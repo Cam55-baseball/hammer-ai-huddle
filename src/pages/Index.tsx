@@ -1,18 +1,25 @@
 import { User, Users, Target } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { RoleButton } from "@/components/RoleButton";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import heroImage from "@/assets/hero-baseball.jpg";
 
 const Index = () => {
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isOwner } = useOwnerAccess();
 
   const handleRoleSelect = (role: string) => {
-    toast({
-      title: `${role} Mode Selected`,
-      description: "Welcome to Hammers Modality. Setting up your dashboard...",
-    });
+    if (user) {
+      // User already logged in, just show selection
+      return;
+    }
+    
+    // Navigate to auth with role in state for profile setup
+    navigate("/auth", { state: { role } });
   };
 
   return (
@@ -26,7 +33,18 @@ const Index = () => {
             </div>
             <h1 className="text-xl font-bold">Hammers Modality</h1>
           </div>
-          <LanguageSelector />
+          <div className="flex items-center gap-4">
+            <LanguageSelector />
+            {user ? (
+              <Button variant="outline" onClick={() => navigate(isOwner ? "/owner" : "/auth")}>
+                {isOwner ? "Owner Dashboard" : "Profile"}
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => navigate("/auth")}>
+                Sign In
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -45,17 +63,14 @@ const Index = () => {
         <div className="container relative mx-auto px-4 text-center">
           <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <h2 className="text-5xl md:text-7xl font-extrabold tracking-tight">
-              Elite Training.
-              <span className="text-primary block">AI-Powered Results.</span>
+              <span className="text-primary block">Elite Training for Champions.</span>
+              <span className="text-secondary text-4xl md:text-5xl block mt-2">Hammer AI-Powered Results</span>
             </h2>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
               Transform your game with advanced motion capture, real-time analytics, 
               and professional development tools used by elite athletes worldwide.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button variant="hero" size="xl">
-                Start Free Trial
-              </Button>
               <Button variant="secondary" size="xl">
                 Watch Demo
               </Button>
@@ -124,9 +139,19 @@ const Index = () => {
                 <span className="text-2xl">📊</span>
               </div>
               <h4 className="text-xl font-bold mb-2">Real-Time Analytics</h4>
-              <p className="text-muted-foreground">
-                Instant feedback on velocity, spin rate, release point, and 20+ biomechanical metrics
-              </p>
+              {isOwner ? (
+                <p className="text-muted-foreground">
+                  Instant feedback on velocity, spin rate, release point, and 20+ biomechanical metrics
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  <span className="inline-block px-3 py-1 bg-muted rounded-full text-sm font-medium mb-2">
+                    Under Construction
+                  </span>
+                  <br />
+                  Advanced analytics coming soon for all users
+                </p>
+              )}
             </div>
 
             <div className="bg-card p-8 rounded-xl shadow-lg border border-border hover:border-primary/50 transition-all duration-300">
