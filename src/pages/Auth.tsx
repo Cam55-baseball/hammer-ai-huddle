@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const authSchema = z.object({
@@ -27,10 +28,11 @@ const Auth = () => {
   const { toast } = useToast();
   const { user, signIn, signUp } = useAuth();
 
+  const state = location.state as { role?: string; sport?: string; modules?: string[]; fromPricing?: boolean };
+
   useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
+    // Don't redirect if user is already authenticated
+    // They might be on this page intentionally
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,7 +42,7 @@ const Auth = () => {
     try {
       if (isLogin) {
         const validated = authSchema.parse({ email, password });
-        const { error } = await signIn(validated.email, validated.password);
+        const { data, error } = await signIn(validated.email, validated.password);
 
         if (error) {
           toast({
@@ -53,7 +55,22 @@ const Auth = () => {
             title: "Welcome Back!",
             description: "Successfully logged in.",
           });
-          navigate("/");
+          
+          // Check if user has completed profile setup
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', authUser.id)
+              .maybeSingle();
+            
+            if (roleData) {
+              navigate("/dashboard");
+            } else {
+              navigate("/profile-setup");
+            }
+          }
         }
       } else {
         const validated = signUpSchema.parse({ email, password, fullName });
@@ -66,13 +83,19 @@ const Auth = () => {
             variant: "destructive",
           });
         } else {
-          // Get role from location state if it was set from home page
-          const state = location.state as { role?: string };
           toast({
             title: "Account Created!",
             description: "Please complete your profile setup.",
           });
-          navigate("/profile-setup", { state: { role: state?.role || "Player" } });
+          
+          // Navigate to profile setup with selections
+          navigate("/profile-setup", { 
+            state: { 
+              role: state?.role, 
+              sport: state?.sport, 
+              modules: state?.modules 
+            } 
+          });
         }
       }
     } catch (error) {

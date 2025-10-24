@@ -13,20 +13,11 @@ const Index = () => {
   const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
 
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
+  // No auto-redirect - let users select role first
 
   const handleRoleSelect = (role: string) => {
-    if (user) {
-      // User already logged in, just show selection
-      return;
-    }
-    
-    // Navigate to auth with role in state for profile setup
-    navigate("/auth", { state: { role } });
+    localStorage.setItem('selectedRole', role);
+    navigate("/select-sport", { state: { role } });
   };
 
   return (
@@ -43,8 +34,8 @@ const Index = () => {
           <div className="flex items-center gap-4">
             <LanguageSelector />
             {user ? (
-              <Button variant="outline" onClick={() => navigate(isOwner ? "/owner" : "/auth")}>
-                {isOwner ? "Owner Dashboard" : "Profile"}
+              <Button variant="outline" onClick={() => navigate("/dashboard")}>
+                Dashboard
               </Button>
             ) : (
               <Button variant="outline" onClick={() => navigate("/auth")}>

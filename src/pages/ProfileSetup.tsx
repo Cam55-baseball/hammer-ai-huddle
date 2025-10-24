@@ -15,16 +15,28 @@ const ProfileSetup = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  const [selectedSport, setSelectedSport] = useState<string>("");
+  const [selectedModules, setSelectedModules] = useState<string[]>([]);
+
   useEffect(() => {
     if (!user) {
       navigate("/auth");
       return;
     }
 
-    // Get role from navigation state if available
-    const state = location.state as { role?: string };
-    if (state?.role) {
-      setSelectedRole(state.role);
+    // Get selections from navigation state or localStorage
+    const state = location.state as { role?: string; sport?: string; modules?: string[] };
+    const role = state?.role || localStorage.getItem('selectedRole');
+    const sport = state?.sport || localStorage.getItem('selectedSport');
+    const modules = state?.modules || JSON.parse(localStorage.getItem('selectedModules') || '[]');
+
+    if (role) setSelectedRole(role);
+    if (sport) setSelectedSport(sport);
+    if (modules) setSelectedModules(modules);
+
+    // If no role selected, redirect to start
+    if (!role) {
+      navigate("/");
     }
   }, [user, navigate, location]);
 
@@ -35,30 +47,59 @@ const ProfileSetup = () => {
       // Map role to enum value
       const roleMap: Record<string, AppRole> = {
         'Player': 'player',
+        'Admin': 'admin',
         'Coach': 'coach',
+        'Scout/Coach/Recruiter': 'recruiter',
         'Recruiter/Scout': 'recruiter',
       };
       
       const roleValue = roleMap[selectedRole] || ('player' as AppRole);
 
-      // Insert user role
-      const { error } = await supabase
-        .from('user_roles')
-        .insert([
-          {
-            user_id: user.id,
-            role: roleValue,
-          }
-        ]);
+      // Map sport to enum value
+      const sportMap: Record<string, 'baseball' | 'softball'> = {
+        'baseball': 'baseball',
+        'softball': 'softball',
+      };
+      const sportValue = sportMap[selectedSport.toLowerCase()] || 'baseball';
 
-      if (error) throw error;
+      // Insert user role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: user.id,
+          role: roleValue,
+        });
+
+      if (roleError) throw roleError;
+
+      // Insert user progress for each selected module
+      if (selectedModules.length > 0) {
+        const progressRecords = selectedModules.map(module => ({
+          user_id: user.id,
+          sport: sportValue,
+          module: module as 'hitting' | 'pitching' | 'throwing',
+          videos_analyzed: 0,
+          average_efficiency_score: null,
+        }));
+
+        const { error: progressError } = await supabase
+          .from('user_progress')
+          .insert(progressRecords);
+
+        if (progressError) throw progressError;
+      }
+
+      // Clear localStorage selections
+      localStorage.removeItem('selectedRole');
+      localStorage.removeItem('selectedSport');
+      localStorage.removeItem('selectedModules');
 
       toast({
         title: "Profile Complete!",
         description: `Your ${selectedRole} profile has been set up successfully.`,
       });
 
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error('Error setting up profile:', error);
       toast({
@@ -79,8 +120,17 @@ const ProfileSetup = () => {
             </div>
             <h1 className="text-3xl font-bold mb-2">Complete Your Profile</h1>
             <p className="text-muted-foreground">
-              You've selected the {selectedRole} role. Ready to start your journey?
+              You've selected the {selectedRole} role for {selectedSport}. Ready to start your journey?
             </p>
+            {selectedModules.length > 0 && (
+              <div className="flex flex-wrap gap-2 justify-center mt-3">
+                {selectedModules.map((module) => (
+                  <span key={module} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm capitalize">
+                    {module}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-6">
