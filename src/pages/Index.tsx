@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { User, Users, Target } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,12 @@ const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleRoleSelect = (role: string) => {
     if (user) {
