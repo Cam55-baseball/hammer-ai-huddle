@@ -12,32 +12,37 @@ import ProfileSetup from "./pages/ProfileSetup";
 import Dashboard from "./pages/Dashboard";
 import AnalyzeVideo from "./pages/AnalyzeVideo";
 import OwnerDashboard from "./pages/OwnerDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import InitializeOwner from "./pages/InitializeOwner";
 import NotFound from "./pages/NotFound";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/select-sport" element={<SelectSport />} />
-          <Route path="/select-modules" element={<SelectModules />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/profile-setup" element={<ProfileSetup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/analyze/:module" element={<AnalyzeVideo />} />
-          <Route path="/owner" element={<OwnerDashboard />} />
-          <Route path="/initialize-owner" element={<InitializeOwner />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <ErrorBoundary>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/select-sport" element={<SelectSport />} />
+            <Route path="/select-modules" element={<SelectModules />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/profile-setup" element={<ProfileSetup />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/analyze/:module" element={<AnalyzeVideo />} />
+            <Route path="/owner" element={<OwnerDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/initialize-owner" element={<InitializeOwner />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </ErrorBoundary>
     </TooltipProvider>
   </QueryClientProvider>
 );

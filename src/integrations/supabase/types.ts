@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          current_period_end: string
+          id: string
+          plan: string
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string
+          videos_remaining: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_period_end?: string
+          id?: string
+          plan?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id: string
+          videos_remaining?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          current_period_end?: string
+          id?: string
+          plan?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+          videos_remaining?: number | null
+        }
+        Relationships: []
+      }
       training_data: {
         Row: {
           created_at: string

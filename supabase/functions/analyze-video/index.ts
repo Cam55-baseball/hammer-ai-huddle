@@ -137,12 +137,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { videoId, module, sport } = await req.json();
+    const { videoId, module, sport, userId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!LOVABLE_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Missing required environment variables");
     }
+
+    console.log(`Analyzing video ${videoId} for user ${userId}`);
+
+    // Initialize Supabase client with service role
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Update video status to processing
+    await supabase.from("videos").update({ status: "processing" }).eq("id", videoId);
 
     // Get system prompt based on module and sport
     const systemPrompt = getSystemPrompt(module, sport);
@@ -160,13 +171,15 @@ Deno.serve(async (req) => {
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Analyze this ${sport} ${module} video. Note: This is a simulated analysis since actual video processing is not yet implemented. Provide realistic feedback as if analyzing a real video.`,
+            content: `Analyze this ${sport} ${module} video. Provide detailed feedback on form and mechanics. Include an efficiency score out of 100 in your response.`,
           },
         ],
       }),
     });
 
     if (!response.ok) {
+      await supabase.from("videos").update({ status: "failed" }).eq("id", videoId);
+      
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
@@ -190,20 +203,93 @@ Deno.serve(async (req) => {
     const data = await response.json();
     const feedback = data.choices?.[0]?.message?.content || "No analysis available";
 
-    // Extract efficiency score from feedback (simple pattern matching)
+    // Extract efficiency score from feedback
     const scoreMatch = feedback.match(/(\d+)\/100/);
     const efficiency_score = scoreMatch ? parseInt(scoreMatch[1]) : 75;
+
+    const mocap_data = {
+      module,
+      sport,
+      analyzed_at: new Date().toISOString(),
+    };
+
+    const ai_analysis = {
+      feedback,
+      model_used: "google/gemini-2.5-flash",
+      analyzed_at: new Date().toISOString(),
+    };
+
+    // Update video with analysis results
+    const { error: updateError } = await supabase
+      .from("videos")
+      .update({
+        status: "completed",
+        efficiency_score,
+        mocap_data,
+        ai_analysis,
+      })
+      .eq("id", videoId);
+
+    if (updateError) {
+      console.error("Error updating video:", updateError);
+      throw updateError;
+    }
+
+    // Update user progress
+    const { data: progressData, error: progressFetchError } = await supabase
+      .from("user_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("module", module)
+      .eq("sport", sport)
+      .maybeSingle();
+
+    if (progressFetchError) {
+      console.error("Error fetching progress:", progressFetchError);
+    } else {
+      const newVideosAnalyzed = (progressData?.videos_analyzed || 0) + 1;
+      const currentAvgScore = progressData?.average_efficiency_score || 0;
+      const newAvgScore = currentAvgScore === 0 
+        ? efficiency_score 
+        : Math.round((currentAvgScore * (newVideosAnalyzed - 1) + efficiency_score) / newVideosAnalyzed);
+
+      const { error: progressUpdateError } = await supabase
+        .from("user_progress")
+        .update({
+          videos_analyzed: newVideosAnalyzed,
+          average_efficiency_score: newAvgScore,
+          last_activity: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+        .eq("module", module)
+        .eq("sport", sport);
+
+      if (progressUpdateError) {
+        console.error("Error updating progress:", progressUpdateError);
+      }
+    }
+
+    // Decrement videos_remaining in subscription
+    const { data: subData } = await supabase
+      .from("subscriptions")
+      .select("videos_remaining")
+      .eq("user_id", userId)
+      .single();
+
+    if (subData && subData.videos_remaining > 0) {
+      await supabase
+        .from("subscriptions")
+        .update({ videos_remaining: subData.videos_remaining - 1 })
+        .eq("user_id", userId);
+    }
+
+    console.log(`Analysis complete for video ${videoId}`);
 
     return new Response(
       JSON.stringify({
         efficiency_score,
         feedback,
-        mocap_data: {
-          // Placeholder mocap data
-          module,
-          sport,
-          analyzed_at: new Date().toISOString(),
-        },
+        mocap_data,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

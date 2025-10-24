@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, Target, Zap, Upload } from "lucide-react";
-import { toast } from "sonner";
 
 type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
@@ -17,6 +16,7 @@ export default function Dashboard() {
   const [selectedModule, setSelectedModule] = useState<ModuleType | null>(null);
   const [selectedSport, setSelectedSport] = useState<SportType>("baseball");
   const [progress, setProgress] = useState<any[]>([]);
+  const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,13 +30,14 @@ export default function Dashboard() {
 
   const loadProgress = async () => {
     try {
-      const { data, error } = await supabase
-        .from("user_progress")
-        .select("*")
-        .eq("user_id", user!.id);
+      const [progressResponse, subResponse] = await Promise.all([
+        supabase.from("user_progress").select("*").eq("user_id", user!.id),
+        supabase.from("subscriptions").select("*").eq("user_id", user!.id).maybeSingle(),
+      ]);
 
-      if (error) throw error;
-      setProgress(data || []);
+      if (progressResponse.error) throw progressResponse.error;
+      setProgress(progressResponse.data || []);
+      setSubscription(subResponse.data);
     } catch (error) {
       console.error("Error loading progress:", error);
     } finally {
@@ -55,13 +56,13 @@ export default function Dashboard() {
   };
 
   const getModuleProgress = (module: ModuleType) => {
-    return progress.find(p => p.module === module && p.sport === selectedSport);
+    return progress.find((p) => p.module === module && p.sport === selectedSport);
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-lg">Loading...</div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -73,7 +74,18 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <CircleDot className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">MoCap Training</h1>
+            <div>
+              <h1 className="text-2xl font-bold">MoCap Training</h1>
+              {subscription && (
+                <div className="mt-1">
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                    {subscription.plan === "free"
+                      ? `Free Trial: ${subscription.videos_remaining} analyses left`
+                      : `Plan: ${subscription.plan}`}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
           <Button variant="outline" onClick={handleSignOut}>
             Sign Out
