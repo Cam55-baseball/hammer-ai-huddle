@@ -41,6 +41,81 @@ export type Database = {
         }
         Relationships: []
       }
+      training_data: {
+        Row: {
+          created_at: string
+          data_type: Database["public"]["Enums"]["training_data_type"]
+          description: string
+          id: string
+          mocap_data: Json | null
+          module: Database["public"]["Enums"]["module_type"]
+          sport: Database["public"]["Enums"]["sport_type"]
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          data_type: Database["public"]["Enums"]["training_data_type"]
+          description: string
+          id?: string
+          mocap_data?: Json | null
+          module: Database["public"]["Enums"]["module_type"]
+          sport: Database["public"]["Enums"]["sport_type"]
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          data_type?: Database["public"]["Enums"]["training_data_type"]
+          description?: string
+          id?: string
+          mocap_data?: Json | null
+          module?: Database["public"]["Enums"]["module_type"]
+          sport?: Database["public"]["Enums"]["sport_type"]
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
+      user_progress: {
+        Row: {
+          average_efficiency_score: number | null
+          id: string
+          last_activity: string
+          module: Database["public"]["Enums"]["module_type"]
+          sport: Database["public"]["Enums"]["sport_type"]
+          user_id: string
+          videos_analyzed: number
+        }
+        Insert: {
+          average_efficiency_score?: number | null
+          id?: string
+          last_activity?: string
+          module: Database["public"]["Enums"]["module_type"]
+          sport: Database["public"]["Enums"]["sport_type"]
+          user_id: string
+          videos_analyzed?: number
+        }
+        Update: {
+          average_efficiency_score?: number | null
+          id?: string
+          last_activity?: string
+          module?: Database["public"]["Enums"]["module_type"]
+          sport?: Database["public"]["Enums"]["sport_type"]
+          user_id?: string
+          videos_analyzed?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -62,6 +137,51 @@ export type Database = {
         }
         Relationships: []
       }
+      videos: {
+        Row: {
+          ai_analysis: Json | null
+          created_at: string
+          efficiency_score: number | null
+          id: string
+          mocap_data: Json | null
+          module: Database["public"]["Enums"]["module_type"]
+          sport: Database["public"]["Enums"]["sport_type"]
+          status: Database["public"]["Enums"]["video_status"]
+          thumbnail_url: string | null
+          updated_at: string
+          user_id: string
+          video_url: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          created_at?: string
+          efficiency_score?: number | null
+          id?: string
+          mocap_data?: Json | null
+          module: Database["public"]["Enums"]["module_type"]
+          sport: Database["public"]["Enums"]["sport_type"]
+          status?: Database["public"]["Enums"]["video_status"]
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id: string
+          video_url: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string
+          efficiency_score?: number | null
+          id?: string
+          mocap_data?: Json | null
+          module?: Database["public"]["Enums"]["module_type"]
+          sport?: Database["public"]["Enums"]["sport_type"]
+          status?: Database["public"]["Enums"]["video_status"]
+          thumbnail_url?: string | null
+          updated_at?: string
+          user_id?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -77,6 +197,10 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "admin" | "coach" | "player" | "recruiter"
+      module_type: "hitting" | "pitching" | "throwing"
+      sport_type: "baseball" | "softball"
+      training_data_type: "professional_example" | "common_mistake"
+      video_status: "uploading" | "processing" | "completed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -205,6 +329,10 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "admin", "coach", "player", "recruiter"],
+      module_type: ["hitting", "pitching", "throwing"],
+      sport_type: ["baseball", "softball"],
+      training_data_type: ["professional_example", "common_mistake"],
+      video_status: ["uploading", "processing", "completed", "failed"],
     },
   },
 } as const
