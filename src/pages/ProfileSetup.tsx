@@ -13,14 +13,23 @@ const ProfileSetup = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   const [selectedSport, setSelectedSport] = useState<string>("");
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
 
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (loading) {
+      console.log('ProfileSetup: Auth still loading...');
+      return;
+    }
+
+    console.log('ProfileSetup: Auth loaded, user:', user ? 'exists' : 'null');
+
     if (!user) {
-      navigate("/auth");
+      console.log('ProfileSetup: No user, redirecting to auth');
+      navigate("/auth", { replace: true });
       return;
     }
 
@@ -30,15 +39,18 @@ const ProfileSetup = () => {
     const sport = state?.sport || localStorage.getItem('selectedSport');
     const modules = state?.modules || JSON.parse(localStorage.getItem('selectedModules') || '[]');
 
+    console.log('ProfileSetup: Retrieved selections - role:', role, 'sport:', sport, 'modules:', modules);
+
     if (role) setSelectedRole(role);
     if (sport) setSelectedSport(sport);
     if (modules) setSelectedModules(modules);
 
     // If no role selected, redirect to start
     if (!role) {
-      navigate("/");
+      console.log('ProfileSetup: No role found, redirecting to home');
+      navigate("/", { replace: true });
     }
-  }, [user, navigate, location]);
+  }, [user, loading, navigate, location]);
 
   const handleStartFreeTrial = async () => {
     if (!selectedRole || !user) return;

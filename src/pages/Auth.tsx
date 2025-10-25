@@ -59,6 +59,8 @@ const Auth = () => {
           // Wait briefly for session to fully establish
           await new Promise(resolve => setTimeout(resolve, 500));
           
+          console.log('Auth: Login successful, checking user role...');
+          
           // Check if user has completed profile setup
           const { data: { user: authUser } } = await supabase.auth.getUser();
           if (authUser) {
@@ -69,17 +71,19 @@ const Auth = () => {
               .maybeSingle();
             
             if (roleError) {
-              console.error('Error checking user role:', roleError);
+              console.error('Auth: Error checking user role:', roleError);
             }
             
             if (roleData) {
-              navigate("/dashboard");
+              console.log('Auth: User has role, navigating to dashboard');
+              navigate("/dashboard", { replace: true });
             } else {
-              navigate("/profile-setup");
+              console.log('Auth: No role found, navigating to profile-setup');
+              navigate("/profile-setup", { replace: true });
             }
           } else {
-            // Fallback if user object is not available
-            navigate("/profile-setup");
+            console.log('Auth: No user object, navigating to profile-setup');
+            navigate("/profile-setup", { replace: true });
           }
         }
       } else {
