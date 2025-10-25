@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import SelectSport from "./pages/SelectSport";
 import SelectModules from "./pages/SelectModules";
 import Pricing from "./pages/Pricing";
+import Checkout from "./pages/Checkout";
 import ProfileSetup from "./pages/ProfileSetup";
 import Dashboard from "./pages/Dashboard";
 import AnalyzeVideo from "./pages/AnalyzeVideo";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/select-sport" element={<SelectSport />} />
             <Route path="/select-modules" element={<SelectModules />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/profile-setup" element={<ProfileSetup />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/analyze/:module" element={<AnalyzeVideo />} />

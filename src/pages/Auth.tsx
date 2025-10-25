@@ -59,7 +59,7 @@ const Auth = () => {
           // Wait briefly for session to fully establish
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          console.log('Auth: Login successful, checking user role...');
+          console.log('Auth: Login successful, checking user role and subscription...');
           
           // Check if user has completed profile setup
           const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -75,8 +75,22 @@ const Auth = () => {
             }
             
             if (roleData) {
-              console.log('Auth: User has role, navigating to dashboard');
-              navigate("/dashboard", { replace: true });
+              console.log('Auth: User has role, checking subscription...');
+              
+              // Check subscription status
+              const { data: subData } = await supabase
+                .from('subscriptions')
+                .select('subscribed_modules')
+                .eq('user_id', authUser.id)
+                .maybeSingle();
+              
+              if (!subData || !subData.subscribed_modules || subData.subscribed_modules.length === 0) {
+                console.log('Auth: No active subscription, navigating to checkout');
+                navigate("/checkout", { replace: true });
+              } else {
+                console.log('Auth: Active subscription found, navigating to dashboard');
+                navigate("/dashboard", { replace: true });
+              }
             } else {
               console.log('Auth: No role found, navigating to profile-setup');
               navigate("/profile-setup", { replace: true });

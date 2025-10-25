@@ -1,22 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CircleDot, Target, Zap, Upload } from "lucide-react";
+import { CircleDot, Target, Zap, Upload, Lock } from "lucide-react";
 
 type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
+  const { modules: subscribedModules, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
-  const [selectedModule, setSelectedModule] = useState<ModuleType | null>(null);
   const [selectedSport, setSelectedSport] = useState<SportType>("baseball");
   const [progress, setProgress] = useState<any[]>([]);
-  const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,14 +35,13 @@ export default function Dashboard() {
 
   const loadProgress = async () => {
     try {
-      const [progressResponse, subResponse] = await Promise.all([
-        supabase.from("user_progress").select("*").eq("user_id", user!.id),
-        supabase.from("subscriptions").select("*").eq("user_id", user!.id).maybeSingle(),
-      ]);
+      const progressResponse = await supabase
+        .from("user_progress")
+        .select("*")
+        .eq("user_id", user!.id);
 
       if (progressResponse.error) throw progressResponse.error;
       setProgress(progressResponse.data || []);
-      setSubscription(subResponse.data);
     } catch (error) {
       console.error("Error loading progress:", error);
     } finally {
@@ -51,7 +50,10 @@ export default function Dashboard() {
   };
 
   const handleModuleSelect = (module: ModuleType) => {
-    setSelectedModule(module);
+    if (!subscribedModules.includes(module)) {
+      navigate("/checkout");
+      return;
+    }
     navigate(`/analyze/${module}?sport=${selectedSport}`);
   };
 
@@ -64,7 +66,7 @@ export default function Dashboard() {
     return progress.find((p) => p.module === module && p.sport === selectedSport);
   };
 
-  if (authLoading || loading) {
+  if (authLoading || loading || subLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -81,17 +83,22 @@ export default function Dashboard() {
             <CircleDot className="h-8 w-8 text-primary" />
             <div>
               <h1 className="text-2xl font-bold">MoCap Training</h1>
-              {subscription && (
-                <div className="mt-1">
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                    {subscription.plan === "free"
-                      ? `Free Trial: ${subscription.videos_remaining} analyses left`
-                      : `Plan: ${subscription.plan}`}
-                  </span>
+              {subscribedModules.length > 0 && (
+                <div className="mt-1 flex gap-2">
+                  {subscribedModules.map((module) => (
+                    <span key={module} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full capitalize">
+                      {module}
+                    </span>
+                  ))}
                 </div>
               )}
             </div>
           </div>
+          {subscribedModules.length === 0 && (
+            <Button variant="default" onClick={() => navigate("/checkout")}>
+              Subscribe to Modules
+            </Button>
+          )}
           <Button variant="outline" onClick={handleSignOut}>
             Sign Out
           </Button>
@@ -124,18 +131,23 @@ export default function Dashboard() {
         <section className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {/* Hitting Module */}
           <Card
-            className="p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+            className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
+              !subscribedModules.includes("hitting") ? "opacity-60" : ""
+            }`}
             onClick={() => handleModuleSelect("hitting")}
           >
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="p-4 rounded-full bg-primary/10">
                 <Target className="h-12 w-12 text-primary" />
               </div>
-              <h3 className="text-2xl font-bold">Hitting</h3>
+              <h3 className="text-2xl font-bold flex items-center gap-2">
+                Hitting
+                {!subscribedModules.includes("hitting") && <Lock className="h-5 w-5" />}
+              </h3>
               <p className="text-muted-foreground">
                 Analyze swing mechanics, kinetic sequence, and bat speed
               </p>
-              {getModuleProgress("hitting") && (
+              {getModuleProgress("hitting") && subscribedModules.includes("hitting") && (
                 <div className="text-sm">
                   <p className="font-semibold">
                     Videos Analyzed: {getModuleProgress("hitting").videos_analyzed}
@@ -145,27 +157,44 @@ export default function Dashboard() {
                   </p>
                 </div>
               )}
-              <Button className="w-full" variant="default">
-                <Upload className="h-4 w-4 mr-2" />
-                Start Analysis
+              <Button 
+                className="w-full" 
+                variant={subscribedModules.includes("hitting") ? "default" : "outline"}
+              >
+                {subscribedModules.includes("hitting") ? (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Start Analysis
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4 mr-2" />
+                    Subscribe
+                  </>
+                )}
               </Button>
             </div>
           </Card>
 
           {/* Pitching Module */}
           <Card
-            className="p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+            className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
+              !subscribedModules.includes("pitching") ? "opacity-60" : ""
+            }`}
             onClick={() => handleModuleSelect("pitching")}
           >
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="p-4 rounded-full bg-primary/10">
                 <CircleDot className="h-12 w-12 text-primary" />
               </div>
-              <h3 className="text-2xl font-bold">Pitching</h3>
+              <h3 className="text-2xl font-bold flex items-center gap-2">
+                Pitching
+                {!subscribedModules.includes("pitching") && <Lock className="h-5 w-5" />}
+              </h3>
               <p className="text-muted-foreground">
                 Analyze delivery mechanics, arm action, and sequencing
               </p>
-              {getModuleProgress("pitching") && (
+              {getModuleProgress("pitching") && subscribedModules.includes("pitching") && (
                 <div className="text-sm">
                   <p className="font-semibold">
                     Videos Analyzed: {getModuleProgress("pitching").videos_analyzed}
@@ -175,27 +204,44 @@ export default function Dashboard() {
                   </p>
                 </div>
               )}
-              <Button className="w-full" variant="default">
-                <Upload className="h-4 w-4 mr-2" />
-                Start Analysis
+              <Button 
+                className="w-full" 
+                variant={subscribedModules.includes("pitching") ? "default" : "outline"}
+              >
+                {subscribedModules.includes("pitching") ? (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Start Analysis
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4 mr-2" />
+                    Subscribe
+                  </>
+                )}
               </Button>
             </div>
           </Card>
 
           {/* Throwing Module */}
           <Card
-            className="p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02]"
+            className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
+              !subscribedModules.includes("throwing") ? "opacity-60" : ""
+            }`}
             onClick={() => handleModuleSelect("throwing")}
           >
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="p-4 rounded-full bg-primary/10">
                 <Zap className="h-12 w-12 text-primary" />
               </div>
-              <h3 className="text-2xl font-bold">Throwing</h3>
+              <h3 className="text-2xl font-bold flex items-center gap-2">
+                Throwing
+                {!subscribedModules.includes("throwing") && <Lock className="h-5 w-5" />}
+              </h3>
               <p className="text-muted-foreground">
                 Analyze arm action, footwork, and energy transfer
               </p>
-              {getModuleProgress("throwing") && (
+              {getModuleProgress("throwing") && subscribedModules.includes("throwing") && (
                 <div className="text-sm">
                   <p className="font-semibold">
                     Videos Analyzed: {getModuleProgress("throwing").videos_analyzed}
@@ -205,9 +251,21 @@ export default function Dashboard() {
                   </p>
                 </div>
               )}
-              <Button className="w-full" variant="default">
-                <Upload className="h-4 w-4 mr-2" />
-                Start Analysis
+              <Button 
+                className="w-full" 
+                variant={subscribedModules.includes("throwing") ? "default" : "outline"}
+              >
+                {subscribedModules.includes("throwing") ? (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Start Analysis
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4 mr-2" />
+                    Subscribe
+                  </>
+                )}
               </Button>
             </div>
           </Card>

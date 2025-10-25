@@ -22,14 +22,7 @@ const Pricing = () => {
   }, [selectedRole, selectedSport, selectedModules, navigate]);
 
   const handleGetStarted = () => {
-    navigate("/auth", { 
-      state: { 
-        role: selectedRole, 
-        sport: selectedSport, 
-        modules: selectedModules,
-        fromPricing: true
-      } 
-    });
+    navigate("/checkout");
   };
 
   return (

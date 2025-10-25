@@ -48,10 +48,11 @@ export type Database = {
           id: string
           plan: string
           status: string
+          stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          subscribed_modules: string[] | null
           updated_at: string | null
           user_id: string
-          videos_remaining: number | null
         }
         Insert: {
           created_at?: string | null
@@ -59,10 +60,11 @@ export type Database = {
           id?: string
           plan?: string
           status?: string
+          stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          subscribed_modules?: string[] | null
           updated_at?: string | null
           user_id: string
-          videos_remaining?: number | null
         }
         Update: {
           created_at?: string | null
@@ -70,10 +72,11 @@ export type Database = {
           id?: string
           plan?: string
           status?: string
+          stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          subscribed_modules?: string[] | null
           updated_at?: string | null
           user_id?: string
-          videos_remaining?: number | null
         }
         Relationships: []
       }

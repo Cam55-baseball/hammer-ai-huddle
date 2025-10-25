@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,44 +14,30 @@ export default function AnalyzeVideo() {
   const [searchParams] = useSearchParams();
   const sport = searchParams.get("sport") || "baseball";
   const { user, loading: authLoading } = useAuth();
+  const { modules: subscribedModules, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<any>(null);
-  const [subscription, setSubscription] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading) {
+    if (authLoading || subLoading) {
       return;
     }
     if (!user) {
       navigate("/auth", { replace: true });
       return;
     }
-    loadSubscription();
-  }, [authLoading, user, navigate]);
-
-  const loadSubscription = async () => {
-    if (!user) return;
     
-    try {
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      setSubscription(data);
-    } catch (error) {
-      console.error('Error loading subscription:', error);
-    } finally {
-      setLoading(false);
+    // Check if user has access to this module
+    if (!subscribedModules.includes(module as string)) {
+      toast.error("You don't have access to this module. Please subscribe.");
+      navigate("/checkout", { replace: true });
+      return;
     }
-  };
+  }, [authLoading, subLoading, user, subscribedModules, module, navigate]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,13 +60,6 @@ export default function AnalyzeVideo() {
 
   const handleUploadAndAnalyze = async () => {
     if (!videoFile || !user) return;
-
-    // Check subscription limits
-    if (subscription?.videos_remaining <= 0) {
-      toast.error("You've used all your free analyses. Please upgrade your plan.");
-      navigate('/pricing');
-      return;
-    }
 
     setUploading(true);
     try {
@@ -141,7 +121,6 @@ export default function AnalyzeVideo() {
       }
 
       setAnalysis(analysisData);
-      await loadSubscription(); // Refresh subscription data
       toast.success("Analysis complete!");
     } catch (error: any) {
       console.error("Error:", error);
@@ -152,7 +131,7 @@ export default function AnalyzeVideo() {
     }
   };
 
-  if (authLoading || loading) {
+  if (authLoading || subLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -169,12 +148,11 @@ export default function AnalyzeVideo() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
-          {subscription && (
-            <div className="text-sm">
-              <span className="text-muted-foreground">Videos remaining: </span>
-              <span className="font-bold text-primary">{subscription.videos_remaining}</span>
-            </div>
-          )}
+          <div className="text-sm">
+            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full capitalize">
+              {module} Module Active
+            </span>
+          </div>
         </div>
       </header>
 
@@ -204,7 +182,7 @@ export default function AnalyzeVideo() {
                 Max file size: 50MB. Supported formats: MP4, MOV, AVI, WebM
               </p>
               <label htmlFor="video-upload">
-                <Button asChild disabled={subscription?.videos_remaining <= 0}>
+                <Button asChild>
                   <span>
                     <Video className="h-4 w-4 mr-2" />
                     Select Video
@@ -218,14 +196,6 @@ export default function AnalyzeVideo() {
                 className="hidden"
                 onChange={handleFileSelect}
               />
-              {subscription?.videos_remaining <= 0 && (
-                <div className="mt-4">
-                  <p className="text-destructive mb-2">You've used all your free analyses</p>
-                  <Button onClick={() => navigate('/pricing')} variant="default">
-                    Upgrade Plan
-                  </Button>
-                </div>
-              )}
             </div>
           </Card>
         )}
@@ -244,7 +214,7 @@ export default function AnalyzeVideo() {
             {!analyzing && !analysis && (
               <Button
                 onClick={handleUploadAndAnalyze}
-                disabled={uploading || subscription?.videos_remaining <= 0}
+                disabled={uploading}
                 size="lg"
                 className="w-full"
               >
