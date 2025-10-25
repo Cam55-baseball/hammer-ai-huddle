@@ -41,28 +41,29 @@ const Checkout = () => {
         description: "Your subscription has been activated. Refreshing your account...",
       });
       
-      // Poll subscription status to ensure Stripe webhook has processed
+      // Poll subscription status with exponential backoff
       let attempts = 0;
-      const maxAttempts = 10;
-      const pollInterval = 2000;
+      const maxAttempts = 5;
+      const pollIntervals = [2000, 5000, 10000, 15000, 20000]; // Exponential backoff
       
       const checkSubscriptionStatus = async () => {
-        attempts++;
         await refetch();
         
-        if (attempts >= maxAttempts) {
+        if (subscribedModules.length > 0) {
+          // Success! Modules detected, redirect immediately
+          navigate("/dashboard", { replace: true });
+        } else if (attempts >= maxAttempts) {
           // After max attempts, redirect anyway
           navigate("/dashboard", { replace: true });
-        } else if (subscribedModules.length > 0) {
-          // Once we detect subscribed modules, redirect
-          navigate("/dashboard", { replace: true });
         } else {
-          // Keep polling
-          setTimeout(checkSubscriptionStatus, pollInterval);
+          // Keep polling with exponential backoff
+          const nextInterval = pollIntervals[attempts] || 20000;
+          attempts++;
+          setTimeout(checkSubscriptionStatus, nextInterval);
         }
       };
       
-      // Start polling after a short delay
+      // Start polling after initial delay
       setTimeout(checkSubscriptionStatus, 2000);
     } else if (checkoutStatus === "cancelled") {
       toast({

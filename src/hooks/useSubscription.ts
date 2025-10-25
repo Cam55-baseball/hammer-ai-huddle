@@ -58,8 +58,8 @@ export const useSubscription = () => {
   useEffect(() => {
     checkSubscription();
 
-    // Auto-refresh every 60 seconds
-    const interval = setInterval(checkSubscription, 60000);
+    // Auto-refresh every 5 minutes (reduced from 60s to minimize rate limits)
+    const interval = setInterval(checkSubscription, 300000);
 
     return () => clearInterval(interval);
   }, [user, session]);

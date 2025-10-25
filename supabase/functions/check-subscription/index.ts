@@ -12,6 +12,18 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
+// Simple in-memory cache to reduce Stripe API calls
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 30000; // 30 seconds
+
+const getCached = (key: string) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  return null;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -44,21 +56,31 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    
+    // Check cache first
+    const cacheKey = `customer:${user.email}`;
+    let customers = getCached(cacheKey);
+    
+    if (!customers) {
+      customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      cache.set(cacheKey, { data: customers, timestamp: Date.now() });
+    }
     
     if (customers.data.length === 0) {
-      logStep("No customer found, updating unsubscribed state");
+      logStep("No customer found, upserting unsubscribed state");
       
-      // Update subscription record
+      // UPSERT subscription record (insert or update)
       await supabaseClient
         .from('subscriptions')
-        .update({
+        .upsert({
+          user_id: user.id,
           status: 'inactive',
           subscribed_modules: [],
           stripe_customer_id: null,
           stripe_subscription_id: null
-        })
-        .eq('user_id', user.id);
+        }, {
+          onConflict: 'user_id'
+        });
 
       return new Response(JSON.stringify({ 
         subscribed: false,
@@ -77,6 +99,7 @@ serve(async (req) => {
       customer: customerId,
       status: "active",
       limit: 1,
+      expand: ['data.items.data.price.product']
     });
     const hasActiveSub = subscriptions.data.length > 0;
     let subscribedModules: string[] = [];
@@ -89,41 +112,43 @@ serve(async (req) => {
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
       
-      // Extract modules from line items metadata
+      // Extract modules from line items metadata (using expanded data)
       for (const item of subscription.items.data) {
-        const price = await stripe.prices.retrieve(item.price.id);
-        const product = await stripe.products.retrieve(price.product as string);
-        const module = product.metadata?.module;
-        if (module) {
-          subscribedModules.push(module);
+        const product = item.price.product;
+        if (typeof product === 'object' && product.metadata?.module) {
+          subscribedModules.push(product.metadata.module);
         }
       }
       logStep("Determined subscribed modules", { subscribedModules });
 
-      // Update subscription record in database
+      // UPSERT subscription record in database
       await supabaseClient
         .from('subscriptions')
-        .update({
+        .upsert({
+          user_id: user.id,
           status: 'active',
           subscribed_modules: subscribedModules,
           stripe_customer_id: customerId,
           stripe_subscription_id: stripeSubscriptionId,
           current_period_end: subscriptionEnd
-        })
-        .eq('user_id', user.id);
+        }, {
+          onConflict: 'user_id'
+        });
     } else {
       logStep("No active subscription found");
       
-      // Update subscription record
+      // UPSERT subscription record
       await supabaseClient
         .from('subscriptions')
-        .update({
+        .upsert({
+          user_id: user.id,
           status: 'inactive',
           subscribed_modules: [],
           stripe_customer_id: customerId,
           stripe_subscription_id: null
-        })
-        .eq('user_id', user.id);
+        }, {
+          onConflict: 'user_id'
+        });
     }
 
     return new Response(JSON.stringify({
