@@ -26,19 +26,19 @@ const SelectModules = () => {
     {
       id: 'hitting',
       label: 'Hitting',
-      icon: '🏏',
+      icon: '⚡',
       description: 'Analyze swing mechanics, bat speed, and contact point'
     },
     {
       id: 'pitching',
       label: 'Pitching',
-      icon: '⚡',
+      icon: '🎯',
       description: 'Track velocity, release point, and arm mechanics'
     },
     {
       id: 'throwing',
       label: 'Throwing',
-      icon: '🎯',
+      icon: '🔥',
       description: 'Improve accuracy, arm strength, and throwing form'
     }
   ];

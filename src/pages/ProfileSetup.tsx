@@ -96,7 +96,7 @@ const ProfileSetup = () => {
 
       toast({
         title: "Profile Complete!",
-        description: `Your ${selectedRole} profile has been set up successfully.`,
+        description: `Your ${selectedRole} profile has been set up successfully. Ready to subscribe.`,
       });
 
       navigate("/dashboard");
@@ -135,7 +135,7 @@ const ProfileSetup = () => {
 
           <div className="space-y-6">
             <div className="bg-muted/30 p-6 rounded-lg">
-              <h2 className="text-xl font-bold mb-4">Your Free Trial Includes:</h2>
+              <h2 className="text-xl font-bold mb-4">Your Subscription Includes:</h2>
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
@@ -147,11 +147,15 @@ const ProfileSetup = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span>Access to training programs and drills</span>
+                  <span>Unlimited video analyses</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
                   <span>Performance tracking and progress reports</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span>Advanced training recommendations</span>
                 </li>
               </ul>
             </div>
@@ -161,12 +165,8 @@ const ProfileSetup = () => {
               size="xl"
               className="w-full"
             >
-              Start Free Trial
+              Complete Setup
             </Button>
-
-            <p className="text-center text-sm text-muted-foreground">
-              No credit card required. Cancel anytime.
-            </p>
           </div>
         </div>
       </div>

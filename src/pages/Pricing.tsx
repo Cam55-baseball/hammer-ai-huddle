@@ -11,6 +11,9 @@ const Pricing = () => {
   const selectedRole = state?.role || localStorage.getItem('selectedRole');
   const selectedSport = state?.sport || localStorage.getItem('selectedSport');
   const selectedModules = state?.modules || JSON.parse(localStorage.getItem('selectedModules') || '[]');
+  
+  const modulePrice = 200;
+  const totalPrice = selectedModules.length * modulePrice;
 
   useEffect(() => {
     if (!selectedRole || !selectedSport || selectedModules.length === 0) {
@@ -44,7 +47,7 @@ const Pricing = () => {
 
         <div className="bg-card border border-border rounded-lg p-6 mb-8">
           <h3 className="font-semibold mb-4">Your Selection:</h3>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 mb-4">
             <span className="bg-primary/10 text-primary px-4 py-2 rounded-full text-sm">
               <strong>Role:</strong> {selectedRole}
             </span>
@@ -57,46 +60,24 @@ const Pricing = () => {
               </span>
             ))}
           </div>
+          <div className="pt-4 border-t border-border">
+            <div className="flex justify-between items-center text-sm mb-2">
+              <span className="text-muted-foreground">{selectedModules.length} module(s) selected</span>
+              <span className="font-semibold">$200 per module/month</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-bold">Total:</span>
+              <span className="text-2xl font-bold text-primary">${totalPrice}/month</span>
+            </div>
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="p-6 hover:shadow-lg transition-all">
-            <div className="text-center">
-              <h3 className="text-xl font-bold mb-2">Free Trial</h3>
-              <div className="text-4xl font-bold mb-4">$0</div>
-              <p className="text-sm text-muted-foreground mb-6">14 days</p>
-              <ul className="text-left space-y-3 mb-8 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">✓</span>
-                  <span>5 video analyses per module</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">✓</span>
-                  <span>Basic motion tracking</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">✓</span>
-                  <span>Performance metrics</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">✓</span>
-                  <span>Progress tracking</span>
-                </li>
-              </ul>
-              <Button onClick={handleGetStarted} variant="outline" className="w-full">
-                Start Free Trial
-              </Button>
-            </div>
-          </Card>
-
+        <div className="grid md:grid-cols-2 gap-6">
           <Card className="p-6 border-primary relative hover:shadow-lg transition-all">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-semibold">
-              MOST POPULAR
-            </div>
             <div className="text-center">
-              <h3 className="text-xl font-bold mb-2">Pro</h3>
-              <div className="text-4xl font-bold mb-4">$29</div>
-              <p className="text-sm text-muted-foreground mb-6">per month</p>
+              <h3 className="text-xl font-bold mb-2">Individual Plan</h3>
+              <div className="text-4xl font-bold mb-4">${totalPrice}</div>
+              <p className="text-sm text-muted-foreground mb-6">$200 per module selected</p>
               <ul className="text-left space-y-3 mb-8 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
@@ -120,20 +101,20 @@ const Pricing = () => {
                 </li>
               </ul>
               <Button onClick={handleGetStarted} className="w-full">
-                Get Started
+                Subscribe Now
               </Button>
             </div>
           </Card>
 
           <Card className="p-6 hover:shadow-lg transition-all">
             <div className="text-center">
-              <h3 className="text-xl font-bold mb-2">Team</h3>
-              <div className="text-4xl font-bold mb-4">$99</div>
-              <p className="text-sm text-muted-foreground mb-6">per month</p>
+              <h3 className="text-xl font-bold mb-2">Team Plan</h3>
+              <div className="text-4xl font-bold mb-4">${totalPrice * 15}</div>
+              <p className="text-sm text-muted-foreground mb-6">{selectedModules.length} module(s) × 15 members</p>
               <ul className="text-left space-y-3 mb-8 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span>Everything in Pro</span>
+                  <span>Everything in Individual Plan</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
@@ -167,10 +148,6 @@ const Pricing = () => {
             ← Back to Modules
           </Button>
         </div>
-
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          No credit card required for free trial. Cancel anytime.
-        </p>
       </div>
     </div>
   );
