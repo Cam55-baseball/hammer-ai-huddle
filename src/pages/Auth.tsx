@@ -56,20 +56,30 @@ const Auth = () => {
             description: "Successfully logged in.",
           });
           
+          // Wait briefly for session to fully establish
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
           // Check if user has completed profile setup
           const { data: { user: authUser } } = await supabase.auth.getUser();
           if (authUser) {
-            const { data: roleData } = await supabase
+            const { data: roleData, error: roleError } = await supabase
               .from('user_roles')
               .select('role')
               .eq('user_id', authUser.id)
               .maybeSingle();
+            
+            if (roleError) {
+              console.error('Error checking user role:', roleError);
+            }
             
             if (roleData) {
               navigate("/dashboard");
             } else {
               navigate("/profile-setup");
             }
+          } else {
+            // Fallback if user object is not available
+            navigate("/profile-setup");
           }
         }
       } else {
