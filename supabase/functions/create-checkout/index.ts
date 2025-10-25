@@ -14,9 +14,9 @@ const logStep = (step: string, details?: any) => {
 
 // Price IDs for each module ($200/month each)
 const MODULE_PRICES: { [key: string]: string } = {
-  hitting: "price_hitting_monthly",
-  pitching: "price_pitching_monthly",
-  throwing: "price_throwing_monthly"
+  hitting: "price_1SLm0qGc5QIzbAH60wry3lSb",
+  pitching: "price_1SKpoEGc5QIzbAH6FlPRhazY",
+  throwing: "price_1SLm1cGc5QIzbAH69slwwgsU"
 };
 
 serve(async (req) => {
