@@ -163,11 +163,11 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Fetch subscriptions without deep expand to avoid 4-level limit
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
       limit: 1,
-      expand: ['data.items.data.price.product']
     });
     const hasActiveSub = subscriptions.data.length > 0;
     let subscribedModules: string[] = [];
@@ -180,11 +180,41 @@ serve(async (req) => {
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
       
-      // Extract modules from line items metadata (using expanded data)
+      // Extract modules from line items by fetching product metadata separately
       for (const item of subscription.items.data) {
-        const product = item.price.product;
-        if (typeof product === 'object' && product.metadata?.module) {
+        const productId = typeof item.price.product === 'string' 
+          ? item.price.product 
+          : item.price.product.id;
+        
+        // Check cache first to reduce API calls
+        const productCacheKey = `product:${productId}`;
+        let product = getCached(productCacheKey);
+        
+        if (!product) {
+          try {
+            product = await stripe.products.retrieve(productId);
+            cache.set(productCacheKey, { data: product, timestamp: Date.now() });
+            logStep("Retrieved product from Stripe", { productId, productName: product.name });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logStep("Error retrieving product", { productId, error: errorMessage });
+            continue;
+          }
+        }
+        
+        // Extract module from product metadata
+        if (product.metadata?.module) {
           subscribedModules.push(product.metadata.module);
+        } else {
+          // Fallback: Try to infer module from product name
+          const productName = product.name?.toLowerCase() || '';
+          if (productName.includes('hitting')) {
+            subscribedModules.push('hitting');
+          } else if (productName.includes('pitching')) {
+            subscribedModules.push('pitching');
+          } else if (productName.includes('throwing')) {
+            subscribedModules.push('throwing');
+          }
         }
       }
       logStep("Determined subscribed modules", { subscribedModules });
@@ -230,6 +260,48 @@ serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
+    
+    // If we hit a rate limit, try to return the last known state from the database
+    if (errorMessage.includes('rate') || errorMessage.includes('too many')) {
+      logStep("Rate limit detected, falling back to database state");
+      
+      try {
+        const authHeader = req.headers.get("Authorization");
+        if (authHeader) {
+          const supabaseClient = createClient(
+            Deno.env.get("SUPABASE_URL") ?? "",
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+            { auth: { persistSession: false } }
+          );
+          
+          const token = authHeader.replace("Bearer ", "");
+          const { data: userData } = await supabaseClient.auth.getUser(token);
+          
+          if (userData?.user) {
+            const { data: subData } = await supabaseClient
+              .from('subscriptions')
+              .select('status, subscribed_modules, current_period_end')
+              .eq('user_id', userData.user.id)
+              .maybeSingle();
+            
+            if (subData) {
+              logStep("Returning cached subscription state from database");
+              return new Response(JSON.stringify({
+                subscribed: subData.status === 'active',
+                modules: subData.subscribed_modules || [],
+                subscription_end: subData.current_period_end
+              }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 200,
+              });
+            }
+          }
+        }
+      } catch (fallbackError) {
+        logStep("Fallback to database failed", { error: String(fallbackError) });
+      }
+    }
+    
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
