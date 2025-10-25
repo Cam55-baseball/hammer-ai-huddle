@@ -41,11 +41,29 @@ const Checkout = () => {
         description: "Your subscription has been activated. Refreshing your account...",
       });
       
-      // Refresh subscription data
-      setTimeout(() => {
-        refetch();
-        navigate("/dashboard", { replace: true });
-      }, 2000);
+      // Poll subscription status to ensure Stripe webhook has processed
+      let attempts = 0;
+      const maxAttempts = 10;
+      const pollInterval = 2000;
+      
+      const checkSubscriptionStatus = async () => {
+        attempts++;
+        await refetch();
+        
+        if (attempts >= maxAttempts) {
+          // After max attempts, redirect anyway
+          navigate("/dashboard", { replace: true });
+        } else if (subscribedModules.length > 0) {
+          // Once we detect subscribed modules, redirect
+          navigate("/dashboard", { replace: true });
+        } else {
+          // Keep polling
+          setTimeout(checkSubscriptionStatus, pollInterval);
+        }
+      };
+      
+      // Start polling after a short delay
+      setTimeout(checkSubscriptionStatus, 2000);
     } else if (checkoutStatus === "cancelled") {
       toast({
         title: "Checkout Cancelled",
