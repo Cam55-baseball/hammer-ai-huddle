@@ -92,19 +92,19 @@ const Index = () => {
             <RoleButton
               icon={User}
               title="Player"
-              description="Track performance, analyze technique, and improve your game"
+              description="Get In The Game!"
               onClick={() => handleRoleSelect("Player")}
             />
             <RoleButton
               icon={Users}
               title="Coach"
-              description="Manage teams, design training programs, and track player progress"
+              description="Get In The Game!"
               onClick={() => handleRoleSelect("Coach")}
             />
             <RoleButton
               icon={Target}
               title="Recruiter/Scout"
-              description="Discover talent, access analytics, and evaluate performance data"
+              description="Get In The Game!"
               onClick={() => handleRoleSelect("Recruiter/Scout")}
             />
           </div>
