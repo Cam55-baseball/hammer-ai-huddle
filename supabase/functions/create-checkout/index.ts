@@ -42,6 +42,44 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check if user is owner - no checkout needed
+    const { data: ownerRole } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
+      .maybeSingle();
+
+    if (ownerRole) {
+      logStep("Owner attempted checkout - access already granted");
+      return new Response(JSON.stringify({
+        owner: true,
+        message: 'Owners have free access to all modules'
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Check if user is admin - no checkout needed
+    const { data: adminRole } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (adminRole) {
+      logStep("Admin attempted checkout - access already granted");
+      return new Response(JSON.stringify({
+        admin: true,
+        message: 'Admins have free access to all modules'
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     // Get requested modules from request body
     const { modules } = await req.json();
     if (!modules || !Array.isArray(modules) || modules.length === 0) {

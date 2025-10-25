@@ -55,6 +55,74 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Check if user is owner - bypass Stripe entirely
+    const { data: ownerRole } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
+      .maybeSingle();
+
+    if (ownerRole) {
+      const allModules = ['hitting', 'pitching', 'throwing'];
+      logStep("Owner detected - granting full access", { userId: user.id });
+      
+      await supabaseClient
+        .from('subscriptions')
+        .upsert({
+          user_id: user.id,
+          status: 'active',
+          subscribed_modules: allModules,
+          stripe_customer_id: null,
+          stripe_subscription_id: null
+        }, {
+          onConflict: 'user_id'
+        });
+
+      return new Response(JSON.stringify({
+        subscribed: true,
+        modules: allModules,
+        subscription_end: null
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Check if user is admin - bypass Stripe entirely
+    const { data: adminRole } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (adminRole) {
+      const allModules = ['hitting', 'pitching', 'throwing'];
+      logStep("Admin detected - granting full access", { userId: user.id });
+      
+      await supabaseClient
+        .from('subscriptions')
+        .upsert({
+          user_id: user.id,
+          status: 'active',
+          subscribed_modules: allModules,
+          stripe_customer_id: null,
+          stripe_subscription_id: null
+        }, {
+          onConflict: 'user_id'
+        });
+
+      return new Response(JSON.stringify({
+        subscribed: true,
+        modules: allModules,
+        subscription_end: null
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     
     // Check cache first

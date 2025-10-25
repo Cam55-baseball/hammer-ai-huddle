@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
@@ -20,6 +22,8 @@ const Checkout = () => {
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { modules: subscribedModules, loading: subLoading, refetch } = useSubscription();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
   const { toast } = useToast();
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [creatingCheckout, setCreatingCheckout] = useState(false);
@@ -107,6 +111,16 @@ const Checkout = () => {
 
       if (invokeError) throw invokeError;
 
+      // Handle owner/admin bypass response
+      if (data?.owner || data?.admin) {
+        toast({
+          title: "Full Access Granted",
+          description: data.message || "You have free access to all modules.",
+        });
+        navigate("/dashboard");
+        return;
+      }
+
       if (data?.url) {
         window.open(data.url, '_blank');
         
@@ -128,10 +142,29 @@ const Checkout = () => {
 
   const totalPrice = selectedModules.length * 200;
 
-  if (authLoading || subLoading) {
+  if (authLoading || subLoading || ownerLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show special message for owners and admins
+  if (isOwner || isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
+        <Card className="p-8 text-center max-w-md">
+          <h2 className="text-2xl font-bold mb-4">
+            {isOwner ? 'Owner' : 'Admin'} Access
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            You have unlimited access to all modules without any payment required.
+          </p>
+          <Button onClick={() => navigate('/dashboard')} className="w-full">
+            Go to Dashboard
+          </Button>
+        </Card>
       </div>
     );
   }
