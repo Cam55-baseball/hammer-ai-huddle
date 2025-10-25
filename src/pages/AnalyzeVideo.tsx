@@ -12,7 +12,7 @@ export default function AnalyzeVideo() {
   const { module } = useParams<{ module: string }>();
   const [searchParams] = useSearchParams();
   const sport = searchParams.get("sport") || "baseball";
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -23,12 +23,15 @@ export default function AnalyzeVideo() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
     if (!user) {
-      navigate("/auth");
+      navigate("/auth", { replace: true });
       return;
     }
     loadSubscription();
-  }, [user, navigate]);
+  }, [authLoading, user, navigate]);
 
   const loadSubscription = async () => {
     if (!user) return;
@@ -149,7 +152,7 @@ export default function AnalyzeVideo() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>

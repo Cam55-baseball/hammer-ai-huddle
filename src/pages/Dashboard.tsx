@@ -11,7 +11,7 @@ type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [selectedModule, setSelectedModule] = useState<ModuleType | null>(null);
   const [selectedSport, setSelectedSport] = useState<SportType>("baseball");
@@ -20,13 +20,18 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Wait for auth to finish initializing before redirecting
+    if (authLoading) {
+      return;
+    }
+
     if (!user) {
-      navigate("/auth");
+      navigate("/auth", { replace: true });
       return;
     }
 
     loadProgress();
-  }, [user, navigate]);
+  }, [authLoading, user, navigate]);
 
   const loadProgress = async () => {
     try {
@@ -52,14 +57,14 @@ export default function Dashboard() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate("/auth");
+    navigate("/auth", { replace: true });
   };
 
   const getModuleProgress = (module: ModuleType) => {
     return progress.find((p) => p.module === module && p.sport === selectedSport);
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
