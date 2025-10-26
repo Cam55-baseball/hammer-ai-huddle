@@ -70,7 +70,15 @@ Focus on:
 
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
-Provide efficiency score (0-100) and specific feedback on landing position and sequence.`;
+Provide efficiency score (0-100) and specific feedback on landing position and sequence.
+
+After the feedback, provide 3–5 actionable drills tailored to the issues found. For each drill:
+- title: Short drill name
+- purpose: Why this drill helps
+- steps: 3–6 specific step-by-step instructions
+- reps_sets: Recommended reps/sets (e.g., "3 sets of 10 reps")
+- equipment: Required equipment or "None"
+- cues: 2–3 coaching cues for proper execution`;
   }
 
   if (module === "pitching" && sport === "softball") {
@@ -156,7 +164,7 @@ Deno.serve(async (req) => {
     // Get system prompt based on module and sport
     const systemPrompt = getSystemPrompt(module, sport);
 
-    // Call Lovable AI for video analysis
+    // Call Lovable AI for video analysis with tool-calling for structured output
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -169,41 +177,112 @@ Deno.serve(async (req) => {
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Analyze this ${sport} ${module} video. Provide detailed feedback on form and mechanics. Include an efficiency score out of 100 in your response.`,
+            content: `Analyze this ${sport} ${module} video. Provide detailed feedback on form and mechanics. Include an efficiency score out of 100 and recommended drills.`,
           },
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "return_analysis",
+              description: "Return structured analysis with score, feedback, and drills",
+              parameters: {
+                type: "object",
+                properties: {
+                  efficiency_score: {
+                    type: "number",
+                    description: "Score from 0-100 based on form correctness"
+                  },
+                  feedback: {
+                    type: "string",
+                    description: "Detailed feedback on mechanics and form"
+                  },
+                  drills: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        title: { type: "string" },
+                        purpose: { type: "string" },
+                        steps: { type: "array", items: { type: "string" } },
+                        reps_sets: { type: "string" },
+                        equipment: { type: "string" },
+                        cues: { type: "array", items: { type: "string" } }
+                      },
+                      required: ["title", "purpose", "steps", "reps_sets", "equipment", "cues"]
+                    }
+                  }
+                },
+                required: ["efficiency_score", "feedback", "drills"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "return_analysis" } }
       }),
     });
 
     if (!response.ok) {
-      await supabase.from("videos").update({ status: "failed" }).eq("id", videoId);
+      const errorText = await response.text();
+      console.error("AI gateway error:", response.status, errorText);
+      
+      const errorData = {
+        code: response.status.toString(),
+        message: errorText
+      };
+      
+      await supabase
+        .from("videos")
+        .update({ 
+          status: "failed",
+          ai_analysis: { error: errorData }
+        })
+        .eq("id", videoId);
       
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
+          JSON.stringify({ error: "Rate limits exceeded, please try again later.", status: 429 }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Payment required, please add credits to your workspace." }),
+          JSON.stringify({ error: "Payment required, please add credits to your workspace.", status: 402 }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const text = await response.text();
-      console.error("AI gateway error:", response.status, text);
       return new Response(
-        JSON.stringify({ error: "AI gateway error" }),
+        JSON.stringify({ error: "AI gateway error", status: 500 }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const data = await response.json();
-    const feedback = data.choices?.[0]?.message?.content || "No analysis available";
+    
+    let efficiency_score = 75;
+    let feedback = "No analysis available";
+    let drills: any[] = [];
 
-    // Extract efficiency score from feedback
-    const scoreMatch = feedback.match(/(\d+)\/100/);
-    const efficiency_score = scoreMatch ? parseInt(scoreMatch[1]) : 75;
+    // Parse tool calls for structured output
+    const toolCalls = data.choices?.[0]?.message?.tool_calls;
+    if (toolCalls && toolCalls.length > 0) {
+      try {
+        const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
+        efficiency_score = analysisArgs.efficiency_score || 75;
+        feedback = analysisArgs.feedback || "No feedback available";
+        drills = analysisArgs.drills || [];
+      } catch (parseError) {
+        console.error("Error parsing tool call arguments:", parseError);
+      }
+    } else {
+      // Fallback to text parsing if no tool calls
+      const content = data.choices?.[0]?.message?.content || "";
+      feedback = content;
+      const scoreMatch = content.match(/(\d+)\/100/);
+      if (scoreMatch) {
+        efficiency_score = parseInt(scoreMatch[1]);
+      }
+    }
 
     const mocap_data = {
       module,
@@ -213,6 +292,7 @@ Deno.serve(async (req) => {
 
     const ai_analysis = {
       feedback,
+      drills,
       model_used: "google/gemini-2.5-flash",
       analyzed_at: new Date().toISOString(),
     };
@@ -287,6 +367,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         efficiency_score,
         feedback,
+        drills,
         mocap_data,
       }),
       {
@@ -296,7 +377,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error("analyze-video error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error", status: 500 }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

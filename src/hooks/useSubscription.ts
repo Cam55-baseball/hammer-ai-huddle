@@ -20,7 +20,7 @@ export const useSubscription = () => {
     initialized: false,
   });
 
-  const checkSubscription = useCallback(async () => {
+  const checkSubscription = useCallback(async (options: { silent?: boolean } = {}) => {
     if (!user || !session) {
       setSubscriptionData({
         subscribed: false,
@@ -32,8 +32,10 @@ export const useSubscription = () => {
       return;
     }
 
-    // Ensure loading state is accurate for manual refetches
-    setSubscriptionData(prev => ({ ...prev, loading: true }));
+    // Only set loading to true for non-silent refreshes
+    if (!options.silent) {
+      setSubscriptionData(prev => ({ ...prev, loading: true }));
+    }
 
     try {
       let modules: string[] = [];
@@ -96,16 +98,17 @@ export const useSubscription = () => {
   }, [user?.id, session?.access_token]);
 
   useEffect(() => {
-    checkSubscription();
+    // Initial check without silent flag
+    checkSubscription({ silent: false });
 
-    // Auto-refresh every 30 seconds for faster subscription updates
-    const interval = setInterval(checkSubscription, 30000);
+    // Auto-refresh every 2 minutes with silent flag to prevent UI flicker
+    const interval = setInterval(() => checkSubscription({ silent: true }), 120000);
 
     return () => clearInterval(interval);
   }, [checkSubscription]);
 
   return {
     ...subscriptionData,
-    refetch: checkSubscription,
+    refetch: () => checkSubscription({ silent: false }),
   };
 };

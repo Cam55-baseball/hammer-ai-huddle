@@ -21,6 +21,8 @@ export default function AnalyzeVideo() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<any>(null);
+  const [analysisError, setAnalysisError] = useState<any>(null);
+  const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
 
   // Force fresh subscription check on page load
   useEffect(() => {
@@ -72,6 +74,8 @@ export default function AnalyzeVideo() {
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
     setAnalysis(null);
+    setAnalysisError(null);
+    setCurrentVideoId(null);
   };
 
   const handleUploadAndAnalyze = async () => {
@@ -111,6 +115,7 @@ export default function AnalyzeVideo() {
       toast.success("Video uploaded! Starting analysis...");
       setUploading(false);
       setAnalyzing(true);
+      setCurrentVideoId(videoData.id);
 
       // Call AI analysis edge function
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
@@ -126,23 +131,75 @@ export default function AnalyzeVideo() {
       );
 
       if (analysisError) {
-        if (analysisError.message?.includes('429')) {
-          toast.error("Rate limit exceeded. Please try again later.");
-        } else if (analysisError.message?.includes('402')) {
+        console.error("Analysis error:", analysisError);
+        setAnalysisError(analysisError);
+        
+        if (analysisError.message?.includes('429') || analysisData?.status === 429) {
+          toast.error("Rate limit exceeded. Please try again in a minute.");
+        } else if (analysisError.message?.includes('402') || analysisData?.status === 402) {
           toast.error("Payment required. Please add credits to continue.");
         } else {
-          throw analysisError;
+          toast.error("Analysis failed. Please try again.");
+        }
+        setAnalyzing(false);
+        return;
+      }
+
+      setAnalysis(analysisData);
+      setAnalysisError(null);
+      toast.success("Analysis complete!");
+      setAnalyzing(false);
+    } catch (error: any) {
+      console.error("Error:", error);
+      setAnalysisError(error);
+      toast.error(error.message || "Failed to analyze video");
+      setAnalyzing(false);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRetryAnalysis = async () => {
+    if (!currentVideoId || !user) return;
+    
+    setAnalyzing(true);
+    setAnalysisError(null);
+    
+    try {
+      const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
+        "analyze-video",
+        {
+          body: {
+            videoId: currentVideoId,
+            module,
+            sport,
+            userId: user.id,
+          },
+        }
+      );
+
+      if (analysisError) {
+        console.error("Retry analysis error:", analysisError);
+        setAnalysisError(analysisError);
+        
+        if (analysisError.message?.includes('429') || analysisData?.status === 429) {
+          toast.error("Rate limit exceeded. Please try again in a minute.");
+        } else if (analysisError.message?.includes('402') || analysisData?.status === 402) {
+          toast.error("Payment required. Please add credits to continue.");
+        } else {
+          toast.error("Analysis failed. Please try again.");
         }
         return;
       }
 
       setAnalysis(analysisData);
+      setAnalysisError(null);
       toast.success("Analysis complete!");
     } catch (error: any) {
-      console.error("Error:", error);
+      console.error("Retry error:", error);
+      setAnalysisError(error);
       toast.error(error.message || "Failed to analyze video");
     } finally {
-      setUploading(false);
       setAnalyzing(false);
     }
   };
@@ -255,22 +312,85 @@ export default function AnalyzeVideo() {
               </Card>
             )}
 
+            {analysisError && !analyzing && (
+              <Card className="p-6 border-destructive">
+                <h3 className="text-xl font-semibold text-destructive mb-4">Analysis Failed</h3>
+                <p className="text-muted-foreground mb-4">
+                  {analysisError.message?.includes('429') || analysisError.status === 429
+                    ? "Rate limit exceeded. Please wait a minute and try again."
+                    : analysisError.message?.includes('402') || analysisError.status === 402
+                    ? "Payment required. Please add credits to your workspace to continue."
+                    : "An error occurred during analysis. Please try again."}
+                </p>
+                <Button onClick={handleRetryAnalysis} className="w-full">
+                  Retry Analysis
+                </Button>
+              </Card>
+            )}
+
             {analysis && (
               <Card className="p-6">
-                <h3 className="text-2xl font-bold mb-4">Analysis Results</h3>
-                <div className="space-y-4">
+                <h3 className="text-2xl font-bold mb-6">Analysis Results</h3>
+                <div className="space-y-6">
                   <div>
                     <h4 className="text-lg font-semibold">Efficiency Score</h4>
                     <div className="text-4xl font-bold text-primary">
                       {analysis.efficiency_score}/100
                     </div>
                   </div>
+                  
                   <div>
                     <h4 className="text-lg font-semibold mb-2">Feedback</h4>
                     <p className="text-muted-foreground whitespace-pre-wrap">
                       {analysis.feedback}
                     </p>
                   </div>
+
+                  {analysis.drills && analysis.drills.length > 0 && (
+                    <div className="pt-4 border-t">
+                      <h4 className="text-lg font-semibold mb-4">Recommended Drills</h4>
+                      <div className="space-y-4">
+                        {analysis.drills.map((drill: any, index: number) => (
+                          <Card key={index} className="p-4 bg-muted/50">
+                            <h5 className="font-semibold text-base mb-1">{drill.title}</h5>
+                            <p className="text-sm text-muted-foreground mb-3">{drill.purpose}</p>
+                            
+                            <div className="space-y-2 mb-3">
+                              <p className="text-sm font-medium">Steps:</p>
+                              <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                                {drill.steps?.map((step: string, stepIndex: number) => (
+                                  <li key={stepIndex}>{step}</li>
+                                ))}
+                              </ol>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 text-xs">
+                              <span className="bg-primary/10 text-primary px-2 py-1 rounded">
+                                {drill.reps_sets}
+                              </span>
+                              <span className="bg-secondary/50 text-secondary-foreground px-2 py-1 rounded">
+                                {drill.equipment}
+                              </span>
+                            </div>
+
+                            {drill.cues && drill.cues.length > 0 && (
+                              <div className="mt-3 pt-3 border-t border-border/50">
+                                <p className="text-xs font-medium mb-1">Coaching Cues:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {drill.cues.map((cue: string, cueIndex: number) => (
+                                    <span key={cueIndex} className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
+                                      {cue}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <Button onClick={() => navigate('/dashboard')} className="w-full mt-4">
                     Return to Dashboard
                   </Button>
