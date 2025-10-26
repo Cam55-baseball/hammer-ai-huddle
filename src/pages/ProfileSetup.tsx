@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
@@ -38,19 +39,19 @@ const ProfileSetup = () => {
     }
 
     try {
-      const roleMap: { [key: string]: string } = {
+      const roleMap: { [key: string]: Database['public']['Enums']['app_role'] } = {
         'Player': 'player',
         'Coach': 'coach',
-        'Recruiter/Scout': 'recruiter_scout'
+        'Recruiter/Scout': 'recruiter'
       };
 
-      const sportMap: { [key: string]: string } = {
+      const sportMap: { [key: string]: Database['public']['Enums']['sport_type'] } = {
         'baseball': 'baseball',
         'softball': 'softball'
       };
 
-      const dbRole = roleMap[selectedRole] || selectedRole.toLowerCase();
-      const dbSport = sportMap[selectedSport || 'baseball'];
+      const dbRole = roleMap[selectedRole] || 'player' as Database['public']['Enums']['app_role'];
+      const dbSport = sportMap[selectedSport || 'baseball'] || 'baseball' as Database['public']['Enums']['sport_type'];
 
       const { error: roleError } = await supabase
         .from('user_roles')
@@ -63,7 +64,7 @@ const ProfileSetup = () => {
           .from('user_progress')
           .insert([{
             user_id: user.id,
-            module: selectedModule,
+            module: selectedModule as Database['public']['Enums']['module_type'],
             sport: dbSport,
             videos_analyzed: 0,
             average_efficiency_score: null,
