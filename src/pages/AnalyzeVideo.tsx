@@ -14,7 +14,7 @@ export default function AnalyzeVideo() {
   const [searchParams] = useSearchParams();
   const sport = searchParams.get("sport") || "baseball";
   const { user, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, loading: subLoading, refetch } = useSubscription();
+  const { modules: subscribedModules, loading: subLoading, initialized, refetch } = useSubscription();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -28,9 +28,11 @@ export default function AnalyzeVideo() {
   }, [refetch]);
 
   useEffect(() => {
-    if (authLoading || subLoading) {
+    // Wait for auth, subscription, and initialization to complete
+    if (authLoading || subLoading || !initialized) {
       return;
     }
+    
     if (!user) {
       navigate("/auth", { replace: true });
       return;
@@ -48,10 +50,10 @@ export default function AnalyzeVideo() {
     // Check if user has access to this module
     if (!subscribedModules.includes(module as string)) {
       toast.error("You don't have access to this module. Please subscribe.");
-      navigate("/checkout", { replace: true });
+      navigate("/dashboard", { replace: true });
       return;
     }
-  }, [authLoading, subLoading, user, subscribedModules, module, navigate]);
+  }, [authLoading, subLoading, initialized, user, subscribedModules, module, navigate]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -145,10 +147,13 @@ export default function AnalyzeVideo() {
     }
   };
 
-  if (authLoading || subLoading) {
+  if (authLoading || subLoading || !initialized) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Verifying subscription access...</p>
+        </div>
       </div>
     );
   }
