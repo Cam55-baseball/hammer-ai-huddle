@@ -177,7 +177,29 @@ serve(async (req) => {
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       stripeSubscriptionId = subscription.id;
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      
+      // Safe date conversion with validation and error handling
+      try {
+        if (subscription.current_period_end && typeof subscription.current_period_end === 'number') {
+          subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+        } else {
+          logStep("Warning: Invalid or missing current_period_end", { 
+            value: subscription.current_period_end,
+            type: typeof subscription.current_period_end 
+          });
+          // Set to 30 days from now as fallback
+          subscriptionEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        }
+      } catch (dateError) {
+        const errorMessage = dateError instanceof Error ? dateError.message : String(dateError);
+        logStep("Error converting date", { 
+          error: errorMessage, 
+          rawValue: subscription.current_period_end 
+        });
+        // Fallback: 30 days from now
+        subscriptionEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      }
+      
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
       
       // Extract modules from line items by fetching product metadata separately
