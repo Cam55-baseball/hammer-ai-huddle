@@ -29,6 +29,9 @@ export const useSubscription = () => {
       return;
     }
 
+    // Ensure loading state is accurate for manual refetches
+    setSubscriptionData(prev => ({ ...prev, loading: true }));
+
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
