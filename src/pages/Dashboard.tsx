@@ -7,13 +7,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, Target, Zap, Upload, Lock } from "lucide-react";
+import { UserMenu } from "@/components/UserMenu";
 
 type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, loading: subLoading } = useSubscription();
+  const { modules: subscribedModules, loading: subLoading, refetch } = useSubscription();
   const navigate = useNavigate();
   const [selectedSport, setSelectedSport] = useState<SportType>("baseball");
   const [progress, setProgress] = useState<any[]>([]);
@@ -30,6 +31,8 @@ export default function Dashboard() {
       return;
     }
 
+    // Refresh subscription on mount to get latest data
+    refetch();
     loadProgress();
   }, [authLoading, user, navigate]);
 
@@ -94,14 +97,17 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-          {subscribedModules.length === 0 && (
-            <Button variant="default" onClick={() => navigate("/checkout")}>
-              Subscribe to Modules
-            </Button>
-          )}
-          <Button variant="outline" onClick={handleSignOut}>
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-3">
+            {subscribedModules.length === 0 && (
+              <Button variant="default" onClick={() => navigate("/checkout")}>
+                Subscribe to Modules
+              </Button>
+            )}
+            <UserMenu 
+              userName={user?.user_metadata?.full_name} 
+              userEmail={user?.email} 
+            />
+          </div>
         </div>
       </header>
 

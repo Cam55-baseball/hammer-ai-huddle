@@ -15,6 +15,7 @@ import AnalyzeVideo from "./pages/AnalyzeVideo";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import InitializeOwner from "./pages/InitializeOwner";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/owner" element={<OwnerDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/initialize-owner" element={<InitializeOwner />} />
+            <Route path="/profile" element={<Profile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
