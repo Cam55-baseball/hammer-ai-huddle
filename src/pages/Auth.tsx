@@ -56,49 +56,8 @@ const Auth = () => {
             description: "Successfully logged in.",
           });
           
-          // Wait briefly for session to fully establish
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          console.log('Auth: Login successful, checking user role and subscription...');
-          
-          // Check if user has completed profile setup
-          const { data: { user: authUser } } = await supabase.auth.getUser();
-          if (authUser) {
-            const { data: roleData, error: roleError } = await supabase
-              .from('user_roles')
-              .select('role')
-              .eq('user_id', authUser.id)
-              .maybeSingle();
-            
-            if (roleError) {
-              console.error('Auth: Error checking user role:', roleError);
-            }
-            
-            if (roleData) {
-              console.log('Auth: User has role, checking subscription...');
-              
-              // Check subscription status
-              const { data: subData } = await supabase
-                .from('subscriptions')
-                .select('subscribed_modules')
-                .eq('user_id', authUser.id)
-                .maybeSingle();
-              
-              if (!subData || !subData.subscribed_modules || subData.subscribed_modules.length === 0) {
-                console.log('Auth: No active subscription, navigating to checkout');
-                navigate("/checkout", { replace: true });
-              } else {
-                console.log('Auth: Active subscription found, navigating to dashboard');
-                navigate("/dashboard", { replace: true });
-              }
-            } else {
-              console.log('Auth: No role found, navigating to profile-setup');
-              navigate("/profile-setup", { replace: true });
-            }
-          } else {
-            console.log('Auth: No user object, navigating to profile-setup');
-            navigate("/profile-setup", { replace: true });
-          }
+          // Always navigate to dashboard after login
+          navigate("/dashboard", { replace: true });
         }
       } else {
         const validated = signUpSchema.parse({ email, password, fullName });
@@ -113,17 +72,11 @@ const Auth = () => {
         } else {
           toast({
             title: "Account Created!",
-            description: "Please complete your profile setup.",
+            description: "Let's set up your profile.",
           });
           
-          // Navigate to profile setup with selections
-          navigate("/profile-setup", { 
-            state: { 
-              role: state?.role, 
-              sport: state?.sport, 
-              modules: state?.modules 
-            } 
-          });
+          // Navigate to sport selection for new signups
+          navigate("/select-sport", { replace: true });
         }
       }
     } catch (error) {

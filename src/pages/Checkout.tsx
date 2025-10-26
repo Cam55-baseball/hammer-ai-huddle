@@ -1,139 +1,116 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
-const MODULES = [
-  { id: "hitting", name: "Hitting", price: 200 },
-  { id: "pitching", name: "Pitching", price: 200 },
-  { id: "throwing", name: "Throwing", price: 200 },
-];
+const MODULE_PRICE = 200;
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, loading: subLoading, refetch } = useSubscription();
+  const { modules: subscribedModules, refetch, loading: subLoading } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isAdmin, loading: adminLoading } = useAdminAccess();
   const { toast } = useToast();
-  const [selectedModules, setSelectedModules] = useState<string[]>([]);
-  const [creatingCheckout, setCreatingCheckout] = useState(false);
-
-  const checkoutStatus = searchParams.get("checkout");
+  const state = location.state as { module?: string; mode?: 'add' | 'new' };
+  const selectedModule = state?.module || localStorage.getItem('selectedModule');
+  const isAddMode = state?.mode === 'add';
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
-    if (authLoading) return;
-    
+    if (authLoading || ownerLoading || adminLoading) {
+      return;
+    }
+
     if (!user) {
       navigate("/auth", { replace: true });
       return;
     }
 
-    // Handle successful checkout
-    if (checkoutStatus === "success") {
+    const status = searchParams.get('status');
+    if (status === 'success') {
+      console.log('Checkout: Payment successful');
       toast({
-        title: "Subscription Successful!",
-        description: "Your subscription has been activated. Refreshing your account...",
+        title: "Payment Successful!",
+        description: "Setting up your subscription...",
       });
       
-      // Poll subscription status with exponential backoff
-      let attempts = 0;
-      const maxAttempts = 5;
-      const pollIntervals = [2000, 5000, 10000, 15000, 20000]; // Exponential backoff
-      
-      const checkSubscriptionStatus = async () => {
+      let pollCount = 0;
+      const maxPolls = 10;
+      const pollInterval = setInterval(async () => {
+        console.log(`Checkout: Polling subscription (${pollCount + 1}/${maxPolls})...`);
         await refetch();
+        pollCount++;
         
-        if (subscribedModules.length > 0) {
-          // Success! Modules detected, redirect immediately
-          navigate("/dashboard", { replace: true });
-        } else if (attempts >= maxAttempts) {
-          // After max attempts, redirect anyway
-          navigate("/dashboard", { replace: true });
-        } else {
-          // Keep polling with exponential backoff
-          const nextInterval = pollIntervals[attempts] || 20000;
-          attempts++;
-          setTimeout(checkSubscriptionStatus, nextInterval);
+        if (pollCount >= maxPolls) {
+          clearInterval(pollInterval);
+          console.log('Checkout: Max polls reached');
+          toast({
+            title: "Subscription Active",
+            description: "Your module is now available!",
+          });
+          
+          if (isAddMode) {
+            navigate("/dashboard", { replace: true });
+          } else {
+            navigate("/profile-setup", { replace: true });
+          }
         }
-      };
+      }, 2000);
       
-      // Start polling after initial delay
-      setTimeout(checkSubscriptionStatus, 2000);
-    } else if (checkoutStatus === "cancelled") {
+      return () => clearInterval(pollInterval);
+    } else if (status === 'cancel') {
+      console.log('Checkout: Payment cancelled');
       toast({
-        title: "Checkout Cancelled",
-        description: "Your subscription was not completed.",
+        title: "Payment Cancelled",
+        description: "Your payment was cancelled. You can try again anytime.",
         variant: "destructive",
       });
     }
-  }, [authLoading, user, checkoutStatus, navigate, toast, refetch]);
-
-  // Auto-redirect to Dashboard when modules are detected after successful checkout
-  useEffect(() => {
-    if (checkoutStatus === 'success' && subscribedModules.length > 0) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [checkoutStatus, subscribedModules, navigate]);
-
-  const handleToggleModule = (moduleId: string) => {
-    setSelectedModules((prev) =>
-      prev.includes(moduleId)
-        ? prev.filter((id) => id !== moduleId)
-        : [...prev, moduleId]
-    );
-  };
+  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, toast, refetch, isAddMode]);
 
   const handleCreateCheckout = async () => {
-    if (selectedModules.length === 0) {
+    if (!selectedModule) {
       toast({
-        title: "No Modules Selected",
-        description: "Please select at least one module to subscribe.",
+        title: "No module selected",
+        description: "Please select a module to continue.",
         variant: "destructive",
       });
       return;
     }
 
-    setCreatingCheckout(true);
+    setCheckoutLoading(true);
 
     try {
-      const { data: sessionData, error } = await supabase.auth.getSession();
-      if (error || !sessionData.session) throw new Error("Not authenticated");
-
-      const { data, error: invokeError } = await supabase.functions.invoke('create-checkout', {
-        body: { modules: selectedModules },
-        headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`,
-        },
-      });
-
-      if (invokeError) throw invokeError;
-
-      // Handle owner/admin bypass response
-      if (data?.owner || data?.admin) {
+      if (isOwner || isAdmin) {
         toast({
           title: "Full Access Granted",
-          description: data.message || "You have free access to all modules.",
+          description: "As an owner/admin, you have free access to all modules.",
         });
         navigate("/dashboard");
         return;
       }
 
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { modules: [selectedModule] }
+      });
+
+      if (error) throw error;
+
       if (data?.url) {
         window.open(data.url, '_blank');
-        
         toast({
           title: "Opening Checkout",
-          description: "Complete your payment in the new tab. This page will automatically update once your subscription is active.",
+          description: "Complete your payment in the new tab.",
         });
       }
     } catch (error: any) {
@@ -143,28 +120,23 @@ const Checkout = () => {
         variant: "destructive",
       });
     } finally {
-      setCreatingCheckout(false);
+      setCheckoutLoading(false);
     }
   };
-
-  const totalPrice = selectedModules.length * 200;
 
   if (authLoading || subLoading || ownerLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  // Show special message for owners and admins
   if (isOwner || isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
         <Card className="p-8 text-center max-w-md">
-          <h2 className="text-2xl font-bold mb-4">
-            {isOwner ? 'Owner' : 'Admin'} Access
-          </h2>
+          <h2 className="text-2xl font-bold mb-4">{isOwner ? 'Owner' : 'Admin'} Access</h2>
           <p className="text-muted-foreground mb-6">
             You have unlimited access to all modules without any payment required.
           </p>
@@ -177,103 +149,54 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-4xl">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Subscribe to Modules</h1>
-          <p className="text-muted-foreground text-lg">
-            Select the training modules you want to access
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
+      <div className="w-full max-w-2xl">
+        <Card className="p-8">
+          <h1 className="text-3xl font-bold mb-4">
+            {isAddMode ? 'Add Training Module' : 'Subscribe to Training Module'}
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            {isAddMode 
+              ? 'Review and confirm your new module subscription' 
+              : 'Review and confirm your first module subscription'}
           </p>
-        </div>
 
-        {subscribedModules.length > 0 && (
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold mb-2 text-primary">Currently Subscribed:</h3>
-            <div className="flex flex-wrap gap-2">
-              {subscribedModules.map((module) => (
-                <span key={module} className="bg-primary/20 text-primary px-3 py-1 rounded-full text-sm capitalize">
-                  {module}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <Card className="p-8 mb-6">
-          <h2 className="text-2xl font-bold mb-6">Select Modules</h2>
-          
-          <div className="space-y-4 mb-8">
-            {MODULES.map((module) => {
-              const isSubscribed = subscribedModules.includes(module.id);
-              const isSelected = selectedModules.includes(module.id);
-              
-              return (
-                <div
-                  key={module.id}
-                  className={`border rounded-lg p-4 transition-all ${
-                    isSubscribed 
-                      ? "border-primary bg-primary/5" 
-                      : isSelected 
-                      ? "border-primary" 
-                      : "border-border"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        id={module.id}
-                        checked={isSelected}
-                        onCheckedChange={() => handleToggleModule(module.id)}
-                        disabled={isSubscribed}
-                      />
-                      <label
-                        htmlFor={module.id}
-                        className="text-lg font-semibold cursor-pointer"
-                      >
-                        {module.name}
-                        {isSubscribed && (
-                          <span className="ml-2 text-sm text-primary font-normal">
-                            (Active)
-                          </span>
-                        )}
-                      </label>
-                    </div>
-                    <span className="text-xl font-bold">${module.price}/mo</span>
-                  </div>
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4">Selected Module</h2>
+            <div className="p-4 rounded-lg border border-primary bg-primary/5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium capitalize">{selectedModule} Analysis</p>
+                  <p className="text-sm text-muted-foreground">${MODULE_PRICE}/month</p>
                 </div>
-              );
-            })}
-          </div>
-
-          <div className="border-t pt-6">
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-xl font-bold">Total:</span>
-              <span className="text-3xl font-bold text-primary">${totalPrice}/month</span>
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+              </div>
             </div>
-
-            <Button
-              onClick={handleCreateCheckout}
-              disabled={selectedModules.length === 0 || creatingCheckout}
-              className="w-full"
-              size="lg"
-            >
-              {creatingCheckout ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Checkout...
-                </>
-              ) : (
-                "Proceed to Payment"
-              )}
-            </Button>
           </div>
-        </Card>
 
-        <div className="text-center">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+          <div className="mb-6 p-4 bg-muted rounded-lg">
+            <div className="flex justify-between items-center">
+              <span className="font-semibold">Total</span>
+              <span className="text-2xl font-bold">${MODULE_PRICE}/month</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              Billed monthly, cancel anytime
+            </p>
+          </div>
+
+          <Button 
+            onClick={handleCreateCheckout}
+            disabled={!selectedModule || checkoutLoading}
+            className="w-full mb-4"
+            size="lg"
+          >
+            {checkoutLoading ? "Processing..." : "Proceed to Payment"}
+          </Button>
+
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="w-full">
             ← Back to Dashboard
           </Button>
-        </div>
+        </Card>
       </div>
     </div>
   );

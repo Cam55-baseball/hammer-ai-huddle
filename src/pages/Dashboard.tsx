@@ -98,9 +98,9 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {subscribedModules.length === 0 && (
-              <Button variant="default" onClick={() => navigate("/checkout")}>
-                Subscribe to Modules
+            {subscribedModules.length < 3 && (
+              <Button variant="default" onClick={() => navigate("/select-modules", { state: { mode: 'add' } })}>
+                Add Module
               </Button>
             )}
             <UserMenu 

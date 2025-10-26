@@ -16,7 +16,7 @@ const SelectSport = () => {
 
   const handleSportSelect = (sport: 'baseball' | 'softball') => {
     localStorage.setItem('selectedSport', sport);
-    navigate("/select-modules", { state: { role: selectedRole, sport } });
+    navigate("/select-role", { state: { sport } });
   };
 
   return (
@@ -31,11 +31,11 @@ const SelectSport = () => {
             Choose the sport you want to analyze and improve
           </p>
           <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Role: {selectedRole}</span>
+            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Sport</span>
             <span>→</span>
-            <span>Sport</span>
+            <span>Role</span>
             <span>→</span>
-            <span>Modules</span>
+            <span>Module</span>
           </div>
         </div>
 
@@ -74,8 +74,8 @@ const SelectSport = () => {
         </div>
 
         <div className="text-center mt-6">
-          <Button variant="ghost" onClick={() => navigate("/")}>
-            ← Back to Role Selection
+          <Button variant="ghost" onClick={() => navigate("/auth")}>
+            ← Back
           </Button>
         </div>
       </div>

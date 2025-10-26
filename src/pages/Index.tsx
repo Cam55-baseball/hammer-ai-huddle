@@ -13,11 +13,15 @@ const Index = () => {
   const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
 
-  // No auto-redirect - let users select role first
+  useEffect(() => {
+    // Redirect authenticated users directly to dashboard
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
-  const handleRoleSelect = (role: string) => {
-    localStorage.setItem('selectedRole', role);
-    navigate("/select-sport", { state: { role } });
+  const handleGetStarted = () => {
+    navigate("/auth");
   };
 
   return (
@@ -69,7 +73,10 @@ const Index = () => {
               and professional development tools used by elite athletes worldwide.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button variant="secondary" size="xl">
+              <Button onClick={handleGetStarted} size="lg">
+                Get Started
+              </Button>
+              <Button variant="secondary" size="lg">
                 Watch Demo
               </Button>
             </div>
@@ -93,19 +100,19 @@ const Index = () => {
               icon={User}
               title="Player"
               description="Get In The Game!"
-              onClick={() => handleRoleSelect("Player")}
+              onClick={handleGetStarted}
             />
             <RoleButton
               icon={Users}
               title="Coach"
               description="Get In The Game!"
-              onClick={() => handleRoleSelect("Coach")}
+              onClick={handleGetStarted}
             />
             <RoleButton
               icon={Target}
               title="Recruiter/Scout"
               description="Get In The Game!"
-              onClick={() => handleRoleSelect("Recruiter/Scout")}
+              onClick={handleGetStarted}
             />
           </div>
         </div>

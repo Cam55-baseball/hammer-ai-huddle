@@ -2,25 +2,34 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 type ModuleType = 'hitting' | 'pitching' | 'throwing';
 
 const SelectModules = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as { role?: string; sport?: string };
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const state = location.state as { role?: string; sport?: string; mode?: 'add' };
   
   const selectedRole = state?.role || localStorage.getItem('selectedRole');
   const selectedSport = state?.sport || localStorage.getItem('selectedSport');
+  const isAddMode = state?.mode === 'add';
   
-  const [selectedModules, setSelectedModules] = useState<ModuleType[]>([]);
+  const [selectedModule, setSelectedModule] = useState<ModuleType | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!selectedRole || !selectedSport) {
-      navigate("/");
+    if (!isAddMode && (!selectedRole || !selectedSport)) {
+      navigate("/select-sport");
     }
-  }, [selectedRole, selectedSport, navigate]);
+    if (isAddMode && !user) {
+      navigate("/auth");
+    }
+  }, [selectedRole, selectedSport, isAddMode, user, navigate]);
 
   const modules: { id: ModuleType; label: string; icon: string; description: string }[] = [
     {
@@ -43,25 +52,44 @@ const SelectModules = () => {
     }
   ];
 
-  const toggleModule = (moduleId: ModuleType) => {
-    setSelectedModules(prev => 
-      prev.includes(moduleId) 
-        ? prev.filter(m => m !== moduleId)
-        : [...prev, moduleId]
-    );
-  };
-
-  const handleContinue = () => {
-    if (selectedModules.length === 0) return;
+  const handleContinue = async () => {
+    if (!selectedModule) return;
     
-    localStorage.setItem('selectedModules', JSON.stringify(selectedModules));
+    setLoading(true);
+    
+    // Check if user is owner or admin
+    if (user) {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['owner', 'admin'])
+        .maybeSingle();
+      
+      if (roleData) {
+        // Owner/admin - skip pricing, go to profile setup or dashboard
+        if (isAddMode) {
+          navigate("/dashboard");
+        } else {
+          localStorage.setItem('selectedModule', selectedModule);
+          navigate("/profile-setup");
+        }
+        setLoading(false);
+        return;
+      }
+    }
+    
+    // Regular user - go to pricing
+    localStorage.setItem('selectedModule', selectedModule);
     navigate("/pricing", { 
       state: { 
         role: selectedRole, 
         sport: selectedSport, 
-        modules: selectedModules 
+        module: selectedModule,
+        mode: isAddMode ? 'add' : 'new'
       } 
     });
+    setLoading(false);
   };
 
   return (
@@ -71,17 +99,19 @@ const SelectModules = () => {
           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold text-2xl">H</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2">Select Training Modules</h1>
+          <h1 className="text-4xl font-bold mb-2">{isAddMode ? 'Add a Module' : 'Select Your Training Module'}</h1>
           <p className="text-muted-foreground">
-            Choose one or more modules to focus on (you can add more later)
+            {isAddMode ? 'Choose one module to add to your subscription' : 'Choose your first module (you can add more later from the dashboard)'}
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-            <span className="bg-muted px-3 py-1 rounded-full">Role: {selectedRole}</span>
-            <span>→</span>
-            <span className="bg-muted px-3 py-1 rounded-full">Sport: {selectedSport}</span>
-            <span>→</span>
-            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Modules</span>
-          </div>
+          {!isAddMode && (
+            <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
+              <span className="bg-muted px-3 py-1 rounded-full">Sport: {selectedSport}</span>
+              <span>→</span>
+              <span className="bg-muted px-3 py-1 rounded-full">Role: {selectedRole}</span>
+              <span>→</span>
+              <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Module</span>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-4 mb-8">
@@ -89,22 +119,20 @@ const SelectModules = () => {
             <Card 
               key={module.id}
               className={`p-6 cursor-pointer transition-all ${
-                selectedModules.includes(module.id) 
-                  ? 'border-primary bg-primary/5' 
+                selectedModule === module.id 
+                  ? 'border-primary bg-primary/5 ring-2 ring-primary' 
                   : 'hover:border-muted-foreground/50'
               }`}
-              onClick={() => toggleModule(module.id)}
+              onClick={() => setSelectedModule(module.id)}
             >
               <div className="flex items-start gap-4">
-                <Checkbox 
-                  checked={selectedModules.includes(module.id)}
-                  onCheckedChange={() => toggleModule(module.id)}
-                  className="mt-1"
-                />
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-3xl">{module.icon}</span>
                     <h3 className="text-xl font-bold">{module.label}</h3>
+                    {selectedModule === module.id && (
+                      <span className="ml-auto text-primary font-semibold">Selected</span>
+                    )}
                   </div>
                   <p className="text-muted-foreground">{module.description}</p>
                 </div>
@@ -116,24 +144,24 @@ const SelectModules = () => {
         <div className="flex gap-4">
           <Button 
             variant="outline" 
-            onClick={() => navigate("/select-sport", { state: { role: selectedRole } })}
+            onClick={() => isAddMode ? navigate("/dashboard") : navigate("/select-role", { state: { sport: selectedSport } })}
             className="flex-1"
           >
             ← Back
           </Button>
           <Button 
             onClick={handleContinue}
-            disabled={selectedModules.length === 0}
+            disabled={!selectedModule || loading}
             className="flex-1"
             size="lg"
           >
-            Continue to Pricing →
+            {loading ? "Loading..." : isAddMode ? "Continue to Pricing →" : "Continue →"}
           </Button>
         </div>
 
-        {selectedModules.length === 0 && (
+        {!selectedModule && (
           <p className="text-center text-sm text-muted-foreground mt-4">
-            Please select at least one module to continue
+            Please select a module to continue
           </p>
         )}
       </div>

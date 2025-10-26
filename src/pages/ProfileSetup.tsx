@@ -1,122 +1,91 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
-
-type AppRole = Database["public"]["Enums"]["app_role"];
 
 const ProfileSetup = () => {
-  const [selectedRole, setSelectedRole] = useState<string>("");
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { user, loading } = useAuth();
+  const state = location.state as { role?: string; sport?: string; module?: string };
 
-  const [selectedSport, setSelectedSport] = useState<string>("");
-  const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const selectedRole = state?.role || localStorage.getItem('selectedRole');
+  const selectedSport = state?.sport || localStorage.getItem('selectedSport');
+  const selectedModule = state?.module || localStorage.getItem('selectedModule');
 
   useEffect(() => {
-    // Wait for auth to finish loading
-    if (loading) {
-      console.log('ProfileSetup: Auth still loading...');
-      return;
-    }
-
-    console.log('ProfileSetup: Auth loaded, user:', user ? 'exists' : 'null');
-
+    if (loading) return;
     if (!user) {
-      console.log('ProfileSetup: No user, redirecting to auth');
       navigate("/auth", { replace: true });
       return;
     }
-
-    // Get selections from navigation state or localStorage
-    const state = location.state as { role?: string; sport?: string; modules?: string[] };
-    const role = state?.role || localStorage.getItem('selectedRole');
-    const sport = state?.sport || localStorage.getItem('selectedSport');
-    const modules = state?.modules || JSON.parse(localStorage.getItem('selectedModules') || '[]');
-
-    console.log('ProfileSetup: Retrieved selections - role:', role, 'sport:', sport, 'modules:', modules);
-
-    if (role) setSelectedRole(role);
-    if (sport) setSelectedSport(sport);
-    if (modules) setSelectedModules(modules);
-
-    // If no role selected, redirect to start
-    if (!role) {
-      console.log('ProfileSetup: No role found, redirecting to home');
+    if (!selectedRole) {
       navigate("/", { replace: true });
     }
-  }, [user, loading, navigate, location]);
+  }, [user, loading, navigate, selectedRole]);
 
-  const handleStartFreeTrial = async () => {
-    if (!selectedRole || !user) return;
+  const handleCompleteSetup = async () => {
+    if (!user || !selectedRole) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a role before continuing.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
-      // Map role to enum value
-      const roleMap: Record<string, AppRole> = {
+      const roleMap: { [key: string]: string } = {
         'Player': 'player',
-        'Admin': 'admin',
         'Coach': 'coach',
-        'Scout/Coach/Recruiter': 'recruiter',
-        'Recruiter/Scout': 'recruiter',
+        'Recruiter/Scout': 'recruiter_scout'
       };
-      
-      const roleValue = roleMap[selectedRole] || ('player' as AppRole);
 
-      // Map sport to enum value
-      const sportMap: Record<string, 'baseball' | 'softball'> = {
+      const sportMap: { [key: string]: string } = {
         'baseball': 'baseball',
-        'softball': 'softball',
+        'softball': 'softball'
       };
-      const sportValue = sportMap[selectedSport.toLowerCase()] || 'baseball';
 
-      // Insert user role
+      const dbRole = roleMap[selectedRole] || selectedRole.toLowerCase();
+      const dbSport = sportMap[selectedSport || 'baseball'];
+
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert({
-          user_id: user.id,
-          role: roleValue,
-        });
+        .insert([{ user_id: user.id, role: dbRole }]);
 
       if (roleError) throw roleError;
 
-      // Insert user progress for each selected module
-      if (selectedModules.length > 0) {
-        const progressRecords = selectedModules.map(module => ({
-          user_id: user.id,
-          sport: sportValue,
-          module: module as 'hitting' | 'pitching' | 'throwing',
-          videos_analyzed: 0,
-          average_efficiency_score: null,
-        }));
-
+      if (selectedModule) {
         const { error: progressError } = await supabase
           .from('user_progress')
-          .insert(progressRecords);
+          .insert([{
+            user_id: user.id,
+            module: selectedModule,
+            sport: dbSport,
+            videos_analyzed: 0,
+            average_efficiency_score: null,
+          }]);
 
         if (progressError) throw progressError;
       }
 
-      // Clear localStorage selections
       localStorage.removeItem('selectedRole');
       localStorage.removeItem('selectedSport');
-      localStorage.removeItem('selectedModules');
+      localStorage.removeItem('selectedModule');
 
       toast({
         title: "Profile Complete!",
-        description: `Your ${selectedRole} profile has been set up successfully. Ready to subscribe.`,
+        description: "Welcome to Hammers Modality!",
       });
 
-      navigate("/dashboard");
-    } catch (error) {
-      console.error('Error setting up profile:', error);
+      navigate("/dashboard", { replace: true });
+    } catch (error: any) {
       toast({
         title: "Setup Failed",
-        description: "There was an error setting up your profile. Please try again.",
+        description: error.message || "Failed to complete profile setup. Please try again.",
         variant: "destructive",
       });
     }
@@ -131,55 +100,44 @@ const ProfileSetup = () => {
               <span className="text-primary-foreground font-bold text-2xl">H</span>
             </div>
             <h1 className="text-3xl font-bold mb-2">Complete Your Profile</h1>
-            <p className="text-muted-foreground">
-              You've selected the {selectedRole} role for {selectedSport}. Ready to start your journey?
+          </div>
+
+          <p className="text-lg text-muted-foreground mb-6">
+            Complete your profile setup to get started:
+          </p>
+          <div className="space-y-2 mb-8">
+            <p className="text-lg"><strong>Role:</strong> {selectedRole}</p>
+            <p className="text-lg"><strong>Sport:</strong> {selectedSport}</p>
+            <p className="text-lg">
+              <strong>Module:</strong> {selectedModule ? selectedModule.charAt(0).toUpperCase() + selectedModule.slice(1) : 'None'}
             </p>
-            {selectedModules.length > 0 && (
-              <div className="flex flex-wrap gap-2 justify-center mt-3">
-                {selectedModules.map((module) => (
-                  <span key={module} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm capitalize">
-                    {module}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
 
-          <div className="space-y-6">
-            <div className="bg-muted/30 p-6 rounded-lg">
-              <h2 className="text-xl font-bold mb-4">Your Subscription Includes:</h2>
-              <ul className="space-y-3 text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">✓</span>
-                  <span>AI-powered motion capture analysis</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">✓</span>
-                  <span>Real-time performance metrics</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">✓</span>
-                  <span>Unlimited video analyses</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">✓</span>
-                  <span>Performance tracking and progress reports</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">✓</span>
-                  <span>Advanced training recommendations</span>
-                </li>
-              </ul>
-            </div>
-
-            <Button 
-              onClick={handleStartFreeTrial}
-              size="xl"
-              className="w-full"
-            >
-              Complete Setup
-            </Button>
+          <div className="bg-muted/30 p-6 rounded-lg mb-6">
+            <h2 className="text-xl font-bold mb-4">Your Subscription Includes:</h2>
+            <ul className="space-y-3 text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-1">✓</span>
+                <span>AI-powered motion capture analysis</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-1">✓</span>
+                <span>Real-time performance metrics</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-1">✓</span>
+                <span>Unlimited video analyses</span>
+              </li>
+            </ul>
           </div>
+
+          <Button 
+            onClick={handleCompleteSetup} 
+            className="w-full" 
+            size="lg"
+          >
+            Complete Setup & Go to Dashboard
+          </Button>
         </div>
       </div>
     </div>
