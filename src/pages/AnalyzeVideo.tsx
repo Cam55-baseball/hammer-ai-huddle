@@ -14,13 +14,18 @@ export default function AnalyzeVideo() {
   const [searchParams] = useSearchParams();
   const sport = searchParams.get("sport") || "baseball";
   const { user, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, loading: subLoading } = useSubscription();
+  const { modules: subscribedModules, loading: subLoading, refetch } = useSubscription();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<any>(null);
+
+  // Force fresh subscription check on page load
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   useEffect(() => {
     if (authLoading || subLoading) {
@@ -30,6 +35,9 @@ export default function AnalyzeVideo() {
       navigate("/auth", { replace: true });
       return;
     }
+    
+    console.log('AnalyzeVideo - Current subscribed modules:', subscribedModules);
+    console.log('AnalyzeVideo - Checking access for module:', module);
     
     // Check if user has access to this module
     if (!subscribedModules.includes(module as string)) {
