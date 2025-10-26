@@ -8,6 +8,8 @@ export interface SubscriptionData {
   subscription_end: string | null;
   loading: boolean;
   initialized: boolean;
+  has_discount?: boolean;
+  discount_percent?: number | null;
 }
 
 export const useSubscription = () => {
@@ -18,6 +20,8 @@ export const useSubscription = () => {
     subscription_end: null,
     loading: true,
     initialized: false,
+    has_discount: false,
+    discount_percent: null,
   });
 
   const checkSubscription = useCallback(async (options: { silent?: boolean } = {}) => {
@@ -28,6 +32,8 @@ export const useSubscription = () => {
         subscription_end: null,
         loading: false,
         initialized: false,
+        has_discount: false,
+        discount_percent: null,
       });
       return;
     }
@@ -41,6 +47,8 @@ export const useSubscription = () => {
       let modules: string[] = [];
       let subscribed = false;
       let subscription_end: string | null = null;
+      let has_discount = false;
+      let discount_percent: number | null = null;
 
       // Try edge function first
       try {
@@ -54,6 +62,8 @@ export const useSubscription = () => {
           subscribed = data.subscribed || false;
           modules = data.modules || [];
           subscription_end = data.subscription_end || null;
+          has_discount = data.has_discount || false;
+          discount_percent = data.discount_percent || null;
         } else {
           throw error || new Error('No data returned from edge function');
         }
@@ -84,6 +94,8 @@ export const useSubscription = () => {
         subscription_end,
         loading: false,
         initialized: true,
+        has_discount,
+        discount_percent,
       });
     } catch (error) {
       console.error('Error checking subscription:', error);
@@ -93,6 +105,8 @@ export const useSubscription = () => {
         subscription_end: null,
         loading: false,
         initialized: true,
+        has_discount: false,
+        discount_percent: null,
       });
     }
   }, [user?.id, session?.access_token]);

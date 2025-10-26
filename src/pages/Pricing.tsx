@@ -2,8 +2,9 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Info } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -85,6 +86,14 @@ const Pricing = () => {
                 {isAddMode ? 'This will be added to your current subscription' : 'Perfect for individual training'}
               </p>
             </div>
+
+            <Alert className="mb-6">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Price shown before promotions. If you have a promotional code (including 100% off codes), 
+                apply it during checkout. Your discount will be reflected in your final billing.
+              </AlertDescription>
+            </Alert>
             
             <ul className="space-y-3 mb-6">
               <li className="flex items-center gap-2">

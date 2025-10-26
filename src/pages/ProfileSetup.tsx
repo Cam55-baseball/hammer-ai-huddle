@@ -41,8 +41,7 @@ const ProfileSetup = () => {
     try {
       const roleMap: { [key: string]: Database['public']['Enums']['app_role'] } = {
         'Player': 'player',
-        'Coach': 'coach',
-        'Recruiter/Scout': 'recruiter'
+        'Recruiter/Coach/Scout': 'recruiter'
       };
 
       const sportMap: { [key: string]: Database['public']['Enums']['sport_type'] } = {

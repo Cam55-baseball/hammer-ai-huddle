@@ -54,42 +54,77 @@ const SelectModules = () => {
 
   const handleContinue = async () => {
     if (!selectedModule) return;
-    
+
     setLoading(true);
     
-    // Check if user is owner or admin
-    if (user) {
-      const { data: roleData } = await supabase
+    try {
+      // Check if user is owner or admin - they get free access and skip pricing
+      const { data: roles } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', user.id)
-        .in('role', ['owner', 'admin'])
-        .maybeSingle();
-      
-      if (roleData) {
-        // Owner/admin - skip pricing, go to profile setup or dashboard
-        if (isAddMode) {
-          navigate("/dashboard");
-        } else {
-          localStorage.setItem('selectedModule', selectedModule);
-          navigate("/profile-setup");
-        }
-        setLoading(false);
-        return;
+        .eq('user_id', user?.id)
+        .in('role', ['owner', 'admin']);
+
+      const isOwnerOrAdmin = roles && roles.length > 0;
+
+      localStorage.setItem('selectedModule', selectedModule);
+
+      // Check if role is Player
+      const isPlayer = selectedRole === 'Player';
+
+      if (isAddMode) {
+        // If adding a module, always go to pricing (even for owners/admins if they want to purchase)
+        navigate("/pricing", { 
+          state: { 
+            role: selectedRole, 
+            sport: selectedSport, 
+            module: selectedModule,
+            mode: 'add'
+          } 
+        });
+      } else if (isOwnerOrAdmin) {
+        // Owners and admins skip pricing for first-time setup and go to profile
+        navigate("/profile-setup", { 
+          state: { 
+            role: selectedRole, 
+            sport: selectedSport, 
+            module: selectedModule 
+          } 
+        });
+      } else if (isPlayer) {
+        // Players go to pricing (they need to pay)
+        navigate("/pricing", { 
+          state: { 
+            role: selectedRole, 
+            sport: selectedSport, 
+            module: selectedModule,
+            mode: 'new'
+          } 
+        });
+      } else {
+        // Non-player roles (Recruiter/Coach/Scout) skip pricing and go to profile setup
+        navigate("/profile-setup", { 
+          state: { 
+            role: selectedRole, 
+            sport: selectedSport, 
+            module: selectedModule 
+          } 
+        });
       }
+    } catch (error) {
+      console.error('Error checking roles:', error);
+      // On error, default to pricing page
+      navigate("/pricing", { 
+        state: { 
+          role: selectedRole, 
+          sport: selectedSport, 
+          module: selectedModule,
+          mode: isAddMode ? 'add' : 'new'
+        } 
+      });
+    } finally {
+      setLoading(false);
     }
-    
-    // Regular user - go to pricing
-    localStorage.setItem('selectedModule', selectedModule);
-    navigate("/pricing", { 
-      state: { 
-        role: selectedRole, 
-        sport: selectedSport, 
-        module: selectedModule,
-        mode: isAddMode ? 'add' : 'new'
-      } 
-    });
-    setLoading(false);
   };
 
   return (

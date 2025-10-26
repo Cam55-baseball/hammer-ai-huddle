@@ -155,11 +155,17 @@ const Checkout = () => {
           <h1 className="text-3xl font-bold mb-4">
             {isAddMode ? 'Add Training Module' : 'Subscribe to Training Module'}
           </h1>
-          <p className="text-muted-foreground mb-6">
+          <p className="text-muted-foreground mb-4">
             {isAddMode 
               ? 'Review and confirm your new module subscription' 
               : 'Review and confirm your first module subscription'}
           </p>
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              💡 <strong>Have a promo code?</strong> You'll be able to apply it during checkout. 
+              Discounts (including 100% off codes) will be reflected in your final billing.
+            </p>
+          </div>
 
           <div className="mb-6">
             <h2 className="text-xl font-semibold mb-4">Selected Module</h2>

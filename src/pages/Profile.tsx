@@ -8,12 +8,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, CreditCard, Loader2 } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
-  const { user, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, subscription_end, loading: subLoading } = useSubscription();
+  const { user, session, loading: authLoading } = useAuth();
+  const { modules: subscribedModules, subscription_end, has_discount, discount_percent, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [openingPortal, setOpeningPortal] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (authLoading) return;
@@ -24,10 +27,35 @@ export default function Profile() {
   }, [authLoading, user, navigate]);
 
   const handleManageSubscription = async () => {
+    if (!session) return;
+    
     setOpeningPortal(true);
-    // For now, redirect to checkout page where they can manage subscriptions
-    navigate("/checkout");
-    setOpeningPortal(false);
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast({
+          title: "Opening Billing Portal",
+          description: "Manage your subscription in the new tab",
+        });
+      }
+    } catch (error) {
+      console.error('Error opening billing portal:', error);
+      toast({
+        title: "Error",
+        description: "Failed to open billing portal. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setOpeningPortal(false);
+    }
   };
 
   if (authLoading || subLoading) {
@@ -113,6 +141,18 @@ export default function Profile() {
                 </div>
               </div>
 
+              {has_discount && discount_percent !== null && (
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-sm font-semibold text-green-800 dark:text-green-200">
+                    {discount_percent === 100 ? (
+                      <>🎉 You have a 100% discount! You're not being charged.</>
+                    ) : (
+                      <>💰 Active {discount_percent}% discount applied to your subscription</>
+                    )}
+                  </p>
+                </div>
+              )}
+
               {subscriptionEndDate && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
@@ -128,7 +168,7 @@ export default function Profile() {
                 {openingPortal ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Opening...
+                    Opening Portal...
                   </>
                 ) : (
                   "Manage Subscription"

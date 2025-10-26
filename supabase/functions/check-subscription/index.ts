@@ -82,7 +82,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         subscribed: true,
         modules: allModules,
-        subscription_end: null
+        subscription_end: null,
+        has_discount: false,
+        discount_percent: null
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -116,7 +118,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         subscribed: true,
         modules: allModules,
-        subscription_end: null
+        subscription_end: null,
+        has_discount: false,
+        discount_percent: null
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -153,7 +157,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         subscribed: false,
         modules: [],
-        subscription_end: null
+        subscription_end: null,
+        has_discount: false,
+        discount_percent: null
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -173,10 +179,21 @@ serve(async (req) => {
     let subscribedModules: string[] = [];
     let subscriptionEnd = null;
     let stripeSubscriptionId = null;
+    let hasDiscount = false;
+    let discountPercent = null;
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       stripeSubscriptionId = subscription.id;
+      
+      // Check for discount
+      if (subscription.discount) {
+        hasDiscount = true;
+        if (subscription.discount.coupon.percent_off) {
+          discountPercent = subscription.discount.coupon.percent_off;
+          logStep("Discount found", { percent: discountPercent });
+        }
+      }
       
       // Safe date conversion with validation and error handling
       try {
@@ -274,7 +291,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       modules: subscribedModules,
-      subscription_end: subscriptionEnd
+      subscription_end: subscriptionEnd,
+      has_discount: hasDiscount,
+      discount_percent: discountPercent
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
@@ -311,7 +330,9 @@ serve(async (req) => {
               return new Response(JSON.stringify({
                 subscribed: subData.status === 'active',
                 modules: subData.subscribed_modules || [],
-                subscription_end: subData.current_period_end
+                subscription_end: subData.current_period_end,
+                has_discount: false,
+                discount_percent: null
               }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 200,

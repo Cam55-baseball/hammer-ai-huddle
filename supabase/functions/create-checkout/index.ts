@@ -85,7 +85,10 @@ serve(async (req) => {
     if (!modules || !Array.isArray(modules) || modules.length === 0) {
       throw new Error("No modules specified");
     }
-    logStep("Modules requested", { modules });
+    if (modules.length !== 1) {
+      throw new Error("Only one module can be purchased at a time");
+    }
+    logStep("Module requested", { modules });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
