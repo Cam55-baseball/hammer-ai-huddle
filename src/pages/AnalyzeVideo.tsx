@@ -36,6 +36,12 @@ export default function AnalyzeVideo() {
       return;
     }
     
+    // Guard against missing module parameter
+    if (!module) {
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+    
     console.log('AnalyzeVideo - Current subscribed modules:', subscribedModules);
     console.log('AnalyzeVideo - Checking access for module:', module);
     

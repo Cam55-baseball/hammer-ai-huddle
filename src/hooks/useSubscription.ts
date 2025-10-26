@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -18,7 +18,7 @@ export const useSubscription = () => {
     loading: true,
   });
 
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
     if (!user || !session) {
       setSubscriptionData({
         subscribed: false,
@@ -56,7 +56,7 @@ export const useSubscription = () => {
         loading: false,
       });
     }
-  };
+  }, [user?.id, session?.access_token]);
 
   useEffect(() => {
     checkSubscription();
@@ -65,7 +65,7 @@ export const useSubscription = () => {
     const interval = setInterval(checkSubscription, 30000);
 
     return () => clearInterval(interval);
-  }, [user, session]);
+  }, [checkSubscription]);
 
   return {
     ...subscriptionData,

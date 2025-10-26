@@ -78,6 +78,13 @@ const Checkout = () => {
     }
   }, [authLoading, user, checkoutStatus, navigate, toast, refetch]);
 
+  // Auto-redirect to Dashboard when modules are detected after successful checkout
+  useEffect(() => {
+    if (checkoutStatus === 'success' && subscribedModules.length > 0) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [checkoutStatus, subscribedModules, navigate]);
+
   const handleToggleModule = (moduleId: string) => {
     setSelectedModules((prev) =>
       prev.includes(moduleId)
