@@ -18,6 +18,15 @@ interface User {
 interface UserRole {
   user_id: string;
   role: string;
+  status?: string;
+}
+
+interface AdminRequest {
+  user_id: string;
+  role: string;
+  status: string;
+  created_at: string;
+  full_name: string | null;
 }
 
 const OwnerDashboard = () => {
@@ -28,6 +37,7 @@ const OwnerDashboard = () => {
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [videos, setVideos] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -40,17 +50,34 @@ const OwnerDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [usersResponse, rolesResponse, videosResponse, subsResponse] = await Promise.all([
+      const [usersResponse, rolesResponse, videosResponse, subsResponse, adminReqResponse] = await Promise.all([
         supabase.from("profiles").select("id, full_name, created_at").order("created_at", { ascending: false }),
-        supabase.from("user_roles").select("user_id, role"),
+        supabase.from("user_roles").select("user_id, role, status"),
         supabase.from("videos").select("*").order("created_at", { ascending: false }).limit(10),
         supabase.from("subscriptions").select("*"),
+        supabase
+          .from("user_roles")
+          .select("user_id, role, status, created_at, profiles(full_name)")
+          .eq("role", "admin")
+          .eq("status", "pending")
+          .order("created_at", { ascending: false }),
       ]);
 
       if (usersResponse.data) setUsers(usersResponse.data);
       if (rolesResponse.data) setUserRoles(rolesResponse.data);
       if (videosResponse.data) setVideos(videosResponse.data);
       if (subsResponse.data) setSubscriptions(subsResponse.data);
+      
+      if (adminReqResponse.data) {
+        const requests: AdminRequest[] = adminReqResponse.data.map((req: any) => ({
+          user_id: req.user_id,
+          role: req.role,
+          status: req.status,
+          created_at: req.created_at,
+          full_name: req.profiles?.full_name || 'Unknown User'
+        }));
+        setAdminRequests(requests);
+      }
     } catch (error) {
       console.error("Error loading dashboard data:", error);
     } finally {
@@ -87,6 +114,58 @@ const OwnerDashboard = () => {
 
   const getUserRole = (userId: string) => {
     return userRoles.find((r) => r.user_id === userId)?.role || "player";
+  };
+
+  const handleApproveAdmin = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .update({ status: 'active' })
+        .eq('user_id', userId)
+        .eq('role', 'admin');
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin Approved",
+        description: "User now has admin access",
+      });
+
+      await loadDashboardData();
+    } catch (error: any) {
+      console.error("Error approving admin:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve admin",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectAdmin = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .update({ status: 'rejected' })
+        .eq('user_id', userId)
+        .eq('role', 'admin');
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin Rejected",
+        description: "Admin request has been rejected",
+      });
+
+      await loadDashboardData();
+    } catch (error: any) {
+      console.error("Error rejecting admin:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject admin",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading || dataLoading) {
@@ -192,6 +271,9 @@ const OwnerDashboard = () => {
           <Tabs defaultValue="users" className="space-y-6">
             <TabsList>
               <TabsTrigger value="users">User Management</TabsTrigger>
+              <TabsTrigger value="admin-requests">
+                Admin Requests {adminRequests.length > 0 && `(${adminRequests.length})`}
+              </TabsTrigger>
               <TabsTrigger value="videos">Recent Videos</TabsTrigger>
               <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
             </TabsList>
@@ -227,6 +309,39 @@ const OwnerDashboard = () => {
                               Make Admin
                             </Button>
                           )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="admin-requests" className="space-y-4">
+              <Card className="p-6">
+                <h3 className="text-2xl font-bold mb-4">Pending Admin Requests</h3>
+                <div className="space-y-2">
+                  {adminRequests.length === 0 ? (
+                    <p className="text-muted-foreground">No pending admin requests</p>
+                  ) : (
+                    adminRequests.map((request) => (
+                      <div key={request.user_id} className="p-4 border rounded-lg flex justify-between items-center">
+                        <div>
+                          <p className="font-semibold">{request.full_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Requested: {new Date(request.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button onClick={() => handleApproveAdmin(request.user_id)}>
+                            Approve
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            onClick={() => handleRejectAdmin(request.user_id)}
+                          >
+                            Reject
+                          </Button>
                         </div>
                       </div>
                     ))

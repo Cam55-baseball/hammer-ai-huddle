@@ -63,7 +63,7 @@ const SelectRole = () => {
 
           <Card 
             className="p-8 cursor-pointer hover:border-primary transition-all hover:shadow-lg"
-            onClick={() => handleRoleSelect('Recruiter/Coach/Scout')}
+            onClick={() => handleRoleSelect('Scout/Coach')}
           >
             <div className="text-center">
               <div className="flex justify-center mb-4">
@@ -71,7 +71,7 @@ const SelectRole = () => {
                   <UserCog className="h-12 w-12 text-primary" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold mb-2">Recruiter/Coach/Scout</h2>
+              <h2 className="text-2xl font-bold mb-2">Scout/Coach</h2>
               <p className="text-muted-foreground mb-6">
                 Train and evaluate talent
               </p>
@@ -82,21 +82,21 @@ const SelectRole = () => {
           </Card>
 
           <Card 
-            className="p-8 opacity-60 cursor-not-allowed"
-            title="Invite-only. Contact us to request admin access."
+            className="p-8 cursor-pointer hover:border-primary transition-all hover:shadow-lg"
+            onClick={() => handleRoleSelect('Admin')}
           >
             <div className="text-center">
               <div className="flex justify-center mb-4">
-                <div className="p-4 rounded-full bg-muted">
-                  <Shield className="h-12 w-12 text-muted-foreground" />
+                <div className="p-4 rounded-full bg-primary/10">
+                  <Shield className="h-12 w-12 text-primary" />
                 </div>
               </div>
               <h2 className="text-2xl font-bold mb-2">Admin</h2>
               <p className="text-muted-foreground mb-6">
-                Invite-only access
+                Request admin access (requires owner approval)
               </p>
-              <Button size="lg" className="w-full" disabled>
-                Invite Required
+              <Button size="lg" className="w-full">
+                Request Admin Access
               </Button>
             </div>
           </Card>

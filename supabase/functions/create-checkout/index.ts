@@ -80,13 +80,33 @@ serve(async (req) => {
       });
     }
 
-    // Get requested modules from request body
-    const { modules } = await req.json();
-    if (!modules || !Array.isArray(modules) || modules.length === 0) {
-      throw new Error("No modules specified");
+    // Get requested modules and sport from request body
+    const { modules, sport } = await req.json();
+    
+    logStep("Received module request", { modules, sport });
+
+    // Validate single module selection
+    if (!modules || !Array.isArray(modules) || modules.length !== 1) {
+      logStep("ERROR: Must select exactly one module");
+      return new Response(
+        JSON.stringify({ error: 'Must select exactly one module at a time' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      );
     }
-    if (modules.length !== 1) {
-      throw new Error("Only one module can be purchased at a time");
+
+    // Validate sport
+    if (!sport || !['baseball', 'softball'].includes(sport)) {
+      logStep("ERROR: Invalid or missing sport");
+      return new Response(
+        JSON.stringify({ error: 'Invalid or missing sport. Must be baseball or softball' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      );
     }
     logStep("Module requested", { modules });
 

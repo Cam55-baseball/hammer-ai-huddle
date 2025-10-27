@@ -14,7 +14,7 @@ type SportType = "baseball" | "softball";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, loading: subLoading, refetch } = useSubscription();
+  const { modules: subscribedModules, loading: subLoading, refetch, hasModuleForSport } = useSubscription();
   const navigate = useNavigate();
   const [selectedSport, setSelectedSport] = useState<SportType>("baseball");
   const [progress, setProgress] = useState<any[]>([]);
@@ -53,11 +53,17 @@ export default function Dashboard() {
   };
 
   const handleModuleSelect = (module: ModuleType) => {
-    if (!subscribedModules.includes(module)) {
-      navigate("/checkout");
+    // Check sport-specific subscription
+    if (!hasModuleForSport(module, selectedSport)) {
+      navigate("/select-modules", { 
+        state: { 
+          mode: 'add',
+          sport: selectedSport 
+        } 
+      });
       return;
     }
-    navigate(`/analyze/${module}?sport=${selectedSport}`);
+    navigate(`/analyze/${module}`, { state: { sport: selectedSport } });
   };
 
   const handleSignOut = async () => {

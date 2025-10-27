@@ -241,19 +241,31 @@ serve(async (req) => {
           }
         }
         
-        // Extract module from product metadata
+        // Extract sport and module from product metadata
+        let sport: string = 'baseball'; // default to baseball for backward compatibility
+        let module: string | null = null;
+        
+        if (product.metadata?.sport) {
+          sport = product.metadata.sport.toLowerCase();
+        }
+        
         if (product.metadata?.module) {
-          subscribedModules.push(product.metadata.module);
+          module = product.metadata.module.toLowerCase();
         } else {
           // Fallback: Try to infer module from product name
           const productName = product.name?.toLowerCase() || '';
           if (productName.includes('hitting')) {
-            subscribedModules.push('hitting');
+            module = 'hitting';
           } else if (productName.includes('pitching')) {
-            subscribedModules.push('pitching');
+            module = 'pitching';
           } else if (productName.includes('throwing')) {
-            subscribedModules.push('throwing');
+            module = 'throwing';
           }
+        }
+        
+        if (module) {
+          // Store in sport_module format for sport-specific locking
+          subscribedModules.push(`${sport}_${module}`);
         }
       }
       logStep("Determined subscribed modules", { subscribedModules });

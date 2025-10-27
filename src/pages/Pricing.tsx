@@ -7,13 +7,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Pricing = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const state = location.state as { role?: string; sport?: string; module?: string; mode?: 'add' | 'new' };
   
   const selectedRole = state?.role || localStorage.getItem('selectedRole');
-  const selectedSport = state?.sport || localStorage.getItem('selectedSport');
+  const selectedSport = state?.sport || localStorage.getItem('selectedSport') || 'baseball';
   const selectedModule = state?.module || localStorage.getItem('selectedModule');
   const isAddMode = state?.mode === 'add';
   

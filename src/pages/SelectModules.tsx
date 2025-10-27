@@ -58,55 +58,67 @@ const SelectModules = () => {
     setLoading(true);
     
     try {
-      // Check if user is owner or admin - they get free access and skip pricing
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user?.id)
-        .in('role', ['owner', 'admin']);
-
-      const isOwnerOrAdmin = roles && roles.length > 0;
-
-      localStorage.setItem('selectedModule', selectedModule);
-
-      // Check if role is Player
-      const isPlayer = selectedRole === 'Player';
-
       if (isAddMode) {
-        // If adding a module, always go to pricing (even for owners/admins if they want to purchase)
+        // When adding a module from dashboard, go to pricing with sport
         navigate("/pricing", { 
           state: { 
-            role: selectedRole, 
-            sport: selectedSport, 
             module: selectedModule,
+            sport: selectedSport,
             mode: 'add'
           } 
         });
-      } else if (isOwnerOrAdmin) {
-        // Owners and admins skip pricing for first-time setup and go to profile
-        navigate("/profile-setup", { 
+        return;
+      }
+
+      // For new signups, check if user is owner or admin
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: ownerRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'owner')
+          .maybeSingle();
+
+        const { data: adminRole } = await supabase
+          .from('user_roles')
+          .select('role, status')
+          .eq('user_id', user.id)
+          .eq('role', 'admin')
+          .eq('status', 'active')
+          .maybeSingle();
+
+        const isOwnerOrAdmin = ownerRole || adminRole;
+
+        if (isOwnerOrAdmin) {
+          // Owner/Admin bypass payment and go to profile setup
+          navigate("/profile-setup", { 
+            state: { 
+              sport: selectedSport, 
+              role: selectedRole,
+              module: selectedModule 
+            } 
+          });
+          return;
+        }
+      }
+
+      // For Player role, go to pricing
+      if (selectedRole === 'Player') {
+        navigate("/pricing", { 
           state: { 
-            role: selectedRole, 
             sport: selectedSport, 
+            role: selectedRole,
             module: selectedModule 
           } 
         });
-      } else if (isPlayer) {
-        // Players go to pricing (they need to pay)
-        navigate("/pricing", { 
-          state: { 
-            role: selectedRole, 
-            sport: selectedSport, 
-            module: selectedModule,
-            mode: 'new'
-          } 
-        });
       } else {
-        // Non-player roles (Recruiter/Coach/Scout) skip pricing and go to profile setup
+        // For Scout/Coach and pending Admin, go to profile setup (skip pricing)
         navigate("/profile-setup", { 
           state: { 
-            role: selectedRole, 
             sport: selectedSport, 
+            role: selectedRole,
             module: selectedModule 
           } 
         });

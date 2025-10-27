@@ -41,7 +41,8 @@ const ProfileSetup = () => {
     try {
       const roleMap: { [key: string]: Database['public']['Enums']['app_role'] } = {
         'Player': 'player',
-        'Recruiter/Coach/Scout': 'recruiter'
+        'Scout/Coach': 'recruiter',
+        'Admin': 'admin'
       };
 
       const sportMap: { [key: string]: Database['public']['Enums']['sport_type'] } = {
@@ -52,9 +53,14 @@ const ProfileSetup = () => {
       const dbRole = roleMap[selectedRole] || 'player' as Database['public']['Enums']['app_role'];
       const dbSport = sportMap[selectedSport || 'baseball'] || 'baseball' as Database['public']['Enums']['sport_type'];
 
+      // Insert role with status (pending for admin, active for others)
       const { error: roleError } = await supabase
         .from('user_roles')
-        .insert([{ user_id: user.id, role: dbRole }]);
+        .insert([{ 
+          user_id: user.id, 
+          role: dbRole,
+          status: dbRole === 'admin' ? 'pending' : 'active'
+        }]);
 
       if (roleError) throw roleError;
 
@@ -76,10 +82,18 @@ const ProfileSetup = () => {
       localStorage.removeItem('selectedSport');
       localStorage.removeItem('selectedModule');
 
-      toast({
-        title: "Profile Complete!",
-        description: "Welcome to Hammers Modality!",
-      });
+      // Show appropriate message based on role
+      if (dbRole === 'admin') {
+        toast({
+          title: "Admin Access Requested",
+          description: "Your admin access request has been submitted. The owner will review it shortly.",
+        });
+      } else {
+        toast({
+          title: "Profile Complete!",
+          description: "Welcome to Hammers Modality!",
+        });
+      }
 
       navigate("/dashboard", { replace: true });
     } catch (error: any) {

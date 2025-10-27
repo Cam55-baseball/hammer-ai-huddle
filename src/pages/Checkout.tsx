@@ -21,9 +21,11 @@ const Checkout = () => {
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isAdmin, loading: adminLoading } = useAdminAccess();
   const { toast } = useToast();
-  const state = location.state as { module?: string; mode?: 'add' | 'new' };
+  const state = location.state as { module?: string; sport?: string; returnTo?: string };
   const selectedModule = state?.module || localStorage.getItem('selectedModule');
-  const isAddMode = state?.mode === 'add';
+  const selectedSport = state?.sport || localStorage.getItem('selectedSport') || 'baseball';
+  const returnTo = state?.returnTo;
+  const isAddMode = returnTo === '/dashboard';
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
@@ -101,7 +103,10 @@ const Checkout = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { modules: [selectedModule] }
+        body: { 
+          modules: [selectedModule],
+          sport: selectedSport
+        }
       });
 
       if (error) throw error;
