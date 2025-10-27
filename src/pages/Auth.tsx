@@ -19,6 +19,7 @@ const signUpSchema = authSchema.extend({
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -26,9 +27,17 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, resetPassword } = useAuth();
 
-  const state = location.state as { role?: string; sport?: string; modules?: string[]; fromPricing?: boolean };
+  const state = location.state as { 
+    role?: string; 
+    sport?: string; 
+    modules?: string[]; 
+    fromPricing?: boolean;
+    returnTo?: string;
+    module?: string;
+    mode?: string;
+  };
 
   useEffect(() => {
     // Don't redirect if user is already authenticated
@@ -40,7 +49,25 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      if (isLogin) {
+      if (isForgotPassword) {
+        const validated = z.object({ email: z.string().email() }).parse({ email });
+        const { error } = await resetPassword(validated.email);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Check Your Email",
+            description: "We've sent you a password reset link.",
+          });
+          setIsForgotPassword(false);
+          setIsLogin(true);
+        }
+      } else if (isLogin) {
         const validated = authSchema.parse({ email, password });
         const { data, error } = await signIn(validated.email, validated.password);
 
@@ -56,8 +83,19 @@ const Auth = () => {
             description: "Successfully logged in.",
           });
           
-          // Always navigate to dashboard after login
-          navigate("/dashboard", { replace: true });
+          // Check if we need to return to a specific page with state
+          if (state?.returnTo) {
+            navigate(state.returnTo, { 
+              state: {
+                sport: state.sport,
+                module: state.module,
+                mode: state.mode
+              },
+              replace: true 
+            });
+          } else {
+            navigate("/dashboard", { replace: true });
+          }
         }
       } else {
         const validated = signUpSchema.parse({ email, password, fullName });
@@ -101,15 +139,19 @@ const Auth = () => {
               <span className="text-primary-foreground font-bold text-2xl">H</span>
             </div>
             <h1 className="text-2xl font-bold mb-2">
-              {isLogin ? "Welcome Back" : "Create Account"}
+              {isForgotPassword ? "Reset Password" : isLogin ? "Welcome Back" : "Create Account"}
             </h1>
             <p className="text-muted-foreground">
-              {isLogin ? "Sign in to continue to Hammers Modality" : "Join Hammers Modality today"}
+              {isForgotPassword 
+                ? "Enter your email to receive a password reset link" 
+                : isLogin 
+                ? "Sign in to continue to Hammers Modality" 
+                : "Join Hammers Modality today"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+            {!isLogin && !isForgotPassword && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
@@ -135,30 +177,48 @@ const Auth = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
+            {!isForgotPassword && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                {isLogin && (
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPassword(true)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
+              {isLoading ? "Loading..." : isForgotPassword ? "Send Reset Link" : isLogin ? "Sign In" : "Sign Up"}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
             <button
               type="button"
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                setIsForgotPassword(false);
+                setIsLogin(!isLogin);
+              }}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+              {isForgotPassword 
+                ? "Back to sign in" 
+                : isLogin 
+                ? "Don't have an account? Sign up" 
+                : "Already have an account? Sign in"}
             </button>
           </div>
         </div>

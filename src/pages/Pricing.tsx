@@ -13,15 +13,23 @@ const Pricing = () => {
   const state = location.state as { role?: string; sport?: string; module?: string; mode?: 'add' | 'new' };
   
   const selectedRole = state?.role || localStorage.getItem('selectedRole');
-  const selectedSport = state?.sport || localStorage.getItem('selectedSport') || 'baseball';
-  const selectedModule = state?.module || localStorage.getItem('selectedModule');
+  const selectedSport = state?.sport || localStorage.getItem('pendingSport') || localStorage.getItem('selectedSport') || 'baseball';
+  const selectedModule = state?.module || localStorage.getItem('pendingModule') || localStorage.getItem('selectedModule');
   const isAddMode = state?.mode === 'add';
   
   const modulePrice = 200;
 
   useEffect(() => {
     if (!user) {
-      navigate("/auth");
+      // Preserve state when redirecting to auth
+      navigate("/auth", { 
+        state: {
+          returnTo: '/pricing',
+          sport: selectedSport,
+          module: selectedModule,
+          mode: isAddMode ? 'add' : 'new'
+        }
+      });
       return;
     }
     

@@ -53,16 +53,24 @@ export default function Dashboard() {
   };
 
   const handleModuleSelect = (module: ModuleType) => {
-    // Check sport-specific subscription
-    if (!hasModuleForSport(module, selectedSport)) {
-      navigate("/select-modules", { 
+    const hasModule = hasModuleForSport(module, selectedSport);
+    
+    if (!hasModule) {
+      // Store selection in localStorage as backup
+      localStorage.setItem('pendingModule', module);
+      localStorage.setItem('pendingSport', selectedSport);
+      
+      // Navigate directly to pricing with module and sport
+      navigate("/pricing", { 
         state: { 
           mode: 'add',
-          sport: selectedSport 
+          sport: selectedSport,
+          module: module
         } 
       });
       return;
     }
+    
     navigate(`/analyze/${module}`, { state: { sport: selectedSport } });
   };
 

@@ -59,7 +59,9 @@ const SelectModules = () => {
     
     try {
       if (isAddMode) {
-        // When adding a module from dashboard, go to pricing with sport
+        // Adding from dashboard - store and go directly to pricing
+        localStorage.setItem('pendingModule', selectedModule);
+        localStorage.setItem('pendingSport', selectedSport);
         navigate("/pricing", { 
           state: { 
             module: selectedModule,
