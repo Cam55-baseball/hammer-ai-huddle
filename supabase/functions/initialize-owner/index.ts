@@ -79,7 +79,8 @@ serve(async (req) => {
       .from('user_roles')
       .insert({
         user_id: user.id,
-        role: 'owner'
+        role: 'owner',
+        status: 'active'
       });
 
     if (insertError) {
