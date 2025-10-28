@@ -208,206 +208,202 @@ const OwnerDashboard = () => {
             Sign Out
           </Button>
         </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">Welcome, Owner</h2>
-            <p className="text-muted-foreground">Comprehensive oversight and management of all app modules</p>
-          </div>
-
-          {/* Analytics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
-                  <p className="text-2xl font-bold">{totalUsers}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <BarChart3 className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Subscriptions</p>
-                  <p className="text-2xl font-bold">{activeSubscriptions}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Video className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Videos Analyzed</p>
-                  <p className="text-2xl font-bold">{totalVideosAnalyzed}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Settings className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Avg Score</p>
-                  <p className="text-2xl font-bold">{avgScore}/100</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Tabs */}
-          <Tabs defaultValue="users" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="users">User Management</TabsTrigger>
-              <TabsTrigger value="admin-requests">
-                Admin Requests {adminRequests.length > 0 && `(${adminRequests.length})`}
-              </TabsTrigger>
-              <TabsTrigger value="videos">Recent Videos</TabsTrigger>
-              <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="users" className="space-y-4">
-              <Card className="p-6">
-                <h3 className="text-2xl font-bold mb-4">All Users</h3>
-                <div className="space-y-2">
-                  {users.length === 0 ? (
-                    <p className="text-muted-foreground">No users yet</p>
-                  ) : (
-                    users.map((user) => (
-                      <div
-                        key={user.id}
-                        className="p-4 border rounded-lg hover:bg-muted/50 transition-colors flex justify-between items-center"
-                      >
-                        <div>
-                          <p className="font-semibold">{user.full_name || "No name"}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Role: <span className="capitalize">{getUserRole(user.id)}</span>
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Joined: {new Date(user.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          {getUserRole(user.id) !== "admin" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleAssignRole(user.id, "admin")}
-                            >
-                              Make Admin
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="admin-requests" className="space-y-4">
-              <Card className="p-6">
-                <h3 className="text-2xl font-bold mb-4">Pending Admin Requests</h3>
-                <div className="space-y-2">
-                  {adminRequests.length === 0 ? (
-                    <p className="text-muted-foreground">No pending admin requests</p>
-                  ) : (
-                    adminRequests.map((request) => (
-                      <div key={request.user_id} className="p-4 border rounded-lg flex justify-between items-center">
-                        <div>
-                          <p className="font-semibold">{request.full_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Requested: {new Date(request.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button onClick={() => handleApproveAdmin(request.user_id)}>
-                            Approve
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            onClick={() => handleRejectAdmin(request.user_id)}
-                          >
-                            Reject
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="videos" className="space-y-4">
-              <Card className="p-6">
-                <h3 className="text-2xl font-bold mb-4">Recent Video Analyses</h3>
-                <div className="space-y-2">
-                  {videos.length === 0 ? (
-                    <p className="text-muted-foreground">No videos analyzed yet</p>
-                  ) : (
-                    videos.map((video) => (
-                      <div key={video.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold capitalize">
-                              {video.sport} - {video.module}
-                            </p>
-                            <p className="text-sm text-muted-foreground">Status: {video.status}</p>
-                            {video.efficiency_score && (
-                              <p className="text-sm">Score: {video.efficiency_score}/100</p>
-                            )}
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(video.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="subscriptions" className="space-y-4">
-              <Card className="p-6">
-                <h3 className="text-2xl font-bold mb-4">Subscription Overview</h3>
-                <div className="grid md:grid-cols-3 gap-4 mb-6">
-                  <div className="p-4 border rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">Free</p>
-                    <p className="text-2xl font-bold">
-                      {subscriptions.filter((s) => s.plan === "free").length}
-                    </p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">Pro</p>
-                    <p className="text-2xl font-bold">
-                      {subscriptions.filter((s) => s.plan === "pro").length}
-                    </p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">Team</p>
-                    <p className="text-2xl font-bold">
-                      {subscriptions.filter((s) => s.plan === "team").length}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-          </Tabs>
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold mb-2">Welcome, Owner</h2>
+          <p className="text-muted-foreground">Comprehensive oversight and management of all app modules</p>
         </div>
+
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Users</p>
+                <p className="text-2xl font-bold">{totalUsers}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <BarChart3 className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Active Subscriptions</p>
+                <p className="text-2xl font-bold">{activeSubscriptions}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <Video className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Videos Analyzed</p>
+                <p className="text-2xl font-bold">{totalVideosAnalyzed}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/10">
+                <Settings className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Avg Score</p>
+                <p className="text-2xl font-bold">{avgScore}/100</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="users">User Management</TabsTrigger>
+            <TabsTrigger value="admin-requests">
+              Admin Requests {adminRequests.length > 0 && `(${adminRequests.length})`}
+            </TabsTrigger>
+            <TabsTrigger value="videos">Recent Videos</TabsTrigger>
+            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users" className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-4">All Users</h3>
+              <div className="space-y-2">
+                {users.length === 0 ? (
+                  <p className="text-muted-foreground">No users yet</p>
+                ) : (
+                  users.map((user) => (
+                    <div
+                      key={user.id}
+                      className="p-4 border rounded-lg hover:bg-muted/50 transition-colors flex justify-between items-center"
+                    >
+                      <div>
+                        <p className="font-semibold">{user.full_name || "No name"}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Role: <span className="capitalize">{getUserRole(user.id)}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Joined: {new Date(user.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {getUserRole(user.id) !== "admin" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleAssignRole(user.id, "admin")}
+                          >
+                            Make Admin
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="admin-requests" className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-4">Pending Admin Requests</h3>
+              <div className="space-y-2">
+                {adminRequests.length === 0 ? (
+                  <p className="text-muted-foreground">No pending admin requests</p>
+                ) : (
+                  adminRequests.map((request) => (
+                    <div key={request.user_id} className="p-4 border rounded-lg flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold">{request.full_name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Requested: {new Date(request.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={() => handleApproveAdmin(request.user_id)}>
+                          Approve
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          onClick={() => handleRejectAdmin(request.user_id)}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="videos" className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-4">Recent Video Analyses</h3>
+              <div className="space-y-2">
+                {videos.length === 0 ? (
+                  <p className="text-muted-foreground">No videos analyzed yet</p>
+                ) : (
+                  videos.map((video) => (
+                    <div key={video.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold capitalize">
+                            {video.sport} - {video.module}
+                          </p>
+                          <p className="text-sm text-muted-foreground">Status: {video.status}</p>
+                          {video.efficiency_score && (
+                            <p className="text-sm">Score: {video.efficiency_score}/100</p>
+                          )}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(video.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="subscriptions" className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-4">Subscription Overview</h3>
+              <div className="grid md:grid-cols-3 gap-4 mb-6">
+                <div className="p-4 border rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Free</p>
+                  <p className="text-2xl font-bold">
+                    {subscriptions.filter((s) => s.plan === "free").length}
+                  </p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Pro</p>
+                  <p className="text-2xl font-bold">
+                    {subscriptions.filter((s) => s.plan === "pro").length}
+                  </p>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-1">Team</p>
+                  <p className="text-2xl font-bold">
+                    {subscriptions.filter((s) => s.plan === "team").length}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </DashboardLayout>
   );
 };

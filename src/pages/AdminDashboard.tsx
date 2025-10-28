@@ -128,11 +128,11 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
+            <h1 className="text-4xl font-bold">Admin Dashboard</h1>
             <p className="text-muted-foreground">Manage training data and monitor system activity</p>
           </div>
           <Button onClick={handleSignOut} variant="outline">
