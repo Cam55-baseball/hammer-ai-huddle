@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Upload, Video } from "lucide-react";
 import { toast } from "sonner";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 export default function AnalyzeVideo() {
   const { module } = useParams<{ module: string }>();
@@ -216,31 +217,17 @@ export default function AnalyzeVideo() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <div className="text-sm">
-            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full capitalize">
-              {module} Module Active
-            </span>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold capitalize">{module} Analysis</h1>
+            <p className="text-muted-foreground capitalize">{sport} - {module} mechanics evaluation</p>
           </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2 capitalize">
-            {module} Analysis
-          </h1>
-          <p className="text-xl text-muted-foreground capitalize">
-            {sport} - {module} mechanics evaluation
-          </p>
+          <Button variant="outline" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
         </div>
 
         {/* Video Upload Section */}
@@ -399,7 +386,7 @@ export default function AnalyzeVideo() {
             )}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

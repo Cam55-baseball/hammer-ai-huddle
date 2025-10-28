@@ -18,6 +18,8 @@ import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import InitializeOwner from "./pages/InitializeOwner";
 import Profile from "./pages/Profile";
+import Rankings from "./pages/Rankings";
+import Weather from "./pages/Weather";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -46,6 +48,8 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/initialize-owner" element={<InitializeOwner />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/rankings" element={<Rankings />} />
+            <Route path="/weather" element={<Weather />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

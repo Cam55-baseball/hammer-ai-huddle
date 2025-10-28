@@ -53,6 +53,16 @@ All colors MUST be HSL.
     
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 5%;
+    --sidebar-primary: 0 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 5%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 100% 50%;
   }
 
   .dark {
@@ -88,6 +98,16 @@ All colors MUST be HSL.
     --gradient-hero: linear-gradient(135deg, hsl(0 100% 40%), hsl(0 80% 25%));
     --gradient-athletic: linear-gradient(180deg, hsl(0 0% 8%), hsl(0 0% 10%));
     --shadow-athletic: 0 20px 40px -15px hsl(0 100% 50% / 0.5);
+    
+    /* Sidebar Dark */
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 0 100% 50%;
   }
 }
 

@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Users, BarChart3, Settings, Video } from "lucide-react";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 interface User {
   id: string;
@@ -194,9 +195,9 @@ const OwnerDashboard = () => {
       : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-xl">H</span>
@@ -407,8 +408,7 @@ const OwnerDashboard = () => {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

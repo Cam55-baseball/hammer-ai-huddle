@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, Target, Zap, Upload, Lock } from "lucide-react";
-import { UserMenu } from "@/components/UserMenu";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
@@ -21,17 +21,11 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Wait for auth to finish initializing before redirecting
-    if (authLoading) {
-      return;
-    }
-
+    if (authLoading) return;
     if (!user) {
       navigate("/auth", { replace: true });
       return;
     }
-
-    // Refresh subscription on mount to get latest data
     refetch();
     loadProgress();
   }, [authLoading, user, navigate]);
@@ -56,27 +50,15 @@ export default function Dashboard() {
     const hasModule = hasModuleForSport(module, selectedSport);
     
     if (!hasModule) {
-      // Store selection in localStorage as backup
       localStorage.setItem('pendingModule', module);
       localStorage.setItem('pendingSport', selectedSport);
-      
-      // Navigate directly to pricing with module and sport
       navigate("/pricing", { 
-        state: { 
-          mode: 'add',
-          sport: selectedSport,
-          module: module
-        } 
+        state: { mode: 'add', sport: selectedSport, module: module } 
       });
       return;
     }
     
     navigate(`/analyze/${module}`, { state: { sport: selectedSport } });
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth", { replace: true });
   };
 
   const getModuleProgress = (module: ModuleType) => {
@@ -92,67 +74,27 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <CircleDot className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold">MoCap Training</h1>
-              {subscribedModules.length > 0 && (
-                <div className="mt-1 flex gap-2">
-                  {subscribedModules.map((module) => (
-                    <span key={module} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full capitalize">
-                      {module}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {subscribedModules.length < 3 && (
-              <Button variant="default" onClick={() => navigate("/select-modules", { state: { mode: 'add' } })}>
-                Add Module
-              </Button>
-            )}
-            <UserMenu 
-              userName={user?.user_metadata?.full_name} 
-              userEmail={user?.email} 
-            />
-          </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Training Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.full_name}</p>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
         {/* Sport Selector */}
-        <div className="mb-8">
-          <Tabs value={selectedSport} onValueChange={(v) => setSelectedSport(v as SportType)}>
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-              <TabsTrigger value="baseball">Baseball</TabsTrigger>
-              <TabsTrigger value="softball">Softball</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        {/* Welcome Section */}
-        <section className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">
-            Welcome back, {user?.user_metadata?.full_name || "Player"}!
-          </h2>
-          <p className="text-xl text-muted-foreground">
-            Select a module to analyze your technique
-          </p>
-        </section>
+        <Tabs value={selectedSport} onValueChange={(v) => setSelectedSport(v as SportType)}>
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="baseball">Baseball</TabsTrigger>
+            <TabsTrigger value="softball">Softball</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {/* Module Cards */}
-        <section className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6">
           {/* Hitting Module */}
           <Card
             className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
-              !subscribedModules.includes("hitting") ? "opacity-60" : ""
+              !hasModuleForSport("hitting", selectedSport) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("hitting")}
           >
@@ -162,12 +104,12 @@ export default function Dashboard() {
               </div>
               <h3 className="text-2xl font-bold flex items-center gap-2">
                 Hitting
-                {!subscribedModules.includes("hitting") && <Lock className="h-5 w-5" />}
+                {!hasModuleForSport("hitting", selectedSport) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-muted-foreground">
                 Analyze swing mechanics, kinetic sequence, and bat speed
               </p>
-              {getModuleProgress("hitting") && subscribedModules.includes("hitting") && (
+              {getModuleProgress("hitting") && hasModuleForSport("hitting", selectedSport) && (
                 <div className="text-sm">
                   <p className="font-semibold">
                     Videos Analyzed: {getModuleProgress("hitting").videos_analyzed}
@@ -179,9 +121,9 @@ export default function Dashboard() {
               )}
               <Button 
                 className="w-full" 
-                variant={subscribedModules.includes("hitting") ? "default" : "outline"}
+                variant={hasModuleForSport("hitting", selectedSport) ? "default" : "outline"}
               >
-                {subscribedModules.includes("hitting") ? (
+                {hasModuleForSport("hitting", selectedSport) ? (
                   <>
                     <Upload className="h-4 w-4 mr-2" />
                     Start Analysis
@@ -199,7 +141,7 @@ export default function Dashboard() {
           {/* Pitching Module */}
           <Card
             className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
-              !subscribedModules.includes("pitching") ? "opacity-60" : ""
+              !hasModuleForSport("pitching", selectedSport) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("pitching")}
           >
@@ -209,12 +151,12 @@ export default function Dashboard() {
               </div>
               <h3 className="text-2xl font-bold flex items-center gap-2">
                 Pitching
-                {!subscribedModules.includes("pitching") && <Lock className="h-5 w-5" />}
+                {!hasModuleForSport("pitching", selectedSport) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-muted-foreground">
                 Analyze delivery mechanics, arm action, and sequencing
               </p>
-              {getModuleProgress("pitching") && subscribedModules.includes("pitching") && (
+              {getModuleProgress("pitching") && hasModuleForSport("pitching", selectedSport) && (
                 <div className="text-sm">
                   <p className="font-semibold">
                     Videos Analyzed: {getModuleProgress("pitching").videos_analyzed}
@@ -226,9 +168,9 @@ export default function Dashboard() {
               )}
               <Button 
                 className="w-full" 
-                variant={subscribedModules.includes("pitching") ? "default" : "outline"}
+                variant={hasModuleForSport("pitching", selectedSport) ? "default" : "outline"}
               >
-                {subscribedModules.includes("pitching") ? (
+                {hasModuleForSport("pitching", selectedSport) ? (
                   <>
                     <Upload className="h-4 w-4 mr-2" />
                     Start Analysis
@@ -246,7 +188,7 @@ export default function Dashboard() {
           {/* Throwing Module */}
           <Card
             className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
-              !subscribedModules.includes("throwing") ? "opacity-60" : ""
+              !hasModuleForSport("throwing", selectedSport) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("throwing")}
           >
@@ -256,12 +198,12 @@ export default function Dashboard() {
               </div>
               <h3 className="text-2xl font-bold flex items-center gap-2">
                 Throwing
-                {!subscribedModules.includes("throwing") && <Lock className="h-5 w-5" />}
+                {!hasModuleForSport("throwing", selectedSport) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-muted-foreground">
                 Analyze arm action, footwork, and energy transfer
               </p>
-              {getModuleProgress("throwing") && subscribedModules.includes("throwing") && (
+              {getModuleProgress("throwing") && hasModuleForSport("throwing", selectedSport) && (
                 <div className="text-sm">
                   <p className="font-semibold">
                     Videos Analyzed: {getModuleProgress("throwing").videos_analyzed}
@@ -273,9 +215,9 @@ export default function Dashboard() {
               )}
               <Button 
                 className="w-full" 
-                variant={subscribedModules.includes("throwing") ? "default" : "outline"}
+                variant={hasModuleForSport("throwing", selectedSport) ? "default" : "outline"}
               >
-                {subscribedModules.includes("throwing") ? (
+                {hasModuleForSport("throwing", selectedSport) ? (
                   <>
                     <Upload className="h-4 w-4 mr-2" />
                     Start Analysis
@@ -289,8 +231,8 @@ export default function Dashboard() {
               </Button>
             </div>
           </Card>
-        </section>
-      </main>
-    </div>
+        </div>
+      </div>
+    </DashboardLayout>
   );
 }
