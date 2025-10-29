@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircleDot, Target, Zap, Upload, Lock } from "lucide-react";
+import { CircleDot, Target, Zap, Upload, Lock, Icon } from "lucide-react";
+import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
 import { toast } from "sonner";
@@ -193,6 +194,15 @@ export default function Dashboard() {
             onClick={() => handleModuleSelect("hitting")}
           >
             <div className="flex flex-col items-center text-center space-y-4">
+              <div className="mb-3 flex justify-center">
+                <div className="bg-primary/10 p-3 rounded-full">
+                  <Icon 
+                    iconNode={baseball} 
+                    size={24}
+                    className="text-primary"
+                  />
+                </div>
+              </div>
               <div className="p-4 rounded-full bg-primary/10">
                 <Target className="h-12 w-12 text-primary" />
               </div>
@@ -240,6 +250,15 @@ export default function Dashboard() {
             onClick={() => handleModuleSelect("pitching")}
           >
             <div className="flex flex-col items-center text-center space-y-4">
+              <div className="mb-3 flex justify-center">
+                <div className="bg-primary/10 p-3 rounded-full">
+                  <Icon 
+                    iconNode={baseball} 
+                    size={24}
+                    className="text-primary"
+                  />
+                </div>
+              </div>
               <div className="p-4 rounded-full bg-primary/10">
                 <CircleDot className="h-12 w-12 text-primary" />
               </div>
@@ -287,6 +306,15 @@ export default function Dashboard() {
             onClick={() => handleModuleSelect("throwing")}
           >
             <div className="flex flex-col items-center text-center space-y-4">
+              <div className="mb-3 flex justify-center">
+                <div className="bg-primary/10 p-3 rounded-full">
+                  <Icon 
+                    iconNode={baseball} 
+                    size={24}
+                    className="text-primary"
+                  />
+                </div>
+              </div>
               <div className="p-4 rounded-full bg-primary/10">
                 <Zap className="h-12 w-12 text-primary" />
               </div>

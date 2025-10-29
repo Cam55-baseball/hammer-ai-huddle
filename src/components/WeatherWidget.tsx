@@ -4,8 +4,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search } from "lucide-react";
+import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon } from "lucide-react";
+import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
+
+interface SportAnalysis {
+  sport: string;
+  ballFlight: string;
+  windImpact: string;
+  fieldCondition: string;
+  trackingCondition: string;
+  uvWarning: string;
+  recommendation: string;
+}
 
 interface WeatherData {
   location: string;
@@ -17,13 +28,15 @@ interface WeatherData {
   windDirection: string;
   visibility: number;
   uvIndex: number;
+  sportAnalysis?: SportAnalysis;
 }
 
 interface WeatherWidgetProps {
   expanded?: boolean;
+  sport?: 'baseball' | 'softball';
 }
 
-export function WeatherWidget({ expanded = false }: WeatherWidgetProps) {
+export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherWidgetProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState("");
@@ -49,7 +62,7 @@ export function WeatherWidget({ expanded = false }: WeatherWidgetProps) {
       }
 
       const { data, error } = await supabase.functions.invoke("get-weather", {
-        body: { location: locationToFetch },
+        body: { location: locationToFetch, sport },
       });
 
       if (error) throw error;
@@ -188,6 +201,47 @@ export function WeatherWidget({ expanded = false }: WeatherWidgetProps) {
                   <div>
                     <p className="text-sm text-muted-foreground">UV Index</p>
                     <p className="font-semibold">{weather.uvIndex}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {expanded && weather?.sportAnalysis && (
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+                <h4 className="font-semibold flex items-center gap-2">
+                  <Icon 
+                    iconNode={baseball} 
+                    size={18}
+                    className="text-primary"
+                  />
+                  {weather.sportAnalysis.sport} Conditions Analysis
+                </h4>
+                <div className="grid gap-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium min-w-[110px]">Ball Flight:</span>
+                    <span className="text-muted-foreground">{weather.sportAnalysis.ballFlight}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium min-w-[110px]">Wind Impact:</span>
+                    <span className="text-muted-foreground">{weather.sportAnalysis.windImpact}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium min-w-[110px]">Field Conditions:</span>
+                    <span className="text-muted-foreground">{weather.sportAnalysis.fieldCondition}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium min-w-[110px]">Tracking:</span>
+                    <span className="text-muted-foreground">{weather.sportAnalysis.trackingCondition}</span>
+                  </div>
+                  {weather.sportAnalysis.uvWarning && (
+                    <div className="flex items-start gap-2">
+                      <span className="font-medium min-w-[110px]">UV Warning:</span>
+                      <span className="text-amber-600 font-medium">{weather.sportAnalysis.uvWarning}</span>
+                    </div>
+                  )}
+                  <div className="pt-2 mt-2 border-t flex items-start gap-2">
+                    <span className="font-semibold min-w-[110px]">Recommendation:</span>
+                    <span className="font-semibold">{weather.sportAnalysis.recommendation}</span>
                   </div>
                 </div>
               </div>

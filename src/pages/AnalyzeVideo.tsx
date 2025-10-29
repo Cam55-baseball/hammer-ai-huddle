@@ -277,10 +277,18 @@ export default function AnalyzeVideo() {
             <h1 className="text-3xl font-bold capitalize">{module} Analysis</h1>
             <p className="text-muted-foreground capitalize">{sport} - {module} mechanics evaluation</p>
           </div>
-          <Button variant="outline" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
+          <div className="flex gap-2">
+            {videoPreview && (
+              <Button variant="outline" onClick={handleRemoveVideo}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Video
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+          </div>
         </div>
 
         {/* Video Upload Section */}
@@ -363,25 +371,14 @@ export default function AnalyzeVideo() {
             </Card>
 
             {!analyzing && !analysis && (
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleUploadAndAnalyze}
-                  disabled={uploading}
-                  size="lg"
-                  className="flex-1"
-                >
-                  {uploading ? "Uploading..." : "Analyze Video"}
-                </Button>
-                <Button
-                  onClick={handleRemoveVideo}
-                  disabled={uploading}
-                  size="lg"
-                  variant="outline"
-                  className="px-6"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button
+                onClick={handleUploadAndAnalyze}
+                disabled={uploading}
+                size="lg"
+                className="w-full"
+              >
+                {uploading ? "Uploading..." : "Analyze Video"}
+              </Button>
             )}
 
             {analyzing && (
