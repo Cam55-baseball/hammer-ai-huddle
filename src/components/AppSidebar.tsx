@@ -6,7 +6,7 @@ import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { supabase } from "@/integrations/supabase/client";
-import logo from "@/assets/logo.png";
+import { branding } from "@/branding";
 import {
   Sidebar,
   SidebarContent,
@@ -86,8 +86,8 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="Hammers Modality" className="h-8 w-8 object-contain" />
-          <h2 className="text-lg font-bold text-sidebar-foreground">Hammers Modality</h2>
+          <img src={branding.logo} alt={branding.appName} className="h-8 w-8 object-contain" />
+          <h2 className="text-lg font-bold text-sidebar-foreground">{branding.appName}</h2>
         </div>
       </SidebarHeader>
 

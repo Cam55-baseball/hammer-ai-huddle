@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-import logo from "@/assets/logo.png";
+import { branding } from "@/branding";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -140,7 +140,7 @@ const Auth = () => {
         <div className="bg-card border border-border rounded-xl p-8 shadow-lg">
           <div className="text-center mb-6">
             <div className="h-16 w-16 mx-auto mb-4">
-              <img src={logo} alt="Hammers Modality" className="h-full w-full object-contain" />
+              <img src={branding.logo} alt={branding.appName} className="h-full w-full object-contain" />
             </div>
             <h1 className="text-2xl font-bold mb-2">
               {isForgotPassword ? "Reset Password" : isLogin ? "Welcome Back" : "Create Account"}
