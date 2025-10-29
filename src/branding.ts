@@ -1,7 +1,7 @@
 // Central branding configuration
 // This file serves as the single source of truth for all branding assets
 
-import brandLogo from "@/assets/logo.png";
+import brandLogo from "@/assets/brand-logo-2025.png";
 
 export const branding = {
   // Main logo used throughout the app UI
