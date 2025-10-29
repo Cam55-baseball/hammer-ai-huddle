@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
+import logo from "@/assets/logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -51,7 +52,10 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        <h2 className="text-lg font-bold text-sidebar-foreground">Motion Capture AI</h2>
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="Hammers Modality" className="h-8 w-8" />
+          <h2 className="text-lg font-bold text-sidebar-foreground">Hammers Modality</h2>
+        </div>
       </SidebarHeader>
 
       <SidebarContent>

@@ -32,7 +32,21 @@ export function WeatherWidget({ expanded = false }: WeatherWidgetProps) {
   const fetchWeather = async (searchLocation?: string) => {
     try {
       setLoading(true);
-      const locationToFetch = searchLocation || location || "New York";
+      let locationToFetch = searchLocation || location;
+      
+      // Try geolocation if no location is set
+      if (!locationToFetch && navigator.geolocation) {
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+          });
+          locationToFetch = `${position.coords.latitude},${position.coords.longitude}`;
+        } catch {
+          locationToFetch = "New York";
+        }
+      } else if (!locationToFetch) {
+        locationToFetch = "New York";
+      }
 
       const { data, error } = await supabase.functions.invoke("get-weather", {
         body: { location: locationToFetch },
@@ -41,7 +55,7 @@ export function WeatherWidget({ expanded = false }: WeatherWidgetProps) {
       if (error) throw error;
 
       setWeather(data);
-      if (!searchLocation) {
+      if (!searchLocation && locationToFetch !== location) {
         setLocation(locationToFetch);
       }
     } catch (error: any) {

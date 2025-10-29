@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,9 +16,14 @@ type SportType = "baseball" | "softball";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, loading: subLoading, refetch, hasModuleForSport } = useSubscription();
+  const { modules: subscribedModules, loading: subLoading, refetch, hasAccessForSport } = useSubscription();
+  const { isOwner } = useOwnerAccess();
+  const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
-  const [selectedSport, setSelectedSport] = useState<SportType>("baseball");
+  const [selectedSport, setSelectedSport] = useState<SportType>(() => {
+    const saved = localStorage.getItem('selectedSport');
+    return (saved as SportType) || "baseball";
+  });
   const [progress, setProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,10 +53,17 @@ export default function Dashboard() {
     }
   };
 
+  const handleSportChange = (sport: string) => {
+    const newSport = sport as SportType;
+    setSelectedSport(newSport);
+    localStorage.setItem('selectedSport', newSport);
+  };
+
   const handleModuleSelect = (module: ModuleType) => {
-    const hasModule = hasModuleForSport(module, selectedSport);
+    const isOwnerOrAdmin = isOwner || isAdmin;
+    const hasAccess = hasAccessForSport(module, selectedSport, isOwnerOrAdmin);
     
-    if (!hasModule) {
+    if (!hasAccess) {
       localStorage.setItem('pendingModule', module);
       localStorage.setItem('pendingSport', selectedSport);
       navigate("/pricing", { 
@@ -58,7 +72,7 @@ export default function Dashboard() {
       return;
     }
     
-    navigate(`/analyze/${module}`, { state: { sport: selectedSport } });
+    navigate(`/analyze/${module}?sport=${selectedSport}`);
   };
 
   const getModuleProgress = (module: ModuleType) => {
@@ -82,7 +96,7 @@ export default function Dashboard() {
         </div>
 
         {/* Sport Selector */}
-        <Tabs value={selectedSport} onValueChange={(v) => setSelectedSport(v as SportType)}>
+        <Tabs value={selectedSport} onValueChange={handleSportChange}>
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="baseball">Baseball</TabsTrigger>
             <TabsTrigger value="softball">Softball</TabsTrigger>
@@ -94,7 +108,7 @@ export default function Dashboard() {
           {/* Hitting Module */}
           <Card
             className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
-              !hasModuleForSport("hitting", selectedSport) ? "opacity-60" : ""
+              !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("hitting")}
           >
@@ -104,12 +118,12 @@ export default function Dashboard() {
               </div>
               <h3 className="text-2xl font-bold flex items-center gap-2">
                 Hitting
-                {!hasModuleForSport("hitting", selectedSport) && <Lock className="h-5 w-5" />}
+                {!hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-muted-foreground">
                 Analyze swing mechanics, kinetic sequence, and bat speed
               </p>
-              {getModuleProgress("hitting") && hasModuleForSport("hitting", selectedSport) && (
+              {getModuleProgress("hitting") && hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && (
                 <div className="text-sm">
                   <p className="font-semibold">
                     Videos Analyzed: {getModuleProgress("hitting").videos_analyzed}
@@ -121,9 +135,9 @@ export default function Dashboard() {
               )}
               <Button 
                 className="w-full" 
-                variant={hasModuleForSport("hitting", selectedSport) ? "default" : "outline"}
+                variant={hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
               >
-                {hasModuleForSport("hitting", selectedSport) ? (
+                {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
                   <>
                     <Upload className="h-4 w-4 mr-2" />
                     Start Analysis
@@ -141,7 +155,7 @@ export default function Dashboard() {
           {/* Pitching Module */}
           <Card
             className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
-              !hasModuleForSport("pitching", selectedSport) ? "opacity-60" : ""
+              !hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("pitching")}
           >
@@ -151,12 +165,12 @@ export default function Dashboard() {
               </div>
               <h3 className="text-2xl font-bold flex items-center gap-2">
                 Pitching
-                {!hasModuleForSport("pitching", selectedSport) && <Lock className="h-5 w-5" />}
+                {!hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-muted-foreground">
                 Analyze delivery mechanics, arm action, and sequencing
               </p>
-              {getModuleProgress("pitching") && hasModuleForSport("pitching", selectedSport) && (
+              {getModuleProgress("pitching") && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && (
                 <div className="text-sm">
                   <p className="font-semibold">
                     Videos Analyzed: {getModuleProgress("pitching").videos_analyzed}
@@ -168,9 +182,9 @@ export default function Dashboard() {
               )}
               <Button 
                 className="w-full" 
-                variant={hasModuleForSport("pitching", selectedSport) ? "default" : "outline"}
+                variant={hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
               >
-                {hasModuleForSport("pitching", selectedSport) ? (
+                {hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? (
                   <>
                     <Upload className="h-4 w-4 mr-2" />
                     Start Analysis
@@ -188,7 +202,7 @@ export default function Dashboard() {
           {/* Throwing Module */}
           <Card
             className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
-              !hasModuleForSport("throwing", selectedSport) ? "opacity-60" : ""
+              !hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("throwing")}
           >
@@ -198,12 +212,12 @@ export default function Dashboard() {
               </div>
               <h3 className="text-2xl font-bold flex items-center gap-2">
                 Throwing
-                {!hasModuleForSport("throwing", selectedSport) && <Lock className="h-5 w-5" />}
+                {!hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-muted-foreground">
                 Analyze arm action, footwork, and energy transfer
               </p>
-              {getModuleProgress("throwing") && hasModuleForSport("throwing", selectedSport) && (
+              {getModuleProgress("throwing") && hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && (
                 <div className="text-sm">
                   <p className="font-semibold">
                     Videos Analyzed: {getModuleProgress("throwing").videos_analyzed}
@@ -215,9 +229,9 @@ export default function Dashboard() {
               )}
               <Button 
                 className="w-full" 
-                variant={hasModuleForSport("throwing", selectedSport) ? "default" : "outline"}
+                variant={hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
               >
-                {hasModuleForSport("throwing", selectedSport) ? (
+                {hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? (
                   <>
                     <Upload className="h-4 w-4 mr-2" />
                     Start Analysis

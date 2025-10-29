@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Upload, Video } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -15,7 +18,9 @@ export default function AnalyzeVideo() {
   const [searchParams] = useSearchParams();
   const sport = searchParams.get("sport") || "baseball";
   const { user, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, loading: subLoading, initialized, refetch } = useSubscription();
+  const { modules: subscribedModules, loading: subLoading, initialized, refetch, hasAccessForSport } = useSubscription();
+  const { isOwner } = useOwnerAccess();
+  const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -24,6 +29,10 @@ export default function AnalyzeVideo() {
   const [analysis, setAnalysis] = useState<any>(null);
   const [analysisError, setAnalysisError] = useState<any>(null);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
+  const [playbackRate, setPlaybackRate] = useState<string>(() => {
+    return localStorage.getItem('videoPlaybackRate') || '1';
+  });
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Force fresh subscription check on page load
   useEffect(() => {
@@ -47,16 +56,33 @@ export default function AnalyzeVideo() {
       return;
     }
     
+    const isOwnerOrAdmin = isOwner || isAdmin;
+    const sportModuleKey = `${sport}_${module}`;
+    const hasAccess = hasAccessForSport(module as string, sport, isOwnerOrAdmin);
+    
     console.log('AnalyzeVideo - Current subscribed modules:', subscribedModules);
-    console.log('AnalyzeVideo - Checking access for module:', module);
+    console.log('AnalyzeVideo - Checking access for:', sportModuleKey);
+    console.log('AnalyzeVideo - Is Owner/Admin:', isOwnerOrAdmin);
+    console.log('AnalyzeVideo - Has Access:', hasAccess);
     
     // Check if user has access to this module
-    if (!subscribedModules.includes(module as string)) {
+    if (!hasAccess) {
       toast.error("You don't have access to this module. Please subscribe.");
       navigate("/dashboard", { replace: true });
       return;
     }
-  }, [authLoading, subLoading, initialized, user, subscribedModules, module, navigate]);
+  }, [authLoading, subLoading, initialized, user, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = parseFloat(playbackRate);
+    }
+  }, [playbackRate]);
+
+  const handlePlaybackRateChange = (rate: string) => {
+    setPlaybackRate(rate);
+    localStorage.setItem('videoPlaybackRate', rate);
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -267,11 +293,31 @@ export default function AnalyzeVideo() {
         {videoPreview && (
           <div className="space-y-6">
             <Card className="p-6">
-              <video
-                src={videoPreview}
-                controls
-                className="w-full rounded-lg"
-              />
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Video Preview</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Playback Speed:</span>
+                    <Select value={playbackRate} onValueChange={handlePlaybackRateChange}>
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0.25">0.25x</SelectItem>
+                        <SelectItem value="0.5">0.5x</SelectItem>
+                        <SelectItem value="0.75">0.75x</SelectItem>
+                        <SelectItem value="1">1.0x</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <video
+                  ref={videoRef}
+                  src={videoPreview}
+                  controls
+                  className="w-full rounded-lg"
+                />
+              </div>
             </Card>
 
             {!analyzing && !analysis && (

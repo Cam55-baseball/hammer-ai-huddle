@@ -21,49 +21,26 @@ export default function Rankings() {
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState<string>("all");
   const [selectedModule, setSelectedModule] = useState<string>("all");
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
 
   const fetchRankings = async () => {
     try {
       setLoading(true);
       
-      let query = supabase
-        .from("user_progress")
-        .select(`
-          user_id,
-          sport,
-          module,
-          videos_analyzed,
-          average_efficiency_score,
-          last_activity,
-          profiles!inner(full_name)
-        `)
-        .order("average_efficiency_score", { ascending: false });
-
-      if (selectedSport !== "all") {
-        query = query.eq("sport", selectedSport as "baseball" | "softball");
-      }
-
-      if (selectedModule !== "all") {
-        query = query.eq("module", selectedModule as "hitting" | "pitching" | "throwing");
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await supabase.functions.invoke('get-rankings', {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: {
+          sport: selectedSport,
+          module: selectedModule,
+        },
+      });
 
       if (error) throw error;
 
-      const formattedData = data.map((item: any) => ({
-        user_id: item.user_id,
-        full_name: item.profiles.full_name || "Anonymous",
-        sport: item.sport,
-        module: item.module,
-        videos_analyzed: item.videos_analyzed,
-        average_efficiency_score: item.average_efficiency_score || 0,
-        last_activity: item.last_activity,
-      }));
-
-      setRankings(formattedData);
+      setRankings(data || []);
     } catch (error) {
       console.error("Error fetching rankings:", error);
       toast({

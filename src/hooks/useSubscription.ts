@@ -27,6 +27,11 @@ export const useSubscription = () => {
     return subscriptionData.modules.includes(key);
   }, [subscriptionData.modules]);
 
+  const hasAccessForSport = useCallback((module: string, sport: string, isOwnerOrAdmin: boolean) => {
+    if (isOwnerOrAdmin) return true;
+    return hasModuleForSport(module, sport);
+  }, [hasModuleForSport]);
+
   const checkSubscription = useCallback(async (silent: boolean = false) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -133,5 +138,5 @@ export const useSubscription = () => {
 
   const refetch = () => checkSubscription(false);
 
-  return { ...subscriptionData, refetch, hasModuleForSport };
+  return { ...subscriptionData, refetch, hasModuleForSport, hasAccessForSport };
 };

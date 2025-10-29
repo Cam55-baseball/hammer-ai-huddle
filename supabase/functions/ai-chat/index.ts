@@ -23,12 +23,39 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    // Fetch owner's profile to get coaching philosophy
+    let ownerBio = "";
+    let ownerName = "Coach";
+
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      const { data: ownerRole } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "owner")
+        .maybeSingle();
+
+      if (ownerRole) {
+        const { data: ownerProfile } = await supabase
+          .from("profiles")
+          .select("full_name, bio")
+          .eq("id", ownerRole.user_id)
+          .single();
+
+        if (ownerProfile) {
+          ownerName = ownerProfile.full_name || "Coach";
+          ownerBio = ownerProfile.bio || "";
+        }
+      }
+    }
+
     // Get user context if userId is provided
     let userContext = "";
-    if (userId) {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL");
-      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-      
+    if (userId) {      
       if (supabaseUrl && supabaseKey) {
         const supabase = createClient(supabaseUrl, supabaseKey);
         
@@ -43,24 +70,27 @@ serve(async (req) => {
           .select("*")
           .eq("user_id", userId);
 
-        if (subscription) {
-          userContext = `\nUser's subscribed modules: ${subscription.subscribed_modules.join(", ")}`;
-        }
-        if (progress && progress.length > 0) {
-          userContext += `\nUser's training progress: ${JSON.stringify(progress)}`;
+        if (subscription || progress) {
+          userContext = `\n\nUser Context:\n`;
+          if (subscription?.subscribed_modules) {
+            userContext += `Active Modules: ${subscription.subscribed_modules.join(", ")}\n`;
+          }
+          if (progress && progress.length > 0) {
+            userContext += `Progress:\n`;
+            progress.forEach((p: any) => {
+              userContext += `- ${p.sport} ${p.module}: ${p.videos_analyzed} videos, avg score: ${p.average_efficiency_score || "N/A"}\n`;
+            });
+          }
         }
       }
     }
 
-    const systemPrompt = `You are an expert baseball and softball biomechanics coach and training assistant. You provide helpful, specific coaching advice about:
-- Hitting mechanics and technique
-- Pitching mechanics and arm health
-- Throwing mechanics and accuracy
-- Training exercises and drills
-- Injury prevention
-- Performance analysis
+    const systemPrompt = `You are an expert biomechanics coach for baseball and softball athletes. You provide detailed, actionable advice on hitting, pitching, and throwing mechanics.
 
-Keep your responses clear, actionable, and encouraging. Use baseball/softball terminology appropriately.${userContext}`;
+${ownerBio ? `Follow the coaching philosophy below unless the user asks otherwise.\n\nCoach: ${ownerName}\nPhilosophy: ${ownerBio}\n` : ''}
+${userContext}
+
+Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -110,8 +140,9 @@ Keep your responses clear, actionable, and encouraging. Use baseball/softball te
     });
   } catch (error) {
     console.error("Error in ai-chat function:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return new Response(
-      JSON.stringify({ error: error.message || "Unknown error occurred" }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

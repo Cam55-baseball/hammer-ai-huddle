@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import logo from "@/assets/logo.png";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -85,16 +85,20 @@ const Auth = () => {
           
           // Check if we need to return to a specific page with state
           if (state?.returnTo) {
-            navigate(state.returnTo, { 
-              state: {
-                sport: state.sport,
-                module: state.module,
-                mode: state.mode
-              },
-              replace: true 
-            });
+            setTimeout(() => {
+              navigate(state.returnTo, { 
+                state: {
+                  sport: state.sport,
+                  module: state.module,
+                  mode: state.mode
+                },
+                replace: true 
+              });
+            }, 0);
           } else {
-            navigate("/dashboard", { replace: true });
+            setTimeout(() => {
+              navigate("/dashboard", { replace: true });
+            }, 0);
           }
         }
       } else {
@@ -135,8 +139,8 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="bg-card border border-border rounded-xl p-8 shadow-lg">
           <div className="text-center mb-6">
-            <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-              <span className="text-primary-foreground font-bold text-2xl">H</span>
+            <div className="h-16 w-16 mx-auto mb-4">
+              <img src={logo} alt="Hammers Modality" className="h-full w-full object-contain" />
             </div>
             <h1 className="text-2xl font-bold mb-2">
               {isForgotPassword ? "Reset Password" : isLogin ? "Welcome Back" : "Create Account"}
