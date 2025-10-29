@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Calendar, CreditCard, Loader2, Edit } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -25,7 +25,13 @@ export default function Profile() {
   const [editForm, setEditForm] = useState({
     full_name: "",
     bio: "",
-    avatar_url: ""
+    avatar_url: "",
+    social_instagram: "",
+    social_twitter: "",
+    social_facebook: "",
+    social_linkedin: "",
+    social_youtube: "",
+    social_website: ""
   });
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -55,7 +61,13 @@ export default function Profile() {
       setEditForm({
         full_name: data.full_name || "",
         bio: data.bio || "",
-        avatar_url: data.avatar_url || ""
+        avatar_url: data.avatar_url || "",
+        social_instagram: data.social_instagram || "",
+        social_twitter: data.social_twitter || "",
+        social_facebook: data.social_facebook || "",
+        social_linkedin: data.social_linkedin || "",
+        social_youtube: data.social_youtube || "",
+        social_website: data.social_website || ""
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -72,7 +84,13 @@ export default function Profile() {
         .update({
           full_name: editForm.full_name,
           bio: editForm.bio,
-          avatar_url: editForm.avatar_url
+          avatar_url: editForm.avatar_url,
+          social_instagram: editForm.social_instagram,
+          social_twitter: editForm.social_twitter,
+          social_facebook: editForm.social_facebook,
+          social_linkedin: editForm.social_linkedin,
+          social_youtube: editForm.social_youtube,
+          social_website: editForm.social_website
         })
         .eq('id', user.id);
 
@@ -187,6 +205,72 @@ export default function Profile() {
               {profile?.bio && (
                 <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>
               )}
+              {(profile?.social_instagram || profile?.social_twitter || 
+                profile?.social_facebook || profile?.social_linkedin || 
+                profile?.social_youtube || profile?.social_website) && (
+                <div className="flex gap-3 mt-3">
+                  {profile.social_instagram && (
+                    <a 
+                      href={profile.social_instagram.startsWith('http') ? profile.social_instagram : `https://instagram.com/${profile.social_instagram}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Instagram className="h-5 w-5" />
+                    </a>
+                  )}
+                  {profile.social_twitter && (
+                    <a 
+                      href={profile.social_twitter.startsWith('http') ? profile.social_twitter : `https://twitter.com/${profile.social_twitter}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Twitter className="h-5 w-5" />
+                    </a>
+                  )}
+                  {profile.social_facebook && (
+                    <a 
+                      href={profile.social_facebook}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Facebook className="h-5 w-5" />
+                    </a>
+                  )}
+                  {profile.social_linkedin && (
+                    <a 
+                      href={profile.social_linkedin}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Linkedin className="h-5 w-5" />
+                    </a>
+                  )}
+                  {profile.social_youtube && (
+                    <a 
+                      href={profile.social_youtube}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Youtube className="h-5 w-5" />
+                    </a>
+                  )}
+                  {profile.social_website && (
+                    <a 
+                      href={profile.social_website}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <Globe className="h-5 w-5" />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
               <DialogTrigger asChild>
@@ -232,6 +316,70 @@ export default function Profile() {
                       placeholder="https://example.com/avatar.jpg"
                     />
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Social Media Links</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Enter your handle (e.g., "username") or full URL
+                    </p>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Instagram className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Instagram username or URL"
+                          value={editForm.social_instagram}
+                          onChange={(e) => setEditForm({ ...editForm, social_instagram: e.target.value })}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Twitter className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Twitter/X username or URL"
+                          value={editForm.social_twitter}
+                          onChange={(e) => setEditForm({ ...editForm, social_twitter: e.target.value })}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Facebook className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Facebook profile URL"
+                          value={editForm.social_facebook}
+                          onChange={(e) => setEditForm({ ...editForm, social_facebook: e.target.value })}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Linkedin className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="LinkedIn profile URL"
+                          value={editForm.social_linkedin}
+                          onChange={(e) => setEditForm({ ...editForm, social_linkedin: e.target.value })}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Youtube className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="YouTube channel URL"
+                          value={editForm.social_youtube}
+                          onChange={(e) => setEditForm({ ...editForm, social_youtube: e.target.value })}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Personal website URL"
+                          value={editForm.social_website}
+                          onChange={(e) => setEditForm({ ...editForm, social_website: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
                   <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
                     {saving ? (
                       <>

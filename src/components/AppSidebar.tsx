@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -24,6 +24,12 @@ interface OwnerProfile {
   full_name: string | null;
   bio: string | null;
   avatar_url: string | null;
+  social_instagram: string | null;
+  social_twitter: string | null;
+  social_facebook: string | null;
+  social_linkedin: string | null;
+  social_youtube: string | null;
+  social_website: string | null;
 }
 
 export function AppSidebar() {
@@ -88,13 +94,13 @@ export function AppSidebar() {
       <SidebarContent>
         {ownerProfile && (
           <SidebarGroup className="border-b border-sidebar-border pb-4">
-            <SidebarGroupLabel>Coach Bio</SidebarGroupLabel>
+            <SidebarGroupLabel>Owner Bio</SidebarGroupLabel>
             <div className="px-4 py-2 space-y-2">
               <div className="flex items-center gap-3">
                 {ownerProfile.avatar_url && (
                   <img 
                     src={ownerProfile.avatar_url} 
-                    alt={ownerProfile.full_name || 'Coach'}
+                    alt={ownerProfile.full_name || 'Owner'}
                     className="h-10 w-10 rounded-full object-cover"
                   />
                 )}
@@ -104,6 +110,80 @@ export function AppSidebar() {
                 <p className="text-xs text-muted-foreground line-clamp-3">
                   {ownerProfile.bio}
                 </p>
+              )}
+              
+              {/* Social Media Links */}
+              {(ownerProfile.social_instagram || ownerProfile.social_twitter || 
+                ownerProfile.social_facebook || ownerProfile.social_linkedin || 
+                ownerProfile.social_youtube || ownerProfile.social_website) && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {ownerProfile.social_instagram && (
+                    <a 
+                      href={ownerProfile.social_instagram.startsWith('http') ? ownerProfile.social_instagram : `https://instagram.com/${ownerProfile.social_instagram}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Instagram"
+                    >
+                      <Instagram className="h-4 w-4" />
+                    </a>
+                  )}
+                  {ownerProfile.social_twitter && (
+                    <a 
+                      href={ownerProfile.social_twitter.startsWith('http') ? ownerProfile.social_twitter : `https://twitter.com/${ownerProfile.social_twitter}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Twitter/X"
+                    >
+                      <Twitter className="h-4 w-4" />
+                    </a>
+                  )}
+                  {ownerProfile.social_facebook && (
+                    <a 
+                      href={ownerProfile.social_facebook}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Facebook"
+                    >
+                      <Facebook className="h-4 w-4" />
+                    </a>
+                  )}
+                  {ownerProfile.social_linkedin && (
+                    <a 
+                      href={ownerProfile.social_linkedin}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="LinkedIn"
+                    >
+                      <Linkedin className="h-4 w-4" />
+                    </a>
+                  )}
+                  {ownerProfile.social_youtube && (
+                    <a 
+                      href={ownerProfile.social_youtube}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="YouTube"
+                    >
+                      <Youtube className="h-4 w-4" />
+                    </a>
+                  )}
+                  {ownerProfile.social_website && (
+                    <a 
+                      href={ownerProfile.social_website}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Website"
+                    >
+                      <Globe className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
               )}
             </div>
           </SidebarGroup>

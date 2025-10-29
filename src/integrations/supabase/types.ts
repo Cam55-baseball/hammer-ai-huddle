@@ -21,6 +21,12 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          social_facebook: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_twitter: string | null
+          social_website: string | null
+          social_youtube: string | null
           updated_at: string | null
         }
         Insert: {
@@ -29,6 +35,12 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id: string
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_twitter?: string | null
+          social_website?: string | null
+          social_youtube?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -37,6 +49,12 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_twitter?: string | null
+          social_website?: string | null
+          social_youtube?: string | null
           updated_at?: string | null
         }
         Relationships: []

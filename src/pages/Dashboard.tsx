@@ -199,7 +199,7 @@ export default function Dashboard() {
                   <Icon 
                     iconNode={baseball} 
                     size={24}
-                    className="text-primary"
+                    className={selectedSport === 'softball' ? 'text-[#FFD700]' : 'text-primary'}
                   />
                 </div>
               </div>
@@ -255,7 +255,7 @@ export default function Dashboard() {
                   <Icon 
                     iconNode={baseball} 
                     size={24}
-                    className="text-primary"
+                    className={selectedSport === 'softball' ? 'text-[#FFD700]' : 'text-primary'}
                   />
                 </div>
               </div>
@@ -311,7 +311,7 @@ export default function Dashboard() {
                   <Icon 
                     iconNode={baseball} 
                     size={24}
-                    className="text-primary"
+                    className={selectedSport === 'softball' ? 'text-[#FFD700]' : 'text-primary'}
                   />
                 </div>
               </div>
