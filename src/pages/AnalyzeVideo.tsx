@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Upload, Video } from "lucide-react";
+import { ArrowLeft, Upload, Video, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 
@@ -73,6 +73,21 @@ export default function AnalyzeVideo() {
     }
   }, [authLoading, subLoading, initialized, user, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate]);
 
+  // Clean upload space when module or sport changes
+  useEffect(() => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setVideoFile(null);
+    setVideoPreview(null);
+    setAnalysis(null);
+    setAnalysisError(null);
+    setCurrentVideoId(null);
+    if (module && sport) {
+      toast.info(`Switched to ${sport} - ${module}. Upload space cleared.`);
+    }
+  }, [module, sport]);
+
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.playbackRate = parseFloat(playbackRate);
@@ -82,6 +97,18 @@ export default function AnalyzeVideo() {
   const handlePlaybackRateChange = (rate: string) => {
     setPlaybackRate(rate);
     localStorage.setItem('videoPlaybackRate', rate);
+  };
+
+  const handleRemoveVideo = () => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setVideoFile(null);
+    setVideoPreview(null);
+    setAnalysis(null);
+    setAnalysisError(null);
+    setCurrentVideoId(null);
+    toast.success("Video removed. Select a new video to analyze.");
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -311,6 +338,21 @@ export default function AnalyzeVideo() {
                     </Select>
                   </div>
                 </div>
+                
+                {/* File metadata and analysis context */}
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between text-sm">
+                    <div>
+                      <p className="font-medium capitalize">{sport} - {module} Analysis</p>
+                      {videoFile && (
+                        <p className="text-muted-foreground text-xs">
+                          {videoFile.name} • {(videoFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <video
                   ref={videoRef}
                   src={videoPreview}
@@ -321,14 +363,25 @@ export default function AnalyzeVideo() {
             </Card>
 
             {!analyzing && !analysis && (
-              <Button
-                onClick={handleUploadAndAnalyze}
-                disabled={uploading}
-                size="lg"
-                className="w-full"
-              >
-                {uploading ? "Uploading..." : "Analyze Video"}
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleUploadAndAnalyze}
+                  disabled={uploading}
+                  size="lg"
+                  className="flex-1"
+                >
+                  {uploading ? "Uploading..." : "Analyze Video"}
+                </Button>
+                <Button
+                  onClick={handleRemoveVideo}
+                  disabled={uploading}
+                  size="lg"
+                  variant="outline"
+                  className="px-6"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             )}
 
             {analyzing && (

@@ -8,9 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CircleDot, Target, Zap, Upload, Lock } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
+import { toast } from "sonner";
 
 type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
@@ -27,6 +30,9 @@ export default function Dashboard() {
   });
   const [progress, setProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSportSwitchDialog, setShowSportSwitchDialog] = useState(false);
+  const [pendingSportSwitch, setPendingSportSwitch] = useState<SportType | null>(null);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -56,8 +62,43 @@ export default function Dashboard() {
 
   const handleSportChange = (sport: string) => {
     const newSport = sport as SportType;
+    
+    // Check if user has dismissed the warning
+    const dontShowWarning = localStorage.getItem('dontShowSportWarning') === 'true';
+    
+    // If trying to switch to a different sport and warning not dismissed
+    if (newSport !== selectedSport && !dontShowWarning) {
+      setPendingSportSwitch(newSport);
+      setShowSportSwitchDialog(true);
+      return;
+    }
+    
+    // Otherwise proceed with the switch
     setSelectedSport(newSport);
     localStorage.setItem('selectedSport', newSport);
+    toast.info(`Switched to ${newSport === 'baseball' ? 'Baseball' : 'Softball'} modules`);
+  };
+
+  const handleConfirmSportSwitch = () => {
+    if (pendingSportSwitch) {
+      setSelectedSport(pendingSportSwitch);
+      localStorage.setItem('selectedSport', pendingSportSwitch);
+      
+      if (dontShowAgain) {
+        localStorage.setItem('dontShowSportWarning', 'true');
+      }
+      
+      toast.info(`Switched to ${pendingSportSwitch === 'baseball' ? 'Baseball' : 'Softball'} modules`);
+    }
+    setShowSportSwitchDialog(false);
+    setPendingSportSwitch(null);
+    setDontShowAgain(false);
+  };
+
+  const handleCancelSportSwitch = () => {
+    setShowSportSwitchDialog(false);
+    setPendingSportSwitch(null);
+    setDontShowAgain(false);
   };
 
   const handleModuleSelect = (module: ModuleType) => {
@@ -97,6 +138,42 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-foreground">Training Dashboard</h1>
           <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.full_name}</p>
         </div>
+
+        {/* Sport Switch Confirmation Dialog */}
+        <AlertDialog open={showSportSwitchDialog} onOpenChange={setShowSportSwitchDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Switch to {pendingSportSwitch === 'baseball' ? 'Baseball' : 'Softball'}?</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3">
+                <p>Baseball and Softball modules are separate and contain different:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Video analysis contexts</li>
+                  <li>Progress tracking</li>
+                  <li>Training data</li>
+                </ul>
+                <p className="text-sm font-medium">Your current videos and progress are sport-specific.</p>
+                
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox 
+                    id="dont-show" 
+                    checked={dontShowAgain}
+                    onCheckedChange={(checked) => setDontShowAgain(checked === true)}
+                  />
+                  <label 
+                    htmlFor="dont-show" 
+                    className="text-sm cursor-pointer select-none"
+                  >
+                    Don't show this again
+                  </label>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleCancelSportSwitch}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmSportSwitch}>Switch</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Sport Selector */}
         <Tabs value={selectedSport} onValueChange={handleSportChange}>
