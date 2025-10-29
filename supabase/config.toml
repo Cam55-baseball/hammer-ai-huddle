@@ -27,3 +27,9 @@ verify_jwt = true
 [functions.get-owner-profile]
 verify_jwt = false
 
+[functions.send-follow-request]
+verify_jwt = true
+
+[functions.respond-to-follow]
+verify_jwt = true
+

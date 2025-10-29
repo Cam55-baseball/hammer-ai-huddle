@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleDot, Target, Zap, Upload, Lock } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
 
 type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
@@ -90,6 +91,8 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <FollowRequestsPanel />
+        
         <div>
           <h1 className="text-3xl font-bold text-foreground">Training Dashboard</h1>
           <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.full_name}</p>

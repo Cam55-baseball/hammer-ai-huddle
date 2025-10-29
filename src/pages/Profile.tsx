@@ -4,9 +4,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, CreditCard, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Calendar, CreditCard, Loader2, Edit } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +20,14 @@ export default function Profile() {
   const { modules: subscribedModules, subscription_end, has_discount, discount_percent, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [openingPortal, setOpeningPortal] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [editForm, setEditForm] = useState({
+    full_name: "",
+    bio: "",
+    avatar_url: ""
+  });
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -23,8 +35,67 @@ export default function Profile() {
     
     if (!user) {
       navigate("/auth", { replace: true });
+    } else {
+      fetchProfile();
     }
   }, [authLoading, user, navigate]);
+
+  const fetchProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+      setEditForm({
+        full_name: data.full_name || "",
+        bio: data.bio || "",
+        avatar_url: data.avatar_url || ""
+      });
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editForm.full_name,
+          bio: editForm.bio,
+          avatar_url: editForm.avatar_url
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been saved successfully.",
+      });
+
+      setEditDialogOpen(false);
+      fetchProfile();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleManageSubscription = async () => {
     if (!session) return;
@@ -105,14 +176,75 @@ export default function Profile() {
         <Card className="p-6 mb-6">
           <div className="flex items-center gap-6 mb-6">
             <Avatar className="h-20 w-20">
+              {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
               <AvatarFallback className="text-2xl bg-primary/10 text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-1">
               <h2 className="text-2xl font-bold">{userName}</h2>
               <p className="text-muted-foreground">{userEmail}</p>
+              {profile?.bio && (
+                <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>
+              )}
             </div>
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Edit Profile</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      value={editForm.full_name}
+                      onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      value={editForm.bio}
+                      onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                      placeholder="Tell us about yourself..."
+                      maxLength={500}
+                      rows={4}
+                    />
+                    <p className="text-xs text-muted-foreground text-right">
+                      {editForm.bio.length}/500 characters
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="avatar_url">Avatar URL</Label>
+                    <Input
+                      id="avatar_url"
+                      value={editForm.avatar_url}
+                      onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
+                      placeholder="https://example.com/avatar.jpg"
+                    />
+                  </div>
+                  <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
+                    {saving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </Card>
 

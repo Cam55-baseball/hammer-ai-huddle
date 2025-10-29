@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { MessageSquare, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatWidget } from "./ChatWidget";
+import logo from "@/assets/logo.png";
 
 export function FloatingChatButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +18,7 @@ export function FloatingChatButton() {
         {isOpen ? (
           <X className="h-6 w-6" />
         ) : (
-          <MessageSquare className="h-6 w-6" />
+          <img src={logo} alt="Chat" className="h-8 w-8 object-contain rounded-full" />
         )}
       </Button>
 

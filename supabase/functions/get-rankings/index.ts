@@ -20,7 +20,6 @@ serve(async (req) => {
 
     // Get the requesting user
     let requestingUserId: string | null = null;
-    let isOwner = false;
 
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
@@ -28,23 +27,16 @@ serve(async (req) => {
       
       if (!userError && user) {
         requestingUserId = user.id;
-        
-        // Check if user is owner
-        const { data: ownerRole } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "owner")
-          .maybeSingle();
-        
-        isOwner = !!ownerRole;
       }
     }
 
     // Parse filters from request body
     const { sport, module } = await req.json().catch(() => ({ sport: null, module: null }));
 
-    // Build query
+    console.log("Fetching rankings for user:", requestingUserId, "filters:", { sport, module });
+
+    // Query for players with accepted scout follows
+    // This query gets all players who have at least one accepted follow from any scout
     let query = supabase
       .from("user_progress")
       .select(`
@@ -58,6 +50,22 @@ serve(async (req) => {
       `)
       .order("average_efficiency_score", { ascending: false });
 
+    // Filter by players who have accepted follows
+    const { data: acceptedFollows } = await supabase
+      .from("scout_follows")
+      .select("player_id")
+      .eq("status", "accepted");
+
+    if (!acceptedFollows || acceptedFollows.length === 0) {
+      console.log("No accepted follows found");
+      return new Response(JSON.stringify([]), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const acceptedPlayerIds = acceptedFollows.map(f => f.player_id);
+    query = query.in("user_id", acceptedPlayerIds);
+
     if (sport && sport !== "all") {
       query = query.eq("sport", sport);
     }
@@ -70,18 +78,18 @@ serve(async (req) => {
 
     if (error) throw error;
 
-    // Format data - anonymize names unless owner or current user
+    // Format data - NO ANONYMIZATION, all real names shown
     const formattedData = data.map((item: any) => ({
       user_id: item.user_id,
-      full_name: isOwner || item.user_id === requestingUserId 
-        ? item.profiles.full_name || "Anonymous"
-        : `Athlete ${item.user_id.substring(0, 8)}`,
+      full_name: item.profiles.full_name || "Anonymous",
       sport: item.sport,
       module: item.module,
       videos_analyzed: item.videos_analyzed,
       average_efficiency_score: item.average_efficiency_score || 0,
       last_activity: item.last_activity,
     }));
+
+    console.log(`Returning ${formattedData.length} ranked players`);
 
     return new Response(JSON.stringify(formattedData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

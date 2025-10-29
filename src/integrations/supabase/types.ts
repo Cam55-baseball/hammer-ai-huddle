@@ -41,6 +41,33 @@ export type Database = {
         }
         Relationships: []
       }
+      scout_follows: {
+        Row: {
+          created_at: string | null
+          id: string
+          player_id: string
+          scout_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          player_id: string
+          scout_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          player_id?: string
+          scout_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string | null
