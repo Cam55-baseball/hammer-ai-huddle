@@ -238,7 +238,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "owner" | "admin" | "coach" | "player" | "recruiter"
+      app_role: "owner" | "admin" | "coach" | "player" | "recruiter" | "scout"
       module_type: "hitting" | "pitching" | "throwing"
       sport_type: "baseball" | "softball"
       training_data_type: "professional_example" | "common_mistake"
@@ -370,7 +370,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["owner", "admin", "coach", "player", "recruiter"],
+      app_role: ["owner", "admin", "coach", "player", "recruiter", "scout"],
       module_type: ["hitting", "pitching", "throwing"],
       sport_type: ["baseball", "softball"],
       training_data_type: ["professional_example", "common_mistake"],
