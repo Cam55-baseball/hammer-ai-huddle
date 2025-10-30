@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, PauseCircle, XCircle } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +34,10 @@ export default function Profile() {
     social_website: ""
   });
   const [saving, setSaving] = useState(false);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [feedbackAction, setFeedbackAction] = useState<'pause' | 'cancel' | null>(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -113,6 +117,89 @@ export default function Profile() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAddModules = () => {
+    const currentSport = localStorage.getItem('selectedSport') || 'baseball';
+    navigate('/select-modules', { 
+      state: { 
+        mode: 'add',
+        sport: currentSport 
+      } 
+    });
+  };
+
+  const handlePauseSubscription = () => {
+    setFeedbackAction('pause');
+    setFeedbackDialogOpen(true);
+    setFeedbackText('');
+  };
+
+  const handleCancelSubscription = () => {
+    setFeedbackAction('cancel');
+    setFeedbackDialogOpen(true);
+    setFeedbackText('');
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (!feedbackText.trim()) {
+      toast({
+        title: "Feedback Required",
+        description: "Please tell us why you're making this change.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmittingFeedback(true);
+    
+    try {
+      // Send feedback email
+      const { error: emailError } = await supabase.functions.invoke(
+        'send-subscription-feedback',
+        {
+          body: {
+            action: feedbackAction,
+            feedback: feedbackText,
+            userName: user?.user_metadata?.full_name || user?.email || 'User',
+            userEmail: user?.email || '',
+            userId: user?.id || '',
+            modules: subscribedModules,
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        }
+      );
+
+      if (emailError) throw emailError;
+
+      // Then redirect to Stripe Customer Portal for actual subscription management
+      await handleManageSubscription();
+      
+      toast({
+        title: "Feedback Sent",
+        description: "Thank you for your feedback. Opening billing portal...",
+      });
+      
+      setFeedbackDialogOpen(false);
+      setFeedbackText('');
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send feedback. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
+
+  const handleCancelFeedback = () => {
+    setFeedbackDialogOpen(false);
+    setFeedbackText('');
+    setFeedbackAction(null);
   };
 
   const handleManageSubscription = async () => {
@@ -440,20 +527,41 @@ export default function Profile() {
                 </div>
               )}
 
-              <Button 
-                onClick={handleManageSubscription}
-                disabled={openingPortal}
-                className="w-full"
-              >
-                {openingPortal ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Opening Portal...
-                  </>
-                ) : (
-                  "Manage Subscription"
-                )}
-              </Button>
+              <div className="space-y-4 pt-4 border-t">
+                <div>
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-3">Manage Your Modules</h4>
+                  <Button 
+                    onClick={handleAddModules}
+                    variant="default"
+                    className="w-full"
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Modules
+                  </Button>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-3">Subscription Controls</h4>
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={handlePauseSubscription}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <PauseCircle className="mr-2 h-4 w-4" />
+                      Pause Subscription
+                    </Button>
+                    <Button 
+                      onClick={handleCancelSubscription}
+                      variant="destructive"
+                      className="w-full"
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      End Subscription
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-center py-8">
@@ -466,6 +574,59 @@ export default function Profile() {
             </div>
           )}
         </Card>
+
+        {/* Feedback Dialog */}
+        <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {feedbackAction === 'pause' ? 'Pause Subscription' : 'End Subscription'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-muted-foreground">
+                We'd love to hear your feedback. Your input helps us improve our service for all users.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="feedback">
+                  Why are you {feedbackAction === 'pause' ? 'pausing' : 'ending'} your subscription?
+                </Label>
+                <Textarea
+                  id="feedback"
+                  placeholder="Please tell us why..."
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  rows={6}
+                  className="resize-none"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleCancelFeedback}
+                  disabled={submittingFeedback}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmitFeedback}
+                  disabled={submittingFeedback || !feedbackText.trim()}
+                  className="flex-1"
+                >
+                  {submittingFeedback ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    'Submit & Continue'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Account Info Card */}
         <Card className="p-6">
