@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -70,7 +70,10 @@ export function AppSidebar() {
 
   const accountItems = [
     { title: "Profile", url: "/profile", icon: Settings },
-    ...(isOwner ? [{ title: "Owner Dashboard", url: "/owner", icon: Shield }] : []),
+    ...(isOwner ? [
+      { title: "Owner Dashboard", url: "/owner", icon: Shield },
+      { title: "Subscribers", url: "/subscribers", icon: Users2 }
+    ] : []),
     ...(isAdmin ? [{ title: "Admin Dashboard", url: "/admin", icon: Users }] : []),
     ...(isScout ? [{ title: "Scout Dashboard", url: "/scout-dashboard", icon: UserPlus }] : []),
   ];

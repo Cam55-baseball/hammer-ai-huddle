@@ -21,6 +21,7 @@ import InitializeOwner from "./pages/InitializeOwner";
 import Profile from "./pages/Profile";
 import Rankings from "./pages/Rankings";
 import Weather from "./pages/Weather";
+import Subscribers from "./pages/Subscribers";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/rankings" element={<Rankings />} />
             <Route path="/weather" element={<Weather />} />
+            <Route path="/subscribers" element={<Subscribers />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
