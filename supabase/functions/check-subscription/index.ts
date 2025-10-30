@@ -177,12 +177,12 @@ serve(async (req) => {
     });
     const hasActiveSub = subscriptions.data.length > 0;
     let subscribedModules: string[] = [];
-    let subscriptionEnd = null;
-    let stripeSubscriptionId = null;
+    let subscriptionEnd: string | null = null;
+    let stripeSubscriptionId: string | null = null;
     let hasDiscount = false;
-    let discountPercent = null;
-    let couponCode = null;
-    let couponName = null;
+    let discountPercent: number | null = null;
+    let couponCode: string | null = null;
+    let couponName: string | null = null;
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
