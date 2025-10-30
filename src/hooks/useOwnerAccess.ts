@@ -3,13 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
 export const useOwnerAccess = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkOwnerRole = async () => {
-      if (!user) {
+      if (!user || !session) {
         setIsOwner(false);
         setLoading(false);
         return;
@@ -38,7 +38,7 @@ export const useOwnerAccess = () => {
     };
 
     checkOwnerRole();
-  }, [user]);
+  }, [user, session]);
 
   return { isOwner, loading };
 };

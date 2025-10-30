@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users2, Target } from "lucide-react";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,7 @@ interface SubscriptionStats {
 
 export default function Subscribers() {
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { session } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [stats, setStats] = useState<SubscriptionStats>({
@@ -99,7 +101,7 @@ export default function Subscribers() {
   };
 
   useEffect(() => {
-    if (isOwner) {
+    if (isOwner && session) {
       fetchSubscriptionStats();
 
       const channel = supabase
@@ -121,7 +123,7 @@ export default function Subscribers() {
         supabase.removeChannel(channel);
       };
     }
-  }, [isOwner]);
+  }, [isOwner, session]);
 
   if (ownerLoading || loading) {
     return (
