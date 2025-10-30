@@ -181,18 +181,23 @@ serve(async (req) => {
     let stripeSubscriptionId = null;
     let hasDiscount = false;
     let discountPercent = null;
+    let couponCode = null;
+    let couponName = null;
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       stripeSubscriptionId = subscription.id;
       
-      // Check for discount
+      // Check for discount and extract coupon details
       if (subscription.discount) {
         hasDiscount = true;
-        if (subscription.discount.coupon.percent_off) {
-          discountPercent = subscription.discount.coupon.percent_off;
-          logStep("Discount found", { percent: discountPercent });
+        const coupon = subscription.discount.coupon;
+        if (coupon.percent_off) {
+          discountPercent = coupon.percent_off;
         }
+        couponCode = coupon.id;
+        couponName = coupon.name || coupon.id;
+        logStep("Discount found", { percent: discountPercent, code: couponCode, name: couponName });
       }
       
       // Safe date conversion with validation and error handling
@@ -270,7 +275,7 @@ serve(async (req) => {
       }
       logStep("Determined subscribed modules", { subscribedModules });
 
-      // UPSERT subscription record in database
+      // UPSERT subscription record in database with coupon information
       await supabaseClient
         .from('subscriptions')
         .upsert({
@@ -279,7 +284,10 @@ serve(async (req) => {
           subscribed_modules: subscribedModules,
           stripe_customer_id: customerId,
           stripe_subscription_id: stripeSubscriptionId,
-          current_period_end: subscriptionEnd
+          current_period_end: subscriptionEnd,
+          coupon_code: couponCode,
+          coupon_name: couponName,
+          discount_percent: discountPercent
         }, {
           onConflict: 'user_id'
         });

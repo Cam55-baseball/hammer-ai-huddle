@@ -88,8 +88,11 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          coupon_code: string | null
+          coupon_name: string | null
           created_at: string | null
           current_period_end: string
+          discount_percent: number | null
           id: string
           plan: string
           status: string
@@ -100,8 +103,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          coupon_code?: string | null
+          coupon_name?: string | null
           created_at?: string | null
           current_period_end?: string
+          discount_percent?: number | null
           id?: string
           plan?: string
           status?: string
@@ -112,8 +118,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          coupon_code?: string | null
+          coupon_name?: string | null
           created_at?: string | null
           current_period_end?: string
+          discount_percent?: number | null
           id?: string
           plan?: string
           status?: string
