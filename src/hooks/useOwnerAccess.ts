@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
 export const useOwnerAccess = () => {
-  const { user, session } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const [isOwner, setIsOwner] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -12,11 +12,18 @@ export const useOwnerAccess = () => {
       console.log('[useOwnerAccess] Checking owner role...', { 
         hasUser: !!user, 
         hasSession: !!session,
-        userId: user?.id 
+        userId: user?.id,
+        authLoading 
       });
 
+      // Wait for auth to finish loading before making any decisions
+      if (authLoading) {
+        console.log('[useOwnerAccess] Auth still loading, deferring owner check');
+        return;
+      }
+
       if (!user || !session) {
-        console.log('[useOwnerAccess] No user or session, setting isOwner to false');
+        console.log('[useOwnerAccess] No user or session after auth settled, setting isOwner to false');
         setIsOwner(false);
         setLoading(false);
         return;
@@ -50,7 +57,7 @@ export const useOwnerAccess = () => {
     };
 
     checkOwnerRole();
-  }, [user, session]);
+  }, [user, session, authLoading]);
 
   return { isOwner, loading };
 };

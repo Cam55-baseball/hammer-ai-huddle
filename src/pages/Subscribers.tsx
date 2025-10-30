@@ -38,7 +38,7 @@ export default function Subscribers() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!ownerLoading && !isOwner) {
+    if (!ownerLoading && session && !isOwner) {
       toast({
         title: "Access Denied",
         description: "Only owners can view subscriber analytics.",
@@ -46,7 +46,7 @@ export default function Subscribers() {
       });
       navigate("/dashboard");
     }
-  }, [isOwner, ownerLoading, navigate, toast]);
+  }, [isOwner, ownerLoading, session, navigate, toast]);
 
   const fetchSubscriptionStats = async () => {
     try {
