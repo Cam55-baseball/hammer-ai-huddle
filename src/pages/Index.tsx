@@ -76,9 +76,6 @@ const Index = () => {
               <Button onClick={handleGetStarted} size="lg">
                 Get Started
               </Button>
-              <Button variant="secondary" size="lg">
-                Watch Demo
-              </Button>
             </div>
           </div>
         </div>
@@ -165,6 +162,10 @@ const Index = () => {
               </div>
               <h4 className="text-xl font-bold mb-2">Performance Rankings</h4>
               <p className="text-muted-foreground">
+                <span className="inline-block px-3 py-1 bg-muted rounded-full text-sm font-medium mb-2">
+                  Coming Soon
+                </span>
+                <br />
                 Compare your stats against players worldwide and track your progress over time
               </p>
             </div>

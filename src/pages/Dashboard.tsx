@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircleDot, Target, Zap, Upload, Lock, Icon } from "lucide-react";
+import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
@@ -139,6 +139,37 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-foreground">Training Dashboard</h1>
           <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.full_name}</p>
         </div>
+
+        {/* Construction Notice */}
+        <Card className="border-2 border-primary/50 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="bg-primary/20 p-3 rounded-full animate-pulse">
+                  <Construction className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Sparkles className="h-5 w-5 text-accent animate-pulse" />
+                  <h3 className="text-xl font-bold text-foreground">
+                    Exciting Updates Coming Soon!
+                  </h3>
+                </div>
+                <p className="text-base text-foreground/90 font-medium">
+                  Advanced metric measuring and enhanced Professional Scout/Collegiate recruiting connections are under construction!
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  We're working hard to bring you powerful new analytics and direct connections to scouts and recruiters. Your training data is being captured now for seamless integration when these features launch!
+                </p>
+                <div className="flex items-center gap-2 pt-2">
+                  <div className="h-2 w-2 bg-accent rounded-full animate-pulse" />
+                  <span className="text-xs text-muted-foreground font-medium">Active Development</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Sport Switch Confirmation Dialog */}
         <AlertDialog open={showSportSwitchDialog} onOpenChange={setShowSportSwitchDialog}>
