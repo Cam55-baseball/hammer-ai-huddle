@@ -90,9 +90,9 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   };
 
   useEffect(() => {
-    // Auto-fetch on mount
+    // Auto-fetch on mount and when sport changes
     fetchWeather();
-  }, []);
+  }, [sport]);
 
   if (loading && !weather) {
     return (
