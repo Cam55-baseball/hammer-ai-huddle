@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Users, BarChart3, Settings, Video } from "lucide-react";
+import { Users, BarChart3, Settings, Video, Target, CircleDot, Zap, Tag } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { Progress } from "@/components/ui/progress";
 
 interface User {
   id: string;
@@ -40,6 +41,16 @@ const OwnerDashboard = () => {
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  const [moduleStats, setModuleStats] = useState<{
+    hitting: number;
+    pitching: number;
+    throwing: number;
+  }>({ hitting: 0, pitching: 0, throwing: 0 });
+  const [couponStats, setCouponStats] = useState<{
+    totalCodes: number;
+    ambassadorCodes: number;
+    totalUsers: number;
+  }>({ totalCodes: 0, ambassadorCodes: 0, totalUsers: 0 });
 
   useEffect(() => {
     if (!loading && !isOwner) {
@@ -79,6 +90,43 @@ const OwnerDashboard = () => {
         }));
         setAdminRequests(requests);
       }
+
+      // Fetch module subscriptions
+      const { data: moduleSubs } = await supabase
+        .from("subscriptions")
+        .select("subscribed_modules")
+        .eq("status", "active");
+
+      const moduleCount = { hitting: 0, pitching: 0, throwing: 0 };
+      moduleSubs?.forEach((sub) => {
+        sub.subscribed_modules?.forEach((module: string) => {
+          const moduleName = module.includes("_") ? module.split("_")[1] : module;
+          if (moduleName in moduleCount) {
+            moduleCount[moduleName as keyof typeof moduleCount]++;
+          }
+        });
+      });
+      setModuleStats(moduleCount);
+
+      // Fetch coupon statistics
+      const { data: allCoupons } = await supabase
+        .from("subscriptions")
+        .select("coupon_code")
+        .eq("status", "active")
+        .not("coupon_code", "is", null);
+
+      const uniqueCoupons = new Set(allCoupons?.map(c => c.coupon_code) || []);
+
+      const { data: ambassadorData } = await supabase
+        .from("coupon_metadata")
+        .select("coupon_code")
+        .eq("is_ambassador", true);
+
+      setCouponStats({
+        totalCodes: uniqueCoupons.size,
+        ambassadorCodes: ambassadorData?.length || 0,
+        totalUsers: allCoupons?.length || 0
+      });
     } catch (error) {
       console.error("Error loading dashboard data:", error);
     } finally {
@@ -214,7 +262,7 @@ const OwnerDashboard = () => {
         </div>
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
           <Card className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-full bg-primary/10">
@@ -233,7 +281,7 @@ const OwnerDashboard = () => {
                 <BarChart3 className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Active Subscriptions</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Subscriptions</p>
                 <p className="text-2xl font-bold">{activeSubscriptions}</p>
               </div>
             </div>
@@ -245,7 +293,7 @@ const OwnerDashboard = () => {
                 <Video className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Videos Analyzed</p>
+                <p className="text-sm text-muted-foreground">Videos</p>
                 <p className="text-2xl font-bold">{totalVideosAnalyzed}</p>
               </div>
             </div>
@@ -257,8 +305,8 @@ const OwnerDashboard = () => {
                 <Settings className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Avg Score</p>
-                <p className="text-2xl font-bold">{avgScore}/100</p>
+                <p className="text-sm text-muted-foreground">Efficiency</p>
+                <p className="text-2xl font-bold">{avgScore}%</p>
               </div>
             </div>
           </Card>
@@ -378,27 +426,88 @@ const OwnerDashboard = () => {
           </TabsContent>
 
           <TabsContent value="subscriptions" className="space-y-4">
+            {/* Module Subscriptions Card */}
             <Card className="p-6">
-              <h3 className="text-2xl font-bold mb-4">Subscription Overview</h3>
-              <div className="grid md:grid-cols-3 gap-4 mb-6">
-                <div className="p-4 border rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-1">Free</p>
-                  <p className="text-2xl font-bold">
-                    {subscriptions.filter((s) => s.plan === "free").length}
-                  </p>
+              <h3 className="text-2xl font-bold mb-4">Module Subscriptions</h3>
+              <p className="text-muted-foreground mb-6">
+                Active subscribers by training module
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Target className="h-5 w-5 text-primary" />
+                    <p className="font-semibold text-lg">Hitting</p>
+                  </div>
+                  <p className="text-3xl font-bold">{moduleStats.hitting}</p>
+                  <p className="text-sm text-muted-foreground">subscribers</p>
+                  <Progress 
+                    value={activeSubscriptions > 0 ? (moduleStats.hitting / activeSubscriptions) * 100 : 0} 
+                    className="h-2 mt-2" 
+                  />
                 </div>
-                <div className="p-4 border rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-1">Pro</p>
-                  <p className="text-2xl font-bold">
-                    {subscriptions.filter((s) => s.plan === "pro").length}
-                  </p>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CircleDot className="h-5 w-5 text-primary" />
+                    <p className="font-semibold text-lg">Pitching</p>
+                  </div>
+                  <p className="text-3xl font-bold">{moduleStats.pitching}</p>
+                  <p className="text-sm text-muted-foreground">subscribers</p>
+                  <Progress 
+                    value={activeSubscriptions > 0 ? (moduleStats.pitching / activeSubscriptions) * 100 : 0} 
+                    className="h-2 mt-2" 
+                  />
                 </div>
-                <div className="p-4 border rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-1">Team</p>
-                  <p className="text-2xl font-bold">
-                    {subscriptions.filter((s) => s.plan === "team").length}
-                  </p>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Zap className="h-5 w-5 text-primary" />
+                    <p className="font-semibold text-lg">Throwing</p>
+                  </div>
+                  <p className="text-3xl font-bold">{moduleStats.throwing}</p>
+                  <p className="text-sm text-muted-foreground">subscribers</p>
+                  <Progress 
+                    value={activeSubscriptions > 0 ? (moduleStats.throwing / activeSubscriptions) * 100 : 0} 
+                    className="h-2 mt-2" 
+                  />
                 </div>
+              </div>
+            </Card>
+
+            {/* Coupon Code Usage Card */}
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-4">Coupon Code Usage</h3>
+              <p className="text-muted-foreground mb-6">
+                Active discount codes and their usage statistics
+              </p>
+              
+              {/* Summary stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="p-4 rounded-lg border bg-card">
+                  <p className="text-sm text-muted-foreground mb-1">Total Codes</p>
+                  <p className="text-2xl font-bold">{couponStats.totalCodes}</p>
+                </div>
+                <div className="p-4 rounded-lg border bg-card">
+                  <p className="text-sm text-muted-foreground mb-1">Ambassador Codes</p>
+                  <p className="text-2xl font-bold">{couponStats.ambassadorCodes}</p>
+                </div>
+                <div className="p-4 rounded-lg border bg-card">
+                  <p className="text-sm text-muted-foreground mb-1">Total Users</p>
+                  <p className="text-2xl font-bold">{couponStats.totalUsers}</p>
+                </div>
+              </div>
+
+              {/* Detailed table - link to /subscribers page */}
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  View detailed breakdown and manage coupon metadata
+                </p>
+                <Button 
+                  onClick={() => navigate('/subscribers')}
+                  variant="outline"
+                >
+                  View Details →
+                </Button>
               </div>
             </Card>
           </TabsContent>
