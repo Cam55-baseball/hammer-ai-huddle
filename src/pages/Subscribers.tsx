@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users2, Target, Tag } from "lucide-react";
+import { Users2, Target } from "lucide-react";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { CouponUsageTable } from "@/components/CouponUsageTable";
 
 interface ModuleStats {
   module: string;
@@ -20,13 +19,6 @@ interface ModuleStats {
 interface SubscriptionStats {
   totalActiveSubscribers: number;
   moduleBreakdown: ModuleStats[];
-  planBreakdown: {
-    free: number;
-    paid: number;
-  };
-  activeCoupons: number;
-  ambassadorCodes: number;
-  ambassadorUsers: number;
 }
 
 export default function Subscribers() {
@@ -37,10 +29,6 @@ export default function Subscribers() {
   const [stats, setStats] = useState<SubscriptionStats>({
       totalActiveSubscribers: 0,
       moduleBreakdown: [],
-      planBreakdown: { free: 0, paid: 0 },
-      activeCoupons: 0,
-      ambassadorCodes: 0,
-      ambassadorUsers: 0,
     });
   const [loading, setLoading] = useState(true);
 
@@ -59,7 +47,7 @@ export default function Subscribers() {
     try {
       const { data: activeSubscriptions, error: subsError } = await supabase
         .from("subscriptions")
-        .select("plan, subscribed_modules, status")
+        .select("subscribed_modules, status")
         .eq("status", "active");
 
       if (subsError) throw subsError;
@@ -80,30 +68,6 @@ export default function Subscribers() {
       });
 
       const totalActive = activeSubscriptions?.length || 0;
-      const freeCount = activeSubscriptions?.filter((s) => s.plan === "free").length || 0;
-      const paidCount = totalActive - freeCount;
-
-      // Count subscriptions with active coupons
-      const { data: couponData } = await supabase
-        .from("subscriptions")
-        .select("coupon_code")
-        .eq("status", "active")
-        .not("coupon_code", "is", null);
-      const activeCouponsCount = couponData?.length || 0;
-
-      // Get ambassador statistics
-      const { data: ambassadorData } = await supabase
-        .from("coupon_metadata")
-        .select("coupon_code")
-        .eq("is_ambassador", true);
-
-      const ambassadorCodes = ambassadorData?.map((m) => m.coupon_code) || [];
-
-      const { data: ambassadorUsersData } = await supabase
-        .from("subscriptions")
-        .select("coupon_code")
-        .in("coupon_code", ambassadorCodes.length > 0 ? ambassadorCodes : [''])
-        .eq("status", "active");
 
       setStats({
         totalActiveSubscribers: totalActive,
@@ -112,13 +76,6 @@ export default function Subscribers() {
           count,
           percentage: totalActive > 0 ? (count / totalActive) * 100 : 0,
         })),
-        planBreakdown: {
-          free: freeCount,
-          paid: paidCount,
-        },
-        activeCoupons: activeCouponsCount,
-        ambassadorCodes: ambassadorCodes.length,
-        ambassadorUsers: ambassadorUsersData?.length || 0,
       });
     } catch (error) {
       console.error("Error fetching subscription stats:", error);
@@ -162,9 +119,7 @@ export default function Subscribers() {
       <DashboardLayout>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
-          <div className="grid gap-4 md:grid-cols-3">
-            <Skeleton className="h-32" />
-            <Skeleton className="h-32" />
+          <div className="grid gap-4 md:grid-cols-1">
             <Skeleton className="h-32" />
           </div>
           <Skeleton className="h-64" />
@@ -182,10 +137,10 @@ export default function Subscribers() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Subscriber Analytics</h1>
-          <p className="text-muted-foreground">Real-time overview of module subscriptions</p>
+          <p className="text-muted-foreground">Active subscribers and module breakdown</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-1">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Subscribers</CardTitle>
@@ -193,52 +148,6 @@ export default function Subscribers() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalActiveSubscribers}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Free Plans</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.planBreakdown.free}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Paid Plans</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.planBreakdown.paid}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Coupons</CardTitle>
-              <Tag className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeCoupons}</div>
-              <p className="text-xs text-muted-foreground">
-                Codes in use
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Ambassador Codes</CardTitle>
-              <Users2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.ambassadorCodes}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.ambassadorUsers} users
-              </p>
             </CardContent>
           </Card>
         </div>
@@ -280,16 +189,6 @@ export default function Subscribers() {
             </CardContent>
           </Card>
         )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Coupon Usage</CardTitle>
-            <CardDescription>Active subscribers using discount codes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CouponUsageTable />
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   );
