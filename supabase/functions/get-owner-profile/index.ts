@@ -36,13 +36,19 @@ serve(async (req) => {
     // Get owner's profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("full_name, bio, avatar_url, social_instagram, social_twitter, social_facebook, social_linkedin, social_youtube, social_website")
+      .select("first_name, last_name, bio, avatar_url, social_instagram, social_twitter, social_facebook, social_linkedin, social_youtube, social_website")
       .eq("id", ownerRole.user_id)
       .single();
 
     if (profileError) throw profileError;
 
-    return new Response(JSON.stringify(profile), {
+    // Construct full_name from first_name and last_name for backward compatibility
+    const responseData = {
+      ...profile,
+      full_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || null,
+    };
+
+    return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

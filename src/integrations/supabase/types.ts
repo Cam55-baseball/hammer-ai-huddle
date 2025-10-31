@@ -53,8 +53,12 @@ export type Database = {
           bio: string | null
           created_at: string | null
           experience_level: string | null
+          first_name: string | null
           full_name: string | null
+          graduation_year: number | null
+          height: string | null
           id: string
+          last_name: string | null
           position: string | null
           social_facebook: string | null
           social_instagram: string | null
@@ -62,15 +66,23 @@ export type Database = {
           social_twitter: string | null
           social_website: string | null
           social_youtube: string | null
+          state: string | null
+          team_affiliation: string | null
           updated_at: string | null
+          weight: string | null
+          years_affiliated: number | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
           experience_level?: string | null
+          first_name?: string | null
           full_name?: string | null
+          graduation_year?: number | null
+          height?: string | null
           id: string
+          last_name?: string | null
           position?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
@@ -78,15 +90,23 @@ export type Database = {
           social_twitter?: string | null
           social_website?: string | null
           social_youtube?: string | null
+          state?: string | null
+          team_affiliation?: string | null
           updated_at?: string | null
+          weight?: string | null
+          years_affiliated?: number | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
           experience_level?: string | null
+          first_name?: string | null
           full_name?: string | null
+          graduation_year?: number | null
+          height?: string | null
           id?: string
+          last_name?: string | null
           position?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
@@ -94,7 +114,11 @@ export type Database = {
           social_twitter?: string | null
           social_website?: string | null
           social_youtube?: string | null
+          state?: string | null
+          team_affiliation?: string | null
           updated_at?: string | null
+          weight?: string | null
+          years_affiliated?: number | null
         }
         Relationships: []
       }

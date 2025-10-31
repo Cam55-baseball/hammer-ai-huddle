@@ -21,7 +21,9 @@ import {
 } from "@/components/ui/sidebar";
 
 interface OwnerProfile {
-  full_name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  full_name?: string | null;
   bio: string | null;
   avatar_url: string | null;
   social_instagram: string | null;
@@ -111,11 +113,13 @@ export function AppSidebar() {
                 {ownerProfile.avatar_url && (
                   <img 
                     src={ownerProfile.avatar_url} 
-                    alt={ownerProfile.full_name || 'Owner'}
+                    alt={`${ownerProfile.first_name} ${ownerProfile.last_name}` || 'Owner'}
                     className="h-10 w-10 rounded-full object-cover"
                   />
                 )}
-                <p className="font-semibold text-sm">{ownerProfile.full_name}</p>
+                <p className="font-semibold text-sm">
+                  {ownerProfile.first_name} {ownerProfile.last_name}
+                </p>
               </div>
               {ownerProfile.bio && (
                 <p className="text-xs text-muted-foreground line-clamp-3">

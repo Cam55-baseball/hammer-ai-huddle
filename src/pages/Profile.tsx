@@ -22,10 +22,20 @@ export default function Profile() {
   const [openingPortal, setOpeningPortal] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
-    full_name: "",
+    first_name: "",
+    last_name: "",
     bio: "",
     avatar_url: "",
+    position: "",
+    experience_level: "",
+    height: "",
+    weight: "",
+    state: "",
+    graduation_year: "",
+    team_affiliation: "",
+    years_affiliated: "",
     social_instagram: "",
     social_twitter: "",
     social_facebook: "",
@@ -34,6 +44,8 @@ export default function Profile() {
     social_website: ""
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [feedbackAction, setFeedbackAction] = useState<'pause' | 'cancel' | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
@@ -62,10 +74,29 @@ export default function Profile() {
 
       if (error) throw error;
       setProfile(data);
+      
+      // Fetch user role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      setUserRole(roleData?.role || null);
+      
       setEditForm({
-        full_name: data.full_name || "",
+        first_name: data.first_name || "",
+        last_name: data.last_name || "",
         bio: data.bio || "",
         avatar_url: data.avatar_url || "",
+        position: data.position || "",
+        experience_level: data.experience_level || "",
+        height: data.height || "",
+        weight: data.weight || "",
+        state: data.state || "",
+        graduation_year: data.graduation_year?.toString() || "",
+        team_affiliation: data.team_affiliation || "",
+        years_affiliated: data.years_affiliated?.toString() || "",
         social_instagram: data.social_instagram || "",
         social_twitter: data.social_twitter || "",
         social_facebook: data.social_facebook || "",
@@ -73,8 +104,56 @@ export default function Profile() {
         social_youtube: data.social_youtube || "",
         social_website: data.social_website || ""
       });
+      setAvatarPreview(data.avatar_url);
     } catch (error) {
       console.error('Error fetching profile:', error);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ 
+        title: "File too large", 
+        description: "Maximum file size is 5MB", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/avatar.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+        
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+        
+      setEditForm({ ...editForm, avatar_url: publicUrl });
+      setAvatarPreview(publicUrl);
+      
+      toast({
+        title: "Upload successful",
+        description: "Profile picture uploaded successfully",
+      });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({ 
+        title: "Upload failed", 
+        description: "Failed to upload profile picture", 
+        variant: "destructive" 
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -83,19 +162,37 @@ export default function Profile() {
 
     setSaving(true);
     try {
+      const updateData: any = {
+        first_name: editForm.first_name,
+        last_name: editForm.last_name,
+        bio: editForm.bio,
+        avatar_url: editForm.avatar_url,
+        social_instagram: editForm.social_instagram,
+        social_twitter: editForm.social_twitter,
+        social_facebook: editForm.social_facebook,
+        social_linkedin: editForm.social_linkedin,
+        social_youtube: editForm.social_youtube,
+        social_website: editForm.social_website
+      };
+
+      // Add role-specific fields
+      if (userRole === 'player') {
+        updateData.position = editForm.position;
+        updateData.experience_level = editForm.experience_level;
+        updateData.height = editForm.height;
+        updateData.weight = editForm.weight;
+        updateData.state = editForm.state;
+        updateData.graduation_year = editForm.graduation_year ? parseInt(editForm.graduation_year) : null;
+        updateData.team_affiliation = editForm.team_affiliation;
+      } else if (userRole === 'scout' || userRole === 'admin') {
+        updateData.position = editForm.position;
+        updateData.team_affiliation = editForm.team_affiliation;
+        updateData.years_affiliated = editForm.years_affiliated ? parseInt(editForm.years_affiliated) : null;
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: editForm.full_name,
-          bio: editForm.bio,
-          avatar_url: editForm.avatar_url,
-          social_instagram: editForm.social_instagram,
-          social_twitter: editForm.social_twitter,
-          social_facebook: editForm.social_facebook,
-          social_linkedin: editForm.social_linkedin,
-          social_youtube: editForm.social_youtube,
-          social_website: editForm.social_website
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) throw error;
@@ -244,13 +341,18 @@ export default function Profile() {
 
   if (!user) return null;
 
-  const userName = user.user_metadata?.full_name || "User";
+  const userName = profile?.first_name && profile?.last_name 
+    ? `${profile.first_name} ${profile.last_name}` 
+    : user.user_metadata?.full_name || "User";
   const userEmail = user.email || "";
   const initials = userName
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase();
+  
+  const isPlayer = userRole === 'player';
+  const isCoachOrScout = userRole === 'scout' || userRole === 'admin';
 
   const subscriptionEndDate = subscription_end 
     ? new Date(subscription_end).toLocaleDateString('en-US', { 
@@ -291,6 +393,72 @@ export default function Profile() {
               <p className="text-muted-foreground">{userEmail}</p>
               {profile?.bio && (
                 <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>
+              )}
+              
+              {/* Player-Specific Info */}
+              {isPlayer && (
+                <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
+                  {profile?.height && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Height</Label>
+                      <p>{profile.height}</p>
+                    </div>
+                  )}
+                  {profile?.weight && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Weight</Label>
+                      <p>{profile.weight}</p>
+                    </div>
+                  )}
+                  {profile?.state && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">State</Label>
+                      <p>{profile.state}</p>
+                    </div>
+                  )}
+                  {profile?.graduation_year && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Graduation Year</Label>
+                      <p>{profile.graduation_year}</p>
+                    </div>
+                  )}
+                  {profile?.position && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Position</Label>
+                      <p>{profile.position}</p>
+                    </div>
+                  )}
+                  {profile?.team_affiliation && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Team</Label>
+                      <p>{profile.team_affiliation}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Coach/Scout Info */}
+              {isCoachOrScout && (
+                <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
+                  {profile?.position && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Position</Label>
+                      <p>{profile.position}</p>
+                    </div>
+                  )}
+                  {profile?.team_affiliation && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Team Affiliation</Label>
+                      <p>{profile.team_affiliation}</p>
+                    </div>
+                  )}
+                  {profile?.years_affiliated && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Years Affiliated</Label>
+                      <p>{profile.years_affiliated} years</p>
+                    </div>
+                  )}
+                </div>
               )}
               {(profile?.social_instagram || profile?.social_twitter || 
                 profile?.social_facebook || profile?.social_linkedin || 
@@ -366,19 +534,30 @@ export default function Profile() {
                   Edit Profile
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>Edit Profile</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="full_name">Full Name</Label>
-                    <Input
-                      id="full_name"
-                      value={editForm.full_name}
-                      onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                      placeholder="Enter your full name"
-                    />
+                <div className="space-y-4 py-4 overflow-y-auto flex-1">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="first_name">First Name</Label>
+                      <Input
+                        id="first_name"
+                        value={editForm.first_name}
+                        onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
+                        placeholder="First name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="last_name">Last Name</Label>
+                      <Input
+                        id="last_name"
+                        value={editForm.last_name}
+                        onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
+                        placeholder="Last name"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
@@ -395,14 +574,137 @@ export default function Profile() {
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="avatar_url">Avatar URL</Label>
-                    <Input
-                      id="avatar_url"
-                      value={editForm.avatar_url}
-                      onChange={(e) => setEditForm({ ...editForm, avatar_url: e.target.value })}
-                      placeholder="https://example.com/avatar.jpg"
-                    />
+                    <Label>Profile Picture</Label>
+                    <div className="flex gap-4 items-start">
+                      <Avatar className="h-20 w-20">
+                        <AvatarImage src={avatarPreview || profile?.avatar_url} />
+                        <AvatarFallback>{initials}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-2">
+                        <Input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handleAvatarUpload}
+                          disabled={uploading}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Max size: 5MB. JPG, PNG, or WEBP
+                        </p>
+                        <Input
+                          placeholder="Or enter image URL"
+                          value={editForm.avatar_url}
+                          onChange={(e) => {
+                            setEditForm({ ...editForm, avatar_url: e.target.value });
+                            setAvatarPreview(e.target.value);
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
+                  
+                  {/* Player-specific fields */}
+                  {isPlayer && (
+                    <>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="height">Height</Label>
+                          <Input
+                            id="height"
+                            value={editForm.height}
+                            onChange={(e) => setEditForm({ ...editForm, height: e.target.value })}
+                            placeholder="e.g., 5'10&quot;"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="weight">Weight</Label>
+                          <Input
+                            id="weight"
+                            value={editForm.weight}
+                            onChange={(e) => setEditForm({ ...editForm, weight: e.target.value })}
+                            placeholder="e.g., 180 lbs"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="state">State</Label>
+                          <Input
+                            id="state"
+                            value={editForm.state}
+                            onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
+                            placeholder="e.g., California"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="graduation_year">Graduation Year</Label>
+                          <Input
+                            id="graduation_year"
+                            type="number"
+                            value={editForm.graduation_year}
+                            onChange={(e) => setEditForm({ ...editForm, graduation_year: e.target.value })}
+                            placeholder="e.g., 2025"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="position">Position</Label>
+                        <Input
+                          id="position"
+                          value={editForm.position}
+                          onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
+                          placeholder="e.g., Pitcher, Outfielder"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="team_affiliation">Team Affiliation</Label>
+                        <Input
+                          id="team_affiliation"
+                          value={editForm.team_affiliation}
+                          onChange={(e) => setEditForm({ ...editForm, team_affiliation: e.target.value })}
+                          placeholder="Travel team/High School/College/Pro"
+                        />
+                      </div>
+                    </>
+                  )}
+                  
+                  {/* Coach/Scout-specific fields */}
+                  {isCoachOrScout && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="position">Position/Role</Label>
+                        <Input
+                          id="position"
+                          value={editForm.position}
+                          onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
+                          placeholder="e.g., Head Coach, Scout"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="team_affiliation">Team Affiliation</Label>
+                        <Input
+                          id="team_affiliation"
+                          value={editForm.team_affiliation}
+                          onChange={(e) => setEditForm({ ...editForm, team_affiliation: e.target.value })}
+                          placeholder="Team name or organization"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="years_affiliated">Years Affiliated</Label>
+                        <Input
+                          id="years_affiliated"
+                          type="number"
+                          value={editForm.years_affiliated}
+                          onChange={(e) => setEditForm({ ...editForm, years_affiliated: e.target.value })}
+                          placeholder="Number of years"
+                        />
+                      </div>
+                    </>
+                  )}
                   
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold">Social Media Links</Label>
