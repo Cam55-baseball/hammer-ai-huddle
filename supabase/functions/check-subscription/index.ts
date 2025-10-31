@@ -291,6 +291,28 @@ serve(async (req) => {
         }, {
           onConflict: 'user_id'
         });
+
+      // Auto-create coupon metadata entry if this is a new coupon
+      if (couponCode) {
+        logStep("Creating coupon metadata entry", { couponCode });
+        const { error: metadataError } = await supabaseClient
+          .from('coupon_metadata')
+          .upsert({
+            coupon_code: couponCode,
+            custom_name: couponName || couponCode,
+            description: `Auto-detected from Stripe subscription`,
+            is_ambassador: false
+          }, {
+            onConflict: 'coupon_code',
+            ignoreDuplicates: true
+          });
+          
+        if (metadataError && metadataError.code !== '23505') {
+          logStep("Error creating coupon metadata", { error: metadataError.message });
+        } else {
+          logStep("Coupon metadata created/verified", { couponCode });
+        }
+      }
     } else {
       logStep("No active subscription found");
       

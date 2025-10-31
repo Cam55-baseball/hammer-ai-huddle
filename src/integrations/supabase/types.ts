@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      coupon_metadata: {
+        Row: {
+          coupon_code: string
+          created_at: string | null
+          custom_name: string | null
+          description: string | null
+          id: string
+          is_ambassador: boolean | null
+          notes: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          coupon_code: string
+          created_at?: string | null
+          custom_name?: string | null
+          description?: string | null
+          id?: string
+          is_ambassador?: boolean | null
+          notes?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          coupon_code?: string
+          created_at?: string | null
+          custom_name?: string | null
+          description?: string | null
+          id?: string
+          is_ambassador?: boolean | null
+          notes?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

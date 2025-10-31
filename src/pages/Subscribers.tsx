@@ -25,6 +25,8 @@ interface SubscriptionStats {
     paid: number;
   };
   activeCoupons: number;
+  ambassadorCodes: number;
+  ambassadorUsers: number;
 }
 
 export default function Subscribers() {
@@ -33,11 +35,13 @@ export default function Subscribers() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [stats, setStats] = useState<SubscriptionStats>({
-    totalActiveSubscribers: 0,
-    moduleBreakdown: [],
-    planBreakdown: { free: 0, paid: 0 },
-    activeCoupons: 0,
-  });
+      totalActiveSubscribers: 0,
+      moduleBreakdown: [],
+      planBreakdown: { free: 0, paid: 0 },
+      activeCoupons: 0,
+      ambassadorCodes: 0,
+      ambassadorUsers: 0,
+    });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -87,6 +91,20 @@ export default function Subscribers() {
         .not("coupon_code", "is", null);
       const activeCouponsCount = couponData?.length || 0;
 
+      // Get ambassador statistics
+      const { data: ambassadorData } = await supabase
+        .from("coupon_metadata")
+        .select("coupon_code")
+        .eq("is_ambassador", true);
+
+      const ambassadorCodes = ambassadorData?.map((m) => m.coupon_code) || [];
+
+      const { data: ambassadorUsersData } = await supabase
+        .from("subscriptions")
+        .select("coupon_code")
+        .in("coupon_code", ambassadorCodes.length > 0 ? ambassadorCodes : [''])
+        .eq("status", "active");
+
       setStats({
         totalActiveSubscribers: totalActive,
         moduleBreakdown: Object.entries(moduleCount).map(([module, count]) => ({
@@ -99,6 +117,8 @@ export default function Subscribers() {
           paid: paidCount,
         },
         activeCoupons: activeCouponsCount,
+        ambassadorCodes: ambassadorCodes.length,
+        ambassadorUsers: ambassadorUsersData?.length || 0,
       });
     } catch (error) {
       console.error("Error fetching subscription stats:", error);
@@ -203,6 +223,22 @@ export default function Subscribers() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.activeCoupons}</div>
+              <p className="text-xs text-muted-foreground">
+                Codes in use
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ambassador Codes</CardTitle>
+              <Users2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.ambassadorCodes}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.ambassadorUsers} users
+              </p>
             </CardContent>
           </Card>
         </div>
