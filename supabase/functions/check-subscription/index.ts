@@ -197,7 +197,47 @@ serve(async (req) => {
         }
         couponCode = coupon.id;
         couponName = coupon.name || coupon.id;
-        logStep("Discount found", { percent: discountPercent, code: couponCode, name: couponName });
+        logStep("Discount found on subscription", { percent: discountPercent, code: couponCode, name: couponName });
+      }
+
+      // Handle 100% off coupons - check invoice level if no subscription discount found
+      if (!hasDiscount && subscription.latest_invoice) {
+        try {
+          const invoiceId = typeof subscription.latest_invoice === 'string' 
+            ? subscription.latest_invoice 
+            : subscription.latest_invoice.id;
+          
+          const invoice = await stripe.invoices.retrieve(invoiceId, {
+            expand: ['discount', 'total_discount_amounts']
+          });
+          
+          logStep("Checking invoice for discounts", { 
+            invoiceId, 
+            hasDiscount: !!invoice.discount,
+            totalDiscountAmounts: invoice.total_discount_amounts 
+          });
+
+          if (invoice.discount && invoice.discount.coupon) {
+            hasDiscount = true;
+            const coupon = invoice.discount.coupon;
+            couponCode = coupon.id;
+            couponName = coupon.name || coupon.id;
+            if (coupon.percent_off) {
+              discountPercent = coupon.percent_off;
+            }
+            logStep("Discount found on invoice", { percent: discountPercent, code: couponCode, name: couponName });
+          }
+
+          // Check for promotional codes
+          if (!hasDiscount && invoice.total_discount_amounts && invoice.total_discount_amounts.length > 0) {
+            logStep("Total discount amounts found on invoice", { amounts: invoice.total_discount_amounts });
+            hasDiscount = true;
+            // If we can't find the coupon code, we still mark that there's a discount
+          }
+        } catch (invoiceError) {
+          const errorMessage = invoiceError instanceof Error ? invoiceError.message : String(invoiceError);
+          logStep("Error checking invoice for discounts", { error: errorMessage });
+        }
       }
       
       // Safe date conversion with validation and error handling
