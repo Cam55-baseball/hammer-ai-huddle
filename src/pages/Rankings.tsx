@@ -25,12 +25,18 @@ export default function Rankings() {
   const { toast } = useToast();
 
   const fetchRankings = async () => {
+    if (!session?.access_token) {
+      console.log("No session available, skipping rankings fetch");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       
       const { data, error } = await supabase.functions.invoke('get-rankings', {
         headers: {
-          Authorization: `Bearer ${session?.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: {
           sport: selectedSport,
@@ -54,11 +60,15 @@ export default function Rankings() {
   };
 
   useEffect(() => {
-    fetchRankings();
-  }, [selectedSport, selectedModule]);
+    if (session?.access_token) {
+      fetchRankings();
+    }
+  }, [selectedSport, selectedModule, session?.access_token]);
 
   // Set up realtime subscription
   useEffect(() => {
+    if (!session?.access_token) return;
+
     const channel = supabase
       .channel("rankings-changes")
       .on(
@@ -77,7 +87,7 @@ export default function Rankings() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedSport, selectedModule]);
+  }, [selectedSport, selectedModule, session?.access_token]);
 
   return (
     <DashboardLayout>
