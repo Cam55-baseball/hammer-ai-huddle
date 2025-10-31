@@ -14,11 +14,9 @@ const Index = () => {
   const { isOwner } = useOwnerAccess();
 
   useEffect(() => {
-    // Redirect authenticated users directly to dashboard
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
+    // Always redirect to auth page - let Auth component handle routing logic
+    navigate("/auth");
+  }, [navigate]);
 
   const handleGetStarted = () => {
     navigate("/auth");

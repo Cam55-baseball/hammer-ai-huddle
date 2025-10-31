@@ -16,7 +16,7 @@ const SelectSport = () => {
 
   const handleSportSelect = (sport: 'baseball' | 'softball') => {
     localStorage.setItem('selectedSport', sport);
-    navigate("/select-role", { state: { sport } });
+    navigate("/select-modules", { state: { sport } });
   };
 
   return (

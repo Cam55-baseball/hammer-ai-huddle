@@ -77,27 +77,45 @@ const Auth = () => {
             description: error.message,
             variant: "destructive",
           });
-        } else {
+        } else if (data.user) {
+          // Check if user has completed onboarding by checking for user_roles
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { data: rolesData } = await supabase
+            .from('user_roles')
+            .select('id')
+            .eq('user_id', data.user.id)
+            .limit(1);
+
+          const hasCompletedOnboarding = rolesData && rolesData.length > 0;
+
           toast({
             title: "Welcome Back!",
             description: "Successfully logged in.",
           });
           
-          // Check if we need to return to a specific page with state
-          if (state?.returnTo) {
-            setTimeout(() => {
-              navigate(state.returnTo, { 
-                state: {
-                  sport: state.sport,
-                  module: state.module,
-                  mode: state.mode
-                },
-                replace: true 
-              });
-            }, 0);
+          // Route based on onboarding status
+          if (hasCompletedOnboarding) {
+            // Existing user - go to dashboard
+            if (state?.returnTo) {
+              setTimeout(() => {
+                navigate(state.returnTo, { 
+                  state: {
+                    sport: state.sport,
+                    module: state.module,
+                    mode: state.mode
+                  },
+                  replace: true 
+                });
+              }, 0);
+            } else {
+              setTimeout(() => {
+                navigate("/dashboard", { replace: true });
+              }, 0);
+            }
           } else {
+            // New user - start onboarding flow
             setTimeout(() => {
-              navigate("/dashboard", { replace: true });
+              navigate("/select-sport", { replace: true });
             }, 0);
           }
         }
