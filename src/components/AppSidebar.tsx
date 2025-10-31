@@ -40,6 +40,14 @@ export function AppSidebar() {
   const { isAdmin } = useAdminAccess();
   const { isScout } = useScoutAccess();
   const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
+  const [selectedSport, setSelectedSport] = useState<'baseball' | 'softball'>('baseball');
+
+  useEffect(() => {
+    const savedSport = localStorage.getItem('selectedSport') as 'baseball' | 'softball';
+    if (savedSport) {
+      setSelectedSport(savedSport);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchOwnerProfile = async () => {
@@ -63,9 +71,9 @@ export function AppSidebar() {
   ];
 
   const trainingModules = [
-    { title: "Hitting Analysis", url: "/analyze/hitting", icon: Target },
-    { title: "Pitching Analysis", url: "/analyze/pitching", icon: Target },
-    { title: "Throwing Analysis", url: "/analyze/throwing", icon: Target },
+    { title: "Hitting Analysis", url: `/analyze/hitting?sport=${selectedSport}`, icon: Target },
+    { title: "Pitching Analysis", url: `/analyze/pitching?sport=${selectedSport}`, icon: Target },
+    { title: "Throwing Analysis", url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
   ];
 
   const accountItems = [

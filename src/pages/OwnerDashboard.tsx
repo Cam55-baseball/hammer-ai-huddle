@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Users, BarChart3, Settings, Video, Target, CircleDot, Zap, Tag } from "lucide-react";
+import { Target, CircleDot, Zap } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Progress } from "@/components/ui/progress";
 
@@ -264,50 +264,30 @@ const OwnerDashboard = () => {
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
           <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Users</p>
-                <p className="text-2xl font-bold">{totalUsers}</p>
-              </div>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Users</p>
+              <p className="text-3xl font-bold">{totalUsers}</p>
             </div>
           </Card>
 
           <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <BarChart3 className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Subscriptions</p>
-                <p className="text-2xl font-bold">{activeSubscriptions}</p>
-              </div>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Subscriptions</p>
+              <p className="text-3xl font-bold">{activeSubscriptions}</p>
             </div>
           </Card>
 
           <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Video className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Videos</p>
-                <p className="text-2xl font-bold">{totalVideosAnalyzed}</p>
-              </div>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Videos</p>
+              <p className="text-3xl font-bold">{totalVideosAnalyzed}</p>
             </div>
           </Card>
 
           <Card className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Settings className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Efficiency</p>
-                <p className="text-2xl font-bold">{avgScore}%</p>
-              </div>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Efficiency</p>
+              <p className="text-3xl font-bold">{avgScore}%</p>
             </div>
           </Card>
         </div>

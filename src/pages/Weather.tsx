@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { WeatherWidget } from "@/components/WeatherWidget";
 
 export default function Weather() {
+  const location = useLocation();
   const [currentSport, setCurrentSport] = useState<'baseball' | 'softball'>('baseball');
   
   useEffect(() => {
     const savedSport = localStorage.getItem('selectedSport') as 'baseball' | 'softball';
     if (savedSport) setCurrentSport(savedSport);
-  }, []);
+  }, [location]);
 
   return (
     <DashboardLayout>
