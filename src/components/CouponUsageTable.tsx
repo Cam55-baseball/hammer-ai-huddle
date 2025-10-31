@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -180,8 +180,8 @@ export function CouponUsageTable() {
       </TableHeader>
       <TableBody>
         {coupons.map((coupon) => (
-          <>
-            <TableRow key={coupon.couponCode} className="hover:bg-muted/50">
+          <React.Fragment key={coupon.couponCode}>
+            <TableRow className="hover:bg-muted/50">
               <TableCell>
                 <Button
                   variant="ghost"
@@ -236,7 +236,7 @@ export function CouponUsageTable() {
               </TableCell>
             </TableRow>
             {expandedRows.has(coupon.couponCode) && (
-              <TableRow key={`${coupon.couponCode}-expanded`}>
+              <TableRow>
                 <TableCell colSpan={7} className="bg-muted/30">
                   <div className="py-4 px-8">
                     <h4 className="font-semibold mb-3">Users with this coupon:</h4>
@@ -257,7 +257,7 @@ export function CouponUsageTable() {
                 </TableCell>
               </TableRow>
             )}
-          </>
+          </React.Fragment>
         ))}
       </TableBody>
     </Table>
