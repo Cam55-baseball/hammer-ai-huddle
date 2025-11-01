@@ -28,27 +28,42 @@ export function FollowRequestsPanel() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // Step 1: Fetch follow requests
+      const { data: followsData, error: followsError } = await supabase
         .from('scout_follows')
-        .select(`
-          id,
-          scout_id,
-          status,
-          created_at,
-          scout:profiles!scout_follows_scout_id_fkey(full_name, avatar_url)
-        `)
+        .select('id, scout_id, status, created_at')
         .eq('player_id', user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (followsError) throw followsError;
       
-      const formattedRequests = data?.map(item => ({
-        ...item,
-        profiles: item.scout
-      })) || [];
+      if (!followsData || followsData.length === 0) {
+        setRequests([]);
+        return;
+      }
+
+      // Step 2: Fetch scout profiles
+      const scoutIds = followsData.map(f => f.scout_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', scoutIds);
+
+      if (profilesError) throw profilesError;
+
+      // Step 3: Map profiles to follows
+      const profileMap = new Map(profilesData?.map(p => [p.id, p]) || []);
       
-      setRequests(formattedRequests as any);
+      const formattedRequests = followsData.map(follow => ({
+        ...follow,
+        profiles: profileMap.get(follow.scout_id) || {
+          full_name: 'Unknown Scout',
+          avatar_url: null
+        }
+      }));
+
+      setRequests(formattedRequests);
     } catch (error) {
       console.error('Error fetching follow requests:', error);
     } finally {
