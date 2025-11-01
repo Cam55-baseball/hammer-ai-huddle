@@ -51,6 +51,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          contact_email: string | null
           created_at: string | null
           experience_level: string | null
           first_name: string | null
@@ -63,8 +64,13 @@ export type Database = {
           social_facebook: string | null
           social_instagram: string | null
           social_linkedin: string | null
+          social_tiktok: string | null
           social_twitter: string | null
           social_website: string | null
+          social_website_2: string | null
+          social_website_3: string | null
+          social_website_4: string | null
+          social_website_5: string | null
           social_youtube: string | null
           state: string | null
           team_affiliation: string | null
@@ -75,6 +81,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          contact_email?: string | null
           created_at?: string | null
           experience_level?: string | null
           first_name?: string | null
@@ -87,8 +94,13 @@ export type Database = {
           social_facebook?: string | null
           social_instagram?: string | null
           social_linkedin?: string | null
+          social_tiktok?: string | null
           social_twitter?: string | null
           social_website?: string | null
+          social_website_2?: string | null
+          social_website_3?: string | null
+          social_website_4?: string | null
+          social_website_5?: string | null
           social_youtube?: string | null
           state?: string | null
           team_affiliation?: string | null
@@ -99,6 +111,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          contact_email?: string | null
           created_at?: string | null
           experience_level?: string | null
           first_name?: string | null
@@ -111,8 +124,13 @@ export type Database = {
           social_facebook?: string | null
           social_instagram?: string | null
           social_linkedin?: string | null
+          social_tiktok?: string | null
           social_twitter?: string | null
           social_website?: string | null
+          social_website_2?: string | null
+          social_website_3?: string | null
+          social_website_4?: string | null
+          social_website_5?: string | null
           social_youtube?: string | null
           state?: string | null
           team_affiliation?: string | null

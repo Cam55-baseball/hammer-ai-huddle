@@ -26,6 +26,7 @@ export default function Profile() {
   const [editForm, setEditForm] = useState({
     first_name: "",
     last_name: "",
+    contact_email: "",
     bio: "",
     avatar_url: "",
     position: "",
@@ -41,7 +42,12 @@ export default function Profile() {
     social_facebook: "",
     social_linkedin: "",
     social_youtube: "",
-    social_website: ""
+    social_tiktok: "",
+    social_website: "",
+    social_website_2: "",
+    social_website_3: "",
+    social_website_4: "",
+    social_website_5: ""
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -87,6 +93,7 @@ export default function Profile() {
       setEditForm({
         first_name: data.first_name || "",
         last_name: data.last_name || "",
+        contact_email: data.contact_email || "",
         bio: data.bio || "",
         avatar_url: data.avatar_url || "",
         position: data.position || "",
@@ -102,7 +109,12 @@ export default function Profile() {
         social_facebook: data.social_facebook || "",
         social_linkedin: data.social_linkedin || "",
         social_youtube: data.social_youtube || "",
-        social_website: data.social_website || ""
+        social_tiktok: data.social_tiktok || "",
+        social_website: data.social_website || "",
+        social_website_2: data.social_website_2 || "",
+        social_website_3: data.social_website_3 || "",
+        social_website_4: data.social_website_4 || "",
+        social_website_5: data.social_website_5 || ""
       });
       setAvatarPreview(data.avatar_url);
     } catch (error) {
@@ -165,6 +177,7 @@ export default function Profile() {
       const updateData: any = {
         first_name: editForm.first_name,
         last_name: editForm.last_name,
+        contact_email: editForm.contact_email,
         bio: editForm.bio,
         avatar_url: editForm.avatar_url,
         social_instagram: editForm.social_instagram,
@@ -172,7 +185,12 @@ export default function Profile() {
         social_facebook: editForm.social_facebook,
         social_linkedin: editForm.social_linkedin,
         social_youtube: editForm.social_youtube,
-        social_website: editForm.social_website
+        social_tiktok: editForm.social_tiktok,
+        social_website: editForm.social_website,
+        social_website_2: editForm.social_website_2,
+        social_website_3: editForm.social_website_3,
+        social_website_4: editForm.social_website_4,
+        social_website_5: editForm.social_website_5
       };
 
       // Add role-specific fields
@@ -559,6 +577,23 @@ export default function Profile() {
                       />
                     </div>
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_email">
+                      Contact Email <span className="text-xs text-muted-foreground">(public)</span>
+                    </Label>
+                    <Input
+                      id="contact_email"
+                      type="email"
+                      value={editForm.contact_email}
+                      onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })}
+                      placeholder="owner@example.com"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This email will be visible to all users for contacting you
+                    </p>
+                  </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
                     <Textarea
@@ -759,6 +794,15 @@ export default function Profile() {
                       </div>
                       
                       <div className="flex items-center gap-2">
+                        <span className="text-base font-bold text-muted-foreground">TT</span>
+                        <Input
+                          placeholder="TikTok username or URL"
+                          value={editForm.social_tiktok}
+                          onChange={(e) => setEditForm({ ...editForm, social_tiktok: e.target.value })}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
                         <Globe className="h-4 w-4 text-muted-foreground" />
                         <Input
                           placeholder="Personal website URL"
@@ -768,6 +812,60 @@ export default function Profile() {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Additional Website Links */}
+                  {(editForm.social_website || editForm.social_website_2 || editForm.social_website_3 || editForm.social_website_4 || editForm.social_website_5) && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">Additional Website Links</Label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Add up to 4 more website URLs
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <Input
+                            placeholder="Website URL 2"
+                            value={editForm.social_website_2}
+                            onChange={(e) => setEditForm({ ...editForm, social_website_2: e.target.value })}
+                          />
+                        </div>
+                        
+                        {(editForm.social_website_2 || editForm.social_website_3) && (
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <Input
+                              placeholder="Website URL 3"
+                              value={editForm.social_website_3}
+                              onChange={(e) => setEditForm({ ...editForm, social_website_3: e.target.value })}
+                            />
+                          </div>
+                        )}
+                        
+                        {(editForm.social_website_3 || editForm.social_website_4) && (
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <Input
+                              placeholder="Website URL 4"
+                              value={editForm.social_website_4}
+                              onChange={(e) => setEditForm({ ...editForm, social_website_4: e.target.value })}
+                            />
+                          </div>
+                        )}
+                        
+                        {(editForm.social_website_4 || editForm.social_website_5) && (
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <Input
+                              placeholder="Website URL 5"
+                              value={editForm.social_website_5}
+                              onChange={(e) => setEditForm({ ...editForm, social_website_5: e.target.value })}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   
                   <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
                     {saving ? (

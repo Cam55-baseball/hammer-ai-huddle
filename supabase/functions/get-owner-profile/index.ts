@@ -36,7 +36,7 @@ serve(async (req) => {
     // Get owner's profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("first_name, last_name, bio, avatar_url, social_instagram, social_twitter, social_facebook, social_linkedin, social_youtube, social_website")
+      .select("first_name, last_name, contact_email, bio, avatar_url, social_instagram, social_twitter, social_facebook, social_linkedin, social_youtube, social_tiktok, social_website, social_website_2, social_website_3, social_website_4, social_website_5")
       .eq("id", ownerRole.user_id)
       .single();
 
