@@ -144,13 +144,45 @@ export function SessionDetailDialog({
               )}
 
               {aiAnalysis.drills && aiAnalysis.drills.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Recommended Drills</Label>
-                  <ul className="list-disc list-inside space-y-1">
-                    {aiAnalysis.drills.map((drill: string, index: number) => (
-                      <li key={index} className="text-sm">{drill}</li>
+                  <div className="space-y-4">
+                    {aiAnalysis.drills.map((drill: any, index: number) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-3">
+                        <h4 className="font-semibold">{drill.title}</h4>
+                        {drill.purpose && (
+                          <p className="text-sm text-muted-foreground">{drill.purpose}</p>
+                        )}
+                        
+                        {drill.steps && drill.steps.length > 0 && (
+                          <div className="space-y-1">
+                            <Label className="text-xs">Steps:</Label>
+                            <ol className="list-decimal list-inside text-sm space-y-1">
+                              {drill.steps.map((step: string, i: number) => (
+                                <li key={i}>{step}</li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                        
+                        {drill.cues && drill.cues.length > 0 && (
+                          <div className="space-y-1">
+                            <Label className="text-xs">Coaching Cues:</Label>
+                            <ul className="list-disc list-inside text-sm space-y-1">
+                              {drill.cues.map((cue: string, i: number) => (
+                                <li key={i}>{cue}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        <div className="flex gap-4 text-xs text-muted-foreground">
+                          {drill.equipment && <span>Equipment: {drill.equipment}</span>}
+                          {drill.reps_sets && <span>Reps/Sets: {drill.reps_sets}</span>}
+                        </div>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
             </div>
