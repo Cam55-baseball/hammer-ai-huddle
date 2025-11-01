@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Check, Clock, BookMarked, User } from 'lucide-react';
+import { UserPlus, Check, Clock, BookMarked, User, UserMinus } from 'lucide-react';
 import { 
   Command,
   CommandEmpty,
@@ -36,6 +37,9 @@ export default function ScoutDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sportFilter, setSportFilter] = useState<'all' | 'baseball' | 'softball'>('all');
+  const [unfollowDialogOpen, setUnfollowDialogOpen] = useState(false);
+  const [playerToUnfollow, setPlayerToUnfollow] = useState<Player | null>(null);
+  const [isUnfollowing, setIsUnfollowing] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -199,6 +203,52 @@ export default function ScoutDashboard() {
     }
   };
 
+  const handleUnfollowClick = (player: Player) => {
+    setPlayerToUnfollow(player);
+    setUnfollowDialogOpen(true);
+  };
+
+  const handleConfirmUnfollow = async () => {
+    if (!playerToUnfollow) return;
+    
+    setIsUnfollowing(true);
+    try {
+      const { error } = await supabase.functions.invoke('unfollow-player', {
+        body: { playerId: playerToUnfollow.id }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Unfollowed player',
+        description: `You have unfollowed ${playerToUnfollow.full_name}`,
+      });
+      
+      // Refresh the following list
+      await fetchFollowing();
+      
+      // Refresh search results if searching
+      if (searchTerm.trim().length >= 2) {
+        const { data } = await supabase.functions.invoke('search-players', {
+          body: { query: searchTerm }
+        });
+        setSearchResults(data?.results || []);
+      }
+      
+      setUnfollowDialogOpen(false);
+      setPlayerToUnfollow(null);
+    } catch (error: any) {
+      console.error('Error unfollowing player:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to unfollow player',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUnfollowing(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <DashboardLayout>
@@ -272,6 +322,14 @@ export default function ScoutDashboard() {
                       >
                         <BookMarked className="h-4 w-4 mr-2" />
                         View Library
+                      </Button>
+                      <Button
+                        onClick={() => handleUnfollowClick(player)}
+                        size="sm"
+                        variant="destructive"
+                      >
+                        <UserMinus className="h-4 w-4 mr-2" />
+                        Unfollow
                       </Button>
                     </div>
                   </div>
@@ -422,6 +480,28 @@ export default function ScoutDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Unfollow Confirmation Dialog */}
+      <AlertDialog open={unfollowDialogOpen} onOpenChange={setUnfollowDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unfollow Player</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to unfollow {playerToUnfollow?.full_name}? You will lose access to their library and profile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUnfollowing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmUnfollow}
+              disabled={isUnfollowing}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isUnfollowing ? "Unfollowing..." : "Unfollow"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

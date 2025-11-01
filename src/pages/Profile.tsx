@@ -72,16 +72,6 @@ export default function Profile() {
     } else {
       // Check if viewing another user's profile
       if (viewingUserId && viewingUserId !== user.id) {
-        // Only owners can view other profiles
-        if (!isOwner) {
-          toast({
-            title: "Access Denied",
-            description: "You don't have permission to view this profile",
-            variant: "destructive",
-          });
-          navigate("/profile", { replace: true });
-          return;
-        }
         setViewingOtherProfile(true);
       } else {
         setViewingOtherProfile(false);

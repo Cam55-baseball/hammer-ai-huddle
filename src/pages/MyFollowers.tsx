@@ -177,13 +177,22 @@ export default function MyFollowers() {
                         </p>
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleRemoveFollower(follower.id)}
-                    >
-                      Remove Access
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/profile?userId=${follower.scout_id}`)}
+                      >
+                        View Profile
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleRemoveFollower(follower.id)}
+                      >
+                        Remove Access
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
