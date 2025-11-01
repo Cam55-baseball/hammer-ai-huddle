@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 const Pricing = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const state = location.state as { role?: string; sport?: string; module?: string; mode?: 'add' | 'new' };
   
   const selectedRole = state?.role || localStorage.getItem('selectedRole');
@@ -20,6 +20,9 @@ const Pricing = () => {
   const modulePrice = 200;
 
   useEffect(() => {
+    // Wait for auth to finish loading before making decisions
+    if (authLoading) return;
+    
     if (!user) {
       // Preserve state when redirecting to auth
       navigate("/auth", { 
@@ -42,7 +45,7 @@ const Pricing = () => {
       navigate("/dashboard");
       return;
     }
-  }, [user, selectedRole, selectedSport, selectedModule, isAddMode, navigate]);
+  }, [user, authLoading, selectedRole, selectedSport, selectedModule, isAddMode, navigate]);
 
   const handleGetStarted = () => {
     navigate("/checkout", { 
