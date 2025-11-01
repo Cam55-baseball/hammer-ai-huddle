@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Search, Check, Clock } from 'lucide-react';
+import { UserPlus, Search, Check, Clock, BookMarked } from 'lucide-react';
 
 interface Player {
   id: string;
@@ -200,10 +200,20 @@ export default function ScoutDashboard() {
                           </Badge>
                         )}
                         {player.followStatus === 'accepted' && (
-                          <Badge variant="default" className="gap-1">
-                            <Check className="h-3 w-3" />
-                            Following
-                          </Badge>
+                          <div className="flex gap-2">
+                            <Badge variant="default" className="gap-1">
+                              <Check className="h-3 w-3" />
+                              Following
+                            </Badge>
+                            <Button
+                              onClick={() => navigate(`/players-club?playerId=${player.id}`)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              <BookMarked className="h-4 w-4 mr-2" />
+                              View Library
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>

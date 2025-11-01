@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Upload, Video, Trash2 } from "lucide-react";
+import { ArrowLeft, Upload, Video, Trash2, BookMarked } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
 
 export default function AnalyzeVideo() {
   const { module } = useParams<{ module: string }>();
@@ -33,6 +34,7 @@ export default function AnalyzeVideo() {
     return localStorage.getItem('videoPlaybackRate') || '1';
   });
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
   // Force fresh subscription check on page load
   useEffect(() => {
@@ -474,15 +476,32 @@ export default function AnalyzeVideo() {
                     </div>
                   )}
 
-                  <Button onClick={() => navigate('/dashboard')} className="w-full mt-4">
-                    Return to Dashboard
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="flex-1">
+                      <BookMarked className="h-4 w-4 mr-2" />
+                      Save to Players Club
+                    </Button>
+                    <Button onClick={() => navigate('/dashboard')} className="flex-1">
+                      Return to Dashboard
+                    </Button>
+                  </div>
                 </div>
               </Card>
             )}
           </div>
         )}
       </div>
+
+      {/* Save to Library Dialog */}
+      {currentVideoId && (
+        <SaveToLibraryDialog
+          open={saveDialogOpen}
+          onClose={() => setSaveDialogOpen(false)}
+          videoId={currentVideoId}
+          sport={sport}
+          module={module || ''}
+        />
+      )}
     </DashboardLayout>
   );
 }

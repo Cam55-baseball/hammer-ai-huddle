@@ -5,11 +5,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap } from "lucide-react";
+import { Target, CircleDot, Zap, Search, BookMarked } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface User {
   id: string;
@@ -46,6 +48,8 @@ const OwnerDashboard = () => {
     pitching: number;
     throwing: number;
   }>({ hitting: 0, pitching: 0, throwing: 0 });
+  const [playerSearch, setPlayerSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   useEffect(() => {
     if (!loading && !isOwner) {
@@ -192,6 +196,40 @@ const OwnerDashboard = () => {
     }
   };
 
+  const searchPlayers = async (searchTerm: string) => {
+    if (!searchTerm || searchTerm.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .ilike('full_name', `%${searchTerm}%`)
+        .limit(10);
+
+      if (!profiles) return;
+
+      // Get session counts for each player
+      const playersWithCounts = await Promise.all(
+        profiles.map(async (player) => {
+          const { count } = await supabase
+            .from('videos')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', player.id)
+            .eq('saved_to_library', true);
+          
+          return { ...player, sessionCount: count || 0 };
+        })
+      );
+      
+      setSearchResults(playersWithCounts);
+    } catch (error) {
+      console.error('Error searching players:', error);
+    }
+  };
+
   if (loading || dataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -276,6 +314,7 @@ const OwnerDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="videos">Recent Videos</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+            <TabsTrigger value="player-search">Player Library Search</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="space-y-4">
@@ -426,6 +465,52 @@ const OwnerDashboard = () => {
                     className="h-2 mt-2" 
                   />
                 </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="player-search" className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Search Player Libraries</h3>
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by player name..."
+                    value={playerSearch}
+                    onChange={(e) => {
+                      setPlayerSearch(e.target.value);
+                      searchPlayers(e.target.value);
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+                
+                {searchResults.length > 0 && (
+                  <div className="space-y-2">
+                    {searchResults.map((player) => (
+                      <div key={player.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            {player.avatar_url && <AvatarImage src={player.avatar_url} />}
+                            <AvatarFallback>{player.full_name?.charAt(0) || 'P'}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold">{player.full_name}</p>
+                            <p className="text-sm text-muted-foreground">{player.sessionCount} sessions saved</p>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => navigate(`/players-club?playerId=${player.id}`)}
+                          size="sm"
+                        >
+                          <BookMarked className="h-4 w-4 mr-2" />
+                          View Library
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </Card>
           </TabsContent>

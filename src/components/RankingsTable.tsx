@@ -15,7 +15,6 @@ interface RankingData {
   sport: string;
   module: string;
   videos_analyzed: number;
-  average_efficiency_score: number;
   last_activity: string;
 }
 
@@ -46,14 +45,13 @@ export function RankingsTable({ rankings, loading, currentUserId }: RankingsTabl
             <TableHead>Sport</TableHead>
             <TableHead>Module</TableHead>
             <TableHead className="text-right">Videos</TableHead>
-            <TableHead className="text-right">Avg Score</TableHead>
             <TableHead className="text-right">Progress</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rankings.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
                 No rankings data available
               </TableCell>
             </TableRow>
@@ -92,9 +90,6 @@ export function RankingsTable({ rankings, loading, currentUserId }: RankingsTabl
                   <TableCell className="capitalize">{ranking.sport}</TableCell>
                   <TableCell className="capitalize">{ranking.module}</TableCell>
                   <TableCell className="text-right">{ranking.videos_analyzed}</TableCell>
-                  <TableCell className="text-right font-semibold">
-                    {ranking.average_efficiency_score}%
-                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
                       <TrendingUp className="h-4 w-4 text-green-500" />

@@ -323,8 +323,13 @@ export type Database = {
           created_at: string
           efficiency_score: number | null
           id: string
+          library_notes: string | null
+          library_title: string | null
           mocap_data: Json | null
           module: Database["public"]["Enums"]["module_type"]
+          saved_to_library: boolean | null
+          session_date: string | null
+          shared_with_scouts: boolean | null
           sport: Database["public"]["Enums"]["sport_type"]
           status: Database["public"]["Enums"]["video_status"]
           thumbnail_url: string | null
@@ -337,8 +342,13 @@ export type Database = {
           created_at?: string
           efficiency_score?: number | null
           id?: string
+          library_notes?: string | null
+          library_title?: string | null
           mocap_data?: Json | null
           module: Database["public"]["Enums"]["module_type"]
+          saved_to_library?: boolean | null
+          session_date?: string | null
+          shared_with_scouts?: boolean | null
           sport: Database["public"]["Enums"]["sport_type"]
           status?: Database["public"]["Enums"]["video_status"]
           thumbnail_url?: string | null
@@ -351,8 +361,13 @@ export type Database = {
           created_at?: string
           efficiency_score?: number | null
           id?: string
+          library_notes?: string | null
+          library_title?: string | null
           mocap_data?: Json | null
           module?: Database["public"]["Enums"]["module_type"]
+          saved_to_library?: boolean | null
+          session_date?: string | null
+          shared_with_scouts?: boolean | null
           sport?: Database["public"]["Enums"]["sport_type"]
           status?: Database["public"]["Enums"]["video_status"]
           thumbnail_url?: string | null

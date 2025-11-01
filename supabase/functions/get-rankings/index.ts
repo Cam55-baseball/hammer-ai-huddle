@@ -79,13 +79,13 @@ serve(async (req) => {
     if (error) throw error;
 
     // Format data - NO ANONYMIZATION, all real names shown
+    // NOTE: Efficiency scores removed from public rankings
     const formattedData = data.map((item: any) => ({
       user_id: item.user_id,
       full_name: item.profiles.full_name || "Anonymous",
       sport: item.sport,
       module: item.module,
       videos_analyzed: item.videos_analyzed,
-      average_efficiency_score: item.average_efficiency_score || 0,
       last_activity: item.last_activity,
     }));
 

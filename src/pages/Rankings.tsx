@@ -12,7 +12,6 @@ interface RankingData {
   sport: string;
   module: string;
   videos_analyzed: number;
-  average_efficiency_score: number;
   last_activity: string;
 }
 
