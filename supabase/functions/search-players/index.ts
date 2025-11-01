@@ -73,35 +73,12 @@ serve(async (req) => {
       );
     }
 
-    const profileIds = profiles.map(p => p.id);
-
-    // Filter to only players
-    const { data: playerRoles, error: playerRolesError } = await supabaseAdmin
-      .from('user_roles')
-      .select('user_id')
-      .in('user_id', profileIds)
-      .eq('role', 'player');
-
-    if (playerRolesError) {
-      throw playerRolesError;
-    }
-
-    const playerIds = new Set(playerRoles?.map(r => r.user_id) || []);
-    const playerProfiles = profiles.filter(p => playerIds.has(p.id));
-
-    if (playerProfiles.length === 0) {
-      return new Response(
-        JSON.stringify({ results: [] }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     // Get follow statuses
     const { data: follows, error: followsError } = await supabaseAdmin
       .from('scout_follows')
       .select('player_id, status')
       .eq('scout_id', user.id)
-      .in('player_id', playerProfiles.map(p => p.id));
+      .in('player_id', profiles.map(p => p.id));
 
     if (followsError) {
       console.error('Error fetching follows:', followsError);
@@ -109,7 +86,7 @@ serve(async (req) => {
 
     const followMap = new Map(follows?.map(f => [f.player_id, f.status]) || []);
 
-    const results = playerProfiles.map(profile => ({
+    const results = profiles.map(profile => ({
       id: profile.id,
       full_name: profile.full_name,
       avatar_url: profile.avatar_url,
