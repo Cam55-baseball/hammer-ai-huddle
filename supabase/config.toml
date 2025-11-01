@@ -39,3 +39,8 @@ verify_jwt = true
 [functions.download-scout-file]
 verify_jwt = true
 
+[functions.search-players]
+verify_jwt = true
+
+[functions.get-following-players]
+verify_jwt = true

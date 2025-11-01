@@ -30,8 +30,9 @@ export default function ScoutDashboard() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
+  const [following, setFollowing] = useState<Player[]>([]);
+  const [searchResults, setSearchResults] = useState<Player[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sportFilter, setSportFilter] = useState<'all' | 'baseball' | 'softball'>('all');
@@ -99,45 +100,26 @@ export default function ScoutDashboard() {
     checkAccess();
   }, [user, navigate]);
 
-  const fetchPlayers = async () => {
+  const fetchFollowing = async () => {
     if (!user) return;
 
     try {
       setLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('get-following-players');
 
-      // Get all profiles
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .neq('id', user.id); // Exclude self
+      if (error) {
+        console.error('Error fetching following:', error);
+        throw error;
+      }
 
-      if (profilesError) throw profilesError;
-
-      // Get scout's follow statuses
-      const { data: followsData } = await supabase
-        .from('scout_follows')
-        .select('player_id, status')
-        .eq('scout_id', user.id);
-
-      const followsMap = new Map(
-        followsData?.map(f => [f.player_id, f.status]) || []
-      );
-
-      const playersWithStatus = profilesData.map(player => ({
-        ...player,
-        followStatus: followsMap.has(player.id) 
-          ? followsMap.get(player.id) as 'pending' | 'accepted'
-          : 'none' as const
-      }));
-
-      setPlayers(playersWithStatus);
-      setFilteredPlayers(playersWithStatus);
+      setFollowing(data?.results || []);
     } catch (error) {
-      console.error('Error fetching players:', error);
+      console.error('Error in fetchFollowing:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load players',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to load following players",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -145,31 +127,46 @@ export default function ScoutDashboard() {
   };
 
   useEffect(() => {
-    fetchPlayers();
-  }, [user]);
-
-  useEffect(() => {
-    let filtered = players;
-
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase().trim();
-      filtered = filtered.filter(p =>
-        p.full_name?.toLowerCase().includes(searchLower)
-      );
-      
-      // Sort: names starting with search term come first
-      filtered.sort((a, b) => {
-        const aStarts = a.full_name?.toLowerCase().startsWith(searchLower);
-        const bStarts = b.full_name?.toLowerCase().startsWith(searchLower);
-        
-        if (aStarts && !bStarts) return -1;
-        if (!aStarts && bStarts) return 1;
-        return 0;
-      });
+    if (user && hasScoutAccess) {
+      fetchFollowing();
     }
+  }, [user, hasScoutAccess]);
 
-    setFilteredPlayers(filtered);
-  }, [searchTerm, players]);
+  // Debounced search effect
+  useEffect(() => {
+    if (searchTerm.trim().length >= 2) {
+      setSearchLoading(true);
+      const timer = setTimeout(async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('search-players', {
+            body: { query: searchTerm }
+          });
+
+          if (error) {
+            console.error('Error searching players:', error);
+            throw error;
+          }
+
+          setSearchResults(data?.results || []);
+        } catch (error) {
+          console.error('Search error:', error);
+          toast({
+            title: "Error",
+            description: "Failed to search players",
+            variant: "destructive",
+          });
+          setSearchResults([]);
+        } finally {
+          setSearchLoading(false);
+        }
+      }, 300);
+
+      return () => clearTimeout(timer);
+    } else {
+      setSearchResults([]);
+      setSearchLoading(false);
+    }
+  }, [searchTerm]);
 
   const handleSendFollow = async (playerId: string) => {
     try {
@@ -184,7 +181,14 @@ export default function ScoutDashboard() {
         description: 'The player will be notified of your request.',
       });
 
-      fetchPlayers();
+      // Refresh following list and search results
+      fetchFollowing();
+      if (searchTerm.trim().length >= 2) {
+        const { data } = await supabase.functions.invoke('search-players', {
+          body: { query: searchTerm }
+        });
+        setSearchResults(data?.results || []);
+      }
     } catch (error: any) {
       console.error('Error sending follow:', error);
       toast({
@@ -205,7 +209,7 @@ export default function ScoutDashboard() {
     );
   }
 
-  const followingPlayers = players.filter(p => p.followStatus === 'accepted');
+  const followingCount = following.length;
 
   return (
     <DashboardLayout>
@@ -221,17 +225,17 @@ export default function ScoutDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Following</span>
-              <Badge variant="secondary">{followingPlayers.length}</Badge>
+              <Badge variant="secondary">{followingCount}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {followingPlayers.length === 0 ? (
+            {following.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
                 You're not following any players yet. Use the Find Players section below to send follow requests.
               </p>
             ) : (
               <div className="space-y-3">
-                {followingPlayers.map((player) => (
+                {following.map((player) => (
                   <div
                     key={player.id}
                     className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
@@ -275,14 +279,20 @@ export default function ScoutDashboard() {
             <div className="space-y-4">
               <Command className="rounded-lg border shadow-md">
                 <CommandInput
-                  placeholder="Search by player name..."
+                  placeholder="Search across all players (min 2 characters)..."
                   value={searchTerm}
                   onValueChange={setSearchTerm}
                 />
                 <CommandList>
-                  <CommandEmpty>No players found</CommandEmpty>
+                  <CommandEmpty>
+                    {searchTerm.trim().length < 2 
+                      ? "Type at least 2 characters to search" 
+                      : searchLoading 
+                      ? "Searching..." 
+                      : "No players found"}
+                  </CommandEmpty>
                   <CommandGroup heading="Players">
-                    {filteredPlayers.slice(0, 8).map((player) => (
+                    {searchResults.slice(0, 8).map((player) => (
                       <CommandItem
                         key={player.id}
                         value={player.full_name}
@@ -310,12 +320,27 @@ export default function ScoutDashboard() {
               </Command>
 
               <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                {filteredPlayers.length === 0 ? (
+                {searchLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>Searching players...</p>
+                  </div>
+                ) : searchTerm.trim().length < 2 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <UserPlus className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>Type at least 2 characters to search across all players</p>
+                  </div>
+                ) : searchResults.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
                     No players found
                   </p>
                 ) : (
-                  filteredPlayers.map((player) => (
+                  <>
+                    {searchTerm && (
+                      <p className="text-sm text-muted-foreground px-2">
+                        {searchResults.length} {searchResults.length === 1 ? 'player' : 'players'} found
+                      </p>
+                    )}
+                    {searchResults.map((player) => (
                     <div
                       key={player.id}
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
@@ -371,7 +396,8 @@ export default function ScoutDashboard() {
                         )}
                       </div>
                     </div>
-                  ))
+                    ))}
+                  </>
                 )}
               </div>
             </div>
