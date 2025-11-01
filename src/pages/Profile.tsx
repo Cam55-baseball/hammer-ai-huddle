@@ -29,6 +29,8 @@ export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [viewingOtherProfile, setViewingOtherProfile] = useState(false);
+  const [hasAcceptedFollow, setHasAcceptedFollow] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     first_name: "",
     last_name: "",
@@ -80,6 +82,48 @@ export default function Profile() {
       fetchProfile(viewingUserId || undefined);
     }
   }, [authLoading, ownerLoading, user, navigate, viewingUserId, isOwner]);
+
+  useEffect(() => {
+    const checkFollowRelationship = async () => {
+      if (!user || !viewingOtherProfile || !viewingUserId) {
+        setHasAcceptedFollow(false);
+        return;
+      }
+
+      try {
+        // Get current user's role
+        const { data: currentRoleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        
+        setCurrentUserRole(currentRoleData?.role || null);
+
+        // Check if there's an accepted follow relationship
+        // Scout viewing player: scout_id = current user, player_id = viewing user
+        // Player viewing scout: player_id = current user, scout_id = viewing user
+        const { data, error } = await supabase
+          .from('scout_follows')
+          .select('status')
+          .or(`and(scout_id.eq.${user.id},player_id.eq.${viewingUserId}),and(player_id.eq.${user.id},scout_id.eq.${viewingUserId})`)
+          .eq('status', 'accepted')
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking follow relationship:', error);
+          setHasAcceptedFollow(false);
+        } else {
+          setHasAcceptedFollow(!!data);
+        }
+      } catch (error) {
+        console.error('Error in checkFollowRelationship:', error);
+        setHasAcceptedFollow(false);
+      }
+    };
+
+    checkFollowRelationship();
+  }, [user, viewingOtherProfile, viewingUserId]);
 
   const fetchProfile = async (targetUserId?: string) => {
     if (!user) return;
@@ -382,9 +426,16 @@ export default function Profile() {
   const displayName = viewingOtherProfile
     ? (profile?.full_name || [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "Player")
     : (profile?.full_name || [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || menuName);
+  
+  const isPlayer = userRole === 'player';
+  const isCoachOrScout = userRole === 'scout' || userRole === 'admin';
+  
   // Only show email if viewing own profile OR if owner viewing someone else's contact_email
+  // OR if scout viewing player with accepted follow
   const displayEmail = viewingOtherProfile 
-    ? (isOwner ? profile?.contact_email || "" : "") 
+    ? (isOwner || (hasAcceptedFollow && currentUserRole === 'scout' && isPlayer) 
+        ? profile?.contact_email || "" 
+        : "") 
     : menuEmail;
   const initials = (displayName || "U")
     .split(" ")
@@ -392,9 +443,6 @@ export default function Profile() {
     .map((n) => n[0])
     .join("")
     .toUpperCase();
-  
-  const isPlayer = userRole === 'player';
-  const isCoachOrScout = userRole === 'scout' || userRole === 'admin';
 
   const subscriptionEndDate = subscription_end 
     ? new Date(subscription_end).toLocaleDateString('en-US', { 
