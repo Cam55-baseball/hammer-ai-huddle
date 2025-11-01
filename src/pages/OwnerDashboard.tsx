@@ -46,11 +46,6 @@ const OwnerDashboard = () => {
     pitching: number;
     throwing: number;
   }>({ hitting: 0, pitching: 0, throwing: 0 });
-  const [couponStats, setCouponStats] = useState<{
-    totalCodes: number;
-    ambassadorCodes: number;
-    totalUsers: number;
-  }>({ totalCodes: 0, ambassadorCodes: 0, totalUsers: 0 });
 
   useEffect(() => {
     if (!loading && !isOwner) {
@@ -107,26 +102,6 @@ const OwnerDashboard = () => {
         });
       });
       setModuleStats(moduleCount);
-
-      // Fetch coupon statistics
-      const { data: allCoupons } = await supabase
-        .from("subscriptions")
-        .select("coupon_code")
-        .eq("status", "active")
-        .not("coupon_code", "is", null);
-
-      const uniqueCoupons = new Set(allCoupons?.map(c => c.coupon_code) || []);
-
-      const { data: ambassadorData } = await supabase
-        .from("coupon_metadata")
-        .select("coupon_code")
-        .eq("is_ambassador", true);
-
-      setCouponStats({
-        totalCodes: uniqueCoupons.size,
-        ambassadorCodes: ambassadorData?.length || 0,
-        totalUsers: allCoupons?.length || 0
-      });
     } catch (error) {
       console.error("Error loading dashboard data:", error);
     } finally {
@@ -451,43 +426,6 @@ const OwnerDashboard = () => {
                     className="h-2 mt-2" 
                   />
                 </div>
-              </div>
-            </Card>
-
-            {/* Coupon Code Usage Card */}
-            <Card className="p-6">
-              <h3 className="text-2xl font-bold mb-4">Coupon Code Usage</h3>
-              <p className="text-muted-foreground mb-6">
-                Active discount codes and their usage statistics
-              </p>
-              
-              {/* Summary stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="p-4 rounded-lg border bg-card">
-                  <p className="text-sm text-muted-foreground mb-1">Total Codes</p>
-                  <p className="text-2xl font-bold">{couponStats.totalCodes}</p>
-                </div>
-                <div className="p-4 rounded-lg border bg-card">
-                  <p className="text-sm text-muted-foreground mb-1">Ambassador Codes</p>
-                  <p className="text-2xl font-bold">{couponStats.ambassadorCodes}</p>
-                </div>
-                <div className="p-4 rounded-lg border bg-card">
-                  <p className="text-sm text-muted-foreground mb-1">Total Users</p>
-                  <p className="text-2xl font-bold">{couponStats.totalUsers}</p>
-                </div>
-              </div>
-
-              {/* Detailed table - link to /subscribers page */}
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  View detailed breakdown and manage coupon metadata
-                </p>
-                <Button 
-                  onClick={() => navigate('/subscribers')}
-                  variant="outline"
-                >
-                  View Details →
-                </Button>
               </div>
             </Card>
           </TabsContent>

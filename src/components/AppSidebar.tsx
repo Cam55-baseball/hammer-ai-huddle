@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -30,6 +30,7 @@ interface OwnerProfile {
   contact_email?: string | null;
   bio: string | null;
   avatar_url: string | null;
+  credentials?: string[] | null;
   social_instagram: string | null;
   social_twitter: string | null;
   social_facebook: string | null;
@@ -182,6 +183,20 @@ export function AppSidebar() {
                     <div>
                       <h4 className="font-semibold mb-2">About</h4>
                       <p className="text-sm text-muted-foreground">{ownerProfile.bio}</p>
+                    </div>
+                  )}
+
+                  {ownerProfile.credentials && ownerProfile.credentials.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Experience & Credentials</h4>
+                      <div className="space-y-2">
+                        {ownerProfile.credentials.map((cred, index) => (
+                          <div key={index} className="flex items-start gap-2 text-sm">
+                            <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                            <span className="text-muted-foreground">{cred}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { PlusCircle, X } from "lucide-react";
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const ProfileSetup = () => {
   const [position, setPosition] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("");
   const [bio, setBio] = useState("");
+  const [credentials, setCredentials] = useState<string[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   
@@ -162,6 +164,7 @@ const ProfileSetup = () => {
         first_name: firstName,
         last_name: lastName,
         bio: bio || null,
+        credentials: credentials.filter(c => c.trim() !== ''),
       };
       
       if (avatarUrl) {
@@ -463,6 +466,54 @@ const ProfileSetup = () => {
               <p className="text-xs text-muted-foreground text-right mt-1">
                 {bio.length}/500 characters
               </p>
+            </div>
+            
+            {/* Credentials (Optional) */}
+            <div>
+              <Label className="text-sm font-semibold">Experience & Credentials (Optional)</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Add your playing history, coaching roles, certifications, etc.
+              </p>
+              
+              <div className="space-y-2">
+                {credentials.map((cred, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      value={cred}
+                      onChange={(e) => {
+                        const newCredentials = [...credentials];
+                        newCredentials[index] = e.target.value;
+                        setCredentials(newCredentials);
+                      }}
+                      placeholder="e.g., Played at University of Texas (2010-2014)"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const newCredentials = credentials.filter((_, i) => i !== index);
+                        setCredentials(newCredentials);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                
+                {credentials.length < 10 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCredentials([...credentials, ""])}
+                    className="w-full"
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Add Credential
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 

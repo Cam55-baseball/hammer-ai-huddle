@@ -53,6 +53,7 @@ export type Database = {
           bio: string | null
           contact_email: string | null
           created_at: string | null
+          credentials: string[] | null
           experience_level: string | null
           first_name: string | null
           full_name: string | null
@@ -83,6 +84,7 @@ export type Database = {
           bio?: string | null
           contact_email?: string | null
           created_at?: string | null
+          credentials?: string[] | null
           experience_level?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -113,6 +115,7 @@ export type Database = {
           bio?: string | null
           contact_email?: string | null
           created_at?: string | null
+          credentials?: string[] | null
           experience_level?: string | null
           first_name?: string | null
           full_name?: string | null

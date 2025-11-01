@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, PauseCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, PauseCircle, XCircle, Check, X } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +29,7 @@ export default function Profile() {
     contact_email: "",
     bio: "",
     avatar_url: "",
+    credentials: [] as string[],
     position: "",
     experience_level: "",
     height: "",
@@ -96,6 +97,7 @@ export default function Profile() {
         contact_email: data.contact_email || "",
         bio: data.bio || "",
         avatar_url: data.avatar_url || "",
+        credentials: data.credentials || [],
         position: data.position || "",
         experience_level: data.experience_level || "",
         height: data.height || "",
@@ -180,6 +182,7 @@ export default function Profile() {
         contact_email: editForm.contact_email,
         bio: editForm.bio,
         avatar_url: editForm.avatar_url,
+        credentials: editForm.credentials,
         social_instagram: editForm.social_instagram,
         social_twitter: editForm.social_twitter,
         social_facebook: editForm.social_facebook,
@@ -413,6 +416,21 @@ export default function Profile() {
                 <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>
               )}
               
+              {/* Credentials Display */}
+              {profile?.credentials && profile.credentials.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <Label className="text-xs text-muted-foreground">Experience & Credentials</Label>
+                  <div className="space-y-1">
+                    {profile.credentials.map((cred: string, index: number) => (
+                      <div key={index} className="flex items-start gap-2 text-sm">
+                        <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                        <span>{cred}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               {/* Player-Specific Info */}
               {isPlayer && (
                 <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
@@ -607,6 +625,56 @@ export default function Profile() {
                     <p className="text-xs text-muted-foreground text-right">
                       {editForm.bio.length}/500 characters
                     </p>
+                  </div>
+                  
+                  {/* Credentials/Experience List */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Experience & Credentials</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Add your playing history, coaching roles, certifications, etc.
+                    </p>
+                    
+                    <div className="space-y-2">
+                      {editForm.credentials.map((cred, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            value={cred}
+                            onChange={(e) => {
+                              const newCredentials = [...editForm.credentials];
+                              newCredentials[index] = e.target.value;
+                              setEditForm({ ...editForm, credentials: newCredentials });
+                            }}
+                            placeholder="e.g., Played at University of Texas (2010-2014)"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              const newCredentials = editForm.credentials.filter((_, i) => i !== index);
+                              setEditForm({ ...editForm, credentials: newCredentials });
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      
+                      {editForm.credentials.length < 10 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditForm({ ...editForm, credentials: [...editForm.credentials, ""] });
+                          }}
+                          className="w-full"
+                        >
+                          <PlusCircle className="h-4 w-4 mr-2" />
+                          Add Credential
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Profile Picture</Label>
