@@ -86,21 +86,21 @@ export default function Profile() {
       } else {
         setViewingOtherProfile(false);
       }
-      fetchProfile();
+      fetchProfile(viewingUserId || undefined);
     }
   }, [authLoading, ownerLoading, user, navigate, viewingUserId, isOwner]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (targetUserId?: string) => {
     if (!user) return;
 
     try {
       // Determine which user's profile to fetch
-      const targetUserId = viewingUserId || user.id;
+      const userId = targetUserId || user.id;
       
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', targetUserId)
+        .eq('id', userId)
         .single();
 
       if (error) throw error;
@@ -110,7 +110,7 @@ export default function Profile() {
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', targetUserId)
+        .eq('user_id', userId)
         .single();
       
       setUserRole(roleData?.role || null);
@@ -248,7 +248,7 @@ export default function Profile() {
       });
 
       setEditDialogOpen(false);
-      fetchProfile();
+      fetchProfile(viewingUserId || undefined);
     } catch (error) {
       console.error('Error saving profile:', error);
       toast({
