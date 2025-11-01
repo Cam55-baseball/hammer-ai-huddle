@@ -418,13 +418,13 @@ export default function Profile() {
               
               {/* Credentials Display */}
               {profile?.credentials && profile.credentials.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <Label className="text-xs text-muted-foreground">Experience & Credentials</Label>
-                  <div className="space-y-1">
+                <div className="mt-4">
+                  <h4 className="font-semibold mb-2">Experience & Credentials</h4>
+                  <div className="space-y-2">
                     {profile.credentials.map((cred: string, index: number) => (
                       <div key={index} className="flex items-start gap-2 text-sm">
                         <Check className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                        <span>{cred}</span>
+                        <span className="text-muted-foreground">{cred}</span>
                       </div>
                     ))}
                   </div>
