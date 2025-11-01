@@ -17,6 +17,7 @@ import Pricing from "./pages/Pricing";
 import Checkout from "./pages/Checkout";
 import ProfileSetup from "./pages/ProfileSetup";
 import Dashboard from "./pages/Dashboard";
+import MyFollowers from "./pages/MyFollowers";
 import AnalyzeVideo from "./pages/AnalyzeVideo";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/profile-setup" element={<ProfileSetup />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/my-followers" element={<MyFollowers />} />
             <Route path="/analyze/:module" element={<AnalyzeVideo />} />
             <Route path="/owner" element={<OwnerDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />

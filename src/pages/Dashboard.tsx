@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, Users, UserPlus, BookMarked } from "lucide-react";
+import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
@@ -19,16 +19,6 @@ import { toast } from "sonner";
 
 type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
-
-interface Follower {
-  id: string;
-  scout_id: string;
-  created_at: string;
-  scout: {
-    full_name: string;
-    avatar_url: string | null;
-  };
-}
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -45,7 +35,6 @@ export default function Dashboard() {
   const [showSportSwitchDialog, setShowSportSwitchDialog] = useState(false);
   const [pendingSportSwitch, setPendingSportSwitch] = useState<SportType | null>(null);
   const [dontShowAgain, setDontShowAgain] = useState(false);
-  const [followers, setFollowers] = useState<Follower[]>([]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -55,32 +44,7 @@ export default function Dashboard() {
     }
     refetch();
     loadProgress();
-    fetchFollowers();
   }, [authLoading, user, navigate]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('scout-follows-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'scout_follows',
-          filter: `player_id=eq.${user.id}`
-        },
-        () => {
-          fetchFollowers();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
 
   const loadProgress = async () => {
     try {
@@ -95,48 +59,6 @@ export default function Dashboard() {
       console.error("Error loading progress:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchFollowers = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('scout_follows')
-        .select(`
-          id,
-          scout_id,
-          created_at,
-          scout:profiles!scout_follows_scout_id_fkey(full_name, avatar_url)
-        `)
-        .eq('player_id', user.id)
-        .eq('status', 'accepted')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setFollowers((data as any) || []);
-    } catch (error) {
-      console.error('Error fetching followers:', error);
-    }
-  };
-
-  const handleRemoveFollower = async (followId: string) => {
-    try {
-      const { error } = await supabase
-        .from('scout_follows')
-        .update({ status: 'rejected' })
-        .eq('id', followId);
-
-      if (error) throw error;
-
-      toast.success('Access removed', {
-        description: 'Scout no longer has access to your library'
-      });
-      fetchFollowers();
-    } catch (error) {
-      console.error('Error removing follower:', error);
-      toast.error('Failed to remove access');
     }
   };
 
@@ -252,63 +174,6 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-6">
         <FollowRequestsPanel />
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              My Followers
-              {followers.length > 0 && <Badge variant="secondary">{followers.length}</Badge>}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {followers.length === 0 ? (
-              <div className="text-center py-8">
-                <UserPlus className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground font-medium">No scouts following you yet</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  When scouts or coaches follow you, they'll appear here
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {followers.map((follower) => (
-                  <div
-                    key={follower.id}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      {follower.scout.avatar_url ? (
-                        <img
-                          src={follower.scout.avatar_url}
-                          alt={follower.scout.full_name}
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <UserPlus className="h-5 w-5 text-primary" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-semibold">{follower.scout.full_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Following since {new Date(follower.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleRemoveFollower(follower.id)}
-                    >
-                      Remove Access
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
         
         <div>
           <h1 className="text-3xl font-bold text-foreground">Training Dashboard</h1>

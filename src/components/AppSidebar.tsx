@@ -79,6 +79,7 @@ export function AppSidebar() {
 
   const mainNavItems = [
     { title: "Dashboard", url: "/dashboard", icon: Home },
+    ...(!isScout ? [{ title: "My Followers", url: "/my-followers", icon: Users }] : []),
     { title: "Rankings", url: "/rankings", icon: Trophy },
     { title: "Weather", url: "/weather", icon: Cloud },
     ...(isScout ? [{ title: "Scout Dashboard", url: "/scout-dashboard", icon: UserPlus }] : []),
