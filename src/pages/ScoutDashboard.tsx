@@ -150,7 +150,7 @@ export default function ScoutDashboard() {
     }
 
     setFilteredPlayers(filtered);
-  }, [searchTerm, players, sportFilter]);
+  }, [searchTerm, players]);
 
   const handleSendFollow = async (playerId: string) => {
     try {
