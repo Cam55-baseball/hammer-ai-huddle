@@ -9,7 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Search, Check, Clock, BookMarked } from 'lucide-react';
+import { UserPlus, Check, Clock, BookMarked } from 'lucide-react';
+import { 
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 
 interface Player {
   id: string;
@@ -143,10 +151,21 @@ export default function ScoutDashboard() {
   useEffect(() => {
     let filtered = players;
 
-    if (searchTerm) {
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
       filtered = filtered.filter(p =>
-        p.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+        p.full_name?.toLowerCase().includes(searchLower)
       );
+      
+      // Sort: names starting with search term come first
+      filtered.sort((a, b) => {
+        const aStarts = a.full_name?.toLowerCase().startsWith(searchLower);
+        const bStarts = b.full_name?.toLowerCase().startsWith(searchLower);
+        
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+        return 0;
+      });
     }
 
     setFilteredPlayers(filtered);
@@ -254,15 +273,41 @@ export default function ScoutDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
+              <Command className="rounded-lg border shadow-md">
+                <CommandInput
                   placeholder="Search by player name..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  onValueChange={setSearchTerm}
                 />
-              </div>
+                <CommandList>
+                  <CommandEmpty>No players found</CommandEmpty>
+                  <CommandGroup heading="Players">
+                    {filteredPlayers.slice(0, 8).map((player) => (
+                      <CommandItem
+                        key={player.id}
+                        value={player.full_name}
+                        onSelect={() => {
+                          setSearchTerm(player.full_name);
+                        }}
+                        className="flex items-center gap-3 cursor-pointer"
+                      >
+                        {player.avatar_url ? (
+                          <img
+                            src={player.avatar_url}
+                            alt={player.full_name}
+                            className="h-8 w-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <UserPlus className="h-4 w-4 text-primary" />
+                          </div>
+                        )}
+                        <span>{player.full_name}</span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
 
               <div className="space-y-3 max-h-[600px] overflow-y-auto">
                 {filteredPlayers.length === 0 ? (
