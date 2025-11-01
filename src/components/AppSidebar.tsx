@@ -81,6 +81,7 @@ export function AppSidebar() {
     { title: "Dashboard", url: "/dashboard", icon: Home },
     { title: "Rankings", url: "/rankings", icon: Trophy },
     { title: "Weather", url: "/weather", icon: Cloud },
+    ...(isScout ? [{ title: "Scout Dashboard", url: "/scout-dashboard", icon: UserPlus }] : []),
   ];
 
   const trainingModules = [
@@ -98,7 +99,6 @@ export function AppSidebar() {
       { title: "Subscribers", url: "/subscribers", icon: Users2 }
     ] : []),
     ...(isAdmin ? [{ title: "Admin Dashboard", url: "/admin", icon: Users }] : []),
-    ...(isScout ? [{ title: "Scout Dashboard", url: "/scout-dashboard", icon: UserPlus }] : []),
   ];
 
   const handleSignOut = async () => {

@@ -186,6 +186,8 @@ export default function ScoutDashboard() {
     );
   }
 
+  const followingPlayers = players.filter(p => p.followStatus === 'accepted');
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -195,6 +197,56 @@ export default function ScoutDashboard() {
             Manage your player follows and track their progress
           </p>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Following</span>
+              <Badge variant="secondary">{followingPlayers.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {followingPlayers.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                You're not following any players yet. Use the Find Players section below to send follow requests.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {followingPlayers.map((player) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {player.avatar_url ? (
+                        <img
+                          src={player.avatar_url}
+                          alt={player.full_name}
+                          className="h-12 w-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                          <UserPlus className="h-6 w-6 text-primary" />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold">{player.full_name}</p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => navigate(`/players-club?playerId=${player.id}`)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      <BookMarked className="h-4 w-4 mr-2" />
+                      View Library
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
