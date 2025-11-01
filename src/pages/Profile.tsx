@@ -391,7 +391,10 @@ export default function Profile() {
   const displayName = viewingOtherProfile
     ? (profile?.full_name || [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "Player")
     : (profile?.full_name || [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || menuName);
-  const displayEmail = viewingOtherProfile ? (profile?.contact_email || "") : menuEmail;
+  // Only show email if viewing own profile OR if owner viewing someone else's contact_email
+  const displayEmail = viewingOtherProfile 
+    ? (isOwner ? profile?.contact_email || "" : "") 
+    : menuEmail;
   const initials = (displayName || "U")
     .split(" ")
     .filter(Boolean)
@@ -445,7 +448,7 @@ export default function Profile() {
             </Avatar>
             <div className="flex-1">
               <h2 className="text-2xl font-bold">{displayName}</h2>
-              <p className="text-muted-foreground">{displayEmail}</p>
+              {displayEmail && <p className="text-muted-foreground">{displayEmail}</p>}
               {profile?.bio && (
                 <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>
               )}

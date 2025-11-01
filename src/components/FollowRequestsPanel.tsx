@@ -4,8 +4,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Check, X, UserPlus } from 'lucide-react';
+import { Check, X, UserPlus, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ScoutProfileDialog } from './ScoutProfileDialog';
 
 interface FollowRequest {
   id: string;
@@ -23,6 +24,8 @@ export function FollowRequestsPanel() {
   const { toast } = useToast();
   const [requests, setRequests] = useState<FollowRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedScoutProfile, setSelectedScoutProfile] = useState<any>(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   const fetchRequests = async () => {
     if (!user) return;
@@ -96,6 +99,28 @@ export function FollowRequestsPanel() {
     };
   }, [user]);
 
+  const handleViewProfile = async (scoutId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', scoutId)
+        .single();
+
+      if (error) throw error;
+
+      setSelectedScoutProfile(data);
+      setProfileDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching scout profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load scout profile',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleResponse = async (followId: string, status: 'accepted' | 'rejected') => {
     try {
       const { error } = await supabase.functions.invoke('respond-to-follow', {
@@ -166,6 +191,14 @@ export function FollowRequestsPanel() {
               <div className="flex gap-2">
                 <Button
                   size="sm"
+                  variant="outline"
+                  onClick={() => handleViewProfile(request.scout_id)}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  View Profile
+                </Button>
+                <Button
+                  size="sm"
                   variant="default"
                   onClick={() => handleResponse(request.id, 'accepted')}
                 >
@@ -185,6 +218,12 @@ export function FollowRequestsPanel() {
           ))}
         </div>
       </CardContent>
+
+      <ScoutProfileDialog
+        open={profileDialogOpen}
+        onOpenChange={setProfileDialogOpen}
+        profile={selectedScoutProfile}
+      />
     </Card>
   );
 }
