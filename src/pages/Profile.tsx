@@ -96,7 +96,7 @@ export default function Profile() {
     try {
       // Determine which user's profile to fetch
       const userId = targetUserId || user.id;
-      
+      console.log('[Profile] Fetching profile for userId:', userId, 'from param:', targetUserId, 'viewingOtherProfile:', viewingOtherProfile);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -386,12 +386,15 @@ export default function Profile() {
 
   if (!user) return null;
 
-  const userName = profile?.first_name && profile?.last_name 
-    ? `${profile.first_name} ${profile.last_name}` 
-    : user.user_metadata?.full_name || "User";
-  const userEmail = user.email || "";
-  const initials = userName
+  const menuName = user.user_metadata?.full_name || "User";
+  const menuEmail = user.email || "";
+  const displayName = viewingOtherProfile
+    ? (profile?.full_name || [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || "Player")
+    : (profile?.full_name || [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || menuName);
+  const displayEmail = viewingOtherProfile ? (profile?.contact_email || "") : menuEmail;
+  const initials = (displayName || "U")
     .split(" ")
+    .filter(Boolean)
     .map((n) => n[0])
     .join("")
     .toUpperCase();
@@ -416,7 +419,7 @@ export default function Profile() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
-          <UserMenu userName={userName} userEmail={userEmail} />
+          <UserMenu userName={menuName} userEmail={menuEmail} />
         </div>
       </header>
 
@@ -424,7 +427,7 @@ export default function Profile() {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold">
-            {viewingOtherProfile ? `${userName}'s Profile` : "Profile"}
+            {viewingOtherProfile ? `${displayName}'s Profile` : "Profile"}
           </h1>
           {viewingOtherProfile && (
             <Badge variant="secondary">Viewing as Owner</Badge>
@@ -441,8 +444,8 @@ export default function Profile() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold">{userName}</h2>
-              <p className="text-muted-foreground">{userEmail}</p>
+              <h2 className="text-2xl font-bold">{displayName}</h2>
+              <p className="text-muted-foreground">{displayEmail}</p>
               {profile?.bio && (
                 <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>
               )}
