@@ -57,9 +57,50 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
     }
   };
 
-  const openFile = (url: string | null) => {
-    if (url) {
-      window.open(url, "_blank");
+  const openFile = async (url: string | null, fileType: 'letter' | 'video') => {
+    if (!url) return;
+    
+    setLoading(true);
+    try {
+      // Extract path from the URL
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split('/');
+      const bucket = fileType === 'letter' ? 'scout-letters' : 'scout-videos';
+      // Path format: /storage/v1/object/public/bucket-name/user_id/filename
+      // We need to extract user_id/filename
+      const bucketIndex = pathParts.indexOf(bucket);
+      const path = pathParts.slice(bucketIndex + 1).join('/');
+      
+      console.log('Opening file:', { bucket, path });
+      
+      // Call edge function to download file
+      const { data, error } = await supabase.functions.invoke('download-scout-file', {
+        body: { bucket, path },
+      });
+      
+      if (error) throw error;
+      
+      // Create blob from the response
+      const blob = new Blob([data], { 
+        type: fileType === 'letter' ? 'application/pdf' : 'video/mp4' 
+      });
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Open in new tab
+      window.open(blobUrl, '_blank');
+      
+      // Clean up blob URL after a delay
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+      
+    } catch (error: any) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to open file. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,8 +136,8 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
           <Button
             variant="outline"
             className="w-full justify-start"
-            onClick={() => openFile(application.organization_letter_url)}
-            disabled={!application.organization_letter_url}
+            onClick={() => openFile(application.organization_letter_url, 'letter')}
+            disabled={!application.organization_letter_url || loading}
           >
             <FileText className="mr-2 h-4 w-4" />
             View Organization Letter
@@ -104,8 +145,8 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
           <Button
             variant="outline"
             className="w-full justify-start"
-            onClick={() => openFile(application.video_submission_url)}
-            disabled={!application.video_submission_url}
+            onClick={() => openFile(application.video_submission_url, 'video')}
+            disabled={!application.video_submission_url || loading}
           >
             <Video className="mr-2 h-4 w-4" />
             View Video Submission

@@ -36,3 +36,6 @@ verify_jwt = true
 [functions.respond-to-follow]
 verify_jwt = true
 
+[functions.download-scout-file]
+verify_jwt = true
+
