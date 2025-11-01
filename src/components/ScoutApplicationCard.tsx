@@ -80,23 +80,20 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
         throw new Error(response.error?.message || 'Failed to download file');
       }
 
-      // The response.data is a Response object, get the blob
-      const blob = await response.data.blob();
+      // response.data is already the blob data from the edge function
+      const blob = response.data;
       
-      // Get content type from response or infer from file extension
-      let contentType = response.data.headers.get('content-type');
-      if (!contentType) {
-        const fileName = path.split('/').pop() || '';
-        const ext = fileName.split('.').pop()?.toLowerCase();
-        const mimeTypes: Record<string, string> = {
-          'pdf': 'application/pdf',
-          'mp4': 'video/mp4',
-          'mov': 'video/quicktime',
-          'avi': 'video/x-msvideo',
-          'webm': 'video/webm'
-        };
-        contentType = mimeTypes[ext || ''] || 'application/octet-stream';
-      }
+      // Get content type from file extension
+      const fileName = path.split('/').pop() || '';
+      const ext = fileName.split('.').pop()?.toLowerCase();
+      const mimeTypes: Record<string, string> = {
+        'pdf': 'application/pdf',
+        'mp4': 'video/mp4',
+        'mov': 'video/quicktime',
+        'avi': 'video/x-msvideo',
+        'webm': 'video/webm'
+      };
+      const contentType = mimeTypes[ext || ''] || 'application/octet-stream';
       
       // Create blob with correct type
       const typedBlob = new Blob([blob], { type: contentType });
