@@ -35,8 +35,23 @@ serve(async (req) => {
 
     console.log("Fetching rankings for user:", requestingUserId, "filters:", { sport, module });
 
-    // Query for players with accepted scout follows
-    // This query gets all players who have at least one accepted follow from any scout
+    // Check if rankings are visible (owner control)
+    const { data: settingsData } = await supabase
+      .from("app_settings")
+      .select("setting_value")
+      .eq("setting_key", "rankings_visible")
+      .maybeSingle();
+
+    const rankingsEnabled = settingsData?.setting_value?.enabled ?? true;
+
+    if (!rankingsEnabled) {
+      console.log("Rankings are disabled by owner");
+      return new Response(JSON.stringify({ disabled: true, message: "Rankings are currently disabled" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Query for ALL players with progress data (no follow filter)
     let query = supabase
       .from("user_progress")
       .select(`
@@ -49,22 +64,6 @@ serve(async (req) => {
         profiles!inner(full_name)
       `)
       .order("average_efficiency_score", { ascending: false });
-
-    // Filter by players who have accepted follows
-    const { data: acceptedFollows } = await supabase
-      .from("scout_follows")
-      .select("player_id")
-      .eq("status", "accepted");
-
-    if (!acceptedFollows || acceptedFollows.length === 0) {
-      console.log("No accepted follows found");
-      return new Response(JSON.stringify([]), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const acceptedPlayerIds = acceptedFollows.map(f => f.player_id);
-    query = query.in("user_id", acceptedPlayerIds);
 
     if (sport && sport !== "all") {
       query = query.eq("sport", sport);

@@ -20,19 +20,24 @@ interface Follower {
 }
 
 export default function MyFollowers() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Wait for auth to finish loading before redirecting
+    if (authLoading) {
+      return;
+    }
+
     if (!user) {
       navigate("/auth");
       return;
     }
 
     fetchFollowers();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -106,7 +111,7 @@ export default function MyFollowers() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-screen">

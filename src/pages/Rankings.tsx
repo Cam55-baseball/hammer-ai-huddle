@@ -5,6 +5,8 @@ import { RankingsFilters } from "@/components/RankingsFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import { Lock } from "lucide-react";
 
 interface RankingData {
   user_id: string;
@@ -20,6 +22,7 @@ export default function Rankings() {
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState<string>("all");
   const [selectedModule, setSelectedModule] = useState<string>("all");
+  const [rankingsDisabled, setRankingsDisabled] = useState(false);
   const { user, session } = useAuth();
   const { toast } = useToast();
 
@@ -45,7 +48,14 @@ export default function Rankings() {
 
       if (error) throw error;
 
-      setRankings(data || []);
+      // Check if rankings are disabled
+      if (data?.disabled) {
+        setRankingsDisabled(true);
+        setRankings([]);
+      } else {
+        setRankingsDisabled(false);
+        setRankings(data || []);
+      }
     } catch (error) {
       console.error("Error fetching rankings:", error);
       toast({
@@ -98,18 +108,32 @@ export default function Rankings() {
           </p>
         </div>
 
-        <RankingsFilters
-          selectedSport={selectedSport}
-          selectedModule={selectedModule}
-          onSportChange={setSelectedSport}
-          onModuleChange={setSelectedModule}
-        />
+        {rankingsDisabled ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Lock className="h-16 w-16 text-muted-foreground/50 mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Rankings Currently Unavailable</h3>
+              <p className="text-muted-foreground text-center max-w-md">
+                The rankings feature is currently disabled. Please check back later.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <RankingsFilters
+              selectedSport={selectedSport}
+              selectedModule={selectedModule}
+              onSportChange={setSelectedSport}
+              onModuleChange={setSelectedModule}
+            />
 
-        <RankingsTable
-          rankings={rankings}
-          loading={loading}
-          currentUserId={user?.id}
-        />
+            <RankingsTable
+              rankings={rankings}
+              loading={loading}
+              currentUserId={user?.id}
+            />
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

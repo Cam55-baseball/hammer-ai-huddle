@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Check, Clock, BookMarked } from 'lucide-react';
+import { UserPlus, Check, Clock, BookMarked, User } from 'lucide-react';
 import { 
   Command,
   CommandEmpty,
@@ -253,17 +253,27 @@ export default function ScoutDashboard() {
                         </div>
                       )}
                       <div>
-                        <p className="font-semibold">{player.full_name}</p>
+                      <p className="font-semibold">{player.full_name}</p>
                       </div>
                     </div>
-                    <Button
-                      onClick={() => navigate(`/players-club?playerId=${player.id}`)}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <BookMarked className="h-4 w-4 mr-2" />
-                      View Library
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => navigate(`/profile?userId=${player.id}`)}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        View Profile
+                      </Button>
+                      <Button
+                        onClick={() => navigate(`/players-club?playerId=${player.id}`)}
+                        size="sm"
+                        variant="outline"
+                      >
+                        <BookMarked className="h-4 w-4 mr-2" />
+                        View Library
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -384,6 +394,14 @@ export default function ScoutDashboard() {
                               <Check className="h-3 w-3" />
                               Following
                             </Badge>
+                            <Button
+                              onClick={() => navigate(`/profile?userId=${player.id}`)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              <User className="h-4 w-4 mr-2" />
+                              View Profile
+                            </Button>
                             <Button
                               onClick={() => navigate(`/players-club?playerId=${player.id}`)}
                               size="sm"

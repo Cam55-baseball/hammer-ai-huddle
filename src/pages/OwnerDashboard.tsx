@@ -8,11 +8,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked, User } from "lucide-react";
+import { Target, CircleDot, Zap, Search, BookMarked, User, Settings } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface User {
   id: string;
@@ -52,6 +54,7 @@ const OwnerDashboard = () => {
   }>({ hitting: 0, pitching: 0, throwing: 0 });
   const [playerSearch, setPlayerSearch] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [rankingsVisible, setRankingsVisible] = useState(true);
 
   useEffect(() => {
     if (!loading && !isOwner) {
@@ -119,6 +122,29 @@ const OwnerDashboard = () => {
       setDataLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchRankingsVisibility = async () => {
+      try {
+        const { data } = await supabase
+          .from('app_settings')
+          .select('setting_value')
+          .eq('setting_key', 'rankings_visible')
+          .maybeSingle();
+        
+        if (data) {
+          const settingValue = data.setting_value as { enabled: boolean };
+          setRankingsVisible(settingValue?.enabled ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching rankings visibility:', error);
+      }
+    };
+
+    if (isOwner) {
+      fetchRankingsVisibility();
+    }
+  }, [isOwner]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -237,6 +263,36 @@ const OwnerDashboard = () => {
     }
   };
 
+  const handleRankingsVisibilityToggle = async (enabled: boolean) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase
+        .from('app_settings')
+        .update({ 
+          setting_value: { enabled },
+          updated_at: new Date().toISOString(),
+          updated_by: user?.id
+        })
+        .eq('setting_key', 'rankings_visible');
+
+      if (error) throw error;
+
+      setRankingsVisible(enabled);
+      toast({
+        title: "Rankings Visibility Updated",
+        description: enabled ? "Rankings are now visible to all users" : "Rankings are now hidden from users",
+      });
+    } catch (error: any) {
+      console.error('Error updating rankings visibility:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update rankings visibility",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading || dataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -324,6 +380,7 @@ const OwnerDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="videos">Recent Videos</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
             <TabsTrigger value="player-search">Player Profile Search</TabsTrigger>
           </TabsList>
 
@@ -551,6 +608,29 @@ const OwnerDashboard = () => {
                   <Progress 
                     value={activeSubscriptions > 0 ? (moduleStats.throwing / activeSubscriptions) * 100 : 0} 
                     className="h-2 mt-2" 
+                  />
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-4">App Settings</h3>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-1">
+                    <Label htmlFor="rankings-visibility" className="text-base font-semibold">
+                      Rankings Visibility
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Control whether rankings are visible to all users in the app
+                    </p>
+                  </div>
+                  <Switch
+                    id="rankings-visibility"
+                    checked={rankingsVisible}
+                    onCheckedChange={handleRankingsVisibilityToggle}
                   />
                 </div>
               </div>
