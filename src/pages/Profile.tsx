@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, PauseCircle, XCircle, Check, X } from "lucide-react";
+import { SiTiktok } from "react-icons/si";
 import { UserMenu } from "@/components/UserMenu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -525,8 +526,11 @@ export default function Profile() {
               )}
               {(profile?.social_instagram || profile?.social_twitter || 
                 profile?.social_facebook || profile?.social_linkedin || 
-                profile?.social_youtube || profile?.social_website) && (
-                <div className="flex gap-3 mt-3">
+                profile?.social_youtube || profile?.social_tiktok ||
+                profile?.social_website || profile?.social_website_2 ||
+                profile?.social_website_3 || profile?.social_website_4 ||
+                profile?.social_website_5) && (
+                <div className="flex flex-wrap gap-3 mt-3">
                   {profile.social_instagram && (
                     <a 
                       href={profile.social_instagram.startsWith('http') ? profile.social_instagram : `https://instagram.com/${profile.social_instagram}`}
@@ -577,12 +581,68 @@ export default function Profile() {
                       <Youtube className="h-5 w-5" />
                     </a>
                   )}
+                  {profile.social_tiktok && (
+                    <a 
+                      href={profile.social_tiktok.startsWith('http') ? profile.social_tiktok : `https://tiktok.com/@${profile.social_tiktok}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="TikTok"
+                    >
+                      <SiTiktok className="h-5 w-5" />
+                    </a>
+                  )}
                   {profile.social_website && (
                     <a 
                       href={profile.social_website}
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Website"
+                    >
+                      <Globe className="h-5 w-5" />
+                    </a>
+                  )}
+                  {profile.social_website_2 && (
+                    <a 
+                      href={profile.social_website_2}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Website 2"
+                    >
+                      <Globe className="h-5 w-5" />
+                    </a>
+                  )}
+                  {profile.social_website_3 && (
+                    <a 
+                      href={profile.social_website_3}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Website 3"
+                    >
+                      <Globe className="h-5 w-5" />
+                    </a>
+                  )}
+                  {profile.social_website_4 && (
+                    <a 
+                      href={profile.social_website_4}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Website 4"
+                    >
+                      <Globe className="h-5 w-5" />
+                    </a>
+                  )}
+                  {profile.social_website_5 && (
+                    <a 
+                      href={profile.social_website_5}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                      title="Website 5"
                     >
                       <Globe className="h-5 w-5" />
                     </a>
