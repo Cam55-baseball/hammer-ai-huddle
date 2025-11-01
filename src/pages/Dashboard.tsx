@@ -253,16 +253,24 @@ export default function Dashboard() {
       <div className="space-y-6">
         <FollowRequestsPanel />
 
-        {followers.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                My Followers
-                <Badge variant="secondary">{followers.length}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              My Followers
+              {followers.length > 0 && <Badge variant="secondary">{followers.length}</Badge>}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {followers.length === 0 ? (
+              <div className="text-center py-8">
+                <UserPlus className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground font-medium">No scouts following you yet</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  When scouts or coaches follow you, they'll appear here
+                </p>
+              </div>
+            ) : (
               <div className="space-y-3">
                 {followers.map((follower) => (
                   <div
@@ -298,9 +306,9 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
         
         <div>
           <h1 className="text-3xl font-bold text-foreground">Training Dashboard</h1>
