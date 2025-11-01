@@ -78,24 +78,61 @@ const Auth = () => {
             variant: "destructive",
           });
         } else if (data.user) {
-          // Check if user has completed onboarding by checking for user_roles
+          // Multi-factor onboarding check
           const { supabase } = await import("@/integrations/supabase/client");
-          const { data: rolesData } = await supabase
-            .from('user_roles')
-            .select('id')
-            .eq('user_id', data.user.id)
-            .limit(1);
+          
+          const [profileCheck, subscriptionCheck, rolesCheck] = await Promise.all([
+            // Check if user has a profile with essential data
+            supabase
+              .from('profiles')
+              .select('id, first_name, last_name, full_name')
+              .eq('id', data.user.id)
+              .maybeSingle(),
+            
+            // Check if user has a subscription
+            supabase
+              .from('subscriptions')
+              .select('id')
+              .eq('user_id', data.user.id)
+              .limit(1),
+            
+            // Check if user has a role (scout/admin/owner)
+            supabase
+              .from('user_roles')
+              .select('id, role')
+              .eq('user_id', data.user.id)
+              .limit(1)
+          ]);
 
-          const hasCompletedOnboarding = rolesData && rolesData.length > 0;
+          // User is onboarded if they have profile data, subscription, or role
+          const hasProfile = profileCheck.data && (
+            profileCheck.data.first_name || 
+            profileCheck.data.last_name || 
+            profileCheck.data.full_name
+          );
+          const hasSubscription = subscriptionCheck.data && subscriptionCheck.data.length > 0;
+          const hasRole = rolesCheck.data && rolesCheck.data.length > 0;
+
+          const hasCompletedOnboarding = hasProfile || hasSubscription || hasRole;
+
+          console.log('[Auth] Onboarding check:', {
+            userId: data.user.id,
+            hasProfile,
+            hasSubscription,
+            hasRole,
+            hasCompletedOnboarding
+          });
 
           toast({
             title: "Welcome Back!",
             description: "Successfully logged in.",
           });
           
-          // Route based on onboarding status
+          // Route based on onboarding status and role
           if (hasCompletedOnboarding) {
-            // Existing user - go to dashboard
+            // Check if user is a scout
+            const isScout = rolesCheck.data?.some((r: any) => r.role === 'scout');
+            
             if (state?.returnTo) {
               setTimeout(() => {
                 navigate(state.returnTo, { 
@@ -107,15 +144,21 @@ const Auth = () => {
                   replace: true 
                 });
               }, 0);
+            } else if (isScout) {
+              // Scouts go to scout dashboard
+              setTimeout(() => {
+                navigate("/scout-dashboard", { replace: true });
+              }, 0);
             } else {
+              // Players/others go to regular dashboard
               setTimeout(() => {
                 navigate("/dashboard", { replace: true });
               }, 0);
             }
           } else {
-            // New user - start onboarding flow
+            // New user - start onboarding at role selection
             setTimeout(() => {
-              navigate("/select-sport", { replace: true });
+              navigate("/select-user-role", { replace: true });
             }, 0);
           }
         }
@@ -135,8 +178,8 @@ const Auth = () => {
             description: "Let's set up your profile.",
           });
           
-          // Navigate to sport selection for new signups
-          navigate("/select-sport", { replace: true });
+          // Navigate to role selection for new signups
+          navigate("/select-user-role", { replace: true });
         }
       }
     } catch (error) {

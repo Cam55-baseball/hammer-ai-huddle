@@ -15,7 +15,7 @@ const SelectModules = () => {
   const { toast } = useToast();
   const state = location.state as { role?: string; sport?: string; mode?: 'add' };
   
-  const selectedRole = state?.role || localStorage.getItem('selectedRole');
+  const userRole = localStorage.getItem('userRole');
   const selectedSport = state?.sport || localStorage.getItem('selectedSport');
   const isAddMode = state?.mode === 'add';
   
@@ -23,13 +23,17 @@ const SelectModules = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isAddMode && (!selectedRole || !selectedSport)) {
+    if (!isAddMode && (!userRole || !selectedSport)) {
       navigate("/select-sport");
     }
     if (isAddMode && !user) {
       navigate("/auth");
     }
-  }, [selectedRole, selectedSport, isAddMode, user, navigate]);
+    if (userRole === 'scout') {
+      // Scouts shouldn't be here
+      navigate('/scout-dashboard');
+    }
+  }, [userRole, selectedSport, isAddMode, user, navigate]);
 
   const modules: { id: ModuleType; label: string; icon: string; description: string }[] = [
     {
@@ -98,7 +102,6 @@ const SelectModules = () => {
           navigate("/profile-setup", { 
             state: { 
               sport: selectedSport, 
-              role: selectedRole,
               module: selectedModule 
             } 
           });
@@ -106,31 +109,18 @@ const SelectModules = () => {
         }
       }
 
-      // For Player role, go to pricing
-      if (selectedRole === 'Player') {
-        navigate("/pricing", { 
-          state: { 
-            sport: selectedSport, 
-            role: selectedRole,
-            module: selectedModule 
-          } 
-        });
-      } else {
-        // For Scout/Coach and pending Admin, go to profile setup (skip pricing)
-        navigate("/profile-setup", { 
-          state: { 
-            sport: selectedSport, 
-            role: selectedRole,
-            module: selectedModule 
-          } 
-        });
-      }
+      // Players go to pricing
+      navigate("/pricing", { 
+        state: { 
+          sport: selectedSport, 
+          module: selectedModule 
+        } 
+      });
     } catch (error) {
       console.error('Error checking roles:', error);
       // On error, default to pricing page
       navigate("/pricing", { 
         state: { 
-          role: selectedRole, 
           sport: selectedSport, 
           module: selectedModule,
           mode: isAddMode ? 'add' : 'new'
@@ -155,8 +145,6 @@ const SelectModules = () => {
           {!isAddMode && (
             <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
               <span className="bg-muted px-3 py-1 rounded-full">Sport: {selectedSport}</span>
-              <span>→</span>
-              <span className="bg-muted px-3 py-1 rounded-full">Role: {selectedRole}</span>
               <span>→</span>
               <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Module</span>
             </div>
@@ -193,7 +181,7 @@ const SelectModules = () => {
         <div className="flex gap-4">
           <Button 
             variant="outline" 
-            onClick={() => isAddMode ? navigate("/dashboard") : navigate("/select-role", { state: { sport: selectedSport } })}
+            onClick={() => isAddMode ? navigate("/dashboard") : navigate("/select-sport")}
             className="flex-1"
           >
             ← Back

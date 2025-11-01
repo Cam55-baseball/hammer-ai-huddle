@@ -34,6 +34,40 @@ export default function ScoutDashboard() {
     }
   }, [user, authLoading, navigate]);
 
+  // Auto-create scout role if it doesn't exist
+  useEffect(() => {
+    const ensureScoutRole = async () => {
+      if (!user) return;
+      
+      try {
+        // Check if scout role exists
+        const { data: existingRole } = await supabase
+          .from('user_roles')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('role', 'scout')
+          .maybeSingle();
+        
+        if (!existingRole) {
+          // Create scout role
+          const { error } = await supabase
+            .from('user_roles')
+            .insert({ user_id: user.id, role: 'scout' });
+          
+          if (error) {
+            console.error('Error creating scout role:', error);
+          } else {
+            console.log('[ScoutDashboard] Scout role created successfully');
+          }
+        }
+      } catch (error) {
+        console.error('Error in ensureScoutRole:', error);
+      }
+    };
+    
+    ensureScoutRole();
+  }, [user]);
+
   const fetchPlayers = async () => {
     if (!user) return;
 

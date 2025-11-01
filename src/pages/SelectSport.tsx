@@ -5,17 +5,21 @@ import { Card } from "@/components/ui/card";
 
 const SelectSport = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const selectedRole = (location.state as { role?: string })?.role || localStorage.getItem('selectedRole');
+  const userRole = localStorage.getItem('userRole');
 
   useEffect(() => {
-    if (!selectedRole) {
-      navigate("/");
+    if (!userRole) {
+      // No role selected, go back to role selection
+      navigate('/select-user-role');
+    } else if (userRole === 'scout') {
+      // Scouts shouldn't be here, redirect to dashboard
+      navigate('/scout-dashboard');
     }
-  }, [selectedRole, navigate]);
+  }, [userRole, navigate]);
 
   const handleSportSelect = (sport: 'baseball' | 'softball') => {
     localStorage.setItem('selectedSport', sport);
+    // Players continue to module selection
     navigate("/select-modules", { state: { sport } });
   };
 
@@ -74,7 +78,7 @@ const SelectSport = () => {
         </div>
 
         <div className="text-center mt-6">
-          <Button variant="ghost" onClick={() => navigate("/auth")}>
+          <Button variant="ghost" onClick={() => navigate("/select-user-role")}>
             ← Back
           </Button>
         </div>
