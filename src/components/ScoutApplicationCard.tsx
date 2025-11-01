@@ -66,25 +66,41 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
       const urlObj = new URL(url);
       const pathParts = urlObj.pathname.split('/');
       const bucket = fileType === 'letter' ? 'scout-letters' : 'scout-videos';
-      // Path format: /storage/v1/object/public/bucket-name/user_id/filename
-      // We need to extract user_id/filename
       const bucketIndex = pathParts.indexOf(bucket);
       const path = pathParts.slice(bucketIndex + 1).join('/');
       
       console.log('Opening file:', { bucket, path });
       
-      // Call edge function to download file
-      const { data, error } = await supabase.functions.invoke('download-scout-file', {
+      // Call edge function to download file - get raw response
+      const response = await supabase.functions.invoke('download-scout-file', {
         body: { bucket, path },
       });
       
-      if (error) throw error;
+      if (!response.data || response.error) {
+        throw new Error(response.error?.message || 'Failed to download file');
+      }
+
+      // The response.data is a Response object, get the blob
+      const blob = await response.data.blob();
       
-      // Create blob from the response
-      const blob = new Blob([data], { 
-        type: fileType === 'letter' ? 'application/pdf' : 'video/mp4' 
-      });
-      const blobUrl = URL.createObjectURL(blob);
+      // Get content type from response or infer from file extension
+      let contentType = response.data.headers.get('content-type');
+      if (!contentType) {
+        const fileName = path.split('/').pop() || '';
+        const ext = fileName.split('.').pop()?.toLowerCase();
+        const mimeTypes: Record<string, string> = {
+          'pdf': 'application/pdf',
+          'mp4': 'video/mp4',
+          'mov': 'video/quicktime',
+          'avi': 'video/x-msvideo',
+          'webm': 'video/webm'
+        };
+        contentType = mimeTypes[ext || ''] || 'application/octet-stream';
+      }
+      
+      // Create blob with correct type
+      const typedBlob = new Blob([blob], { type: contentType });
+      const blobUrl = URL.createObjectURL(typedBlob);
       
       // Open in new tab
       window.open(blobUrl, '_blank');
