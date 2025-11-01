@@ -75,6 +75,7 @@ export type Database = {
           social_youtube: string | null
           state: string | null
           team_affiliation: string | null
+          tutorial_completed: boolean | null
           updated_at: string | null
           weight: string | null
           years_affiliated: number | null
@@ -106,6 +107,7 @@ export type Database = {
           social_youtube?: string | null
           state?: string | null
           team_affiliation?: string | null
+          tutorial_completed?: boolean | null
           updated_at?: string | null
           weight?: string | null
           years_affiliated?: number | null
@@ -137,6 +139,7 @@ export type Database = {
           social_youtube?: string | null
           state?: string | null
           team_affiliation?: string | null
+          tutorial_completed?: boolean | null
           updated_at?: string | null
           weight?: string | null
           years_affiliated?: number | null
