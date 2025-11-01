@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,12 +18,16 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const { user, session, loading: authLoading } = useAuth();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { modules: subscribedModules, subscription_end, has_discount, discount_percent, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const viewingUserId = searchParams.get('userId');
   const [openingPortal, setOpeningPortal] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [viewingOtherProfile, setViewingOtherProfile] = useState(false);
   const [editForm, setEditForm] = useState({
     first_name: "",
     last_name: "",
@@ -60,33 +65,52 @@ export default function Profile() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || ownerLoading) return;
     
     if (!user) {
       navigate("/auth", { replace: true });
     } else {
+      // Check if viewing another user's profile
+      if (viewingUserId && viewingUserId !== user.id) {
+        // Only owners can view other profiles
+        if (!isOwner) {
+          toast({
+            title: "Access Denied",
+            description: "You don't have permission to view this profile",
+            variant: "destructive",
+          });
+          navigate("/profile", { replace: true });
+          return;
+        }
+        setViewingOtherProfile(true);
+      } else {
+        setViewingOtherProfile(false);
+      }
       fetchProfile();
     }
-  }, [authLoading, user, navigate]);
+  }, [authLoading, ownerLoading, user, navigate, viewingUserId, isOwner]);
 
   const fetchProfile = async () => {
     if (!user) return;
 
     try {
+      // Determine which user's profile to fetch
+      const targetUserId = viewingUserId || user.id;
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', targetUserId)
         .single();
 
       if (error) throw error;
       setProfile(data);
       
-      // Fetch user role
+      // Fetch user role for the target user
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', user.id)
+        .eq('user_id', targetUserId)
         .single();
       
       setUserRole(roleData?.role || null);
@@ -352,7 +376,7 @@ export default function Profile() {
     }
   };
 
-  if (authLoading || subLoading) {
+  if (authLoading || subLoading || ownerLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -398,7 +422,14 @@ export default function Profile() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8">Profile</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-4xl font-bold">
+            {viewingOtherProfile ? `${userName}'s Profile` : "Profile"}
+          </h1>
+          {viewingOtherProfile && (
+            <Badge variant="secondary">Viewing as Owner</Badge>
+          )}
+        </div>
 
         {/* User Info Card */}
         <Card className="p-6 mb-6">
@@ -563,13 +594,14 @@ export default function Profile() {
                 </div>
               )}
             </div>
-            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </Button>
-              </DialogTrigger>
+            {!viewingOtherProfile && (
+              <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>Edit Profile</DialogTitle>
@@ -948,11 +980,13 @@ export default function Profile() {
                 </div>
               </DialogContent>
             </Dialog>
+            )}
           </div>
         </Card>
 
         {/* Subscription Status Card */}
-        <Card className="p-6 mb-6">
+        {!viewingOtherProfile && (
+          <Card className="p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
@@ -995,41 +1029,43 @@ export default function Profile() {
                 </div>
               )}
 
-              <div className="space-y-4 pt-4 border-t">
-                <div>
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-3">Manage Your Modules</h4>
-                  <Button 
-                    onClick={handleAddModules}
-                    variant="default"
-                    className="w-full"
-                  >
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Modules
-                  </Button>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-3">Subscription Controls</h4>
-                  <div className="space-y-2">
+              {!viewingOtherProfile && (
+                <div className="space-y-4 pt-4 border-t">
+                  <div>
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-3">Manage Your Modules</h4>
                     <Button 
-                      onClick={handlePauseSubscription}
-                      variant="outline"
+                      onClick={handleAddModules}
+                      variant="default"
                       className="w-full"
                     >
-                      <PauseCircle className="mr-2 h-4 w-4" />
-                      Pause Subscription
-                    </Button>
-                    <Button 
-                      onClick={handleCancelSubscription}
-                      variant="destructive"
-                      className="w-full"
-                    >
-                      <XCircle className="mr-2 h-4 w-4" />
-                      End Subscription
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Modules
                     </Button>
                   </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-3">Subscription Controls</h4>
+                    <div className="space-y-2">
+                      <Button 
+                        onClick={handlePauseSubscription}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <PauseCircle className="mr-2 h-4 w-4" />
+                        Pause Subscription
+                      </Button>
+                      <Button 
+                        onClick={handleCancelSubscription}
+                        variant="destructive"
+                        className="w-full"
+                      >
+                        <XCircle className="mr-2 h-4 w-4" />
+                        End Subscription
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -1042,6 +1078,7 @@ export default function Profile() {
             </div>
           )}
         </Card>
+        )}
 
         {/* Feedback Dialog */}
         <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>

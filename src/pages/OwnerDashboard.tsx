@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked } from "lucide-react";
+import { Target, CircleDot, Zap, Search, BookMarked, User } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -314,7 +314,7 @@ const OwnerDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="videos">Recent Videos</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            <TabsTrigger value="player-search">Player Library Search</TabsTrigger>
+            <TabsTrigger value="player-search">Player Profile Search</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="space-y-4">
@@ -471,7 +471,7 @@ const OwnerDashboard = () => {
 
           <TabsContent value="player-search" className="space-y-4">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Search Player Libraries</h3>
+              <h3 className="text-lg font-semibold mb-4">Search Player Profiles & Libraries</h3>
               <div className="space-y-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -500,13 +500,23 @@ const OwnerDashboard = () => {
                             <p className="text-sm text-muted-foreground">{player.sessionCount} sessions saved</p>
                           </div>
                         </div>
-                        <Button
-                          onClick={() => navigate(`/players-club?playerId=${player.id}`)}
-                          size="sm"
-                        >
-                          <BookMarked className="h-4 w-4 mr-2" />
-                          View Library
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => navigate(`/profile?userId=${player.id}`)}
+                            size="sm"
+                            variant="outline"
+                          >
+                            <User className="h-4 w-4 mr-2" />
+                            View Profile
+                          </Button>
+                          <Button
+                            onClick={() => navigate(`/players-club?playerId=${player.id}`)}
+                            size="sm"
+                          >
+                            <BookMarked className="h-4 w-4 mr-2" />
+                            View Library
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
