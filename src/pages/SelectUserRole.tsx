@@ -20,8 +20,8 @@ const SelectUserRole = () => {
     localStorage.setItem('userRole', role);
     
     if (role === 'scout') {
-      // Scouts go directly to scout dashboard
-      navigate('/scout-dashboard');
+      // Scouts go to sport selection for application
+      navigate('/select-sport-scout');
     } else {
       // Players continue to sport selection
       navigate('/select-sport');

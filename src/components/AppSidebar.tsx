@@ -94,6 +94,7 @@ export function AppSidebar() {
     { title: "Profile", url: "/profile", icon: Settings },
     ...(isOwner ? [
       { title: "Owner Dashboard", url: "/owner", icon: Shield },
+      { title: "Scout Applications", url: "/owner?tab=scout-applications", icon: UserPlus },
       { title: "Subscribers", url: "/subscribers", icon: Users2 }
     ] : []),
     ...(isAdmin ? [{ title: "Admin Dashboard", url: "/admin", icon: Users }] : []),

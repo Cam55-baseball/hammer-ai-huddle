@@ -35,38 +35,61 @@ export default function ScoutDashboard() {
   }, [user, authLoading, navigate]);
 
   // Auto-create scout role if it doesn't exist
+  const [hasScoutAccess, setHasScoutAccess] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
+
   useEffect(() => {
-    const ensureScoutRole = async () => {
-      if (!user) return;
-      
+    const checkAccess = async () => {
+      if (!user) {
+        setCheckingAccess(false);
+        return;
+      }
+
       try {
-        // Check if scout role exists
-        const { data: existingRole } = await supabase
+        // Check if user has scout role
+        const { data: roleData } = await supabase
           .from('user_roles')
           .select('id')
           .eq('user_id', user.id)
           .eq('role', 'scout')
+          .eq('status', 'active')
           .maybeSingle();
-        
-        if (!existingRole) {
-          // Create scout role
-          const { error } = await supabase
-            .from('user_roles')
-            .insert({ user_id: user.id, role: 'scout' });
-          
-          if (error) {
-            console.error('Error creating scout role:', error);
+
+        if (roleData) {
+          setHasScoutAccess(true);
+          setCheckingAccess(false);
+          return;
+        }
+
+        // Check application status
+        const { data: appData } = await supabase
+          .from('scout_applications')
+          .select('status')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (appData) {
+          if (appData.status === 'approved') {
+            setHasScoutAccess(true);
+          } else if (appData.status === 'pending') {
+            navigate('/scout-application-pending');
           } else {
-            console.log('[ScoutDashboard] Scout role created successfully');
+            navigate('/scout-application');
           }
+        } else {
+          // No application, redirect to apply
+          navigate('/scout-application');
         }
       } catch (error) {
-        console.error('Error in ensureScoutRole:', error);
+        console.error('Error checking scout access:', error);
+        navigate('/scout-application');
+      } finally {
+        setCheckingAccess(false);
       }
     };
-    
-    ensureScoutRole();
-  }, [user]);
+
+    checkAccess();
+  }, [user, navigate]);
 
   const fetchPlayers = async () => {
     if (!user) return;

@@ -146,6 +146,54 @@ export type Database = {
         }
         Relationships: []
       }
+      scout_applications: {
+        Row: {
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          organization_letter_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sport: string
+          status: string
+          updated_at: string | null
+          user_id: string
+          video_submission_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          organization_letter_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sport: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+          video_submission_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          organization_letter_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sport?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          video_submission_url?: string | null
+        }
+        Relationships: []
+      }
       scout_follows: {
         Row: {
           created_at: string | null

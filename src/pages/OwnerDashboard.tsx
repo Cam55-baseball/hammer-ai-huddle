@@ -12,6 +12,7 @@ import { Target, CircleDot, Zap, Search, BookMarked, User } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
 
 interface User {
   id: string;
@@ -42,6 +43,7 @@ const OwnerDashboard = () => {
   const [videos, setVideos] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([]);
+  const [scoutApplications, setScoutApplications] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [moduleStats, setModuleStats] = useState<{
     hitting: number;
@@ -61,7 +63,7 @@ const OwnerDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [usersResponse, rolesResponse, videosResponse, subsResponse, adminReqResponse] = await Promise.all([
+      const [usersResponse, rolesResponse, videosResponse, subsResponse, adminReqResponse, scoutAppResponse] = await Promise.all([
         supabase.from("profiles").select("id, full_name, created_at").order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id, role, status"),
         supabase.from("videos").select("*").order("created_at", { ascending: false }).limit(10),
@@ -72,12 +74,17 @@ const OwnerDashboard = () => {
           .eq("role", "admin")
           .eq("status", "pending")
           .order("created_at", { ascending: false }),
+        supabase
+          .from("scout_applications")
+          .select("*")
+          .order("created_at", { ascending: false }),
       ]);
 
       if (usersResponse.data) setUsers(usersResponse.data);
       if (rolesResponse.data) setUserRoles(rolesResponse.data);
       if (videosResponse.data) setVideos(videosResponse.data);
       if (subsResponse.data) setSubscriptions(subsResponse.data);
+      if (scoutAppResponse.data) setScoutApplications(scoutAppResponse.data);
       
       if (adminReqResponse.data) {
         const requests: AdminRequest[] = adminReqResponse.data.map((req: any) => ({
@@ -312,6 +319,9 @@ const OwnerDashboard = () => {
             <TabsTrigger value="admin-requests">
               Admin Requests {adminRequests.length > 0 && `(${adminRequests.length})`}
             </TabsTrigger>
+            <TabsTrigger value="scout-applications">
+              Scout Applications {scoutApplications.filter(a => a.status === 'pending').length > 0 && `(${scoutApplications.filter(a => a.status === 'pending').length})`}
+            </TabsTrigger>
             <TabsTrigger value="videos">Recent Videos</TabsTrigger>
             <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
             <TabsTrigger value="player-search">Player Profile Search</TabsTrigger>
@@ -386,6 +396,84 @@ const OwnerDashboard = () => {
                   ))
                 )}
               </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="scout-applications" className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-2xl font-bold mb-4">Scout/Coach Applications</h3>
+              <Tabs defaultValue="pending" className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="pending">
+                    Pending ({scoutApplications.filter(a => a.status === 'pending').length})
+                  </TabsTrigger>
+                  <TabsTrigger value="approved">Approved</TabsTrigger>
+                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                  <TabsTrigger value="all">All</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="pending" className="space-y-4">
+                  {scoutApplications.filter(a => a.status === 'pending').length === 0 ? (
+                    <p className="text-muted-foreground">No pending applications</p>
+                  ) : (
+                    scoutApplications
+                      .filter(a => a.status === 'pending')
+                      .map(app => (
+                        <ScoutApplicationCard 
+                          key={app.id} 
+                          application={app}
+                          onUpdate={loadDashboardData}
+                        />
+                      ))
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="approved" className="space-y-4">
+                  {scoutApplications.filter(a => a.status === 'approved').length === 0 ? (
+                    <p className="text-muted-foreground">No approved applications</p>
+                  ) : (
+                    scoutApplications
+                      .filter(a => a.status === 'approved')
+                      .map(app => (
+                        <ScoutApplicationCard 
+                          key={app.id} 
+                          application={app}
+                          onUpdate={loadDashboardData}
+                        />
+                      ))
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="rejected" className="space-y-4">
+                  {scoutApplications.filter(a => a.status === 'rejected').length === 0 ? (
+                    <p className="text-muted-foreground">No rejected applications</p>
+                  ) : (
+                    scoutApplications
+                      .filter(a => a.status === 'rejected')
+                      .map(app => (
+                        <ScoutApplicationCard 
+                          key={app.id} 
+                          application={app}
+                          onUpdate={loadDashboardData}
+                        />
+                      ))
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="all" className="space-y-4">
+                  {scoutApplications.length === 0 ? (
+                    <p className="text-muted-foreground">No applications yet</p>
+                  ) : (
+                    scoutApplications.map(app => (
+                      <ScoutApplicationCard 
+                        key={app.id} 
+                        application={app}
+                        onUpdate={loadDashboardData}
+                      />
+                    ))
+                  )}
+                </TabsContent>
+              </Tabs>
             </Card>
           </TabsContent>
 

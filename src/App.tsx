@@ -7,6 +7,9 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import SelectUserRole from "./pages/SelectUserRole";
+import SelectSportScout from "./pages/SelectSportScout";
+import ScoutApplication from "./pages/ScoutApplication";
+import ScoutApplicationPending from "./pages/ScoutApplicationPending";
 import SelectSport from "./pages/SelectSport";
 import SelectRole from "./pages/SelectRole";
 import SelectModules from "./pages/SelectModules";
@@ -40,8 +43,11 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/select-user-role" element={<SelectUserRole />} />
-            <Route path="/select-sport" element={<SelectSport />} />
+          <Route path="/select-user-role" element={<SelectUserRole />} />
+          <Route path="/select-sport-scout" element={<SelectSportScout />} />
+          <Route path="/scout-application" element={<ScoutApplication />} />
+          <Route path="/scout-application-pending" element={<ScoutApplicationPending />} />
+          <Route path="/select-sport" element={<SelectSport />} />
             <Route path="/select-role" element={<SelectRole />} />
             <Route path="/select-modules" element={<SelectModules />} />
             <Route path="/pricing" element={<Pricing />} />

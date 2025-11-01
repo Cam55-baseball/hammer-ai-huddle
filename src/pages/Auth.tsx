@@ -81,7 +81,7 @@ const Auth = () => {
           // Multi-factor onboarding check
           const { supabase } = await import("@/integrations/supabase/client");
           
-          const [profileCheck, subscriptionCheck, rolesCheck] = await Promise.all([
+          const [profileCheck, subscriptionCheck, rolesCheck, scoutAppCheck] = await Promise.all([
             // Check if user has a profile with essential data
             supabase
               .from('profiles')
@@ -96,32 +96,41 @@ const Auth = () => {
               .eq('user_id', data.user.id)
               .limit(1),
             
-            // Check if user has a role (scout/admin/owner)
-            supabase
-              .from('user_roles')
-              .select('id, role')
-              .eq('user_id', data.user.id)
-              .limit(1)
-          ]);
+          // Check if user has a role (scout/admin/owner)
+          supabase
+            .from('user_roles')
+            .select('id, role')
+            .eq('user_id', data.user.id)
+            .limit(1),
+          
+          // Check for scout application
+          supabase
+            .from('scout_applications')
+            .select('status')
+            .eq('user_id', data.user.id)
+            .maybeSingle()
+        ]);
 
           // User is onboarded if they have profile data, subscription, or role
-          const hasProfile = profileCheck.data && (
-            profileCheck.data.first_name || 
-            profileCheck.data.last_name || 
-            profileCheck.data.full_name
-          );
-          const hasSubscription = subscriptionCheck.data && subscriptionCheck.data.length > 0;
-          const hasRole = rolesCheck.data && rolesCheck.data.length > 0;
+        const hasProfile = profileCheck.data && (
+          profileCheck.data.first_name || 
+          profileCheck.data.last_name || 
+          profileCheck.data.full_name
+        );
+        const hasSubscription = subscriptionCheck.data && subscriptionCheck.data.length > 0;
+        const hasRole = rolesCheck.data && rolesCheck.data.length > 0;
+        const hasPendingScoutApp = scoutAppCheck.data?.status === 'pending';
 
-          const hasCompletedOnboarding = hasProfile || hasSubscription || hasRole;
+        const hasCompletedOnboarding = hasProfile || hasSubscription || hasRole;
 
-          console.log('[Auth] Onboarding check:', {
-            userId: data.user.id,
-            hasProfile,
-            hasSubscription,
-            hasRole,
-            hasCompletedOnboarding
-          });
+        console.log('[Auth] Onboarding check:', {
+          userId: data.user.id,
+          hasProfile,
+          hasSubscription,
+          hasRole,
+          hasPendingScoutApp,
+          hasCompletedOnboarding
+        });
 
           toast({
             title: "Welcome Back!",
