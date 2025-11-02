@@ -401,9 +401,17 @@ export default function Profile() {
       }
     } catch (error) {
       console.error('Error opening billing portal:', error);
+      
+      // Check if this is the Stripe portal configuration error
+      const errorMessage = error?.message || '';
+      const isPortalConfigError = errorMessage.includes('No configuration provided') || 
+                                   errorMessage.includes('default configuration has not been created');
+      
       toast({
-        title: "Error",
-        description: "Failed to open billing portal. Please try again.",
+        title: "Billing Portal Unavailable",
+        description: isPortalConfigError 
+          ? "The billing portal is currently being set up. Please contact support to manage your subscription."
+          : "Failed to open billing portal. Please try again later.",
         variant: "destructive",
       });
     } finally {
