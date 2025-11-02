@@ -73,6 +73,19 @@ serve(async (req) => {
       query = query.eq("module", module);
     }
 
+    // Exclude owners from rankings
+    const { data: ownerRoles } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "owner");
+
+    const ownerUserIds = ownerRoles?.map(o => o.user_id) || [];
+    
+    if (ownerUserIds.length > 0) {
+      console.log(`Excluding ${ownerUserIds.length} owner(s) from rankings:`, ownerUserIds);
+      query = query.not("user_id", "in", `(${ownerUserIds.join(",")})`);
+    }
+
     const { data, error } = await query;
 
     if (error) throw error;

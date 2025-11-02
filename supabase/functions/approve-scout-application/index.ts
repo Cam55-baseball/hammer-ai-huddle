@@ -88,6 +88,39 @@ serve(async (req) => {
         });
       }
 
+      // Auto-follow the owner
+      try {
+        const { data: ownerRole } = await supabaseClient
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "owner")
+          .maybeSingle();
+
+        if (ownerRole?.user_id) {
+          console.log(`Auto-creating follow relationship: scout ${application.user_id} -> owner ${ownerRole.user_id}`);
+          
+          const { error: followError } = await supabaseClient
+            .from("scout_follows")
+            .insert({
+              scout_id: application.user_id,
+              player_id: ownerRole.user_id,
+              status: "accepted",
+            });
+
+          if (followError) {
+            console.error("Error creating auto-follow relationship:", followError);
+            // Don't fail the approval if auto-follow fails, just log it
+          } else {
+            console.log("Auto-follow relationship created successfully");
+          }
+        } else {
+          console.log("No owner found to auto-follow");
+        }
+      } catch (followException) {
+        console.error("Exception during auto-follow creation:", followException);
+        // Don't fail the approval if auto-follow fails
+      }
+
       // Update application status
       const { error: updateError } = await supabaseClient
         .from("scout_applications")
