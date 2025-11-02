@@ -430,10 +430,14 @@ export default function Profile() {
   const isPlayer = userRole === 'player';
   const isCoachOrScout = userRole === 'scout' || userRole === 'admin';
   
-  // Only show email if viewing own profile OR if owner viewing someone else's contact_email
-  // OR if scout viewing player with accepted follow
+  // Show email if:
+  // 1. Viewing own profile -> show user's auth email
+  // 2. Owner viewing someone else's contact_email
+  // 3. Scout/Coach viewing ANY player profile (no follow requirement)
+  // 4. NEVER show scout/coach email to players
   const displayEmail = viewingOtherProfile 
-    ? (isOwner || (hasAcceptedFollow && currentUserRole === 'scout' && isPlayer) 
+    ? (isOwner 
+        || ((currentUserRole === 'scout' || currentUserRole === 'coach') && isPlayer)
         ? profile?.contact_email || "" 
         : "") 
     : menuEmail;
