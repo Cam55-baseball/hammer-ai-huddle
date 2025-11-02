@@ -40,6 +40,7 @@ export default function ScoutDashboard() {
   const [unfollowDialogOpen, setUnfollowDialogOpen] = useState(false);
   const [playerToUnfollow, setPlayerToUnfollow] = useState<Player | null>(null);
   const [isUnfollowing, setIsUnfollowing] = useState(false);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -135,6 +136,19 @@ export default function ScoutDashboard() {
       fetchFollowing();
     }
   }, [user, hasScoutAccess]);
+
+  // Fetch owner ID
+  useEffect(() => {
+    const fetchOwnerId = async () => {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'owner')
+        .maybeSingle();
+      if (data) setOwnerId(data.user_id);
+    };
+    fetchOwnerId();
+  }, []);
 
   // Debounced search effect
   useEffect(() => {
@@ -288,49 +302,56 @@ export default function ScoutDashboard() {
                 {following.map((player) => (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                    className="flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap"
                   >
-                    <div className="flex items-center gap-3">
-                      {player.avatar_url ? (
-                        <img
-                          src={player.avatar_url}
-                          alt={player.full_name}
-                          className="h-12 w-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <UserPlus className="h-6 w-6 text-primary" />
-                        </div>
-                      )}
-                      <div>
-                      <p className="font-semibold">{player.full_name}</p>
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex-shrink-0">
+                        {player.avatar_url ? (
+                          <img
+                            src={player.avatar_url}
+                            alt={player.full_name}
+                            className="h-12 w-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <UserPlus className="h-6 w-6 text-primary" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold truncate">{player.full_name}</p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2 items-center">
                       <Button
                         onClick={() => navigate(`/profile?userId=${player.id}`)}
                         size="sm"
                         variant="outline"
+                        className="flex-shrink-0"
                       >
-                        <User className="h-4 w-4 mr-2" />
-                        View Profile
+                        <User className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">View Profile</span>
                       </Button>
                       <Button
                         onClick={() => navigate(`/players-club?playerId=${player.id}`)}
                         size="sm"
                         variant="outline"
+                        className="flex-shrink-0"
                       >
-                        <BookMarked className="h-4 w-4 mr-2" />
-                        View Library
+                        <BookMarked className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">View Library</span>
                       </Button>
-                      <Button
-                        onClick={() => handleUnfollowClick(player)}
-                        size="sm"
-                        variant="destructive"
-                      >
-                        <UserMinus className="h-4 w-4 mr-2" />
-                        Unfollow
-                      </Button>
+                      {player.id !== ownerId && (
+                        <Button
+                          onClick={() => handleUnfollowClick(player)}
+                          size="sm"
+                          variant="destructive"
+                          className="flex-shrink-0"
+                        >
+                          <UserMinus className="h-4 w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Unfollow</span>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -411,44 +432,47 @@ export default function ScoutDashboard() {
                     {searchResults.map((player) => (
                     <div
                       key={player.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                      className="flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap"
                     >
-                      <div className="flex items-center gap-3">
-                        {player.avatar_url ? (
-                          <img
-                            src={player.avatar_url}
-                            alt={player.full_name}
-                            className="h-12 w-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <UserPlus className="h-6 w-6 text-primary" />
-                          </div>
-                        )}
-                        <div>
-                          <p className="font-semibold">{player.full_name}</p>
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="flex-shrink-0">
+                          {player.avatar_url ? (
+                            <img
+                              src={player.avatar_url}
+                              alt={player.full_name}
+                              className="h-12 w-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                              <UserPlus className="h-6 w-6 text-primary" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold truncate">{player.full_name}</p>
                         </div>
                       </div>
 
-                      <div>
+                      <div className="flex flex-wrap gap-2 items-center">
                         {player.followStatus === 'none' && (
                           <Button
                             onClick={() => handleSendFollow(player.id)}
                             size="sm"
+                            className="flex-shrink-0"
                           >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Follow
+                            <UserPlus className="h-4 w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Follow</span>
                           </Button>
                         )}
                         {player.followStatus === 'pending' && (
-                          <Badge variant="secondary" className="gap-1">
+                          <Badge variant="secondary" className="gap-1 flex-shrink-0">
                             <Clock className="h-3 w-3" />
                             Pending
                           </Badge>
                         )}
                         {player.followStatus === 'accepted' && (
-                          <div className="flex gap-2">
-                            <Badge variant="default" className="gap-1">
+                          <>
+                            <Badge variant="default" className="gap-1 flex-shrink-0">
                               <Check className="h-3 w-3" />
                               Following
                             </Badge>
@@ -456,19 +480,21 @@ export default function ScoutDashboard() {
                               onClick={() => navigate(`/profile?userId=${player.id}`)}
                               size="sm"
                               variant="outline"
+                              className="flex-shrink-0"
                             >
-                              <User className="h-4 w-4 mr-2" />
-                              View Profile
+                              <User className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">View Profile</span>
                             </Button>
                             <Button
                               onClick={() => navigate(`/players-club?playerId=${player.id}`)}
                               size="sm"
                               variant="outline"
+                              className="flex-shrink-0"
                             >
-                              <BookMarked className="h-4 w-4 mr-2" />
-                              View Library
+                              <BookMarked className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">View Library</span>
                             </Button>
-                          </div>
+                          </>
                         )}
                       </div>
                     </div>

@@ -45,6 +45,26 @@ serve(async (req) => {
 
     console.log(`[unfollow-player] Scout ${user.id} unfollowing player ${playerId}`);
 
+    // Check if the player is an owner - scouts cannot unfollow owners
+    const { data: ownerCheck, error: ownerCheckError } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('user_id', playerId)
+      .eq('role', 'owner')
+      .maybeSingle();
+
+    if (ownerCheckError) {
+      console.error('[unfollow-player] Error checking owner status:', ownerCheckError);
+    }
+
+    if (ownerCheck) {
+      console.log('[unfollow-player] Cannot unfollow owner');
+      return new Response(
+        JSON.stringify({ error: 'Cannot unfollow the owner' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Verify the scout has a follow relationship with this player
     const { data: existingFollow, error: checkError } = await supabase
       .from('scout_follows')

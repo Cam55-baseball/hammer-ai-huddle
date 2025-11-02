@@ -73,26 +73,41 @@ serve(async (req) => {
       query = query.eq("module", module);
     }
 
-    // Exclude owners from rankings
-    const { data: ownerRoles } = await supabase
+    // Fetch all data first
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching rankings:", error);
+      throw error;
+    }
+
+    console.log(`Fetched ${data?.length || 0} total records before filtering`);
+
+    // Exclude owners from rankings by filtering in code
+    const { data: ownerRoles, error: ownerError } = await supabase
       .from("user_roles")
       .select("user_id")
       .eq("role", "owner");
+
+    if (ownerError) {
+      console.error("Error fetching owner roles:", ownerError);
+    }
 
     const ownerUserIds = ownerRoles?.map(o => o.user_id) || [];
     
     if (ownerUserIds.length > 0) {
       console.log(`Excluding ${ownerUserIds.length} owner(s) from rankings:`, ownerUserIds);
-      query = query.not("user_id", "in", `(${ownerUserIds.join(",")})`);
     }
 
-    const { data, error } = await query;
+    // Filter out owners from the results
+    const ownerUserIdsSet = new Set(ownerUserIds);
+    const filteredData = data.filter((item: any) => !ownerUserIdsSet.has(item.user_id));
 
-    if (error) throw error;
+    console.log(`Returning ${filteredData.length} ranked players after excluding owners`);
 
     // Format data - NO ANONYMIZATION, all real names shown
     // NOTE: Efficiency scores removed from public rankings
-    const formattedData = data.map((item: any) => ({
+    const formattedData = filteredData.map((item: any) => ({
       user_id: item.user_id,
       full_name: item.profiles.full_name || "Anonymous",
       sport: item.sport,
