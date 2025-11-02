@@ -332,6 +332,41 @@ serve(async (req) => {
           onConflict: 'user_id'
         });
 
+      // Auto-assign player role if user has active subscription but no role
+      if (subscribedModules.length > 0) {
+        logStep("Checking for player role assignment");
+        
+        // Check if user already has a role
+        const { data: existingRoles, error: roleCheckError } = await supabaseClient
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .limit(1);
+        
+        if (roleCheckError) {
+          logStep("Error checking for existing roles", { error: roleCheckError.message });
+        } else if (!existingRoles || existingRoles.length === 0) {
+          // User has no role but has active subscription - auto-assign player role
+          logStep("Auto-assigning player role for subscribed user without role");
+          
+          const { error: roleInsertError } = await supabaseClient
+            .from('user_roles')
+            .insert([{
+              user_id: user.id,
+              role: 'player',
+              status: 'active'
+            }]);
+          
+          if (roleInsertError) {
+            logStep("Error auto-assigning player role", { error: roleInsertError.message });
+          } else {
+            logStep("Successfully auto-assigned player role");
+          }
+        } else {
+          logStep("User already has role assigned", { roles: existingRoles });
+        }
+      }
+
       // Auto-create coupon metadata entry if this is a new coupon
       if (couponCode) {
         logStep("Creating coupon metadata entry", { couponCode });
