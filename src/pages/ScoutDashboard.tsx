@@ -41,6 +41,7 @@ export default function ScoutDashboard() {
   const [playerToUnfollow, setPlayerToUnfollow] = useState<Player | null>(null);
   const [isUnfollowing, setIsUnfollowing] = useState(false);
   const [ownerId, setOwnerId] = useState<string | null>(null);
+  const [ownerLoading, setOwnerLoading] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -140,12 +141,14 @@ export default function ScoutDashboard() {
   // Fetch owner ID
   useEffect(() => {
     const fetchOwnerId = async () => {
+      setOwnerLoading(true);
       const { data } = await supabase
         .from('user_roles')
         .select('user_id')
         .eq('role', 'owner')
         .maybeSingle();
       if (data) setOwnerId(data.user_id);
+      setOwnerLoading(false);
     };
     fetchOwnerId();
   }, []);
@@ -293,7 +296,9 @@ export default function ScoutDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {following.length === 0 ? (
+            {(loading || ownerLoading) ? (
+              <p className="text-center text-muted-foreground py-8">Loading...</p>
+            ) : following.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
                 You're not following any players yet. Use the Find Players section below to send follow requests.
               </p>
