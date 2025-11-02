@@ -60,8 +60,7 @@ serve(async (req) => {
         module,
         videos_analyzed,
         average_efficiency_score,
-        last_activity,
-        profiles!inner(full_name)
+        last_activity
       `)
       .order("average_efficiency_score", { ascending: false });
 
@@ -103,13 +102,28 @@ serve(async (req) => {
     const ownerUserIdsSet = new Set(ownerUserIds);
     const filteredData = (data || []).filter((item: any) => !ownerUserIdsSet.has(item.user_id));
 
-    console.log(`Returning ${filteredData.length} ranked players after excluding owners`);
+    // Build profile map for names
+    const userIds = Array.from(new Set(filteredData.map((i: any) => i.user_id)));
+    let profileMap: Record<string, string> = {};
+    if (userIds.length > 0) {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+      if (profilesError) {
+        console.error("Error fetching profiles for rankings:", profilesError);
+      } else {
+        profileMap = (profilesData || []).reduce((acc: Record<string, string>, p: any) => {
+          acc[p.id] = p.full_name || "Anonymous";
+          return acc;
+        }, {});
+      }
+    }
 
     // Format data - NO ANONYMIZATION, all real names shown
-    // NOTE: Efficiency scores removed from public rankings
     const formattedData = filteredData.map((item: any) => ({
       user_id: item.user_id,
-      full_name: item.profiles.full_name || "Anonymous",
+      full_name: profileMap[item.user_id] || "Anonymous",
       sport: item.sport,
       module: item.module,
       videos_analyzed: item.videos_analyzed,
