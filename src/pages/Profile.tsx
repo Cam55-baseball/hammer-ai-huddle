@@ -476,7 +476,15 @@ export default function Profile() {
             {viewingOtherProfile ? `${displayName}'s Profile` : "Profile"}
           </h1>
           {viewingOtherProfile && (
-            <Badge variant="secondary">Viewing as Owner</Badge>
+            <Badge variant="secondary">
+              {isOwner
+                ? "Viewing as Owner"
+                : currentUserRole === 'scout'
+                ? "Viewing as Scout"
+                : currentUserRole === 'coach'
+                ? "Viewing as Coach"
+                : "Viewing Profile"}
+            </Badge>
           )}
         </div>
 
