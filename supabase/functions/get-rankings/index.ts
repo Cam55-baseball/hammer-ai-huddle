@@ -99,9 +99,9 @@ serve(async (req) => {
       console.log(`Excluding ${ownerUserIds.length} owner(s) from rankings:`, ownerUserIds);
     }
 
-    // Filter out owners from the results
+    // Filter out owners from the results - handle null data safely
     const ownerUserIdsSet = new Set(ownerUserIds);
-    const filteredData = data.filter((item: any) => !ownerUserIdsSet.has(item.user_id));
+    const filteredData = (data || []).filter((item: any) => !ownerUserIdsSet.has(item.user_id));
 
     console.log(`Returning ${filteredData.length} ranked players after excluding owners`);
 
