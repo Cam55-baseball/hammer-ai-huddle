@@ -81,7 +81,7 @@ export default function Profile() {
       }
       fetchProfile(viewingUserId || undefined);
     }
-  }, [authLoading, ownerLoading, user, navigate, viewingUserId, isOwner]);
+  }, [authLoading, ownerLoading, user, navigate, viewingUserId]);
 
   useEffect(() => {
     const checkFollowRelationship = async () => {
