@@ -560,6 +560,12 @@ export default function Profile() {
                       <p>{profile.position}</p>
                     </div>
                   )}
+                  {profile?.experience_level && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Experience Level</Label>
+                      <p className="capitalize">{profile.experience_level}</p>
+                    </div>
+                  )}
                   {profile?.team_affiliation && (
                     <div>
                       <Label className="text-xs text-muted-foreground">Team</Label>
