@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { ScoutApplicationCard } from '@/components/ScoutApplicationCard';
 
 interface Video {
   id: string;
@@ -28,6 +29,21 @@ interface TrainingData {
   created_at: string;
 }
 
+interface ScoutApplication {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  sport: string;
+  organization_letter_url: string | null;
+  video_submission_url: string | null;
+  status: string;
+  created_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -35,6 +51,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<Video[]>([]);
   const [trainingData, setTrainingData] = useState<TrainingData[]>([]);
+  const [scoutApplications, setScoutApplications] = useState<ScoutApplication[]>([]);
 
   useEffect(() => {
     const checkAdminRole = async () => {
@@ -72,17 +89,35 @@ const AdminDashboard = () => {
     };
 
     checkAdminRole();
+
+    // Set up realtime subscription for scout applications
+    const channel = supabase
+      .channel('scout-applications-admin')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'scout_applications' },
+        () => {
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, navigate]);
 
   const loadData = async () => {
     try {
-      const [videosResponse, trainingResponse] = await Promise.all([
+      const [videosResponse, trainingResponse, scoutAppResponse] = await Promise.all([
         supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('training_data').select('*').order('created_at', { ascending: false }),
+        supabase.from('scout_applications').select('*').order('created_at', { ascending: false }),
       ]);
 
       if (videosResponse.data) setVideos(videosResponse.data);
       if (trainingResponse.data) setTrainingData(trainingResponse.data);
+      if (scoutAppResponse.data) setScoutApplications(scoutAppResponse.data);
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -144,6 +179,7 @@ const AdminDashboard = () => {
           <TabsList>
             <TabsTrigger value="videos">Videos</TabsTrigger>
             <TabsTrigger value="training">Training Data</TabsTrigger>
+            <TabsTrigger value="applications">Scout Applications</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -223,6 +259,82 @@ const AdminDashboard = () => {
                   ))
                 )}
               </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="applications" className="space-y-4">
+            <Card className="p-6">
+              <h2 className="text-2xl font-bold mb-4">Scout Applications</h2>
+              <Tabs defaultValue="pending" className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="pending">Pending</TabsTrigger>
+                  <TabsTrigger value="approved">Approved</TabsTrigger>
+                  <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                  <TabsTrigger value="all">All</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="pending" className="space-y-4">
+                  {scoutApplications.filter(app => app.status === 'pending').length === 0 ? (
+                    <p className="text-muted-foreground">No pending applications</p>
+                  ) : (
+                    scoutApplications
+                      .filter(app => app.status === 'pending')
+                      .map(app => (
+                        <ScoutApplicationCard
+                          key={app.id}
+                          application={app}
+                          onUpdate={loadData}
+                        />
+                      ))
+                  )}
+                </TabsContent>
+
+                <TabsContent value="approved" className="space-y-4">
+                  {scoutApplications.filter(app => app.status === 'approved').length === 0 ? (
+                    <p className="text-muted-foreground">No approved applications</p>
+                  ) : (
+                    scoutApplications
+                      .filter(app => app.status === 'approved')
+                      .map(app => (
+                        <ScoutApplicationCard
+                          key={app.id}
+                          application={app}
+                          onUpdate={loadData}
+                        />
+                      ))
+                  )}
+                </TabsContent>
+
+                <TabsContent value="rejected" className="space-y-4">
+                  {scoutApplications.filter(app => app.status === 'rejected').length === 0 ? (
+                    <p className="text-muted-foreground">No rejected applications</p>
+                  ) : (
+                    scoutApplications
+                      .filter(app => app.status === 'rejected')
+                      .map(app => (
+                        <ScoutApplicationCard
+                          key={app.id}
+                          application={app}
+                          onUpdate={loadData}
+                        />
+                      ))
+                  )}
+                </TabsContent>
+
+                <TabsContent value="all" className="space-y-4">
+                  {scoutApplications.length === 0 ? (
+                    <p className="text-muted-foreground">No applications yet</p>
+                  ) : (
+                    scoutApplications.map(app => (
+                      <ScoutApplicationCard
+                        key={app.id}
+                        application={app}
+                        onUpdate={loadData}
+                      />
+                    ))
+                  )}
+                </TabsContent>
+              </Tabs>
             </Card>
           </TabsContent>
 

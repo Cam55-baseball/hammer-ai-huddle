@@ -28,12 +28,15 @@ serve(async (req) => {
       });
     }
 
-    // Verify user is owner
+    // Verify user is owner or admin
     const { data: ownerCheck } = await supabaseClient
       .rpc("has_role", { _user_id: user.id, _role: "owner" });
+    
+    const { data: adminCheck } = await supabaseClient
+      .rpc("has_role", { _user_id: user.id, _role: "admin" });
 
-    if (!ownerCheck) {
-      return new Response(JSON.stringify({ error: "Unauthorized - Owner access required" }), {
+    if (!ownerCheck && !adminCheck) {
+      return new Response(JSON.stringify({ error: "Unauthorized - Owner or Admin access required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

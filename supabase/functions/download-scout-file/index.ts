@@ -44,16 +44,24 @@ serve(async (req) => {
 
     console.log('[DOWNLOAD-SCOUT-FILE] User authenticated:', user.id);
 
-    // Check if user is owner
-    const { data: roleData, error: roleError } = await supabase
+    // Check if user is owner or admin
+    const { data: ownerRole, error: ownerError } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .eq('role', 'owner')
       .maybeSingle();
 
-    const isOwner = !roleError && roleData !== null;
-    console.log('[DOWNLOAD-SCOUT-FILE] Is owner:', isOwner);
+    const { data: adminRole, error: adminError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    const isOwner = !ownerError && ownerRole !== null;
+    const isAdmin = !adminError && adminRole !== null;
+    console.log('[DOWNLOAD-SCOUT-FILE] Is owner:', isOwner, 'Is admin:', isAdmin);
 
     // Parse request body
     const { bucket, path } = await req.json();
@@ -78,10 +86,10 @@ serve(async (req) => {
       });
     }
 
-    // Only owners can access files
-    if (!isOwner) {
-      console.error('[DOWNLOAD-SCOUT-FILE] User is not owner');
-      return new Response(JSON.stringify({ error: 'Forbidden - Owner access required' }), {
+    // Only owners or admins can access files
+    if (!isOwner && !isAdmin) {
+      console.error('[DOWNLOAD-SCOUT-FILE] User is not owner or admin');
+      return new Response(JSON.stringify({ error: 'Forbidden - Owner or Admin access required' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
