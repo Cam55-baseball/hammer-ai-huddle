@@ -5,13 +5,14 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 type ModuleType = 'hitting' | 'pitching' | 'throwing';
 
 const SelectModules = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const state = location.state as { role?: string; sport?: string; mode?: 'add' };
   
@@ -23,6 +24,9 @@ const SelectModules = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Wait for auth to load before making decisions
+    if (authLoading) return;
+    
     if (!isAddMode && (!userRole || !selectedSport)) {
       navigate("/select-sport");
     }
@@ -33,7 +37,7 @@ const SelectModules = () => {
       // Scouts shouldn't be here
       navigate('/scout-dashboard');
     }
-  }, [userRole, selectedSport, isAddMode, user, navigate]);
+  }, [authLoading, userRole, selectedSport, isAddMode, user, navigate]);
 
   const modules: { id: ModuleType; label: string; icon: string; description: string }[] = [
     {
@@ -130,6 +134,14 @@ const SelectModules = () => {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
