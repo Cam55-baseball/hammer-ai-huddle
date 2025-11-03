@@ -48,12 +48,16 @@ const Pricing = () => {
   }, [user, authLoading, selectedRole, selectedSport, selectedModule, isAddMode, navigate]);
 
   const handleGetStarted = () => {
+    // Store in localStorage as backup
+    if (selectedModule) localStorage.setItem('selectedModule', selectedModule);
+    if (selectedSport) localStorage.setItem('selectedSport', selectedSport);
+    
     navigate("/checkout", { 
       state: { 
         role: selectedRole, 
         sport: selectedSport, 
         module: selectedModule,
-        mode: isAddMode ? 'add' : 'new'
+        returnTo: isAddMode ? '/dashboard' : undefined
       } 
     });
   };

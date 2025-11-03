@@ -12,11 +12,20 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// Price IDs for each module ($200/month each)
-const MODULE_PRICES: { [key: string]: string } = {
-  hitting: "price_1SLm0qGc5QIzbAH60wry3lSb",
-  pitching: "price_1SKpoEGc5QIzbAH6FlPRhazY",
-  throwing: "price_1SLm1cGc5QIzbAH69slwwgsU"
+// Price IDs for each module ($200/month each) - sport-specific
+const MODULE_PRICES: { [key: string]: { [sport: string]: string } } = {
+  hitting: {
+    baseball: "price_1SLm0qGc5QIzbAH60wry3lSb",
+    softball: "price_1SPBvTGc5QIzbAH6hkuqTPOp"
+  },
+  pitching: {
+    baseball: "price_1SKpoEGc5QIzbAH6FlPRhazY",
+    softball: "price_1SPBwcGc5QIzbAH6XUKF9dNy"
+  },
+  throwing: {
+    baseball: "price_1SLm1cGc5QIzbAH69slwwgsU",
+    softball: "price_1SPBxRGc5QIzbAH6IJfEzqqr"
+  }
 };
 
 serve(async (req) => {
@@ -84,6 +93,7 @@ serve(async (req) => {
     const { modules, sport } = await req.json();
     
     logStep("Received module request", { modules, sport });
+    logStep("Sport selection", { sport, isBaseball: sport === 'baseball', isSoftball: sport === 'softball' });
 
     // Validate single module selection
     if (!modules || !Array.isArray(modules) || modules.length !== 1) {
@@ -124,11 +134,19 @@ serve(async (req) => {
       logStep("No existing customer, will create during checkout");
     }
 
-    // Build line items for selected modules
-    const lineItems = modules.map((module: string) => ({
-      price: MODULE_PRICES[module],
-      quantity: 1,
-    }));
+    // Build line items for selected modules with sport-specific pricing
+    const lineItems = modules.map((module: string) => {
+      const priceId = MODULE_PRICES[module]?.[sport];
+      if (!priceId) {
+        logStep("ERROR: No price found", { module, sport, availableSports: Object.keys(MODULE_PRICES[module] || {}) });
+        throw new Error(`No price found for module ${module} and sport ${sport}`);
+      }
+      logStep("Using sport-specific price", { module, sport, priceId });
+      return {
+        price: priceId,
+        quantity: 1,
+      };
+    });
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     

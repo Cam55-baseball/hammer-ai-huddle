@@ -29,12 +29,27 @@ const Checkout = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
+    // CRITICAL: Wait for ALL loading states to complete before making any decisions
     if (authLoading || ownerLoading || adminLoading) {
+      console.log('Checkout: Still loading...', { authLoading, ownerLoading, adminLoading });
       return;
     }
 
+    // Only redirect to auth if we're CERTAIN the user is not logged in
     if (!user) {
-      navigate("/auth", { replace: true });
+      console.log('Checkout: No user found, redirecting to auth');
+      // Save state for return
+      localStorage.setItem('selectedModule', selectedModule || '');
+      localStorage.setItem('selectedSport', selectedSport);
+      navigate("/auth", { 
+        replace: true,
+        state: {
+          returnTo: '/checkout',
+          module: selectedModule,
+          sport: selectedSport,
+          mode: isAddMode ? 'add' : 'new'
+        }
+      });
       return;
     }
 
