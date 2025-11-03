@@ -169,302 +169,316 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
-    // Fetch subscriptions without deep expand to avoid 4-level limit
+    // Fetch ALL active subscriptions (not just 1) - users can have multiple modules
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
-      limit: 1,
+      limit: 100,  // Get all active subscriptions (Stripe max is 100)
     });
     const hasActiveSub = subscriptions.data.length > 0;
     let subscribedModules: string[] = [];
     let subscriptionEnd: string | null = null;
-    let stripeSubscriptionId: string | null = null;
+    let latestEndDate: number = 0;  // Track the furthest expiration timestamp
+    let stripeSubscriptionIds: string[] = [];  // Track all subscription IDs
     let hasDiscount = false;
     let discountPercent: number | null = null;
     let couponCode: string | null = null;
     let couponName: string | null = null;
 
     if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      stripeSubscriptionId = subscription.id;
+      logStep("Processing multiple subscriptions", { count: subscriptions.data.length });
       
-      // Check for discount and extract coupon details
-      if (subscription.discount) {
-        hasDiscount = true;
-        const coupon = subscription.discount.coupon;
-        if (coupon.percent_off) {
-          discountPercent = coupon.percent_off;
-        }
-        couponCode = coupon.id;
-        couponName = coupon.name || coupon.id;
-        logStep("Discount found on subscription", { percent: discountPercent, code: couponCode, name: couponName });
-      }
-
-      // Handle 100% off coupons - check invoice level if no subscription discount found
-      if (!hasDiscount && subscription.latest_invoice) {
-        try {
-          const invoiceId = typeof subscription.latest_invoice === 'string' 
-            ? subscription.latest_invoice 
-            : subscription.latest_invoice.id;
-          
-          const invoice = await stripe.invoices.retrieve(invoiceId, {
-            expand: ['discount', 'total_discount_amounts']
-          });
-          
-          logStep("Checking invoice for discounts", { 
-            invoiceId, 
-            hasDiscount: !!invoice.discount,
-            totalDiscountAmounts: invoice.total_discount_amounts 
-          });
-
-          if (invoice.discount && invoice.discount.coupon) {
-            hasDiscount = true;
-            const coupon = invoice.discount.coupon;
-            couponCode = coupon.id;
-            couponName = coupon.name || coupon.id;
-            if (coupon.percent_off) {
-              discountPercent = coupon.percent_off;
-            }
-            logStep("Discount found on invoice", { percent: discountPercent, code: couponCode, name: couponName });
+      // Process ALL active subscriptions to get all modules
+      for (const subscription of subscriptions.data) {
+        stripeSubscriptionIds.push(subscription.id);
+        logStep("Processing subscription", { subscriptionId: subscription.id });
+      
+        // Check for discount and extract coupon details (keep the first one found)
+        if (!hasDiscount && subscription.discount) {
+          hasDiscount = true;
+          const coupon = subscription.discount.coupon;
+          if (coupon.percent_off) {
+            discountPercent = coupon.percent_off;
           }
+          couponCode = coupon.id;
+          couponName = coupon.name || coupon.id;
+          logStep("Discount found on subscription", { percent: discountPercent, code: couponCode, name: couponName });
+        }
 
-          // Check for promotional codes
-          if (!hasDiscount && invoice.total_discount_amounts && invoice.total_discount_amounts.length > 0) {
-            logStep("Total discount amounts found on invoice", { amounts: invoice.total_discount_amounts });
-            hasDiscount = true;
-            // If we can't find the coupon code, we still mark that there's a discount
-          }
-        } catch (invoiceError) {
-          const errorMessage = invoiceError instanceof Error ? invoiceError.message : String(invoiceError);
-          logStep("Error checking invoice for discounts", { error: errorMessage });
-        }
-      }
-      
-      // Safe date conversion with validation and error handling
-      try {
-        if (subscription.current_period_end && typeof subscription.current_period_end === 'number') {
-          subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-        } else {
-          logStep("Warning: Invalid or missing current_period_end", { 
-            value: subscription.current_period_end,
-            type: typeof subscription.current_period_end 
-          });
-          // Set to 30 days from now as fallback
-          subscriptionEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-        }
-      } catch (dateError) {
-        const errorMessage = dateError instanceof Error ? dateError.message : String(dateError);
-        logStep("Error converting date", { 
-          error: errorMessage, 
-          rawValue: subscription.current_period_end 
-        });
-        // Fallback: 30 days from now
-        subscriptionEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-      }
-      
-      logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
-      
-      // Extract modules from line items by fetching product metadata separately
-      for (const item of subscription.items.data) {
-        const productId = typeof item.price.product === 'string' 
-          ? item.price.product 
-          : item.price.product.id;
-        
-        // Check cache first to reduce API calls
-        const productCacheKey = `product:${productId}`;
-        let product = getCached(productCacheKey);
-        
-        if (!product) {
+        // Handle 100% off coupons - check invoice level if no subscription discount found
+        if (!hasDiscount && subscription.latest_invoice) {
           try {
-            product = await stripe.products.retrieve(productId);
-            cache.set(productCacheKey, { data: product, timestamp: Date.now() });
-            logStep("Retrieved product from Stripe", { productId, productName: product.name });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            logStep("Error retrieving product", { productId, error: errorMessage });
-            continue;
+            const invoiceId = typeof subscription.latest_invoice === 'string' 
+              ? subscription.latest_invoice 
+              : subscription.latest_invoice.id;
+            
+            const invoice = await stripe.invoices.retrieve(invoiceId, {
+              expand: ['discount', 'total_discount_amounts']
+            });
+            
+            logStep("Checking invoice for discounts", { 
+              invoiceId, 
+              hasDiscount: !!invoice.discount,
+              totalDiscountAmounts: invoice.total_discount_amounts 
+            });
+
+            if (invoice.discount && invoice.discount.coupon) {
+              hasDiscount = true;
+              const coupon = invoice.discount.coupon;
+              couponCode = coupon.id;
+              couponName = coupon.name || coupon.id;
+              if (coupon.percent_off) {
+                discountPercent = coupon.percent_off;
+              }
+              logStep("Discount found on invoice", { percent: discountPercent, code: couponCode, name: couponName });
+            }
+
+            // Check for promotional codes
+            if (!hasDiscount && invoice.total_discount_amounts && invoice.total_discount_amounts.length > 0) {
+              logStep("Total discount amounts found on invoice", { amounts: invoice.total_discount_amounts });
+              hasDiscount = true;
+            }
+          } catch (invoiceError) {
+            const errorMessage = invoiceError instanceof Error ? invoiceError.message : String(invoiceError);
+            logStep("Error checking invoice for discounts", { error: errorMessage });
           }
         }
         
-        // Extract sport and module from product metadata with robust normalization
-        let sport: string | null = null;
-        let module: string | null = null;
+        // Track the latest subscription end date across all subscriptions
+        try {
+          if (subscription.current_period_end && typeof subscription.current_period_end === 'number') {
+            if (subscription.current_period_end > latestEndDate) {
+              latestEndDate = subscription.current_period_end;
+              subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+            }
+          } else {
+            logStep("Warning: Invalid or missing current_period_end", { 
+              value: subscription.current_period_end,
+              type: typeof subscription.current_period_end 
+            });
+          }
+        } catch (dateError) {
+          const errorMessage = dateError instanceof Error ? dateError.message : String(dateError);
+          logStep("Error converting date", { 
+            error: errorMessage, 
+            rawValue: subscription.current_period_end 
+          });
+        }
         
-        // Helper to normalize metadata values
-        const normalizeValue = (value: string | undefined): string | null => {
-          if (!value) return null;
-          return value.trim().toLowerCase();
-        };
+        logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
         
-        // Helper to try mapping weird key/value pairs like { "softball": "pitching" } or { "sport=softball": "module=pitching" }
-        const extractFromWeirdKv = (meta: Record<string, string | undefined>) => {
-          const validModules = ['hitting', 'pitching', 'throwing'];
-          for (const [rawK, rawV] of Object.entries(meta || {})) {
-            const k = normalizeValue(rawK as string) || '';
-            const v = normalizeValue(rawV as string | undefined) || '';
+        // Extract modules from line items by fetching product metadata separately
+        for (const item of subscription.items.data) {
+          const productId = typeof item.price.product === 'string' 
+            ? item.price.product 
+            : item.price.product.id;
+          
+          // Check cache first to reduce API calls
+          const productCacheKey = `product:${productId}`;
+          let product = getCached(productCacheKey);
+          
+          if (!product) {
+            try {
+              product = await stripe.products.retrieve(productId);
+              cache.set(productCacheKey, { data: product, timestamp: Date.now() });
+              logStep("Retrieved product from Stripe", { productId, productName: product.name });
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              logStep("Error retrieving product", { productId, error: errorMessage });
+              continue;
+            }
+          }
+          
+          // Extract sport and module from product metadata with robust normalization
+          let sport: string | null = null;
+          let module: string | null = null;
+          
+          // Helper to normalize metadata values
+          const normalizeValue = (value: string | undefined): string | null => {
+            if (!value) return null;
+            return value.trim().toLowerCase();
+          };
+          
+          // Helper to try mapping weird key/value pairs like { "softball": "pitching" } or { "sport=softball": "module=pitching" }
+          const extractFromWeirdKv = (meta: Record<string, string | undefined>) => {
+            const validModules = ['hitting', 'pitching', 'throwing'];
+            for (const [rawK, rawV] of Object.entries(meta || {})) {
+              const k = normalizeValue(rawK as string) || '';
+              const v = normalizeValue(rawV as string | undefined) || '';
 
-            // Direct sport name used as key
-            if (!sport && (k === 'softball' || k === 'baseball')) {
-              sport = k;
-              // value could be a module name
-              if (!module) {
-                for (const m of validModules) {
-                  if (v.includes(m)) { module = m; break; }
+              // Direct sport name used as key
+              if (!sport && (k === 'softball' || k === 'baseball')) {
+                sport = k;
+                // value could be a module name
+                if (!module) {
+                  for (const m of validModules) {
+                    if (v.includes(m)) { module = m; break; }
+                  }
+                }
+              }
+
+              // Keys or values that look like key=value
+              if (k.includes('=')) {
+                const [lhs, rhs] = k.split('=');
+                const key = (lhs || '').trim().toLowerCase();
+                const val = (rhs || '').trim().toLowerCase();
+                if (!sport && key === 'sport' && (val === 'softball' || val === 'baseball')) sport = val;
+                if (!module && key === 'module') {
+                  for (const m of validModules) { if (val.includes(m)) { module = m; break; } }
+                }
+              }
+              if (v.includes('=')) {
+                const [lhs, rhs] = v.split('=');
+                const key = (lhs || '').trim().toLowerCase();
+                const val = (rhs || '').trim().toLowerCase();
+                if (!sport && key === 'sport' && (val === 'softball' || val === 'baseball')) sport = val;
+                if (!module && key === 'module') {
+                  for (const m of validModules) { if (val.includes(m)) { module = m; break; } }
                 }
               }
             }
-
-            // Keys or values that look like key=value
-            if (k.includes('=')) {
-              const [lhs, rhs] = k.split('=');
-              const key = (lhs || '').trim().toLowerCase();
-              const val = (rhs || '').trim().toLowerCase();
-              if (!sport && key === 'sport' && (val === 'softball' || val === 'baseball')) sport = val;
-              if (!module && key === 'module') {
-                for (const m of validModules) { if (val.includes(m)) { module = m; break; } }
-              }
-            }
-            if (v.includes('=')) {
-              const [lhs, rhs] = v.split('=');
-              const key = (lhs || '').trim().toLowerCase();
-              const val = (rhs || '').trim().toLowerCase();
-              if (!sport && key === 'sport' && (val === 'softball' || val === 'baseball')) sport = val;
-              if (!module && key === 'module') {
-                for (const m of validModules) { if (val.includes(m)) { module = m; break; } }
-              }
-            }
+          };
+          
+          // Try product metadata first (both lowercase and capitalized keys)
+          sport = normalizeValue(product.metadata?.sport) || normalizeValue(product.metadata?.Sport);
+          module = normalizeValue(product.metadata?.module) || normalizeValue(product.metadata?.Module);
+          
+          // If still missing, try to extract from odd key/value patterns
+          if (!sport || !module) {
+            extractFromWeirdKv(product.metadata as Record<string, string | undefined>);
           }
-        };
-        
-        // Try product metadata first (both lowercase and capitalized keys)
-        sport = normalizeValue(product.metadata?.sport) || normalizeValue(product.metadata?.Sport);
-        module = normalizeValue(product.metadata?.module) || normalizeValue(product.metadata?.Module);
-        
-        // If still missing, try to extract from odd key/value patterns
-        if (!sport || !module) {
-          extractFromWeirdKv(product.metadata as Record<string, string | undefined>);
-        }
-        
-        // Try inferring sport from product name if still missing
-        if (!sport) {
-          const name = (product.name || '').toLowerCase();
-          if (name.includes('softball')) sport = 'softball';
-          else if (name.includes('baseball')) sport = 'baseball';
-        }
-        
-        logStep("Product metadata extracted", { 
-          productId, 
-          rawMetadata: product.metadata,
-          extractedSport: sport,
-          extractedModule: module 
-        });
-        
-        // Fallback to price metadata if product metadata is missing
-        if (!sport || !module) {
-          try {
-            const priceId = typeof item.price.id === 'string' ? item.price.id : item.price.id;
-            const priceCacheKey = `price:${priceId}`;
-            let priceData = getCached(priceCacheKey);
-            
-            if (!priceData) {
-              priceData = await stripe.prices.retrieve(priceId);
-              cache.set(priceCacheKey, { data: priceData, timestamp: Date.now() });
-            }
-            
-            if (!sport) {
-              sport = normalizeValue(priceData.metadata?.sport) || normalizeValue(priceData.metadata?.Sport);
-            }
-            if (!module) {
-              module = normalizeValue(priceData.metadata?.module) || normalizeValue(priceData.metadata?.Module);
-            }
-            
-            // Heuristics for odd price metadata, if still missing
-            if ((!sport || !module) && priceData?.metadata) {
-              extractFromWeirdKv(priceData.metadata as Record<string, string | undefined>);
-            }
-            
-            // If still no sport, infer from the product name again as a last resort
-            if (!sport) {
-              const name = (product.name || '').toLowerCase();
-              if (name.includes('softball')) sport = 'softball';
-              else if (name.includes('baseball')) sport = 'baseball';
-            }
-            
-            logStep("Price metadata fallback used", { 
-              priceId, 
-              priceMetadata: priceData.metadata,
-              finalSport: sport,
-              finalModule: module 
-            });
-          } catch (priceError) {
-            const errorMessage = priceError instanceof Error ? priceError.message : String(priceError);
-            logStep("Error retrieving price metadata", { error: errorMessage });
+          
+          // Try inferring sport from product name if still missing
+          if (!sport) {
+            const name = (product.name || '').toLowerCase();
+            if (name.includes('softball')) sport = 'softball';
+            else if (name.includes('baseball')) sport = 'baseball';
           }
-        }
-        
-        // Validate and map sport
-        const validSports = ['baseball', 'softball'];
-        if (sport && !validSports.includes(sport)) {
-          logStep("Invalid sport value, defaulting to baseball", { invalidSport: sport });
-          sport = 'baseball';
-        }
-        if (!sport) {
-          sport = 'baseball'; // default for backward compatibility
-          logStep("No sport found, defaulting to baseball");
-        }
-        
-        // Validate and map module
-        const validModules = ['hitting', 'pitching', 'throwing'];
-        if (module) {
-          // Handle cases like "softball pitching" -> "pitching"
-          for (const validModule of validModules) {
-            if (module.includes(validModule)) {
-              const mappedModule = validModule;
-              if (module !== mappedModule) {
-                logStep("Mapped module value", { original: module, mapped: mappedModule });
+          
+          logStep("Product metadata extracted", { 
+            productId, 
+            rawMetadata: product.metadata,
+            extractedSport: sport,
+            extractedModule: module 
+          });
+          
+          // Fallback to price metadata if product metadata is missing
+          if (!sport || !module) {
+            try {
+              const priceId = typeof item.price.id === 'string' ? item.price.id : item.price.id;
+              const priceCacheKey = `price:${priceId}`;
+              let priceData = getCached(priceCacheKey);
+              
+              if (!priceData) {
+                priceData = await stripe.prices.retrieve(priceId);
+                cache.set(priceCacheKey, { data: priceData, timestamp: Date.now() });
               }
-              module = mappedModule;
-              break;
+              
+              if (!sport) {
+                sport = normalizeValue(priceData.metadata?.sport) || normalizeValue(priceData.metadata?.Sport);
+              }
+              if (!module) {
+                module = normalizeValue(priceData.metadata?.module) || normalizeValue(priceData.metadata?.Module);
+              }
+              
+              // Heuristics for odd price metadata, if still missing
+              if ((!sport || !module) && priceData?.metadata) {
+                extractFromWeirdKv(priceData.metadata as Record<string, string | undefined>);
+              }
+              
+              // If still no sport, infer from the product name again as a last resort
+              if (!sport) {
+                const name = (product.name || '').toLowerCase();
+                if (name.includes('softball')) sport = 'softball';
+                else if (name.includes('baseball')) sport = 'baseball';
+              }
+              
+              logStep("Price metadata fallback used", { 
+                priceId, 
+                priceMetadata: priceData.metadata,
+                finalSport: sport,
+                finalModule: module 
+              });
+            } catch (priceError) {
+              const errorMessage = priceError instanceof Error ? priceError.message : String(priceError);
+              logStep("Error retrieving price metadata", { error: errorMessage });
             }
           }
           
-          // Final validation
-          if (!validModules.includes(module)) {
-            logStep("Invalid module value after mapping", { invalidModule: module });
-            module = null;
+          // Validate and map sport
+          const validSports = ['baseball', 'softball'];
+          if (sport && !validSports.includes(sport)) {
+            logStep("Invalid sport value, defaulting to baseball", { invalidSport: sport });
+            sport = 'baseball';
           }
-        }
-        
-        // Fallback: Try to infer module from product name if still null
-        if (!module) {
-          const productName = product.name?.toLowerCase() || '';
-          if (productName.includes('hitting')) {
-            module = 'hitting';
-          } else if (productName.includes('pitching')) {
-            module = 'pitching';
-          } else if (productName.includes('throwing')) {
-            module = 'throwing';
+          if (!sport) {
+            sport = 'baseball'; // default for backward compatibility
+            logStep("No sport found, defaulting to baseball");
           }
+          
+          // Validate and map module
+          const validModules = ['hitting', 'pitching', 'throwing'];
           if (module) {
-            logStep("Inferred module from product name", { productName, inferredModule: module });
+            // Handle cases like "softball pitching" -> "pitching"
+            for (const validModule of validModules) {
+              if (module.includes(validModule)) {
+                const mappedModule = validModule;
+                if (module !== mappedModule) {
+                  logStep("Mapped module value", { original: module, mapped: mappedModule });
+                }
+                module = mappedModule;
+                break;
+              }
+            }
+            
+            // Final validation
+            if (!validModules.includes(module)) {
+              logStep("Invalid module value after mapping", { invalidModule: module });
+              module = null;
+            }
           }
-        }
-        
-        logStep("Final resolved metadata", { sport, module, productId });
-        
-        if (module) {
-          // Store in sport_module format for sport-specific locking
-          const sportModule = `${sport}_${module}`;
-          subscribedModules.push(sportModule);
-          logStep("Added subscribed module", { sportModule });
-        } else {
-          logStep("WARNING: Could not determine module for product", { 
-            productId, 
-            productName: product.name,
-            metadata: product.metadata 
-          });
+          
+          // Fallback: Try to infer module from product name if still null
+          if (!module) {
+            const productName = product.name?.toLowerCase() || '';
+            if (productName.includes('hitting')) {
+              module = 'hitting';
+            } else if (productName.includes('pitching')) {
+              module = 'pitching';
+            } else if (productName.includes('throwing')) {
+              module = 'throwing';
+            }
+            if (module) {
+              logStep("Inferred module from product name", { productName, inferredModule: module });
+            }
+          }
+          
+          logStep("Final resolved metadata", { sport, module, productId });
+          
+          if (module) {
+            // Store in sport_module format for sport-specific locking
+            const sportModule = `${sport}_${module}`;
+            // Only add if not already in the array (avoid duplicates from multiple subscriptions)
+            if (!subscribedModules.includes(sportModule)) {
+              subscribedModules.push(sportModule);
+              logStep("Added subscribed module", { sportModule });
+            }
+          } else {
+            logStep("WARNING: Could not determine module for product", { 
+              productId, 
+              productName: product.name,
+              metadata: product.metadata 
+            });
+          }
         }
       }
+      
+      // If no end date was found across all subscriptions, use a fallback
+      if (!subscriptionEnd) {
+        subscriptionEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        logStep("No valid end date found, using 30-day fallback");
+      }
+      
       logStep("Determined subscribed modules", { subscribedModules });
 
       // UPSERT subscription record in database with coupon information
@@ -475,7 +489,7 @@ serve(async (req) => {
           status: 'active',
           subscribed_modules: subscribedModules,
           stripe_customer_id: customerId,
-          stripe_subscription_id: stripeSubscriptionId,
+          stripe_subscription_id: stripeSubscriptionIds.join(','),  // Store all IDs
           current_period_end: subscriptionEnd,
           coupon_code: couponCode,
           coupon_name: couponName,
@@ -543,7 +557,7 @@ serve(async (req) => {
     } else {
       logStep("No active subscription found");
       
-      // UPSERT subscription record
+      // UPSERT subscription record (set to inactive)
       await supabaseClient
         .from('subscriptions')
         .upsert({
@@ -551,7 +565,8 @@ serve(async (req) => {
           status: 'inactive',
           subscribed_modules: [],
           stripe_customer_id: customerId,
-          stripe_subscription_id: null
+          stripe_subscription_id: null,
+          current_period_end: null
         }, {
           onConflict: 'user_id'
         });
@@ -571,47 +586,39 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
     
-    // If we hit a rate limit, try to return the last known state from the database
-    if (errorMessage.includes('rate') || errorMessage.includes('too many')) {
-      logStep("Rate limit detected, falling back to database state");
-      
-      try {
-        const authHeader = req.headers.get("Authorization");
-        if (authHeader) {
-          const supabaseClient = createClient(
-            Deno.env.get("SUPABASE_URL") ?? "",
-            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-            { auth: { persistSession: false } }
-          );
+    // Fallback to database state on error (like rate limiting)
+    try {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader) {
+        const token = authHeader.replace("Bearer ", "");
+        const { data: userData } = await supabaseClient.auth.getUser(token);
+        const user = userData.user;
+        
+        if (user) {
+          const { data: subscription } = await supabaseClient
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
           
-          const token = authHeader.replace("Bearer ", "");
-          const { data: userData } = await supabaseClient.auth.getUser(token);
-          
-          if (userData?.user) {
-            const { data: subData } = await supabaseClient
-              .from('subscriptions')
-              .select('status, subscribed_modules, current_period_end')
-              .eq('user_id', userData.user.id)
-              .maybeSingle();
-            
-            if (subData) {
-              logStep("Returning cached subscription state from database");
-              return new Response(JSON.stringify({
-                subscribed: subData.status === 'active',
-                modules: subData.subscribed_modules || [],
-                subscription_end: subData.current_period_end,
-                has_discount: false,
-                discount_percent: null
-              }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-                status: 200,
-              });
-            }
+          if (subscription) {
+            logStep("Returning cached subscription from database");
+            const isActive = subscription.status === 'active';
+            return new Response(JSON.stringify({
+              subscribed: isActive,
+              modules: subscription.subscribed_modules || [],
+              subscription_end: subscription.current_period_end,
+              has_discount: !!subscription.coupon_code,
+              discount_percent: subscription.discount_percent
+            }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 200,
+            });
           }
         }
-      } catch (fallbackError) {
-        logStep("Fallback to database failed", { error: String(fallbackError) });
       }
+    } catch (fallbackError) {
+      logStep("Fallback also failed", { error: fallbackError });
     }
     
     return new Response(JSON.stringify({ error: errorMessage }), {
