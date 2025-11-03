@@ -40,7 +40,7 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
         label: 'Canceling',
         color: 'bg-orange-500',
         icon: <AlertCircle className="w-3 h-3" />,
-        message: `Access until ${new Date(details.current_period_end!).toLocaleDateString()}`
+        message: `Access until ${new Date(details.current_period_end!).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`
       };
     }
     
@@ -58,7 +58,7 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
         label: 'Active',
         color: 'bg-green-500',
         icon: <CheckCircle className="w-3 h-3" />,
-        message: `Renews ${new Date(details.current_period_end!).toLocaleDateString()}`
+        message: `Renews ${new Date(details.current_period_end!).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`
       };
     }
     
@@ -86,7 +86,7 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
       if (error) throw error;
       
       toast.success(`${moduleName} will be canceled at period end`, {
-        description: `You'll keep access until ${new Date(details.current_period_end!).toLocaleDateString()}`
+        description: `You'll keep access until ${new Date(details.current_period_end!).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`
       });
       
       onActionComplete();
@@ -193,7 +193,7 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
             <AlertDialogDescription className="space-y-2">
               <p>Your subscription will be canceled at the end of your billing period.</p>
               <p className="font-semibold">
-                You'll keep access until: {new Date(details.current_period_end!).toLocaleDateString()}
+                You'll keep access until: {new Date(details.current_period_end!).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
               </p>
               <p>After that date, you'll lose access to this module.</p>
               <p className="text-sm text-muted-foreground">

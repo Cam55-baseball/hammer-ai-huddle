@@ -11,16 +11,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, PauseCircle, XCircle, Check, X } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, Check, X } from "lucide-react";
 import { SiTiktok } from "react-icons/si";
 import { UserMenu } from "@/components/UserMenu";
+import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const { user, session, loading: authLoading } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
-  const { modules: subscribedModules, subscription_end, has_discount, discount_percent, loading: subLoading } = useSubscription();
+  const { modules: subscribedModules, module_details, subscription_end, has_discount, discount_percent, loading: subLoading, refetch } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const viewingUserId = searchParams.get('userId');
@@ -61,10 +62,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
-  const [feedbackAction, setFeedbackAction] = useState<'pause' | 'cancel' | null>(null);
-  const [feedbackText, setFeedbackText] = useState("");
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -306,77 +304,36 @@ export default function Profile() {
     });
   };
 
-  const handlePauseSubscription = () => {
-    setFeedbackAction('pause');
-    setFeedbackDialogOpen(true);
-    setFeedbackText('');
-  };
-
-  const handleCancelSubscription = () => {
-    setFeedbackAction('cancel');
-    setFeedbackDialogOpen(true);
-    setFeedbackText('');
-  };
-
-  const handleSubmitFeedback = async () => {
-    if (!feedbackText.trim()) {
-      toast({
-        title: "Feedback Required",
-        description: "Please tell us why you're making this change.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSubmittingFeedback(true);
+  const handleCancelAll = async () => {
+    if (!confirm('Cancel all modules? You\'ll keep access until each billing date.')) return;
     
+    setIsRefreshing(true);
     try {
-      // Send feedback email
-      const { error: emailError } = await supabase.functions.invoke(
-        'send-subscription-feedback',
-        {
-          body: {
-            action: feedbackAction,
-            feedback: feedbackText,
-            userName: user?.user_metadata?.full_name || user?.email || 'User',
-            userEmail: user?.email || '',
-            userId: user?.id || '',
-            modules: subscribedModules,
-          },
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-        }
-      );
-
-      if (emailError) throw emailError;
-
-      // Then redirect to Stripe Customer Portal for actual subscription management
-      await handleManageSubscription();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
       
-      toast({
-        title: "Feedback Sent",
-        description: "Thank you for your feedback. Opening billing portal...",
+      const { data, error } = await supabase.functions.invoke('cancel-all-subscriptions', {
+        headers: { Authorization: `Bearer ${session.access_token}` }
       });
       
-      setFeedbackDialogOpen(false);
-      setFeedbackText('');
+      if (error) throw error;
+      
+      toast({
+        title: "All modules will be canceled",
+        description: data.message || 'You\'ll keep access until each billing date'
+      });
+      
+      refetch();
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      console.error('Cancel all error:', error);
       toast({
         title: "Error",
-        description: "Failed to send feedback. Please try again.",
-        variant: "destructive",
+        description: "Failed to cancel subscriptions",
+        variant: "destructive"
       });
     } finally {
-      setSubmittingFeedback(false);
+      setIsRefreshing(false);
     }
-  };
-
-  const handleCancelFeedback = () => {
-    setFeedbackDialogOpen(false);
-    setFeedbackText('');
-    setFeedbackAction(null);
   };
 
   const handleManageSubscription = async () => {
@@ -1172,28 +1129,6 @@ export default function Profile() {
                       Add Modules
                     </Button>
                   </div>
-
-                  <div>
-                    <h4 className="text-sm font-semibold text-muted-foreground mb-3">Subscription Controls</h4>
-                    <div className="space-y-2">
-                      <Button 
-                        onClick={handlePauseSubscription}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <PauseCircle className="mr-2 h-4 w-4" />
-                        Pause Subscription
-                      </Button>
-                      <Button 
-                        onClick={handleCancelSubscription}
-                        variant="destructive"
-                        className="w-full"
-                      >
-                        <XCircle className="mr-2 h-4 w-4" />
-                        End Subscription
-                      </Button>
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
@@ -1210,58 +1145,41 @@ export default function Profile() {
         </Card>
         )}
 
-        {/* Feedback Dialog */}
-        <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                {feedbackAction === 'pause' ? 'Pause Subscription' : 'End Subscription'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <p className="text-sm text-muted-foreground">
-                We'd love to hear your feedback. Your input helps us improve our service for all users.
-              </p>
-              <div className="space-y-2">
-                <Label htmlFor="feedback">
-                  Why are you {feedbackAction === 'pause' ? 'pausing' : 'ending'} your subscription?
-                </Label>
-                <Textarea
-                  id="feedback"
-                  placeholder="Please tell us why..."
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  rows={6}
-                  className="resize-none"
-                />
+        {/* Manage Subscriptions Section */}
+        {!viewingOtherProfile && module_details && Object.keys(module_details).length > 0 && (
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <h3 className="text-xl font-bold">Manage Your Subscriptions</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Control each module individually - cancel anytime
+                  </p>
+                </div>
+                {Object.keys(module_details).length > 1 && (
+                  <Button variant="outline" onClick={handleCancelAll} disabled={isRefreshing}>
+                    Cancel All Modules
+                  </Button>
+                )}
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={handleCancelFeedback}
-                  disabled={submittingFeedback}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSubmitFeedback}
-                  disabled={submittingFeedback || !feedbackText.trim()}
-                  className="flex-1"
-                >
-                  {submittingFeedback ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    'Submit & Continue'
-                  )}
-                </Button>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(module_details).map(([key, details]) => {
+                  const [sport, module] = key.split('_') as ['baseball' | 'softball', 'hitting' | 'pitching' | 'throwing'];
+                  return (
+                    <ModuleManagementCard
+                      key={key}
+                      sport={sport}
+                      module={module}
+                      details={details}
+                      onActionComplete={refetch}
+                    />
+                  );
+                })}
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+          </Card>
+        )}
 
         {/* Account Info Card */}
         <Card className="p-6">
