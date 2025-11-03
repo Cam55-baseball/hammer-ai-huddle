@@ -159,7 +159,16 @@ async function handleSubscriptionEvent(
       continue;
     }
 
-    for (const item of sub.items.data) {
+    // Retrieve full subscription details to ensure we have all fields including current_period_end
+    const fullSub = await stripe.subscriptions.retrieve(sub.id);
+    logStep("Full subscription retrieved in webhook", { 
+      subscriptionId: fullSub.id,
+      hasCurrentPeriodEnd: !!fullSub.current_period_end,
+      currentPeriodEnd: fullSub.current_period_end,
+      status: fullSub.status
+    });
+
+    for (const item of fullSub.items.data) {
       const productId = typeof item.price.product === 'string' 
         ? item.price.product 
         : item.price.product.id;
@@ -185,17 +194,17 @@ async function handleSubscriptionEvent(
       const sportModule = `${sport}_${module}`;
       
       moduleMapping[sportModule] = {
-        subscription_id: sub.id,
-        status: sub.status,
-        current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-        cancel_at_period_end: sub.cancel_at_period_end || false,
+        subscription_id: fullSub.id,
+        status: fullSub.status,
+        current_period_end: new Date(fullSub.current_period_end * 1000).toISOString(),
+        cancel_at_period_end: fullSub.cancel_at_period_end || false,
         price_id: item.price.id,
-        canceled_at: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null
+        canceled_at: fullSub.canceled_at ? new Date(fullSub.canceled_at * 1000).toISOString() : null
       };
 
       // Add to active modules if subscription is active or canceled but still within period
-      if (sub.status === 'active' || 
-          (sub.status === 'canceled' && sub.current_period_end * 1000 > Date.now())) {
+      if (fullSub.status === 'active' || 
+          (fullSub.status === 'canceled' && fullSub.current_period_end * 1000 > Date.now())) {
         activeModules.push(sportModule);
       }
     }

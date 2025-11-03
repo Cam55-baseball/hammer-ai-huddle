@@ -195,10 +195,19 @@ serve(async (req) => {
         stripeSubscriptionIds.push(subscription.id);
         logStep("Processing subscription", { subscriptionId: subscription.id });
       
+        // Retrieve full subscription details to ensure we have all fields including current_period_end
+        const fullSubscription = await stripe.subscriptions.retrieve(subscription.id);
+        logStep("Full subscription retrieved", { 
+          subscriptionId: fullSubscription.id,
+          hasCurrentPeriodEnd: !!fullSubscription.current_period_end,
+          currentPeriodEnd: fullSubscription.current_period_end,
+          status: fullSubscription.status
+        });
+
         // Check for discount and extract coupon details (keep the first one found)
-        if (!hasDiscount && subscription.discount) {
+        if (!hasDiscount && fullSubscription.discount) {
           hasDiscount = true;
-          const coupon = subscription.discount.coupon;
+          const coupon = fullSubscription.discount.coupon;
           if (coupon.percent_off) {
             discountPercent = coupon.percent_off;
           }
@@ -208,11 +217,11 @@ serve(async (req) => {
         }
 
         // Handle 100% off coupons - check invoice level if no subscription discount found
-        if (!hasDiscount && subscription.latest_invoice) {
+        if (!hasDiscount && fullSubscription.latest_invoice) {
           try {
-            const invoiceId = typeof subscription.latest_invoice === 'string' 
-              ? subscription.latest_invoice 
-              : subscription.latest_invoice.id;
+            const invoiceId = typeof fullSubscription.latest_invoice === 'string' 
+              ? fullSubscription.latest_invoice 
+              : fullSubscription.latest_invoice.id;
             
             const invoice = await stripe.invoices.retrieve(invoiceId, {
               expand: ['discount', 'total_discount_amounts']
@@ -248,29 +257,29 @@ serve(async (req) => {
         
         // Track the latest subscription end date across all subscriptions
         try {
-          if (subscription.current_period_end && typeof subscription.current_period_end === 'number') {
-            if (subscription.current_period_end > latestEndDate) {
-              latestEndDate = subscription.current_period_end;
-              subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+          if (fullSubscription.current_period_end && typeof fullSubscription.current_period_end === 'number') {
+            if (fullSubscription.current_period_end > latestEndDate) {
+              latestEndDate = fullSubscription.current_period_end;
+              subscriptionEnd = new Date(fullSubscription.current_period_end * 1000).toISOString();
             }
           } else {
             logStep("Warning: Invalid or missing current_period_end", { 
-              value: subscription.current_period_end,
-              type: typeof subscription.current_period_end 
+              value: fullSubscription.current_period_end,
+              type: typeof fullSubscription.current_period_end 
             });
           }
         } catch (dateError) {
           const errorMessage = dateError instanceof Error ? dateError.message : String(dateError);
           logStep("Error converting date", { 
             error: errorMessage, 
-            rawValue: subscription.current_period_end 
+            rawValue: fullSubscription.current_period_end 
           });
         }
         
-        logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
+        logStep("Active subscription found", { subscriptionId: fullSubscription.id, endDate: subscriptionEnd });
         
         // Extract modules from line items by fetching product metadata separately
-        for (const item of subscription.items.data) {
+        for (const item of fullSubscription.items.data) {
           const productId = typeof item.price.product === 'string' 
             ? item.price.product 
             : item.price.product.id;
@@ -463,15 +472,15 @@ serve(async (req) => {
             
             // NEW: Build module mapping
             moduleMapping[sportModule] = {
-              subscription_id: subscription.id,
-              status: subscription.status,
-              current_period_end: subscription.current_period_end 
-                ? new Date(subscription.current_period_end * 1000).toISOString() 
+              subscription_id: fullSubscription.id,
+              status: fullSubscription.status,
+              current_period_end: fullSubscription.current_period_end 
+                ? new Date(fullSubscription.current_period_end * 1000).toISOString() 
                 : null,
-              cancel_at_period_end: subscription.cancel_at_period_end || false,
+              cancel_at_period_end: fullSubscription.cancel_at_period_end || false,
               price_id: item.price.id,
-              canceled_at: subscription.canceled_at 
-                ? new Date(subscription.canceled_at * 1000).toISOString() 
+              canceled_at: fullSubscription.canceled_at 
+                ? new Date(fullSubscription.canceled_at * 1000).toISOString() 
                 : null
             };
             
