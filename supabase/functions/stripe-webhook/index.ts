@@ -161,10 +161,11 @@ async function handleSubscriptionEvent(
 
     // Retrieve full subscription details to ensure we have all fields including current_period_end
     const fullSub = await stripe.subscriptions.retrieve(sub.id);
+    const subscriptionItem = fullSub.items.data[0];
     logStep("Full subscription retrieved in webhook", { 
       subscriptionId: fullSub.id,
-      hasCurrentPeriodEnd: !!fullSub.current_period_end,
-      currentPeriodEnd: fullSub.current_period_end,
+      hasCurrentPeriodEnd: !!subscriptionItem?.current_period_end,
+      currentPeriodEnd: subscriptionItem?.current_period_end,
       status: fullSub.status
     });
 
@@ -196,7 +197,9 @@ async function handleSubscriptionEvent(
       moduleMapping[sportModule] = {
         subscription_id: fullSub.id,
         status: fullSub.status,
-        current_period_end: new Date(fullSub.current_period_end * 1000).toISOString(),
+        current_period_end: item.current_period_end 
+          ? new Date(item.current_period_end * 1000).toISOString()
+          : null,
         cancel_at_period_end: fullSub.cancel_at_period_end || false,
         price_id: item.price.id,
         canceled_at: fullSub.canceled_at ? new Date(fullSub.canceled_at * 1000).toISOString() : null

@@ -197,10 +197,11 @@ serve(async (req) => {
       
         // Retrieve full subscription details to ensure we have all fields including current_period_end
         const fullSubscription = await stripe.subscriptions.retrieve(subscription.id);
+        const subscriptionItem = fullSubscription.items.data[0];
         logStep("Full subscription retrieved", { 
           subscriptionId: fullSubscription.id,
-          hasCurrentPeriodEnd: !!fullSubscription.current_period_end,
-          currentPeriodEnd: fullSubscription.current_period_end,
+          hasCurrentPeriodEnd: !!subscriptionItem?.current_period_end,
+          currentPeriodEnd: subscriptionItem?.current_period_end,
           status: fullSubscription.status
         });
 
@@ -257,15 +258,15 @@ serve(async (req) => {
         
         // Track the latest subscription end date across all subscriptions
         try {
-          if (fullSubscription.current_period_end && typeof fullSubscription.current_period_end === 'number') {
-            if (fullSubscription.current_period_end > latestEndDate) {
-              latestEndDate = fullSubscription.current_period_end;
-              subscriptionEnd = new Date(fullSubscription.current_period_end * 1000).toISOString();
+          if (subscriptionItem?.current_period_end && typeof subscriptionItem.current_period_end === 'number') {
+            if (subscriptionItem.current_period_end > latestEndDate) {
+              latestEndDate = subscriptionItem.current_period_end;
+              subscriptionEnd = new Date(subscriptionItem.current_period_end * 1000).toISOString();
             }
           } else {
             logStep("Warning: Invalid or missing current_period_end", { 
-              value: fullSubscription.current_period_end,
-              type: typeof fullSubscription.current_period_end 
+              value: subscriptionItem?.current_period_end,
+              type: typeof subscriptionItem?.current_period_end 
             });
           }
         } catch (dateError) {
@@ -474,8 +475,8 @@ serve(async (req) => {
             moduleMapping[sportModule] = {
               subscription_id: fullSubscription.id,
               status: fullSubscription.status,
-              current_period_end: fullSubscription.current_period_end 
-                ? new Date(fullSubscription.current_period_end * 1000).toISOString() 
+              current_period_end: item.current_period_end 
+                ? new Date(item.current_period_end * 1000).toISOString() 
                 : null,
               cancel_at_period_end: fullSubscription.cancel_at_period_end || false,
               price_id: item.price.id,
