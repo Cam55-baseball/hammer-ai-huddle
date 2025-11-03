@@ -120,9 +120,19 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    // Normalize Supabase/PostgREST errors to readable JSON
+    const normalized =
+      error && typeof error === "object"
+        ? {
+            message: (error as any).message || "Unknown error",
+            code: (error as any).code,
+            details: (error as any).details,
+            hint: (error as any).hint,
+          }
+        : { message: String(error) };
+
+    logStep("ERROR", normalized);
+    return new Response(JSON.stringify({ error: normalized }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
