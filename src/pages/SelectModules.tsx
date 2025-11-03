@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Loader2 } from "lucide-react";
 
 type ModuleType = 'hitting' | 'pitching' | 'throwing';
@@ -14,6 +15,7 @@ const SelectModules = () => {
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { modules: subscribedModules, loading: subscriptionLoading } = useSubscription();
   const state = location.state as { role?: string; sport?: string; mode?: 'add' };
   
   const userRole = localStorage.getItem('userRole');
@@ -59,6 +61,13 @@ const SelectModules = () => {
       description: 'Improve accuracy, arm strength, and throwing form'
     }
   ];
+
+  // Check if a module is already purchased
+  const isPurchased = (moduleId: ModuleType) => {
+    if (!selectedSport) return false;
+    const moduleKey = `${selectedSport}_${moduleId}`;
+    return subscribedModules.includes(moduleKey);
+  };
 
   const handleContinue = async () => {
     if (!selectedModule) return;
@@ -135,7 +144,7 @@ const SelectModules = () => {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || subscriptionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -164,30 +173,37 @@ const SelectModules = () => {
         </div>
 
         <div className="grid gap-4 mb-8">
-          {modules.map((module) => (
-            <Card 
-              key={module.id}
-              className={`p-6 cursor-pointer transition-all ${
-                selectedModule === module.id 
-                  ? 'border-primary bg-primary/5 ring-2 ring-primary' 
-                  : 'hover:border-muted-foreground/50'
-              }`}
-              onClick={() => setSelectedModule(module.id)}
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-3xl">{module.icon}</span>
-                    <h3 className="text-xl font-bold">{module.label}</h3>
-                    {selectedModule === module.id && (
-                      <span className="ml-auto text-primary font-semibold">Selected</span>
-                    )}
+          {modules.map((module) => {
+            const purchased = isPurchased(module.id);
+            return (
+              <Card 
+                key={module.id}
+                className={`p-6 transition-all ${
+                  purchased
+                    ? 'opacity-50 border-muted cursor-not-allowed'
+                    : selectedModule === module.id 
+                      ? 'border-primary bg-primary/5 ring-2 ring-primary cursor-pointer' 
+                      : 'hover:border-muted-foreground/50 cursor-pointer'
+                }`}
+                onClick={() => !purchased && setSelectedModule(module.id)}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-3xl">{module.icon}</span>
+                      <h3 className="text-xl font-bold">{module.label}</h3>
+                      {purchased ? (
+                        <span className="ml-auto text-muted-foreground font-semibold">Already Purchased ✓</span>
+                      ) : selectedModule === module.id && (
+                        <span className="ml-auto text-primary font-semibold">Selected</span>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground">{module.description}</p>
                   </div>
-                  <p className="text-muted-foreground">{module.description}</p>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
 
         <div className="flex gap-4">
