@@ -1,5 +1,14 @@
 project_id = "wysikbsjalfvjwqzkihj"
 
+[functions.admin-search-users]
+verify_jwt = true
+
+[functions.admin-cancel-user-subscriptions]
+verify_jwt = true
+
+[functions.admin-delete-user]
+verify_jwt = true
+
 [functions.analyze-video]
 verify_jwt = true
 
