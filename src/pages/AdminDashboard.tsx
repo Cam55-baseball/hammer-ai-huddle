@@ -46,7 +46,7 @@ interface ScoutApplication {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<Video[]>([]);
@@ -55,7 +55,15 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const checkAdminRole = async () => {
+      // Wait for auth to finish loading before making decisions
+      if (authLoading) {
+        console.log('[AdminDashboard] Auth still loading, waiting...');
+        return;
+      }
+
+      // Only redirect if auth is done loading AND user is null
       if (!user) {
+        console.log('[AdminDashboard] No user after auth loaded, redirecting to home');
         navigate('/');
         return;
       }
@@ -106,7 +114,7 @@ const AdminDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const loadData = async () => {
     try {
@@ -151,7 +159,7 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
