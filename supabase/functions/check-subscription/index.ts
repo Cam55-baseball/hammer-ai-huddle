@@ -174,6 +174,7 @@ serve(async (req) => {
       customer: customerId,
       status: "active",
       limit: 100,  // Get all active subscriptions (Stripe max is 100)
+      expand: ['data.latest_invoice', 'data.discount'],  // Expand to get full subscription data including current_period_end
     });
     const hasActiveSub = subscriptions.data.length > 0;
     let subscribedModules: string[] = [];

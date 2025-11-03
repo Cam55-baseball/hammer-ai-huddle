@@ -147,6 +147,7 @@ async function handleSubscriptionEvent(
   const allSubscriptions = await stripe.subscriptions.list({
     customer: customerId,
     limit: 100,
+    expand: ['data.latest_invoice', 'data.discount'],  // Expand to get full subscription data
   });
 
   const moduleMapping: Record<string, any> = {};
