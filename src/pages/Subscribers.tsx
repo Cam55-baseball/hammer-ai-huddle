@@ -15,6 +15,7 @@ import { SubscriberManagementTable } from "@/components/SubscriberManagementTabl
 
 interface ModuleStats {
   module: string;
+  rawModule?: string;
   count: number;
   percentage: number;
 }
@@ -83,6 +84,7 @@ export default function Subscribers() {
           
           return {
             module: `${sport.charAt(0).toUpperCase() + sport.slice(1)} - ${moduleName.charAt(0).toUpperCase() + moduleName.slice(1)}`,
+            rawModule: module, // Keep raw module as unique key
             count,
             percentage: totalActive > 0 ? (count / totalActive) * 100 : 0,
           };
@@ -257,7 +259,7 @@ export default function Subscribers() {
             <CardContent>
               <div className="space-y-4">
                 {filteredStats.moduleBreakdown.map((module) => (
-                  <div key={module.module} className="space-y-2">
+                  <div key={module.rawModule || module.module} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Target className="h-5 w-5 text-primary" />

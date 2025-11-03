@@ -48,30 +48,18 @@ serve(async (req) => {
     const { searchQuery } = await req.json();
     logStep("Search query received", { searchQuery });
 
-    // Get all users with profiles and subscriptions
-    let query = supabaseClient
+    // Get all profiles first
+    let profileQuery = supabaseClient
       .from("profiles")
-      .select(`
-        id,
-        full_name,
-        first_name,
-        last_name,
-        subscriptions (
-          stripe_customer_id,
-          status,
-          subscribed_modules,
-          module_subscription_mapping,
-          current_period_end
-        )
-      `);
+      .select("id, full_name, first_name, last_name");
 
     // Apply search filter if provided
     if (searchQuery && searchQuery.trim() !== "") {
       const searchTerm = searchQuery.trim().toLowerCase();
-      query = query.or(`full_name.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,id.eq.${searchTerm}`);
+      profileQuery = profileQuery.or(`full_name.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,id.eq.${searchTerm}`);
     }
 
-    const { data: profiles, error: profilesError } = await query;
+    const { data: profiles, error: profilesError } = await profileQuery;
 
     if (profilesError) {
       logStep("Error fetching profiles", { error: profilesError });
@@ -80,8 +68,26 @@ serve(async (req) => {
 
     logStep("Profiles fetched", { count: profiles?.length });
 
-    // Get email addresses from auth.users
+    // Get subscriptions separately for these user IDs
     const userIds = profiles?.map(p => p.id) || [];
+    const { data: subscriptions, error: subsError } = await supabaseClient
+      .from("subscriptions")
+      .select("user_id, stripe_customer_id, status, subscribed_modules, module_subscription_mapping, current_period_end")
+      .in("user_id", userIds);
+
+    if (subsError) {
+      logStep("Error fetching subscriptions", { error: subsError });
+      throw subsError;
+    }
+
+    logStep("Subscriptions fetched", { count: subscriptions?.length });
+
+    // Create subscription map
+    const subscriptionMap = new Map(
+      subscriptions?.map(sub => [sub.user_id, sub]) || []
+    );
+
+    // Get email addresses from auth.users
     const { data: { users: authUsers }, error: authError } = await supabaseClient.auth.admin.listUsers();
     
     if (authError) {
@@ -93,9 +99,7 @@ serve(async (req) => {
 
     // Transform data for frontend
     const results = profiles?.map(profile => {
-      const subscription = Array.isArray(profile.subscriptions) 
-        ? profile.subscriptions[0] 
-        : profile.subscriptions;
+      const subscription = subscriptionMap.get(profile.id);
 
       return {
         id: profile.id,
