@@ -55,8 +55,16 @@ serve(async (req) => {
 
     // Apply search filter if provided
     if (searchQuery && searchQuery.trim() !== "") {
-      const searchTerm = searchQuery.trim().toLowerCase();
-      profileQuery = profileQuery.or(`full_name.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,id.eq.${searchTerm}`);
+      const raw = searchQuery.trim();
+      const lower = raw.toLowerCase();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(raw);
+      if (isUuid) {
+        profileQuery = profileQuery.eq("id", raw);
+      } else {
+        profileQuery = profileQuery.or(
+          `full_name.ilike.%${lower}%,first_name.ilike.%${lower}%,last_name.ilike.%${lower}%`
+        );
+      }
     }
 
     const { data: profiles, error: profilesError } = await profileQuery;
