@@ -63,9 +63,10 @@ const AdminDashboard = () => {
       try {
         const { data, error } = await supabase
           .from('user_roles')
-          .select('role')
+          .select('role, status')
           .eq('user_id', user.id)
           .eq('role', 'admin')
+          .eq('status', 'active')
           .maybeSingle();
 
         if (error || !data) {

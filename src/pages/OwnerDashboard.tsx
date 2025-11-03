@@ -153,7 +153,11 @@ const OwnerDashboard = () => {
 
   const handleAssignRole = async (userId: string, role: "admin" | "player") => {
     try {
-      const { error } = await supabase.from("user_roles").insert([{ user_id: userId, role }]);
+      const { error } = await supabase.from("user_roles").insert([{ 
+        user_id: userId, 
+        role,
+        status: 'active'
+      }]);
 
       if (error) throw error;
 
@@ -174,7 +178,19 @@ const OwnerDashboard = () => {
   };
 
   const getUserRole = (userId: string) => {
-    return userRoles.find((r) => r.user_id === userId)?.role || "player";
+    const userRole = userRoles.find((r) => r.user_id === userId);
+    
+    // If admin role but not active, show as player
+    if (userRole?.role === 'admin' && userRole?.status !== 'active') {
+      return 'player';
+    }
+    
+    return userRole?.role || "player";
+  };
+
+  const isActiveAdmin = (userId: string) => {
+    const userRole = userRoles.find((r) => r.user_id === userId);
+    return userRole?.role === 'admin' && userRole?.status === 'active';
   };
 
   const handleApproveAdmin = async (userId: string) => {
@@ -224,6 +240,32 @@ const OwnerDashboard = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to reject admin",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveAdmin = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq('user_id', userId)
+        .eq('role', 'admin');
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin Removed",
+        description: "User's admin access has been revoked",
+      });
+
+      await loadDashboardData();
+    } catch (error: any) {
+      console.error("Error removing admin:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove admin role",
         variant: "destructive",
       });
     }
@@ -400,19 +442,32 @@ const OwnerDashboard = () => {
                         <p className="font-semibold">{user.full_name || "No name"}</p>
                         <p className="text-sm text-muted-foreground">
                           Role: <span className="capitalize">{getUserRole(user.id)}</span>
+                          {isActiveAdmin(user.id) && (
+                            <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              Active Admin
+                            </span>
+                          )}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Joined: {new Date(user.created_at).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        {getUserRole(user.id) !== "admin" && (
+                        {!isActiveAdmin(user.id) ? (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleAssignRole(user.id, "admin")}
                           >
                             Make Admin
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleRemoveAdmin(user.id)}
+                          >
+                            Remove Admin
                           </Button>
                         )}
                       </div>
