@@ -1,9 +1,19 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface ModuleDetails {
+  subscription_id: string;
+  status: 'active' | 'canceled' | 'past_due';
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  price_id: string;
+  canceled_at: string | null;
+}
+
 export interface SubscriptionData {
   subscribed: boolean;
   modules: string[]; // Format: ['baseball_hitting', 'softball_pitching']
+  module_details: Record<string, ModuleDetails>;
   subscription_end: string | null;
   loading: boolean;
   initialized: boolean;
@@ -15,6 +25,7 @@ export const useSubscription = () => {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData>({
     subscribed: false,
     modules: [],
+    module_details: {},
     subscription_end: null,
     loading: true,
     initialized: false,
@@ -40,6 +51,7 @@ export const useSubscription = () => {
         setSubscriptionData({
           subscribed: false,
           modules: [],
+          module_details: {},
           subscription_end: null,
           loading: false,
           initialized: true,
@@ -59,6 +71,7 @@ export const useSubscription = () => {
         setSubscriptionData({
           subscribed: data.subscribed || false,
           modules: data.modules || [],
+          module_details: data.module_details || {},
           subscription_end: data.subscription_end || null,
           loading: false,
           initialized: true,
@@ -81,6 +94,7 @@ export const useSubscription = () => {
             setSubscriptionData({
               subscribed: isActive,
               modules: fallbackData.subscribed_modules || [],
+              module_details: (fallbackData.module_subscription_mapping as unknown as Record<string, ModuleDetails>) || {},
               subscription_end: fallbackData.current_period_end || null,
               loading: false,
               initialized: true,
@@ -91,6 +105,7 @@ export const useSubscription = () => {
             setSubscriptionData({
               subscribed: false,
               modules: [],
+              module_details: {},
               subscription_end: null,
               loading: false,
               initialized: true,
@@ -103,6 +118,7 @@ export const useSubscription = () => {
           setSubscriptionData({
             subscribed: false,
             modules: [],
+            module_details: {},
             subscription_end: null,
             loading: false,
             initialized: true,
@@ -116,6 +132,7 @@ export const useSubscription = () => {
       setSubscriptionData({
         subscribed: false,
         modules: [],
+        module_details: {},
         subscription_end: null,
         loading: false,
         initialized: true,
@@ -124,6 +141,23 @@ export const useSubscription = () => {
       });
     }
   }, []);
+
+  const getModuleDetails = useCallback((module: string, sport: string) => {
+    const key = `${sport}_${module}`;
+    return subscriptionData.module_details?.[key];
+  }, [subscriptionData.module_details]);
+  
+  const getModuleStatus = useCallback((module: string, sport: string) => {
+    const details = getModuleDetails(module, sport);
+    if (!details) return 'not_subscribed';
+    if (details.cancel_at_period_end) return 'canceling';
+    return details.status;
+  }, [getModuleDetails]);
+  
+  const hasPendingCancellation = useCallback((module: string, sport: string) => {
+    const details = getModuleDetails(module, sport);
+    return details?.cancel_at_period_end || false;
+  }, [getModuleDetails]);
 
   useEffect(() => {
     checkSubscription(false);
@@ -138,5 +172,13 @@ export const useSubscription = () => {
 
   const refetch = () => checkSubscription(false);
 
-  return { ...subscriptionData, refetch, hasModuleForSport, hasAccessForSport };
+  return { 
+    ...subscriptionData, 
+    refetch, 
+    hasModuleForSport, 
+    hasAccessForSport,
+    getModuleDetails,
+    getModuleStatus,
+    hasPendingCancellation
+  };
 };

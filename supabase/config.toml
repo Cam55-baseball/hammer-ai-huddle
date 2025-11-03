@@ -44,3 +44,15 @@ verify_jwt = true
 
 [functions.get-following-players]
 verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.cancel-module-subscription]
+verify_jwt = true
+
+[functions.cancel-all-subscriptions]
+verify_jwt = true
+
+[functions.resume-module-subscription]
+verify_jwt = true

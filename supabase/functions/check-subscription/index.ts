@@ -184,6 +184,7 @@ serve(async (req) => {
     let discountPercent: number | null = null;
     let couponCode: string | null = null;
     let couponName: string | null = null;
+    const moduleMapping: Record<string, any> = {};  // NEW: Track module details
 
     if (hasActiveSub) {
       logStep("Processing multiple subscriptions", { count: subscriptions.data.length });
@@ -458,6 +459,21 @@ serve(async (req) => {
           if (module) {
             // Store in sport_module format for sport-specific locking
             const sportModule = `${sport}_${module}`;
+            
+            // NEW: Build module mapping
+            moduleMapping[sportModule] = {
+              subscription_id: subscription.id,
+              status: subscription.status,
+              current_period_end: subscription.current_period_end 
+                ? new Date(subscription.current_period_end * 1000).toISOString() 
+                : null,
+              cancel_at_period_end: subscription.cancel_at_period_end || false,
+              price_id: item.price.id,
+              canceled_at: subscription.canceled_at 
+                ? new Date(subscription.canceled_at * 1000).toISOString() 
+                : null
+            };
+            
             // Only add if not already in the array (avoid duplicates from multiple subscriptions)
             if (!subscribedModules.includes(sportModule)) {
               subscribedModules.push(sportModule);
@@ -481,6 +497,10 @@ serve(async (req) => {
       
       logStep("Determined subscribed modules", { subscribedModules });
 
+      // Check for pending cancellations
+      const hasPendingCancellations = Object.values(moduleMapping)
+        .some((m: any) => m.cancel_at_period_end);
+
       // UPSERT subscription record in database with coupon information
       await supabaseClient
         .from('subscriptions')
@@ -488,6 +508,8 @@ serve(async (req) => {
           user_id: user.id,
           status: 'active',
           subscribed_modules: subscribedModules,
+          module_subscription_mapping: moduleMapping,  // NEW
+          has_pending_cancellations: hasPendingCancellations,  // NEW
           stripe_customer_id: customerId,
           stripe_subscription_id: stripeSubscriptionIds.join(','),  // Store all IDs
           current_period_end: subscriptionEnd,
@@ -575,6 +597,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       modules: subscribedModules,
+      module_details: moduleMapping,  // NEW
       subscription_end: subscriptionEnd,
       has_discount: hasDiscount,
       discount_percent: discountPercent

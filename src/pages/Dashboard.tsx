@@ -15,6 +15,7 @@ import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, Boo
 import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
+import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { toast } from "sonner";
 
 type ModuleType = "hitting" | "pitching" | "throwing";
@@ -22,7 +23,7 @@ type SportType = "baseball" | "softball";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, loading: subLoading, refetch, hasAccessForSport } = useSubscription();
+  const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
@@ -137,6 +138,33 @@ export default function Dashboard() {
     }
   };
 
+  const handleCancelAll = async () => {
+    if (!confirm('Cancel all modules? You\'ll keep access until each billing date.')) return;
+    
+    setIsRefreshing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+      
+      const { data, error } = await supabase.functions.invoke('cancel-all-subscriptions', {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      
+      if (error) throw error;
+      
+      toast.success('All modules will be canceled', {
+        description: data.message || 'You\'ll keep access until each billing date'
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error('Cancel all error:', error);
+      toast.error('Failed to cancel subscriptions');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const getEfficiencyScoreDisplay = (module: ModuleType) => {
     const moduleProgress = getModuleProgress(module);
     const hasAccess = hasAccessForSport(module, selectedSport, isOwner || isAdmin);
@@ -224,6 +252,43 @@ export default function Dashboard() {
             </div>
           </div>
         </Card>
+
+        {/* Subscription Management */}
+        {module_details && Object.keys(module_details).length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <CardTitle>Manage Your Subscriptions</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Control each module individually - cancel anytime
+                  </p>
+                </div>
+                {Object.keys(module_details).length > 1 && (
+                  <Button variant="outline" onClick={handleCancelAll} disabled={isRefreshing}>
+                    Cancel All Modules
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(module_details).map(([key, details]) => {
+                  const [sport, module] = key.split('_') as [SportType, ModuleType];
+                  return (
+                    <ModuleManagementCard
+                      key={key}
+                      sport={sport}
+                      module={module}
+                      details={details}
+                      onActionComplete={refetch}
+                    />
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Sport Switch Confirmation Dialog */}
         <AlertDialog open={showSportSwitchDialog} onOpenChange={setShowSportSwitchDialog}>

@@ -71,6 +71,33 @@ export type Database = {
         }
         Relationships: []
       }
+      processed_webhook_events: {
+        Row: {
+          details: Json | null
+          event_type: string
+          id: string
+          processed_at: string | null
+          stripe_event_id: string
+          user_email: string | null
+        }
+        Insert: {
+          details?: Json | null
+          event_type: string
+          id?: string
+          processed_at?: string | null
+          stripe_event_id: string
+          user_email?: string | null
+        }
+        Update: {
+          details?: Json | null
+          event_type?: string
+          id?: string
+          processed_at?: string | null
+          stripe_event_id?: string
+          user_email?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -267,7 +294,9 @@ export type Database = {
           created_at: string | null
           current_period_end: string
           discount_percent: number | null
+          has_pending_cancellations: boolean | null
           id: string
+          module_subscription_mapping: Json | null
           plan: string
           status: string
           stripe_customer_id: string | null
@@ -282,7 +311,9 @@ export type Database = {
           created_at?: string | null
           current_period_end?: string
           discount_percent?: number | null
+          has_pending_cancellations?: boolean | null
           id?: string
+          module_subscription_mapping?: Json | null
           plan?: string
           status?: string
           stripe_customer_id?: string | null
@@ -297,7 +328,9 @@ export type Database = {
           created_at?: string | null
           current_period_end?: string
           discount_percent?: number | null
+          has_pending_cancellations?: boolean | null
           id?: string
+          module_subscription_mapping?: Json | null
           plan?: string
           status?: string
           stripe_customer_id?: string | null
