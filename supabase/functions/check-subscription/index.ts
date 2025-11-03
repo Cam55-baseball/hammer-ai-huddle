@@ -286,18 +286,93 @@ serve(async (req) => {
           }
         }
         
-        // Extract sport and module from product metadata
-        let sport: string = 'baseball'; // default to baseball for backward compatibility
+        // Extract sport and module from product metadata with robust normalization
+        let sport: string | null = null;
         let module: string | null = null;
         
-        if (product.metadata?.sport) {
-          sport = product.metadata.sport.toLowerCase();
+        // Helper to normalize metadata values
+        const normalizeValue = (value: string | undefined): string | null => {
+          if (!value) return null;
+          return value.trim().toLowerCase();
+        };
+        
+        // Try product metadata first (both lowercase and capitalized keys)
+        sport = normalizeValue(product.metadata?.sport) || normalizeValue(product.metadata?.Sport);
+        module = normalizeValue(product.metadata?.module) || normalizeValue(product.metadata?.Module);
+        
+        logStep("Product metadata extracted", { 
+          productId, 
+          rawMetadata: product.metadata,
+          extractedSport: sport,
+          extractedModule: module 
+        });
+        
+        // Fallback to price metadata if product metadata is missing
+        if (!sport || !module) {
+          try {
+            const priceId = typeof item.price.id === 'string' ? item.price.id : item.price.id;
+            const priceCacheKey = `price:${priceId}`;
+            let priceData = getCached(priceCacheKey);
+            
+            if (!priceData) {
+              priceData = await stripe.prices.retrieve(priceId);
+              cache.set(priceCacheKey, { data: priceData, timestamp: Date.now() });
+            }
+            
+            if (!sport) {
+              sport = normalizeValue(priceData.metadata?.sport) || normalizeValue(priceData.metadata?.Sport);
+            }
+            if (!module) {
+              module = normalizeValue(priceData.metadata?.module) || normalizeValue(priceData.metadata?.Module);
+            }
+            
+            logStep("Price metadata fallback used", { 
+              priceId, 
+              priceMetadata: priceData.metadata,
+              finalSport: sport,
+              finalModule: module 
+            });
+          } catch (priceError) {
+            const errorMessage = priceError instanceof Error ? priceError.message : String(priceError);
+            logStep("Error retrieving price metadata", { error: errorMessage });
+          }
         }
         
-        if (product.metadata?.module) {
-          module = product.metadata.module.toLowerCase();
-        } else {
-          // Fallback: Try to infer module from product name
+        // Validate and map sport
+        const validSports = ['baseball', 'softball'];
+        if (sport && !validSports.includes(sport)) {
+          logStep("Invalid sport value, defaulting to baseball", { invalidSport: sport });
+          sport = 'baseball';
+        }
+        if (!sport) {
+          sport = 'baseball'; // default for backward compatibility
+          logStep("No sport found, defaulting to baseball");
+        }
+        
+        // Validate and map module
+        const validModules = ['hitting', 'pitching', 'throwing'];
+        if (module) {
+          // Handle cases like "softball pitching" -> "pitching"
+          for (const validModule of validModules) {
+            if (module.includes(validModule)) {
+              const mappedModule = validModule;
+              if (module !== mappedModule) {
+                logStep("Mapped module value", { original: module, mapped: mappedModule });
+              }
+              module = mappedModule;
+              break;
+            }
+          }
+          
+          // Final validation
+          if (!validModules.includes(module)) {
+            logStep("Invalid module value after mapping", { invalidModule: module });
+            module = null;
+          }
+        }
+        
+        // Fallback: Try to infer module from product name if still null
+        if (!module) {
           const productName = product.name?.toLowerCase() || '';
           if (productName.includes('hitting')) {
             module = 'hitting';
@@ -306,11 +381,24 @@ serve(async (req) => {
           } else if (productName.includes('throwing')) {
             module = 'throwing';
           }
+          if (module) {
+            logStep("Inferred module from product name", { productName, inferredModule: module });
+          }
         }
+        
+        logStep("Final resolved metadata", { sport, module, productId });
         
         if (module) {
           // Store in sport_module format for sport-specific locking
-          subscribedModules.push(`${sport}_${module}`);
+          const sportModule = `${sport}_${module}`;
+          subscribedModules.push(sportModule);
+          logStep("Added subscribed module", { sportModule });
+        } else {
+          logStep("WARNING: Could not determine module for product", { 
+            productId, 
+            productName: product.name,
+            metadata: product.metadata 
+          });
         }
       }
       logStep("Determined subscribed modules", { subscribedModules });

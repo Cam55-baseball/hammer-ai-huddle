@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked } from "lucide-react";
+import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked, RefreshCw } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
@@ -35,6 +35,7 @@ export default function Dashboard() {
   const [showSportSwitchDialog, setShowSportSwitchDialog] = useState(false);
   const [pendingSportSwitch, setPendingSportSwitch] = useState<SportType | null>(null);
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -121,6 +122,19 @@ export default function Dashboard() {
 
   const getModuleProgress = (module: ModuleType) => {
     return progress.find((p) => p.module === module && p.sport === selectedSport);
+  };
+
+  const handleRefreshAccess = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+      toast.success("Subscription status refreshed");
+    } catch (error) {
+      console.error("Error refreshing subscription:", error);
+      toast.error("Failed to refresh subscription status");
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const getEfficiencyScoreDisplay = (module: ModuleType) => {
@@ -247,13 +261,25 @@ export default function Dashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Sport Selector */}
-        <Tabs value={selectedSport} onValueChange={handleSportChange}>
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="baseball">Baseball</TabsTrigger>
-            <TabsTrigger value="softball">Softball</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* Sport Selector with Refresh Button */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <Tabs value={selectedSport} onValueChange={handleSportChange}>
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="baseball">Baseball</TabsTrigger>
+              <TabsTrigger value="softball">Softball</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshAccess}
+            disabled={isRefreshing}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh Access
+          </Button>
+        </div>
 
         {/* Module Cards */}
         <div className="grid md:grid-cols-3 gap-6">
