@@ -19,7 +19,8 @@ serve(async (req) => {
 
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
   );
 
   try {
@@ -48,12 +49,22 @@ serve(async (req) => {
     // Get user's subscription record
     const { data: subData, error: subError } = await supabaseClient
       .from('subscriptions')
-      .select('module_subscription_mapping')
+      .select('module_subscription_mapping, stripe_customer_id')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (subError || !subData) {
-      throw new Error("No subscription found for user");
+    logStep("Subscription query result", { 
+      hasData: !!subData, 
+      hasError: !!subError,
+      errorMessage: subError?.message 
+    });
+
+    if (subError) {
+      throw new Error(`Database error: ${subError.message}`);
+    }
+
+    if (!subData) {
+      throw new Error("No subscription found for user. Please check your subscription status.");
     }
 
     const sportModule = `${sport}_${module}`;
