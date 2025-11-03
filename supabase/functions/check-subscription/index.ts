@@ -296,9 +296,61 @@ serve(async (req) => {
           return value.trim().toLowerCase();
         };
         
+        // Helper to try mapping weird key/value pairs like { "softball": "pitching" } or { "sport=softball": "module=pitching" }
+        const extractFromWeirdKv = (meta: Record<string, string | undefined>) => {
+          const validModules = ['hitting', 'pitching', 'throwing'];
+          for (const [rawK, rawV] of Object.entries(meta || {})) {
+            const k = normalizeValue(rawK as string) || '';
+            const v = normalizeValue(rawV as string | undefined) || '';
+
+            // Direct sport name used as key
+            if (!sport && (k === 'softball' || k === 'baseball')) {
+              sport = k;
+              // value could be a module name
+              if (!module) {
+                for (const m of validModules) {
+                  if (v.includes(m)) { module = m; break; }
+                }
+              }
+            }
+
+            // Keys or values that look like key=value
+            if (k.includes('=')) {
+              const [lhs, rhs] = k.split('=');
+              const key = (lhs || '').trim().toLowerCase();
+              const val = (rhs || '').trim().toLowerCase();
+              if (!sport && key === 'sport' && (val === 'softball' || val === 'baseball')) sport = val;
+              if (!module && key === 'module') {
+                for (const m of validModules) { if (val.includes(m)) { module = m; break; } }
+              }
+            }
+            if (v.includes('=')) {
+              const [lhs, rhs] = v.split('=');
+              const key = (lhs || '').trim().toLowerCase();
+              const val = (rhs || '').trim().toLowerCase();
+              if (!sport && key === 'sport' && (val === 'softball' || val === 'baseball')) sport = val;
+              if (!module && key === 'module') {
+                for (const m of validModules) { if (val.includes(m)) { module = m; break; } }
+              }
+            }
+          }
+        };
+        
         // Try product metadata first (both lowercase and capitalized keys)
         sport = normalizeValue(product.metadata?.sport) || normalizeValue(product.metadata?.Sport);
         module = normalizeValue(product.metadata?.module) || normalizeValue(product.metadata?.Module);
+        
+        // If still missing, try to extract from odd key/value patterns
+        if (!sport || !module) {
+          extractFromWeirdKv(product.metadata as Record<string, string | undefined>);
+        }
+        
+        // Try inferring sport from product name if still missing
+        if (!sport) {
+          const name = (product.name || '').toLowerCase();
+          if (name.includes('softball')) sport = 'softball';
+          else if (name.includes('baseball')) sport = 'baseball';
+        }
         
         logStep("Product metadata extracted", { 
           productId, 
@@ -324,6 +376,18 @@ serve(async (req) => {
             }
             if (!module) {
               module = normalizeValue(priceData.metadata?.module) || normalizeValue(priceData.metadata?.Module);
+            }
+            
+            // Heuristics for odd price metadata, if still missing
+            if ((!sport || !module) && priceData?.metadata) {
+              extractFromWeirdKv(priceData.metadata as Record<string, string | undefined>);
+            }
+            
+            // If still no sport, infer from the product name again as a last resort
+            if (!sport) {
+              const name = (product.name || '').toLowerCase();
+              if (name.includes('softball')) sport = 'softball';
+              else if (name.includes('baseball')) sport = 'baseball';
             }
             
             logStep("Price metadata fallback used", { 
