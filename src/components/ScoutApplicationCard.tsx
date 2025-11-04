@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Video, Check, X } from "lucide-react";
+import { FileText, Video, Check, X, User } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ScoutProfileDialog } from "./ScoutProfileDialog";
 interface ScoutApplicationCardProps {
   application: {
     id: string;
@@ -30,6 +31,8 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerType, setViewerType] = useState<'pdf' | 'video' | 'unknown'>('unknown');
   const [viewerTitle, setViewerTitle] = useState('');
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [scoutProfile, setScoutProfile] = useState<any>(null);
 
   const handleAction = async (action: "approve" | "deny") => {
     setLoading(true);
@@ -137,6 +140,31 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
     }
   };
 
+  const handleViewProfile = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', application.user_id)
+        .single();
+
+      if (error) throw error;
+
+      setScoutProfile(data);
+      setProfileDialogOpen(true);
+    } catch (error: any) {
+      console.error('[ScoutApplicationCard] Error fetching profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load scout profile. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <Card className="p-6">
@@ -185,6 +213,18 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
               <Video className="mr-2 h-4 w-4" />
               View Video Submission
             </Button>
+
+            {application.status === "approved" && (
+              <Button
+                variant="default"
+                className="w-full justify-start"
+                onClick={handleViewProfile}
+                disabled={loading}
+              >
+                <User className="mr-2 h-4 w-4" />
+                View Profile
+              </Button>
+            )}
 
             {application.status === "pending" && (
               <div className="flex gap-2 pt-2">
@@ -268,6 +308,12 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ScoutProfileDialog
+        open={profileDialogOpen}
+        onOpenChange={setProfileDialogOpen}
+        profile={scoutProfile}
+      />
     </>
   );
 }
