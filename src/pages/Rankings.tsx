@@ -48,13 +48,20 @@ export default function Rankings() {
 
       if (error) throw error;
 
+      // Normalize response - handle both direct array and wrapped object formats
+      const normalizedRankings = Array.isArray(data) 
+        ? data 
+        : Array.isArray(data?.data) 
+          ? data.data 
+          : [];
+
       // Check if rankings are disabled
       if (data?.disabled) {
         setRankingsDisabled(true);
         setRankings([]);
       } else {
         setRankingsDisabled(false);
-        setRankings(data || []);
+        setRankings(normalizedRankings);
       }
     } catch (error) {
       console.error("Error fetching rankings:", error);
