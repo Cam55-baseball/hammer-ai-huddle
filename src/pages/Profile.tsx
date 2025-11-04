@@ -178,6 +178,14 @@ export default function Profile() {
       setAvatarPreview(data.avatar_url);
     } catch (error) {
       console.error('Error fetching profile:', error);
+      toast({
+        title: "Error loading profile",
+        description: "Unable to load this profile. You may not have permission to view it.",
+        variant: "destructive"
+      });
+      if (viewingOtherProfile) {
+        navigate('/scout-dashboard');
+      }
     }
   };
 
