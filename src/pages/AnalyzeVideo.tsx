@@ -13,6 +13,7 @@ import { ArrowLeft, Upload, Video, Trash2, BookMarked } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
+import { branding } from "@/branding";
 
 export default function AnalyzeVideo() {
   const { module } = useParams<{ module: string }>();
@@ -475,6 +476,12 @@ export default function AnalyzeVideo() {
                       </div>
                     </div>
                   )}
+
+                  <div className="pt-4 border-t">
+                    <p className="text-xs text-muted-foreground/70 leading-relaxed">
+                      <strong>Disclaimer:</strong> {branding.appName} waives all liability for any injuries that may occur from performing training techniques demonstrated or recommended through this platform. Users assume full responsibility for their safety and should consult with qualified professionals before beginning any training program.
+                    </p>
+                  </div>
 
                   <div className="flex gap-2">
                     <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="flex-1">
