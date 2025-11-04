@@ -7,35 +7,29 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // 🔹 Initialize Supabase
     const authHeader = req.headers.get("Authorization");
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get the requesting user
+    // 🔹 Auth check (optional, but logged for context)
     let requestingUserId: string | null = null;
-
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-      
-      if (!userError && user) {
-        requestingUserId = user.id;
-      }
+      const { data: { user } } = await supabase.auth.getUser(token);
+      requestingUserId = user?.id ?? null;
     }
 
-    // Parse filters from request body
+    // 🔹 Parse filters from request body
     const { sport, module } = await req.json().catch(() => ({ sport: null, module: null }));
 
-    console.log("Fetching rankings for user:", requestingUserId, "filters:", { sport, module });
+    console.log("Fetching rankings with filters:", { sport, module, requestingUserId });
 
-    // Check if rankings are visible (owner control)
+    // 🔹 Check if rankings are enabled in app settings
     const { data: settingsData } = await supabase
       .from("app_settings")
       .select("setting_value")
@@ -43,107 +37,118 @@ serve(async (req) => {
       .maybeSingle();
 
     const rankingsEnabled = settingsData?.setting_value?.enabled ?? true;
-
     if (!rankingsEnabled) {
-      console.log("Rankings are disabled by owner");
-      return new Response(JSON.stringify({ disabled: true, message: "Rankings are currently disabled" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.log("Rankings disabled by app owner");
+      return new Response(
+        JSON.stringify({ disabled: true, message: "Rankings are currently disabled", data: [] }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Query for ALL players with progress data (no follow filter)
+    // 🔹 Query user progress table for rankings
     let query = supabase
       .from("user_progress")
-      .select(`
-        user_id,
-        sport,
-        module,
-        videos_analyzed,
-        average_efficiency_score,
-        last_activity
-      `)
-      .order("average_efficiency_score", { ascending: false });
+      .select("user_id, sport, module, videos_analyzed, average_efficiency_score, last_activity")
+      .order("average_efficiency_score", { ascending: false, nullsFirst: false });
 
-    if (sport && sport !== "all") {
-      query = query.eq("sport", sport);
-    }
+    if (sport && sport !== "all") query = query.eq("sport", sport);
+    if (module && module !== "all") query = query.eq("module", module);
 
-    if (module && module !== "all") {
-      query = query.eq("module", module);
-    }
-
-    // Fetch all data first
     const { data, error } = await query;
 
+    // ✅ Defensive guard: check for query errors
     if (error) {
       console.error("Error fetching rankings:", error);
       throw error;
     }
 
-    console.log(`Fetched ${data?.length || 0} total records before filtering`);
+    // ✅ Defensive guard: handle no data found
+    if (!data || data.length === 0) {
+      console.warn("No ranking data found");
+      return new Response(
+        JSON.stringify({
+          message: "No players found for the given filters",
+          data: [],
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
 
-    // Exclude owners from rankings by filtering in code
+    // 🔹 Exclude owners (not part of player rankings)
     const { data: ownerRoles, error: ownerError } = await supabase
       .from("user_roles")
       .select("user_id")
       .eq("role", "owner");
 
-    if (ownerError) {
-      console.error("Error fetching owner roles:", ownerError);
+    if (ownerError) console.error("Error fetching owner roles:", ownerError);
+
+    const ownerIds = new Set(ownerRoles?.map(o => o.user_id) || []);
+    const filtered = data.filter((item: any) => !ownerIds.has(item.user_id));
+
+    if (filtered.length === 0) {
+      console.warn("No non-owner players available for rankings");
+      return new Response(
+        JSON.stringify({
+          message: "No eligible players to rank",
+          data: [],
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
     }
 
-    const ownerUserIds = ownerRoles?.map(o => o.user_id) || [];
-    
-    if (ownerUserIds.length > 0) {
-      console.log(`Excluding ${ownerUserIds.length} owner(s) from rankings:`, ownerUserIds);
-    }
-
-    // Filter out owners from the results - handle null data safely
-    const ownerUserIdsSet = new Set(ownerUserIds);
-    const filteredData = (data || []).filter((item: any) => !ownerUserIdsSet.has(item.user_id));
-
-    // Build profile map for names
-    const userIds = Array.from(new Set(filteredData.map((i: any) => i.user_id)));
+    // 🔹 Fetch player names from profiles table
+    const userIds = Array.from(new Set(filtered.map((i: any) => i.user_id)));
     let profileMap: Record<string, string> = {};
+
     if (userIds.length > 0) {
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select("id, full_name")
         .in("id", userIds);
+
       if (profilesError) {
         console.error("Error fetching profiles for rankings:", profilesError);
       } else {
-        profileMap = (profilesData || []).reduce((acc: Record<string, string>, p: any) => {
+        profileMap = (profilesData || []).reduce((acc, p: any) => {
           acc[p.id] = p.full_name || "Anonymous";
           return acc;
         }, {});
       }
+    } else {
+      console.log("No user IDs to fetch profiles for");
     }
 
-    // Format data - NO ANONYMIZATION, all real names shown
-    const formattedData = filteredData.map((item: any) => ({
-      user_id: item.user_id,
-      full_name: profileMap[item.user_id] || "Anonymous",
-      sport: item.sport,
-      module: item.module,
-      videos_analyzed: item.videos_analyzed,
-      last_activity: item.last_activity,
+    // 🔹 Final formatted response
+    const formatted = filtered.map((i: any) => ({
+      user_id: i.user_id,
+      full_name: profileMap[i.user_id] || "Anonymous",
+      sport: i.sport,
+      module: i.module,
+      videos_analyzed: i.videos_analyzed ?? 0,
+      last_activity: i.last_activity ?? null,
     }));
 
-    console.log(`Returning ${formattedData.length} ranked players`);
+    console.log(`Returning ${formatted.length} ranked players`);
 
-    return new Response(JSON.stringify(formattedData), {
+    return new Response(JSON.stringify(formatted), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
     });
-  } catch (error) {
-    console.error("Error in get-rankings function:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+
+  } catch (err) {
+    console.error("Unhandled error in get-rankings:", err);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({
+        error: err instanceof Error ? err.message : String(err),
+        data: [],
+      }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
