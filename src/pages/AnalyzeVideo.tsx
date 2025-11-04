@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { ArrowLeft, Upload, Video, Trash2, BookMarked } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -36,6 +38,7 @@ export default function AnalyzeVideo() {
   });
   const videoRef = useRef<HTMLVideoElement>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [analysisEnabled, setAnalysisEnabled] = useState(true);
 
   // Force fresh subscription check on page load
   useEffect(() => {
@@ -86,6 +89,7 @@ export default function AnalyzeVideo() {
     setAnalysis(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
+    setAnalysisEnabled(true);
     if (module && sport) {
       toast.info(`Switched to ${sport} - ${module}. Upload space cleared.`);
     }
@@ -111,6 +115,7 @@ export default function AnalyzeVideo() {
     setAnalysis(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
+    setAnalysisEnabled(true);
     toast.success("Video removed. Select a new video to analyze.");
   };
 
@@ -154,7 +159,7 @@ export default function AnalyzeVideo() {
         .from('videos')
         .getPublicUrl(fileName);
 
-      // Create video record
+      // Create video record with appropriate status
       const { data: videoData, error: videoError } = await supabase
         .from("videos")
         .insert([{
@@ -162,17 +167,29 @@ export default function AnalyzeVideo() {
           sport: sport as "baseball" | "softball",
           module: module as "hitting" | "pitching" | "throwing",
           video_url: publicUrl,
-          status: "uploading" as const,
+          status: analysisEnabled ? "uploading" : "completed",
         }])
         .select()
         .single();
 
       if (videoError) throw videoError;
 
+      setCurrentVideoId(videoData.id);
+      
+      // Branch based on analysis toggle
+      if (!analysisEnabled) {
+        // No analysis - just upload and prompt to save to library
+        toast.success("Video uploaded successfully!");
+        setUploading(false);
+        
+        // Automatically open save to library dialog
+        setSaveDialogOpen(true);
+        return;
+      }
+
       toast.success("Video uploaded! Starting analysis...");
       setUploading(false);
       setAnalyzing(true);
-      setCurrentVideoId(videoData.id);
 
       // Call AI analysis edge function
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
@@ -209,7 +226,7 @@ export default function AnalyzeVideo() {
     } catch (error: any) {
       console.error("Error:", error);
       setAnalysisError(error);
-      toast.error(error.message || "Failed to analyze video");
+      toast.error(error.message || "Failed to process video");
       setAnalyzing(false);
     } finally {
       setUploading(false);
@@ -364,6 +381,25 @@ export default function AnalyzeVideo() {
                   </div>
                 </div>
 
+                {/* Analysis Toggle */}
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="enable-analysis" className="text-sm font-medium">
+                      Enable AI Analysis
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {analysisEnabled 
+                        ? "Video will be analyzed for technique feedback and drill recommendations" 
+                        : "Video will be uploaded without analysis (saves analysis credits)"}
+                    </p>
+                  </div>
+                  <Switch
+                    id="enable-analysis"
+                    checked={analysisEnabled}
+                    onCheckedChange={setAnalysisEnabled}
+                  />
+                </div>
+
                 <video
                   ref={videoRef}
                   src={videoPreview}
@@ -380,8 +416,46 @@ export default function AnalyzeVideo() {
                 size="lg"
                 className="w-full"
               >
-                {uploading ? "Uploading..." : "Analyze Video"}
+                {uploading 
+                  ? "Uploading..." 
+                  : analysisEnabled 
+                    ? "Upload & Analyze Video" 
+                    : "Upload Video to Library"}
               </Button>
+            )}
+
+            {/* Non-analyzed upload success message */}
+            {currentVideoId && !analysisEnabled && !analyzing && !analysis && !uploading && (
+              <Card className="p-6 border-primary">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <BookMarked className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold">Video Uploaded!</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Your video has been uploaded without analysis
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <p className="text-muted-foreground">
+                    Your video is ready to be saved to your Players Club library. You can add a title, 
+                    notes, and choose whether to share it with scouts.
+                  </p>
+                  
+                  <div className="flex gap-2">
+                    <Button onClick={() => setSaveDialogOpen(true)} className="flex-1">
+                      <BookMarked className="h-4 w-4 mr-2" />
+                      Save to Players Club
+                    </Button>
+                    <Button onClick={() => navigate('/dashboard')} variant="outline" className="flex-1">
+                      Return to Dashboard
+                    </Button>
+                  </div>
+                </div>
+              </Card>
             )}
 
             {analyzing && (
