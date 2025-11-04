@@ -455,6 +455,9 @@ const ProfileSetup = () => {
 
             <div>
               <Label htmlFor="bio">Bio (Optional)</Label>
+              <p className="text-xs text-muted-foreground mt-1 mb-2">
+                Please include: Contact Email, Height and Weight, State, Graduation Year (HS & College), Batting Side(s), Position(s), Throwing Hand(s), Team Affiliation or Free Agency/Uncommitted status
+              </p>
               <Textarea
                 id="bio"
                 value={bio}
