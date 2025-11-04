@@ -61,11 +61,39 @@ export const useSubscription = () => {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
+      // First attempt: Call edge function with current session
+      let { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
+
+      // If we get an auth error (401), try refreshing the session and retry once
+      if (error && (error.message?.includes('Authentication') || error.message?.includes('401'))) {
+        console.log('[useSubscription] Auth error detected, attempting token refresh...');
+        
+        try {
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (!refreshError && refreshData.session) {
+            console.log('[useSubscription] Token refreshed successfully, retrying edge function...');
+            
+            // Retry with refreshed token
+            const retryResult = await supabase.functions.invoke('check-subscription', {
+              headers: {
+                Authorization: `Bearer ${refreshData.session.access_token}`,
+              },
+            });
+            
+            data = retryResult.data;
+            error = retryResult.error;
+          } else {
+            console.error('[useSubscription] Token refresh failed:', refreshError);
+          }
+        } catch (refreshError) {
+          console.error('[useSubscription] Error during token refresh:', refreshError);
+        }
+      }
 
       if (!error && data) {
         setSubscriptionData({

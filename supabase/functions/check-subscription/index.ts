@@ -43,17 +43,55 @@ serve(async (req) => {
     logStep("Stripe key verified");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      logStep("ERROR: No authorization header");
+      return new Response(
+        JSON.stringify({ error: "No authorization header provided" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
     logStep("Authorization header found");
 
     const token = authHeader.replace("Bearer ", "");
     logStep("Authenticating user with token");
     
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError) {
+      logStep("ERROR: Authentication failed", { 
+        error: userError.message,
+        code: userError.code,
+        status: userError.status 
+      });
+      
+      return new Response(
+        JSON.stringify({ 
+          error: "Authentication failed",
+          message: userError.message,
+          code: userError.code
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+    
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    if (!user?.email) {
+      logStep("ERROR: User not found or email missing");
+      return new Response(
+        JSON.stringify({ error: "User not authenticated or email not available" }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+    
+    logStep("User authenticated successfully", { userId: user.id, email: user.email });
 
     // Check if user is owner - bypass Stripe entirely
     const { data: ownerRole } = await supabaseClient
@@ -620,6 +658,14 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
     
+    // Determine appropriate status code
+    let statusCode = 500;
+    if (errorMessage.includes('Authentication') || errorMessage.includes('Auth session') || errorMessage.includes('authorization header')) {
+      statusCode = 401;
+    } else if (errorMessage.includes('STRIPE_SECRET_KEY')) {
+      statusCode = 500;
+    }
+    
     // Fallback to database state on error (like rate limiting)
     try {
       const authHeader = req.headers.get("Authorization");
@@ -655,9 +701,15 @@ serve(async (req) => {
       logStep("Fallback also failed", { error: fallbackError });
     }
     
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ 
+        error: errorMessage,
+        timestamp: new Date().toISOString()
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: statusCode,
+      }
+    );
   }
 });
