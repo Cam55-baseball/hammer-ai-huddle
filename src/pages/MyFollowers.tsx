@@ -8,6 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Follower {
   id: string;
@@ -24,6 +34,8 @@ export default function MyFollowers() {
   const navigate = useNavigate();
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [loading, setLoading] = useState(true);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [selectedFollower, setSelectedFollower] = useState<Follower | null>(null);
 
   useEffect(() => {
     // Wait for auth to finish loading before redirecting
@@ -94,16 +106,20 @@ export default function MyFollowers() {
     }
   };
 
-  const handleRemoveFollower = async (followId: string) => {
+  const handleRemoveFollower = async () => {
+    if (!selectedFollower) return;
+    
     try {
       const { error } = await supabase
         .from('scout_follows')
         .update({ status: 'rejected' })
-        .eq('id', followId);
+        .eq('id', selectedFollower.id);
 
       if (error) throw error;
 
       toast.success("Scout access removed");
+      setRemoveDialogOpen(false);
+      setSelectedFollower(null);
       fetchFollowers();
     } catch (error) {
       console.error('Error removing follower:', error);
@@ -188,7 +204,10 @@ export default function MyFollowers() {
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => handleRemoveFollower(follower.id)}
+                        onClick={() => {
+                          setSelectedFollower(follower);
+                          setRemoveDialogOpen(true);
+                        }}
                       >
                         Remove Access
                       </Button>
@@ -200,6 +219,41 @@ export default function MyFollowers() {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Scout/Coach Access?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Removing access will <strong>permanently prevent {selectedFollower?.scout.full_name || "this scout/coach"}</strong> from:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Viewing your training library and videos</li>
+                <li>Following you in the future</li>
+                <li>Accessing your profile data</li>
+              </ul>
+              <p className="pt-2">
+                This action cannot be undone. Are you sure you want to remove their access?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setRemoveDialogOpen(false);
+              setSelectedFollower(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRemoveFollower}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove Access
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
