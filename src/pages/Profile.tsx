@@ -28,10 +28,10 @@ export default function Profile() {
   const [openingPortal, setOpeningPortal] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null); // Role of the profile being viewed
   const [viewingOtherProfile, setViewingOtherProfile] = useState(false);
   const [hasAcceptedFollow, setHasAcceptedFollow] = useState(false);
-  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null); // Role of the logged-in user
   const [followStatus, setFollowStatus] = useState<'none' | 'pending' | 'accepted' | null>(null);
   const [sendingFollow, setSendingFollow] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -134,6 +134,23 @@ export default function Profile() {
 
     checkFollowRelationship();
   }, [user, viewingOtherProfile, viewingUserId]);
+
+  // Fetch current user's role (for bio prompt visibility)
+  useEffect(() => {
+    const fetchCurrentUserRole = async () => {
+      if (!user || viewingOtherProfile) return; // Only fetch when viewing own profile
+      
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      setCurrentUserRole(data?.role || null);
+    };
+    
+    fetchCurrentUserRole();
+  }, [user, viewingOtherProfile]);
 
   const fetchProfile = async (targetUserId?: string) => {
     if (!user) return;
@@ -821,9 +838,11 @@ export default function Profile() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
-                    <p className="text-xs text-muted-foreground mt-1 mb-2">
-                      Please include: Contact Email, Height and Weight, State, Graduation Year (HS & College), Batting Side(s), Position(s), Throwing Hand(s), Team Affiliation or Free Agency/Uncommitted status
-                    </p>
+                    {currentUserRole === 'player' && (
+                      <p className="text-xs text-muted-foreground mt-1 mb-2">
+                        Please include: Contact Email, Height and Weight, State, Graduation Year (HS & College), Batting Side(s), Position(s), Throwing Hand(s), Team Affiliation or Free Agency/Uncommitted status
+                      </p>
+                    )}
                     <Textarea
                       id="bio"
                       value={editForm.bio}
