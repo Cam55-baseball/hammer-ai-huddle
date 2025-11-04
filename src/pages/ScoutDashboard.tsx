@@ -459,6 +459,28 @@ export default function ScoutDashboard() {
                       </div>
 
                       <div className="flex flex-wrap gap-2 items-center">
+                        <Button
+                          onClick={() => navigate(`/profile?userId=${player.id}`)}
+                          size="sm"
+                          variant="outline"
+                          className="flex-shrink-0"
+                        >
+                          <User className="h-4 w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">View Profile</span>
+                        </Button>
+                        
+                        {player.followStatus === 'accepted' && (
+                          <Button
+                            onClick={() => navigate(`/players-club?playerId=${player.id}`)}
+                            size="sm"
+                            variant="outline"
+                            className="flex-shrink-0"
+                          >
+                            <BookMarked className="h-4 w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">View Library</span>
+                          </Button>
+                        )}
+                        
                         {player.followStatus === 'none' && (
                           <Button
                             onClick={() => handleSendFollow(player.id)}
@@ -476,30 +498,10 @@ export default function ScoutDashboard() {
                           </Badge>
                         )}
                         {player.followStatus === 'accepted' && (
-                          <>
-                            <Badge variant="default" className="gap-1 flex-shrink-0">
-                              <Check className="h-3 w-3" />
-                              Following
-                            </Badge>
-                            <Button
-                              onClick={() => navigate(`/profile?userId=${player.id}`)}
-                              size="sm"
-                              variant="outline"
-                              className="flex-shrink-0"
-                            >
-                              <User className="h-4 w-4 sm:mr-2" />
-                              <span className="hidden sm:inline">View Profile</span>
-                            </Button>
-                            <Button
-                              onClick={() => navigate(`/players-club?playerId=${player.id}`)}
-                              size="sm"
-                              variant="outline"
-                              className="flex-shrink-0"
-                            >
-                              <BookMarked className="h-4 w-4 sm:mr-2" />
-                              <span className="hidden sm:inline">View Library</span>
-                            </Button>
-                          </>
+                          <Badge variant="default" className="gap-1 flex-shrink-0">
+                            <Check className="h-3 w-3" />
+                            Following
+                          </Badge>
                         )}
                       </div>
                     </div>
