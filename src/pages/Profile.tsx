@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, Check, X } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, Check, X, UserPlus, Clock } from "lucide-react";
 import { SiTiktok } from "react-icons/si";
 import { UserMenu } from "@/components/UserMenu";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
@@ -32,6 +32,8 @@ export default function Profile() {
   const [viewingOtherProfile, setViewingOtherProfile] = useState(false);
   const [hasAcceptedFollow, setHasAcceptedFollow] = useState(false);
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
+  const [followStatus, setFollowStatus] = useState<'none' | 'pending' | 'accepted' | null>(null);
+  const [sendingFollow, setSendingFollow] = useState(false);
   const [editForm, setEditForm] = useState({
     first_name: "",
     last_name: "",
@@ -85,6 +87,7 @@ export default function Profile() {
     const checkFollowRelationship = async () => {
       if (!user || !viewingOtherProfile || !viewingUserId) {
         setHasAcceptedFollow(false);
+        setFollowStatus(null);
         return;
       }
 
@@ -98,24 +101,33 @@ export default function Profile() {
         
         setCurrentUserRole(currentRoleData?.role || null);
 
-        // Check if there's an accepted follow relationship
-        // Scout viewing player: scout_id = current user, player_id = viewing user
-        // Player viewing scout: player_id = current user, scout_id = viewing user
+        // Only check follow status if current user is a scout/coach
+        if (currentRoleData?.role !== 'scout' && currentRoleData?.role !== 'coach') {
+          setFollowStatus(null);
+          setHasAcceptedFollow(false);
+          return;
+        }
+
+        // Check follow relationship where scout_id = current user, player_id = viewing user
         const { data, error } = await supabase
           .from('scout_follows')
           .select('status')
-          .or(`and(scout_id.eq.${user.id},player_id.eq.${viewingUserId}),and(player_id.eq.${user.id},scout_id.eq.${viewingUserId})`)
-          .eq('status', 'accepted')
+          .eq('scout_id', user.id)
+          .eq('player_id', viewingUserId)
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error checking follow relationship:', error);
+          setFollowStatus('none');
           setHasAcceptedFollow(false);
         } else {
-          setHasAcceptedFollow(!!data);
+          const status = data?.status as 'pending' | 'accepted' | undefined;
+          setFollowStatus(status || 'none');
+          setHasAcceptedFollow(status === 'accepted');
         }
       } catch (error) {
         console.error('Error in checkFollowRelationship:', error);
+        setFollowStatus('none');
         setHasAcceptedFollow(false);
       }
     };
@@ -186,6 +198,37 @@ export default function Profile() {
       if (viewingOtherProfile) {
         navigate('/scout-dashboard');
       }
+    }
+  };
+
+  const handleSendFollow = async () => {
+    if (!viewingUserId) return;
+    
+    setSendingFollow(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-follow-request', {
+        body: { player_id: viewingUserId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Follow request sent',
+        description: `A follow request has been sent to ${profile?.first_name || 'the player'}.`,
+      });
+
+      // Update follow status to pending
+      setFollowStatus('pending');
+      
+    } catch (error: any) {
+      console.error('Error sending follow:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send follow request',
+        variant: 'destructive',
+      });
+    } finally {
+      setSendingFollow(false);
     }
   };
 
@@ -444,10 +487,11 @@ export default function Profile() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold">
-            {viewingOtherProfile ? `${displayName}'s Profile` : "Profile"}
-          </h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-4xl font-bold">
+          {viewingOtherProfile ? `${displayName}'s Profile` : "Profile"}
+        </h1>
+        <div className="flex items-center gap-3">
           {viewingOtherProfile && (
             <Badge variant="secondary">
               {isOwner
@@ -459,7 +503,43 @@ export default function Profile() {
                 : "Viewing Profile"}
             </Badge>
           )}
+          
+          {/* Follow Action Buttons - Only show if scout/coach viewing a player */}
+          {viewingOtherProfile && 
+           (currentUserRole === 'scout' || currentUserRole === 'coach') && 
+           isPlayer && (
+            <>
+              {followStatus === 'none' && (
+                <Button
+                  onClick={handleSendFollow}
+                  disabled={sendingFollow}
+                  variant="default"
+                  className="gap-2"
+                >
+                  {sendingFollow ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <UserPlus className="h-4 w-4" />
+                  )}
+                  {sendingFollow ? 'Sending...' : 'Follow Player'}
+                </Button>
+              )}
+              {followStatus === 'pending' && (
+                <Badge variant="secondary" className="gap-1 px-3 py-1.5">
+                  <Clock className="h-4 w-4" />
+                  Follow Request Pending
+                </Badge>
+              )}
+              {followStatus === 'accepted' && (
+                <Badge variant="default" className="gap-1 px-3 py-1.5">
+                  <Check className="h-4 w-4" />
+                  Following
+                </Badge>
+              )}
+            </>
+          )}
         </div>
+      </div>
 
         {/* User Info Card */}
         <Card className="p-6 mb-6">
