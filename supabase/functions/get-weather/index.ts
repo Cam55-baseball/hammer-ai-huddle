@@ -111,14 +111,28 @@ serve(async (req) => {
       throw new Error("Location is required");
     }
 
+    console.log(`Fetching weather for location: ${location}`);
+
     // Using wttr.in free weather API (no key required)
-    const response = await fetch(`https://wttr.in/${encodeURIComponent(location)}?format=j1`);
+    const weatherUrl = `https://wttr.in/${encodeURIComponent(location)}?format=j1`;
+    console.log(`Weather API URL: ${weatherUrl}`);
+    
+    const response = await fetch(weatherUrl, {
+      headers: {
+        'User-Agent': 'WeatherApp/1.0'
+      }
+    });
+    
+    console.log(`Weather API response status: ${response.status}`);
     
     if (!response.ok) {
-      throw new Error("Failed to fetch weather data");
+      const errorText = await response.text();
+      console.error(`Weather API error response: ${errorText}`);
+      throw new Error(`Weather API returned ${response.status}: ${errorText.substring(0, 100)}`);
     }
 
     const data = await response.json();
+    console.log(`Successfully fetched weather data for: ${location}`);
     const current = data.current_condition[0];
     const locationInfo = data.nearest_area[0];
 
