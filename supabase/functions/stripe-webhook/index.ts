@@ -38,10 +38,10 @@ serve(async (req) => {
     const body = await req.text();
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Verify webhook signature
+    // Verify webhook signature (async)
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
       logStep("Signature verified", { eventType: event.type, eventId: event.id });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);

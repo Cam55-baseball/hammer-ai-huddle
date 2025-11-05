@@ -125,7 +125,7 @@ serve(async (req) => {
       error: scoutFollowsError1?.message || scoutFollowsError2?.message 
     });
 
-    // Step 5: Delete from scout_applications table
+    // Step 5: Delete from scout_applications table (as applicant)
     const { error: applicationsError, count: applicationsCount } = await supabaseClient
       .from("scout_applications")
       .delete()
@@ -133,6 +133,19 @@ serve(async (req) => {
     
     if (applicationsError) logStep("Error deleting scout_applications", { error: applicationsError });
     deletionLog.push({ table: "scout_applications", count: applicationsCount || 0, error: applicationsError?.message });
+
+    // Step 5b: Nullify scout_applications reviewed_by (as reviewer)
+    const { error: reviewerError, count: reviewerCount } = await supabaseClient
+      .from("scout_applications")
+      .update({ reviewed_by: null })
+      .eq("reviewed_by", userId);
+    
+    if (reviewerError) logStep("Error nullifying scout_applications reviewer", { error: reviewerError });
+    deletionLog.push({ 
+      table: "scout_applications (reviewed_by)", 
+      count: reviewerCount || 0, 
+      error: reviewerError?.message 
+    });
 
     // Step 6: Delete from subscriptions table
     const { error: subscriptionsError, count: subscriptionsCount } = await supabaseClient

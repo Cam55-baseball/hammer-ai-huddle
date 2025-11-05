@@ -120,7 +120,8 @@ serve(async (req) => {
     const response = await fetch(weatherUrl, {
       headers: {
         'User-Agent': 'WeatherApp/1.0'
-      }
+      },
+      signal: AbortSignal.timeout(10000) // 10 second timeout
     });
     
     console.log(`Weather API response status: ${response.status}`);
@@ -131,7 +132,25 @@ serve(async (req) => {
       throw new Error(`Weather API returned ${response.status}: ${errorText.substring(0, 100)}`);
     }
 
-    const data = await response.json();
+    const rawText = await response.text();
+    console.log(`Received response, length: ${rawText.length}`);
+
+    // Validate JSON before parsing
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseError) {
+      console.error(`JSON parse error: ${parseError}`);
+      console.error(`Raw response (first 500 chars): ${rawText.substring(0, 500)}`);
+      throw new Error("Weather API returned invalid JSON");
+    }
+
+    // Validate response structure
+    if (!data.current_condition || !data.nearest_area) {
+      console.error(`Invalid response structure: ${JSON.stringify(data).substring(0, 200)}`);
+      throw new Error("Weather API returned incomplete data");
+    }
+
     console.log(`Successfully fetched weather data for: ${location}`);
     const current = data.current_condition[0];
     const locationInfo = data.nearest_area[0];

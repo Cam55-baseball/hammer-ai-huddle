@@ -118,7 +118,7 @@ serve(async (req) => {
         profileMap = (profilesData || []).reduce((acc, p: any) => {
           acc[p.id] = p.full_name || "Anonymous";
           return acc;
-        }, {});
+        }, {} as Record<string, string>);
       }
     } else {
       console.log("No user IDs to fetch profiles for");
