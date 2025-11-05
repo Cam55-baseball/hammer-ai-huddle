@@ -40,18 +40,20 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchWeather = async (searchLocation?: string) => {
     try {
       setLoading(true);
+      setError(null);
       let locationToFetch = searchLocation || location;
       
       // Try geolocation if no location is set
       if (!locationToFetch && navigator.geolocation) {
         try {
           const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
           });
           locationToFetch = `${position.coords.latitude},${position.coords.longitude}`;
         } catch {
@@ -67,15 +69,21 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
 
       if (error) throw error;
 
+      if (!data) {
+        throw new Error("No weather data received");
+      }
+
       setWeather(data);
       if (!searchLocation && locationToFetch !== location) {
         setLocation(locationToFetch);
       }
     } catch (error: any) {
       console.error("Error fetching weather:", error);
+      const errorMessage = error.message || "Failed to fetch weather data";
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: error.message || "Failed to fetch weather data",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -147,6 +155,25 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             <Search className="h-4 w-4" />
           </Button>
         </div>
+
+        {error && !weather && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-center space-y-3">
+            <p className="text-sm text-destructive font-medium">{error}</p>
+            <Button onClick={() => fetchWeather()} variant="outline" size="sm">
+              <Search className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {!weather && !loading && !error && (
+          <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
+            <MapPin className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Enter a location above to view weather conditions
+            </p>
+          </div>
+        )}
 
         {weather && (
           <div className="space-y-4">
