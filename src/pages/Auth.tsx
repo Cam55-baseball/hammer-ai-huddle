@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Info } from "lucide-react";
 import { z } from "zod";
 import { branding } from "@/branding";
 
@@ -271,6 +272,17 @@ const Auth = () => {
                     Forgot password?
                   </button>
                 )}
+              </div>
+            )}
+
+            {!isLogin && !isForgotPassword && (
+              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Your data is never shared without your consent, and we employ robust security measures to protect it.
+                  </p>
+                </div>
               </div>
             )}
 
