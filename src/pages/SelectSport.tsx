@@ -35,9 +35,9 @@ const SelectSport = () => {
             Choose the sport you want to analyze and improve
           </p>
           <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Sport</span>
+            <span className="bg-muted px-3 py-1 rounded-full">Role</span>
             <span>→</span>
-            <span>Role</span>
+            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Sport</span>
             <span>→</span>
             <span>Module</span>
           </div>

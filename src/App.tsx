@@ -49,7 +49,7 @@ const App = () => (
           <Route path="/scout-application" element={<ScoutApplication />} />
           <Route path="/scout-application-pending" element={<ScoutApplicationPending />} />
           <Route path="/select-sport" element={<SelectSport />} />
-            <Route path="/select-role" element={<SelectRole />} />
+            {/* SelectRole is deprecated - use SelectUserRole instead */}
             <Route path="/select-modules" element={<SelectModules />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/checkout" element={<Checkout />} />

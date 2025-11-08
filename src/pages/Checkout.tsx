@@ -53,7 +53,8 @@ const Checkout = () => {
       return;
     }
 
-    const status = searchParams.get('status');
+    // Check for both 'status' (new) and 'checkout' (old) parameters for backward compatibility
+    const status = searchParams.get('status') || searchParams.get('checkout');
     if (status === 'success') {
       console.log('Checkout: Payment successful');
       toast({
@@ -85,7 +86,7 @@ const Checkout = () => {
       }, 2000);
       
       return () => clearInterval(pollInterval);
-    } else if (status === 'cancel') {
+    } else if (status === 'cancel' || status === 'cancelled') {
       console.log('Checkout: Payment cancelled');
       toast({
         title: "Payment Cancelled",
@@ -108,6 +109,29 @@ const Checkout = () => {
     setCheckoutLoading(true);
 
     try {
+      // Refresh session to ensure valid token before checkout
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (!sessionData.session || sessionError) {
+        console.log('Checkout: Session invalid, attempting refresh...');
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
+          toast({
+            title: "Session Expired",
+            description: "Please log in again to continue.",
+            variant: "destructive",
+          });
+          navigate("/auth", { 
+            state: { 
+              returnTo: '/checkout',
+              module: selectedModule,
+              sport: selectedSport
+            }
+          });
+          return;
+        }
+      }
+
       if (isOwner || isAdmin) {
         toast({
           title: "Full Access Granted",
@@ -130,13 +154,19 @@ const Checkout = () => {
         window.open(data.url, '_blank');
         toast({
           title: "Opening Checkout",
-          description: "Complete your payment in the new tab.",
+          description: "Complete your payment in the new tab. This page will update automatically after payment.",
         });
+      } else {
+        throw new Error("No checkout URL received");
       }
     } catch (error: any) {
+      console.error('Checkout error:', error);
+      const errorMsg = error.message || "Failed to create checkout session";
       toast({
         title: "Checkout Failed",
-        description: error.message || "Failed to create checkout session",
+        description: errorMsg.includes('Auth session missing') 
+          ? "Your session expired. Please refresh the page and try again."
+          : errorMsg,
         variant: "destructive",
       });
     } finally {
