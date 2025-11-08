@@ -16,7 +16,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { user, loading: authLoading } = useAuth();
+  const { user, session, loading: authLoading } = useAuth();
   const { modules: subscribedModules, refetch, loading: subLoading } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isAdmin, loading: adminLoading } = useAdminAccess();
@@ -56,23 +56,68 @@ const Checkout = () => {
     // Check for both 'status' (new) and 'checkout' (old) parameters for backward compatibility
     const status = searchParams.get('status') || searchParams.get('checkout');
     if (status === 'success') {
-      console.log('Checkout: Payment successful, redirecting to dashboard');
+      console.log('Checkout: Payment successful, verifying session...');
+      
+      // Show loading state while verifying session
       toast({
         title: "Payment Successful!",
-        description: "Redirecting to your dashboard...",
+        description: "Verifying your session...",
       });
       
-      // Trigger immediate refetch (async, don't wait)
-      refetch();
+      // Wait for auth to stabilize (max 3 seconds)
+      let attempts = 0;
+      const maxAttempts = 15; // 3 seconds (15 * 200ms)
       
-      // Redirect immediately
-      if (isAddMode) {
-        navigate("/dashboard", { replace: true });
-      } else {
-        navigate("/profile-setup", { replace: true });
-      }
+      const verifyAndRedirect = setInterval(() => {
+        attempts++;
+        
+        // Check if user is authenticated
+        if (user && session) {
+          clearInterval(verifyAndRedirect);
+          console.log('Checkout: Session verified, redirecting to dashboard');
+          
+          toast({
+            title: "Payment Successful!",
+            description: "Redirecting to your dashboard...",
+          });
+          
+          // Trigger immediate refetch
+          refetch();
+          
+          // Redirect to appropriate page
+          if (isAddMode) {
+            navigate("/dashboard", { replace: true });
+          } else {
+            navigate("/profile-setup", { replace: true });
+          }
+          
+          return;
+        }
+        
+        // Timeout after max attempts
+        if (attempts >= maxAttempts) {
+          clearInterval(verifyAndRedirect);
+          console.log('Checkout: Session verification timeout, redirecting anyway');
+          
+          toast({
+            title: "Payment Successful!",
+            description: "Redirecting to your dashboard...",
+          });
+          
+          // Trigger refetch
+          refetch();
+          
+          // Redirect anyway
+          if (isAddMode) {
+            navigate("/dashboard", { replace: true });
+          } else {
+            navigate("/profile-setup", { replace: true });
+          }
+        }
+      }, 200); // Check every 200ms
       
-      return;
+      // Clean up interval on unmount
+      return () => clearInterval(verifyAndRedirect);
     } else if (status === 'cancel' || status === 'cancelled') {
       console.log('Checkout: Payment cancelled');
       toast({
