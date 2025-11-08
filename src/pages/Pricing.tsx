@@ -12,7 +12,7 @@ const Pricing = () => {
   const { user, loading: authLoading } = useAuth();
   const state = location.state as { role?: string; sport?: string; module?: string; mode?: 'add' | 'new' };
   
-  const selectedRole = state?.role || localStorage.getItem('selectedRole');
+  const selectedRole = state?.role || localStorage.getItem('selectedRole') || localStorage.getItem('userRole');
   const selectedSport = state?.sport || localStorage.getItem('pendingSport') || localStorage.getItem('selectedSport') || 'baseball';
   const selectedModule = state?.module || localStorage.getItem('pendingModule') || localStorage.getItem('selectedModule');
   const isAddMode = state?.mode === 'add';
@@ -36,7 +36,7 @@ const Pricing = () => {
       return;
     }
     
-    if (!isAddMode && (!selectedRole || !selectedSport || !selectedModule)) {
+    if (!isAddMode && (!selectedSport || !selectedModule)) {
       navigate("/select-sport");
       return;
     }
@@ -140,7 +140,7 @@ const Pricing = () => {
         </div>
 
         <div className="text-center mt-6">
-          <Button variant="ghost" onClick={() => isAddMode ? navigate("/dashboard") : navigate("/select-modules", { state: { role: selectedRole, sport: selectedSport } })}>
+          <Button variant="ghost" onClick={() => isAddMode ? navigate("/dashboard") : navigate("/select-modules", { state: { role: selectedRole || localStorage.getItem('userRole') || undefined, sport: selectedSport } })}>
             ← Back
           </Button>
         </div>

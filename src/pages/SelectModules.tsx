@@ -18,7 +18,7 @@ const SelectModules = () => {
   const { modules: subscribedModules, loading: subscriptionLoading } = useSubscription();
   const state = location.state as { role?: string; sport?: string; mode?: 'add' };
   
-  const userRole = localStorage.getItem('userRole');
+  const userRole = localStorage.getItem('userRole') || localStorage.getItem('selectedRole');
   const selectedSport = state?.sport || localStorage.getItem('selectedSport');
   const isAddMode = state?.mode === 'add';
   
@@ -83,7 +83,8 @@ const SelectModules = () => {
           state: { 
             module: selectedModule,
             sport: selectedSport,
-            mode: 'add'
+            mode: 'add',
+            role: userRole || undefined
           } 
         });
         return;
@@ -126,7 +127,8 @@ const SelectModules = () => {
       navigate("/pricing", { 
         state: { 
           sport: selectedSport, 
-          module: selectedModule 
+          module: selectedModule,
+          role: userRole || undefined
         } 
       });
     } catch (error) {
@@ -136,7 +138,8 @@ const SelectModules = () => {
         state: { 
           sport: selectedSport, 
           module: selectedModule,
-          mode: isAddMode ? 'add' : 'new'
+          mode: isAddMode ? 'add' : 'new',
+          role: userRole || undefined
         } 
       });
     } finally {
