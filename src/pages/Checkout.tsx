@@ -211,11 +211,20 @@ const Checkout = () => {
       if (error) throw error;
 
       if (data?.url) {
-        window.open(data.url, '_blank');
+        // Save state before redirect so we can return properly
+        localStorage.setItem('checkoutReturnUrl', window.location.pathname);
+        localStorage.setItem('checkoutModule', selectedModule);
+        localStorage.setItem('checkoutSport', selectedSport);
+        
         toast({
-          title: "Opening Checkout",
-          description: "Complete your payment in the new tab. This page will update automatically after payment.",
+          title: "Redirecting to Checkout",
+          description: "You'll be redirected to complete your payment...",
         });
+        
+        // Small delay to let toast show, then redirect
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 500);
       } else {
         throw new Error("No checkout URL received");
       }
