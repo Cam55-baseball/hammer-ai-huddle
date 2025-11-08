@@ -532,15 +532,40 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      retention_status: {
+        Row: {
+          newest_record: string | null
+          oldest_record: string | null
+          records_to_clean: number | null
+          table_name: string | null
+          total_records: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      archive_old_scout_applications: { Args: never; Returns: undefined }
+      cleanup_old_webhook_events: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      manual_archive_scout_applications: {
+        Args: never
+        Returns: {
+          archived_count: number
+          cutoff_date: string
+        }[]
+      }
+      manual_cleanup_webhooks: {
+        Args: never
+        Returns: {
+          cutoff_date: string
+          deleted_count: number
+        }[]
       }
       user_has_role: {
         Args: {
