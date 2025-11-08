@@ -56,36 +56,23 @@ const Checkout = () => {
     // Check for both 'status' (new) and 'checkout' (old) parameters for backward compatibility
     const status = searchParams.get('status') || searchParams.get('checkout');
     if (status === 'success') {
-      console.log('Checkout: Payment successful');
+      console.log('Checkout: Payment successful, redirecting to dashboard');
       toast({
         title: "Payment Successful!",
-        description: "Setting up your subscription...",
+        description: "Redirecting to your dashboard...",
       });
       
-      let pollCount = 0;
-      const maxPolls = 10;
-      const pollInterval = setInterval(async () => {
-        console.log(`Checkout: Polling subscription (${pollCount + 1}/${maxPolls})...`);
-        await refetch();
-        pollCount++;
-        
-        if (pollCount >= maxPolls) {
-          clearInterval(pollInterval);
-          console.log('Checkout: Max polls reached');
-          toast({
-            title: "Subscription Active",
-            description: "Your module is now available!",
-          });
-          
-          if (isAddMode) {
-            navigate("/dashboard", { replace: true });
-          } else {
-            navigate("/profile-setup", { replace: true });
-          }
-        }
-      }, 2000);
+      // Trigger immediate refetch (async, don't wait)
+      refetch();
       
-      return () => clearInterval(pollInterval);
+      // Redirect immediately
+      if (isAddMode) {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/profile-setup", { replace: true });
+      }
+      
+      return;
     } else if (status === 'cancel' || status === 'cancelled') {
       console.log('Checkout: Payment cancelled');
       toast({
