@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 
 const SelectSport = () => {
   const navigate = useNavigate();
-  const userRole = localStorage.getItem('userRole');
+  const userRole = localStorage.getItem('userRole') || localStorage.getItem('selectedRole');
 
   useEffect(() => {
     if (!userRole) {
