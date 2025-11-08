@@ -218,9 +218,8 @@ const ProfileSetup = () => {
         if (progressError) throw progressError;
       }
 
-      // Clear localStorage
+      // Clear localStorage (keep selectedSport for consistency)
       localStorage.removeItem('selectedRole');
-      localStorage.removeItem('selectedSport');
       localStorage.removeItem('selectedModule');
 
       // Show appropriate message based on role

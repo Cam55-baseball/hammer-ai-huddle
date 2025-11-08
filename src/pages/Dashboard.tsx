@@ -29,7 +29,10 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [selectedSport, setSelectedSport] = useState<SportType>(() => {
     const saved = localStorage.getItem('selectedSport');
-    return (saved as SportType) || "baseball";
+    if (saved === 'baseball' || saved === 'softball') {
+      return saved as SportType;
+    }
+    return "baseball";
   });
   const [progress, setProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +50,28 @@ export default function Dashboard() {
     refetch();
     loadProgress();
   }, [authLoading, user, navigate]);
+  
+  // Detect sport from subscribed modules if localStorage is empty
+  useEffect(() => {
+    const saved = localStorage.getItem('selectedSport');
+    if (saved === 'baseball' || saved === 'softball') return;
+    
+    if (subscribedModules.length > 0) {
+      const hasSoftball = subscribedModules.some(m => m.startsWith('softball_'));
+      const hasBaseball = subscribedModules.some(m => m.startsWith('baseball_'));
+      
+      if (hasSoftball && !hasBaseball) {
+        setSelectedSport('softball');
+        localStorage.setItem('selectedSport', 'softball');
+      } else if (hasBaseball && !hasSoftball) {
+        setSelectedSport('baseball');
+        localStorage.setItem('selectedSport', 'baseball');
+      } else if (hasSoftball) {
+        setSelectedSport('softball');
+        localStorage.setItem('selectedSport', 'softball');
+      }
+    }
+  }, [subscribedModules]);
   
   // Module activation notification system
   useEffect(() => {

@@ -363,11 +363,27 @@ export default function Profile() {
   };
 
   const handleAddModules = () => {
-    const currentSport = localStorage.getItem('selectedSport') || 'baseball';
+    let currentSport = localStorage.getItem('selectedSport');
+    
+    if (!currentSport || (currentSport !== 'baseball' && currentSport !== 'softball')) {
+      const hasSoftball = subscribedModules.some(m => m.startsWith('softball_'));
+      const hasBaseball = subscribedModules.some(m => m.startsWith('baseball_'));
+      
+      if (hasSoftball && !hasBaseball) {
+        currentSport = 'softball';
+      } else if (hasBaseball || !hasSoftball) {
+        currentSport = 'baseball';
+      }
+      
+      if (currentSport) {
+        localStorage.setItem('selectedSport', currentSport);
+      }
+    }
+    
     navigate('/select-modules', { 
       state: { 
         mode: 'add',
-        sport: currentSport 
+        sport: currentSport || 'baseball'
       } 
     });
   };
