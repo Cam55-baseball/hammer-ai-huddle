@@ -28,7 +28,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.ai-chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-weather]
 verify_jwt = false

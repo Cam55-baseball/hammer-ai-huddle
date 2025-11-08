@@ -1,10 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.0";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const requestSchema = z.object({
+  player_id: z.string().uuid("Invalid player ID format"),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -40,11 +45,9 @@ serve(async (req) => {
       throw new Error("User is not a scout");
     }
 
-    const { player_id } = await req.json();
-
-    if (!player_id) {
-      throw new Error("player_id is required");
-    }
+    // Validate input
+    const body = await req.json();
+    const { player_id } = requestSchema.parse(body);
 
     // Check if player exists
     const { data: playerProfile } = await supabase

@@ -1,7 +1,16 @@
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const requestSchema = z.object({
+  videoId: z.string().uuid("Invalid video ID format"),
+  module: z.enum(["hitting", "pitching", "throwing"], { errorMap: () => ({ message: "Invalid module" }) }),
+  sport: z.enum(["baseball", "softball"], { errorMap: () => ({ message: "Invalid sport" }) }),
+  userId: z.string().uuid("Invalid user ID format"),
+});
 
 // Module-specific system prompts
 const getSystemPrompt = (module: string, sport: string) => {
@@ -143,7 +152,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { videoId, module, sport, userId } = await req.json();
+    // Validate input
+    const body = await req.json();
+    const { videoId, module, sport, userId } = requestSchema.parse(body);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -376,6 +388,18 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("analyze-video error:", error);
+    
+    // Return validation errors with 400 status
+    if (error instanceof z.ZodError) {
+      return new Response(
+        JSON.stringify({ error: "Validation error", details: error.errors }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+    
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error", status: 500 }),
       {

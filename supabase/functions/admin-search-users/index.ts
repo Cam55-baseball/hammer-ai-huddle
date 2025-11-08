@@ -1,10 +1,15 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const requestSchema = z.object({
+  searchQuery: z.string().trim().max(500, "Search query must be less than 500 characters").optional(),
+});
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -45,7 +50,9 @@ serve(async (req) => {
 
     logStep("Owner verified", { userId: user.id });
 
-    const { searchQuery } = await req.json();
+    // Validate input
+    const body = await req.json();
+    const { searchQuery } = requestSchema.parse(body);
     logStep("Search query received", { searchQuery });
 
     // Get all profiles first
@@ -128,6 +135,15 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
+    // Return validation errors with 400 status
+    if (error instanceof z.ZodError) {
+      logStep("Validation error", { errors: error.errors });
+      return new Response(JSON.stringify({ error: "Validation error", details: error.errors }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+    
     // Normalize Supabase/PostgREST errors to readable JSON
     const normalized =
       error && typeof error === "object"

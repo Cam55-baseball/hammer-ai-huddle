@@ -1,9 +1,17 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const requestSchema = z.object({
+  sessionId: z.string().uuid("Invalid session ID format"),
+  title: z.string().trim().max(200, "Title must be less than 200 characters").optional(),
+  notes: z.string().trim().max(5000, "Notes must be less than 5000 characters").optional(),
+  sharedWithScouts: z.boolean().optional(),
+});
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -29,7 +37,9 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { sessionId, title, notes, sharedWithScouts } = await req.json();
+    // Validate input
+    const body = await req.json();
+    const { sessionId, title, notes, sharedWithScouts } = requestSchema.parse(body);
 
     console.log('[update-library-session] Request:', { sessionId, userId: user.id });
 
@@ -86,6 +96,15 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('[update-library-session] Error:', error);
+    
+    // Return validation errors with 400 status
+    if (error instanceof z.ZodError) {
+      return new Response(
+        JSON.stringify({ error: "Validation error", details: error.errors }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

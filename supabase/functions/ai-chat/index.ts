@@ -12,76 +12,83 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, userId } = await req.json();
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    // Authenticate user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header");
+    }
+
+    const supabase = createClient(supabaseUrl!, supabaseKey!);
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      throw new Error("Unauthorized");
+    }
+
+    const { messages } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Messages array is required");
     }
+
+    // Use authenticated userId instead of accepting from request
+    const userId = user.id;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
     // Fetch owner's profile to get coaching philosophy
     let ownerBio = "";
     let ownerName = "Coach";
 
-    if (supabaseUrl && supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: ownerRole } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "owner")
+      .maybeSingle();
 
-      const { data: ownerRole } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "owner")
-        .maybeSingle();
+    if (ownerRole) {
+      const { data: ownerProfile } = await supabase
+        .from("profiles")
+        .select("full_name, bio")
+        .eq("id", ownerRole.user_id)
+        .single();
 
-      if (ownerRole) {
-        const { data: ownerProfile } = await supabase
-          .from("profiles")
-          .select("full_name, bio")
-          .eq("id", ownerRole.user_id)
-          .single();
-
-        if (ownerProfile) {
-          ownerName = ownerProfile.full_name || "Coach";
-          ownerBio = ownerProfile.bio || "";
-        }
+      if (ownerProfile) {
+        ownerName = ownerProfile.full_name || "Coach";
+        ownerBio = ownerProfile.bio || "";
       }
     }
 
-    // Get user context if userId is provided
+    // Get user context for authenticated user
     let userContext = "";
-    if (userId) {      
-      if (supabaseUrl && supabaseKey) {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        
-        const { data: subscription } = await supabase
-          .from("subscriptions")
-          .select("subscribed_modules")
-          .eq("user_id", userId)
-          .single();
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("subscribed_modules")
+      .eq("user_id", userId)
+      .single();
 
-        const { data: progress } = await supabase
-          .from("user_progress")
-          .select("*")
-          .eq("user_id", userId);
+    const { data: progress } = await supabase
+      .from("user_progress")
+      .select("*")
+      .eq("user_id", userId);
 
-        if (subscription || progress) {
-          userContext = `\n\nUser Context:\n`;
-          if (subscription?.subscribed_modules) {
-            userContext += `Active Modules: ${subscription.subscribed_modules.join(", ")}\n`;
-          }
-          if (progress && progress.length > 0) {
-            userContext += `Progress:\n`;
-            progress.forEach((p: any) => {
-              userContext += `- ${p.sport} ${p.module}: ${p.videos_analyzed} videos, avg score: ${p.average_efficiency_score || "N/A"}\n`;
-            });
-          }
-        }
+    if (subscription || progress) {
+      userContext = `\n\nUser Context:\n`;
+      if (subscription?.subscribed_modules) {
+        userContext += `Active Modules: ${subscription.subscribed_modules.join(", ")}\n`;
+      }
+      if (progress && progress.length > 0) {
+        userContext += `Progress:\n`;
+        progress.forEach((p: any) => {
+          userContext += `- ${p.sport} ${p.module}: ${p.videos_analyzed} videos, avg score: ${p.average_efficiency_score || "N/A"}\n`;
+        });
       }
     }
 

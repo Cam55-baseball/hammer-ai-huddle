@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -9,19 +10,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const requestSchema = z.object({
+  action: z.enum(["pause", "cancel"], { errorMap: () => ({ message: "Action must be 'pause' or 'cancel'" }) }),
+  feedback: z.string().trim().min(1, "Feedback is required").max(2000, "Feedback must be less than 2000 characters"),
+  userName: z.string().trim().max(200, "Name must be less than 200 characters"),
+  userEmail: z.string().email("Invalid email format").max(255, "Email must be less than 255 characters"),
+  userId: z.string().uuid("Invalid user ID format"),
+  modules: z.array(z.string()).max(50, "Too many modules specified"),
+});
+
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[SUBSCRIPTION-FEEDBACK] ${step}${detailsStr}`);
 };
-
-interface FeedbackRequest {
-  action: 'pause' | 'cancel';
-  feedback: string;
-  userName: string;
-  userEmail: string;
-  userId: string;
-  modules: string[];
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -48,7 +49,9 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { action, feedback, userName, userEmail, userId, modules }: FeedbackRequest = await req.json();
+    // Validate input
+    const body = await req.json();
+    const { action, feedback, userName, userEmail, userId, modules } = requestSchema.parse(body);
     logStep("Feedback data received", { action, userName });
 
     // Get owner's email from user_roles table
@@ -124,6 +127,15 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
+    // Return validation errors with 400 status
+    if (error instanceof z.ZodError) {
+      logStep("Validation error", { errors: error.errors });
+      return new Response(JSON.stringify({ error: "Validation error", details: error.errors }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+    
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in send-subscription-feedback", { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
