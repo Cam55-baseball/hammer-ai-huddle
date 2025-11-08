@@ -93,12 +93,16 @@ const Checkout = () => {
           // Trigger immediate refetch
           refetch();
           
-          // Redirect to appropriate page
-          if (isAddMode) {
-            navigate("/dashboard", { replace: true });
-          } else {
-            navigate("/profile-setup", { replace: true });
-          }
+          // Redirect to sign-in page with success message
+          navigate("/auth", { 
+            replace: true,
+            state: {
+              fromPayment: true,
+              message: "Payment successful! Please sign in to access your new module.",
+              module: selectedModule,
+              sport: selectedSport
+            }
+          });
           
           return;
         }
@@ -125,12 +129,16 @@ const Checkout = () => {
           // Trigger refetch
           refetch();
           
-          // Redirect anyway
-          if (isAddMode) {
-            navigate("/dashboard", { replace: true });
-          } else {
-            navigate("/profile-setup", { replace: true });
-          }
+          // Redirect to sign-in page
+          navigate("/auth", { 
+            replace: true,
+            state: {
+              fromPayment: true,
+              message: "Payment successful! Please sign in to access your new module.",
+              module: selectedModule,
+              sport: selectedSport
+            }
+          });
         }
       }, 200); // Check every 200ms
       
@@ -266,6 +274,12 @@ const Checkout = () => {
             <p className="text-sm text-blue-800 dark:text-blue-200">
               💡 <strong>Have a promo code?</strong> You'll be able to apply it during checkout. 
               Discounts (including 100% off codes) will be reflected in your final billing.
+            </p>
+          </div>
+
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              📌 <strong>Important:</strong> After purchasing your module, you'll be redirected to sign back in to your account to access your modules.
             </p>
           </div>
 

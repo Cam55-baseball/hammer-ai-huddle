@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 import { branding } from "@/branding";
 
@@ -38,6 +39,8 @@ const Auth = () => {
     returnTo?: string;
     module?: string;
     mode?: string;
+    fromPayment?: boolean;
+    message?: string;
   };
 
   useEffect(() => {
@@ -224,6 +227,15 @@ const Auth = () => {
                 : "Join Hammers Modality today"}
             </p>
           </div>
+
+          {state?.fromPayment && (
+            <Alert className="mb-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800 dark:text-green-200">
+                {state.message}
+              </AlertDescription>
+            </Alert>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && !isForgotPassword && (
