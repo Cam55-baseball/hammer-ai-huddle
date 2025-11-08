@@ -32,6 +32,10 @@ export const useSubscription = () => {
     has_discount: false,
     discount_percent: null,
   });
+  
+  const [prevModules, setPrevModules] = useState<string[]>([]);
+  const [onChangeCallbacks, setOnChangeCallbacks] = useState<((newModules: string[]) => void)[]>([]);
+  const [fastPolling, setFastPolling] = useState(false);
 
   const hasModuleForSport = useCallback((module: string, sport: string) => {
     const key = `${sport}_${module}`;
@@ -96,9 +100,11 @@ export const useSubscription = () => {
       }
 
       if (!error && data) {
+        const newModules = data.modules || [];
+        
         setSubscriptionData({
           subscribed: data.subscribed || false,
-          modules: data.modules || [],
+          modules: newModules,
           module_details: data.module_details || {},
           subscription_end: data.subscription_end || null,
           loading: false,
@@ -106,6 +112,13 @@ export const useSubscription = () => {
           has_discount: data.has_discount || false,
           discount_percent: data.discount_percent || null,
         });
+        
+        // Detect module changes and trigger callbacks
+        if (prevModules.length > 0 && newModules.length > prevModules.length) {
+          console.log('[useSubscription] New modules detected:', newModules);
+          onChangeCallbacks.forEach(callback => callback(newModules));
+        }
+        setPrevModules(newModules);
       } else {
         console.error('Error fetching subscription:', error);
         
@@ -190,15 +203,28 @@ export const useSubscription = () => {
   useEffect(() => {
     checkSubscription(false);
     
-    // Silent refresh every minute
+    // Dynamic polling: 5 seconds when fast polling, 60 seconds normally
+    const pollingInterval = fastPolling ? 5000 : 60000;
     const interval = setInterval(() => {
       checkSubscription(true);
-    }, 60000);
+    }, pollingInterval);
 
     return () => clearInterval(interval);
-  }, [checkSubscription]);
+  }, [checkSubscription, fastPolling]);
 
   const refetch = () => checkSubscription(false);
+  
+  const onModulesChange = useCallback((callback: (newModules: string[]) => void) => {
+    setOnChangeCallbacks(prev => [...prev, callback]);
+    return () => {
+      setOnChangeCallbacks(prev => prev.filter(cb => cb !== callback));
+    };
+  }, []);
+  
+  const enableFastPolling = useCallback((enabled: boolean) => {
+    console.log('[useSubscription] Fast polling:', enabled ? 'enabled' : 'disabled');
+    setFastPolling(enabled);
+  }, []);
 
   return { 
     ...subscriptionData, 
@@ -207,6 +233,8 @@ export const useSubscription = () => {
     hasAccessForSport,
     getModuleDetails,
     getModuleStatus,
-    hasPendingCancellation
+    hasPendingCancellation,
+    onModulesChange,
+    enableFastPolling
   };
 };

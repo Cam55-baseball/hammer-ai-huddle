@@ -23,7 +23,7 @@ type SportType = "baseball" | "softball";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
-  const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails } = useSubscription();
+  const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
@@ -47,6 +47,76 @@ export default function Dashboard() {
     refetch();
     loadProgress();
   }, [authLoading, user, navigate]);
+  
+  // Module activation notification system
+  useEffect(() => {
+    // Check if we're waiting for a new module activation
+    const pendingActivation = localStorage.getItem('pendingModuleActivation');
+    if (!pendingActivation) return;
+    
+    try {
+      const { module, sport, timestamp } = JSON.parse(pendingActivation);
+      const elapsed = Date.now() - timestamp;
+      
+      // Only track for up to 5 minutes after payment
+      if (elapsed > 5 * 60 * 1000) {
+        localStorage.removeItem('pendingModuleActivation');
+        return;
+      }
+      
+      // Enable fast polling (5 second intervals)
+      enableFastPolling(true);
+      console.log('[Dashboard] Watching for module activation:', `${sport}_${module}`);
+      
+      // Set up module detection
+      const expectedKey = `${sport}_${module}`;
+      
+      // Check if module already exists
+      if (subscribedModules.includes(expectedKey)) {
+        console.log('[Dashboard] Module already active:', expectedKey);
+        toast.success("🎉 Module Activated!", {
+          description: `Your ${module} module is now ready to use!`,
+          duration: 8000,
+        });
+        localStorage.removeItem('pendingModuleActivation');
+        // Disable fast polling after detection
+        setTimeout(() => enableFastPolling(false), 1000);
+        return;
+      }
+      
+      // Subscribe to module changes
+      const unsubscribe = onModulesChange((newModules) => {
+        if (newModules.includes(expectedKey)) {
+          console.log('[Dashboard] New module detected:', expectedKey);
+          toast.success("🎉 Module Activated!", {
+            description: `Your ${module} module is now ready to use! Click any module to start analyzing.`,
+            duration: 10000,
+          });
+          localStorage.removeItem('pendingModuleActivation');
+          // Disable fast polling after detection
+          setTimeout(() => enableFastPolling(false), 1000);
+          unsubscribe();
+        }
+      });
+      
+      // Timeout after 5 minutes
+      const timeout = setTimeout(() => {
+        console.log('[Dashboard] Module activation timeout, stopping watch');
+        localStorage.removeItem('pendingModuleActivation');
+        enableFastPolling(false);
+        unsubscribe();
+      }, 5 * 60 * 1000);
+      
+      return () => {
+        clearTimeout(timeout);
+        unsubscribe();
+        enableFastPolling(false);
+      };
+    } catch (error) {
+      console.error('[Dashboard] Error parsing pending activation:', error);
+      localStorage.removeItem('pendingModuleActivation');
+    }
+  }, [subscribedModules, enableFastPolling, onModulesChange]);
 
   const loadProgress = async () => {
     try {

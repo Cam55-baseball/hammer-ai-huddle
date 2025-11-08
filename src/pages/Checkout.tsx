@@ -81,6 +81,15 @@ const Checkout = () => {
             description: "Redirecting to your dashboard...",
           });
           
+          // Store pending module activation for notification system
+          if (isAddMode && selectedModule && selectedSport) {
+            localStorage.setItem('pendingModuleActivation', JSON.stringify({
+              module: selectedModule,
+              sport: selectedSport,
+              timestamp: Date.now()
+            }));
+          }
+          
           // Trigger immediate refetch
           refetch();
           
@@ -104,6 +113,15 @@ const Checkout = () => {
             description: "Redirecting to your dashboard...",
           });
           
+          // Store pending module activation for notification system
+          if (isAddMode && selectedModule && selectedSport) {
+            localStorage.setItem('pendingModuleActivation', JSON.stringify({
+              module: selectedModule,
+              sport: selectedSport,
+              timestamp: Date.now()
+            }));
+          }
+          
           // Trigger refetch
           refetch();
           
@@ -120,6 +138,8 @@ const Checkout = () => {
       return () => clearInterval(verifyAndRedirect);
     } else if (status === 'cancel' || status === 'cancelled') {
       console.log('Checkout: Payment cancelled');
+      // Clear any pending module activation
+      localStorage.removeItem('pendingModuleActivation');
       toast({
         title: "Payment Cancelled",
         description: "Your payment was cancelled. You can try again anytime.",
