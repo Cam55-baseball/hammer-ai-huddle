@@ -163,15 +163,29 @@ export default function AnalyzeVideo() {
       // Generate and upload thumbnail
       let thumbnailUrl: string | null = null;
       try {
-        console.log('Generating thumbnail from video...');
-        const thumbnailBlob = await generateVideoThumbnail(videoFile, 0);
-        console.log('Thumbnail generated, uploading...');
+        console.log('=== THUMBNAIL GENERATION START ===');
+        console.log('Video file:', {
+          name: videoFile.name,
+          size: videoFile.size,
+          type: videoFile.type
+        });
+        
+        const thumbnailBlob = await generateVideoThumbnail(videoFile, 0.1);
+        console.log('Thumbnail generated successfully, uploading...');
+        
         thumbnailUrl = await uploadVideoThumbnail(thumbnailBlob, user.id, fileName);
-        console.log('Thumbnail uploaded:', thumbnailUrl);
-      } catch (thumbnailError) {
-        console.error('Error generating/uploading thumbnail:', thumbnailError);
-        // Don't fail the entire upload if thumbnail generation fails
-        toast.error('Failed to generate thumbnail, but video was uploaded successfully');
+        console.log('Thumbnail uploaded successfully:', thumbnailUrl);
+        console.log('=== THUMBNAIL GENERATION SUCCESS ===');
+      } catch (thumbnailError: any) {
+        console.error('=== THUMBNAIL GENERATION FAILED ===');
+        console.error('Error details:', thumbnailError);
+        console.error('Error message:', thumbnailError.message);
+        console.error('Error stack:', thumbnailError.stack);
+        
+        // Show detailed error to user
+        toast.error(`Thumbnail generation failed: ${thumbnailError.message || 'Unknown error'}`, {
+          duration: 5000
+        });
       }
 
       // Create video record with appropriate status
