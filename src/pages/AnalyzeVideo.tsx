@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
 import { branding } from "@/branding";
+import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 
 export default function AnalyzeVideo() {
   const { module } = useParams<{ module: string }>();
@@ -159,6 +160,20 @@ export default function AnalyzeVideo() {
         .from('videos')
         .getPublicUrl(fileName);
 
+      // Generate and upload thumbnail
+      let thumbnailUrl: string | null = null;
+      try {
+        console.log('Generating thumbnail from video...');
+        const thumbnailBlob = await generateVideoThumbnail(videoFile, 0);
+        console.log('Thumbnail generated, uploading...');
+        thumbnailUrl = await uploadVideoThumbnail(thumbnailBlob, user.id, fileName);
+        console.log('Thumbnail uploaded:', thumbnailUrl);
+      } catch (thumbnailError) {
+        console.error('Error generating/uploading thumbnail:', thumbnailError);
+        // Don't fail the entire upload if thumbnail generation fails
+        toast.error('Failed to generate thumbnail, but video was uploaded successfully');
+      }
+
       // Create video record with appropriate status
       const { data: videoData, error: videoError } = await supabase
         .from("videos")
@@ -167,6 +182,7 @@ export default function AnalyzeVideo() {
           sport: sport as "baseball" | "softball",
           module: module as "hitting" | "pitching" | "throwing",
           video_url: publicUrl,
+          thumbnail_url: thumbnailUrl,
           status: analysisEnabled ? "uploading" : "completed",
         }])
         .select()
