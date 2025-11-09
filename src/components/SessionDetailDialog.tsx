@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -36,6 +36,36 @@ export function SessionDetailDialog({
   const [notes, setNotes] = useState(session.library_notes || '');
   const [sharedWithScouts, setSharedWithScouts] = useState(session.shared_with_scouts || false);
   const [saving, setSaving] = useState(false);
+
+  // Sync state when session changes
+  useEffect(() => {
+    setSharedWithScouts(session.shared_with_scouts || false);
+  }, [session.shared_with_scouts]);
+
+  const handleToggleShare = async (checked: boolean) => {
+    try {
+      setSharedWithScouts(checked);
+      
+      const { error } = await supabase.functions.invoke('update-library-session', {
+        body: {
+          sessionId: session.id,
+          title: session.library_title,
+          notes: session.library_notes,
+          sharedWithScouts: checked,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(checked ? 'Shared with scouts' : 'Unshared from scouts');
+      onUpdate();
+    } catch (error: any) {
+      console.error('Error toggling share:', error);
+      toast.error(error.message || 'Failed to update sharing');
+      // Revert on error
+      setSharedWithScouts(!checked);
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -123,8 +153,7 @@ export function SessionDetailDialog({
               <Switch
                 id="share-toggle"
                 checked={sharedWithScouts}
-                onCheckedChange={setSharedWithScouts}
-                disabled={!isEditing}
+                onCheckedChange={handleToggleShare}
               />
             </div>
           )}
