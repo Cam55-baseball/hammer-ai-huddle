@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadCustomThumbnail } from '@/lib/uploadHelpers';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { Upload, X } from 'lucide-react';
 
 interface SessionDetailDialogProps {
   session: any;
@@ -37,6 +39,41 @@ export function SessionDetailDialog({
   const [sharedWithScouts, setSharedWithScouts] = useState(session.shared_with_scouts || false);
   const [analysisPublic, setAnalysisPublic] = useState(session.analysis_public || false);
   const [saving, setSaving] = useState(false);
+  const [customThumbnail, setCustomThumbnail] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a JPG, PNG, or WebP image');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be smaller than 5MB');
+      return;
+    }
+
+    setCustomThumbnail(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setThumbnailPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveThumbnail = () => {
+    setCustomThumbnail(null);
+    setThumbnailPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   // Sync state when session changes
   useEffect(() => {
@@ -98,6 +135,21 @@ export function SessionDetailDialog({
   const handleSave = async () => {
     try {
       setSaving(true);
+
+      let customThumbnailUrl: string | undefined = undefined;
+      if (customThumbnail) {
+        try {
+          customThumbnailUrl = await uploadCustomThumbnail(
+            customThumbnail,
+            session.user_id,
+            session.id
+          );
+        } catch (thumbnailError: any) {
+          console.error('Error uploading thumbnail:', thumbnailError);
+          toast.error(`Failed to upload thumbnail: ${thumbnailError.message}`);
+        }
+      }
+
       const { error } = await supabase.functions.invoke('update-library-session', {
         body: {
           sessionId: session.id,
@@ -108,6 +160,15 @@ export function SessionDetailDialog({
       });
 
       if (error) throw error;
+
+      if (customThumbnailUrl) {
+        const { error: thumbnailError } = await supabase
+          .from('videos')
+          .update({ thumbnail_url: customThumbnailUrl })
+          .eq('id', session.id);
+
+        if (thumbnailError) throw thumbnailError;
+      }
 
       toast.success('Session updated successfully');
       setIsEditing(false);
@@ -173,6 +234,53 @@ export function SessionDetailDialog({
               </p>
             )}
           </div>
+
+          {/* Thumbnail Upload in Edit Mode */}
+          {isEditing && isOwner && (
+            <div className="space-y-2">
+              <Label>Update Cover Image</Label>
+              <p className="text-xs text-muted-foreground">
+                Upload a new cover image for this session
+              </p>
+              
+              {thumbnailPreview ? (
+                <div className="relative">
+                  <img 
+                    src={thumbnailPreview} 
+                    alt="New thumbnail" 
+                    className="w-full h-32 object-cover rounded-md"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={handleRemoveThumbnail}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload New Thumbnail
+                </Button>
+              )}
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={handleThumbnailSelect}
+                className="hidden"
+              />
+            </div>
+          )}
 
           {/* Share Toggle (only for owners) */}
           {isOwner && (

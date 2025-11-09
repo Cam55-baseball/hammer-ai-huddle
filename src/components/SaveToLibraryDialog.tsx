@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadCustomThumbnail } from '@/lib/uploadHelpers';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { BookMarked } from 'lucide-react';
+import { BookMarked, Upload, X } from 'lucide-react';
 
 interface SaveToLibraryDialogProps {
   open: boolean;
@@ -35,10 +36,63 @@ export function SaveToLibraryDialog({
   const [shareWithScouts, setShareWithScouts] = useState(false);
   const [analysisPublic, setAnalysisPublic] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [customThumbnail, setCustomThumbnail] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a JPG, PNG, or WebP image');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be smaller than 5MB');
+      return;
+    }
+
+    setCustomThumbnail(file);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setThumbnailPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveThumbnail = () => {
+    setCustomThumbnail(null);
+    setThumbnailPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSave = async () => {
     try {
       setSaving(true);
+
+      let customThumbnailUrl: string | undefined = undefined;
+      if (customThumbnail) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            customThumbnailUrl = await uploadCustomThumbnail(
+              customThumbnail,
+              user.id,
+              videoId
+            );
+            console.log('Custom thumbnail uploaded:', customThumbnailUrl);
+          }
+        } catch (thumbnailError: any) {
+          console.error('Error uploading thumbnail:', thumbnailError);
+          toast.error(`Failed to upload thumbnail: ${thumbnailError.message}`);
+        }
+      }
 
       const { error } = await supabase.functions.invoke('update-library-session', {
         body: {
@@ -52,13 +106,18 @@ export function SaveToLibraryDialog({
 
       if (error) throw error;
 
-      // Also update the saved_to_library flag
+      const updateData: any = { 
+        saved_to_library: true,
+        session_date: new Date().toISOString()
+      };
+      
+      if (customThumbnailUrl) {
+        updateData.thumbnail_url = customThumbnailUrl;
+      }
+
       const { error: updateError } = await supabase
         .from('videos')
-        .update({ 
-          saved_to_library: true,
-          session_date: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', videoId);
 
       if (updateError) throw updateError;
@@ -105,6 +164,53 @@ export function SaveToLibraryDialog({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add notes about this session..."
               rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Custom Cover Image (Optional)</Label>
+            <p className="text-xs text-muted-foreground">
+              Upload your own cover image if auto-generated thumbnail failed
+            </p>
+            
+            {thumbnailPreview ? (
+              <div className="relative">
+                <img 
+                  src={thumbnailPreview} 
+                  alt="Thumbnail preview" 
+                  className="w-full h-40 object-cover rounded-md"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2"
+                  onClick={handleRemoveThumbnail}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div 
+                className="border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Click to upload thumbnail image
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  JPG, PNG, or WebP (max 5MB)
+                </p>
+              </div>
+            )}
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={handleThumbnailSelect}
+              className="hidden"
             />
           </div>
 
