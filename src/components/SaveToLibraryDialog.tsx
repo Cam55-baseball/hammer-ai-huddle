@@ -33,6 +33,7 @@ export function SaveToLibraryDialog({
   const [title, setTitle] = useState(`${sport} ${module} - ${new Date().toLocaleDateString()}`);
   const [notes, setNotes] = useState('');
   const [shareWithScouts, setShareWithScouts] = useState(false);
+  const [analysisPublic, setAnalysisPublic] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -45,6 +46,7 @@ export function SaveToLibraryDialog({
           title,
           notes,
           sharedWithScouts: shareWithScouts,
+          analysisPublic: analysisPublic,
         },
       });
 
@@ -120,12 +122,28 @@ export function SaveToLibraryDialog({
             />
           </div>
 
+          {shareWithScouts && (
+            <div className="flex items-center justify-between border-t pt-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="analysis-public">Make analysis public?</Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow scouts to view the AI analysis and feedback
+                </p>
+              </div>
+              <Switch
+                id="analysis-public"
+                checked={analysisPublic}
+                onCheckedChange={setAnalysisPublic}
+              />
+            </div>
+          )}
+
           <div className="flex gap-2 justify-end pt-4">
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save to Library'}
+              {saving ? 'Uploading...' : 'Upload to Library'}
             </Button>
           </div>
         </div>

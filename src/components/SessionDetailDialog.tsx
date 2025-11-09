@@ -35,12 +35,14 @@ export function SessionDetailDialog({
   const [title, setTitle] = useState(session.library_title || '');
   const [notes, setNotes] = useState(session.library_notes || '');
   const [sharedWithScouts, setSharedWithScouts] = useState(session.shared_with_scouts || false);
+  const [analysisPublic, setAnalysisPublic] = useState(session.analysis_public || false);
   const [saving, setSaving] = useState(false);
 
   // Sync state when session changes
   useEffect(() => {
     setSharedWithScouts(session.shared_with_scouts || false);
-  }, [session.shared_with_scouts]);
+    setAnalysisPublic(session.analysis_public || false);
+  }, [session.shared_with_scouts, session.analysis_public]);
 
   const handleToggleShare = async (checked: boolean) => {
     try {
@@ -64,6 +66,32 @@ export function SessionDetailDialog({
       toast.error(error.message || 'Failed to update sharing');
       // Revert on error
       setSharedWithScouts(!checked);
+    }
+  };
+
+  const handleToggleAnalysisPublic = async (checked: boolean) => {
+    try {
+      setAnalysisPublic(checked);
+      
+      const { error } = await supabase.functions.invoke('update-library-session', {
+        body: {
+          sessionId: session.id,
+          title: session.library_title,
+          notes: session.library_notes,
+          sharedWithScouts: session.shared_with_scouts,
+          analysisPublic: checked,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(checked ? 'Analysis is now public' : 'Analysis is now private');
+      onUpdate();
+    } catch (error: any) {
+      console.error('Error toggling analysis visibility:', error);
+      toast.error(error.message || 'Failed to update analysis visibility');
+      // Revert on error
+      setAnalysisPublic(!checked);
     }
   };
 
@@ -148,20 +176,33 @@ export function SessionDetailDialog({
 
           {/* Share Toggle (only for owners) */}
           {isOwner && (
-            <div className="flex items-center justify-between">
-              <Label htmlFor="share-toggle">Share with scouts</Label>
-              <Switch
-                id="share-toggle"
-                checked={sharedWithScouts}
-                onCheckedChange={handleToggleShare}
-              />
-            </div>
+            <>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="share-toggle">Share with scouts</Label>
+                <Switch
+                  id="share-toggle"
+                  checked={sharedWithScouts}
+                  onCheckedChange={handleToggleShare}
+                />
+              </div>
+              
+              {sharedWithScouts && (
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="analysis-public-toggle">Make analysis public</Label>
+                  <Switch
+                    id="analysis-public-toggle"
+                    checked={analysisPublic}
+                    onCheckedChange={handleToggleAnalysisPublic}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <Separator />
 
-          {/* AI Analysis */}
-          {aiAnalysis && (
+          {/* AI Analysis - hide from scouts if analysis is private */}
+          {aiAnalysis && (isOwner || analysisPublic) && (
             <div className="space-y-4">
               <h3 className="font-semibold">Analysis Results</h3>
               
@@ -216,6 +257,17 @@ export function SessionDetailDialog({
               )}
             </div>
           )}
+
+          {/* Show privacy message if analysis exists but is private for scouts */}
+          {aiAnalysis && !isOwner && !analysisPublic && (
+            <div className="p-4 border rounded-lg bg-muted/30">
+              <p className="text-sm text-muted-foreground text-center">
+                The player has chosen to keep the analysis private
+              </p>
+            </div>
+          )}
+
+          <Separator />
 
           {/* Video Preview */}
           {session.video_url && (

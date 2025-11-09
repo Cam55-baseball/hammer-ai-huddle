@@ -94,11 +94,18 @@ Deno.serve(async (req) => {
       throw error;
     }
 
-    // For scouts viewing other players, filter out efficiency_score
+    // For scouts viewing other players, filter out private data
     let responseData = data;
     if (isScout && !isOwner && playerId && playerId !== user.id) {
       responseData = data.map(session => {
         const { efficiency_score, ...rest } = session;
+        
+        // Also filter out ai_analysis if analysis_public is false
+        if (!session.analysis_public) {
+          const { ai_analysis, ...restWithoutAnalysis } = rest;
+          return restWithoutAnalysis;
+        }
+        
         return rest;
       });
     }

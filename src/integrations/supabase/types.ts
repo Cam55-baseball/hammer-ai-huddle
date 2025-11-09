@@ -473,6 +473,7 @@ export type Database = {
       videos: {
         Row: {
           ai_analysis: Json | null
+          analysis_public: boolean | null
           created_at: string
           efficiency_score: number | null
           id: string
@@ -492,6 +493,7 @@ export type Database = {
         }
         Insert: {
           ai_analysis?: Json | null
+          analysis_public?: boolean | null
           created_at?: string
           efficiency_score?: number | null
           id?: string
@@ -511,6 +513,7 @@ export type Database = {
         }
         Update: {
           ai_analysis?: Json | null
+          analysis_public?: boolean | null
           created_at?: string
           efficiency_score?: number | null
           id?: string

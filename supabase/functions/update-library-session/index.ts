@@ -11,6 +11,7 @@ const requestSchema = z.object({
   title: z.string().trim().max(200, "Title must be less than 200 characters").optional(),
   notes: z.string().trim().max(5000, "Notes must be less than 5000 characters").optional(),
   sharedWithScouts: z.boolean().optional(),
+  analysisPublic: z.boolean().optional(),
 });
 
 Deno.serve(async (req) => {
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
 
     // Validate input
     const body = await req.json();
-    const { sessionId, title, notes, sharedWithScouts } = requestSchema.parse(body);
+    const { sessionId, title, notes, sharedWithScouts, analysisPublic } = requestSchema.parse(body);
 
     console.log('[update-library-session] Request:', { sessionId, userId: user.id });
 
@@ -71,14 +72,18 @@ Deno.serve(async (req) => {
       );
     }
 
+    const updates: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (title !== undefined) updates.library_title = title;
+    if (notes !== undefined) updates.library_notes = notes;
+    if (sharedWithScouts !== undefined) updates.shared_with_scouts = sharedWithScouts;
+    if (analysisPublic !== undefined) updates.analysis_public = analysisPublic;
+
     const { data, error } = await supabase
       .from('videos')
-      .update({
-        library_title: title,
-        library_notes: notes,
-        shared_with_scouts: sharedWithScouts,
-        updated_at: new Date().toISOString()
-      })
+      .update(updates)
       .eq('id', sessionId)
       .select()
       .single();
