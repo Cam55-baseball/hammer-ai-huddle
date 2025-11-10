@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, PlusCircle, Check, X, UserPlus, Clock } from "lucide-react";
 import { SiTiktok } from "react-icons/si";
 import { UserMenu } from "@/components/UserMenu";
@@ -49,6 +51,16 @@ export default function Profile() {
     graduation_year: "",
     team_affiliation: "",
     years_affiliated: "",
+    throwing_hand: "",
+    batting_side: "",
+    commitment_status: "",
+    college_grad_year: "",
+    enrolled_in_college: false,
+    is_professional: false,
+    is_free_agent: false,
+    mlb_affiliate: "",
+    independent_league: "",
+    is_foreign_player: false,
     social_instagram: "",
     social_twitter: "",
     social_facebook: "",
@@ -192,6 +204,16 @@ export default function Profile() {
         graduation_year: data.graduation_year?.toString() || "",
         team_affiliation: data.team_affiliation || "",
         years_affiliated: data.years_affiliated?.toString() || "",
+        throwing_hand: data.throwing_hand || "",
+        batting_side: data.batting_side || "",
+        commitment_status: data.commitment_status || "",
+        college_grad_year: data.college_grad_year?.toString() || "",
+        enrolled_in_college: data.enrolled_in_college || false,
+        is_professional: data.is_professional || false,
+        is_free_agent: data.is_free_agent || false,
+        mlb_affiliate: data.mlb_affiliate || "",
+        independent_league: data.independent_league || "",
+        is_foreign_player: data.is_foreign_player || false,
         social_instagram: data.social_instagram || "",
         social_twitter: data.social_twitter || "",
         social_facebook: data.social_facebook || "",
@@ -330,6 +352,16 @@ export default function Profile() {
         updateData.state = editForm.state;
         updateData.graduation_year = editForm.graduation_year ? parseInt(editForm.graduation_year) : null;
         updateData.team_affiliation = editForm.team_affiliation;
+        updateData.throwing_hand = editForm.throwing_hand || null;
+        updateData.batting_side = editForm.batting_side || null;
+        updateData.commitment_status = editForm.commitment_status || null;
+        updateData.college_grad_year = editForm.college_grad_year ? parseInt(editForm.college_grad_year) : null;
+        updateData.enrolled_in_college = editForm.enrolled_in_college;
+        updateData.is_professional = editForm.is_professional;
+        updateData.is_free_agent = editForm.is_free_agent;
+        updateData.mlb_affiliate = editForm.mlb_affiliate || null;
+        updateData.independent_league = editForm.independent_league || null;
+        updateData.is_foreign_player = editForm.is_foreign_player;
       } else if (userRole === 'scout' || userRole === 'admin') {
         updateData.position = editForm.position;
         updateData.team_affiliation = editForm.team_affiliation;
@@ -620,6 +652,18 @@ export default function Profile() {
                       <p>{profile.weight}</p>
                     </div>
                   )}
+                  {profile?.throwing_hand && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Throws</Label>
+                      <p>{profile.throwing_hand === 'B' ? 'Both' : profile.throwing_hand === 'R' ? 'Right' : 'Left'}</p>
+                    </div>
+                  )}
+                  {profile?.batting_side && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Bats</Label>
+                      <p>{profile.batting_side === 'B' ? 'Switch' : profile.batting_side === 'R' ? 'Right' : 'Left'}</p>
+                    </div>
+                  )}
                   {profile?.state && (
                     <div>
                       <Label className="text-xs text-muted-foreground">State</Label>
@@ -628,8 +672,20 @@ export default function Profile() {
                   )}
                   {profile?.graduation_year && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Graduation Year</Label>
+                      <Label className="text-xs text-muted-foreground">HS Grad Year</Label>
                       <p>{profile.graduation_year}</p>
+                    </div>
+                  )}
+                  {profile?.college_grad_year && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">College Grad Year</Label>
+                      <p>{profile.college_grad_year}</p>
+                    </div>
+                  )}
+                  {profile?.enrolled_in_college && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">College Status</Label>
+                      <p>Currently Enrolled</p>
                     </div>
                   )}
                   {profile?.position && (
@@ -641,13 +697,49 @@ export default function Profile() {
                   {profile?.experience_level && (
                     <div>
                       <Label className="text-xs text-muted-foreground">Experience Level</Label>
-                      <p className="capitalize">{profile.experience_level}</p>
+                      <p className="capitalize">{profile.experience_level.replace('_', ' ')}</p>
+                    </div>
+                  )}
+                  {profile?.commitment_status && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Status</Label>
+                      <p className="capitalize">{profile.commitment_status}</p>
                     </div>
                   )}
                   {profile?.team_affiliation && (
                     <div>
                       <Label className="text-xs text-muted-foreground">Team</Label>
                       <p>{profile.team_affiliation}</p>
+                    </div>
+                  )}
+                  {profile?.is_professional && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Level</Label>
+                      <p>Professional Player</p>
+                    </div>
+                  )}
+                  {profile?.is_free_agent && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Status</Label>
+                      <p>Free Agent</p>
+                    </div>
+                  )}
+                  {profile?.mlb_affiliate && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">MLB Affiliate</Label>
+                      <p>{profile.mlb_affiliate}</p>
+                    </div>
+                  )}
+                  {profile?.independent_league && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Independent League</Label>
+                      <p>{profile.independent_league}</p>
+                    </div>
+                  )}
+                  {profile?.is_foreign_player && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Player Type</Label>
+                      <p>International Player</p>
                     </div>
                   )}
                 </div>
@@ -1014,6 +1106,167 @@ export default function Profile() {
                           onChange={(e) => setEditForm({ ...editForm, team_affiliation: e.target.value })}
                           placeholder="Travel team/High School/College/Pro"
                         />
+                      </div>
+                      
+                      {/* Playing Style */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Playing Style</Label>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label htmlFor="throwing_hand">Throwing Hand</Label>
+                            <Select
+                              value={editForm.throwing_hand}
+                              onValueChange={(value) => setEditForm({ ...editForm, throwing_hand: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="R">Right</SelectItem>
+                                <SelectItem value="L">Left</SelectItem>
+                                <SelectItem value="B">Both</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="batting_side">Batting Side</Label>
+                            <Select
+                              value={editForm.batting_side}
+                              onValueChange={(value) => setEditForm({ ...editForm, batting_side: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="R">Right</SelectItem>
+                                <SelectItem value="L">Left</SelectItem>
+                                <SelectItem value="B">Switch</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Academic & Commitment Status */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Academic & Commitment</Label>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label htmlFor="college_grad_year">College Grad Year</Label>
+                            <Input
+                              id="college_grad_year"
+                              type="number"
+                              value={editForm.college_grad_year}
+                              onChange={(e) => setEditForm({ ...editForm, college_grad_year: e.target.value })}
+                              placeholder="e.g., 2027"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="commitment_status">Commitment Status</Label>
+                            <Select
+                              value={editForm.commitment_status}
+                              onValueChange={(value) => setEditForm({ ...editForm, commitment_status: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="committed">Committed</SelectItem>
+                                <SelectItem value="uncommitted">Uncommitted</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="enrolled_in_college"
+                            checked={editForm.enrolled_in_college}
+                            onCheckedChange={(checked) => setEditForm({ ...editForm, enrolled_in_college: checked })}
+                          />
+                          <Label htmlFor="enrolled_in_college">Currently enrolled in college</Label>
+                        </div>
+                      </div>
+                      
+                      {/* Professional Status */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Professional Status</Label>
+                        
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Switch
+                            id="is_professional"
+                            checked={editForm.is_professional}
+                            onCheckedChange={(checked) => setEditForm({ ...editForm, is_professional: checked })}
+                          />
+                          <Label htmlFor="is_professional">Professional player</Label>
+                        </div>
+                        
+                        {editForm.is_professional && (
+                          <div className="space-y-3 pl-4 border-l-2 border-primary/20">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id="is_free_agent"
+                                checked={editForm.is_free_agent}
+                                onCheckedChange={(checked) => setEditForm({ ...editForm, is_free_agent: checked })}
+                              />
+                              <Label htmlFor="is_free_agent">Free Agent</Label>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="mlb_affiliate">MLB Affiliate</Label>
+                              <Input
+                                id="mlb_affiliate"
+                                value={editForm.mlb_affiliate}
+                                onChange={(e) => setEditForm({ ...editForm, mlb_affiliate: e.target.value })}
+                                placeholder="e.g., New York Yankees"
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="independent_league">Independent League</Label>
+                              <Input
+                                id="independent_league"
+                                value={editForm.independent_league}
+                                onChange={(e) => setEditForm({ ...editForm, independent_league: e.target.value })}
+                                placeholder="e.g., Atlantic League"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* International Status */}
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="is_foreign_player"
+                          checked={editForm.is_foreign_player}
+                          onCheckedChange={(checked) => setEditForm({ ...editForm, is_foreign_player: checked })}
+                        />
+                        <Label htmlFor="is_foreign_player">International/Foreign player</Label>
+                      </div>
+                      
+                      {/* Experience Level */}
+                      <div className="space-y-2">
+                        <Label htmlFor="experience_level">Experience Level</Label>
+                        <Select
+                          value={editForm.experience_level}
+                          onValueChange={(value) => setEditForm({ ...editForm, experience_level: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="youth">Youth</SelectItem>
+                            <SelectItem value="high_school">High School</SelectItem>
+                            <SelectItem value="college">College</SelectItem>
+                            <SelectItem value="professional">Professional</SelectItem>
+                            <SelectItem value="semi_pro">Semi-Pro</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </>
                   )}
