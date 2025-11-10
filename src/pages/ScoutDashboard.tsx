@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { PlayerSearchFilters } from '@/components/PlayerSearchFilters';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -42,6 +43,27 @@ export default function ScoutDashboard() {
   const [isUnfollowing, setIsUnfollowing] = useState(false);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [ownerLoading, setOwnerLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    positions: [] as string[],
+    throwingHands: [] as string[],
+    battingSides: [] as string[],
+    heightMin: '',
+    heightMax: '',
+    weightMin: '',
+    weightMax: '',
+    state: '',
+    commitmentStatus: '',
+    hsGradYearMin: '',
+    hsGradYearMax: '',
+    collegeGradYearMin: '',
+    collegeGradYearMax: '',
+    enrolledInCollege: null as boolean | null,
+    isProfessional: null as boolean | null,
+    isFreeAgent: null as boolean | null,
+    mlbAffiliate: '',
+    independentLeague: '',
+    isForeignPlayer: null as boolean | null,
+  });
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -153,14 +175,53 @@ export default function ScoutDashboard() {
     fetchOwnerId();
   }, []);
 
-  // Debounced search effect
+  // Debounced search effect with filters
   useEffect(() => {
-    if (searchTerm.trim().length >= 2) {
+    // Check if we have search term or active filters
+    const hasActiveFilters = 
+      filters.positions.length > 0 ||
+      filters.throwingHands.length > 0 ||
+      filters.battingSides.length > 0 ||
+      filters.heightMin || filters.heightMax ||
+      filters.weightMin || filters.weightMax ||
+      filters.state ||
+      filters.commitmentStatus ||
+      filters.hsGradYearMin || filters.hsGradYearMax ||
+      filters.collegeGradYearMin || filters.collegeGradYearMax ||
+      filters.enrolledInCollege !== null ||
+      filters.isProfessional !== null ||
+      filters.isFreeAgent !== null ||
+      filters.mlbAffiliate ||
+      filters.independentLeague ||
+      filters.isForeignPlayer !== null;
+
+    if (searchTerm.trim().length >= 2 || hasActiveFilters) {
       setSearchLoading(true);
       const timer = setTimeout(async () => {
         try {
           const { data, error } = await supabase.functions.invoke('search-players', {
-            body: { query: searchTerm }
+            body: { 
+              query: searchTerm,
+              positions: filters.positions.length > 0 ? filters.positions : undefined,
+              throwingHands: filters.throwingHands.length > 0 ? filters.throwingHands : undefined,
+              battingSides: filters.battingSides.length > 0 ? filters.battingSides : undefined,
+              heightMin: filters.heightMin || undefined,
+              heightMax: filters.heightMax || undefined,
+              weightMin: filters.weightMin || undefined,
+              weightMax: filters.weightMax || undefined,
+              state: filters.state || undefined,
+              commitmentStatus: filters.commitmentStatus || undefined,
+              hsGradYearMin: filters.hsGradYearMin || undefined,
+              hsGradYearMax: filters.hsGradYearMax || undefined,
+              collegeGradYearMin: filters.collegeGradYearMin || undefined,
+              collegeGradYearMax: filters.collegeGradYearMax || undefined,
+              enrolledInCollege: filters.enrolledInCollege,
+              isProfessional: filters.isProfessional,
+              isFreeAgent: filters.isFreeAgent,
+              mlbAffiliate: filters.mlbAffiliate || undefined,
+              independentLeague: filters.independentLeague || undefined,
+              isForeignPlayer: filters.isForeignPlayer,
+            }
           });
 
           if (error) {
@@ -187,7 +248,7 @@ export default function ScoutDashboard() {
       setSearchResults([]);
       setSearchLoading(false);
     }
-  }, [searchTerm]);
+  }, [searchTerm, filters]);
 
   const handleSendFollow = async (playerId: string) => {
     try {
@@ -371,6 +432,32 @@ export default function ScoutDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              <PlayerSearchFilters
+                filters={filters}
+                onFilterChange={setFilters}
+                onClearFilters={() => setFilters({
+                  positions: [],
+                  throwingHands: [],
+                  battingSides: [],
+                  heightMin: '',
+                  heightMax: '',
+                  weightMin: '',
+                  weightMax: '',
+                  state: '',
+                  commitmentStatus: '',
+                  hsGradYearMin: '',
+                  hsGradYearMax: '',
+                  collegeGradYearMin: '',
+                  collegeGradYearMax: '',
+                  enrolledInCollege: null,
+                  isProfessional: null,
+                  isFreeAgent: null,
+                  mlbAffiliate: '',
+                  independentLeague: '',
+                  isForeignPlayer: null,
+                })}
+              />
+              
               <Command className="rounded-lg border shadow-md">
                 <CommandInput
                   placeholder="Search across all players (min 2 characters)..."

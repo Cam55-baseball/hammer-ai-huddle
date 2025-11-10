@@ -131,17 +131,29 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          batting_side: Database["public"]["Enums"]["batting_side"] | null
           bio: string | null
+          college_grad_year: number | null
+          commitment_status:
+            | Database["public"]["Enums"]["commitment_status"]
+            | null
           contact_email: string | null
           created_at: string | null
           credentials: string[] | null
+          enrolled_in_college: boolean | null
           experience_level: string | null
           first_name: string | null
           full_name: string | null
           graduation_year: number | null
           height: string | null
+          high_school_grad_year: number | null
           id: string
+          independent_league: string | null
+          is_foreign_player: boolean | null
+          is_free_agent: boolean | null
+          is_professional: boolean | null
           last_name: string | null
+          mlb_affiliate: string | null
           position: string | null
           social_facebook: string | null
           social_instagram: string | null
@@ -156,6 +168,7 @@ export type Database = {
           social_youtube: string | null
           state: string | null
           team_affiliation: string | null
+          throwing_hand: Database["public"]["Enums"]["throwing_hand"] | null
           tutorial_completed: boolean | null
           updated_at: string | null
           weight: string | null
@@ -163,17 +176,29 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          batting_side?: Database["public"]["Enums"]["batting_side"] | null
           bio?: string | null
+          college_grad_year?: number | null
+          commitment_status?:
+            | Database["public"]["Enums"]["commitment_status"]
+            | null
           contact_email?: string | null
           created_at?: string | null
           credentials?: string[] | null
+          enrolled_in_college?: boolean | null
           experience_level?: string | null
           first_name?: string | null
           full_name?: string | null
           graduation_year?: number | null
           height?: string | null
+          high_school_grad_year?: number | null
           id: string
+          independent_league?: string | null
+          is_foreign_player?: boolean | null
+          is_free_agent?: boolean | null
+          is_professional?: boolean | null
           last_name?: string | null
+          mlb_affiliate?: string | null
           position?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
@@ -188,6 +213,7 @@ export type Database = {
           social_youtube?: string | null
           state?: string | null
           team_affiliation?: string | null
+          throwing_hand?: Database["public"]["Enums"]["throwing_hand"] | null
           tutorial_completed?: boolean | null
           updated_at?: string | null
           weight?: string | null
@@ -195,17 +221,29 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          batting_side?: Database["public"]["Enums"]["batting_side"] | null
           bio?: string | null
+          college_grad_year?: number | null
+          commitment_status?:
+            | Database["public"]["Enums"]["commitment_status"]
+            | null
           contact_email?: string | null
           created_at?: string | null
           credentials?: string[] | null
+          enrolled_in_college?: boolean | null
           experience_level?: string | null
           first_name?: string | null
           full_name?: string | null
           graduation_year?: number | null
           height?: string | null
+          high_school_grad_year?: number | null
           id?: string
+          independent_league?: string | null
+          is_foreign_player?: boolean | null
+          is_free_agent?: boolean | null
+          is_professional?: boolean | null
           last_name?: string | null
+          mlb_affiliate?: string | null
           position?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
@@ -220,6 +258,7 @@ export type Database = {
           social_youtube?: string | null
           state?: string | null
           team_affiliation?: string | null
+          throwing_hand?: Database["public"]["Enums"]["throwing_hand"] | null
           tutorial_completed?: boolean | null
           updated_at?: string | null
           weight?: string | null
@@ -580,8 +619,11 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "admin" | "coach" | "player" | "recruiter" | "scout"
+      batting_side: "R" | "L" | "B"
+      commitment_status: "committed" | "uncommitted"
       module_type: "hitting" | "pitching" | "throwing"
       sport_type: "baseball" | "softball"
+      throwing_hand: "R" | "L" | "B"
       training_data_type: "professional_example" | "common_mistake"
       video_status: "uploading" | "processing" | "completed" | "failed"
     }
@@ -712,8 +754,11 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "admin", "coach", "player", "recruiter", "scout"],
+      batting_side: ["R", "L", "B"],
+      commitment_status: ["committed", "uncommitted"],
       module_type: ["hitting", "pitching", "throwing"],
       sport_type: ["baseball", "softball"],
+      throwing_hand: ["R", "L", "B"],
       training_data_type: ["professional_example", "common_mistake"],
       video_status: ["uploading", "processing", "completed", "failed"],
     },

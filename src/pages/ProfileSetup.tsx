@@ -39,6 +39,16 @@ const ProfileSetup = () => {
   const [playerState, setPlayerState] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
   const [teamAffiliation, setTeamAffiliation] = useState("");
+  const [throwingHand, setThrowingHand] = useState("");
+  const [battingSide, setBattingSide] = useState("");
+  const [commitmentStatus, setCommitmentStatus] = useState("");
+  const [collegeGradYear, setCollegeGradYear] = useState("");
+  const [enrolledInCollege, setEnrolledInCollege] = useState(false);
+  const [isProfessional, setIsProfessional] = useState(false);
+  const [isFreeAgent, setIsFreeAgent] = useState(false);
+  const [mlbAffiliate, setMlbAffiliate] = useState("");
+  const [independentLeague, setIndependentLeague] = useState("");
+  const [isForeignPlayer, setIsForeignPlayer] = useState(false);
   
   // Coach/Scout-specific fields
   const [yearsAffiliated, setYearsAffiliated] = useState("");
@@ -177,8 +187,18 @@ const ProfileSetup = () => {
         profileData.height = height;
         profileData.weight = weight;
         profileData.state = playerState;
-        profileData.graduation_year = parseInt(graduationYear);
+        profileData.high_school_grad_year = parseInt(graduationYear);
         profileData.team_affiliation = teamAffiliation;
+        profileData.throwing_hand = throwingHand || null;
+        profileData.batting_side = battingSide || null;
+        profileData.commitment_status = commitmentStatus || null;
+        profileData.college_grad_year = collegeGradYear ? parseInt(collegeGradYear) : null;
+        profileData.enrolled_in_college = enrolledInCollege;
+        profileData.is_professional = isProfessional;
+        profileData.is_free_agent = isFreeAgent;
+        profileData.mlb_affiliate = mlbAffiliate || null;
+        profileData.independent_league = independentLeague || null;
+        profileData.is_foreign_player = isForeignPlayer;
       } else if (isCoachOrScout) {
         profileData.position = position;
         profileData.team_affiliation = teamAffiliation;
@@ -411,6 +431,125 @@ const ProfileSetup = () => {
                     required
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="throwingHand">Throwing Hand</Label>
+                    <Select value={throwingHand} onValueChange={setThrowingHand}>
+                      <SelectTrigger id="throwingHand">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="R">Right</SelectItem>
+                        <SelectItem value="L">Left</SelectItem>
+                        <SelectItem value="B">Both</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="battingSide">Batting Side</Label>
+                    <Select value={battingSide} onValueChange={setBattingSide}>
+                      <SelectTrigger id="battingSide">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="R">Right</SelectItem>
+                        <SelectItem value="L">Left</SelectItem>
+                        <SelectItem value="B">Both/Switch</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="commitmentStatus">Commitment Status</Label>
+                  <Select value={commitmentStatus} onValueChange={setCommitmentStatus}>
+                    <SelectTrigger id="commitmentStatus">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="committed">Committed</SelectItem>
+                      <SelectItem value="uncommitted">Uncommitted</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="collegeGradYear">College Graduation Year</Label>
+                  <Input
+                    id="collegeGradYear"
+                    type="number"
+                    value={collegeGradYear}
+                    onChange={(e) => setCollegeGradYear(e.target.value)}
+                    placeholder="e.g., 2028"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="enrolledInCollege"
+                      checked={enrolledInCollege}
+                      onChange={(e) => setEnrolledInCollege(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="enrolledInCollege" className="cursor-pointer">Enrolled in College</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isProfessional"
+                      checked={isProfessional}
+                      onChange={(e) => setIsProfessional(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="isProfessional" className="cursor-pointer">Professional Player</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isFreeAgent"
+                      checked={isFreeAgent}
+                      onChange={(e) => setIsFreeAgent(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="isFreeAgent" className="cursor-pointer">Free Agent</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isForeignPlayer"
+                      checked={isForeignPlayer}
+                      onChange={(e) => setIsForeignPlayer(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="isForeignPlayer" className="cursor-pointer">International Player</Label>
+                  </div>
+                </div>
+
+                {isProfessional && (
+                  <>
+                    <div>
+                      <Label htmlFor="mlbAffiliate">MLB Affiliate</Label>
+                      <Input
+                        id="mlbAffiliate"
+                        value={mlbAffiliate}
+                        onChange={(e) => setMlbAffiliate(e.target.value)}
+                        placeholder="e.g., Yankees, Dodgers"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="independentLeague">Independent League</Label>
+                      <Input
+                        id="independentLeague"
+                        value={independentLeague}
+                        onChange={(e) => setIndependentLeague(e.target.value)}
+                        placeholder="e.g., Atlantic League"
+                      />
+                    </div>
+                  </>
+                )}
               </>
             )}
 

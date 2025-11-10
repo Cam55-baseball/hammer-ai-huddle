@@ -39,9 +39,55 @@ serve(async (req) => {
       throw new Error('User must be a scout or coach');
     }
 
-    const { query, limit = 50 } = await req.json();
+    const {
+      query,
+      limit = 50,
+      positions,
+      throwingHands,
+      battingSides,
+      heightMin,
+      heightMax,
+      weightMin,
+      weightMax,
+      state,
+      commitmentStatus,
+      hsGradYearMin,
+      hsGradYearMax,
+      collegeGradYearMin,
+      collegeGradYearMax,
+      enrolledInCollege,
+      isProfessional,
+      isFreeAgent,
+      mlbAffiliate,
+      independentLeague,
+      isForeignPlayer,
+    } = await req.json();
 
-    if (!query || query.trim().length < 2) {
+    // Helper to parse height strings like "6'2"" to inches
+    const parseHeightToInches = (height: string): number | null => {
+      const match = height.match(/(\d+)['′-](\d+)/);
+      if (match) {
+        return parseInt(match[1]) * 12 + parseInt(match[2]);
+      }
+      return null;
+    };
+
+    // Helper to parse weight strings like "180 lbs" to number
+    const parseWeightToPounds = (weight: string): number | null => {
+      const match = weight.match(/(\d+)/);
+      return match ? parseInt(match[1]) : null;
+    };
+
+    // Check if we have any filters applied
+    const hasFilters = positions?.length > 0 || throwingHands?.length > 0 || 
+      battingSides?.length > 0 || heightMin || heightMax || weightMin || weightMax ||
+      state || commitmentStatus || hsGradYearMin || hsGradYearMax ||
+      collegeGradYearMin || collegeGradYearMax || enrolledInCollege !== null ||
+      isProfessional !== null || isFreeAgent !== null || mlbAffiliate ||
+      independentLeague || isForeignPlayer !== null;
+
+    // If no query and no filters, return empty
+    if ((!query || query.trim().length < 2) && !hasFilters) {
       return new Response(
         JSON.stringify({ results: [] }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -54,13 +100,83 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Search profiles
-    const { data: profiles, error: profilesError } = await supabaseAdmin
+    // Build query with filters
+    let profileQuery = supabaseAdmin
       .from('profiles')
-      .select('id, full_name, avatar_url')
-      .ilike('full_name', `%${query.trim()}%`)
-      .neq('id', user.id)
-      .limit(Math.min(limit, 50));
+      .select('id, full_name, avatar_url, position, throwing_hand, batting_side, height, weight, state, high_school_grad_year, college_grad_year, commitment_status, enrolled_in_college, is_professional, is_free_agent, mlb_affiliate, independent_league, is_foreign_player')
+      .neq('id', user.id);
+
+    // Apply name search if provided
+    if (query && query.trim().length >= 2) {
+      profileQuery = profileQuery.ilike('full_name', `%${query.trim()}%`);
+    }
+
+    // Apply position filter
+    if (positions && positions.length > 0) {
+      profileQuery = profileQuery.in('position', positions);
+    }
+
+    // Apply throwing hand filter
+    if (throwingHands && throwingHands.length > 0) {
+      profileQuery = profileQuery.in('throwing_hand', throwingHands);
+    }
+
+    // Apply batting side filter
+    if (battingSides && battingSides.length > 0) {
+      profileQuery = profileQuery.in('batting_side', battingSides);
+    }
+
+    // Apply state filter
+    if (state) {
+      profileQuery = profileQuery.ilike('state', `%${state}%`);
+    }
+
+    // Apply commitment status filter
+    if (commitmentStatus) {
+      profileQuery = profileQuery.eq('commitment_status', commitmentStatus);
+    }
+
+    // Apply HS graduation year range
+    if (hsGradYearMin) {
+      profileQuery = profileQuery.gte('high_school_grad_year', parseInt(hsGradYearMin));
+    }
+    if (hsGradYearMax) {
+      profileQuery = profileQuery.lte('high_school_grad_year', parseInt(hsGradYearMax));
+    }
+
+    // Apply college graduation year range
+    if (collegeGradYearMin) {
+      profileQuery = profileQuery.gte('college_grad_year', parseInt(collegeGradYearMin));
+    }
+    if (collegeGradYearMax) {
+      profileQuery = profileQuery.lte('college_grad_year', parseInt(collegeGradYearMax));
+    }
+
+    // Apply boolean filters
+    if (enrolledInCollege !== null) {
+      profileQuery = profileQuery.eq('enrolled_in_college', enrolledInCollege);
+    }
+    if (isProfessional !== null) {
+      profileQuery = profileQuery.eq('is_professional', isProfessional);
+    }
+    if (isFreeAgent !== null) {
+      profileQuery = profileQuery.eq('is_free_agent', isFreeAgent);
+    }
+    if (isForeignPlayer !== null) {
+      profileQuery = profileQuery.eq('is_foreign_player', isForeignPlayer);
+    }
+
+    // Apply text search filters
+    if (mlbAffiliate) {
+      profileQuery = profileQuery.ilike('mlb_affiliate', `%${mlbAffiliate}%`);
+    }
+    if (independentLeague) {
+      profileQuery = profileQuery.ilike('independent_league', `%${independentLeague}%`);
+    }
+
+    profileQuery = profileQuery.limit(Math.min(limit, 50));
+
+    const { data: profiles, error: profilesError } = await profileQuery;
 
     if (profilesError) {
       throw profilesError;
@@ -86,7 +202,40 @@ serve(async (req) => {
 
     const followMap = new Map(follows?.map(f => [f.player_id, f.status]) || []);
 
-    const results = profiles.map(profile => ({
+    // Apply client-side height/weight filtering (since we need to parse strings)
+    let filteredProfiles = profiles;
+    
+    if (heightMin || heightMax) {
+      filteredProfiles = filteredProfiles.filter(profile => {
+        if (!profile.height) return false;
+        const heightInches = parseHeightToInches(profile.height);
+        if (!heightInches) return false;
+        
+        const minInches = heightMin ? parseHeightToInches(heightMin) : null;
+        const maxInches = heightMax ? parseHeightToInches(heightMax) : null;
+        
+        if (minInches && heightInches < minInches) return false;
+        if (maxInches && heightInches > maxInches) return false;
+        return true;
+      });
+    }
+
+    if (weightMin || weightMax) {
+      filteredProfiles = filteredProfiles.filter(profile => {
+        if (!profile.weight) return false;
+        const weightPounds = parseWeightToPounds(profile.weight);
+        if (!weightPounds) return false;
+        
+        const minPounds = weightMin ? parseInt(weightMin) : null;
+        const maxPounds = weightMax ? parseInt(weightMax) : null;
+        
+        if (minPounds && weightPounds < minPounds) return false;
+        if (maxPounds && weightPounds > maxPounds) return false;
+        return true;
+      });
+    }
+
+    const results = filteredProfiles.map(profile => ({
       id: profile.id,
       full_name: profile.full_name,
       avatar_url: profile.avatar_url,
