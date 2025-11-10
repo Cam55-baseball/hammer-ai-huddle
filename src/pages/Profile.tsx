@@ -1077,7 +1077,7 @@ export default function Profile() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="graduation_year">Graduation Year</Label>
+                          <Label htmlFor="graduation_year">HS Grad Year</Label>
                           <Input
                             id="graduation_year"
                             type="number"
@@ -1089,13 +1089,26 @@ export default function Profile() {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="position">Position</Label>
-                        <Input
-                          id="position"
+                        <Label htmlFor="position">Primary Position</Label>
+                        <Select
                           value={editForm.position}
-                          onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
-                          placeholder="e.g., Pitcher, Outfielder"
-                        />
+                          onValueChange={(value) => setEditForm({ ...editForm, position: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select position" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="P">Pitcher (P)</SelectItem>
+                            <SelectItem value="C">Catcher (C)</SelectItem>
+                            <SelectItem value="1B">First Base (1B)</SelectItem>
+                            <SelectItem value="2B">Second Base (2B)</SelectItem>
+                            <SelectItem value="3B">Third Base (3B)</SelectItem>
+                            <SelectItem value="SS">Shortstop (SS)</SelectItem>
+                            <SelectItem value="LF">Left Field (LF)</SelectItem>
+                            <SelectItem value="CF">Center Field (CF)</SelectItem>
+                            <SelectItem value="RF">Right Field (RF)</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       
                       <div className="space-y-2">
