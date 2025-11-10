@@ -187,7 +187,14 @@ export default function Profile() {
         .eq('user_id', userId)
         .single();
       
-      setUserRole(roleData?.role || null);
+      let userRole = roleData?.role || null;
+      
+      // Fallback: If no role found but profile has player-specific data, assume player
+      if (!userRole && data.position) {
+        userRole = 'player';
+      }
+      
+      setUserRole(userRole);
       
       setEditForm({
         first_name: data.first_name || "",

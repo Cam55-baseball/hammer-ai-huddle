@@ -19,7 +19,14 @@ const ProfileSetup = () => {
   const { user, loading } = useAuth();
   const locationState = location.state as { role?: string; sport?: string; module?: string };
 
-  const selectedRole = locationState?.role || localStorage.getItem('selectedRole');
+  // Read from both possible localStorage keys for role
+  const rawRole = locationState?.role || localStorage.getItem('selectedRole') || localStorage.getItem('userRole');
+  
+  // Normalize role value to expected format (handle both lowercase and capitalized)
+  let selectedRole: string | null = rawRole;
+  if (rawRole === 'player') selectedRole = 'Player';
+  else if (rawRole === 'scout') selectedRole = 'Scout/Coach';
+  
   const selectedSport = locationState?.sport || localStorage.getItem('selectedSport');
   const selectedModule = locationState?.module || localStorage.getItem('selectedModule');
 
