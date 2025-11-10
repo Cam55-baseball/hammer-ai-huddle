@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -29,6 +29,7 @@ const Checkout = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [showManualLink, setShowManualLink] = useState(false);
+  const popupRef = useRef<Window | null>(null);
 
   useEffect(() => {
     // CRITICAL: Wait for ALL loading states to complete before making any decisions
@@ -194,6 +195,16 @@ const Checkout = () => {
 
     setCheckoutLoading(true);
 
+    // CRITICAL: Open popup immediately to preserve user activation
+    console.log('Checkout: Opening blank popup window...');
+    popupRef.current = window.open('', '_blank', 'noopener,noreferrer') || null;
+    
+    if (!popupRef.current) {
+      console.warn('Checkout: Popup blocked by browser, will fallback to redirect methods');
+    } else {
+      console.log('Checkout: Popup opened successfully');
+    }
+
     try {
       // Refresh session to ensure valid token before checkout
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -249,7 +260,22 @@ const Checkout = () => {
           description: "You'll be redirected to complete your payment...",
         });
         
-        // Resilient redirect with fallback
+        // If popup is still open, navigate it to Stripe
+        if (popupRef.current && !popupRef.current.closed) {
+          console.log('Checkout: Navigating popup to Stripe URL', data.url);
+          try {
+            popupRef.current.location.href = data.url;
+            console.log('Checkout: Popup successfully navigated to Stripe');
+            return;
+          } catch (e) {
+            console.warn('Checkout: Failed to navigate popup, falling back to redirect', e);
+            popupRef.current.close();
+          }
+        } else {
+          console.log('Checkout: Popup closed or blocked, using fallback redirect');
+        }
+        
+        // Fallback: Use existing redirect method
         redirectToStripe(data.url);
         return;
       } else {
@@ -257,6 +283,13 @@ const Checkout = () => {
       }
     } catch (error: any) {
       console.error('Checkout error:', error);
+      
+      // Close popup if it's still open on error
+      if (popupRef.current && !popupRef.current.closed) {
+        console.log('Checkout: Closing popup due to error');
+        popupRef.current.close();
+      }
+      
       const errorMsg = error.message || "Failed to create checkout session";
       toast({
         title: "Checkout Failed",
