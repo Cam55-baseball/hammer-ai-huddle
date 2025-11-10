@@ -197,7 +197,7 @@ const Checkout = () => {
 
     // CRITICAL: Open popup immediately to preserve user activation
     console.log('Checkout: Opening blank popup window...');
-    popupRef.current = window.open('', '_blank', 'noopener,noreferrer') || null;
+    popupRef.current = window.open('', '_blank', 'noreferrer') || null;
     
     if (!popupRef.current) {
       console.warn('Checkout: Popup blocked by browser, will fallback to redirect methods');
