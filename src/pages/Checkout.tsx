@@ -27,6 +27,8 @@ const Checkout = () => {
   const returnTo = state?.returnTo;
   const isAddMode = returnTo === '/dashboard';
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [showManualLink, setShowManualLink] = useState(false);
 
   useEffect(() => {
     // CRITICAL: Wait for ALL loading states to complete before making any decisions
@@ -156,6 +158,30 @@ const Checkout = () => {
     }
   }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, toast, refetch, isAddMode]);
 
+  const redirectToStripe = (url: string) => {
+    console.log('Checkout: Redirecting to Stripe URL', url);
+    try {
+      // Try to navigate the top frame (helps if embedded in iframe)
+      if (window.top) {
+        window.top.location.href = url;
+      } else {
+        window.location.href = url;
+      }
+    } catch (e) {
+      console.warn('Checkout: window.top navigation failed, trying assign', e);
+      try {
+        window.location.assign(url);
+      } catch (e2) {
+        console.warn('Checkout: location.assign failed', e2);
+      }
+    }
+
+    // Safety net: if navigation didn't occur (e.g., iframe sandbox), show manual link
+    setTimeout(() => {
+      setShowManualLink(true);
+    }, 1500);
+  };
+
   const handleCreateCheckout = async () => {
     if (!selectedModule) {
       toast({
@@ -216,14 +242,16 @@ const Checkout = () => {
         localStorage.setItem('checkoutModule', selectedModule);
         localStorage.setItem('checkoutSport', selectedSport);
         
+        setCheckoutUrl(data.url);
+        
         toast({
           title: "Redirecting to Checkout",
           description: "You'll be redirected to complete your payment...",
         });
         
-        // Immediate redirect to prevent React from interfering
-        window.location.href = data.url;
-        return; // Stop execution
+        // Resilient redirect with fallback
+        redirectToStripe(data.url);
+        return;
       } else {
         throw new Error("No checkout URL received");
       }
@@ -313,6 +341,19 @@ const Checkout = () => {
               Billed monthly, cancel anytime
             </p>
           </div>
+
+          {showManualLink && checkoutUrl && (
+            <div className="mb-4 p-4 rounded-lg border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+              <p className="text-sm text-amber-800 dark:text-amber-100 mb-2">
+                If you are not redirected automatically, click the button below to open Stripe Checkout.
+              </p>
+              <Button asChild className="w-full" variant="secondary">
+                <a href={checkoutUrl} target="_top" rel="noopener noreferrer">
+                  Open Stripe Checkout
+                </a>
+              </Button>
+            </div>
+          )}
 
           <Button 
             onClick={handleCreateCheckout}
