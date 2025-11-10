@@ -221,10 +221,9 @@ const Checkout = () => {
           description: "You'll be redirected to complete your payment...",
         });
         
-        // Small delay to let toast show, then redirect
-        setTimeout(() => {
-          window.location.href = data.url;
-        }, 500);
+        // Immediate redirect to prevent React from interfering
+        window.location.href = data.url;
+        return; // Stop execution
       } else {
         throw new Error("No checkout URL received");
       }
