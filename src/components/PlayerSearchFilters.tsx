@@ -225,7 +225,6 @@ export function PlayerSearchFilters({ filters, onFilterChange, onClearFilters }:
                 <SelectValue placeholder="Any" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any</SelectItem>
                 <SelectItem value="committed">Committed</SelectItem>
                 <SelectItem value="uncommitted">Uncommitted</SelectItem>
               </SelectContent>
@@ -286,7 +285,6 @@ export function PlayerSearchFilters({ filters, onFilterChange, onClearFilters }:
                 <SelectValue placeholder="Any" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any</SelectItem>
                 <SelectItem value="true">Enrolled in College</SelectItem>
                 <SelectItem value="false">Not in College</SelectItem>
               </SelectContent>
@@ -309,7 +307,6 @@ export function PlayerSearchFilters({ filters, onFilterChange, onClearFilters }:
                 <SelectValue placeholder="Any" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any</SelectItem>
                 <SelectItem value="true">Professional</SelectItem>
                 <SelectItem value="false">Non-Professional</SelectItem>
               </SelectContent>
@@ -332,7 +329,6 @@ export function PlayerSearchFilters({ filters, onFilterChange, onClearFilters }:
                 <SelectValue placeholder="Any" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any</SelectItem>
                 <SelectItem value="true">Free Agent</SelectItem>
                 <SelectItem value="false">Not Free Agent</SelectItem>
               </SelectContent>
@@ -377,7 +373,6 @@ export function PlayerSearchFilters({ filters, onFilterChange, onClearFilters }:
                 <SelectValue placeholder="Any" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any</SelectItem>
                 <SelectItem value="true">International</SelectItem>
                 <SelectItem value="false">Domestic</SelectItem>
               </SelectContent>
