@@ -28,6 +28,7 @@ import Rankings from "./pages/Rankings";
 import Weather from "./pages/Weather";
 import Subscribers from "./pages/Subscribers";
 import PlayersClub from "./pages/PlayersClub";
+import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/weather" element={<Weather />} />
             <Route path="/subscribers" element={<Subscribers />} />
             <Route path="/players-club" element={<PlayersClub />} />
+            <Route path="/coming-soon" element={<ComingSoon />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Construction } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -82,6 +82,7 @@ export function AppSidebar() {
     ...(!isScout ? [{ title: "My Followers", url: "/my-followers", icon: Users }] : []),
     { title: "Rankings", url: "/rankings", icon: Trophy },
     { title: "Weather", url: "/weather", icon: Cloud },
+    { title: "Coming soon", url: "/coming-soon", icon: Construction },
     ...(isScout ? [{ title: "Scout Dashboard", url: "/scout-dashboard", icon: UserPlus }] : []),
   ];
 

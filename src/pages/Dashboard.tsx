@@ -17,6 +17,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { toast } from "sonner";
+import dashboardHeroImage from "@/assets/dashboard-hero.jpg";
 
 type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
@@ -290,34 +291,17 @@ export default function Dashboard() {
           <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.full_name}</p>
         </div>
 
-        {/* Construction Notice */}
-        <Card className="border-2 border-primary/50 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
-          <div className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <div className="bg-primary/20 p-3 rounded-full animate-pulse">
-                  <Construction className="h-8 w-8 text-primary" />
-                </div>
-              </div>
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Sparkles className="h-5 w-5 text-accent animate-pulse" />
-                  <h3 className="text-xl font-bold text-foreground">
-                    Exciting Updates Coming Soon!
-                  </h3>
-                </div>
-                <p className="text-base text-foreground/90 font-medium">
-                  Advanced metric measuring and enhanced Professional Scout/Collegiate recruiting connections are under construction!
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  We're working hard to bring you powerful new analytics and direct connections to scouts and recruiters. Your training data is being captured now for seamless integration when these features launch!
-                </p>
-                <div className="flex items-center gap-2 pt-2">
-                  <div className="h-2 w-2 bg-accent rounded-full animate-pulse" />
-                  <span className="text-xs text-muted-foreground font-medium">Active Development</span>
-                </div>
-              </div>
-            </div>
+        {/* Hero Image Card */}
+        <Card className="relative overflow-hidden border-2 border-black shadow-lg" style={{ minHeight: '200px' }}>
+          <img 
+            src={dashboardHeroImage} 
+            alt="Baseball player fielding" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+            <h2 className="text-white text-3xl md:text-4xl font-bold text-center px-4">
+              Let's level the playing field!
+            </h2>
           </div>
         </Card>
 
