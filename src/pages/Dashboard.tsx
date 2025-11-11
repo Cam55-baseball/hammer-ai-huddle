@@ -17,7 +17,10 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { toast } from "sonner";
-import dashboardHeroImage from "@/assets/dashboard-hero.jpg";
+import dashboardHero1 from "@/assets/dashboard-hero.jpg";
+import dashboardHero2 from "@/assets/dashboard-hero-1.jpg";
+import dashboardHero3 from "@/assets/dashboard-hero-2.jpg";
+import dashboardHero4 from "@/assets/dashboard-hero-3.jpg";
 
 type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
@@ -41,6 +44,9 @@ export default function Dashboard() {
   const [pendingSportSwitch, setPendingSportSwitch] = useState<SportType | null>(null);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  const heroImages = [dashboardHero1, dashboardHero2, dashboardHero3, dashboardHero4];
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
   useEffect(() => {
     if (authLoading) return;
@@ -143,6 +149,15 @@ export default function Dashboard() {
       localStorage.removeItem('pendingModuleActivation');
     }
   }, [subscribedModules, enableFastPolling, onModulesChange]);
+
+  // Automatic hero image slideshow
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentHeroIndex((prevIndex) => (prevIndex + 1) % heroImages.length);
+    }, 5000); // Change image every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const loadProgress = async () => {
     try {
@@ -294,9 +309,10 @@ export default function Dashboard() {
         {/* Hero Image Card */}
         <Card className="relative overflow-hidden border-2 border-black shadow-lg" style={{ minHeight: '200px' }}>
           <img 
-            src={dashboardHeroImage} 
-            alt="Baseball player fielding" 
-            className="w-full h-full object-cover"
+            key={currentHeroIndex}
+            src={heroImages[currentHeroIndex]} 
+            alt="Baseball action" 
+            className="w-full h-full object-cover transition-opacity duration-1000"
           />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
             <h2 className="text-white text-3xl md:text-4xl font-bold text-center px-4">
