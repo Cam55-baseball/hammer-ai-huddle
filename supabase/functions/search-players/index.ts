@@ -82,9 +82,12 @@ serve(async (req) => {
     const hasFilters = positions?.length > 0 || throwingHands?.length > 0 || 
       battingSides?.length > 0 || heightMin || heightMax || weightMin || weightMax ||
       state || commitmentStatus || hsGradYearMin || hsGradYearMax ||
-      collegeGradYearMin || collegeGradYearMax || enrolledInCollege !== null ||
-      isProfessional !== null || isFreeAgent !== null || mlbAffiliate ||
-      independentLeague || isForeignPlayer !== null;
+      collegeGradYearMin || collegeGradYearMax ||
+      (typeof enrolledInCollege === 'boolean') ||
+      (typeof isProfessional === 'boolean') ||
+      (typeof isFreeAgent === 'boolean') ||
+      mlbAffiliate || independentLeague ||
+      (typeof isForeignPlayer === 'boolean');
 
     // If no query and no filters, return empty
     if ((!query || query.trim().length < 2) && !hasFilters) {
@@ -153,16 +156,16 @@ serve(async (req) => {
     }
 
     // Apply boolean filters
-    if (enrolledInCollege !== null) {
+    if (typeof enrolledInCollege === 'boolean') {
       profileQuery = profileQuery.eq('enrolled_in_college', enrolledInCollege);
     }
-    if (isProfessional !== null) {
+    if (typeof isProfessional === 'boolean') {
       profileQuery = profileQuery.eq('is_professional', isProfessional);
     }
-    if (isFreeAgent !== null) {
+    if (typeof isFreeAgent === 'boolean') {
       profileQuery = profileQuery.eq('is_free_agent', isFreeAgent);
     }
-    if (isForeignPlayer !== null) {
+    if (typeof isForeignPlayer === 'boolean') {
       profileQuery = profileQuery.eq('is_foreign_player', isForeignPlayer);
     }
 
@@ -249,8 +252,11 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in search-players:', error);
+    const message = (error && typeof error === 'object' && 'message' in (error as any))
+      ? (error as any).message
+      : String(error ?? 'Unknown error');
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: message }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
