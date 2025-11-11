@@ -215,12 +215,12 @@ export default function ScoutDashboard() {
               hsGradYearMax: filters.hsGradYearMax || undefined,
               collegeGradYearMin: filters.collegeGradYearMin || undefined,
               collegeGradYearMax: filters.collegeGradYearMax || undefined,
-              enrolledInCollege: filters.enrolledInCollege,
-              isProfessional: filters.isProfessional,
-              isFreeAgent: filters.isFreeAgent,
+              enrolledInCollege: filters.enrolledInCollege !== null ? filters.enrolledInCollege : undefined,
+              isProfessional: filters.isProfessional !== null ? filters.isProfessional : undefined,
+              isFreeAgent: filters.isFreeAgent !== null ? filters.isFreeAgent : undefined,
               mlbAffiliate: filters.mlbAffiliate || undefined,
               independentLeague: filters.independentLeague || undefined,
-              isForeignPlayer: filters.isForeignPlayer,
+              isForeignPlayer: filters.isForeignPlayer !== null ? filters.isForeignPlayer : undefined,
             }
           });
 
