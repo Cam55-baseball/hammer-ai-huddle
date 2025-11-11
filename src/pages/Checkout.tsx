@@ -197,7 +197,7 @@ const Checkout = () => {
 
     // CRITICAL: Open popup immediately to preserve user activation
     console.log('Checkout: Opening blank popup window...');
-    popupRef.current = window.open('', '_blank', 'noreferrer') || null;
+    popupRef.current = window.open('', '_blank', '') || null;
     
     if (!popupRef.current) {
       console.warn('Checkout: Popup blocked by browser, will fallback to redirect methods');
@@ -259,6 +259,28 @@ const Checkout = () => {
           title: "Redirecting to Checkout",
           description: "You'll be redirected to complete your payment...",
         });
+        
+        // Fail-safe: Check if popup is stuck on blank page
+        setTimeout(() => {
+          if (popupRef.current && !popupRef.current.closed) {
+            try {
+              // If popup is still blank, close it and redirect main window
+              if (popupRef.current.location.href === 'about:blank') {
+                console.log('Checkout: Popup stuck on blank page, closing and redirecting');
+                popupRef.current.close();
+                redirectToStripe(data.url);
+              }
+            } catch (e) {
+              // Cross-origin error means popup navigated successfully
+              console.log('Checkout: Popup navigated (cross-origin check passed)');
+            }
+          }
+        }, 1200);
+        
+        // Always show manual link after 2 seconds as final fallback
+        setTimeout(() => {
+          setShowManualLink(true);
+        }, 2000);
         
         // If popup is still open, navigate it to Stripe
         if (popupRef.current && !popupRef.current.closed) {
