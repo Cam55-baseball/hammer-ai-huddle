@@ -307,7 +307,7 @@ export default function Dashboard() {
         </div>
 
         {/* Hero Image Card */}
-        <Card className="relative overflow-hidden border-2 border-black shadow-lg" style={{ minHeight: '200px' }}>
+        <Card className="relative overflow-hidden border-2 border-black shadow-lg aspect-[21/9] w-full">
           <img 
             key={currentHeroIndex}
             src={heroImages[currentHeroIndex]} 
