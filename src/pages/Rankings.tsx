@@ -115,7 +115,7 @@ export default function Rankings() {
         </p>
       </div>
 
-      <Card className="bg-red-600 border-red-700">
+      <Card className="relative overflow-hidden border-red-700 bg-gradient-to-r from-red-600 via-red-500 to-red-700 bg-[length:200%_200%] animate-gradient-shift">
         <CardContent className="py-4">
           <p className="text-white text-center font-medium">
             Our goal is to increase connections and develop the athletes of today.
