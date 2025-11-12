@@ -36,6 +36,7 @@ export default function Profile() {
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null); // Role of the logged-in user
   const [followStatus, setFollowStatus] = useState<'none' | 'pending' | 'accepted' | null>(null);
   const [sendingFollow, setSendingFollow] = useState(false);
+  const [playerSport, setPlayerSport] = useState<'baseball' | 'softball'>('baseball');
   const [editForm, setEditForm] = useState({
     first_name: "",
     last_name: "",
@@ -195,6 +196,19 @@ export default function Profile() {
       }
       
       setUserRole(userRole);
+      
+      // Detect sport from subscriptions for proper label display
+      const { data: subData } = await supabase
+        .from('subscriptions')
+        .select('subscribed_modules')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      const hasSoftballModules = subData?.subscribed_modules?.some((mod: string) => 
+        mod.startsWith('softball_')
+      ) || false;
+
+      setPlayerSport(hasSoftballModules ? 'softball' : 'baseball');
       
       setEditForm({
         first_name: data.first_name || "",
@@ -733,7 +747,9 @@ export default function Profile() {
                   )}
                   {profile?.mlb_affiliate && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">MLB Affiliate</Label>
+                      <Label className="text-xs text-muted-foreground">
+                        {playerSport === 'softball' ? 'Professional Affiliate' : 'MLB Affiliate'}
+                      </Label>
                       <p>{profile.mlb_affiliate}</p>
                     </div>
                   )}
@@ -1237,12 +1253,14 @@ export default function Profile() {
                             </div>
                             
                             <div className="space-y-2">
-                              <Label htmlFor="mlb_affiliate">MLB Affiliate</Label>
+                              <Label htmlFor="mlb_affiliate">
+                                {playerSport === 'softball' ? 'Professional Affiliate' : 'MLB Affiliate'}
+                              </Label>
                               <Input
                                 id="mlb_affiliate"
                                 value={editForm.mlb_affiliate}
                                 onChange={(e) => setEditForm({ ...editForm, mlb_affiliate: e.target.value })}
-                                placeholder="e.g., New York Yankees"
+                                placeholder={playerSport === 'softball' ? 'e.g., USSSA Pride' : 'e.g., New York Yankees'}
                               />
                             </div>
                             

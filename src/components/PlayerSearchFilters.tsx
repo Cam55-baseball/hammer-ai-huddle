@@ -32,6 +32,7 @@ interface FilterState {
 
 interface PlayerSearchFiltersProps {
   filters: FilterState;
+  sportFilter: 'all' | 'baseball' | 'softball';
   onFilterChange: (filters: FilterState) => void;
   onClearFilters: () => void;
 }
@@ -40,7 +41,7 @@ const POSITIONS = ["P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF"];
 const THROWING_HANDS = ["R", "L", "B"];
 const BATTING_SIDES = ["R", "L", "B"];
 
-export function PlayerSearchFilters({ filters, onFilterChange, onClearFilters }: PlayerSearchFiltersProps) {
+export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onClearFilters }: PlayerSearchFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handlePositionToggle = (position: string) => {
@@ -335,12 +336,14 @@ export function PlayerSearchFilters({ filters, onFilterChange, onClearFilters }:
             </Select>
           </div>
 
-          {/* MLB Affiliate */}
+          {/* MLB/Professional Affiliate */}
           <div>
-            <Label htmlFor="mlb-affiliate" className="text-sm font-semibold mb-2 block">MLB Affiliate</Label>
+            <Label htmlFor="mlb-affiliate" className="text-sm font-semibold mb-2 block">
+              {sportFilter === 'softball' ? 'Professional Affiliate' : 'MLB Affiliate'}
+            </Label>
             <Input
               id="mlb-affiliate"
-              placeholder="e.g., Yankees, Dodgers"
+              placeholder={sportFilter === 'softball' ? 'e.g., Chicago Bandits' : 'e.g., Yankees, Dodgers'}
               value={filters.mlbAffiliate}
               onChange={(e) => onFilterChange({ ...filters, mlbAffiliate: e.target.value })}
             />

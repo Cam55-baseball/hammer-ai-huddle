@@ -342,14 +342,22 @@ export default function ScoutDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Scout Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your player follows and track their progress
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Scout Dashboard</h1>
+        <p className="text-muted-foreground mt-2">
+          Manage your player follows and track their progress
+        </p>
+      </div>
 
-        <Card>
+      <Tabs value={sportFilter} onValueChange={(value) => setSportFilter(value as 'all' | 'baseball' | 'softball')} className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-3 mx-auto">
+          <TabsTrigger value="all">All Sports</TabsTrigger>
+          <TabsTrigger value="baseball">Baseball</TabsTrigger>
+          <TabsTrigger value="softball">Softball</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Following</span>
@@ -434,6 +442,7 @@ export default function ScoutDashboard() {
             <div className="space-y-4">
               <PlayerSearchFilters
                 filters={filters}
+                sportFilter={sportFilter}
                 onFilterChange={setFilters}
                 onClearFilters={() => setFilters({
                   positions: [],
