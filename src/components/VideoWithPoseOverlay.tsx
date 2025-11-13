@@ -4,6 +4,34 @@ import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
 import { Activity, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 
+// Calculate Euclidean distance between two landmarks
+const calculateDistance = (landmark1: any, landmark2: any): number => {
+  const dx = landmark1.x - landmark2.x;
+  const dy = landmark1.y - landmark2.y;
+  return Math.sqrt(dx * dx + dy * dy);
+};
+
+// Calculate adaptive scale factor based on person size in frame
+const calculateScaleFactor = (landmarks: any[], canvasWidth: number): number => {
+  const leftShoulder = landmarks[11];
+  const rightShoulder = landmarks[12];
+  
+  if (!leftShoulder || !rightShoulder) {
+    return 1.0; // Default scale if shoulders not detected
+  }
+  
+  // Calculate shoulder width in pixels
+  const shoulderWidthNormalized = calculateDistance(leftShoulder, rightShoulder);
+  const shoulderWidthPixels = shoulderWidthNormalized * canvasWidth;
+  
+  // Base reference: 150px shoulder width (typical mid-distance video)
+  const BASE_SHOULDER_WIDTH = 150;
+  const scaleFactor = shoulderWidthPixels / BASE_SHOULDER_WIDTH;
+  
+  // Clamp between 0.5x and 2.0x to prevent extreme sizes
+  return Math.max(0.5, Math.min(2.0, scaleFactor));
+};
+
 interface VideoWithPoseOverlayProps {
   videoSrc: string;
   showMarkers?: boolean;
@@ -51,21 +79,34 @@ export const VideoWithPoseOverlay = ({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (results.poseLandmarks && markersEnabled) {
-        // Draw connections (skeleton lines)
+        // Calculate adaptive scale based on person size
+        const scaleFactor = calculateScaleFactor(results.poseLandmarks, canvas.width);
+        
+        // Base sizes
+        const baseLandmarkRadius = 4;
+        const baseKeyLandmarkRadius = 6;
+        const baseLineWidth = 2;
+        
+        // Scaled sizes
+        const landmarkRadius = baseLandmarkRadius * scaleFactor;
+        const keyLandmarkRadius = baseKeyLandmarkRadius * scaleFactor;
+        const lineWidth = Math.max(1, baseLineWidth * scaleFactor); // Minimum 1px for visibility
+        
+        // Draw connections (skeleton lines) with adaptive thickness
         drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
-          color: 'rgba(59, 130, 246, 0.6)', // Blue
-          lineWidth: 2
+          color: 'rgba(59, 130, 246, 0.6)',
+          lineWidth: lineWidth
         });
 
-        // Draw landmarks (joint points)
+        // Draw landmarks (joint points) with adaptive size
         drawLandmarks(ctx, results.poseLandmarks, {
           color: 'rgba(59, 130, 246, 0.9)',
           fillColor: 'rgba(59, 130, 246, 0.3)',
-          lineWidth: 1,
-          radius: 4
+          lineWidth: Math.max(1, lineWidth * 0.5),
+          radius: landmarkRadius
         });
 
-        // Highlight key points for hitting analysis
+        // Highlight key points for hitting analysis with adaptive size
         const keyLandmarks = [
           { index: 0, color: '#a855f7' }, // Nose (head)
           { index: 11, color: '#10b981' }, // Left shoulder
@@ -83,14 +124,14 @@ export const VideoWithPoseOverlay = ({
             ctx.arc(
               landmark.x * canvas.width,
               landmark.y * canvas.height,
-              6,
+              keyLandmarkRadius, // Adaptive size
               0,
               2 * Math.PI
             );
             ctx.fillStyle = color;
             ctx.fill();
             ctx.strokeStyle = 'white';
-            ctx.lineWidth = 2;
+            ctx.lineWidth = Math.max(1, lineWidth);
             ctx.stroke();
           }
         });
