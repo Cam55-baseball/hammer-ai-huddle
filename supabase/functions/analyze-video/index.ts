@@ -73,6 +73,17 @@ Provide:
 - **If forward head movement detected:** Note correlation with back elbow position and hand travel
 - Recommended drills to correct any sequence issues and improve balance
 
+IMPORTANT - POSITIVES IDENTIFICATION:
+After your analysis, identify 2-4 specific positive aspects of the player's mechanics. Look for:
+- Good foundation elements (stance, setup, balance)
+- Correct sequencing in any part of the swing
+- Proper timing in any phase
+- Good rotation mechanics
+- Strong finish/follow-through
+- Any element that shows proper form or good athletic movement
+
+These positives will be displayed separately to encourage the player.
+
 DO NOT MENTION: velocity, bat speed, exit velocity, or output metrics.
 Focus ONLY on form and body mechanics.`;
   }
@@ -119,7 +130,20 @@ After the feedback, provide 3–5 actionable drills tailored to the issues found
 - steps: 3–6 specific step-by-step instructions
 - reps_sets: Recommended reps/sets (e.g., "3 sets of 10 reps")
 - equipment: Required equipment or "None"
-- cues: 2–3 coaching cues for proper execution`;
+- cues: 2–3 coaching cues for proper execution
+
+IMPORTANT - POSITIVES IDENTIFICATION:
+Identify 2-4 specific positive mechanical elements, such as:
+- Good leg drive or momentum toward target
+- Proper landing position elements
+- Correct sequencing in any phase
+- Good arm path or slot
+- Strong follow-through
+- Proper balance and athleticism
+- Any correct alignment or rotation mechanics
+
+DO NOT MENTION: velocity, spin rate, or output metrics.
+Focus ONLY on form and body mechanics.`;
   }
 
   if (module === "pitching" && sport === "softball") {
@@ -138,7 +162,19 @@ Key Focus Areas:
 
 Use your knowledge of professional softball pitching mechanics to evaluate form.
 
-Provide efficiency score (0-100) based on professional standards.`;
+IMPORTANT - POSITIVES IDENTIFICATION:
+Identify 2-4 positive aspects of their windmill mechanics:
+- Clean arm circle
+- Good hip drive and rotation
+- Consistent release point
+- Strong lower body engagement
+- Good balance and athletic movement
+- Smooth rhythm and tempo
+
+Provide an efficiency score (0-100) based on professional standards, specific feedback, and recommended drills.
+
+DO NOT MENTION: velocity, spin rate, or output metrics.
+Focus ONLY on form and body mechanics.`;
   }
 
   if (module === "throwing") {
@@ -172,7 +208,19 @@ Focus on:
 
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
-Provide efficiency score (0-100) and specific feedback on sequence and alignment.`;
+IMPORTANT - POSITIVES IDENTIFICATION:
+Identify 2-4 positive throwing mechanics:
+- Good footwork toward target
+- Proper momentum generation
+- Correct body rotation elements
+- Strong arm path
+- Good follow-through
+- Athletic balance throughout throw
+
+Provide efficiency score (0-100) and specific feedback on sequence and alignment.
+
+DO NOT MENTION: velocity or output metrics.
+Focus ONLY on form and body mechanics.`;
   }
 
   return "You are an expert sports mechanics analyst.";
@@ -241,6 +289,11 @@ Deno.serve(async (req) => {
                     type: "string",
                     description: "Detailed feedback on mechanics and form"
                   },
+                  positives: {
+                    type: "array",
+                    description: "List of 2-4 specific positive aspects of the player's mechanics that they should feel good about and build upon",
+                    items: { type: "string" }
+                  },
                   drills: {
                     type: "array",
                     items: {
@@ -257,7 +310,7 @@ Deno.serve(async (req) => {
                     }
                   }
                 },
-                required: ["efficiency_score", "feedback", "drills"]
+                required: ["efficiency_score", "feedback", "positives", "drills"]
               }
             }
           }
@@ -305,6 +358,7 @@ Deno.serve(async (req) => {
     
     let efficiency_score = 75;
     let feedback = "No analysis available";
+    let positives: string[] = [];
     let drills: any[] = [];
 
     // Parse tool calls for structured output
@@ -314,6 +368,7 @@ Deno.serve(async (req) => {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
         efficiency_score = analysisArgs.efficiency_score || 75;
         feedback = analysisArgs.feedback || "No feedback available";
+        positives = analysisArgs.positives || [];
         drills = analysisArgs.drills || [];
       } catch (parseError) {
         console.error("Error parsing tool call arguments:", parseError);
@@ -336,6 +391,7 @@ Deno.serve(async (req) => {
 
     const ai_analysis = {
       feedback,
+      positives,
       drills,
       model_used: "google/gemini-2.5-flash",
       analyzed_at: new Date().toISOString(),
@@ -411,6 +467,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         efficiency_score,
         feedback,
+        positives,
         drills,
         mocap_data,
       }),

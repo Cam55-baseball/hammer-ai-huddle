@@ -32,7 +32,19 @@ export default function AnalyzeVideo() {
   const [analyzing, setAnalyzing] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<{
+    efficiency_score: number;
+    feedback: string;
+    positives?: string[];
+    drills: Array<{
+      title: string;
+      purpose: string;
+      steps: string[];
+      reps_sets: string;
+      equipment: string;
+      cues?: string[];
+    }>;
+  } | null>(null);
   const [analysisError, setAnalysisError] = useState<any>(null);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [playbackRate, setPlaybackRate] = useState<string>(() => {
@@ -536,6 +548,45 @@ export default function AnalyzeVideo() {
                       {analysis.feedback}
                     </p>
                   </div>
+
+                  {/* Positives Section */}
+                  {analysis.positives && analysis.positives.length > 0 && (
+                    <div className="bg-green-50 dark:bg-green-950/30 border-2 border-green-500 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 mt-0.5">
+                          <svg 
+                            className="h-6 w-6 text-green-600 dark:text-green-400" 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-green-700 dark:text-green-300 mb-2">
+                            What You're Doing Well
+                          </h4>
+                          <ul className="space-y-2">
+                            {analysis.positives.map((positive: string, index: number) => (
+                              <li 
+                                key={index} 
+                                className="text-sm text-green-900 dark:text-green-100 flex items-start gap-2"
+                              >
+                                <span className="text-green-600 dark:text-green-400 mt-0.5">✓</span>
+                                <span>{positive}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {analysis.drills && analysis.drills.length > 0 && (
                     <div className="pt-4 border-t">
