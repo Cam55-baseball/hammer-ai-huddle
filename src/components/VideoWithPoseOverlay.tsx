@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Activity, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './ui/resizable';
 
 // Define POSE_CONNECTIONS manually (MediaPipe Pose landmark connections)
 const POSE_CONNECTIONS: [number, number][] = [
@@ -242,18 +243,15 @@ export const VideoWithPoseOverlay = ({
     if (!video || !canvas) return;
 
     const updateCanvasSize = () => {
+      // Set canvas to match video's natural dimensions
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      canvas.style.width = `${video.clientWidth}px`;
-      canvas.style.height = `${video.clientHeight}px`;
     };
 
     video.addEventListener('loadedmetadata', updateCanvasSize);
-    window.addEventListener('resize', updateCanvasSize);
-
+    
     return () => {
       video.removeEventListener('loadedmetadata', updateCanvasSize);
-      window.removeEventListener('resize', updateCanvasSize);
     };
   }, []);
 
@@ -264,52 +262,89 @@ export const VideoWithPoseOverlay = ({
   };
 
   return (
-    <div className="relative w-full">
-      <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-        <video
-          ref={videoRef}
-          src={videoSrc}
-          controls
-          className="w-full h-full"
-          crossOrigin="anonymous"
-        />
-        {markersEnabled && (
-          <canvas
-            ref={canvasRef}
-            className="absolute top-0 left-0 pointer-events-none"
-            style={{ width: '100%', height: '100%' }}
-          />
-        )}
-      </div>
-
-      <div className="mt-4 flex items-center gap-4">
+    <div className="w-full space-y-4">
+      {/* Controls above the split view */}
+      <div className="flex items-center justify-between">
         <Button
-          variant="outline"
-          size="sm"
           onClick={handleToggleMarkers}
+          variant={markersEnabled ? "default" : "outline"}
+          size="sm"
+          disabled={isProcessing}
           className="gap-2"
         >
-          <Activity className="h-4 w-4" />
-          {markersEnabled ? 'Hide' : 'Show'} Pose Markers
+          {isProcessing ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Activity className="h-4 w-4" />
+              {markersEnabled ? "Hide" : "Show"} Pose Markers
+            </>
+          )}
         </Button>
-
-        {isProcessing && markersEnabled && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Processing pose detection...
-          </div>
-        )}
-
+        
         {markersEnabled && !isProcessing && poseDetector && (
-          <div className="text-sm text-muted-foreground">
-            Pose detection ready
-          </div>
+          <p className="text-sm text-green-600">
+            ✓ Pose detection active
+          </p>
         )}
       </div>
 
+      {/* Split-view panels */}
+      <ResizablePanelGroup direction="horizontal" className="min-h-[400px] rounded-lg border">
+        {/* Left Panel - Original Video */}
+        <ResizablePanel defaultSize={50} minSize={30}>
+          <div className="h-full flex flex-col bg-black">
+            <div className="flex-1 flex items-center justify-center p-4">
+              <video 
+                ref={videoRef}
+                src={videoSrc}
+                controls
+                className="max-w-full max-h-full object-contain"
+                crossOrigin="anonymous"
+                playsInline
+              />
+            </div>
+            <div className="p-3 bg-muted/10 border-t border-border">
+              <p className="text-xs text-muted-foreground text-center">Original Video</p>
+            </div>
+          </div>
+        </ResizablePanel>
+
+        {/* Resizable Handle */}
+        <ResizableHandle withHandle />
+
+        {/* Right Panel - Pose Detection Canvas */}
+        <ResizablePanel defaultSize={50} minSize={30}>
+          <div className="h-full flex flex-col bg-black">
+            <div className="flex-1 flex items-center justify-center p-4">
+              {markersEnabled ? (
+                <canvas 
+                  ref={canvasRef}
+                  className="max-w-full max-h-full object-contain"
+                />
+              ) : (
+                <div className="text-center p-8">
+                  <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Enable pose markers to see analysis
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="p-3 bg-muted/10 border-t border-border">
+              <p className="text-xs text-muted-foreground text-center">Pose Detection</p>
+            </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+
+      {/* Legend below the split view */}
       {markersEnabled && (
-        <div className="mt-4 p-4 bg-muted rounded-lg">
-          <h4 className="text-sm font-medium mb-2">Landmark Legend</h4>
+        <div className="p-4 bg-muted/50 rounded-lg">
+          <h4 className="text-sm font-semibold mb-2">Key Landmarks:</h4>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#a855f7' }} />
