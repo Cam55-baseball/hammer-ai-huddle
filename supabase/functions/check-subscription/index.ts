@@ -29,6 +29,7 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Create service role client for privileged operations (accessible in both try and catch)
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -58,7 +59,17 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     logStep("Authenticating user with token");
     
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    // Create a client with the user's token to get user info
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { 
+        global: { headers: { Authorization: authHeader } },
+        auth: { persistSession: false }
+      }
+    );
+    
+    const { data: userData, error: userError } = await userClient.auth.getUser();
     if (userError) {
       logStep("ERROR: Authentication failed", { 
         error: userError.message,
@@ -69,7 +80,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "Authentication failed",
-          message: userError.message,
+          message: userError.message || "Invalid or expired token",
           code: userError.code
         }),
         { 
@@ -670,8 +681,17 @@ serve(async (req) => {
     try {
       const authHeader = req.headers.get("Authorization");
       if (authHeader) {
-        const token = authHeader.replace("Bearer ", "");
-        const { data: userData } = await supabaseClient.auth.getUser(token);
+        // Create a client with the user's token for fallback auth
+        const fallbackClient = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+          { 
+            global: { headers: { Authorization: authHeader } },
+            auth: { persistSession: false }
+          }
+        );
+        
+        const { data: userData } = await fallbackClient.auth.getUser();
         const user = userData.user;
         
         if (user) {
