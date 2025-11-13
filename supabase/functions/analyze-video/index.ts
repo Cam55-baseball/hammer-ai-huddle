@@ -28,8 +28,10 @@ CRITICAL HITTING KINETIC SEQUENCE:
 
 BALANCE & HEAD CONTROL:
 - Head should stay on the MIDDLE LINE of the body throughout the swing
-- Minimal forward head movement = good balance ⭐
-- Forward moving head = imbalance → inaccurate bat + timing issues
+- Minimal head movement TOWARD THE BALL (backward toward pitcher) = good balance ⭐
+- Head moving TOWARD THE BALL = red flag → imbalance, inaccurate bat, timing issues
+- Head moving forward toward home plate/toes is natural and acceptable in proper swing mechanics
+- **CRITICAL DISTINCTION:** We are ONLY concerned with head movement TOWARD THE PITCHER/BALL (backward), NOT forward movement toward the plate
 - Proper back elbow placement and hands staying back often naturally stabilize the head
 - **IMPORTANT:** Don't sacrifice swing sequence to keep head still - proper sequence creates natural balance
 
@@ -43,16 +45,17 @@ RED FLAGS:
   * Barrel loses tension and connection to body rotation
   * Barrel drops BELOW the plane of the properly sequenced swing
   * Disrupts bat path and timing
-- ⚠️ Excessive forward head movement → Balance and timing issues
-  * Moving head = moving eyes = inconsistent contact point
+- ⚠️ Head movement TOWARD THE BALL (backward toward pitcher) → Balance and timing issues
+  * Moving head backward = pulling off the ball = moving eyes away from contact point
   * Often indicates hands traveling forward out of sequence
-  * Can signal improper back elbow placement
+  * Can signal improper back elbow placement or fear of the pitch
+  * **NOTE:** Forward movement toward home plate/toes is acceptable and natural
 - Back elbow drops to slot without traveling forward → Reduces bat speed
 - Hips rotate before back elbow travels → Broken kinetic chain
 
 Focus on:
 1. ⭐ Do hands stay BEHIND the back elbow until AFTER shoulders begin rotating?
-2. Does the head stay on the middle line of the body with minimal forward movement? ⭐
+2. Does the head stay on the middle line of the body without moving TOWARD THE BALL (backward)? ⭐
 3. Does the FRONT SHOULDER stay CLOSED until proper timing in sequence? ⭐
 4. Does back elbow TRAVEL forward before hips?
 5. Are timing gaps correct (elbow → hips → shoulders → hands)?
@@ -65,12 +68,12 @@ Provide:
 - Specific feedback on:
   * Hand-elbow timing relative to shoulder rotation
   * Front shoulder control and timing (watch for early opening)
-  * Head position and forward movement (balance indicator)
+  * Head position and movement TOWARD THE BALL (balance indicator - backward movement only)
   * Back elbow travel
   * Kinetic sequence timing
 - Identify any sequence violations and their impact on power/contact
 - **If front shoulder opens early:** Explain impact on barrel tension, swing plane, and contact accuracy
-- **If forward head movement detected:** Note correlation with back elbow position and hand travel
+- **If head movement TOWARD THE BALL detected:** Note correlation with back elbow position and hand travel - this backward movement indicates pulling off the ball
 - Recommended drills to correct any sequence issues and improve balance
 
 IMPORTANT - POSITIVES IDENTIFICATION:
