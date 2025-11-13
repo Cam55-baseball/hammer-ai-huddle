@@ -23,7 +23,7 @@ CRITICAL HITTING KINETIC SEQUENCE:
 3. BACK ELBOW TRAVELS FORWARD (BEFORE hips rotate) ⭐
 4. Hips Rotate
 5. Torso Rotates
-6. Shoulders Rotate
+6. Shoulders Rotate (FRONT SHOULDER MUST STAY CLOSED UNTIL THIS POINT) ⭐
 7. Hands/Bat Release (HANDS MUST NOT PASS BACK ELBOW BEFORE SHOULDERS ROTATE) ⭐⭐
 
 BALANCE & HEAD CONTROL:
@@ -38,31 +38,38 @@ RED FLAGS:
   * Bat not on plane early enough or long enough
   * Reduces contact abilities and accuracy at contact
   * Breaks kinetic chain → Power loss
+- ⚠️ CRITICAL: Front shoulder pulls/opens out of sequence (too early) → MAJOR CONTACT DISRUPTOR ⭐
+  * Causes inaccuracies when making contact with the pitch
+  * Barrel loses tension and connection to body rotation
+  * Barrel drops BELOW the plane of the properly sequenced swing
+  * Disrupts bat path and timing
 - ⚠️ Excessive forward head movement → Balance and timing issues
   * Moving head = moving eyes = inconsistent contact point
   * Often indicates hands traveling forward out of sequence
   * Can signal improper back elbow placement
-- Front shoulder opens early (out of sequence) → Drops bat speed
 - Back elbow drops to slot without traveling forward → Reduces bat speed
 - Hips rotate before back elbow travels → Broken kinetic chain
 
 Focus on:
 1. ⭐ Do hands stay BEHIND the back elbow until AFTER shoulders begin rotating?
 2. Does the head stay on the middle line of the body with minimal forward movement? ⭐
-3. Does back elbow TRAVEL forward before hips?
-4. Does front shoulder stay closed until proper timing?
+3. Does the FRONT SHOULDER stay CLOSED until proper timing in sequence? ⭐
+4. Does back elbow TRAVEL forward before hips?
 5. Are timing gaps correct (elbow → hips → shoulders → hands)?
 
 Provide:
 - Efficiency score (0-100) based on form correctness
 - **PRIORITY CHECK:** Flag if hands pass back elbow before shoulder rotation (major deduction to score)
+- **PRIORITY CHECK:** Flag if front shoulder opens/pulls out of sequence (major deduction to score)
 - **BALANCE CHECK:** Assess head movement and balance throughout the swing
 - Specific feedback on:
   * Hand-elbow timing relative to shoulder rotation
+  * Front shoulder control and timing (watch for early opening)
   * Head position and forward movement (balance indicator)
-  * Back elbow travel and front shoulder control
+  * Back elbow travel
   * Kinetic sequence timing
 - Identify any sequence violations and their impact on power/contact
+- **If front shoulder opens early:** Explain impact on barrel tension, swing plane, and contact accuracy
 - **If forward head movement detected:** Note correlation with back elbow position and hand travel
 - Recommended drills to correct any sequence issues and improve balance
 
