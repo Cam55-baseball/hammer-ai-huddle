@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pose } from '@mediapipe/pose';
-import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
 import { Activity, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -12,6 +10,15 @@ const POSE_CONNECTIONS: [number, number][] = [
   [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 27], [26, 28],
   [27, 29], [28, 30], [29, 31], [30, 32], [27, 31], [28, 32]
 ];
+
+// MediaPipe types (loaded from CDN)
+declare global {
+  interface Window {
+    Pose: any;
+    drawConnectors: any;
+    drawLandmarks: any;
+  }
+}
 
 // Calculate Euclidean distance between two landmarks
 const calculateDistance = (landmark1: any, landmark2: any): number => {
@@ -54,17 +61,42 @@ export const VideoWithPoseOverlay = ({
 }: VideoWithPoseOverlayProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [poseDetector, setPoseDetector] = useState<Pose | null>(null);
+  const [poseDetector, setPoseDetector] = useState<any | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [markersEnabled, setMarkersEnabled] = useState(showMarkers);
   const animationFrameRef = useRef<number>();
 
+  // Load MediaPipe scripts from CDN
+  useEffect(() => {
+    if (window.Pose && window.drawConnectors && window.drawLandmarks) return;
+
+    const loadScript = (src: string): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+          resolve();
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = src;
+        script.crossOrigin = 'anonymous';
+        script.onload = () => resolve();
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    };
+
+    Promise.all([
+      loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js'),
+      loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js')
+    ]).catch(console.error);
+  }, []);
+
   // Initialize MediaPipe Pose
   useEffect(() => {
-    if (!markersEnabled) return;
+    if (!markersEnabled || !window.Pose) return;
 
-    const pose = new Pose({
-      locateFile: (file) => {
+    const pose = new window.Pose({
+      locateFile: (file: string) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
       }
     });
@@ -102,18 +134,22 @@ export const VideoWithPoseOverlay = ({
         const lineWidth = Math.max(1, baseLineWidth * scaleFactor); // Minimum 1px for visibility
         
         // Draw connections (skeleton lines) with adaptive thickness
-        drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
-          color: 'rgba(59, 130, 246, 0.6)',
-          lineWidth: lineWidth
-        });
+        if (window.drawConnectors) {
+          window.drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
+            color: 'rgba(59, 130, 246, 0.6)',
+            lineWidth: lineWidth
+          });
+        }
 
         // Draw landmarks (joint points) with adaptive size
-        drawLandmarks(ctx, results.poseLandmarks, {
-          color: 'rgba(59, 130, 246, 0.9)',
-          fillColor: 'rgba(59, 130, 246, 0.3)',
-          lineWidth: Math.max(1, lineWidth * 0.5),
-          radius: landmarkRadius
-        });
+        if (window.drawLandmarks) {
+          window.drawLandmarks(ctx, results.poseLandmarks, {
+            color: 'rgba(59, 130, 246, 0.9)',
+            fillColor: 'rgba(59, 130, 246, 0.3)',
+            lineWidth: Math.max(1, lineWidth * 0.5),
+            radius: landmarkRadius
+          });
+        }
 
         // Highlight key points for hitting analysis with adaptive size
         const keyLandmarks = [
