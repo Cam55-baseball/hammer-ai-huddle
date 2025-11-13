@@ -24,22 +24,32 @@ CRITICAL HITTING KINETIC SEQUENCE:
 4. Hips Rotate
 5. Torso Rotates
 6. Shoulders Rotate
-7. Hands/Bat Release
+7. Hands/Bat Release (HANDS MUST NOT PASS BACK ELBOW BEFORE SHOULDERS ROTATE) ⭐⭐
 
 RED FLAGS:
+- ⚠️ CRITICAL: Hands pass back elbow BEFORE shoulders begin rotating → MAJOR SEQUENCE DISRUPTOR
+  * Bat not on plane early enough or long enough
+  * Reduces contact abilities and accuracy at contact
+  * Breaks kinetic chain → Power loss
 - Front shoulder opens early (out of sequence) → Drops bat speed
 - Back elbow drops to slot without traveling forward → Reduces bat speed
 - Hips rotate before back elbow travels → Broken kinetic chain
 
 Focus on:
-1. Does back elbow TRAVEL forward before hips?
-2. Does front shoulder stay closed until proper timing?
-3. Are timing gaps correct (elbow → hips → shoulders)?
+1. ⭐ Do hands stay BEHIND the back elbow until AFTER shoulders begin rotating?
+2. Does back elbow TRAVEL forward before hips?
+3. Does front shoulder stay closed until proper timing?
+4. Are timing gaps correct (elbow → hips → shoulders → hands)?
 
 Provide:
 - Efficiency score (0-100) based on form correctness
-- Specific feedback on back elbow travel, front shoulder control, kinetic sequence timing
-- Identify any sequence violations
+- **PRIORITY CHECK:** Flag if hands pass back elbow before shoulder rotation (major deduction to score)
+- Specific feedback on:
+  * Hand-elbow timing relative to shoulder rotation
+  * Back elbow travel and front shoulder control
+  * Kinetic sequence timing
+- Identify any sequence violations and their impact on power/contact
+- Recommended drills to correct any sequence issues
 
 DO NOT MENTION: velocity, bat speed, exit velocity, or output metrics.
 Focus ONLY on form and body mechanics.`;
