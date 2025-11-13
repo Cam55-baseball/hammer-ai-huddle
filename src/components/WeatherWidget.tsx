@@ -43,7 +43,8 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const fetchWeather = async (searchLocation?: string) => {
+  const fetchWeather = async (searchLocation?: string, sportParam?: 'baseball' | 'softball') => {
+    const sportToUse = sportParam || sport;
     try {
       setLoading(true);
       setError(null);
@@ -64,7 +65,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
       }
 
       const { data, error } = await supabase.functions.invoke("get-weather", {
-        body: { location: locationToFetch, sport },
+        body: { location: locationToFetch, sport: sportToUse },
       });
 
       if (error) throw error;
@@ -93,13 +94,13 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
 
   const handleSearch = () => {
     if (location.trim()) {
-      fetchWeather(location);
+      fetchWeather(location, sport);
     }
   };
 
   useEffect(() => {
     // Auto-fetch on mount and when sport changes
-    fetchWeather();
+    fetchWeather(undefined, sport);
   }, [sport]);
 
   if (loading && !weather) {
