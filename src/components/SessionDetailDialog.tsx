@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Upload, X } from 'lucide-react';
+import { VideoWithPoseOverlay } from '@/components/VideoWithPoseOverlay';
 
 interface SessionDetailDialogProps {
   session: any;
@@ -381,10 +382,9 @@ export function SessionDetailDialog({
           {session.video_url && (
             <div className="space-y-2">
               <Label>Video</Label>
-              <video
-                src={session.video_url}
-                controls
-                className="w-full rounded-md"
+              <VideoWithPoseOverlay
+                videoSrc={session.video_url}
+                showMarkers={false}
               />
             </div>
           )}
