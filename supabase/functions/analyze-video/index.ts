@@ -73,6 +73,12 @@ Provide:
 - **If forward head movement detected:** Note correlation with back elbow position and hand travel
 - Recommended drills to correct any sequence issues and improve balance
 
+SUMMARY FORMAT:
+Provide a brief 3-5 bullet point summary of the most critical findings before the detailed feedback. Each bullet should be one concise sentence highlighting key issues or patterns. Examples:
+- "Hands passing back elbow before shoulder rotation - major power loss"
+- "Front shoulder pulling open too early - reducing bat control"
+- "Good balance and head stability throughout swing"
+
 IMPORTANT - POSITIVES IDENTIFICATION:
 After your analysis, identify 2-4 specific positive aspects of the player's mechanics. Look for:
 - Good foundation elements (stance, setup, balance)
@@ -132,6 +138,12 @@ After the feedback, provide 3–5 actionable drills tailored to the issues found
 - equipment: Required equipment or "None"
 - cues: 2–3 coaching cues for proper execution
 
+SUMMARY FORMAT:
+Provide a brief 3-5 bullet point summary of key mechanical findings. Examples:
+- "Back leg not facing target at release - reducing accuracy"
+- "Strong leg drive toward target"
+- "Front shoulder opening early in delivery"
+
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 specific positive mechanical elements, such as:
 - Good leg drive or momentum toward target
@@ -161,6 +173,12 @@ Key Focus Areas:
 7. Shoulder alignment
 
 Use your knowledge of professional softball pitching mechanics to evaluate form.
+
+SUMMARY FORMAT:
+Provide a brief 3-5 bullet point summary of key findings. Examples:
+- "Clean arm circle mechanics"
+- "Inconsistent release point affecting accuracy"
+- "Strong hip rotation and drive"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 positive aspects of their windmill mechanics:
@@ -207,6 +225,12 @@ Focus on:
 4. Does shoulder move BEFORE arm action?
 
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
+
+SUMMARY FORMAT:
+Provide a brief 3-5 bullet point summary of key findings. Examples:
+- "Good momentum toward target"
+- "Back leg not facing target before shoulder rotation"
+- "Strong follow-through mechanics"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 positive throwing mechanics:
@@ -285,6 +309,11 @@ Deno.serve(async (req) => {
                     type: "number",
                     description: "Score from 0-100 based on form correctness"
                   },
+                  summary: {
+                    type: "array",
+                    description: "3-5 brief bullet points summarizing the most critical findings (mix of issues and strengths)",
+                    items: { type: "string" }
+                  },
                   feedback: {
                     type: "string",
                     description: "Detailed feedback on mechanics and form"
@@ -310,7 +339,7 @@ Deno.serve(async (req) => {
                     }
                   }
                 },
-                required: ["efficiency_score", "feedback", "positives", "drills"]
+                required: ["efficiency_score", "summary", "feedback", "positives", "drills"]
               }
             }
           }
@@ -358,6 +387,7 @@ Deno.serve(async (req) => {
     
     let efficiency_score = 75;
     let feedback = "No analysis available";
+    let summary: string[] = [];
     let positives: string[] = [];
     let drills: any[] = [];
 
@@ -367,6 +397,7 @@ Deno.serve(async (req) => {
       try {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
         efficiency_score = analysisArgs.efficiency_score || 75;
+        summary = analysisArgs.summary || [];
         feedback = analysisArgs.feedback || "No feedback available";
         positives = analysisArgs.positives || [];
         drills = analysisArgs.drills || [];
@@ -390,6 +421,7 @@ Deno.serve(async (req) => {
     };
 
     const ai_analysis = {
+      summary,
       feedback,
       positives,
       drills,
