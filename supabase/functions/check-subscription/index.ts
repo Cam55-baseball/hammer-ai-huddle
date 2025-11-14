@@ -24,6 +24,18 @@ const getCached = (key: string) => {
   return null;
 };
 
+// Timeout wrapper for async operations
+const withTimeout = async <T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  operation: string
+): Promise<T> => {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`${operation} timed out after ${timeoutMs}ms`)), timeoutMs)
+  );
+  return Promise.race([promise, timeout]);
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -176,15 +188,28 @@ serve(async (req) => {
       });
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripe = new Stripe(stripeKey, { 
+      apiVersion: "2025-08-27.basil",
+      timeout: 10000, // 10 second timeout for all Stripe API calls
+      maxNetworkRetries: 2 // Retry failed requests up to 2 times
+    });
     
     // Check cache first
     const cacheKey = `customer:${user.email}`;
     let customers = getCached(cacheKey);
     
     if (!customers) {
-      customers = await stripe.customers.list({ email: user.email, limit: 1 });
-      cache.set(cacheKey, { data: customers, timestamp: Date.now() });
+      try {
+        customers = await withTimeout(
+          stripe.customers.list({ email: user.email, limit: 1 }),
+          8000,
+          "Stripe customer list"
+        );
+        cache.set(cacheKey, { data: customers, timestamp: Date.now() });
+      } catch (timeoutError) {
+        logStep("Stripe API timeout, checking database cache", { error: timeoutError });
+        throw new Error("Stripe API temporarily unavailable");
+      }
     }
     
     if (customers.data.length === 0) {
@@ -219,12 +244,22 @@ serve(async (req) => {
     logStep("Found Stripe customer", { customerId });
 
     // Fetch ALL active subscriptions (not just 1) - users can have multiple modules
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 100,  // Get all active subscriptions (Stripe max is 100)
-      expand: ['data.latest_invoice', 'data.discount'],  // Expand to get full subscription data including current_period_end
-    });
+    let subscriptions;
+    try {
+      subscriptions = await withTimeout(
+        stripe.subscriptions.list({
+          customer: customerId,
+          status: "active",
+          limit: 100,  // Get all active subscriptions (Stripe max is 100)
+          expand: ['data.latest_invoice', 'data.discount'],  // Expand to get full subscription data including current_period_end
+        }),
+        8000,
+        "Stripe subscriptions list"
+      );
+    } catch (timeoutError) {
+      logStep("Stripe subscriptions timeout, using database cache", { error: timeoutError });
+      throw new Error("Stripe API temporarily unavailable");
+    }
     const hasActiveSub = subscriptions.data.length > 0;
     let subscribedModules: string[] = [];
     let subscriptionEnd: string | null = null;
@@ -245,7 +280,17 @@ serve(async (req) => {
         logStep("Processing subscription", { subscriptionId: subscription.id });
       
         // Retrieve full subscription details to ensure we have all fields including current_period_end
-        const fullSubscription = await stripe.subscriptions.retrieve(subscription.id);
+        let fullSubscription;
+        try {
+          fullSubscription = await withTimeout(
+            stripe.subscriptions.retrieve(subscription.id),
+            8000,
+            `Stripe subscription retrieve ${subscription.id}`
+          );
+        } catch (retrieveError) {
+          logStep("Failed to retrieve full subscription", { subscriptionId: subscription.id, error: retrieveError });
+          continue; // Skip this subscription and continue with others
+        }
         const subscriptionItem = fullSubscription.items.data[0];
         logStep("Full subscription retrieved", { 
           subscriptionId: fullSubscription.id,
@@ -273,9 +318,13 @@ serve(async (req) => {
               ? fullSubscription.latest_invoice 
               : fullSubscription.latest_invoice.id;
             
-            const invoice = await stripe.invoices.retrieve(invoiceId, {
-              expand: ['discount', 'total_discount_amounts']
-            });
+            const invoice = await withTimeout(
+              stripe.invoices.retrieve(invoiceId, {
+                expand: ['discount', 'total_discount_amounts']
+              }),
+              5000,
+              `Stripe invoice retrieve ${invoiceId}`
+            );
             
             logStep("Checking invoice for discounts", { 
               invoiceId, 
@@ -340,7 +389,11 @@ serve(async (req) => {
           
           if (!product) {
             try {
-              product = await stripe.products.retrieve(productId);
+              product = await withTimeout(
+                stripe.products.retrieve(productId),
+                5000,
+                `Stripe product retrieve ${productId}`
+              );
               cache.set(productCacheKey, { data: product, timestamp: Date.now() });
               logStep("Retrieved product from Stripe", { productId, productName: product.name });
             } catch (error) {
@@ -431,9 +484,16 @@ serve(async (req) => {
               let priceData = getCached(priceCacheKey);
               
               if (!priceData) {
-                priceData = await stripe.prices.retrieve(priceId);
-                cache.set(priceCacheKey, { data: priceData, timestamp: Date.now() });
-              }
+                try {
+                  priceData = await withTimeout(
+                    stripe.prices.retrieve(priceId),
+                    5000,
+                    `Stripe price retrieve ${priceId}`
+                  );
+                  cache.set(priceCacheKey, { data: priceData, timestamp: Date.now() });
+                } catch (priceError) {
+                  logStep("Failed to retrieve price", { priceId, error: priceError });
+                }
               
               if (!sport) {
                 sport = normalizeValue(priceData.metadata?.sport) || normalizeValue(priceData.metadata?.Sport);
@@ -667,7 +727,12 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in check-subscription", { message: errorMessage });
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    logStep("ERROR in check-subscription", { 
+      message: errorMessage,
+      stack: errorStack,
+      type: error instanceof Error ? error.constructor.name : typeof error
+    });
     
     // Determine appropriate status code
     let statusCode = 500;
@@ -675,6 +740,8 @@ serve(async (req) => {
       statusCode = 401;
     } else if (errorMessage.includes('STRIPE_SECRET_KEY')) {
       statusCode = 500;
+    } else if (errorMessage.includes('timed out') || errorMessage.includes('temporarily unavailable')) {
+      statusCode = 503; // Service Unavailable
     }
     
     // Fallback to database state on error (like rate limiting)
@@ -723,8 +790,11 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
-        timestamp: new Date().toISOString()
+        error: errorMessage.includes('Stripe API') 
+          ? "Service temporarily unavailable. Please try again." 
+          : errorMessage,
+        timestamp: new Date().toISOString(),
+        retry: statusCode === 503
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
