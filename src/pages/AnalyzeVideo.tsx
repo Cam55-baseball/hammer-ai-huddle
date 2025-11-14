@@ -34,6 +34,7 @@ export default function AnalyzeVideo() {
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<{
     efficiency_score: number;
+    summary?: string[];
     feedback: string;
     positives?: string[];
     drills: Array<{
@@ -543,7 +544,26 @@ export default function AnalyzeVideo() {
                   </div>
                   
                   <div>
-                    <h4 className="text-lg font-semibold mb-2">Feedback</h4>
+                    <h4 className="text-lg font-semibold mb-3">Feedback</h4>
+                    
+                    {/* Summary Bullet Points */}
+                    {analysis.summary && analysis.summary.length > 0 && (
+                      <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border">
+                        <ul className="space-y-1.5">
+                          {analysis.summary.map((point: string, index: number) => (
+                            <li 
+                              key={index}
+                              className="text-sm flex items-start gap-2"
+                            >
+                              <span className="text-primary mt-0.5">•</span>
+                              <span>{point}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {/* Detailed Feedback */}
                     <p className="text-muted-foreground whitespace-pre-wrap">
                       {analysis.feedback}
                     </p>
