@@ -28,14 +28,8 @@ CRITICAL HITTING KINETIC SEQUENCE:
 
 BALANCE & HEAD CONTROL:
 - Head should stay on the MIDDLE LINE of the body throughout the swing
-- Head position directly affects balance, eye tracking, and contact consistency
-- **THREE TYPES OF HEAD MOVEMENT:**
-  1. ✓ Downward/vertical (toward toes while staying over plate) = ACCEPTABLE natural weight transfer
-     * OK as long as back elbow has not begun swinging forward yet
-  2. ❌ Linear forward diving (toward pitcher/ball) = RED FLAG
-     * Lunging at the pitch = moving eyes = loss of balance
-     * Indicates poor timing and sequence breakdown
-  3. Backward pulling (toward catcher/away from ball) = Different issue, less common
+- Minimal forward head movement = good balance ⭐
+- Forward moving head = imbalance → inaccurate bat + timing issues
 - Proper back elbow placement and hands staying back often naturally stabilize the head
 - **IMPORTANT:** Don't sacrifice swing sequence to keep head still - proper sequence creates natural balance
 
@@ -49,18 +43,16 @@ RED FLAGS:
   * Barrel loses tension and connection to body rotation
   * Barrel drops BELOW the plane of the properly sequenced swing
   * Disrupts bat path and timing
-- ⚠️ Linear forward head movement (diving toward pitcher/ball) → Balance and timing issues
-  * Lunging forward = moving eyes away from tracking = inconsistent contact point
-  * Often indicates hands traveling forward out of sequence or fear of the pitch
-  * Can signal improper back elbow placement or early weight shift
-  * **IMPORTANT:** Downward/vertical head drop while staying over plate is acceptable
-  * **CRITICAL:** Only flag if head moves linearly TOWARD the pitcher, not downward toward toes
+- ⚠️ Excessive forward head movement → Balance and timing issues
+  * Moving head = moving eyes = inconsistent contact point
+  * Often indicates hands traveling forward out of sequence
+  * Can signal improper back elbow placement
 - Back elbow drops to slot without traveling forward → Reduces bat speed
 - Hips rotate before back elbow travels → Broken kinetic chain
 
 Focus on:
 1. ⭐ Do hands stay BEHIND the back elbow until AFTER shoulders begin rotating?
-2. Does the head avoid lunging/diving forward toward the pitcher? (Downward toward toes is OK) ⭐
+2. Does the head stay on the middle line of the body with minimal forward movement? ⭐
 3. Does the FRONT SHOULDER stay CLOSED until proper timing in sequence? ⭐
 4. Does back elbow TRAVEL forward before hips?
 5. Are timing gaps correct (elbow → hips → shoulders → hands)?
@@ -73,12 +65,12 @@ Provide:
 - Specific feedback on:
   * Hand-elbow timing relative to shoulder rotation
   * Front shoulder control and timing (watch for early opening)
-  * Head position - flag only LINEAR FORWARD diving toward pitcher (not downward/vertical movement)
+  * Head position and forward movement (balance indicator)
   * Back elbow travel
   * Kinetic sequence timing
 - Identify any sequence violations and their impact on power/contact
 - **If front shoulder opens early:** Explain impact on barrel tension, swing plane, and contact accuracy
-- **If linear forward head diving detected:** Note correlation with back elbow position, hand travel, and early weight shift - this lunging indicates timing breakdown
+- **If forward head movement detected:** Note correlation with back elbow position and hand travel
 - Recommended drills to correct any sequence issues and improve balance
 
 IMPORTANT - POSITIVES IDENTIFICATION:
