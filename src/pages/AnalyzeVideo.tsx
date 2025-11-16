@@ -15,7 +15,7 @@ import { ArrowLeft, Upload, Video, Trash2, BookMarked } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
-import { VideoWithPoseOverlay } from "@/components/VideoWithPoseOverlay";
+import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 
@@ -54,7 +54,6 @@ export default function AnalyzeVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [analysisEnabled, setAnalysisEnabled] = useState(true);
-  const [poseMarkersEnabled, setPoseMarkersEnabled] = useState(false);
 
   // Force fresh subscription check on page load
   useEffect(() => {
@@ -445,10 +444,9 @@ export default function AnalyzeVideo() {
                   />
                 </div>
 
-                <VideoWithPoseOverlay
+                <EnhancedVideoPlayer
                   videoSrc={videoPreview}
-                  showMarkers={poseMarkersEnabled}
-                  onToggleMarkers={setPoseMarkersEnabled}
+                  playbackRate={parseFloat(playbackRate)}
                 />
               </div>
             </Card>
