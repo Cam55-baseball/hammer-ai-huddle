@@ -74,10 +74,12 @@ Provide:
 - Recommended drills to correct any sequence issues and improve balance
 
 SUMMARY FORMAT:
-Provide a brief 3-5 bullet point summary of the most critical findings before the detailed feedback. Each bullet should be one concise sentence highlighting key issues or patterns. Examples:
-- "Hands passing back elbow before shoulder rotation - major power loss"
-- "Front shoulder pulling open too early - reducing bat control"
-- "Good balance and head stability throughout swing"
+REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
+Focus on the most important actionable insights that a player or parent would understand immediately.
+Balance issues with strengths. Examples:
+- "Your hands move too early - wait for shoulders to start turning first"
+- "Great balance throughout the swing - head stays steady"
+- "Front shoulder opens too soon - this makes contact harder"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 After your analysis, identify 2-4 specific positive aspects of the player's mechanics. Look for:
@@ -139,10 +141,12 @@ After the feedback, provide 3–5 actionable drills tailored to the issues found
 - cues: 2–3 coaching cues for proper execution
 
 SUMMARY FORMAT:
-Provide a brief 3-5 bullet point summary of key mechanical findings. Examples:
-- "Back leg not facing target at release - reducing accuracy"
-- "Strong leg drive toward target"
-- "Front shoulder opening early in delivery"
+REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
+Focus on the most important actionable insights that a player or parent would understand immediately.
+Balance issues with strengths. Examples:
+- "Back leg needs to face the target earlier for better accuracy"
+- "Good drive toward the plate with your legs"
+- "Front shoulder opens too early in your delivery"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 specific positive mechanical elements, such as:
@@ -175,10 +179,12 @@ Key Focus Areas:
 Use your knowledge of professional softball pitching mechanics to evaluate form.
 
 SUMMARY FORMAT:
-Provide a brief 3-5 bullet point summary of key findings. Examples:
-- "Clean arm circle mechanics"
-- "Inconsistent release point affecting accuracy"
-- "Strong hip rotation and drive"
+REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
+Focus on the most important actionable insights that a player or parent would understand immediately.
+Balance issues with strengths. Examples:
+- "Your arm circle is smooth and powerful"
+- "Release point varies - work on consistency for better control"
+- "Strong hip drive generates good power"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 positive aspects of their windmill mechanics:
@@ -227,10 +233,12 @@ Focus on:
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
 SUMMARY FORMAT:
-Provide a brief 3-5 bullet point summary of key findings. Examples:
-- "Good momentum toward target"
-- "Back leg not facing target before shoulder rotation"
-- "Strong follow-through mechanics"
+REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
+Focus on the most important actionable insights that a player or parent would understand immediately.
+Balance issues with strengths. Examples:
+- "Good momentum moving toward your target"
+- "Back leg needs to face target before you throw for better accuracy"
+- "Strong finish on your throw"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 positive throwing mechanics:
@@ -311,7 +319,7 @@ Deno.serve(async (req) => {
                   },
                   summary: {
                     type: "array",
-                    description: "3-5 brief bullet points summarizing the most critical findings (mix of issues and strengths)",
+                    description: "REQUIRED: Exactly 3-5 bullet points in plain, beginner-friendly language (no jargon, max 15 words per bullet). Focus on actionable insights a player or parent would understand. Balance issues with strengths.",
                     items: { type: "string" }
                   },
                   feedback: {
@@ -498,6 +506,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         efficiency_score,
+        summary,
         feedback,
         positives,
         drills,

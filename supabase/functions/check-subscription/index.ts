@@ -696,7 +696,9 @@ serve(async (req) => {
           logStep("Coupon metadata created/verified", { couponCode });
         }
       }
-    } else {
+    } // Close if (hasActiveSub) block started at line 274
+    
+    if (!hasActiveSub) {
       logStep("No active subscription found");
       
       // UPSERT subscription record (set to inactive)
@@ -717,7 +719,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       modules: subscribedModules,
-      module_details: moduleMapping,  // NEW
+      module_details: moduleMapping,
       subscription_end: subscriptionEnd,
       has_discount: hasDiscount,
       discount_percent: discountPercent
@@ -801,5 +803,5 @@ serve(async (req) => {
         status: statusCode,
       }
     );
-  }
-});
+  } // Close the try-catch block
+}); // Close the serve function
