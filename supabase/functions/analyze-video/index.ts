@@ -59,12 +59,34 @@ CRITICAL HITTING KINETIC SEQUENCE:
 6. Shoulders Rotate (FRONT SHOULDER MUST STAY CLOSED UNTIL THIS POINT) ⭐
 7. Hands/Bat Release (HANDS MUST NOT PASS BACK ELBOW BEFORE SHOULDERS ROTATE) ⭐⭐
 
-BALANCE & HEAD CONTROL:
-- Head should stay on the MIDDLE LINE of the body throughout the swing
-- Minimal forward head movement = good balance ⭐
-- Forward moving head = imbalance → inaccurate bat + timing issues
-- Proper back elbow placement and hands staying back often naturally stabilize the head
-- **IMPORTANT:** Don't sacrifice swing sequence to keep head still - proper sequence creates natural balance
+BALANCE & HEAD CONTROL - PHASE-SPECIFIC ANALYSIS:
+
+PRE-SWING PHASE (Before Swing Sequence Starts):
+- Forward head movement toward home plate = ACCEPTABLE ✓
+- This is part of natural stride and load mechanics
+- Does NOT disrupt visual tracking or timing
+
+SWING SEQUENCE PHASE (During Active Swing):
+- ⚠️ CRITICAL: Minimal forward head movement required ⭐⭐
+  * Moving head = moving eyes = contact point disruption
+  * Some natural movement will occur, but excessive movement is a RED FLAG
+  * Proper back elbow placement and hands staying back naturally stabilize the head
+  
+- ⚠️ CRITICAL RED FLAG: Lateral head movement toward pitcher during swing sequence ⭐⭐⭐
+  * MAJOR DISRUPTOR of swing mechanics
+  * Indicates broken sequence timing (elbow and/or hands out of sequence)
+  * Head racing forward = loss of time on pitch (moving closer to ball prematurely)
+  * Disrupts spatial awareness → contact inaccuracies
+  * Often caused by:
+    → Elbow leaving sequence timing early
+    → Hands leaving sequence timing early
+    → Rushing the swing
+    
+HEAD MOVEMENT ROOT CAUSES:
+- If head moves excessively during sequence: Check elbow and hand timing
+- Proper sequence (elbow → hips → shoulders → hands) naturally prevents head drift
+- Head stability is a RESULT of good sequence, not a separate goal
+- **IMPORTANT:** Don't sacrifice swing sequence to keep head still - proper sequence creates natural head stability
 
 RED FLAGS:
 - ⚠️ CRITICAL: Hands pass back elbow BEFORE shoulders begin rotating → MAJOR SEQUENCE DISRUPTOR
@@ -76,19 +98,27 @@ RED FLAGS:
   * Barrel loses tension and connection to body rotation
   * Barrel drops BELOW the plane of the properly sequenced swing
   * Disrupts bat path and timing
-- ⚠️ Excessive forward head movement → Balance and timing issues
+- ⚠️ CRITICAL: Lateral head movement toward pitcher during swing sequence → MAJOR CONTACT DISRUPTOR ⭐⭐⭐
+  * Head moving toward pitcher = broken swing sequence
+  * Loss of spatial awareness and timing on pitch
+  * Indicates elbow and/or hands traveling out of sequence
+  * Causes contact inaccuracies and inconsistent bat path
+  * Hitter loses time on pitch by moving closer to ball prematurely
+- ⚠️ Excessive forward head movement during swing sequence → Balance and contact issues ⭐
   * Moving head = moving eyes = inconsistent contact point
+  * Natural during load/stride is OK, but during active swing is problematic
   * Often indicates hands traveling forward out of sequence
   * Can signal improper back elbow placement
 - Back elbow drops to slot without traveling forward → Reduces bat speed
 - Hips rotate before back elbow travels → Broken kinetic chain
 
 Focus on:
-1. ⭐ Do hands stay BEHIND the back elbow until AFTER shoulders begin rotating?
-2. Does the head stay on the middle line of the body with minimal forward movement? ⭐
-3. Does the FRONT SHOULDER stay CLOSED until proper timing in sequence? ⭐
-4. Does back elbow TRAVEL forward before hips?
-5. Are timing gaps correct (elbow → hips → shoulders → hands)?
+1. ⭐⭐⭐ Does the head move LATERALLY toward the pitcher during swing sequence? (CRITICAL RED FLAG)
+2. ⭐⭐ Does the head move EXCESSIVELY FORWARD during swing sequence? (Some natural movement OK)
+3. ⭐ Do hands stay BEHIND the back elbow until AFTER shoulders begin rotating?
+4. ⭐ Does the FRONT SHOULDER stay CLOSED until proper timing in sequence?
+5. Does back elbow TRAVEL forward before hips?
+6. Are timing gaps correct (elbow → hips → shoulders → hands)?
 
 Provide:
 - Efficiency score (0-100) based on form correctness
