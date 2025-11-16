@@ -178,9 +178,28 @@ Phase 2 - STANDARD SEQUENCING (After Landing):
 8. Arm action
 9. Release
 
+ARM ANGLE SAFETY CHECK (Phase 2 - During Arm Action):
+⭐ GOAL: Hand-Elbow-Shoulder angle LESS than 90° when hand flips up ⭐
+- As the hand flips up to travel forward in the sequence
+- Measure the angle formed by: Hand → Elbow → Shoulder
+- LESS than 90° = GOOD (reduces harmful pinpointed stress) ✓
+- 90° or GREATER = INCREASED INJURY RISK ⚠️
+
+Why this matters:
+- Keeps arm in safer "layback" position during acceleration
+- Distributes force across larger muscle groups (not just elbow/shoulder)
+- Reduces pinpointed stress on connective tissue
+- Natural consequence of proper shoulder rotation timing
+
+If angle is ≥90°:
+- Often indicates shoulder rotation is late or insufficient
+- Arm may be "catching up" instead of being driven by body
+- Increased stress on elbow and rotator cuff
+
 RED FLAGS:
 - Back leg (foot/knee/hip) NOT facing target before shoulder rotation → Causes INACCURACIES
 - Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
+- Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
 - Glove closed or not facing target at landing → Poor directional control
 - Shoulders not aligned with target at landing → Energy leakage
 
@@ -190,6 +209,7 @@ Focus on:
 3. Is glove open and facing target at landing?
 4. Does arm flip up before shoulder rotation (patterning issue)?
 5. Does back leg face target BEFORE shoulder moves?
+6. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
 
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
@@ -210,6 +230,8 @@ Balance issues with strengths. Examples:
 - "Back leg needs to face the target earlier for better accuracy"
 - "Good drive toward the plate with your legs"
 - "Front shoulder opens too early in your delivery"
+- "Good arm angle under 90 degrees - protects your elbow and shoulder"
+- "Arm angle looks high - let shoulders lead more to reduce stress"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 specific positive mechanical elements, such as:
@@ -220,6 +242,7 @@ Identify 2-4 specific positive mechanical elements, such as:
 - Strong follow-through
 - Proper balance and athleticism
 - Any correct alignment or rotation mechanics
+- Safe arm angle (hand-elbow-shoulder <90° at flip-up)
 
 DO NOT MENTION: velocity, spin rate, or output metrics.
 Focus ONLY on form and body mechanics.`;
@@ -282,9 +305,27 @@ Phase 2 - STANDARD SEQUENCING:
 7. Arm action (follows shoulder)
 8. Release
 
+ARM ANGLE SAFETY CHECK (During Arm Action):
+⭐ GOAL: Hand-Elbow-Shoulder angle LESS than 90° when hand flips up ⭐
+- As the hand flips up to travel forward in the sequence
+- Measure the angle formed by: Hand → Elbow → Shoulder
+- LESS than 90° = GOOD (reduces harmful pinpointed stress) ✓
+- 90° or GREATER = INCREASED INJURY RISK ⚠️
+
+Why this matters:
+- Keeps arm in safer throwing position
+- Distributes force across body instead of concentrating at elbow
+- Reduces pinpointed stress on arm structures
+- Natural result of proper shoulder-first sequencing
+
+If angle is ≥90°:
+- Check if shoulder rotation is leading the arm action
+- Arm should be "whipped" by body rotation, not pushing itself
+
 RED FLAGS:
 - Back leg NOT facing target before shoulder rotation → Causes INACCURACIES
 - Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
+- Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
 - Poor footwork alignment (not directed to target) → Reduces accuracy
 
 Focus on:
@@ -292,6 +333,7 @@ Focus on:
 2. Does arm flip up before shoulder moves (T-spine/patterning issue)?
 3. Is footwork aligned to target?
 4. Does shoulder move BEFORE arm action?
+5. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
 
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
@@ -302,6 +344,8 @@ Balance issues with strengths. Examples:
 - "Good momentum moving toward your target"
 - "Back leg needs to face target before you throw for better accuracy"
 - "Strong finish on your throw"
+- "Good arm position - angle stays under 90 degrees for safety"
+- "Arm angle needs work - shoulder should rotate before arm flips up"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 positive throwing mechanics:
@@ -311,6 +355,7 @@ Identify 2-4 positive throwing mechanics:
 - Strong arm path
 - Good follow-through
 - Athletic balance throughout throw
+- Safe arm angle during flip-up (<90°)
 
 Provide efficiency score (0-100) and specific feedback on sequence and alignment.
 
