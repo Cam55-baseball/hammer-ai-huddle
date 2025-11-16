@@ -91,6 +91,15 @@ export const useSubscription = () => {
         }
       }
 
+      // Handle intermittent 404 NOT_FOUND from function deployments/cold starts by retrying once
+      if (error && (error.message?.includes('NOT_FOUND') || error.message?.includes('not found') || (error as any)?.status === 404)) {
+        console.warn('[useSubscription] Function not found (404). Retrying once after short delay...');
+        await new Promise((r) => setTimeout(r, 400));
+        const retry404 = await supabase.functions.invoke('check-subscription');
+        data = retry404.data;
+        error = retry404.error;
+      }
+
       if (!error && data) {
         const newModules = data.modules || [];
         
