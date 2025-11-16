@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Upload, X } from 'lucide-react';
-import { VideoWithPoseOverlay } from '@/components/VideoWithPoseOverlay';
+import { EnhancedVideoPlayer } from '@/components/EnhancedVideoPlayer';
 
 interface SessionDetailDialogProps {
   session: any;
@@ -382,9 +382,9 @@ export function SessionDetailDialog({
           {session.video_url && (
             <div className="space-y-2">
               <Label>Video</Label>
-              <VideoWithPoseOverlay
+              <EnhancedVideoPlayer
                 videoSrc={session.video_url}
-                showMarkers={false}
+                playbackRate={1}
               />
             </div>
           )}
