@@ -126,7 +126,7 @@ export function AppSidebar() {
               <SidebarGroupLabel>Owner Bio</SidebarGroupLabel>
               <button
                 onClick={() => setOwnerBioOpen(true)}
-                className="w-full px-4 py-2 hover:bg-accent/50 rounded-md text-left transition-colors"
+                className="w-full px-4 py-2 hover:bg-accent/50 rounded-md text-left transition-colors owner-bio-section"
               >
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
@@ -343,13 +343,14 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel>Training Modules</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="training-modules-menu">
               {trainingModules.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     onClick={() => navigate(item.url)}
                     isActive={isActive(item.url)}
                     tooltip={item.title}
+                    className={item.title === "Players Club" ? "players-club" : ""}
                   >
                     <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>
@@ -370,6 +371,7 @@ export function AppSidebar() {
                     onClick={() => navigate(item.url)}
                     isActive={isActive(item.url)}
                     tooltip={item.title}
+                    className={item.title === "Profile" ? "settings-profile" : ""}
                   >
                     <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>

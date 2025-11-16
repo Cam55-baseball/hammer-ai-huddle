@@ -379,10 +379,10 @@ export default function Dashboard() {
         </div>
 
         {/* Module Cards */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-6 module-cards">
           {/* Hitting Module */}
           <Card
-            className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
+            className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
               !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("hitting")}
