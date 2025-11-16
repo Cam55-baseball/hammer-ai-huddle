@@ -376,7 +376,7 @@ export default function ScoutDashboard() {
                 {following.map((player) => (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap"
+                    className="player-profiles flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap"
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="flex-shrink-0">
@@ -420,7 +420,7 @@ export default function ScoutDashboard() {
                           onClick={() => handleUnfollowClick(player)}
                           size="sm"
                           variant="destructive"
-                          className="flex-shrink-0"
+                          className="follow-button flex-shrink-0"
                         >
                           <UserMinus className="h-4 w-4 sm:mr-2" />
                           <span className="hidden sm:inline">Unfollow</span>
@@ -533,7 +533,7 @@ export default function ScoutDashboard() {
                     {searchResults.map((player) => (
                     <div
                       key={player.id}
-                      className="flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap"
+                      className="player-profiles flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap"
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="flex-shrink-0">
@@ -581,7 +581,7 @@ export default function ScoutDashboard() {
                           <Button
                             onClick={() => handleSendFollow(player.id)}
                             size="sm"
-                            className="flex-shrink-0"
+                            className="follow-button flex-shrink-0"
                           >
                             <UserPlus className="h-4 w-4 sm:mr-2" />
                             <span className="hidden sm:inline">Follow</span>
