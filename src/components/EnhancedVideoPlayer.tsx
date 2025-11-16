@@ -13,6 +13,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const [loopStart, setLoopStart] = useState<number | null>(null);
   const [loopEnd, setLoopEnd] = useState<number | null>(null);
   const [keyFrames, setKeyFrames] = useState<string[]>([]);
+  const [videoReady, setVideoReady] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -20,6 +21,24 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
       videoRef.current.playbackRate = playbackRate;
     }
   }, [playbackRate]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleLoadedMetadata = () => {
+      setVideoReady(true);
+    };
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    
+    // Check if already loaded
+    if (video.readyState >= 1) {
+      setVideoReady(true);
+    }
+
+    return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+  }, [videoSrc]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -37,12 +56,26 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
 
   const stepFrame = (direction: 'forward' | 'backward') => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !videoReady) {
+      toast.error("Video not ready yet");
+      return;
+    }
 
-    const step = 1 / 30; // Assuming 30fps
-    video.currentTime = direction === 'forward' 
+    // Force pause before seeking (critical for mobile)
+    video.pause();
+
+    // Calculate frame step (try to use actual framerate, fallback to 30fps)
+    const step = 1 / 30;
+    
+    const newTime = direction === 'forward' 
       ? Math.min(video.currentTime + step, video.duration)
       : Math.max(video.currentTime - step, 0);
+
+    // Set new time
+    video.currentTime = newTime;
+
+    // Visual feedback for mobile
+    toast.success(`${direction === 'forward' ? '→' : '←'} Frame`);
   };
 
   const setLoopPoint = (type: 'start' | 'end') => {
@@ -102,6 +135,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             variant="outline"
             size="sm"
             onClick={() => stepFrame('backward')}
+            disabled={!videoReady}
             title="Step backward one frame"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -110,6 +144,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             variant="outline"
             size="sm"
             onClick={() => stepFrame('forward')}
+            disabled={!videoReady}
             title="Step forward one frame"
           >
             <ChevronRight className="h-4 w-4" />
@@ -118,6 +153,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             variant="outline"
             size="sm"
             onClick={captureKeyFrame}
+            disabled={!videoReady}
             title="Capture current frame"
           >
             <Camera className="h-4 w-4 mr-2" />
