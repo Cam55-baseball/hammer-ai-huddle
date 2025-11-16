@@ -542,28 +542,27 @@ export default function AnalyzeVideo() {
                       {analysis.efficiency_score}/100
                     </div>
                   </div>
+
+                  {/* Summary - Moved here for prominence */}
+                  {analysis.summary && analysis.summary.length > 0 && (
+                    <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                      <h4 className="text-lg font-semibold mb-3">Key Findings</h4>
+                      <ul className="space-y-2">
+                        {analysis.summary.map((point: string, index: number) => (
+                          <li 
+                            key={index}
+                            className="flex items-start gap-2"
+                          >
+                            <span className="text-primary mt-1 text-lg">•</span>
+                            <span className="text-base">{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   
                   <div>
-                    <h4 className="text-lg font-semibold mb-3">Feedback</h4>
-                    
-                    {/* Summary Bullet Points */}
-                    {analysis.summary && analysis.summary.length > 0 && (
-                      <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border">
-                        <ul className="space-y-1.5">
-                          {analysis.summary.map((point: string, index: number) => (
-                            <li 
-                              key={index}
-                              className="text-sm flex items-start gap-2"
-                            >
-                              <span className="text-primary mt-0.5">•</span>
-                              <span>{point}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {/* Detailed Feedback */}
+                    <h4 className="text-lg font-semibold mb-3">Detailed Analysis</h4>
                     <p className="text-muted-foreground whitespace-pre-wrap">
                       {analysis.feedback}
                     </p>
