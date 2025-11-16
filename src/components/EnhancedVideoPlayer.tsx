@@ -73,9 +73,6 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
 
     // Set new time
     video.currentTime = newTime;
-
-    // Visual feedback for mobile
-    toast.success(`${direction === 'forward' ? '→' : '←'} Frame`);
   };
 
   const setLoopPoint = (type: 'start' | 'end') => {
