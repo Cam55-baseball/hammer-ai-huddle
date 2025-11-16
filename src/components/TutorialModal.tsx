@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, X, UserCircle, Upload, Target, Library, Users, TrendingUp, Settings, Search, Filter, UserCheck, Video, Award, Sparkles, Play } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -93,34 +93,83 @@ export function TutorialModal({ open, onClose, userId }: TutorialModalProps) {
   const progress = ((currentSlide + 1) / slides.length) * 100;
   const SlideIcon = slide?.icon;
 
+  if (!open) return null;
+
   return (
     <>
       {activeHighlight && <TutorialSpotlight target={activeHighlight} onDismiss={() => setActiveHighlight(null)} />}
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" style={{ zIndex: 50 }}>
-          <button onClick={onClose} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100" aria-label="Close"><X className="h-4 w-4" /></button>
-          <DialogHeader className="space-y-4">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-2xl font-bold">{slide?.title}</DialogTitle>
-              <Badge variant="secondary">{isScout ? "Scout/Coach" : "Player"} Tutorial</Badge>
+      
+      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-30 w-[90vw] sm:w-[420px] animate-in slide-in-from-bottom-8 fade-in duration-500">
+        <Card className="max-h-[70vh] md:max-h-[80vh] shadow-2xl border-2 border-primary/20 overflow-hidden">
+          <CardHeader className="relative space-y-3 pb-4">
+            <button 
+              onClick={onClose} 
+              className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 transition-opacity" 
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            
+            <div className="flex items-center justify-between pr-8">
+              <CardTitle className="text-xl font-bold">{slide?.title}</CardTitle>
             </div>
-            <span className="text-sm text-muted-foreground">Step {currentSlide + 1} of {slides.length}</span>
-          </DialogHeader>
-          <Progress value={progress} className="w-full" />
-          <div className="py-8 space-y-6">
-            {SlideIcon && <div className="flex justify-center"><div className="rounded-full bg-primary/10 p-4"><SlideIcon className="h-12 w-12 text-primary" /></div></div>}
-            <p className="text-base leading-relaxed text-center px-4">{slide?.description}</p>
-          </div>
-          <div className="flex justify-between pt-6 border-t">
-            <Button variant="outline" onClick={handlePrevious} disabled={currentSlide === 0} className="gap-2"><ChevronLeft className="h-4 w-4" />Previous</Button>
-            {currentSlide === slides.length - 1 ? (
-              <Button variant="hero" onClick={handleComplete} disabled={isCompleting} className="gap-2">{isCompleting ? "Completing..." : "Start Competing"}<Play className="h-4 w-4" /></Button>
-            ) : (
-              <Button variant="outline" onClick={handleNext} className="gap-2">Next<ChevronRight className="h-4 w-4" /></Button>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Step {currentSlide + 1} of {slides.length}</span>
+              <Badge variant="secondary" className="text-xs">{isScout ? "Scout/Coach" : "Player"}</Badge>
+            </div>
+            
+            <Progress value={progress} className="w-full" />
+          </CardHeader>
+          
+          <CardContent className="space-y-4 pb-4 overflow-y-auto max-h-[40vh]">
+            {SlideIcon && (
+              <div className="flex justify-center">
+                <div className="rounded-full bg-primary/10 p-3">
+                  <SlideIcon className="h-10 w-10 text-primary" />
+                </div>
+              </div>
             )}
-          </div>
-        </DialogContent>
-      </Dialog>
+            <p className="text-sm md:text-base leading-relaxed text-center">{slide?.description}</p>
+          </CardContent>
+          
+          <CardFooter className="flex justify-between pt-4 border-t">
+            <Button 
+              variant="outline" 
+              onClick={handlePrevious} 
+              disabled={currentSlide === 0} 
+              className="gap-2"
+              size="sm"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            
+            {currentSlide === slides.length - 1 ? (
+              <Button 
+                variant="hero" 
+                onClick={handleComplete} 
+                disabled={isCompleting} 
+                className="gap-2"
+                size="sm"
+              >
+                {isCompleting ? "Completing..." : "Start Competing"}
+                <Play className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button 
+                variant="outline" 
+                onClick={handleNext} 
+                className="gap-2"
+                size="sm"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
     </>
   );
 }
