@@ -66,11 +66,7 @@ export const useSubscription = () => {
       }
 
       // First attempt: Call edge function with current session
-      let { data, error } = await supabase.functions.invoke('check-subscription', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      let { data, error } = await supabase.functions.invoke('check-subscription');
 
       // If we get an auth error (401), try refreshing the session and retry once
       if (error && (error.message?.includes('Authentication') || error.message?.includes('401'))) {
@@ -83,11 +79,7 @@ export const useSubscription = () => {
             console.log('[useSubscription] Token refreshed successfully, retrying edge function...');
             
             // Retry with refreshed token
-            const retryResult = await supabase.functions.invoke('check-subscription', {
-              headers: {
-                Authorization: `Bearer ${refreshData.session.access_token}`,
-              },
-            });
+            const retryResult = await supabase.functions.invoke('check-subscription');
             
             data = retryResult.data;
             error = retryResult.error;

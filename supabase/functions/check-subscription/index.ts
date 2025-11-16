@@ -33,23 +33,33 @@ Deno.serve(async (req) => {
       );
     }
 
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false } }
-    );
+    // Decode verified JWT locally to avoid extra network calls
+    const decodeJwt = (token: string) => {
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        // Pad base64 string
+        while (base64.length % 4 !== 0) base64 += '=';
+        const json = atob(base64);
+        return JSON.parse(json);
+      } catch (_) {
+        return null;
+      }
+    };
 
-    const { data: userData, error: userError } = await userClient.auth.getUser();
-    if (userError) {
-      logStep("ERROR: Authentication failed", { error: userError.message, code: userError.code });
+    const bearer = authHeader.replace(/^Bearer\s+/i, '');
+    const claims = decodeJwt(bearer);
+    if (!claims || !claims.sub) {
+      logStep("ERROR: Authentication failed while decoding JWT");
       return new Response(
-        JSON.stringify({ error: "Authentication failed", message: userError.message || "Invalid or expired token" }),
+        JSON.stringify({ error: "Authentication failed", message: "Invalid or expired token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const user = userData.user;
-    if (!user?.id || !user.email) {
+    const user = { id: claims.sub as string, email: (claims.email || claims.user_metadata?.email || null) as string | null };
+    if (!user.id || !user.email) {
       logStep("ERROR: User not authenticated or email missing");
       return new Response(
         JSON.stringify({ error: "User not authenticated or email not available" }),
