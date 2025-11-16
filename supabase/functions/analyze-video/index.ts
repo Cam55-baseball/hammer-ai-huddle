@@ -12,6 +12,39 @@ const requestSchema = z.object({
   userId: z.string().uuid("Invalid user ID format"),
 });
 
+// Helper function to generate beginner-friendly bullet points
+const makeBeginnerBullets = (feedback: string, positives: string[]): string[] => {
+  const bullets: string[] = [];
+  
+  // Add 1-2 strength bullets from positives (if available)
+  if (positives && positives.length > 0) {
+    const strengthBullets = positives.slice(0, 2).map(p => {
+      const words = p.split(' ');
+      return words.length <= 15 ? p : words.slice(0, 15).join(' ') + '...';
+    });
+    bullets.push(...strengthBullets);
+  }
+  
+  // Add issue bullets from feedback
+  if (feedback) {
+    const sentences = feedback.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    for (const sentence of sentences) {
+      const trimmed = sentence.trim();
+      const words = trimmed.split(' ');
+      if (words.length > 0 && words.length <= 15) {
+        bullets.push(trimmed);
+      } else if (words.length > 15) {
+        bullets.push(words.slice(0, 15).join(' ') + '...');
+      }
+      if (bullets.length >= 5) break;
+    }
+  }
+  
+  // Dedupe and limit to 3-5 bullets
+  const unique = Array.from(new Set(bullets));
+  return unique.slice(0, Math.max(3, Math.min(5, unique.length)));
+};
+
 // Module-specific system prompts
 const getSystemPrompt = (module: string, sport: string) => {
   if (module === "hitting") {
@@ -420,6 +453,12 @@ Deno.serve(async (req) => {
       if (scoreMatch) {
         efficiency_score = parseInt(scoreMatch[1]);
       }
+    }
+    
+    // Guarantee bullets: If summary is empty or not an array, generate from feedback and positives
+    if (!Array.isArray(summary) || summary.length === 0) {
+      console.log("Summary empty or invalid, generating beginner bullets from feedback");
+      summary = makeBeginnerBullets(feedback, positives);
     }
 
     const mocap_data = {
