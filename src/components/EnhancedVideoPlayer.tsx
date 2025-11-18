@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Camera, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download } from "lucide-react";
 import { toast } from "sonner";
 
 interface EnhancedVideoPlayerProps {
@@ -111,6 +111,28 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
     toast.success("Key frame captured!");
   };
 
+  const downloadFrame = (frameDataUrl: string, index: number) => {
+    const link = document.createElement('a');
+    link.href = frameDataUrl;
+    link.download = `key-frame-${index + 1}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Frame ${index + 1} downloaded!`);
+  };
+
+  const downloadAllFrames = () => {
+    if (keyFrames.length === 0) return;
+    
+    toast.info(`Downloading ${keyFrames.length} frame${keyFrames.length > 1 ? 's' : ''}...`);
+    
+    keyFrames.forEach((frame, index) => {
+      setTimeout(() => {
+        downloadFrame(frame, index);
+      }, index * 150);
+    });
+  };
+
   return (
     <div className="space-y-4">
       {/* Video Player */}
@@ -198,7 +220,17 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
       {/* Captured Key Frames */}
       {keyFrames.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold">Captured Key Frames</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold">Captured Key Frames</h4>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={downloadAllFrames}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download All ({keyFrames.length})
+            </Button>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {keyFrames.map((frame, idx) => (
               <div key={idx} className="relative group">
@@ -207,6 +239,15 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
                   alt={`Key frame ${idx + 1}`}
                   className="w-full rounded-lg border"
                 />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => downloadFrame(frame, idx)}
+                  title="Download frame"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
                 <Button
                   variant="destructive"
                   size="sm"
