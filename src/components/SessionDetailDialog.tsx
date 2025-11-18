@@ -137,12 +137,18 @@ export function SessionDetailDialog({
     try {
       setSaving(true);
 
+      // Get authenticated user for thumbnail upload
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw userError || new Error('You must be signed in to update sessions.');
+      }
+
       let customThumbnailUrl: string | undefined = undefined;
       if (customThumbnail) {
         try {
           customThumbnailUrl = await uploadCustomThumbnail(
             customThumbnail,
-            session.user_id,
+            user.id,
             session.id
           );
         } catch (thumbnailError: any) {
@@ -166,7 +172,8 @@ export function SessionDetailDialog({
         const { error: thumbnailError } = await supabase
           .from('videos')
           .update({ thumbnail_url: customThumbnailUrl })
-          .eq('id', session.id);
+          .eq('id', session.id)
+          .eq('user_id', user.id);
 
         if (thumbnailError) throw thumbnailError;
       }
