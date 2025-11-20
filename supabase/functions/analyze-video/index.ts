@@ -542,6 +542,7 @@ Deno.serve(async (req) => {
     let summary: string[] = [];
     let positives: string[] = [];
     let drills: any[] = [];
+    let arm_angle_assessment: any = undefined;
 
     // Parse tool calls for structured output
     const toolCalls = data.choices?.[0]?.message?.tool_calls;
@@ -578,7 +579,22 @@ Deno.serve(async (req) => {
       analyzed_at: new Date().toISOString(),
     };
 
-    const ai_analysis = {
+    // Ensure arm angle assessment is captured from tool calls if available
+    if (!arm_angle_assessment) {
+      try {
+        const armToolCalls = data.choices?.[0]?.message?.tool_calls;
+        if (armToolCalls && armToolCalls.length > 0) {
+          const armArgs = JSON.parse(armToolCalls[0].function.arguments);
+          if (armArgs.arm_angle_assessment) {
+            arm_angle_assessment = armArgs.arm_angle_assessment;
+          }
+        }
+      } catch (parseError) {
+        console.error("Error parsing arm angle from tool calls:", parseError);
+      }
+    }
+
+    const ai_analysis: any = {
       summary,
       feedback,
       positives,
@@ -586,6 +602,10 @@ Deno.serve(async (req) => {
       model_used: "google/gemini-2.5-flash",
       analyzed_at: new Date().toISOString(),
     };
+
+    if (arm_angle_assessment) {
+      ai_analysis.arm_angle_assessment = arm_angle_assessment;
+    }
 
     // Update video with analysis results
     const { error: updateError } = await supabase
@@ -660,6 +680,7 @@ Deno.serve(async (req) => {
         feedback,
         positives,
         drills,
+        arm_angle_assessment,
         mocap_data,
       }),
       {
