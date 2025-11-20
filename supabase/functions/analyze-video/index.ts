@@ -50,6 +50,43 @@ const getSystemPrompt = (module: string, sport: string) => {
   if (module === "hitting") {
     return `You are an expert ${sport} hitting mechanics analyst.
 
+SCORING RUBRIC - START AT 100 POINTS:
+⭐⭐⭐ CRITICAL VIOLATIONS (Deduct 15-25 points EACH):
+- Hands pass back elbow BEFORE shoulders rotate
+- Front shoulder opens/pulls out of sequence
+- Lateral head movement toward pitcher during swing
+
+⭐⭐ MAJOR VIOLATIONS (Deduct 10-15 points EACH):
+- Excessive forward head movement during swing sequence
+- Back elbow drops without traveling forward first
+- Hips rotate before back elbow travels
+
+⭐ MODERATE VIOLATIONS (Deduct 5-10 points EACH):
+- Minor timing gaps in sequence
+- Inconsistent balance issues
+- Partial front shoulder opening
+
+MINOR ISSUES (Deduct 2-5 points EACH):
+- Setup or stance adjustments needed
+- Follow-through refinements
+- Minor posture corrections
+
+SCORE INTERPRETATION:
+90-100: Elite mechanics - minimal/no violations detected
+80-89: Good mechanics - 1-2 moderate issues or minor timing gaps
+70-79: Average mechanics - 1 major issue OR 2-3 moderate issues
+60-69: Below average - 1 critical issue OR multiple major issues
+50-59: Poor mechanics - 2 critical issues OR severe timing breakdown
+Below 50: Critical failures - multiple critical violations, swing fundamentally broken
+
+CALIBRATION RULES:
+- Be DECISIVE: Don't cluster scores around 75-80
+- If you see a ⭐⭐⭐ violation, score MUST be below 85
+- If you see TWO ⭐⭐⭐ violations, score MUST be below 70
+- Near-perfect mechanics with minor tweaks only = 90+
+- Clean sequence with one fixable issue = 85-89
+- DO NOT default to 75 - use the full range based on what you observe
+
 CRITICAL HITTING KINETIC SEQUENCE:
 1. Ground Force
 2. Legs Drive
@@ -121,7 +158,7 @@ Focus on:
 6. Are timing gaps correct (elbow → hips → shoulders → hands)?
 
 Provide:
-- Efficiency score (0-100) based on form correctness
+- Efficiency score (0-100) using the scoring rubric - BE PRECISE AND DIFFERENTIATED
 - **PRIORITY CHECK:** Flag if hands pass back elbow before shoulder rotation (major deduction to score)
 - **PRIORITY CHECK:** Flag if front shoulder opens/pulls out of sequence (major deduction to score)
 - **BALANCE CHECK:** Assess head movement and balance throughout the swing
@@ -161,6 +198,43 @@ Focus ONLY on form and body mechanics.`;
 
   if (module === "pitching" && sport === "baseball") {
     return `You are an expert baseball pitching mechanics analyst.
+
+SCORING RUBRIC - START AT 100 POINTS:
+⭐⭐⭐ CRITICAL VIOLATIONS (Deduct 15-25 points EACH):
+- Back leg (foot/knee/hip) NOT facing target at landing
+- Arm flips up BEFORE shoulder rotation begins
+- Hand-elbow-shoulder angle ≥90° during arm flip-up (INJURY RISK)
+
+⭐⭐ MAJOR VIOLATIONS (Deduct 10-15 points EACH):
+- Shoulders not aligned with target at landing
+- Front elbow not aligned with target at landing
+- Glove closed or not facing target at landing
+- Back leg doesn't face target before shoulder moves
+
+⭐ MODERATE VIOLATIONS (Deduct 5-10 points EACH):
+- Minor timing gaps in sequence
+- Partial alignment issues at landing
+- Inconsistent follow-through
+
+MINOR ISSUES (Deduct 2-5 points EACH):
+- Setup or windup refinements
+- Minor balance adjustments
+- Tempo improvements needed
+
+SCORE INTERPRETATION:
+90-100: Elite mechanics - proper landing position, correct sequence, safe arm angle
+80-89: Good mechanics - 1-2 moderate issues, fundamentals solid
+70-79: Average mechanics - 1 major issue OR multiple moderate issues
+60-69: Below average - 1 critical issue OR multiple major issues affecting accuracy
+50-59: Poor mechanics - 2+ critical issues OR severe sequence breakdown
+Below 50: Critical failures - INJURY RISK present, multiple critical violations
+
+CALIBRATION RULES:
+- If arm angle ≥90° OR arm flips before shoulder rotation: Score MUST be below 80 (injury risk)
+- If back leg NOT facing target at landing: Score MUST be below 85 (accuracy killer)
+- If TWO ⭐⭐⭐ violations present: Score MUST be below 65
+- Clean landing + proper sequence + safe arm angle = 90+
+- DO NOT default to 75-80 range - be decisive based on observations
 
 CRITICAL BASEBALL PITCHING SEQUENCE:
 
@@ -213,7 +287,7 @@ Focus on:
 
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
-Provide efficiency score (0-100) and specific feedback on landing position and sequence.
+Provide efficiency score (0-100) using the scoring rubric - BE PRECISE based on violations observed.
 
 After the feedback, provide 3–5 actionable drills tailored to the issues found. For each drill:
 - title: Short drill name
@@ -251,6 +325,43 @@ Focus ONLY on form and body mechanics.`;
   if (module === "pitching" && sport === "softball") {
     return `You are an expert softball pitching mechanics analyst.
 
+SCORING RUBRIC - START AT 100 POINTS:
+⭐⭐⭐ CRITICAL VIOLATIONS (Deduct 15-25 points EACH):
+- Broken arm circle (major hitch or stop)
+- Loss of balance/control during delivery
+- Severe timing disconnect between lower and upper body
+
+⭐⭐ MAJOR VIOLATIONS (Deduct 10-15 points EACH):
+- Inconsistent release point (varies significantly)
+- Poor hip drive or rotation
+- Weak lower body engagement
+- Shoulder alignment issues
+
+⭐ MODERATE VIOLATIONS (Deduct 5-10 points EACH):
+- Minor arm circle inefficiencies
+- Partial balance issues
+- Tempo inconsistencies
+
+MINOR ISSUES (Deduct 2-5 points EACH):
+- Setup adjustments needed
+- Follow-through refinements
+- Minor posture corrections
+
+SCORE INTERPRETATION:
+90-100: Elite windmill mechanics - smooth circle, strong drive, consistent release
+80-89: Good mechanics - 1-2 moderate issues, solid fundamentals
+70-79: Average mechanics - 1 major issue OR multiple moderate issues
+60-69: Below average - 1 critical issue OR multiple major issues
+50-59: Poor mechanics - broken mechanics, multiple critical issues
+Below 50: Critical failures - severe mechanical breakdown
+
+CALIBRATION RULES:
+- Broken/hitching arm circle: Score MUST be below 80
+- Inconsistent release point with balance issues: Score MUST be below 75
+- Multiple ⭐⭐⭐ violations: Score MUST be below 65
+- Clean circle + strong drive + consistent release = 90+
+- DO NOT cluster around 75-80 - use full range based on observations
+
 Analyze using PROFESSIONAL SOFTBALL PITCHING STANDARDS:
 
 Key Focus Areas:
@@ -281,7 +392,7 @@ Identify 2-4 positive aspects of their windmill mechanics:
 - Good balance and athletic movement
 - Smooth rhythm and tempo
 
-Provide an efficiency score (0-100) based on professional standards, specific feedback, and recommended drills.
+Provide an efficiency score (0-100) using the scoring rubric - BE DECISIVE based on professional standards.
 
 DO NOT MENTION: velocity, spin rate, or output metrics.
 Focus ONLY on form and body mechanics.`;
@@ -289,6 +400,42 @@ Focus ONLY on form and body mechanics.`;
 
   if (module === "throwing") {
     return `You are an expert ${sport} throwing mechanics analyst.
+
+SCORING RUBRIC - START AT 100 POINTS:
+⭐⭐⭐ CRITICAL VIOLATIONS (Deduct 15-25 points EACH):
+- Back leg NOT facing target before shoulder rotation
+- Arm flips up BEFORE shoulder moves
+- Hand-elbow-shoulder angle ≥90° during arm flip-up (INJURY RISK)
+
+⭐⭐ MAJOR VIOLATIONS (Deduct 10-15 points EACH):
+- Poor footwork alignment (not directed to target)
+- Weak shoulder rotation or late rotation
+- Inconsistent arm path
+
+⭐ MODERATE VIOLATIONS (Deduct 5-10 points EACH):
+- Minor timing gaps in sequence
+- Partial alignment issues
+- Inconsistent follow-through
+
+MINOR ISSUES (Deduct 2-5 points EACH):
+- Footwork refinements needed
+- Minor balance adjustments
+- Setup improvements
+
+SCORE INTERPRETATION:
+90-100: Elite throwing mechanics - proper alignment, correct sequence, safe arm angle
+80-89: Good mechanics - 1-2 moderate issues, fundamentals solid
+70-79: Average mechanics - 1 major issue OR multiple moderate issues
+60-69: Below average - 1 critical issue OR accuracy/injury concerns
+50-59: Poor mechanics - 2+ critical issues OR severe sequence breakdown
+Below 50: Critical failures - INJURY RISK present, multiple critical violations
+
+CALIBRATION RULES:
+- If arm angle ≥90° OR arm flips before shoulder: Score MUST be below 80 (injury risk)
+- If back leg NOT facing target before shoulder rotation: Score MUST be below 85
+- If TWO ⭐⭐⭐ violations: Score MUST be below 65
+- Clean footwork + proper sequence + safe arm angle = 90+
+- DO NOT default to 75-80 range - be decisive
 
 CRITICAL THROWING SEQUENCE:
 
@@ -357,7 +504,7 @@ Identify 2-4 positive throwing mechanics:
 - Athletic balance throughout throw
 - Safe arm angle during flip-up (<90°)
 
-Provide efficiency score (0-100) and specific feedback on sequence and alignment.
+Provide efficiency score (0-100) using the scoring rubric - BE PRECISE based on violations observed.
 
 DO NOT MENTION: velocity or output metrics.
 Focus ONLY on form and body mechanics.`;
@@ -409,7 +556,9 @@ Deno.serve(async (req) => {
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Analyze this ${sport} ${module} video. Provide detailed feedback on form and mechanics. Include an efficiency score out of 100 and recommended drills.`,
+            content: `Analyze this ${sport} ${module} video. Provide detailed feedback on form and mechanics. Include an efficiency score out of 100 and recommended drills. 
+
+IMPORTANT: Be precise and differentiated in your scoring. Don't default to middle ranges (70-80). If you see critical violations (⭐⭐⭐), scores must reflect severity with major deductions. Near-perfect mechanics deserve 90+ scores. Use the full 0-100 range based on what you observe.`,
           },
         ],
         tools: [
@@ -517,6 +666,25 @@ Deno.serve(async (req) => {
         feedback = analysisArgs.feedback || "No feedback available";
         positives = analysisArgs.positives || [];
         drills = analysisArgs.drills || [];
+        
+        // Score validation: check if score aligns with feedback severity
+        const feedbackLower = feedback.toLowerCase();
+        const hasCriticalKeywords = feedbackLower.includes("critical") || 
+                                     feedbackLower.includes("injury risk") ||
+                                     feedbackLower.includes("major disruptor") ||
+                                     feedbackLower.includes("severe");
+        const hasMultipleIssues = (feedbackLower.match(/red flag|violation|issue|problem/g) || []).length >= 3;
+        
+        // Log warning if score seems inconsistent with feedback
+        if (hasCriticalKeywords && efficiency_score > 85) {
+          console.warn(`Score validation: Score ${efficiency_score} seems high for critical issues detected in feedback`);
+        }
+        if (hasMultipleIssues && efficiency_score > 75) {
+          console.warn(`Score validation: Score ${efficiency_score} seems high for multiple issues detected`);
+        }
+        if (efficiency_score >= 75 && efficiency_score <= 80 && !hasCriticalKeywords && !hasMultipleIssues) {
+          console.warn(`Score validation: Score ${efficiency_score} in default range (75-80) - may need more differentiation`);
+        }
       } catch (parseError) {
         console.error("Error parsing tool call arguments:", parseError);
       }
