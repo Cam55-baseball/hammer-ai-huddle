@@ -16,8 +16,6 @@ import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
 import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
-import { ArmAngleBadge } from "@/components/ArmAngleBadge";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 
@@ -47,12 +45,6 @@ export default function AnalyzeVideo() {
       equipment: string;
       cues?: string[];
     }>;
-    arm_angle_assessment?: {
-      angle_degrees?: number | null;
-      safety_status: "safer" | "risk" | "unknown";
-      confidence?: "high" | "medium" | "low";
-      notes?: string;
-    };
   } | null>(null);
   const [analysisError, setAnalysisError] = useState<any>(null);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
@@ -540,28 +532,7 @@ export default function AnalyzeVideo() {
 
             {analysis && (
               <Card className="p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-                  <h3 className="text-2xl font-bold">Analysis Results</h3>
-                  {(module === 'throwing' || (module === 'pitching' && sport === 'baseball')) && 
-                   analysis.arm_angle_assessment && (
-                    <ArmAngleBadge assessment={analysis.arm_angle_assessment} />
-                  )}
-                </div>
-
-                {/* Arm Angle Risk Alert */}
-                {(module === 'throwing' || (module === 'pitching' && sport === 'baseball')) &&
-                 analysis.arm_angle_assessment?.safety_status === 'risk' && (
-                  <Alert variant="destructive" className="mb-6">
-                    <AlertTitle>⚠️ Injury Risk Detected</AlertTitle>
-                    <AlertDescription>
-                      The arm angle analysis indicates increased injury risk. Hand-elbow-shoulder angle of 90° or greater 
-                      can place excessive stress on the elbow and rotator cuff. This often indicates that shoulder rotation 
-                      is late or insufficient during the throwing motion. Review the detailed feedback below and consider 
-                      working on the recommended drills to improve your mechanics and reduce injury risk.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
+                <h3 className="text-2xl font-bold mb-6">Analysis Results</h3>
                 <div className="space-y-6">
                   <div>
                     <h4 className="text-lg font-semibold">Efficiency Score</h4>

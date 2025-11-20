@@ -15,11 +15,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Upload, X, AlertTriangle } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { EnhancedVideoPlayer } from '@/components/EnhancedVideoPlayer';
-import { ArmAngleBadge } from '@/components/ArmAngleBadge';
 
 interface SessionDetailDialogProps {
   session: any;
@@ -39,11 +37,6 @@ export function SessionDetailDialog({
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(session.library_title || '');
   const [notes, setNotes] = useState(session.library_notes || '');
-  
-  // Helper to determine if arm angle badge should be shown
-  const shouldShowArmAngleBadge = (module: string, sport: string): boolean => {
-    return module === "throwing" || (module === "pitching" && sport === "baseball");
-  };
   const [sharedWithScouts, setSharedWithScouts] = useState(session.shared_with_scouts || false);
   const [analysisPublic, setAnalysisPublic] = useState(session.analysis_public || false);
   const [saving, setSaving] = useState(false);
@@ -327,25 +320,7 @@ export function SessionDetailDialog({
           {/* AI Analysis - hide from scouts if analysis is private */}
           {aiAnalysis && (isOwner || analysisPublic) && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <h3 className="font-semibold">Analysis Results</h3>
-                {shouldShowArmAngleBadge(session.module, session.sport) && aiAnalysis.arm_angle_assessment && (
-                  <ArmAngleBadge assessment={aiAnalysis.arm_angle_assessment} />
-                )}
-              </div>
-
-              {/* Risk Alert for arm angle */}
-              {shouldShowArmAngleBadge(session.module, session.sport) && 
-               aiAnalysis.arm_angle_assessment?.safety_status === "risk" && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Arm Angle Health Risk Detected</AlertTitle>
-                  <AlertDescription>
-                    The analysis detected an arm angle of {aiAnalysis.arm_angle_assessment.angle_degrees ? `${Math.round(aiAnalysis.arm_angle_assessment.angle_degrees)}°` : '≥90°'}, which increases injury risk to the elbow and rotator cuff. 
-                    This typically indicates late or insufficient shoulder rotation. Review the feedback below for specific guidance on improving shoulder rotation timing.
-                  </AlertDescription>
-                </Alert>
-              )}
+              <h3 className="font-semibold">Analysis Results</h3>
               
               {aiAnalysis.feedback && (
                 <div className="space-y-2">
