@@ -396,6 +396,80 @@ Deno.serve(async (req) => {
     // Get system prompt based on module and sport
     const systemPrompt = getSystemPrompt(module, sport);
 
+    // Determine if we should include arm angle assessment (throwing modules or baseball pitching)
+    const shouldAssessArmAngle = module === "throwing" || (module === "pitching" && sport === "baseball");
+
+    // Build tool parameters with conditional arm angle assessment
+    const toolParameters: any = {
+      type: "object",
+      properties: {
+        efficiency_score: {
+          type: "number",
+          description: "Score from 0-100 based on form correctness"
+        },
+        summary: {
+          type: "array",
+          description: "REQUIRED: Exactly 3-5 bullet points in plain, beginner-friendly language (no jargon, max 15 words per bullet). Focus on actionable insights a player or parent would understand. Balance issues with strengths.",
+          items: { type: "string" }
+        },
+        feedback: {
+          type: "string",
+          description: "Detailed feedback on mechanics and form"
+        },
+        positives: {
+          type: "array",
+          description: "List of 2-4 specific positive aspects of the player's mechanics that they should feel good about and build upon",
+          items: { type: "string" }
+        },
+        drills: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              purpose: { type: "string" },
+              steps: { type: "array", items: { type: "string" } },
+              reps_sets: { type: "string" },
+              equipment: { type: "string" },
+              cues: { type: "array", items: { type: "string" } }
+            },
+            required: ["title", "purpose", "steps", "reps_sets", "equipment", "cues"]
+          }
+        }
+      },
+      required: ["efficiency_score", "summary", "feedback", "positives", "drills"]
+    };
+
+    // Add arm angle assessment for throwing/pitching modules
+    if (shouldAssessArmAngle) {
+      toolParameters.properties.arm_angle_assessment = {
+        type: "object",
+        description: "ARM ANGLE SAFETY CHECK during arm flip-up phase. Measure the hand-elbow-shoulder angle. Angles <90° indicate safer mechanics and reduced injury risk. Angles ≥90° indicate health risk, often from late or insufficient shoulder rotation.",
+        properties: {
+          angle_degrees: {
+            type: "number",
+            description: "Estimated angle in degrees (0-180). Use null if the angle cannot be determined from video quality or camera angle."
+          },
+          safety_status: {
+            type: "string",
+            enum: ["safer", "risk", "unknown"],
+            description: "safer if angle <90°, risk if angle ≥90°, unknown if angle cannot be determined from the video"
+          },
+          confidence: {
+            type: "string",
+            enum: ["high", "medium", "low"],
+            description: "Assessment confidence level based on video clarity, camera angle, and visibility of arm flip-up phase"
+          },
+          notes: {
+            type: "string",
+            description: "Brief explanation of the assessment, biomechanical implications, or why it couldn't be determined"
+          }
+        },
+        required: ["safety_status"]
+      };
+      toolParameters.required.push("arm_angle_assessment");
+    }
+
     // Call Lovable AI for video analysis with tool-calling for structured output
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -409,7 +483,7 @@ Deno.serve(async (req) => {
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Analyze this ${sport} ${module} video. Provide detailed feedback on form and mechanics. Include an efficiency score out of 100 and recommended drills.`,
+            content: `Analyze this ${sport} ${module} video. Provide detailed feedback on form and mechanics. Include an efficiency score out of 100 and recommended drills.${shouldAssessArmAngle ? ' IMPORTANT: Include arm angle safety assessment during the arm flip-up phase.' : ''}`,
           },
         ],
         tools: [
@@ -418,45 +492,7 @@ Deno.serve(async (req) => {
             function: {
               name: "return_analysis",
               description: "Return structured analysis with score, feedback, and drills",
-              parameters: {
-                type: "object",
-                properties: {
-                  efficiency_score: {
-                    type: "number",
-                    description: "Score from 0-100 based on form correctness"
-                  },
-                  summary: {
-                    type: "array",
-                    description: "REQUIRED: Exactly 3-5 bullet points in plain, beginner-friendly language (no jargon, max 15 words per bullet). Focus on actionable insights a player or parent would understand. Balance issues with strengths.",
-                    items: { type: "string" }
-                  },
-                  feedback: {
-                    type: "string",
-                    description: "Detailed feedback on mechanics and form"
-                  },
-                  positives: {
-                    type: "array",
-                    description: "List of 2-4 specific positive aspects of the player's mechanics that they should feel good about and build upon",
-                    items: { type: "string" }
-                  },
-                  drills: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        title: { type: "string" },
-                        purpose: { type: "string" },
-                        steps: { type: "array", items: { type: "string" } },
-                        reps_sets: { type: "string" },
-                        equipment: { type: "string" },
-                        cues: { type: "array", items: { type: "string" } }
-                      },
-                      required: ["title", "purpose", "steps", "reps_sets", "equipment", "cues"]
-                    }
-                  }
-                },
-                required: ["efficiency_score", "summary", "feedback", "positives", "drills"]
-              }
+              parameters: toolParameters
             }
           }
         ],
