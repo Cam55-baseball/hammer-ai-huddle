@@ -306,7 +306,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
                 <Button
                   variant="destructive"
                   size="sm"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => setKeyFrames(prev => prev.filter((_, i) => i !== idx))}
                 >
                   Remove
