@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, Edit } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, Edit, FlipHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { FrameAnnotationDialog } from "./FrameAnnotationDialog";
 
@@ -23,6 +23,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [annotationDialogOpen, setAnnotationDialogOpen] = useState(false);
   const [selectedFrameIndex, setSelectedFrameIndex] = useState<number | null>(null);
+  const [isMirrored, setIsMirrored] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -183,7 +184,10 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
           controls
           preload="metadata"
           className="w-full"
-          style={{ maxHeight: '600px' }}
+          style={{ 
+            maxHeight: '600px',
+            transform: isMirrored ? 'scaleX(-1)' : 'none'
+          }}
         />
         <canvas ref={canvasRef} className="hidden" />
       </div>
@@ -218,6 +222,16 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
           >
             <Camera className="h-4 w-4 mr-2" />
             Capture Frame
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsMirrored(!isMirrored)}
+            title="Mirror video horizontally"
+            className={isMirrored ? 'bg-primary/10' : ''}
+          >
+            <FlipHorizontal className="h-4 w-4 mr-2" />
+            Mirror
           </Button>
         </div>
 

@@ -19,7 +19,8 @@ import {
   Rows2,
   Layers,
   X,
-  Edit
+  Edit,
+  FlipHorizontal
 } from 'lucide-react';
 import { useVideoSync } from '@/hooks/useVideoSync';
 import { toast } from 'sonner';
@@ -62,6 +63,8 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
   const [timeOffset, setTimeOffset] = useState(0);
   const [layout, setLayout] = useState<'horizontal' | 'vertical' | 'overlay'>('horizontal');
   const [overlayOpacity, setOverlayOpacity] = useState(50);
+  const [video1Mirrored, setVideo1Mirrored] = useState(false);
+  const [video2Mirrored, setVideo2Mirrored] = useState(false);
   
   const [video1KeyFrames, setVideo1KeyFrames] = useState<KeyFrame[]>([]);
   const [video2KeyFrames, setVideo2KeyFrames] = useState<KeyFrame[]>([]);
@@ -282,7 +285,11 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                   className="w-full rounded-lg bg-black"
                   controls
                   preload="metadata"
-                  style={layout === 'overlay' ? { opacity: overlayOpacity / 100 } : {}}
+                  style={
+                    layout === 'overlay' 
+                      ? { opacity: overlayOpacity / 100, transform: video1Mirrored ? 'scaleX(-1)' : 'none' } 
+                      : { transform: video1Mirrored ? 'scaleX(-1)' : 'none' }
+                  }
                 />
                 
                 {/* Individual Frame Controls for Video 1 */}
@@ -301,6 +308,15 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                     onClick={() => stepFrameIndividual(1, 'forward')}
                   >
                     <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setVideo1Mirrored(!video1Mirrored)}
+                    title="Mirror video"
+                    className={video1Mirrored ? 'bg-primary/10' : ''}
+                  >
+                    <FlipHorizontal className="h-4 w-4" />
                   </Button>
                 </div>
                 
@@ -338,6 +354,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                   className="w-full rounded-lg bg-black"
                   controls
                   preload="metadata"
+                  style={{ transform: video2Mirrored ? 'scaleX(-1)' : 'none' }}
                 />
                 
                 {/* Individual Frame Controls for Video 2 */}
@@ -356,6 +373,15 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                     onClick={() => stepFrameIndividual(2, 'forward')}
                   >
                     <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setVideo2Mirrored(!video2Mirrored)}
+                    title="Mirror video"
+                    className={video2Mirrored ? 'bg-primary/10' : ''}
+                  >
+                    <FlipHorizontal className="h-4 w-4" />
                   </Button>
                 </div>
                 
