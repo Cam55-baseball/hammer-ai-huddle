@@ -106,6 +106,15 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
     }
   };
 
+  const stepFrameIndividual = (videoNumber: 1 | 2, direction: 'forward' | 'backward') => {
+    const videoRef = videoNumber === 1 ? video1Ref : video2Ref;
+    const video = videoRef.current;
+    if (!video) return;
+
+    const step = direction === 'forward' ? 1/30 : -1/30;
+    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + step));
+  };
+
   const captureKeyFrame = (videoNumber: 1 | 2) => {
     const videoRef = videoNumber === 1 ? video1Ref : video2Ref;
     const canvasRef = videoNumber === 1 ? canvas1Ref : canvas2Ref;
@@ -275,6 +284,26 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                   preload="metadata"
                   style={layout === 'overlay' ? { opacity: overlayOpacity / 100 } : {}}
                 />
+                
+                {/* Individual Frame Controls for Video 1 */}
+                <div className="flex justify-center gap-2 mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => stepFrameIndividual(1, 'backward')}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-xs text-muted-foreground self-center">Frame Step</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => stepFrameIndividual(1, 'forward')}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                
                 <canvas ref={canvas1Ref} className="hidden" />
                 <p className="text-sm font-medium">{video1.library_title || `Video 1`}</p>
                 <p className="text-xs text-muted-foreground">
@@ -310,6 +339,26 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                   controls
                   preload="metadata"
                 />
+                
+                {/* Individual Frame Controls for Video 2 */}
+                <div className="flex justify-center gap-2 mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => stepFrameIndividual(2, 'backward')}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-xs text-muted-foreground self-center">Frame Step</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => stepFrameIndividual(2, 'forward')}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                
                 <canvas ref={canvas2Ref} className="hidden" />
                 <p className="text-sm font-medium">{video2.library_title || `Video 2`}</p>
                 <p className="text-xs text-muted-foreground">
