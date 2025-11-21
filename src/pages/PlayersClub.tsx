@@ -9,14 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, Scale } from 'lucide-react';
+import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, Scale, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoCardLazy } from '@/components/VideoCardLazy';
 import { BlurhashImage } from '@/components/BlurhashImage';
 import { VideoComparisonView } from '@/components/VideoComparisonView';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -336,15 +335,32 @@ export default function PlayersClub() {
                   }}
                 >
                   <CardContent className="p-0">
-                    {/* Selection Checkbox for Compare Mode */}
+                    {/* Selection Indicator for Compare Mode */}
                     {compareMode && (
-                      <div className="absolute top-4 left-4 z-10">
-                        <Checkbox
-                          checked={selectedVideos.some(v => v.id === session.id)}
-                          disabled={selectedVideos.length >= 2 && !selectedVideos.some(v => v.id === session.id)}
-                          onCheckedChange={() => handleVideoSelection(session)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
+                      <div 
+                        className="absolute top-4 left-4 z-10"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+                            selectedVideos.some(v => v.id === session.id)
+                              ? 'bg-primary border-primary'
+                              : 'bg-white/90 border-border backdrop-blur-sm'
+                          } ${
+                            selectedVideos.length >= 2 && !selectedVideos.some(v => v.id === session.id)
+                              ? 'opacity-40 cursor-not-allowed'
+                              : 'cursor-pointer hover:border-primary hover:scale-110'
+                          }`}
+                          onClick={() => {
+                            if (selectedVideos.length < 2 || selectedVideos.some(v => v.id === session.id)) {
+                              handleVideoSelection(session);
+                            }
+                          }}
+                        >
+                          {selectedVideos.some(v => v.id === session.id) && (
+                            <Check className="h-5 w-5 text-primary-foreground" />
+                          )}
+                        </div>
                       </div>
                     )}
                     {/* Thumbnail with responsive images and blurhash */}
