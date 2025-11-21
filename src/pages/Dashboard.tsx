@@ -16,6 +16,7 @@ import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
+import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { toast } from "sonner";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
 import dashboardHero2 from "@/assets/dashboard-hero-1.jpg";
@@ -290,9 +291,19 @@ export default function Dashboard() {
 
   if (authLoading || loading || subLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <div className="h-8 w-64 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-96 bg-muted animate-pulse rounded" />
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <DashboardModuleSkeleton />
+            <DashboardModuleSkeleton />
+            <DashboardModuleSkeleton />
+          </div>
+        </div>
+      </DashboardLayout>
     );
   }
 

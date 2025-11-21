@@ -513,6 +513,7 @@ export type Database = {
         Row: {
           ai_analysis: Json | null
           analysis_public: boolean | null
+          blurhash: string | null
           created_at: string
           efficiency_score: number | null
           id: string
@@ -525,7 +526,9 @@ export type Database = {
           shared_with_scouts: boolean | null
           sport: Database["public"]["Enums"]["sport_type"]
           status: Database["public"]["Enums"]["video_status"]
+          thumbnail_sizes: Json | null
           thumbnail_url: string | null
+          thumbnail_webp_url: string | null
           updated_at: string
           user_id: string
           video_url: string
@@ -533,6 +536,7 @@ export type Database = {
         Insert: {
           ai_analysis?: Json | null
           analysis_public?: boolean | null
+          blurhash?: string | null
           created_at?: string
           efficiency_score?: number | null
           id?: string
@@ -545,7 +549,9 @@ export type Database = {
           shared_with_scouts?: boolean | null
           sport: Database["public"]["Enums"]["sport_type"]
           status?: Database["public"]["Enums"]["video_status"]
+          thumbnail_sizes?: Json | null
           thumbnail_url?: string | null
+          thumbnail_webp_url?: string | null
           updated_at?: string
           user_id: string
           video_url: string
@@ -553,6 +559,7 @@ export type Database = {
         Update: {
           ai_analysis?: Json | null
           analysis_public?: boolean | null
+          blurhash?: string | null
           created_at?: string
           efficiency_score?: number | null
           id?: string
@@ -565,7 +572,9 @@ export type Database = {
           shared_with_scouts?: boolean | null
           sport?: Database["public"]["Enums"]["sport_type"]
           status?: Database["public"]["Enums"]["video_status"]
+          thumbnail_sizes?: Json | null
           thumbnail_url?: string | null
+          thumbnail_webp_url?: string | null
           updated_at?: string
           user_id?: string
           video_url?: string

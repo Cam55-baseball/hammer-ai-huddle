@@ -1,7 +1,7 @@
-import { useEffect } from "react";
-import { User, Users, Target } from "lucide-react";
+import { User, Users, Target, Shield, Lock, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { RoleButton } from "@/components/RoleButton";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,11 +12,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner } = useOwnerAccess();
-
-  useEffect(() => {
-    // Always redirect to auth page - let Auth component handle routing logic
-    navigate("/auth");
-  }, [navigate]);
 
   const handleGetStarted = () => {
     navigate("/auth");
@@ -173,10 +168,26 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="py-12 border-t border-border">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p className="text-sm">
-            © 2025 Hammers Modality. Training content only — consult professionals for medical issues.
-          </p>
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center gap-6 mb-8">
+            <Badge variant="outline" className="px-4 py-2">
+              <Shield className="h-4 w-4 mr-2" />
+              256-bit Encryption
+            </Badge>
+            <Badge variant="outline" className="px-4 py-2">
+              <Lock className="h-4 w-4 mr-2" />
+              Data Privacy
+            </Badge>
+            <Badge variant="outline" className="px-4 py-2">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Secure Storage
+            </Badge>
+          </div>
+          <div className="text-center text-muted-foreground">
+            <p className="text-sm">
+              © 2025 Hammers Modality. Training content only — consult professionals for medical issues.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

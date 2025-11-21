@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
 import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
+import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 
@@ -501,17 +502,7 @@ export default function AnalyzeVideo() {
             )}
 
             {analyzing && (
-              <Card className="p-6">
-                <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-center">
-                    Analyzing your technique...
-                  </h3>
-                  <Progress value={66} className="w-full" />
-                  <p className="text-center text-muted-foreground">
-                    This may take a minute. Our AI is analyzing your mechanics in detail.
-                  </p>
-                </div>
-              </Card>
+              <AnalysisResultSkeleton />
             )}
 
             {analysisError && !analyzing && (

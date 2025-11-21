@@ -141,6 +141,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
           ref={videoRef}
           src={videoSrc}
           controls
+          preload="metadata"
           className="w-full"
           style={{ maxHeight: '600px' }}
         />
