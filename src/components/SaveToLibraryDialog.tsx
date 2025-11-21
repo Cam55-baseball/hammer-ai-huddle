@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { uploadCustomThumbnail } from '@/lib/uploadHelpers';
+import { uploadOptimizedThumbnail, uploadThumbnailSizes } from '@/lib/uploadHelpers';
+import { processVideoThumbnail } from '@/lib/thumbnailHelpers';
 import {
   Dialog,
   DialogContent,
@@ -76,17 +77,31 @@ export function SaveToLibraryDialog({
     try {
       setSaving(true);
 
-      let customThumbnailUrl: string | undefined = undefined;
+      let thumbnailData = {
+        webpUrl: undefined as string | undefined,
+        sizes: undefined as any,
+        blurhash: undefined as string | undefined
+      };
+
       if (customThumbnail) {
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            customThumbnailUrl = await uploadCustomThumbnail(
-              customThumbnail,
+            // Process and optimize thumbnail
+            const processed = await processVideoThumbnail(customThumbnail, 0.1);
+            
+            // Upload WebP version
+            thumbnailData.webpUrl = await uploadOptimizedThumbnail(
+              processed.webpBlob,
               user.id,
-              videoId
+              videoId,
+              'webp'
             );
-            console.log('Custom thumbnail uploaded:', customThumbnailUrl);
+            
+            // Upload multiple sizes
+            const sizesData = await uploadThumbnailSizes(processed.sizes, user.id, videoId);
+            thumbnailData.sizes = sizesData;
+            thumbnailData.blurhash = processed.blurhash;
           }
         } catch (thumbnailError: any) {
           console.error('Error uploading thumbnail:', thumbnailError);
@@ -111,8 +126,12 @@ export function SaveToLibraryDialog({
         session_date: new Date().toISOString()
       };
       
-      if (customThumbnailUrl) {
-        updateData.thumbnail_url = customThumbnailUrl;
+      if (thumbnailData.webpUrl) {
+        updateData.thumbnail_webp_url = thumbnailData.webpUrl;
+        updateData.thumbnail_sizes = thumbnailData.sizes;
+        updateData.blurhash = thumbnailData.blurhash;
+        // Keep original thumbnail_url as fallback
+        updateData.thumbnail_url = thumbnailData.webpUrl;
       }
 
       const { error: updateError } = await supabase

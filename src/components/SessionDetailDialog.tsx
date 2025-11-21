@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { uploadCustomThumbnail } from '@/lib/uploadHelpers';
+import { uploadOptimizedThumbnail, uploadThumbnailSizes } from '@/lib/uploadHelpers';
+import { processVideoThumbnail } from '@/lib/thumbnailHelpers';
 import {
   Dialog,
   DialogContent,
@@ -143,14 +144,29 @@ export function SessionDetailDialog({
         throw userError || new Error('You must be signed in to update sessions.');
       }
 
-      let customThumbnailUrl: string | undefined = undefined;
+      let thumbnailData = {
+        webpUrl: undefined as string | undefined,
+        sizes: undefined as any,
+        blurhash: undefined as string | undefined
+      };
+
       if (customThumbnail) {
         try {
-          customThumbnailUrl = await uploadCustomThumbnail(
-            customThumbnail,
+          // Process and optimize thumbnail
+          const processed = await processVideoThumbnail(customThumbnail, 0.1);
+          
+          // Upload WebP version
+          thumbnailData.webpUrl = await uploadOptimizedThumbnail(
+            processed.webpBlob,
             user.id,
-            session.id
+            session.id,
+            'webp'
           );
+          
+          // Upload multiple sizes
+          const sizesData = await uploadThumbnailSizes(processed.sizes, user.id, session.id);
+          thumbnailData.sizes = sizesData;
+          thumbnailData.blurhash = processed.blurhash;
         } catch (thumbnailError: any) {
           console.error('Error uploading thumbnail:', thumbnailError);
           toast.error(`Failed to upload thumbnail: ${thumbnailError.message}`);
@@ -168,10 +184,17 @@ export function SessionDetailDialog({
 
       if (error) throw error;
 
-      if (customThumbnailUrl) {
+      if (thumbnailData.webpUrl) {
+        const updateData: any = {
+          thumbnail_webp_url: thumbnailData.webpUrl,
+          thumbnail_sizes: thumbnailData.sizes,
+          blurhash: thumbnailData.blurhash,
+          thumbnail_url: thumbnailData.webpUrl
+        };
+
         const { error: thumbnailError } = await supabase
           .from('videos')
-          .update({ thumbnail_url: customThumbnailUrl })
+          .update(updateData)
           .eq('id', session.id)
           .eq('user_id', user.id);
 

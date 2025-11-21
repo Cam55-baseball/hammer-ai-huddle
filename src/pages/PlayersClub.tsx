@@ -13,6 +13,8 @@ import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked } fr
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VideoCardLazy } from '@/components/VideoCardLazy';
+import { BlurhashImage } from '@/components/BlurhashImage';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +31,13 @@ interface LibrarySession {
   user_id: string;
   video_url: string;
   thumbnail_url?: string;
+  thumbnail_webp_url?: string;
+  thumbnail_sizes?: {
+    small: string;
+    medium: string;
+    large: string;
+  };
+  blurhash?: string;
   library_title?: string;
   library_notes?: string;
   sport: string;
@@ -260,87 +269,127 @@ export default function PlayersClub() {
         ) : (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
             {filteredSessions.map((session) => (
-              <Card key={session.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <CardContent className="p-0">
-                  {/* Thumbnail */}
-                  <div className="relative h-48 bg-muted">
-                    {session.thumbnail_url ? (
-                      <img src={session.thumbnail_url} alt="Session" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BookMarked className="h-16 w-16 text-muted-foreground" />
+              <VideoCardLazy key={session.id}>
+                <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <CardContent className="p-0">
+                    {/* Thumbnail with responsive images and blurhash */}
+                    <div className="relative h-48 bg-muted">
+                      {session.blurhash && (session.thumbnail_webp_url || session.thumbnail_url) ? (
+                        <BlurhashImage
+                          blurhash={session.blurhash}
+                          src={session.thumbnail_webp_url || session.thumbnail_url!}
+                          alt="Session thumbnail"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : session.thumbnail_sizes || session.thumbnail_webp_url ? (
+                        <picture>
+                          {/* Load appropriate size based on viewport */}
+                          {session.thumbnail_sizes?.small && (
+                            <source
+                              media="(max-width: 640px)"
+                              srcSet={session.thumbnail_sizes.small}
+                              type="image/webp"
+                            />
+                          )}
+                          {session.thumbnail_sizes?.medium && (
+                            <source
+                              media="(max-width: 1024px)"
+                              srcSet={session.thumbnail_sizes.medium}
+                              type="image/webp"
+                            />
+                          )}
+                          {session.thumbnail_sizes?.large && (
+                            <source
+                              srcSet={session.thumbnail_sizes.large}
+                              type="image/webp"
+                            />
+                          )}
+                          {/* Fallback for browsers without WebP support */}
+                          <img
+                            src={session.thumbnail_url || session.thumbnail_webp_url}
+                            alt="Session"
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </picture>
+                      ) : session.thumbnail_url ? (
+                        <img src={session.thumbnail_url} alt="Session" className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <BookMarked className="h-16 w-16 text-muted-foreground" />
+                        </div>
+                      )}
+                      {session.shared_with_scouts && (
+                        <Badge className="absolute top-2 right-2" variant="secondary">
+                          <Share2 className="h-3 w-3 mr-1" />
+                          Shared
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <h3 className="font-semibold line-clamp-1">
+                          {session.library_title || `${session.sport} ${session.module}`}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(session.session_date).toLocaleDateString()}
+                        </p>
                       </div>
-                    )}
-                    {session.shared_with_scouts && (
-                      <Badge className="absolute top-2 right-2" variant="secondary">
-                        <Share2 className="h-3 w-3 mr-1" />
-                        Shared
-                      </Badge>
-                    )}
-                  </div>
 
-                  {/* Content */}
-                  <div className="p-4 space-y-3">
-                    <div>
-                      <h3 className="font-semibold line-clamp-1">
-                        {session.library_title || `${session.sport} ${session.module}`}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(session.session_date).toLocaleDateString()}
-                      </p>
-                    </div>
+                      <div className="flex gap-2">
+                        <Badge variant="outline">{session.sport}</Badge>
+                        <Badge variant="outline">{session.module}</Badge>
+                        {session.efficiency_score !== undefined && (
+                          <Badge>{session.efficiency_score}%</Badge>
+                        )}
+                      </div>
 
-                    <div className="flex gap-2">
-                      <Badge variant="outline">{session.sport}</Badge>
-                      <Badge variant="outline">{session.module}</Badge>
-                      {session.efficiency_score !== undefined && (
-                        <Badge>{session.efficiency_score}%</Badge>
-                      )}
+                      {/* Actions */}
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedSession(session)}
+                          className="flex-1"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownload(session.id)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        {isOwnLibrary && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleToggleShare(session.id, session.shared_with_scouts)}
+                            >
+                              <Share2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSessionToDelete(session.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedSession(session)}
-                        className="flex-1"
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDownload(session.id)}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      {isOwnLibrary && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleToggleShare(session.id, session.shared_with_scouts)}
-                          >
-                            <Share2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSessionToDelete(session.id);
-                              setDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </VideoCardLazy>
             ))}
           </div>
         )}
