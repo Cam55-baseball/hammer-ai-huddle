@@ -1,0 +1,266 @@
+import { useEffect, useRef, useState } from "react";
+import { Canvas as FabricCanvas, Circle, Rect, Line, IText } from "fabric";
+import * as fabric from "fabric";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { AnnotationToolbar } from "./AnnotationToolbar";
+
+interface FrameAnnotationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  frameDataUrl: string;
+  onSave: (annotatedFrame: string) => void;
+}
+
+export type AnnotationTool = "select" | "draw" | "text" | "rectangle" | "circle" | "arrow";
+
+export const FrameAnnotationDialog = ({
+  open,
+  onOpenChange,
+  frameDataUrl,
+  onSave,
+}: FrameAnnotationDialogProps) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
+  const [activeTool, setActiveTool] = useState<AnnotationTool>("select");
+  const [activeColor, setActiveColor] = useState("#FF0000");
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyStep, setHistoryStep] = useState(-1);
+
+  // Initialize canvas
+  useEffect(() => {
+    if (!canvasRef.current || !open) return;
+
+    const canvas = new FabricCanvas(canvasRef.current, {
+      width: 800,
+      height: 600,
+      backgroundColor: "#ffffff",
+    });
+
+    // Load the frame image as background
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const scale = Math.min(800 / img.width, 600 / img.height);
+      canvas.setDimensions({
+        width: img.width * scale,
+        height: img.height * scale,
+      });
+      
+      // Set background color and add image
+      canvas.backgroundColor = "#f0f0f0";
+      const fabricImg = new fabric.Image(img, {
+        scaleX: scale,
+        scaleY: scale,
+        selectable: false,
+        evented: false,
+      });
+      canvas.add(fabricImg);
+      canvas.renderAll();
+      saveHistory(canvas);
+    };
+    img.src = frameDataUrl;
+
+    // Initialize drawing brush
+    canvas.freeDrawingBrush.color = activeColor;
+    canvas.freeDrawingBrush.width = 3;
+
+    setFabricCanvas(canvas);
+
+    return () => {
+      canvas.dispose();
+    };
+  }, [open, frameDataUrl]);
+
+  // Update tool behavior
+  useEffect(() => {
+    if (!fabricCanvas) return;
+
+    fabricCanvas.isDrawingMode = activeTool === "draw";
+    
+    if (activeTool === "draw" && fabricCanvas.freeDrawingBrush) {
+      fabricCanvas.freeDrawingBrush.color = activeColor;
+      fabricCanvas.freeDrawingBrush.width = 3;
+    }
+
+    // Save state after drawing
+    if (activeTool === "draw") {
+      const handlePathCreated = () => {
+        saveHistory(fabricCanvas);
+      };
+      fabricCanvas.on("path:created", handlePathCreated);
+      return () => {
+        fabricCanvas.off("path:created", handlePathCreated);
+      };
+    }
+  }, [activeTool, activeColor, fabricCanvas]);
+
+  const saveHistory = (canvas: FabricCanvas) => {
+    const json = JSON.stringify(canvas.toJSON());
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyStep + 1);
+      newHistory.push(json);
+      return newHistory;
+    });
+    setHistoryStep(prev => prev + 1);
+  };
+
+  const handleUndo = () => {
+    if (!fabricCanvas || historyStep <= 0) return;
+    
+    const newStep = historyStep - 1;
+    setHistoryStep(newStep);
+    fabricCanvas.loadFromJSON(history[newStep], () => {
+      fabricCanvas.renderAll();
+    });
+  };
+
+  const handleRedo = () => {
+    if (!fabricCanvas || historyStep >= history.length - 1) return;
+    
+    const newStep = historyStep + 1;
+    setHistoryStep(newStep);
+    fabricCanvas.loadFromJSON(history[newStep], () => {
+      fabricCanvas.renderAll();
+    });
+  };
+
+  const handleToolClick = (tool: AnnotationTool) => {
+    setActiveTool(tool);
+
+    if (!fabricCanvas) return;
+
+    if (tool === "text") {
+      const text = new IText("Label", {
+        left: 100,
+        top: 100,
+        fill: activeColor,
+        fontSize: 24,
+        fontWeight: "bold",
+      });
+      fabricCanvas.add(text);
+      fabricCanvas.setActiveObject(text);
+      saveHistory(fabricCanvas);
+    } else if (tool === "rectangle") {
+      const rect = new Rect({
+        left: 100,
+        top: 100,
+        fill: "transparent",
+        stroke: activeColor,
+        strokeWidth: 3,
+        width: 150,
+        height: 100,
+      });
+      fabricCanvas.add(rect);
+      saveHistory(fabricCanvas);
+    } else if (tool === "circle") {
+      const circle = new Circle({
+        left: 100,
+        top: 100,
+        fill: "transparent",
+        stroke: activeColor,
+        strokeWidth: 3,
+        radius: 50,
+      });
+      fabricCanvas.add(circle);
+      saveHistory(fabricCanvas);
+    } else if (tool === "arrow") {
+      const arrow = createArrow(150, 150, 250, 250, activeColor);
+      fabricCanvas.add(arrow);
+      saveHistory(fabricCanvas);
+    }
+  };
+
+  const createArrow = (x1: number, y1: number, x2: number, y2: number, color: string) => {
+    const line = new Line([x1, y1, x2, y2], {
+      stroke: color,
+      strokeWidth: 3,
+    });
+    
+    return line;
+  };
+
+  const handlePresetLabel = (label: string) => {
+    if (!fabricCanvas) return;
+
+    const text = new IText(label, {
+      left: 150,
+      top: 150,
+      fill: activeColor,
+      fontSize: 20,
+      fontWeight: "bold",
+      backgroundColor: "rgba(255, 255, 255, 0.8)",
+      padding: 5,
+    });
+    fabricCanvas.add(text);
+    fabricCanvas.setActiveObject(text);
+    saveHistory(fabricCanvas);
+    toast.success(`Added "${label}" label`);
+  };
+
+  const handleClear = () => {
+    if (!fabricCanvas) return;
+    
+    const objects = fabricCanvas.getObjects();
+    // Keep only the first object (background image)
+    objects.slice(1).forEach(obj => {
+      fabricCanvas.remove(obj);
+    });
+    fabricCanvas.renderAll();
+    saveHistory(fabricCanvas);
+    toast.info("Canvas cleared");
+  };
+
+  const handleSave = () => {
+    if (!fabricCanvas) return;
+
+    const annotatedFrame = fabricCanvas.toDataURL({
+      format: "png",
+      quality: 1,
+      multiplier: 1,
+    });
+    
+    onSave(annotatedFrame);
+    onOpenChange(false);
+    toast.success("Annotations saved!");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[900px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Annotate Frame</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <AnnotationToolbar
+            activeTool={activeTool}
+            activeColor={activeColor}
+            onToolClick={handleToolClick}
+            onColorChange={setActiveColor}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onClear={handleClear}
+            onPresetLabel={handlePresetLabel}
+            canUndo={historyStep > 0}
+            canRedo={historyStep < history.length - 1}
+          />
+
+          <div className="border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center">
+            <canvas ref={canvasRef} className="max-w-full" />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>
+            Save Annotations
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};

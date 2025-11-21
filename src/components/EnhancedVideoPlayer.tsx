@@ -1,20 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, Edit } from "lucide-react";
 import { toast } from "sonner";
+import { FrameAnnotationDialog } from "./FrameAnnotationDialog";
 
 interface EnhancedVideoPlayerProps {
   videoSrc: string;
   playbackRate?: number;
 }
 
+interface KeyFrame {
+  original: string;
+  annotated: string | null;
+}
+
 export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [loopStart, setLoopStart] = useState<number | null>(null);
   const [loopEnd, setLoopEnd] = useState<number | null>(null);
-  const [keyFrames, setKeyFrames] = useState<string[]>([]);
+  const [keyFrames, setKeyFrames] = useState<KeyFrame[]>([]);
   const [videoReady, setVideoReady] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [annotationDialogOpen, setAnnotationDialogOpen] = useState(false);
+  const [selectedFrameIndex, setSelectedFrameIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -107,14 +115,32 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const frameUrl = canvas.toDataURL('image/png');
-    setKeyFrames(prev => [...prev, frameUrl]);
+    setKeyFrames(prev => [...prev, { original: frameUrl, annotated: null }]);
     toast.success("Key frame captured!");
   };
 
-  const downloadFrame = (frameDataUrl: string, index: number) => {
+  const handleAnnotateFrame = (index: number) => {
+    setSelectedFrameIndex(index);
+    setAnnotationDialogOpen(true);
+  };
+
+  const handleSaveAnnotation = (annotatedFrame: string) => {
+    if (selectedFrameIndex === null) return;
+    
+    setKeyFrames(prev => 
+      prev.map((frame, idx) => 
+        idx === selectedFrameIndex 
+          ? { ...frame, annotated: annotatedFrame }
+          : frame
+      )
+    );
+    setSelectedFrameIndex(null);
+  };
+
+  const downloadFrame = (frame: KeyFrame, index: number) => {
     const link = document.createElement('a');
-    link.href = frameDataUrl;
-    link.download = `key-frame-${index + 1}.png`;
+    link.href = frame.annotated || frame.original;
+    link.download = `key-frame-${index + 1}${frame.annotated ? '-annotated' : ''}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -236,19 +262,33 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             {keyFrames.map((frame, idx) => (
               <div key={idx} className="relative group">
                 <img 
-                  src={frame} 
+                  src={frame.annotated || frame.original} 
                   alt={`Key frame ${idx + 1}`}
                   className="w-full rounded-lg border"
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => downloadFrame(frame, idx)}
-                  title="Download frame"
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
+                {frame.annotated && (
+                  <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+                    Annotated
+                  </div>
+                )}
+                <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleAnnotateFrame(idx)}
+                    title="Annotate frame"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => downloadFrame(frame, idx)}
+                    title="Download frame"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -261,6 +301,16 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             ))}
           </div>
         </div>
+      )}
+
+      {/* Annotation Dialog */}
+      {selectedFrameIndex !== null && (
+        <FrameAnnotationDialog
+          open={annotationDialogOpen}
+          onOpenChange={setAnnotationDialogOpen}
+          frameDataUrl={keyFrames[selectedFrameIndex]?.original || ""}
+          onSave={handleSaveAnnotation}
+        />
       )}
     </div>
   );
