@@ -105,21 +105,35 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const captureKeyFrame = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas) return;
+    if (!video || !canvas) {
+      toast.error("Video or canvas not ready");
+      return;
+    }
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      toast.error("Could not get canvas context");
+      return;
+    }
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const frameUrl = canvas.toDataURL('image/png');
+    console.log("Frame captured, data URL length:", frameUrl.length);
+    
     setKeyFrames(prev => [...prev, { original: frameUrl, annotated: null }]);
     toast.success("Key frame captured!");
   };
 
   const handleAnnotateFrame = (index: number) => {
+    const frame = keyFrames[index];
+    if (!frame || !frame.original) {
+      toast.error("Frame data not found");
+      return;
+    }
+    console.log("Opening annotation dialog for frame:", index, "Data URL length:", frame.original.length);
     setSelectedFrameIndex(index);
     setAnnotationDialogOpen(true);
   };
@@ -304,14 +318,12 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
       )}
 
       {/* Annotation Dialog */}
-      {selectedFrameIndex !== null && (
-        <FrameAnnotationDialog
-          open={annotationDialogOpen}
-          onOpenChange={setAnnotationDialogOpen}
-          frameDataUrl={keyFrames[selectedFrameIndex]?.original || ""}
-          onSave={handleSaveAnnotation}
-        />
-      )}
+      <FrameAnnotationDialog
+        open={annotationDialogOpen && selectedFrameIndex !== null}
+        onOpenChange={setAnnotationDialogOpen}
+        frameDataUrl={selectedFrameIndex !== null ? (keyFrames[selectedFrameIndex]?.original || "") : ""}
+        onSave={handleSaveAnnotation}
+      />
     </div>
   );
 };

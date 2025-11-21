@@ -27,49 +27,69 @@ export const FrameAnnotationDialog = ({
   const [activeColor, setActiveColor] = useState("#FF0000");
   const [history, setHistory] = useState<string[]>([]);
   const [historyStep, setHistoryStep] = useState(-1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Initialize canvas
   useEffect(() => {
-    if (!canvasRef.current || !open) return;
+    if (!canvasRef.current || !open || !frameDataUrl) {
+      setIsLoading(false);
+      return;
+    }
 
-    const canvas = new FabricCanvas(canvasRef.current, {
-      width: 800,
-      height: 600,
-      backgroundColor: "#ffffff",
-    });
+    setIsLoading(true);
+    setLoadError(null);
+    console.log("Starting canvas initialization, frame data length:", frameDataUrl.length);
 
-    // Load the frame image as background
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    
     img.onload = () => {
-      const scale = Math.min(800 / img.width, 600 / img.height);
-      canvas.setDimensions({
-        width: img.width * scale,
-        height: img.height * scale,
-      });
-      
-      // Set background color and add image
-      canvas.backgroundColor = "#f0f0f0";
-      const fabricImg = new fabric.Image(img, {
-        scaleX: scale,
-        scaleY: scale,
-        selectable: false,
-        evented: false,
-      });
-      canvas.add(fabricImg);
-      canvas.renderAll();
-      saveHistory(canvas);
+      try {
+        console.log("Image loaded successfully:", img.width, "x", img.height);
+        const canvas = new FabricCanvas(canvasRef.current!, {
+          width: img.width,
+          height: img.height,
+          backgroundColor: "#f0f0f0",
+        });
+
+        const fabricImg = new fabric.Image(img, {
+          left: 0,
+          top: 0,
+          selectable: false,
+          evented: false,
+        });
+        
+        canvas.add(fabricImg);
+        canvas.sendObjectToBack(fabricImg);
+        canvas.renderAll();
+        
+        // Initialize drawing brush
+        canvas.freeDrawingBrush.color = activeColor;
+        canvas.freeDrawingBrush.width = 3;
+        
+        setFabricCanvas(canvas);
+        saveHistory(canvas);
+        setIsLoading(false);
+        console.log("Canvas initialized successfully");
+      } catch (error) {
+        console.error("Canvas initialization error:", error);
+        setLoadError("Failed to initialize canvas");
+        setIsLoading(false);
+      }
     };
+    
+    img.onerror = () => {
+      console.error("Image loading failed for frame");
+      setLoadError("Failed to load frame image");
+      setIsLoading(false);
+    };
+    
     img.src = frameDataUrl;
 
-    // Initialize drawing brush
-    canvas.freeDrawingBrush.color = activeColor;
-    canvas.freeDrawingBrush.width = 3;
-
-    setFabricCanvas(canvas);
-
     return () => {
-      canvas.dispose();
+      if (fabricCanvas) {
+        fabricCanvas.dispose();
+      }
     };
   }, [open, frameDataUrl]);
 
@@ -247,9 +267,26 @@ export const FrameAnnotationDialog = ({
             canRedo={historyStep < history.length - 1}
           />
 
-          <div className="border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center">
-            <canvas ref={canvasRef} className="max-w-full" />
-          </div>
+          {isLoading && (
+            <div className="flex items-center justify-center h-[400px] bg-muted/20 rounded-lg">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-sm text-muted-foreground">Loading frame...</p>
+              </div>
+            </div>
+          )}
+
+          {loadError && (
+            <div className="flex items-center justify-center h-[400px] bg-destructive/10 rounded-lg border border-destructive">
+              <p className="text-sm text-destructive">{loadError}</p>
+            </div>
+          )}
+
+          {!isLoading && !loadError && (
+            <div className="border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center">
+              <canvas ref={canvasRef} className="max-w-full" />
+            </div>
+          )}
         </div>
 
         <DialogFooter>
