@@ -32,8 +32,7 @@ export const FrameAnnotationDialog = ({
 
   // Initialize canvas
   useEffect(() => {
-    if (!canvasRef.current || !open || !frameDataUrl) {
-      setIsLoading(false);
+    if (!open || !frameDataUrl || !canvasRef.current) {
       return;
     }
 
@@ -41,12 +40,13 @@ export const FrameAnnotationDialog = ({
     setLoadError(null);
     console.log("Starting canvas initialization, frame data length:", frameDataUrl.length);
 
+    let canvas: FabricCanvas | null = null;
     const img = new Image();
     
     img.onload = () => {
       try {
         console.log("Image loaded successfully:", img.width, "x", img.height);
-        const canvas = new FabricCanvas(canvasRef.current!, {
+        canvas = new FabricCanvas(canvasRef.current!, {
           width: img.width,
           height: img.height,
           backgroundColor: "#f0f0f0",
@@ -87,9 +87,7 @@ export const FrameAnnotationDialog = ({
     img.src = frameDataUrl;
 
     return () => {
-      if (fabricCanvas) {
-        fabricCanvas.dispose();
-      }
+      canvas?.dispose();
     };
   }, [open, frameDataUrl]);
 
@@ -267,26 +265,24 @@ export const FrameAnnotationDialog = ({
             canRedo={historyStep < history.length - 1}
           />
 
-          {isLoading && (
-            <div className="flex items-center justify-center h-[400px] bg-muted/20 rounded-lg">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-sm text-muted-foreground">Loading frame...</p>
+          <div className="relative border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center min-h-[400px]">
+            <canvas ref={canvasRef} className="max-w-full" />
+            
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-sm text-muted-foreground">Loading frame...</p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {loadError && (
-            <div className="flex items-center justify-center h-[400px] bg-destructive/10 rounded-lg border border-destructive">
-              <p className="text-sm text-destructive">{loadError}</p>
-            </div>
-          )}
-
-          {!isLoading && !loadError && (
-            <div className="border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center">
-              <canvas ref={canvasRef} className="max-w-full" />
-            </div>
-          )}
+            {loadError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-destructive/10 backdrop-blur-sm border border-destructive">
+                <p className="text-sm text-destructive">{loadError}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         <DialogFooter>
