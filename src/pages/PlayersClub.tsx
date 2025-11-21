@@ -335,36 +335,36 @@ export default function PlayersClub() {
                   }}
                 >
                   <CardContent className="p-0">
-                    {/* Selection Indicator for Compare Mode */}
-                    {compareMode && (
-                      <div 
-                        className="absolute top-4 left-4 z-10"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
-                            selectedVideos.some(v => v.id === session.id)
-                              ? 'bg-primary border-primary'
-                              : 'bg-white/90 border-border backdrop-blur-sm'
-                          } ${
-                            selectedVideos.length >= 2 && !selectedVideos.some(v => v.id === session.id)
-                              ? 'opacity-40 cursor-not-allowed'
-                              : 'cursor-pointer hover:border-primary hover:scale-110'
-                          }`}
-                          onClick={() => {
-                            if (selectedVideos.length < 2 || selectedVideos.some(v => v.id === session.id)) {
-                              handleVideoSelection(session);
-                            }
-                          }}
-                        >
-                          {selectedVideos.some(v => v.id === session.id) && (
-                            <Check className="h-5 w-5 text-primary-foreground" />
-                          )}
-                        </div>
-                      </div>
-                    )}
                     {/* Thumbnail with responsive images and blurhash */}
                     <div className="relative h-48 bg-muted">
+                      {/* Selection Indicator for Compare Mode */}
+                      {compareMode && (
+                        <div 
+                          className="absolute top-4 left-4 z-10"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+                              selectedVideos.some(v => v.id === session.id)
+                                ? 'bg-primary border-primary'
+                                : 'bg-white/90 border-border backdrop-blur-sm'
+                            } ${
+                              selectedVideos.length >= 2 && !selectedVideos.some(v => v.id === session.id)
+                                ? 'opacity-40 cursor-not-allowed'
+                                : 'cursor-pointer hover:border-primary hover:scale-110'
+                            }`}
+                            onClick={() => {
+                              if (selectedVideos.length < 2 || selectedVideos.some(v => v.id === session.id)) {
+                                handleVideoSelection(session);
+                              }
+                            }}
+                          >
+                            {selectedVideos.some(v => v.id === session.id) && (
+                              <Check className="h-5 w-5 text-primary-foreground" />
+                            )}
+                          </div>
+                        </div>
+                      )}
                       {session.blurhash && (session.thumbnail_webp_url || session.thumbnail_url) ? (
                         <BlurhashImage
                           blurhash={session.blurhash}
