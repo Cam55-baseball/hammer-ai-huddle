@@ -41,62 +41,79 @@ export const FrameAnnotationDialog = ({
     console.log("Starting canvas initialization, frame data length:", frameDataUrl.length);
 
     let canvas: FabricCanvas | null = null;
-    const img = new Image();
-    
-    img.onload = () => {
-      try {
-        if (!canvasRef.current) {
-          console.error("Canvas ref missing at image load");
-          setLoadError("Failed to initialize canvas");
-          setIsLoading(false);
-          return;
-        }
+    let cancelled = false;
 
-        console.log("Image loaded successfully:", img.width, "x", img.height);
-        canvas = new FabricCanvas(canvasRef.current, {
-          width: img.width,
-          height: img.height,
-          backgroundColor: "#f0f0f0",
-        });
+    const init = () => {
+      if (cancelled) return;
 
-        const fabricImg = new fabric.Image(img, {
-          left: 0,
-          top: 0,
-          selectable: false,
-          evented: false,
-        });
-        
-        canvas.add(fabricImg);
-        canvas.sendObjectToBack(fabricImg);
-        canvas.renderAll();
-        
-        // Initialize drawing brush
-        canvas.freeDrawingBrush.color = activeColor;
-        canvas.freeDrawingBrush.width = 3;
-        
-        setFabricCanvas(canvas);
-        saveHistory(canvas);
-        setIsLoading(false);
-        console.log("Canvas initialized successfully");
-      } catch (error) {
-        console.error("Canvas initialization error:", error);
-        setLoadError("Failed to initialize canvas");
-        setIsLoading(false);
+      const canvasElement = canvasRef.current;
+      if (!canvasElement) {
+        console.warn("Canvas ref not ready yet, retrying next frame");
+        requestAnimationFrame(init);
+        return;
       }
+
+      const img = new Image();
+
+      img.onload = () => {
+        if (cancelled) return;
+        try {
+          console.log("Image loaded successfully:", img.width, "x", img.height);
+
+          canvas = new FabricCanvas(canvasElement, {
+            width: img.width,
+            height: img.height,
+            backgroundColor: "#f0f0f0",
+          });
+
+          const fabricImg = new fabric.Image(img, {
+            left: 0,
+            top: 0,
+            selectable: false,
+            evented: false,
+          });
+
+          canvas.add(fabricImg);
+          canvas.sendObjectToBack(fabricImg);
+          canvas.renderAll();
+
+          // Safely configure free drawing brush
+          if (canvas.freeDrawingBrush) {
+            canvas.freeDrawingBrush.color = activeColor;
+            canvas.freeDrawingBrush.width = 3;
+          }
+
+          setFabricCanvas(canvas);
+          saveHistory(canvas);
+          setIsLoading(false);
+          console.log("Canvas initialized successfully");
+        } catch (error) {
+          console.error("Canvas initialization error:", error);
+          const message = error instanceof Error ? error.message : String(error);
+          setLoadError(`Failed to initialize canvas: ${message}`);
+          setIsLoading(false);
+        }
+      };
+
+      img.onerror = () => {
+        if (cancelled) return;
+        console.error("Image loading failed for frame", {
+          snippet: frameDataUrl.slice(0, 40),
+        });
+        setLoadError("Failed to load frame image");
+        setIsLoading(false);
+      };
+
+      img.src = frameDataUrl;
     };
-    
-    img.onerror = () => {
-      console.error("Image loading failed for frame");
-      setLoadError("Failed to load frame image");
-      setIsLoading(false);
-    };
-    
-    img.src = frameDataUrl;
+
+    requestAnimationFrame(init);
 
     return () => {
+      cancelled = true;
       canvas?.dispose();
     };
-  }, [open, frameDataUrl]);
+  }, [open, frameDataUrl, activeColor]);
 
   // Reset state when dialog closes
   useEffect(() => {
