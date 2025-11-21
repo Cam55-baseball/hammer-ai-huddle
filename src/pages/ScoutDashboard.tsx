@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Check, Clock, BookMarked, User, UserMinus } from 'lucide-react';
+import { ProfileCardSkeleton } from '@/components/skeletons/ProfileCardSkeleton';
 import { 
   Command,
   CommandEmpty,
@@ -511,8 +512,9 @@ export default function ScoutDashboard() {
 
               <div className="space-y-3 max-h-[600px] overflow-y-auto">
                 {searchLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>Searching players...</p>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <ProfileCardSkeleton />
+                    <ProfileCardSkeleton />
                   </div>
                 ) : searchTerm.trim().length < 2 ? (
                   <div className="text-center py-8 text-muted-foreground">

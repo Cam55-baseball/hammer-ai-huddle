@@ -4,6 +4,7 @@ import { AppSidebar } from "./AppSidebar";
 import { FloatingChatButton } from "./FloatingChatButton";
 import { TutorialButton } from "./TutorialButton";
 import { TutorialModal } from "./TutorialModal";
+import { OfflineIndicator } from "./OfflineIndicator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -54,7 +55,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               )}
             </div>
           </header>
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-6">
+            <OfflineIndicator />
+            {children}
+          </main>
         </SidebarInset>
       </div>
       <FloatingChatButton />
