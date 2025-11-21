@@ -9,12 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked } from 'lucide-react';
+import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, Scale } from 'lucide-react';
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoCardLazy } from '@/components/VideoCardLazy';
 import { BlurhashImage } from '@/components/BlurhashImage';
+import { VideoComparisonView } from '@/components/VideoComparisonView';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,6 +66,11 @@ export default function PlayersClub() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string>('');
+  
+  // Compare mode state
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedVideos, setSelectedVideos] = useState<LibrarySession[]>([]);
+  const [showComparisonView, setShowComparisonView] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -169,6 +176,24 @@ export default function PlayersClub() {
     }
   };
 
+  const handleVideoSelection = (session: LibrarySession) => {
+    const isSelected = selectedVideos.some(v => v.id === session.id);
+    
+    if (isSelected) {
+      setSelectedVideos(prev => prev.filter(v => v.id !== session.id));
+    } else if (selectedVideos.length < 2) {
+      setSelectedVideos(prev => [...prev, session]);
+    } else {
+      toast.error('Maximum 2 videos can be selected for comparison');
+    }
+  };
+
+  const handleExitCompareMode = () => {
+    setCompareMode(false);
+    setSelectedVideos([]);
+    setShowComparisonView(false);
+  };
+
   const filteredSessions = sessions.filter(session => {
     const matchesSport = sportFilter === 'all' || session.sport === sportFilter;
     const matchesModule = moduleFilter === 'all' || session.module === moduleFilter;
@@ -217,13 +242,39 @@ export default function PlayersClub() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4 items-center">
           <Input
             placeholder="Search sessions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="max-w-xs"
           />
+          
+          {/* Compare Button */}
+          {isOwnLibrary && (
+            <>
+              <Button
+                variant={compareMode ? 'default' : 'outline'}
+                onClick={() => {
+                  if (compareMode) {
+                    handleExitCompareMode();
+                  } else {
+                    setCompareMode(true);
+                  }
+                }}
+                className="gap-2"
+              >
+                <Scale className="h-4 w-4" />
+                {compareMode ? `Compare (${selectedVideos.length}/2)` : 'Compare Videos'}
+              </Button>
+              
+              {compareMode && selectedVideos.length === 2 && (
+                <Button onClick={() => setShowComparisonView(true)}>
+                  Start Comparison
+                </Button>
+              )}
+            </>
+          )}
           <Select value={sportFilter} onValueChange={setSportFilter}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Sport" />
@@ -270,8 +321,32 @@ export default function PlayersClub() {
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
             {filteredSessions.map((session) => (
               <VideoCardLazy key={session.id}>
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+                <Card 
+                  className={`overflow-hidden hover:shadow-lg transition-shadow ${
+                    compareMode ? 'cursor-pointer' : ''
+                  } ${
+                    selectedVideos.some(v => v.id === session.id) 
+                      ? 'ring-2 ring-primary' 
+                      : ''
+                  }`}
+                  onClick={() => {
+                    if (compareMode) {
+                      handleVideoSelection(session);
+                    }
+                  }}
+                >
                   <CardContent className="p-0">
+                    {/* Selection Checkbox for Compare Mode */}
+                    {compareMode && (
+                      <div className="absolute top-4 left-4 z-10">
+                        <Checkbox
+                          checked={selectedVideos.some(v => v.id === session.id)}
+                          disabled={selectedVideos.length >= 2 && !selectedVideos.some(v => v.id === session.id)}
+                          onCheckedChange={() => handleVideoSelection(session)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    )}
                     {/* Thumbnail with responsive images and blurhash */}
                     <div className="relative h-48 bg-muted">
                       {session.blurhash && (session.thumbnail_webp_url || session.thumbnail_url) ? (
@@ -403,6 +478,19 @@ export default function PlayersClub() {
           onClose={() => setSelectedSession(null)}
           onUpdate={fetchLibrary}
           isOwner={isOwnLibrary || isOwner}
+        />
+      )}
+
+      {/* Video Comparison View */}
+      {showComparisonView && selectedVideos.length === 2 && (
+        <VideoComparisonView
+          video1={selectedVideos[0]}
+          video2={selectedVideos[1]}
+          open={showComparisonView}
+          onClose={() => {
+            setShowComparisonView(false);
+            handleExitCompareMode();
+          }}
         />
       )}
 
