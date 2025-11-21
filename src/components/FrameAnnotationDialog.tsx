@@ -32,7 +32,7 @@ export const FrameAnnotationDialog = ({
 
   // Initialize canvas
   useEffect(() => {
-    if (!open || !frameDataUrl || !canvasRef.current) {
+    if (!open || !frameDataUrl) {
       return;
     }
 
@@ -45,8 +45,15 @@ export const FrameAnnotationDialog = ({
     
     img.onload = () => {
       try {
+        if (!canvasRef.current) {
+          console.error("Canvas ref missing at image load");
+          setLoadError("Failed to initialize canvas");
+          setIsLoading(false);
+          return;
+        }
+
         console.log("Image loaded successfully:", img.width, "x", img.height);
-        canvas = new FabricCanvas(canvasRef.current!, {
+        canvas = new FabricCanvas(canvasRef.current, {
           width: img.width,
           height: img.height,
           backgroundColor: "#f0f0f0",
@@ -90,6 +97,17 @@ export const FrameAnnotationDialog = ({
       canvas?.dispose();
     };
   }, [open, frameDataUrl]);
+
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setFabricCanvas(null);
+      setHistory([]);
+      setHistoryStep(-1);
+      setIsLoading(true);
+      setLoadError(null);
+    }
+  }, [open]);
 
   // Update tool behavior
   useEffect(() => {
