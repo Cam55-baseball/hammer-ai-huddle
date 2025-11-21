@@ -512,7 +512,7 @@ Deno.serve(async (req) => {
     if (toolCalls && toolCalls.length > 0) {
       try {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
-        efficiency_score = analysisArgs.efficiency_score || 75;
+        efficiency_score = Math.round(analysisArgs.efficiency_score || 75);
         summary = analysisArgs.summary || [];
         feedback = analysisArgs.feedback || "No feedback available";
         positives = analysisArgs.positives || [];
