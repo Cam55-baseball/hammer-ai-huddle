@@ -81,3 +81,70 @@ export const uploadCustomThumbnail = async (
   
   return publicUrl;
 };
+
+/**
+ * Upload optimized WebP thumbnail to Supabase storage
+ */
+export const uploadOptimizedThumbnail = async (
+  webpBlob: Blob,
+  userId: string,
+  videoId: string,
+  format: 'webp' | 'jpg' = 'webp'
+): Promise<string> => {
+  const fileName = `${videoId}-thumbnail.${format}`;
+  const filePath = `${userId}/thumbnails/${fileName}`;
+  
+  const { error } = await supabase.storage
+    .from('videos')
+    .upload(filePath, webpBlob, {
+      cacheControl: '31536000', // 1 year cache
+      upsert: true,
+      contentType: `image/${format}`
+    });
+  
+  if (error) throw error;
+  
+  const { data: { publicUrl } } = supabase.storage
+    .from('videos')
+    .getPublicUrl(filePath);
+  
+  return publicUrl;
+};
+
+/**
+ * Upload all thumbnail sizes (small, medium, large)
+ */
+export const uploadThumbnailSizes = async (
+  sizes: { small: Blob; medium: Blob; large: Blob },
+  userId: string,
+  videoId: string
+): Promise<{ small: string; medium: string; large: string }> => {
+  const uploadSize = async (blob: Blob, size: string) => {
+    const fileName = `${videoId}-${size}.webp`;
+    const filePath = `${userId}/thumbnails/${fileName}`;
+    
+    const { error } = await supabase.storage
+      .from('videos')
+      .upload(filePath, blob, {
+        cacheControl: '31536000',
+        upsert: true,
+        contentType: 'image/webp'
+      });
+    
+    if (error) throw error;
+    
+    const { data: { publicUrl } } = supabase.storage
+      .from('videos')
+      .getPublicUrl(filePath);
+    
+    return publicUrl;
+  };
+  
+  const [small, medium, large] = await Promise.all([
+    uploadSize(sizes.small, 'small'),
+    uploadSize(sizes.medium, 'medium'),
+    uploadSize(sizes.large, 'large')
+  ]);
+  
+  return { small, medium, large };
+};
