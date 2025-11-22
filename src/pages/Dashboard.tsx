@@ -394,29 +394,19 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 module-cards">
           {/* Hitting Module */}
           <Card
-            className={`p-3 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
+            className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
               !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("hitting")}
           >
-            <div className="flex flex-col items-center text-center space-y-2 sm:space-y-4">
-              <div className="mb-1 sm:mb-3 flex justify-center">
-                <div className="bg-primary/10 p-2 sm:p-3 rounded-full">
-                  <Icon 
-                    iconNode={baseball} 
-                    size={20}
-                    className={`sm:w-6 sm:h-6 ${selectedSport === 'softball' ? 'text-[#FFD700]' : 'text-primary'}`}
-                  />
-                </div>
-              </div>
-              <div className="p-3 sm:p-4 rounded-full bg-primary/10">
-                <Target className="h-8 w-8 sm:h-12 sm:w-12 text-primary" />
+            <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
+              <div className="p-2 sm:p-4 rounded-full bg-primary/10">
+                <Target className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
                 Hitting
                 {!hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
-              {getEfficiencyScoreDisplay("hitting")}
               <p className="text-sm sm:text-base text-muted-foreground">
                 Analyze swing mechanics, kinetic sequence, and bat speed
               </p>
@@ -449,29 +439,19 @@ export default function Dashboard() {
 
           {/* Pitching Module */}
           <Card
-            className={`p-3 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
+            className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
               !hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("pitching")}
           >
-            <div className="flex flex-col items-center text-center space-y-2 sm:space-y-4">
-              <div className="mb-1 sm:mb-3 flex justify-center">
-                <div className="bg-primary/10 p-2 sm:p-3 rounded-full">
-                  <Icon 
-                    iconNode={baseball} 
-                    size={20}
-                    className={`sm:w-6 sm:h-6 ${selectedSport === 'softball' ? 'text-[#FFD700]' : 'text-primary'}`}
-                  />
-                </div>
-              </div>
-              <div className="p-3 sm:p-4 rounded-full bg-primary/10">
-                <CircleDot className="h-8 w-8 sm:h-12 sm:w-12 text-primary" />
+            <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
+              <div className="p-2 sm:p-4 rounded-full bg-primary/10">
+                <CircleDot className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
                 Pitching
                 {!hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
-              {getEfficiencyScoreDisplay("pitching")}
               <p className="text-sm sm:text-base text-muted-foreground">
                 Analyze delivery mechanics, arm action, and sequencing
               </p>
@@ -504,29 +484,19 @@ export default function Dashboard() {
 
           {/* Throwing Module */}
           <Card
-            className={`p-3 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
+            className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
               !hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("throwing")}
           >
-            <div className="flex flex-col items-center text-center space-y-2 sm:space-y-4">
-              <div className="mb-1 sm:mb-3 flex justify-center">
-                <div className="bg-primary/10 p-2 sm:p-3 rounded-full">
-                  <Icon 
-                    iconNode={baseball} 
-                    size={20}
-                    className={`sm:w-6 sm:h-6 ${selectedSport === 'softball' ? 'text-[#FFD700]' : 'text-primary'}`}
-                  />
-                </div>
-              </div>
-              <div className="p-3 sm:p-4 rounded-full bg-primary/10">
-                <Zap className="h-8 w-8 sm:h-12 sm:w-12 text-primary" />
+            <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
+              <div className="p-2 sm:p-4 rounded-full bg-primary/10">
+                <Zap className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
                 Throwing
                 {!hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
-              {getEfficiencyScoreDisplay("throwing")}
               <p className="text-sm sm:text-base text-muted-foreground">
                 Analyze arm action, footwork, and energy transfer
               </p>
