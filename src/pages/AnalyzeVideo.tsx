@@ -498,13 +498,15 @@ export default function AnalyzeVideo() {
                     notes, and choose whether to share it with scouts.
                   </p>
                   
-                  <div className="flex gap-2">
-                    <Button onClick={() => setSaveDialogOpen(true)} className="flex-1">
-                      <BookMarked className="h-4 w-4 mr-2" />
-                      Save to Players Club
+                  <div className="flex flex-col xs:flex-row gap-2">
+                    <Button onClick={() => setSaveDialogOpen(true)} className="w-full xs:flex-1">
+                      <BookMarked className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden xs:inline">Save to Players Club</span>
+                      <span className="xs:hidden">Save to Library</span>
                     </Button>
-                    <Button onClick={() => navigate('/dashboard')} variant="outline" className="flex-1">
-                      Return to Dashboard
+                    <Button onClick={() => navigate('/dashboard')} variant="outline" className="w-full xs:flex-1">
+                      <span className="hidden xs:inline">Return to Dashboard</span>
+                      <span className="xs:hidden">Dashboard</span>
                     </Button>
                   </div>
                 </div>
@@ -657,13 +659,15 @@ export default function AnalyzeVideo() {
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
-                    <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="flex-1">
-                      <BookMarked className="h-4 w-4 mr-2" />
-                      Save to Players Club
+                  <div className="flex flex-col xs:flex-row gap-2">
+                    <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">
+                      <BookMarked className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden xs:inline">Save to Players Club</span>
+                      <span className="xs:hidden">Save to Library</span>
                     </Button>
-                    <Button onClick={() => navigate('/dashboard')} className="flex-1">
-                      Return to Dashboard
+                    <Button onClick={() => navigate('/dashboard')} className="w-full xs:flex-1">
+                      <span className="hidden xs:inline">Return to Dashboard</span>
+                      <span className="xs:hidden">Dashboard</span>
                     </Button>
                   </div>
                 </div>

@@ -321,21 +321,139 @@ export default function PlayersClub() {
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
             {filteredSessions.map((session) => (
               <VideoCardLazy key={session.id}>
-                <Card 
-                  className={`overflow-hidden hover:shadow-lg transition-shadow ${
-                    compareMode ? 'cursor-pointer' : ''
-                  } ${
-                    selectedVideos.some(v => v.id === session.id) 
-                      ? 'ring-2 ring-primary' 
-                      : ''
-                  }`}
-                  onClick={() => {
-                    if (compareMode) {
-                      handleVideoSelection(session);
-                    }
-                  }}
-                >
-                  <CardContent className="p-0">
+                {viewMode === 'list' ? (
+                  <Card 
+                    className={`overflow-hidden hover:shadow-lg transition-shadow flex flex-row ${
+                      compareMode ? 'cursor-pointer' : ''
+                    } ${
+                      selectedVideos.some(v => v.id === session.id) 
+                        ? 'ring-2 ring-primary' 
+                        : ''
+                    }`}
+                    onClick={() => {
+                      if (compareMode) {
+                        handleVideoSelection(session);
+                      }
+                    }}
+                  >
+                    <CardContent className="p-0 flex flex-row w-full">
+                      {/* Thumbnail - Fixed width for list view */}
+                      <div className="relative w-32 sm:w-40 h-24 sm:h-28 flex-shrink-0 bg-muted">
+                        {/* Selection indicator for compare mode */}
+                        {compareMode && (
+                          <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${
+                                selectedVideos.some(v => v.id === session.id)
+                                  ? 'bg-primary border-primary'
+                                  : 'bg-white/90 border-border backdrop-blur-sm'
+                              } ${
+                                selectedVideos.length >= 2 && !selectedVideos.some(v => v.id === session.id)
+                                  ? 'opacity-40 cursor-not-allowed'
+                                  : 'cursor-pointer hover:border-primary'
+                              }`}
+                              onClick={() => {
+                                if (selectedVideos.length < 2 || selectedVideos.some(v => v.id === session.id)) {
+                                  handleVideoSelection(session);
+                                }
+                              }}
+                            >
+                              {selectedVideos.some(v => v.id === session.id) && (
+                                <Check className="h-4 w-4 text-primary-foreground" />
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {session.blurhash && (session.thumbnail_webp_url || session.thumbnail_url) ? (
+                          <BlurhashImage
+                            blurhash={session.blurhash}
+                            src={session.thumbnail_webp_url || session.thumbnail_url!}
+                            alt="Session thumbnail"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : session.thumbnail_url ? (
+                          <img 
+                            src={session.thumbnail_url} 
+                            alt="Session thumbnail"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-muted">
+                            <BookMarked className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content - Horizontal layout */}
+                      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
+                        <div className="space-y-1">
+                          <h3 className="font-semibold text-base sm:text-lg line-clamp-1">
+                            {session.library_title || 'Untitled Session'}
+                          </h3>
+                          <div className="flex flex-wrap gap-2 items-center text-xs text-muted-foreground">
+                            <Badge variant="outline" className="capitalize text-xs">
+                              {session.sport}
+                            </Badge>
+                            <Badge variant="outline" className="capitalize text-xs">
+                              {session.module}
+                            </Badge>
+                            {session.efficiency_score !== undefined && (
+                              <Badge variant="secondary" className="text-xs">
+                                {session.efficiency_score}%
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(session.session_date).toLocaleDateString()}
+                          </span>
+                          {isOwnLibrary && !compareMode && (
+                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedSession(session);
+                                }}
+                                className="h-8 px-2"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDownload(session.id);
+                                }}
+                                className="h-8 px-2"
+                              >
+                                <Download className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card 
+                    className={`overflow-hidden hover:shadow-lg transition-shadow ${
+                      compareMode ? 'cursor-pointer' : ''
+                    } ${
+                      selectedVideos.some(v => v.id === session.id) 
+                        ? 'ring-2 ring-primary' 
+                        : ''
+                    }`}
+                    onClick={() => {
+                      if (compareMode) {
+                        handleVideoSelection(session);
+                      }
+                    }}
+                  >
+                    <CardContent className="p-0">
                     {/* Thumbnail with responsive images and blurhash */}
                     <div className="relative h-48 bg-muted">
                       {/* Selection Indicator for Compare Mode */}
@@ -481,6 +599,7 @@ export default function PlayersClub() {
                     </div>
                   </CardContent>
                 </Card>
+                )}
               </VideoCardLazy>
             ))}
           </div>
