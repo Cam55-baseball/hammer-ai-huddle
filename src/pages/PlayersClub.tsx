@@ -241,17 +241,17 @@ export default function PlayersClub() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-stretch sm:items-center">
           <Input
             placeholder="Search sessions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-xs"
+            className="w-full sm:max-w-xs"
           />
           
           {/* Compare Button */}
           {isOwnLibrary && (
-            <>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Button
                 variant={compareMode ? 'default' : 'outline'}
                 onClick={() => {
@@ -261,21 +261,22 @@ export default function PlayersClub() {
                     setCompareMode(true);
                   }
                 }}
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 <Scale className="h-4 w-4" />
-                {compareMode ? `Compare (${selectedVideos.length}/2)` : 'Compare Videos'}
+                <span className="sm:hidden">{compareMode ? `${selectedVideos.length}/2` : 'Compare'}</span>
+                <span className="hidden sm:inline">{compareMode ? `Compare (${selectedVideos.length}/2)` : 'Compare Videos'}</span>
               </Button>
               
               {compareMode && selectedVideos.length === 2 && (
-                <Button onClick={() => setShowComparisonView(true)}>
+                <Button onClick={() => setShowComparisonView(true)} className="w-full sm:w-auto">
                   Start Comparison
                 </Button>
               )}
-            </>
+            </div>
           )}
           <Select value={sportFilter} onValueChange={setSportFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Sport" />
             </SelectTrigger>
             <SelectContent>
@@ -285,7 +286,7 @@ export default function PlayersClub() {
             </SelectContent>
           </Select>
           <Select value={moduleFilter} onValueChange={setModuleFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Module" />
             </SelectTrigger>
             <SelectContent>
