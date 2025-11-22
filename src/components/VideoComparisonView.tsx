@@ -217,7 +217,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className={`${isMobile ? 'max-w-full p-3' : 'max-w-[95vw] p-6'} max-h-[95vh] overflow-auto overflow-x-hidden`}>
+        <DialogContent className="max-w-full w-full p-3 sm:p-6 max-h-[95vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span className={isMobile ? 'text-lg' : ''}>Video Comparison</span>
@@ -283,18 +283,20 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                     {!isMobile && <span className="ml-2">Capture</span>}
                   </Button>
                 </div>
-                <video
-                  ref={video1Ref}
-                  src={video1.video_url}
-                  className="w-full rounded-lg bg-black"
-                  controls
-                  preload="metadata"
-                  style={
-                    layout === 'overlay' 
-                      ? { opacity: overlayOpacity / 100, transform: video1Mirrored ? 'scaleX(-1)' : 'none' } 
-                      : { transform: video1Mirrored ? 'scaleX(-1)' : 'none' }
-                  }
-                />
+                <div className="relative w-full max-w-full overflow-hidden">
+                  <video
+                    ref={video1Ref}
+                    src={video1.video_url}
+                    className="w-full rounded-lg bg-black"
+                    controls
+                    preload="metadata"
+                    style={
+                      layout === 'overlay' 
+                        ? { maxWidth: '100%', width: '100%', height: 'auto', opacity: overlayOpacity / 100, transform: video1Mirrored ? 'scaleX(-1)' : 'none' } 
+                        : { maxWidth: '100%', width: '100%', height: 'auto', transform: video1Mirrored ? 'scaleX(-1)' : 'none' }
+                    }
+                  />
+                </div>
                 
                 {/* Individual Frame Controls for Video 1 */}
                 <div className={`flex justify-center gap-1 mt-2 ${isMobile ? 'flex-wrap' : 'gap-2'}`}>
@@ -354,14 +356,16 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                     {!isMobile && <span className="ml-2">Capture</span>}
                   </Button>
                 </div>
-                <video
-                  ref={video2Ref}
-                  src={video2.video_url}
-                  className="w-full rounded-lg bg-black"
-                  controls
-                  preload="metadata"
-                  style={{ transform: video2Mirrored ? 'scaleX(-1)' : 'none' }}
-                />
+                <div className="relative w-full max-w-full overflow-hidden">
+                  <video
+                    ref={video2Ref}
+                    src={video2.video_url}
+                    className="w-full rounded-lg bg-black"
+                    controls
+                    preload="metadata"
+                    style={{ maxWidth: '100%', width: '100%', height: 'auto', transform: video2Mirrored ? 'scaleX(-1)' : 'none' }}
+                  />
+                </div>
                 
                 {/* Individual Frame Controls for Video 2 */}
                 <div className={`flex justify-center gap-1 mt-2 ${isMobile ? 'flex-wrap' : 'gap-2'}`}>
@@ -447,7 +451,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
             </div>
 
             {/* Playback Speed */}
-            <div className="space-y-2">
+            <div className="space-y-2 py-2 sm:py-0">
               <Label>Playback Speed: {playbackSpeed}x</Label>
               <Slider
                 value={[playbackSpeed]}
@@ -460,7 +464,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
 
             {/* Time Offset */}
             {syncPlayback && (
-              <div className="space-y-2">
+              <div className="space-y-2 py-2 sm:py-0">
                 <Label>Time Offset: {timeOffset > 0 ? '+' : ''}{timeOffset.toFixed(2)}s</Label>
                 <Slider
                   value={[timeOffset]}

@@ -216,7 +216,7 @@ export function SessionDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-full sm:max-w-[90vw] lg:max-w-3xl max-h-[90vh] overflow-y-auto p-3 sm:p-6 overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? (
@@ -234,7 +234,7 @@ export function SessionDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {/* Badges */}
           <div className="flex gap-2 flex-wrap">
             <Badge variant="outline">{session.sport}</Badge>
@@ -420,26 +420,26 @@ export function SessionDetailDialog({
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-2 justify-end">
+          <div className="flex flex-col xs:flex-row gap-2 justify-end">
             {isOwner && (
               <>
                 {isEditing ? (
                   <>
-                    <Button variant="outline" onClick={() => setIsEditing(false)}>
+                    <Button variant="outline" onClick={() => setIsEditing(false)} className="w-full xs:w-auto">
                       Cancel
                     </Button>
-                    <Button onClick={handleSave} disabled={saving}>
+                    <Button onClick={handleSave} disabled={saving} className="w-full xs:w-auto">
                       {saving ? 'Saving...' : 'Save Changes'}
                     </Button>
                   </>
                 ) : (
-                  <Button onClick={() => setIsEditing(true)}>
+                  <Button onClick={() => setIsEditing(true)} className="w-full xs:w-auto">
                     Edit Session
                   </Button>
                 )}
               </>
             )}
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} className="w-full xs:w-auto">
               Close
             </Button>
           </div>
