@@ -121,7 +121,7 @@ serve(async (req) => {
       headers: {
         'User-Agent': 'WeatherApp/1.0'
       },
-      signal: AbortSignal.timeout(10000) // 10 second timeout
+      signal: AbortSignal.timeout(20000) // 20 second timeout
     });
     
     console.log(`Weather API response status: ${response.status}`);
@@ -177,11 +177,15 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Error in get-weather function:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage = error instanceof Error 
+      ? error.name === 'TimeoutError' 
+        ? "Weather service is taking too long to respond. Please try again in a moment."
+        : error.message 
+      : "Unknown error occurred";
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {
-        status: 500,
+        status: error instanceof Error && error.name === 'TimeoutError' ? 504 : 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
