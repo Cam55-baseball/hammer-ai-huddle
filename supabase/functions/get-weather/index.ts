@@ -98,6 +98,26 @@ function generateRecommendation(weather: WeatherMetrics): string {
   return "✅ Ideal conditions - Perfect for training";
 }
 
+function degreesToCardinal(degrees: number): string {
+  const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+  const index = Math.round(degrees / 45) % 8;
+  return directions[index];
+}
+
+function mapWeatherCodeToDescription(code: number | undefined): string {
+  if (code == null) return "Unknown";
+  if (code === 0) return "Clear sky";
+  if ([1, 2, 3].includes(code)) return "Partly cloudy";
+  if ([45, 48].includes(code)) return "Foggy";
+  if ([51, 53, 55].includes(code)) return "Drizzle";
+  if ([61, 63, 65].includes(code)) return "Rain";
+  if ([66, 67].includes(code)) return "Freezing rain";
+  if ([71, 73, 75, 77].includes(code)) return "Snow";
+  if ([80, 81, 82].includes(code)) return "Rain showers";
+  if ([95, 96, 99].includes(code)) return "Thunderstorm";
+  return "Unknown";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -113,62 +133,99 @@ serve(async (req) => {
 
     console.log(`Fetching weather for location: ${location}`);
 
-    // Using wttr.in free weather API (no key required)
-    const weatherUrl = `https://wttr.in/${encodeURIComponent(location)}?format=j1`;
-    console.log(`Weather API URL: ${weatherUrl}`);
-    
+    // Determine coordinates from location string
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+    let resolvedLocationName = location as string;
+
+    const coordMatch = location.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+
+    if (coordMatch) {
+      latitude = parseFloat(coordMatch[1]);
+      longitude = parseFloat(coordMatch[2]);
+    } else {
+      // Geocode city name to coordinates using Open-Meteo geocoding API
+      const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=en&format=json`;
+      console.log(`Geocoding location via Open-Meteo: ${geoUrl}`);
+
+      const geoResponse = await fetch(geoUrl, {
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!geoResponse.ok) {
+        const errorText = await geoResponse.text();
+        console.error(`Geocoding API error response: ${errorText}`);
+        throw new Error(`Location lookup failed with status ${geoResponse.status}`);
+      }
+
+      const geoData = await geoResponse.json();
+
+      if (!geoData.results || !geoData.results.length) {
+        throw new Error("Location not found");
+      }
+
+      const firstResult = geoData.results[0];
+      latitude = firstResult.latitude;
+      longitude = firstResult.longitude;
+      resolvedLocationName = `${firstResult.name}${firstResult.country ? `, ${firstResult.country}` : ""}`;
+    }
+
+    if (latitude == null || longitude == null || Number.isNaN(latitude) || Number.isNaN(longitude)) {
+      throw new Error("Invalid location coordinates");
+    }
+
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,weather_code&hourly=uv_index,visibility&timezone=auto`;
+    console.log(`Open-Meteo Weather API URL: ${weatherUrl}`);
+
     const response = await fetch(weatherUrl, {
-      headers: {
-        'User-Agent': 'WeatherApp/1.0'
-      },
-      signal: AbortSignal.timeout(20000) // 20 second timeout
+      signal: AbortSignal.timeout(10000),
     });
-    
-    console.log(`Weather API response status: ${response.status}`);
-    
+
+    console.log(`Open-Meteo response status: ${response.status}`);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Weather API error response: ${errorText}`);
-      throw new Error(`Weather API returned ${response.status}: ${errorText.substring(0, 100)}`);
+      console.error(`Open-Meteo error response: ${errorText}`);
+      throw new Error(`Weather API returned ${response.status}`);
     }
 
-    const rawText = await response.text();
-    console.log(`Received response, length: ${rawText.length}`);
+    const data = await response.json();
 
-    // Validate JSON before parsing
-    let data;
-    try {
-      data = JSON.parse(rawText);
-    } catch (parseError) {
-      console.error(`JSON parse error: ${parseError}`);
-      console.error(`Raw response (first 500 chars): ${rawText.substring(0, 500)}`);
-      throw new Error("Weather API returned invalid JSON");
-    }
-
-    // Validate response structure
-    if (!data.current_condition || !data.nearest_area) {
-      console.error(`Invalid response structure: ${JSON.stringify(data).substring(0, 200)}`);
+    if (!data.current) {
+      console.error(`Invalid Open-Meteo response structure: ${JSON.stringify(data).substring(0, 200)}`);
       throw new Error("Weather API returned incomplete data");
     }
 
-    console.log(`Successfully fetched weather data for: ${location}`);
-    const current = data.current_condition[0];
-    const locationInfo = data.nearest_area[0];
+    const current = data.current;
+    const hourly = data.hourly || {};
+    const uvValues: number[] = hourly.uv_index || [];
+    const visibilityValues: number[] = hourly.visibility || [];
 
-    const weatherMetrics = {
-      temperature: parseFloat(current.temp_F),
-      humidity: parseFloat(current.humidity),
-      windSpeed: parseFloat(current.windspeedMiles),
-      windDirection: current.winddir16Point,
-      visibility: parseFloat(current.visibilityMiles),
-      uvIndex: parseFloat(current.uvIndex),
+    const uvIndex = uvValues.length ? uvValues[0] : 0;
+    const visibilityKm = visibilityValues.length ? visibilityValues[0] / 1000 : 10; // visibility in meters -> km
+    const visibilityMiles = visibilityKm * 0.621371;
+
+    const temperatureF = current.temperature_2m * 9 / 5 + 32;
+    const feelsLikeF = current.apparent_temperature != null ? current.apparent_temperature * 9 / 5 + 32 : temperatureF;
+    const windSpeedMph = current.wind_speed_10m != null ? current.wind_speed_10m * 0.621371 : 0;
+
+    const windDirectionDeg = current.wind_direction_10m;
+    const windDirection = typeof windDirectionDeg === "number" ? degreesToCardinal(windDirectionDeg) : "N/A";
+
+    const weatherMetrics: WeatherMetrics = {
+      temperature: temperatureF,
+      humidity: current.relative_humidity_2m ?? 0,
+      windSpeed: windSpeedMph,
+      windDirection,
+      visibility: visibilityMiles,
+      uvIndex: uvIndex ?? 0,
     };
 
     const weatherData = {
-      location: `${locationInfo.areaName[0].value}, ${locationInfo.country[0].value}`,
+      location: resolvedLocationName,
       ...weatherMetrics,
-      feelsLike: parseFloat(current.FeelsLikeF),
-      condition: current.weatherDesc[0].value,
+      feelsLike: feelsLikeF,
+      condition: mapWeatherCodeToDescription(current.weather_code),
       sportAnalysis: calculateSportConditions(weatherMetrics, sportType),
     };
 
