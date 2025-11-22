@@ -336,29 +336,29 @@ export default function AnalyzeVideo() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6 overflow-x-hidden max-w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h1 className="text-3xl font-bold capitalize">{module} Analysis</h1>
-            <p className="text-muted-foreground capitalize">{sport} - {module} mechanics evaluation</p>
+            <h1 className="text-2xl sm:text-3xl font-bold capitalize">{module} Analysis</h1>
+            <p className="text-sm sm:text-base text-muted-foreground capitalize">{sport} - {module} mechanics evaluation</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             {videoPreview && (
-              <Button variant="outline" onClick={handleRemoveVideo}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Video
+              <Button variant="outline" size="sm" onClick={handleRemoveVideo} className="flex-1 sm:flex-initial">
+                <Trash2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Delete Video</span>
               </Button>
             )}
-            <Button variant="outline" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+            <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")} className="flex-1 sm:flex-initial">
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back</span>
             </Button>
           </div>
         </div>
 
         {/* Video Upload Section */}
         {!videoPreview && (
-          <Card className="p-12 text-center border-dashed border-2">
+          <Card className="p-6 sm:p-12 text-center border-dashed border-2">
             <div className="flex flex-col items-center space-y-4">
               <div className="p-6 rounded-full bg-primary/10">
                 <Upload className="h-16 w-16 text-primary" />
@@ -394,12 +394,12 @@ export default function AnalyzeVideo() {
           <div className="space-y-6">
             <Card className="p-6">
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Video Preview</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Playback Speed:</span>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+                  <h3 className="text-base sm:text-lg font-semibold">Video Preview</h3>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">Speed:</span>
                     <Select value={playbackRate} onValueChange={handlePlaybackRateChange}>
-                      <SelectTrigger className="w-24">
+                      <SelectTrigger className="w-20 sm:w-24">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -459,11 +459,21 @@ export default function AnalyzeVideo() {
                 size="lg"
                 className="w-full"
               >
-                {uploading 
-                  ? "Uploading..." 
-                  : analysisEnabled 
-                    ? "Upload & Analyze Video" 
-                    : "Upload Video to Library"}
+                {uploading ? (
+                  "Uploading..."
+                ) : analysisEnabled ? (
+                  <>
+                    <Upload className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Upload & Analyze Video</span>
+                    <span className="xs:hidden">Upload & Analyze</span>
+                  </>
+                ) : (
+                  <>
+                    <BookMarked className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Upload Video to Library</span>
+                    <span className="xs:hidden">Upload to Library</span>
+                  </>
+                )}
               </Button>
             )}
 

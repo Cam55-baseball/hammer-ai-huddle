@@ -309,24 +309,24 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 overflow-x-hidden max-w-full">
         <FollowRequestsPanel />
         
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Training Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.full_name}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Training Dashboard</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Welcome back, {user?.user_metadata?.full_name}</p>
         </div>
 
         {/* Hero Image Card */}
-        <Card className="relative overflow-hidden border-2 border-black shadow-lg aspect-[21/9] w-full">
+        <Card className="relative overflow-hidden border-2 border-black shadow-lg aspect-[16/9] sm:aspect-[21/9] w-full max-w-full">
           <img 
             key={currentHeroIndex}
             src={heroImages[currentHeroIndex]} 
             alt="Baseball action" 
-            className="w-full h-full object-cover transition-opacity duration-1000"
+            className="w-full h-full object-cover transition-opacity duration-1000 max-w-full"
           />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <h2 className="text-white text-3xl md:text-4xl font-bold text-center px-4">
+            <h2 className="text-white text-xl sm:text-2xl md:text-4xl font-bold text-center px-4">
               Let's level the playing field!
             </h2>
           </div>
@@ -370,9 +370,9 @@ export default function Dashboard() {
         </AlertDialog>
 
         {/* Sport Selector with Refresh Button */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <Tabs value={selectedSport} onValueChange={handleSportChange}>
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-4">
+          <Tabs value={selectedSport} onValueChange={handleSportChange} className="flex-1">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="baseball">Baseball</TabsTrigger>
               <TabsTrigger value="softball">Softball</TabsTrigger>
             </TabsList>
@@ -382,18 +382,19 @@ export default function Dashboard() {
             size="sm"
             onClick={handleRefreshAccess}
             disabled={isRefreshing}
-            className="gap-2"
+            className="gap-2 w-full xs:w-auto"
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh Access
+            <span className="hidden sm:inline">Refresh Access</span>
+            <span className="sm:hidden">Refresh</span>
           </Button>
         </div>
 
         {/* Module Cards */}
-        <div className="grid md:grid-cols-3 gap-6 module-cards">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 module-cards">
           {/* Hitting Module */}
           <Card
-            className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
+            className={`p-4 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
               !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("hitting")}
@@ -432,12 +433,13 @@ export default function Dashboard() {
               >
                 {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
                   <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Start Analysis
+                    <Upload className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Start Analysis</span>
+                    <span className="xs:hidden">Analyze</span>
                   </>
                 ) : (
                   <>
-                    <Lock className="h-4 w-4 mr-2" />
+                    <Lock className="h-4 w-4 sm:mr-2" />
                     Subscribe
                   </>
                 )}
@@ -447,7 +449,7 @@ export default function Dashboard() {
 
           {/* Pitching Module */}
           <Card
-            className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
+            className={`p-4 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
               !hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("pitching")}
@@ -486,12 +488,13 @@ export default function Dashboard() {
               >
                 {hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? (
                   <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Start Analysis
+                    <Upload className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Start Analysis</span>
+                    <span className="xs:hidden">Analyze</span>
                   </>
                 ) : (
                   <>
-                    <Lock className="h-4 w-4 mr-2" />
+                    <Lock className="h-4 w-4 sm:mr-2" />
                     Subscribe
                   </>
                 )}
@@ -501,7 +504,7 @@ export default function Dashboard() {
 
           {/* Throwing Module */}
           <Card
-            className={`p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
+            className={`p-4 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
               !hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
             }`}
             onClick={() => handleModuleSelect("throwing")}
@@ -540,12 +543,13 @@ export default function Dashboard() {
               >
                 {hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? (
                   <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Start Analysis
+                    <Upload className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Start Analysis</span>
+                    <span className="xs:hidden">Analyze</span>
                   </>
                 ) : (
                   <>
-                    <Lock className="h-4 w-4 mr-2" />
+                    <Lock className="h-4 w-4 sm:mr-2" />
                     Subscribe
                   </>
                 )}
