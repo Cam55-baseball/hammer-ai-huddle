@@ -183,9 +183,9 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
           src={videoSrc}
           controls
           preload="metadata"
-          className="w-full"
+          className="w-full h-auto"
           style={{ 
-            maxHeight: '600px',
+            maxHeight: 'min(600px, 70vh)',
             transform: isMirrored ? 'scaleX(-1)' : 'none'
           }}
         />
@@ -193,64 +193,72 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
       </div>
 
       {/* Frame Controls */}
-      <div className="flex gap-2 flex-wrap items-center justify-between p-4 bg-muted/30 rounded-lg border">
-        <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 p-3 sm:p-4 bg-muted/30 rounded-lg border overflow-x-hidden">
+        {/* Navigation & Capture */}
+        <div className="flex gap-1 sm:gap-2 flex-wrap justify-center sm:justify-start">
           <Button
             variant="outline"
             size="sm"
             onClick={() => stepFrame('backward')}
             disabled={!videoReady}
-            title="Step backward one frame"
+            title="Step backward"
           >
             <ChevronLeft className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1">Back</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => stepFrame('forward')}
             disabled={!videoReady}
-            title="Step forward one frame"
+            title="Step forward"
           >
             <ChevronRight className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1">Forward</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={captureKeyFrame}
             disabled={!videoReady}
-            title="Capture current frame"
+            title="Capture"
           >
-            <Camera className="h-4 w-4 mr-2" />
-            Capture Frame
+            <Camera className="h-4 w-4" />
+            <span className="hidden md:inline ml-1">Capture</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsMirrored(!isMirrored)}
-            title="Mirror video horizontally"
+            title="Mirror"
             className={isMirrored ? 'bg-primary/10' : ''}
           >
-            <FlipHorizontal className="h-4 w-4 mr-2" />
-            Mirror
+            <FlipHorizontal className="h-4 w-4" />
+            <span className="hidden md:inline ml-1">Mirror</span>
           </Button>
         </div>
 
-        <div className="flex gap-2">
+        {/* Loop Controls */}
+        <div className="flex gap-1 sm:gap-2 flex-wrap justify-center sm:justify-start sm:ml-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setLoopPoint('start')}
             disabled={loopStart !== null && loopEnd !== null}
+            className="text-xs sm:text-sm"
           >
-            Mark Loop Start
+            <span className="hidden sm:inline">Mark Loop Start</span>
+            <span className="sm:hidden">Loop Start</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setLoopPoint('end')}
             disabled={loopStart === null || (loopStart !== null && loopEnd !== null)}
+            className="text-xs sm:text-sm"
           >
-            Mark Loop End
+            <span className="hidden sm:inline">Mark Loop End</span>
+            <span className="sm:hidden">Loop End</span>
           </Button>
           {(loopStart !== null || loopEnd !== null) && (
             <Button
@@ -258,8 +266,8 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
               size="sm"
               onClick={clearLoop}
             >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Clear Loop
+              <RotateCcw className="h-4 w-4" />
+              <span className="hidden sm:inline ml-1">Clear</span>
             </Button>
           )}
         </div>
@@ -286,7 +294,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
               Download All ({keyFrames.length})
             </Button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {keyFrames.map((frame, idx) => (
               <div key={idx} className="relative group">
                 <img 
@@ -299,7 +307,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
                     Annotated
                   </div>
                 )}
-                <div className="absolute top-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 left-2 flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <Button
                     variant="outline"
                     size="sm"
@@ -320,7 +328,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
                 <Button
                   variant="destructive"
                   size="sm"
-                  className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute bottom-2 right-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                   onClick={() => setKeyFrames(prev => prev.filter((_, i) => i !== idx))}
                 >
                   Remove

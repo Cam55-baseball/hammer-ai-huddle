@@ -44,9 +44,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full overflow-x-hidden max-w-full">
         <AppSidebar />
-        <SidebarInset className="flex-1">
+        <SidebarInset className="flex-1 overflow-x-hidden max-w-full">
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4">
             <SidebarTrigger />
             <div className="ml-auto">
@@ -55,7 +55,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               )}
             </div>
           </header>
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-3 sm:p-6 overflow-x-hidden max-w-full">
             <OfflineIndicator />
             {children}
           </main>
