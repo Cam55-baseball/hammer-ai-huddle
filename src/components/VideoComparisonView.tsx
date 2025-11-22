@@ -23,6 +23,7 @@ import {
   FlipHorizontal
 } from 'lucide-react';
 import { useVideoSync } from '@/hooks/useVideoSync';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { FrameAnnotationDialog } from './FrameAnnotationDialog';
 
@@ -52,6 +53,7 @@ interface VideoComparisonViewProps {
 }
 
 export function VideoComparisonView({ video1, video2, open, onClose }: VideoComparisonViewProps) {
+  const isMobile = useIsMobile();
   const video1Ref = useRef<HTMLVideoElement>(null);
   const video2Ref = useRef<HTMLVideoElement>(null);
   const canvas1Ref = useRef<HTMLCanvasElement>(null);
@@ -61,7 +63,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [timeOffset, setTimeOffset] = useState(0);
-  const [layout, setLayout] = useState<'horizontal' | 'vertical' | 'overlay'>('horizontal');
+  const [layout, setLayout] = useState<'horizontal' | 'vertical' | 'overlay'>(isMobile ? 'vertical' : 'horizontal');
   const [overlayOpacity, setOverlayOpacity] = useState(50);
   const [video1Mirrored, setVideo1Mirrored] = useState(false);
   const [video2Mirrored, setVideo2Mirrored] = useState(false);
@@ -215,49 +217,51 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-6 overflow-auto">
+        <DialogContent className={`${isMobile ? 'max-w-full p-3' : 'max-w-[95vw] p-6'} max-h-[95vh] overflow-auto overflow-x-hidden`}>
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span>Video Comparison</span>
+              <span className={isMobile ? 'text-lg' : ''}>Video Comparison</span>
               <Button variant="ghost" size="icon" onClick={onClose}>
                 <X className="h-4 w-4" />
               </Button>
             </DialogTitle>
           </DialogHeader>
 
-          {/* Layout Controls */}
-          <div className="flex gap-2 mb-4">
-            <Button
-              variant={layout === 'horizontal' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setLayout('horizontal')}
-            >
-              <Columns2 className="h-4 w-4 mr-2" />
-              Side by Side
-            </Button>
-            <Button
-              variant={layout === 'vertical' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setLayout('vertical')}
-            >
-              <Rows2 className="h-4 w-4 mr-2" />
-              Stacked
-            </Button>
-            <Button
-              variant={layout === 'overlay' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setLayout('overlay')}
-            >
-              <Layers className="h-4 w-4 mr-2" />
-              Overlay
-            </Button>
-          </div>
+        {/* Layout Controls */}
+        <div className="flex gap-2 mb-4 flex-wrap">
+          <Button
+            variant={layout === 'horizontal' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setLayout('horizontal')}
+          >
+            <Columns2 className="h-4 w-4" />
+            {!isMobile && <span className="ml-2">Side by Side</span>}
+          </Button>
+          <Button
+            variant={layout === 'vertical' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setLayout('vertical')}
+          >
+            <Rows2 className="h-4 w-4" />
+            {!isMobile && <span className="ml-2">Stacked</span>}
+          </Button>
+          <Button
+            variant={layout === 'overlay' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setLayout('overlay')}
+          >
+            <Layers className="h-4 w-4" />
+            {!isMobile && <span className="ml-2">Overlay</span>}
+          </Button>
+        </div>
 
           {/* Video Players */}
           <div className={`relative ${
-            layout === 'horizontal' ? 'grid grid-cols-2 gap-4' :
-            layout === 'vertical' ? 'grid grid-rows-2 gap-4' :
-            'relative'
+            isMobile ? 'flex flex-col gap-4' : (
+              layout === 'horizontal' ? 'grid grid-cols-2 gap-4' :
+              layout === 'vertical' ? 'grid grid-rows-2 gap-4' :
+              'relative'
+            )
           }`}>
             {/* Video 1 */}
             <div className={layout === 'overlay' ? 'absolute inset-0 z-10' : ''}>
@@ -275,8 +279,8 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                     variant="outline"
                     onClick={() => captureKeyFrame(1)}
                   >
-                    <Camera className="h-4 w-4 mr-2" />
-                    Capture
+                    <Camera className="h-4 w-4" />
+                    {!isMobile && <span className="ml-2">Capture</span>}
                   </Button>
                 </div>
                 <video
@@ -293,19 +297,21 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                 />
                 
                 {/* Individual Frame Controls for Video 1 */}
-                <div className="flex justify-center gap-2 mt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                <div className={`flex justify-center gap-1 mt-2 ${isMobile ? 'flex-wrap' : 'gap-2'}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => stepFrameIndividual(1, 'backward')}
+                    className={isMobile ? 'h-8 w-8 p-0' : ''}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-xs text-muted-foreground self-center">Frame Step</span>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  {!isMobile && <span className="text-xs text-muted-foreground self-center">Frame Step</span>}
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => stepFrameIndividual(1, 'forward')}
+                    className={isMobile ? 'h-8 w-8 p-0' : ''}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -314,7 +320,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                     size="sm"
                     onClick={() => setVideo1Mirrored(!video1Mirrored)}
                     title="Mirror video"
-                    className={video1Mirrored ? 'bg-primary/10' : ''}
+                    className={`${video1Mirrored ? 'bg-primary/10' : ''} ${isMobile ? 'h-8 w-8 p-0' : ''}`}
                   >
                     <FlipHorizontal className="h-4 w-4" />
                   </Button>
@@ -344,8 +350,8 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                     variant="outline"
                     onClick={() => captureKeyFrame(2)}
                   >
-                    <Camera className="h-4 w-4 mr-2" />
-                    Capture
+                    <Camera className="h-4 w-4" />
+                    {!isMobile && <span className="ml-2">Capture</span>}
                   </Button>
                 </div>
                 <video
@@ -358,19 +364,21 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                 />
                 
                 {/* Individual Frame Controls for Video 2 */}
-                <div className="flex justify-center gap-2 mt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                <div className={`flex justify-center gap-1 mt-2 ${isMobile ? 'flex-wrap' : 'gap-2'}`}>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => stepFrameIndividual(2, 'backward')}
+                    className={isMobile ? 'h-8 w-8 p-0' : ''}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-xs text-muted-foreground self-center">Frame Step</span>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  {!isMobile && <span className="text-xs text-muted-foreground self-center">Frame Step</span>}
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => stepFrameIndividual(2, 'forward')}
+                    className={isMobile ? 'h-8 w-8 p-0' : ''}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -379,7 +387,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                     size="sm"
                     onClick={() => setVideo2Mirrored(!video2Mirrored)}
                     title="Mirror video"
-                    className={video2Mirrored ? 'bg-primary/10' : ''}
+                    className={`${video2Mirrored ? 'bg-primary/10' : ''} ${isMobile ? 'h-8 w-8 p-0' : ''}`}
                   >
                     <FlipHorizontal className="h-4 w-4" />
                   </Button>
@@ -469,8 +477,8 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
 
           {/* Key Frames Grid */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Captured Key Frames</h3>
+            <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'}`}>
+              <h3 className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>Captured Key Frames</h3>
               {(video1KeyFrames.length > 0 || video2KeyFrames.length > 0) && (
                 <Button variant="outline" size="sm" onClick={downloadAllFrames}>
                   <Download className="h-4 w-4 mr-2" />
@@ -480,14 +488,14 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
             </div>
 
             <ScrollArea className="h-64">
-              <div className="grid grid-cols-2 gap-4">
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                 {/* Video 1 Frames */}
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Video 1 Frames</p>
+                  <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Video 1 Frames</p>
                   {video1KeyFrames.length === 0 ? (
                     <p className="text-xs text-muted-foreground">No frames captured</p>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
                       {video1KeyFrames.map((frame, idx) => (
                         <div key={idx} className="relative group">
                           <img
@@ -496,7 +504,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                             className="w-full rounded border cursor-pointer hover:border-primary"
                             onClick={() => jumpToFrame(1, frame.timestamp)}
                           />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                          <div className={`absolute inset-0 bg-black/50 transition-opacity flex items-center justify-center gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                             <Button
                               size="sm"
                               variant="secondary"
@@ -527,11 +535,11 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
 
                 {/* Video 2 Frames */}
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Video 2 Frames</p>
+                  <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Video 2 Frames</p>
                   {video2KeyFrames.length === 0 ? (
                     <p className="text-xs text-muted-foreground">No frames captured</p>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
                       {video2KeyFrames.map((frame, idx) => (
                         <div key={idx} className="relative group">
                           <img
@@ -540,7 +548,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                             className="w-full rounded border cursor-pointer hover:border-primary"
                             onClick={() => jumpToFrame(2, frame.timestamp)}
                           />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                          <div className={`absolute inset-0 bg-black/50 transition-opacity flex items-center justify-center gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                             <Button
                               size="sm"
                               variant="secondary"
