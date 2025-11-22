@@ -358,16 +358,16 @@ export default function AnalyzeVideo() {
 
         {/* Video Upload Section */}
         {!videoPreview && (
-          <Card className="p-6 sm:p-12 text-center border-dashed border-2">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="p-6 rounded-full bg-primary/10">
-                <Upload className="h-16 w-16 text-primary" />
+          <Card className="p-4 sm:p-12 text-center border-dashed border-2">
+            <div className="flex flex-col items-center space-y-3 sm:space-y-4">
+              <div className="p-4 sm:p-6 rounded-full bg-primary/10">
+                <Upload className="h-10 w-10 sm:h-16 sm:w-16 text-primary" />
               </div>
-              <h3 className="text-2xl font-semibold">Upload Your Video</h3>
-              <p className="text-muted-foreground max-w-md">
+              <h3 className="text-xl sm:text-2xl font-semibold">Upload Your Video</h3>
+              <p className="text-sm sm:text-base text-muted-foreground max-w-md">
                 Upload a video of your {module} technique. Our AI will analyze your mechanics and provide detailed feedback.
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Max file size: 50MB. Supported formats: MP4, MOV, AVI, WebM
               </p>
               <label htmlFor="video-upload">
