@@ -193,13 +193,15 @@ export default function MyFollowers() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col xs:flex-row gap-2">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => navigate(`/profile?userId=${follower.scout_id}`)}
+                        className="w-full xs:w-auto"
                       >
-                        View Profile
+                        <span className="hidden sm:inline">View Profile</span>
+                        <span className="sm:hidden">View</span>
                       </Button>
                       <Button
                         size="sm"
@@ -208,8 +210,10 @@ export default function MyFollowers() {
                           setSelectedFollower(follower);
                           setRemoveDialogOpen(true);
                         }}
+                        className="w-full xs:w-auto"
                       >
-                        Remove Access
+                        <span className="hidden sm:inline">Remove Access</span>
+                        <span className="sm:hidden">Remove</span>
                       </Button>
                     </div>
                   </div>

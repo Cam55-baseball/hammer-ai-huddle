@@ -140,7 +140,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
           Weather Conditions
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 overflow-x-hidden max-w-full">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -197,7 +197,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             </div>
 
             {expanded && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="flex items-center gap-3 rounded-lg border border-border p-3">
                   <Wind className="h-5 w-5 text-muted-foreground" />
                   <div>
@@ -235,7 +235,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             )}
 
             {expanded && weather?.sportAnalysis && (
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4 space-y-2 sm:space-y-3 overflow-x-hidden">
                 <h4 className="font-semibold flex items-center gap-2">
                   <Icon 
                     iconNode={baseball} 
@@ -246,30 +246,30 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                 </h4>
                 <div className="grid gap-2 text-sm">
                   <div className="flex items-start gap-2">
-                    <span className="font-medium min-w-[110px]">Ball Flight:</span>
-                    <span className="text-muted-foreground">{weather.sportAnalysis.ballFlight}</span>
+                    <span className="font-medium min-w-[90px] sm:min-w-[110px] text-sm sm:text-base">Ball Flight:</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">{weather.sportAnalysis.ballFlight}</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="font-medium min-w-[110px]">Wind Impact:</span>
-                    <span className="text-muted-foreground">{weather.sportAnalysis.windImpact}</span>
+                    <span className="font-medium min-w-[90px] sm:min-w-[110px] text-sm sm:text-base">Wind Impact:</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">{weather.sportAnalysis.windImpact}</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="font-medium min-w-[110px]">Field Conditions:</span>
-                    <span className="text-muted-foreground">{weather.sportAnalysis.fieldCondition}</span>
+                    <span className="font-medium min-w-[90px] sm:min-w-[110px] text-sm sm:text-base">Field Conditions:</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">{weather.sportAnalysis.fieldCondition}</span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <span className="font-medium min-w-[110px]">Tracking:</span>
-                    <span className="text-muted-foreground">{weather.sportAnalysis.trackingCondition}</span>
+                    <span className="font-medium min-w-[90px] sm:min-w-[110px] text-sm sm:text-base">Tracking:</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">{weather.sportAnalysis.trackingCondition}</span>
                   </div>
                   {weather.sportAnalysis.uvWarning && (
                     <div className="flex items-start gap-2">
-                      <span className="font-medium min-w-[110px]">UV Warning:</span>
-                      <span className="text-amber-600 font-medium">{weather.sportAnalysis.uvWarning}</span>
+                      <span className="font-medium min-w-[90px] sm:min-w-[110px] text-sm sm:text-base">UV Warning:</span>
+                      <span className="text-amber-600 font-medium text-sm sm:text-base">{weather.sportAnalysis.uvWarning}</span>
                     </div>
                   )}
                   <div className="pt-2 mt-2 border-t flex items-start gap-2">
-                    <span className="font-semibold min-w-[110px]">Recommendation:</span>
-                    <span className="font-semibold">{weather.sportAnalysis.recommendation}</span>
+                    <span className="font-semibold min-w-[90px] sm:min-w-[110px] text-sm sm:text-base">Recommendation:</span>
+                    <span className="font-semibold text-sm sm:text-base">{weather.sportAnalysis.recommendation}</span>
                   </div>
                 </div>
               </div>
