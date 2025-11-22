@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, Edit, FlipHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal } from "lucide-react";
 import { toast } from "sonner";
-import { FrameAnnotationDialog } from "./FrameAnnotationDialog";
 
 interface EnhancedVideoPlayerProps {
   videoSrc: string;
@@ -11,7 +10,6 @@ interface EnhancedVideoPlayerProps {
 
 interface KeyFrame {
   original: string;
-  annotated: string | null;
 }
 
 export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVideoPlayerProps) => {
@@ -21,8 +19,6 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const [keyFrames, setKeyFrames] = useState<KeyFrame[]>([]);
   const [videoReady, setVideoReady] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [annotationDialogOpen, setAnnotationDialogOpen] = useState(false);
-  const [selectedFrameIndex, setSelectedFrameIndex] = useState<number | null>(null);
   const [isMirrored, setIsMirrored] = useState(false);
 
   useEffect(() => {
@@ -124,38 +120,14 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
     const frameUrl = canvas.toDataURL('image/png');
     console.log("Frame captured, data URL length:", frameUrl.length);
     
-    setKeyFrames(prev => [...prev, { original: frameUrl, annotated: null }]);
+    setKeyFrames(prev => [...prev, { original: frameUrl }]);
     toast.success("Key frame captured!");
-  };
-
-  const handleAnnotateFrame = (index: number) => {
-    const frame = keyFrames[index];
-    if (!frame || !frame.original) {
-      toast.error("Frame data not found");
-      return;
-    }
-    console.log("Opening annotation dialog for frame:", index, "Data URL length:", frame.original.length);
-    setSelectedFrameIndex(index);
-    setAnnotationDialogOpen(true);
-  };
-
-  const handleSaveAnnotation = (annotatedFrame: string) => {
-    if (selectedFrameIndex === null) return;
-    
-    setKeyFrames(prev => 
-      prev.map((frame, idx) => 
-        idx === selectedFrameIndex 
-          ? { ...frame, annotated: annotatedFrame }
-          : frame
-      )
-    );
-    setSelectedFrameIndex(null);
   };
 
   const downloadFrame = (frame: KeyFrame, index: number) => {
     const link = document.createElement('a');
-    link.href = frame.annotated || frame.original;
-    link.download = `key-frame-${index + 1}${frame.annotated ? '-annotated' : ''}.png`;
+    link.href = frame.original;
+    link.download = `key-frame-${index + 1}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -298,24 +270,11 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             {keyFrames.map((frame, idx) => (
               <div key={idx} className="relative group">
                 <img 
-                  src={frame.annotated || frame.original} 
+                  src={frame.original} 
                   alt={`Key frame ${idx + 1}`}
                   className="w-full rounded-lg border"
                 />
-                {frame.annotated && (
-                  <div className="absolute bottom-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
-                    Annotated
-                  </div>
-                )}
                 <div className="absolute top-2 left-2 flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleAnnotateFrame(idx)}
-                    title="Annotate frame"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -338,14 +297,6 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
           </div>
         </div>
       )}
-
-      {/* Annotation Dialog */}
-      <FrameAnnotationDialog
-        open={annotationDialogOpen && selectedFrameIndex !== null}
-        onOpenChange={setAnnotationDialogOpen}
-        frameDataUrl={selectedFrameIndex !== null ? (keyFrames[selectedFrameIndex]?.original || "") : ""}
-        onSave={handleSaveAnnotation}
-      />
     </div>
   );
 };

@@ -9,13 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, Scale, Check } from 'lucide-react';
+import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked } from 'lucide-react';
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoCardLazy } from '@/components/VideoCardLazy';
 import { BlurhashImage } from '@/components/BlurhashImage';
-import { VideoComparisonView } from '@/components/VideoComparisonView';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,11 +64,6 @@ export default function PlayersClub() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [playerName, setPlayerName] = useState<string>('');
-  
-  // Compare mode state
-  const [compareMode, setCompareMode] = useState(false);
-  const [selectedVideos, setSelectedVideos] = useState<LibrarySession[]>([]);
-  const [showComparisonView, setShowComparisonView] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -175,24 +169,6 @@ export default function PlayersClub() {
     }
   };
 
-  const handleVideoSelection = (session: LibrarySession) => {
-    const isSelected = selectedVideos.some(v => v.id === session.id);
-    
-    if (isSelected) {
-      setSelectedVideos(prev => prev.filter(v => v.id !== session.id));
-    } else if (selectedVideos.length < 2) {
-      setSelectedVideos(prev => [...prev, session]);
-    } else {
-      toast.error('Maximum 2 videos can be selected for comparison');
-    }
-  };
-
-  const handleExitCompareMode = () => {
-    setCompareMode(false);
-    setSelectedVideos([]);
-    setShowComparisonView(false);
-  };
-
   const filteredSessions = sessions.filter(session => {
     const matchesSport = sportFilter === 'all' || session.sport === sportFilter;
     const matchesModule = moduleFilter === 'all' || session.module === moduleFilter;
@@ -249,32 +225,6 @@ export default function PlayersClub() {
             className="w-full sm:max-w-xs"
           />
           
-          {/* Compare Button */}
-          {isOwnLibrary && (
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <Button
-                variant={compareMode ? 'default' : 'outline'}
-                onClick={() => {
-                  if (compareMode) {
-                    handleExitCompareMode();
-                  } else {
-                    setCompareMode(true);
-                  }
-                }}
-                className="gap-2 w-full sm:w-auto"
-              >
-                <Scale className="h-4 w-4" />
-                <span className="sm:hidden">{compareMode ? `${selectedVideos.length}/2` : 'Compare'}</span>
-                <span className="hidden sm:inline">{compareMode ? `Compare (${selectedVideos.length}/2)` : 'Compare Videos'}</span>
-              </Button>
-              
-              {compareMode && selectedVideos.length === 2 && (
-                <Button onClick={() => setShowComparisonView(true)} className="w-full sm:w-auto">
-                  Start Comparison
-                </Button>
-              )}
-            </div>
-          )}
           <Select value={sportFilter} onValueChange={setSportFilter}>
             <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Sport" />
@@ -322,48 +272,10 @@ export default function PlayersClub() {
             {filteredSessions.map((session) => (
               <VideoCardLazy key={session.id}>
                 {viewMode === 'list' ? (
-                  <Card 
-                    className={`overflow-hidden hover:shadow-lg transition-shadow flex flex-row ${
-                      compareMode ? 'cursor-pointer' : ''
-                    } ${
-                      selectedVideos.some(v => v.id === session.id) 
-                        ? 'ring-2 ring-primary' 
-                        : ''
-                    }`}
-                    onClick={() => {
-                      if (compareMode) {
-                        handleVideoSelection(session);
-                      }
-                    }}
-                  >
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow flex flex-row">
                     <CardContent className="p-0 flex flex-row w-full">
                       {/* Thumbnail - Fixed width for list view */}
                       <div className="relative w-32 sm:w-40 h-24 sm:h-28 flex-shrink-0 bg-muted">
-                        {/* Selection indicator for compare mode */}
-                        {compareMode && (
-                          <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
-                            <div
-                              className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${
-                                selectedVideos.some(v => v.id === session.id)
-                                  ? 'bg-primary border-primary'
-                                  : 'bg-white/90 border-border backdrop-blur-sm'
-                              } ${
-                                selectedVideos.length >= 2 && !selectedVideos.some(v => v.id === session.id)
-                                  ? 'opacity-40 cursor-not-allowed'
-                                  : 'cursor-pointer hover:border-primary'
-                              }`}
-                              onClick={() => {
-                                if (selectedVideos.length < 2 || selectedVideos.some(v => v.id === session.id)) {
-                                  handleVideoSelection(session);
-                                }
-                              }}
-                            >
-                              {selectedVideos.some(v => v.id === session.id) && (
-                                <Check className="h-4 w-4 text-primary-foreground" />
-                              )}
-                            </div>
-                          </div>
-                        )}
                         {session.blurhash && (session.thumbnail_webp_url || session.thumbnail_url) ? (
                           <BlurhashImage
                             blurhash={session.blurhash}
@@ -408,7 +320,7 @@ export default function PlayersClub() {
                           <span className="text-xs text-muted-foreground">
                             {new Date(session.session_date).toLocaleDateString()}
                           </span>
-                          {isOwnLibrary && !compareMode && (
+                          {isOwnLibrary && (
                             <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                               <Button
                                 size="sm"
@@ -439,51 +351,10 @@ export default function PlayersClub() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card 
-                    className={`overflow-hidden hover:shadow-lg transition-shadow ${
-                      compareMode ? 'cursor-pointer' : ''
-                    } ${
-                      selectedVideos.some(v => v.id === session.id) 
-                        ? 'ring-2 ring-primary' 
-                        : ''
-                    }`}
-                    onClick={() => {
-                      if (compareMode) {
-                        handleVideoSelection(session);
-                      }
-                    }}
-                  >
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow">
                     <CardContent className="p-0">
                     {/* Thumbnail with responsive images and blurhash */}
                     <div className="relative h-48 bg-muted">
-                      {/* Selection Indicator for Compare Mode */}
-                      {compareMode && (
-                        <div 
-                          className="absolute top-4 left-4 z-10"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
-                              selectedVideos.some(v => v.id === session.id)
-                                ? 'bg-primary border-primary'
-                                : 'bg-white/90 border-border backdrop-blur-sm'
-                            } ${
-                              selectedVideos.length >= 2 && !selectedVideos.some(v => v.id === session.id)
-                                ? 'opacity-40 cursor-not-allowed'
-                                : 'cursor-pointer hover:border-primary hover:scale-110'
-                            }`}
-                            onClick={() => {
-                              if (selectedVideos.length < 2 || selectedVideos.some(v => v.id === session.id)) {
-                                handleVideoSelection(session);
-                              }
-                            }}
-                          >
-                            {selectedVideos.some(v => v.id === session.id) && (
-                              <Check className="h-5 w-5 text-primary-foreground" />
-                            )}
-                          </div>
-                        </div>
-                      )}
                       {session.blurhash && (session.thumbnail_webp_url || session.thumbnail_url) ? (
                         <BlurhashImage
                           blurhash={session.blurhash}
@@ -614,19 +485,6 @@ export default function PlayersClub() {
           onClose={() => setSelectedSession(null)}
           onUpdate={fetchLibrary}
           isOwner={isOwnLibrary || isOwner}
-        />
-      )}
-
-      {/* Video Comparison View */}
-      {showComparisonView && selectedVideos.length === 2 && (
-        <VideoComparisonView
-          video1={selectedVideos[0]}
-          video2={selectedVideos[1]}
-          open={showComparisonView}
-          onClose={() => {
-            setShowComparisonView(false);
-            handleExitCompareMode();
-          }}
         />
       )}
 
