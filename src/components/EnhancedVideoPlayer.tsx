@@ -20,6 +20,8 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const [videoReady, setVideoReady] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isMirrored, setIsMirrored] = useState(false);
+  const [isSteppingFrames, setIsSteppingFrames] = useState(false);
+  const steppingTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     if (videoRef.current) {
@@ -59,6 +61,37 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
     return () => video.removeEventListener('timeupdate', handleTimeUpdate);
   }, [loopStart, loopEnd]);
 
+  // Handle fullscreen changes to maintain mirror effect on mobile
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleFullscreenChange = () => {
+      // Reapply mirror state when exiting fullscreen
+      if (!document.fullscreenElement && isMirrored) {
+        setIsMirrored(false);
+        setTimeout(() => setIsMirrored(true), 50);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, [isMirrored]);
+
+  // Cleanup stepping timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (steppingTimeoutRef.current) {
+        clearTimeout(steppingTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const stepFrame = (direction: 'forward' | 'backward') => {
     const video = videoRef.current;
     if (!video || !videoReady) {
@@ -68,6 +101,28 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
 
     // Force pause before seeking (critical for mobile)
     video.pause();
+
+    // Hide controls on mobile during frame stepping
+    if (window.innerWidth < 768) {
+      setIsSteppingFrames(true);
+      video.controls = false;
+
+      // Add haptic feedback on mobile
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+
+      // Clear existing timeout
+      if (steppingTimeoutRef.current) {
+        clearTimeout(steppingTimeoutRef.current);
+      }
+
+      // Restore controls after 2 seconds of inactivity
+      steppingTimeoutRef.current = setTimeout(() => {
+        video.controls = true;
+        setIsSteppingFrames(false);
+      }, 2000);
+    }
 
     // Calculate frame step (try to use actual framerate, fallback to 30fps)
     const step = 1 / 30;
@@ -150,17 +205,29 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
     <div className="space-y-4">
       {/* Video Player */}
       <div className="relative bg-black rounded-lg overflow-hidden">
-        <video
-          ref={videoRef}
-          src={videoSrc}
-          controls
-          preload="metadata"
-          className="w-full h-auto"
+        {/* Frame stepping indicator on mobile */}
+        {isSteppingFrames && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-3 py-1 rounded-full text-xs sm:hidden z-10">
+            Frame-by-frame mode
+          </div>
+        )}
+        
+        {/* Mirror wrapper for video */}
+        <div 
           style={{ 
-            maxHeight: 'min(600px, 70vh)',
-            transform: isMirrored ? 'scaleX(-1)' : 'none'
+            transform: isMirrored ? 'scaleX(-1)' : 'none',
+            width: '100%'
           }}
-        />
+        >
+          <video
+            ref={videoRef}
+            src={videoSrc}
+            controls
+            preload="metadata"
+            className={`w-full h-auto ${isSteppingFrames ? 'pointer-events-none' : ''}`}
+            style={{ maxHeight: 'min(600px, 70vh)' }}
+          />
+        </div>
         <canvas ref={canvasRef} className="hidden" />
       </div>
 
@@ -174,6 +241,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             onClick={() => stepFrame('backward')}
             disabled={!videoReady}
             title="Step backward"
+            className="min-h-[44px] min-w-[44px]"
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="hidden sm:inline ml-1">Back</span>
@@ -184,6 +252,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             onClick={() => stepFrame('forward')}
             disabled={!videoReady}
             title="Step forward"
+            className="min-h-[44px] min-w-[44px]"
           >
             <ChevronRight className="h-4 w-4" />
             <span className="hidden sm:inline ml-1">Forward</span>
