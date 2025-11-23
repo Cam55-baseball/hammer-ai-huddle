@@ -1,8 +1,8 @@
-import { User, Users, Target, Shield, Lock, CheckCircle } from "lucide-react";
+import { Shield, Lock, CheckCircle, Construction, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RoleButton } from "@/components/RoleButton";
+import { Card } from "@/components/ui/card";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -74,36 +74,41 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Role Selection */}
+      {/* Coming Soon Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 space-y-4">
-            <h3 className="text-3xl md:text-4xl font-bold">Choose Your Path</h3>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Select your role to access tailored tools, analytics, and training programs 
-              designed for your specific needs.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <RoleButton
-              icon={User}
-              title="Player"
-              description="Get In The Game!"
-              onClick={handleGetStarted}
-            />
-            <RoleButton
-              icon={Users}
-              title="Coach"
-              description="Get In The Game!"
-              onClick={handleGetStarted}
-            />
-            <RoleButton
-              icon={Target}
-              title="Recruiter/Scout"
-              description="Get In The Game!"
-              onClick={handleGetStarted}
-            />
+          <div className="max-w-3xl mx-auto">
+            <Card className="border-2 border-red-500 bg-red-50 shadow-lg">
+              <div className="p-6 sm:p-8">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="bg-red-100 p-3 rounded-full animate-pulse">
+                      <Construction className="h-8 w-8 text-red-600" />
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Sparkles className="h-6 w-6 text-red-600 animate-pulse" />
+                      <h3 className="text-2xl md:text-3xl font-bold text-red-900">
+                        Exciting Updates Coming Soon!
+                      </h3>
+                    </div>
+                    <div className="space-y-3 text-red-900">
+                      <p className="text-lg font-semibold">
+                        Advanced metric measuring and enhanced Professional Scout/Collegiate recruiting connections are under construction!
+                      </p>
+                      <p className="text-base">
+                        We're working hard to bring you powerful new analytics and direct connections to scouts and recruiters. Your training data is being captured now for seamless integration when these features launch!
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 pt-2">
+                      <div className="h-2 w-2 bg-red-600 rounded-full animate-pulse" />
+                      <span className="text-sm text-red-900 font-semibold">Active Development</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       </section>
