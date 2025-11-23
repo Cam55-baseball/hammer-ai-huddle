@@ -82,7 +82,6 @@ export function AppSidebar() {
     ...(!isScout ? [{ title: "My Followers", url: "/my-followers", icon: Users }] : []),
     { title: "Rankings", url: "/rankings", icon: Trophy },
     { title: "Weather", url: "/weather", icon: Cloud },
-    { title: "Coming soon", url: "/coming-soon", icon: Construction },
     ...(isScout ? [{ title: "Scout Dashboard", url: "/scout-dashboard", icon: UserPlus }] : []),
   ];
 
