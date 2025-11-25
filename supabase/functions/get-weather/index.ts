@@ -14,6 +14,18 @@ interface WeatherMetrics {
   uvIndex: number;
 }
 
+interface DailyForecast {
+  date: string;
+  high: number;
+  low: number;
+  condition: string;
+  weatherCode: number;
+  windSpeedMax: number;
+  precipitationChance: number;
+  recommendation: string;
+  recommendationColor: 'green' | 'yellow' | 'red';
+}
+
 function calculateSportConditions(weather: WeatherMetrics, sport: string) {
   const { temperature, humidity, windSpeed, windDirection, visibility, uvIndex } = weather;
   
@@ -96,6 +108,43 @@ function generateRecommendation(weather: WeatherMetrics): string {
   
   // Ideal conditions
   return "✅ Ideal conditions - Perfect for training";
+}
+
+function generateDailyRecommendation(
+  high: number,
+  low: number,
+  windSpeed: number,
+  precipChance: number
+): { recommendation: string; color: 'green' | 'yellow' | 'red' } {
+  // Critical conditions - do not train
+  if (windSpeed > 25 || high > 100 || low < 30 || precipChance > 70) {
+    return {
+      recommendation: "❌ Not Recommended - Unsafe conditions",
+      color: 'red'
+    };
+  }
+  
+  // Caution conditions
+  if (windSpeed > 15 || high > 90 || low < 40 || precipChance > 40) {
+    return {
+      recommendation: "⚠️ Fair - Monitor conditions",
+      color: 'yellow'
+    };
+  }
+  
+  // Good conditions with minor considerations
+  if (windSpeed > 10 || high > 80 || low < 50 || precipChance > 20) {
+    return {
+      recommendation: "✅ Good - Minor adjustments needed",
+      color: 'yellow'
+    };
+  }
+  
+  // Ideal conditions
+  return {
+    recommendation: "✅ Excellent - Ideal for training",
+    color: 'green'
+  };
 }
 
 function degreesToCardinal(degrees: number): string {
@@ -200,7 +249,7 @@ serve(async (req) => {
       throw new Error("Invalid location coordinates");
     }
 
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,weather_code&hourly=uv_index,visibility&timezone=auto`;
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,weather_code&hourly=uv_index,visibility&daily=temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max,precipitation_probability_max&timezone=auto&forecast_days=7`;
     console.log(`Open-Meteo Weather API URL: ${weatherUrl}`);
 
     const response = await fetch(weatherUrl, {
@@ -247,12 +296,49 @@ serve(async (req) => {
       uvIndex: uvIndex ?? 0,
     };
 
+    // Process daily forecast data
+    const daily = data.daily || {};
+    const dailyForecasts: DailyForecast[] = [];
+
+    if (daily.time && daily.time.length > 0) {
+      for (let i = 0; i < Math.min(daily.time.length, 7); i++) {
+        const highC = daily.temperature_2m_max?.[i] ?? 0;
+        const lowC = daily.temperature_2m_min?.[i] ?? 0;
+        const highF = highC * 9 / 5 + 32;
+        const lowF = lowC * 9 / 5 + 32;
+        const windSpeedKmh = daily.wind_speed_10m_max?.[i] ?? 0;
+        const windSpeedMph = windSpeedKmh * 0.621371;
+        const precipChance = daily.precipitation_probability_max?.[i] ?? 0;
+        const weatherCode = daily.weather_code?.[i] ?? 0;
+        
+        const { recommendation, color } = generateDailyRecommendation(
+          highF,
+          lowF,
+          windSpeedMph,
+          precipChance
+        );
+        
+        dailyForecasts.push({
+          date: daily.time[i],
+          high: Math.round(highF),
+          low: Math.round(lowF),
+          condition: mapWeatherCodeToDescription(weatherCode),
+          weatherCode,
+          windSpeedMax: Math.round(windSpeedMph),
+          precipitationChance: Math.round(precipChance),
+          recommendation,
+          recommendationColor: color
+        });
+      }
+    }
+
     const weatherData = {
       location: resolvedLocationName,
       ...weatherMetrics,
       feelsLike: feelsLikeF,
       condition: mapWeatherCodeToDescription(current.weather_code),
       sportAnalysis: calculateSportConditions(weatherMetrics, sportType),
+      dailyForecast: dailyForecasts,
     };
 
     return new Response(JSON.stringify(weatherData), {
