@@ -143,6 +143,32 @@ serve(async (req) => {
     if (coordMatch) {
       latitude = parseFloat(coordMatch[1]);
       longitude = parseFloat(coordMatch[2]);
+      
+      // Reverse geocode coordinates to readable location name
+      const reverseGeoUrl = `https://geocoding-api.open-meteo.com/v1/search?latitude=${latitude}&longitude=${longitude}&count=1&language=en&format=json`;
+      console.log(`Reverse geocoding coordinates: ${reverseGeoUrl}`);
+      
+      try {
+        const reverseGeoResponse = await fetch(reverseGeoUrl, {
+          signal: AbortSignal.timeout(5000),
+        });
+        
+        if (reverseGeoResponse.ok) {
+          const reverseGeoData = await reverseGeoResponse.json();
+          
+          if (reverseGeoData.results && reverseGeoData.results.length > 0) {
+            const result = reverseGeoData.results[0];
+            resolvedLocationName = `${result.name}${result.country ? `, ${result.country}` : ""}`;
+            console.log(`Resolved coordinates to: ${resolvedLocationName}`);
+          } else {
+            console.warn(`No reverse geocoding results for coordinates: ${latitude},${longitude}`);
+          }
+        } else {
+          console.warn(`Reverse geocoding failed with status ${reverseGeoResponse.status}`);
+        }
+      } catch (reverseGeoError) {
+        console.error(`Reverse geocoding error:`, reverseGeoError);
+      }
     } else {
       // Geocode city name to coordinates using Open-Meteo geocoding API
       const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=en&format=json`;
