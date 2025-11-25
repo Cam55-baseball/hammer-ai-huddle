@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface EnhancedVideoPlayerProps {
@@ -23,6 +23,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const [isSteppingFrames, setIsSteppingFrames] = useState(false);
   const steppingTimeoutRef = useRef<NodeJS.Timeout>();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenFrameIndex, setFullscreenFrameIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -229,6 +230,52 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
       }, index * 150);
     });
   };
+
+  const navigateToPreviousFrame = () => {
+    if (fullscreenFrameIndex !== null && fullscreenFrameIndex > 0) {
+      setFullscreenFrameIndex(fullscreenFrameIndex - 1);
+    }
+  };
+
+  const navigateToNextFrame = () => {
+    if (fullscreenFrameIndex !== null && fullscreenFrameIndex < keyFrames.length - 1) {
+      setFullscreenFrameIndex(fullscreenFrameIndex + 1);
+    }
+  };
+
+  const handleFullscreenRemove = (index: number) => {
+    const newFrames = keyFrames.filter((_, i) => i !== index);
+    setKeyFrames(newFrames);
+    toast.success("Frame removed!");
+    
+    // Navigate to next frame or close if it was the last frame
+    if (newFrames.length === 0) {
+      setFullscreenFrameIndex(null);
+    } else if (index >= newFrames.length) {
+      setFullscreenFrameIndex(newFrames.length - 1);
+    }
+  };
+
+  // Keyboard navigation for fullscreen viewer
+  useEffect(() => {
+    if (fullscreenFrameIndex === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateToPreviousFrame();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateToNextFrame();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setFullscreenFrameIndex(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [fullscreenFrameIndex, keyFrames.length]);
 
   return (
     <div className="space-y-4">
@@ -486,13 +533,28 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
                 <img 
                   src={frame.original} 
                   alt={`Key frame ${idx + 1}`}
-                  className="w-full rounded-lg border"
+                  className="w-full rounded-lg border cursor-pointer"
+                  onClick={() => setFullscreenFrameIndex(idx)}
                 />
                 <div className="absolute top-2 left-2 flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => downloadFrame(frame, idx)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFullscreenFrameIndex(idx);
+                    }}
+                    title="View fullscreen"
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadFrame(frame, idx);
+                    }}
                     title="Download frame"
                   >
                     <Download className="h-4 w-4" />
@@ -502,12 +564,129 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
                   variant="destructive"
                   size="sm"
                   className="absolute bottom-2 right-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
-                  onClick={() => setKeyFrames(prev => prev.filter((_, i) => i !== idx))}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setKeyFrames(prev => prev.filter((_, i) => i !== idx));
+                  }}
                 >
                   Remove
                 </Button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen Frame Viewer */}
+      {fullscreenFrameIndex !== null && (
+        <div 
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
+          onClick={() => setFullscreenFrameIndex(null)}
+        >
+          {/* Close button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 text-white hover:bg-white/20 z-10 min-h-[44px] min-w-[44px]"
+            onClick={() => setFullscreenFrameIndex(null)}
+          >
+            <X className="h-6 w-6" />
+          </Button>
+
+          {/* Frame counter */}
+          <div className="absolute top-4 left-4 text-white text-sm font-medium bg-black/50 px-3 py-1 rounded z-10">
+            {fullscreenFrameIndex + 1} / {keyFrames.length}
+          </div>
+
+          {/* Previous button */}
+          {fullscreenFrameIndex > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12 z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateToPreviousFrame();
+              }}
+            >
+              <ChevronLeft className="h-8 w-8" />
+            </Button>
+          )}
+
+          {/* Next button */}
+          {fullscreenFrameIndex < keyFrames.length - 1 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12 z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateToNextFrame();
+              }}
+            >
+              <ChevronRight className="h-8 w-8" />
+            </Button>
+          )}
+
+          {/* Frame image */}
+          <img
+            src={keyFrames[fullscreenFrameIndex].original}
+            alt={`Key Frame ${fullscreenFrameIndex + 1}`}
+            className="max-w-full max-h-[80vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              const startX = touch.clientX;
+              
+              const handleTouchMove = (moveEvent: TouchEvent) => {
+                const moveTouch = moveEvent.touches[0];
+                const diffX = moveTouch.clientX - startX;
+                
+                if (Math.abs(diffX) > 50) {
+                  if (diffX > 0) {
+                    navigateToPreviousFrame();
+                  } else {
+                    navigateToNextFrame();
+                  }
+                  document.removeEventListener('touchmove', handleTouchMove);
+                }
+              };
+              
+              document.addEventListener('touchmove', handleTouchMove);
+              document.addEventListener('touchend', () => {
+                document.removeEventListener('touchmove', handleTouchMove);
+              }, { once: true });
+            }}
+          />
+
+          {/* Action buttons */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-black/50 text-white border-white/20 hover:bg-white/20 min-h-[44px] min-w-[44px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadFrame(keyFrames[fullscreenFrameIndex], fullscreenFrameIndex);
+              }}
+              title="Download frame"
+            >
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Download</span>
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="min-h-[44px] min-w-[44px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFullscreenRemove(fullscreenFrameIndex);
+              }}
+              title="Remove frame"
+            >
+              <Trash2 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Remove</span>
+            </Button>
           </div>
         </div>
       )}
