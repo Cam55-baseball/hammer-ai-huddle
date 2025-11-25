@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon } from "lucide-react";
+import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -18,6 +18,18 @@ interface SportAnalysis {
   recommendation: string;
 }
 
+interface DailyForecast {
+  date: string;
+  high: number;
+  low: number;
+  condition: string;
+  weatherCode: number;
+  windSpeedMax: number;
+  precipitationChance: number;
+  recommendation: string;
+  recommendationColor: 'green' | 'yellow' | 'red';
+}
+
 interface WeatherData {
   location: string;
   temperature: number;
@@ -29,6 +41,7 @@ interface WeatherData {
   visibility: number;
   uvIndex: number;
   sportAnalysis?: SportAnalysis;
+  dailyForecast?: DailyForecast[];
 }
 
 interface WeatherWidgetProps {
@@ -41,6 +54,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showForecast, setShowForecast] = useState(false);
   const { toast } = useToast();
 
   const fetchWeather = async (searchLocation?: string, sportParam?: 'baseball' | 'softball') => {
@@ -133,6 +147,30 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   };
 
   const condition = getTrainingCondition();
+
+  const formatForecastDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return "Tomorrow";
+    } else {
+      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+  };
+
+  const getRecommendationColorClass = (color: 'green' | 'yellow' | 'red') => {
+    switch (color) {
+      case 'green': return 'text-green-600 bg-green-50 border-green-200';
+      case 'yellow': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      case 'red': return 'text-red-600 bg-red-50 border-red-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
 
   return (
     <Card>
@@ -273,6 +311,69 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                     <span className="font-semibold text-sm sm:text-base">Recommendation:</span>
                     <span className="font-semibold text-sm sm:text-base break-words">{weather.sportAnalysis.recommendation}</span>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {weather?.dailyForecast && weather.dailyForecast.length > 0 && (
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowForecast(!showForecast)}
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                {showForecast ? 'Hide' : 'Show'} 7-Day Forecast
+              </Button>
+            )}
+
+            {showForecast && weather?.dailyForecast && weather.dailyForecast.length > 0 && (
+              <div className="space-y-3 animate-in fade-in-50 duration-300">
+                <h4 className="font-semibold text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  7-Day Training Forecast
+                </h4>
+                
+                <div className="grid gap-3">
+                  {weather.dailyForecast.map((day) => (
+                    <div 
+                      key={day.date} 
+                      className="rounded-lg border border-border bg-card p-3 sm:p-4 hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-sm sm:text-base">
+                            {formatForecastDate(day.date)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{day.condition}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
+                            <span className="font-bold text-base sm:text-lg">{day.high}°</span>
+                          </div>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />
+                            <span className="text-sm text-muted-foreground">{day.low}°</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mb-2">
+                        <div className="flex items-center gap-1">
+                          <Wind className="h-3 w-3" />
+                          <span>{day.windSpeedMax} mph max</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <CloudRain className="h-3 w-3" />
+                          <span>{day.precipitationChance}% rain</span>
+                        </div>
+                      </div>
+                      
+                      <div className={`rounded-md border p-2 text-xs sm:text-sm font-medium ${getRecommendationColorClass(day.recommendationColor)}`}>
+                        {day.recommendation}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
