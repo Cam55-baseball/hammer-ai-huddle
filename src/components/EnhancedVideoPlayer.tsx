@@ -23,9 +23,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const [isSteppingFrames, setIsSteppingFrames] = useState(false);
   const steppingTimeoutRef = useRef<NodeJS.Timeout>();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showFullscreenControls, setShowFullscreenControls] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const fullscreenControlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     if (videoRef.current) {
@@ -96,9 +94,6 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
       if (steppingTimeoutRef.current) {
         clearTimeout(steppingTimeoutRef.current);
       }
-      if (fullscreenControlsTimeoutRef.current) {
-        clearTimeout(fullscreenControlsTimeoutRef.current);
-      }
     };
   }, []);
 
@@ -125,17 +120,6 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
     }
   };
 
-  const handleFullscreenTap = () => {
-    setShowFullscreenControls(true);
-    
-    if (fullscreenControlsTimeoutRef.current) {
-      clearTimeout(fullscreenControlsTimeoutRef.current);
-    }
-    
-    fullscreenControlsTimeoutRef.current = setTimeout(() => {
-      setShowFullscreenControls(false);
-    }, 3000);
-  };
 
   const stepFrame = (direction: 'forward' | 'backward') => {
     const video = videoRef.current;
@@ -252,7 +236,6 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
       <div 
         ref={containerRef}
         className={`relative bg-black rounded-lg overflow-hidden ${isFullscreen ? 'w-screen h-screen' : ''}`}
-        onClick={isFullscreen ? handleFullscreenTap : undefined}
       >
         {/* Frame stepping indicator on mobile */}
         {isSteppingFrames && !isFullscreen && (
@@ -283,9 +266,7 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
         {/* Fullscreen Controls Overlay */}
         {isFullscreen && (
           <div 
-            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 z-20 transition-opacity duration-300 ${
-              showFullscreenControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            }`}
+            className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 z-20"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-center gap-2 flex-wrap">
