@@ -75,8 +75,10 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
       }
 
       setWeather(data);
-      if (!searchLocation && locationToFetch !== location) {
-        setLocation(locationToFetch);
+      // Update location input with the resolved location name from backend
+      // This replaces coordinates with readable names like "New York, US"
+      if (!searchLocation) {
+        setLocation(data.location);
       }
     } catch (error: any) {
       console.error("Error fetching weather:", error);
