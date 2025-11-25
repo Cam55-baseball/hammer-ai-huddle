@@ -69,6 +69,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
 
   const fetchWeather = async (searchLocation?: string, sportParam?: 'baseball' | 'softball') => {
     const sportToUse = sportParam || sport;
+    console.log(`WeatherWidget: fetching weather with sport: ${sportToUse}`);
     try {
       setLoading(true);
       setError(null);
@@ -312,29 +313,29 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                 </h4>
                 <div className="grid gap-2 text-sm">
                   <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">Ball Flight:</span>
+                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Ball Flight:</span>
                     <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.ballFlight}</span>
                   </div>
                   <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">Wind Impact:</span>
+                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Wind Impact:</span>
                     <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.windImpact}</span>
                   </div>
                   <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">Field Conditions:</span>
+                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Field Conditions:</span>
                     <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.fieldCondition}</span>
                   </div>
                   <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">Tracking:</span>
+                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Tracking:</span>
                     <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.trackingCondition}</span>
                   </div>
                   {weather.sportAnalysis.uvWarning && (
                     <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                      <span className="font-medium text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">UV Warning:</span>
+                      <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">UV Warning:</span>
                       <span className="text-amber-600 font-medium text-sm sm:text-base break-words">{weather.sportAnalysis.uvWarning}</span>
                     </div>
                   )}
                   <div className="pt-2 mt-2 border-t flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-semibold text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">Recommendation:</span>
+                    <span className="font-semibold text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Recommendation:</span>
                     <span className="font-semibold text-sm sm:text-base break-words">{weather.sportAnalysis.recommendation}</span>
                   </div>
                 </div>

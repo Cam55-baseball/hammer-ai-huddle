@@ -343,6 +343,8 @@ serve(async (req) => {
     }
 
     console.log(`Fetching weather for location: ${location}`);
+    console.log(`Sport parameter received: ${sport} (type: ${typeof sport})`);
+    console.log(`Using sportType: ${sportType}`);
 
     // Determine coordinates from location string
     let latitude: number | null = null;
