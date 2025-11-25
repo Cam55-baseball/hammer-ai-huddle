@@ -6,7 +6,13 @@ import { WeatherWidget } from "@/components/WeatherWidget";
 
 export default function Weather() {
   const location = useLocation();
-  const [currentSport, setCurrentSport] = useState<'baseball' | 'softball'>('baseball');
+  const [currentSport, setCurrentSport] = useState<'baseball' | 'softball'>(() => {
+    const saved = localStorage.getItem('selectedSport');
+    if (saved === 'baseball' || saved === 'softball') {
+      return saved as 'baseball' | 'softball';
+    }
+    return 'baseball';
+  });
   
   useEffect(() => {
     const savedSport = localStorage.getItem('selectedSport') as 'baseball' | 'softball';
@@ -36,7 +42,7 @@ export default function Weather() {
       };
       detectSportFromModules();
     }
-  }, [location]);
+  }, []);
 
   return (
     <DashboardLayout>
