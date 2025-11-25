@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import { toast } from "sonner";
 
 interface EnhancedVideoPlayerProps {
@@ -25,6 +25,18 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenFrameIndex, setFullscreenFrameIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Zoom state
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const pinchStartDistanceRef = useRef<number | null>(null);
+  const pinchStartZoomRef = useRef<number>(1);
+  
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 4;
+  const ZOOM_STEP = 0.5;
 
   useEffect(() => {
     if (videoRef.current) {
@@ -234,12 +246,18 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const navigateToPreviousFrame = () => {
     if (fullscreenFrameIndex !== null && fullscreenFrameIndex > 0) {
       setFullscreenFrameIndex(fullscreenFrameIndex - 1);
+      // Reset zoom when changing frames
+      setZoomLevel(MIN_ZOOM);
+      setPanPosition({ x: 0, y: 0 });
     }
   };
 
   const navigateToNextFrame = () => {
     if (fullscreenFrameIndex !== null && fullscreenFrameIndex < keyFrames.length - 1) {
       setFullscreenFrameIndex(fullscreenFrameIndex + 1);
+      // Reset zoom when changing frames
+      setZoomLevel(MIN_ZOOM);
+      setPanPosition({ x: 0, y: 0 });
     }
   };
 
@@ -254,6 +272,139 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
     } else if (index >= newFrames.length) {
       setFullscreenFrameIndex(newFrames.length - 1);
     }
+  };
+
+  // Zoom control functions
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + ZOOM_STEP, MAX_ZOOM));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => {
+      const newZoom = Math.max(prev - ZOOM_STEP, MIN_ZOOM);
+      if (newZoom === MIN_ZOOM) {
+        setPanPosition({ x: 0, y: 0 });
+      }
+      return newZoom;
+    });
+  };
+
+  const handleResetZoom = () => {
+    setZoomLevel(MIN_ZOOM);
+    setPanPosition({ x: 0, y: 0 });
+  };
+
+  const handlePinchZoom = (e: React.TouchEvent<HTMLImageElement>) => {
+    if (e.touches.length !== 2) return;
+    
+    e.preventDefault();
+    
+    const touch1 = e.touches[0];
+    const touch2 = e.touches[1];
+    
+    const distance = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    );
+    
+    if (!pinchStartDistanceRef.current) {
+      pinchStartDistanceRef.current = distance;
+      pinchStartZoomRef.current = zoomLevel;
+      return;
+    }
+    
+    const scale = distance / pinchStartDistanceRef.current;
+    const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, pinchStartZoomRef.current * scale));
+    
+    setZoomLevel(newZoom);
+  };
+
+  const handlePinchEnd = () => {
+    pinchStartDistanceRef.current = null;
+    pinchStartZoomRef.current = 1;
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
+    if (zoomLevel <= MIN_ZOOM) return;
+    
+    e.preventDefault();
+    setIsPanning(true);
+    
+    const startX = e.clientX - panPosition.x;
+    const startY = e.clientY - panPosition.y;
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      setPanPosition({
+        x: moveEvent.clientX - startX,
+        y: moveEvent.clientY - startY
+      });
+    };
+    
+    const handleMouseUp = () => {
+      setIsPanning(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
+    // Handle pinch zoom if 2 fingers
+    if (e.touches.length === 2) {
+      handlePinchZoom(e);
+      return;
+    }
+    
+    // If zoomed in, handle pan/drag
+    if (zoomLevel > MIN_ZOOM && e.touches.length === 1) {
+      const touch = e.touches[0];
+      const startX = touch.clientX - panPosition.x;
+      const startY = touch.clientY - panPosition.y;
+      
+      const handleTouchMove = (moveEvent: TouchEvent) => {
+        moveEvent.preventDefault();
+        const moveTouch = moveEvent.touches[0];
+        setPanPosition({
+          x: moveTouch.clientX - startX,
+          y: moveTouch.clientY - startY
+        });
+      };
+      
+      const handleTouchEnd = () => {
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+        handlePinchEnd();
+      };
+      
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
+      return;
+    }
+    
+    // If not zoomed, handle swipe navigation
+    const touch = e.touches[0];
+    const startX = touch.clientX;
+    
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      const moveTouch = moveEvent.touches[0];
+      const diffX = moveTouch.clientX - startX;
+      
+      if (Math.abs(diffX) > 50) {
+        if (diffX > 0) {
+          navigateToPreviousFrame();
+        } else {
+          navigateToNextFrame();
+        }
+        document.removeEventListener('touchmove', handleTouchMove);
+      }
+    };
+    
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+    }, { once: true });
   };
 
   // Keyboard navigation for fullscreen viewer
@@ -598,6 +749,56 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             {fullscreenFrameIndex + 1} / {keyFrames.length}
           </div>
 
+          {/* Zoom controls */}
+          <div className="absolute top-16 right-4 flex flex-col gap-2 z-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white bg-black/50 hover:bg-white/20 min-h-[44px] min-w-[44px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleZoomIn();
+              }}
+              disabled={zoomLevel >= MAX_ZOOM}
+              title="Zoom in"
+            >
+              <ZoomIn className="h-5 w-5" />
+            </Button>
+            
+            <div className="text-white text-xs text-center bg-black/50 px-2 py-1 rounded">
+              {Math.round(zoomLevel * 100)}%
+            </div>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white bg-black/50 hover:bg-white/20 min-h-[44px] min-w-[44px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleZoomOut();
+              }}
+              disabled={zoomLevel <= MIN_ZOOM}
+              title="Zoom out"
+            >
+              <ZoomOut className="h-5 w-5" />
+            </Button>
+            
+            {zoomLevel > MIN_ZOOM && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white bg-black/50 hover:bg-white/20 min-h-[44px] min-w-[44px] mt-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleResetZoom();
+                }}
+                title="Reset zoom"
+              >
+                <RotateCcw className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
+
           {/* Previous button */}
           {fullscreenFrameIndex > 0 && (
             <Button
@@ -628,36 +829,34 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             </Button>
           )}
 
-          {/* Frame image */}
-          <img
-            src={keyFrames[fullscreenFrameIndex].original}
-            alt={`Key Frame ${fullscreenFrameIndex + 1}`}
-            className="max-w-full max-h-[80vh] object-contain"
+          {/* Frame image with zoom and pan */}
+          <div 
+            ref={imageContainerRef}
+            className="relative flex items-center justify-center max-w-full max-h-[80vh]"
             onClick={(e) => e.stopPropagation()}
-            onTouchStart={(e) => {
-              const touch = e.touches[0];
-              const startX = touch.clientX;
-              
-              const handleTouchMove = (moveEvent: TouchEvent) => {
-                const moveTouch = moveEvent.touches[0];
-                const diffX = moveTouch.clientX - startX;
-                
-                if (Math.abs(diffX) > 50) {
-                  if (diffX > 0) {
-                    navigateToPreviousFrame();
-                  } else {
-                    navigateToNextFrame();
-                  }
-                  document.removeEventListener('touchmove', handleTouchMove);
+          >
+            <img
+              src={keyFrames[fullscreenFrameIndex].original}
+              alt={`Key Frame ${fullscreenFrameIndex + 1}`}
+              className={`max-w-full max-h-[80vh] object-contain transition-transform ${
+                isPanning ? 'cursor-grabbing' : zoomLevel > MIN_ZOOM ? 'cursor-grab' : 'cursor-default'
+              }`}
+              style={{
+                transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
+                transformOrigin: 'center center'
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+              onTouchMove={(e) => {
+                if (e.touches.length === 2) {
+                  handlePinchZoom(e);
                 }
-              };
-              
-              document.addEventListener('touchmove', handleTouchMove);
-              document.addEventListener('touchend', () => {
-                document.removeEventListener('touchmove', handleTouchMove);
-              }, { once: true });
-            }}
-          />
+              }}
+              onTouchEnd={handlePinchEnd}
+              draggable={false}
+            />
+          </div>
 
           {/* Action buttons */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
