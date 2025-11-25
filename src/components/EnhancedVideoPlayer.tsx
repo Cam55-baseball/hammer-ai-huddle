@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface EnhancedVideoPlayerProps {
@@ -22,6 +22,10 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const [isMirrored, setIsMirrored] = useState(false);
   const [isSteppingFrames, setIsSteppingFrames] = useState(false);
   const steppingTimeoutRef = useRef<NodeJS.Timeout>();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showFullscreenControls, setShowFullscreenControls] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const fullscreenControlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     if (videoRef.current) {
@@ -67,6 +71,9 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
     if (!video) return;
 
     const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isCurrentlyFullscreen);
+      
       // Reapply mirror state when exiting fullscreen
       if (!document.fullscreenElement && isMirrored) {
         setIsMirrored(false);
@@ -83,14 +90,52 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
     };
   }, [isMirrored]);
 
-  // Cleanup stepping timeout on unmount
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (steppingTimeoutRef.current) {
         clearTimeout(steppingTimeoutRef.current);
       }
+      if (fullscreenControlsTimeoutRef.current) {
+        clearTimeout(fullscreenControlsTimeoutRef.current);
+      }
     };
   }, []);
+
+  const toggleFullscreen = async () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        if (container.requestFullscreen) {
+          await container.requestFullscreen();
+        } else if ((container as any).webkitRequestFullscreen) {
+          await (container as any).webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        }
+      }
+    } catch (error) {
+      console.error('Fullscreen error:', error);
+    }
+  };
+
+  const handleFullscreenTap = () => {
+    setShowFullscreenControls(true);
+    
+    if (fullscreenControlsTimeoutRef.current) {
+      clearTimeout(fullscreenControlsTimeoutRef.current);
+    }
+    
+    fullscreenControlsTimeoutRef.current = setTimeout(() => {
+      setShowFullscreenControls(false);
+    }, 3000);
+  };
 
   const stepFrame = (direction: 'forward' | 'backward') => {
     const video = videoRef.current;
@@ -203,10 +248,14 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
 
   return (
     <div className="space-y-4">
-      {/* Video Player */}
-      <div className="relative bg-black rounded-lg overflow-hidden">
+      {/* Video Player Container */}
+      <div 
+        ref={containerRef}
+        className={`relative bg-black rounded-lg overflow-hidden ${isFullscreen ? 'w-screen h-screen' : ''}`}
+        onClick={isFullscreen ? handleFullscreenTap : undefined}
+      >
         {/* Frame stepping indicator on mobile */}
-        {isSteppingFrames && (
+        {isSteppingFrames && !isFullscreen && (
           <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-3 py-1 rounded-full text-xs sm:hidden z-10">
             Frame-by-frame mode
           </div>
@@ -216,7 +265,8 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
         <div 
           style={{ 
             transform: isMirrored ? 'scaleX(-1)' : 'none',
-            width: '100%'
+            width: '100%',
+            height: isFullscreen ? '100%' : 'auto'
           }}
         >
           <video
@@ -224,11 +274,115 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             src={videoSrc}
             controls
             preload="metadata"
-            className={`w-full h-auto ${isSteppingFrames ? 'pointer-events-none' : ''}`}
-            style={{ maxHeight: 'min(600px, 70vh)' }}
+            className={`w-full ${isFullscreen ? 'h-full object-contain' : 'h-auto'} ${isSteppingFrames ? 'pointer-events-none' : ''}`}
+            style={{ maxHeight: isFullscreen ? '100%' : 'min(600px, 70vh)' }}
           />
         </div>
         <canvas ref={canvasRef} className="hidden" />
+        
+        {/* Fullscreen Controls Overlay */}
+        {isFullscreen && (
+          <div 
+            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 z-20 transition-opacity duration-300 ${
+              showFullscreenControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              {/* Frame Navigation */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => stepFrame('backward')}
+                disabled={!videoReady}
+                className="text-white hover:bg-white/20 min-h-[44px] min-w-[44px]"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => stepFrame('forward')}
+                disabled={!videoReady}
+                className="text-white hover:bg-white/20 min-h-[44px] min-w-[44px]"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+              
+              {/* Capture */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={captureKeyFrame}
+                disabled={!videoReady}
+                className="text-white hover:bg-white/20 min-h-[44px] min-w-[44px]"
+              >
+                <Camera className="h-5 w-5" />
+              </Button>
+              
+              {/* Loop Start */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLoopPoint('start')}
+                disabled={loopStart !== null && loopEnd !== null}
+                className="text-white hover:bg-white/20 min-h-[44px] px-2"
+              >
+                <span className="text-xs">Loop Start</span>
+              </Button>
+              
+              {/* Loop End */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setLoopPoint('end')}
+                disabled={loopStart === null || (loopStart !== null && loopEnd !== null)}
+                className="text-white hover:bg-white/20 min-h-[44px] px-2"
+              >
+                <span className="text-xs">Loop End</span>
+              </Button>
+              
+              {/* Clear Loop (if active) */}
+              {(loopStart !== null || loopEnd !== null) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearLoop}
+                  className="text-white hover:bg-white/20 min-h-[44px] min-w-[44px]"
+                >
+                  <RotateCcw className="h-5 w-5" />
+                </Button>
+              )}
+              
+              {/* Mirror Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMirrored(!isMirrored)}
+                className={`text-white hover:bg-white/20 min-h-[44px] min-w-[44px] ${isMirrored ? 'bg-white/30' : ''}`}
+              >
+                <FlipHorizontal className="h-5 w-5" />
+              </Button>
+              
+              {/* Exit Fullscreen */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleFullscreen}
+                className="text-white hover:bg-white/20 min-h-[44px] min-w-[44px]"
+              >
+                <Minimize2 className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            {/* Loop Status Indicator */}
+            {loopStart !== null && loopEnd !== null && (
+              <div className="text-center text-white/80 text-xs mt-2">
+                Looping: {loopStart.toFixed(2)}s → {loopEnd.toFixed(2)}s
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Frame Controls */}
@@ -276,6 +430,16 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
           >
             <FlipHorizontal className="h-4 w-4" />
             <span className="hidden md:inline ml-1">Mirror</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleFullscreen}
+            title="Fullscreen"
+            className="min-h-[44px] min-w-[44px]"
+          >
+            <Maximize2 className="h-4 w-4" />
+            <span className="hidden md:inline ml-1">Fullscreen</span>
           </Button>
         </div>
 
