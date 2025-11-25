@@ -26,6 +26,14 @@ interface DailyForecast {
   recommendationColor: 'green' | 'yellow' | 'red';
 }
 
+interface DrillRecommendation {
+  category: string;
+  drills: string[];
+  reason: string;
+  priority: 'high' | 'medium' | 'low';
+  icon: string;
+}
+
 function calculateSportConditions(weather: WeatherMetrics, sport: string) {
   const { temperature, humidity, windSpeed, windDirection, visibility, uvIndex } = weather;
   
@@ -145,6 +153,160 @@ function generateDailyRecommendation(
     recommendation: "✅ Excellent - Ideal for training",
     color: 'green'
   };
+}
+
+function generateDrillRecommendations(
+  weather: WeatherMetrics, 
+  sport: string
+): DrillRecommendation[] {
+  const { temperature, humidity, windSpeed, windDirection, visibility, uvIndex } = weather;
+  const recommendations: DrillRecommendation[] = [];
+  
+  // WIND-BASED DRILLS (High Priority)
+  if (windSpeed >= 15) {
+    recommendations.push({
+      category: "Wind Training",
+      drills: [
+        "Wind-adjusted batting practice (account for ball movement)",
+        "Outfield communication drills (calling fly balls in wind)",
+        "Throwing into the wind (arm strength development)",
+        "Wind-reading drills for fly balls"
+      ],
+      reason: `Strong ${windDirection} wind (${Math.round(windSpeed)} mph) - Perfect for wind adaptation training`,
+      priority: 'high',
+      icon: "💨"
+    });
+  } else if (windSpeed >= 10) {
+    recommendations.push({
+      category: "Moderate Wind Drills",
+      drills: [
+        "Outfield tracking with wind drift awareness",
+        "Pitcher grip adjustments for wind conditions",
+        "Infield pop-up communication in breeze"
+      ],
+      reason: `Moderate ${windDirection} wind (${Math.round(windSpeed)} mph) - Good for controlled wind practice`,
+      priority: 'medium',
+      icon: "🌬️"
+    });
+  }
+  
+  // HEAT-BASED DRILLS
+  if (temperature > 85) {
+    recommendations.push({
+      category: "Heat Management Training",
+      drills: [
+        "Shorter, high-intensity intervals (5-10 min segments)",
+        "Hydration protocol practice",
+        "Mental focus drills (heat affects concentration)",
+        "Base running technique (conserve energy in heat)"
+      ],
+      reason: `Hot conditions (${Math.round(temperature)}°F) - Focus on efficiency and hydration`,
+      priority: 'high',
+      icon: "🌡️"
+    });
+  }
+  
+  // COLD WEATHER DRILLS
+  if (temperature < 50 && temperature >= 40) {
+    recommendations.push({
+      category: "Cold Weather Adaptation",
+      drills: [
+        "Extended warm-up routines (15-20 min)",
+        "Short toss with focus on feel and grip",
+        "Batting tee work (controlled swings, feel the barrel)",
+        "Footwork and agility drills (keep blood flowing)"
+      ],
+      reason: `Cool conditions (${Math.round(temperature)}°F) - Prioritize warm-up and flexibility`,
+      priority: 'medium',
+      icon: "❄️"
+    });
+  } else if (temperature < 40) {
+    recommendations.push({
+      category: "Indoor/Light Training",
+      drills: [
+        "Film study and game review",
+        "Indoor soft toss or tee work",
+        "Mental preparation and visualization",
+        "Light stretching and mobility work"
+      ],
+      reason: `Very cold (${Math.round(temperature)}°F) - Consider indoor alternatives`,
+      priority: 'high',
+      icon: "🏠"
+    });
+  }
+  
+  // HIGH UV DRILLS (Sun Safety)
+  if (uvIndex >= 8) {
+    recommendations.push({
+      category: "Sun Safety Training",
+      drills: [
+        "Practice with hats and sunglasses (game simulation)",
+        "Fly ball tracking with sun glare management",
+        "Frequent water breaks every 15 minutes",
+        "Shade rotation for position players"
+      ],
+      reason: `High UV index (${uvIndex}) - Sun protection critical`,
+      priority: 'high',
+      icon: "☀️"
+    });
+  }
+  
+  // POOR VISIBILITY DRILLS
+  if (visibility < 5) {
+    recommendations.push({
+      category: "Limited Visibility Training",
+      drills: [
+        "Ground ball fundamentals (less reliance on tracking)",
+        "Batting cage work (controlled environment)",
+        "Baserunning and situational awareness",
+        "Pitching bullpen sessions (pitcher focus)"
+      ],
+      reason: `Poor visibility (${visibility} mi) - Focus on controlled drills`,
+      priority: 'medium',
+      icon: "🌫️"
+    });
+  }
+  
+  // IDEAL CONDITIONS - FULL PRACTICE DRILLS
+  if (
+    temperature >= 60 && temperature <= 85 &&
+    windSpeed < 15 &&
+    uvIndex < 8 &&
+    visibility >= 5
+  ) {
+    recommendations.push({
+      category: "Full Practice Schedule",
+      drills: [
+        sport === 'baseball' ? "Live batting practice" : "Live hitting rounds",
+        "Infield/outfield drills with game scenarios",
+        "Situational scrimmages (runners on base)",
+        "Baserunning and stealing practice",
+        "Full bullpen sessions for pitchers",
+        "Defensive positioning and cutoff drills"
+      ],
+      reason: `Ideal conditions (${Math.round(temperature)}°F, ${Math.round(windSpeed)} mph wind) - Perfect for comprehensive training`,
+      priority: 'high',
+      icon: "⭐"
+    });
+  }
+  
+  // HIGH HUMIDITY DRILLS
+  if (humidity > 70) {
+    recommendations.push({
+      category: "Heavy Air Adjustments",
+      drills: [
+        "Power hitting drills (ball won't carry as far)",
+        "Pitcher endurance work (heavy air = more effort)",
+        "Hydration and stamina management",
+        "Gap hitting instead of home run focus"
+      ],
+      reason: `High humidity (${humidity}%) - Heavy air affects ball flight`,
+      priority: 'low',
+      icon: "💧"
+    });
+  }
+  
+  return recommendations;
 }
 
 function degreesToCardinal(degrees: number): string {
@@ -339,6 +501,7 @@ serve(async (req) => {
       condition: mapWeatherCodeToDescription(current.weather_code),
       sportAnalysis: calculateSportConditions(weatherMetrics, sportType),
       dailyForecast: dailyForecasts,
+      drillRecommendations: generateDrillRecommendations(weatherMetrics, sportType)
     };
 
     return new Response(JSON.stringify(weatherData), {

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain } from "lucide-react";
+import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -30,6 +30,14 @@ interface DailyForecast {
   recommendationColor: 'green' | 'yellow' | 'red';
 }
 
+interface DrillRecommendation {
+  category: string;
+  drills: string[];
+  reason: string;
+  priority: 'high' | 'medium' | 'low';
+  icon: string;
+}
+
 interface WeatherData {
   location: string;
   temperature: number;
@@ -42,6 +50,7 @@ interface WeatherData {
   uvIndex: number;
   sportAnalysis?: SportAnalysis;
   dailyForecast?: DailyForecast[];
+  drillRecommendations?: DrillRecommendation[];
 }
 
 interface WeatherWidgetProps {
@@ -55,6 +64,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   const [location, setLocation] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showForecast, setShowForecast] = useState(false);
+  const [showDrills, setShowDrills] = useState(false);
   const { toast } = useToast();
 
   const fetchWeather = async (searchLocation?: string, sportParam?: 'baseball' | 'softball') => {
@@ -169,6 +179,15 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
       case 'yellow': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
       case 'red': return 'text-red-600 bg-red-50 border-red-200';
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getPriorityColorClass = (priority: 'high' | 'medium' | 'low') => {
+    switch (priority) {
+      case 'high': return 'bg-primary text-primary-foreground';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'low': return 'bg-gray-100 text-gray-700 border-gray-300';
+      default: return 'bg-gray-100 text-gray-700 border-gray-300';
     }
   };
 
@@ -315,14 +334,74 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               </div>
             )}
 
+            {weather?.drillRecommendations && weather.drillRecommendations.length > 0 && (
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowDrills(!showDrills)}
+              >
+                <Target className="h-4 w-4 mr-2" />
+                {showDrills ? 'Hide' : 'Show'} Drill Recommendations
+              </Button>
+            )}
+
+            {showDrills && weather?.drillRecommendations && weather.drillRecommendations.length > 0 && (
+              <div className="space-y-3 animate-in fade-in-50 duration-300">
+                <h4 className="font-semibold text-base flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Weather-Based Drill Recommendations
+                </h4>
+                
+                <div className="grid gap-3">
+                  {weather.drillRecommendations.map((rec, index) => (
+                    <div 
+                      key={index} 
+                      className="rounded-lg border border-border bg-card p-3 sm:p-4 hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{rec.icon}</span>
+                          <h5 className="font-semibold text-sm sm:text-base">{rec.category}</h5>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-md border ${getPriorityColorClass(rec.priority)}`}>
+                          {rec.priority.toUpperCase()}
+                        </span>
+                      </div>
+                      
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 italic">
+                        {rec.reason}
+                      </p>
+                      
+                      <div className="space-y-1.5">
+                        {rec.drills.map((drill, drillIndex) => (
+                          <div 
+                            key={drillIndex} 
+                            className="flex items-start gap-2 text-xs sm:text-sm"
+                          >
+                            <span className="text-primary mt-0.5">•</span>
+                            <span className="flex-1">{drill}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="rounded-md bg-muted/50 p-3 text-xs sm:text-sm text-muted-foreground">
+                  💡 <strong>Tip:</strong> Prioritize HIGH priority drills for maximum effectiveness in current conditions.
+                </div>
+              </div>
+            )}
+
             {weather?.dailyForecast && weather.dailyForecast.length > 0 && (
               <Button 
                 variant="outline" 
                 className="w-full"
                 onClick={() => setShowForecast(!showForecast)}
               >
-                <Calendar className="h-4 w-4 mr-2" />
-                {showForecast ? 'Hide' : 'Show'} 7-Day Forecast
+                <Calendar className="h-4 w-4" />
+                <span className="hidden sm:inline ml-2">{showForecast ? 'Hide' : 'Show'} 7-Day Forecast</span>
+                <span className="sm:hidden ml-2">7-Day Forecast</span>
               </Button>
             )}
 
