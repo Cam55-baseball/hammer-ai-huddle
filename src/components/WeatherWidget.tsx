@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target } from "lucide-react";
+import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -296,38 +296,45 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             {expanded && weather?.sportAnalysis && (
               <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4 space-y-2 sm:space-y-3 overflow-x-hidden max-w-full">
                 <h4 className="font-semibold flex items-center gap-2">
-                  <Icon 
-                    iconNode={baseball} 
-                    size={18}
-                    className="text-primary"
-                  />
+                  {weather.sportAnalysis.sport.toLowerCase().includes('softball') ? (
+                    <Circle 
+                      size={18}
+                      className="text-primary fill-primary/20"
+                    />
+                  ) : (
+                    <Icon 
+                      iconNode={baseball} 
+                      size={18}
+                      className="text-primary"
+                    />
+                  )}
                   {weather.sportAnalysis.sport} Conditions Analysis
                 </h4>
                 <div className="grid gap-2 text-sm">
                   <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base">Ball Flight:</span>
+                    <span className="font-medium text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">Ball Flight:</span>
                     <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.ballFlight}</span>
                   </div>
                   <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base">Wind Impact:</span>
+                    <span className="font-medium text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">Wind Impact:</span>
                     <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.windImpact}</span>
                   </div>
                   <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base">Field Conditions:</span>
+                    <span className="font-medium text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">Field Conditions:</span>
                     <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.fieldCondition}</span>
                   </div>
                   <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base">Tracking:</span>
+                    <span className="font-medium text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">Tracking:</span>
                     <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.trackingCondition}</span>
                   </div>
                   {weather.sportAnalysis.uvWarning && (
                     <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                      <span className="font-medium text-sm sm:text-base">UV Warning:</span>
+                      <span className="font-medium text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">UV Warning:</span>
                       <span className="text-amber-600 font-medium text-sm sm:text-base break-words">{weather.sportAnalysis.uvWarning}</span>
                     </div>
                   )}
                   <div className="pt-2 mt-2 border-t flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-semibold text-sm sm:text-base">Recommendation:</span>
+                    <span className="font-semibold text-sm sm:text-base min-w-[110px] sm:min-w-[130px]">Recommendation:</span>
                     <span className="font-semibold text-sm sm:text-base break-words">{weather.sportAnalysis.recommendation}</span>
                   </div>
                 </div>
