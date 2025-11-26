@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked } from 'lucide-react';
+import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, BookmarkCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -46,6 +46,7 @@ interface LibrarySession {
   session_date: string;
   shared_with_scouts: boolean;
   ai_analysis?: any;
+  annotation_count?: Array<{ count: number }>;
 }
 
 export default function PlayersClub() {
@@ -177,6 +178,11 @@ export default function PlayersClub() {
     
     return matchesSport && matchesModule && matchesSearch;
   });
+
+  const getAnnotationCount = (session: LibrarySession) => {
+    if (!session.annotation_count || !Array.isArray(session.annotation_count)) return 0;
+    return session.annotation_count[0]?.count || 0;
+  };
 
   const isOwnLibrary = !viewingPlayerId || viewingPlayerId === user?.id;
 
@@ -399,6 +405,13 @@ export default function PlayersClub() {
                         <div className="w-full h-full flex items-center justify-center">
                           <BookMarked className="h-16 w-16 text-muted-foreground" />
                         </div>
+                      )}
+                      {/* Annotation indicator */}
+                      {getAnnotationCount(session) > 0 && (
+                        <Badge className="absolute top-2 left-2 bg-green-500 hover:bg-green-600">
+                          <BookmarkCheck className="h-3 w-3 mr-1" />
+                          Annotated
+                        </Badge>
                       )}
                       {session.shared_with_scouts && (
                         <Badge className="absolute top-2 right-2" variant="secondary">

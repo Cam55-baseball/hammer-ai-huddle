@@ -1,18 +1,31 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2, ZoomIn, ZoomOut, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { FrameAnnotationDialog } from './FrameAnnotationDialog';
 
 interface EnhancedVideoPlayerProps {
   videoSrc: string;
   playbackRate?: number;
+  videoId?: string;
+  playerId?: string;
+  isScoutView?: boolean;
+  onSaveAnnotation?: (data: { annotationData: string; originalFrameData: string; notes?: string; frameTimestamp?: number }) => void;
 }
 
 interface KeyFrame {
   original: string;
+  annotated?: string;
 }
 
-export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVideoPlayerProps) => {
+export const EnhancedVideoPlayer = ({ 
+  videoSrc, 
+  playbackRate = 1,
+  videoId,
+  playerId,
+  isScoutView = false,
+  onSaveAnnotation
+}: EnhancedVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [loopStart, setLoopStart] = useState<number | null>(null);
   const [loopEnd, setLoopEnd] = useState<number | null>(null);
@@ -33,6 +46,10 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const pinchStartDistanceRef = useRef<number | null>(null);
   const pinchStartZoomRef = useRef<number>(1);
+  
+  // Annotation state
+  const [annotationDialogOpen, setAnnotationDialogOpen] = useState(false);
+  const [selectedFrameIndex, setSelectedFrameIndex] = useState<number | null>(null);
   
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 4;
@@ -272,6 +289,33 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
     } else if (index >= newFrames.length) {
       setFullscreenFrameIndex(newFrames.length - 1);
     }
+  };
+
+  const handleAnnotateFrame = (index: number) => {
+    setSelectedFrameIndex(index);
+    setAnnotationDialogOpen(true);
+  };
+
+  const handleSaveAnnotation = async (annotatedDataUrl: string) => {
+    if (selectedFrameIndex === null) return;
+    
+    setKeyFrames(prev => prev.map((frame, i) => 
+      i === selectedFrameIndex ? { ...frame, annotated: annotatedDataUrl } : frame
+    ));
+    
+    if (isScoutView && onSaveAnnotation && videoId && playerId) {
+      const video = videoRef.current;
+      const frameTimestamp = video?.currentTime;
+      
+      await onSaveAnnotation({
+        annotationData: annotatedDataUrl,
+        originalFrameData: keyFrames[selectedFrameIndex].original,
+        frameTimestamp
+      });
+    }
+    
+    setAnnotationDialogOpen(false);
+    setSelectedFrameIndex(null);
   };
 
   // Zoom control functions
@@ -699,6 +743,19 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
                   >
                     <Maximize2 className="h-4 w-4" />
                   </Button>
+                  {isScoutView && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAnnotateFrame(idx);
+                      }}
+                      title="Annotate frame"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -888,6 +945,16 @@ export const EnhancedVideoPlayer = ({ videoSrc, playbackRate = 1 }: EnhancedVide
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Annotation Dialog */}
+      {selectedFrameIndex !== null && (
+        <FrameAnnotationDialog
+          open={annotationDialogOpen}
+          onOpenChange={setAnnotationDialogOpen}
+          frameDataUrl={keyFrames[selectedFrameIndex].original}
+          onSave={handleSaveAnnotation}
+        />
       )}
     </div>
   );

@@ -509,6 +509,53 @@ export type Database = {
         }
         Relationships: []
       }
+      video_annotations: {
+        Row: {
+          annotation_data: string
+          created_at: string | null
+          frame_timestamp: number | null
+          id: string
+          notes: string | null
+          original_frame_data: string
+          player_id: string
+          scout_id: string
+          updated_at: string | null
+          video_id: string
+        }
+        Insert: {
+          annotation_data: string
+          created_at?: string | null
+          frame_timestamp?: number | null
+          id?: string
+          notes?: string | null
+          original_frame_data: string
+          player_id: string
+          scout_id: string
+          updated_at?: string | null
+          video_id: string
+        }
+        Update: {
+          annotation_data?: string
+          created_at?: string | null
+          frame_timestamp?: number | null
+          id?: string
+          notes?: string | null
+          original_frame_data?: string
+          player_id?: string
+          scout_id?: string
+          updated_at?: string | null
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_annotations_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       videos: {
         Row: {
           ai_analysis: Json | null

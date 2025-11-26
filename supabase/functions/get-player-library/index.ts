@@ -55,7 +55,10 @@ Deno.serve(async (req) => {
 
     let query = supabase
       .from('videos')
-      .select('*')
+      .select(`
+        *,
+        annotation_count:video_annotations(count)
+      `)
       .eq('saved_to_library', true)
       .order('session_date', { ascending: false });
 
