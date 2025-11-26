@@ -460,7 +460,12 @@ export function SessionDetailDialog({
           {/* Annotations Section (Players viewing their videos) */}
           {isOwner && annotations.length > 0 && (
             <div className="space-y-3">
-              <Label className="text-base">Coach Annotations</Label>
+              <div className="flex items-center gap-2">
+                <Label className="text-lg font-bold text-primary">Coach Annotations</Label>
+                <Badge variant="secondary" className="bg-primary/10 text-primary">
+                  {annotations.length} {annotations.length === 1 ? 'annotation' : 'annotations'}
+                </Badge>
+              </div>
               <div className="space-y-3">
                 {annotations.map((annotation: any) => (
                   <div key={annotation.id} className="border rounded-lg p-3 space-y-2">
