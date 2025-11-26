@@ -548,6 +548,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "video_annotations_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_annotations_scout_id_fkey"
+            columns: ["scout_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "video_annotations_video_id_fkey"
             columns: ["video_id"]
             isOneToOne: false
