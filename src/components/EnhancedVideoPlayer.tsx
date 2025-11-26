@@ -214,28 +214,44 @@ export const EnhancedVideoPlayer = ({
   };
 
   const captureKeyFrame = () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) {
-      toast.error("Video or canvas not ready");
-      return;
+    try {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      if (!video || !canvas) {
+        toast.error("Video or canvas not ready");
+        return;
+      }
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        toast.error("Could not get canvas context");
+        return;
+      }
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const frameUrl = canvas.toDataURL('image/png');
+      
+      // Validate the captured frame
+      if (!frameUrl || frameUrl === 'data:,' || frameUrl.length < 100) {
+        toast.error("Failed to capture frame. Try refreshing the page.");
+        return;
+      }
+      
+      setKeyFrames(prev => [...prev, { original: frameUrl }]);
+      
+      // Add haptic feedback on mobile
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+      
+      toast.success("Key frame captured!");
+    } catch (error) {
+      console.error('Frame capture error:', error);
+      toast.error("Failed to capture frame. The video may have CORS restrictions.");
     }
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      toast.error("Could not get canvas context");
-      return;
-    }
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const frameUrl = canvas.toDataURL('image/png');
-    console.log("Frame captured, data URL length:", frameUrl.length);
-    
-    setKeyFrames(prev => [...prev, { original: frameUrl }]);
-    toast.success("Key frame captured!");
   };
 
   const downloadFrame = (frame: KeyFrame, index: number) => {
@@ -498,6 +514,7 @@ export const EnhancedVideoPlayer = ({
             ref={videoRef}
             src={videoSrc}
             controls
+            crossOrigin="anonymous"
             preload="metadata"
             className={`w-full ${isFullscreen ? 'h-full object-contain' : 'h-auto'} ${isSteppingFrames ? 'pointer-events-none' : ''}`}
             style={{ maxHeight: isFullscreen ? '100%' : 'min(600px, 70vh)' }}
@@ -511,6 +528,13 @@ export const EnhancedVideoPlayer = ({
             className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 z-20"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Scout view indicator */}
+            {isScoutView && (
+              <div className="text-xs text-center text-white/80 mb-2 bg-primary/20 px-3 py-1 rounded-full inline-block mx-auto w-full">
+                Scout View - Capture frames to annotate
+              </div>
+            )}
+            
             <div className="flex items-center justify-center gap-2 flex-wrap">
               {/* Frame Navigation */}
               <Button
@@ -917,6 +941,21 @@ export const EnhancedVideoPlayer = ({
 
           {/* Action buttons */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {isScoutView && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-black/50 text-white border-white/20 hover:bg-white/20 min-h-[44px] min-w-[44px]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAnnotateFrame(fullscreenFrameIndex);
+                }}
+                title="Annotate frame"
+              >
+                <Pencil className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Annotate</span>
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
