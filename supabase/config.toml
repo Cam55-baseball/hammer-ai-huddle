@@ -65,3 +65,9 @@ verify_jwt = true
 
 [functions.resume-module-subscription]
 verify_jwt = true
+
+[functions.save-video-annotation]
+verify_jwt = true
+
+[functions.get-video-annotations]
+verify_jwt = true

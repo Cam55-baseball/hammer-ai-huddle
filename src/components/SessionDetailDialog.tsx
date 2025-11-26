@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadOptimizedThumbnail, uploadThumbnailSizes } from '@/lib/uploadHelpers';
 import { processVideoThumbnail } from '@/lib/thumbnailHelpers';
+import { useScoutAccess } from '@/hooks/useScoutAccess';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,7 @@ export function SessionDetailDialog({
   onUpdate,
   isOwner,
 }: SessionDetailDialogProps) {
+  const { isScout } = useScoutAccess();
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(session.library_title || '');
   const [notes, setNotes] = useState(session.library_notes || '');
@@ -44,6 +46,8 @@ export function SessionDetailDialog({
   const [customThumbnail, setCustomThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [annotations, setAnnotations] = useState<any[]>([]);
+  const [loadingAnnotations, setLoadingAnnotations] = useState(false);
 
   const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,11 +81,56 @@ export function SessionDetailDialog({
     }
   };
 
-  // Sync state when session changes
+  // Sync state when session changes and fetch annotations
   useEffect(() => {
     setSharedWithScouts(session.shared_with_scouts || false);
     setAnalysisPublic(session.analysis_public || false);
-  }, [session.shared_with_scouts, session.analysis_public]);
+    
+    if (open) {
+      fetchAnnotations();
+    }
+  }, [session.shared_with_scouts, session.analysis_public, open]);
+
+  const fetchAnnotations = async () => {
+    try {
+      setLoadingAnnotations(true);
+      const { data, error } = await supabase.functions.invoke('get-video-annotations', {
+        body: { videoId: session.id }
+      });
+
+      if (error) throw error;
+      setAnnotations(data || []);
+    } catch (error: any) {
+      console.error('Error fetching annotations:', error);
+    } finally {
+      setLoadingAnnotations(false);
+    }
+  };
+
+  const handleSaveAnnotation = async (annotationData: {
+    annotationData: string;
+    originalFrameData: string;
+    notes?: string;
+    frameTimestamp?: number;
+  }) => {
+    try {
+      const { error } = await supabase.functions.invoke('save-video-annotation', {
+        body: {
+          videoId: session.id,
+          playerId: session.user_id,
+          ...annotationData
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success('Annotation saved to player\'s library');
+      fetchAnnotations();
+    } catch (error: any) {
+      console.error('Error saving annotation:', error);
+      toast.error(error.message || 'Failed to save annotation');
+    }
+  };
 
   const handleToggleShare = async (checked: boolean) => {
     try {
@@ -408,6 +457,48 @@ export function SessionDetailDialog({
 
           <Separator />
 
+          {/* Annotations Section (Players viewing their videos) */}
+          {isOwner && annotations.length > 0 && (
+            <div className="space-y-3">
+              <Label className="text-base">Coach Annotations</Label>
+              <div className="space-y-3">
+                {annotations.map((annotation: any) => (
+                  <div key={annotation.id} className="border rounded-lg p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      {annotation.scout?.avatar_url && (
+                        <img 
+                          src={annotation.scout.avatar_url} 
+                          alt={annotation.scout.full_name}
+                          className="h-8 w-8 rounded-full"
+                        />
+                      )}
+                      <div>
+                        <p className="font-medium text-sm">{annotation.scout?.full_name || 'Coach'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(annotation.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <img 
+                      src={annotation.annotation_data} 
+                      alt="Annotated frame"
+                      className="w-full rounded-md"
+                    />
+                    {annotation.notes && (
+                      <p className="text-sm">{annotation.notes}</p>
+                    )}
+                    {annotation.frame_timestamp && (
+                      <p className="text-xs text-muted-foreground">
+                        At {annotation.frame_timestamp.toFixed(2)}s
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <Separator />
+            </div>
+          )}
+
           {/* Video Preview */}
           {session.video_url && (
             <div className="space-y-2">
@@ -415,6 +506,10 @@ export function SessionDetailDialog({
               <EnhancedVideoPlayer
                 videoSrc={session.video_url}
                 playbackRate={1}
+                videoId={session.id}
+                playerId={session.user_id}
+                isScoutView={isScout && !isOwner}
+                onSaveAnnotation={handleSaveAnnotation}
               />
             </div>
           )}
