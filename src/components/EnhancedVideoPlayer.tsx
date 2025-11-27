@@ -11,12 +11,15 @@ interface EnhancedVideoPlayerProps {
   videoId?: string;
   playerId?: string;
   isScoutView?: boolean;
+  isOwnerView?: boolean;
   onSaveAnnotation?: (data: { annotationData: string; originalFrameData: string; notes?: string; frameTimestamp?: number }) => void;
 }
 
 interface KeyFrame {
   original: string;
   annotated?: string;
+  dataUrl: string;
+  timestamp: number;
 }
 
 export const EnhancedVideoPlayer = ({ 
@@ -25,6 +28,7 @@ export const EnhancedVideoPlayer = ({
   videoId,
   playerId,
   isScoutView = false,
+  isOwnerView = false,
   onSaveAnnotation
 }: EnhancedVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -241,7 +245,11 @@ export const EnhancedVideoPlayer = ({
         return;
       }
       
-      setKeyFrames(prev => [...prev, { original: frameUrl }]);
+      setKeyFrames(prev => [...prev, { 
+        original: frameUrl,
+        dataUrl: frameUrl,
+        timestamp: video.currentTime
+      }]);
       
       // Add haptic feedback on mobile
       if ('vibrate' in navigator) {
@@ -330,7 +338,7 @@ export const EnhancedVideoPlayer = ({
       i === selectedFrameIndex ? { ...frame, annotated: annotatedDataUrl } : frame
     ));
     
-    if (isScoutView && onSaveAnnotation && videoId && playerId) {
+    if ((isScoutView || isOwnerView) && onSaveAnnotation && videoId && playerId) {
       const video = videoRef.current;
       const frameTimestamp = video?.currentTime;
       
@@ -343,6 +351,17 @@ export const EnhancedVideoPlayer = ({
     
     setAnnotationDialogOpen(false);
     setSelectedFrameIndex(null);
+  };
+
+  const downloadAnnotatedFrame = (frame: KeyFrame, index: number) => {
+    if (!frame.annotated) return;
+    const link = document.createElement('a');
+    link.href = frame.annotated;
+    link.download = `annotated-frame-${index + 1}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Annotated frame ${index + 1} downloaded!`);
   };
 
   // Zoom control functions
@@ -779,7 +798,7 @@ export const EnhancedVideoPlayer = ({
                   >
                     <Maximize2 className="h-4 w-4" />
                   </Button>
-                  {isScoutView && (
+                  {(isScoutView || isOwnerView) && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -790,6 +809,19 @@ export const EnhancedVideoPlayer = ({
                       title="Annotate frame"
                     >
                       <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {frame.annotated && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadAnnotatedFrame(frame, idx);
+                      }}
+                      title="Download annotated frame"
+                    >
+                      <Download className="h-4 w-4 text-green-500" />
                     </Button>
                   )}
                   <Button
