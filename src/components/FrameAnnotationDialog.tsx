@@ -13,7 +13,7 @@ interface FrameAnnotationDialogProps {
   onSave: (annotatedFrame: string) => void;
 }
 
-export type AnnotationTool = "select" | "draw" | "text" | "rectangle" | "circle" | "arrow";
+export type AnnotationTool = "select" | "draw" | "text" | "rectangle" | "circle" | "arrow" | "pan";
 
 export const FrameAnnotationDialog = ({
   open,
@@ -28,6 +28,8 @@ export const FrameAnnotationDialog = ({
   const [history, setHistory] = useState<string[]>([]);
   const [historyStep, setHistoryStep] = useState(-1);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastPanPosition, setLastPanPosition] = useState<{ x: number; y: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -147,6 +149,8 @@ export const FrameAnnotationDialog = ({
       setIsLoading(true);
       setLoadError(null);
       setZoomLevel(1);
+      setIsPanning(false);
+      setLastPanPosition(null);
     }
   }, [open]);
 
@@ -155,6 +159,20 @@ export const FrameAnnotationDialog = ({
     if (!fabricCanvas) return;
 
     fabricCanvas.isDrawingMode = activeTool === "draw";
+    
+    // Disable object selection in pan mode
+    if (activeTool === "pan") {
+      fabricCanvas.selection = false;
+      fabricCanvas.forEachObject((obj) => {
+        obj.selectable = false;
+      });
+    } else {
+      fabricCanvas.selection = true;
+      fabricCanvas.forEachObject((obj, index) => {
+        // Keep background image unselectable
+        obj.selectable = index > 0;
+      });
+    }
     
     if (activeTool === "draw" && fabricCanvas.freeDrawingBrush) {
       fabricCanvas.freeDrawingBrush.color = activeColor;
@@ -328,6 +346,60 @@ export const FrameAnnotationDialog = ({
     setZoomLevel(1);
   };
 
+  // Handle pan mode
+  useEffect(() => {
+    if (!fabricCanvas || activeTool !== "pan") return;
+
+    const handleMouseDown = (opt: fabric.TPointerEventInfo) => {
+      setIsPanning(true);
+      fabricCanvas.selection = false;
+      const evt = opt.e as MouseEvent | TouchEvent;
+      const point = 'touches' in evt ? evt.touches[0] : evt;
+      setLastPanPosition({ x: point.clientX, y: point.clientY });
+      fabricCanvas.setCursor('grabbing');
+    };
+
+    const handleMouseMove = (opt: fabric.TPointerEventInfo) => {
+      if (!isPanning || !lastPanPosition) return;
+      const evt = opt.e as MouseEvent | TouchEvent;
+      const point = 'touches' in evt ? evt.touches[0] : evt;
+      
+      const deltaX = point.clientX - lastPanPosition.x;
+      const deltaY = point.clientY - lastPanPosition.y;
+      
+      const vpt = fabricCanvas.viewportTransform;
+      if (vpt) {
+        vpt[4] += deltaX;
+        vpt[5] += deltaY;
+        fabricCanvas.setViewportTransform(vpt);
+      }
+      
+      setLastPanPosition({ x: point.clientX, y: point.clientY });
+    };
+
+    const handleMouseUp = () => {
+      setIsPanning(false);
+      setLastPanPosition(null);
+      fabricCanvas.selection = true;
+      fabricCanvas.setCursor('grab');
+    };
+
+    fabricCanvas.on('mouse:down', handleMouseDown);
+    fabricCanvas.on('mouse:move', handleMouseMove);
+    fabricCanvas.on('mouse:up', handleMouseUp);
+
+    // Set initial cursor for pan mode
+    fabricCanvas.setCursor('grab');
+    fabricCanvas.defaultCursor = 'grab';
+
+    return () => {
+      fabricCanvas.off('mouse:down', handleMouseDown);
+      fabricCanvas.off('mouse:move', handleMouseMove);
+      fabricCanvas.off('mouse:up', handleMouseUp);
+      fabricCanvas.defaultCursor = 'default';
+    };
+  }, [activeTool, fabricCanvas, isPanning, lastPanPosition]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-full sm:max-w-[900px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-3 sm:p-6">
@@ -353,7 +425,7 @@ export const FrameAnnotationDialog = ({
             onResetZoom={handleResetZoom}
           />
 
-          <div className="relative border rounded-lg overflow-auto bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
+          <div className={`relative border rounded-lg overflow-auto bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] ${activeTool === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''}`}>
             <canvas ref={canvasRef} />
             
             {isLoading && (
