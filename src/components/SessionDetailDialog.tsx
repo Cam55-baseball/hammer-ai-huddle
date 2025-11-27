@@ -18,7 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Download, Play } from 'lucide-react';
 import { EnhancedVideoPlayer } from '@/components/EnhancedVideoPlayer';
 
 interface SessionDetailDialogProps {
@@ -48,6 +48,7 @@ export function SessionDetailDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [loadingAnnotations, setLoadingAnnotations] = useState(false);
+  const mainVideoRef = useRef<HTMLVideoElement>(null);
 
   const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -118,6 +119,7 @@ export function SessionDetailDialog({
         body: {
           videoId: session.id,
           playerId: session.user_id,
+          isSelfAnnotation: false,
           ...annotationData
         }
       });
@@ -129,6 +131,52 @@ export function SessionDetailDialog({
     } catch (error: any) {
       console.error('Error saving annotation:', error);
       toast.error(error.message || 'Failed to save annotation');
+    }
+  };
+
+  const handleSaveSelfAnnotation = async (annotationData: {
+    annotationData: string;
+    originalFrameData: string;
+    notes?: string;
+    frameTimestamp?: number;
+  }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase.functions.invoke('save-video-annotation', {
+        body: {
+          videoId: session.id,
+          playerId: user?.id,
+          isSelfAnnotation: true,
+          ...annotationData
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success('Annotation saved!');
+      fetchAnnotations();
+    } catch (error: any) {
+      console.error('Error saving annotation:', error);
+      toast.error(error.message || 'Failed to save annotation');
+    }
+  };
+
+  const downloadAnnotation = (annotation: any) => {
+    const link = document.createElement('a');
+    link.href = annotation.annotation_data;
+    link.download = `annotation-${new Date(annotation.created_at).toISOString().split('T')[0]}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Annotation downloaded!');
+  };
+
+  const seekToTimestamp = (timestamp: number) => {
+    if (mainVideoRef.current) {
+      mainVideoRef.current.currentTime = timestamp;
+      mainVideoRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      mainVideoRef.current.play();
     }
   };
 
@@ -457,49 +505,126 @@ export function SessionDetailDialog({
 
           <Separator />
 
-          {/* Annotations Section (Players viewing their videos) */}
-          {isOwner && annotations.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Label className="text-lg font-bold text-primary">Coach Annotations</Label>
-                <Badge variant="secondary" className="bg-primary/10 text-primary">
-                  {annotations.length} {annotations.length === 1 ? 'annotation' : 'annotations'}
-                </Badge>
-              </div>
-              <div className="space-y-3">
-                {annotations.map((annotation: any) => (
-                  <div key={annotation.id} className="border rounded-lg p-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      {annotation.scout?.avatar_url && (
-                        <img 
-                          src={annotation.scout.avatar_url} 
-                          alt={annotation.scout.full_name}
-                          className="h-8 w-8 rounded-full"
-                        />
-                      )}
-                      <div>
-                        <p className="font-medium text-sm">{annotation.scout?.full_name || 'Coach'}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(annotation.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <img 
-                      src={annotation.annotation_data} 
-                      alt="Annotated frame"
-                      className="w-full rounded-md"
-                    />
-                    {annotation.notes && (
-                      <p className="text-sm">{annotation.notes}</p>
-                    )}
-                    {annotation.frame_timestamp && (
-                      <p className="text-xs text-muted-foreground">
-                        At {annotation.frame_timestamp.toFixed(2)}s
-                      </p>
-                    )}
+          {/* Annotations Section */}
+          {annotations.length > 0 && (
+            <div className="space-y-4">
+              {/* Coach Annotations */}
+              {annotations.filter(a => a.annotator_type === 'scout').length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-lg font-bold text-primary">Coach Annotations</Label>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary">
+                      {annotations.filter(a => a.annotator_type === 'scout').length}
+                    </Badge>
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-3">
+                    {annotations.filter(a => a.annotator_type === 'scout').map((annotation: any) => (
+                      <div key={annotation.id} className="border rounded-lg p-3 space-y-3">
+                        <div className="flex items-center gap-2">
+                          {annotation.scout?.avatar_url && (
+                            <img 
+                              src={annotation.scout.avatar_url} 
+                              alt={annotation.scout.full_name}
+                              className="h-8 w-8 rounded-full"
+                            />
+                          )}
+                          <div>
+                            <p className="font-medium text-sm">{annotation.scout?.full_name || 'Coach'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(annotation.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <img 
+                          src={annotation.annotation_data} 
+                          alt="Annotated frame"
+                          className="w-full rounded-md"
+                        />
+                        {annotation.notes && (
+                          <p className="text-sm">{annotation.notes}</p>
+                        )}
+                        
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => downloadAnnotation(annotation)}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Download
+                          </Button>
+                          
+                          {annotation.frame_timestamp !== null && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => seekToTimestamp(annotation.frame_timestamp)}
+                            >
+                              <Play className="h-4 w-4 mr-1" />
+                              View at {annotation.frame_timestamp.toFixed(1)}s
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Player Self-Annotations */}
+              {isOwner && annotations.filter(a => a.annotator_type === 'player').length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-lg font-bold">My Annotations</Label>
+                    <Badge variant="outline">
+                      {annotations.filter(a => a.annotator_type === 'player').length}
+                    </Badge>
+                  </div>
+                  <div className="space-y-3">
+                    {annotations.filter(a => a.annotator_type === 'player').map((annotation: any) => (
+                      <div key={annotation.id} className="border rounded-lg p-3 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(annotation.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <img 
+                          src={annotation.annotation_data} 
+                          alt="My annotated frame"
+                          className="w-full rounded-md"
+                        />
+                        {annotation.notes && (
+                          <p className="text-sm">{annotation.notes}</p>
+                        )}
+                        
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => downloadAnnotation(annotation)}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Download
+                          </Button>
+                          
+                          {annotation.frame_timestamp !== null && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => seekToTimestamp(annotation.frame_timestamp)}
+                            >
+                              <Play className="h-4 w-4 mr-1" />
+                              View at {annotation.frame_timestamp.toFixed(1)}s
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <Separator />
             </div>
           )}
@@ -508,14 +633,23 @@ export function SessionDetailDialog({
           {session.video_url && (
             <div className="space-y-2">
               <Label>Video</Label>
-              <EnhancedVideoPlayer
-                videoSrc={session.video_url}
-                playbackRate={1}
-                videoId={session.id}
-                playerId={session.user_id}
-                isScoutView={isScout && !isOwner}
-                onSaveAnnotation={handleSaveAnnotation}
-              />
+              <div className="relative">
+                <video
+                  ref={mainVideoRef}
+                  style={{ display: 'none' }}
+                  src={session.video_url}
+                  crossOrigin="anonymous"
+                />
+                <EnhancedVideoPlayer
+                  videoSrc={session.video_url}
+                  playbackRate={1}
+                  videoId={session.id}
+                  playerId={session.user_id}
+                  isScoutView={isScout && !isOwner}
+                  isOwnerView={isOwner}
+                  onSaveAnnotation={isOwner ? handleSaveSelfAnnotation : handleSaveAnnotation}
+                />
+              </div>
             </div>
           )}
 
