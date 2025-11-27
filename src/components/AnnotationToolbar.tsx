@@ -80,7 +80,7 @@ export const AnnotationToolbar = ({
   onResetZoom,
 }: AnnotationToolbarProps) => {
   return (
-    <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/30 rounded-lg border">
+    <div className="flex flex-wrap items-center gap-1 sm:gap-2 p-2 sm:p-3 bg-muted/30 rounded-lg border">
       {/* Drawing Tools */}
       <div className="flex gap-1">
         <Button

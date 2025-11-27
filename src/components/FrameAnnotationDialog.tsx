@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AnnotationToolbar } from "./AnnotationToolbar";
+import { ZoomIn } from "lucide-react";
 
 interface FrameAnnotationDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ export const FrameAnnotationDialog = ({
   onSave,
 }: FrameAnnotationDialogProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [activeTool, setActiveTool] = useState<AnnotationTool>("select");
   const [activeColor, setActiveColor] = useState("#FF0000");
@@ -32,6 +34,9 @@ export const FrameAnnotationDialog = ({
   const [lastPanPosition, setLastPanPosition] = useState<{ x: number; y: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
+  const [initialZoomOnPinch, setInitialZoomOnPinch] = useState<number>(1);
+  const [isPinching, setIsPinching] = useState(false);
 
   // Initialize canvas
   useEffect(() => {
@@ -151,6 +156,8 @@ export const FrameAnnotationDialog = ({
       setZoomLevel(1);
       setIsPanning(false);
       setLastPanPosition(null);
+      setInitialPinchDistance(null);
+      setIsPinching(false);
     }
   }, [open]);
 
@@ -346,6 +353,20 @@ export const FrameAnnotationDialog = ({
     setZoomLevel(1);
   };
 
+  // Helper functions for pinch-to-zoom
+  const getDistanceBetweenTouches = (touches: TouchList): number => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const getMidpointBetweenTouches = (touches: TouchList): { x: number; y: number } => {
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2,
+    };
+  };
+
   // Handle pan mode
   useEffect(() => {
     if (!fabricCanvas || activeTool !== "pan") return;
@@ -400,6 +421,74 @@ export const FrameAnnotationDialog = ({
     };
   }, [activeTool, fabricCanvas, isPanning, lastPanPosition]);
 
+  // Handle pinch-to-zoom gesture
+  useEffect(() => {
+    if (!fabricCanvas || !containerRef.current) return;
+
+    const container = containerRef.current;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        // Two-finger pinch detected
+        e.preventDefault();
+        const distance = getDistanceBetweenTouches(e.touches);
+        setInitialPinchDistance(distance);
+        setInitialZoomOnPinch(zoomLevel);
+        setIsPinching(true);
+        
+        // Haptic feedback on pinch start
+        if (navigator.vibrate) {
+          navigator.vibrate(10);
+        }
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && initialPinchDistance !== null) {
+        e.preventDefault();
+        
+        const currentDistance = getDistanceBetweenTouches(e.touches);
+        const scale = currentDistance / initialPinchDistance;
+        const newZoom = Math.max(0.5, Math.min(4, initialZoomOnPinch * scale));
+        
+        // Get the midpoint between fingers to zoom towards
+        const midpoint = getMidpointBetweenTouches(e.touches);
+        const containerRect = container.getBoundingClientRect();
+        const point = new fabric.Point(
+          midpoint.x - containerRect.left,
+          midpoint.y - containerRect.top
+        );
+        
+        // Apply zoom centered on pinch midpoint
+        fabricCanvas.zoomToPoint(point, newZoom);
+        fabricCanvas.renderAll();
+        setZoomLevel(newZoom);
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (isPinching) {
+        setInitialPinchDistance(null);
+        setIsPinching(false);
+        
+        // Haptic feedback on pinch end
+        if (navigator.vibrate) {
+          navigator.vibrate(10);
+        }
+      }
+    };
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [fabricCanvas, initialPinchDistance, initialZoomOnPinch, isPinching, zoomLevel]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-full sm:max-w-[900px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-3 sm:p-6">
@@ -425,8 +514,19 @@ export const FrameAnnotationDialog = ({
             onResetZoom={handleResetZoom}
           />
 
-          <div className={`relative border rounded-lg overflow-auto bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] ${activeTool === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''}`}>
+          <div 
+            ref={containerRef}
+            className={`relative border rounded-lg overflow-auto bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] touch-none ${activeTool === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
+          >
             <canvas ref={canvasRef} />
+            
+            {/* Pinch-to-zoom visual indicator */}
+            {isPinching && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-in fade-in zoom-in duration-200">
+                <ZoomIn className="h-4 w-4" />
+                <span className="text-sm font-semibold">{Math.round(zoomLevel * 100)}%</span>
+              </div>
+            )}
             
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
