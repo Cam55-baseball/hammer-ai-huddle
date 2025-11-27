@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -15,7 +13,6 @@ import {
   ChevronRight,
   Camera,
   Download,
-  Link2,
   Columns2,
   Rows2,
   Layers,
@@ -23,10 +20,8 @@ import {
   Edit,
   FlipHorizontal,
   ChevronDown,
-  Maximize2
 } from 'lucide-react';
 import { useVideoSync } from '@/hooks/useVideoSync';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { FrameAnnotationDialog } from './FrameAnnotationDialog';
 
@@ -56,7 +51,6 @@ interface VideoComparisonViewProps {
 }
 
 export function VideoComparisonView({ video1, video2, open, onClose }: VideoComparisonViewProps) {
-  const isMobile = useIsMobile();
   const video1Ref = useRef<HTMLVideoElement>(null);
   const video2Ref = useRef<HTMLVideoElement>(null);
   const canvas1Ref = useRef<HTMLCanvasElement>(null);
@@ -66,7 +60,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [timeOffset, setTimeOffset] = useState(0);
-  const [layout, setLayout] = useState<'horizontal' | 'vertical' | 'overlay'>(isMobile ? 'vertical' : 'horizontal');
+  const [layout, setLayout] = useState<'horizontal' | 'vertical' | 'overlay'>('horizontal');
   const [overlayOpacity, setOverlayOpacity] = useState(50);
   const [video1Mirrored, setVideo1Mirrored] = useState(false);
   const [video2Mirrored, setVideo2Mirrored] = useState(false);
@@ -77,28 +71,12 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
   const [annotationDialogOpen, setAnnotationDialogOpen] = useState(false);
   const [selectedFrame, setSelectedFrame] = useState<{ videoNumber: 1 | 2; index: number } | null>(null);
 
-  const [focusMode, setFocusMode] = useState(false);
   const [advancedControlsOpen, setAdvancedControlsOpen] = useState(false);
   const [keyFramesOpen, setKeyFramesOpen] = useState(false);
   const [video1CurrentTime, setVideo1CurrentTime] = useState(0);
   const [video2CurrentTime, setVideo2CurrentTime] = useState(0);
   const [video1Duration, setVideo1Duration] = useState(0);
   const [video2Duration, setVideo2Duration] = useState(0);
-
-  // Detect landscape orientation for mobile
-  const [isLandscape, setIsLandscape] = useState(
-    typeof window !== 'undefined' && window.matchMedia('(orientation: landscape)').matches
-  );
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const mediaQuery = window.matchMedia('(orientation: landscape)');
-    const handler = (e: MediaQueryListEvent) => setIsLandscape(e.matches);
-    
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
 
   // Track video time updates
   useEffect(() => {
@@ -284,409 +262,335 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-full w-full p-3 sm:p-6 max-h-[95vh] overflow-y-auto overflow-x-hidden">
-          <DialogHeader>
+        <DialogContent className="max-w-full w-full h-[95vh] p-2 sm:p-4 flex flex-col overflow-hidden">
+          <DialogHeader className="flex-shrink-0 pb-2">
             <DialogTitle className="flex items-center justify-between">
-              <span className={isMobile ? 'text-lg' : ''}>Video Comparison</span>
-              <Button variant="ghost" size="icon" onClick={onClose}>
+              <span className="text-base sm:text-lg">Video Comparison</span>
+              <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </DialogTitle>
           </DialogHeader>
 
-        {/* Layout Controls & Focus Mode */}
-        {!focusMode && (
-          <div className="flex gap-2 mb-4 flex-wrap justify-between">
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant={layout === 'horizontal' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setLayout('horizontal')}
-              >
-                <Columns2 className="h-4 w-4" />
-                {!isMobile && <span className="ml-2">Side by Side</span>}
-              </Button>
-              <Button
-                variant={layout === 'vertical' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setLayout('vertical')}
-              >
-                <Rows2 className="h-4 w-4" />
-                {!isMobile && <span className="ml-2">Stacked</span>}
-              </Button>
-              <Button
-                variant={layout === 'overlay' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setLayout('overlay')}
-              >
-                <Layers className="h-4 w-4" />
-                {!isMobile && <span className="ml-2">Overlay</span>}
-              </Button>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFocusMode(true)}
-            >
-              <Maximize2 className="h-4 w-4" />
-              {!isMobile && <span className="ml-2">Focus Mode</span>}
-            </Button>
-          </div>
-        )}
-
-          {/* Video Players */}
-          <div className={`relative ${
-            isMobile && !isLandscape ? 'flex flex-col gap-4' : (
-              layout === 'horizontal' ? 'grid grid-cols-2 gap-4' :
-              layout === 'vertical' ? 'grid grid-rows-2 gap-4' :
-              'relative'
-            )
-          }`}>
-            {/* Video 1 */}
-            <div className={layout === 'overlay' ? 'absolute inset-0 z-10' : ''}>
-              <div className="space-y-2">
-                {!focusMode && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge>{video1.sport}</Badge>
-                      <Badge variant="outline">{video1.module}</Badge>
-                      {video1.efficiency_score !== undefined && (
-                        <Badge variant="secondary">{video1.efficiency_score}%</Badge>
-                      )}
-                    </div>
+          {/* Video Container - Takes all available space */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <div className={`h-full ${
+              layout === 'horizontal' 
+                ? 'grid grid-cols-1 sm:grid-cols-2 gap-2' 
+                : layout === 'vertical'
+                ? 'grid grid-rows-2 gap-2'
+                : 'relative'
+            }`}>
+              {/* Video 1 */}
+              <div className={`h-full overflow-hidden flex flex-col ${layout === 'overlay' ? 'absolute inset-0 z-10' : ''}`}>
+                <div className="relative flex-1 min-h-0">
+                  <div style={{ transform: video1Mirrored ? 'scaleX(-1)' : 'none' }} className="h-full">
+                    <video
+                      ref={video1Ref}
+                      src={video1.video_url}
+                      className="w-full h-full rounded-lg bg-black object-contain"
+                      controls
+                      preload="metadata"
+                      style={
+                        layout === 'overlay' 
+                          ? { opacity: overlayOpacity / 100 } 
+                          : undefined
+                      }
+                    />
+                  </div>
+                  {/* Overlay Controls */}
+                  <div className="absolute bottom-2 right-2 flex gap-1 opacity-70 hover:opacity-100 transition-opacity">
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => captureKeyFrame(1)}
+                      className="h-8 w-8 p-0"
+                      title="Capture frame"
                     >
                       <Camera className="h-4 w-4" />
-                      {!isMobile && <span className="ml-2">Capture</span>}
                     </Button>
-                  </div>
-                )}
-                <div className="relative w-full max-w-full overflow-hidden">
-                  <video
-                    ref={video1Ref}
-                    src={video1.video_url}
-                    className={`w-full rounded-lg bg-black object-contain ${
-                      layout === 'horizontal' ? 'max-h-[50vh]' : 'max-h-[35vh]'
-                    }`}
-                    controls
-                    preload="metadata"
-                    style={
-                      layout === 'overlay' 
-                        ? { opacity: overlayOpacity / 100, transform: video1Mirrored ? 'scaleX(-1)' : 'none' } 
-                        : { transform: video1Mirrored ? 'scaleX(-1)' : 'none' }
-                    }
-                  />
-                </div>
-                
-                {!focusMode && (
-                  <>
-                    {/* Individual Frame Controls for Video 1 */}
-                    <div className={`flex justify-center gap-1 mt-2 ${isMobile ? 'flex-wrap' : 'gap-2'}`}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => stepFrameIndividual(1, 'backward')}
-                        className={isMobile ? 'h-8 w-8 p-0' : ''}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      {!isMobile && <span className="text-xs text-muted-foreground self-center">Frame Step</span>}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => stepFrameIndividual(1, 'forward')}
-                        className={isMobile ? 'h-8 w-8 p-0' : ''}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setVideo1Mirrored(!video1Mirrored)}
-                        title="Mirror video"
-                        className={`${video1Mirrored ? 'bg-primary/10' : ''} ${isMobile ? 'h-8 w-8 p-0' : ''}`}
-                      >
-                        <FlipHorizontal className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <canvas ref={canvas1Ref} className="hidden" />
-                    <p className="text-sm font-medium">{video1.library_title || `Video 1`}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(video1.session_date).toLocaleDateString()}
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Video 2 */}
-            <div className={layout === 'overlay' ? 'relative z-0' : ''}>
-              <div className="space-y-2">
-                {!focusMode && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge>{video2.sport}</Badge>
-                      <Badge variant="outline">{video2.module}</Badge>
-                      {video2.efficiency_score !== undefined && (
-                        <Badge variant="secondary">{video2.efficiency_score}%</Badge>
-                      )}
-                    </div>
                     <Button
                       size="sm"
-                      variant="outline"
-                      onClick={() => captureKeyFrame(2)}
+                      variant="secondary"
+                      onClick={() => setVideo1Mirrored(!video1Mirrored)}
+                      className={`h-8 w-8 p-0 ${video1Mirrored ? 'bg-primary/20' : ''}`}
+                      title="Mirror video"
                     >
-                      <Camera className="h-4 w-4" />
-                      {!isMobile && <span className="ml-2">Capture</span>}
+                      <FlipHorizontal className="h-4 w-4" />
                     </Button>
                   </div>
-                )}
-                <div className="relative w-full max-w-full overflow-hidden">
-                  <video
-                    ref={video2Ref}
-                    src={video2.video_url}
-                    className={`w-full rounded-lg bg-black object-contain ${
-                      layout === 'horizontal' ? 'max-h-[50vh]' : 'max-h-[35vh]'
-                    }`}
-                    controls
-                    preload="metadata"
-                    style={{ transform: video2Mirrored ? 'scaleX(-1)' : 'none' }}
-                  />
                 </div>
-                
-                {!focusMode && (
-                  <>
-                    {/* Individual Frame Controls for Video 2 */}
-                    <div className={`flex justify-center gap-1 mt-2 ${isMobile ? 'flex-wrap' : 'gap-2'}`}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => stepFrameIndividual(2, 'backward')}
-                        className={isMobile ? 'h-8 w-8 p-0' : ''}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      {!isMobile && <span className="text-xs text-muted-foreground self-center">Frame Step</span>}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => stepFrameIndividual(2, 'forward')}
-                        className={isMobile ? 'h-8 w-8 p-0' : ''}
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setVideo2Mirrored(!video2Mirrored)}
-                        title="Mirror video"
-                        className={`${video2Mirrored ? 'bg-primary/10' : ''} ${isMobile ? 'h-8 w-8 p-0' : ''}`}
-                      >
-                        <FlipHorizontal className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <canvas ref={canvas2Ref} className="hidden" />
-                    <p className="text-sm font-medium">{video2.library_title || `Video 2`}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(video2.session_date).toLocaleDateString()}
-                    </p>
-                  </>
-                )}
+                {/* Progress Bar */}
+                <div className="flex-shrink-0 pt-1 space-y-0.5">
+                  <div className="flex justify-between text-[10px] text-muted-foreground px-1">
+                    <span>V1</span>
+                    <span>{formatTime(video1CurrentTime)} / {formatTime(video1Duration)}</span>
+                  </div>
+                  <div 
+                    className="relative h-2 bg-secondary rounded-full cursor-pointer overflow-hidden"
+                    onClick={(e) => handleProgressClick(1, e)}
+                  >
+                    <div 
+                      className="absolute inset-y-0 left-0 bg-blue-500 rounded-full transition-all duration-100"
+                      style={{ width: `${video1Duration > 0 ? (video1CurrentTime / video1Duration) * 100 : 0}%` }}
+                    />
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-white border border-blue-500 rounded-full shadow"
+                      style={{ left: `calc(${video1Duration > 0 ? (video1CurrentTime / video1Duration) * 100 : 0}% - 4px)` }}
+                    />
+                  </div>
+                  {/* Individual Frame Controls */}
+                  <div className="flex justify-center gap-1 pt-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => stepFrameIndividual(1, 'backward')}
+                      className="h-7 w-7 p-0"
+                      title="Step backward"
+                    >
+                      <ChevronLeft className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => stepFrameIndividual(1, 'forward')}
+                      className="h-7 w-7 p-0"
+                      title="Step forward"
+                    >
+                      <ChevronRight className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                <canvas ref={canvas1Ref} className="hidden" />
+              </div>
+
+              {/* Video 2 */}
+              <div className={`h-full overflow-hidden flex flex-col ${layout === 'overlay' ? 'relative z-0' : ''}`}>
+                <div className="relative flex-1 min-h-0">
+                  <div style={{ transform: video2Mirrored ? 'scaleX(-1)' : 'none' }} className="h-full">
+                    <video
+                      ref={video2Ref}
+                      src={video2.video_url}
+                      className="w-full h-full rounded-lg bg-black object-contain"
+                      controls
+                      preload="metadata"
+                    />
+                  </div>
+                  {/* Overlay Controls */}
+                  <div className="absolute bottom-2 right-2 flex gap-1 opacity-70 hover:opacity-100 transition-opacity">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => captureKeyFrame(2)}
+                      className="h-8 w-8 p-0"
+                      title="Capture frame"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setVideo2Mirrored(!video2Mirrored)}
+                      className={`h-8 w-8 p-0 ${video2Mirrored ? 'bg-primary/20' : ''}`}
+                      title="Mirror video"
+                    >
+                      <FlipHorizontal className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                {/* Progress Bar */}
+                <div className="flex-shrink-0 pt-1 space-y-0.5">
+                  <div className="flex justify-between text-[10px] text-muted-foreground px-1">
+                    <span>V2</span>
+                    <span>{formatTime(video2CurrentTime)} / {formatTime(video2Duration)}</span>
+                  </div>
+                  <div 
+                    className="relative h-2 bg-secondary rounded-full cursor-pointer overflow-hidden"
+                    onClick={(e) => handleProgressClick(2, e)}
+                  >
+                    <div 
+                      className="absolute inset-y-0 left-0 bg-green-500 rounded-full transition-all duration-100"
+                      style={{ width: `${video2Duration > 0 ? (video2CurrentTime / video2Duration) * 100 : 0}%` }}
+                    />
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-white border border-green-500 rounded-full shadow"
+                      style={{ left: `calc(${video2Duration > 0 ? (video2CurrentTime / video2Duration) * 100 : 0}% - 4px)` }}
+                    />
+                  </div>
+                  {/* Individual Frame Controls */}
+                  <div className="flex justify-center gap-1 pt-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => stepFrameIndividual(2, 'backward')}
+                      className="h-7 w-7 p-0"
+                      title="Step backward"
+                    >
+                      <ChevronLeft className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => stepFrameIndividual(2, 'forward')}
+                      className="h-7 w-7 p-0"
+                      title="Step forward"
+                    >
+                      <ChevronRight className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                <canvas ref={canvas2Ref} className="hidden" />
               </div>
             </div>
           </div>
 
-          {/* Side-by-Side Progress Bars */}
-          {!focusMode && (
-            <div className={`${isMobile ? 'space-y-3' : 'grid grid-cols-2 gap-4'} py-3`}>
-              {/* Video 1 Progress */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span className="font-medium">Video 1</span>
-                  <span>{formatTime(video1CurrentTime)} / {formatTime(video1Duration)}</span>
-                </div>
-                <div 
-                  className="relative h-3 bg-secondary rounded-full cursor-pointer overflow-hidden"
-                  onClick={(e) => handleProgressClick(1, e)}
+          {/* Bottom Control Bar - Fixed Height */}
+          <div className="flex-shrink-0 pt-2 space-y-2 border-t">
+            {/* Main Controls */}
+            <div className="flex items-center justify-between gap-2">
+              {/* Left: Layout + Sync Toggle */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant={layout === 'horizontal' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setLayout('horizontal')}
+                  className="h-8 w-8 p-0"
+                  title="Side by side"
                 >
-                  <div 
-                    className="absolute inset-y-0 left-0 bg-blue-500 rounded-full transition-all duration-100"
-                    style={{ width: `${video1Duration > 0 ? (video1CurrentTime / video1Duration) * 100 : 0}%` }}
-                  />
-                  <div 
-                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full shadow"
-                    style={{ left: `calc(${video1Duration > 0 ? (video1CurrentTime / video1Duration) * 100 : 0}% - 6px)` }}
-                  />
-                </div>
-              </div>
-
-              {/* Video 2 Progress */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span className="font-medium">Video 2</span>
-                  <span>{formatTime(video2CurrentTime)} / {formatTime(video2Duration)}</span>
-                </div>
-                <div 
-                  className="relative h-3 bg-secondary rounded-full cursor-pointer overflow-hidden"
-                  onClick={(e) => handleProgressClick(2, e)}
+                  <Columns2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={layout === 'vertical' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setLayout('vertical')}
+                  className="h-8 w-8 p-0"
+                  title="Stacked"
                 >
-                  <div 
-                    className="absolute inset-y-0 left-0 bg-green-500 rounded-full transition-all duration-100"
-                    style={{ width: `${video2Duration > 0 ? (video2CurrentTime / video2Duration) * 100 : 0}%` }}
-                  />
-                  <div 
-                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-green-500 rounded-full shadow"
-                    style={{ left: `calc(${video2Duration > 0 ? (video2CurrentTime / video2Duration) * 100 : 0}% - 6px)` }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!focusMode && (
-            <>
-              <Separator />
-
-              {/* Essential Synchronized Controls */}
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-2">
+                  <Rows2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={layout === 'overlay' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setLayout('overlay')}
+                  className="h-8 w-8 p-0"
+                  title="Overlay"
+                >
+                  <Layers className="h-4 w-4" />
+                </Button>
+                <div className="h-4 w-px bg-border mx-1" />
+                <div className="flex items-center gap-1.5">
                   <Switch
                     checked={syncPlayback}
                     onCheckedChange={setSyncPlayback}
-                    id="sync-playback"
+                    id="sync"
+                    className="scale-75"
                   />
-                  <Label htmlFor="sync-playback" className="flex items-center gap-2">
-                    <Link2 className="h-4 w-4" />
-                    {!isMobile && 'Synchronized Playback'}
+                  <Label htmlFor="sync" className="text-xs cursor-pointer hidden sm:inline">
+                    Sync
                   </Label>
                 </div>
-
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => stepFrame('backward')}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={togglePlayPause}>
-                    {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => stepFrame('forward')}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
               </div>
 
-              {/* Advanced Controls - Collapsible */}
-              <Collapsible open={advancedControlsOpen} onOpenChange={setAdvancedControlsOpen}>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-full justify-between">
-                    <span>Advanced Controls</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${advancedControlsOpen ? 'rotate-180' : ''}`} />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 pt-4">
-                  {/* Playback Speed */}
-                  <div className="space-y-2">
-                    <Label>Playback Speed: {playbackSpeed}x</Label>
-                    <Slider
-                      value={[playbackSpeed]}
-                      onValueChange={([value]) => setPlaybackSpeed(value)}
-                      min={0.25}
-                      max={2}
-                      step={0.25}
-                    />
-                  </div>
-
-                  {/* Time Offset */}
-                  {syncPlayback && (
-                    <div className="space-y-2">
-                      <Label>Time Offset: {timeOffset > 0 ? '+' : ''}{timeOffset.toFixed(2)}s</Label>
-                      <Slider
-                        value={[timeOffset]}
-                        onValueChange={([value]) => setTimeOffset(value)}
-                        min={-5}
-                        max={5}
-                        step={0.1}
-                      />
-                    </div>
-                  )}
-
-                  {/* Overlay Opacity Control */}
-                  {layout === 'overlay' && (
-                    <div className="space-y-2">
-                      <Label>Overlay Opacity: {overlayOpacity}%</Label>
-                      <Slider
-                        value={[overlayOpacity]}
-                        onValueChange={([value]) => setOverlayOpacity(value)}
-                        min={0}
-                        max={100}
-                        step={5}
-                      />
-                    </div>
-                  )}
-                </CollapsibleContent>
-              </Collapsible>
-
-              <Separator />
-            </>
-          )}
-
-          {/* Focus Mode - Minimal Controls */}
-          {focusMode && (
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={togglePlayPause}>
+              {/* Center: Playback Controls */}
+              <div className="flex gap-1">
+                <Button variant="ghost" size="sm" onClick={() => stepFrame('backward')} className="h-8 w-8 p-0">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="default" size="sm" onClick={togglePlayPause} className="h-8 px-3">
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </Button>
+                <Button variant="ghost" size="sm" onClick={() => stepFrame('forward')} className="h-8 w-8 p-0">
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setFocusMode(false)}>
-                Exit Focus Mode
-              </Button>
-            </div>
-          )}
 
-          {/* Key Frames Grid - Collapsible */}
-          {!focusMode && (
-            <Collapsible open={keyFramesOpen} onOpenChange={setKeyFramesOpen}>
-              <div className="flex items-center justify-between">
+              {/* Right: More Options */}
+              <Collapsible open={advancedControlsOpen} onOpenChange={setAdvancedControlsOpen}>
                 <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex-1 justify-between">
-                    <span className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>
-                      Captured Key Frames ({video1KeyFrames.length + video2KeyFrames.length})
-                    </span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${keyFramesOpen ? 'rotate-180' : ''}`} />
+                  <Button variant="ghost" size="sm" className="h-8 px-2">
+                    <span className="text-xs">More</span>
+                    <ChevronDown className={`h-3 w-3 ml-1 transition-transform ${advancedControlsOpen ? 'rotate-180' : ''}`} />
                   </Button>
                 </CollapsibleTrigger>
-                {(video1KeyFrames.length > 0 || video2KeyFrames.length > 0) && (
-                  <Button variant="outline" size="sm" onClick={downloadAllFrames} className="ml-2">
-                    <Download className="h-4 w-4 mr-2" />
-                    {!isMobile && 'Download All'}
-                  </Button>
-                )}
-              </div>
+              </Collapsible>
+            </div>
 
-              <CollapsibleContent className="pt-4">
-                <ScrollArea className="h-64">
-                  <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
-                    {/* Video 1 Frames */}
-                    <div className="space-y-2">
-                      <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Video 1 Frames</p>
-                      {video1KeyFrames.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">No frames captured</p>
-                      ) : (
-                        <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
+            {/* Advanced Controls Content */}
+            <Collapsible open={advancedControlsOpen} onOpenChange={setAdvancedControlsOpen}>
+              <CollapsibleContent className="space-y-3 pt-2 border-t">
+                {/* Playback Speed */}
+                <div className="space-y-1">
+                  <Label className="text-xs">Speed: {playbackSpeed}x</Label>
+                  <Slider
+                    value={[playbackSpeed]}
+                    onValueChange={([value]) => setPlaybackSpeed(value)}
+                    min={0.25}
+                    max={2}
+                    step={0.25}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Time Offset */}
+                {syncPlayback && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Offset: {timeOffset > 0 ? '+' : ''}{timeOffset.toFixed(2)}s</Label>
+                    <Slider
+                      value={[timeOffset]}
+                      onValueChange={([value]) => setTimeOffset(value)}
+                      min={-5}
+                      max={5}
+                      step={0.1}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+
+                {/* Overlay Opacity */}
+                {layout === 'overlay' && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">Opacity: {overlayOpacity}%</Label>
+                    <Slider
+                      value={[overlayOpacity]}
+                      onValueChange={([value]) => setOverlayOpacity(value)}
+                      min={0}
+                      max={100}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+
+                {/* Key Frames */}
+                {(video1KeyFrames.length > 0 || video2KeyFrames.length > 0) && (
+                  <Collapsible open={keyFramesOpen} onOpenChange={setKeyFramesOpen}>
+                    <div className="flex items-center justify-between border-t pt-2">
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="flex-1 justify-between h-7">
+                          <span className="text-xs">
+                            Key Frames ({video1KeyFrames.length + video2KeyFrames.length})
+                          </span>
+                          <ChevronDown className={`h-3 w-3 transition-transform ${keyFramesOpen ? 'rotate-180' : ''}`} />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <Button variant="ghost" size="sm" onClick={downloadAllFrames} className="h-7 px-2">
+                        <Download className="h-3 w-3" />
+                      </Button>
+                    </div>
+
+                    <CollapsibleContent className="pt-2">
+                      <ScrollArea className="h-48">
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* Video 1 Frames */}
                           {video1KeyFrames.map((frame, idx) => (
-                            <div key={idx} className="relative group">
+                            <div key={`v1-${idx}`} className="relative group">
                               <img
                                 src={frame.annotated || frame.original}
-                                alt={`Video 1 Frame ${idx + 1}`}
+                                alt={`V1 Frame ${idx + 1}`}
                                 className="w-full rounded border cursor-pointer hover:border-primary"
                                 onClick={() => jumpToFrame(1, frame.timestamp)}
                               />
-                              <div className={`absolute inset-0 bg-black/50 transition-opacity flex items-center justify-center gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                                 <Button
                                   size="sm"
                                   variant="secondary"
@@ -694,6 +598,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                                     e.stopPropagation();
                                     handleAnnotateFrame(1, idx);
                                   }}
+                                  className="h-6 w-6 p-0"
                                 >
                                   <Edit className="h-3 w-3" />
                                 </Button>
@@ -704,33 +609,25 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                                     e.stopPropagation();
                                     downloadFrame(1, idx);
                                   }}
+                                  className="h-6 w-6 p-0"
                                 >
                                   <Download className="h-3 w-3" />
                                 </Button>
                               </div>
-                              <p className="text-xs text-center mt-1">{frame.timestamp.toFixed(2)}s</p>
+                              <p className="text-[10px] text-center mt-0.5">V1 {frame.timestamp.toFixed(2)}s</p>
                             </div>
                           ))}
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Video 2 Frames */}
-                    <div className="space-y-2">
-                      <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Video 2 Frames</p>
-                      {video2KeyFrames.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">No frames captured</p>
-                      ) : (
-                        <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
+                          {/* Video 2 Frames */}
                           {video2KeyFrames.map((frame, idx) => (
-                            <div key={idx} className="relative group">
+                            <div key={`v2-${idx}`} className="relative group">
                               <img
                                 src={frame.annotated || frame.original}
-                                alt={`Video 2 Frame ${idx + 1}`}
+                                alt={`V2 Frame ${idx + 1}`}
                                 className="w-full rounded border cursor-pointer hover:border-primary"
                                 onClick={() => jumpToFrame(2, frame.timestamp)}
                               />
-                              <div className={`absolute inset-0 bg-black/50 transition-opacity flex items-center justify-center gap-1 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
                                 <Button
                                   size="sm"
                                   variant="secondary"
@@ -738,6 +635,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                                     e.stopPropagation();
                                     handleAnnotateFrame(2, idx);
                                   }}
+                                  className="h-6 w-6 p-0"
                                 >
                                   <Edit className="h-3 w-3" />
                                 </Button>
@@ -748,21 +646,22 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                                     e.stopPropagation();
                                     downloadFrame(2, idx);
                                   }}
+                                  className="h-6 w-6 p-0"
                                 >
                                   <Download className="h-3 w-3" />
                                 </Button>
                               </div>
-                              <p className="text-xs text-center mt-1">{frame.timestamp.toFixed(2)}s</p>
+                              <p className="text-[10px] text-center mt-0.5">V2 {frame.timestamp.toFixed(2)}s</p>
                             </div>
                           ))}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </ScrollArea>
+                      </ScrollArea>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
               </CollapsibleContent>
             </Collapsible>
-          )}
+          </div>
         </DialogContent>
       </Dialog>
 
