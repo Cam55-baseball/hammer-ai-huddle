@@ -814,20 +814,13 @@ export const EnhancedVideoPlayer = ({
       {fullscreenFrameIndex !== null && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
           {/* Background overlay - ONLY this closes */}
-          <div 
-            className="absolute inset-0 bg-black/95"
-            onClick={() => setFullscreenFrameIndex(null)}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              setFullscreenFrameIndex(null);
-            }}
-          />
+          <div className="absolute inset-0 bg-black/95 pointer-events-none" />
 
           {/* Close button */}
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 text-white hover:bg-white/20 z-10 min-h-[44px] min-w-[44px]"
+            className="absolute top-4 right-4 text-white hover:bg-white/20 z-10 min-h-[44px] min-w-[44px] pointer-events-auto"
             onClick={(e) => {
               e.stopPropagation();
               setFullscreenFrameIndex(null);
@@ -847,7 +840,7 @@ export const EnhancedVideoPlayer = ({
           </div>
 
           {/* Zoom controls */}
-          <div className="absolute top-16 right-4 flex flex-col gap-2 z-10">
+          <div className="absolute top-16 right-4 flex flex-col gap-2 z-10 pointer-events-auto">
             <Button
               variant="ghost"
               size="icon"
@@ -916,7 +909,7 @@ export const EnhancedVideoPlayer = ({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12 z-10"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12 z-10 pointer-events-auto"
               onClick={(e) => {
                 e.stopPropagation();
                 navigateToPreviousFrame();
@@ -936,7 +929,7 @@ export const EnhancedVideoPlayer = ({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12 z-10"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12 z-10 pointer-events-auto"
               onClick={(e) => {
                 e.stopPropagation();
                 navigateToNextFrame();
@@ -954,7 +947,7 @@ export const EnhancedVideoPlayer = ({
           {/* Frame image with zoom and pan */}
           <div 
             ref={imageContainerRef}
-            className="relative flex items-center justify-center w-full h-full max-w-full max-h-[calc(100vh-100px)] sm:max-h-[80vh] overflow-hidden"
+            className="relative flex items-center justify-center w-full h-full max-w-full max-h-[calc(100vh-100px)] sm:max-h-[80vh] overflow-hidden pointer-events-auto"
             onClick={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
           >
@@ -982,7 +975,7 @@ export const EnhancedVideoPlayer = ({
           </div>
 
           {/* Action buttons */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10 pointer-events-auto">
             {isScoutView && (
               <Button
                 variant="outline"
