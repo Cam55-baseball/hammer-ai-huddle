@@ -708,26 +708,27 @@ export const EnhancedVideoPlayer = ({
             size="sm"
             onClick={() => setLoopPoint('start')}
             disabled={loopStart !== null && loopEnd !== null}
-            className="text-xs sm:text-sm"
+            className="text-xs sm:text-sm flex-1 sm:flex-initial"
           >
             <span className="hidden sm:inline">Mark Loop Start</span>
-            <span className="sm:hidden">Loop Start</span>
+            <span className="sm:hidden">Start</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setLoopPoint('end')}
             disabled={loopStart === null || (loopStart !== null && loopEnd !== null)}
-            className="text-xs sm:text-sm"
+            className="text-xs sm:text-sm flex-1 sm:flex-initial"
           >
             <span className="hidden sm:inline">Mark Loop End</span>
-            <span className="sm:hidden">Loop End</span>
+            <span className="sm:hidden">End</span>
           </Button>
           {(loopStart !== null || loopEnd !== null) && (
             <Button
               variant="outline"
               size="sm"
               onClick={clearLoop}
+              className="flex-1 sm:flex-initial"
             >
               <RotateCcw className="h-4 w-4" />
               <span className="hidden sm:inline ml-1">Clear</span>
