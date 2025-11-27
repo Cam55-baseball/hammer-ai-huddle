@@ -70,6 +70,10 @@ export const EnhancedVideoPlayer = ({
     type: string;
     severity: 'critical' | 'major' | 'minor';
   }>>([]);
+  
+  // Video playback state for reactive timeline
+  const [currentVideoTime, setCurrentVideoTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
 
   const handleViolationDetected = (violation: { timestamp: number; type: string; severity: 'critical' | 'major' | 'minor' }) => {
     setViolations(prev => {
@@ -104,6 +108,7 @@ export const EnhancedVideoPlayer = ({
 
     const handleLoadedMetadata = () => {
       setVideoReady(true);
+      setVideoDuration(video.duration);
     };
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -111,9 +116,23 @@ export const EnhancedVideoPlayer = ({
     // Check if already loaded
     if (video.readyState >= 1) {
       setVideoReady(true);
+      if (video.duration) setVideoDuration(video.duration);
     }
 
     return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+  }, [videoSrc]);
+
+  // Sync current time for reactive timeline
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    const handleTimeUpdate = () => {
+      setCurrentVideoTime(video.currentTime);
+    };
+    
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    return () => video.removeEventListener('timeupdate', handleTimeUpdate);
   }, [videoSrc]);
 
   useEffect(() => {
@@ -897,11 +916,11 @@ export const EnhancedVideoPlayer = ({
       )}
 
       {/* Violation Timeline */}
-      {skeletonTrackingEnabled && violations.length > 0 && videoRef.current && (
+      {skeletonTrackingEnabled && videoRef.current && (
         <ViolationTimeline
           violations={violations}
-          videoDuration={videoRef.current.duration || 0}
-          currentTime={videoRef.current.currentTime || 0}
+          videoDuration={videoDuration}
+          currentTime={currentVideoTime}
           onSeek={handleSeekToViolation}
         />
       )}
