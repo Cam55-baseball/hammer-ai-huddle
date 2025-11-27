@@ -4,12 +4,17 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2, ZoomIn, ZoomOut, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { FrameAnnotationDialog } from './FrameAnnotationDialog';
+import { PoseOverlay } from './PoseOverlay';
+import { ViolationTimeline } from './ViolationTimeline';
 
 interface EnhancedVideoPlayerProps {
   videoSrc: string;
   playbackRate?: number;
   videoId?: string;
   playerId?: string;
+  sport?: 'baseball' | 'softball';
+  module?: 'hitting' | 'pitching' | 'throwing';
+  skeletonTrackingEnabled?: boolean;
   isScoutView?: boolean;
   isOwnerView?: boolean;
   onSaveAnnotation?: (data: { annotationData: string; originalFrameData: string; notes?: string; frameTimestamp?: number }) => void;
@@ -27,6 +32,9 @@ export const EnhancedVideoPlayer = ({
   playbackRate = 1,
   videoId,
   playerId,
+  sport = 'baseball',
+  module = 'hitting',
+  skeletonTrackingEnabled = false,
   isScoutView = false,
   isOwnerView = false,
   onSaveAnnotation
@@ -55,6 +63,30 @@ export const EnhancedVideoPlayer = ({
   // Annotation state
   const [annotationDialogOpen, setAnnotationDialogOpen] = useState(false);
   const [selectedFrameIndex, setSelectedFrameIndex] = useState<number | null>(null);
+  
+  // Skeleton tracking state
+  const [violations, setViolations] = useState<Array<{
+    timestamp: number;
+    type: string;
+    severity: 'critical' | 'major' | 'minor';
+  }>>([]);
+
+  const handleViolationDetected = (violation: { timestamp: number; type: string; severity: 'critical' | 'major' | 'minor' }) => {
+    setViolations(prev => {
+      // Prevent duplicate violations within 0.5s
+      const isDuplicate = prev.some(v => 
+        v.type === violation.type && Math.abs(v.timestamp - violation.timestamp) < 0.5
+      );
+      if (isDuplicate) return prev;
+      return [...prev, violation];
+    });
+  };
+
+  const handleSeekToViolation = (timestamp: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = timestamp;
+    }
+  };
   
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 4;
@@ -552,6 +584,17 @@ export const EnhancedVideoPlayer = ({
         </div>
         <canvas ref={canvasRef} className="hidden" />
         
+        {/* Pose Overlay */}
+        {skeletonTrackingEnabled && (
+          <PoseOverlay
+            videoRef={videoRef}
+            enabled={skeletonTrackingEnabled}
+            sport={sport}
+            module={module}
+            onViolationDetected={handleViolationDetected}
+          />
+        )}
+        
         {/* Fullscreen Controls Overlay */}
         {isFullscreen && (
           <div 
@@ -851,6 +894,16 @@ export const EnhancedVideoPlayer = ({
             ))}
           </div>
         </div>
+      )}
+
+      {/* Violation Timeline */}
+      {skeletonTrackingEnabled && violations.length > 0 && videoRef.current && (
+        <ViolationTimeline
+          violations={violations}
+          videoDuration={videoRef.current.duration || 0}
+          currentTime={videoRef.current.currentTime || 0}
+          onSeek={handleSeekToViolation}
+        />
       )}
 
       {/* Fullscreen Frame Viewer */}
