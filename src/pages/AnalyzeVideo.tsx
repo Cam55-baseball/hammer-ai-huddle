@@ -55,7 +55,6 @@ export default function AnalyzeVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [analysisEnabled, setAnalysisEnabled] = useState(true);
-  const [skeletonTrackingEnabled, setSkeletonTrackingEnabled] = useState(false);
 
   // Force fresh subscription check on page load
   useEffect(() => {
@@ -446,22 +445,6 @@ export default function AnalyzeVideo() {
                   />
                 </div>
 
-                {/* Skeleton Tracking Toggle */}
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="skeleton-tracking" className="text-sm font-medium">
-                      Enable Skeleton Tracking
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Real-time pose detection to visualize biomechanical violations
-                    </p>
-                  </div>
-                  <Switch
-                    id="skeleton-tracking"
-                    checked={skeletonTrackingEnabled}
-                    onCheckedChange={setSkeletonTrackingEnabled}
-                  />
-                </div>
 
                 <EnhancedVideoPlayer
                   videoSrc={videoPreview}
@@ -469,7 +452,6 @@ export default function AnalyzeVideo() {
                   videoId={currentVideoId || undefined}
                   sport={sport as 'baseball' | 'softball'}
                   module={module as 'hitting' | 'pitching' | 'throwing'}
-                  skeletonTrackingEnabled={skeletonTrackingEnabled}
                 />
               </div>
             </Card>
