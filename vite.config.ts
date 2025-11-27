@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  optimizeDeps: {
+    exclude: ['@mediapipe/pose', '@mediapipe/drawing_utils']
+  },
   plugins: [
     react(), 
     mode === "development" && componentTagger(),
