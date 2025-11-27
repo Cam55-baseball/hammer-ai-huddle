@@ -80,6 +80,10 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
   const [focusMode, setFocusMode] = useState(false);
   const [advancedControlsOpen, setAdvancedControlsOpen] = useState(false);
   const [keyFramesOpen, setKeyFramesOpen] = useState(false);
+  const [video1CurrentTime, setVideo1CurrentTime] = useState(0);
+  const [video2CurrentTime, setVideo2CurrentTime] = useState(0);
+  const [video1Duration, setVideo1Duration] = useState(0);
+  const [video2Duration, setVideo2Duration] = useState(0);
 
   // Detect landscape orientation for mobile
   const [isLandscape, setIsLandscape] = useState(
@@ -94,6 +98,29 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
     
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  // Track video time updates
+  useEffect(() => {
+    const v1 = video1Ref.current;
+    const v2 = video2Ref.current;
+
+    const handleTimeUpdate1 = () => setVideo1CurrentTime(v1?.currentTime || 0);
+    const handleTimeUpdate2 = () => setVideo2CurrentTime(v2?.currentTime || 0);
+    const handleLoadedMetadata1 = () => setVideo1Duration(v1?.duration || 0);
+    const handleLoadedMetadata2 = () => setVideo2Duration(v2?.duration || 0);
+
+    v1?.addEventListener('timeupdate', handleTimeUpdate1);
+    v1?.addEventListener('loadedmetadata', handleLoadedMetadata1);
+    v2?.addEventListener('timeupdate', handleTimeUpdate2);
+    v2?.addEventListener('loadedmetadata', handleLoadedMetadata2);
+
+    return () => {
+      v1?.removeEventListener('timeupdate', handleTimeUpdate1);
+      v1?.removeEventListener('loadedmetadata', handleLoadedMetadata1);
+      v2?.removeEventListener('timeupdate', handleTimeUpdate2);
+      v2?.removeEventListener('loadedmetadata', handleLoadedMetadata2);
+    };
   }, []);
 
   useVideoSync({
@@ -140,6 +167,24 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
 
     const step = direction === 'forward' ? 1/30 : -1/30;
     video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + step));
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds % 1) * 100);
+    return `${mins}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+  };
+
+  const handleProgressClick = (videoNumber: 1 | 2, e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickPosition = (e.clientX - rect.left) / rect.width;
+    const videoRef = videoNumber === 1 ? video1Ref : video2Ref;
+    const duration = videoNumber === 1 ? video1Duration : video2Duration;
+    
+    if (videoRef.current && duration > 0) {
+      videoRef.current.currentTime = clickPosition * duration;
+    }
   };
 
   const captureKeyFrame = (videoNumber: 1 | 2) => {
@@ -455,6 +500,53 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
               </div>
             </div>
           </div>
+
+          {/* Side-by-Side Progress Bars */}
+          {!focusMode && (
+            <div className={`${isMobile ? 'space-y-3' : 'grid grid-cols-2 gap-4'} py-3`}>
+              {/* Video 1 Progress */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span className="font-medium">Video 1</span>
+                  <span>{formatTime(video1CurrentTime)} / {formatTime(video1Duration)}</span>
+                </div>
+                <div 
+                  className="relative h-3 bg-secondary rounded-full cursor-pointer overflow-hidden"
+                  onClick={(e) => handleProgressClick(1, e)}
+                >
+                  <div 
+                    className="absolute inset-y-0 left-0 bg-blue-500 rounded-full transition-all duration-100"
+                    style={{ width: `${video1Duration > 0 ? (video1CurrentTime / video1Duration) * 100 : 0}%` }}
+                  />
+                  <div 
+                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-blue-500 rounded-full shadow"
+                    style={{ left: `calc(${video1Duration > 0 ? (video1CurrentTime / video1Duration) * 100 : 0}% - 6px)` }}
+                  />
+                </div>
+              </div>
+
+              {/* Video 2 Progress */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span className="font-medium">Video 2</span>
+                  <span>{formatTime(video2CurrentTime)} / {formatTime(video2Duration)}</span>
+                </div>
+                <div 
+                  className="relative h-3 bg-secondary rounded-full cursor-pointer overflow-hidden"
+                  onClick={(e) => handleProgressClick(2, e)}
+                >
+                  <div 
+                    className="absolute inset-y-0 left-0 bg-green-500 rounded-full transition-all duration-100"
+                    style={{ width: `${video2Duration > 0 ? (video2CurrentTime / video2Duration) * 100 : 0}%` }}
+                  />
+                  <div 
+                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-2 border-green-500 rounded-full shadow"
+                    style={{ left: `calc(${video2Duration > 0 ? (video2CurrentTime / video2Duration) * 100 : 0}% - 6px)` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {!focusMode && (
             <>
