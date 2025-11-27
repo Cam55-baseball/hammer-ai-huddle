@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Upload, Video, Trash2, BookMarked } from "lucide-react";
+import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
@@ -479,7 +479,7 @@ export default function AnalyzeVideo() {
 
             {/* Non-analyzed upload success message */}
             {currentVideoId && !analysisEnabled && !analyzing && !analysis && !uploading && (
-              <Card className="p-6 border-primary">
+              <Card className="p-4 sm:p-6 border-primary">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -498,13 +498,14 @@ export default function AnalyzeVideo() {
                     notes, and choose whether to share it with scouts.
                   </p>
                   
-                  <div className="flex flex-col xs:flex-row gap-2">
+                  <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
                     <Button onClick={() => setSaveDialogOpen(true)} className="w-full xs:flex-1">
                       <BookMarked className="h-4 w-4 sm:mr-2" />
                       <span className="hidden xs:inline">Save to Players Club</span>
                       <span className="xs:hidden">Save to Library</span>
                     </Button>
                     <Button onClick={() => navigate('/dashboard')} variant="outline" className="w-full xs:flex-1">
+                      <Home className="h-4 w-4 xs:hidden" />
                       <span className="hidden xs:inline">Return to Dashboard</span>
                       <span className="xs:hidden">Dashboard</span>
                     </Button>
@@ -534,7 +535,7 @@ export default function AnalyzeVideo() {
             )}
 
             {analysis && (
-              <Card className="p-6">
+              <Card className="p-4 sm:p-6">
                 <h3 className="text-2xl font-bold mb-6">Analysis Results</h3>
                 <div className="space-y-6">
                   <div>
@@ -659,13 +660,14 @@ export default function AnalyzeVideo() {
                     </p>
                   </div>
 
-                  <div className="flex flex-col xs:flex-row gap-2">
+                  <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
                     <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">
                       <BookMarked className="h-4 w-4 sm:mr-2" />
                       <span className="hidden xs:inline">Save to Players Club</span>
                       <span className="xs:hidden">Save to Library</span>
                     </Button>
                     <Button onClick={() => navigate('/dashboard')} className="w-full xs:flex-1">
+                      <Home className="h-4 w-4 xs:hidden" />
                       <span className="hidden xs:inline">Return to Dashboard</span>
                       <span className="xs:hidden">Dashboard</span>
                     </Button>
