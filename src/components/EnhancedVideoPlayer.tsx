@@ -812,16 +812,31 @@ export const EnhancedVideoPlayer = ({
 
       {/* Fullscreen Frame Viewer */}
       {fullscreenFrameIndex !== null && createPortal(
-        <div 
-          className="fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden"
-          onClick={() => setFullscreenFrameIndex(null)}
-        >
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+          {/* Background overlay - ONLY this closes */}
+          <div 
+            className="absolute inset-0 bg-black/95"
+            onClick={() => setFullscreenFrameIndex(null)}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              setFullscreenFrameIndex(null);
+            }}
+          />
+
           {/* Close button */}
           <Button
             variant="ghost"
             size="icon"
             className="absolute top-4 right-4 text-white hover:bg-white/20 z-10 min-h-[44px] min-w-[44px]"
-            onClick={() => setFullscreenFrameIndex(null)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setFullscreenFrameIndex(null);
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setFullscreenFrameIndex(null);
+            }}
           >
             <X className="h-6 w-6" />
           </Button>
@@ -839,6 +854,11 @@ export const EnhancedVideoPlayer = ({
               className="text-white bg-black/50 hover:bg-white/20 min-h-[44px] min-w-[44px]"
               onClick={(e) => {
                 e.stopPropagation();
+                handleZoomIn();
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
                 handleZoomIn();
               }}
               disabled={zoomLevel >= MAX_ZOOM}
@@ -859,6 +879,11 @@ export const EnhancedVideoPlayer = ({
                 e.stopPropagation();
                 handleZoomOut();
               }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleZoomOut();
+              }}
               disabled={zoomLevel <= MIN_ZOOM}
               title="Zoom out"
             >
@@ -872,6 +897,11 @@ export const EnhancedVideoPlayer = ({
                 className="text-white bg-black/50 hover:bg-white/20 min-h-[44px] min-w-[44px] mt-2"
                 onClick={(e) => {
                   e.stopPropagation();
+                  handleResetZoom();
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
                   handleResetZoom();
                 }}
                 title="Reset zoom"
@@ -891,6 +921,11 @@ export const EnhancedVideoPlayer = ({
                 e.stopPropagation();
                 navigateToPreviousFrame();
               }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                navigateToPreviousFrame();
+              }}
             >
               <ChevronLeft className="h-8 w-8" />
             </Button>
@@ -906,6 +941,11 @@ export const EnhancedVideoPlayer = ({
                 e.stopPropagation();
                 navigateToNextFrame();
               }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                navigateToNextFrame();
+              }}
             >
               <ChevronRight className="h-8 w-8" />
             </Button>
@@ -916,6 +956,7 @@ export const EnhancedVideoPlayer = ({
             ref={imageContainerRef}
             className="relative flex items-center justify-center w-full h-full max-w-full max-h-[calc(100vh-100px)] sm:max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
           >
             <img
               src={keyFrames[fullscreenFrameIndex].original}
@@ -951,6 +992,11 @@ export const EnhancedVideoPlayer = ({
                   e.stopPropagation();
                   handleAnnotateFrame(fullscreenFrameIndex);
                 }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleAnnotateFrame(fullscreenFrameIndex);
+                }}
                 title="Annotate frame"
               >
                 <Pencil className="h-4 w-4 sm:mr-2" />
@@ -965,6 +1011,11 @@ export const EnhancedVideoPlayer = ({
                 e.stopPropagation();
                 downloadFrame(keyFrames[fullscreenFrameIndex], fullscreenFrameIndex);
               }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                downloadFrame(keyFrames[fullscreenFrameIndex], fullscreenFrameIndex);
+              }}
               title="Download frame"
             >
               <Download className="h-4 w-4 sm:mr-2" />
@@ -976,6 +1027,11 @@ export const EnhancedVideoPlayer = ({
               className="min-h-[44px] min-w-[44px]"
               onClick={(e) => {
                 e.stopPropagation();
+                handleFullscreenRemove(fullscreenFrameIndex);
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
                 handleFullscreenRemove(fullscreenFrameIndex);
               }}
               title="Remove frame"
