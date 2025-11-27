@@ -13,6 +13,7 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
+  Hand,
 } from "lucide-react";
 import { AnnotationTool } from "./FrameAnnotationDialog";
 import {
@@ -210,6 +211,15 @@ export const AnnotationToolbar = ({
 
       {/* Zoom Controls */}
       <div className="flex items-center gap-1">
+        <Button
+          variant={activeTool === "pan" ? "default" : "outline"}
+          size="sm"
+          onClick={() => onToolClick("pan")}
+          disabled={zoomLevel <= 1}
+          title="Pan (drag to move around when zoomed)"
+        >
+          <Hand className="h-4 w-4" />
+        </Button>
         <Button
           variant="outline"
           size="sm"
