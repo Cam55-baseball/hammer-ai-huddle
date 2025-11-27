@@ -681,7 +681,6 @@ export function SessionDetailDialog({
                   playerId={session.user_id}
                   sport={session.sport}
                   module={session.module}
-                  skeletonTrackingEnabled={false}
                   isScoutView={isScout && !isOwner}
                   isOwnerView={isOwner}
                   onSaveAnnotation={isOwner ? handleSaveSelfAnnotation : handleSaveAnnotation}
