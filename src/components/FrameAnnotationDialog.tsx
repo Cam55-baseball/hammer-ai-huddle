@@ -545,14 +545,14 @@ export const FrameAnnotationDialog = ({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>
-            Save Annotations
-          </Button>
-        </DialogFooter>
+      <DialogFooter className="flex-col sm:flex-row gap-2">
+        <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
+          Cancel
+        </Button>
+        <Button onClick={handleSave} className="w-full sm:w-auto">
+          Save Annotations
+        </Button>
+      </DialogFooter>
       </DialogContent>
     </Dialog>
   );
