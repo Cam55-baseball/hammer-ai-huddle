@@ -41,7 +41,17 @@ export const PoseOverlay = ({ videoRef, enabled, sport, module, onViolationDetec
       setIsLoading(true);
       import('@mediapipe/pose')
         .then((module) => {
-          setPoseLib(module);
+          // Handle various UMD export patterns
+          console.log('MediaPipe module keys:', Object.keys(module));
+          
+          const PoseClass = module.Pose || (module as any).default?.Pose || (module as any).default;
+          
+          if (!PoseClass) {
+            console.error('Module structure:', module);
+            throw new Error('Could not find Pose class in module');
+          }
+          
+          setPoseLib({ Pose: PoseClass });
           setIsLoading(false);
           toast.success('Pose tracking initialized');
         })
