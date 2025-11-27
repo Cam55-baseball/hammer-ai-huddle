@@ -812,7 +812,7 @@ export const EnhancedVideoPlayer = ({
       {/* Fullscreen Frame Viewer */}
       {fullscreenFrameIndex !== null && (
         <div 
-          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden"
           onClick={() => setFullscreenFrameIndex(null)}
         >
           {/* Close button */}
@@ -913,13 +913,13 @@ export const EnhancedVideoPlayer = ({
           {/* Frame image with zoom and pan */}
           <div 
             ref={imageContainerRef}
-            className="relative flex items-center justify-center max-w-full max-h-[80vh]"
+            className="relative flex items-center justify-center w-full h-full max-w-full max-h-[calc(100vh-100px)] sm:max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <img
               src={keyFrames[fullscreenFrameIndex].original}
               alt={`Key Frame ${fullscreenFrameIndex + 1}`}
-              className={`max-w-full max-h-[80vh] object-contain transition-transform ${
+              className={`max-w-full max-h-[calc(100vh-100px)] sm:max-h-[80vh] object-contain transition-transform ${
                 isPanning ? 'cursor-grabbing' : zoomLevel > MIN_ZOOM ? 'cursor-grab' : 'cursor-default'
               }`}
               style={{

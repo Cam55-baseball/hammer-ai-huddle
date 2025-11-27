@@ -281,7 +281,7 @@ export const FrameAnnotationDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[900px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-full sm:max-w-[900px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-3 sm:p-6">
         <DialogHeader>
           <DialogTitle>Annotate Frame</DialogTitle>
         </DialogHeader>
@@ -300,8 +300,8 @@ export const FrameAnnotationDialog = ({
             canRedo={historyStep < history.length - 1}
           />
 
-          <div className="relative border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center min-h-[400px]">
-            <canvas ref={canvasRef} className="max-w-full" />
+          <div className="relative border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] max-w-full">
+            <canvas ref={canvasRef} className="max-w-full max-h-[50vh] sm:max-h-[60vh]" />
             
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
