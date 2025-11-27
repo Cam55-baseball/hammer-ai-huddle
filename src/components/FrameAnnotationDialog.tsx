@@ -27,6 +27,7 @@ export const FrameAnnotationDialog = ({
   const [activeColor, setActiveColor] = useState("#FF0000");
   const [history, setHistory] = useState<string[]>([]);
   const [historyStep, setHistoryStep] = useState(-1);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -145,6 +146,7 @@ export const FrameAnnotationDialog = ({
       setHistoryStep(-1);
       setIsLoading(true);
       setLoadError(null);
+      setZoomLevel(1);
     }
   }, [open]);
 
@@ -302,6 +304,30 @@ export const FrameAnnotationDialog = ({
     toast.success("Annotations saved!");
   };
 
+  const handleZoomIn = () => {
+    if (!fabricCanvas) return;
+    const newZoom = Math.min(zoomLevel + 0.25, 4); // Max 400%
+    fabricCanvas.setZoom(newZoom);
+    fabricCanvas.renderAll();
+    setZoomLevel(newZoom);
+  };
+
+  const handleZoomOut = () => {
+    if (!fabricCanvas) return;
+    const newZoom = Math.max(zoomLevel - 0.25, 0.5); // Min 50%
+    fabricCanvas.setZoom(newZoom);
+    fabricCanvas.renderAll();
+    setZoomLevel(newZoom);
+  };
+
+  const handleResetZoom = () => {
+    if (!fabricCanvas) return;
+    fabricCanvas.setZoom(1);
+    fabricCanvas.setViewportTransform([1, 0, 0, 1, 0, 0]); // Reset pan as well
+    fabricCanvas.renderAll();
+    setZoomLevel(1);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-full sm:max-w-[900px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-3 sm:p-6">
@@ -321,9 +347,13 @@ export const FrameAnnotationDialog = ({
             onPresetLabel={handlePresetLabel}
             canUndo={historyStep > 0}
             canRedo={historyStep < history.length - 1}
+            zoomLevel={zoomLevel}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onResetZoom={handleResetZoom}
           />
 
-          <div className="relative border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
+          <div className="relative border rounded-lg overflow-auto bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
             <canvas ref={canvasRef} />
             
             {isLoading && (

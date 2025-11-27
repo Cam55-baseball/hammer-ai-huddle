@@ -10,6 +10,9 @@ import {
   Undo2,
   Redo2,
   Trash2,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
 } from "lucide-react";
 import { AnnotationTool } from "./FrameAnnotationDialog";
 import {
@@ -30,6 +33,10 @@ interface AnnotationToolbarProps {
   onPresetLabel: (label: string) => void;
   canUndo: boolean;
   canRedo: boolean;
+  zoomLevel: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onResetZoom: () => void;
 }
 
 const PRESET_LABELS = [
@@ -66,6 +73,10 @@ export const AnnotationToolbar = ({
   onPresetLabel,
   canUndo,
   canRedo,
+  zoomLevel,
+  onZoomIn,
+  onZoomOut,
+  onResetZoom,
 }: AnnotationToolbarProps) => {
   return (
     <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/30 rounded-lg border">
@@ -193,6 +204,43 @@ export const AnnotationToolbar = ({
         >
           <Redo2 className="h-4 w-4" />
         </Button>
+      </div>
+
+      <Separator orientation="vertical" className="h-8" />
+
+      {/* Zoom Controls */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onZoomOut}
+          disabled={zoomLevel <= 0.5}
+          title="Zoom Out"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </Button>
+        <span className="text-xs font-medium min-w-[40px] text-center">
+          {Math.round(zoomLevel * 100)}%
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onZoomIn}
+          disabled={zoomLevel >= 4}
+          title="Zoom In"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </Button>
+        {zoomLevel !== 1 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onResetZoom}
+            title="Reset Zoom"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <Separator orientation="vertical" className="h-8" />
