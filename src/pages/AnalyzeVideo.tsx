@@ -445,13 +445,9 @@ export default function AnalyzeVideo() {
                   />
                 </div>
 
-
                 <EnhancedVideoPlayer
                   videoSrc={videoPreview}
                   playbackRate={parseFloat(playbackRate)}
-                  videoId={currentVideoId || undefined}
-                  sport={sport as 'baseball' | 'softball'}
-                  module={module as 'hitting' | 'pitching' | 'throwing'}
                 />
               </div>
             </Card>
@@ -469,19 +465,17 @@ export default function AnalyzeVideo() {
                   <>
                     <Upload className="h-4 w-4 sm:mr-2" />
                     <span className="hidden xs:inline">Upload & Analyze Video</span>
-                    <span className="xs:hidden">Analyze</span>
+                    <span className="xs:hidden">Upload & Analyze</span>
                   </>
                 ) : (
                   <>
-                    <Upload className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">Upload Video</span>
-                    <span className="xs:hidden">Upload</span>
+                    <BookMarked className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Upload Video to Library</span>
+                    <span className="xs:hidden">Upload to Library</span>
                   </>
                 )}
               </Button>
             )}
-
-
 
             {/* Non-analyzed upload success message */}
             {currentVideoId && !analysisEnabled && !analyzing && !analysis && !uploading && (

@@ -505,40 +505,6 @@ export function SessionDetailDialog({
 
           <Separator />
 
-          {/* Pose Analysis Results */}
-          {session.pose_analysis && (
-            <div className="space-y-3">
-              <h3 className="font-semibold">Skeleton Tracking Results</h3>
-              <div className="p-4 bg-muted/30 rounded-lg">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-red-500">
-                      {session.pose_analysis.violation_timestamps?.filter((v: any) => v.severity === 'critical').length || 0}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Critical Issues</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-orange-500">
-                      {session.pose_analysis.violation_timestamps?.filter((v: any) => v.severity === 'major').length || 0}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Major Issues</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-yellow-500">
-                      {session.pose_analysis.violation_timestamps?.filter((v: any) => v.severity === 'minor').length || 0}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Minor Issues</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground text-center">
-                  Total violations detected: {session.pose_analysis.violation_timestamps?.length || 0}
-                </p>
-              </div>
-            </div>
-          )}
-
-          <Separator />
-
           {/* Annotations Section */}
           {annotations.length > 0 && (
             <div className="space-y-4">
@@ -679,8 +645,6 @@ export function SessionDetailDialog({
                   playbackRate={1}
                   videoId={session.id}
                   playerId={session.user_id}
-                  sport={session.sport}
-                  module={session.module}
                   isScoutView={isScout && !isOwner}
                   isOwnerView={isOwner}
                   onSaveAnnotation={isOwner ? handleSaveSelfAnnotation : handleSaveAnnotation}

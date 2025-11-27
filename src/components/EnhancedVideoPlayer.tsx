@@ -10,8 +10,6 @@ interface EnhancedVideoPlayerProps {
   playbackRate?: number;
   videoId?: string;
   playerId?: string;
-  sport?: 'baseball' | 'softball';
-  module?: 'hitting' | 'pitching' | 'throwing';
   isScoutView?: boolean;
   isOwnerView?: boolean;
   onSaveAnnotation?: (data: { annotationData: string; originalFrameData: string; notes?: string; frameTimestamp?: number }) => void;
@@ -29,8 +27,6 @@ export const EnhancedVideoPlayer = ({
   playbackRate = 1,
   videoId,
   playerId,
-  sport = 'baseball',
-  module = 'hitting',
   isScoutView = false,
   isOwnerView = false,
   onSaveAnnotation
@@ -60,9 +56,6 @@ export const EnhancedVideoPlayer = ({
   const [annotationDialogOpen, setAnnotationDialogOpen] = useState(false);
   const [selectedFrameIndex, setSelectedFrameIndex] = useState<number | null>(null);
   
-  // Video playback state
-  const [videoDuration, setVideoDuration] = useState(0);
-  
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 4;
   const ZOOM_STEP = 0.5;
@@ -79,7 +72,6 @@ export const EnhancedVideoPlayer = ({
 
     const handleLoadedMetadata = () => {
       setVideoReady(true);
-      setVideoDuration(video.duration);
     };
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -87,12 +79,10 @@ export const EnhancedVideoPlayer = ({
     // Check if already loaded
     if (video.readyState >= 1) {
       setVideoReady(true);
-      if (video.duration) setVideoDuration(video.duration);
     }
 
     return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
   }, [videoSrc]);
-
 
   useEffect(() => {
     const video = videoRef.current;

@@ -573,38 +573,6 @@ export type Database = {
           },
         ]
       }
-      video_pose_analysis: {
-        Row: {
-          id: string
-          landmark_data: Json | null
-          processed_at: string | null
-          video_id: string
-          violation_timestamps: Json | null
-        }
-        Insert: {
-          id?: string
-          landmark_data?: Json | null
-          processed_at?: string | null
-          video_id: string
-          violation_timestamps?: Json | null
-        }
-        Update: {
-          id?: string
-          landmark_data?: Json | null
-          processed_at?: string | null
-          video_id?: string
-          violation_timestamps?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "video_pose_analysis_video_id_fkey"
-            columns: ["video_id"]
-            isOneToOne: true
-            referencedRelation: "videos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       videos: {
         Row: {
           ai_analysis: Json | null
