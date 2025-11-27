@@ -35,31 +35,44 @@ export const PoseOverlay = ({ videoRef, enabled, sport, module, onViolationDetec
   const lastFrameTimeRef = useRef<number>(0);
   const isMobile = window.innerWidth < 768;
 
-  // Lazy load MediaPipe when enabled
+  // Lazy load MediaPipe when enabled via CDN
   useEffect(() => {
     if (enabled && !poseLib) {
       setIsLoading(true);
-      import('@mediapipe/pose')
-        .then((module) => {
-          // Handle various UMD export patterns
-          console.log('MediaPipe module keys:', Object.keys(module));
-          
-          const PoseClass = module.Pose || (module as any).default?.Pose || (module as any).default;
-          
-          if (!PoseClass) {
-            console.error('Module structure:', module);
-            throw new Error('Could not find Pose class in module');
-          }
-          
-          setPoseLib({ Pose: PoseClass });
+      
+      // Check if already loaded globally
+      if ((window as any).Pose) {
+        setPoseLib({ Pose: (window as any).Pose });
+        setIsLoading(false);
+        toast.success('Pose tracking initialized');
+        return;
+      }
+      
+      // Load via CDN script injection
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js';
+      script.async = true;
+      
+      script.onload = () => {
+        const Pose = (window as any).Pose;
+        if (Pose) {
+          setPoseLib({ Pose });
           setIsLoading(false);
           toast.success('Pose tracking initialized');
-        })
-        .catch((error) => {
-          console.error('Failed to load MediaPipe:', error);
+        } else {
+          console.error('Pose class not found on window after script load');
           toast.error('Failed to load pose tracking');
           setIsLoading(false);
-        });
+        }
+      };
+      
+      script.onerror = (error) => {
+        console.error('Failed to load MediaPipe script:', error);
+        toast.error('Failed to load pose tracking');
+        setIsLoading(false);
+      };
+      
+      document.head.appendChild(script);
     }
   }, [enabled, poseLib]);
 
