@@ -2,12 +2,12 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { User, UserCog } from "lucide-react";
+import { User, UserCog, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const SelectUserRole = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
 
   useEffect(() => {
     // Redirect to auth if not logged in
@@ -26,6 +26,11 @@ const SelectUserRole = () => {
       // Players continue to sport selection
       navigate('/select-sport');
     }
+  };
+
+  const handleBackToSignIn = async () => {
+    await signOut();
+    navigate('/auth');
   };
 
   if (loading) {
@@ -47,6 +52,14 @@ const SelectUserRole = () => {
           <p className="text-muted-foreground">
             Are you here to train or to coach?
           </p>
+          <Button 
+            variant="ghost" 
+            className="mt-2"
+            onClick={handleBackToSignIn}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Sign In
+          </Button>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
