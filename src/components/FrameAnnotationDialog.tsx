@@ -60,15 +60,37 @@ export const FrameAnnotationDialog = ({
         try {
           console.log("Image loaded successfully:", img.width, "x", img.height);
 
+          // Calculate max available dimensions for the canvas
+          // Account for dialog padding, toolbar, header, footer
+          const maxWidth = Math.min(window.innerWidth - 48, 850); // max dialog width minus padding
+          const maxHeight = window.innerHeight * 0.55; // ~55vh for canvas area
+          
+          // Calculate scale factor to fit image within available space while maintaining aspect ratio
+          const scaleX = maxWidth / img.width;
+          const scaleY = maxHeight / img.height;
+          const scale = Math.min(scaleX, scaleY, 1); // Never scale up, only down if needed
+          
+          const canvasWidth = Math.floor(img.width * scale);
+          const canvasHeight = Math.floor(img.height * scale);
+          
+          console.log("Scaling canvas:", { 
+            original: `${img.width}x${img.height}`,
+            scaled: `${canvasWidth}x${canvasHeight}`,
+            scale 
+          });
+
           canvas = new FabricCanvas(canvasElement, {
-            width: img.width,
-            height: img.height,
+            width: canvasWidth,
+            height: canvasHeight,
             backgroundColor: "#f0f0f0",
           });
 
+          // Scale the image to fit the canvas
           const fabricImg = new fabric.Image(img, {
             left: 0,
             top: 0,
+            scaleX: scale,
+            scaleY: scale,
             selectable: false,
             evented: false,
           });
@@ -268,10 +290,11 @@ export const FrameAnnotationDialog = ({
   const handleSave = () => {
     if (!fabricCanvas) return;
 
+    // Export at higher resolution for quality
     const annotatedFrame = fabricCanvas.toDataURL({
       format: "png",
       quality: 1,
-      multiplier: 1,
+      multiplier: 2, // Export at 2x for better quality
     });
     
     onSave(annotatedFrame);
@@ -300,8 +323,8 @@ export const FrameAnnotationDialog = ({
             canRedo={historyStep < history.length - 1}
           />
 
-          <div className="relative border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] max-w-full">
-            <canvas ref={canvasRef} className="max-w-full max-h-[50vh] sm:max-h-[60vh]" />
+          <div className="relative border rounded-lg overflow-hidden bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
+            <canvas ref={canvasRef} />
             
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
