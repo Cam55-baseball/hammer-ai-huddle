@@ -300,6 +300,14 @@ export const EnhancedVideoPlayer = ({
     setKeyFrames(newFrames);
     toast.success("Frame removed!");
     
+    // Reset selectedFrameIndex if the deleted frame was selected
+    if (selectedFrameIndex === index) {
+      setSelectedFrameIndex(null);
+    } else if (selectedFrameIndex !== null && selectedFrameIndex > index) {
+      // Adjust index if a frame before the selected one was deleted
+      setSelectedFrameIndex(selectedFrameIndex - 1);
+    }
+    
     // Navigate to next frame or close if it was the last frame
     if (newFrames.length === 0) {
       setFullscreenFrameIndex(null);
@@ -309,6 +317,8 @@ export const EnhancedVideoPlayer = ({
   };
 
   const handleAnnotateFrame = (index: number) => {
+    // Close fullscreen viewer first to avoid z-index conflicts
+    setFullscreenFrameIndex(null);
     setSelectedFrameIndex(index);
     setAnnotationDialogOpen(true);
   };
@@ -1038,7 +1048,7 @@ export const EnhancedVideoPlayer = ({
       )}
 
       {/* Annotation Dialog */}
-      {selectedFrameIndex !== null && (
+      {selectedFrameIndex !== null && keyFrames[selectedFrameIndex] && (
         <FrameAnnotationDialog
           open={annotationDialogOpen}
           onOpenChange={setAnnotationDialogOpen}
