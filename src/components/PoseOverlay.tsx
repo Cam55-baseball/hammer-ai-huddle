@@ -13,22 +13,9 @@ interface PoseOverlayProps {
   }) => void;
 }
 
-// MediaPipe landmark connections
-const POSE_CONNECTIONS: [number, number][] = [
-  [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
-  [9, 10], [11, 12], [11, 13], [13, 15], [15, 17], [15, 19], [15, 21],
-  [17, 19], [12, 14], [14, 16], [16, 18], [16, 20], [16, 22], [18, 20],
-  [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [27, 29], [27, 31],
-  [29, 31], [24, 26], [26, 28], [28, 30], [28, 32], [30, 32]
-];
-
-// Adaptive marker sizing constants
-const BASE_SHOULDER_WIDTH = 150; // Reference shoulder width in pixels
-const MIN_SCALE = 0.5; // Minimum scale for far shots
-const MAX_SCALE = 2.0; // Maximum scale for close-ups
+// Visual overlay removed - keeping only violation detection
 
 export const PoseOverlay = ({ videoRef, enabled, sport, module, onViolationDetected }: PoseOverlayProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [poseLib, setPoseLib] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const animationFrameRef = useRef<number>();
@@ -76,23 +63,6 @@ export const PoseOverlay = ({ videoRef, enabled, sport, module, onViolationDetec
     }
   }, [enabled, poseLib]);
 
-  // Calculate adaptive marker sizing based on person's size
-  const calculateScale = (landmarks: any[]) => {
-    if (!landmarks || landmarks.length < 12) return 1;
-
-    const leftShoulder = landmarks[11];
-    const rightShoulder = landmarks[12];
-    
-    if (!leftShoulder || !rightShoulder) return 1;
-
-    const shoulderWidth = Math.hypot(
-      (rightShoulder.x - leftShoulder.x) * (canvasRef.current?.width || 1),
-      (rightShoulder.y - leftShoulder.y) * (canvasRef.current?.height || 1)
-    );
-
-    const scaleFactor = shoulderWidth / BASE_SHOULDER_WIDTH;
-    return Math.max(MIN_SCALE, Math.min(MAX_SCALE, scaleFactor));
-  };
 
   // Detect biomechanical violations
   const detectViolations = (landmarks: any[], timestamp: number) => {
@@ -196,61 +166,12 @@ export const PoseOverlay = ({ videoRef, enabled, sport, module, onViolationDetec
     }
   };
 
-  // Draw landmarks and connections
-  const drawPose = (landmarks: any[], scale: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Base sizes scaled by person size
-    const landmarkRadius = 4 * scale * (isMobile ? 1.5 : 1);
-    const keyLandmarkRadius = 6 * scale * (isMobile ? 1.5 : 1);
-    const lineWidth = 2 * scale;
-
-    // Draw connections
-    ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
-    ctx.lineWidth = lineWidth;
-
-    POSE_CONNECTIONS.forEach(([start, end]) => {
-      const startPoint = landmarks[start];
-      const endPoint = landmarks[end];
-
-      if (startPoint && endPoint) {
-        ctx.beginPath();
-        ctx.moveTo(startPoint.x * canvas.width, startPoint.y * canvas.height);
-        ctx.lineTo(endPoint.x * canvas.width, endPoint.y * canvas.height);
-        ctx.stroke();
-      }
-    });
-
-    // Draw landmarks
-    const keyLandmarks = [0, 11, 12, 13, 14, 15, 16, 23, 24]; // Nose, shoulders, elbows, wrists, hips
-
-    landmarks.forEach((landmark, index) => {
-      if (!landmark) return;
-
-      const x = landmark.x * canvas.width;
-      const y = landmark.y * canvas.height;
-      const isKeyLandmark = keyLandmarks.includes(index);
-      const radius = isKeyLandmark ? keyLandmarkRadius : landmarkRadius;
-
-      ctx.fillStyle = isKeyLandmark ? 'rgba(255, 0, 255, 0.8)' : 'rgba(0, 255, 255, 0.6)';
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, 2 * Math.PI);
-      ctx.fill();
-    });
-  };
 
   // Process video frames
   useEffect(() => {
-    if (!enabled || !poseLib || !videoRef.current || !canvasRef.current) return;
+    if (!enabled || !poseLib || !videoRef.current) return;
 
     const video = videoRef.current;
-    const canvas = canvasRef.current;
 
     // Initialize MediaPipe Pose
     const pose = new poseLib.Pose({
@@ -268,9 +189,7 @@ export const PoseOverlay = ({ videoRef, enabled, sport, module, onViolationDetec
 
     pose.onResults((results: any) => {
       if (results.poseLandmarks) {
-        const scale = calculateScale(results.poseLandmarks);
-        drawPose(results.poseLandmarks, scale);
-        
+        // Visual overlay removed - only detect violations
         const timestamp = video.currentTime;
         detectViolations(results.poseLandmarks, timestamp);
       }
@@ -303,16 +222,7 @@ export const PoseOverlay = ({ videoRef, enabled, sport, module, onViolationDetec
       animationFrameRef.current = requestAnimationFrame(processFrame);
     };
 
-    // Sync canvas size with video
-    const syncCanvasSize = () => {
-      if (video.videoWidth && video.videoHeight) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-      }
-    };
-
-    video.addEventListener('loadedmetadata', syncCanvasSize);
-    syncCanvasSize();
+    // Canvas size sync no longer needed since we're not drawing
 
     animationFrameRef.current = requestAnimationFrame(processFrame);
 
@@ -320,7 +230,6 @@ export const PoseOverlay = ({ videoRef, enabled, sport, module, onViolationDetec
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      video.removeEventListener('loadedmetadata', syncCanvasSize);
       pose.close();
     };
   }, [enabled, poseLib, videoRef, sport, module, isMobile]);
@@ -329,15 +238,6 @@ export const PoseOverlay = ({ videoRef, enabled, sport, module, onViolationDetec
 
   return (
     <>
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 pointer-events-none z-10"
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain'
-        }}
-      />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
           <div className="text-center space-y-2">
