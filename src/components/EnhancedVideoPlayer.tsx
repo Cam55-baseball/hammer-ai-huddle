@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2, ZoomIn, ZoomOut, Pencil } from "lucide-react";
 import { toast } from "sonner";
@@ -810,9 +811,9 @@ export const EnhancedVideoPlayer = ({
       )}
 
       {/* Fullscreen Frame Viewer */}
-      {fullscreenFrameIndex !== null && (
+      {fullscreenFrameIndex !== null && createPortal(
         <div 
-          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden"
+          className="fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-hidden"
           onClick={() => setFullscreenFrameIndex(null)}
         >
           {/* Close button */}
@@ -983,7 +984,8 @@ export const EnhancedVideoPlayer = ({
               <span className="hidden sm:inline">Remove</span>
             </Button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Annotation Dialog */}
