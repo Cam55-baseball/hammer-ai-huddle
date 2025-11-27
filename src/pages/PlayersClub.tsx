@@ -9,13 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, BookmarkCheck, GitCompare, Check, Play } from 'lucide-react';
+import { Download, Edit, Share2, Trash2, LayoutGrid, LayoutList, BookMarked, BookmarkCheck, Columns2, Check, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { SessionDetailDialog } from '@/components/SessionDetailDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoCardLazy } from '@/components/VideoCardLazy';
 import { BlurhashImage } from '@/components/BlurhashImage';
 import { VideoComparisonView } from '@/components/VideoComparisonView';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -247,14 +248,28 @@ export default function PlayersClub() {
               <LayoutList className="h-4 w-4" />
             </Button>
             {isOwnLibrary && filteredSessions.length >= 2 && (
-              <Button
-                variant={compareMode ? 'default' : 'outline'}
-                onClick={toggleCompareMode}
-                className="gap-2"
-              >
-                <GitCompare className="h-4 w-4" />
-                <span className="hidden sm:inline">{compareMode ? 'Cancel' : 'Compare'}</span>
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={compareMode ? 'default' : 'secondary'}
+                      onClick={toggleCompareMode}
+                      className="gap-1.5"
+                    >
+                      <Columns2 className="h-4 w-4" />
+                      <span>
+                        {compareMode 
+                          ? 'Cancel' 
+                          : `Compare${selectedForComparison.length > 0 ? ` (${selectedForComparison.length}/2)` : ''}`
+                        }
+                      </span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{compareMode ? 'Exit comparison mode' : 'Select 2 videos to compare side-by-side'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             {compareMode && selectedForComparison.length === 2 && (
               <Button onClick={() => setShowComparisonView(true)} className="gap-2">
@@ -264,6 +279,14 @@ export default function PlayersClub() {
             )}
           </div>
         </div>
+
+        {/* Helper Text for Compare Mode */}
+        {compareMode && selectedForComparison.length < 2 && (
+          <div className="text-sm text-muted-foreground text-center py-2 bg-secondary/50 rounded-md flex items-center justify-center gap-1.5">
+            <Columns2 className="h-4 w-4" />
+            <span>Tap {2 - selectedForComparison.length} video{selectedForComparison.length === 1 ? '' : 's'} to compare</span>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-stretch sm:items-center">
