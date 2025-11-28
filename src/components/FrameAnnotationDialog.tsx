@@ -208,6 +208,14 @@ export const FrameAnnotationDialog = ({
 
     fabricCanvas.isDrawingMode = activeTool === "draw";
     
+    // When in draw mode, ensure touch events can reach the canvas
+    if (activeTool === "draw") {
+      if (fabricCanvas.upperCanvasEl) {
+        fabricCanvas.upperCanvasEl.style.touchAction = 'none';
+        fabricCanvas.upperCanvasEl.style.pointerEvents = 'auto';
+      }
+    }
+    
     // Disable object selection in pan mode
     if (activeTool === "pan") {
       fabricCanvas.selection = false;
@@ -464,7 +472,8 @@ export const FrameAnnotationDialog = ({
 
   // Handle pinch-to-zoom gesture
   useEffect(() => {
-    if (!fabricCanvas || !containerRef.current) return;
+    // Don't attach pinch handlers in draw mode - let Fabric.js handle touch
+    if (!fabricCanvas || !containerRef.current || activeTool === 'draw') return;
 
     const container = containerRef.current;
 
@@ -528,7 +537,7 @@ export const FrameAnnotationDialog = ({
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [fabricCanvas, initialPinchDistance, initialZoomOnPinch, isPinching, zoomLevel]);
+  }, [fabricCanvas, initialPinchDistance, initialZoomOnPinch, isPinching, zoomLevel, activeTool]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -560,6 +569,13 @@ export const FrameAnnotationDialog = ({
             className={`relative border rounded-lg overflow-auto bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] ${activeTool === 'draw' ? '' : 'touch-none'} ${activeTool === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
           >
             <canvas ref={canvasRef} className={activeTool === 'draw' ? '' : 'touch-none'} />
+            
+            {/* Draw mode indicator */}
+            {activeTool === 'draw' && (
+              <div className="absolute top-4 left-4 bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-full text-xs font-medium shadow-lg">
+                ✏️ Draw with finger
+              </div>
+            )}
             
             {/* Pinch-to-zoom visual indicator */}
             {isPinching && (
