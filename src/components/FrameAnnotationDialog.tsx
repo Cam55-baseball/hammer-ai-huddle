@@ -14,7 +14,7 @@ interface FrameAnnotationDialogProps {
   onSave: (annotatedFrame: string) => void;
 }
 
-export type AnnotationTool = "select" | "draw" | "text" | "rectangle" | "circle" | "arrow" | "pan";
+export type AnnotationTool = "select" | "draw" | "eraser" | "text" | "rectangle" | "circle" | "arrow" | "pan";
 
 export const FrameAnnotationDialog = ({
   open,
@@ -214,6 +214,19 @@ export const FrameAnnotationDialog = ({
         fabricCanvas.upperCanvasEl.style.touchAction = 'none';
         fabricCanvas.upperCanvasEl.style.pointerEvents = 'auto';
       }
+      if (fabricCanvas.lowerCanvasEl) {
+        fabricCanvas.lowerCanvasEl.style.touchAction = 'none';
+      }
+      // Also set on the wrapper element
+      if (fabricCanvas.wrapperEl) {
+        fabricCanvas.wrapperEl.style.touchAction = 'none';
+      }
+      
+      // Ensure the brush is configured
+      if (fabricCanvas.freeDrawingBrush) {
+        fabricCanvas.freeDrawingBrush.color = activeColor;
+        fabricCanvas.freeDrawingBrush.width = 3;
+      }
     }
     
     // Disable object selection in pan mode
@@ -246,6 +259,71 @@ export const FrameAnnotationDialog = ({
       };
     }
   }, [activeTool, activeColor, fabricCanvas]);
+
+  // Native touch event forwarding for draw mode on mobile
+  useEffect(() => {
+    if (!fabricCanvas || activeTool !== 'draw') return;
+    
+    const upperCanvas = fabricCanvas.upperCanvasEl;
+    if (!upperCanvas) return;
+    
+    // Prevent default touch behaviors that might interfere with drawing
+    const preventDefaultHandler = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        // Single finger - allow drawing, prevent scroll
+        e.preventDefault();
+      }
+    };
+    
+    upperCanvas.addEventListener('touchstart', preventDefaultHandler, { passive: false });
+    upperCanvas.addEventListener('touchmove', preventDefaultHandler, { passive: false });
+    
+    return () => {
+      upperCanvas.removeEventListener('touchstart', preventDefaultHandler);
+      upperCanvas.removeEventListener('touchmove', preventDefaultHandler);
+    };
+  }, [fabricCanvas, activeTool]);
+
+  // Eraser/Delete functionality
+  const handleDeleteSelected = () => {
+    if (!fabricCanvas) return;
+    
+    const activeObjects = fabricCanvas.getActiveObjects();
+    if (activeObjects.length === 0) {
+      toast.info("Select an object to delete");
+      return;
+    }
+    
+    // Don't delete the background image (first object)
+    activeObjects.forEach(obj => {
+      const allObjects = fabricCanvas.getObjects();
+      if (allObjects.indexOf(obj) > 0) {
+        fabricCanvas.remove(obj);
+      }
+    });
+    
+    fabricCanvas.discardActiveObject();
+    fabricCanvas.renderAll();
+    saveHistory(fabricCanvas);
+    toast.success("Object(s) deleted");
+  };
+
+  // Keyboard delete handler
+  useEffect(() => {
+    if (!fabricCanvas) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Don't handle if editing text
+        if (isEditingText) return;
+        
+        handleDeleteSelected();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [fabricCanvas, isEditingText]);
 
   const saveHistory = (canvas: FabricCanvas) => {
     const json = JSON.stringify(canvas.toJSON());
@@ -562,11 +640,12 @@ export const FrameAnnotationDialog = ({
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}
             onResetZoom={handleResetZoom}
+            onDeleteSelected={handleDeleteSelected}
           />
 
           <div 
             ref={containerRef}
-            className={`relative border rounded-lg overflow-auto bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] ${activeTool === 'draw' ? '' : 'touch-none'} ${activeTool === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
+            className={`relative border rounded-lg ${activeTool === 'draw' ? 'overflow-hidden' : 'overflow-auto'} bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] ${activeTool === 'draw' ? '' : 'touch-none'} ${activeTool === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
           >
             <canvas ref={canvasRef} className={activeTool === 'draw' ? '' : 'touch-none'} />
             
