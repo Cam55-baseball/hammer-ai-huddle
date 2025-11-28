@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked, RefreshCw } from "lucide-react";
+import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked, RefreshCw, TrendingUp } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
@@ -410,12 +410,32 @@ export default function Dashboard() {
               <p className="text-sm sm:text-base text-muted-foreground">
                 Analyze swing mechanics, kinetic sequence, and bat speed
               </p>
-              {getModuleProgress("hitting") && hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && (
+              {getModuleProgress("hitting") && hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
                 <div className="text-sm">
                   <p className="font-semibold">
                     Videos Analyzed: {getModuleProgress("hitting").videos_analyzed}
                   </p>
                 </div>
+              ) : !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? null : (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <TrendingUp className="h-4 w-4" />
+                  <span>GET STARTED</span>
+                </div>
+              )}
+              {!hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? null : !getModuleProgress("hitting") && (
+                <p className="text-sm text-muted-foreground mb-3">
+                  Upload your first video to start tracking your progress
+                </p>
+              )}
+              {!getModuleProgress("hitting") && hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && (
+                <Button 
+                  onClick={() => handleModuleSelect("hitting")}
+                  variant="secondary"
+                  size="sm"
+                  className="w-full animate-pulse-subtle mb-2"
+                >
+                  Upload Video
+                </Button>
               )}
               <Button 
                 className="w-full" 
