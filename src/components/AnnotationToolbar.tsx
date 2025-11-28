@@ -14,6 +14,7 @@ import {
   ZoomOut,
   RotateCcw,
   Hand,
+  Eraser,
 } from "lucide-react";
 import { AnnotationTool } from "./FrameAnnotationDialog";
 import {
@@ -38,6 +39,7 @@ interface AnnotationToolbarProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
+  onDeleteSelected: () => void;
 }
 
 const PRESET_LABELS = [
@@ -78,6 +80,7 @@ export const AnnotationToolbar = ({
   onZoomIn,
   onZoomOut,
   onResetZoom,
+  onDeleteSelected,
 }: AnnotationToolbarProps) => {
   return (
     <div className="flex flex-col gap-2 p-2 sm:p-3 bg-muted/30 rounded-lg border max-w-full overflow-x-hidden">
@@ -100,6 +103,17 @@ export const AnnotationToolbar = ({
             title="Freehand Draw"
           >
             <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              onToolClick("select");
+              onDeleteSelected();
+            }}
+            title="Delete Selected Object"
+          >
+            <Eraser className="h-4 w-4" />
           </Button>
           <Button
             variant={activeTool === "text" ? "default" : "outline"}
