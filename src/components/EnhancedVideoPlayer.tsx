@@ -51,6 +51,7 @@ export const EnhancedVideoPlayer = ({
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [isPinchingKeyframe, setIsPinchingKeyframe] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const pinchStartDistanceRef = useRef<number | null>(null);
   const pinchStartZoomRef = useRef<number>(1);
@@ -457,6 +458,8 @@ export const EnhancedVideoPlayer = ({
     if (e.touches.length !== 2) return;
     
     e.preventDefault();
+    e.stopPropagation();
+    setIsPinchingKeyframe(true);
     
     const touch1 = e.touches[0];
     const touch2 = e.touches[1];
@@ -480,7 +483,8 @@ export const EnhancedVideoPlayer = ({
 
   const handlePinchEnd = () => {
     pinchStartDistanceRef.current = null;
-    pinchStartZoomRef.current = 1;
+    pinchStartZoomRef.current = zoomLevel;
+    setIsPinchingKeyframe(false);
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
@@ -512,13 +516,17 @@ export const EnhancedVideoPlayer = ({
   const handleTouchStart = (e: React.TouchEvent<HTMLImageElement>) => {
     // Handle pinch zoom if 2 fingers
     if (e.touches.length === 2) {
+      e.preventDefault();
+      e.stopPropagation();
       handlePinchZoom(e);
       return;
     }
     
-    // If zoomed in, handle pan/drag
+    const touch = e.touches[0];
+    
+    // If zoomed in, enable panning - prevent swipe
     if (zoomLevel > MIN_ZOOM && e.touches.length === 1) {
-      const touch = e.touches[0];
+      setIsPanning(true);
       const startX = touch.clientX - panPosition.x;
       const startY = touch.clientY - panPosition.y;
       
@@ -532,6 +540,7 @@ export const EnhancedVideoPlayer = ({
       };
       
       const handleTouchEnd = () => {
+        setIsPanning(false);
         document.removeEventListener('touchmove', handleTouchMove);
         document.removeEventListener('touchend', handleTouchEnd);
         handlePinchEnd();
@@ -539,31 +548,33 @@ export const EnhancedVideoPlayer = ({
       
       document.addEventListener('touchmove', handleTouchMove, { passive: false });
       document.addEventListener('touchend', handleTouchEnd);
+      e.preventDefault();
       return;
     }
     
-    // If not zoomed, handle swipe navigation
-    const touch = e.touches[0];
-    const startX = touch.clientX;
-    
-    const handleTouchMove = (moveEvent: TouchEvent) => {
-      const moveTouch = moveEvent.touches[0];
-      const diffX = moveTouch.clientX - startX;
+    // Only do swipe if not zoomed AND only 1 touch
+    if (zoomLevel === MIN_ZOOM && e.touches.length === 1) {
+      const startX = touch.clientX;
       
-      if (Math.abs(diffX) > 50) {
-        if (diffX > 0) {
-          navigateToPreviousFrame();
-        } else {
-          navigateToNextFrame();
+      const handleTouchMove = (moveEvent: TouchEvent) => {
+        const moveTouch = moveEvent.touches[0];
+        const diffX = moveTouch.clientX - startX;
+        
+        if (Math.abs(diffX) > 50) {
+          if (diffX > 0) {
+            navigateToPreviousFrame();
+          } else {
+            navigateToNextFrame();
+          }
+          document.removeEventListener('touchmove', handleTouchMove);
         }
+      };
+      
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', () => {
         document.removeEventListener('touchmove', handleTouchMove);
-      }
-    };
-    
-    document.addEventListener('touchmove', handleTouchMove);
-    document.addEventListener('touchend', () => {
-      document.removeEventListener('touchmove', handleTouchMove);
-    }, { once: true });
+      }, { once: true });
+    }
   };
 
   // Keyboard navigation for fullscreen viewer
@@ -1059,14 +1070,14 @@ export const EnhancedVideoPlayer = ({
           {/* Frame image with zoom and pan */}
           <div 
             ref={imageContainerRef}
-            className="relative flex items-center justify-center w-full h-full max-w-full max-h-[calc(100vh-100px)] sm:max-h-[80vh] overflow-hidden pointer-events-auto"
+            className="relative flex items-center justify-center w-full h-full max-w-full max-h-[calc(100vh-100px)] sm:max-h-[80vh] overflow-hidden pointer-events-auto touch-none"
             onClick={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
           >
             <img
               src={keyFrames[fullscreenFrameIndex].original}
               alt={`Key Frame ${fullscreenFrameIndex + 1}`}
-              className={`max-w-full max-h-[calc(100vh-100px)] sm:max-h-[80vh] object-contain transition-transform ${
+              className={`max-w-full max-h-[calc(100vh-100px)] sm:max-h-[80vh] object-contain transition-transform touch-none ${
                 isPanning ? 'cursor-grabbing' : zoomLevel > MIN_ZOOM ? 'cursor-grab' : 'cursor-default'
               }`}
               style={{
@@ -1087,7 +1098,7 @@ export const EnhancedVideoPlayer = ({
           </div>
 
           {/* Action buttons */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10 pointer-events-auto">
+          <div className="absolute bottom-8 sm:bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20 pointer-events-auto">
             {(isScoutView || isOwnerView) && (
               <Button
                 variant="outline"
