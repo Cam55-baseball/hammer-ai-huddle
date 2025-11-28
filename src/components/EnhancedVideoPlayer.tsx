@@ -44,6 +44,9 @@ export const EnhancedVideoPlayer = ({
   const [fullscreenFrameIndex, setFullscreenFrameIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Blob video URL for CORS-free frame capture
+  const [blobVideoUrl, setBlobVideoUrl] = useState<string | null>(null);
+  
   // Zoom state
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
@@ -59,6 +62,48 @@ export const EnhancedVideoPlayer = ({
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 4;
   const ZOOM_STEP = 0.5;
+
+  // Load video as blob to bypass CORS restrictions for frame capture
+  useEffect(() => {
+    let isMounted = true;
+    
+    const loadVideoAsBlob = async () => {
+      if (!videoSrc) return;
+      
+      try {
+        const response = await fetch(videoSrc, {
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch video');
+        }
+        
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        if (isMounted) {
+          setBlobVideoUrl(blobUrl);
+        }
+      } catch (error) {
+        console.error('Failed to load video as blob:', error);
+        // Fall back to direct URL if blob loading fails
+        if (isMounted) {
+          setBlobVideoUrl(null);
+        }
+      }
+    };
+    
+    loadVideoAsBlob();
+    
+    return () => {
+      isMounted = false;
+      // Clean up blob URL when component unmounts or video changes
+      if (blobVideoUrl) {
+        URL.revokeObjectURL(blobVideoUrl);
+      }
+    };
+  }, [videoSrc]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -82,7 +127,7 @@ export const EnhancedVideoPlayer = ({
     }
 
     return () => video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-  }, [videoSrc]);
+  }, [videoSrc, blobVideoUrl]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -227,6 +272,12 @@ export const EnhancedVideoPlayer = ({
         return;
       }
 
+      // Check if video has valid dimensions
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        toast.error("Video not fully loaded. Please wait and try again.");
+        return;
+      }
+
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         toast.error("Could not get canvas context");
@@ -235,13 +286,27 @@ export const EnhancedVideoPlayer = ({
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      try {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      } catch (drawError) {
+        console.error('Canvas draw error:', drawError);
+        toast.error("Failed to draw video frame. Please refresh and try again.");
+        return;
+      }
 
-      const frameUrl = canvas.toDataURL('image/png');
+      let frameUrl: string;
+      try {
+        frameUrl = canvas.toDataURL('image/png');
+      } catch (corsError) {
+        console.error('CORS error during toDataURL:', corsError);
+        toast.error("Cannot capture frame due to video security restrictions. Please refresh the page.");
+        return;
+      }
       
       // Validate the captured frame
       if (!frameUrl || frameUrl === 'data:,' || frameUrl.length < 100) {
-        toast.error("Failed to capture frame. Try refreshing the page.");
+        toast.error("Failed to capture frame. The video may still be loading.");
         return;
       }
       
@@ -259,7 +324,11 @@ export const EnhancedVideoPlayer = ({
       toast.success("Key frame captured!");
     } catch (error) {
       console.error('Frame capture error:', error);
-      toast.error("Failed to capture frame. The video may have CORS restrictions.");
+      if (error instanceof DOMException && error.name === 'SecurityError') {
+        toast.error("Video is protected. Frame capture is not available for this video.");
+      } else {
+        toast.error("Failed to capture frame. Please try again.");
+      }
     }
   };
 
@@ -542,7 +611,7 @@ export const EnhancedVideoPlayer = ({
         >
           <video
             ref={videoRef}
-            src={videoSrc}
+            src={blobVideoUrl || videoSrc}
             controls
             crossOrigin="anonymous"
             preload="metadata"
@@ -1019,7 +1088,7 @@ export const EnhancedVideoPlayer = ({
 
           {/* Action buttons */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10 pointer-events-auto">
-            {isScoutView && (
+            {(isScoutView || isOwnerView) && (
               <Button
                 variant="outline"
                 size="sm"
