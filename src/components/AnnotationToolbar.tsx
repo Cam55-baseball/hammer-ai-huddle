@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   MousePointer2,
-  Pencil,
   Type,
   Square,
   Circle as CircleIcon,
@@ -95,14 +94,6 @@ export const AnnotationToolbar = ({
             title="Select"
           >
             <MousePointer2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={activeTool === "draw" ? "default" : "outline"}
-            size="sm"
-            onClick={() => onToolClick("draw")}
-            title="Freehand Draw"
-          >
-            <Pencil className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"

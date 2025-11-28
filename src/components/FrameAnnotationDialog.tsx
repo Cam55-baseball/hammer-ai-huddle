@@ -649,13 +649,6 @@ export const FrameAnnotationDialog = ({
           >
             <canvas ref={canvasRef} className={activeTool === 'draw' ? '' : 'touch-none'} />
             
-            {/* Draw mode indicator */}
-            {activeTool === 'draw' && (
-              <div className="absolute top-4 left-4 bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-full text-xs font-medium shadow-lg">
-                ✏️ Draw with finger
-              </div>
-            )}
-            
             {/* Pinch-to-zoom visual indicator */}
             {isPinching && (
               <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg flex items-center gap-2 animate-in fade-in zoom-in duration-200">
