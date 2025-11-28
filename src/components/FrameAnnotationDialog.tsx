@@ -37,6 +37,9 @@ export const FrameAnnotationDialog = ({
   const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
   const [initialZoomOnPinch, setInitialZoomOnPinch] = useState<number>(1);
   const [isPinching, setIsPinching] = useState(false);
+  const [isEditingText, setIsEditingText] = useState(false);
+  const [editingTextValue, setEditingTextValue] = useState('');
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize canvas
   useEffect(() => {
@@ -113,6 +116,12 @@ export const FrameAnnotationDialog = ({
             canvas.freeDrawingBrush.width = 3;
           }
 
+          // Configure touch handling for mobile
+          canvas.allowTouchScrolling = false;
+          if (canvas.upperCanvasEl) {
+            canvas.upperCanvasEl.style.touchAction = 'none';
+          }
+
           setFabricCanvas(canvas);
           saveHistory(canvas);
           setIsLoading(false);
@@ -158,8 +167,40 @@ export const FrameAnnotationDialog = ({
       setLastPanPosition(null);
       setInitialPinchDistance(null);
       setIsPinching(false);
+      setIsEditingText(false);
+      setEditingTextValue('');
     }
   }, [open]);
+
+  // Handle text editing events for mobile keyboard
+  useEffect(() => {
+    if (!fabricCanvas) return;
+
+    const handleTextEditingEntered = (e: any) => {
+      const target = e.target;
+      if (target && target.type === 'i-text') {
+        setIsEditingText(true);
+        setEditingTextValue(target.text || '');
+        
+        // Focus the input to trigger mobile keyboard
+        setTimeout(() => {
+          hiddenInputRef.current?.focus();
+        }, 100);
+      }
+    };
+
+    const handleTextEditingExited = () => {
+      setIsEditingText(false);
+    };
+
+    fabricCanvas.on('text:editing:entered', handleTextEditingEntered);
+    fabricCanvas.on('text:editing:exited', handleTextEditingExited);
+
+    return () => {
+      fabricCanvas.off('text:editing:entered', handleTextEditingEntered);
+      fabricCanvas.off('text:editing:exited', handleTextEditingExited);
+    };
+  }, [fabricCanvas]);
 
   // Update tool behavior
   useEffect(() => {
@@ -516,9 +557,9 @@ export const FrameAnnotationDialog = ({
 
           <div 
             ref={containerRef}
-            className={`relative border rounded-lg overflow-auto bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] touch-none ${activeTool === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
+            className={`relative border rounded-lg overflow-auto bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] ${activeTool === 'draw' ? '' : 'touch-none'} ${activeTool === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
           >
-            <canvas ref={canvasRef} />
+            <canvas ref={canvasRef} className={activeTool === 'draw' ? '' : 'touch-none'} />
             
             {/* Pinch-to-zoom visual indicator */}
             {isPinching && (
@@ -541,6 +582,37 @@ export const FrameAnnotationDialog = ({
               <div className="absolute inset-0 flex items-center justify-center bg-destructive/10 backdrop-blur-sm border border-destructive">
                 <p className="text-sm text-destructive">{loadError}</p>
               </div>
+            )}
+            
+            {/* Mobile text editing overlay input */}
+            {isEditingText && (
+              <input
+                ref={hiddenInputRef}
+                type="text"
+                value={editingTextValue}
+                onChange={(e) => {
+                  setEditingTextValue(e.target.value);
+                  const activeObj = fabricCanvas?.getActiveObject();
+                  if (activeObj && activeObj.type === 'i-text') {
+                    activeObj.set('text', e.target.value);
+                    fabricCanvas?.renderAll();
+                  }
+                }}
+                onBlur={() => {
+                  setIsEditingText(false);
+                  const activeObj = fabricCanvas?.getActiveObject();
+                  if (activeObj && activeObj.type === 'i-text') {
+                    (activeObj as any).exitEditing?.();
+                  }
+                  if (fabricCanvas) {
+                    saveHistory(fabricCanvas);
+                  }
+                }}
+                className="absolute bottom-0 left-0 right-0 p-3 bg-background border-t text-base z-50"
+                style={{ fontSize: '16px' }}
+                autoFocus
+                placeholder="Enter text..."
+              />
             )}
           </div>
         </div>
