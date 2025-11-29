@@ -44,19 +44,39 @@ serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
-    
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+
+    const jwt = authHeader.replace("Bearer ", "");
+
+    type JwtPayload = {
+      sub: string;
+      email?: string;
+      [key: string]: unknown;
+    };
+
+    let userId: string;
+    let email: string | undefined;
+
+    try {
+      const base64Payload = jwt.split(".")[1];
+      const payloadJson = atob(base64Payload);
+      const payload = JSON.parse(payloadJson) as JwtPayload;
+      userId = payload.sub;
+      email = payload.email;
+    } catch (_err) {
+      throw new Error("Invalid auth token");
+    }
+
+    if (!email) {
+      throw new Error("User email not available in auth token");
+    }
+
+    logStep("User authenticated from JWT", { userId, email });
 
     // Check if user is owner - no checkout needed
     const { data: ownerRole } = await supabaseClient
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('role', 'owner')
       .maybeSingle();
 
@@ -75,7 +95,7 @@ serve(async (req) => {
     const { data: adminRole } = await supabaseClient
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('role', 'admin')
       .maybeSingle();
 
@@ -126,7 +146,7 @@ serve(async (req) => {
     });
 
     // Check if customer already exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
@@ -153,14 +173,14 @@ serve(async (req) => {
     
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
+      customer_email: customerId ? undefined : email,
       line_items: lineItems,
       mode: "subscription",
       allow_promotion_codes: true,
       success_url: `${origin}/checkout?status=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout?status=cancel`,
       metadata: {
-        user_id: user.id
+        user_id: userId
       }
     });
 
