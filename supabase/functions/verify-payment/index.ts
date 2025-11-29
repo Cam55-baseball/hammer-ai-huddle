@@ -12,6 +12,22 @@ const logStep = (step: string, details?: any) => {
   console.log(`[VERIFY-PAYMENT] ${step}${detailsStr}`);
 };
 
+// Helper to safely convert Unix timestamp to ISO string
+const safeToISO = (unixTimestamp: number): string => {
+  try {
+    const date = new Date(unixTimestamp * 1000);
+    // Validate date is not invalid
+    if (isNaN(date.getTime())) {
+      throw new Error('Invalid date');
+    }
+    return date.toISOString();
+  } catch (error) {
+    logStep("Date conversion failed, using default", { unixTimestamp, error });
+    // Return a default date 30 days from now if conversion fails
+    return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  }
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -99,7 +115,7 @@ serve(async (req) => {
           moduleMapping[key] = {
             subscription_id: subscription.id,
             status: subscription.status,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_end: safeToISO(subscription.current_period_end),
             price_id: item.price.id,
             cancel_at_period_end: subscription.cancel_at_period_end || false,
           };
@@ -148,7 +164,7 @@ serve(async (req) => {
       stripe_customer_id: customerId,
       stripe_subscription_id: subscriptions.data[0]?.id || null,
       current_period_end: subscriptions.data[0] 
-        ? new Date(subscriptions.data[0].current_period_end * 1000).toISOString()
+        ? safeToISO(subscriptions.data[0].current_period_end)
         : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       has_pending_cancellations: Object.values(moduleMapping).some((m: any) => m.cancel_at_period_end),
       coupon_code: couponCode,
