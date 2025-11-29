@@ -38,6 +38,26 @@ const Checkout = () => {
       
       const verifyPayment = async () => {
         try {
+          // Ensure user is authenticated before calling verify-payment
+          const { data: sessionData } = await supabase.auth.getSession();
+          
+          if (!sessionData.session) {
+            console.log('Checkout: No session, waiting for auth...');
+            toast({
+              title: "Please Sign In",
+              description: "Sign in to activate your modules.",
+              variant: "destructive",
+            });
+            navigate('/auth', { 
+              state: { 
+                returnTo: '/checkout',
+                sessionId,
+                verifyPayment: true
+              }
+            });
+            return;
+          }
+
           toast({
             title: "Verifying Payment",
             description: "Please wait while we activate your modules...",
