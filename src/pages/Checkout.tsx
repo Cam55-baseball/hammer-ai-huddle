@@ -159,8 +159,9 @@ const Checkout = () => {
       
       if (!sessionData.session || sessionError) {
         console.log('Checkout: Session invalid, attempting refresh...');
-        const { error: refreshError } = await supabase.auth.refreshSession();
-        if (refreshError) {
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshData.session) {
           toast({
             title: "Session Expired",
             description: "Please log in again to continue.",
@@ -175,6 +176,9 @@ const Checkout = () => {
           });
           return;
         }
+        
+        // Wait a moment for the session to propagate
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       if (isOwner || isAdmin) {
