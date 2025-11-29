@@ -15,7 +15,7 @@ const MODULE_PRICE = 200;
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, session, loading: authLoading } = useAuth();
   const { modules: subscribedModules, refetch, loading: subLoading } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
@@ -58,45 +58,19 @@ const Checkout = () => {
 
     // Check for both 'status' (new) and 'checkout' (old) parameters for backward compatibility
     const status = searchParams.get('status') || searchParams.get('checkout');
+    const sessionId = searchParams.get('session_id');
+    
     if (status === 'success') {
-      console.log('Checkout: Payment successful, verifying session...');
+      console.log('Checkout: Payment successful, verifying payment...', { sessionId });
       
-      // Show loading state while verifying session
-      toast({
-        title: "Payment Successful!",
-        description: "Verifying your session...",
-      });
-      
-      // Wait for auth to stabilize (max 3 seconds)
-      let attempts = 0;
-      const maxAttempts = 15; // 3 seconds (15 * 200ms)
-      
-      const verifyAndRedirect = setInterval(() => {
-        attempts++;
-        
-        // Check if user is authenticated
-        if (user && session) {
-          clearInterval(verifyAndRedirect);
-          console.log('Checkout: Session verified, redirecting to dashboard');
-          
+      const verifyPayment = async () => {
+        if (!sessionId) {
+          console.warn('Checkout: No session_id found, redirecting to sign-in');
           toast({
             title: "Payment Successful!",
-            description: "Redirecting to your dashboard...",
+            description: "Your modules will be activated shortly. Please sign in to continue.",
           });
           
-          // Store pending module activation for notification system
-          if (isAddMode && selectedModule && selectedSport) {
-            localStorage.setItem('pendingModuleActivation', JSON.stringify({
-              module: selectedModule,
-              sport: selectedSport,
-              timestamp: Date.now()
-            }));
-          }
-          
-          // Trigger immediate refetch
-          refetch();
-          
-          // Redirect to sign-in page with success message
           navigate("/auth", { 
             replace: true,
             state: {
@@ -106,58 +80,83 @@ const Checkout = () => {
               sport: selectedSport
             }
           });
-          
           return;
         }
-        
-        // Timeout after max attempts
-        if (attempts >= maxAttempts) {
-          clearInterval(verifyAndRedirect);
-          console.log('Checkout: Session verification timeout, redirecting anyway');
-          
+
+        try {
           toast({
-            title: "Payment Successful!",
-            description: "Redirecting to your dashboard...",
+            title: "Verifying Payment",
+            description: "Please wait while we activate your modules...",
           });
-          
-          // Store pending module activation for notification system
-          if (isAddMode && selectedModule && selectedSport) {
-            localStorage.setItem('pendingModuleActivation', JSON.stringify({
-              module: selectedModule,
-              sport: selectedSport,
-              timestamp: Date.now()
-            }));
+
+          const { data, error } = await supabase.functions.invoke('verify-payment', {
+            body: { sessionId },
+          });
+
+          if (error) {
+            console.error('Checkout: Verification error:', error);
+            toast({
+              title: "Verification Failed",
+              description: "Please refresh the page or contact support if modules don't appear.",
+              variant: "destructive",
+            });
+            return;
           }
-          
-          // Trigger refetch
-          refetch();
-          
-          // Redirect to sign-in page
-          navigate("/auth", { 
-            replace: true,
-            state: {
-              fromPayment: true,
-              message: "Payment successful! Please sign in to access your new module.",
-              module: selectedModule,
-              sport: selectedSport
+
+          if (data?.success) {
+            console.log('Checkout: Payment verified successfully:', data);
+            
+            const moduleList = data.modules.join(', ');
+            let successMessage = `Modules activated: ${moduleList}`;
+            
+            if (data.coupon) {
+              successMessage += `\nDiscount applied: ${data.coupon.discount}% off`;
             }
+            
+            toast({
+              title: "Payment Successful!",
+              description: successMessage,
+            });
+            
+            // Refresh session and subscription
+            await supabase.auth.refreshSession();
+            await refetch();
+            
+            // Clear URL params
+            setSearchParams({});
+            
+            // Redirect to dashboard after 2 seconds
+            setTimeout(() => navigate('/dashboard'), 2000);
+          } else {
+            toast({
+              title: "Verification Failed",
+              description: "Please contact support if your modules don't appear.",
+              variant: "destructive",
+            });
+          }
+        } catch (err) {
+          console.error('Checkout: Verification exception:', err);
+          toast({
+            title: "Verification Error",
+            description: "Please refresh the page or contact support.",
+            variant: "destructive",
           });
         }
-      }, 200); // Check every 200ms
-      
-      // Clean up interval on unmount
-      return () => clearInterval(verifyAndRedirect);
+      };
+
+      verifyPayment();
+      verifyPayment();
     } else if (status === 'cancel' || status === 'cancelled') {
       console.log('Checkout: Payment cancelled');
-      // Clear any pending module activation
       localStorage.removeItem('pendingModuleActivation');
       toast({
         title: "Payment Cancelled",
         description: "Your payment was cancelled. You can try again anytime.",
         variant: "destructive",
       });
+      setSearchParams({});
     }
-  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, toast, refetch, isAddMode]);
+  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, toast, refetch, isAddMode, selectedModule, selectedSport, session, setSearchParams]);
 
   const redirectToStripe = (url: string) => {
     console.log('Checkout: Redirecting to Stripe URL', url);

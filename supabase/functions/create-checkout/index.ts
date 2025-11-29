@@ -156,7 +156,7 @@ serve(async (req) => {
       line_items: lineItems,
       mode: "subscription",
       allow_promotion_codes: true,
-      success_url: `${origin}/checkout?status=success`,
+      success_url: `${origin}/checkout?status=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout?status=cancel`,
       metadata: {
         user_id: user.id

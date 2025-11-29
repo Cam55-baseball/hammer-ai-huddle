@@ -71,3 +71,6 @@ verify_jwt = true
 
 [functions.get-video-annotations]
 verify_jwt = true
+
+[functions.verify-payment]
+verify_jwt = true
