@@ -43,8 +43,9 @@ serve(async (req) => {
     logStep("Function started");
 
     const authHeader = req.headers.get("Authorization");
+    logStep("Authorization header received", { hasAuthHeader: !!authHeader });
     if (!authHeader) {
-      logStep("ERROR: No authorization header");
+      logStep("ERROR: No authorization header on request");
       throw new Error("Authentication error: Auth session missing!");
     }
 
@@ -64,6 +65,8 @@ serve(async (req) => {
 
     const bearer = authHeader.replace(/^Bearer\s+/i, '');
     const claims = decodeJwt(bearer);
+    logStep("Decoded JWT claims", { hasClaims: !!claims, hasSub: !!claims?.sub, hasEmail: !!(claims?.email || claims?.user_metadata?.email) });
+
     if (!claims || !claims.sub) {
       logStep("ERROR: Authentication failed while decoding JWT");
       throw new Error("Authentication error: Auth session missing!");
@@ -75,7 +78,7 @@ serve(async (req) => {
     };
 
     if (!user.id || !user.email) {
-      logStep("ERROR: User not authenticated or email missing");
+      logStep("ERROR: User not authenticated or email missing", { hasId: !!user.id, hasEmail: !!user.email });
       throw new Error("User not authenticated or email not available");
     }
 
