@@ -96,21 +96,39 @@ serve(async (req) => {
     const moduleMapping: Record<string, any> = {};
     const activeModules: string[] = [];
 
+    logStep("Processing subscriptions for module mapping", { subscriptionCount: subscriptions.data.length });
+
     for (const subscription of subscriptions.data) {
+      logStep("Processing subscription", { subscriptionId: subscription.id, itemCount: subscription.items.data.length });
+      
       for (const item of subscription.items.data) {
         const productId = typeof item.price.product === 'string' 
           ? item.price.product 
           : item.price.product?.id;
 
-        if (!productId) continue;
+        if (!productId) {
+          logStep("WARNING: No product ID found for subscription item", { itemId: item.id });
+          continue;
+        }
 
         // Fetch product to get metadata
+        logStep("Fetching product details", { productId });
         const product = await stripe.products.retrieve(productId);
+        logStep("Product retrieved", { 
+          productId, 
+          productName: product.name,
+          hasMetadata: !!product.metadata,
+          metadataKeys: product.metadata ? Object.keys(product.metadata) : [],
+          sport: product.metadata?.sport,
+          module: product.metadata?.module
+        });
+
         const sport = product.metadata?.sport || '';
         const module = product.metadata?.module || '';
 
         if (sport && module) {
           const key = `${sport}_${module}`;
+          logStep("Adding module to active list", { key, sport, module });
           activeModules.push(key);
 
           moduleMapping[key] = {
@@ -120,6 +138,14 @@ serve(async (req) => {
             price_id: item.price.id,
             cancel_at_period_end: subscription.cancel_at_period_end || false,
           };
+        } else {
+          logStep("ERROR: Product missing required metadata", { 
+            productId, 
+            productName: product.name,
+            sport, 
+            module,
+            allMetadata: product.metadata 
+          });
         }
       }
     }
