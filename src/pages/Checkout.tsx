@@ -27,9 +27,6 @@ const Checkout = () => {
   const returnTo = state?.returnTo;
   const isAddMode = returnTo === '/dashboard';
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
-  const [showManualLink, setShowManualLink] = useState(false);
-  const popupRef = useRef<Window | null>(null);
 
   useEffect(() => {
     // CRITICAL: Wait for ALL loading states to complete before making any decisions
@@ -157,29 +154,6 @@ const Checkout = () => {
     }
   }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, toast, refetch, isAddMode, selectedModule, selectedSport, session, setSearchParams]);
 
-  const redirectToStripe = (url: string) => {
-    console.log('Checkout: Redirecting to Stripe URL', url);
-    try {
-      // Try to navigate the top frame (helps if embedded in iframe)
-      if (window.top) {
-        window.top.location.href = url;
-      } else {
-        window.location.href = url;
-      }
-    } catch (e) {
-      console.warn('Checkout: window.top navigation failed, trying assign', e);
-      try {
-        window.location.assign(url);
-      } catch (e2) {
-        console.warn('Checkout: location.assign failed', e2);
-      }
-    }
-
-    // Safety net: if navigation didn't occur (e.g., iframe sandbox), show manual link
-    setTimeout(() => {
-      setShowManualLink(true);
-    }, 1500);
-  };
 
   const handleCreateCheckout = async () => {
     if (!selectedModule) {
@@ -192,16 +166,6 @@ const Checkout = () => {
     }
 
     setCheckoutLoading(true);
-
-    // CRITICAL: Open popup immediately to preserve user activation
-    console.log('Checkout: Opening blank popup window...');
-    popupRef.current = window.open('', '_blank', '') || null;
-    
-    if (!popupRef.current) {
-      console.warn('Checkout: Popup blocked by browser, will fallback to redirect methods');
-    } else {
-      console.log('Checkout: Popup opened successfully');
-    }
 
     try {
       // Refresh session to ensure valid token before checkout
@@ -251,64 +215,20 @@ const Checkout = () => {
         localStorage.setItem('checkoutModule', selectedModule);
         localStorage.setItem('checkoutSport', selectedSport);
         
-        setCheckoutUrl(data.url);
-        
         toast({
           title: "Redirecting to Checkout",
           description: "You'll be redirected to complete your payment...",
         });
         
-        // Fail-safe: Check if popup is stuck on blank page
-        setTimeout(() => {
-          if (popupRef.current && !popupRef.current.closed) {
-            try {
-              // If popup is still blank, close it and redirect main window
-              if (popupRef.current.location.href === 'about:blank') {
-                console.log('Checkout: Popup stuck on blank page, closing and redirecting');
-                popupRef.current.close();
-                redirectToStripe(data.url);
-              }
-            } catch (e) {
-              // Cross-origin error means popup navigated successfully
-              console.log('Checkout: Popup navigated (cross-origin check passed)');
-            }
-          }
-        }, 1200);
-        
-        // Always show manual link after 2 seconds as final fallback
-        setTimeout(() => {
-          setShowManualLink(true);
-        }, 2000);
-        
-        // If popup is still open, navigate it to Stripe
-        if (popupRef.current && !popupRef.current.closed) {
-          console.log('Checkout: Navigating popup to Stripe URL', data.url);
-          try {
-            popupRef.current.location.href = data.url;
-            console.log('Checkout: Popup successfully navigated to Stripe');
-            return;
-          } catch (e) {
-            console.warn('Checkout: Failed to navigate popup, falling back to redirect', e);
-            popupRef.current.close();
-          }
-        } else {
-          console.log('Checkout: Popup closed or blocked, using fallback redirect');
-        }
-        
-        // Fallback: Use existing redirect method
-        redirectToStripe(data.url);
+        // Direct redirect to Stripe
+        console.log('Checkout: Redirecting to Stripe URL', data.url);
+        window.location.href = data.url;
         return;
       } else {
         throw new Error("No checkout URL received");
       }
     } catch (error: any) {
       console.error('Checkout error:', error);
-      
-      // Close popup if it's still open on error
-      if (popupRef.current && !popupRef.current.closed) {
-        console.log('Checkout: Closing popup due to error');
-        popupRef.current.close();
-      }
       
       const errorMsg = error.message || "Failed to create checkout session";
       toast({
@@ -395,18 +315,6 @@ const Checkout = () => {
             </p>
           </div>
 
-          {showManualLink && checkoutUrl && (
-            <div className="mb-4 p-4 rounded-lg border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
-              <p className="text-sm text-amber-800 dark:text-amber-100 mb-2">
-                If you are not redirected automatically, click the button below to open Stripe Checkout.
-              </p>
-              <Button asChild className="w-full" variant="secondary">
-                <a href={checkoutUrl} target="_top" rel="noopener noreferrer">
-                  Open Stripe Checkout
-                </a>
-              </Button>
-            </div>
-          )}
 
           <Button 
             onClick={handleCreateCheckout}
