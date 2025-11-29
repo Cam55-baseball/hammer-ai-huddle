@@ -10,7 +10,6 @@ import { branding } from "@/branding";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
 import {
   Sidebar,
   SidebarContent,
@@ -330,16 +329,8 @@ export function AppSidebar() {
                     onClick={() => navigate(item.url)}
                     isActive={isActive(item.url)}
                     tooltip={item.title}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-sidebar-accent relative min-h-[44px]",
-                      isActive(item.url) && "bg-sidebar-accent text-sidebar-primary font-semibold before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary before:rounded-r"
-                    )}
-                    aria-current={isActive(item.url) ? "page" : undefined}
                   >
-                    <item.icon className={cn(
-                      "h-5 w-5 transition-transform",
-                      isActive(item.url) && "scale-110"
-                    )} />
+                    <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

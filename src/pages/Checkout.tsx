@@ -15,7 +15,7 @@ const MODULE_PRICE = 200;
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { user, session, loading: authLoading } = useAuth();
   const { modules: subscribedModules, refetch, loading: subLoading } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
@@ -27,158 +27,12 @@ const Checkout = () => {
   const returnTo = state?.returnTo;
   const isAddMode = returnTo === '/dashboard';
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const verifyingRef = useRef(false);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [showManualLink, setShowManualLink] = useState(false);
+  const popupRef = useRef<Window | null>(null);
 
   useEffect(() => {
-    // PRIORITY 1: Check for payment success params FIRST (before auth checks)
-    const status = searchParams.get('status') || searchParams.get('checkout');
-    const sessionId = searchParams.get('session_id');
-    
-    if (status === 'success' && sessionId) {
-      console.log('Checkout: Payment successful, verifying payment...', { sessionId });
-      
-      const verifyPayment = async () => {
-        // Prevent multiple simultaneous verification attempts
-        if (verifyingRef.current) {
-          console.log('Checkout: Verification already in progress, skipping...');
-          return;
-        }
-        verifyingRef.current = true;
-
-        try {
-          // Force refresh the session to get a fresh token
-          console.log('Checkout: Forcing session refresh...');
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          
-          if (refreshError || !refreshData.session) {
-            console.log('Checkout: Session refresh failed, redirecting to auth...');
-            toast({
-              title: "Please Sign In",
-              description: "Sign in to activate your modules.",
-              variant: "destructive",
-            });
-            navigate('/auth', { 
-              state: { 
-                returnTo: '/checkout',
-                sessionId,
-                verifyPayment: true
-              }
-            });
-            verifyingRef.current = false;
-            return;
-          }
-          
-          console.log('Checkout: Session refreshed successfully');
-          // Wait briefly for token to propagate
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          toast({
-            title: "Verifying Payment",
-            description: "Please wait while we activate your modules...",
-          });
-
-          // Retry logic for verify-payment (max 2 attempts)
-          let verifyAttempts = 0;
-          const maxAttempts = 2;
-          let lastError = null;
-          let data = null;
-          
-          while (verifyAttempts < maxAttempts) {
-            verifyAttempts++;
-            console.log(`Checkout: Verification attempt ${verifyAttempts}/${maxAttempts}`);
-            
-            const result = await supabase.functions.invoke('verify-payment', {
-              body: { sessionId },
-            });
-            
-            if (!result.error && result.data?.success) {
-              data = result.data;
-              console.log('Checkout: Verification succeeded on attempt', verifyAttempts);
-              break;
-            }
-            
-            lastError = result.error;
-            console.error(`Checkout: Verification attempt ${verifyAttempts} failed:`, result.error);
-            
-            if (verifyAttempts < maxAttempts) {
-              console.log('Checkout: Retrying after delay and refresh...');
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              await supabase.auth.refreshSession(); // Try another refresh
-            }
-          }
-
-          if (lastError && !data) {
-            console.error('Checkout: All verification attempts failed:', lastError);
-            toast({
-              title: "Verification Failed",
-              description: "Please refresh the page or contact support if modules don't appear.",
-              variant: "destructive",
-            });
-            verifyingRef.current = false;
-            return;
-          }
-
-          if (data?.success) {
-            console.log('Checkout: Payment verified successfully:', data);
-            
-            const moduleList = data.modules.join(', ');
-            let successMessage = `Modules activated: ${moduleList}`;
-            
-            if (data.coupon) {
-              successMessage += `\nDiscount applied: ${data.coupon.discount}% off`;
-            }
-            
-            toast({
-              title: "Payment Successful!",
-              description: successMessage,
-            });
-            
-            // Refresh session and subscription
-            await supabase.auth.refreshSession();
-            await refetch();
-            
-            // Clear URL params
-            setSearchParams({});
-            
-            // Redirect to dashboard after 2 seconds
-            setTimeout(() => navigate('/dashboard'), 2000);
-          } else {
-            toast({
-              title: "Verification Failed",
-              description: "Please contact support if your modules don't appear.",
-              variant: "destructive",
-            });
-          }
-        } catch (err) {
-          console.error('Checkout: Verification exception:', err);
-          toast({
-            title: "Verification Error",
-            description: "Please refresh the page or contact support.",
-            variant: "destructive",
-          });
-        } finally {
-          verifyingRef.current = false;
-        }
-      };
-
-      verifyPayment();
-      return; // Stop here, don't do auth checks yet
-    }
-    
-    // Handle cancelled payment
-    if (status === 'cancel' || status === 'cancelled') {
-      console.log('Checkout: Payment cancelled');
-      localStorage.removeItem('pendingModuleActivation');
-      toast({
-        title: "Payment Cancelled",
-        description: "Your payment was cancelled. You can try again anytime.",
-        variant: "destructive",
-      });
-      setSearchParams({});
-      return;
-    }
-
-    // PRIORITY 2: Now check auth status for other flows
+    // CRITICAL: Wait for ALL loading states to complete before making any decisions
     if (authLoading || ownerLoading || adminLoading) {
       console.log('Checkout: Still loading...', { authLoading, ownerLoading, adminLoading });
       return;
@@ -201,8 +55,133 @@ const Checkout = () => {
       });
       return;
     }
-  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, toast, refetch, isAddMode, selectedModule, selectedSport, session, setSearchParams]);
 
+    // Check for both 'status' (new) and 'checkout' (old) parameters for backward compatibility
+    const status = searchParams.get('status') || searchParams.get('checkout');
+    if (status === 'success') {
+      console.log('Checkout: Payment successful, verifying session...');
+      
+      // Show loading state while verifying session
+      toast({
+        title: "Payment Successful!",
+        description: "Verifying your session...",
+      });
+      
+      // Wait for auth to stabilize (max 3 seconds)
+      let attempts = 0;
+      const maxAttempts = 15; // 3 seconds (15 * 200ms)
+      
+      const verifyAndRedirect = setInterval(() => {
+        attempts++;
+        
+        // Check if user is authenticated
+        if (user && session) {
+          clearInterval(verifyAndRedirect);
+          console.log('Checkout: Session verified, redirecting to dashboard');
+          
+          toast({
+            title: "Payment Successful!",
+            description: "Redirecting to your dashboard...",
+          });
+          
+          // Store pending module activation for notification system
+          if (isAddMode && selectedModule && selectedSport) {
+            localStorage.setItem('pendingModuleActivation', JSON.stringify({
+              module: selectedModule,
+              sport: selectedSport,
+              timestamp: Date.now()
+            }));
+          }
+          
+          // Trigger immediate refetch
+          refetch();
+          
+          // Redirect to sign-in page with success message
+          navigate("/auth", { 
+            replace: true,
+            state: {
+              fromPayment: true,
+              message: "Payment successful! Please sign in to access your new module.",
+              module: selectedModule,
+              sport: selectedSport
+            }
+          });
+          
+          return;
+        }
+        
+        // Timeout after max attempts
+        if (attempts >= maxAttempts) {
+          clearInterval(verifyAndRedirect);
+          console.log('Checkout: Session verification timeout, redirecting anyway');
+          
+          toast({
+            title: "Payment Successful!",
+            description: "Redirecting to your dashboard...",
+          });
+          
+          // Store pending module activation for notification system
+          if (isAddMode && selectedModule && selectedSport) {
+            localStorage.setItem('pendingModuleActivation', JSON.stringify({
+              module: selectedModule,
+              sport: selectedSport,
+              timestamp: Date.now()
+            }));
+          }
+          
+          // Trigger refetch
+          refetch();
+          
+          // Redirect to sign-in page
+          navigate("/auth", { 
+            replace: true,
+            state: {
+              fromPayment: true,
+              message: "Payment successful! Please sign in to access your new module.",
+              module: selectedModule,
+              sport: selectedSport
+            }
+          });
+        }
+      }, 200); // Check every 200ms
+      
+      // Clean up interval on unmount
+      return () => clearInterval(verifyAndRedirect);
+    } else if (status === 'cancel' || status === 'cancelled') {
+      console.log('Checkout: Payment cancelled');
+      // Clear any pending module activation
+      localStorage.removeItem('pendingModuleActivation');
+      toast({
+        title: "Payment Cancelled",
+        description: "Your payment was cancelled. You can try again anytime.",
+        variant: "destructive",
+      });
+    }
+  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, toast, refetch, isAddMode]);
+
+  const redirectToStripe = (url: string) => {
+    console.log('Checkout: Redirecting to Stripe URL', url);
+    try {
+      // Try to navigate the top frame (helps if embedded in iframe)
+      if (window.top) {
+        window.top.location.href = url;
+      } else {
+        window.location.href = url;
+      }
+    } catch (e) {
+      console.warn('Checkout: window.top navigation failed, trying assign', e);
+      try {
+        window.location.assign(url);
+      } catch (e2) {
+        console.warn('Checkout: location.assign failed', e2);
+      }
+    }
+
+    // Safety net: if navigation didn't occur (e.g., iframe sandbox), show manual link
+    setTimeout(() => {
+      setShowManualLink(true);
+    }, 1500);
+  };
 
   const handleCreateCheckout = async () => {
     if (!selectedModule) {
@@ -216,15 +195,24 @@ const Checkout = () => {
 
     setCheckoutLoading(true);
 
+    // CRITICAL: Open popup immediately to preserve user activation
+    console.log('Checkout: Opening blank popup window...');
+    popupRef.current = window.open('', '_blank', '') || null;
+    
+    if (!popupRef.current) {
+      console.warn('Checkout: Popup blocked by browser, will fallback to redirect methods');
+    } else {
+      console.log('Checkout: Popup opened successfully');
+    }
+
     try {
       // Refresh session to ensure valid token before checkout
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (!sessionData.session || sessionError) {
         console.log('Checkout: Session invalid, attempting refresh...');
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        
-        if (refreshError || !refreshData.session) {
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        if (refreshError) {
           toast({
             title: "Session Expired",
             description: "Please log in again to continue.",
@@ -239,9 +227,6 @@ const Checkout = () => {
           });
           return;
         }
-        
-        // Wait a moment for the session to propagate
-        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       if (isOwner || isAdmin) {
@@ -267,38 +252,65 @@ const Checkout = () => {
         localStorage.setItem('checkoutReturnUrl', window.location.pathname);
         localStorage.setItem('checkoutModule', selectedModule);
         localStorage.setItem('checkoutSport', selectedSport);
-        localStorage.setItem('pendingCheckoutSession', 'true');
+        
+        setCheckoutUrl(data.url);
         
         toast({
-          title: "Opening Checkout",
-          description: "Stripe checkout is opening in a new tab...",
+          title: "Redirecting to Checkout",
+          description: "You'll be redirected to complete your payment...",
         });
         
-        console.log('Checkout: Opening Stripe URL in new tab', data.url);
+        // Fail-safe: Check if popup is stuck on blank page
+        setTimeout(() => {
+          if (popupRef.current && !popupRef.current.closed) {
+            try {
+              // If popup is still blank, close it and redirect main window
+              if (popupRef.current.location.href === 'about:blank') {
+                console.log('Checkout: Popup stuck on blank page, closing and redirecting');
+                popupRef.current.close();
+                redirectToStripe(data.url);
+              }
+            } catch (e) {
+              // Cross-origin error means popup navigated successfully
+              console.log('Checkout: Popup navigated (cross-origin check passed)');
+            }
+          }
+        }, 1200);
         
-        // Open in new tab (works reliably in iframes)
-        const stripeWindow = window.open(data.url, '_blank');
+        // Always show manual link after 2 seconds as final fallback
+        setTimeout(() => {
+          setShowManualLink(true);
+        }, 2000);
         
-        // If popup was blocked, show fallback message
-        if (!stripeWindow || stripeWindow.closed) {
-          toast({
-            title: "Popup Blocked",
-            description: "Please allow popups and try again, or click the link below.",
-          });
+        // If popup is still open, navigate it to Stripe
+        if (popupRef.current && !popupRef.current.closed) {
+          console.log('Checkout: Navigating popup to Stripe URL', data.url);
+          try {
+            popupRef.current.location.href = data.url;
+            console.log('Checkout: Popup successfully navigated to Stripe');
+            return;
+          } catch (e) {
+            console.warn('Checkout: Failed to navigate popup, falling back to redirect', e);
+            popupRef.current.close();
+          }
+        } else {
+          console.log('Checkout: Popup closed or blocked, using fallback redirect');
         }
         
-        // Show user instructions to return after payment
-        toast({
-          title: "Complete Payment",
-          description: "After payment, return to this tab and refresh to see your modules.",
-        });
-        
+        // Fallback: Use existing redirect method
+        redirectToStripe(data.url);
         return;
       } else {
         throw new Error("No checkout URL received");
       }
     } catch (error: any) {
       console.error('Checkout error:', error);
+      
+      // Close popup if it's still open on error
+      if (popupRef.current && !popupRef.current.closed) {
+        console.log('Checkout: Closing popup due to error');
+        popupRef.current.close();
+      }
       
       const errorMsg = error.message || "Failed to create checkout session";
       toast({
@@ -385,6 +397,18 @@ const Checkout = () => {
             </p>
           </div>
 
+          {showManualLink && checkoutUrl && (
+            <div className="mb-4 p-4 rounded-lg border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+              <p className="text-sm text-amber-800 dark:text-amber-100 mb-2">
+                If you are not redirected automatically, click the button below to open Stripe Checkout.
+              </p>
+              <Button asChild className="w-full" variant="secondary">
+                <a href={checkoutUrl} target="_top" rel="noopener noreferrer">
+                  Open Stripe Checkout
+                </a>
+              </Button>
+            </div>
+          )}
 
           <Button 
             onClick={handleCreateCheckout}

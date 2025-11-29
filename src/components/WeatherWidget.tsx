@@ -295,48 +295,48 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             )}
 
             {expanded && weather?.sportAnalysis && (
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4 space-y-2 sm:space-y-3 overflow-hidden max-w-full">
-                <h4 className="font-semibold text-sm sm:text-base flex items-center gap-2 break-words hyphens-auto">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4 space-y-2 sm:space-y-3 overflow-x-hidden max-w-full">
+                <h4 className="font-semibold flex items-center gap-2">
                   {weather.sportAnalysis.sport.toLowerCase().includes('softball') ? (
                     <Circle 
                       size={18}
-                      className="text-primary fill-primary/20 flex-shrink-0"
+                      className="text-primary fill-primary/20"
                     />
                   ) : (
                     <Icon 
                       iconNode={baseball} 
                       size={18}
-                      className="text-primary flex-shrink-0"
+                      className="text-primary"
                     />
                   )}
-                  <span className="break-words hyphens-auto">{weather.sportAnalysis.sport} Conditions Analysis</span>
+                  {weather.sportAnalysis.sport} Conditions Analysis
                 </h4>
-                <div className="grid gap-2 text-sm overflow-hidden">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-medium text-xs sm:text-sm">Flight:</span>
-                    <span className="text-muted-foreground text-xs sm:text-sm break-words hyphens-auto">{weather.sportAnalysis.ballFlight}</span>
+                <div className="grid gap-2 text-sm">
+                  <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
+                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Ball Flight:</span>
+                    <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.ballFlight}</span>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-medium text-xs sm:text-sm">Wind:</span>
-                    <span className="text-muted-foreground text-xs sm:text-sm break-words hyphens-auto">{weather.sportAnalysis.windImpact}</span>
+                  <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
+                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Wind Impact:</span>
+                    <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.windImpact}</span>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-medium text-xs sm:text-sm">Field:</span>
-                    <span className="text-muted-foreground text-xs sm:text-sm break-words hyphens-auto">{weather.sportAnalysis.fieldCondition}</span>
+                  <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
+                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Field Conditions:</span>
+                    <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.fieldCondition}</span>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-medium text-xs sm:text-sm">Tracking:</span>
-                    <span className="text-muted-foreground text-xs sm:text-sm break-words hyphens-auto">{weather.sportAnalysis.trackingCondition}</span>
+                  <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
+                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Tracking:</span>
+                    <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.trackingCondition}</span>
                   </div>
                   {weather.sportAnalysis.uvWarning && (
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-medium text-xs sm:text-sm">UV:</span>
-                      <span className="text-amber-600 font-medium text-xs sm:text-sm break-words hyphens-auto">{weather.sportAnalysis.uvWarning}</span>
+                    <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
+                      <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">UV Warning:</span>
+                      <span className="text-amber-600 font-medium text-sm sm:text-base break-words">{weather.sportAnalysis.uvWarning}</span>
                     </div>
                   )}
-                  <div className="pt-2 mt-2 border-t flex flex-col gap-0.5">
-                    <span className="font-semibold text-xs sm:text-sm">Recommendation:</span>
-                    <span className="font-semibold text-xs sm:text-sm break-words hyphens-auto">{weather.sportAnalysis.recommendation}</span>
+                  <div className="pt-2 mt-2 border-t flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
+                    <span className="font-semibold text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Recommendation:</span>
+                    <span className="font-semibold text-sm sm:text-base break-words">{weather.sportAnalysis.recommendation}</span>
                   </div>
                 </div>
               </div>
@@ -354,29 +354,29 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             )}
 
             {showDrills && weather?.drillRecommendations && weather.drillRecommendations.length > 0 && (
-              <div className="space-y-3 animate-in fade-in-50 duration-300 overflow-hidden max-w-full">
-                <h4 className="font-semibold text-sm sm:text-base flex items-center gap-2">
-                  <Target className="h-4 w-4 flex-shrink-0" />
-                  <span className="break-words">Drill Recommendations</span>
+              <div className="space-y-3 animate-in fade-in-50 duration-300">
+                <h4 className="font-semibold text-base flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Weather-Based Drill Recommendations
                 </h4>
                 
                 <div className="grid gap-3">
                   {weather.drillRecommendations.map((rec, index) => (
                     <div 
                       key={index} 
-                      className="rounded-lg border border-border bg-card p-2 sm:p-3 hover:bg-muted/30 transition-colors overflow-hidden"
+                      className="rounded-lg border border-border bg-card p-3 sm:p-4 hover:bg-muted/30 transition-colors"
                     >
-                      <div className="flex flex-col xs:flex-row xs:items-start xs:justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-lg sm:text-xl flex-shrink-0">{rec.icon}</span>
-                          <h5 className="font-semibold text-xs sm:text-sm break-words hyphens-auto">{rec.category}</h5>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{rec.icon}</span>
+                          <h5 className="font-semibold text-sm sm:text-base">{rec.category}</h5>
                         </div>
-                        <span className={`text-xs px-2 py-0.5 sm:py-1 rounded-md border whitespace-nowrap flex-shrink-0 ${getPriorityColorClass(rec.priority)}`}>
+                        <span className={`text-xs px-2 py-1 rounded-md border ${getPriorityColorClass(rec.priority)}`}>
                           {rec.priority.toUpperCase()}
                         </span>
                       </div>
                       
-                      <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 italic break-words hyphens-auto">
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 italic">
                         {rec.reason}
                       </p>
                       
@@ -386,8 +386,8 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                             key={drillIndex} 
                             className="flex items-start gap-2 text-xs sm:text-sm"
                           >
-                            <span className="text-primary mt-0.5 flex-shrink-0">•</span>
-                            <span className="flex-1 break-words hyphens-auto">{drill}</span>
+                            <span className="text-primary mt-0.5">•</span>
+                            <span className="flex-1">{drill}</span>
                           </div>
                         ))}
                       </div>
@@ -395,7 +395,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                   ))}
                 </div>
                 
-                <div className="rounded-md bg-muted/50 p-2 sm:p-3 text-xs sm:text-sm text-muted-foreground break-words">
+                <div className="rounded-md bg-muted/50 p-3 text-xs sm:text-sm text-muted-foreground">
                   💡 <strong>Tip:</strong> Prioritize HIGH priority drills for maximum effectiveness in current conditions.
                 </div>
               </div>
@@ -414,49 +414,49 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             )}
 
             {showForecast && weather?.dailyForecast && weather.dailyForecast.length > 0 && (
-              <div className="space-y-3 animate-in fade-in-50 duration-300 overflow-hidden max-w-full">
-                <h4 className="font-semibold text-sm sm:text-base flex items-center gap-2">
-                  <Calendar className="h-4 w-4 flex-shrink-0" />
-                  7-Day Forecast
+              <div className="space-y-3 animate-in fade-in-50 duration-300">
+                <h4 className="font-semibold text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  7-Day Training Forecast
                 </h4>
                 
                 <div className="grid gap-3">
                   {weather.dailyForecast.map((day) => (
                     <div 
                       key={day.date} 
-                      className="rounded-lg border border-border bg-card p-2 sm:p-3 hover:bg-muted/30 transition-colors overflow-hidden"
+                      className="rounded-lg border border-border bg-card p-3 sm:p-4 hover:bg-muted/30 transition-colors"
                     >
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-xs sm:text-sm break-words">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-sm sm:text-base">
                             {formatForecastDate(day.date)}
                           </p>
-                          <p className="text-xs text-muted-foreground break-words">{day.condition}</p>
+                          <p className="text-xs text-muted-foreground">{day.condition}</p>
                         </div>
-                        <div className="flex flex-col gap-0.5 flex-shrink-0">
-                          <div className="flex items-center gap-1">
-                            <TrendingUp className="h-3 w-3 text-red-500" />
-                            <span className="font-bold text-sm sm:text-base">{day.high}°</span>
+                        <div className="text-right">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
+                            <span className="font-bold text-base sm:text-lg">{day.high}°</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <TrendingDown className="h-3 w-3 text-blue-500" />
-                            <span className="text-xs sm:text-sm text-muted-foreground">{day.low}°</span>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />
+                            <span className="text-sm text-muted-foreground">{day.low}°</span>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-2">
-                        <div className="flex items-center gap-1 whitespace-nowrap">
-                          <Wind className="h-3 w-3 flex-shrink-0" />
-                          <span>{day.windSpeedMax} mph</span>
+                      <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mb-2">
+                        <div className="flex items-center gap-1">
+                          <Wind className="h-3 w-3" />
+                          <span>{day.windSpeedMax} mph max</span>
                         </div>
-                        <div className="flex items-center gap-1 whitespace-nowrap">
-                          <CloudRain className="h-3 w-3 flex-shrink-0" />
-                          <span>{day.precipitationChance}%</span>
+                        <div className="flex items-center gap-1">
+                          <CloudRain className="h-3 w-3" />
+                          <span>{day.precipitationChance}% rain</span>
                         </div>
                       </div>
                       
-                      <div className={`rounded-md border p-1.5 sm:p-2 text-xs font-medium break-words hyphens-auto ${getRecommendationColorClass(day.recommendationColor)}`}>
+                      <div className={`rounded-md border p-2 text-xs sm:text-sm font-medium ${getRecommendationColorClass(day.recommendationColor)}`}>
                         {day.recommendation}
                       </div>
                     </div>

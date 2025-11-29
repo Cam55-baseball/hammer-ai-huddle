@@ -206,23 +206,7 @@ function generateDrillRecommendations(
     });
   }
   
-  // COOL WEATHER DRILLS (50-60°F)
-  if (temperature >= 50 && temperature < 60) {
-    recommendations.push({
-      category: "Cool Weather Practice",
-      drills: [
-        "Extended warm-up with dynamic stretching (10-15 min)",
-        "Layered clothing management - dress in layers for flexibility",
-        "Focus on proper mechanics - cooler muscles need attention",
-        "Regular movement between drills to maintain body temperature"
-      ],
-      reason: `Moderate-cool conditions (${Math.round(temperature)}°F) - Extra warm-up recommended`,
-      priority: 'medium',
-      icon: "🧊"
-    });
-  }
-  
-  // COLD WEATHER DRILLS (40-50°F)
+  // COLD WEATHER DRILLS
   if (temperature < 50 && temperature >= 40) {
     recommendations.push({
       category: "Cold Weather Adaptation",

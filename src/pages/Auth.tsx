@@ -9,7 +9,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 import { branding } from "@/branding";
-import { cn } from "@/lib/utils";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -27,9 +26,6 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [emailValid, setEmailValid] = useState<boolean | null>(null);
-  const [passwordValid, setPasswordValid] = useState<boolean | null>(null);
-  const [passwordStrength, setPasswordStrength] = useState<"weak" | "medium" | "strong" | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -52,55 +48,8 @@ const Auth = () => {
     // They might be on this page intentionally
   }, [user, navigate]);
 
-  // Real-time email validation
-  const validateEmail = (value: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(value);
-  };
-
-  // Password strength calculation
-  const calculatePasswordStrength = (pwd: string): "weak" | "medium" | "strong" => {
-    if (pwd.length < 6) return "weak";
-    const hasUpper = /[A-Z]/.test(pwd);
-    const hasLower = /[a-z]/.test(pwd);
-    const hasNumber = /[0-9]/.test(pwd);
-    const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
-    const strengthScore = [hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
-    if (strengthScore >= 3 && pwd.length >= 8) return "strong";
-    if (strengthScore >= 2 || pwd.length >= 8) return "medium";
-    return "weak";
-  };
-
-  const handleEmailChange = (value: string) => {
-    setEmail(value);
-    if (value.length > 0) {
-      setEmailValid(validateEmail(value));
-    } else {
-      setEmailValid(null);
-    }
-  };
-
-  const handlePasswordChange = (value: string) => {
-    setPassword(value);
-    if (value.length > 0) {
-      setPasswordValid(value.length >= 6);
-      if (!isLogin) {
-        setPasswordStrength(calculatePasswordStrength(value));
-      }
-    } else {
-      setPasswordValid(null);
-      setPasswordStrength(null);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Haptic feedback on submit
-    if ('vibrate' in navigator && window.innerWidth < 768) {
-      navigator.vibrate(20);
-    }
-    
     setIsLoading(true);
 
     try {
@@ -305,93 +254,35 @@ const Auth = () => {
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => handleEmailChange(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className={cn(
-                    "text-base pr-10",
-                    emailValid === true && "border-green-500",
-                    emailValid === false && "border-destructive"
-                  )}
-                  inputMode="email"
-                  aria-describedby={emailValid === false ? "email-error" : undefined}
-                />
-                {emailValid === true && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 animate-checkmark">
-                    ✓
-                  </span>
-                )}
-              </div>
-              {emailValid === false && (
-                <span id="email-error" className="text-xs text-destructive">
-                  Please enter a valid email address
-                </span>
-              )}
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
 
             {!isForgotPassword && (
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => handlePasswordChange(e.target.value)}
-                    required
-                    disabled={isLoading}
-                    className={cn(
-                      "text-base pr-10",
-                      passwordValid === true && "border-green-500",
-                      passwordValid === false && "border-destructive"
-                    )}
-                    aria-describedby={passwordValid === false ? "password-error" : undefined}
-                  />
-                  {passwordValid === true && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 animate-checkmark">
-                      ✓
-                    </span>
-                  )}
-                </div>
-                {passwordValid === false && (
-                  <span id="password-error" className="text-xs text-destructive">
-                    Password must be at least 6 characters
-                  </span>
-                )}
-                {!isLogin && passwordStrength && (
-                  <div className="mt-2">
-                    <div className="flex gap-1 mb-1">
-                      <div className={cn(
-                        "h-1 flex-1 rounded",
-                        passwordStrength === "weak" ? "bg-destructive" : "bg-muted",
-                        passwordStrength === "medium" || passwordStrength === "strong" ? "bg-yellow-500" : "",
-                        passwordStrength === "strong" ? "bg-green-500" : ""
-                      )} />
-                      <div className={cn(
-                        "h-1 flex-1 rounded",
-                        passwordStrength === "medium" || passwordStrength === "strong" ? "bg-yellow-500" : "bg-muted",
-                        passwordStrength === "strong" ? "bg-green-500" : ""
-                      )} />
-                      <div className={cn(
-                        "h-1 flex-1 rounded",
-                        passwordStrength === "strong" ? "bg-green-500" : "bg-muted"
-                      )} />
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      Password strength: <span className={cn(
-                        passwordStrength === "weak" && "text-destructive",
-                        passwordStrength === "medium" && "text-yellow-600",
-                        passwordStrength === "strong" && "text-green-600"
-                      )}>{passwordStrength}</span>
-                    </span>
-                  </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                {isLogin && (
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPassword(true)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Forgot password?
+                  </button>
                 )}
               </div>
             )}
@@ -408,14 +299,7 @@ const Auth = () => {
             )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full spinner" />
-                  {isForgotPassword ? "Sending reset link..." : isLogin ? "Signing in..." : "Creating account..."}
-                </span>
-              ) : (
-                isForgotPassword ? "Send Reset Link" : isLogin ? "Sign In" : "Sign Up"
-              )}
+              {isLoading ? "Loading..." : isForgotPassword ? "Send Reset Link" : isLogin ? "Sign In" : "Sign Up"}
             </Button>
           </form>
 

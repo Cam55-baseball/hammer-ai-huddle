@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useOwnerAccess } from '@/hooks/useOwnerAccess';
@@ -53,7 +53,6 @@ export default function PlayersClub() {
   const { session, user } = useAuth();
   const { isOwner } = useOwnerAccess();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const viewingPlayerId = searchParams.get('playerId');
 
   const [sessions, setSessions] = useState<LibrarySession[]>([]);
@@ -259,43 +258,8 @@ export default function PlayersClub() {
         {loading ? (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
             {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-slide-up" style={{ animationDelay: `${i * 0.05}s` }}>
-                <Skeleton className="h-64 skeleton-shimmer" />
-              </div>
+              <Skeleton key={i} className="h-64" />
             ))}
-          </div>
-        ) : filteredSessions.length === 0 ? (
-          <div className="text-center py-16 px-4 animate-slide-up">
-            <div className="max-w-md mx-auto">
-              <div className="relative inline-block mb-6">
-                <BookMarked className="h-16 w-16 text-primary animate-pulse-subtle" />
-                <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">
-                {sessions.length === 0 && isOwnLibrary 
-                  ? "Start Your Journey" 
-                  : sessions.length === 0 
-                    ? "No Videos Shared Yet" 
-                    : "No Results Found"}
-              </h3>
-              <p className="text-muted-foreground mb-6 leading-relaxed">
-                {sessions.length === 0 && isOwnLibrary 
-                  ? "Upload and analyze your first video to begin tracking your progress and improving your technique" 
-                  : sessions.length === 0 
-                    ? "This player hasn't shared any videos with scouts yet" 
-                    : "Try adjusting your filters or search terms"}
-              </p>
-              {sessions.length === 0 && isOwnLibrary && (
-                <Button 
-                  onClick={() => navigate('/analyze-video')} 
-                  size="lg"
-                  className="w-full sm:w-auto animate-pulse-subtle"
-                >
-                  <BookMarked className="mr-2 h-5 w-5" />
-                  Analyze Your First Video
-                </Button>
-              )}
-            </div>
           </div>
         ) : filteredSessions.length === 0 ? (
           <Card>

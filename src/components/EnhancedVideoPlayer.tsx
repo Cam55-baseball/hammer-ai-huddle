@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2, ZoomIn, ZoomOut, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { FrameAnnotationDialog } from './FrameAnnotationDialog';
-import { cn } from "@/lib/utils";
 
 interface EnhancedVideoPlayerProps {
   videoSrc: string;
@@ -752,9 +751,8 @@ export const EnhancedVideoPlayer = ({
             size="sm"
             onClick={() => stepFrame('backward')}
             disabled={!videoReady}
-            title="Step backward one frame"
+            title="Step backward"
             className="min-h-[44px] min-w-[44px]"
-            aria-label="Step backward one frame"
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="hidden sm:inline ml-1">Back</span>
@@ -764,9 +762,8 @@ export const EnhancedVideoPlayer = ({
             size="sm"
             onClick={() => stepFrame('forward')}
             disabled={!videoReady}
-            title="Step forward one frame"
+            title="Step forward"
             className="min-h-[44px] min-w-[44px]"
-            aria-label="Step forward one frame"
           >
             <ChevronRight className="h-4 w-4" />
             <span className="hidden sm:inline ml-1">Forward</span>
@@ -776,9 +773,7 @@ export const EnhancedVideoPlayer = ({
             size="sm"
             onClick={captureKeyFrame}
             disabled={!videoReady}
-            title="Capture current frame"
-            className="min-h-[44px] min-w-[44px]"
-            aria-label="Capture current frame"
+            title="Capture"
           >
             <Camera className="h-4 w-4" />
             <span className="hidden md:inline ml-1">Capture</span>
@@ -787,13 +782,8 @@ export const EnhancedVideoPlayer = ({
             variant="outline"
             size="sm"
             onClick={() => setIsMirrored(!isMirrored)}
-            title={isMirrored ? "Disable mirror" : "Enable mirror"}
-            className={cn(
-              "min-h-[44px] min-w-[44px]",
-              isMirrored && 'bg-primary/10'
-            )}
-            aria-label={isMirrored ? "Disable mirror effect" : "Enable mirror effect"}
-            aria-pressed={isMirrored}
+            title="Mirror"
+            className={isMirrored ? 'bg-primary/10' : ''}
           >
             <FlipHorizontal className="h-4 w-4" />
             <span className="hidden md:inline ml-1">Mirror</span>
