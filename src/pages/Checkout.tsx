@@ -145,7 +145,6 @@ const Checkout = () => {
       };
 
       verifyPayment();
-      verifyPayment();
     } else if (status === 'cancel' || status === 'cancelled') {
       console.log('Checkout: Payment cancelled');
       localStorage.removeItem('pendingModuleActivation');

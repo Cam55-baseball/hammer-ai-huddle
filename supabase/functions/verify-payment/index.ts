@@ -53,8 +53,9 @@ serve(async (req) => {
       customerId: session.customer 
     });
 
-    if (session.payment_status !== "paid") {
-      throw new Error("Payment not completed");
+    // Accept both "paid" and "no_payment_required" (100% off coupons)
+    if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required") {
+      throw new Error(`Payment not completed. Status: ${session.payment_status}`);
     }
 
     // Get the customer ID
