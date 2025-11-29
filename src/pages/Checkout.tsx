@@ -29,57 +29,14 @@ const Checkout = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
-    // CRITICAL: Wait for ALL loading states to complete before making any decisions
-    if (authLoading || ownerLoading || adminLoading) {
-      console.log('Checkout: Still loading...', { authLoading, ownerLoading, adminLoading });
-      return;
-    }
-
-    // Only redirect to auth if we're CERTAIN the user is not logged in
-    if (!user) {
-      console.log('Checkout: No user found, redirecting to auth');
-      // Save state for return
-      localStorage.setItem('selectedModule', selectedModule || '');
-      localStorage.setItem('selectedSport', selectedSport);
-      navigate("/auth", { 
-        replace: true,
-        state: {
-          returnTo: '/checkout',
-          module: selectedModule,
-          sport: selectedSport,
-          mode: isAddMode ? 'add' : 'new'
-        }
-      });
-      return;
-    }
-
-    // Check for both 'status' (new) and 'checkout' (old) parameters for backward compatibility
+    // PRIORITY 1: Check for payment success params FIRST (before auth checks)
     const status = searchParams.get('status') || searchParams.get('checkout');
     const sessionId = searchParams.get('session_id');
     
-    if (status === 'success') {
+    if (status === 'success' && sessionId) {
       console.log('Checkout: Payment successful, verifying payment...', { sessionId });
       
       const verifyPayment = async () => {
-        if (!sessionId) {
-          console.warn('Checkout: No session_id found, redirecting to sign-in');
-          toast({
-            title: "Payment Successful!",
-            description: "Your modules will be activated shortly. Please sign in to continue.",
-          });
-          
-          navigate("/auth", { 
-            replace: true,
-            state: {
-              fromPayment: true,
-              message: "Payment successful! Please sign in to access your new module.",
-              module: selectedModule,
-              sport: selectedSport
-            }
-          });
-          return;
-        }
-
         try {
           toast({
             title: "Verifying Payment",
@@ -142,7 +99,11 @@ const Checkout = () => {
       };
 
       verifyPayment();
-    } else if (status === 'cancel' || status === 'cancelled') {
+      return; // Stop here, don't do auth checks yet
+    }
+    
+    // Handle cancelled payment
+    if (status === 'cancel' || status === 'cancelled') {
       console.log('Checkout: Payment cancelled');
       localStorage.removeItem('pendingModuleActivation');
       toast({
@@ -151,6 +112,31 @@ const Checkout = () => {
         variant: "destructive",
       });
       setSearchParams({});
+      return;
+    }
+
+    // PRIORITY 2: Now check auth status for other flows
+    if (authLoading || ownerLoading || adminLoading) {
+      console.log('Checkout: Still loading...', { authLoading, ownerLoading, adminLoading });
+      return;
+    }
+
+    // Only redirect to auth if we're CERTAIN the user is not logged in
+    if (!user) {
+      console.log('Checkout: No user found, redirecting to auth');
+      // Save state for return
+      localStorage.setItem('selectedModule', selectedModule || '');
+      localStorage.setItem('selectedSport', selectedSport);
+      navigate("/auth", { 
+        replace: true,
+        state: {
+          returnTo: '/checkout',
+          module: selectedModule,
+          sport: selectedSport,
+          mode: isAddMode ? 'add' : 'new'
+        }
+      });
+      return;
     }
   }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, toast, refetch, isAddMode, selectedModule, selectedSport, session, setSearchParams]);
 
