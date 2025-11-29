@@ -27,6 +27,7 @@ const Checkout = () => {
   const returnTo = state?.returnTo;
   const isAddMode = returnTo === '/dashboard';
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const verifyingRef = useRef(false);
 
   useEffect(() => {
     // PRIORITY 1: Check for payment success params FIRST (before auth checks)
@@ -37,12 +38,20 @@ const Checkout = () => {
       console.log('Checkout: Payment successful, verifying payment...', { sessionId });
       
       const verifyPayment = async () => {
+        // Prevent multiple simultaneous verification attempts
+        if (verifyingRef.current) {
+          console.log('Checkout: Verification already in progress, skipping...');
+          return;
+        }
+        verifyingRef.current = true;
+
         try {
-          // Ensure user is authenticated before calling verify-payment
-          const { data: sessionData } = await supabase.auth.getSession();
+          // Force refresh the session to get a fresh token
+          console.log('Checkout: Forcing session refresh...');
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
           
-          if (!sessionData.session) {
-            console.log('Checkout: No session, waiting for auth...');
+          if (refreshError || !refreshData.session) {
+            console.log('Checkout: Session refresh failed, redirecting to auth...');
             toast({
               title: "Please Sign In",
               description: "Sign in to activate your modules.",
@@ -55,25 +64,57 @@ const Checkout = () => {
                 verifyPayment: true
               }
             });
+            verifyingRef.current = false;
             return;
           }
+          
+          console.log('Checkout: Session refreshed successfully');
+          // Wait briefly for token to propagate
+          await new Promise(resolve => setTimeout(resolve, 500));
 
           toast({
             title: "Verifying Payment",
             description: "Please wait while we activate your modules...",
           });
 
-          const { data, error } = await supabase.functions.invoke('verify-payment', {
-            body: { sessionId },
-          });
+          // Retry logic for verify-payment (max 2 attempts)
+          let verifyAttempts = 0;
+          const maxAttempts = 2;
+          let lastError = null;
+          let data = null;
+          
+          while (verifyAttempts < maxAttempts) {
+            verifyAttempts++;
+            console.log(`Checkout: Verification attempt ${verifyAttempts}/${maxAttempts}`);
+            
+            const result = await supabase.functions.invoke('verify-payment', {
+              body: { sessionId },
+            });
+            
+            if (!result.error && result.data?.success) {
+              data = result.data;
+              console.log('Checkout: Verification succeeded on attempt', verifyAttempts);
+              break;
+            }
+            
+            lastError = result.error;
+            console.error(`Checkout: Verification attempt ${verifyAttempts} failed:`, result.error);
+            
+            if (verifyAttempts < maxAttempts) {
+              console.log('Checkout: Retrying after delay and refresh...');
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              await supabase.auth.refreshSession(); // Try another refresh
+            }
+          }
 
-          if (error) {
-            console.error('Checkout: Verification error:', error);
+          if (lastError && !data) {
+            console.error('Checkout: All verification attempts failed:', lastError);
             toast({
               title: "Verification Failed",
               description: "Please refresh the page or contact support if modules don't appear.",
               variant: "destructive",
             });
+            verifyingRef.current = false;
             return;
           }
 
@@ -115,6 +156,8 @@ const Checkout = () => {
             description: "Please refresh the page or contact support.",
             variant: "destructive",
           });
+        } finally {
+          verifyingRef.current = false;
         }
       };
 
