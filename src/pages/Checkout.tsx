@@ -200,15 +200,32 @@ const Checkout = () => {
         localStorage.setItem('checkoutReturnUrl', window.location.pathname);
         localStorage.setItem('checkoutModule', selectedModule);
         localStorage.setItem('checkoutSport', selectedSport);
+        localStorage.setItem('pendingCheckoutSession', 'true');
         
         toast({
-          title: "Redirecting to Checkout",
-          description: "You'll be redirected to complete your payment...",
+          title: "Opening Checkout",
+          description: "Stripe checkout is opening in a new tab...",
         });
         
-        // Direct redirect to Stripe
-        console.log('Checkout: Redirecting to Stripe URL', data.url);
-        window.location.href = data.url;
+        console.log('Checkout: Opening Stripe URL in new tab', data.url);
+        
+        // Open in new tab (works reliably in iframes)
+        const stripeWindow = window.open(data.url, '_blank');
+        
+        // If popup was blocked, show fallback message
+        if (!stripeWindow || stripeWindow.closed) {
+          toast({
+            title: "Popup Blocked",
+            description: "Please allow popups and try again, or click the link below.",
+          });
+        }
+        
+        // Show user instructions to return after payment
+        toast({
+          title: "Complete Payment",
+          description: "After payment, return to this tab and refresh to see your modules.",
+        });
+        
         return;
       } else {
         throw new Error("No checkout URL received");
