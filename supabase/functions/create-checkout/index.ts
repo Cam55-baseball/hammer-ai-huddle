@@ -43,13 +43,42 @@ serve(async (req) => {
     logStep("Function started");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      logStep("ERROR: No authorization header");
+      throw new Error("Authentication error: Auth session missing!");
+    }
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    // Decode verified JWT locally (same pattern as check-subscription)
+    const decodeJwt = (token: string) => {
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4 !== 0) base64 += '=';
+        const json = atob(base64);
+        return JSON.parse(json);
+      } catch {
+        return null;
+      }
+    };
+
+    const bearer = authHeader.replace(/^Bearer\s+/i, '');
+    const claims = decodeJwt(bearer);
+    if (!claims || !claims.sub) {
+      logStep("ERROR: Authentication failed while decoding JWT");
+      throw new Error("Authentication error: Auth session missing!");
+    }
+
+    const user = {
+      id: claims.sub as string,
+      email: (claims.email || claims.user_metadata?.email || null) as string | null,
+    };
+
+    if (!user.id || !user.email) {
+      logStep("ERROR: User not authenticated or email missing");
+      throw new Error("User not authenticated or email not available");
+    }
+
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Check if user is owner - no checkout needed
