@@ -434,19 +434,34 @@ export default function Dashboard() {
                   </>
                 )}
               </Button>
-              {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && (
-                <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
+              <Button 
+                className={hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) 
+                  ? "w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                  : "w-full"}
+                variant={hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (hasAccessForSport("hitting", selectedSport, isOwner || isAdmin)) {
                     navigate("/production-studio");
-                  }}
-                >
-                  <Dumbbell className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden xs:inline">Production Studio</span>
-                  <span className="xs:hidden">Studio</span>
-                </Button>
-              )}
+                  } else {
+                    navigate("/pricing");
+                  }
+                }}
+              >
+                {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
+                  <>
+                    <Dumbbell className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Production Studio</span>
+                    <span className="xs:hidden">Studio</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Production Studio</span>
+                    <span className="xs:hidden">Studio</span>
+                  </>
+                )}
+              </Button>
             </div>
           </Card>
 
@@ -492,19 +507,34 @@ export default function Dashboard() {
                   </>
                 )}
               </Button>
-              {hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && (
-                <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
+              <Button 
+                className={hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) 
+                  ? "w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                  : "w-full"}
+                variant={hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (hasAccessForSport("pitching", selectedSport, isOwner || isAdmin)) {
                     navigate("/production-lab");
-                  }}
-                >
-                  <Dumbbell className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden xs:inline">Production Lab</span>
-                  <span className="xs:hidden">Lab</span>
-                </Button>
-              )}
+                  } else {
+                    navigate("/pricing");
+                  }
+                }}
+              >
+                {hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? (
+                  <>
+                    <Dumbbell className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Production Lab</span>
+                    <span className="xs:hidden">Lab</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Production Lab</span>
+                    <span className="xs:hidden">Lab</span>
+                  </>
+                )}
+              </Button>
             </div>
           </Card>
 
@@ -550,19 +580,34 @@ export default function Dashboard() {
                   </>
                 )}
               </Button>
-              {hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && (
-                <Button 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
+              <Button 
+                className={hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) 
+                  ? "w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                  : "w-full"}
+                variant={hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (hasAccessForSport("throwing", selectedSport, isOwner || isAdmin)) {
                     navigate("/rainbow-bread");
-                  }}
-                >
-                  <Dumbbell className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden xs:inline">Rainbow Bread</span>
-                  <span className="xs:hidden">Training</span>
-                </Button>
-              )}
+                  } else {
+                    navigate("/pricing");
+                  }
+                }}
+              >
+                {hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? (
+                  <>
+                    <Dumbbell className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Rainbow Bread</span>
+                    <span className="xs:hidden">Training</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">Rainbow Bread</span>
+                    <span className="xs:hidden">Training</span>
+                  </>
+                )}
+              </Button>
             </div>
           </Card>
         </div>
