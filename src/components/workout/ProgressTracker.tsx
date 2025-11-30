@@ -18,6 +18,7 @@ interface ProgressTrackerProps {
   distanceLastUpdated?: string | null;
   progressId?: string;
   onUpdateMetrics?: (exitVelocity: number, distance: number) => Promise<void>;
+  moduleType?: 'hitting' | 'pitching';
 }
 
 export function ProgressTracker({
@@ -34,6 +35,7 @@ export function ProgressTracker({
   distanceLastUpdated,
   progressId,
   onUpdateMetrics,
+  moduleType = 'hitting',
 }: ProgressTrackerProps) {
   const [localExitVelocity, setLocalExitVelocity] = React.useState<string>(exitVelocity?.toString() || '');
   const [localDistance, setLocalDistance] = React.useState<string>(distance?.toString() || '');
@@ -41,6 +43,12 @@ export function ProgressTracker({
 
   const canUnlockNextBlock = completionPercentage >= 70;
   const quote = getDailyQuote();
+
+  const metric1Label = moduleType === 'pitching' ? 'Velocity' : 'Exit Velocity';
+  const metric2Label = moduleType === 'pitching' ? 'Long Toss Distance' : 'Distance';
+  const metricsDescription = moduleType === 'pitching' 
+    ? 'Track your pitching power metrics! Update your Velocity and Long Toss Distance every 2 months to measure your improvement.'
+    : 'Track your hitting power metrics! Update your Exit Velocity and Distance every 2 months to measure your improvement.';
 
   // Check if user can update metrics (2 months = 60 days)
   const canUpdateMetrics = React.useMemo(() => {
@@ -171,14 +179,14 @@ export function ProgressTracker({
         </h4>
         
         <p className="text-xs text-muted-foreground">
-          Track your hitting power metrics! Update your Exit Velocity and Distance every 2 months to measure your improvement.
+          {metricsDescription}
         </p>
 
         <div className="grid grid-cols-2 gap-3">
-          {/* Exit Velocity */}
+          {/* Metric 1 */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
-              Exit Velocity (mph)
+              {metric1Label} (mph)
             </label>
             <div className="flex items-center gap-1">
               <input
@@ -202,10 +210,10 @@ export function ProgressTracker({
             )}
           </div>
 
-          {/* Distance */}
+          {/* Metric 2 */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">
-              Distance (ft)
+              {metric2Label} (ft)
             </label>
             <div className="flex items-center gap-1">
               <input
