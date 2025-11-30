@@ -203,6 +203,7 @@ export default function ProductionStudio() {
               <DailyChecklist
                 todaysWorkouts={todaysWorkouts}
                 onWorkoutCompleted={loadWorkoutData}
+                previousExerciseLogs={workoutData?.previousExerciseLogs || {}}
               />
             </div>
           </div>

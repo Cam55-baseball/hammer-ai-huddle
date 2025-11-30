@@ -33,6 +33,7 @@ interface Workout {
 interface DailyChecklistProps {
   todaysWorkouts: Workout[];
   onWorkoutCompleted: () => void;
+  previousExerciseLogs?: Record<string, number>;
 }
 
 interface SetLog {
@@ -40,7 +41,7 @@ interface SetLog {
   reps: number | null;
 }
 
-export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted }: DailyChecklistProps) {
+export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted, previousExerciseLogs = {} }: DailyChecklistProps) {
   const { toast } = useToast();
   const [completingWorkout, setCompletingWorkout] = useState<string | null>(null);
   const [exerciseLogs, setExerciseLogs] = useState<Record<string, Record<number, { name: string; sets: SetLog[] }>>>({});
@@ -165,7 +166,14 @@ export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted }: DailyChec
                   {/* Weight tracking inputs for strength workouts */}
                   {isStrength && !isCompleted && (
                     <div className="mt-3 pt-3 border-t border-border/50">
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Log weights:</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-medium text-muted-foreground">Log weights:</p>
+                        {previousExerciseLogs[exercise.name] && (
+                          <span className="text-xs text-muted-foreground">
+                            Last: <span className="font-medium text-foreground">{previousExerciseLogs[exercise.name]} lbs</span>
+                          </span>
+                        )}
+                      </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {Array.from({ length: exercise.sets }).map((_, setIdx) => (
                           <div key={setIdx} className="flex items-center gap-1.5">
@@ -176,7 +184,7 @@ export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted }: DailyChec
                               <Input
                                 id={`${workout.id}-${idx}-${setIdx}`}
                                 type="number"
-                                placeholder="0"
+                                placeholder={previousExerciseLogs[exercise.name]?.toString() || "0"}
                                 min="0"
                                 step="5"
                                 value={exerciseLogs[workout.id]?.[idx]?.sets[setIdx]?.weight || ''}

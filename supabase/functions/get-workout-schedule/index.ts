@@ -113,11 +113,34 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Aggregate previous exercise logs from completed workouts
+    const previousExerciseLogs: Record<string, number> = {};
+    const completedWorkouts = workouts?.filter(w => w.status === 'completed' && w.exercise_logs) || [];
+    
+    for (const workout of completedWorkouts) {
+      const logs = workout.exercise_logs as Record<number, { name: string; sets: { weight: number | null }[] }>;
+      if (logs) {
+        for (const exerciseLog of Object.values(logs)) {
+          if (exerciseLog.name && exerciseLog.sets?.length > 0) {
+            const weights = exerciseLog.sets
+              .map(s => s.weight)
+              .filter(w => w !== null && w > 0) as number[];
+            
+            if (weights.length > 0) {
+              const avgWeight = weights.reduce((sum, w) => sum + w, 0) / weights.length;
+              previousExerciseLogs[exerciseLog.name] = Math.round(avgWeight);
+            }
+          }
+        }
+      }
+    }
+
     return new Response(JSON.stringify({
       progress,
       workouts,
       today,
       equipment: equipment || [],
+      previousExerciseLogs,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
