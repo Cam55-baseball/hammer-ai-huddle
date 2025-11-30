@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Dumbbell, Zap, ArrowUp, ArrowDown, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { RestTimer } from "./RestTimer";
 
 interface Exercise {
   name: string;
@@ -261,6 +262,9 @@ export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted, previousExe
                             );
                           })}
                         </div>
+                        
+                        {/* Rest Timer */}
+                        <RestTimer defaultDuration={90} />
                     </div>
                   )}
                 </div>
