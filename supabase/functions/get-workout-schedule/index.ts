@@ -113,6 +113,47 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Check for missed workouts and roll them forward
+    const missedWorkouts = workouts?.filter(w => 
+      w.status === 'scheduled' && w.scheduled_date < today
+    ) || [];
+
+    if (missedWorkouts.length > 0) {
+      console.log(`Found ${missedWorkouts.length} missed workouts, rolling forward...`);
+      
+      // Calculate how many days to shift
+      const oldestMissedDate = missedWorkouts[0].scheduled_date;
+      const daysToShift = Math.floor(
+        (new Date(today).getTime() - new Date(oldestMissedDate).getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      // Update all scheduled (not completed) workouts to shift forward
+      for (const workout of workouts || []) {
+        if (workout.status === 'scheduled') {
+          const currentDate = new Date(workout.scheduled_date);
+          const newDate = new Date(currentDate.getTime() + daysToShift * 24 * 60 * 60 * 1000);
+          const newDateStr = newDate.toISOString().split('T')[0];
+
+          await supabase
+            .from('workout_completions')
+            .update({ scheduled_date: newDateStr, updated_at: new Date().toISOString() })
+            .eq('id', workout.id);
+        }
+      }
+
+      // Refetch workouts with updated dates
+      const { data: updatedWorkouts } = await supabase
+        .from('workout_completions')
+        .select('*, workout_templates(*)')
+        .eq('progress_id', progress.id)
+        .order('scheduled_date');
+
+      // Use updated workouts for the rest of the function
+      if (updatedWorkouts) {
+        workouts.splice(0, workouts.length, ...updatedWorkouts);
+      }
+    }
+
     // Aggregate previous exercise logs from completed workouts with enhanced data
     const previousExerciseLogs: Record<string, {
       avgWeight: number;
