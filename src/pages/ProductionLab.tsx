@@ -32,6 +32,19 @@ export default function ProductionLab() {
 
   const hasAccess = hasSubModuleAccess('production_lab', 'pitching', selectedSport);
 
+  // Validate session on mount and redirect if invalid
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        console.log('No valid session, redirecting to auth');
+        await supabase.auth.signOut();
+        navigate('/auth');
+      }
+    };
+    checkSession();
+  }, [navigate]);
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
@@ -50,10 +63,10 @@ export default function ProductionLab() {
   }, [authLoading, subLoading, hasAccess, selectedSport, navigate, toast]);
 
   useEffect(() => {
-    if (hasAccess) {
+    if (hasAccess && user) {
       loadWorkoutData();
     }
-  }, [hasAccess, selectedSport]);
+  }, [hasAccess, selectedSport, user]);
 
   const loadWorkoutData = async () => {
     setLoadingWorkouts(true);
