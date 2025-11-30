@@ -113,12 +113,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Aggregate previous exercise logs from completed workouts
-    const previousExerciseLogs: Record<string, number> = {};
+    // Aggregate previous exercise logs from completed workouts with enhanced data
+    const previousExerciseLogs: Record<string, {
+      avgWeight: number;
+      maxWeight: number;
+      lastReps: number;
+      estimated1RM: number;
+    }> = {};
     const completedWorkouts = workouts?.filter(w => w.status === 'completed' && w.exercise_logs) || [];
     
     for (const workout of completedWorkouts) {
-      const logs = workout.exercise_logs as Record<number, { name: string; sets: { weight: number | null }[] }>;
+      const logs = workout.exercise_logs as Record<number, { name: string; sets: { weight: number | null; reps: number | null }[] }>;
       if (logs) {
         for (const exerciseLog of Object.values(logs)) {
           if (exerciseLog.name && exerciseLog.sets?.length > 0) {
@@ -128,7 +133,22 @@ Deno.serve(async (req) => {
             
             if (weights.length > 0) {
               const avgWeight = weights.reduce((sum, w) => sum + w, 0) / weights.length;
-              previousExerciseLogs[exerciseLog.name] = Math.round(avgWeight);
+              const maxWeight = Math.max(...weights);
+              
+              // Get reps from the workout template
+              const template = workout.workout_templates as any;
+              const templateExercise = template?.exercises?.find((e: any) => e.name === exerciseLog.name);
+              const lastReps = templateExercise?.reps || 5;
+              
+              // Calculate estimated 1RM using Epley's formula: 1RM = weight × (1 + reps/30)
+              const estimated1RM = Math.round(maxWeight * (1 + lastReps / 30));
+              
+              previousExerciseLogs[exerciseLog.name] = {
+                avgWeight: Math.round(avgWeight),
+                maxWeight: Math.round(maxWeight),
+                lastReps,
+                estimated1RM,
+              };
             }
           }
         }

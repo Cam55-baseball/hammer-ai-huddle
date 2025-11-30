@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Dumbbell, Zap } from "lucide-react";
+import { CheckCircle2, Dumbbell, Zap, ArrowUp, ArrowDown, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,7 +33,12 @@ interface Workout {
 interface DailyChecklistProps {
   todaysWorkouts: Workout[];
   onWorkoutCompleted: () => void;
-  previousExerciseLogs?: Record<string, number>;
+  previousExerciseLogs?: Record<string, {
+    avgWeight: number;
+    maxWeight: number;
+    lastReps: number;
+    estimated1RM: number;
+  }>;
 }
 
 interface SetLog {
@@ -45,6 +50,23 @@ export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted, previousExe
   const { toast } = useToast();
   const [completingWorkout, setCompletingWorkout] = useState<string | null>(null);
   const [exerciseLogs, setExerciseLogs] = useState<Record<string, Record<number, { name: string; sets: SetLog[] }>>>({});
+
+  // Helper to parse intensity strings like "85-90% 1RM" or "85% 1RM"
+  const parseIntensity = (intensityString?: string): { min: number; max: number } | null => {
+    if (!intensityString) return null;
+    const match = intensityString.match(/(\d+)(?:-(\d+))?%\s*1RM/i);
+    if (!match) return null;
+    const min = parseInt(match[1]);
+    const max = match[2] ? parseInt(match[2]) : min;
+    return { min, max };
+  };
+
+  // Calculate suggested weight range based on estimated 1RM
+  const calculateSuggestedWeight = (estimated1RM: number, intensity: { min: number; max: number }) => {
+    const minWeight = Math.round(estimated1RM * (intensity.min / 100));
+    const maxWeight = Math.round(estimated1RM * (intensity.max / 100));
+    return { minWeight, maxWeight };
+  };
 
   const handleWeightChange = (workoutId: string, exerciseIndex: number, setIndex: number, weight: string, exerciseName: string, totalSets: number) => {
     setExerciseLogs(prev => {
@@ -160,44 +182,76 @@ export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted, previousExe
                       {exercise.notes && (
                         <p className="text-xs text-muted-foreground mt-1">{exercise.notes}</p>
                       )}
+                      
+                      {/* Personalized weight suggestion based on estimated 1RM */}
+                      {previousExerciseLogs[exercise.name] && exercise.intensity && (() => {
+                        const intensity = parseIntensity(exercise.intensity);
+                        if (!intensity) return null;
+                        const suggested = calculateSuggestedWeight(previousExerciseLogs[exercise.name].estimated1RM, intensity);
+                        return (
+                          <div className="flex items-center gap-1.5 mt-2 p-2 rounded bg-blue-500/10 border border-blue-500/20">
+                            <Lightbulb className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+                            <p className="text-xs text-blue-700 dark:text-blue-300">
+                              Suggested: <span className="font-semibold">{suggested.minWeight}{suggested.maxWeight !== suggested.minWeight ? `-${suggested.maxWeight}` : ''} lbs</span>
+                              {' '}(est. 1RM: {previousExerciseLogs[exercise.name].estimated1RM} lbs)
+                            </p>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                   
                   {/* Weight tracking inputs for strength workouts */}
                   {isStrength && !isCompleted && (
                     <div className="mt-3 pt-3 border-t border-border/50">
-                      <div className="flex items-center justify-between mb-2">
+                       <div className="flex items-center justify-between mb-2">
                         <p className="text-xs font-medium text-muted-foreground">Log weights:</p>
                         {previousExerciseLogs[exercise.name] && (
                           <span className="text-xs text-muted-foreground">
-                            Last: <span className="font-medium text-foreground">{previousExerciseLogs[exercise.name]} lbs</span>
+                            Last: <span className="font-medium text-foreground">{previousExerciseLogs[exercise.name].avgWeight} lbs</span>
                           </span>
                         )}
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {Array.from({ length: exercise.sets }).map((_, setIdx) => (
-                          <div key={setIdx} className="flex items-center gap-1.5">
-                            <label htmlFor={`${workout.id}-${idx}-${setIdx}`} className="text-xs text-muted-foreground whitespace-nowrap">
-                              Set {setIdx + 1}:
-                            </label>
-                            <div className="relative flex-1">
-                              <Input
-                                id={`${workout.id}-${idx}-${setIdx}`}
-                                type="number"
-                                placeholder={previousExerciseLogs[exercise.name]?.toString() || "0"}
-                                min="0"
-                                step="5"
-                                value={exerciseLogs[workout.id]?.[idx]?.sets[setIdx]?.weight || ''}
-                                onChange={(e) => handleWeightChange(workout.id, idx, setIdx, e.target.value, exercise.name, exercise.sets)}
-                                className="h-9 pr-10 text-sm"
-                                aria-label={`Weight for ${exercise.name}, set ${setIdx + 1}`}
-                              />
-                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-                                lbs
-                              </span>
+                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {Array.from({ length: exercise.sets }).map((_, setIdx) => {
+                          const currentWeight = exerciseLogs[workout.id]?.[idx]?.sets[setIdx]?.weight;
+                          const previousWeight = previousExerciseLogs[exercise.name]?.avgWeight;
+                          const showProgressIndicator = currentWeight && previousWeight;
+                          const isImprovement = currentWeight && previousWeight && currentWeight > previousWeight;
+                          const isDecline = currentWeight && previousWeight && currentWeight < previousWeight;
+                          
+                          return (
+                            <div key={setIdx} className="flex items-center gap-1.5">
+                              <label htmlFor={`${workout.id}-${idx}-${setIdx}`} className="text-xs text-muted-foreground whitespace-nowrap">
+                                Set {setIdx + 1}:
+                              </label>
+                              <div className="relative flex-1">
+                                <Input
+                                  id={`${workout.id}-${idx}-${setIdx}`}
+                                  type="number"
+                                  placeholder={previousExerciseLogs[exercise.name]?.avgWeight.toString() || "0"}
+                                  min="0"
+                                  step="5"
+                                  value={exerciseLogs[workout.id]?.[idx]?.sets[setIdx]?.weight || ''}
+                                  onChange={(e) => handleWeightChange(workout.id, idx, setIdx, e.target.value, exercise.name, exercise.sets)}
+                                  className="h-9 pr-16 text-sm"
+                                  aria-label={`Weight for ${exercise.name}, set ${setIdx + 1}`}
+                                />
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
+                                  {showProgressIndicator && isImprovement && (
+                                    <ArrowUp className="h-3.5 w-3.5 text-green-500" />
+                                  )}
+                                  {showProgressIndicator && isDecline && (
+                                    <ArrowDown className="h-3.5 w-3.5 text-red-400" />
+                                  )}
+                                  <span className="text-xs text-muted-foreground">
+                                    lbs
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
