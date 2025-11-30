@@ -28,6 +28,9 @@ Deno.serve(async (req) => {
 
     const { subModule, parentModule, sport } = await req.json();
 
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
+
     // Get user's workout progress
     const { data: progress, error: progressError } = await supabase
       .from('user_workout_progress')
@@ -36,16 +39,41 @@ Deno.serve(async (req) => {
       .eq('parent_module', parentModule)
       .eq('sub_module', subModule)
       .eq('sport', sport)
-      .single();
+      .maybeSingle();
 
-    if (progressError || !progress) {
-      return new Response(JSON.stringify({ error: 'No workout progress found' }), {
-        status: 404,
+    if (progressError) {
+      console.error('Error fetching workout progress:', progressError);
+      return new Response(JSON.stringify({ error: 'Failed to fetch workout progress' }), {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Get scheduled workouts
+    // Get equipment for this sub-module (available even if no progress yet)
+    const { data: equipment, error: equipmentError } = await supabase
+      .from('workout_equipment')
+      .select('*')
+      .eq('sub_module', subModule)
+      .eq('sport', sport);
+
+    if (equipmentError) {
+      console.error('Error fetching equipment:', equipmentError);
+    }
+
+    // If user has no workout progress yet, return an empty schedule instead of 404
+    if (!progress) {
+      return new Response(JSON.stringify({
+        progress: null,
+        workouts: [],
+        today,
+        equipment: equipment || [],
+        status: 'no_progress',
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Get scheduled workouts for this progress record
     const { data: workouts, error: workoutsError } = await supabase
       .from('workout_completions')
       .select('*, workout_templates(*)')
@@ -60,15 +88,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get today's date
-    const today = new Date().toISOString().split('T')[0];
-
-    // Get equipment for this sub-module
-    const { data: equipment } = await supabase
-      .from('workout_equipment')
-      .select('*')
-      .eq('sub_module', subModule)
-      .eq('sport', sport);
+    return new Response(JSON.stringify({
+      progress,
+      workouts,
+      today,
+      equipment: equipment || [],
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
     return new Response(JSON.stringify({ 
       progress,
