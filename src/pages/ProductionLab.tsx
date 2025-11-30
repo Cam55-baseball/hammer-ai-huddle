@@ -166,6 +166,34 @@ export default function ProductionLab() {
   const todaysWorkouts = workoutData?.workouts?.filter((w: any) => w.scheduled_date === workoutData.today) || [];
   const daysRemaining = workoutData?.progress ? 42 - workoutData.progress.current_day_in_block : 42;
 
+  const handleUpdateMetrics = async (velocity: number, longTossDistance: number) => {
+    try {
+      const { error } = await supabase.functions.invoke('update-power-metrics', {
+        body: {
+          exitVelocity: velocity,
+          distance: longTossDistance,
+          progressId: workoutData.progress.id,
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Metrics Updated",
+        description: "Your pitching power metrics have been recorded successfully.",
+      });
+
+      await loadWorkoutData();
+    } catch (error) {
+      console.error('Error updating metrics:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update metrics. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="container max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
@@ -193,6 +221,15 @@ export default function ProductionLab() {
             totalWorkouts={42}
             currentBlock={workoutData.progress.current_block || 1}
             daysRemaining={daysRemaining}
+            exitVelocity={workoutData.progress.exit_velocity}
+            exitVelocityPrevious={workoutData.progress.exit_velocity_previous}
+            exitVelocityLastUpdated={workoutData.progress.exit_velocity_last_updated}
+            distance={workoutData.progress.distance}
+            distancePrevious={workoutData.progress.distance_previous}
+            distanceLastUpdated={workoutData.progress.distance_last_updated}
+            progressId={workoutData.progress.id}
+            onUpdateMetrics={handleUpdateMetrics}
+            moduleType="pitching"
           />
         )}
 
