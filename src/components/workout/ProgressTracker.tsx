@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Trophy, Calendar, CheckCircle2, Sparkles } from "lucide-react";
 import { getDailyQuote } from "@/lib/motivationalQuotes";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProgressTrackerProps {
   completionPercentage: number;
@@ -40,7 +41,12 @@ export function ProgressTracker({
   const [localExitVelocity, setLocalExitVelocity] = React.useState<string>(exitVelocity?.toString() || '');
   const [localDistance, setLocalDistance] = React.useState<string>(distance?.toString() || '');
   const [isUpdating, setIsUpdating] = React.useState(false);
+  const [showRecordCelebration, setShowRecordCelebration] = React.useState<{
+    metric1: boolean;
+    metric2: boolean;
+  }>({ metric1: false, metric2: false });
 
+  const { toast } = useToast();
   const canUnlockNextBlock = completionPercentage >= 70;
   const quote = getDailyQuote();
 
@@ -98,9 +104,43 @@ export function ProgressTracker({
       return;
     }
     
+    // Check if this will be a new record
+    const isMetric1Record = exitVelocityPrevious && exitVelValue > exitVelocityPrevious;
+    const isMetric2Record = distancePrevious && distanceValue > distancePrevious;
+    
     setIsUpdating(true);
     try {
       await onUpdateMetrics(exitVelValue, distanceValue);
+      
+      // Show celebration badges
+      if (isMetric1Record || isMetric2Record) {
+        setShowRecordCelebration({
+          metric1: isMetric1Record || false,
+          metric2: isMetric2Record || false,
+        });
+        
+        // Show toast notification
+        const improvements = [];
+        if (isMetric1Record) {
+          const delta = (exitVelValue - (exitVelocityPrevious || 0)).toFixed(1);
+          improvements.push(`${metric1Label} improved by +${delta} mph`);
+        }
+        if (isMetric2Record) {
+          const delta = (distanceValue - (distancePrevious || 0)).toFixed(1);
+          improvements.push(`${metric2Label} improved by +${delta} ft`);
+        }
+        
+        toast({
+          title: "🎉 New Personal Record!",
+          description: improvements.join(' and ') + '!',
+          duration: 5000,
+        });
+        
+        // Hide celebration after 10 seconds
+        setTimeout(() => {
+          setShowRecordCelebration({ metric1: false, metric2: false });
+        }, 10000);
+      }
     } finally {
       setIsUpdating(false);
     }
@@ -188,7 +228,7 @@ export function ProgressTracker({
             <label className="text-xs font-medium text-muted-foreground">
               {metric1Label} (mph)
             </label>
-            <div className="flex items-center gap-1">
+            <div className="space-y-1">
               <input
                 type="number"
                 value={localExitVelocity}
@@ -199,8 +239,18 @@ export function ProgressTracker({
                 step="0.1"
                 min="0"
               />
-              {showExitVelocityImprovement && (
-                <span className="text-green-500 text-lg" title="Improved!">↑</span>
+              {(showExitVelocityImprovement || showRecordCelebration.metric1) && (
+                <div className="flex flex-col items-start gap-0.5 mt-1">
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full animate-pulse">
+                    <Trophy className="h-3 w-3 text-amber-900" />
+                    <span className="text-xs font-bold text-amber-900">NEW RECORD!</span>
+                  </div>
+                  {exitVelocity && exitVelocityPrevious && (
+                    <span className="text-xs text-green-600 font-medium">
+                      +{(exitVelocity - exitVelocityPrevious).toFixed(1)} mph
+                    </span>
+                  )}
+                </div>
               )}
             </div>
             {exitVelocityLastUpdated && (
@@ -215,7 +265,7 @@ export function ProgressTracker({
             <label className="text-xs font-medium text-muted-foreground">
               {metric2Label} (ft)
             </label>
-            <div className="flex items-center gap-1">
+            <div className="space-y-1">
               <input
                 type="number"
                 value={localDistance}
@@ -226,8 +276,18 @@ export function ProgressTracker({
                 step="0.1"
                 min="0"
               />
-              {showDistanceImprovement && (
-                <span className="text-green-500 text-lg" title="Improved!">↑</span>
+              {(showDistanceImprovement || showRecordCelebration.metric2) && (
+                <div className="flex flex-col items-start gap-0.5 mt-1">
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full animate-pulse">
+                    <Trophy className="h-3 w-3 text-amber-900" />
+                    <span className="text-xs font-bold text-amber-900">NEW RECORD!</span>
+                  </div>
+                  {distance && distancePrevious && (
+                    <span className="text-xs text-green-600 font-medium">
+                      +{(distance - distancePrevious).toFixed(1)} ft
+                    </span>
+                  )}
+                </div>
               )}
             </div>
             {distanceLastUpdated && (
