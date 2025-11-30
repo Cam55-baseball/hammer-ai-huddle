@@ -66,15 +66,18 @@ export default function RainbowBread() {
         }
       });
 
-      if (error) {
-        if (error.message?.includes('not found')) {
+      if (error || data?.error) {
+        const errorMsg = error?.message || data?.error || '';
+        if (errorMsg.toLowerCase().includes('not found') || errorMsg.toLowerCase().includes('progress')) {
+          console.log('No workout program found, initializing...');
           await initializeProgram();
+          return;
         } else {
-          throw error;
+          throw new Error(errorMsg);
         }
-      } else {
-        setWorkoutData(data);
       }
+      
+      setWorkoutData(data);
     } catch (error) {
       console.error('Error loading workout data:', error);
       toast({

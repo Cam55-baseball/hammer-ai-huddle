@@ -66,16 +66,19 @@ export default function ProductionStudio() {
         }
       });
 
-      if (error) {
-        // No program initialized yet
-        if (error.message?.includes('not found')) {
+      if (error || data?.error) {
+        const errorMsg = error?.message || data?.error || '';
+        // No program initialized yet - check for any "not found" or "progress" related errors
+        if (errorMsg.toLowerCase().includes('not found') || errorMsg.toLowerCase().includes('progress')) {
+          console.log('No workout program found, initializing...');
           await initializeProgram();
+          return;
         } else {
-          throw error;
+          throw new Error(errorMsg);
         }
-      } else {
-        setWorkoutData(data);
       }
+      
+      setWorkoutData(data);
     } catch (error) {
       console.error('Error loading workout data:', error);
       toast({
