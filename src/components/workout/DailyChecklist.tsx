@@ -11,8 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Exercise {
   name: string;
-  sets: number;
-  reps: number;
+  sets: number | string; // Can be number or string like "4-5"
+  reps: number | string; // Can be number or string like "3-5"
   intensity?: string;
   notes?: string;
 }
@@ -45,6 +45,14 @@ interface SetLog {
   weight: number | null;
   reps: number | null;
 }
+
+// Helper to parse sets/reps that might be strings like "4-5" or numbers
+const parseSetsOrReps = (value: number | string): number => {
+  if (typeof value === 'number') return value;
+  // For strings like "4-5", extract the first number
+  const match = String(value).match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+};
 
 export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted, previousExerciseLogs = {} }: DailyChecklistProps) {
   const { toast } = useToast();
@@ -211,9 +219,9 @@ export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted, previousExe
                             Last: <span className="font-medium text-foreground">{previousExerciseLogs[exercise.name].avgWeight} lbs</span>
                           </span>
                         )}
-                      </div>
-                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {Array.from({ length: exercise.sets }).map((_, setIdx) => {
+                       </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {Array.from({ length: parseSetsOrReps(exercise.sets) }).map((_, setIdx) => {
                           const currentWeight = exerciseLogs[workout.id]?.[idx]?.sets[setIdx]?.weight;
                           const previousWeight = previousExerciseLogs[exercise.name]?.avgWeight;
                           const showProgressIndicator = currentWeight && previousWeight;
@@ -233,7 +241,7 @@ export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted, previousExe
                                   min="0"
                                   step="5"
                                   value={exerciseLogs[workout.id]?.[idx]?.sets[setIdx]?.weight || ''}
-                                  onChange={(e) => handleWeightChange(workout.id, idx, setIdx, e.target.value, exercise.name, exercise.sets)}
+                                  onChange={(e) => handleWeightChange(workout.id, idx, setIdx, e.target.value, exercise.name, parseSetsOrReps(exercise.sets))}
                                   className="h-9 pr-16 text-sm"
                                   aria-label={`Weight for ${exercise.name}, set ${setIdx + 1}`}
                                 />
@@ -249,10 +257,10 @@ export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted, previousExe
                                   </span>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                     </div>
                   )}
                 </div>
