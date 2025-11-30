@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Calendar, CheckCircle2 } from "lucide-react";
+import { Trophy, Calendar, CheckCircle2, Sparkles } from "lucide-react";
+import { getDailyQuote } from "@/lib/motivationalQuotes";
 
 interface ProgressTrackerProps {
   completionPercentage: number;
@@ -18,9 +19,23 @@ export function ProgressTracker({
   daysRemaining,
 }: ProgressTrackerProps) {
   const canUnlockNextBlock = completionPercentage >= 70;
+  const quote = getDailyQuote();
 
   return (
     <Card className="p-4 sm:p-6 space-y-4">
+      {/* Daily Motivational Quote */}
+      <div className="pb-3 border-b">
+        <div className="flex items-start gap-2">
+          <Sparkles className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm sm:text-base font-medium bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent leading-relaxed">
+              "{quote.text}"
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">— {quote.author}</p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Your Progress</h3>
         <Trophy className={canUnlockNextBlock ? "h-5 w-5 text-primary" : "h-5 w-5 text-muted-foreground"} />
