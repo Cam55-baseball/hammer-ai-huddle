@@ -68,14 +68,14 @@ export default function ProductionStudio() {
 
       if (error || data?.error) {
         const errorMsg = error?.message || data?.error || '';
-        // No program initialized yet - check for any "not found" or "progress" related errors
-        if (errorMsg.toLowerCase().includes('not found') || errorMsg.toLowerCase().includes('progress')) {
-          console.log('No workout program found, initializing...');
-          await initializeProgram();
-          return;
-        } else {
-          throw new Error(errorMsg);
-        }
+        throw new Error(errorMsg);
+      }
+
+      // Check if user needs program initialization
+      if (data?.status === 'no_progress') {
+        console.log('No workout program found, initializing...');
+        await initializeProgram();
+        return;
       }
       
       setWorkoutData(data);

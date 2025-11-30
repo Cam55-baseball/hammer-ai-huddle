@@ -97,15 +97,6 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-    return new Response(JSON.stringify({ 
-      progress,
-      workouts,
-      today,
-      equipment: equipment || []
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
   } catch (error) {
     console.error('Error in get-workout-schedule:', error);
     return new Response(JSON.stringify({ error: String(error) }), {
