@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked, RefreshCw } from "lucide-react";
+import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked, RefreshCw, Dumbbell } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
@@ -434,6 +434,19 @@ export default function Dashboard() {
                   </>
                 )}
               </Button>
+              {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && (
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/production-studio");
+                  }}
+                >
+                  <Dumbbell className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden xs:inline">Production Studio</span>
+                  <span className="xs:hidden">Studio</span>
+                </Button>
+              )}
             </div>
           </Card>
 
@@ -479,6 +492,19 @@ export default function Dashboard() {
                   </>
                 )}
               </Button>
+              {hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && (
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/production-lab");
+                  }}
+                >
+                  <Dumbbell className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden xs:inline">Production Lab</span>
+                  <span className="xs:hidden">Lab</span>
+                </Button>
+              )}
             </div>
           </Card>
 
@@ -524,6 +550,19 @@ export default function Dashboard() {
                   </>
                 )}
               </Button>
+              {hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && (
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate("/rainbow-bread");
+                  }}
+                >
+                  <Dumbbell className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden xs:inline">Rainbow Bread</span>
+                  <span className="xs:hidden">Training</span>
+                </Button>
+              )}
             </div>
           </Card>
         </div>
