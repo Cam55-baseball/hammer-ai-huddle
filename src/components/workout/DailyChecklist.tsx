@@ -35,10 +35,42 @@ interface DailyChecklistProps {
   onWorkoutCompleted: () => void;
 }
 
+interface SetLog {
+  weight: number | null;
+  reps: number | null;
+}
+
 export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted }: DailyChecklistProps) {
   const { toast } = useToast();
   const [completingWorkout, setCompletingWorkout] = useState<string | null>(null);
-  const [exerciseLogs, setExerciseLogs] = useState<Record<string, any>>({});
+  const [exerciseLogs, setExerciseLogs] = useState<Record<string, Record<number, { name: string; sets: SetLog[] }>>>({});
+
+  const handleWeightChange = (workoutId: string, exerciseIndex: number, setIndex: number, weight: string, exerciseName: string, totalSets: number) => {
+    setExerciseLogs(prev => {
+      const workoutLogs = prev[workoutId] || {};
+      const exerciseLog = workoutLogs[exerciseIndex] || {
+        name: exerciseName,
+        sets: Array(totalSets).fill(null).map(() => ({ weight: null, reps: null }))
+      };
+      
+      const updatedSets = [...exerciseLog.sets];
+      updatedSets[setIndex] = {
+        ...updatedSets[setIndex],
+        weight: weight ? parseFloat(weight) : null
+      };
+
+      return {
+        ...prev,
+        [workoutId]: {
+          ...workoutLogs,
+          [exerciseIndex]: {
+            ...exerciseLog,
+            sets: updatedSets
+          }
+        }
+      };
+    });
+  };
 
   const handleCompleteWorkout = async (workoutId: string) => {
     setCompletingWorkout(workoutId);
@@ -115,18 +147,52 @@ export function DailyChecklist({ todaysWorkouts, onWorkoutCompleted }: DailyChec
 
             <div className="space-y-3 mb-4">
               {workout.workout_templates.exercises.map((exercise, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <Checkbox disabled={isCompleted} />
-                  <div className="flex-1">
-                    <p className="font-medium">{exercise.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {exercise.sets} sets × {exercise.reps} reps
-                      {exercise.intensity && ` @ ${exercise.intensity}`}
-                    </p>
-                    {exercise.notes && (
-                      <p className="text-xs text-muted-foreground mt-1">{exercise.notes}</p>
-                    )}
+                <div key={idx} className="p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-start gap-3">
+                    <Checkbox disabled={isCompleted} />
+                    <div className="flex-1">
+                      <p className="font-medium">{exercise.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {exercise.sets} sets × {exercise.reps} reps
+                        {exercise.intensity && ` @ ${exercise.intensity}`}
+                      </p>
+                      {exercise.notes && (
+                        <p className="text-xs text-muted-foreground mt-1">{exercise.notes}</p>
+                      )}
+                    </div>
                   </div>
+                  
+                  {/* Weight tracking inputs for strength workouts */}
+                  {isStrength && !isCompleted && (
+                    <div className="mt-3 pt-3 border-t border-border/50">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Log weights:</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {Array.from({ length: exercise.sets }).map((_, setIdx) => (
+                          <div key={setIdx} className="flex items-center gap-1.5">
+                            <label htmlFor={`${workout.id}-${idx}-${setIdx}`} className="text-xs text-muted-foreground whitespace-nowrap">
+                              Set {setIdx + 1}:
+                            </label>
+                            <div className="relative flex-1">
+                              <Input
+                                id={`${workout.id}-${idx}-${setIdx}`}
+                                type="number"
+                                placeholder="0"
+                                min="0"
+                                step="5"
+                                value={exerciseLogs[workout.id]?.[idx]?.sets[setIdx]?.weight || ''}
+                                onChange={(e) => handleWeightChange(workout.id, idx, setIdx, e.target.value, exercise.name, exercise.sets)}
+                                className="h-9 pr-10 text-sm"
+                                aria-label={`Weight for ${exercise.name}, set ${setIdx + 1}`}
+                              />
+                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                                lbs
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
