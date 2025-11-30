@@ -197,7 +197,15 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
-      progress,
+      progress: {
+        ...progress,
+        exit_velocity: progress.exit_velocity,
+        exit_velocity_previous: progress.exit_velocity_previous,
+        exit_velocity_last_updated: progress.exit_velocity_last_updated,
+        distance: progress.distance,
+        distance_previous: progress.distance_previous,
+        distance_last_updated: progress.distance_last_updated,
+      },
       workouts,
       today,
       equipment: equipment || [],

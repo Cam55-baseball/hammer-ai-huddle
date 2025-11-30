@@ -62,6 +62,43 @@ export default function ProductionStudio() {
     }
   }, [authLoading, subLoading, hasAccess, selectedSport, navigate, toast]);
 
+  const handleUpdateMetrics = async (exitVelocity: number, distance: number) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('update-power-metrics', {
+        body: {
+          exitVelocity,
+          distance,
+          progressId: workoutData?.progress?.id,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success! 🎉",
+        description: "Power metrics updated successfully!",
+      });
+      
+      // Reload workout data to get updated metrics
+      await loadWorkoutData();
+    } catch (error: any) {
+      console.error('Error updating metrics:', error);
+      if (error.message?.includes('Cannot update metrics yet')) {
+        toast({
+          title: "Too Soon",
+          description: `You can update your metrics again in ${error.daysRemaining} days`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update metrics. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     if (hasAccess && user) {
       loadWorkoutData();
@@ -193,6 +230,14 @@ export default function ProductionStudio() {
             totalWorkouts={42}
             currentBlock={workoutData.progress.current_block || 1}
             daysRemaining={daysRemaining}
+            exitVelocity={workoutData.progress.exit_velocity}
+            exitVelocityPrevious={workoutData.progress.exit_velocity_previous}
+            exitVelocityLastUpdated={workoutData.progress.exit_velocity_last_updated}
+            distance={workoutData.progress.distance}
+            distancePrevious={workoutData.progress.distance_previous}
+            distanceLastUpdated={workoutData.progress.distance_last_updated}
+            progressId={workoutData.progress.id}
+            onUpdateMetrics={handleUpdateMetrics}
           />
         )}
 
