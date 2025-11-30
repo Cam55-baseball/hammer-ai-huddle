@@ -66,6 +66,13 @@ export default function ProductionStudio() {
         }
       });
 
+      // Handle 401 Unauthorized - session expired or invalid
+      if (error?.message?.includes('Unauthorized') || data?.error === 'Unauthorized') {
+        await supabase.auth.signOut();
+        navigate('/auth');
+        return;
+      }
+
       if (error || data?.error) {
         const errorMsg = error?.message || data?.error || '';
         throw new Error(errorMsg);
