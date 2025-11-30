@@ -192,6 +192,7 @@ export default function ProductionLab() {
               <WorkoutCalendar
                 workouts={workoutData?.workouts || []}
                 currentMonth={currentMonth}
+                onMonthChange={setCurrentMonth}
                 onWorkoutClick={(workout) => console.log('Workout clicked:', workout)}
               />
             </div>
