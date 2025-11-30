@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Construction } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Construction, Clapperboard, FlaskConical, Rainbow } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -87,8 +87,11 @@ export function AppSidebar() {
 
   const trainingModules = [
     { title: "Hitting Analysis", url: `/analyze/hitting?sport=${selectedSport}`, icon: Target },
+    { title: "  → Production Studio", url: "/production-studio", icon: Clapperboard, indent: true },
     { title: "Pitching Analysis", url: `/analyze/pitching?sport=${selectedSport}`, icon: Target },
+    { title: "  → Production Lab", url: "/production-lab", icon: FlaskConical, indent: true },
     { title: "Throwing Analysis", url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
+    { title: "  → Rainbow Bread", url: "/rainbow-bread", icon: Rainbow, indent: true },
     { title: "Players Club", url: "/players-club", icon: BookMarked },
   ];
 
