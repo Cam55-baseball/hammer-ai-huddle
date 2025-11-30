@@ -201,6 +201,11 @@ export const useSubscription = () => {
     return details?.cancel_at_period_end || false;
   }, [getModuleDetails]);
 
+  const hasSubModuleAccess = useCallback((subModule: string, parentModule: string, sport: string) => {
+    // Sub-module requires parent module subscription
+    return hasModuleForSport(parentModule, sport);
+  }, [hasModuleForSport]);
+
   useEffect(() => {
     checkSubscription(false);
     
@@ -235,6 +240,7 @@ export const useSubscription = () => {
     getModuleDetails,
     getModuleStatus,
     hasPendingCancellation,
+    hasSubModuleAccess,
     onModulesChange,
     enableFastPolling
   };
