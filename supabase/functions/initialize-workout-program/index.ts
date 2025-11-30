@@ -13,18 +13,42 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false },
+    });
 
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    
-    if (userError || !userData.user) {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Missing Authorization header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const decodeJwt = (token: string) => {
+      try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4 !== 0) base64 += '=';
+        const json = atob(base64);
+        return JSON.parse(json);
+      } catch (_) {
+        return null;
+      }
+    };
+
+    const bearer = authHeader.replace(/^Bearer\s+/i, '');
+    const claims = decodeJwt(bearer);
+
+    if (!claims || !claims.sub) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const userId = claims.sub as string;
 
     const { subModule, parentModule, sport, experienceLevel } = await req.json();
 
@@ -49,11 +73,11 @@ Deno.serve(async (req) => {
     const { data: existingProgress } = await supabase
       .from('user_workout_progress')
       .select('*')
-      .eq('user_id', userData.user.id)
+      .eq('user_id', userId)
       .eq('parent_module', parentModule)
       .eq('sub_module', subModule)
       .eq('sport', sport)
-      .single();
+      .maybeSingle();
 
     if (existingProgress) {
       return new Response(JSON.stringify({ 
@@ -68,7 +92,7 @@ Deno.serve(async (req) => {
     const { data: progress, error: progressError } = await supabase
       .from('user_workout_progress')
       .insert({
-        user_id: userData.user.id,
+        user_id: userId,
         program_id: program.id,
         parent_module: parentModule,
         sub_module: subModule,
@@ -99,7 +123,7 @@ Deno.serve(async (req) => {
     if (templates && templates.length > 0) {
       const blockStartDate = new Date();
       const scheduledWorkouts = templates.map(template => ({
-        user_id: userData.user.id,
+        user_id: userId,
         progress_id: progress.id,
         template_id: template.id,
         scheduled_date: new Date(blockStartDate.getTime() + (template.day_in_cycle - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
