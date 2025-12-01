@@ -257,7 +257,9 @@ export default function ProductionStudio() {
         <div className="grid lg:grid-cols-2 gap-6">
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-4">Today's Workouts</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                {new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })} Workout
+              </h2>
               <DailyChecklist
                 todaysWorkouts={todaysWorkouts}
                 onWorkoutCompleted={loadWorkoutData}
