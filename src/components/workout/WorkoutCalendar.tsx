@@ -47,6 +47,9 @@ export function WorkoutCalendar({ workouts, currentMonth, onMonthChange, onWorko
 
   // Determine if a workout is clickable
   const isWorkoutClickable = (workout: Workout, day: Date) => {
+    // Completed workouts are ALWAYS clickable (for viewing history)
+    if (workout.status === 'completed') return true;
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const workoutDate = parseISO(workout.scheduled_date);
