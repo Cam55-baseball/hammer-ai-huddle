@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
 
     const userId = claims.sub as string;
 
-    const { subModule, parentModule, sport, experienceLevel } = await req.json();
+    const { subModule, parentModule, sport, experienceLevel, localDate } = await req.json();
 
     // Get the first block program for this sub-module
     const { data: program, error: programError } = await supabase
@@ -121,9 +121,11 @@ Deno.serve(async (req) => {
 
     // Create scheduled workouts with timezone-safe date handling
     if (templates && templates.length > 0) {
-      const blockStartDateStr = new Date().toISOString().split('T')[0];
+      // Use provided local date, fallback to UTC if not provided (backwards compatibility)
+      const blockStartDateStr = localDate || new Date().toISOString().split('T')[0];
       const scheduledWorkouts = templates.map(template => {
-        const startDate = new Date(blockStartDateStr + 'T00:00:00Z');
+        // Use noon UTC to avoid any midnight edge cases
+        const startDate = new Date(blockStartDateStr + 'T12:00:00Z');
         const scheduledDate = new Date(startDate.getTime() + (template.day_in_cycle - 1) * 24 * 60 * 60 * 1000);
         return {
           user_id: userId,
