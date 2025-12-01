@@ -33,9 +33,6 @@ const Weather = lazy(() => import("./pages/Weather"));
 const Subscribers = lazy(() => import("./pages/Subscribers"));
 const PlayersClub = lazy(() => import("./pages/PlayersClub"));
 const ComingSoon = lazy(() => import("./pages/ComingSoon"));
-const ProductionStudio = lazy(() => import("./pages/ProductionStudio"));
-const ProductionLab = lazy(() => import("./pages/ProductionLab"));
-const RainbowBread = lazy(() => import("./pages/RainbowBread"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -73,9 +70,6 @@ const App = () => (
               <Route path="/weather" element={<Weather />} />
               <Route path="/subscribers" element={<Subscribers />} />
               <Route path="/players-club" element={<PlayersClub />} />
-              <Route path="/production-studio" element={<ProductionStudio />} />
-              <Route path="/production-lab" element={<ProductionLab />} />
-              <Route path="/rainbow-bread" element={<RainbowBread />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
