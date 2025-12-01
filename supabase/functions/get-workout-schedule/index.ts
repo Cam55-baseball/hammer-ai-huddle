@@ -13,92 +13,39 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    });
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized: Missing Authorization header' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const decodeJwt = (token: string) => {
-      try {
-        const parts = token.split('.');
-        if (parts.length !== 3) return null;
-        let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-        while (base64.length % 4 !== 0) base64 += '=';
-        const json = atob(base64);
-        return JSON.parse(json);
-      } catch (_) {
-        return null;
-      }
-    };
-
-    const bearer = authHeader.replace(/^Bearer\s+/i, '');
-    const claims = decodeJwt(bearer);
-
-    if (!claims || !claims.sub) {
+    const authHeader = req.headers.get('Authorization')!;
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !userData.user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Use the user ID from the verified JWT claims
-    const userId = claims.sub as string;
-
-    const { subModule, parentModule, sport, localDate } = await req.json();
-
-    // Use provided local date, or fall back to UTC if not provided
-    const today = localDate || new Date().toISOString().split('T')[0];
+    const { subModule, parentModule, sport } = await req.json();
 
     // Get user's workout progress
     const { data: progress, error: progressError } = await supabase
       .from('user_workout_progress')
       .select('*, workout_programs(*)')
-      .eq('user_id', userId)
+      .eq('user_id', userData.user.id)
       .eq('parent_module', parentModule)
       .eq('sub_module', subModule)
       .eq('sport', sport)
-      .maybeSingle();
+      .single();
 
-    if (progressError) {
-      console.error('Error fetching workout progress:', progressError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch workout progress' }), {
-        status: 500,
+    if (progressError || !progress) {
+      return new Response(JSON.stringify({ error: 'No workout progress found' }), {
+        status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Get equipment for this sub-module (available even if no progress yet)
-    const { data: equipment, error: equipmentError } = await supabase
-      .from('workout_equipment')
-      .select('*')
-      .eq('sub_module', subModule)
-      .eq('sport', sport);
-
-    if (equipmentError) {
-      console.error('Error fetching equipment:', equipmentError);
-    }
-
-    // If user has no workout progress yet, return an empty schedule instead of 404
-    if (!progress) {
-      return new Response(JSON.stringify({
-        progress: null,
-        workouts: [],
-        today,
-        equipment: equipment || [],
-        status: 'no_progress',
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Get scheduled workouts for this progress record
+    // Get scheduled workouts
     const { data: workouts, error: workoutsError } = await supabase
       .from('workout_completions')
       .select('*, workout_templates(*)')
@@ -113,103 +60,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check for missed workouts and roll them forward
-    const missedWorkouts = workouts?.filter(w => 
-      w.status === 'scheduled' && w.scheduled_date < today
-    ) || [];
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0];
 
-    if (missedWorkouts.length > 0) {
-      console.log(`Found ${missedWorkouts.length} missed workouts, rolling forward...`);
-      
-      // Calculate how many days to shift
-      const oldestMissedDate = missedWorkouts[0].scheduled_date;
-      const daysToShift = Math.floor(
-        (new Date(today).getTime() - new Date(oldestMissedDate).getTime()) / (1000 * 60 * 60 * 24)
-      );
+    // Get equipment for this sub-module
+    const { data: equipment } = await supabase
+      .from('workout_equipment')
+      .select('*')
+      .eq('sub_module', subModule)
+      .eq('sport', sport);
 
-      // Update all scheduled (not completed) workouts to shift forward
-      for (const workout of workouts || []) {
-        if (workout.status === 'scheduled') {
-          const currentDate = new Date(workout.scheduled_date);
-          const newDate = new Date(currentDate.getTime() + daysToShift * 24 * 60 * 60 * 1000);
-          const newDateStr = newDate.toISOString().split('T')[0];
-
-          await supabase
-            .from('workout_completions')
-            .update({ scheduled_date: newDateStr, updated_at: new Date().toISOString() })
-            .eq('id', workout.id);
-        }
-      }
-
-      // Refetch workouts with updated dates
-      const { data: updatedWorkouts } = await supabase
-        .from('workout_completions')
-        .select('*, workout_templates(*)')
-        .eq('progress_id', progress.id)
-        .order('scheduled_date');
-
-      // Use updated workouts for the rest of the function
-      if (updatedWorkouts) {
-        workouts.splice(0, workouts.length, ...updatedWorkouts);
-      }
-    }
-
-    // Aggregate previous exercise logs from completed workouts with enhanced data
-    const previousExerciseLogs: Record<string, {
-      avgWeight: number;
-      maxWeight: number;
-      lastReps: number;
-      estimated1RM: number;
-    }> = {};
-    const completedWorkouts = workouts?.filter(w => w.status === 'completed' && w.exercise_logs) || [];
-    
-    for (const workout of completedWorkouts) {
-      const logs = workout.exercise_logs as Record<number, { name: string; sets: { weight: number | null; reps: number | null }[] }>;
-      if (logs) {
-        for (const exerciseLog of Object.values(logs)) {
-          if (exerciseLog.name && exerciseLog.sets?.length > 0) {
-            const weights = exerciseLog.sets
-              .map(s => s.weight)
-              .filter(w => w !== null && w > 0) as number[];
-            
-            if (weights.length > 0) {
-              const avgWeight = weights.reduce((sum, w) => sum + w, 0) / weights.length;
-              const maxWeight = Math.max(...weights);
-              
-              // Get reps from the workout template
-              const template = workout.workout_templates as any;
-              const templateExercise = template?.exercises?.find((e: any) => e.name === exerciseLog.name);
-              const lastReps = templateExercise?.reps || 5;
-              
-              // Calculate estimated 1RM using Epley's formula: 1RM = weight × (1 + reps/30)
-              const estimated1RM = Math.round(maxWeight * (1 + lastReps / 30));
-              
-              previousExerciseLogs[exerciseLog.name] = {
-                avgWeight: Math.round(avgWeight),
-                maxWeight: Math.round(maxWeight),
-                lastReps,
-                estimated1RM,
-              };
-            }
-          }
-        }
-      }
-    }
-
-    return new Response(JSON.stringify({
-      progress: {
-        ...progress,
-        exit_velocity: progress.exit_velocity,
-        exit_velocity_previous: progress.exit_velocity_previous,
-        exit_velocity_last_updated: progress.exit_velocity_last_updated,
-        distance: progress.distance,
-        distance_previous: progress.distance_previous,
-        distance_last_updated: progress.distance_last_updated,
-      },
+    return new Response(JSON.stringify({ 
+      progress,
       workouts,
       today,
-      equipment: equipment || [],
-      previousExerciseLogs,
+      equipment: equipment || []
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -43,59 +43,8 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Check if workout is scheduled for today
     const today = new Date().toISOString().split('T')[0];
-
-    // Before validating scheduled date, check for missed workouts and roll forward
-    const { data: missedWorkouts } = await supabase
-      .from('workout_completions')
-      .select('*')
-      .eq('progress_id', workout.progress_id)
-      .eq('status', 'scheduled')
-      .lt('scheduled_date', today)
-      .order('scheduled_date');
-
-    if (missedWorkouts && missedWorkouts.length > 0) {
-      console.log(`Found ${missedWorkouts.length} missed workouts, rolling forward...`);
-      
-      const oldestMissedDate = missedWorkouts[0].scheduled_date;
-      const daysToShift = Math.floor(
-        (new Date(today).getTime() - new Date(oldestMissedDate).getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      // Get all scheduled workouts to shift
-      const { data: scheduledWorkouts } = await supabase
-        .from('workout_completions')
-        .select('*')
-        .eq('progress_id', workout.progress_id)
-        .eq('status', 'scheduled')
-        .order('scheduled_date');
-
-      if (scheduledWorkouts) {
-        for (const w of scheduledWorkouts) {
-          const currentDate = new Date(w.scheduled_date);
-          const newDate = new Date(currentDate.getTime() + daysToShift * 24 * 60 * 60 * 1000);
-          const newDateStr = newDate.toISOString().split('T')[0];
-
-          await supabase
-            .from('workout_completions')
-            .update({ scheduled_date: newDateStr, updated_at: new Date().toISOString() })
-            .eq('id', w.id);
-        }
-      }
-
-      // Refetch the current workout with updated date
-      const { data: updatedWorkout } = await supabase
-        .from('workout_completions')
-        .select('*, user_workout_progress(*)')
-        .eq('id', workoutId)
-        .single();
-
-      if (updatedWorkout) {
-        Object.assign(workout, updatedWorkout);
-      }
-    }
-
-    // Check if workout is scheduled for today (after roll-forward)
     if (workout.scheduled_date !== today) {
       return new Response(JSON.stringify({ 
         error: 'This workout is not scheduled for today. Workouts must be completed on their scheduled day.' 

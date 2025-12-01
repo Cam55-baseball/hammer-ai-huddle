@@ -13,44 +13,20 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    });
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized: Missing Authorization header' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const decodeJwt = (token: string) => {
-      try {
-        const parts = token.split('.');
-        if (parts.length !== 3) return null;
-        let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-        while (base64.length % 4 !== 0) base64 += '=';
-        const json = atob(base64);
-        return JSON.parse(json);
-      } catch (_) {
-        return null;
-      }
-    };
-
-    const bearer = authHeader.replace(/^Bearer\s+/i, '');
-    const claims = decodeJwt(bearer);
-
-    if (!claims || !claims.sub) {
+    const authHeader = req.headers.get('Authorization')!;
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !userData.user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const userId = claims.sub as string;
-
-    const { subModule, parentModule, sport, experienceLevel, localDate } = await req.json();
+    const { subModule, parentModule, sport, experienceLevel } = await req.json();
 
     // Get the first block program for this sub-module
     const { data: program, error: programError } = await supabase
@@ -73,11 +49,11 @@ Deno.serve(async (req) => {
     const { data: existingProgress } = await supabase
       .from('user_workout_progress')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', userData.user.id)
       .eq('parent_module', parentModule)
       .eq('sub_module', subModule)
       .eq('sport', sport)
-      .maybeSingle();
+      .single();
 
     if (existingProgress) {
       return new Response(JSON.stringify({ 
@@ -92,7 +68,7 @@ Deno.serve(async (req) => {
     const { data: progress, error: progressError } = await supabase
       .from('user_workout_progress')
       .insert({
-        user_id: userId,
+        user_id: userData.user.id,
         program_id: program.id,
         parent_module: parentModule,
         sub_module: subModule,
@@ -119,22 +95,16 @@ Deno.serve(async (req) => {
       .eq('program_id', program.id)
       .order('day_in_cycle');
 
-    // Create scheduled workouts with timezone-safe date handling
+    // Create scheduled workouts
     if (templates && templates.length > 0) {
-      // Use provided local date, fallback to UTC if not provided (backwards compatibility)
-      const blockStartDateStr = localDate || new Date().toISOString().split('T')[0];
-      const scheduledWorkouts = templates.map(template => {
-        // Use noon UTC to avoid any midnight edge cases
-        const startDate = new Date(blockStartDateStr + 'T12:00:00Z');
-        const scheduledDate = new Date(startDate.getTime() + (template.day_in_cycle - 1) * 24 * 60 * 60 * 1000);
-        return {
-          user_id: userId,
-          progress_id: progress.id,
-          template_id: template.id,
-          scheduled_date: scheduledDate.toISOString().split('T')[0],
-          status: 'scheduled',
-        };
-      });
+      const blockStartDate = new Date();
+      const scheduledWorkouts = templates.map(template => ({
+        user_id: userData.user.id,
+        progress_id: progress.id,
+        template_id: template.id,
+        scheduled_date: new Date(blockStartDate.getTime() + (template.day_in_cycle - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        status: 'scheduled',
+      }));
 
       await supabase.from('workout_completions').insert(scheduledWorkouts);
     }

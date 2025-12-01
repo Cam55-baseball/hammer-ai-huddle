@@ -78,15 +78,11 @@ Deno.serve(async (req) => {
       .eq("status", "active");
 
     if (roles && roles.length > 0) {
-      logStep("Owner/Admin detected - granting full access", { userId: user.id });
+      logStep("Owner detected - granting full access", { userId: user.id });
       return new Response(
         JSON.stringify({
           subscribed: true,
-          modules: [
-            "baseball_hitting", "baseball_pitching", "baseball_throwing",
-            "softball_hitting", "softball_pitching", "softball_throwing"
-          ],
-          module_details: {},
+          modules: ["hitting", "pitching", "throwing"],
           subscription_end: null,
           has_discount: false,
           discount_percent: null,

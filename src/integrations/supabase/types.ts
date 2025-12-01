@@ -516,12 +516,6 @@ export type Database = {
           created_at: string | null
           current_block: number | null
           current_day_in_block: number | null
-          distance: number | null
-          distance_last_updated: string | null
-          distance_previous: number | null
-          exit_velocity: number | null
-          exit_velocity_last_updated: string | null
-          exit_velocity_previous: number | null
           experience_level: string | null
           id: string
           parent_module: string
@@ -538,12 +532,6 @@ export type Database = {
           created_at?: string | null
           current_block?: number | null
           current_day_in_block?: number | null
-          distance?: number | null
-          distance_last_updated?: string | null
-          distance_previous?: number | null
-          exit_velocity?: number | null
-          exit_velocity_last_updated?: string | null
-          exit_velocity_previous?: number | null
           experience_level?: string | null
           id?: string
           parent_module: string
@@ -560,12 +548,6 @@ export type Database = {
           created_at?: string | null
           current_block?: number | null
           current_day_in_block?: number | null
-          distance?: number | null
-          distance_last_updated?: string | null
-          distance_previous?: number | null
-          exit_velocity?: number | null
-          exit_velocity_last_updated?: string | null
-          exit_velocity_previous?: number | null
           experience_level?: string | null
           id?: string
           parent_module?: string
