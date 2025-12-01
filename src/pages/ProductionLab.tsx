@@ -113,12 +113,17 @@ export default function ProductionLab() {
 
   const initializeProgram = async () => {
     try {
+      // Get user's local date (not UTC)
+      const localDate = new Date();
+      const localDateStr = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`;
+      
       const { data, error } = await supabase.functions.invoke('initialize-workout-program', {
         body: {
           subModule: 'production_lab',
           parentModule: 'pitching',
           sport: selectedSport,
           experienceLevel: 'beginner',
+          localDate: localDateStr,
         }
       });
 
