@@ -297,9 +297,16 @@ export default function ProductionStudio() {
                 )}
                 <span>{selectedWorkout?.workout_templates.title}</span>
               </div>
-              <Badge variant={selectedWorkout?.workout_templates.workout_type === 'strength' ? "default" : "secondary"}>
-                {selectedWorkout?.workout_templates.workout_type}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {selectedWorkout?.status === 'completed' && (
+                  <Badge variant="default" className="bg-green-600">
+                    ✓ Completed
+                  </Badge>
+                )}
+                <Badge variant={selectedWorkout?.workout_templates.workout_type === 'strength' ? "default" : "secondary"}>
+                  {selectedWorkout?.workout_templates.workout_type}
+                </Badge>
+              </div>
             </DialogTitle>
           </DialogHeader>
           
@@ -333,6 +340,30 @@ export default function ProductionStudio() {
                   </div>
                 ))}
               </div>
+
+              {/* Logged Weights for Completed Workouts */}
+              {selectedWorkout.status === 'completed' && selectedWorkout.exercise_logs && Object.keys(selectedWorkout.exercise_logs).length > 0 && (
+                <div className="space-y-3 mt-4 pt-4 border-t">
+                  <h3 className="font-semibold text-green-600">Logged Weights</h3>
+                  {Object.entries(selectedWorkout.exercise_logs).map(([idx, log]: [string, any]) => (
+                    <div key={idx} className="p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+                      <p className="font-medium text-sm">{log.name}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {log.sets?.map((set: any, setIdx: number) => (
+                          <Badge key={setIdx} variant="outline" className="font-mono text-xs bg-background">
+                            Set {setIdx + 1}: {set.weight || '-'} lbs
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  {selectedWorkout.completed_date && (
+                    <p className="text-xs text-muted-foreground">
+                      Completed on {new Date(selectedWorkout.completed_date).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

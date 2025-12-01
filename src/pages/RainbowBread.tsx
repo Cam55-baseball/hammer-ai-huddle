@@ -4,6 +4,8 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +15,7 @@ import { WorkoutCalendar } from "@/components/workout/WorkoutCalendar";
 import { DailyChecklist } from "@/components/workout/DailyChecklist";
 import { ProgressTracker } from "@/components/workout/ProgressTracker";
 import { EquipmentList } from "@/components/workout/EquipmentList";
-import { Rainbow, Lock } from "lucide-react";
+import { Rainbow, Lock, Dumbbell, Zap } from "lucide-react";
 
 export default function RainbowBread() {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ export default function RainbowBread() {
   const [workoutData, setWorkoutData] = useState<any>(null);
   const [loadingWorkouts, setLoadingWorkouts] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedWorkout, setSelectedWorkout] = useState<any>(null);
 
   const hasAccess = hasSubModuleAccess('rainbow_bread', 'throwing', selectedSport);
 
@@ -261,7 +264,7 @@ export default function RainbowBread() {
                 workouts={workoutData?.workouts || []}
                 currentMonth={currentMonth}
                 onMonthChange={setCurrentMonth}
-                onWorkoutClick={(workout) => console.log('Workout clicked:', workout)}
+                onWorkoutClick={setSelectedWorkout}
               />
             </div>
 
@@ -271,6 +274,91 @@ export default function RainbowBread() {
           </div>
         </div>
       </div>
+
+      {/* Workout Preview Dialog */}
+      <Dialog open={!!selectedWorkout} onOpenChange={() => setSelectedWorkout(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {selectedWorkout?.workout_templates.workout_type === 'strength' ? (
+                  <Dumbbell className="h-5 w-5 text-blue-500" />
+                ) : (
+                  <Zap className="h-5 w-5 text-green-500" />
+                )}
+                <span>{selectedWorkout?.workout_templates.title}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {selectedWorkout?.status === 'completed' && (
+                  <Badge variant="default" className="bg-green-600">
+                    ✓ Completed
+                  </Badge>
+                )}
+                <Badge variant={selectedWorkout?.workout_templates.workout_type === 'strength' ? "default" : "secondary"}>
+                  {selectedWorkout?.workout_templates.workout_type}
+                </Badge>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedWorkout && (
+            <div className="space-y-4">
+              {selectedWorkout.workout_templates.description && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedWorkout.workout_templates.description}
+                </p>
+              )}
+              
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span>Scheduled: {new Date(selectedWorkout.scheduled_date).toLocaleDateString()}</span>
+                {selectedWorkout.workout_templates.estimated_duration_minutes && (
+                  <span>Duration: {selectedWorkout.workout_templates.estimated_duration_minutes} min</span>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="font-semibold">Exercises</h3>
+                {selectedWorkout.workout_templates.exercises.map((exercise: any, idx: number) => (
+                  <div key={idx} className="p-3 rounded-lg bg-muted/50">
+                    <p className="font-medium">{exercise.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {exercise.sets} sets × {exercise.reps} reps
+                      {exercise.intensity && ` @ ${exercise.intensity}`}
+                    </p>
+                    {exercise.notes && (
+                      <p className="text-xs text-muted-foreground mt-1">{exercise.notes}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Logged Weights for Completed Workouts */}
+              {selectedWorkout.status === 'completed' && selectedWorkout.exercise_logs && Object.keys(selectedWorkout.exercise_logs).length > 0 && (
+                <div className="space-y-3 mt-4 pt-4 border-t">
+                  <h3 className="font-semibold text-green-600">Logged Weights</h3>
+                  {Object.entries(selectedWorkout.exercise_logs).map(([idx, log]: [string, any]) => (
+                    <div key={idx} className="p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+                      <p className="font-medium text-sm">{log.name}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {log.sets?.map((set: any, setIdx: number) => (
+                          <Badge key={setIdx} variant="outline" className="font-mono text-xs bg-background">
+                            Set {setIdx + 1}: {set.weight || '-'} lbs
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  {selectedWorkout.completed_date && (
+                    <p className="text-xs text-muted-foreground">
+                      Completed on {new Date(selectedWorkout.completed_date).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
