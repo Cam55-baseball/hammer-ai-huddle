@@ -51,10 +51,10 @@ Deno.serve(async (req) => {
     // Use the user ID from the verified JWT claims
     const userId = claims.sub as string;
 
-    const { subModule, parentModule, sport } = await req.json();
+    const { subModule, parentModule, sport, localDate } = await req.json();
 
-    // Get today's date
-    const today = new Date().toISOString().split('T')[0];
+    // Use provided local date, or fall back to UTC if not provided
+    const today = localDate || new Date().toISOString().split('T')[0];
 
     // Get user's workout progress
     const { data: progress, error: progressError } = await supabase

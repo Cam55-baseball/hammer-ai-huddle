@@ -111,11 +111,16 @@ export default function ProductionStudio() {
   const loadWorkoutData = async () => {
     setLoadingWorkouts(true);
     try {
+      // Get user's local date
+      const localDate = new Date();
+      const localDateStr = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`;
+      
       const { data, error } = await supabase.functions.invoke('get-workout-schedule', {
         body: {
           subModule: 'production_studio',
           parentModule: 'hitting',
           sport: selectedSport,
+          localDate: localDateStr,
         }
       });
 
