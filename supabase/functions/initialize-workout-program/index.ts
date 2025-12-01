@@ -121,14 +121,20 @@ Deno.serve(async (req) => {
 
     // Create scheduled workouts
     if (templates && templates.length > 0) {
-      const blockStartDate = new Date();
-      const scheduledWorkouts = templates.map(template => ({
-        user_id: userId,
-        progress_id: progress.id,
-        template_id: template.id,
-        scheduled_date: new Date(blockStartDate.getTime() + (template.day_in_cycle - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'scheduled',
-      }));
+      // Use the same block_start_date string that was stored in progress to avoid timezone issues
+      const blockStartDateStr = new Date().toISOString().split('T')[0]; // e.g., "2025-11-30"
+      const scheduledWorkouts = templates.map(template => {
+        // Add days to the date string directly to avoid timezone issues
+        const startDate = new Date(blockStartDateStr + 'T00:00:00Z'); // Explicit UTC midnight
+        const scheduledDate = new Date(startDate.getTime() + (template.day_in_cycle - 1) * 24 * 60 * 60 * 1000);
+        return {
+          user_id: userId,
+          progress_id: progress.id,
+          template_id: template.id,
+          scheduled_date: scheduledDate.toISOString().split('T')[0],
+          status: 'scheduled',
+        };
+      });
 
       await supabase.from('workout_completions').insert(scheduledWorkouts);
     }
