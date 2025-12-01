@@ -1,6 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.0';
 
-// Initialize workout program for sub-modules with timezone-safe date handling
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -120,13 +119,11 @@ Deno.serve(async (req) => {
       .eq('program_id', program.id)
       .order('day_in_cycle');
 
-    // Create scheduled workouts
+    // Create scheduled workouts with timezone-safe date handling
     if (templates && templates.length > 0) {
-      // Use the same block_start_date string that was stored in progress to avoid timezone issues
-      const blockStartDateStr = new Date().toISOString().split('T')[0]; // e.g., "2025-11-30"
+      const blockStartDateStr = new Date().toISOString().split('T')[0];
       const scheduledWorkouts = templates.map(template => {
-        // Add days to the date string directly to avoid timezone issues
-        const startDate = new Date(blockStartDateStr + 'T00:00:00Z'); // Explicit UTC midnight
+        const startDate = new Date(blockStartDateStr + 'T00:00:00Z');
         const scheduledDate = new Date(startDate.getTime() + (template.day_in_cycle - 1) * 24 * 60 * 60 * 1000);
         return {
           user_id: userId,
