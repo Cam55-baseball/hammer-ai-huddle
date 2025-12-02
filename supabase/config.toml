@@ -74,3 +74,15 @@ verify_jwt = true
 
 [functions.get-video-annotations]
 verify_jwt = true
+
+[functions.generate-monthly-report]
+verify_jwt = true
+
+[functions.check-report-ready]
+verify_jwt = true
+
+[functions.get-monthly-report]
+verify_jwt = true
+
+[functions.list-monthly-reports]
+verify_jwt = true
