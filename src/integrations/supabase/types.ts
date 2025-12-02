@@ -131,6 +131,45 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_streaks: {
+        Row: {
+          badges_earned: string[] | null
+          created_at: string | null
+          current_streak: number
+          id: string
+          last_visit_date: string | null
+          longest_streak: number
+          tips_collected: number
+          total_visits: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          badges_earned?: string[] | null
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_visit_date?: string | null
+          longest_streak?: number
+          tips_collected?: number
+          total_visits?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          badges_earned?: string[] | null
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_visit_date?: string | null
+          longest_streak?: number
+          tips_collected?: number
+          total_visits?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       processed_webhook_events: {
         Row: {
           details: Json | null

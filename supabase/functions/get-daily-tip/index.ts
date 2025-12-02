@@ -27,6 +27,15 @@ const CATEGORY_NAMES: Record<string, string> = {
   holistic: 'Holistic Health'
 };
 
+const BADGE_MILESTONES = [
+  { days: 3, id: 'starter', name: 'Getting Started', emoji: '🌱' },
+  { days: 7, id: 'week_warrior', name: 'Week Warrior', emoji: '⚡' },
+  { days: 14, id: 'iron_will', name: 'Iron Will', emoji: '💪' },
+  { days: 30, id: 'iron_horse', name: 'Iron Horse', emoji: '🏇' },
+  { days: 60, id: 'elite', name: 'Elite Performer', emoji: '🏆' },
+  { days: 100, id: 'legendary', name: 'Legendary', emoji: '👑' },
+];
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -45,12 +54,10 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    // User client for auth
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
     
-    // Service client for admin operations
     const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: { user }, error: authError } = await userClient.auth.getUser();
@@ -63,13 +70,93 @@ serve(async (req) => {
 
     const { sport = 'baseball', category } = await req.json().catch(() => ({}));
 
-    // Get user's viewed tips count
+    // ========== STREAK TRACKING ==========
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Get or create streak record
+    let { data: streakData } = await serviceClient
+      .from('nutrition_streaks')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!streakData) {
+      // Create new streak record
+      const { data: newStreak } = await serviceClient
+        .from('nutrition_streaks')
+        .insert({
+          user_id: user.id,
+          current_streak: 1,
+          longest_streak: 1,
+          last_visit_date: today,
+          total_visits: 1,
+          tips_collected: 1,
+          badges_earned: ['starter'],
+        })
+        .select()
+        .single();
+      streakData = newStreak;
+    } else {
+      const lastVisit = streakData.last_visit_date;
+      const lastVisitDate = new Date(lastVisit);
+      const todayDate = new Date(today);
+      const diffDays = Math.floor((todayDate.getTime() - lastVisitDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      let newStreak = streakData.current_streak;
+      let newLongest = streakData.longest_streak;
+      let newTipsCollected = streakData.tips_collected;
+
+      if (diffDays === 0) {
+        // Same day visit - just increment tips
+        newTipsCollected += 1;
+      } else if (diffDays === 1) {
+        // Consecutive day - increment streak
+        newStreak += 1;
+        newTipsCollected += 1;
+        if (newStreak > newLongest) {
+          newLongest = newStreak;
+        }
+      } else {
+        // Streak broken - reset
+        newStreak = 1;
+        newTipsCollected += 1;
+      }
+
+      // Check for new badges
+      const currentBadges = streakData.badges_earned || [];
+      const newBadges = [...currentBadges];
+      
+      for (const milestone of BADGE_MILESTONES) {
+        if (newStreak >= milestone.days && !currentBadges.includes(milestone.id)) {
+          newBadges.push(milestone.id);
+        }
+      }
+
+      // Update streak record
+      const { data: updatedStreak } = await serviceClient
+        .from('nutrition_streaks')
+        .update({
+          current_streak: newStreak,
+          longest_streak: newLongest,
+          last_visit_date: today,
+          total_visits: streakData.total_visits + 1,
+          tips_collected: newTipsCollected,
+          badges_earned: newBadges,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+      
+      streakData = updatedStreak || streakData;
+    }
+
+    // ========== TIP FETCHING ==========
     const { count: viewedCount } = await serviceClient
       .from('user_viewed_tips')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
-    // Get total tips available for this sport
     const { count: totalCount } = await serviceClient
       .from('nutrition_daily_tips')
       .select('*', { count: 'exact', head: true })
@@ -78,7 +165,6 @@ serve(async (req) => {
     const viewedPercentage = totalCount ? ((viewedCount || 0) / totalCount) * 100 : 0;
     const shouldGenerateAI = viewedPercentage >= 80;
 
-    // Build query for unseen tips
     let query = serviceClient
       .from('nutrition_daily_tips')
       .select('id, category, tip_text, sport, is_ai_generated')
@@ -88,7 +174,6 @@ serve(async (req) => {
       query = query.eq('category', category);
     }
 
-    // Get tips not yet viewed by user
     const { data: viewedTipIds } = await serviceClient
       .from('user_viewed_tips')
       .select('tip_id')
@@ -110,17 +195,14 @@ serve(async (req) => {
     let selectedTip = null;
 
     if (unseenTips && unseenTips.length > 0) {
-      // Select random unseen tip
       const randomIndex = Math.floor(Math.random() * unseenTips.length);
       selectedTip = unseenTips[randomIndex];
     } else if (shouldGenerateAI) {
-      // Generate new tip with AI
       console.log('Generating AI tip for category:', category || 'random');
       
       const targetCategory = category || Object.keys(CATEGORY_NAMES)[Math.floor(Math.random() * Object.keys(CATEGORY_NAMES).length)];
       const categoryName = CATEGORY_NAMES[targetCategory];
 
-      // Get some recent tips to avoid
       const { data: recentTips } = await serviceClient
         .from('nutrition_daily_tips')
         .select('tip_text')
@@ -133,7 +215,6 @@ serve(async (req) => {
       const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
       if (!LOVABLE_API_KEY) {
         console.error('LOVABLE_API_KEY not configured');
-        // Return a random viewed tip as fallback
         const { data: fallbackTip } = await serviceClient
           .from('nutrition_daily_tips')
           .select('id, category, tip_text, sport, is_ai_generated')
@@ -175,7 +256,6 @@ Generate only the tip text, nothing else.`;
             const generatedTip = aiData.choices?.[0]?.message?.content?.trim();
 
             if (generatedTip && generatedTip.length > 10) {
-              // Save the AI-generated tip to database
               const { data: newTip, error: insertError } = await serviceClient
                 .from('nutrition_daily_tips')
                 .insert({
@@ -202,7 +282,6 @@ Generate only the tip text, nothing else.`;
       }
     }
 
-    // If still no tip, get a random one (even if viewed)
     if (!selectedTip) {
       const { data: randomTip } = await serviceClient
         .from('nutrition_daily_tips')
@@ -215,7 +294,6 @@ Generate only the tip text, nothing else.`;
     }
 
     if (selectedTip) {
-      // Record this tip as viewed
       await serviceClient
         .from('user_viewed_tips')
         .upsert({
@@ -231,6 +309,13 @@ Generate only the tip text, nothing else.`;
       viewedPercentage: Math.round(viewedPercentage),
       totalTips: totalCount || 0,
       viewedTips: viewedCount || 0,
+      streak: streakData ? {
+        currentStreak: streakData.current_streak,
+        longestStreak: streakData.longest_streak,
+        totalVisits: streakData.total_visits,
+        tipsCollected: streakData.tips_collected,
+        badgesEarned: streakData.badges_earned || [],
+      } : null,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

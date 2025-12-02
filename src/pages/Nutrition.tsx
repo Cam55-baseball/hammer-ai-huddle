@@ -6,7 +6,17 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { NutritionDisclaimer } from '@/components/NutritionDisclaimer';
 import { DailyTipHero } from '@/components/DailyTipHero';
 import { NutritionCategory } from '@/components/NutritionCategory';
+import { NutritionStreakCard } from '@/components/NutritionStreakCard';
+import { NutritionBadges } from '@/components/NutritionBadges';
 import { useAuth } from '@/hooks/useAuth';
+
+interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  totalVisits: number;
+  tipsCollected: number;
+  badgesEarned: string[];
+}
 
 export default function Nutrition() {
   const navigate = useNavigate();
@@ -17,11 +27,28 @@ export default function Nutrition() {
     return (saved === 'baseball' || saved === 'softball') ? saved : 'baseball';
   });
 
+  const [streakData, setStreakData] = useState<StreakData | null>(null);
+  const [totalTips, setTotalTips] = useState(0);
+  const [viewedTips, setViewedTips] = useState(0);
+  const [streakLoading, setStreakLoading] = useState(true);
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
     }
   }, [user, authLoading, navigate]);
+
+  // Callback to receive streak data from DailyTipHero
+  const handleStreakUpdate = (data: {
+    streak: StreakData | null;
+    totalTips: number;
+    viewedTips: number;
+  }) => {
+    setStreakData(data.streak);
+    setTotalTips(data.totalTips);
+    setViewedTips(data.viewedTips);
+    setStreakLoading(false);
+  };
 
   if (authLoading) {
     return (
@@ -57,11 +84,22 @@ export default function Nutrition() {
           </div>
         </div>
 
-        {/* Disclaimer */}
-        <NutritionDisclaimer />
+        {/* Streak Card */}
+        <NutritionStreakCard 
+          streak={streakData}
+          totalTips={totalTips}
+          viewedTips={viewedTips}
+          isLoading={streakLoading}
+        />
+
+        {/* Badges */}
+        <NutritionBadges 
+          earnedBadges={streakData?.badgesEarned || []}
+          currentStreak={streakData?.currentStreak || 0}
+        />
 
         {/* Daily Tip */}
-        <DailyTipHero sport={currentSport} />
+        <DailyTipHero sport={currentSport} onStreakUpdate={handleStreakUpdate} />
 
         {/* Categories */}
         <div className="space-y-3">
@@ -71,6 +109,9 @@ export default function Nutrition() {
           </h2>
           <NutritionCategory />
         </div>
+
+        {/* Disclaimer at bottom */}
+        <NutritionDisclaimer />
       </div>
     </DashboardLayout>
   );
