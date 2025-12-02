@@ -263,6 +263,7 @@ export type Database = {
           last_name: string | null
           mlb_affiliate: string | null
           position: string | null
+          preferred_language: string | null
           social_facebook: string | null
           social_instagram: string | null
           social_linkedin: string | null
@@ -308,6 +309,7 @@ export type Database = {
           last_name?: string | null
           mlb_affiliate?: string | null
           position?: string | null
+          preferred_language?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_linkedin?: string | null
@@ -353,6 +355,7 @@ export type Database = {
           last_name?: string | null
           mlb_affiliate?: string | null
           position?: string | null
+          preferred_language?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_linkedin?: string | null
