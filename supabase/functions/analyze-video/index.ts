@@ -680,13 +680,19 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
     let summary: string[] = [];
     let positives: string[] = [];
     let drills: any[] = [];
+    // Calculate average historical score
+    const averageHistoricalScore = historicalScores.length > 0 
+      ? Math.round(historicalScores.reduce((sum, s) => sum + s, 0) / historicalScores.length)
+      : null;
+
     let scorecard: any = {
       improvements: [],
       regressions: [],
       neutral: [],
       overall_trend: "Baseline established.",
       is_first_analysis: !hasHistory,
-      historical_scores: historicalScores
+      historical_scores: historicalScores,
+      average_historical_score: averageHistoricalScore
     };
 
     // Parse tool calls for structured output
@@ -705,6 +711,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
           scorecard = {
             ...analysisArgs.scorecard,
             historical_scores: historicalScores,
+            average_historical_score: averageHistoricalScore,
             is_first_analysis: !hasHistory
           };
           

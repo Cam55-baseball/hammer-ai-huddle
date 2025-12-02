@@ -21,6 +21,7 @@ interface ScorecardData {
   score_trend?: ScoreTrend;
   is_first_analysis: boolean;
   historical_scores?: number[];
+  average_historical_score?: number | null;
 }
 
 interface TheScorecardProps {
@@ -31,7 +32,7 @@ interface TheScorecardProps {
 export function TheScorecard({ scorecard, currentScore }: TheScorecardProps) {
   if (!scorecard) return null;
 
-  const { improvements, regressions, neutral, overall_trend, score_trend, is_first_analysis, historical_scores } = scorecard;
+  const { improvements, regressions, neutral, overall_trend, score_trend, is_first_analysis, average_historical_score } = scorecard;
 
   // First analysis - show baseline message
   if (is_first_analysis) {
@@ -67,12 +68,10 @@ export function TheScorecard({ scorecard, currentScore }: TheScorecardProps) {
     );
   }
 
-  // Format score history display
-  const formatScoreHistory = () => {
-    if (!historical_scores || historical_scores.length === 0) return null;
-    const scores = [...historical_scores, currentScore];
-    return scores.join(' → ');
-  };
+  // Calculate difference from average
+  const scoreDifference = average_historical_score !== null && average_historical_score !== undefined
+    ? currentScore - average_historical_score
+    : null;
 
   // Get trend icon and color
   const getTrendDisplay = (direction: string) => {
@@ -103,26 +102,54 @@ export function TheScorecard({ scorecard, currentScore }: TheScorecardProps) {
           </div>
         </div>
 
-        {/* Score Trend Section */}
-        {score_trend && (
-          <div className={`p-3 rounded-lg ${trendDisplay?.bg} border border-border/50`}>
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <TrendIcon className={`h-5 w-5 ${trendDisplay?.color}`} />
-                <span className={`font-semibold ${trendDisplay?.color}`}>
-                  Score Trend: {score_trend.direction === 'improving' ? 'Improving' : score_trend.direction === 'declining' ? 'Declining' : 'Stable'}
+        {/* Score Trend Section - Average vs Current */}
+        {average_historical_score !== null && average_historical_score !== undefined && (
+          <div className={`p-4 rounded-lg ${trendDisplay?.bg || 'bg-secondary/50'} border border-border/50`}>
+            <div className="flex items-center gap-2 mb-3">
+              <TrendIcon className={`h-5 w-5 ${trendDisplay?.color || 'text-muted-foreground'}`} />
+              <span className={`font-semibold ${trendDisplay?.color || 'text-foreground'}`}>
+                Score Trend: {score_trend?.direction === 'improving' ? 'Improving' : score_trend?.direction === 'declining' ? 'Declining' : 'Stable'}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between gap-4">
+              {/* Your Average */}
+              <div className="flex-1 text-center">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Your Average</p>
+                <p className="text-2xl sm:text-3xl font-bold text-muted-foreground">{average_historical_score}</p>
+                <p className="text-xs text-muted-foreground">/100</p>
+              </div>
+              
+              {/* Arrow */}
+              <div className="flex-shrink-0">
+                <span className="text-2xl text-muted-foreground">→</span>
+              </div>
+              
+              {/* This Session */}
+              <div className="flex-1 text-center">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">This Session</p>
+                <p className={`text-2xl sm:text-3xl font-bold ${
+                  scoreDifference && scoreDifference > 0 
+                    ? 'text-green-600 dark:text-green-400' 
+                    : scoreDifference && scoreDifference < 0 
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-foreground'
+                }`}>{currentScore}</p>
+                <p className="text-xs text-muted-foreground">/100</p>
+              </div>
+            </div>
+            
+            {/* Difference from average */}
+            {scoreDifference !== null && scoreDifference !== 0 && (
+              <div className="mt-3 text-center">
+                <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+                  scoreDifference > 0 
+                    ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300' 
+                    : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'
+                }`}>
+                  {scoreDifference > 0 ? '+' : ''}{scoreDifference} {scoreDifference > 0 ? 'above' : 'below'} your average
                 </span>
               </div>
-              {score_trend.comparison_to_first !== 0 && (
-                <span className={`text-sm font-medium ${score_trend.comparison_to_first > 0 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                  {score_trend.comparison_to_first > 0 ? '+' : ''}{score_trend.comparison_to_first} from first
-                </span>
-              )}
-            </div>
-            {historical_scores && historical_scores.length > 0 && (
-              <p className="text-sm text-muted-foreground mt-1 font-mono">
-                {formatScoreHistory()}
-              </p>
             )}
           </div>
         )}
