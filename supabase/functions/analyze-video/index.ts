@@ -45,6 +45,41 @@ const makeBeginnerBullets = (feedback: string, positives: string[]): string[] =>
   return unique.slice(0, Math.max(3, Math.min(5, unique.length)));
 };
 
+// Helper to format historical analysis for AI context
+const formatHistoricalContext = (historicalVideos: any[]): string => {
+  if (!historicalVideos || historicalVideos.length === 0) {
+    return "NO HISTORICAL DATA - This is the player's first analysis in this module.";
+  }
+  
+  let context = `HISTORICAL ANALYSIS DATA (${historicalVideos.length} previous upload${historicalVideos.length > 1 ? 's' : ''}, from oldest to newest):\n\n`;
+  
+  historicalVideos.forEach((video, index) => {
+    const date = new Date(video.created_at).toLocaleDateString();
+    const analysis = video.ai_analysis || {};
+    const score = video.efficiency_score || 'N/A';
+    
+    context += `--- Upload ${index + 1} (${date}) ---\n`;
+    context += `Score: ${score}/100\n`;
+    
+    if (analysis.summary && analysis.summary.length > 0) {
+      context += `Key Issues: ${analysis.summary.join('; ')}\n`;
+    }
+    if (analysis.positives && analysis.positives.length > 0) {
+      context += `Strengths: ${analysis.positives.join('; ')}\n`;
+    }
+    if (analysis.feedback) {
+      // Truncate feedback to avoid token limits
+      const truncatedFeedback = analysis.feedback.length > 300 
+        ? analysis.feedback.substring(0, 300) + '...' 
+        : analysis.feedback;
+      context += `Detailed Notes: ${truncatedFeedback}\n`;
+    }
+    context += '\n';
+  });
+  
+  return context;
+};
+
 // Module-specific system prompts
 const getSystemPrompt = (module: string, sport: string) => {
   if (module === "hitting") {
@@ -366,6 +401,49 @@ Focus ONLY on form and body mechanics.`;
   return "You are an expert sports mechanics analyst.";
 };
 
+// Scorecard generation instructions to append to system prompt
+const getScorecardInstructions = (hasHistory: boolean) => {
+  if (!hasHistory) {
+    return `
+
+THE SCORECARD - PROGRESS TRACKING:
+Since this is the player's FIRST analysis in this module, you will establish a baseline.
+Set is_first_analysis to true and provide empty arrays for improvements, regressions, and neutral.
+The overall_trend should be an encouraging message about establishing their baseline.`;
+  }
+  
+  return `
+
+THE SCORECARD - PROGRESS TRACKING:
+You have been provided with the player's COMPLETE historical analysis data above.
+Compare the CURRENT video analysis against ALL previous analyses to generate "The Scorecard" progress report.
+
+CRITICAL: Your comparison must reference:
+1. The MOST RECENT previous upload (immediate comparison)
+2. PATTERNS across ALL previous uploads (long-term trends)
+
+For IMPROVEMENTS - identify areas where the player has gotten better:
+- Compare to last upload AND overall historical pattern
+- Explain WHAT improved and HOW it aligns with long-term progress
+- Use trend descriptors: "consistent improvement", "recent breakthrough", "gradual progress"
+
+For REGRESSIONS - identify areas where the player has declined:
+- Compare to last upload AND overall historical pattern
+- Explain WHAT regressed and how it differs from recent AND historical performance
+- Use trend descriptors: "recent decline", "recurring issue", "gradual regression"
+
+For NEUTRAL - identify areas with no meaningful change:
+- Note that performance is consistent with previous uploads
+- This is not necessarily bad - stability in good mechanics is positive
+
+SCORE TREND:
+- Calculate direction: "improving" if trending up, "declining" if trending down, "stable" if within ±5 points
+- average_change: average point change between consecutive uploads
+- comparison_to_first: difference between current score and first-ever score
+
+Be SPECIFIC and ACTIONABLE in your assessments. Reference actual mechanical elements, not vague generalities.`;
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -393,8 +471,45 @@ Deno.serve(async (req) => {
     // Update video status to processing
     await supabase.from("videos").update({ status: "processing" }).eq("id", videoId);
 
+    // ===== FETCH HISTORICAL ANALYSIS DATA =====
+    console.log(`Fetching historical analysis for user ${userId}, sport ${sport}, module ${module}`);
+    
+    const { data: historicalVideos, error: historyError } = await supabase
+      .from("videos")
+      .select("id, created_at, efficiency_score, ai_analysis")
+      .eq("user_id", userId)
+      .eq("sport", sport)
+      .eq("module", module)
+      .eq("status", "completed")
+      .not("ai_analysis", "is", null)
+      .neq("id", videoId) // Exclude current video
+      .order("created_at", { ascending: true }); // Oldest first for chronological context
+    
+    if (historyError) {
+      console.error("Error fetching historical data:", historyError);
+    }
+    
+    const hasHistory = !!(historicalVideos && historicalVideos.length > 0);
+    console.log(`Found ${historicalVideos?.length || 0} previous analyses`);
+    
+    // Format historical context for AI
+    const historicalContext = formatHistoricalContext(historicalVideos || []);
+    
+    // Extract historical scores for trend display
+    const historicalScores = historicalVideos?.map(v => v.efficiency_score).filter(s => s != null) || [];
+
     // Get system prompt based on module and sport
-    const systemPrompt = getSystemPrompt(module, sport);
+    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory);
+
+    // Build user message with historical context
+    const userMessage = `${historicalContext}
+
+---
+
+CURRENT VIDEO ANALYSIS:
+Analyze this ${sport} ${module} video. Provide detailed feedback on form and mechanics. Include an efficiency score out of 100 and recommended drills.
+
+${hasHistory ? `Based on the historical data above and this current analysis, generate "The Scorecard" progress report comparing current performance to ALL previous uploads.` : `This is the player's first analysis - establish a baseline.`}`;
 
     // Call Lovable AI for video analysis with tool-calling for structured output
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -407,17 +522,14 @@ Deno.serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `Analyze this ${sport} ${module} video. Provide detailed feedback on form and mechanics. Include an efficiency score out of 100 and recommended drills.`,
-          },
+          { role: "user", content: userMessage },
         ],
         tools: [
           {
             type: "function",
             function: {
               name: "return_analysis",
-              description: "Return structured analysis with score, feedback, and drills",
+              description: "Return structured analysis with score, feedback, drills, and progress scorecard",
               parameters: {
                 type: "object",
                 properties: {
@@ -453,9 +565,71 @@ Deno.serve(async (req) => {
                       },
                       required: ["title", "purpose", "steps", "reps_sets", "equipment", "cues"]
                     }
+                  },
+                  scorecard: {
+                    type: "object",
+                    description: "Progress tracking scorecard comparing current analysis to historical data",
+                    properties: {
+                      improvements: {
+                        type: "array",
+                        description: "Areas where player has improved compared to previous uploads",
+                        items: {
+                          type: "object",
+                          properties: {
+                            area: { type: "string", description: "Mechanical area that improved (e.g., 'Hand-elbow timing')" },
+                            description: { type: "string", description: "What improved and how" },
+                            trend: { type: "string", description: "One of: 'consistent improvement', 'recent breakthrough', 'gradual progress'" }
+                          },
+                          required: ["area", "description"]
+                        }
+                      },
+                      regressions: {
+                        type: "array",
+                        description: "Areas where player has declined compared to previous uploads",
+                        items: {
+                          type: "object",
+                          properties: {
+                            area: { type: "string", description: "Mechanical area that regressed" },
+                            description: { type: "string", description: "What regressed and how" },
+                            trend: { type: "string", description: "One of: 'recent decline', 'recurring issue', 'gradual regression'" }
+                          },
+                          required: ["area", "description"]
+                        }
+                      },
+                      neutral: {
+                        type: "array",
+                        description: "Areas with no meaningful change from previous uploads",
+                        items: {
+                          type: "object",
+                          properties: {
+                            area: { type: "string", description: "Mechanical area that stayed consistent" },
+                            description: { type: "string", description: "Brief note about consistency" }
+                          },
+                          required: ["area", "description"]
+                        }
+                      },
+                      overall_trend: { 
+                        type: "string", 
+                        description: "Overall progress summary in 1-2 sentences with actionable next focus" 
+                      },
+                      score_trend: {
+                        type: "object",
+                        properties: {
+                          direction: { type: "string", description: "One of: 'improving', 'declining', 'stable'" },
+                          average_change: { type: "number", description: "Average point change between consecutive uploads" },
+                          comparison_to_first: { type: "number", description: "Score difference from first-ever to current upload" }
+                        },
+                        required: ["direction", "average_change", "comparison_to_first"]
+                      },
+                      is_first_analysis: { 
+                        type: "boolean", 
+                        description: "True if this is the player's first analysis in this module" 
+                      }
+                    },
+                    required: ["improvements", "regressions", "neutral", "overall_trend", "is_first_analysis"]
                   }
                 },
-                required: ["efficiency_score", "summary", "feedback", "positives", "drills"]
+                required: ["efficiency_score", "summary", "feedback", "positives", "drills", "scorecard"]
               }
             }
           }
@@ -506,6 +680,14 @@ Deno.serve(async (req) => {
     let summary: string[] = [];
     let positives: string[] = [];
     let drills: any[] = [];
+    let scorecard: any = {
+      improvements: [],
+      regressions: [],
+      neutral: [],
+      overall_trend: "Baseline established.",
+      is_first_analysis: !hasHistory,
+      historical_scores: historicalScores
+    };
 
     // Parse tool calls for structured output
     const toolCalls = data.choices?.[0]?.message?.tool_calls;
@@ -517,6 +699,36 @@ Deno.serve(async (req) => {
         feedback = analysisArgs.feedback || "No feedback available";
         positives = analysisArgs.positives || [];
         drills = analysisArgs.drills || [];
+        
+        // Parse scorecard
+        if (analysisArgs.scorecard) {
+          scorecard = {
+            ...analysisArgs.scorecard,
+            historical_scores: historicalScores,
+            is_first_analysis: !hasHistory
+          };
+          
+          // Calculate score trend if not provided
+          if (!scorecard.score_trend && historicalScores.length > 0) {
+            const allScores = [...historicalScores, efficiency_score];
+            let totalChange = 0;
+            for (let i = 1; i < allScores.length; i++) {
+              totalChange += allScores[i] - allScores[i - 1];
+            }
+            const avgChange = allScores.length > 1 ? totalChange / (allScores.length - 1) : 0;
+            const comparisonToFirst = efficiency_score - historicalScores[0];
+            
+            let direction = "stable";
+            if (avgChange > 2) direction = "improving";
+            else if (avgChange < -2) direction = "declining";
+            
+            scorecard.score_trend = {
+              direction,
+              average_change: Math.round(avgChange * 10) / 10,
+              comparison_to_first: comparisonToFirst
+            };
+          }
+        }
       } catch (parseError) {
         console.error("Error parsing tool call arguments:", parseError);
       }
@@ -547,6 +759,7 @@ Deno.serve(async (req) => {
       feedback,
       positives,
       drills,
+      scorecard,
       model_used: "google/gemini-2.5-flash",
       analyzed_at: new Date().toISOString(),
     };
@@ -624,6 +837,7 @@ Deno.serve(async (req) => {
         feedback,
         positives,
         drills,
+        scorecard,
         mocap_data,
       }),
       {

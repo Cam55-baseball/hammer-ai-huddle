@@ -17,6 +17,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
 import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
+import { TheScorecard } from "@/components/TheScorecard";
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 
@@ -46,6 +47,19 @@ export default function AnalyzeVideo() {
       equipment: string;
       cues?: string[];
     }>;
+    scorecard?: {
+      improvements: Array<{ area: string; description: string; trend?: string }>;
+      regressions: Array<{ area: string; description: string; trend?: string }>;
+      neutral: Array<{ area: string; description: string }>;
+      overall_trend: string;
+      score_trend?: {
+        direction: "improving" | "declining" | "stable";
+        average_change: number;
+        comparison_to_first: number;
+      };
+      is_first_analysis: boolean;
+      historical_scores?: number[];
+    };
   } | null>(null);
   const [analysisError, setAnalysisError] = useState<any>(null);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
@@ -651,6 +665,16 @@ export default function AnalyzeVideo() {
                           </Card>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* The Scorecard - Progress Report */}
+                  {analysis.scorecard && (
+                    <div className="pt-4 border-t">
+                      <TheScorecard 
+                        scorecard={analysis.scorecard} 
+                        currentScore={analysis.efficiency_score} 
+                      />
                     </div>
                   )}
 
