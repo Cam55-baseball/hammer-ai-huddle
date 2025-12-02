@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,6 +46,7 @@ interface OwnerProfile {
 }
 
 export function AppSidebar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
@@ -78,29 +80,29 @@ export function AppSidebar() {
   }, []);
 
   const mainNavItems = [
-    { title: "Dashboard", url: "/dashboard", icon: Home },
-    ...(!isScout ? [{ title: "My Followers", url: "/my-followers", icon: Users }] : []),
-    { title: "Rankings", url: "/rankings", icon: Trophy },
-    { title: "Nutrition", url: "/nutrition", icon: Apple },
-    { title: "Weather", url: "/weather", icon: Cloud },
-    ...(isScout ? [{ title: "Scout Dashboard", url: "/scout-dashboard", icon: UserPlus }] : []),
+    { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
+    ...(!isScout ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
+    { title: t('navigation.rankings'), url: "/rankings", icon: Trophy },
+    { title: t('navigation.nutrition'), url: "/nutrition", icon: Apple },
+    { title: t('navigation.weather'), url: "/weather", icon: Cloud },
+    ...(isScout ? [{ title: t('navigation.scoutDashboard'), url: "/scout-dashboard", icon: UserPlus }] : []),
   ];
 
   const trainingModules = [
-    { title: "Hitting Analysis", url: `/analyze/hitting?sport=${selectedSport}`, icon: Target },
-    { title: "Pitching Analysis", url: `/analyze/pitching?sport=${selectedSport}`, icon: Target },
-    { title: "Throwing Analysis", url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
-    { title: "Players Club", url: "/players-club", icon: BookMarked },
+    { title: t('dashboard.modules.hittingAnalysis'), url: `/analyze/hitting?sport=${selectedSport}`, icon: Target },
+    { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target },
+    { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
+    { title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked },
   ];
 
   const accountItems = [
-    { title: "Profile", url: "/profile", icon: Settings },
+    { title: t('navigation.profile'), url: "/profile", icon: Settings },
     ...(isOwner ? [
-      { title: "Owner Dashboard", url: "/owner", icon: Shield },
-      { title: "Scout Applications", url: "/owner?tab=scout-applications", icon: UserPlus },
-      { title: "Subscribers", url: "/subscribers", icon: Users2 }
+      { title: t('navigation.ownerDashboard'), url: "/owner", icon: Shield },
+      { title: t('navigation.scoutApplications'), url: "/owner?tab=scout-applications", icon: UserPlus },
+      { title: t('navigation.subscribers'), url: "/subscribers", icon: Users2 }
     ] : []),
-    ...(isAdmin ? [{ title: "Admin Dashboard", url: "/admin", icon: Users }] : []),
+    ...(isAdmin ? [{ title: t('navigation.adminDashboard'), url: "/admin", icon: Users }] : []),
   ];
 
   const handleSignOut = async () => {
@@ -123,7 +125,7 @@ export function AppSidebar() {
         {ownerProfile && (
           <>
             <SidebarGroup className="border-b border-sidebar-border pb-4">
-              <SidebarGroupLabel>Owner Bio</SidebarGroupLabel>
+              <SidebarGroupLabel>{t('sidebar.ownerBio')}</SidebarGroupLabel>
               <button
                 onClick={() => setOwnerBioOpen(true)}
                 className="w-full px-4 py-2 hover:bg-accent/50 rounded-md text-left transition-colors owner-bio-section"
@@ -145,7 +147,7 @@ export function AppSidebar() {
                       {ownerProfile.bio}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground italic">Click to view full bio →</p>
+                  <p className="text-xs text-muted-foreground italic">{t('sidebar.clickToViewFullBio')}</p>
                 </div>
               </button>
             </SidebarGroup>
@@ -154,7 +156,7 @@ export function AppSidebar() {
             <Dialog open={ownerBioOpen} onOpenChange={setOwnerBioOpen}>
               <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>About the Owner</DialogTitle>
+                  <DialogTitle>{t('sidebar.aboutTheOwner')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
@@ -185,14 +187,14 @@ export function AppSidebar() {
 
                   {ownerProfile.bio && (
                     <div>
-                      <h4 className="font-semibold mb-2">About</h4>
+                      <h4 className="font-semibold mb-2">{t('sidebar.about')}</h4>
                       <p className="text-sm text-muted-foreground">{ownerProfile.bio}</p>
                     </div>
                   )}
 
                   {ownerProfile.credentials && ownerProfile.credentials.length > 0 && (
                     <div>
-                      <h4 className="font-semibold mb-2">Experience & Credentials</h4>
+                      <h4 className="font-semibold mb-2">{t('sidebar.experienceAndCredentials')}</h4>
                       <div className="space-y-2">
                         {ownerProfile.credentials.map((cred, index) => (
                           <div key={index} className="flex items-start gap-2 text-sm">
@@ -208,7 +210,7 @@ export function AppSidebar() {
                     ownerProfile.social_facebook || ownerProfile.social_linkedin || 
                     ownerProfile.social_youtube || ownerProfile.social_tiktok) && (
                     <div>
-                      <h4 className="font-semibold mb-2">Social Media</h4>
+                      <h4 className="font-semibold mb-2">{t('sidebar.socialMedia')}</h4>
                       <div className="flex gap-3 flex-wrap">
                         {ownerProfile.social_instagram && (
                           <a 
@@ -290,7 +292,7 @@ export function AppSidebar() {
                     ownerProfile.social_website_3 || ownerProfile.social_website_4 || 
                     ownerProfile.social_website_5) && (
                     <div>
-                      <h4 className="font-semibold mb-2">Websites</h4>
+                      <h4 className="font-semibold mb-2">{t('sidebar.websites')}</h4>
                       <div className="flex flex-wrap gap-2">
                         {[
                           ownerProfile.social_website,
@@ -321,7 +323,7 @@ export function AppSidebar() {
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('navigation.mainNavigation')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNavItems.map((item) => (
@@ -341,7 +343,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Training Modules</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('navigation.trainingModules')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="training-modules-menu">
               {trainingModules.map((item) => (
@@ -362,7 +364,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Account</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('navigation.account')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {accountItems.map((item) => (
@@ -386,9 +388,9 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleSignOut} tooltip="Sign Out">
+            <SidebarMenuButton onClick={handleSignOut} tooltip={t('navigation.signOut')}>
               <LogOut className="h-4 w-4" />
-              <span>Sign Out</span>
+              <span>{t('navigation.signOut')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
