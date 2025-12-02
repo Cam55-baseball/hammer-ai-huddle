@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle } from "lucide-react";
+import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -75,7 +75,6 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
       setError(null);
       let locationToFetch = searchLocation || location;
       
-      // Try geolocation if no location is set
       if (!locationToFetch && navigator.geolocation) {
         try {
           const position = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -100,8 +99,6 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
       }
 
       setWeather(data);
-      // Update location input with the resolved location name from backend
-      // This replaces coordinates with readable names like "New York, US"
       if (!searchLocation) {
         setLocation(data.location);
       }
@@ -126,35 +123,69 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   };
 
   useEffect(() => {
-    // Auto-fetch on mount and when sport changes
     fetchWeather(undefined, sport);
   }, [sport]);
 
+  // Dynamic weather gradient based on conditions
+  const getWeatherGradient = (condition: string) => {
+    const c = condition.toLowerCase();
+    if (c.includes('clear') || c.includes('sunny')) 
+      return 'from-amber-400 via-orange-500 to-yellow-500';
+    if (c.includes('partly')) 
+      return 'from-sky-400 via-blue-400 to-amber-300';
+    if (c.includes('cloud') || c.includes('overcast')) 
+      return 'from-slate-400 via-gray-500 to-slate-600';
+    if (c.includes('rain') || c.includes('drizzle')) 
+      return 'from-blue-500 via-blue-600 to-indigo-700';
+    if (c.includes('storm') || c.includes('thunder')) 
+      return 'from-slate-700 via-purple-800 to-slate-900';
+    if (c.includes('snow') || c.includes('sleet')) 
+      return 'from-slate-200 via-blue-100 to-white';
+    if (c.includes('fog') || c.includes('mist')) 
+      return 'from-gray-300 via-gray-400 to-gray-500';
+    return 'from-sky-400 via-blue-500 to-indigo-600';
+  };
+
+  // Weather icon based on condition
+  const getWeatherIcon = (condition: string) => {
+    const c = condition.toLowerCase();
+    if (c.includes('clear') || c.includes('sunny')) return <Sun className="h-16 w-16 sm:h-20 sm:w-20 text-white drop-shadow-lg" />;
+    if (c.includes('partly')) return <CloudSun className="h-16 w-16 sm:h-20 sm:w-20 text-white drop-shadow-lg" />;
+    if (c.includes('cloud') || c.includes('overcast')) return <Cloud className="h-16 w-16 sm:h-20 sm:w-20 text-white drop-shadow-lg" />;
+    if (c.includes('rain') || c.includes('drizzle')) return <CloudRain className="h-16 w-16 sm:h-20 sm:w-20 text-white drop-shadow-lg" />;
+    if (c.includes('storm') || c.includes('thunder')) return <Zap className="h-16 w-16 sm:h-20 sm:w-20 text-white drop-shadow-lg" />;
+    if (c.includes('snow') || c.includes('sleet')) return <Snowflake className="h-16 w-16 sm:h-20 sm:w-20 text-blue-800 drop-shadow-lg" />;
+    return <Cloud className="h-16 w-16 sm:h-20 sm:w-20 text-white drop-shadow-lg" />;
+  };
+
   if (loading && !weather) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-32" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-24 w-full" />
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <Skeleton className="h-48 w-full rounded-t-lg" />
+          <div className="p-4 space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   const getTrainingCondition = () => {
-    if (!weather) return { text: "Unknown", color: "text-muted-foreground" };
+    if (!weather) return { text: "Unknown", color: "bg-muted text-muted-foreground", pulse: false };
     
     const { windSpeed, temperature } = weather;
     
     if (windSpeed > 20 || temperature < 40 || temperature > 95) {
-      return { text: "Poor Conditions", color: "text-destructive" };
+      return { text: "Poor", color: "bg-red-500/90 text-white", pulse: false };
     } else if (windSpeed > 15 || temperature < 50 || temperature > 85) {
-      return { text: "Fair Conditions", color: "text-yellow-500" };
+      return { text: "Fair", color: "bg-amber-500/90 text-white", pulse: false };
     }
-    return { text: "Excellent Conditions", color: "text-green-500" };
+    return { text: "Excellent", color: "bg-emerald-500/90 text-white", pulse: true };
   };
 
   const condition = getTrainingCondition();
@@ -176,9 +207,9 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
 
   const getRecommendationColorClass = (color: 'green' | 'yellow' | 'red') => {
     switch (color) {
-      case 'green': return 'text-green-600 bg-green-50 border-green-200';
-      case 'yellow': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'red': return 'text-red-600 bg-red-50 border-red-200';
+      case 'green': return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+      case 'yellow': return 'text-amber-700 bg-amber-50 border-amber-200';
+      case 'red': return 'text-red-700 bg-red-50 border-red-200';
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
     }
   };
@@ -186,287 +217,360 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   const getPriorityColorClass = (priority: 'high' | 'medium' | 'low') => {
     switch (priority) {
       case 'high': return 'bg-primary text-primary-foreground';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'medium': return 'bg-amber-100 text-amber-800 border-amber-300';
       case 'low': return 'bg-gray-100 text-gray-700 border-gray-300';
       default: return 'bg-gray-100 text-gray-700 border-gray-300';
     }
   };
 
+  const weatherGradient = weather ? getWeatherGradient(weather.condition) : 'from-sky-400 via-blue-500 to-indigo-600';
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Cloud className="h-5 w-5" />
-          Weather Conditions
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 overflow-x-hidden max-w-full">
-        <div className="flex gap-2">
+    <div className="space-y-4">
+      {/* Search Bar - Glass-morphism Style */}
+      <div className="relative">
+        <div className="flex gap-2 p-1 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm">
           <div className="relative flex-1">
             <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Enter location..."
+              placeholder="Search any location..."
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="pl-9"
+              className="pl-9 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </div>
-          <Button onClick={handleSearch} disabled={loading}>
+          <Button onClick={handleSearch} disabled={loading} className="rounded-lg">
             <Search className="h-4 w-4" />
           </Button>
         </div>
+      </div>
 
-        {error && !weather && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-center space-y-3">
+      {error && !weather && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="p-4 text-center space-y-3">
             <p className="text-sm text-destructive font-medium">{error}</p>
             <Button onClick={() => fetchWeather()} variant="outline" size="sm">
               <Search className="h-4 w-4 mr-2" />
               Retry
             </Button>
-          </div>
-        )}
+          </CardContent>
+        </Card>
+      )}
 
-        {!weather && !loading && !error && (
-          <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
-            <MapPin className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
+      {!weather && !loading && !error && (
+        <Card className="border-dashed">
+          <CardContent className="p-8 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+              <MapPin className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground">
               Enter a location above to view weather conditions
             </p>
-          </div>
-        )}
+          </CardContent>
+        </Card>
+      )}
 
-        {weather && (
-          <div className="space-y-4">
-            <div className="rounded-lg border border-border bg-muted/50 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{weather.location}</p>
-                  <p className="text-3xl font-bold">{Math.round(weather.temperature)}°F</p>
-                  <p className="text-sm text-muted-foreground">
-                    Feels like {Math.round(weather.feelsLike)}°F
+      {weather && (
+        <div className="space-y-4">
+          {/* Main Weather Card - Premium Design */}
+          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${weatherGradient} p-5 sm:p-6 text-white shadow-xl`}>
+            {/* Decorative elements */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/10 blur-3xl" />
+            </div>
+            
+            <div className="relative z-10">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  {/* Location */}
+                  <div className="flex items-center gap-2 text-white/80 mb-1">
+                    <MapPin className="h-4 w-4" />
+                    <span className="text-sm font-medium">{weather.location}</span>
+                  </div>
+                  
+                  {/* Temperature - Large Display */}
+                  <p className="text-6xl sm:text-7xl font-bold tracking-tight">
+                    {Math.round(weather.temperature)}°
                   </p>
+                  
+                  {/* Feels Like Badge */}
+                  <div className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 bg-white/20 rounded-full backdrop-blur-sm">
+                    <Thermometer className="h-4 w-4" />
+                    <span className="text-sm font-medium">Feels like {Math.round(weather.feelsLike)}°F</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-medium">{weather.condition}</p>
-                  <p className={`text-sm font-semibold ${condition.color}`}>
+                
+                <div className="text-right flex flex-col items-end">
+                  {/* Weather Icon */}
+                  <div className="mb-2">
+                    {getWeatherIcon(weather.condition)}
+                  </div>
+                  
+                  {/* Condition Text */}
+                  <p className="text-lg sm:text-xl font-semibold mb-2">{weather.condition}</p>
+                  
+                  {/* Training Readiness Badge */}
+                  <div className={`px-4 py-1.5 rounded-full font-bold text-sm ${condition.color} ${condition.pulse ? 'animate-pulse' : ''}`}>
                     {condition.text}
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            {expanded && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="flex items-center gap-3 rounded-lg border border-border p-3">
-                  <Wind className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Wind</p>
-                    <p className="font-semibold">
-                      {weather.windSpeed} mph {weather.windDirection}
-                    </p>
+          {/* Stats Grid - Enhanced Cards */}
+          {expanded && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Wind Card */}
+              <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-sky-100 text-sky-600 group-hover:scale-110 transition-transform">
+                      <Wind className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Wind</p>
+                      <p className="text-lg font-bold">{weather.windSpeed} mph</p>
+                      <p className="text-xs text-muted-foreground">{weather.windDirection}</p>
+                    </div>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="flex items-center gap-3 rounded-lg border border-border p-3">
-                  <Droplets className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Humidity</p>
-                    <p className="font-semibold">{weather.humidity}%</p>
+              {/* Humidity Card */}
+              <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform">
+                      <Droplets className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Humidity</p>
+                      <p className="text-lg font-bold">{weather.humidity}%</p>
+                      <p className="text-xs text-muted-foreground">{weather.humidity > 70 ? 'High' : weather.humidity > 40 ? 'Moderate' : 'Low'}</p>
+                    </div>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="flex items-center gap-3 rounded-lg border border-border p-3">
-                  <Eye className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Visibility</p>
-                    <p className="font-semibold">{weather.visibility} mi</p>
+              {/* Visibility Card */}
+              <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-purple-100 text-purple-600 group-hover:scale-110 transition-transform">
+                      <Eye className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Visibility</p>
+                      <p className="text-lg font-bold">{weather.visibility} mi</p>
+                      <p className="text-xs text-muted-foreground">{weather.visibility >= 10 ? 'Clear' : weather.visibility >= 5 ? 'Good' : 'Limited'}</p>
+                    </div>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="flex items-center gap-3 rounded-lg border border-border p-3">
-                  <Thermometer className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">UV Index</p>
-                    <p className="font-semibold">{weather.uvIndex}</p>
+              {/* UV Index Card */}
+              <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-xl group-hover:scale-110 transition-transform ${
+                      weather.uvIndex >= 8 ? 'bg-red-100 text-red-600' : 
+                      weather.uvIndex >= 6 ? 'bg-orange-100 text-orange-600' : 
+                      weather.uvIndex >= 3 ? 'bg-amber-100 text-amber-600' : 
+                      'bg-green-100 text-green-600'
+                    }`}>
+                      <Sun className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">UV Index</p>
+                      <p className="text-lg font-bold">{weather.uvIndex}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {weather.uvIndex >= 8 ? 'Very High' : weather.uvIndex >= 6 ? 'High' : weather.uvIndex >= 3 ? 'Moderate' : 'Low'}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-            {expanded && weather?.sportAnalysis && (
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4 space-y-2 sm:space-y-3 overflow-x-hidden max-w-full">
-                <h4 className="font-semibold flex items-center gap-2">
+          {/* Sport Analysis - Premium Card */}
+          {expanded && weather?.sportAnalysis && (
+            <Card className="overflow-hidden border-0 shadow-lg">
+              <div className={`bg-gradient-to-r ${
+                weather.sportAnalysis.sport.toLowerCase().includes('softball') 
+                  ? 'from-pink-500 to-rose-600' 
+                  : 'from-primary to-red-600'
+              } p-4 text-white`}>
+                <h4 className="font-bold text-lg flex items-center gap-2">
                   {weather.sportAnalysis.sport.toLowerCase().includes('softball') ? (
-                    <Circle 
-                      size={18}
-                      className="text-primary fill-primary/20"
-                    />
+                    <Circle size={20} className="fill-white/30" />
                   ) : (
-                    <Icon 
-                      iconNode={baseball} 
-                      size={18}
-                      className="text-primary"
-                    />
+                    <Icon iconNode={baseball} size={20} />
                   )}
                   {weather.sportAnalysis.sport} Conditions Analysis
                 </h4>
-                <div className="grid gap-2 text-sm">
-                  <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Ball Flight:</span>
-                    <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.ballFlight}</span>
-                  </div>
-                  <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Wind Impact:</span>
-                    <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.windImpact}</span>
-                  </div>
-                  <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Field Conditions:</span>
-                    <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.fieldCondition}</span>
-                  </div>
-                  <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Tracking:</span>
-                    <span className="text-muted-foreground text-sm sm:text-base break-words">{weather.sportAnalysis.trackingCondition}</span>
-                  </div>
+              </div>
+              <CardContent className="p-4 sm:p-5 space-y-3 bg-gradient-to-b from-card to-muted/20">
+                <div className="grid gap-3">
+                  {[
+                    { label: 'Ball Flight', value: weather.sportAnalysis.ballFlight },
+                    { label: 'Wind Impact', value: weather.sportAnalysis.windImpact },
+                    { label: 'Field Conditions', value: weather.sportAnalysis.fieldCondition },
+                    { label: 'Tracking', value: weather.sportAnalysis.trackingCondition },
+                  ].map((item, i) => (
+                    <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                      <span className="font-semibold text-sm min-w-[120px] text-foreground">{item.label}:</span>
+                      <span className="text-sm text-muted-foreground break-words">{item.value}</span>
+                    </div>
+                  ))}
+                  
                   {weather.sportAnalysis.uvWarning && (
-                    <div className="flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                      <span className="font-medium text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">UV Warning:</span>
-                      <span className="text-amber-600 font-medium text-sm sm:text-base break-words">{weather.sportAnalysis.uvWarning}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-2 rounded-lg bg-amber-50 border border-amber-200">
+                      <span className="font-semibold text-sm min-w-[120px] text-amber-800">⚠️ UV Warning:</span>
+                      <span className="text-sm text-amber-700 break-words">{weather.sportAnalysis.uvWarning}</span>
                     </div>
                   )}
-                  <div className="pt-2 mt-2 border-t flex flex-col xs:flex-row xs:items-start gap-1 xs:gap-2">
-                    <span className="font-semibold text-sm sm:text-base min-w-[90px] sm:min-w-[110px]">Recommendation:</span>
-                    <span className="font-semibold text-sm sm:text-base break-words">{weather.sportAnalysis.recommendation}</span>
+                </div>
+                
+                <div className="pt-3 mt-3 border-t">
+                  <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+                    <span className="font-bold text-sm text-primary block mb-1">💡 Recommendation</span>
+                    <span className="text-sm text-foreground">{weather.sportAnalysis.recommendation}</span>
                   </div>
                 </div>
-              </div>
-            )}
+              </CardContent>
+            </Card>
+          )}
 
-            {weather?.drillRecommendations && weather.drillRecommendations.length > 0 && (
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setShowDrills(!showDrills)}
-              >
-                <Target className="h-4 w-4 mr-2" />
-                {showDrills ? 'Hide' : 'Show'} Drill Recommendations
-              </Button>
-            )}
+          {/* Drill Recommendations Toggle */}
+          {weather?.drillRecommendations && weather.drillRecommendations.length > 0 && (
+            <Button 
+              variant="outline" 
+              className="w-full group hover:bg-primary hover:text-primary-foreground transition-all"
+              onClick={() => setShowDrills(!showDrills)}
+            >
+              <Target className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+              {showDrills ? 'Hide' : 'Show'} Drill Recommendations
+            </Button>
+          )}
 
-            {showDrills && weather?.drillRecommendations && weather.drillRecommendations.length > 0 && (
-              <div className="space-y-3 animate-in fade-in-50 duration-300">
-                <h4 className="font-semibold text-base flex items-center gap-2">
-                  <Target className="h-4 w-4" />
-                  Weather-Based Drill Recommendations
-                </h4>
-                
-                <div className="grid gap-3">
-                  {weather.drillRecommendations.map((rec, index) => (
-                    <div 
-                      key={index} 
-                      className="rounded-lg border border-border bg-card p-3 sm:p-4 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-2">
+          {/* Drill Recommendations List */}
+          {showDrills && weather?.drillRecommendations && weather.drillRecommendations.length > 0 && (
+            <div className="space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-300">
+              <h4 className="font-bold text-base flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" />
+                Weather-Based Drill Recommendations
+              </h4>
+              
+              <div className="grid gap-3">
+                {weather.drillRecommendations.map((rec, index) => (
+                  <Card key={index} className="overflow-hidden hover:shadow-md transition-all border-border/50">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">{rec.icon}</span>
-                          <h5 className="font-semibold text-sm sm:text-base">{rec.category}</h5>
+                          <span className="text-2xl">{rec.icon}</span>
+                          <h5 className="font-bold">{rec.category}</h5>
                         </div>
-                        <span className={`text-xs px-2 py-1 rounded-md border ${getPriorityColorClass(rec.priority)}`}>
+                        <span className={`text-xs px-3 py-1 rounded-full font-bold ${getPriorityColorClass(rec.priority)}`}>
                           {rec.priority.toUpperCase()}
                         </span>
                       </div>
                       
-                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 italic">
+                      <p className="text-sm text-muted-foreground mb-3 italic border-l-2 border-primary/30 pl-3">
                         {rec.reason}
                       </p>
                       
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         {rec.drills.map((drill, drillIndex) => (
-                          <div 
-                            key={drillIndex} 
-                            className="flex items-start gap-2 text-xs sm:text-sm"
-                          >
-                            <span className="text-primary mt-0.5">•</span>
-                            <span className="flex-1">{drill}</span>
+                          <div key={drillIndex} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                            <span className="text-primary font-bold">•</span>
+                            <span>{drill}</span>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="rounded-md bg-muted/50 p-3 text-xs sm:text-sm text-muted-foreground">
-                  💡 <strong>Tip:</strong> Prioritize HIGH priority drills for maximum effectiveness in current conditions.
-                </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            )}
+              
+              <Card className="bg-muted/50 border-dashed">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <span className="text-2xl">💡</span>
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Pro Tip:</strong> Focus on HIGH priority drills for maximum effectiveness in current conditions.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-            {weather?.dailyForecast && weather.dailyForecast.length > 0 && (
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setShowForecast(!showForecast)}
-              >
-                <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline ml-2">{showForecast ? 'Hide' : 'Show'} 7-Day Forecast</span>
-                <span className="sm:hidden ml-2">7-Day Forecast</span>
-              </Button>
-            )}
+          {/* 7-Day Forecast Toggle */}
+          {weather?.dailyForecast && weather.dailyForecast.length > 0 && (
+            <Button 
+              variant="outline" 
+              className="w-full group hover:bg-primary hover:text-primary-foreground transition-all"
+              onClick={() => setShowForecast(!showForecast)}
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              {showForecast ? 'Hide' : 'Show'} 7-Day Forecast
+            </Button>
+          )}
 
-            {showForecast && weather?.dailyForecast && weather.dailyForecast.length > 0 && (
-              <div className="space-y-3 animate-in fade-in-50 duration-300">
-                <h4 className="font-semibold text-base flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  7-Day Training Forecast
-                </h4>
-                
-                <div className="grid gap-3">
-                  {weather.dailyForecast.map((day) => (
-                    <div 
-                      key={day.date} 
-                      className="rounded-lg border border-border bg-card p-3 sm:p-4 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-semibold text-sm sm:text-base">
-                            {formatForecastDate(day.date)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{day.condition}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="flex items-center gap-1 sm:gap-2">
-                            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
-                            <span className="font-bold text-base sm:text-lg">{day.high}°</span>
+          {/* 7-Day Forecast Cards */}
+          {showForecast && weather?.dailyForecast && weather.dailyForecast.length > 0 && (
+            <div className="space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-300">
+              <h4 className="font-bold text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                7-Day Training Forecast
+              </h4>
+              
+              <div className="grid gap-3">
+                {weather.dailyForecast.map((day) => (
+                  <Card key={day.date} className="overflow-hidden hover:shadow-md transition-all border-border/50">
+                    <CardContent className="p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-4">
+                          <div className="text-center min-w-[70px]">
+                            <p className="font-bold text-sm">{formatForecastDate(day.date)}</p>
                           </div>
-                          <div className="flex items-center gap-1 sm:gap-2">
-                            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />
-                            <span className="text-sm text-muted-foreground">{day.low}°</span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex flex-col items-center">
+                              <div className="flex items-center text-red-500">
+                                <TrendingUp className="h-3 w-3 mr-1" />
+                                <span className="font-bold">{Math.round(day.high)}°</span>
+                              </div>
+                              <div className="flex items-center text-blue-500">
+                                <TrendingDown className="h-3 w-3 mr-1" />
+                                <span className="font-medium">{Math.round(day.low)}°</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mb-2">
-                        <div className="flex items-center gap-1">
-                          <Wind className="h-3 w-3" />
-                          <span>{day.windSpeedMax} mph max</span>
+                        
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="text-sm text-muted-foreground">{day.condition}</span>
+                          {day.precipitationChance > 0 && (
+                            <span className="text-xs text-blue-600 flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-full">
+                              <CloudRain className="h-3 w-3" />
+                              {day.precipitationChance}%
+                            </span>
+                          )}
+                          <span className={`text-xs px-3 py-1 rounded-full font-semibold border ${getRecommendationColorClass(day.recommendationColor)}`}>
+                            {day.recommendation}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <CloudRain className="h-3 w-3" />
-                          <span>{day.precipitationChance}% rain</span>
-                        </div>
                       </div>
-                      
-                      <div className={`rounded-md border p-2 text-xs sm:text-sm font-medium ${getRecommendationColorClass(day.recommendationColor)}`}>
-                        {day.recommendation}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
