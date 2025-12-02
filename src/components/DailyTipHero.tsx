@@ -6,8 +6,21 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 
+interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  totalVisits: number;
+  tipsCollected: number;
+  badgesEarned: string[];
+}
+
 interface DailyTipHeroProps {
   sport: 'baseball' | 'softball';
+  onStreakUpdate?: (data: {
+    streak: StreakData | null;
+    totalTips: number;
+    viewedTips: number;
+  }) => void;
 }
 
 interface TipData {
@@ -17,7 +30,7 @@ interface TipData {
   is_ai_generated: boolean;
 }
 
-export function DailyTipHero({ sport }: DailyTipHeroProps) {
+export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
   const [tip, setTip] = useState<TipData | null>(null);
   const [categoryName, setCategoryName] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -39,6 +52,15 @@ export function DailyTipHero({ sport }: DailyTipHeroProps) {
         setTip(data.tip);
         setCategoryName(data.categoryName || '');
         setViewedPercentage(data.viewedPercentage || 0);
+      }
+
+      // Pass streak data to parent
+      if (onStreakUpdate) {
+        onStreakUpdate({
+          streak: data?.streak || null,
+          totalTips: data?.totalTips || 0,
+          viewedTips: data?.viewedTips || 0,
+        });
       }
     } catch (err) {
       console.error('Error fetching daily tip:', err);
