@@ -55,7 +55,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               )}
             </div>
           </header>
-          <main className="flex-1 p-3 sm:p-6 overflow-x-hidden max-w-full">
+          <main className="flex-1 p-3 sm:p-6 overflow-x-hidden max-w-full box-border">
             <OfflineIndicator />
             {children}
           </main>

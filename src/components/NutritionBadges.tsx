@@ -35,9 +35,9 @@ export function NutritionBadges({ earnedBadges, currentStreak }: NutritionBadges
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 overflow-hidden">
         <TooltipProvider>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 max-w-full">
             {BADGE_MILESTONES.map((badge) => {
               const isEarned = earnedBadges.includes(badge.id);
               

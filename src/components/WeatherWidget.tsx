@@ -226,7 +226,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   const weatherGradient = weather ? getWeatherGradient(weather.condition) : 'from-sky-400 via-blue-500 to-indigo-600';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-full overflow-x-hidden">
       {/* Search Bar - Glass-morphism Style */}
       <div className="relative">
         <div className="flex gap-2 p-1 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm">
@@ -413,24 +413,24 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                   {weather.sportAnalysis.sport} Conditions Analysis
                 </h4>
               </div>
-              <CardContent className="p-4 sm:p-5 space-y-3 bg-gradient-to-b from-card to-muted/20">
-                <div className="grid gap-3">
+              <CardContent className="p-3 sm:p-5 space-y-3 bg-gradient-to-b from-card to-muted/20 overflow-hidden">
+                <div className="grid gap-3 max-w-full">
                   {[
                     { label: 'Ball Flight', value: weather.sportAnalysis.ballFlight },
                     { label: 'Wind Impact', value: weather.sportAnalysis.windImpact },
                     { label: 'Field Conditions', value: weather.sportAnalysis.fieldCondition },
                     { label: 'Tracking', value: weather.sportAnalysis.trackingCondition },
                   ].map((item, i) => (
-                    <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                      <span className="font-semibold text-sm min-w-[120px] text-foreground">{item.label}:</span>
-                      <span className="text-sm text-muted-foreground break-words">{item.value}</span>
+                    <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors max-w-full">
+                      <span className="font-semibold text-sm min-w-[100px] sm:min-w-[120px] text-foreground flex-shrink-0">{item.label}:</span>
+                      <span className="text-sm text-muted-foreground break-words overflow-hidden">{item.value}</span>
                     </div>
                   ))}
                   
                   {weather.sportAnalysis.uvWarning && (
-                    <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-2 rounded-lg bg-amber-50 border border-amber-200">
-                      <span className="font-semibold text-sm min-w-[120px] text-amber-800">⚠️ UV Warning:</span>
-                      <span className="text-sm text-amber-700 break-words">{weather.sportAnalysis.uvWarning}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-2 rounded-lg bg-amber-50 border border-amber-200 max-w-full">
+                      <span className="font-semibold text-sm min-w-[100px] sm:min-w-[120px] text-amber-800 flex-shrink-0">⚠️ UV Warning:</span>
+                      <span className="text-sm text-amber-700 break-words overflow-hidden">{weather.sportAnalysis.uvWarning}</span>
                     </div>
                   )}
                 </div>
