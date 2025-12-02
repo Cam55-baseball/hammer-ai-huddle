@@ -383,30 +383,56 @@ serve(async (req) => {
         console.error(`Reverse geocoding error:`, reverseGeoError);
       }
     } else {
-      // Geocode city name to coordinates using Open-Meteo geocoding API
-      const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=en&format=json`;
-      console.log(`Geocoding location via Open-Meteo: ${geoUrl}`);
+      // Clean up location string - Open-Meteo works better with just city names
+      // Remove common patterns like ", FL", ", fl", ", Florida", etc.
+      let cleanLocation = location.trim();
+      const statePattern = /,\s*([A-Za-z]{2}|[A-Za-z]+)$/i;
+      const cityOnly = cleanLocation.replace(statePattern, '').trim();
+      
+      // Try searches in order: full location, then city only
+      const searchTerms = [cleanLocation];
+      if (cityOnly !== cleanLocation) {
+        searchTerms.push(cityOnly);
+      }
+      
+      let geoData: any = null;
+      let searchUsed = '';
+      
+      for (const searchTerm of searchTerms) {
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchTerm)}&count=5&language=en&format=json`;
+        console.log(`Geocoding location via Open-Meteo: ${geoUrl}`);
 
-      const geoResponse = await fetch(geoUrl, {
-        signal: AbortSignal.timeout(10000),
-      });
+        const geoResponse = await fetch(geoUrl, {
+          signal: AbortSignal.timeout(10000),
+        });
 
-      if (!geoResponse.ok) {
-        const errorText = await geoResponse.text();
-        console.error(`Geocoding API error response: ${errorText}`);
-        throw new Error(`Location lookup failed with status ${geoResponse.status}`);
+        if (!geoResponse.ok) {
+          const errorText = await geoResponse.text();
+          console.error(`Geocoding API error response: ${errorText}`);
+          continue;
+        }
+
+        const data = await geoResponse.json();
+        
+        if (data.results && data.results.length > 0) {
+          geoData = data;
+          searchUsed = searchTerm;
+          console.log(`Found location with search term: ${searchTerm}`);
+          break;
+        }
+        
+        console.log(`No results for search term: ${searchTerm}, trying next...`);
       }
 
-      const geoData = await geoResponse.json();
-
-      if (!geoData.results || !geoData.results.length) {
+      if (!geoData || !geoData.results || !geoData.results.length) {
         throw new Error("Location not found");
       }
 
       const firstResult = geoData.results[0];
       latitude = firstResult.latitude;
       longitude = firstResult.longitude;
-      resolvedLocationName = `${firstResult.name}${firstResult.country ? `, ${firstResult.country}` : ""}`;
+      resolvedLocationName = `${firstResult.name}${firstResult.admin1 ? `, ${firstResult.admin1}` : ''}${firstResult.country ? `, ${firstResult.country}` : ""}`;
+      console.log(`Resolved location: ${resolvedLocationName}`);
     }
 
     if (latitude == null || longitude == null || Number.isNaN(latitude) || Number.isNaN(longitude)) {
