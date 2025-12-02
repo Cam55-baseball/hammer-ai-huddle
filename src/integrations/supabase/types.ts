@@ -101,6 +101,45 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_reports: {
+        Row: {
+          created_at: string | null
+          downloaded_at: string | null
+          id: string
+          report_data: Json
+          report_period_end: string
+          report_period_start: string
+          saved_to_library: boolean | null
+          status: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          downloaded_at?: string | null
+          id?: string
+          report_data?: Json
+          report_period_end: string
+          report_period_start: string
+          saved_to_library?: boolean | null
+          status?: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          downloaded_at?: string | null
+          id?: string
+          report_data?: Json
+          report_period_end?: string
+          report_period_start?: string
+          saved_to_library?: boolean | null
+          status?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: []
+      }
       nutrition_daily_tips: {
         Row: {
           category: string
@@ -551,6 +590,36 @@ export type Database = {
           sport?: Database["public"]["Enums"]["sport_type"]
           user_id?: string
           videos_analyzed?: number
+        }
+        Relationships: []
+      }
+      user_report_cycles: {
+        Row: {
+          created_at: string | null
+          cycle_start_date: string
+          id: string
+          next_report_date: string
+          reports_generated: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          cycle_start_date: string
+          id?: string
+          next_report_date: string
+          reports_generated?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          cycle_start_date?: string
+          id?: string
+          next_report_date?: string
+          reports_generated?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
