@@ -101,6 +101,36 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_daily_tips: {
+        Row: {
+          category: string
+          created_at: string | null
+          generated_at: string | null
+          id: string
+          is_ai_generated: boolean | null
+          sport: string | null
+          tip_text: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          generated_at?: string | null
+          id?: string
+          is_ai_generated?: boolean | null
+          sport?: string | null
+          tip_text: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          generated_at?: string | null
+          id?: string
+          is_ai_generated?: boolean | null
+          sport?: string | null
+          tip_text?: string
+        }
+        Relationships: []
+      }
       processed_webhook_events: {
         Row: {
           details: Json | null
@@ -508,6 +538,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_viewed_tips: {
+        Row: {
+          id: string
+          tip_id: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          tip_id: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          tip_id?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_viewed_tips_tip_id_fkey"
+            columns: ["tip_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_daily_tips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       video_annotations: {
         Row: {

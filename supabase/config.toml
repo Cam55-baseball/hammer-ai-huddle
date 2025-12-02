@@ -1,5 +1,8 @@
 project_id = "wysikbsjalfvjwqzkihj"
 
+[functions.get-daily-tip]
+verify_jwt = true
+
 [functions.admin-search-users]
 verify_jwt = true
 

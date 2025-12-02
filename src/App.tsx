@@ -32,6 +32,7 @@ const Rankings = lazy(() => import("./pages/Rankings"));
 const Weather = lazy(() => import("./pages/Weather"));
 const Subscribers = lazy(() => import("./pages/Subscribers"));
 const PlayersClub = lazy(() => import("./pages/PlayersClub"));
+const Nutrition = lazy(() => import("./pages/Nutrition"));
 const ComingSoon = lazy(() => import("./pages/ComingSoon"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/weather" element={<Weather />} />
               <Route path="/subscribers" element={<Subscribers />} />
               <Route path="/players-club" element={<PlayersClub />} />
+              <Route path="/nutrition" element={<Nutrition />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

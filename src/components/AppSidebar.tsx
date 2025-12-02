@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -90,6 +90,7 @@ export function AppSidebar() {
     { title: "Pitching Analysis", url: `/analyze/pitching?sport=${selectedSport}`, icon: Target },
     { title: "Throwing Analysis", url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
     { title: "Players Club", url: "/players-club", icon: BookMarked },
+    { title: "Nutrition", url: "/nutrition", icon: Apple },
   ];
 
   const accountItems = [
