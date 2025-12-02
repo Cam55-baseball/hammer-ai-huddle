@@ -79,7 +79,7 @@ export function NutritionStreakCard({ streak, totalTips, viewedTips, isLoading }
               {currentStreak >= 7 && <span className="text-lg">🔥</span>}
             </div>
             
-            <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mb-2">
               <span className="flex items-center gap-1">
                 <Trophy className="h-3 w-3" />
                 Best: {longestStreak}
