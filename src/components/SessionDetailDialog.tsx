@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { uploadOptimizedThumbnail, uploadThumbnailSizes } from '@/lib/uploadHelpers';
 import { processVideoThumbnail } from '@/lib/thumbnailHelpers';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
+import { TheScorecard } from '@/components/TheScorecard';
 import {
   Dialog,
   DialogContent,
@@ -490,6 +491,14 @@ export function SessionDetailDialog({
                     ))}
                   </div>
                 </div>
+              )}
+
+              {/* The Scorecard Progress Report */}
+              {aiAnalysis.scorecard && (
+                <TheScorecard 
+                  scorecard={aiAnalysis.scorecard} 
+                  currentScore={session.efficiency_score || 0}
+                />
               )}
             </div>
           )}
