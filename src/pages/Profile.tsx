@@ -17,6 +17,7 @@ import { ArrowLeft, Calendar, CreditCard, Loader2, Edit, Instagram, Twitter, Fac
 import { SiTiktok } from "react-icons/si";
 import { UserMenu } from "@/components/UserMenu";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -1470,6 +1471,20 @@ export default function Profile() {
                       </div>
                     </div>
                   )}
+
+                  {/* Preferences */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">Preferences</Label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Customize your app experience
+                    </p>
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="language">Language</Label>
+                        <LanguageSelector />
+                      </div>
+                    </div>
+                  </div>
                   
                   <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
                     {saving ? (
