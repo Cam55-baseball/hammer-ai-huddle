@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -27,6 +28,7 @@ type ModuleType = "hitting" | "pitching" | "throwing";
 type SportType = "baseball" | "softball";
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
   const { isOwner } = useOwnerAccess();
@@ -107,8 +109,8 @@ export default function Dashboard() {
       // Check if module already exists
       if (subscribedModules.includes(expectedKey)) {
         console.log('[Dashboard] Module already active:', expectedKey);
-        toast.success("🎉 Module Activated!", {
-          description: `Your ${module} module is now ready to use!`,
+        toast.success(t('dashboard.moduleActivated'), {
+          description: t('dashboard.moduleReadyDescription', { module }),
           duration: 8000,
         });
         localStorage.removeItem('pendingModuleActivation');
@@ -121,8 +123,8 @@ export default function Dashboard() {
       const unsubscribe = onModulesChange((newModules) => {
         if (newModules.includes(expectedKey)) {
           console.log('[Dashboard] New module detected:', expectedKey);
-          toast.success("🎉 Module Activated!", {
-            description: `Your ${module} module is now ready to use! Click any module to start analyzing.`,
+          toast.success(t('dashboard.moduleActivated'), {
+            description: t('dashboard.moduleReadyDescription', { module }),
             duration: 10000,
           });
           localStorage.removeItem('pendingModuleActivation');
@@ -192,7 +194,7 @@ export default function Dashboard() {
     // Otherwise proceed with the switch
     setSelectedSport(newSport);
     localStorage.setItem('selectedSport', newSport);
-    toast.info(`Switched to ${newSport === 'baseball' ? 'Baseball' : 'Softball'} modules`);
+    toast.info(t('dashboard.switchedToSport', { sport: newSport === 'baseball' ? t('dashboard.baseball') : t('dashboard.softball') }));
   };
 
   const handleConfirmSportSwitch = () => {
@@ -204,7 +206,7 @@ export default function Dashboard() {
         localStorage.setItem('dontShowSportWarning', 'true');
       }
       
-      toast.info(`Switched to ${pendingSportSwitch === 'baseball' ? 'Baseball' : 'Softball'} modules`);
+      toast.info(t('dashboard.switchedToSport', { sport: pendingSportSwitch === 'baseball' ? t('dashboard.baseball') : t('dashboard.softball') }));
     }
     setShowSportSwitchDialog(false);
     setPendingSportSwitch(null);
@@ -241,10 +243,10 @@ export default function Dashboard() {
     setIsRefreshing(true);
     try {
       await refetch();
-      toast.success("Subscription status refreshed");
+      toast.success(t('dashboard.subscriptionRefreshed'));
     } catch (error) {
       console.error("Error refreshing subscription:", error);
-      toast.error("Failed to refresh subscription status");
+      toast.error(t('errors.somethingWentWrong'));
     } finally {
       setIsRefreshing(false);
     }
@@ -263,8 +265,8 @@ export default function Dashboard() {
       return (
         <div className="w-full px-4 py-2 bg-primary/5 rounded-lg border border-primary/20">
           <div className="text-center">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-              Average Score
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+              {t('dashboard.averageScore')}
             </p>
             <p className="text-2xl font-bold text-primary">
               {moduleProgress.average_efficiency_score}%
@@ -279,10 +281,10 @@ export default function Dashboard() {
       <div className="w-full px-4 py-2 bg-muted/30 rounded-lg border border-muted">
         <div className="text-center">
           <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-            Average Score
+            {t('dashboard.averageScore')}
           </p>
           <p className="text-sm text-muted-foreground">
-            No data yet
+            {t('dashboard.noDataYet')}
           </p>
         </div>
       </div>
@@ -313,8 +315,8 @@ export default function Dashboard() {
         <FollowRequestsPanel />
         
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Training Dashboard</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">Welcome back, {user?.user_metadata?.full_name}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('dashboard.title')}</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">{t('dashboard.welcomeBack')} {user?.user_metadata?.full_name}</p>
         </div>
 
         {/* Hero Image Card */}
@@ -327,7 +329,7 @@ export default function Dashboard() {
           />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
             <h2 className="text-white text-xl sm:text-2xl md:text-4xl font-bold text-center px-4">
-              Let's level the playing field!
+              {t('dashboard.heroTitle')}
             </h2>
           </div>
         </Card>
@@ -337,15 +339,15 @@ export default function Dashboard() {
         <AlertDialog open={showSportSwitchDialog} onOpenChange={setShowSportSwitchDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Switch to {pendingSportSwitch === 'baseball' ? 'Baseball' : 'Softball'}?</AlertDialogTitle>
+              <AlertDialogTitle>{t('sportSwitch.switchTo', { sport: pendingSportSwitch === 'baseball' ? t('dashboard.baseball') : t('dashboard.softball') })}</AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
-                <p>Baseball and Softball modules are separate and contain different:</p>
+                <p>{t('sportSwitch.separateModulesDescription')}</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>Video analysis contexts</li>
-                  <li>Progress tracking</li>
-                  <li>Training data</li>
+                  <li>{t('sportSwitch.videoAnalysisContexts')}</li>
+                  <li>{t('sportSwitch.progressTracking')}</li>
+                  <li>{t('sportSwitch.trainingData')}</li>
                 </ul>
-                <p className="text-sm font-medium">Your current videos and progress are sport-specific.</p>
+                <p className="text-sm font-medium">{t('sportSwitch.sportSpecificNote')}</p>
                 
                 <div className="flex items-center space-x-2 pt-2">
                   <Checkbox 
@@ -357,14 +359,14 @@ export default function Dashboard() {
                     htmlFor="dont-show" 
                     className="text-sm cursor-pointer select-none"
                   >
-                    Don't show this again
+                    {t('sportSwitch.dontShowAgain')}
                   </label>
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={handleCancelSportSwitch}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmSportSwitch}>Switch</AlertDialogAction>
+              <AlertDialogCancel onClick={handleCancelSportSwitch}>{t('sportSwitch.cancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmSportSwitch}>{t('sportSwitch.switch')}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -373,8 +375,8 @@ export default function Dashboard() {
         <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 sm:gap-4">
           <Tabs value={selectedSport} onValueChange={handleSportChange} className="flex-1">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="baseball">Baseball</TabsTrigger>
-              <TabsTrigger value="softball">Softball</TabsTrigger>
+              <TabsTrigger value="baseball">{t('dashboard.baseball')}</TabsTrigger>
+              <TabsTrigger value="softball">{t('dashboard.softball')}</TabsTrigger>
             </TabsList>
           </Tabs>
           <Button
@@ -385,8 +387,8 @@ export default function Dashboard() {
             className="gap-2 w-full xs:w-auto"
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Refresh Access</span>
-            <span className="sm:hidden">Refresh</span>
+            <span className="hidden sm:inline">{t('dashboard.refreshAccess')}</span>
+            <span className="sm:hidden">{t('dashboard.refresh')}</span>
           </Button>
         </div>
 
@@ -404,16 +406,16 @@ export default function Dashboard() {
                 <Target className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                Hitting
+                {t('dashboard.modules.hitting')}
                 {!hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground">
-                Analyze swing mechanics, kinetic sequence, and bat speed
+                {t('dashboard.modules.hittingDescription')}
               </p>
               {getModuleProgress("hitting") && hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && (
                 <div className="text-sm">
                   <p className="font-semibold">
-                    Videos Analyzed: {getModuleProgress("hitting").videos_analyzed}
+                    {t('dashboard.videosAnalyzed')} {getModuleProgress("hitting").videos_analyzed}
                   </p>
                 </div>
               )}
@@ -424,13 +426,13 @@ export default function Dashboard() {
                 {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
                   <>
                     <Upload className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">Start Analysis</span>
-                    <span className="xs:hidden">Analyze</span>
+                    <span className="hidden xs:inline">{t('dashboard.startAnalysis')}</span>
+                    <span className="xs:hidden">{t('dashboard.analyze')}</span>
                   </>
                 ) : (
                   <>
                     <Lock className="h-4 w-4 sm:mr-2" />
-                    Subscribe
+                    {t('dashboard.subscribe')}
                   </>
                 )}
               </Button>
@@ -449,16 +451,16 @@ export default function Dashboard() {
                 <CircleDot className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                Pitching
+                {t('dashboard.modules.pitching')}
                 {!hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground">
-                Analyze delivery mechanics, arm action, and sequencing
+                {t('dashboard.modules.pitchingDescription')}
               </p>
               {getModuleProgress("pitching") && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && (
                 <div className="text-sm">
                   <p className="font-semibold">
-                    Videos Analyzed: {getModuleProgress("pitching").videos_analyzed}
+                    {t('dashboard.videosAnalyzed')} {getModuleProgress("pitching").videos_analyzed}
                   </p>
                 </div>
               )}
@@ -469,13 +471,13 @@ export default function Dashboard() {
                 {hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? (
                   <>
                     <Upload className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">Start Analysis</span>
-                    <span className="xs:hidden">Analyze</span>
+                    <span className="hidden xs:inline">{t('dashboard.startAnalysis')}</span>
+                    <span className="xs:hidden">{t('dashboard.analyze')}</span>
                   </>
                 ) : (
                   <>
                     <Lock className="h-4 w-4 sm:mr-2" />
-                    Subscribe
+                    {t('dashboard.subscribe')}
                   </>
                 )}
               </Button>
@@ -494,16 +496,16 @@ export default function Dashboard() {
                 <Zap className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                Throwing
+                {t('dashboard.modules.throwing')}
                 {!hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground">
-                Analyze arm action, footwork, and energy transfer
+                {t('dashboard.modules.throwingDescription')}
               </p>
               {getModuleProgress("throwing") && hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && (
                 <div className="text-sm">
                   <p className="font-semibold">
-                    Videos Analyzed: {getModuleProgress("throwing").videos_analyzed}
+                    {t('dashboard.videosAnalyzed')} {getModuleProgress("throwing").videos_analyzed}
                   </p>
                 </div>
               )}
@@ -514,13 +516,13 @@ export default function Dashboard() {
                 {hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? (
                   <>
                     <Upload className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">Start Analysis</span>
-                    <span className="xs:hidden">Analyze</span>
+                    <span className="hidden xs:inline">{t('dashboard.startAnalysis')}</span>
+                    <span className="xs:hidden">{t('dashboard.analyze')}</span>
                   </>
                 ) : (
                   <>
                     <Lock className="h-4 w-4 sm:mr-2" />
-                    Subscribe
+                    {t('dashboard.subscribe')}
                   </>
                 )}
               </Button>
