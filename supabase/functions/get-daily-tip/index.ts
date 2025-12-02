@@ -151,6 +151,53 @@ serve(async (req) => {
       streakData = updatedStreak || streakData;
     }
 
+    // ========== DAILY LIMIT CHECK ==========
+    const DAILY_TIP_LIMIT = 2;
+    const todayStart = new Date(today + 'T00:00:00.000Z').toISOString();
+    const todayEnd = new Date(today + 'T23:59:59.999Z').toISOString();
+    
+    const { count: todayTipCount } = await serviceClient
+      .from('user_viewed_tips')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('viewed_at', todayStart)
+      .lte('viewed_at', todayEnd);
+
+    const tipsViewedToday = todayTipCount || 0;
+    const dailyTipsRemaining = Math.max(0, DAILY_TIP_LIMIT - tipsViewedToday);
+
+    // If limit reached, return streak data but no new tip
+    if (tipsViewedToday >= DAILY_TIP_LIMIT) {
+      const { count: totalCount } = await serviceClient
+        .from('nutrition_daily_tips')
+        .select('*', { count: 'exact', head: true })
+        .or(`sport.eq.both,sport.eq.${sport}`);
+
+      const { count: viewedCount } = await serviceClient
+        .from('user_viewed_tips')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      return new Response(JSON.stringify({
+        tip: null,
+        limitReached: true,
+        limitMessage: "You've collected your 2 health tips for today! Come back tomorrow for more.",
+        dailyTipsRemaining: 0,
+        totalTips: totalCount || 0,
+        viewedTips: viewedCount || 0,
+        viewedPercentage: totalCount ? Math.round(((viewedCount || 0) / totalCount) * 100) : 0,
+        streak: streakData ? {
+          currentStreak: streakData.current_streak,
+          longestStreak: streakData.longest_streak,
+          totalVisits: streakData.total_visits,
+          tipsCollected: streakData.tips_collected,
+          badgesEarned: streakData.badges_earned || [],
+        } : null,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // ========== TIP FETCHING ==========
     const { count: viewedCount } = await serviceClient
       .from('user_viewed_tips')
@@ -309,6 +356,8 @@ Generate only the tip text, nothing else.`;
       viewedPercentage: Math.round(viewedPercentage),
       totalTips: totalCount || 0,
       viewedTips: viewedCount || 0,
+      dailyTipsRemaining: dailyTipsRemaining - 1,
+      limitReached: false,
       streak: streakData ? {
         currentStreak: streakData.current_streak,
         longestStreak: streakData.longest_streak,

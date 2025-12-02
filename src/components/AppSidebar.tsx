@@ -81,6 +81,7 @@ export function AppSidebar() {
     { title: "Dashboard", url: "/dashboard", icon: Home },
     ...(!isScout ? [{ title: "My Followers", url: "/my-followers", icon: Users }] : []),
     { title: "Rankings", url: "/rankings", icon: Trophy },
+    { title: "Nutrition", url: "/nutrition", icon: Apple },
     { title: "Weather", url: "/weather", icon: Cloud },
     ...(isScout ? [{ title: "Scout Dashboard", url: "/scout-dashboard", icon: UserPlus }] : []),
   ];
@@ -90,7 +91,6 @@ export function AppSidebar() {
     { title: "Pitching Analysis", url: `/analyze/pitching?sport=${selectedSport}`, icon: Target },
     { title: "Throwing Analysis", url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
     { title: "Players Club", url: "/players-club", icon: BookMarked },
-    { title: "Nutrition", url: "/nutrition", icon: Apple },
   ];
 
   const accountItems = [
