@@ -725,7 +725,11 @@
     "dashboard": "Dashboard",
     "save": "Save",
     "showProgressReport": "Show Progress Report",
-    "progressReportDescription": "Display your improvement trends and scorecard"
+    "progressReportDescription": "Display your improvement trends and scorecard",
+    "scorecardFilter": "Show Categories",
+    "filterAll": "All",
+    "filterImprovements": "Improvements",
+    "filterRegressions": "Needs Work"
   },
   "sessionDetail": {
     "session": "Session",
@@ -745,6 +749,10 @@
     "repsSets": "Reps/Sets",
     "analysisPrivate": "The player has chosen to keep the analysis private",
     "showProgressReport": "Show Progress Report",
+    "scorecardFilter": "Show Categories",
+    "filterAll": "All",
+    "filterImprovements": "Improvements",
+    "filterRegressions": "Needs Work",
     "coachAnnotations": "Coach Annotations",
     "myAnnotations": "My Annotations",
     "annotations": "annotations",

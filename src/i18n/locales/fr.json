@@ -697,7 +697,11 @@
     "switchedContext": "Basculé vers {{sport}} - {{module}}. Espace de téléchargement effacé.",
     "noAccessError": "Vous n'avez pas accès à ce module. Veuillez vous abonner.",
     "showProgressReport": "Afficher le Rapport de Progression",
-    "progressReportDescription": "Afficher vos tendances d'amélioration et votre carte de score"
+    "progressReportDescription": "Afficher vos tendances d'amélioration et votre carte de score",
+    "scorecardFilter": "Afficher les Catégories",
+    "filterAll": "Toutes",
+    "filterImprovements": "Améliorations",
+    "filterRegressions": "À Travailler"
   },
   "sessionDetail": {
     "session": "Session",
@@ -717,6 +721,10 @@
     "repsSets": "Reps/Séries",
     "analysisPrivate": "Le joueur a choisi de garder l'analyse privée",
     "showProgressReport": "Afficher le Rapport de Progression",
+    "scorecardFilter": "Afficher les Catégories",
+    "filterAll": "Toutes",
+    "filterImprovements": "Améliorations",
+    "filterRegressions": "À Travailler",
     "coachAnnotations": "Annotations de l'Entraîneur",
     "myAnnotations": "Mes Annotations",
     "annotations": "annotations",

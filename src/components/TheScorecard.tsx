@@ -27,9 +27,10 @@ interface ScorecardData {
 interface TheScorecardProps {
   scorecard: ScorecardData;
   currentScore: number;
+  displayFilter?: 'all' | 'improvements' | 'regressions';
 }
 
-export function TheScorecard({ scorecard, currentScore }: TheScorecardProps) {
+export function TheScorecard({ scorecard, currentScore, displayFilter = 'all' }: TheScorecardProps) {
   if (!scorecard) return null;
 
   const { improvements, regressions, neutral, overall_trend, score_trend, is_first_analysis, average_historical_score } = scorecard;
@@ -155,7 +156,7 @@ export function TheScorecard({ scorecard, currentScore }: TheScorecardProps) {
         )}
 
         {/* Improvements Section */}
-        {improvements && improvements.length > 0 && (
+        {(displayFilter === 'all' || displayFilter === 'improvements') && improvements && improvements.length > 0 && (
           <div className="bg-green-50 dark:bg-green-950/30 border border-green-500/50 rounded-lg p-3 sm:p-4">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -176,7 +177,7 @@ export function TheScorecard({ scorecard, currentScore }: TheScorecardProps) {
         )}
 
         {/* Regressions Section */}
-        {regressions && regressions.length > 0 && (
+        {(displayFilter === 'all' || displayFilter === 'regressions') && regressions && regressions.length > 0 && (
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-500/50 rounded-lg p-3 sm:p-4">
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -196,8 +197,8 @@ export function TheScorecard({ scorecard, currentScore }: TheScorecardProps) {
           </div>
         )}
 
-        {/* Neutral/Holding Steady Section */}
-        {neutral && neutral.length > 0 && (
+        {/* Neutral/Holding Steady Section - only show when filter is 'all' */}
+        {displayFilter === 'all' && neutral && neutral.length > 0 && (
           <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-500/50 rounded-lg p-3 sm:p-4">
             <div className="flex items-center gap-2 mb-3">
               <Minus className="h-5 w-5 text-blue-600 dark:text-blue-400" />

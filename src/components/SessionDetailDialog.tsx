@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
@@ -55,10 +56,22 @@ export function SessionDetailDialog({
   const [showScorecard, setShowScorecard] = useState<boolean>(() => {
     return localStorage.getItem('showProgressReport') !== 'false';
   });
+  const [scorecardFilter, setScorecardFilter] = useState<'all' | 'improvements' | 'regressions'>(() => {
+    const saved = localStorage.getItem('scorecardDisplayFilter');
+    return (saved === 'improvements' || saved === 'regressions') ? saved : 'all';
+  });
 
   const handleScorecardToggle = (checked: boolean) => {
     setShowScorecard(checked);
     localStorage.setItem('showProgressReport', String(checked));
+  };
+
+  const handleScorecardFilterChange = (value: string) => {
+    if (value) {
+      const filter = value as 'all' | 'improvements' | 'regressions';
+      setScorecardFilter(filter);
+      localStorage.setItem('scorecardDisplayFilter', filter);
+    }
   };
 
   const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -518,10 +531,32 @@ export function SessionDetailDialog({
                   </div>
                   
                   {showScorecard && (
-                    <TheScorecard 
-                      scorecard={aiAnalysis.scorecard} 
-                      currentScore={session.efficiency_score || 0}
-                    />
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <Label className="text-sm font-medium">{t('sessionDetail.scorecardFilter')}</Label>
+                        <ToggleGroup 
+                          type="single" 
+                          value={scorecardFilter} 
+                          onValueChange={handleScorecardFilterChange}
+                          size="sm"
+                        >
+                          <ToggleGroupItem value="all" className="text-xs px-3">
+                            {t('sessionDetail.filterAll')}
+                          </ToggleGroupItem>
+                          <ToggleGroupItem value="improvements" className="text-xs px-3">
+                            {t('sessionDetail.filterImprovements')}
+                          </ToggleGroupItem>
+                          <ToggleGroupItem value="regressions" className="text-xs px-3">
+                            {t('sessionDetail.filterRegressions')}
+                          </ToggleGroupItem>
+                        </ToggleGroup>
+                      </div>
+                      <TheScorecard 
+                        scorecard={aiAnalysis.scorecard} 
+                        currentScore={session.efficiency_score || 0}
+                        displayFilter={scorecardFilter}
+                      />
+                    </div>
                   )}
                 </div>
               )}
