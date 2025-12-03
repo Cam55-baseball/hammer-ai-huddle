@@ -52,6 +52,14 @@ export function SessionDetailDialog({
   const [annotations, setAnnotations] = useState<any[]>([]);
   const [loadingAnnotations, setLoadingAnnotations] = useState(false);
   const mainVideoRef = useRef<HTMLVideoElement>(null);
+  const [showScorecard, setShowScorecard] = useState<boolean>(() => {
+    return localStorage.getItem('showProgressReport') !== 'false';
+  });
+
+  const handleScorecardToggle = (checked: boolean) => {
+    setShowScorecard(checked);
+    localStorage.setItem('showProgressReport', String(checked));
+  };
 
   const handleThumbnailSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -497,10 +505,25 @@ export function SessionDetailDialog({
 
               {/* The Scorecard Progress Report */}
               {aiAnalysis.scorecard && (
-                <TheScorecard 
-                  scorecard={aiAnalysis.scorecard} 
-                  currentScore={session.efficiency_score || 0}
-                />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="show-scorecard-dialog" className="text-sm font-medium">
+                      {t('sessionDetail.showProgressReport')}
+                    </Label>
+                    <Switch
+                      id="show-scorecard-dialog"
+                      checked={showScorecard}
+                      onCheckedChange={handleScorecardToggle}
+                    />
+                  </div>
+                  
+                  {showScorecard && (
+                    <TheScorecard 
+                      scorecard={aiAnalysis.scorecard} 
+                      currentScore={session.efficiency_score || 0}
+                    />
+                  )}
+                </div>
               )}
             </div>
           )}

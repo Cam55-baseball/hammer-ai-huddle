@@ -666,7 +666,9 @@
     "loopSection": "セクションループ",
     "videoRemoved": "ビデオが削除されました。新しいビデオを選択してください。",
     "switchedContext": "{{sport}} - {{module}}に切り替えました。アップロードスペースをクリアしました。",
-    "noAccessError": "このモジュールへのアクセス権がありません。購読してください。"
+    "noAccessError": "このモジュールへのアクセス権がありません。購読してください。",
+    "showProgressReport": "進捗レポートを表示",
+    "progressReportDescription": "改善傾向とスコアカードを表示"
   },
   "sessionDetail": {
     "session": "セッション",
@@ -685,6 +687,7 @@
     "equipment": "器具",
     "repsSets": "回数/セット",
     "analysisPrivate": "選手が分析を非公開にしています",
+    "showProgressReport": "進捗レポートを表示",
     "coachAnnotations": "コーチの注釈",
     "myAnnotations": "マイ注釈",
     "annotations": "件の注釈",

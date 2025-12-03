@@ -695,7 +695,9 @@
     "loopSection": "Boucler la Section",
     "videoRemoved": "Vidéo supprimée. Sélectionnez une nouvelle vidéo à analyser.",
     "switchedContext": "Basculé vers {{sport}} - {{module}}. Espace de téléchargement effacé.",
-    "noAccessError": "Vous n'avez pas accès à ce module. Veuillez vous abonner."
+    "noAccessError": "Vous n'avez pas accès à ce module. Veuillez vous abonner.",
+    "showProgressReport": "Afficher le Rapport de Progression",
+    "progressReportDescription": "Afficher vos tendances d'amélioration et votre carte de score"
   },
   "sessionDetail": {
     "session": "Session",
@@ -714,6 +716,7 @@
     "equipment": "Équipement",
     "repsSets": "Reps/Séries",
     "analysisPrivate": "Le joueur a choisi de garder l'analyse privée",
+    "showProgressReport": "Afficher le Rapport de Progression",
     "coachAnnotations": "Annotations de l'Entraîneur",
     "myAnnotations": "Mes Annotations",
     "annotations": "annotations",

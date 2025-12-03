@@ -723,7 +723,9 @@
     "switchedContext": "Cambiado a {{sport}} - {{module}}. Espacio de carga limpiado.",
     "noAccessError": "No tienes acceso a este módulo. Por favor suscríbete.",
     "dashboard": "Panel",
-    "save": "Guardar"
+    "save": "Guardar",
+    "showProgressReport": "Mostrar Informe de Progreso",
+    "progressReportDescription": "Muestra tus tendencias de mejora y tarjeta de puntuación"
   },
   "sessionDetail": {
     "session": "Sesión",
@@ -742,6 +744,7 @@
     "equipment": "Equipamiento",
     "repsSets": "Reps/Series",
     "analysisPrivate": "El jugador ha elegido mantener el análisis privado",
+    "showProgressReport": "Mostrar Informe de Progreso",
     "coachAnnotations": "Anotaciones del Entrenador",
     "myAnnotations": "Mis Anotaciones",
     "annotations": "anotaciones",

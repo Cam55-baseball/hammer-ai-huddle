@@ -666,7 +666,9 @@
     "loopSection": "섹션 반복",
     "videoRemoved": "비디오가 삭제되었습니다. 분석할 새 비디오를 선택하세요.",
     "switchedContext": "{{sport}} - {{module}}(으)로 전환되었습니다. 업로드 공간이 비워졌습니다.",
-    "noAccessError": "이 모듈에 대한 접근 권한이 없습니다. 구독하세요."
+    "noAccessError": "이 모듈에 대한 접근 권한이 없습니다. 구독하세요.",
+    "showProgressReport": "진행 보고서 표시",
+    "progressReportDescription": "개선 추세 및 점수표 표시"
   },
   "sessionDetail": {
     "session": "세션",
@@ -685,6 +687,7 @@
     "equipment": "장비",
     "repsSets": "횟수/세트",
     "analysisPrivate": "선수가 분석을 비공개로 유지했습니다",
+    "showProgressReport": "진행 보고서 표시",
     "coachAnnotations": "코치 주석",
     "myAnnotations": "내 주석",
     "annotations": "개의 주석",

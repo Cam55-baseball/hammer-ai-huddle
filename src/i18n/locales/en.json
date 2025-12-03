@@ -723,7 +723,9 @@
     "switchedContext": "Switched to {{sport}} - {{module}}. Upload space cleared.",
     "noAccessError": "You don't have access to this module. Please subscribe.",
     "dashboard": "Dashboard",
-    "save": "Save"
+    "save": "Save",
+    "showProgressReport": "Show Progress Report",
+    "progressReportDescription": "Display your improvement trends and scorecard"
   },
   "sessionDetail": {
     "session": "Session",
@@ -742,6 +744,7 @@
     "equipment": "Equipment",
     "repsSets": "Reps/Sets",
     "analysisPrivate": "The player has chosen to keep the analysis private",
+    "showProgressReport": "Show Progress Report",
     "coachAnnotations": "Coach Annotations",
     "myAnnotations": "My Annotations",
     "annotations": "annotations",
