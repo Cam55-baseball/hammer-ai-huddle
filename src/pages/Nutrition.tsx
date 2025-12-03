@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Apple, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -19,6 +20,7 @@ interface StreakData {
 }
 
 export default function Nutrition() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   
@@ -78,8 +80,8 @@ export default function Nutrition() {
               <Apple className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold">Iron Horse Production</h1>
-              <p className="text-sm text-muted-foreground">Dietary & Holistic Health for Elite Athletes</p>
+              <h1 className="text-xl sm:text-2xl font-bold">{t('nutrition.title')}</h1>
+              <p className="text-sm text-muted-foreground">{t('nutrition.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -104,8 +106,8 @@ export default function Nutrition() {
         {/* Categories */}
         <div className="space-y-3">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <span>Nutrition Categories</span>
-            <span className="text-xs text-muted-foreground font-normal">(18 topics)</span>
+            <span>{t('nutrition.categoriesTitle')}</span>
+            <span className="text-xs text-muted-foreground font-normal">{t('nutrition.topicsCount', { count: 18 })}</span>
           </h2>
           <NutritionCategory />
         </div>

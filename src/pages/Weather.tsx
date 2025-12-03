@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { Wind, Cloud, Sparkles } from "lucide-react";
 
 export default function Weather() {
+  const { t } = useTranslation();
   const location = useLocation();
   const [currentSport, setCurrentSport] = useState<'baseball' | 'softball'>(() => {
     const saved = localStorage.getItem('selectedSport');
@@ -63,12 +65,12 @@ export default function Weather() {
                 <Wind className="h-6 w-6" />
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                Playing The Elements
+                {t('weather.title')}
               </h1>
             </div>
             <p className="text-blue-100 text-base sm:text-lg flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
-              Master every {currentSport} game-day condition • Train smarter, play harder
+              {t('weather.subtitle', { sport: currentSport === 'softball' ? t('dashboard.softball').toLowerCase() : t('dashboard.baseball').toLowerCase() })} • {t('weather.tagline')}
             </p>
           </div>
         </div>

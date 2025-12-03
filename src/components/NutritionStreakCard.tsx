@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Flame, Trophy, Target } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -18,6 +19,8 @@ interface NutritionStreakCardProps {
 }
 
 export function NutritionStreakCard({ streak, totalTips, viewedTips, isLoading }: NutritionStreakCardProps) {
+  const { t } = useTranslation();
+
   if (isLoading) {
     return (
       <Card className="bg-gradient-to-r from-orange-500/20 via-red-500/20 to-amber-500/20 border-orange-500/30">
@@ -74,7 +77,7 @@ export function NutritionStreakCard({ streak, totalTips, viewedTips, isLoading }
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="font-bold text-lg">
-                {currentStreak} Day{currentStreak !== 1 ? 's' : ''} Streak
+                {currentStreak} {currentStreak === 1 ? t('nutrition.dayStreak') : t('nutrition.daysStreak')}
               </span>
               {currentStreak >= 7 && <span className="text-lg">🔥</span>}
             </div>
@@ -82,11 +85,11 @@ export function NutritionStreakCard({ streak, totalTips, viewedTips, isLoading }
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mb-2">
               <span className="flex items-center gap-1">
                 <Trophy className="h-3 w-3" />
-                Best: {longestStreak}
+                {t('nutrition.best')}: {longestStreak}
               </span>
               <span className="flex items-center gap-1">
                 <Target className="h-3 w-3" />
-                {tipsCollected} tips collected
+                {tipsCollected} {t('nutrition.tipsCollected')}
               </span>
             </div>
 
@@ -94,7 +97,7 @@ export function NutritionStreakCard({ streak, totalTips, viewedTips, isLoading }
             <div className="space-y-1">
               <Progress value={progressPercent} className="h-2" />
               <p className="text-xs text-muted-foreground">
-                {Math.round(progressPercent)}% of {totalTips} tips explored
+                {t('nutrition.tipsExplored', { percent: Math.round(progressPercent), total: totalTips })}
               </p>
             </div>
           </div>

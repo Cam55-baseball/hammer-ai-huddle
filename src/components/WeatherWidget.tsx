@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ interface WeatherWidgetProps {
 }
 
 export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherWidgetProps) {
+  const { t } = useTranslation();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState("");
@@ -95,7 +97,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
       if (error) throw error;
 
       if (!data) {
-        throw new Error("No weather data received");
+        throw new Error(t('weather.noDataReceived'));
       }
 
       setWeather(data);
@@ -104,10 +106,10 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
       }
     } catch (error: any) {
       console.error("Error fetching weather:", error);
-      const errorMessage = error.message || "Failed to fetch weather data";
+      const errorMessage = error.message || t('weather.fetchError');
       setError(errorMessage);
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -176,16 +178,16 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   }
 
   const getTrainingCondition = () => {
-    if (!weather) return { text: "Unknown", color: "bg-muted text-muted-foreground", pulse: false };
+    if (!weather) return { text: t('weather.unknown'), color: "bg-muted text-muted-foreground", pulse: false };
     
     const { windSpeed, temperature } = weather;
     
     if (windSpeed > 20 || temperature < 40 || temperature > 95) {
-      return { text: "Poor", color: "bg-red-500/90 text-white", pulse: false };
+      return { text: t('weather.poor'), color: "bg-red-500/90 text-white", pulse: false };
     } else if (windSpeed > 15 || temperature < 50 || temperature > 85) {
-      return { text: "Fair", color: "bg-amber-500/90 text-white", pulse: false };
+      return { text: t('weather.fair'), color: "bg-amber-500/90 text-white", pulse: false };
     }
-    return { text: "Excellent", color: "bg-emerald-500/90 text-white", pulse: true };
+    return { text: t('weather.excellent'), color: "bg-emerald-500/90 text-white", pulse: true };
   };
 
   const condition = getTrainingCondition();
@@ -197,9 +199,9 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
     tomorrow.setDate(tomorrow.getDate() + 1);
     
     if (date.toDateString() === today.toDateString()) {
-      return "Today";
+      return t('weather.today');
     } else if (date.toDateString() === tomorrow.toDateString()) {
-      return "Tomorrow";
+      return t('weather.tomorrow');
     } else {
       return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
@@ -233,7 +235,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
           <div className="relative flex-1">
             <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search any location..."
+              placeholder={t('weather.searchLocation')}
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -252,7 +254,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             <p className="text-sm text-destructive font-medium">{error}</p>
             <Button onClick={() => fetchWeather()} variant="outline" size="sm">
               <Search className="h-4 w-4 mr-2" />
-              Retry
+              {t('common.retry')}
             </Button>
           </CardContent>
         </Card>
@@ -265,7 +267,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               <MapPin className="h-8 w-8 text-muted-foreground" />
             </div>
             <p className="text-muted-foreground">
-              Enter a location above to view weather conditions
+              {t('weather.enterLocationPrompt')}
             </p>
           </CardContent>
         </Card>
@@ -298,7 +300,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                   {/* Feels Like Badge */}
                   <div className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 bg-white/20 rounded-full backdrop-blur-sm">
                     <Thermometer className="h-4 w-4" />
-                    <span className="text-sm font-medium">Feels like {Math.round(weather.feelsLike)}°F</span>
+                    <span className="text-sm font-medium">{t('weather.feelsLike')} {Math.round(weather.feelsLike)}°F</span>
                   </div>
                 </div>
                 
@@ -331,7 +333,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                       <Wind className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Wind</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.wind')}</p>
                       <p className="text-lg font-bold">{weather.windSpeed} mph</p>
                       <p className="text-xs text-muted-foreground">{weather.windDirection}</p>
                     </div>
@@ -347,9 +349,9 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                       <Droplets className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Humidity</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.humidity')}</p>
                       <p className="text-lg font-bold">{weather.humidity}%</p>
-                      <p className="text-xs text-muted-foreground">{weather.humidity > 70 ? 'High' : weather.humidity > 40 ? 'Moderate' : 'Low'}</p>
+                      <p className="text-xs text-muted-foreground">{weather.humidity > 70 ? t('weather.high') : weather.humidity > 40 ? t('weather.moderate') : t('weather.low')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -363,9 +365,9 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                       <Eye className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Visibility</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.visibility')}</p>
                       <p className="text-lg font-bold">{weather.visibility} mi</p>
-                      <p className="text-xs text-muted-foreground">{weather.visibility >= 10 ? 'Clear' : weather.visibility >= 5 ? 'Good' : 'Limited'}</p>
+                      <p className="text-xs text-muted-foreground">{weather.visibility >= 10 ? t('weather.clear') : weather.visibility >= 5 ? t('weather.good') : t('weather.limited')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -384,10 +386,10 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                       <Sun className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">UV Index</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.uvIndex')}</p>
                       <p className="text-lg font-bold">{weather.uvIndex}</p>
                       <p className="text-xs text-muted-foreground">
-                        {weather.uvIndex >= 8 ? 'Very High' : weather.uvIndex >= 6 ? 'High' : weather.uvIndex >= 3 ? 'Moderate' : 'Low'}
+                        {weather.uvIndex >= 8 ? t('weather.veryHigh') : weather.uvIndex >= 6 ? t('weather.high') : weather.uvIndex >= 3 ? t('weather.moderate') : t('weather.low')}
                       </p>
                     </div>
                   </div>
@@ -410,16 +412,16 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                   ) : (
                     <Icon iconNode={baseball} size={20} />
                   )}
-                  {weather.sportAnalysis.sport} Conditions Analysis
+                  {t('weather.sportAnalysis', { sport: weather.sportAnalysis.sport })}
                 </h4>
               </div>
               <CardContent className="p-3 sm:p-5 space-y-3 bg-gradient-to-b from-card to-muted/20 overflow-hidden">
                 <div className="grid gap-3 max-w-full">
                   {[
-                    { label: 'Ball Flight', value: weather.sportAnalysis.ballFlight },
-                    { label: 'Wind Impact', value: weather.sportAnalysis.windImpact },
-                    { label: 'Field Conditions', value: weather.sportAnalysis.fieldCondition },
-                    { label: 'Tracking', value: weather.sportAnalysis.trackingCondition },
+                    { label: t('weather.ballFlight'), value: weather.sportAnalysis.ballFlight },
+                    { label: t('weather.windImpact'), value: weather.sportAnalysis.windImpact },
+                    { label: t('weather.fieldConditions'), value: weather.sportAnalysis.fieldCondition },
+                    { label: t('weather.tracking'), value: weather.sportAnalysis.trackingCondition },
                   ].map((item, i) => (
                     <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors max-w-full">
                       <span className="font-semibold text-sm min-w-[100px] sm:min-w-[120px] text-foreground flex-shrink-0">{item.label}:</span>
@@ -429,7 +431,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                   
                   {weather.sportAnalysis.uvWarning && (
                     <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-2 rounded-lg bg-amber-50 border border-amber-200 max-w-full">
-                      <span className="font-semibold text-sm min-w-[100px] sm:min-w-[120px] text-amber-800 flex-shrink-0">⚠️ UV Warning:</span>
+                      <span className="font-semibold text-sm min-w-[100px] sm:min-w-[120px] text-amber-800 flex-shrink-0">⚠️ {t('weather.uvWarning')}:</span>
                       <span className="text-sm text-amber-700 break-words overflow-hidden">{weather.sportAnalysis.uvWarning}</span>
                     </div>
                   )}
@@ -437,7 +439,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                 
                 <div className="pt-3 mt-3 border-t">
                   <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
-                    <span className="font-bold text-sm text-primary block mb-1">💡 Recommendation</span>
+                    <span className="font-bold text-sm text-primary block mb-1">💡 {t('weather.recommendation')}</span>
                     <span className="text-sm text-foreground">{weather.sportAnalysis.recommendation}</span>
                   </div>
                 </div>
@@ -453,7 +455,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               onClick={() => setShowDrills(!showDrills)}
             >
               <Target className="h-4 w-4 mr-2 group-hover:animate-pulse" />
-              {showDrills ? 'Hide' : 'Show'} Drill Recommendations
+              {showDrills ? t('weather.hideDrills') : t('weather.showDrills')}
             </Button>
           )}
 
@@ -462,7 +464,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             <div className="space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-300">
               <h4 className="font-bold text-base flex items-center gap-2">
                 <Target className="h-4 w-4 text-primary" />
-                Weather-Based Drill Recommendations
+                {t('weather.drillRecommendationsTitle')}
               </h4>
               
               <div className="grid gap-3">
@@ -500,7 +502,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                 <CardContent className="p-4 flex items-center gap-3">
                   <span className="text-2xl">💡</span>
                   <p className="text-sm text-muted-foreground">
-                    <strong>Pro Tip:</strong> Focus on HIGH priority drills for maximum effectiveness in current conditions.
+                    <strong>{t('weather.proTip')}:</strong> {t('weather.proTipText')}
                   </p>
                 </CardContent>
               </Card>
@@ -515,7 +517,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               onClick={() => setShowForecast(!showForecast)}
             >
               <Calendar className="h-4 w-4 mr-2" />
-              {showForecast ? 'Hide' : 'Show'} 7-Day Forecast
+              {showForecast ? t('weather.hideForecast') : t('weather.showForecast')}
             </Button>
           )}
 
@@ -524,7 +526,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             <div className="space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-300">
               <h4 className="font-bold text-base flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary" />
-                7-Day Training Forecast
+                {t('weather.forecastTitle')}
               </h4>
               
               <div className="grid gap-3">

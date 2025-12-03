@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PlayerSearchFilters } from '@/components/PlayerSearchFilters';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,6 +31,7 @@ interface Player {
 }
 
 export default function ScoutDashboard() {
+  const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -146,8 +148,8 @@ export default function ScoutDashboard() {
     } catch (error) {
       console.error('Error in fetchFollowing:', error);
       toast({
-        title: "Error",
-        description: "Failed to load following players",
+        title: t('common.error'),
+        description: t('scout.failedToLoadFollowing'),
         variant: "destructive",
       });
     } finally {
@@ -234,8 +236,8 @@ export default function ScoutDashboard() {
         } catch (error) {
           console.error('Search error:', error);
           toast({
-            title: "Error",
-            description: "Failed to search players",
+            title: t('common.error'),
+            description: t('scout.failedToSearchPlayers'),
             variant: "destructive",
           });
           setSearchResults([]);
@@ -260,8 +262,8 @@ export default function ScoutDashboard() {
       if (error) throw error;
 
       toast({
-        title: 'Follow request sent',
-        description: 'The player will be notified of your request.',
+        title: t('scout.followRequestSent'),
+        description: t('scout.followRequestSentDescription'),
       });
 
       // Refresh following list and search results
@@ -275,8 +277,8 @@ export default function ScoutDashboard() {
     } catch (error: any) {
       console.error('Error sending follow:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to send follow request',
+        title: t('common.error'),
+        description: error.message || t('scout.failedToSendFollow'),
         variant: 'destructive',
       });
     }
@@ -299,8 +301,8 @@ export default function ScoutDashboard() {
       if (error) throw error;
 
       toast({
-        title: 'Unfollowed player',
-        description: `You have unfollowed ${playerToUnfollow.full_name}`,
+        title: t('scout.unfollowedPlayer'),
+        description: t('scout.unfollowedPlayerDescription', { name: playerToUnfollow.full_name }),
       });
       
       // Refresh the following list
@@ -319,8 +321,8 @@ export default function ScoutDashboard() {
     } catch (error: any) {
       console.error('Error unfollowing player:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to unfollow player',
+        title: t('common.error'),
+        description: error.message || t('scout.failedToUnfollow'),
         variant: 'destructive',
       });
     } finally {
@@ -344,33 +346,33 @@ export default function ScoutDashboard() {
     <DashboardLayout>
       <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Scout Dashboard</h1>
+        <h1 className="text-3xl font-bold">{t('scout.dashboard')}</h1>
         <p className="text-muted-foreground mt-2">
-          Manage your player follows and track their progress
+          {t('scout.dashboardDescription')}
         </p>
       </div>
 
       <Tabs value={sportFilter} onValueChange={(value) => setSportFilter(value as 'all' | 'baseball' | 'softball')} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-3 mx-auto">
-          <TabsTrigger value="all">All Sports</TabsTrigger>
-          <TabsTrigger value="baseball">Baseball</TabsTrigger>
-          <TabsTrigger value="softball">Softball</TabsTrigger>
+          <TabsTrigger value="all">{t('common.allSports')}</TabsTrigger>
+          <TabsTrigger value="baseball">{t('dashboard.baseball')}</TabsTrigger>
+          <TabsTrigger value="softball">{t('dashboard.softball')}</TabsTrigger>
         </TabsList>
       </Tabs>
 
       <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Following</span>
+              <span>{t('scout.following')}</span>
               <Badge variant="secondary">{followingCount}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {(loading || ownerLoading) ? (
-              <p className="text-center text-muted-foreground py-8">Loading...</p>
+              <p className="text-center text-muted-foreground py-8">{t('common.loading')}</p>
             ) : following.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
-                You're not following any players yet. Use the Find Players section below to send follow requests.
+                {t('scout.noFollowingPlayers')}
               </p>
             ) : (
               <div className="space-y-3">
@@ -405,7 +407,7 @@ export default function ScoutDashboard() {
                         className="flex-shrink-0"
                       >
                         <User className="h-4 w-4 sm:mr-2" />
-                        <span className="hidden sm:inline">View Profile</span>
+                        <span className="hidden sm:inline">{t('scout.viewProfile')}</span>
                       </Button>
                       <Button
                         onClick={() => navigate(`/players-club?playerId=${player.id}`)}
@@ -414,7 +416,7 @@ export default function ScoutDashboard() {
                         className="flex-shrink-0"
                       >
                         <BookMarked className="h-4 w-4 sm:mr-2" />
-                        <span className="hidden sm:inline">View Library</span>
+                        <span className="hidden sm:inline">{t('scout.viewLibrary')}</span>
                       </Button>
                       {player.id !== ownerId && (
                         <Button
@@ -424,7 +426,7 @@ export default function ScoutDashboard() {
                           className="follow-button flex-shrink-0"
                         >
                           <UserMinus className="h-4 w-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Unfollow</span>
+                          <span className="hidden sm:inline">{t('scout.unfollow')}</span>
                         </Button>
                       )}
                     </div>
@@ -437,7 +439,7 @@ export default function ScoutDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Find Players</CardTitle>
+            <CardTitle>{t('scout.findPlayers')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -470,19 +472,19 @@ export default function ScoutDashboard() {
               
               <Command className="rounded-lg border shadow-md">
                 <CommandInput
-                  placeholder="Search across all players (min 2 characters)..."
+                  placeholder={t('scout.searchPlayersPlaceholder')}
                   value={searchTerm}
                   onValueChange={setSearchTerm}
                 />
                 <CommandList>
                   <CommandEmpty>
                     {searchTerm.trim().length < 2 
-                      ? "Type at least 2 characters to search" 
+                      ? t('scout.minCharactersToSearch')
                       : searchLoading 
-                      ? "Searching..." 
-                      : "No players found"}
+                      ? t('common.searching')
+                      : t('scout.noPlayersFound')}
                   </CommandEmpty>
-                  <CommandGroup heading="Players">
+                  <CommandGroup heading={t('scout.players')}>
                     {searchResults.slice(0, 8).map((player) => (
                       <CommandItem
                         key={player.id}
@@ -519,17 +521,19 @@ export default function ScoutDashboard() {
                 ) : searchTerm.trim().length < 2 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <UserPlus className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>Type at least 2 characters to search across all players</p>
+                    <p>{t('scout.typeToSearch')}</p>
                   </div>
                 ) : searchResults.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
-                    No players found
+                    {t('scout.noPlayersFound')}
                   </p>
                 ) : (
                   <>
                     {searchTerm && (
                       <p className="text-sm text-muted-foreground px-2">
-                        {searchResults.length} {searchResults.length === 1 ? 'player' : 'players'} found
+                        {searchResults.length === 1 
+                          ? t('scout.playerFound', { count: searchResults.length })
+                          : t('scout.playersFound', { count: searchResults.length })}
                       </p>
                     )}
                     {searchResults.map((player) => (
@@ -564,7 +568,7 @@ export default function ScoutDashboard() {
                           className="flex-shrink-0"
                         >
                           <User className="h-4 w-4 sm:mr-2" />
-                          <span className="hidden sm:inline">View Profile</span>
+                          <span className="hidden sm:inline">{t('scout.viewProfile')}</span>
                         </Button>
                         
                         {player.followStatus === 'accepted' && (
@@ -575,7 +579,7 @@ export default function ScoutDashboard() {
                             className="flex-shrink-0"
                           >
                             <BookMarked className="h-4 w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">View Library</span>
+                            <span className="hidden sm:inline">{t('scout.viewLibrary')}</span>
                           </Button>
                         )}
                         
@@ -586,19 +590,19 @@ export default function ScoutDashboard() {
                             className="follow-button flex-shrink-0"
                           >
                             <UserPlus className="h-4 w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">Follow</span>
+                            <span className="hidden sm:inline">{t('scout.follow')}</span>
                           </Button>
                         )}
                         {player.followStatus === 'pending' && (
                           <Badge variant="secondary" className="gap-1 flex-shrink-0">
                             <Clock className="h-3 w-3" />
-                            Pending
+                            {t('scout.pending')}
                           </Badge>
                         )}
                         {player.followStatus === 'accepted' && (
                           <Badge variant="default" className="gap-1 flex-shrink-0">
                             <Check className="h-3 w-3" />
-                            Following
+                            {t('scout.followingStatus')}
                           </Badge>
                         )}
                       </div>
@@ -616,19 +620,19 @@ export default function ScoutDashboard() {
       <AlertDialog open={unfollowDialogOpen} onOpenChange={setUnfollowDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Unfollow Player</AlertDialogTitle>
+            <AlertDialogTitle>{t('scout.unfollowPlayer')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to unfollow {playerToUnfollow?.full_name}? You will lose access to their library and profile.
+              {t('scout.unfollowConfirmation', { name: playerToUnfollow?.full_name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isUnfollowing}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isUnfollowing}>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleConfirmUnfollow}
               disabled={isUnfollowing}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isUnfollowing ? "Unfollowing..." : "Unfollow"}
+              {isUnfollowing ? t('scout.unfollowing') : t('scout.unfollow')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
