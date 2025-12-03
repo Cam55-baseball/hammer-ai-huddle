@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, UserCircle, Upload, Target, Library, Users, TrendingUp, Settings, Search, Filter, UserCheck, Video, Award, Sparkles, Play } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,8 +11,8 @@ import { useScoutAccess } from "@/hooks/useScoutAccess";
 
 interface TutorialSlide {
   id: number;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   icon: React.ElementType;
 }
 
@@ -22,29 +23,30 @@ interface TutorialModalProps {
 }
 
 const playerTutorialSlides: TutorialSlide[] = [
-  { id: 1, title: "Welcome to Hammers Modality", description: "Your complete baseball training and scouting platform. Analyze your performance with AI-powered feedback, connect with scouts, and track your progress to the next level.", icon: Sparkles },
-  { id: 2, title: "Meet the Creator", description: "Learn about the developer and owner of Hammers Modality. Visit the Owner Bio section in the sidebar to view their background, credentials, and contact information.", icon: UserCircle },
-  { id: 3, title: "Your Training Modules", description: "Access your Hitting, Pitching, and Throwing analysis tools. Each module is designed with cutting-edge AI to help you improve specific aspects of your game.", icon: Target },
-  { id: 4, title: "Upload & Analyze Videos", description: "Use the module cards to upload videos of your workouts or games. Our AI analyzes your mechanics in real-time, providing instant feedback on your technique.", icon: Upload },
-  { id: 5, title: "Get Personalized Coaching", description: "Receive detailed efficiency scores, customized drills, and technique feedback tailored to your performance. Improve specific areas with data-driven recommendations.", icon: Award },
-  { id: 6, title: "Your Video Library", description: "All your videos are saved in the Players Club. Review past analyses, mark videos as private or public, and share them with scouts and coaches following you.", icon: Library },
-  { id: 7, title: "Build Your Following", description: "View scouts and coaches following you in My Followers. Accept or decline follow requests, and control who can see your public training videos.", icon: Users },
-  { id: 8, title: "Track Your Ranking", description: "Your ranking updates automatically based on scout and coach engagement. The more visibility you gain through quality content, the higher you climb!", icon: TrendingUp },
-  { id: 9, title: "Complete Your Profile", description: "Visit Settings to add your bio, upload photos, list teams and schools, and connect social media. This information is visible to scouts—make it count!", icon: Settings },
+  { id: 1, titleKey: "tutorial.player.welcome.title", descriptionKey: "tutorial.player.welcome.description", icon: Sparkles },
+  { id: 2, titleKey: "tutorial.player.creator.title", descriptionKey: "tutorial.player.creator.description", icon: UserCircle },
+  { id: 3, titleKey: "tutorial.player.modules.title", descriptionKey: "tutorial.player.modules.description", icon: Target },
+  { id: 4, titleKey: "tutorial.player.upload.title", descriptionKey: "tutorial.player.upload.description", icon: Upload },
+  { id: 5, titleKey: "tutorial.player.coaching.title", descriptionKey: "tutorial.player.coaching.description", icon: Award },
+  { id: 6, titleKey: "tutorial.player.library.title", descriptionKey: "tutorial.player.library.description", icon: Library },
+  { id: 7, titleKey: "tutorial.player.following.title", descriptionKey: "tutorial.player.following.description", icon: Users },
+  { id: 8, titleKey: "tutorial.player.ranking.title", descriptionKey: "tutorial.player.ranking.description", icon: TrendingUp },
+  { id: 9, titleKey: "tutorial.player.profile.title", descriptionKey: "tutorial.player.profile.description", icon: Settings },
 ];
 
 const scoutTutorialSlides: TutorialSlide[] = [
-  { id: 1, title: "Welcome Scouts & Coaches", description: "Your comprehensive scouting platform to discover, evaluate, and follow talented players. Access detailed profiles, training videos, and performance analytics.", icon: Sparkles },
-  { id: 2, title: "Meet the Creator", description: "Learn about the developer and owner of Hammers Modality. Visit the Owner Bio section in the sidebar to view their background and credentials.", icon: UserCircle },
-  { id: 3, title: "Discover Talent", description: "Use the Scout Dashboard to search for players based on name, position, location, and more. Find hidden gems and track rising stars in baseball and softball.", icon: Search },
-  { id: 4, title: "Advanced Player Search", description: "Apply filters to narrow your search by position, throwing hand, batting side, height, weight, graduation year, state, and commitment status for precise talent scouting.", icon: Filter },
-  { id: 5, title: "Follow Players", description: "Send follow requests to players you're interested in. When they accept, you gain access to all their public training videos and performance data.", icon: UserCheck },
-  { id: 6, title: "View Player Videos", description: "Once you're following a player, access their entire video library in the Players Club. Watch their training sessions, game footage, and AI analysis breakdowns.", icon: Video },
-  { id: 7, title: "Rankings System", description: "Players are automatically ranked based on their engagement and visibility with scouts. The more scouts following and interacting with a player, the higher they rank.", icon: TrendingUp },
-  { id: 8, title: "Analyze Performance", description: "Review AI-generated reports for each player, including efficiency scores, mechanics analysis, and detailed feedback to help you make informed recruiting decisions.", icon: Play },
+  { id: 1, titleKey: "tutorial.scout.welcome.title", descriptionKey: "tutorial.scout.welcome.description", icon: Sparkles },
+  { id: 2, titleKey: "tutorial.scout.creator.title", descriptionKey: "tutorial.scout.creator.description", icon: UserCircle },
+  { id: 3, titleKey: "tutorial.scout.discover.title", descriptionKey: "tutorial.scout.discover.description", icon: Search },
+  { id: 4, titleKey: "tutorial.scout.search.title", descriptionKey: "tutorial.scout.search.description", icon: Filter },
+  { id: 5, titleKey: "tutorial.scout.follow.title", descriptionKey: "tutorial.scout.follow.description", icon: UserCheck },
+  { id: 6, titleKey: "tutorial.scout.videos.title", descriptionKey: "tutorial.scout.videos.description", icon: Video },
+  { id: 7, titleKey: "tutorial.scout.rankings.title", descriptionKey: "tutorial.scout.rankings.description", icon: TrendingUp },
+  { id: 8, titleKey: "tutorial.scout.analyze.title", descriptionKey: "tutorial.scout.analyze.description", icon: Play },
 ];
 
 export const TutorialModal = ({ open, onClose, userId }: TutorialModalProps) => {
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const { isScout } = useScoutAccess();
 
@@ -88,11 +90,11 @@ export const TutorialModal = ({ open, onClose, userId }: TutorialModalProps) => 
 
       if (error) throw error;
 
-      toast.success("Tutorial completed! Welcome to Hammers Modality.");
+      toast.success(t('tutorial.completed'));
       onClose();
     } catch (error) {
       console.error("Error completing tutorial:", error);
-      toast.error("Failed to mark tutorial as complete");
+      toast.error(t('tutorial.failedToComplete'));
     }
   };
 
@@ -103,10 +105,10 @@ export const TutorialModal = ({ open, onClose, userId }: TutorialModalProps) => 
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CurrentIcon className="h-6 w-6 text-primary" />
-              <span>{slide.title}</span>
+              <span>{t(slide.titleKey)}</span>
             </div>
             <Badge variant="secondary">
-              Step {currentSlide + 1} of {totalSlides}
+              {t('tutorial.step', { current: currentSlide + 1, total: totalSlides })}
             </Badge>
           </DialogTitle>
         </DialogHeader>
@@ -115,7 +117,7 @@ export const TutorialModal = ({ open, onClose, userId }: TutorialModalProps) => 
           <div className="flex flex-col items-center text-center space-y-4">
             <CurrentIcon className="h-16 w-16 text-primary" />
             <p className="text-muted-foreground text-lg leading-relaxed">
-              {slide.description}
+              {t(slide.descriptionKey)}
             </p>
           </div>
 
@@ -130,7 +132,7 @@ export const TutorialModal = ({ open, onClose, userId }: TutorialModalProps) => 
             className="gap-2"
           >
             <ChevronLeft className="h-4 w-4" />
-            Previous
+            {t('tutorial.previous')}
           </Button>
 
           <Button
@@ -138,10 +140,10 @@ export const TutorialModal = ({ open, onClose, userId }: TutorialModalProps) => 
             className="gap-2"
           >
             {currentSlide === totalSlides - 1 ? (
-              "Start Competing!"
+              t('tutorial.startCompeting')
             ) : (
               <>
-                Next
+                {t('tutorial.next')}
                 <ChevronRight className="h-4 w-4" />
               </>
             )}
