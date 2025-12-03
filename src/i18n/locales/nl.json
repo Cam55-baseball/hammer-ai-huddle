@@ -697,7 +697,11 @@
     "switchedContext": "Overgeschakeld naar {{sport}} - {{module}}. Uploadruimte gewist.",
     "noAccessError": "U heeft geen toegang tot deze module. Abonneer alstublieft.",
     "showProgressReport": "Voortgangsrapport tonen",
-    "progressReportDescription": "Toon uw verbeteringstrends en scorekaart"
+    "progressReportDescription": "Toon uw verbeteringstrends en scorekaart",
+    "scorecardFilter": "Categorieën tonen",
+    "filterAll": "Alle",
+    "filterImprovements": "Verbeteringen",
+    "filterRegressions": "Aandacht nodig"
   },
   "sessionDetail": {
     "session": "Sessie",
@@ -717,6 +721,10 @@
     "repsSets": "Herh./Sets",
     "analysisPrivate": "De speler heeft ervoor gekozen de analyse privé te houden",
     "showProgressReport": "Voortgangsrapport tonen",
+    "scorecardFilter": "Categorieën tonen",
+    "filterAll": "Alle",
+    "filterImprovements": "Verbeteringen",
+    "filterRegressions": "Aandacht nodig",
     "coachAnnotations": "Coach Annotaties",
     "myAnnotations": "Mijn Annotaties",
     "annotations": "annotaties",

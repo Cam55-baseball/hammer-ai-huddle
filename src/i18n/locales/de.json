@@ -697,7 +697,11 @@
     "switchedContext": "Zu {{sport}} - {{module}} gewechselt. Upload-Bereich geleert.",
     "noAccessError": "Sie haben keinen Zugang zu diesem Modul. Bitte abonnieren Sie.",
     "showProgressReport": "Fortschrittsbericht anzeigen",
-    "progressReportDescription": "Zeigen Sie Ihre Verbesserungstrends und Scorecard an"
+    "progressReportDescription": "Zeigen Sie Ihre Verbesserungstrends und Scorecard an",
+    "scorecardFilter": "Kategorien anzeigen",
+    "filterAll": "Alle",
+    "filterImprovements": "Verbesserungen",
+    "filterRegressions": "Nacharbeit"
   },
   "sessionDetail": {
     "session": "Sitzung",
@@ -717,6 +721,10 @@
     "repsSets": "Wdh./Sätze",
     "analysisPrivate": "Der Spieler hat die Analyse privat gehalten",
     "showProgressReport": "Fortschrittsbericht anzeigen",
+    "scorecardFilter": "Kategorien anzeigen",
+    "filterAll": "Alle",
+    "filterImprovements": "Verbesserungen",
+    "filterRegressions": "Nacharbeit",
     "coachAnnotations": "Trainer-Annotationen",
     "myAnnotations": "Meine Annotationen",
     "annotations": "Annotationen",

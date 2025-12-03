@@ -725,7 +725,11 @@
     "dashboard": "Panel",
     "save": "Guardar",
     "showProgressReport": "Mostrar Informe de Progreso",
-    "progressReportDescription": "Muestra tus tendencias de mejora y tarjeta de puntuación"
+    "progressReportDescription": "Muestra tus tendencias de mejora y tarjeta de puntuación",
+    "scorecardFilter": "Mostrar Categorías",
+    "filterAll": "Todas",
+    "filterImprovements": "Mejoras",
+    "filterRegressions": "Necesita Trabajo"
   },
   "sessionDetail": {
     "session": "Sesión",
@@ -745,6 +749,10 @@
     "repsSets": "Reps/Series",
     "analysisPrivate": "El jugador ha elegido mantener el análisis privado",
     "showProgressReport": "Mostrar Informe de Progreso",
+    "scorecardFilter": "Mostrar Categorías",
+    "filterAll": "Todas",
+    "filterImprovements": "Mejoras",
+    "filterRegressions": "Necesita Trabajo",
     "coachAnnotations": "Anotaciones del Entrenador",
     "myAnnotations": "Mis Anotaciones",
     "annotations": "anotaciones",

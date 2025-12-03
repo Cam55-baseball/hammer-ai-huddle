@@ -668,7 +668,11 @@
     "switchedContext": "{{sport}} - {{module}}(으)로 전환되었습니다. 업로드 공간이 비워졌습니다.",
     "noAccessError": "이 모듈에 대한 접근 권한이 없습니다. 구독하세요.",
     "showProgressReport": "진행 보고서 표시",
-    "progressReportDescription": "개선 추세 및 점수표 표시"
+    "progressReportDescription": "개선 추세 및 점수표 표시",
+    "scorecardFilter": "카테고리 표시",
+    "filterAll": "전체",
+    "filterImprovements": "개선점",
+    "filterRegressions": "개선 필요"
   },
   "sessionDetail": {
     "session": "세션",
@@ -688,6 +692,10 @@
     "repsSets": "횟수/세트",
     "analysisPrivate": "선수가 분석을 비공개로 유지했습니다",
     "showProgressReport": "진행 보고서 표시",
+    "scorecardFilter": "카테고리 표시",
+    "filterAll": "전체",
+    "filterImprovements": "개선점",
+    "filterRegressions": "개선 필요",
     "coachAnnotations": "코치 주석",
     "myAnnotations": "내 주석",
     "annotations": "개의 주석",

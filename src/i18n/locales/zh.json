@@ -668,7 +668,11 @@
     "switchedContext": "已切换到{{sport}} - {{module}}。上传空间已清除。",
     "noAccessError": "您无权访问此模块。请订阅。",
     "showProgressReport": "显示进度报告",
-    "progressReportDescription": "显示您的改进趋势和记分卡"
+    "progressReportDescription": "显示您的改进趋势和记分卡",
+    "scorecardFilter": "显示类别",
+    "filterAll": "全部",
+    "filterImprovements": "改进项",
+    "filterRegressions": "需要改进"
   },
   "sessionDetail": {
     "session": "会话",
@@ -688,6 +692,10 @@
     "repsSets": "次数/组数",
     "analysisPrivate": "球员已选择将分析保持私密",
     "showProgressReport": "显示进度报告",
+    "scorecardFilter": "显示类别",
+    "filterAll": "全部",
+    "filterImprovements": "改进项",
+    "filterRegressions": "需要改进",
     "coachAnnotations": "教练注释",
     "myAnnotations": "我的注释",
     "annotations": "条注释",

@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -74,10 +75,22 @@ export default function AnalyzeVideo() {
   const [showScorecard, setShowScorecard] = useState<boolean>(() => {
     return localStorage.getItem('showProgressReport') !== 'false';
   });
+  const [scorecardFilter, setScorecardFilter] = useState<'all' | 'improvements' | 'regressions'>(() => {
+    const saved = localStorage.getItem('scorecardDisplayFilter');
+    return (saved === 'improvements' || saved === 'regressions') ? saved : 'all';
+  });
 
   const handleScorecardToggle = (checked: boolean) => {
     setShowScorecard(checked);
     localStorage.setItem('showProgressReport', String(checked));
+  };
+
+  const handleScorecardFilterChange = (value: string) => {
+    if (value) {
+      const filter = value as 'all' | 'improvements' | 'regressions';
+      setScorecardFilter(filter);
+      localStorage.setItem('scorecardDisplayFilter', filter);
+    }
   };
 
   // Force fresh subscription check on page load
@@ -697,10 +710,32 @@ export default function AnalyzeVideo() {
                       </div>
                       
                       {showScorecard && (
-                        <TheScorecard 
-                          scorecard={analysis.scorecard} 
-                          currentScore={analysis.efficiency_score} 
-                        />
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <Label className="text-sm font-medium">{t('videoAnalysis.scorecardFilter')}</Label>
+                            <ToggleGroup 
+                              type="single" 
+                              value={scorecardFilter} 
+                              onValueChange={handleScorecardFilterChange}
+                              size="sm"
+                            >
+                              <ToggleGroupItem value="all" className="text-xs px-3">
+                                {t('videoAnalysis.filterAll')}
+                              </ToggleGroupItem>
+                              <ToggleGroupItem value="improvements" className="text-xs px-3">
+                                {t('videoAnalysis.filterImprovements')}
+                              </ToggleGroupItem>
+                              <ToggleGroupItem value="regressions" className="text-xs px-3">
+                                {t('videoAnalysis.filterRegressions')}
+                              </ToggleGroupItem>
+                            </ToggleGroup>
+                          </div>
+                          <TheScorecard 
+                            scorecard={analysis.scorecard} 
+                            currentScore={analysis.efficiency_score}
+                            displayFilter={scorecardFilter}
+                          />
+                        </div>
                       )}
                     </div>
                   )}
