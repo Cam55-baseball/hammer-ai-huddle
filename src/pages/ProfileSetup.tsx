@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import { PlusCircle, X } from "lucide-react";
 const ProfileSetup = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { user, loading } = useAuth();
   const locationState = location.state as { role?: string; sport?: string; module?: string };
@@ -89,8 +91,8 @@ const ProfileSetup = () => {
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast({
-          title: "File too large",
-          description: "Maximum file size is 5MB",
+          title: t('profileSetup.fileTooLarge'),
+          description: t('profileSetup.maxFileSizeError'),
           variant: "destructive",
         });
         return;
@@ -103,8 +105,8 @@ const ProfileSetup = () => {
   const handleCompleteSetup = async () => {
     if (!user || !selectedRole) {
       toast({
-        title: "Missing Information",
-        description: "Please select a role before continuing.",
+        title: t('profileSetup.missingInformation'),
+        description: t('profileSetup.selectRoleFirst'),
         variant: "destructive",
       });
       return;
@@ -112,8 +114,8 @@ const ProfileSetup = () => {
 
     if (!firstName.trim() || !lastName.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Please enter your first and last name.",
+        title: t('profileSetup.missingInformation'),
+        description: t('profileSetup.enterFirstLastName'),
         variant: "destructive",
       });
       return;
@@ -122,8 +124,8 @@ const ProfileSetup = () => {
     // Validate player-specific required fields
     if (isPlayer && (!height || !weight || !playerState || !graduationYear || !position || !experienceLevel || !teamAffiliation)) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields for player profile.",
+        title: t('profileSetup.missingInformation'),
+        description: t('profileSetup.fillRequiredFieldsPlayer'),
         variant: "destructive",
       });
       return;
@@ -132,8 +134,8 @@ const ProfileSetup = () => {
     // Validate coach/scout-specific required fields
     if (isCoachOrScout && (!position || !teamAffiliation || !yearsAffiliated)) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields for coach/scout profile.",
+        title: t('profileSetup.missingInformation'),
+        description: t('profileSetup.fillRequiredFieldsCoach'),
         variant: "destructive",
       });
       return;
@@ -252,21 +254,21 @@ const ProfileSetup = () => {
       // Show appropriate message based on role
       if (dbRole === 'admin') {
         toast({
-          title: "Admin Access Requested",
-          description: "Your admin access request has been submitted. The owner will review it shortly.",
+          title: t('profileSetup.adminAccessRequested'),
+          description: t('profileSetup.adminRequestSubmitted'),
         });
       } else {
         toast({
-          title: "Profile Complete!",
-          description: "Welcome to Hammers Modality!",
+          title: t('profileSetup.profileComplete'),
+          description: t('profileSetup.welcomeToApp'),
         });
       }
 
       navigate("/dashboard", { replace: true });
     } catch (error: any) {
       toast({
-        title: "Setup Failed",
-        description: error.message || "Failed to complete profile setup. Please try again.",
+        title: t('profileSetup.setupFailed'),
+        description: error.message || t('profileSetup.failedSetupRetry'),
         variant: "destructive",
       });
     } finally {
@@ -282,9 +284,9 @@ const ProfileSetup = () => {
             <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
               <span className="text-primary-foreground font-bold text-2xl">H</span>
             </div>
-            <h1 className="text-3xl font-bold mb-2">Create Your Profile</h1>
+            <h1 className="text-3xl font-bold mb-2">{t('profileSetup.title')}</h1>
             <p className="text-muted-foreground">
-              Tell us about yourself to personalize your experience
+              {t('profileSetup.description')}
             </p>
           </div>
 
@@ -292,17 +294,17 @@ const ProfileSetup = () => {
           <div className="bg-muted/30 p-4 rounded-lg mb-6">
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">Role</p>
+                <p className="text-muted-foreground">{t('profileSetup.role')}</p>
                 <p className="font-semibold">{selectedRole}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Sport</p>
+                <p className="text-muted-foreground">{t('profileSetup.sport')}</p>
                 <p className="font-semibold">{selectedSport}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Module</p>
+                <p className="text-muted-foreground">{t('profileSetup.module')}</p>
                 <p className="font-semibold">
-                  {selectedModule ? selectedModule.charAt(0).toUpperCase() + selectedModule.slice(1) : 'None'}
+                  {selectedModule ? selectedModule.charAt(0).toUpperCase() + selectedModule.slice(1) : t('profileSetup.none')}
                 </p>
               </div>
             </div>
@@ -312,29 +314,29 @@ const ProfileSetup = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="firstName">First Name *</Label>
+                <Label htmlFor="firstName">{t('profileSetup.firstName')} *</Label>
                 <Input
                   id="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="First name"
+                  placeholder={t('profileSetup.placeholders.firstName')}
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name *</Label>
+                <Label htmlFor="lastName">{t('profileSetup.lastName')} *</Label>
                 <Input
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Last name"
+                  placeholder={t('profileSetup.placeholders.lastName')}
                   required
                 />
               </div>
             </div>
             
             <div>
-              <Label htmlFor="avatar">Profile Picture</Label>
+              <Label htmlFor="avatar">{t('profileSetup.profilePicture')}</Label>
               <div className="flex gap-4 items-center">
                 {avatarPreview && (
                   <Avatar className="h-16 w-16">
@@ -350,29 +352,29 @@ const ProfileSetup = () => {
                   className="flex-1"
                 />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Max size: 5MB</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('profileSetup.maxFileSize')}</p>
             </div>
 
             {isPlayer && (
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="height">Height *</Label>
+                    <Label htmlFor="height">{t('profileSetup.height')} *</Label>
                     <Input
                       id="height"
                       value={height}
                       onChange={(e) => setHeight(e.target.value)}
-                      placeholder="e.g., 5'10&quot;"
+                      placeholder={t('profileSetup.placeholders.height')}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="weight">Weight *</Label>
+                    <Label htmlFor="weight">{t('profileSetup.weight')} *</Label>
                     <Input
                       id="weight"
                       value={weight}
                       onChange={(e) => setWeight(e.target.value)}
-                      placeholder="e.g., 180 lbs"
+                      placeholder={t('profileSetup.placeholders.weight')}
                       required
                     />
                   </div>
@@ -380,115 +382,115 @@ const ProfileSetup = () => {
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="playerState">State *</Label>
+                    <Label htmlFor="playerState">{t('profileSetup.state')} *</Label>
                     <Input
                       id="playerState"
                       value={playerState}
                       onChange={(e) => setPlayerState(e.target.value)}
-                      placeholder="e.g., California"
+                      placeholder={t('profileSetup.placeholders.state')}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="graduationYear">Graduation Year *</Label>
+                    <Label htmlFor="graduationYear">{t('profileSetup.graduationYear')} *</Label>
                     <Input
                       id="graduationYear"
                       type="number"
                       value={graduationYear}
                       onChange={(e) => setGraduationYear(e.target.value)}
-                      placeholder="e.g., 2025"
+                      placeholder={t('profileSetup.placeholders.gradYear')}
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="position">Position *</Label>
+                  <Label htmlFor="position">{t('profileSetup.position')} *</Label>
                   <Input
                     id="position"
                     value={position}
                     onChange={(e) => setPosition(e.target.value)}
-                    placeholder="e.g., Pitcher, Outfielder"
+                    placeholder={t('profileSetup.placeholders.position')}
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="experienceLevel">Experience Level *</Label>
+                  <Label htmlFor="experienceLevel">{t('profileSetup.experienceLevel')} *</Label>
                   <Select value={experienceLevel} onValueChange={setExperienceLevel} required>
                     <SelectTrigger id="experienceLevel">
-                      <SelectValue placeholder="Select your experience level" />
+                      <SelectValue placeholder={t('profileSetup.selectExperienceLevel')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Beginner">Beginner</SelectItem>
-                      <SelectItem value="Intermediate">Intermediate</SelectItem>
-                      <SelectItem value="Advanced">Advanced</SelectItem>
-                      <SelectItem value="Professional">Professional</SelectItem>
+                      <SelectItem value="Beginner">{t('profileSetup.beginner')}</SelectItem>
+                      <SelectItem value="Intermediate">{t('profileSetup.intermediate')}</SelectItem>
+                      <SelectItem value="Advanced">{t('profileSetup.advanced')}</SelectItem>
+                      <SelectItem value="Professional">{t('profileSetup.professional')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="teamAffiliation">Team Affiliation *</Label>
+                  <Label htmlFor="teamAffiliation">{t('profileSetup.teamAffiliation')} *</Label>
                   <Input
                     id="teamAffiliation"
                     value={teamAffiliation}
                     onChange={(e) => setTeamAffiliation(e.target.value)}
-                    placeholder="Travel team/High School/College/Pro"
+                    placeholder={t('profileSetup.placeholders.teamAffiliation')}
                     required
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="throwingHand">Throwing Hand</Label>
+                    <Label htmlFor="throwingHand">{t('profileSetup.throwingHand')}</Label>
                     <Select value={throwingHand} onValueChange={setThrowingHand}>
                       <SelectTrigger id="throwingHand">
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder={t('common.select')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="R">Right</SelectItem>
-                        <SelectItem value="L">Left</SelectItem>
-                        <SelectItem value="B">Both</SelectItem>
+                        <SelectItem value="R">{t('profileSetup.right')}</SelectItem>
+                        <SelectItem value="L">{t('profileSetup.left')}</SelectItem>
+                        <SelectItem value="B">{t('profileSetup.both')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="battingSide">Batting Side</Label>
+                    <Label htmlFor="battingSide">{t('profileSetup.battingSide')}</Label>
                     <Select value={battingSide} onValueChange={setBattingSide}>
                       <SelectTrigger id="battingSide">
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder={t('common.select')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="R">Right</SelectItem>
-                        <SelectItem value="L">Left</SelectItem>
-                        <SelectItem value="B">Both/Switch</SelectItem>
+                        <SelectItem value="R">{t('profileSetup.right')}</SelectItem>
+                        <SelectItem value="L">{t('profileSetup.left')}</SelectItem>
+                        <SelectItem value="B">{t('profileSetup.bothSwitch')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="commitmentStatus">Commitment Status</Label>
+                  <Label htmlFor="commitmentStatus">{t('profileSetup.commitmentStatus')}</Label>
                   <Select value={commitmentStatus} onValueChange={setCommitmentStatus}>
                     <SelectTrigger id="commitmentStatus">
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder={t('profileSetup.selectStatus')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="committed">Committed</SelectItem>
-                      <SelectItem value="uncommitted">Uncommitted</SelectItem>
+                      <SelectItem value="committed">{t('profileSetup.committed')}</SelectItem>
+                      <SelectItem value="uncommitted">{t('profileSetup.uncommitted')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="collegeGradYear">College Graduation Year</Label>
+                  <Label htmlFor="collegeGradYear">{t('profileSetup.collegeGradYear')}</Label>
                   <Input
                     id="collegeGradYear"
                     type="number"
                     value={collegeGradYear}
                     onChange={(e) => setCollegeGradYear(e.target.value)}
-                    placeholder="e.g., 2028"
+                    placeholder={t('profileSetup.placeholders.collegeGradYear')}
                   />
                 </div>
 
@@ -501,7 +503,7 @@ const ProfileSetup = () => {
                       onChange={(e) => setEnrolledInCollege(e.target.checked)}
                       className="h-4 w-4"
                     />
-                    <Label htmlFor="enrolledInCollege" className="cursor-pointer">Enrolled in College</Label>
+                    <Label htmlFor="enrolledInCollege" className="cursor-pointer">{t('profileSetup.enrolledInCollege')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <input
@@ -511,7 +513,7 @@ const ProfileSetup = () => {
                       onChange={(e) => setIsProfessional(e.target.checked)}
                       className="h-4 w-4"
                     />
-                    <Label htmlFor="isProfessional" className="cursor-pointer">Professional Player</Label>
+                    <Label htmlFor="isProfessional" className="cursor-pointer">{t('profileSetup.professionalPlayer')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <input
@@ -521,7 +523,7 @@ const ProfileSetup = () => {
                       onChange={(e) => setIsFreeAgent(e.target.checked)}
                       className="h-4 w-4"
                     />
-                    <Label htmlFor="isFreeAgent" className="cursor-pointer">Free Agent</Label>
+                    <Label htmlFor="isFreeAgent" className="cursor-pointer">{t('profileSetup.freeAgent')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <input
@@ -531,28 +533,28 @@ const ProfileSetup = () => {
                       onChange={(e) => setIsForeignPlayer(e.target.checked)}
                       className="h-4 w-4"
                     />
-                    <Label htmlFor="isForeignPlayer" className="cursor-pointer">International Player</Label>
+                    <Label htmlFor="isForeignPlayer" className="cursor-pointer">{t('profileSetup.internationalPlayer')}</Label>
                   </div>
                 </div>
 
                 {isProfessional && (
                   <>
                     <div>
-                      <Label htmlFor="mlbAffiliate">MLB Affiliate</Label>
+                      <Label htmlFor="mlbAffiliate">{t('profileSetup.mlbAffiliate')}</Label>
                       <Input
                         id="mlbAffiliate"
                         value={mlbAffiliate}
                         onChange={(e) => setMlbAffiliate(e.target.value)}
-                        placeholder="e.g., Yankees, Dodgers"
+                        placeholder={t('profileSetup.placeholders.mlbAffiliate')}
                       />
                     </div>
                     <div>
-                      <Label htmlFor="independentLeague">Independent League</Label>
+                      <Label htmlFor="independentLeague">{t('profileSetup.independentLeague')}</Label>
                       <Input
                         id="independentLeague"
                         value={independentLeague}
                         onChange={(e) => setIndependentLeague(e.target.value)}
-                        placeholder="e.g., Atlantic League"
+                        placeholder={t('profileSetup.placeholders.independentLeague')}
                       />
                     </div>
                   </>
@@ -563,35 +565,35 @@ const ProfileSetup = () => {
             {isCoachOrScout && (
               <>
                 <div>
-                  <Label htmlFor="position">Position/Role *</Label>
+                  <Label htmlFor="position">{t('profileSetup.positionRole')} *</Label>
                   <Input
                     id="position"
                     value={position}
                     onChange={(e) => setPosition(e.target.value)}
-                    placeholder="e.g., Head Coach, Scout"
+                    placeholder={t('profileSetup.placeholders.positionCoach')}
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="teamAffiliation">Team Affiliation *</Label>
+                  <Label htmlFor="teamAffiliation">{t('profileSetup.teamAffiliation')} *</Label>
                   <Input
                     id="teamAffiliation"
                     value={teamAffiliation}
                     onChange={(e) => setTeamAffiliation(e.target.value)}
-                    placeholder="Team name or organization"
+                    placeholder={t('profileSetup.placeholders.organization')}
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="yearsAffiliated">Years Affiliated *</Label>
+                  <Label htmlFor="yearsAffiliated">{t('profileSetup.yearsAffiliated')} *</Label>
                   <Input
                     id="yearsAffiliated"
                     type="number"
                     value={yearsAffiliated}
                     onChange={(e) => setYearsAffiliated(e.target.value)}
-                    placeholder="Number of years"
+                    placeholder={t('profileSetup.placeholders.yearsNumber')}
                     required
                   />
                 </div>
@@ -599,30 +601,30 @@ const ProfileSetup = () => {
             )}
 
             <div>
-              <Label htmlFor="bio">Bio (Optional)</Label>
+              <Label htmlFor="bio">{t('profileSetup.bioOptional')}</Label>
               {isPlayer && (
                 <p className="text-xs text-muted-foreground mt-1 mb-2">
-                  Please include: Contact Email, Height and Weight, State, Graduation Year (HS & College), Batting Side(s), Position(s), Throwing Hand(s), Team Affiliation or Free Agency/Uncommitted status
+                  {t('profileSetup.bioHelperText')}
                 </p>
               )}
               <Textarea
                 id="bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell us about yourself..."
+                placeholder={t('profileSetup.tellUsAboutYourself')}
                 maxLength={500}
                 rows={4}
               />
               <p className="text-xs text-muted-foreground text-right mt-1">
-                {bio.length}/500 characters
+                {t('profileSetup.characterCount', { count: bio.length })}
               </p>
             </div>
             
             {/* Credentials (Optional) */}
             <div>
-              <Label className="text-sm font-semibold">Experience & Credentials (Optional)</Label>
+              <Label className="text-sm font-semibold">{t('profileSetup.experienceCredentials')}</Label>
               <p className="text-xs text-muted-foreground mb-2">
-                Add your playing history, coaching roles, certifications, etc.
+                {t('profileSetup.credentialsHelperText')}
               </p>
               
               <div className="space-y-2">
@@ -635,7 +637,7 @@ const ProfileSetup = () => {
                         newCredentials[index] = e.target.value;
                         setCredentials(newCredentials);
                       }}
-                      placeholder="e.g., Played at University of Texas (2010-2014)"
+                      placeholder={t('profileSetup.placeholders.credential')}
                     />
                     <Button
                       type="button"
@@ -660,7 +662,7 @@ const ProfileSetup = () => {
                     className="w-full"
                   >
                     <PlusCircle className="h-4 w-4 mr-2" />
-                    Add Credential
+                    {t('profileSetup.addCredential')}
                   </Button>
                 )}
               </div>
@@ -673,7 +675,7 @@ const ProfileSetup = () => {
             size="lg"
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Creating Profile..." : "Complete Profile & Go to Dashboard"}
+            {isSubmitting ? t('profileSetup.creatingProfile') : t('profileSetup.completeProfileAndGo')}
           </Button>
         </div>
       </div>
