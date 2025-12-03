@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadOptimizedThumbnail, uploadThumbnailSizes } from '@/lib/uploadHelpers';
 import { processVideoThumbnail } from '@/lib/thumbnailHelpers';
@@ -32,6 +33,7 @@ export function SaveToLibraryDialog({
   sport,
   module,
 }: SaveToLibraryDialogProps) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(`${sport} ${module} - ${new Date().toLocaleDateString()}`);
   const [notes, setNotes] = useState('');
   const [shareWithScouts, setShareWithScouts] = useState(false);
@@ -47,12 +49,12 @@ export function SaveToLibraryDialog({
 
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a JPG, PNG, or WebP image');
+      toast.error(t('saveToLibrary.invalidImageType'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be smaller than 5MB');
+      toast.error(t('saveToLibrary.imageTooLarge'));
       return;
     }
 
@@ -105,7 +107,7 @@ export function SaveToLibraryDialog({
           }
         } catch (thumbnailError: any) {
           console.error('Error uploading thumbnail:', thumbnailError);
-          toast.error(`Failed to upload thumbnail: ${thumbnailError.message}`);
+          toast.error(`${t('saveToLibrary.failedToUploadThumbnail')}: ${thumbnailError.message}`);
         }
       }
 
@@ -141,11 +143,11 @@ export function SaveToLibraryDialog({
 
       if (updateError) throw updateError;
 
-      toast.success('Session saved to Players Club!');
+      toast.success(t('saveToLibrary.savedToPlayersClub'));
       onClose();
     } catch (error: any) {
       console.error('Error saving to library:', error);
-      toast.error(error.message || 'Failed to save session');
+      toast.error(error.message || t('saveToLibrary.failedToSave'));
     } finally {
       setSaving(false);
     }
@@ -157,39 +159,39 @@ export function SaveToLibraryDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BookMarked className="h-5 w-5" />
-            Save to Players Club
+            {t('saveToLibrary.title')}
           </DialogTitle>
           <DialogDescription>
-            Add this session to your personal training library
+            {t('saveToLibrary.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Session Title</Label>
+            <Label htmlFor="title">{t('saveToLibrary.sessionTitle')}</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter a title for this session..."
+              placeholder={t('saveToLibrary.enterTitle')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label htmlFor="notes">{t('saveToLibrary.notesOptional')}</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add notes about this session..."
+              placeholder={t('saveToLibrary.addNotes')}
               rows={3}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Custom Cover Image (Optional)</Label>
+            <Label>{t('saveToLibrary.customCoverImageOptional')}</Label>
             <p className="text-xs text-muted-foreground">
-              Upload your own cover image if auto-generated thumbnail failed
+              {t('saveToLibrary.coverImageHelp')}
             </p>
             
             {thumbnailPreview ? (
@@ -216,10 +218,10 @@ export function SaveToLibraryDialog({
               >
                 <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  Click to upload thumbnail image
+                  {t('saveToLibrary.clickToUpload')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  JPG, PNG, or WebP (max 5MB)
+                  {t('saveToLibrary.imageFormats')}
                 </p>
               </div>
             )}
@@ -235,9 +237,9 @@ export function SaveToLibraryDialog({
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="share">Share with Scouts</Label>
+              <Label htmlFor="share">{t('saveToLibrary.shareWithScouts')}</Label>
               <p className="text-sm text-muted-foreground">
-                Allow scouts who follow you to view this session
+                {t('saveToLibrary.shareDescription')}
               </p>
             </div>
             <Switch
@@ -250,9 +252,9 @@ export function SaveToLibraryDialog({
           {shareWithScouts && (
             <div className="flex items-center justify-between border-t pt-4">
               <div className="space-y-0.5">
-                <Label htmlFor="analysis-public">Make analysis public?</Label>
+                <Label htmlFor="analysis-public">{t('saveToLibrary.makeAnalysisPublic')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Allow scouts to view the AI analysis and feedback
+                  {t('saveToLibrary.analysisDescription')}
                 </p>
               </div>
               <Switch
@@ -265,10 +267,10 @@ export function SaveToLibraryDialog({
 
           <div className="flex gap-2 justify-end pt-4">
             <Button variant="outline" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Uploading...' : 'Upload to Library'}
+              {saving ? t('saveToLibrary.uploading') : t('saveToLibrary.uploadToLibrary')}
             </Button>
           </div>
         </div>

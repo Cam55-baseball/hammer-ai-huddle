@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function ModuleManagementCard({ sport, module, details, onActionComplete }: Props) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
@@ -33,37 +35,41 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
   const moduleName = `${sport.charAt(0).toUpperCase() + sport.slice(1)} ${module.charAt(0).toUpperCase() + module.slice(1)}`;
   const emoji = sport === 'baseball' ? '⚾' : '🥎';
   
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  };
+  
   // Determine status display
   const getStatusInfo = () => {
     if (details.cancel_at_period_end && details.status === 'active') {
       return {
-        label: 'Canceling',
+        label: t('moduleManagement.canceling'),
         color: 'bg-orange-500',
         icon: <AlertCircle className="w-3 h-3" />,
-        message: `Access until ${new Date(details.current_period_end!).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`
+        message: t('moduleManagement.accessUntil', { date: formatDate(details.current_period_end!) })
       };
     }
     
     if (details.status === 'canceled') {
       return {
-        label: 'Canceled',
+        label: t('moduleManagement.canceled'),
         color: 'bg-gray-500',
         icon: <XCircle className="w-3 h-3" />,
-        message: 'No longer active'
+        message: t('moduleManagement.noLongerActive')
       };
     }
     
     if (details.status === 'active') {
       return {
-        label: 'Active',
+        label: t('moduleManagement.active'),
         color: 'bg-green-500',
         icon: <CheckCircle className="w-3 h-3" />,
-        message: `Renews ${new Date(details.current_period_end!).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`
+        message: t('moduleManagement.renewsOn', { date: formatDate(details.current_period_end!) })
       };
     }
     
     return {
-      label: 'Unknown',
+      label: t('moduleManagement.unknown'),
       color: 'bg-gray-500',
       icon: null,
       message: ''
@@ -85,14 +91,14 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
       
       if (error) throw error;
       
-      toast.success(`${moduleName} will be canceled at period end`, {
-        description: `You'll keep access until ${new Date(details.current_period_end!).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`
+      toast.success(t('moduleManagement.canceledAtPeriodEnd', { moduleName }), {
+        description: t('moduleManagement.accessUntil', { date: formatDate(details.current_period_end!) })
       });
       
       onActionComplete();
     } catch (error) {
       console.error('Cancel error:', error);
-      toast.error('Failed to cancel module');
+      toast.error(t('moduleManagement.failedToCancel'));
     } finally {
       setLoading(false);
       setShowCancelDialog(false);
@@ -112,14 +118,14 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
       
       if (error) throw error;
       
-      toast.success(`${moduleName} cancellation removed`, {
-        description: 'Your subscription will continue as normal'
+      toast.success(t('moduleManagement.cancellationRemoved', { moduleName }), {
+        description: t('moduleManagement.subscriptionContinues')
       });
       
       onActionComplete();
     } catch (error) {
       console.error('Resume error:', error);
-      toast.error('Failed to resume module');
+      toast.error(t('moduleManagement.failedToResume'));
     } finally {
       setLoading(false);
       setShowResumeDialog(false);
@@ -156,7 +162,7 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
                 onClick={() => setShowCancelDialog(true)}
                 disabled={loading}
               >
-                Cancel
+                {t('moduleManagement.cancel')}
               </Button>
             )}
             
@@ -168,7 +174,7 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
                 onClick={() => setShowResumeDialog(true)}
                 disabled={loading}
               >
-                Keep Subscription
+                {t('moduleManagement.keepSubscription')}
               </Button>
             )}
             
@@ -178,7 +184,7 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
                 size="sm"
                 onClick={() => window.location.href = '/pricing'}
               >
-                Resubscribe
+                {t('moduleManagement.resubscribe')}
               </Button>
             )}
           </div>
@@ -189,22 +195,22 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel {moduleName}?</AlertDialogTitle>
+            <AlertDialogTitle>{t('moduleManagement.cancelModuleTitle', { moduleName })}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
-              <p>Your subscription will be canceled at the end of your billing period.</p>
+              <p>{t('moduleManagement.cancelModuleDescription')}</p>
               <p className="font-semibold">
-                You'll keep access until: {new Date(details.current_period_end!).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                {t('moduleManagement.keepAccessUntil', { date: formatDate(details.current_period_end!) })}
               </p>
-              <p>After that date, you'll lose access to this module.</p>
+              <p>{t('moduleManagement.loseAccessAfter')}</p>
               <p className="text-sm text-muted-foreground">
-                No refunds will be issued for the current period.
+                {t('moduleManagement.noRefunds')}
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Go Back</AlertDialogCancel>
+            <AlertDialogCancel>{t('moduleManagement.goBack')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleCancel} disabled={loading}>
-              Yes, Cancel at Period End
+              {t('moduleManagement.yesCancelAtEnd')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -214,15 +220,15 @@ export function ModuleManagementCard({ sport, module, details, onActionComplete 
       <AlertDialog open={showResumeDialog} onOpenChange={setShowResumeDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Keep {moduleName}?</AlertDialogTitle>
+            <AlertDialogTitle>{t('moduleManagement.keepModuleTitle', { moduleName })}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove the scheduled cancellation. Your subscription will continue normally and you'll be billed on your next billing date.
+              {t('moduleManagement.keepModuleDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Go Back</AlertDialogCancel>
+            <AlertDialogCancel>{t('moduleManagement.goBack')}</AlertDialogCancel>
             <AlertDialogAction onClick={handleResume} disabled={loading}>
-              Yes, Keep Subscription
+              {t('moduleManagement.yesKeepSubscription')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

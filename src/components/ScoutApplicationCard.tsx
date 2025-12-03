@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import { FileText, Video, Check, X, User } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScoutProfileDialog } from "./ScoutProfileDialog";
+
 interface ScoutApplicationCardProps {
   application: {
     id: string;
@@ -25,6 +27,7 @@ interface ScoutApplicationCardProps {
 }
 
 export function ScoutApplicationCard({ application, onUpdate }: ScoutApplicationCardProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -47,16 +50,19 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
       if (error) throw error;
 
       toast({
-        title: action === "approve" ? "Application Approved" : "Application Denied",
-        description: `${application.first_name} ${application.last_name}'s application has been ${action}d`,
+        title: action === "approve" ? t('scoutApplication.applicationApproved') : t('scoutApplication.applicationDenied'),
+        description: t('scoutApplication.applicationHasBeen', { 
+          name: `${application.first_name} ${application.last_name}`,
+          action: action === "approve" ? t('scoutApplication.approved') : t('scoutApplication.denied')
+        }),
       });
 
       onUpdate();
     } catch (error: any) {
       console.error(`Error ${action}ing application:`, error);
       toast({
-        title: "Error",
-        description: error.message || `Failed to ${action} application`,
+        title: t('common.error'),
+        description: error.message || (action === "approve" ? t('scoutApplication.failedToApprove') : t('scoutApplication.failedToDeny')),
         variant: "destructive",
       });
     } finally {
@@ -124,15 +130,15 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
 
       // Set viewer state and open dialog
       setViewerUrl(blobUrl);
-      setViewerTitle(fileType === 'letter' ? 'Organization Letter' : 'Video Submission');
+      setViewerTitle(fileType === 'letter' ? t('scoutApplication.organizationLetter') : t('scoutApplication.videoSubmission'));
       const vt = ext === 'pdf' ? 'pdf' : (ext && ['mp4', 'mov', 'webm', 'avi'].includes(ext) ? 'video' : 'unknown');
       setViewerType(vt as 'pdf' | 'video' | 'unknown');
       setViewerOpen(true);
     } catch (error: any) {
       console.error('[ScoutApplicationCard] Error downloading file:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to open file. Please try again.',
+        title: t('common.error'),
+        description: error.message || t('scoutApplication.failedToOpenFile'),
         variant: 'destructive',
       });
     } finally {
@@ -156,8 +162,8 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
     } catch (error: any) {
       console.error('[ScoutApplicationCard] Error fetching profile:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load scout profile. Please try again.',
+        title: t('common.error'),
+        description: t('scoutApplication.failedToLoadProfile'),
         variant: 'destructive',
       });
     } finally {
@@ -190,7 +196,7 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Applied: {format(new Date(application.created_at), "MMM d, yyyy")}
+              {t('scoutApplication.applied')}: {format(new Date(application.created_at), "MMM d, yyyy")}
             </p>
           </div>
 
@@ -202,7 +208,7 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
               disabled={!application.organization_letter_url || loading}
             >
               <FileText className="mr-2 h-4 w-4" />
-              View Organization Letter
+              {t('scoutApplication.viewOrganizationLetter')}
             </Button>
             <Button
               variant="outline"
@@ -211,7 +217,7 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
               disabled={!application.video_submission_url || loading}
             >
               <Video className="mr-2 h-4 w-4" />
-              View Video Submission
+              {t('scoutApplication.viewVideoSubmission')}
             </Button>
 
             {application.status === "approved" && (
@@ -222,7 +228,7 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
                 disabled={loading}
               >
                 <User className="mr-2 h-4 w-4" />
-                View Profile
+                {t('scoutApplication.viewProfile')}
               </Button>
             )}
 
@@ -234,7 +240,7 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
                   className="flex-1"
                 >
                   <Check className="mr-2 h-4 w-4" />
-                  Approve
+                  {t('scoutApplication.approve')}
                 </Button>
                 <Button
                   onClick={() => handleAction("deny")}
@@ -243,7 +249,7 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
                   className="flex-1"
                 >
                   <X className="mr-2 h-4 w-4" />
-                  Deny
+                  {t('scoutApplication.deny')}
                 </Button>
               </div>
             )}
@@ -277,7 +283,7 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
             ) : viewerType === 'video' ? (
               <video src={viewerUrl || ''} controls className="w-full max-h-[70vh] rounded-md" />
             ) : (
-              <p className="text-sm text-muted-foreground">Preview not available. Use download instead.</p>
+              <p className="text-sm text-muted-foreground">{t('scoutApplication.previewNotAvailable')}</p>
             )}
           </div>
           <DialogFooter className="gap-2">
@@ -288,7 +294,7 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
                 if (viewerUrl) window.open(viewerUrl, '_blank');
               }}
             >
-              Open in new tab
+              {t('scoutApplication.openInNewTab')}
             </Button>
             <Button
               type="button"
@@ -303,7 +309,7 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
                 }
               }}
             >
-              Download
+              {t('scoutApplication.download')}
             </Button>
           </DialogFooter>
         </DialogContent>

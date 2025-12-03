@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ export function DeleteUserDialog({
   user,
   onSuccess,
 }: DeleteUserDialogProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const { toast } = useToast();
@@ -40,8 +42,8 @@ export function DeleteUserDialog({
   const handleDelete = async () => {
     if (confirmText !== "DELETE") {
       toast({
-        title: "Confirmation Required",
-        description: 'Please type "DELETE" to confirm',
+        title: t('deleteUserDialog.confirmationRequired'),
+        description: t('deleteUserDialog.pleaseTypeDelete'),
         variant: "destructive",
       });
       return;
@@ -56,8 +58,8 @@ export function DeleteUserDialog({
       if (error) throw error;
 
       toast({
-        title: "Account Deleted",
-        description: `${user.full_name}'s account has been permanently deleted.`,
+        title: t('deleteUserDialog.accountDeleted'),
+        description: t('deleteUserDialog.accountDeletedDescription', { name: user.full_name }),
       });
 
       setConfirmText("");
@@ -66,8 +68,8 @@ export function DeleteUserDialog({
     } catch (error) {
       console.error("Error deleting user:", error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete user account",
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : t('deleteUserDialog.failedToDelete'),
         variant: "destructive",
       });
     } finally {
@@ -81,37 +83,37 @@ export function DeleteUserDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />
-            Delete User Account
+            {t('deleteUserDialog.title')}
           </DialogTitle>
           <DialogDescription>
-            This is a permanent action that cannot be undone. All user data will be deleted.
+            {t('deleteUserDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div>
-            <p className="text-sm font-medium mb-1">User to Delete:</p>
+            <p className="text-sm font-medium mb-1">{t('deleteUserDialog.userToDelete')}</p>
             <p className="text-sm text-muted-foreground">{user.full_name}</p>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
 
           <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
             <p className="text-sm text-destructive font-medium mb-2">
-              ⚠️ This will permanently delete:
+              {t('deleteUserDialog.warningTitle')}
             </p>
             <ul className="text-sm text-destructive space-y-1 list-disc list-inside">
-              <li>All user profile information</li>
-              <li>All video uploads and analyses</li>
-              <li>All training progress data</li>
-              <li>All scout connections and applications</li>
-              <li>All active Stripe subscriptions</li>
-              <li>The user's authentication account</li>
+              <li>{t('deleteUserDialog.warningItem1')}</li>
+              <li>{t('deleteUserDialog.warningItem2')}</li>
+              <li>{t('deleteUserDialog.warningItem3')}</li>
+              <li>{t('deleteUserDialog.warningItem4')}</li>
+              <li>{t('deleteUserDialog.warningItem5')}</li>
+              <li>{t('deleteUserDialog.warningItem6')}</li>
             </ul>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="confirm" className="text-destructive font-medium">
-              Type "DELETE" to confirm deletion:
+              {t('deleteUserDialog.confirmLabel')}
             </Label>
             <Input
               id="confirm"
@@ -132,7 +134,7 @@ export function DeleteUserDialog({
             }}
             disabled={loading}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -140,7 +142,7 @@ export function DeleteUserDialog({
             disabled={loading || confirmText !== "DELETE"}
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Delete Account Permanently
+            {t('deleteUserDialog.deleteAccountPermanently')}
           </Button>
         </DialogFooter>
       </DialogContent>
