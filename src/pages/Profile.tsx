@@ -925,7 +925,7 @@ export default function Profile() {
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
                     <Edit className="h-4 w-4 mr-2" />
-                    Edit Profile
+                    {t('profile.editProfile')}
                   </Button>
                 </DialogTrigger>
               <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
@@ -935,12 +935,12 @@ export default function Profile() {
                 <div className="space-y-4 py-4 overflow-y-auto flex-1">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="first_name">First Name</Label>
+                      <Label htmlFor="first_name">{t('profile.firstName')}</Label>
                       <Input
                         id="first_name"
                         value={editForm.first_name}
                         onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
-                        placeholder="First name"
+                        placeholder={t('profile.placeholders.firstName')}
                       />
                     </div>
                     <div className="space-y-2">
@@ -949,24 +949,24 @@ export default function Profile() {
                         id="last_name"
                         value={editForm.last_name}
                         onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
-                        placeholder="Last name"
+                        placeholder={t('profile.placeholders.lastName')}
                       />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="contact_email">
-                      Contact Email <span className="text-xs text-muted-foreground">(public)</span>
+                      {t('profile.contactEmail')} <span className="text-xs text-muted-foreground">({t('profile.public')})</span>
                     </Label>
                     <Input
                       id="contact_email"
                       type="email"
                       value={editForm.contact_email}
                       onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })}
-                      placeholder="owner@example.com"
+                      placeholder={t('profile.placeholders.email')}
                     />
                     <p className="text-xs text-muted-foreground">
-                      This email will be visible to all users for contacting you
+                      {t('profile.contactEmailDescription')}
                     </p>
                   </div>
                   
@@ -974,27 +974,27 @@ export default function Profile() {
                     <Label htmlFor="bio">{t('profile.bio')}</Label>
                     {currentUserRole === 'player' && (
                       <p className="text-xs text-muted-foreground mt-1 mb-2">
-                        Please include: Contact Email, Height and Weight, State, Graduation Year (HS & College), Batting Side(s), Position(s), Throwing Hand(s), Team Affiliation or Free Agency/Uncommitted status
+                        {t('profile.playerBioPrompt')}
                       </p>
                     )}
                     <Textarea
                       id="bio"
                       value={editForm.bio}
                       onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                      placeholder="Tell us about yourself..."
+                      placeholder={t('profile.bioPlaceholder')}
                       maxLength={500}
                       rows={4}
                     />
                     <p className="text-xs text-muted-foreground text-right">
-                      {editForm.bio.length}/500 characters
+                      {editForm.bio.length}/500 {t('profile.characters')}
                     </p>
                   </div>
                   
                   {/* Credentials/Experience List */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Experience & Credentials</Label>
+                    <Label className="text-sm font-semibold">{t('profile.experienceCredentials')}</Label>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Add your playing history, coaching roles, certifications, etc.
+                      {t('profile.credentialsDescription')}
                     </p>
                     
                     <div className="space-y-2">
@@ -1007,7 +1007,7 @@ export default function Profile() {
                               newCredentials[index] = e.target.value;
                               setEditForm({ ...editForm, credentials: newCredentials });
                             }}
-                            placeholder="e.g., Played at University of Texas (2010-2014)"
+                            placeholder={t('profile.placeholders.credential')}
                           />
                           <Button
                             type="button"
@@ -1078,7 +1078,7 @@ export default function Profile() {
                             id="height"
                             value={editForm.height}
                             onChange={(e) => setEditForm({ ...editForm, height: e.target.value })}
-                            placeholder="e.g., 5'10&quot;"
+                            placeholder={t('profile.placeholders.height')}
                           />
                         </div>
                         <div className="space-y-2">
@@ -1087,7 +1087,7 @@ export default function Profile() {
                             id="weight"
                             value={editForm.weight}
                             onChange={(e) => setEditForm({ ...editForm, weight: e.target.value })}
-                            placeholder="e.g., 180 lbs"
+                            placeholder={t('profile.placeholders.weight')}
                           />
                         </div>
                       </div>
@@ -1099,7 +1099,7 @@ export default function Profile() {
                             id="state"
                             value={editForm.state}
                             onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
-                            placeholder="e.g., California"
+                            placeholder={t('profile.placeholders.state')}
                           />
                         </div>
                         <div className="space-y-2">
@@ -1109,7 +1109,7 @@ export default function Profile() {
                             type="number"
                             value={editForm.graduation_year}
                             onChange={(e) => setEditForm({ ...editForm, graduation_year: e.target.value })}
-                            placeholder="e.g., 2025"
+                            placeholder={t('profile.placeholders.hsGradYear')}
                           />
                         </div>
                       </div>
@@ -1143,7 +1143,7 @@ export default function Profile() {
                           id="team_affiliation"
                           value={editForm.team_affiliation}
                           onChange={(e) => setEditForm({ ...editForm, team_affiliation: e.target.value })}
-                          placeholder="Travel team/High School/College/Pro"
+                          placeholder={t('profile.placeholders.teamAffiliation')}
                         />
                       </div>
                       
@@ -1200,7 +1200,7 @@ export default function Profile() {
                               type="number"
                               value={editForm.college_grad_year}
                               onChange={(e) => setEditForm({ ...editForm, college_grad_year: e.target.value })}
-                              placeholder="e.g., 2027"
+                              placeholder={t('profile.placeholders.collegeGradYear')}
                             />
                           </div>
                           
@@ -1263,7 +1263,7 @@ export default function Profile() {
                                 id="mlb_affiliate"
                                 value={editForm.mlb_affiliate}
                                 onChange={(e) => setEditForm({ ...editForm, mlb_affiliate: e.target.value })}
-                                placeholder={playerSport === 'softball' ? 'e.g., USSSA Pride' : 'e.g., New York Yankees'}
+                                placeholder={playerSport === 'softball' ? t('profile.placeholders.softballAffiliate') : t('profile.placeholders.mlbAffiliate')}
                               />
                             </div>
                             
@@ -1273,7 +1273,7 @@ export default function Profile() {
                                 id="independent_league"
                                 value={editForm.independent_league}
                                 onChange={(e) => setEditForm({ ...editForm, independent_league: e.target.value })}
-                                placeholder="e.g., Atlantic League"
+                                placeholder={t('profile.placeholders.independentLeague')}
                               />
                             </div>
                           </div>
@@ -1321,7 +1321,7 @@ export default function Profile() {
                           id="position"
                           value={editForm.position}
                           onChange={(e) => setEditForm({ ...editForm, position: e.target.value })}
-                          placeholder="e.g., Head Coach, Scout"
+                          placeholder={t('profile.placeholders.positionRole')}
                         />
                       </div>
                       
@@ -1331,7 +1331,7 @@ export default function Profile() {
                           id="team_affiliation"
                           value={editForm.team_affiliation}
                           onChange={(e) => setEditForm({ ...editForm, team_affiliation: e.target.value })}
-                          placeholder="Team name or organization"
+                          placeholder={t('profile.placeholders.organization')}
                         />
                       </div>
                       
@@ -1342,7 +1342,7 @@ export default function Profile() {
                           type="number"
                           value={editForm.years_affiliated}
                           onChange={(e) => setEditForm({ ...editForm, years_affiliated: e.target.value })}
-                          placeholder="Number of years"
+                          placeholder={t('profile.placeholders.yearsNumber')}
                         />
                       </div>
                     </>
@@ -1358,7 +1358,7 @@ export default function Profile() {
                       <div className="flex items-center gap-2">
                         <Instagram className="h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="Instagram username or URL"
+                          placeholder={t('profile.placeholders.instagram')}
                           value={editForm.social_instagram}
                           onChange={(e) => setEditForm({ ...editForm, social_instagram: e.target.value })}
                         />
@@ -1367,7 +1367,7 @@ export default function Profile() {
                       <div className="flex items-center gap-2">
                         <Twitter className="h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="Twitter/X username or URL"
+                          placeholder={t('profile.placeholders.twitter')}
                           value={editForm.social_twitter}
                           onChange={(e) => setEditForm({ ...editForm, social_twitter: e.target.value })}
                         />
@@ -1376,7 +1376,7 @@ export default function Profile() {
                       <div className="flex items-center gap-2">
                         <Facebook className="h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="Facebook profile URL"
+                          placeholder={t('profile.placeholders.facebook')}
                           value={editForm.social_facebook}
                           onChange={(e) => setEditForm({ ...editForm, social_facebook: e.target.value })}
                         />
@@ -1385,7 +1385,7 @@ export default function Profile() {
                       <div className="flex items-center gap-2">
                         <Linkedin className="h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="LinkedIn profile URL"
+                          placeholder={t('profile.placeholders.linkedin')}
                           value={editForm.social_linkedin}
                           onChange={(e) => setEditForm({ ...editForm, social_linkedin: e.target.value })}
                         />
@@ -1394,7 +1394,7 @@ export default function Profile() {
                       <div className="flex items-center gap-2">
                         <Youtube className="h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="YouTube channel URL"
+                          placeholder={t('profile.placeholders.youtube')}
                           value={editForm.social_youtube}
                           onChange={(e) => setEditForm({ ...editForm, social_youtube: e.target.value })}
                         />
@@ -1403,7 +1403,7 @@ export default function Profile() {
                       <div className="flex items-center gap-2">
                         <span className="text-base font-bold text-muted-foreground">TT</span>
                         <Input
-                          placeholder="TikTok username or URL"
+                          placeholder={t('profile.placeholders.tiktok')}
                           value={editForm.social_tiktok}
                           onChange={(e) => setEditForm({ ...editForm, social_tiktok: e.target.value })}
                         />
@@ -1412,7 +1412,7 @@ export default function Profile() {
                       <div className="flex items-center gap-2">
                         <Globe className="h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="Personal website URL"
+                          placeholder={t('profile.placeholders.website')}
                           value={editForm.social_website}
                           onChange={(e) => setEditForm({ ...editForm, social_website: e.target.value })}
                         />
@@ -1432,7 +1432,7 @@ export default function Profile() {
                         <div className="flex items-center gap-2">
                           <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           <Input
-                            placeholder="Website URL 2"
+                            placeholder={t('profile.placeholders.websiteUrl2')}
                             value={editForm.social_website_2}
                             onChange={(e) => setEditForm({ ...editForm, social_website_2: e.target.value })}
                           />
@@ -1442,7 +1442,7 @@ export default function Profile() {
                           <div className="flex items-center gap-2">
                             <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                             <Input
-                              placeholder="Website URL 3"
+                              placeholder={t('profile.placeholders.websiteUrl3')}
                               value={editForm.social_website_3}
                               onChange={(e) => setEditForm({ ...editForm, social_website_3: e.target.value })}
                             />
@@ -1453,7 +1453,7 @@ export default function Profile() {
                           <div className="flex items-center gap-2">
                             <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                             <Input
-                              placeholder="Website URL 4"
+                              placeholder={t('profile.placeholders.websiteUrl4')}
                               value={editForm.social_website_4}
                               onChange={(e) => setEditForm({ ...editForm, social_website_4: e.target.value })}
                             />
@@ -1464,7 +1464,7 @@ export default function Profile() {
                           <div className="flex items-center gap-2">
                             <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                             <Input
-                              placeholder="Website URL 5"
+                              placeholder={t('profile.placeholders.websiteUrl5')}
                               value={editForm.social_website_5}
                               onChange={(e) => setEditForm({ ...editForm, social_website_5: e.target.value })}
                             />
