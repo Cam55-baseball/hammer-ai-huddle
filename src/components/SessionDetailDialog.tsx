@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadOptimizedThumbnail, uploadThumbnailSizes } from '@/lib/uploadHelpers';
 import { processVideoThumbnail } from '@/lib/thumbnailHelpers';
@@ -37,6 +38,7 @@ export function SessionDetailDialog({
   onUpdate,
   isOwner,
 }: SessionDetailDialogProps) {
+  const { t } = useTranslation();
   const { isScout } = useScoutAccess();
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(session.library_title || '');
@@ -57,12 +59,12 @@ export function SessionDetailDialog({
 
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a JPG, PNG, or WebP image');
+      toast.error(t('sessionDetail.invalidImageType', 'Please upload a JPG, PNG, or WebP image'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be smaller than 5MB');
+      toast.error(t('sessionDetail.imageTooLarge', 'Image must be smaller than 5MB'));
       return;
     }
 
@@ -127,11 +129,11 @@ export function SessionDetailDialog({
 
       if (error) throw error;
 
-      toast.success('Annotation saved to player\'s library');
+      toast.success(t('sessionDetail.annotationSaved', "Annotation saved to player's library"));
       fetchAnnotations();
     } catch (error: any) {
       console.error('Error saving annotation:', error);
-      toast.error(error.message || 'Failed to save annotation');
+      toast.error(error.message || t('sessionDetail.annotationFailed', 'Failed to save annotation'));
     }
   };
 
@@ -155,11 +157,11 @@ export function SessionDetailDialog({
 
       if (error) throw error;
 
-      toast.success('Annotation saved!');
+      toast.success(t('sessionDetail.annotationSavedSelf', 'Annotation saved!'));
       fetchAnnotations();
     } catch (error: any) {
       console.error('Error saving annotation:', error);
-      toast.error(error.message || 'Failed to save annotation');
+      toast.error(error.message || t('sessionDetail.annotationFailed', 'Failed to save annotation'));
     }
   };
 
@@ -170,7 +172,7 @@ export function SessionDetailDialog({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Annotation downloaded!');
+    toast.success(t('sessionDetail.annotationDownloaded', 'Annotation downloaded!'));
   };
 
   const seekToTimestamp = (timestamp: number) => {
@@ -196,11 +198,11 @@ export function SessionDetailDialog({
 
       if (error) throw error;
 
-      toast.success(checked ? 'Shared with scouts' : 'Unshared from scouts');
+      toast.success(checked ? t('sessionDetail.sharedWithScouts') : t('sessionDetail.unsharedFromScouts', 'Unshared from scouts'));
       onUpdate();
     } catch (error: any) {
       console.error('Error toggling share:', error);
-      toast.error(error.message || 'Failed to update sharing');
+      toast.error(error.message || t('sessionDetail.updateFailed', 'Failed to update sharing'));
       // Revert on error
       setSharedWithScouts(!checked);
     }
@@ -222,11 +224,11 @@ export function SessionDetailDialog({
 
       if (error) throw error;
 
-      toast.success(checked ? 'Analysis is now public' : 'Analysis is now private');
+      toast.success(checked ? t('sessionDetail.analysisPublicNow', 'Analysis is now public') : t('sessionDetail.analysisPrivateNow', 'Analysis is now private'));
       onUpdate();
     } catch (error: any) {
       console.error('Error toggling analysis visibility:', error);
-      toast.error(error.message || 'Failed to update analysis visibility');
+      toast.error(error.message || t('sessionDetail.updateFailed', 'Failed to update analysis visibility'));
       // Revert on error
       setAnalysisPublic(!checked);
     }
@@ -239,7 +241,7 @@ export function SessionDetailDialog({
       // Get authenticated user for thumbnail upload
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
-        throw userError || new Error('You must be signed in to update sessions.');
+        throw userError || new Error(t('sessionDetail.mustBeSignedIn', 'You must be signed in to update sessions.'));
       }
 
       let thumbnailData = {
@@ -267,7 +269,7 @@ export function SessionDetailDialog({
           thumbnailData.blurhash = processed.blurhash;
         } catch (thumbnailError: any) {
           console.error('Error uploading thumbnail:', thumbnailError);
-          toast.error(`Failed to upload thumbnail: ${thumbnailError.message}`);
+          toast.error(`${t('sessionDetail.thumbnailFailed', 'Failed to upload thumbnail')}: ${thumbnailError.message}`);
         }
       }
 
@@ -299,12 +301,12 @@ export function SessionDetailDialog({
         if (thumbnailError) throw thumbnailError;
       }
 
-      toast.success('Session updated successfully');
+      toast.success(t('sessionDetail.sessionUpdated', 'Session updated successfully'));
       setIsEditing(false);
       onUpdate();
     } catch (error: any) {
       console.error('Error updating session:', error);
-      toast.error(error.message || 'Failed to update session');
+      toast.error(error.message || t('sessionDetail.updateFailed', 'Failed to update session'));
     } finally {
       setSaving(false);
     }
@@ -321,10 +323,10 @@ export function SessionDetailDialog({
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Session title..."
+                placeholder={t('sessionDetail.sessionTitlePlaceholder', 'Session title...')}
               />
             ) : (
-              session.library_title || `${session.sport} ${session.module} Session`
+              session.library_title || `${session.sport} ${session.module} ${t('sessionDetail.session')}`
             )}
           </DialogTitle>
           <DialogDescription>
@@ -338,10 +340,10 @@ export function SessionDetailDialog({
             <Badge variant="outline">{session.sport}</Badge>
             <Badge variant="outline">{session.module}</Badge>
             {session.efficiency_score !== undefined && (
-              <Badge>Efficiency: {session.efficiency_score}%</Badge>
+              <Badge>{t('sessionDetail.efficiency')}: {session.efficiency_score}%</Badge>
             )}
             {session.shared_with_scouts && (
-              <Badge variant="secondary">Shared with Scouts</Badge>
+              <Badge variant="secondary">{t('sessionDetail.sharedWithScouts')}</Badge>
             )}
           </div>
 
@@ -349,17 +351,17 @@ export function SessionDetailDialog({
 
           {/* Notes Section */}
           <div className="space-y-2">
-            <Label>Notes</Label>
+            <Label>{t('sessionDetail.notes')}</Label>
             {isEditing ? (
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add notes about this session..."
+                placeholder={t('sessionDetail.notesPlaceholder', 'Add notes about this session...')}
                 rows={3}
               />
             ) : (
               <p className="text-sm text-muted-foreground">
-                {session.library_notes || 'No notes added'}
+                {session.library_notes || t('sessionDetail.noNotes')}
               </p>
             )}
           </div>
@@ -367,16 +369,16 @@ export function SessionDetailDialog({
           {/* Thumbnail Upload in Edit Mode */}
           {isEditing && isOwner && (
             <div className="space-y-2">
-              <Label>Update Cover Image</Label>
+              <Label>{t('sessionDetail.updateCoverImage')}</Label>
               <p className="text-xs text-muted-foreground">
-                Upload a new cover image for this session
+                {t('sessionDetail.uploadNewCoverImage')}
               </p>
               
               {thumbnailPreview ? (
                 <div className="relative">
                   <img 
                     src={thumbnailPreview} 
-                    alt="New thumbnail" 
+                    alt={t('sessionDetail.newThumbnail', 'New thumbnail')}
                     className="w-full h-32 object-cover rounded-md"
                   />
                   <Button
@@ -397,7 +399,7 @@ export function SessionDetailDialog({
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload New Thumbnail
+                  {t('sessionDetail.uploadNewThumbnail')}
                 </Button>
               )}
               
@@ -415,7 +417,7 @@ export function SessionDetailDialog({
           {isOwner && (
             <>
               <div className="flex items-center justify-between">
-                <Label htmlFor="share-toggle">Share with scouts</Label>
+                <Label htmlFor="share-toggle">{t('sessionDetail.shareWithScouts')}</Label>
                 <Switch
                   id="share-toggle"
                   checked={sharedWithScouts}
@@ -425,7 +427,7 @@ export function SessionDetailDialog({
               
               {sharedWithScouts && (
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="analysis-public-toggle">Make analysis public</Label>
+                  <Label htmlFor="analysis-public-toggle">{t('sessionDetail.makeAnalysisPublic')}</Label>
                   <Switch
                     id="analysis-public-toggle"
                     checked={analysisPublic}
@@ -441,18 +443,18 @@ export function SessionDetailDialog({
           {/* AI Analysis - hide from scouts if analysis is private */}
           {aiAnalysis && (isOwner || analysisPublic) && (
             <div className="space-y-4">
-              <h3 className="font-semibold">Analysis Results</h3>
+              <h3 className="font-semibold">{t('sessionDetail.analysisResults')}</h3>
               
               {aiAnalysis.feedback && (
                 <div className="space-y-2">
-                  <Label>Feedback</Label>
+                  <Label>{t('sessionDetail.feedback')}</Label>
                   <p className="text-sm">{aiAnalysis.feedback}</p>
                 </div>
               )}
 
               {aiAnalysis.drills && aiAnalysis.drills.length > 0 && (
                 <div className="space-y-3">
-                  <Label>Recommended Drills</Label>
+                  <Label>{t('sessionDetail.recommendedDrills')}</Label>
                   <div className="space-y-4">
                     {aiAnalysis.drills.map((drill: any, index: number) => (
                       <div key={index} className="border rounded-lg p-4 space-y-3">
@@ -463,7 +465,7 @@ export function SessionDetailDialog({
                         
                         {drill.steps && drill.steps.length > 0 && (
                           <div className="space-y-1">
-                            <Label className="text-xs">Steps:</Label>
+                            <Label className="text-xs">{t('sessionDetail.steps')}</Label>
                             <ol className="list-decimal list-inside text-sm space-y-1">
                               {drill.steps.map((step: string, i: number) => (
                                 <li key={i}>{step}</li>
@@ -474,7 +476,7 @@ export function SessionDetailDialog({
                         
                         {drill.cues && drill.cues.length > 0 && (
                           <div className="space-y-1">
-                            <Label className="text-xs">Coaching Cues:</Label>
+                            <Label className="text-xs">{t('sessionDetail.coachingCues')}</Label>
                             <ul className="list-disc list-inside text-sm space-y-1">
                               {drill.cues.map((cue: string, i: number) => (
                                 <li key={i}>{cue}</li>
@@ -484,8 +486,8 @@ export function SessionDetailDialog({
                         )}
                         
                         <div className="flex gap-4 text-xs text-muted-foreground">
-                          {drill.equipment && <span>Equipment: {drill.equipment}</span>}
-                          {drill.reps_sets && <span>Reps/Sets: {drill.reps_sets}</span>}
+                          {drill.equipment && <span>{t('sessionDetail.equipment')}: {drill.equipment}</span>}
+                          {drill.reps_sets && <span>{t('sessionDetail.repsSets')}: {drill.reps_sets}</span>}
                         </div>
                       </div>
                     ))}
@@ -507,7 +509,7 @@ export function SessionDetailDialog({
           {aiAnalysis && !isOwner && !analysisPublic && (
             <div className="p-4 border rounded-lg bg-muted/30">
               <p className="text-sm text-muted-foreground text-center">
-                The player has chosen to keep the analysis private
+                {t('sessionDetail.analysisPrivate')}
               </p>
             </div>
           )}
@@ -521,7 +523,7 @@ export function SessionDetailDialog({
               {annotations.filter(a => a.annotator_type === 'scout').length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Label className="text-lg font-bold text-primary">Coach Annotations</Label>
+                    <Label className="text-lg font-bold text-primary">{t('sessionDetail.coachAnnotations')}</Label>
                     <Badge variant="secondary" className="bg-primary/10 text-primary">
                       {annotations.filter(a => a.annotator_type === 'scout').length}
                     </Badge>
@@ -538,7 +540,7 @@ export function SessionDetailDialog({
                             />
                           )}
                           <div>
-                            <p className="font-medium text-sm">{annotation.scout?.full_name || 'Coach'}</p>
+                            <p className="font-medium text-sm">{annotation.scout?.full_name || t('sessionDetail.coach', 'Coach')}</p>
                             <p className="text-xs text-muted-foreground">
                               {new Date(annotation.created_at).toLocaleDateString()}
                             </p>
@@ -546,7 +548,7 @@ export function SessionDetailDialog({
                         </div>
                         <img 
                           src={annotation.annotation_data} 
-                          alt="Annotated frame"
+                          alt={t('sessionDetail.annotatedFrame', 'Annotated frame')}
                           className="w-full rounded-md"
                         />
                         {annotation.notes && (
@@ -561,7 +563,7 @@ export function SessionDetailDialog({
                             onClick={() => downloadAnnotation(annotation)}
                           >
                             <Download className="h-4 w-4 mr-1" />
-                            Download
+                            {t('sessionDetail.download')}
                           </Button>
                           
                           {annotation.frame_timestamp !== null && (
@@ -571,7 +573,7 @@ export function SessionDetailDialog({
                               onClick={() => seekToTimestamp(annotation.frame_timestamp)}
                             >
                               <Play className="h-4 w-4 mr-1" />
-                              View at {annotation.frame_timestamp.toFixed(1)}s
+                              {t('sessionDetail.viewAt')} {annotation.frame_timestamp.toFixed(1)}s
                             </Button>
                           )}
                         </div>
@@ -585,7 +587,7 @@ export function SessionDetailDialog({
               {isOwner && annotations.filter(a => a.annotator_type === 'player').length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Label className="text-lg font-bold">My Annotations</Label>
+                    <Label className="text-lg font-bold">{t('sessionDetail.myAnnotations')}</Label>
                     <Badge variant="outline">
                       {annotations.filter(a => a.annotator_type === 'player').length}
                     </Badge>
@@ -600,7 +602,7 @@ export function SessionDetailDialog({
                         </div>
                         <img 
                           src={annotation.annotation_data} 
-                          alt="My annotated frame"
+                          alt={t('sessionDetail.myAnnotatedFrame', 'My annotated frame')}
                           className="w-full rounded-md"
                         />
                         {annotation.notes && (
@@ -615,7 +617,7 @@ export function SessionDetailDialog({
                             onClick={() => downloadAnnotation(annotation)}
                           >
                             <Download className="h-4 w-4 mr-1" />
-                            Download
+                            {t('sessionDetail.download')}
                           </Button>
                           
                           {annotation.frame_timestamp !== null && (
@@ -625,7 +627,7 @@ export function SessionDetailDialog({
                               onClick={() => seekToTimestamp(annotation.frame_timestamp)}
                             >
                               <Play className="h-4 w-4 mr-1" />
-                              View at {annotation.frame_timestamp.toFixed(1)}s
+                              {t('sessionDetail.viewAt')} {annotation.frame_timestamp.toFixed(1)}s
                             </Button>
                           )}
                         </div>
@@ -641,7 +643,7 @@ export function SessionDetailDialog({
           {/* Video Preview */}
           {session.video_url && (
             <div className="space-y-2">
-              <Label>Video</Label>
+              <Label>{t('sessionDetail.video')}</Label>
               <div className="relative">
                 <video
                   ref={mainVideoRef}
@@ -669,21 +671,21 @@ export function SessionDetailDialog({
                 {isEditing ? (
                   <>
                     <Button variant="outline" onClick={() => setIsEditing(false)} className="w-full xs:w-auto">
-                      Cancel
+                      {t('sessionDetail.cancel')}
                     </Button>
                     <Button onClick={handleSave} disabled={saving} className="w-full xs:w-auto">
-                      {saving ? 'Saving...' : 'Save Changes'}
+                      {saving ? t('sessionDetail.saving') : t('sessionDetail.saveChanges')}
                     </Button>
                   </>
                 ) : (
                   <Button onClick={() => setIsEditing(true)} className="w-full xs:w-auto">
-                    Edit Session
+                    {t('sessionDetail.editSession')}
                   </Button>
                 )}
               </>
             )}
             <Button variant="outline" onClick={onClose} className="w-full xs:w-auto">
-              Close
+              {t('sessionDetail.close')}
             </Button>
           </div>
         </div>

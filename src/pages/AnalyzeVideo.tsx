@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -22,6 +23,7 @@ import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 
 export default function AnalyzeVideo() {
+  const { t } = useTranslation();
   const { module } = useParams<{ module: string }>();
   const [searchParams] = useSearchParams();
   const sport = searchParams.get("sport") || (localStorage.getItem('selectedSport') as string) || "baseball";
@@ -103,11 +105,11 @@ export default function AnalyzeVideo() {
     
     // Check if user has access to this module
     if (!hasAccess) {
-      toast.error("You don't have access to this module. Please subscribe.");
+      toast.error(t('errors.noModuleAccess', "You don't have access to this module. Please subscribe."));
       navigate("/dashboard", { replace: true });
       return;
     }
-  }, [authLoading, subLoading, initialized, user, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate]);
+  }, [authLoading, subLoading, initialized, user, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate, t]);
 
   // Clean upload space when module or sport changes
   useEffect(() => {
@@ -121,9 +123,9 @@ export default function AnalyzeVideo() {
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
     if (module && sport) {
-      toast.info(`Switched to ${sport} - ${module}. Upload space cleared.`);
+      toast.info(t('videoAnalysis.switchedModule', `Switched to ${sport} - ${module}. Upload space cleared.`));
     }
-  }, [module, sport]);
+  }, [module, sport, t]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -146,7 +148,7 @@ export default function AnalyzeVideo() {
     setAnalysisError(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
-    toast.success("Video removed. Select a new video to analyze.");
+    toast.success(t('videoAnalysis.videoRemoved', "Video removed. Select a new video to analyze."));
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,12 +156,12 @@ export default function AnalyzeVideo() {
     if (!file) return;
 
     if (!file.type.startsWith("video/")) {
-      toast.error("Please select a valid video file");
+      toast.error(t('videoAnalysis.invalidVideoFile', "Please select a valid video file"));
       return;
     }
 
     if (file.size > 52428800) { // 50MB limit
-      toast.error("Video file size must be under 50MB");
+      toast.error(t('videoAnalysis.fileTooLarge', "Video file size must be under 50MB"));
       return;
     }
 
@@ -212,7 +214,7 @@ export default function AnalyzeVideo() {
         console.error('Error stack:', thumbnailError.stack);
         
         // Show detailed error to user
-        toast.error(`Thumbnail generation failed: ${thumbnailError.message || 'Unknown error'}`, {
+        toast.error(`${t('videoAnalysis.thumbnailFailed', 'Thumbnail generation failed')}: ${thumbnailError.message || 'Unknown error'}`, {
           duration: 5000
         });
       }
@@ -238,7 +240,7 @@ export default function AnalyzeVideo() {
       // Branch based on analysis toggle
       if (!analysisEnabled) {
         // No analysis - just upload and prompt to save to library
-        toast.success("Video uploaded successfully!");
+        toast.success(t('videoAnalysis.uploadSuccess', "Video uploaded successfully!"));
         setUploading(false);
         
         // Automatically open save to library dialog
@@ -246,7 +248,7 @@ export default function AnalyzeVideo() {
         return;
       }
 
-      toast.success("Video uploaded! Starting analysis...");
+      toast.success(t('videoAnalysis.uploadedStartingAnalysis', "Video uploaded! Starting analysis..."));
       setUploading(false);
       setAnalyzing(true);
 
@@ -268,11 +270,11 @@ export default function AnalyzeVideo() {
         setAnalysisError(analysisError);
         
         if (analysisError.message?.includes('429') || analysisData?.status === 429) {
-          toast.error("Rate limit exceeded. Please try again in a minute.");
+          toast.error(t('videoAnalysis.rateLimitError'));
         } else if (analysisError.message?.includes('402') || analysisData?.status === 402) {
-          toast.error("Payment required. Please add credits to continue.");
+          toast.error(t('videoAnalysis.paymentRequiredError'));
         } else {
-          toast.error("Analysis failed. Please try again.");
+          toast.error(t('videoAnalysis.genericAnalysisError'));
         }
         setAnalyzing(false);
         return;
@@ -280,12 +282,12 @@ export default function AnalyzeVideo() {
 
       setAnalysis(analysisData);
       setAnalysisError(null);
-      toast.success("Analysis complete!");
+      toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
       setAnalyzing(false);
     } catch (error: any) {
       console.error("Error:", error);
       setAnalysisError(error);
-      toast.error(error.message || "Failed to process video");
+      toast.error(error.message || t('videoAnalysis.processingFailed', "Failed to process video"));
       setAnalyzing(false);
     } finally {
       setUploading(false);
@@ -316,22 +318,22 @@ export default function AnalyzeVideo() {
         setAnalysisError(analysisError);
         
         if (analysisError.message?.includes('429') || analysisData?.status === 429) {
-          toast.error("Rate limit exceeded. Please try again in a minute.");
+          toast.error(t('videoAnalysis.rateLimitError'));
         } else if (analysisError.message?.includes('402') || analysisData?.status === 402) {
-          toast.error("Payment required. Please add credits to continue.");
+          toast.error(t('videoAnalysis.paymentRequiredError'));
         } else {
-          toast.error("Analysis failed. Please try again.");
+          toast.error(t('videoAnalysis.genericAnalysisError'));
         }
         return;
       }
 
       setAnalysis(analysisData);
       setAnalysisError(null);
-      toast.success("Analysis complete!");
+      toast.success(t('videoAnalysis.analysisComplete', "Analysis complete!"));
     } catch (error: any) {
       console.error("Retry error:", error);
       setAnalysisError(error);
-      toast.error(error.message || "Failed to analyze video");
+      toast.error(error.message || t('videoAnalysis.analysisFailed', "Failed to analyze video"));
     } finally {
       setAnalyzing(false);
     }
@@ -342,7 +344,7 @@ export default function AnalyzeVideo() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Verifying subscription access...</p>
+          <p className="text-muted-foreground">{t('videoAnalysis.verifyingAccess')}</p>
         </div>
       </div>
     );
@@ -353,19 +355,19 @@ export default function AnalyzeVideo() {
       <div className="space-y-4 sm:space-y-6 overflow-x-hidden max-w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold capitalize">{module} Analysis</h1>
-            <p className="text-sm sm:text-base text-muted-foreground capitalize">{sport} - {module} mechanics evaluation</p>
+            <h1 className="text-2xl sm:text-3xl font-bold capitalize">{module} {t('videoAnalysis.analysis')}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground capitalize">{sport} - {module} {t('videoAnalysis.mechanicsEvaluation', 'mechanics evaluation')}</p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
             {videoPreview && (
               <Button variant="outline" size="sm" onClick={handleRemoveVideo} className="flex-1 sm:flex-initial">
                 <Trash2 className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Delete Video</span>
+                <span className="hidden sm:inline">{t('videoAnalysis.deleteVideo')}</span>
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")} className="flex-1 sm:flex-initial">
               <ArrowLeft className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Back</span>
+              <span className="hidden sm:inline">{t('videoAnalysis.back')}</span>
             </Button>
           </div>
         </div>
@@ -377,18 +379,18 @@ export default function AnalyzeVideo() {
               <div className="p-4 sm:p-6 rounded-full bg-primary/10">
                 <Upload className="h-10 w-10 sm:h-16 sm:w-16 text-primary" />
               </div>
-              <h3 className="text-xl sm:text-2xl font-semibold">Upload Your Video</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold">{t('videoAnalysis.uploadYourVideo')}</h3>
               <p className="text-sm sm:text-base text-muted-foreground max-w-md">
-                Upload a video of your {module} technique. Our AI will analyze your mechanics and provide detailed feedback.
+                {t('videoAnalysis.uploadDescription', { module })}
               </p>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Max file size: 50MB. Supported formats: MP4, MOV, AVI, WebM
+                {t('videoAnalysis.maxFileSize')}
               </p>
               <label htmlFor="video-upload">
                 <Button asChild>
                   <span>
                     <Video className="h-4 w-4 mr-2" />
-                    Select Video
+                    {t('videoAnalysis.selectVideo')}
                   </span>
                 </Button>
               </label>
@@ -409,9 +411,9 @@ export default function AnalyzeVideo() {
             <Card className="p-6">
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
-                  <h3 className="text-base sm:text-lg font-semibold">Video Preview</h3>
+                  <h3 className="text-base sm:text-lg font-semibold">{t('videoAnalysis.videoPreview')}</h3>
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">Speed:</span>
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">{t('videoAnalysis.speed')}</span>
                     <Select value={playbackRate} onValueChange={handlePlaybackRateChange}>
                       <SelectTrigger className="w-20 sm:w-24">
                         <SelectValue />
@@ -430,7 +432,7 @@ export default function AnalyzeVideo() {
                 <div className="bg-muted/50 p-3 rounded-lg">
                   <div className="flex items-center justify-between text-sm">
                     <div>
-                      <p className="font-medium capitalize">{sport} - {module} Analysis</p>
+                      <p className="font-medium capitalize">{sport} - {module} {t('videoAnalysis.analysis')}</p>
                       {videoFile && (
                         <p className="text-muted-foreground text-xs">
                           {videoFile.name} • {(videoFile.size / 1024 / 1024).toFixed(2)} MB
@@ -444,12 +446,12 @@ export default function AnalyzeVideo() {
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
                   <div className="space-y-0.5">
                     <Label htmlFor="enable-analysis" className="text-sm font-medium">
-                      Enable AI Analysis
+                      {t('videoAnalysis.enableAIAnalysis')}
                     </Label>
                     <p className="text-xs text-muted-foreground">
                       {analysisEnabled 
-                        ? "Video will be analyzed for technique feedback and drill recommendations" 
-                        : "Video will be uploaded without analysis (saves analysis credits)"}
+                        ? t('videoAnalysis.analysisEnabledDescription')
+                        : t('videoAnalysis.analysisDisabledDescription')}
                     </p>
                   </div>
                   <Switch
@@ -474,18 +476,18 @@ export default function AnalyzeVideo() {
                 className="w-full"
               >
                 {uploading ? (
-                  "Uploading..."
+                  t('videoAnalysis.uploading')
                 ) : analysisEnabled ? (
                   <>
                     <Upload className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">Upload & Analyze Video</span>
-                    <span className="xs:hidden">Upload & Analyze</span>
+                    <span className="hidden xs:inline">{t('videoAnalysis.uploadAndAnalyze')}</span>
+                    <span className="xs:hidden">{t('videoAnalysis.uploadAndAnalyze')}</span>
                   </>
                 ) : (
                   <>
                     <BookMarked className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">Upload Video to Library</span>
-                    <span className="xs:hidden">Upload to Library</span>
+                    <span className="hidden xs:inline">{t('videoAnalysis.uploadToLibrary')}</span>
+                    <span className="xs:hidden">{t('videoAnalysis.uploadToLibrary')}</span>
                   </>
                 )}
               </Button>
@@ -500,28 +502,27 @@ export default function AnalyzeVideo() {
                       <BookMarked className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold">Video Uploaded!</h3>
+                      <h3 className="text-xl font-semibold">{t('videoAnalysis.videoUploaded')}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Your video has been uploaded without analysis
+                        {t('videoAnalysis.uploadedWithoutAnalysis')}
                       </p>
                     </div>
                   </div>
                   
                   <p className="text-muted-foreground">
-                    Your video is ready to be saved to your Players Club library. You can add a title, 
-                    notes, and choose whether to share it with scouts.
+                    {t('videoAnalysis.readyToSave')}
                   </p>
                   
                   <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
                     <Button onClick={() => setSaveDialogOpen(true)} className="w-full xs:flex-1">
                       <BookMarked className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden xs:inline">Save to Players Club</span>
-                      <span className="xs:hidden">Save to Library</span>
+                      <span className="hidden xs:inline">{t('videoAnalysis.saveToLibrary')}</span>
+                      <span className="xs:hidden">{t('videoAnalysis.saveToLibrary')}</span>
                     </Button>
                     <Button onClick={() => navigate('/dashboard')} variant="outline" className="w-full xs:flex-1">
                       <Home className="h-4 w-4 xs:hidden" />
-                      <span className="hidden xs:inline">Return to Dashboard</span>
-                      <span className="xs:hidden">Dashboard</span>
+                      <span className="hidden xs:inline">{t('videoAnalysis.returnToDashboard')}</span>
+                      <span className="xs:hidden">{t('navigation.dashboard')}</span>
                     </Button>
                   </div>
                 </div>
@@ -534,26 +535,26 @@ export default function AnalyzeVideo() {
 
             {analysisError && !analyzing && (
               <Card className="p-6 border-destructive">
-                <h3 className="text-xl font-semibold text-destructive mb-4">Analysis Failed</h3>
+                <h3 className="text-xl font-semibold text-destructive mb-4">{t('videoAnalysis.analysisFailed')}</h3>
                 <p className="text-muted-foreground mb-4">
                   {analysisError.message?.includes('429') || analysisError.status === 429
-                    ? "Rate limit exceeded. Please wait a minute and try again."
+                    ? t('videoAnalysis.rateLimitError')
                     : analysisError.message?.includes('402') || analysisError.status === 402
-                    ? "Payment required. Please add credits to your workspace to continue."
-                    : "An error occurred during analysis. Please try again."}
+                    ? t('videoAnalysis.paymentRequiredError')
+                    : t('videoAnalysis.genericAnalysisError')}
                 </p>
                 <Button onClick={handleRetryAnalysis} className="w-full">
-                  Retry Analysis
+                  {t('videoAnalysis.retryAnalysis')}
                 </Button>
               </Card>
             )}
 
             {analysis && (
               <Card className="p-4 sm:p-6">
-                <h3 className="text-2xl font-bold mb-6">Analysis Results</h3>
+                <h3 className="text-2xl font-bold mb-6">{t('videoAnalysis.analysisResults')}</h3>
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-semibold">Efficiency Score</h4>
+                    <h4 className="text-lg font-semibold">{t('videoAnalysis.efficiencyScore')}</h4>
                     <div className="text-4xl font-bold text-primary">
                       {analysis.efficiency_score}/100
                     </div>
@@ -562,7 +563,7 @@ export default function AnalyzeVideo() {
                   {/* Summary - Moved here for prominence */}
                   {analysis.summary && analysis.summary.length > 0 && (
                     <div className="p-4 bg-muted/50 rounded-lg border border-border">
-                      <h4 className="text-lg font-semibold mb-3">Key Findings</h4>
+                      <h4 className="text-lg font-semibold mb-3">{t('videoAnalysis.keyFindings')}</h4>
                       <ul className="space-y-2">
                         {analysis.summary.map((point: string, index: number) => (
                           <li 
@@ -578,7 +579,7 @@ export default function AnalyzeVideo() {
                   )}
                   
                   <div>
-                    <h4 className="text-lg font-semibold mb-3">Detailed Analysis</h4>
+                    <h4 className="text-lg font-semibold mb-3">{t('videoAnalysis.detailedAnalysis')}</h4>
                     <p className="text-muted-foreground whitespace-pre-wrap">
                       {analysis.feedback}
                     </p>
@@ -605,7 +606,7 @@ export default function AnalyzeVideo() {
                         </div>
                         <div className="flex-1">
                           <h4 className="text-lg font-semibold text-green-700 dark:text-green-300 mb-2">
-                            What You're Doing Well
+                            {t('videoAnalysis.whatYoureDoingWell')}
                           </h4>
                           <ul className="space-y-2">
                             {analysis.positives.map((positive: string, index: number) => (
@@ -625,7 +626,7 @@ export default function AnalyzeVideo() {
 
                   {analysis.drills && analysis.drills.length > 0 && (
                     <div className="pt-4 border-t">
-                      <h4 className="text-lg font-semibold mb-4">Recommended Drills</h4>
+                      <h4 className="text-lg font-semibold mb-4">{t('videoAnalysis.recommendedDrills')}</h4>
                       <div className="space-y-4">
                         {analysis.drills.map((drill: any, index: number) => (
                           <Card key={index} className="p-4 bg-muted/50">
@@ -633,7 +634,7 @@ export default function AnalyzeVideo() {
                             <p className="text-sm text-muted-foreground mb-3">{drill.purpose}</p>
                             
                             <div className="space-y-2 mb-3">
-                              <p className="text-sm font-medium">Steps:</p>
+                              <p className="text-sm font-medium">{t('videoAnalysis.steps')}</p>
                               <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
                                 {drill.steps?.map((step: string, stepIndex: number) => (
                                   <li key={stepIndex}>{step}</li>
@@ -652,7 +653,7 @@ export default function AnalyzeVideo() {
 
                             {drill.cues && drill.cues.length > 0 && (
                               <div className="mt-3 pt-3 border-t border-border/50">
-                                <p className="text-xs font-medium mb-1">Coaching Cues:</p>
+                                <p className="text-xs font-medium mb-1">{t('videoAnalysis.coachingCues')}</p>
                                 <div className="flex flex-wrap gap-1">
                                   {drill.cues.map((cue: string, cueIndex: number) => (
                                     <span key={cueIndex} className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
@@ -680,20 +681,20 @@ export default function AnalyzeVideo() {
 
                   <div className="pt-4 border-t">
                     <p className="text-xs text-muted-foreground/70 leading-relaxed">
-                      <strong>Disclaimer:</strong> {branding.appName} waives all liability for any injuries that may occur from performing training techniques demonstrated or recommended through this platform. Users assume full responsibility for their safety and should consult with qualified professionals before beginning any training program.
+                      <strong>{t('videoAnalysis.disclaimer')}</strong> {branding.appName} waives all liability for any injuries that may occur from performing training techniques demonstrated or recommended through this platform. Users assume full responsibility for their safety and should consult with qualified professionals before beginning any training program.
                     </p>
                   </div>
 
                   <div className="flex flex-col xs:flex-row gap-2 max-w-full overflow-x-hidden">
                     <Button onClick={() => setSaveDialogOpen(true)} variant="outline" className="w-full xs:flex-1">
                       <BookMarked className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden xs:inline">Save to Players Club</span>
-                      <span className="xs:hidden">Save to Library</span>
+                      <span className="hidden xs:inline">{t('videoAnalysis.saveToLibrary')}</span>
+                      <span className="xs:hidden">{t('videoAnalysis.saveToLibrary')}</span>
                     </Button>
                     <Button onClick={() => navigate('/dashboard')} className="w-full xs:flex-1">
                       <Home className="h-4 w-4 xs:hidden" />
-                      <span className="hidden xs:inline">Return to Dashboard</span>
-                      <span className="xs:hidden">Dashboard</span>
+                      <span className="hidden xs:inline">{t('videoAnalysis.returnToDashboard')}</span>
+                      <span className="xs:hidden">{t('navigation.dashboard')}</span>
                     </Button>
                   </div>
                 </div>
