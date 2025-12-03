@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { EditableCell } from "@/components/EditableCell";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface CouponUser {
   userId: string;
@@ -28,6 +29,7 @@ interface CouponUsageExtended {
 }
 
 export function CouponUsageTable() {
+  const { t } = useTranslation();
   const [coupons, setCoupons] = useState<CouponUsageExtended[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -81,7 +83,7 @@ export function CouponUsageTable() {
         coupon.usageCount++;
         coupon.users.push({
           userId: sub.user_id,
-          userName: sub.profiles?.full_name || "Unknown User",
+          userName: sub.profiles?.full_name || t('couponTable.unknownUser'),
           discountPercent: sub.discount_percent || 0,
           status: sub.status
         });
@@ -108,14 +110,14 @@ export function CouponUsageTable() {
 
     if (error) {
       toast({ 
-        title: "Error", 
+        title: t('common.error'), 
         description: error.message, 
         variant: "destructive" 
       });
     } else {
       toast({ 
-        title: "Success", 
-        description: "Coupon metadata updated" 
+        title: t('common.success'), 
+        description: t('couponTable.metadataUpdated') 
       });
       fetchCouponData();
     }
@@ -160,7 +162,7 @@ export function CouponUsageTable() {
   if (coupons.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        No active coupon usage found.
+        {t('couponTable.noCoupons')}
       </div>
     );
   }
@@ -170,12 +172,12 @@ export function CouponUsageTable() {
       <TableHeader>
         <TableRow>
           <TableHead className="w-[50px]"></TableHead>
-          <TableHead>Coupon Code</TableHead>
-          <TableHead>Custom Name</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Usage</TableHead>
-          <TableHead>Discount</TableHead>
+          <TableHead>{t('couponTable.couponCode')}</TableHead>
+          <TableHead>{t('couponTable.customName')}</TableHead>
+          <TableHead>{t('couponTable.description')}</TableHead>
+          <TableHead>{t('couponTable.type')}</TableHead>
+          <TableHead>{t('couponTable.usage')}</TableHead>
+          <TableHead>{t('couponTable.discount')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -203,14 +205,14 @@ export function CouponUsageTable() {
                 <EditableCell
                   value={coupon.customName || coupon.stripeCustomName}
                   onSave={(value) => updateMetadata(coupon.couponCode, 'custom_name', value)}
-                  placeholder="Add custom name..."
+                  placeholder={t('couponTable.addCustomName')}
                 />
               </TableCell>
               <TableCell>
                 <EditableCell
                   value={coupon.description}
                   onSave={(value) => updateMetadata(coupon.couponCode, 'description', value)}
-                  placeholder="Add description..."
+                  placeholder={t('couponTable.addDescription')}
                 />
               </TableCell>
               <TableCell>
@@ -222,16 +224,16 @@ export function CouponUsageTable() {
                     }
                   />
                   {coupon.isAmbassador && (
-                    <Badge variant="secondary">Ambassador</Badge>
+                    <Badge variant="secondary">{t('couponTable.ambassador')}</Badge>
                   )}
                 </div>
               </TableCell>
               <TableCell>
-                <Badge variant="outline">{coupon.usageCount} users</Badge>
+                <Badge variant="outline">{t('couponTable.usersCount', { count: coupon.usageCount })}</Badge>
               </TableCell>
               <TableCell>
                 <Badge variant="secondary">
-                  {coupon.users[0]?.discountPercent}% off
+                  {t('couponTable.percentOff', { percent: coupon.users[0]?.discountPercent })}
                 </Badge>
               </TableCell>
             </TableRow>
@@ -239,13 +241,13 @@ export function CouponUsageTable() {
               <TableRow>
                 <TableCell colSpan={7} className="bg-muted/30">
                   <div className="py-4 px-8">
-                    <h4 className="font-semibold mb-3">Users with this coupon:</h4>
+                    <h4 className="font-semibold mb-3">{t('couponTable.usersWithCoupon')}</h4>
                     <div className="space-y-2">
                       {coupon.users.map((user) => (
                         <div key={user.userId} className="flex items-center justify-between py-2 px-4 bg-background rounded border">
                           <span className="font-medium">{user.userName}</span>
                           <div className="flex gap-2">
-                            <Badge variant="secondary">{user.discountPercent}% off</Badge>
+                            <Badge variant="secondary">{t('couponTable.percentOff', { percent: user.discountPercent })}</Badge>
                             <Badge variant={user.status === "active" ? "default" : "secondary"}>
                               {user.status}
                             </Badge>

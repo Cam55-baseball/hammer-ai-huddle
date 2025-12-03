@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2, UserX } from "lucide-react";
 import { CancelSubscriptionDialog } from "./CancelSubscriptionDialog";
 import { DeleteUserDialog } from "./DeleteUserDialog";
+import { useTranslation } from "react-i18next";
 
 interface ModuleMapping {
   [key: string]: {
@@ -39,6 +40,7 @@ export function SubscriberManagementTable({
   onRefresh,
   sportFilter 
 }: SubscriberManagementTableProps) {
+  const { t } = useTranslation();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Subscriber | null>(null);
@@ -73,7 +75,7 @@ export function SubscriberManagementTable({
           </div>
           {renewalDate && (
             <span className="text-xs text-muted-foreground">
-              Renews: {renewalDate}
+              {t('subscriberTable.renews', { date: renewalDate })}
             </span>
           )}
         </div>
@@ -87,7 +89,7 @@ export function SubscriberManagementTable({
       .filter((date): date is string => date !== null)
       .map(date => new Date(date).getTime());
     
-    if (dates.length === 0) return "No renewal";
+    if (dates.length === 0) return t('subscriberTable.noRenewal');
     
     const earliest = Math.min(...dates);
     return new Date(earliest).toLocaleDateString();
@@ -99,14 +101,14 @@ export function SubscriberManagementTable({
     );
 
     if (hasPendingCancellation) {
-      return <Badge variant="destructive">Canceling</Badge>;
+      return <Badge variant="destructive">{t('subscriberTable.canceling')}</Badge>;
     }
 
     switch (status) {
       case "active":
-        return <Badge variant="default" className="bg-green-500">Active</Badge>;
+        return <Badge variant="default" className="bg-green-500">{t('subscriberTable.active')}</Badge>;
       case "canceled":
-        return <Badge variant="secondary">Canceled</Badge>;
+        return <Badge variant="secondary">{t('subscriberTable.canceled')}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -133,7 +135,7 @@ export function SubscriberManagementTable({
   if (filteredSubscribers.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        No subscribers found
+        {t('subscriberTable.noSubscribers')}
       </div>
     );
   }
@@ -144,12 +146,12 @@ export function SubscriberManagementTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Active Modules</TableHead>
-              <TableHead>Next Renewal</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('subscriberTable.name')}</TableHead>
+              <TableHead>{t('subscriberTable.email')}</TableHead>
+              <TableHead>{t('subscriberTable.activeModules')}</TableHead>
+              <TableHead>{t('subscriberTable.nextRenewal')}</TableHead>
+              <TableHead>{t('subscriberTable.status')}</TableHead>
+              <TableHead className="text-right">{t('subscriberTable.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -163,7 +165,7 @@ export function SubscriberManagementTable({
                       {getModuleDisplay(subscriber.subscribed_modules, subscriber.module_subscription_mapping)}
                     </div>
                   ) : (
-                    <span className="text-muted-foreground text-sm">No modules</span>
+                    <span className="text-muted-foreground text-sm">{t('subscriberTable.noModules')}</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -183,7 +185,7 @@ export function SubscriberManagementTable({
                       disabled={subscriber.status !== "active"}
                     >
                       <UserX className="h-4 w-4 mr-1" />
-                      Cancel
+                      {t('subscriberTable.cancel')}
                     </Button>
                     <Button
                       variant="destructive"
@@ -191,7 +193,7 @@ export function SubscriberManagementTable({
                       onClick={() => handleDeleteClick(subscriber)}
                     >
                       <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
+                      {t('subscriberTable.delete')}
                     </Button>
                   </div>
                 </TableCell>

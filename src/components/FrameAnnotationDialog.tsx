@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AnnotationToolbar } from "./AnnotationToolbar";
 import { ZoomIn } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface FrameAnnotationDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ export const FrameAnnotationDialog = ({
   frameDataUrl,
   onSave,
 }: FrameAnnotationDialogProps) => {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
@@ -290,7 +292,7 @@ export const FrameAnnotationDialog = ({
     
     const activeObjects = fabricCanvas.getActiveObjects();
     if (activeObjects.length === 0) {
-      toast.info("Select an object to delete");
+      toast.info(t('annotation.selectToDelete'));
       return;
     }
     
@@ -305,7 +307,7 @@ export const FrameAnnotationDialog = ({
     fabricCanvas.discardActiveObject();
     fabricCanvas.renderAll();
     saveHistory(fabricCanvas);
-    toast.success("Object(s) deleted");
+    toast.success(t('annotation.deleted'));
   };
 
   // Keyboard delete handler
@@ -425,7 +427,7 @@ export const FrameAnnotationDialog = ({
     fabricCanvas.add(text);
     fabricCanvas.setActiveObject(text);
     saveHistory(fabricCanvas);
-    toast.success(`Added "${label}" label`);
+    toast.success(t('annotation.labelAdded', { label }));
   };
 
   const handleClear = () => {
@@ -438,7 +440,7 @@ export const FrameAnnotationDialog = ({
     });
     fabricCanvas.renderAll();
     saveHistory(fabricCanvas);
-    toast.info("Canvas cleared");
+    toast.info(t('annotation.canvasCleared'));
   };
 
   const handleSave = () => {
@@ -453,7 +455,7 @@ export const FrameAnnotationDialog = ({
     
     onSave(annotatedFrame);
     onOpenChange(false);
-    toast.success("Annotations saved!");
+    toast.success(t('annotation.annotationsSaved'));
   };
 
   const handleZoomIn = () => {
@@ -661,7 +663,7 @@ export const FrameAnnotationDialog = ({
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-sm text-muted-foreground">Loading frame...</p>
+                  <p className="text-sm text-muted-foreground">{t('annotation.loadingFrame')}</p>
                 </div>
               </div>
             )}
@@ -699,7 +701,7 @@ export const FrameAnnotationDialog = ({
                 className="absolute bottom-0 left-0 right-0 p-3 bg-background border-t text-base z-50"
                 style={{ fontSize: '16px' }}
                 autoFocus
-                placeholder="Enter text..."
+                placeholder={t('annotation.enterText')}
               />
             )}
           </div>
@@ -707,10 +709,10 @@ export const FrameAnnotationDialog = ({
 
       <DialogFooter className="flex-col sm:flex-row gap-2">
         <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button onClick={handleSave} className="w-full sm:w-auto">
-          Save Annotations
+          {t('annotation.saveAnnotations')}
         </Button>
       </DialogFooter>
       </DialogContent>

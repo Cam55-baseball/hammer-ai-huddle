@@ -1361,5 +1361,107 @@
         "content5": "La santé mentale est aussi importante que la santé physique"
       }
     }
+  },
+  "annotation": {
+    "title": "Annoter le Cadre",
+    "saveAnnotations": "Enregistrer les Annotations",
+    "selectToDelete": "Sélectionnez un objet à supprimer",
+    "deleted": "Objet(s) supprimé(s)",
+    "labelAdded": "Étiquette \"{{label}}\" ajoutée",
+    "canvasCleared": "Canevas effacé",
+    "annotationsSaved": "Annotations enregistrées !",
+    "loadingFrame": "Chargement du cadre...",
+    "enterText": "Entrez le texte...",
+    "defaultLabel": "Étiquette",
+    "tools": {
+      "select": "Sélectionner",
+      "deleteSelected": "Supprimer l'Objet Sélectionné",
+      "addText": "Ajouter du Texte",
+      "rectangle": "Rectangle",
+      "circle": "Cercle",
+      "arrow": "Flèche",
+      "selectColor": "Sélectionner la Couleur",
+      "presetLabels": "Étiquettes Prédéfinies",
+      "undo": "Annuler",
+      "redo": "Rétablir",
+      "pan": "Déplacer (glisser pour se déplacer avec le zoom)",
+      "zoomOut": "Dézoomer",
+      "zoomIn": "Zoomer",
+      "resetZoom": "Réinitialiser le Zoom",
+      "clearAll": "Effacer Toutes les Annotations"
+    },
+    "presets": {
+      "backElbow": "Coude Arrière",
+      "frontShoulder": "Épaule Avant",
+      "hipRotation": "Rotation de la Hanche",
+      "contactPoint": "Point de Contact",
+      "headPosition": "Position de la Tête",
+      "releasePoint": "Point de Lâcher",
+      "followThrough": "Suivi",
+      "armAngle": "Angle du Bras",
+      "strideLength": "Longueur de Foulée"
+    },
+    "colors": {
+      "red": "Rouge",
+      "blue": "Bleu",
+      "green": "Vert",
+      "yellow": "Jaune",
+      "orange": "Orange",
+      "purple": "Violet",
+      "white": "Blanc",
+      "black": "Noir"
+    }
+  },
+  "scoutProfile": {
+    "title": "Profil Scout/Entraîneur",
+    "defaultName": "Scout",
+    "about": "À propos",
+    "experienceCredentials": "Expérience & Qualifications",
+    "teamAffiliation": "Affiliation d'Équipe",
+    "yearsAffiliated": "Années d'Affiliation",
+    "socialLinks": "Liens Sociaux",
+    "social": {
+      "instagram": "Instagram",
+      "twitter": "Twitter",
+      "facebook": "Facebook",
+      "linkedin": "LinkedIn",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "website": "Site Web"
+    }
+  },
+  "subscriberTable": {
+    "name": "Nom",
+    "email": "Email",
+    "activeModules": "Modules Actifs",
+    "nextRenewal": "Prochain Renouvellement",
+    "status": "Statut",
+    "actions": "Actions",
+    "renews": "Renouvelle: {{date}}",
+    "noRenewal": "Pas de renouvellement",
+    "canceling": "Annulation en cours",
+    "active": "Actif",
+    "canceled": "Annulé",
+    "noSubscribers": "Aucun abonné trouvé",
+    "noModules": "Aucun module",
+    "cancel": "Annuler",
+    "delete": "Supprimer"
+  },
+  "couponTable": {
+    "couponCode": "Code Coupon",
+    "customName": "Nom Personnalisé",
+    "description": "Description",
+    "type": "Type",
+    "usage": "Utilisation",
+    "discount": "Réduction",
+    "noCoupons": "Aucune utilisation de coupon active trouvée.",
+    "unknownUser": "Utilisateur Inconnu",
+    "ambassador": "Ambassadeur",
+    "usersCount": "{{count}} utilisateurs",
+    "percentOff": "{{percent}}% de réduction",
+    "usersWithCoupon": "Utilisateurs avec ce coupon :",
+    "addCustomName": "Ajouter un nom personnalisé...",
+    "addDescription": "Ajouter une description...",
+    "metadataUpdated": "Métadonnées du coupon mises à jour"
   }
 }
