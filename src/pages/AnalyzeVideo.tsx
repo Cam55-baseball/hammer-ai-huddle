@@ -71,6 +71,14 @@ export default function AnalyzeVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [analysisEnabled, setAnalysisEnabled] = useState(true);
+  const [showScorecard, setShowScorecard] = useState<boolean>(() => {
+    return localStorage.getItem('showProgressReport') !== 'false';
+  });
+
+  const handleScorecardToggle = (checked: boolean) => {
+    setShowScorecard(checked);
+    localStorage.setItem('showProgressReport', String(checked));
+  };
 
   // Force fresh subscription check on page load
   useEffect(() => {
@@ -671,11 +679,29 @@ export default function AnalyzeVideo() {
 
                   {/* The Scorecard - Progress Report */}
                   {analysis.scorecard && (
-                    <div className="pt-4 border-t">
-                      <TheScorecard 
-                        scorecard={analysis.scorecard} 
-                        currentScore={analysis.efficiency_score} 
-                      />
+                    <div className="pt-4 border-t space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="show-scorecard" className="text-sm font-medium">
+                            {t('videoAnalysis.showProgressReport')}
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            {t('videoAnalysis.progressReportDescription')}
+                          </p>
+                        </div>
+                        <Switch
+                          id="show-scorecard"
+                          checked={showScorecard}
+                          onCheckedChange={handleScorecardToggle}
+                        />
+                      </div>
+                      
+                      {showScorecard && (
+                        <TheScorecard 
+                          scorecard={analysis.scorecard} 
+                          currentScore={analysis.efficiency_score} 
+                        />
+                      )}
                     </div>
                   )}
 

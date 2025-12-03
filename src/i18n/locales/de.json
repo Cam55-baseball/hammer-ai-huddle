@@ -695,7 +695,9 @@
     "loopSection": "Abschnitt wiederholen",
     "videoRemoved": "Video entfernt. Wählen Sie ein neues Video zur Analyse.",
     "switchedContext": "Zu {{sport}} - {{module}} gewechselt. Upload-Bereich geleert.",
-    "noAccessError": "Sie haben keinen Zugang zu diesem Modul. Bitte abonnieren Sie."
+    "noAccessError": "Sie haben keinen Zugang zu diesem Modul. Bitte abonnieren Sie.",
+    "showProgressReport": "Fortschrittsbericht anzeigen",
+    "progressReportDescription": "Zeigen Sie Ihre Verbesserungstrends und Scorecard an"
   },
   "sessionDetail": {
     "session": "Sitzung",
@@ -714,6 +716,7 @@
     "equipment": "Ausrüstung",
     "repsSets": "Wdh./Sätze",
     "analysisPrivate": "Der Spieler hat die Analyse privat gehalten",
+    "showProgressReport": "Fortschrittsbericht anzeigen",
     "coachAnnotations": "Trainer-Annotationen",
     "myAnnotations": "Meine Annotationen",
     "annotations": "Annotationen",

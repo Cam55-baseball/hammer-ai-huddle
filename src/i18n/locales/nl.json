@@ -695,7 +695,9 @@
     "loopSection": "Sectie Herhalen",
     "videoRemoved": "Video verwijderd. Selecteer een nieuwe video om te analyseren.",
     "switchedContext": "Overgeschakeld naar {{sport}} - {{module}}. Uploadruimte gewist.",
-    "noAccessError": "U heeft geen toegang tot deze module. Abonneer alstublieft."
+    "noAccessError": "U heeft geen toegang tot deze module. Abonneer alstublieft.",
+    "showProgressReport": "Voortgangsrapport tonen",
+    "progressReportDescription": "Toon uw verbeteringstrends en scorekaart"
   },
   "sessionDetail": {
     "session": "Sessie",
@@ -714,6 +716,7 @@
     "equipment": "Apparatuur",
     "repsSets": "Herh./Sets",
     "analysisPrivate": "De speler heeft ervoor gekozen de analyse privé te houden",
+    "showProgressReport": "Voortgangsrapport tonen",
     "coachAnnotations": "Coach Annotaties",
     "myAnnotations": "Mijn Annotaties",
     "annotations": "annotaties",
