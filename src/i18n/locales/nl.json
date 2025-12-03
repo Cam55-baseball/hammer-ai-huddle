@@ -1361,5 +1361,107 @@
         "content5": "Mentale gezondheid is net zo belangrijk als fysieke gezondheid"
       }
     }
+  },
+  "annotation": {
+    "title": "Frame Annoteren",
+    "saveAnnotations": "Annotaties Opslaan",
+    "selectToDelete": "Selecteer een object om te verwijderen",
+    "deleted": "Object(en) verwijderd",
+    "labelAdded": "Label \"{{label}}\" toegevoegd",
+    "canvasCleared": "Canvas gewist",
+    "annotationsSaved": "Annotaties opgeslagen!",
+    "loadingFrame": "Frame laden...",
+    "enterText": "Tekst invoeren...",
+    "defaultLabel": "Label",
+    "tools": {
+      "select": "Selecteren",
+      "deleteSelected": "Geselecteerd Object Verwijderen",
+      "addText": "Tekst Toevoegen",
+      "rectangle": "Rechthoek",
+      "circle": "Cirkel",
+      "arrow": "Pijl",
+      "selectColor": "Kleur Selecteren",
+      "presetLabels": "Vooringestelde Labels",
+      "undo": "Ongedaan maken",
+      "redo": "Opnieuw",
+      "pan": "Pannen (sleep om te bewegen bij zoom)",
+      "zoomOut": "Uitzoomen",
+      "zoomIn": "Inzoomen",
+      "resetZoom": "Zoom Resetten",
+      "clearAll": "Alle Annotaties Wissen"
+    },
+    "presets": {
+      "backElbow": "Achter Elleboog",
+      "frontShoulder": "Voor Schouder",
+      "hipRotation": "Heup Rotatie",
+      "contactPoint": "Contactpunt",
+      "headPosition": "Hoofd Positie",
+      "releasePoint": "Loslaat Punt",
+      "followThrough": "Doorslag",
+      "armAngle": "Arm Hoek",
+      "strideLength": "Pas Lengte"
+    },
+    "colors": {
+      "red": "Rood",
+      "blue": "Blauw",
+      "green": "Groen",
+      "yellow": "Geel",
+      "orange": "Oranje",
+      "purple": "Paars",
+      "white": "Wit",
+      "black": "Zwart"
+    }
+  },
+  "scoutProfile": {
+    "title": "Scout/Coach Profiel",
+    "defaultName": "Scout",
+    "about": "Over",
+    "experienceCredentials": "Ervaring & Kwalificaties",
+    "teamAffiliation": "Team Affiliatie",
+    "yearsAffiliated": "Jaren Geaffilieerd",
+    "socialLinks": "Sociale Links",
+    "social": {
+      "instagram": "Instagram",
+      "twitter": "Twitter",
+      "facebook": "Facebook",
+      "linkedin": "LinkedIn",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "website": "Website"
+    }
+  },
+  "subscriberTable": {
+    "name": "Naam",
+    "email": "E-mail",
+    "activeModules": "Actieve Modules",
+    "nextRenewal": "Volgende Verlenging",
+    "status": "Status",
+    "actions": "Acties",
+    "renews": "Verlengt: {{date}}",
+    "noRenewal": "Geen verlenging",
+    "canceling": "Wordt geannuleerd",
+    "active": "Actief",
+    "canceled": "Geannuleerd",
+    "noSubscribers": "Geen abonnees gevonden",
+    "noModules": "Geen modules",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen"
+  },
+  "couponTable": {
+    "couponCode": "Couponcode",
+    "customName": "Aangepaste Naam",
+    "description": "Beschrijving",
+    "type": "Type",
+    "usage": "Gebruik",
+    "discount": "Korting",
+    "noCoupons": "Geen actief coupongebruik gevonden.",
+    "unknownUser": "Onbekende Gebruiker",
+    "ambassador": "Ambassadeur",
+    "usersCount": "{{count}} gebruikers",
+    "percentOff": "{{percent}}% korting",
+    "usersWithCoupon": "Gebruikers met deze coupon:",
+    "addCustomName": "Aangepaste naam toevoegen...",
+    "addDescription": "Beschrijving toevoegen...",
+    "metadataUpdated": "Coupon metadata bijgewerkt"
   }
 }

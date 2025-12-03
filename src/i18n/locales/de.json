@@ -1361,5 +1361,107 @@
         "content5": "Geistige Gesundheit ist genauso wichtig wie körperliche Gesundheit"
       }
     }
+  },
+  "annotation": {
+    "title": "Rahmen Annotieren",
+    "saveAnnotations": "Annotationen Speichern",
+    "selectToDelete": "Wählen Sie ein Objekt zum Löschen",
+    "deleted": "Objekt(e) gelöscht",
+    "labelAdded": "Etikett \"{{label}}\" hinzugefügt",
+    "canvasCleared": "Leinwand gelöscht",
+    "annotationsSaved": "Annotationen gespeichert!",
+    "loadingFrame": "Rahmen wird geladen...",
+    "enterText": "Text eingeben...",
+    "defaultLabel": "Etikett",
+    "tools": {
+      "select": "Auswählen",
+      "deleteSelected": "Ausgewähltes Objekt Löschen",
+      "addText": "Text Hinzufügen",
+      "rectangle": "Rechteck",
+      "circle": "Kreis",
+      "arrow": "Pfeil",
+      "selectColor": "Farbe Wählen",
+      "presetLabels": "Vordefinierte Etiketten",
+      "undo": "Rückgängig",
+      "redo": "Wiederholen",
+      "pan": "Schwenken (ziehen zum Bewegen bei Zoom)",
+      "zoomOut": "Herauszoomen",
+      "zoomIn": "Hineinzoomen",
+      "resetZoom": "Zoom Zurücksetzen",
+      "clearAll": "Alle Annotationen Löschen"
+    },
+    "presets": {
+      "backElbow": "Hinterer Ellbogen",
+      "frontShoulder": "Vordere Schulter",
+      "hipRotation": "Hüftrotation",
+      "contactPoint": "Kontaktpunkt",
+      "headPosition": "Kopfposition",
+      "releasePoint": "Abwurfpunkt",
+      "followThrough": "Durchschwung",
+      "armAngle": "Armwinkel",
+      "strideLength": "Schrittlänge"
+    },
+    "colors": {
+      "red": "Rot",
+      "blue": "Blau",
+      "green": "Grün",
+      "yellow": "Gelb",
+      "orange": "Orange",
+      "purple": "Lila",
+      "white": "Weiß",
+      "black": "Schwarz"
+    }
+  },
+  "scoutProfile": {
+    "title": "Scout/Trainer Profil",
+    "defaultName": "Scout",
+    "about": "Über",
+    "experienceCredentials": "Erfahrung & Qualifikationen",
+    "teamAffiliation": "Teamzugehörigkeit",
+    "yearsAffiliated": "Jahre Zugehörig",
+    "socialLinks": "Soziale Links",
+    "social": {
+      "instagram": "Instagram",
+      "twitter": "Twitter",
+      "facebook": "Facebook",
+      "linkedin": "LinkedIn",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "website": "Webseite"
+    }
+  },
+  "subscriberTable": {
+    "name": "Name",
+    "email": "E-Mail",
+    "activeModules": "Aktive Module",
+    "nextRenewal": "Nächste Verlängerung",
+    "status": "Status",
+    "actions": "Aktionen",
+    "renews": "Verlängert: {{date}}",
+    "noRenewal": "Keine Verlängerung",
+    "canceling": "Wird gekündigt",
+    "active": "Aktiv",
+    "canceled": "Gekündigt",
+    "noSubscribers": "Keine Abonnenten gefunden",
+    "noModules": "Keine Module",
+    "cancel": "Kündigen",
+    "delete": "Löschen"
+  },
+  "couponTable": {
+    "couponCode": "Gutscheincode",
+    "customName": "Benutzerdefinierter Name",
+    "description": "Beschreibung",
+    "type": "Typ",
+    "usage": "Nutzung",
+    "discount": "Rabatt",
+    "noCoupons": "Keine aktive Gutscheinnutzung gefunden.",
+    "unknownUser": "Unbekannter Benutzer",
+    "ambassador": "Botschafter",
+    "usersCount": "{{count}} Benutzer",
+    "percentOff": "{{percent}}% Rabatt",
+    "usersWithCoupon": "Benutzer mit diesem Gutschein:",
+    "addCustomName": "Benutzerdefinierten Namen hinzufügen...",
+    "addDescription": "Beschreibung hinzufügen...",
+    "metadataUpdated": "Gutschein-Metadaten aktualisiert"
   }
 }

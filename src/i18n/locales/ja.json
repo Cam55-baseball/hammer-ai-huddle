@@ -1332,5 +1332,107 @@
         "content5": "メンタルヘルスは身体的健康と同じくらい重要です"
       }
     }
+  },
+  "annotation": {
+    "title": "フレームに注釈を付ける",
+    "saveAnnotations": "注釈を保存",
+    "selectToDelete": "削除するオブジェクトを選択してください",
+    "deleted": "オブジェクトが削除されました",
+    "labelAdded": "「{{label}}」ラベルが追加されました",
+    "canvasCleared": "キャンバスがクリアされました",
+    "annotationsSaved": "注釈が保存されました！",
+    "loadingFrame": "フレームを読み込み中...",
+    "enterText": "テキストを入力...",
+    "defaultLabel": "ラベル",
+    "tools": {
+      "select": "選択",
+      "deleteSelected": "選択したオブジェクトを削除",
+      "addText": "テキストを追加",
+      "rectangle": "長方形",
+      "circle": "円",
+      "arrow": "矢印",
+      "selectColor": "色を選択",
+      "presetLabels": "プリセットラベル",
+      "undo": "元に戻す",
+      "redo": "やり直し",
+      "pan": "パン（ズーム時にドラッグして移動）",
+      "zoomOut": "縮小",
+      "zoomIn": "拡大",
+      "resetZoom": "ズームをリセット",
+      "clearAll": "すべての注釈をクリア"
+    },
+    "presets": {
+      "backElbow": "後ろ肘",
+      "frontShoulder": "前肩",
+      "hipRotation": "腰の回転",
+      "contactPoint": "コンタクトポイント",
+      "headPosition": "頭の位置",
+      "releasePoint": "リリースポイント",
+      "followThrough": "フォロースルー",
+      "armAngle": "腕の角度",
+      "strideLength": "ストライド長"
+    },
+    "colors": {
+      "red": "赤",
+      "blue": "青",
+      "green": "緑",
+      "yellow": "黄色",
+      "orange": "オレンジ",
+      "purple": "紫",
+      "white": "白",
+      "black": "黒"
+    }
+  },
+  "scoutProfile": {
+    "title": "スカウト/コーチプロフィール",
+    "defaultName": "スカウト",
+    "about": "概要",
+    "experienceCredentials": "経験と資格",
+    "teamAffiliation": "チーム所属",
+    "yearsAffiliated": "所属年数",
+    "socialLinks": "ソーシャルリンク",
+    "social": {
+      "instagram": "Instagram",
+      "twitter": "Twitter",
+      "facebook": "Facebook",
+      "linkedin": "LinkedIn",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "website": "ウェブサイト"
+    }
+  },
+  "subscriberTable": {
+    "name": "名前",
+    "email": "メール",
+    "activeModules": "アクティブモジュール",
+    "nextRenewal": "次回更新",
+    "status": "ステータス",
+    "actions": "アクション",
+    "renews": "更新: {{date}}",
+    "noRenewal": "更新なし",
+    "canceling": "キャンセル中",
+    "active": "アクティブ",
+    "canceled": "キャンセル済み",
+    "noSubscribers": "登録者が見つかりません",
+    "noModules": "モジュールなし",
+    "cancel": "キャンセル",
+    "delete": "削除"
+  },
+  "couponTable": {
+    "couponCode": "クーポンコード",
+    "customName": "カスタム名",
+    "description": "説明",
+    "type": "タイプ",
+    "usage": "使用状況",
+    "discount": "割引",
+    "noCoupons": "アクティブなクーポン使用が見つかりません。",
+    "unknownUser": "不明なユーザー",
+    "ambassador": "アンバサダー",
+    "usersCount": "{{count}}ユーザー",
+    "percentOff": "{{percent}}%オフ",
+    "usersWithCoupon": "このクーポンを持つユーザー:",
+    "addCustomName": "カスタム名を追加...",
+    "addDescription": "説明を追加...",
+    "metadataUpdated": "クーポンメタデータが更新されました"
   }
 }

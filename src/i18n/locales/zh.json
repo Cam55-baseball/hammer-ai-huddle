@@ -1332,5 +1332,107 @@
         "content5": "心理健康与身体健康同样重要"
       }
     }
+  },
+  "annotation": {
+    "title": "标注帧",
+    "saveAnnotations": "保存标注",
+    "selectToDelete": "选择要删除的对象",
+    "deleted": "对象已删除",
+    "labelAdded": "已添加\"{{label}}\"标签",
+    "canvasCleared": "画布已清除",
+    "annotationsSaved": "标注已保存！",
+    "loadingFrame": "加载帧中...",
+    "enterText": "输入文字...",
+    "defaultLabel": "标签",
+    "tools": {
+      "select": "选择",
+      "deleteSelected": "删除选中对象",
+      "addText": "添加文字",
+      "rectangle": "矩形",
+      "circle": "圆形",
+      "arrow": "箭头",
+      "selectColor": "选择颜色",
+      "presetLabels": "预设标签",
+      "undo": "撤销",
+      "redo": "重做",
+      "pan": "平移（缩放时拖动移动）",
+      "zoomOut": "缩小",
+      "zoomIn": "放大",
+      "resetZoom": "重置缩放",
+      "clearAll": "清除所有标注"
+    },
+    "presets": {
+      "backElbow": "后肘",
+      "frontShoulder": "前肩",
+      "hipRotation": "髋部旋转",
+      "contactPoint": "接触点",
+      "headPosition": "头部位置",
+      "releasePoint": "释放点",
+      "followThrough": "随挥",
+      "armAngle": "手臂角度",
+      "strideLength": "步幅长度"
+    },
+    "colors": {
+      "red": "红色",
+      "blue": "蓝色",
+      "green": "绿色",
+      "yellow": "黄色",
+      "orange": "橙色",
+      "purple": "紫色",
+      "white": "白色",
+      "black": "黑色"
+    }
+  },
+  "scoutProfile": {
+    "title": "球探/教练资料",
+    "defaultName": "球探",
+    "about": "关于",
+    "experienceCredentials": "经验与资质",
+    "teamAffiliation": "球队隶属",
+    "yearsAffiliated": "隶属年限",
+    "socialLinks": "社交链接",
+    "social": {
+      "instagram": "Instagram",
+      "twitter": "Twitter",
+      "facebook": "Facebook",
+      "linkedin": "领英",
+      "youtube": "YouTube",
+      "tiktok": "抖音",
+      "website": "网站"
+    }
+  },
+  "subscriberTable": {
+    "name": "姓名",
+    "email": "邮箱",
+    "activeModules": "活跃模块",
+    "nextRenewal": "下次续订",
+    "status": "状态",
+    "actions": "操作",
+    "renews": "续订: {{date}}",
+    "noRenewal": "无续订",
+    "canceling": "取消中",
+    "active": "活跃",
+    "canceled": "已取消",
+    "noSubscribers": "未找到订阅者",
+    "noModules": "无模块",
+    "cancel": "取消",
+    "delete": "删除"
+  },
+  "couponTable": {
+    "couponCode": "优惠码",
+    "customName": "自定义名称",
+    "description": "描述",
+    "type": "类型",
+    "usage": "使用情况",
+    "discount": "折扣",
+    "noCoupons": "未找到活跃的优惠码使用记录。",
+    "unknownUser": "未知用户",
+    "ambassador": "大使",
+    "usersCount": "{{count}}位用户",
+    "percentOff": "{{percent}}%折扣",
+    "usersWithCoupon": "使用此优惠码的用户:",
+    "addCustomName": "添加自定义名称...",
+    "addDescription": "添加描述...",
+    "metadataUpdated": "优惠码元数据已更新"
   }
 }
