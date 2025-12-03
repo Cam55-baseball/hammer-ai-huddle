@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
@@ -14,33 +15,35 @@ export function RankingsFilters({
   onSportChange,
   onModuleChange,
 }: RankingsFiltersProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-wrap gap-4 rounded-lg border border-border bg-card p-4">
       <div className="flex-1 min-w-[200px]">
-        <Label htmlFor="sport-filter">Sport</Label>
+        <Label htmlFor="sport-filter">{t('rankings.sport')}</Label>
         <Select value={selectedSport} onValueChange={onSportChange}>
           <SelectTrigger id="sport-filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Sports</SelectItem>
-            <SelectItem value="baseball">Baseball</SelectItem>
-            <SelectItem value="softball">Softball</SelectItem>
+            <SelectItem value="all">{t('rankings.allSports')}</SelectItem>
+            <SelectItem value="baseball">{t('dashboard.baseball')}</SelectItem>
+            <SelectItem value="softball">{t('dashboard.softball')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="flex-1 min-w-[200px]">
-        <Label htmlFor="module-filter">Module</Label>
+        <Label htmlFor="module-filter">{t('rankings.module')}</Label>
         <Select value={selectedModule} onValueChange={onModuleChange}>
           <SelectTrigger id="module-filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Modules</SelectItem>
-            <SelectItem value="hitting">Hitting</SelectItem>
-            <SelectItem value="pitching">Pitching</SelectItem>
-            <SelectItem value="throwing">Throwing</SelectItem>
+            <SelectItem value="all">{t('rankings.allModules')}</SelectItem>
+            <SelectItem value="hitting">{t('dashboard.hitting')}</SelectItem>
+            <SelectItem value="pitching">{t('dashboard.pitching')}</SelectItem>
+            <SelectItem value="throwing">{t('dashboard.throwing')}</SelectItem>
           </SelectContent>
         </Select>
       </div>

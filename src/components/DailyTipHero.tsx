@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Lightbulb, RefreshCw, Sparkles, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,6 +32,7 @@ interface TipData {
 }
 
 export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
+  const { t } = useTranslation();
   const [tip, setTip] = useState<TipData | null>(null);
   const [categoryName, setCategoryName] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -54,7 +56,7 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
       // Handle limit reached state
       if (data?.limitReached) {
         setLimitReached(true);
-        setLimitMessage(data.limitMessage || "You've reached your daily tip limit.");
+        setLimitMessage(data.limitMessage || t('nutrition.dailyLimitMessage'));
         setDailyTipsRemaining(0);
         setViewedPercentage(data.viewedPercentage || 0);
       } else if (data?.tip) {
@@ -113,9 +115,9 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-2">
-                <h3 className="font-semibold text-foreground text-sm sm:text-base">Daily Limit Reached</h3>
+                <h3 className="font-semibold text-foreground text-sm sm:text-base">{t('nutrition.dailyLimitReached')}</h3>
                 <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                  0 tips remaining
+                  {t('nutrition.noTipsRemaining')}
                 </Badge>
               </div>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed break-words">
@@ -123,7 +125,7 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
               </p>
               <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
                 <span className="text-xs text-muted-foreground">
-                  {viewedPercentage}% of tips explored
+                  {t('nutrition.percentExplored', { percent: viewedPercentage })}
                 </span>
                 <Button 
                   variant="ghost" 
@@ -132,7 +134,7 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
                   className="gap-1 h-7 px-2 opacity-50"
                 >
                   <RefreshCw className="h-3 w-3" />
-                  <span className="hidden xs:inline">New Tip</span>
+                  <span className="hidden xs:inline">{t('nutrition.newTip')}</span>
                 </Button>
               </div>
             </div>
@@ -154,7 +156,7 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <h3 className="font-semibold text-foreground text-sm sm:text-base">Daily Tip</h3>
+              <h3 className="font-semibold text-foreground text-sm sm:text-base">{t('nutrition.dailyTip')}</h3>
               {categoryName && (
                 <Badge variant="secondary" className="text-xs">
                   {categoryName}
@@ -163,12 +165,14 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
               {tip.is_ai_generated && (
                 <Badge variant="outline" className="text-xs gap-1 border-purple-500/50 text-purple-400">
                   <Sparkles className="h-3 w-3" />
-                  AI
+                  {t('common.ai')}
                 </Badge>
               )}
               {dailyTipsRemaining >= 0 && (
                 <Badge variant="outline" className="text-xs">
-                  {dailyTipsRemaining} {dailyTipsRemaining === 1 ? 'tip' : 'tips'} left today
+                  {dailyTipsRemaining === 1 
+                    ? t('nutrition.tipLeftToday', { count: dailyTipsRemaining })
+                    : t('nutrition.tipsLeftToday', { count: dailyTipsRemaining })}
                 </Badge>
               )}
             </div>
@@ -177,7 +181,7 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
             </p>
             <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
               <span className="text-xs text-muted-foreground">
-                {viewedPercentage}% of tips explored
+                {t('nutrition.percentExplored', { percent: viewedPercentage })}
               </span>
               <Button 
                 variant="ghost" 
@@ -187,7 +191,7 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
                 className="gap-1 h-7 px-2"
               >
                 <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden xs:inline">New Tip</span>
+                <span className="hidden xs:inline">{t('nutrition.newTip')}</span>
               </Button>
             </div>
           </div>

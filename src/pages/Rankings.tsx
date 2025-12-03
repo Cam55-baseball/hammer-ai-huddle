@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RankingsTable } from "@/components/RankingsTable";
 import { RankingsFilters } from "@/components/RankingsFilters";
@@ -18,6 +19,7 @@ interface RankingData {
 }
 
 export default function Rankings() {
+  const { t } = useTranslation();
   const [rankings, setRankings] = useState<RankingData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSport, setSelectedSport] = useState<string>("all");
@@ -66,8 +68,8 @@ export default function Rankings() {
     } catch (error) {
       console.error("Error fetching rankings:", error);
       toast({
-        title: "Error",
-        description: "Failed to load rankings",
+        title: t('common.error'),
+        description: t('rankings.failedToLoad'),
         variant: "destructive",
       });
     } finally {
@@ -109,16 +111,16 @@ export default function Rankings() {
     <DashboardLayout>
       <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Rankings</h1>
+        <h1 className="text-3xl font-bold text-foreground">{t('rankings.title')}</h1>
         <p className="text-muted-foreground">
-          See how you stack up against other athletes
+          {t('rankings.subtitle')}
         </p>
       </div>
 
       <Card className="relative overflow-hidden border-red-700 bg-gradient-to-r from-red-600 via-red-500 to-red-700 bg-[length:200%_200%] animate-gradient-shift">
         <CardContent className="py-4">
           <p className="text-white text-center font-montserrat font-extrabold text-xl md:text-2xl tracking-wider uppercase leading-relaxed drop-shadow-lg">
-            Our goal is to increase connections and develop the athletes of today.
+            {t('rankings.missionStatement')}
           </p>
         </CardContent>
       </Card>
@@ -127,9 +129,9 @@ export default function Rankings() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Lock className="h-16 w-16 text-muted-foreground/50 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Rankings Currently Unavailable</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('rankings.unavailable')}</h3>
               <p className="text-muted-foreground text-center max-w-md">
-                The rankings feature is currently disabled. Please check back later.
+                {t('rankings.disabledMessage')}
               </p>
             </CardContent>
           </Card>
