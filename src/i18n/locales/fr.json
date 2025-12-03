@@ -1130,5 +1130,202 @@
     "annotationSaved": "Annotation enregistrée",
     "followRequestSent": "Demande de suivi envoyée",
     "languageChanged": "Langue modifiée"
+  },
+  "videoPlayer": {
+    "frameByFrameMode": "Mode image par image",
+    "scoutViewCapture": "Vue Scout - Capturez des images pour annoter",
+    "loopStart": "Début Boucle",
+    "loopEnd": "Fin Boucle",
+    "looping": "Boucle: {{start}}s → {{end}}s",
+    "back": "Retour",
+    "forward": "Avancer",
+    "capture": "Capturer",
+    "mirror": "Miroir",
+    "fullscreen": "Plein Écran",
+    "markLoopStart": "Marquer Début Boucle",
+    "markLoopEnd": "Marquer Fin Boucle",
+    "clear": "Effacer",
+    "start": "Début",
+    "end": "Fin",
+    "capturedKeyFrames": "Images Clés Capturées",
+    "downloadAll": "Télécharger Tout ({{count}})",
+    "keyFrameCaptured": "Image clé capturée!",
+    "videoNotReady": "Vidéo pas encore prête",
+    "loopStartSet": "Début de boucle défini à {{time}}s",
+    "loopEndSet": "Fin de boucle définie à {{time}}s",
+    "loopCleared": "Boucle effacée",
+    "frameDownloaded": "Image {{number}} téléchargée!",
+    "annotatedFrameDownloaded": "Image annotée {{number}} téléchargée!",
+    "frameRemoved": "Image supprimée!",
+    "videoOrCanvasNotReady": "Vidéo ou canevas pas prêt",
+    "videoNotFullyLoaded": "Vidéo pas complètement chargée. Veuillez attendre et réessayer.",
+    "canvasContextError": "Impossible d'obtenir le contexte du canevas",
+    "failedToDrawFrame": "Échec du dessin de l'image. Veuillez actualiser et réessayer.",
+    "cannotCaptureCors": "Impossible de capturer l'image en raison des restrictions de sécurité. Veuillez actualiser la page.",
+    "failedToCaptureLoading": "Échec de capture de l'image. La vidéo est peut-être encore en chargement.",
+    "videoProtected": "Vidéo protégée. La capture d'image n'est pas disponible pour cette vidéo.",
+    "failedToCapture": "Échec de capture de l'image. Veuillez réessayer.",
+    "downloadingFrames": "Téléchargement de {{count}} image(s)...",
+    "stepBackward": "Reculer d'une image",
+    "stepForward": "Avancer d'une image"
+  },
+  "tutorial": {
+    "step": "Étape {{current}} sur {{total}}",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "startCompeting": "Commencer à Concourir",
+    "completed": "Tutoriel terminé!",
+    "failedToComplete": "Échec de la completion du tutoriel",
+    "player": {
+      "welcome": { "title": "Bienvenue sur Hammers Modality!", "description": "Découvrons les outils qui vous aideront à élever votre jeu au niveau supérieur." },
+      "creator": { "title": "Votre Profil de Créateur", "description": "Configurez votre profil pour personnaliser votre expérience d'entraînement et connectez-vous avec des scouts." },
+      "modules": { "title": "Modules d'Entraînement", "description": "Accédez à des modules spécialisés pour la frappe, le lancer et le pitch pour améliorer des compétences spécifiques." },
+      "upload": { "title": "Téléchargement Vidéo", "description": "Téléchargez vos vidéos d'entraînement pour obtenir une analyse alimentée par l'IA de votre technique." },
+      "coaching": { "title": "Coaching IA", "description": "Recevez des commentaires détaillés et des recommandations d'exercices basés sur l'analyse de votre vidéo." },
+      "library": { "title": "Club des Joueurs", "description": "Enregistrez et organisez vos sessions d'entraînement dans votre bibliothèque personnelle." },
+      "following": { "title": "Connexion Scouts", "description": "Connectez-vous avec des scouts et entraîneurs qui peuvent voir vos progrès d'entraînement." },
+      "ranking": { "title": "Classements", "description": "Suivez votre progression et comparez-vous avec d'autres athlètes dans les classements." },
+      "profile": { "title": "Paramètres du Profil", "description": "Personnalisez votre profil et gérez les paramètres de votre compte." }
+    },
+    "scout": {
+      "welcome": { "title": "Bienvenue, Scout!", "description": "Explorons les outils pour découvrir et évaluer les talents." },
+      "creator": { "title": "Votre Profil Scout", "description": "Configurez vos qualifications et votre affiliation d'organisation." },
+      "discover": { "title": "Découvrir les Joueurs", "description": "Parcourez et recherchez des joueurs talentueux en utilisant des filtres avancés." },
+      "search": { "title": "Recherche Avancée", "description": "Filtrez les joueurs par position, état, niveau d'expérience et plus." },
+      "follow": { "title": "Suivre les Joueurs", "description": "Envoyez des demandes de suivi pour accéder aux bibliothèques d'entraînement des joueurs." },
+      "videos": { "title": "Voir les Vidéos", "description": "Regardez les sessions d'entraînement et analysez les techniques des joueurs." },
+      "rankings": { "title": "Classements des Joueurs", "description": "Voir les classements de performance de tous les joueurs sur la plateforme." },
+      "analyze": { "title": "Analyser les Performances", "description": "Examinez les analyses IA et ajoutez vos propres annotations aux vidéos des joueurs." }
+    }
+  },
+  "nutrition": {
+    "categoryContent": {
+      "bloodType": {
+        "content1": "Différents types sanguins peuvent avoir des réponses variées à certains aliments",
+        "content2": "Comprendre votre type sanguin peut aider à personnaliser vos choix nutritionnels",
+        "content3": "Des recherches suggèrent des corrélations potentielles entre le type sanguin et l'absorption des nutriments",
+        "content4": "Considérez consulter un nutritionniste pour des recommandations personnalisées",
+        "content5": "Le type sanguin peut influencer l'inflammation et les niveaux d'énergie chez les athlètes"
+      },
+      "hydration": {
+        "content1": "L'hydratation optimale améliore les performances athlétiques et la récupération",
+        "content2": "Visez à boire la moitié de votre poids corporel en onces d'eau quotidiennement",
+        "content3": "Les électrolytes sont cruciaux pendant l'exercice intense et par temps chaud",
+        "content4": "Surveillez la couleur de l'urine comme indicateur d'hydratation",
+        "content5": "La pré-hydratation avant l'entraînement est aussi importante que boire pendant"
+      },
+      "mineralization": {
+        "content1": "Les minéraux sont essentiels pour la fonction musculaire et la santé osseuse",
+        "content2": "Le magnésium aide la récupération musculaire et la qualité du sommeil",
+        "content3": "Le zinc soutient la fonction immunitaire et la réparation tissulaire",
+        "content4": "Le calcium et la vitamine D travaillent ensemble pour la densité osseuse",
+        "content5": "Le fer est critique pour le transport de l'oxygène et la production d'énergie"
+      },
+      "recovery": {
+        "content1": "La récupération post-entraînement est cruciale pour les gains de performance",
+        "content2": "Consommez des protéines dans les 30 minutes après l'exercice intense",
+        "content3": "Le sommeil est la technique de récupération la plus importante",
+        "content4": "Les aliments anti-inflammatoires aident à réduire les courbatures",
+        "content5": "La récupération active peut être plus bénéfique que le repos complet"
+      },
+      "bloodFlow": {
+        "content1": "Une bonne circulation améliore l'apport de nutriments aux muscles",
+        "content2": "L'oxyde nitrique des légumes verts feuillus améliore le flux sanguin",
+        "content3": "La santé cardiovasculaire impacte directement les performances athlétiques",
+        "content4": "La betterave a montré des améliorations de l'endurance",
+        "content5": "Une bonne circulation aide à l'élimination des déchets des muscles"
+      },
+      "lymphatic": {
+        "content1": "Le système lymphatique élimine les toxines et les déchets",
+        "content2": "L'hydratation soutient le bon fonctionnement lymphatique",
+        "content3": "Le mouvement et l'exercice stimulent la circulation lymphatique",
+        "content4": "Le brossage à sec peut aider le drainage lymphatique",
+        "content5": "Une lymphe saine soutient la fonction immunitaire et la récupération"
+      },
+      "vitamins": {
+        "content1": "Les vitamines sont essentielles pour la production d'énergie et la récupération",
+        "content2": "Les vitamines B aident à convertir la nourriture en énergie",
+        "content3": "La vitamine C soutient l'immunité et la synthèse du collagène",
+        "content4": "La vitamine D est cruciale pour la santé osseuse et la fonction musculaire",
+        "content5": "Les sources alimentaires entières sont généralement meilleures que les suppléments"
+      },
+      "dailyTips": {
+        "content1": "Commencez chaque journée avec de l'eau avant le café ou la nourriture",
+        "content2": "Mangez des aliments colorés pour une variété de nutriments",
+        "content3": "Planifiez vos repas autour des horaires d'entraînement",
+        "content4": "Écoutez les signaux de faim et de satiété de votre corps",
+        "content5": "La cohérence dans les habitudes alimentaires donne de meilleurs résultats"
+      },
+      "longevity": {
+        "content1": "La longévité commence par des habitudes de santé quotidiennes",
+        "content2": "Les régimes anti-inflammatoires soutiennent la santé à long terme",
+        "content3": "Les connexions sociales impactent autant la longévité que l'alimentation",
+        "content4": "Une activité physique régulière est clé pour un vieillissement en bonne santé",
+        "content5": "La gestion du stress est cruciale pour la santé à long terme"
+      },
+      "weight": {
+        "content1": "La gestion du poids se concentre sur la composition corporelle, pas seulement les chiffres de la balance",
+        "content2": "La masse musculaire est plus importante que le poids total pour les athlètes",
+        "content3": "L'alimentation chronométrée peut optimiser le métabolisme",
+        "content4": "Les changements progressifs sont plus durables que les régimes extrêmes",
+        "content5": "Surveillez l'énergie et la performance, pas seulement le poids"
+      },
+      "vegan": {
+        "content1": "Les régimes à base de plantes peuvent soutenir les performances athlétiques",
+        "content2": "La combinaison de protéines assure un apport complet en acides aminés",
+        "content3": "La supplémentation en B12 est essentielle pour les athlètes végétaliens",
+        "content4": "Le fer des sources végétales nécessite de la vitamine C pour l'absorption",
+        "content5": "Les acides gras oméga-3 peuvent provenir des graines de lin et des noix"
+      },
+      "restrictive": {
+        "content1": "Les régimes restrictifs nécessitent une planification attentive pour les athlètes",
+        "content2": "Les sensibilités alimentaires doivent être correctement diagnostiquées",
+        "content3": "Les régimes d'élimination peuvent identifier les déclencheurs alimentaires",
+        "content4": "Travaillez avec un diététicien pour les restrictions alimentaires majeures",
+        "content5": "Des alternatives existent pour la plupart des aliments courants"
+      },
+      "offSeason": {
+        "content1": "La hors-saison est le moment de développer la force et corriger les carences",
+        "content2": "Concentrez-vous sur la qualité nutritionnelle plutôt que la restriction",
+        "content3": "Utilisez ce temps pour expérimenter de nouveaux aliments sains",
+        "content4": "Traitez toute carence nutritionnelle identifiée",
+        "content5": "Préparez progressivement le corps pour les exigences de la saison"
+      },
+      "inSeason": {
+        "content1": "La nutrition en saison soutient les exigences de haute performance",
+        "content2": "La cohérence dans l'alimentation devient critique pendant la compétition",
+        "content3": "Ajustez l'apport calorique aux charges d'entraînement",
+        "content4": "Chronométrez les repas autour des matchs et des entraînements",
+        "content5": "Maintenez les habitudes qui marchent, évitez d'expérimenter"
+      },
+      "performance": {
+        "content1": "La nutrition pré-entraînement alimente l'entraînement et la compétition",
+        "content2": "Les glucides sont le carburant principal pour l'exercice de haute intensité",
+        "content3": "Les protéines avant l'exercice peuvent réduire la dégradation musculaire",
+        "content4": "Évitez les aliments riches en fibres immédiatement avant l'activité",
+        "content5": "Le timing des repas affecte la disponibilité de l'énergie"
+      },
+      "inGame": {
+        "content1": "L'hydratation en jeu maintient les performances tout au long de la compétition",
+        "content2": "Les glucides simples fournissent une énergie rapide pendant les matchs",
+        "content3": "Les électrolytes préviennent les crampes et la fatigue",
+        "content4": "La nutrition à la mi-temps peut affecter les performances en seconde période",
+        "content5": "Pratiquez la nutrition de jour de match pendant l'entraînement"
+      },
+      "supplements": {
+        "content1": "Les suppléments certifiés NSF assurent la sécurité pour les athlètes",
+        "content2": "Les aliments entiers devraient être la base de la nutrition",
+        "content3": "La créatine est l'un des suppléments les plus recherchés",
+        "content4": "La caféine peut améliorer les performances utilisée correctement",
+        "content5": "Consultez des professionnels avant de commencer les suppléments"
+      },
+      "holistic": {
+        "content1": "La santé holistique connecte le corps, l'esprit et l'esprit",
+        "content2": "La gestion du stress impacte la digestion et l'absorption des nutriments",
+        "content3": "La qualité du sommeil affecte les choix alimentaires et le métabolisme",
+        "content4": "L'alimentation consciente améliore la satisfaction des repas",
+        "content5": "La santé mentale est aussi importante que la santé physique"
+      }
+    }
   }
 }

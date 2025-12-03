@@ -1130,5 +1130,202 @@
     "annotationSaved": "Annotation gespeichert",
     "followRequestSent": "Folgeanfrage gesendet",
     "languageChanged": "Sprache geändert"
+  },
+  "videoPlayer": {
+    "frameByFrameMode": "Bild-für-Bild-Modus",
+    "scoutViewCapture": "Scout-Ansicht - Bilder zum Annotieren aufnehmen",
+    "loopStart": "Schleifenstart",
+    "loopEnd": "Schleifenende",
+    "looping": "Schleife: {{start}}s → {{end}}s",
+    "back": "Zurück",
+    "forward": "Vor",
+    "capture": "Aufnehmen",
+    "mirror": "Spiegeln",
+    "fullscreen": "Vollbild",
+    "markLoopStart": "Schleifenstart Markieren",
+    "markLoopEnd": "Schleifenende Markieren",
+    "clear": "Löschen",
+    "start": "Start",
+    "end": "Ende",
+    "capturedKeyFrames": "Aufgenommene Schlüsselbilder",
+    "downloadAll": "Alle Herunterladen ({{count}})",
+    "keyFrameCaptured": "Schlüsselbild aufgenommen!",
+    "videoNotReady": "Video noch nicht bereit",
+    "loopStartSet": "Schleifenstart bei {{time}}s gesetzt",
+    "loopEndSet": "Schleifenende bei {{time}}s gesetzt",
+    "loopCleared": "Schleife gelöscht",
+    "frameDownloaded": "Bild {{number}} heruntergeladen!",
+    "annotatedFrameDownloaded": "Annotiertes Bild {{number}} heruntergeladen!",
+    "frameRemoved": "Bild entfernt!",
+    "videoOrCanvasNotReady": "Video oder Canvas nicht bereit",
+    "videoNotFullyLoaded": "Video nicht vollständig geladen. Bitte warten und erneut versuchen.",
+    "canvasContextError": "Canvas-Kontext konnte nicht abgerufen werden",
+    "failedToDrawFrame": "Bildaufnahme fehlgeschlagen. Bitte Seite aktualisieren und erneut versuchen.",
+    "cannotCaptureCors": "Bildaufnahme aufgrund von Sicherheitsbeschränkungen nicht möglich. Bitte Seite aktualisieren.",
+    "failedToCaptureLoading": "Bildaufnahme fehlgeschlagen. Das Video wird möglicherweise noch geladen.",
+    "videoProtected": "Video ist geschützt. Bildaufnahme für dieses Video nicht verfügbar.",
+    "failedToCapture": "Bildaufnahme fehlgeschlagen. Bitte erneut versuchen.",
+    "downloadingFrames": "{{count}} Bild(er) werden heruntergeladen...",
+    "stepBackward": "Ein Bild zurück",
+    "stepForward": "Ein Bild vor"
+  },
+  "tutorial": {
+    "step": "Schritt {{current}} von {{total}}",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "startCompeting": "Anfangen zu Konkurrieren",
+    "completed": "Tutorial abgeschlossen!",
+    "failedToComplete": "Tutorial konnte nicht abgeschlossen werden",
+    "player": {
+      "welcome": { "title": "Willkommen bei Hammers Modality!", "description": "Entdecken Sie die Werkzeuge, die Ihnen helfen, Ihr Spiel auf das nächste Level zu bringen." },
+      "creator": { "title": "Ihr Ersteller-Profil", "description": "Richten Sie Ihr Profil ein, um Ihre Trainingserfahrung zu personalisieren und sich mit Scouts zu verbinden." },
+      "modules": { "title": "Trainingsmodule", "description": "Greifen Sie auf spezialisierte Module für Schlagen, Werfen und Pitchen zu, um spezifische Fähigkeiten zu verbessern." },
+      "upload": { "title": "Video-Upload", "description": "Laden Sie Ihre Trainingsvideos hoch, um KI-gestützte Analysen Ihrer Technik zu erhalten." },
+      "coaching": { "title": "KI-Coaching", "description": "Erhalten Sie detailliertes Feedback und Übungsempfehlungen basierend auf Ihrer Videoanalyse." },
+      "library": { "title": "Spieler-Club", "description": "Speichern und organisieren Sie Ihre Trainingseinheiten in Ihrer persönlichen Bibliothek." },
+      "following": { "title": "Scout-Verbindung", "description": "Verbinden Sie sich mit Scouts und Trainern, die Ihren Trainingsfortschritt sehen können." },
+      "ranking": { "title": "Ranglisten", "description": "Verfolgen Sie Ihren Fortschritt und vergleichen Sie sich mit anderen Athleten in den Ranglisten." },
+      "profile": { "title": "Profileinstellungen", "description": "Passen Sie Ihr Profil an und verwalten Sie Ihre Kontoeinstellungen." }
+    },
+    "scout": {
+      "welcome": { "title": "Willkommen, Scout!", "description": "Lassen Sie uns die Werkzeuge erkunden, um Talente zu entdecken und zu bewerten." },
+      "creator": { "title": "Ihr Scout-Profil", "description": "Richten Sie Ihre Qualifikationen und Organisationszugehörigkeit ein." },
+      "discover": { "title": "Spieler Entdecken", "description": "Durchsuchen und finden Sie talentierte Spieler mit erweiterten Filtern." },
+      "search": { "title": "Erweiterte Suche", "description": "Filtern Sie Spieler nach Position, Bundesland, Erfahrungsstufe und mehr." },
+      "follow": { "title": "Spielern Folgen", "description": "Senden Sie Folgeanfragen, um Zugang zu den Trainingsbibliotheken der Spieler zu erhalten." },
+      "videos": { "title": "Videos Ansehen", "description": "Schauen Sie sich Trainingseinheiten an und analysieren Sie die Techniken der Spieler." },
+      "rankings": { "title": "Spieler-Ranglisten", "description": "Sehen Sie Leistungsranglisten für alle Spieler auf der Plattform." },
+      "analyze": { "title": "Leistung Analysieren", "description": "Überprüfen Sie KI-Analysen und fügen Sie Ihre eigenen Anmerkungen zu Spielervideos hinzu." }
+    }
+  },
+  "nutrition": {
+    "categoryContent": {
+      "bloodType": {
+        "content1": "Verschiedene Blutgruppen können unterschiedlich auf bestimmte Lebensmittel reagieren",
+        "content2": "Das Verständnis Ihrer Blutgruppe kann bei der Personalisierung Ihrer Ernährungswahl helfen",
+        "content3": "Forschung deutet auf mögliche Korrelationen zwischen Blutgruppe und Nährstoffaufnahme hin",
+        "content4": "Erwägen Sie die Konsultation eines Ernährungsberaters für personalisierte Empfehlungen",
+        "content5": "Die Blutgruppe kann Entzündungen und Energielevel bei Athleten beeinflussen"
+      },
+      "hydration": {
+        "content1": "Optimale Flüssigkeitszufuhr verbessert athletische Leistung und Erholung",
+        "content2": "Streben Sie an, täglich die Hälfte Ihres Körpergewichts in Unzen Wasser zu trinken",
+        "content3": "Elektrolyte sind entscheidend bei intensivem Training und heißem Wetter",
+        "content4": "Überwachen Sie die Urinfarbe als Hydratationsindikator",
+        "content5": "Vor-Hydratation vor dem Training ist genauso wichtig wie Trinken während"
+      },
+      "mineralization": {
+        "content1": "Mineralien sind essentiell für Muskelfunktion und Knochengesundheit",
+        "content2": "Magnesium hilft bei der Muskelregeneration und Schlafqualität",
+        "content3": "Zink unterstützt die Immunfunktion und Gewebereparatur",
+        "content4": "Kalzium und Vitamin D arbeiten zusammen für die Knochendichte",
+        "content5": "Eisen ist entscheidend für Sauerstofftransport und Energieproduktion"
+      },
+      "recovery": {
+        "content1": "Erholung nach dem Training ist entscheidend für Leistungssteigerungen",
+        "content2": "Nehmen Sie innerhalb von 30 Minuten nach intensivem Training Protein zu sich",
+        "content3": "Schlaf ist die wichtigste Erholungstechnik",
+        "content4": "Entzündungshemmende Lebensmittel helfen, Muskelkater zu reduzieren",
+        "content5": "Aktive Erholung kann vorteilhafter sein als vollständige Ruhe"
+      },
+      "bloodFlow": {
+        "content1": "Gute Durchblutung verbessert die Nährstoffversorgung der Muskeln",
+        "content2": "Stickstoffmonoxid aus Blattgemüse verbessert den Blutfluss",
+        "content3": "Kardiovaskuläre Gesundheit beeinflusst direkt die athletische Leistung",
+        "content4": "Rote Beete hat gezeigt, dass sie die Ausdauer verbessert",
+        "content5": "Gute Durchblutung hilft bei der Abfallbeseitigung aus den Muskeln"
+      },
+      "lymphatic": {
+        "content1": "Das Lymphsystem entfernt Giftstoffe und Abfallprodukte",
+        "content2": "Flüssigkeitszufuhr unterstützt die ordnungsgemäße Lymphfunktion",
+        "content3": "Bewegung und Sport stimulieren den Lymphfluss",
+        "content4": "Trockenbürsten kann die Lymphdrainage unterstützen",
+        "content5": "Gesunde Lymphe unterstützt Immunfunktion und Erholung"
+      },
+      "vitamins": {
+        "content1": "Vitamine sind essentiell für Energieproduktion und Erholung",
+        "content2": "B-Vitamine helfen, Nahrung in Energie umzuwandeln",
+        "content3": "Vitamin C unterstützt Immunität und Kollagensynthese",
+        "content4": "Vitamin D ist entscheidend für Knochengesundheit und Muskelfunktion",
+        "content5": "Vollwertnahrungsquellen sind im Allgemeinen besser als Nahrungsergänzungsmittel"
+      },
+      "dailyTips": {
+        "content1": "Beginnen Sie jeden Tag mit Wasser vor Kaffee oder Essen",
+        "content2": "Essen Sie bunte Lebensmittel für Nährstoffvielfalt",
+        "content3": "Planen Sie Mahlzeiten um Trainingszeiten herum",
+        "content4": "Hören Sie auf die Hunger- und Sättigungssignale Ihres Körpers",
+        "content5": "Konsistenz in den Essgewohnheiten bringt bessere Ergebnisse"
+      },
+      "longevity": {
+        "content1": "Langlebigkeit beginnt mit täglichen Gesundheitsgewohnheiten",
+        "content2": "Entzündungshemmende Ernährung unterstützt langfristige Gesundheit",
+        "content3": "Soziale Verbindungen beeinflussen die Langlebigkeit genauso wie die Ernährung",
+        "content4": "Regelmäßige körperliche Aktivität ist der Schlüssel zum gesunden Altern",
+        "content5": "Stressmanagement ist entscheidend für langfristige Gesundheit"
+      },
+      "weight": {
+        "content1": "Gewichtsmanagement konzentriert sich auf Körperzusammensetzung, nicht nur Waagenzahlen",
+        "content2": "Muskelmasse ist für Athleten wichtiger als Gesamtgewicht",
+        "content3": "Zeitgesteuerte Ernährung kann den Stoffwechsel optimieren",
+        "content4": "Allmähliche Änderungen sind nachhaltiger als extreme Diäten",
+        "content5": "Überwachen Sie Energie und Leistung, nicht nur das Gewicht"
+      },
+      "vegan": {
+        "content1": "Pflanzenbasierte Ernährung kann athletische Leistung unterstützen",
+        "content2": "Proteinkombination gewährleistet vollständige Aminosäureaufnahme",
+        "content3": "B12-Supplementierung ist für vegane Athleten essentiell",
+        "content4": "Eisen aus pflanzlichen Quellen benötigt Vitamin C zur Absorption",
+        "content5": "Omega-3-Fettsäuren können aus Leinsamen und Nüssen stammen"
+      },
+      "restrictive": {
+        "content1": "Restriktive Diäten erfordern sorgfältige Planung für Athleten",
+        "content2": "Nahrungsmittelunverträglichkeiten sollten ordnungsgemäß diagnostiziert werden",
+        "content3": "Eliminationsdiäten können Nahrungsmittelauslöser identifizieren",
+        "content4": "Arbeiten Sie bei größeren Nahrungsmitteleinschränkungen mit einem Ernährungsberater zusammen",
+        "content5": "Für die meisten gängigen Lebensmittel gibt es Alternativen"
+      },
+      "offSeason": {
+        "content1": "Die Nebensaison ist die Zeit, Kraft aufzubauen und Defizite zu beheben",
+        "content2": "Konzentrieren Sie sich auf Ernährungsqualität statt Einschränkung",
+        "content3": "Nutzen Sie diese Zeit zum Experimentieren mit neuen gesunden Lebensmitteln",
+        "content4": "Behandeln Sie alle identifizierten Nährstoffmängel",
+        "content5": "Bereiten Sie den Körper schrittweise auf die Saisonanforderungen vor"
+      },
+      "inSeason": {
+        "content1": "Saisonernährung unterstützt Hochleistungsanforderungen",
+        "content2": "Konsistenz beim Essen wird während der Wettkampfzeit kritisch",
+        "content3": "Passen Sie die Kalorienaufnahme an die Trainingsbelastung an",
+        "content4": "Timing der Mahlzeiten um Spiele und Training herum",
+        "content5": "Behalten Sie Gewohnheiten bei, die funktionieren, vermeiden Sie Experimente"
+      },
+      "performance": {
+        "content1": "Vor-Training-Ernährung treibt Training und Wettkampf an",
+        "content2": "Kohlenhydrate sind der primäre Treibstoff für hochintensives Training",
+        "content3": "Protein vor dem Training kann den Muskelabbau reduzieren",
+        "content4": "Vermeiden Sie ballaststoffreiche Lebensmittel unmittelbar vor der Aktivität",
+        "content5": "Mahlzeiten-Timing beeinflusst die Energieverfügbarkeit"
+      },
+      "inGame": {
+        "content1": "Flüssigkeitszufuhr im Spiel erhält die Leistung während des Wettkampfs",
+        "content2": "Einfache Kohlenhydrate liefern schnelle Energie während der Spiele",
+        "content3": "Elektrolyte verhindern Krämpfe und Ermüdung",
+        "content4": "Halbzeit-Ernährung kann die Leistung in der zweiten Hälfte beeinflussen",
+        "content5": "Üben Sie die Spieltag-Ernährung während des Trainings"
+      },
+      "supplements": {
+        "content1": "NSF-zertifizierte Nahrungsergänzungsmittel gewährleisten Sicherheit für Athleten",
+        "content2": "Vollwertkost sollte die Grundlage der Ernährung sein",
+        "content3": "Kreatin ist eines der am besten erforschten Nahrungsergänzungsmittel",
+        "content4": "Koffein kann bei richtiger Anwendung die Leistung verbessern",
+        "content5": "Konsultieren Sie Fachleute, bevor Sie Nahrungsergänzungsmittel einnehmen"
+      },
+      "holistic": {
+        "content1": "Ganzheitliche Gesundheit verbindet Körper, Geist und Seele",
+        "content2": "Stressmanagement beeinflusst Verdauung und Nährstoffaufnahme",
+        "content3": "Schlafqualität beeinflusst Essenswahl und Stoffwechsel",
+        "content4": "Achtsames Essen verbessert die Zufriedenheit mit Mahlzeiten",
+        "content5": "Geistige Gesundheit ist genauso wichtig wie körperliche Gesundheit"
+      }
+    }
   }
 }

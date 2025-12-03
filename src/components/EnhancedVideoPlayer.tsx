@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2, ZoomIn, ZoomOut, Pencil } from "lucide-react";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ export const EnhancedVideoPlayer = ({
   isOwnerView = false,
   onSaveAnnotation
 }: EnhancedVideoPlayerProps) => {
+  const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [loopStart, setLoopStart] = useState<number | null>(null);
   const [loopEnd, setLoopEnd] = useState<number | null>(null);
@@ -205,7 +207,7 @@ export const EnhancedVideoPlayer = ({
   const stepFrame = (direction: 'forward' | 'backward') => {
     const video = videoRef.current;
     if (!video || !videoReady) {
-      toast.error("Video not ready yet");
+      toast.error(t('videoPlayer.videoNotReady'));
       return;
     }
 
@@ -251,17 +253,17 @@ export const EnhancedVideoPlayer = ({
 
     if (type === 'start') {
       setLoopStart(video.currentTime);
-      toast.success(`Loop start set at ${video.currentTime.toFixed(2)}s`);
+      toast.success(t('videoPlayer.loopStartSet', { time: video.currentTime.toFixed(2) }));
     } else {
       setLoopEnd(video.currentTime);
-      toast.success(`Loop end set at ${video.currentTime.toFixed(2)}s`);
+      toast.success(t('videoPlayer.loopEndSet', { time: video.currentTime.toFixed(2) }));
     }
   };
 
   const clearLoop = () => {
     setLoopStart(null);
     setLoopEnd(null);
-    toast.info("Loop cleared");
+    toast.info(t('videoPlayer.loopCleared'));
   };
 
   const captureKeyFrame = () => {
@@ -269,19 +271,19 @@ export const EnhancedVideoPlayer = ({
       const video = videoRef.current;
       const canvas = canvasRef.current;
       if (!video || !canvas) {
-        toast.error("Video or canvas not ready");
+        toast.error(t('videoPlayer.videoOrCanvasNotReady'));
         return;
       }
 
       // Check if video has valid dimensions
       if (video.videoWidth === 0 || video.videoHeight === 0) {
-        toast.error("Video not fully loaded. Please wait and try again.");
+        toast.error(t('videoPlayer.videoNotFullyLoaded'));
         return;
       }
 
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        toast.error("Could not get canvas context");
+        toast.error(t('videoPlayer.canvasContextError'));
         return;
       }
 
@@ -292,7 +294,7 @@ export const EnhancedVideoPlayer = ({
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       } catch (drawError) {
         console.error('Canvas draw error:', drawError);
-        toast.error("Failed to draw video frame. Please refresh and try again.");
+        toast.error(t('videoPlayer.failedToDrawFrame'));
         return;
       }
 
@@ -301,13 +303,13 @@ export const EnhancedVideoPlayer = ({
         frameUrl = canvas.toDataURL('image/png');
       } catch (corsError) {
         console.error('CORS error during toDataURL:', corsError);
-        toast.error("Cannot capture frame due to video security restrictions. Please refresh the page.");
+        toast.error(t('videoPlayer.cannotCaptureCors'));
         return;
       }
       
       // Validate the captured frame
       if (!frameUrl || frameUrl === 'data:,' || frameUrl.length < 100) {
-        toast.error("Failed to capture frame. The video may still be loading.");
+        toast.error(t('videoPlayer.failedToCaptureLoading'));
         return;
       }
       
@@ -322,13 +324,13 @@ export const EnhancedVideoPlayer = ({
         navigator.vibrate(50);
       }
       
-      toast.success("Key frame captured!");
+      toast.success(t('videoPlayer.keyFrameCaptured'));
     } catch (error) {
       console.error('Frame capture error:', error);
       if (error instanceof DOMException && error.name === 'SecurityError') {
-        toast.error("Video is protected. Frame capture is not available for this video.");
+        toast.error(t('videoPlayer.videoProtected'));
       } else {
-        toast.error("Failed to capture frame. Please try again.");
+        toast.error(t('videoPlayer.failedToCapture'));
       }
     }
   };
@@ -340,13 +342,13 @@ export const EnhancedVideoPlayer = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success(`Frame ${index + 1} downloaded!`);
+    toast.success(t('videoPlayer.frameDownloaded', { number: index + 1 }));
   };
 
   const downloadAllFrames = () => {
     if (keyFrames.length === 0) return;
     
-    toast.info(`Downloading ${keyFrames.length} frame${keyFrames.length > 1 ? 's' : ''}...`);
+    toast.info(t('videoPlayer.downloadingFrames', { count: keyFrames.length }));
     
     keyFrames.forEach((frame, index) => {
       setTimeout(() => {
@@ -376,7 +378,7 @@ export const EnhancedVideoPlayer = ({
   const handleFullscreenRemove = (index: number) => {
     const newFrames = keyFrames.filter((_, i) => i !== index);
     setKeyFrames(newFrames);
-    toast.success("Frame removed!");
+    toast.success(t('videoPlayer.frameRemoved'));
     
     // Reset selectedFrameIndex if the deleted frame was selected
     if (selectedFrameIndex === index) {
@@ -431,7 +433,7 @@ export const EnhancedVideoPlayer = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success(`Annotated frame ${index + 1} downloaded!`);
+    toast.success(t('videoPlayer.annotatedFrameDownloaded', { number: index + 1 }));
   };
 
   // Zoom control functions
@@ -608,7 +610,7 @@ export const EnhancedVideoPlayer = ({
         {/* Frame stepping indicator on mobile */}
         {isSteppingFrames && !isFullscreen && (
           <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-3 py-1 rounded-full text-xs sm:hidden z-10">
-            Frame-by-frame mode
+            {t('videoPlayer.frameByFrameMode')}
           </div>
         )}
         
@@ -641,7 +643,7 @@ export const EnhancedVideoPlayer = ({
             {/* Scout view indicator */}
             {isScoutView && (
               <div className="text-xs text-center text-white/80 mb-2 bg-primary/20 px-3 py-1 rounded-full inline-block mx-auto w-full">
-                Scout View - Capture frames to annotate
+                {t('videoPlayer.scoutViewCapture')}
               </div>
             )}
             
@@ -685,7 +687,7 @@ export const EnhancedVideoPlayer = ({
                 disabled={loopStart !== null && loopEnd !== null}
                 className="text-white hover:bg-white/20 min-h-[44px] px-2"
               >
-                <span className="text-xs">Loop Start</span>
+                <span className="text-xs">{t('videoPlayer.loopStart')}</span>
               </Button>
               
               {/* Loop End */}
@@ -696,7 +698,7 @@ export const EnhancedVideoPlayer = ({
                 disabled={loopStart === null || (loopStart !== null && loopEnd !== null)}
                 className="text-white hover:bg-white/20 min-h-[44px] px-2"
               >
-                <span className="text-xs">Loop End</span>
+                <span className="text-xs">{t('videoPlayer.loopEnd')}</span>
               </Button>
               
               {/* Clear Loop (if active) */}
@@ -735,7 +737,7 @@ export const EnhancedVideoPlayer = ({
             {/* Loop Status Indicator */}
             {loopStart !== null && loopEnd !== null && (
               <div className="text-center text-white/80 text-xs mt-2">
-                Looping: {loopStart.toFixed(2)}s → {loopEnd.toFixed(2)}s
+                {t('videoPlayer.looping', { start: loopStart.toFixed(2), end: loopEnd.toFixed(2) })}
               </div>
             )}
           </div>
@@ -751,52 +753,52 @@ export const EnhancedVideoPlayer = ({
             size="sm"
             onClick={() => stepFrame('backward')}
             disabled={!videoReady}
-            title="Step backward"
+            title={t('videoPlayer.stepBackward')}
             className="min-h-[44px] min-w-[44px]"
           >
             <ChevronLeft className="h-4 w-4" />
-            <span className="hidden sm:inline ml-1">Back</span>
+            <span className="hidden sm:inline ml-1">{t('videoPlayer.back')}</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => stepFrame('forward')}
             disabled={!videoReady}
-            title="Step forward"
+            title={t('videoPlayer.stepForward')}
             className="min-h-[44px] min-w-[44px]"
           >
             <ChevronRight className="h-4 w-4" />
-            <span className="hidden sm:inline ml-1">Forward</span>
+            <span className="hidden sm:inline ml-1">{t('videoPlayer.forward')}</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={captureKeyFrame}
             disabled={!videoReady}
-            title="Capture"
+            title={t('videoPlayer.capture')}
           >
             <Camera className="h-4 w-4" />
-            <span className="hidden md:inline ml-1">Capture</span>
+            <span className="hidden md:inline ml-1">{t('videoPlayer.capture')}</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsMirrored(!isMirrored)}
-            title="Mirror"
+            title={t('videoPlayer.mirror')}
             className={isMirrored ? 'bg-primary/10' : ''}
           >
             <FlipHorizontal className="h-4 w-4" />
-            <span className="hidden md:inline ml-1">Mirror</span>
+            <span className="hidden md:inline ml-1">{t('videoPlayer.mirror')}</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={toggleFullscreen}
-            title="Fullscreen"
+            title={t('videoPlayer.fullscreen')}
             className="min-h-[44px] min-w-[44px]"
           >
             <Maximize2 className="h-4 w-4" />
-            <span className="hidden md:inline ml-1">Fullscreen</span>
+            <span className="hidden md:inline ml-1">{t('videoPlayer.fullscreen')}</span>
           </Button>
         </div>
 
@@ -809,8 +811,8 @@ export const EnhancedVideoPlayer = ({
             disabled={loopStart !== null && loopEnd !== null}
             className="text-xs sm:text-sm flex-1 sm:flex-initial"
           >
-            <span className="hidden sm:inline">Mark Loop Start</span>
-            <span className="sm:hidden">Start</span>
+            <span className="hidden sm:inline">{t('videoPlayer.markLoopStart')}</span>
+            <span className="sm:hidden">{t('videoPlayer.start')}</span>
           </Button>
           <Button
             variant="outline"
@@ -819,8 +821,8 @@ export const EnhancedVideoPlayer = ({
             disabled={loopStart === null || (loopStart !== null && loopEnd !== null)}
             className="text-xs sm:text-sm flex-1 sm:flex-initial"
           >
-            <span className="hidden sm:inline">Mark Loop End</span>
-            <span className="sm:hidden">End</span>
+            <span className="hidden sm:inline">{t('videoPlayer.markLoopEnd')}</span>
+            <span className="sm:hidden">{t('videoPlayer.end')}</span>
           </Button>
           {(loopStart !== null || loopEnd !== null) && (
             <Button
@@ -830,7 +832,7 @@ export const EnhancedVideoPlayer = ({
               className="flex-1 sm:flex-initial"
             >
               <RotateCcw className="h-4 w-4" />
-              <span className="hidden sm:inline ml-1">Clear</span>
+              <span className="hidden sm:inline ml-1">{t('videoPlayer.clear')}</span>
             </Button>
           )}
         </div>
@@ -839,7 +841,7 @@ export const EnhancedVideoPlayer = ({
       {/* Loop Status */}
       {loopStart !== null && loopEnd !== null && (
         <div className="text-sm text-muted-foreground text-center p-2 bg-primary/5 rounded-lg border border-primary/20">
-          Looping: {loopStart.toFixed(2)}s → {loopEnd.toFixed(2)}s
+          {t('videoPlayer.looping', { start: loopStart.toFixed(2), end: loopEnd.toFixed(2) })}
         </div>
       )}
 
@@ -847,14 +849,14 @@ export const EnhancedVideoPlayer = ({
       {keyFrames.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold">Captured Key Frames</h4>
+            <h4 className="text-sm font-semibold">{t('videoPlayer.capturedKeyFrames')}</h4>
             <Button
               variant="outline"
               size="sm"
               onClick={downloadAllFrames}
             >
               <Download className="h-4 w-4 mr-2" />
-              Download All ({keyFrames.length})
+              {t('videoPlayer.downloadAll', { count: keyFrames.length })}
             </Button>
           </div>
           <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

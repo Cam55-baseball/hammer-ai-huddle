@@ -1130,5 +1130,202 @@
     "annotationSaved": "Annotatie opgeslagen",
     "followRequestSent": "Volgverzoek verstuurd",
     "languageChanged": "Taal gewijzigd"
+  },
+  "videoPlayer": {
+    "frameByFrameMode": "Frame-voor-frame modus",
+    "scoutViewCapture": "Scout Weergave - Maak frames om te annoteren",
+    "loopStart": "Lus Start",
+    "loopEnd": "Lus Einde",
+    "looping": "Lus: {{start}}s → {{end}}s",
+    "back": "Terug",
+    "forward": "Vooruit",
+    "capture": "Vastleggen",
+    "mirror": "Spiegelen",
+    "fullscreen": "Volledig Scherm",
+    "markLoopStart": "Markeer Lus Start",
+    "markLoopEnd": "Markeer Lus Einde",
+    "clear": "Wissen",
+    "start": "Start",
+    "end": "Einde",
+    "capturedKeyFrames": "Vastgelegde Sleutelframes",
+    "downloadAll": "Alles Downloaden ({{count}})",
+    "keyFrameCaptured": "Sleutelframe vastgelegd!",
+    "videoNotReady": "Video nog niet klaar",
+    "loopStartSet": "Lus start ingesteld op {{time}}s",
+    "loopEndSet": "Lus einde ingesteld op {{time}}s",
+    "loopCleared": "Lus gewist",
+    "frameDownloaded": "Frame {{number}} gedownload!",
+    "annotatedFrameDownloaded": "Geannoteerd frame {{number}} gedownload!",
+    "frameRemoved": "Frame verwijderd!",
+    "videoOrCanvasNotReady": "Video of canvas niet klaar",
+    "videoNotFullyLoaded": "Video niet volledig geladen. Wacht en probeer opnieuw.",
+    "canvasContextError": "Kon canvas context niet krijgen",
+    "failedToDrawFrame": "Frame tekenen mislukt. Vernieuw de pagina en probeer opnieuw.",
+    "cannotCaptureCors": "Kan frame niet vastleggen vanwege beveiligingsbeperkingen. Vernieuw de pagina.",
+    "failedToCaptureLoading": "Frame vastleggen mislukt. De video is mogelijk nog aan het laden.",
+    "videoProtected": "Video is beveiligd. Frame vastleggen niet beschikbaar voor deze video.",
+    "failedToCapture": "Frame vastleggen mislukt. Probeer opnieuw.",
+    "downloadingFrames": "{{count}} frame(s) downloaden...",
+    "stepBackward": "Eén frame terug",
+    "stepForward": "Eén frame vooruit"
+  },
+  "tutorial": {
+    "step": "Stap {{current}} van {{total}}",
+    "previous": "Vorige",
+    "next": "Volgende",
+    "startCompeting": "Begin met Concurreren",
+    "completed": "Tutorial voltooid!",
+    "failedToComplete": "Tutorial kon niet worden voltooid",
+    "player": {
+      "welcome": { "title": "Welkom bij Hammers Modality!", "description": "Laten we de tools verkennen die je helpen je spel naar het volgende niveau te tillen." },
+      "creator": { "title": "Je Creator Profiel", "description": "Stel je profiel in om je trainingservaring te personaliseren en verbind met scouts." },
+      "modules": { "title": "Trainingsmodules", "description": "Krijg toegang tot gespecialiseerde modules voor slaan, gooien en pitchen om specifieke vaardigheden te verbeteren." },
+      "upload": { "title": "Video Uploaden", "description": "Upload je trainingsvideo's om AI-gestuurde analyse van je techniek te krijgen." },
+      "coaching": { "title": "AI Coaching", "description": "Ontvang gedetailleerde feedback en oefenaanbevelingen op basis van je videoanalyse." },
+      "library": { "title": "Spelers Club", "description": "Sla je trainingssessies op en organiseer ze in je persoonlijke bibliotheek." },
+      "following": { "title": "Scout Verbinding", "description": "Verbind met scouts en coaches die je trainingsvoortgang kunnen zien." },
+      "ranking": { "title": "Ranglijsten", "description": "Volg je voortgang en vergelijk jezelf met andere atleten in de ranglijsten." },
+      "profile": { "title": "Profiel Instellingen", "description": "Pas je profiel aan en beheer je accountinstellingen." }
+    },
+    "scout": {
+      "welcome": { "title": "Welkom, Scout!", "description": "Laten we de tools verkennen om talent te ontdekken en te evalueren." },
+      "creator": { "title": "Je Scout Profiel", "description": "Stel je kwalificaties en organisatie-affiliatie in." },
+      "discover": { "title": "Ontdek Spelers", "description": "Blader en zoek naar getalenteerde spelers met geavanceerde filters." },
+      "search": { "title": "Geavanceerd Zoeken", "description": "Filter spelers op positie, staat, ervaringsniveau en meer." },
+      "follow": { "title": "Volg Spelers", "description": "Stuur volgverzoeken om toegang te krijgen tot de trainingsbibliotheken van spelers." },
+      "videos": { "title": "Bekijk Video's", "description": "Bekijk trainingssessies en analyseer de technieken van spelers." },
+      "rankings": { "title": "Speler Ranglijsten", "description": "Bekijk prestatieranglijsten voor alle spelers op het platform." },
+      "analyze": { "title": "Analyseer Prestaties", "description": "Bekijk AI-analyses en voeg je eigen annotaties toe aan spelervideo's." }
+    }
+  },
+  "nutrition": {
+    "categoryContent": {
+      "bloodType": {
+        "content1": "Verschillende bloedgroepen kunnen verschillend reageren op bepaalde voedingsmiddelen",
+        "content2": "Het begrijpen van je bloedgroep kan helpen bij het personaliseren van je voedingskeuzes",
+        "content3": "Onderzoek suggereert mogelijke correlaties tussen bloedgroep en voedingsstofopname",
+        "content4": "Overweeg een voedingsdeskundige te raadplegen voor gepersonaliseerde aanbevelingen",
+        "content5": "Bloedgroep kan ontstekingen en energieniveaus bij atleten beïnvloeden"
+      },
+      "hydration": {
+        "content1": "Optimale hydratatie verbetert atletische prestaties en herstel",
+        "content2": "Streef ernaar dagelijks de helft van je lichaamsgewicht in ounces water te drinken",
+        "content3": "Elektrolyten zijn cruciaal tijdens intensieve training en warm weer",
+        "content4": "Monitor urinekleur als indicator voor hydratatie",
+        "content5": "Pre-hydratatie voor training is net zo belangrijk als drinken tijdens"
+      },
+      "mineralization": {
+        "content1": "Mineralen zijn essentieel voor spierfunctie en botgezondheid",
+        "content2": "Magnesium helpt bij spierherstel en slaapkwaliteit",
+        "content3": "Zink ondersteunt de immuunfunctie en weefselherstel",
+        "content4": "Calcium en vitamine D werken samen voor botdichtheid",
+        "content5": "IJzer is cruciaal voor zuurstoftransport en energieproductie"
+      },
+      "recovery": {
+        "content1": "Herstel na training is cruciaal voor prestatiewinst",
+        "content2": "Consumeer eiwitten binnen 30 minuten na intensieve training",
+        "content3": "Slaap is de belangrijkste hersteltechniek",
+        "content4": "Ontstekingsremmende voedingsmiddelen helpen spierpijn te verminderen",
+        "content5": "Actief herstel kan voordeliger zijn dan volledige rust"
+      },
+      "bloodFlow": {
+        "content1": "Goede bloedcirculatie verbetert de voedingstoftoevoer naar spieren",
+        "content2": "Stikstofoxide uit bladgroenten verbetert de bloedstroom",
+        "content3": "Cardiovasculaire gezondheid beïnvloedt direct atletische prestaties",
+        "content4": "Bieten hebben aangetoond uithoudingsvermogen te verbeteren",
+        "content5": "Goede circulatie helpt bij afvalverwijdering uit spieren"
+      },
+      "lymphatic": {
+        "content1": "Het lymfesysteem verwijdert gifstoffen en afvalstoffen",
+        "content2": "Hydratatie ondersteunt de juiste lymfefunctie",
+        "content3": "Beweging en oefening stimuleren de lymfecirculatie",
+        "content4": "Droog borstelen kan helpen bij lymfedrainage",
+        "content5": "Gezonde lymfe ondersteunt immuunfunctie en herstel"
+      },
+      "vitamins": {
+        "content1": "Vitaminen zijn essentieel voor energieproductie en herstel",
+        "content2": "B-vitaminen helpen voedsel om te zetten in energie",
+        "content3": "Vitamine C ondersteunt immuniteit en collageensynthese",
+        "content4": "Vitamine D is cruciaal voor botgezondheid en spierfunctie",
+        "content5": "Volwaardig voedsel is over het algemeen beter dan supplementen"
+      },
+      "dailyTips": {
+        "content1": "Begin elke dag met water voor koffie of eten",
+        "content2": "Eet kleurrijk voedsel voor voedingsvariëteit",
+        "content3": "Plan maaltijden rond trainingsschema's",
+        "content4": "Luister naar de honger- en verzadigingssignalen van je lichaam",
+        "content5": "Consistentie in eetgewoonten geeft betere resultaten"
+      },
+      "longevity": {
+        "content1": "Levensduur begint met dagelijkse gezondheidsgewoonten",
+        "content2": "Ontstekingsremmende diëten ondersteunen gezondheid op lange termijn",
+        "content3": "Sociale connecties beïnvloeden levensduur net zoveel als voeding",
+        "content4": "Regelmatige lichaamsbeweging is de sleutel tot gezond ouder worden",
+        "content5": "Stressmanagement is cruciaal voor gezondheid op lange termijn"
+      },
+      "weight": {
+        "content1": "Gewichtsbeheersing richt zich op lichaamssamenstelling, niet alleen weegschaalcijfers",
+        "content2": "Spiermassa is belangrijker dan totaalgewicht voor atleten",
+        "content3": "Getimede voeding kan het metabolisme optimaliseren",
+        "content4": "Geleidelijke veranderingen zijn duurzamer dan extreme diëten",
+        "content5": "Monitor energie en prestaties, niet alleen gewicht"
+      },
+      "vegan": {
+        "content1": "Plantaardige diëten kunnen atletische prestaties ondersteunen",
+        "content2": "Eiwitcombinatie zorgt voor volledige aminozuurinname",
+        "content3": "B12-suppletie is essentieel voor veganistische atleten",
+        "content4": "IJzer uit plantaardige bronnen heeft vitamine C nodig voor opname",
+        "content5": "Omega-3 vetzuren kunnen uit lijnzaad en noten komen"
+      },
+      "restrictive": {
+        "content1": "Restrictieve diëten vereisen zorgvuldige planning voor atleten",
+        "content2": "Voedselsensitiviteiten moeten correct worden gediagnosticeerd",
+        "content3": "Eliminatiediëten kunnen voedselstriggers identificeren",
+        "content4": "Werk samen met een diëtist voor grote voedselrestricties",
+        "content5": "Er bestaan alternatieven voor de meeste gangbare voedingsmiddelen"
+      },
+      "offSeason": {
+        "content1": "Het naseizoen is de tijd om kracht op te bouwen en tekorten te corrigeren",
+        "content2": "Focus op voedingskwaliteit in plaats van restrictie",
+        "content3": "Gebruik deze tijd om te experimenteren met nieuwe gezonde voedingsmiddelen",
+        "content4": "Pak geïdentificeerde voedingstekorten aan",
+        "content5": "Bereid het lichaam geleidelijk voor op seizoensvereisten"
+      },
+      "inSeason": {
+        "content1": "Seizoensvoeding ondersteunt hoge prestatie-eisen",
+        "content2": "Consistentie in eten wordt kritiek tijdens competitie",
+        "content3": "Pas calorie-inname aan aan trainingsbelasting",
+        "content4": "Time maaltijden rond wedstrijden en trainingen",
+        "content5": "Behoud gewoontes die werken, vermijd experimenten"
+      },
+      "performance": {
+        "content1": "Pre-workout voeding voedt training en competitie",
+        "content2": "Koolhydraten zijn de primaire brandstof voor hoogintensieve oefening",
+        "content3": "Eiwitten voor het sporten kunnen spierafbraak verminderen",
+        "content4": "Vermijd vezelrijke voedingsmiddelen vlak voor activiteit",
+        "content5": "Maaltijdtiming beïnvloedt energiebeschikbaarheid"
+      },
+      "inGame": {
+        "content1": "In-game hydratatie behoudt prestaties tijdens de hele wedstrijd",
+        "content2": "Eenvoudige koolhydraten leveren snelle energie tijdens wedstrijden",
+        "content3": "Elektrolyten voorkomen krampen en vermoeidheid",
+        "content4": "Rust-voeding kan prestaties in de tweede helft beïnvloeden",
+        "content5": "Oefen wedstrijddagvoeding tijdens training"
+      },
+      "supplements": {
+        "content1": "NSF-gecertificeerde supplementen garanderen veiligheid voor atleten",
+        "content2": "Volwaardig voedsel moet de basis van voeding zijn",
+        "content3": "Creatine is een van de meest onderzochte supplementen",
+        "content4": "Cafeïne kan prestaties verbeteren bij correct gebruik",
+        "content5": "Raadpleeg professionals voordat je met supplementen begint"
+      },
+      "holistic": {
+        "content1": "Holistische gezondheid verbindt lichaam, geest en ziel",
+        "content2": "Stressmanagement beïnvloedt spijsvertering en voedingstofopname",
+        "content3": "Slaapkwaliteit beïnvloedt voedselkeuzes en metabolisme",
+        "content4": "Bewust eten verbetert maaltijdtevredenheid",
+        "content5": "Mentale gezondheid is net zo belangrijk als fysieke gezondheid"
+      }
+    }
   }
 }
