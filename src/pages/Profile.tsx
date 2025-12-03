@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -80,6 +81,7 @@ export default function Profile() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (authLoading || ownerLoading) return;
@@ -252,8 +254,8 @@ export default function Profile() {
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
-        title: "Error loading profile",
-        description: "Unable to load this profile. You may not have permission to view it.",
+        title: t('toast.errorLoadingProfile'),
+        description: t('profile.unableToLoadProfile'),
         variant: "destructive"
       });
       if (viewingOtherProfile) {
@@ -274,8 +276,8 @@ export default function Profile() {
       if (error) throw error;
 
       toast({
-        title: 'Follow request sent',
-        description: `A follow request has been sent to ${profile?.first_name || 'the player'}.`,
+        title: t('toast.followRequestSent'),
+        description: t('profile.followRequestSentTo', { name: profile?.first_name || t('profile.thePlayer') }),
       });
 
       // Update follow status to pending
@@ -284,8 +286,8 @@ export default function Profile() {
     } catch (error: any) {
       console.error('Error sending follow:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to send follow request',
+        title: t('common.error'),
+        description: error.message || t('profile.failedToSendFollowRequest'),
         variant: 'destructive',
       });
     } finally {
@@ -299,8 +301,8 @@ export default function Profile() {
     
     if (file.size > 5 * 1024 * 1024) {
       toast({ 
-        title: "File too large", 
-        description: "Maximum file size is 5MB", 
+        title: t('toast.fileTooLarge'), 
+        description: t('toast.maxFileSizeInfo'), 
         variant: "destructive" 
       });
       return;
@@ -325,14 +327,14 @@ export default function Profile() {
       setAvatarPreview(publicUrl);
       
       toast({
-        title: "Upload successful",
-        description: "Profile picture uploaded successfully",
+        title: t('toast.uploadSuccessful'),
+        description: t('toast.profilePictureUploaded'),
       });
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({ 
-        title: "Upload failed", 
-        description: "Failed to upload profile picture", 
+        title: t('toast.uploadFailed'), 
+        description: t('profile.failedToUploadProfilePicture'), 
         variant: "destructive" 
       });
     } finally {
@@ -398,8 +400,8 @@ export default function Profile() {
       if (error) throw error;
 
       toast({
-        title: "Profile Updated",
-        description: "Your profile has been saved successfully.",
+        title: t('toast.profileUpdated'),
+        description: t('toast.profileSaved'),
       });
 
       setEditDialogOpen(false);
@@ -407,8 +409,8 @@ export default function Profile() {
     } catch (error) {
       console.error('Error saving profile:', error);
       toast({
-        title: "Error",
-        description: "Failed to save profile. Please try again.",
+        title: t('common.error'),
+        description: t('profile.failedToSaveProfile'),
         variant: "destructive",
       });
     } finally {
@@ -443,7 +445,7 @@ export default function Profile() {
   };
 
   const handleCancelAll = async () => {
-    if (!confirm('Cancel all modules? You\'ll keep access until each billing date.')) return;
+    if (!confirm(t('profile.cancelAllConfirm'))) return;
     
     setIsRefreshing(true);
     try {
@@ -457,16 +459,16 @@ export default function Profile() {
       if (error) throw error;
       
       toast({
-        title: "All modules will be canceled",
-        description: data.message || 'You\'ll keep access until each billing date'
+        title: t('toast.modulesCanceled'),
+        description: data.message || t('profile.keepAccessUntilBillingDate')
       });
       
       refetch();
     } catch (error) {
       console.error('Cancel all error:', error);
       toast({
-        title: "Error",
-        description: "Failed to cancel subscriptions",
+        title: t('common.error'),
+        description: t('profile.failedToCancelSubscriptions'),
         variant: "destructive"
       });
     } finally {
@@ -490,8 +492,8 @@ export default function Profile() {
       if (data?.url) {
         window.open(data.url, '_blank');
         toast({
-          title: "Opening Billing Portal",
-          description: "Manage your subscription in the new tab",
+          title: t('profile.openingBillingPortal'),
+          description: t('profile.manageBillingInNewTab'),
         });
       }
     } catch (error) {
@@ -503,10 +505,10 @@ export default function Profile() {
                                    errorMessage.includes('default configuration has not been created');
       
       toast({
-        title: "Billing Portal Unavailable",
+        title: t('toast.billingPortalUnavailable'),
         description: isPortalConfigError 
-          ? "The billing portal is currently being set up. Please contact support to manage your subscription."
-          : "Failed to open billing portal. Please try again later.",
+          ? t('profile.portalBeingSetUp')
+          : t('profile.failedToOpenBillingPortal'),
         variant: "destructive",
       });
     } finally {
@@ -566,7 +568,7 @@ export default function Profile() {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Button variant="ghost" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            {t('profile.backToDashboard')}
           </Button>
           <UserMenu userName={menuName} userEmail={menuEmail} />
         </div>
@@ -576,18 +578,18 @@ export default function Profile() {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">
-          {viewingOtherProfile ? `${displayName}'s Profile` : "Profile"}
+          {viewingOtherProfile ? t('profile.viewingPlayerProfile', { name: displayName }) : t('profile.title')}
         </h1>
         <div className="flex items-center gap-3">
           {viewingOtherProfile && (
             <Badge variant="secondary">
               {isOwner
-                ? "Viewing as Owner"
+                ? t('profile.viewingAsOwner')
                 : currentUserRole === 'scout'
-                ? "Viewing as Scout"
+                ? t('profile.viewingAsScout')
                 : currentUserRole === 'coach'
-                ? "Viewing as Coach"
-                : "Viewing Profile"}
+                ? t('profile.viewingAsCoach')
+                : t('profile.viewingProfile')}
             </Badge>
           )}
           
@@ -608,19 +610,19 @@ export default function Profile() {
                   ) : (
                     <UserPlus className="h-4 w-4" />
                   )}
-                  {sendingFollow ? 'Sending...' : 'Follow Player'}
+                  {sendingFollow ? t('profile.sending') : t('profile.followPlayer')}
                 </Button>
               )}
               {followStatus === 'pending' && (
                 <Badge variant="secondary" className="gap-1 px-3 py-1.5">
                   <Clock className="h-4 w-4" />
-                  Follow Request Pending
+                  {t('profile.followRequestPending')}
                 </Badge>
               )}
               {followStatus === 'accepted' && (
                 <Badge variant="default" className="gap-1 px-3 py-1.5">
                   <Check className="h-4 w-4" />
-                  Following
+                  {t('profile.following')}
                 </Badge>
               )}
             </>
@@ -647,7 +649,7 @@ export default function Profile() {
               {/* Credentials Display */}
               {profile?.credentials && profile.credentials.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="font-semibold mb-2">Experience & Credentials</h4>
+                  <h4 className="font-semibold mb-2">{t('profile.experienceCredentials')}</h4>
                   <div className="space-y-2">
                     {profile.credentials.map((cred: string, index: number) => (
                       <div key={index} className="flex items-start gap-2 text-sm">
@@ -664,106 +666,106 @@ export default function Profile() {
                 <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
                   {profile?.height && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Height</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.height')}</Label>
                       <p>{profile.height}</p>
                     </div>
                   )}
                   {profile?.weight && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Weight</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.weight')}</Label>
                       <p>{profile.weight}</p>
                     </div>
                   )}
                   {profile?.throwing_hand && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Throws</Label>
-                      <p>{profile.throwing_hand === 'B' ? 'Both' : profile.throwing_hand === 'R' ? 'Right' : 'Left'}</p>
+                      <Label className="text-xs text-muted-foreground">{t('profile.throws')}</Label>
+                      <p>{profile.throwing_hand === 'B' ? t('profile.both') : profile.throwing_hand === 'R' ? t('profile.right') : t('profile.left')}</p>
                     </div>
                   )}
                   {profile?.batting_side && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Bats</Label>
-                      <p>{profile.batting_side === 'B' ? 'Switch' : profile.batting_side === 'R' ? 'Right' : 'Left'}</p>
+                      <Label className="text-xs text-muted-foreground">{t('profile.bats')}</Label>
+                      <p>{profile.batting_side === 'B' ? t('profile.switch') : profile.batting_side === 'R' ? t('profile.right') : t('profile.left')}</p>
                     </div>
                   )}
                   {profile?.state && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">State</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.state')}</Label>
                       <p>{profile.state}</p>
                     </div>
                   )}
                   {profile?.graduation_year && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">HS Grad Year</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.hsGradYear')}</Label>
                       <p>{profile.graduation_year}</p>
                     </div>
                   )}
                   {profile?.college_grad_year && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">College Grad Year</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.collegeGradYear')}</Label>
                       <p>{profile.college_grad_year}</p>
                     </div>
                   )}
                   {profile?.enrolled_in_college && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">College Status</Label>
-                      <p>Currently Enrolled</p>
+                      <Label className="text-xs text-muted-foreground">{t('profile.collegeStatus')}</Label>
+                      <p>{t('profile.currentlyEnrolled')}</p>
                     </div>
                   )}
                   {profile?.position && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Position</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.position')}</Label>
                       <p>{profile.position}</p>
                     </div>
                   )}
                   {profile?.experience_level && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Experience Level</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.experienceLevel')}</Label>
                       <p className="capitalize">{profile.experience_level.replace('_', ' ')}</p>
                     </div>
                   )}
                   {profile?.commitment_status && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Status</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.status')}</Label>
                       <p className="capitalize">{profile.commitment_status}</p>
                     </div>
                   )}
                   {profile?.team_affiliation && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Team</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.team')}</Label>
                       <p>{profile.team_affiliation}</p>
                     </div>
                   )}
                   {profile?.is_professional && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Level</Label>
-                      <p>Professional Player</p>
+                      <Label className="text-xs text-muted-foreground">{t('profile.level')}</Label>
+                      <p>{t('profile.professionalPlayer')}</p>
                     </div>
                   )}
                   {profile?.is_free_agent && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Status</Label>
-                      <p>Free Agent</p>
+                      <Label className="text-xs text-muted-foreground">{t('profile.status')}</Label>
+                      <p>{t('profile.freeAgent')}</p>
                     </div>
                   )}
                   {profile?.mlb_affiliate && (
                     <div>
                       <Label className="text-xs text-muted-foreground">
-                        {playerSport === 'softball' ? 'Professional Affiliate' : 'MLB Affiliate'}
+                        {playerSport === 'softball' ? t('profile.professionalAffiliate') : t('profile.mlbAffiliate')}
                       </Label>
                       <p>{profile.mlb_affiliate}</p>
                     </div>
                   )}
                   {profile?.independent_league && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Independent League</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.independentLeague')}</Label>
                       <p>{profile.independent_league}</p>
                     </div>
                   )}
                   {profile?.is_foreign_player && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Player Type</Label>
-                      <p>International Player</p>
+                      <Label className="text-xs text-muted-foreground">{t('profile.playerType')}</Label>
+                      <p>{t('profile.internationalPlayer')}</p>
                     </div>
                   )}
                 </div>
@@ -774,20 +776,20 @@ export default function Profile() {
                 <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
                   {profile?.position && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Position</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.position')}</Label>
                       <p>{profile.position}</p>
                     </div>
                   )}
                   {profile?.team_affiliation && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Team Affiliation</Label>
+                      <Label className="text-xs text-muted-foreground">{t('profile.teamAffiliation')}</Label>
                       <p>{profile.team_affiliation}</p>
                     </div>
                   )}
                   {profile?.years_affiliated && (
                     <div>
-                      <Label className="text-xs text-muted-foreground">Years Affiliated</Label>
-                      <p>{profile.years_affiliated} years</p>
+                      <Label className="text-xs text-muted-foreground">{t('profile.yearsAffiliated')}</Label>
+                      <p>{profile.years_affiliated} {t('profile.years')}</p>
                     </div>
                   )}
                 </div>
@@ -928,7 +930,7 @@ export default function Profile() {
                 </DialogTrigger>
               <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
                 <DialogHeader>
-                  <DialogTitle>Edit Profile</DialogTitle>
+                  <DialogTitle>{t('profile.editProfile')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4 overflow-y-auto flex-1">
                   <div className="grid grid-cols-2 gap-3">
@@ -942,7 +944,7 @@ export default function Profile() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="last_name">Last Name</Label>
+                      <Label htmlFor="last_name">{t('profile.lastName')}</Label>
                       <Input
                         id="last_name"
                         value={editForm.last_name}
@@ -969,7 +971,7 @@ export default function Profile() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="bio">Bio</Label>
+                    <Label htmlFor="bio">{t('profile.bio')}</Label>
                     {currentUserRole === 'player' && (
                       <p className="text-xs text-muted-foreground mt-1 mb-2">
                         Please include: Contact Email, Height and Weight, State, Graduation Year (HS & College), Batting Side(s), Position(s), Throwing Hand(s), Team Affiliation or Free Agency/Uncommitted status
@@ -1032,13 +1034,13 @@ export default function Profile() {
                           className="w-full"
                         >
                           <PlusCircle className="h-4 w-4 mr-2" />
-                          Add Credential
+                          {t('profile.addCredential')}
                         </Button>
                       )}
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Profile Picture</Label>
+                    <Label>{t('profile.profilePicture')}</Label>
                     <div className="flex gap-4 items-start">
                       <Avatar className="h-20 w-20">
                         <AvatarImage src={avatarPreview || profile?.avatar_url} />
@@ -1052,10 +1054,10 @@ export default function Profile() {
                           disabled={uploading}
                         />
                         <p className="text-xs text-muted-foreground">
-                          Max size: 5MB. JPG, PNG, or WEBP
+                          {t('profile.maxSizeInfo')}
                         </p>
                         <Input
-                          placeholder="Or enter image URL"
+                          placeholder={t('profile.orEnterImageUrl')}
                           value={editForm.avatar_url}
                           onChange={(e) => {
                             setEditForm({ ...editForm, avatar_url: e.target.value });
@@ -1071,7 +1073,7 @@ export default function Profile() {
                     <>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
-                          <Label htmlFor="height">Height</Label>
+                          <Label htmlFor="height">{t('profile.height')}</Label>
                           <Input
                             id="height"
                             value={editForm.height}
@@ -1080,7 +1082,7 @@ export default function Profile() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="weight">Weight</Label>
+                          <Label htmlFor="weight">{t('profile.weight')}</Label>
                           <Input
                             id="weight"
                             value={editForm.weight}
@@ -1092,7 +1094,7 @@ export default function Profile() {
                       
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
-                          <Label htmlFor="state">State</Label>
+                          <Label htmlFor="state">{t('profile.state')}</Label>
                           <Input
                             id="state"
                             value={editForm.state}
@@ -1101,7 +1103,7 @@ export default function Profile() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="graduation_year">HS Grad Year</Label>
+                          <Label htmlFor="graduation_year">{t('profile.hsGradYear')}</Label>
                           <Input
                             id="graduation_year"
                             type="number"
@@ -1113,30 +1115,30 @@ export default function Profile() {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="position">Primary Position</Label>
+                        <Label htmlFor="position">{t('profile.primaryPosition')}</Label>
                         <Select
                           value={editForm.position}
                           onValueChange={(value) => setEditForm({ ...editForm, position: value })}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select position" />
+                            <SelectValue placeholder={t('profile.selectPosition')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="P">Pitcher (P)</SelectItem>
-                            <SelectItem value="C">Catcher (C)</SelectItem>
-                            <SelectItem value="1B">First Base (1B)</SelectItem>
-                            <SelectItem value="2B">Second Base (2B)</SelectItem>
-                            <SelectItem value="3B">Third Base (3B)</SelectItem>
-                            <SelectItem value="SS">Shortstop (SS)</SelectItem>
-                            <SelectItem value="LF">Left Field (LF)</SelectItem>
-                            <SelectItem value="CF">Center Field (CF)</SelectItem>
-                            <SelectItem value="RF">Right Field (RF)</SelectItem>
+                            <SelectItem value="P">{t('profile.positions.pitcher')}</SelectItem>
+                            <SelectItem value="C">{t('profile.positions.catcher')}</SelectItem>
+                            <SelectItem value="1B">{t('profile.positions.firstBase')}</SelectItem>
+                            <SelectItem value="2B">{t('profile.positions.secondBase')}</SelectItem>
+                            <SelectItem value="3B">{t('profile.positions.thirdBase')}</SelectItem>
+                            <SelectItem value="SS">{t('profile.positions.shortstop')}</SelectItem>
+                            <SelectItem value="LF">{t('profile.positions.leftField')}</SelectItem>
+                            <SelectItem value="CF">{t('profile.positions.centerField')}</SelectItem>
+                            <SelectItem value="RF">{t('profile.positions.rightField')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="team_affiliation">Team Affiliation</Label>
+                        <Label htmlFor="team_affiliation">{t('profile.teamAffiliation')}</Label>
                         <Input
                           id="team_affiliation"
                           value={editForm.team_affiliation}
@@ -1147,39 +1149,39 @@ export default function Profile() {
                       
                       {/* Playing Style */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-semibold">Playing Style</Label>
+                        <Label className="text-sm font-semibold">{t('profile.playingStyle')}</Label>
                         
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-2">
-                            <Label htmlFor="throwing_hand">Throwing Hand</Label>
+                            <Label htmlFor="throwing_hand">{t('profile.throwingHand')}</Label>
                             <Select
                               value={editForm.throwing_hand}
                               onValueChange={(value) => setEditForm({ ...editForm, throwing_hand: value })}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select" />
+                                <SelectValue placeholder={t('common.select')} />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="R">Right</SelectItem>
-                                <SelectItem value="L">Left</SelectItem>
-                                <SelectItem value="B">Both</SelectItem>
+                                <SelectItem value="R">{t('profile.right')}</SelectItem>
+                                <SelectItem value="L">{t('profile.left')}</SelectItem>
+                                <SelectItem value="B">{t('profile.both')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                           
                           <div className="space-y-2">
-                            <Label htmlFor="batting_side">Batting Side</Label>
+                            <Label htmlFor="batting_side">{t('profile.battingSide')}</Label>
                             <Select
                               value={editForm.batting_side}
                               onValueChange={(value) => setEditForm({ ...editForm, batting_side: value })}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select" />
+                                <SelectValue placeholder={t('common.select')} />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="R">Right</SelectItem>
-                                <SelectItem value="L">Left</SelectItem>
-                                <SelectItem value="B">Switch</SelectItem>
+                                <SelectItem value="R">{t('profile.right')}</SelectItem>
+                                <SelectItem value="L">{t('profile.left')}</SelectItem>
+                                <SelectItem value="B">{t('profile.switch')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1188,11 +1190,11 @@ export default function Profile() {
                       
                       {/* Academic & Commitment Status */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-semibold">Academic & Commitment</Label>
+                        <Label className="text-sm font-semibold">{t('profile.academicCommitment')}</Label>
                         
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-2">
-                            <Label htmlFor="college_grad_year">College Grad Year</Label>
+                            <Label htmlFor="college_grad_year">{t('profile.collegeGradYear')}</Label>
                             <Input
                               id="college_grad_year"
                               type="number"
@@ -1203,17 +1205,17 @@ export default function Profile() {
                           </div>
                           
                           <div className="space-y-2">
-                            <Label htmlFor="commitment_status">Commitment Status</Label>
+                            <Label htmlFor="commitment_status">{t('profile.commitmentStatus')}</Label>
                             <Select
                               value={editForm.commitment_status}
                               onValueChange={(value) => setEditForm({ ...editForm, commitment_status: value })}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select" />
+                                <SelectValue placeholder={t('common.select')} />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="committed">Committed</SelectItem>
-                                <SelectItem value="uncommitted">Uncommitted</SelectItem>
+                                <SelectItem value="committed">{t('profile.committed')}</SelectItem>
+                                <SelectItem value="uncommitted">{t('profile.uncommitted')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1225,13 +1227,13 @@ export default function Profile() {
                             checked={editForm.enrolled_in_college}
                             onCheckedChange={(checked) => setEditForm({ ...editForm, enrolled_in_college: checked })}
                           />
-                          <Label htmlFor="enrolled_in_college">Currently enrolled in college</Label>
+                          <Label htmlFor="enrolled_in_college">{t('profile.currentlyEnrolledInCollege')}</Label>
                         </div>
                       </div>
                       
                       {/* Professional Status */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-semibold">Professional Status</Label>
+                        <Label className="text-sm font-semibold">{t('profile.professionalStatus')}</Label>
                         
                         <div className="flex items-center space-x-2 mb-2">
                           <Switch
@@ -1239,7 +1241,7 @@ export default function Profile() {
                             checked={editForm.is_professional}
                             onCheckedChange={(checked) => setEditForm({ ...editForm, is_professional: checked })}
                           />
-                          <Label htmlFor="is_professional">Professional player</Label>
+                          <Label htmlFor="is_professional">{t('profile.isProfessional')}</Label>
                         </div>
                         
                         {editForm.is_professional && (
@@ -1250,12 +1252,12 @@ export default function Profile() {
                                 checked={editForm.is_free_agent}
                                 onCheckedChange={(checked) => setEditForm({ ...editForm, is_free_agent: checked })}
                               />
-                              <Label htmlFor="is_free_agent">Free Agent</Label>
+                              <Label htmlFor="is_free_agent">{t('profile.freeAgent')}</Label>
                             </div>
                             
                             <div className="space-y-2">
                               <Label htmlFor="mlb_affiliate">
-                                {playerSport === 'softball' ? 'Professional Affiliate' : 'MLB Affiliate'}
+                                {playerSport === 'softball' ? t('profile.professionalAffiliate') : t('profile.mlbAffiliate')}
                               </Label>
                               <Input
                                 id="mlb_affiliate"
@@ -1266,7 +1268,7 @@ export default function Profile() {
                             </div>
                             
                             <div className="space-y-2">
-                              <Label htmlFor="independent_league">Independent League</Label>
+                              <Label htmlFor="independent_league">{t('profile.independentLeague')}</Label>
                               <Input
                                 id="independent_league"
                                 value={editForm.independent_league}
@@ -1285,25 +1287,25 @@ export default function Profile() {
                           checked={editForm.is_foreign_player}
                           onCheckedChange={(checked) => setEditForm({ ...editForm, is_foreign_player: checked })}
                         />
-                        <Label htmlFor="is_foreign_player">International/Foreign player</Label>
+                        <Label htmlFor="is_foreign_player">{t('profile.isForeignPlayer')}</Label>
                       </div>
                       
                       {/* Experience Level */}
                       <div className="space-y-2">
-                        <Label htmlFor="experience_level">Experience Level</Label>
+                        <Label htmlFor="experience_level">{t('profile.experienceLevel')}</Label>
                         <Select
                           value={editForm.experience_level}
                           onValueChange={(value) => setEditForm({ ...editForm, experience_level: value })}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select level" />
+                            <SelectValue placeholder={t('profile.selectLevel')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="youth">Youth</SelectItem>
-                            <SelectItem value="high_school">High School</SelectItem>
-                            <SelectItem value="college">College</SelectItem>
-                            <SelectItem value="professional">Professional</SelectItem>
-                            <SelectItem value="semi_pro">Semi-Pro</SelectItem>
+                            <SelectItem value="youth">{t('profile.experienceLevels.youth')}</SelectItem>
+                            <SelectItem value="high_school">{t('profile.experienceLevels.highSchool')}</SelectItem>
+                            <SelectItem value="college">{t('profile.experienceLevels.college')}</SelectItem>
+                            <SelectItem value="professional">{t('profile.experienceLevels.professional')}</SelectItem>
+                            <SelectItem value="semi_pro">{t('profile.experienceLevels.semiPro')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1314,7 +1316,7 @@ export default function Profile() {
                   {isCoachOrScout && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="position">Position/Role</Label>
+                        <Label htmlFor="position">{t('profile.positionRole')}</Label>
                         <Input
                           id="position"
                           value={editForm.position}
@@ -1324,7 +1326,7 @@ export default function Profile() {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="team_affiliation">Team Affiliation</Label>
+                        <Label htmlFor="team_affiliation">{t('profile.teamAffiliation')}</Label>
                         <Input
                           id="team_affiliation"
                           value={editForm.team_affiliation}
@@ -1334,7 +1336,7 @@ export default function Profile() {
                       </div>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="years_affiliated">Years Affiliated</Label>
+                        <Label htmlFor="years_affiliated">{t('profile.yearsAffiliated')}</Label>
                         <Input
                           id="years_affiliated"
                           type="number"
@@ -1347,9 +1349,9 @@ export default function Profile() {
                   )}
                   
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Social Media Links</Label>
+                    <Label className="text-sm font-semibold">{t('profile.socialMediaLinks')}</Label>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Enter your handle (e.g., "username") or full URL
+                      {t('profile.enterHandleOrUrl')}
                     </p>
                     
                     <div className="space-y-3">
@@ -1421,9 +1423,9 @@ export default function Profile() {
                   {/* Additional Website Links */}
                   {(editForm.social_website || editForm.social_website_2 || editForm.social_website_3 || editForm.social_website_4 || editForm.social_website_5) && (
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Additional Website Links</Label>
+                      <Label className="text-sm font-semibold">{t('profile.additionalWebsiteLinks')}</Label>
                       <p className="text-xs text-muted-foreground mb-2">
-                        Add up to 4 more website URLs
+                        {t('profile.addMoreWebsites')}
                       </p>
                       
                       <div className="space-y-3">
@@ -1474,13 +1476,13 @@ export default function Profile() {
 
                   {/* Preferences */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold">Preferences</Label>
+                    <Label className="text-sm font-semibold">{t('profile.preferences')}</Label>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Customize your app experience
+                      {t('profile.customizeExperience')}
                     </p>
                     <div className="space-y-3">
                       <div className="space-y-2">
-                        <Label htmlFor="language">Language</Label>
+                        <Label htmlFor="language">{t('profile.language')}</Label>
                         <LanguageSelector />
                       </div>
                     </div>
@@ -1490,10 +1492,10 @@ export default function Profile() {
                     {saving ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
+                        {t('common.saving')}
                       </>
                     ) : (
-                      "Save Changes"
+                      t('common.saveChanges')
                     )}
                   </Button>
                 </div>
@@ -1509,17 +1511,17 @@ export default function Profile() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
-              Subscription Status
+              {t('profile.subscriptionStatus')}
             </h3>
             <Badge variant={subscribedModules.length > 0 ? "default" : "secondary"}>
-              {subscribedModules.length > 0 ? "Active" : "No Active Subscription"}
+              {subscribedModules.length > 0 ? t('profile.active') : t('profile.noActiveSubscription')}
             </Badge>
           </div>
 
           {subscribedModules.length > 0 ? (
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold mb-2">Active Modules:</h4>
+                <h4 className="font-semibold mb-2">{t('profile.activeModules')}</h4>
                 <div className="flex flex-wrap gap-2">
                   {subscribedModules.map((module) => (
                     <Badge key={module} variant="outline" className="capitalize">
@@ -1533,9 +1535,9 @@ export default function Profile() {
                 <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <p className="text-sm font-semibold text-green-800 dark:text-green-200">
                     {discount_percent === 100 ? (
-                      <>🎉 You have a 100% discount! You're not being charged.</>
+                      <>{t('profile.fullDiscount')}</>
                     ) : (
-                      <>💰 Active {discount_percent}% discount applied to your subscription</>
+                      <>{t('profile.discountApplied', { percent: discount_percent })}</>
                     )}
                   </p>
                 </div>
@@ -1544,21 +1546,21 @@ export default function Profile() {
               {subscriptionEndDate && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>Renews on {subscriptionEndDate}</span>
+                  <span>{t('profile.renewsOn', { date: subscriptionEndDate })}</span>
                 </div>
               )}
 
               {!viewingOtherProfile && (
                 <div className="space-y-4 pt-4 border-t">
                   <div>
-                    <h4 className="text-sm font-semibold text-muted-foreground mb-3">Manage Your Modules</h4>
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-3">{t('profile.manageYourModules')}</h4>
                     <Button 
                       onClick={handleAddModules}
                       variant="default"
                       className="w-full"
                     >
                       <PlusCircle className="mr-2 h-4 w-4" />
-                      Add Modules
+                      {t('profile.addModules')}
                     </Button>
                   </div>
                 </div>
@@ -1567,10 +1569,10 @@ export default function Profile() {
           ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">
-                You don't have any active subscriptions.
+                {t('profile.noActiveSubscriptions')}
               </p>
               <Button onClick={() => navigate("/checkout")}>
-                Subscribe to Modules
+                {t('profile.subscribeToModules')}
               </Button>
             </div>
           )}
@@ -1583,14 +1585,14 @@ export default function Profile() {
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <h3 className="text-xl font-bold">Manage Your Subscriptions</h3>
+                  <h3 className="text-xl font-bold">{t('profile.manageSubscriptions')}</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Control each module individually - cancel anytime
+                    {t('profile.controlModulesDescription')}
                   </p>
                 </div>
                 {Object.keys(module_details).length > 1 && (
                   <Button variant="outline" onClick={handleCancelAll} disabled={isRefreshing}>
-                    Cancel All Modules
+                    {t('profile.cancelAllModules')}
                   </Button>
                 )}
               </div>
@@ -1615,14 +1617,14 @@ export default function Profile() {
 
         {/* Account Info Card */}
         <Card className="p-6">
-          <h3 className="text-xl font-bold mb-4">Account Information</h3>
+          <h3 className="text-xl font-bold mb-4">{t('profile.accountInformation')}</h3>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">User ID:</span>
+              <span className="text-muted-foreground">{t('profile.userId')}</span>
               <span className="font-mono text-xs">{user.id}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Account Created:</span>
+              <span className="text-muted-foreground">{t('profile.accountCreated')}</span>
               <span>
                 {new Date(user.created_at).toLocaleDateString('en-US', {
                   year: 'numeric',
