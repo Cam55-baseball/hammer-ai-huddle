@@ -914,7 +914,252 @@
       "holisticDesc": "Mind-body nutrition connection",
       "dailyNutrition": "Daily Nutrition Tips",
       "dailyNutritionDesc": "Quick daily tips for better eating"
+    },
+    "categoryContent": {
+      "bloodType": {
+        "content1": "Type O: Focus on lean proteins, fish, and vegetables. Limit dairy and wheat.",
+        "content2": "Type A: Plant-based foods work best. Include soy, grains, and organic vegetables.",
+        "content3": "Type B: Enjoy diverse foods including meat, dairy, grains, and vegetables.",
+        "content4": "Type AB: Combine recommendations from A and B types. Seafood and tofu are excellent.",
+        "content5": "All types benefit from proper hydration and avoiding processed foods."
+      },
+      "hydration": {
+        "content1": "Drink half your body weight in ounces of water daily as a baseline.",
+        "content2": "Pre-hydrate 2-3 hours before training with 16-20 oz of water.",
+        "content3": "During exercise, drink 7-10 oz every 10-20 minutes.",
+        "content4": "Post-workout: Replace 150% of fluid lost through sweat.",
+        "content5": "Monitor urine color - pale yellow indicates good hydration."
+      },
+      "minerals": {
+        "content1": "Magnesium supports muscle function and recovery. Sources: nuts, seeds, leafy greens.",
+        "content2": "Zinc aids protein synthesis and immune function. Found in meat, shellfish, legumes.",
+        "content3": "Iron carries oxygen to muscles. Athletes need more than sedentary individuals.",
+        "content4": "Calcium builds strong bones. Important for high-impact athletes.",
+        "content5": "Potassium prevents cramping. Bananas, potatoes, and avocados are rich sources."
+      },
+      "recovery": {
+        "content1": "Consume protein within 30 minutes post-workout for optimal muscle repair.",
+        "content2": "Quality sleep (7-9 hours) is essential for growth hormone release.",
+        "content3": "Include anti-inflammatory foods: berries, fatty fish, turmeric.",
+        "content4": "Active recovery days improve blood flow without additional stress.",
+        "content5": "Cold/heat therapy can accelerate tissue repair and reduce soreness."
+      },
+      "bloodFlow": {
+        "content1": "Nitrate-rich foods like beets improve circulation and oxygen delivery.",
+        "content2": "Dark chocolate (70%+ cacao) supports vascular health.",
+        "content3": "Garlic and onions naturally thin blood and improve flow.",
+        "content4": "Omega-3 fatty acids reduce inflammation in blood vessels.",
+        "content5": "Regular movement throughout the day prevents blood pooling."
+      },
+      "lymphatic": {
+        "content1": "Dry brushing before showers stimulates lymphatic drainage.",
+        "content2": "Rebounding (mini trampoline) is excellent for lymph movement.",
+        "content3": "Deep breathing exercises move lymph through the thoracic duct.",
+        "content4": "Stay hydrated - lymph fluid is primarily water.",
+        "content5": "Reduce processed foods that burden the lymphatic system."
+      },
+      "vitamins": {
+        "content1": "Vitamin D: Essential for bone health and immune function. Get sunlight or supplement.",
+        "content2": "B vitamins convert food to energy. Found in whole grains and meats.",
+        "content3": "Vitamin C supports collagen production for connective tissue health.",
+        "content4": "Vitamin E protects cells from exercise-induced oxidative stress.",
+        "content5": "Vitamin K2 directs calcium to bones, not arteries."
+      },
+      "dailyNutrition": {
+        "content1": "Eat the rainbow - different colored vegetables provide unique nutrients.",
+        "content2": "Protein at every meal supports stable blood sugar and satiety.",
+        "content3": "Complex carbs before training provide sustained energy.",
+        "content4": "Healthy fats (olive oil, avocado, nuts) support hormone production.",
+        "content5": "Minimize sugar and processed foods that cause inflammation."
+      },
+      "longevity": {
+        "content1": "Caloric moderation without malnutrition extends healthspan.",
+        "content2": "Antioxidant-rich foods combat cellular aging.",
+        "content3": "Maintain muscle mass through resistance training and protein.",
+        "content4": "Manage stress - cortisol accelerates aging processes.",
+        "content5": "Social connections and purpose contribute to longevity."
+      },
+      "weight": {
+        "content1": "Focus on body composition, not just scale weight.",
+        "content2": "Protein intake (0.8-1g per pound) supports muscle during weight loss.",
+        "content3": "Gradual changes (1-2 lbs/week) preserve muscle mass.",
+        "content4": "Strength training increases metabolic rate.",
+        "content5": "Sleep deprivation increases hunger hormones - prioritize rest."
+      },
+      "vegan": {
+        "content1": "Combine plant proteins (beans + rice) for complete amino acids.",
+        "content2": "Supplement B12 - it's only found naturally in animal products.",
+        "content3": "Include iron-rich foods with vitamin C for better absorption.",
+        "content4": "Omega-3s from algae, flax, chia, and walnuts.",
+        "content5": "Creatine supplementation may benefit vegan athletes."
+      },
+      "restrictive": {
+        "content1": "Gluten-free athletes: Choose quinoa, rice, and certified GF oats.",
+        "content2": "Dairy-free: Fortified plant milks provide calcium and vitamin D.",
+        "content3": "Low-FODMAP for digestive issues: Work with a dietitian.",
+        "content4": "Keto athletes may need adaptation period for high-intensity work.",
+        "content5": "Always consult healthcare providers before eliminating food groups."
+      },
+      "offseason": {
+        "content1": "Increase calories gradually to support muscle building.",
+        "content2": "Focus on strength training and skill development.",
+        "content3": "Address any nutritional deficiencies identified during season.",
+        "content4": "Experiment with new foods and meal timing strategies.",
+        "content5": "Allow mental recovery from strict in-season protocols."
+      },
+      "inseason": {
+        "content1": "Maintain consistent eating patterns on game and practice days.",
+        "content2": "Carb-load appropriately before competition.",
+        "content3": "Stay on top of hydration - don't wait until you're thirsty.",
+        "content4": "Post-game nutrition is crucial for next-day performance.",
+        "content5": "Avoid trying new foods close to competition."
+      },
+      "performance": {
+        "content1": "Pre-game meal 3-4 hours before: Familiar, easily digestible foods.",
+        "content2": "Carbohydrates are the primary fuel for high-intensity performance.",
+        "content3": "Caffeine (3-6mg/kg) 30-60 minutes before can enhance performance.",
+        "content4": "Stay calm - stress hormones impair digestion and performance.",
+        "content5": "Visualize success while fueling your body."
+      },
+      "ingameHydration": {
+        "content1": "Sip fluids between innings or during breaks - don't guzzle.",
+        "content2": "Sports drinks help if playing over 60 minutes in heat.",
+        "content3": "Electrolyte tablets can be added to water in hot conditions.",
+        "content4": "Avoid sugary drinks that cause energy crashes.",
+        "content5": "Monitor sweat rate to personalize fluid replacement."
+      },
+      "supplements": {
+        "content1": "NSF Certified for Sport ensures products are safe for athletes.",
+        "content2": "Protein powder: Convenient for post-workout or meal supplementation.",
+        "content3": "Creatine monohydrate: Well-researched for power and strength.",
+        "content4": "Beta-alanine may improve high-intensity performance.",
+        "content5": "Always check with your organization's banned substance list."
+      },
+      "holistic": {
+        "content1": "Mind-body connection: Stress affects nutrient absorption.",
+        "content2": "Mindful eating improves digestion and satisfaction.",
+        "content3": "Gratitude practices reduce cortisol and inflammation.",
+        "content4": "Nature exposure supports mental and physical recovery.",
+        "content5": "Community and team meals enhance the eating experience."
+      }
     }
+  },
+  "tutorial": {
+    "completed": "Tutorial completed! Welcome to Hammers Modality.",
+    "failedToComplete": "Failed to mark tutorial as complete",
+    "step": "Step {{current}} of {{total}}",
+    "previous": "Previous",
+    "next": "Next",
+    "startCompeting": "Start Competing!",
+    "player": {
+      "welcome": {
+        "title": "Welcome to Hammers Modality",
+        "description": "Your complete baseball training and scouting platform. Analyze your performance with AI-powered feedback, connect with scouts, and track your progress to the next level."
+      },
+      "creator": {
+        "title": "Meet the Creator",
+        "description": "Learn about the developer and owner of Hammers Modality. Visit the Owner Bio section in the sidebar to view their background, credentials, and contact information."
+      },
+      "modules": {
+        "title": "Your Training Modules",
+        "description": "Access your Hitting, Pitching, and Throwing analysis tools. Each module is designed with cutting-edge AI to help you improve specific aspects of your game."
+      },
+      "upload": {
+        "title": "Upload & Analyze Videos",
+        "description": "Use the module cards to upload videos of your workouts or games. Our AI analyzes your mechanics in real-time, providing instant feedback on your technique."
+      },
+      "coaching": {
+        "title": "Get Personalized Coaching",
+        "description": "Receive detailed efficiency scores, customized drills, and technique feedback tailored to your performance. Improve specific areas with data-driven recommendations."
+      },
+      "library": {
+        "title": "Your Video Library",
+        "description": "All your videos are saved in the Players Club. Review past analyses, mark videos as private or public, and share them with scouts and coaches following you."
+      },
+      "following": {
+        "title": "Build Your Following",
+        "description": "View scouts and coaches following you in My Followers. Accept or decline follow requests, and control who can see your public training videos."
+      },
+      "ranking": {
+        "title": "Track Your Ranking",
+        "description": "Your ranking updates automatically based on scout and coach engagement. The more visibility you gain through quality content, the higher you climb!"
+      },
+      "profile": {
+        "title": "Complete Your Profile",
+        "description": "Visit Settings to add your bio, upload photos, list teams and schools, and connect social media. This information is visible to scouts—make it count!"
+      }
+    },
+    "scout": {
+      "welcome": {
+        "title": "Welcome Scouts & Coaches",
+        "description": "Your comprehensive scouting platform to discover, evaluate, and follow talented players. Access detailed profiles, training videos, and performance analytics."
+      },
+      "creator": {
+        "title": "Meet the Creator",
+        "description": "Learn about the developer and owner of Hammers Modality. Visit the Owner Bio section in the sidebar to view their background and credentials."
+      },
+      "discover": {
+        "title": "Discover Talent",
+        "description": "Use the Scout Dashboard to search for players based on name, position, location, and more. Find hidden gems and track rising stars in baseball and softball."
+      },
+      "search": {
+        "title": "Advanced Player Search",
+        "description": "Apply filters to narrow your search by position, throwing hand, batting side, height, weight, graduation year, state, and commitment status for precise talent scouting."
+      },
+      "follow": {
+        "title": "Follow Players",
+        "description": "Send follow requests to players you're interested in. When they accept, you gain access to all their public training videos and performance data."
+      },
+      "videos": {
+        "title": "View Player Videos",
+        "description": "Once you're following a player, access their entire video library in the Players Club. Watch their training sessions, game footage, and AI analysis breakdowns."
+      },
+      "rankings": {
+        "title": "Rankings System",
+        "description": "Players are automatically ranked based on their engagement and visibility with scouts. The more scouts following and interacting with a player, the higher they rank."
+      },
+      "analyze": {
+        "title": "Analyze Performance",
+        "description": "Review AI-generated reports for each player, including efficiency scores, mechanics analysis, and detailed feedback to help you make informed recruiting decisions."
+      }
+    }
+  },
+  "videoPlayer": {
+    "frameByFrameMode": "Frame-by-frame mode",
+    "scoutViewCapture": "Scout View - Capture frames to annotate",
+    "loopStart": "Loop Start",
+    "loopEnd": "Loop End",
+    "looping": "Looping: {{start}}s → {{end}}s",
+    "back": "Back",
+    "forward": "Forward",
+    "capture": "Capture",
+    "mirror": "Mirror",
+    "fullscreen": "Fullscreen",
+    "markLoopStart": "Mark Loop Start",
+    "markLoopEnd": "Mark Loop End",
+    "clear": "Clear",
+    "start": "Start",
+    "end": "End",
+    "capturedKeyFrames": "Captured Key Frames",
+    "downloadAll": "Download All ({{count}})",
+    "keyFrameCaptured": "Key frame captured!",
+    "videoNotReady": "Video not ready yet",
+    "loopStartSet": "Loop start set at {{time}}s",
+    "loopEndSet": "Loop end set at {{time}}s",
+    "loopCleared": "Loop cleared",
+    "frameDownloaded": "Frame {{number}} downloaded!",
+    "annotatedFrameDownloaded": "Annotated frame {{number}} downloaded!",
+    "frameRemoved": "Frame removed!",
+    "cannotCaptureFrame": "Cannot capture frame due to video security restrictions",
+    "failedToCaptureFrame": "Failed to capture frame",
+    "view": "View",
+    "annotate": "Annotate",
+    "download": "Download",
+    "remove": "Remove",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "resetZoom": "Reset",
+    "frameOf": "Frame {{current}} of {{total}}"
   },
   "weather": {
     "title": "Playing The Elements",

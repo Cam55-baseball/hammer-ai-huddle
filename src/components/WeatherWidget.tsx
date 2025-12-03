@@ -455,7 +455,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               onClick={() => setShowDrills(!showDrills)}
             >
               <Target className="h-4 w-4 mr-2 group-hover:animate-pulse" />
-              {showDrills ? t('weather.hideDrills') : t('weather.showDrills')}
+              {showDrills ? t('weather.hideDrills') : t('weather.toggleDrills')}
             </Button>
           )}
 
@@ -502,7 +502,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                 <CardContent className="p-4 flex items-center gap-3">
                   <span className="text-2xl">💡</span>
                   <p className="text-sm text-muted-foreground">
-                    <strong>{t('weather.proTip')}:</strong> {t('weather.proTipText')}
+                    <strong>{t('weather.proTip')}</strong> {t('weather.prioritizeDrills')}
                   </p>
                 </CardContent>
               </Card>
@@ -517,7 +517,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               onClick={() => setShowForecast(!showForecast)}
             >
               <Calendar className="h-4 w-4 mr-2" />
-              {showForecast ? t('weather.hideForecast') : t('weather.showForecast')}
+              {showForecast ? t('weather.hideForecast') : t('weather.toggleForecast')}
             </Button>
           )}
 

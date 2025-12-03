@@ -10,7 +10,23 @@ const requestSchema = z.object({
   module: z.enum(["hitting", "pitching", "throwing"], { errorMap: () => ({ message: "Invalid module" }) }),
   sport: z.enum(["baseball", "softball"], { errorMap: () => ({ message: "Invalid sport" }) }),
   userId: z.string().uuid("Invalid user ID format"),
+  language: z.string().optional(),
 });
+
+// Language name mapping for AI instruction
+const getLanguageName = (code: string): string => {
+  const languages: Record<string, string> = {
+    en: "English",
+    es: "Spanish",
+    fr: "French",
+    de: "German",
+    ja: "Japanese",
+    zh: "Chinese",
+    nl: "Dutch",
+    ko: "Korean",
+  };
+  return languages[code] || "English";
+};
 
 // Helper function to generate beginner-friendly bullet points
 const makeBeginnerBullets = (feedback: string, positives: string[]): string[] => {
@@ -498,8 +514,17 @@ Deno.serve(async (req) => {
     // Extract historical scores for trend display
     const historicalScores = historicalVideos?.map(v => v.efficiency_score).filter(s => s != null) || [];
 
+    // Extract language from request
+    const language = body.language || 'en';
+    const languageName = getLanguageName(language);
+    
+    // Language instruction for non-English responses
+    const languageInstruction = language !== 'en' 
+      ? `\n\nIMPORTANT LANGUAGE REQUIREMENT: You MUST respond ENTIRELY in ${languageName}. ALL text including feedback, drill names, drill steps, drill purposes, drill cues, summary bullets, scorecard areas, and descriptions MUST be written in ${languageName}. Do not use any English except for proper nouns or technical terms that have no translation.`
+      : '';
+    
     // Get system prompt based on module and sport
-    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory);
+    const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction;
 
     // Build user message with historical context
     const userMessage = `${historicalContext}

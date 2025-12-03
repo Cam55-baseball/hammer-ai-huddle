@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -273,7 +274,7 @@ export default function AnalyzeVideo() {
       setUploading(false);
       setAnalyzing(true);
 
-      // Call AI analysis edge function
+      // Call AI analysis edge function with language preference
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
         "analyze-video",
         {
@@ -282,6 +283,7 @@ export default function AnalyzeVideo() {
             module,
             sport,
             userId: user.id,
+            language: i18n.language,
           },
         }
       );
@@ -330,6 +332,7 @@ export default function AnalyzeVideo() {
             module,
             sport,
             userId: user.id,
+            language: i18n.language,
           },
         }
       );

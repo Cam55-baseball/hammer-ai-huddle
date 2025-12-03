@@ -914,7 +914,252 @@
       "holisticDesc": "Conexión mente-cuerpo en la nutrición",
       "dailyNutrition": "Consejos de Nutrición Diarios",
       "dailyNutritionDesc": "Consejos rápidos diarios para comer mejor"
+    },
+    "categoryContent": {
+      "bloodType": {
+        "content1": "Tipo O: Enfócate en proteínas magras, pescado y verduras. Limita lácteos y trigo.",
+        "content2": "Tipo A: Los alimentos a base de plantas funcionan mejor. Incluye soja, granos y verduras orgánicas.",
+        "content3": "Tipo B: Disfruta de alimentos diversos incluyendo carne, lácteos, granos y verduras.",
+        "content4": "Tipo AB: Combina recomendaciones de los tipos A y B. Mariscos y tofu son excelentes.",
+        "content5": "Todos los tipos se benefician de una hidratación adecuada y evitar alimentos procesados."
+      },
+      "hydration": {
+        "content1": "Bebe la mitad de tu peso corporal en onzas de agua diariamente como base.",
+        "content2": "Pre-hidrátate 2-3 horas antes del entrenamiento con 16-20 oz de agua.",
+        "content3": "Durante el ejercicio, bebe 7-10 oz cada 10-20 minutos.",
+        "content4": "Post-entrenamiento: Reemplaza el 150% del líquido perdido por sudor.",
+        "content5": "Monitorea el color de la orina - amarillo pálido indica buena hidratación."
+      },
+      "minerals": {
+        "content1": "El magnesio apoya la función muscular y la recuperación. Fuentes: nueces, semillas, verduras de hoja verde.",
+        "content2": "El zinc ayuda a la síntesis de proteínas y la función inmune. Se encuentra en carne, mariscos, legumbres.",
+        "content3": "El hierro lleva oxígeno a los músculos. Los atletas necesitan más que las personas sedentarias.",
+        "content4": "El calcio construye huesos fuertes. Importante para atletas de alto impacto.",
+        "content5": "El potasio previene calambres. Plátanos, papas y aguacates son fuentes ricas."
+      },
+      "recovery": {
+        "content1": "Consume proteína dentro de 30 minutos post-entrenamiento para una óptima reparación muscular.",
+        "content2": "El sueño de calidad (7-9 horas) es esencial para la liberación de hormona del crecimiento.",
+        "content3": "Incluye alimentos antiinflamatorios: bayas, pescado graso, cúrcuma.",
+        "content4": "Los días de recuperación activa mejoran el flujo sanguíneo sin estrés adicional.",
+        "content5": "La terapia de frío/calor puede acelerar la reparación de tejidos y reducir el dolor."
+      },
+      "bloodFlow": {
+        "content1": "Los alimentos ricos en nitratos como la remolacha mejoran la circulación y el suministro de oxígeno.",
+        "content2": "El chocolate oscuro (70%+ cacao) apoya la salud vascular.",
+        "content3": "El ajo y las cebollas adelgazan naturalmente la sangre y mejoran el flujo.",
+        "content4": "Los ácidos grasos omega-3 reducen la inflamación en los vasos sanguíneos.",
+        "content5": "El movimiento regular durante el día previene el estancamiento de sangre."
+      },
+      "lymphatic": {
+        "content1": "El cepillado en seco antes de las duchas estimula el drenaje linfático.",
+        "content2": "El rebote (mini trampolín) es excelente para el movimiento linfático.",
+        "content3": "Los ejercicios de respiración profunda mueven la linfa a través del conducto torácico.",
+        "content4": "Mantente hidratado - el líquido linfático es principalmente agua.",
+        "content5": "Reduce los alimentos procesados que sobrecargan el sistema linfático."
+      },
+      "vitamins": {
+        "content1": "Vitamina D: Esencial para la salud ósea y la función inmune. Toma sol o suplementa.",
+        "content2": "Las vitaminas B convierten los alimentos en energía. Se encuentran en granos enteros y carnes.",
+        "content3": "La vitamina C apoya la producción de colágeno para la salud del tejido conectivo.",
+        "content4": "La vitamina E protege las células del estrés oxidativo inducido por el ejercicio.",
+        "content5": "La vitamina K2 dirige el calcio a los huesos, no a las arterias."
+      },
+      "dailyNutrition": {
+        "content1": "Come el arcoíris - diferentes vegetales de colores proporcionan nutrientes únicos.",
+        "content2": "Proteína en cada comida apoya el azúcar en sangre estable y la saciedad.",
+        "content3": "Los carbohidratos complejos antes del entrenamiento proporcionan energía sostenida.",
+        "content4": "Las grasas saludables (aceite de oliva, aguacate, nueces) apoyan la producción hormonal.",
+        "content5": "Minimiza el azúcar y los alimentos procesados que causan inflamación."
+      },
+      "longevity": {
+        "content1": "La moderación calórica sin malnutrición extiende la vida saludable.",
+        "content2": "Los alimentos ricos en antioxidantes combaten el envejecimiento celular.",
+        "content3": "Mantén la masa muscular a través del entrenamiento de resistencia y proteínas.",
+        "content4": "Maneja el estrés - el cortisol acelera los procesos de envejecimiento.",
+        "content5": "Las conexiones sociales y el propósito contribuyen a la longevidad."
+      },
+      "weight": {
+        "content1": "Enfócate en la composición corporal, no solo en el peso de la báscula.",
+        "content2": "La ingesta de proteínas (0.8-1g por libra) apoya el músculo durante la pérdida de peso.",
+        "content3": "Los cambios graduales (1-2 lbs/semana) preservan la masa muscular.",
+        "content4": "El entrenamiento de fuerza aumenta la tasa metabólica.",
+        "content5": "La privación de sueño aumenta las hormonas del hambre - prioriza el descanso."
+      },
+      "vegan": {
+        "content1": "Combina proteínas vegetales (frijoles + arroz) para aminoácidos completos.",
+        "content2": "Suplementa B12 - solo se encuentra naturalmente en productos animales.",
+        "content3": "Incluye alimentos ricos en hierro con vitamina C para mejor absorción.",
+        "content4": "Omega-3 de algas, lino, chía y nueces.",
+        "content5": "La suplementación con creatina puede beneficiar a los atletas veganos."
+      },
+      "restrictive": {
+        "content1": "Atletas sin gluten: Elige quinoa, arroz y avena certificada sin gluten.",
+        "content2": "Sin lácteos: Las leches vegetales fortificadas proporcionan calcio y vitamina D.",
+        "content3": "Bajo FODMAP para problemas digestivos: Trabaja con un nutricionista.",
+        "content4": "Los atletas keto pueden necesitar un período de adaptación para trabajo de alta intensidad.",
+        "content5": "Siempre consulta con profesionales de salud antes de eliminar grupos de alimentos."
+      },
+      "offseason": {
+        "content1": "Aumenta las calorías gradualmente para apoyar la construcción muscular.",
+        "content2": "Enfócate en entrenamiento de fuerza y desarrollo de habilidades.",
+        "content3": "Aborda cualquier deficiencia nutricional identificada durante la temporada.",
+        "content4": "Experimenta con nuevos alimentos y estrategias de timing de comidas.",
+        "content5": "Permite la recuperación mental de los protocolos estrictos de temporada."
+      },
+      "inseason": {
+        "content1": "Mantén patrones de alimentación consistentes en días de juego y práctica.",
+        "content2": "Carga carbohidratos apropiadamente antes de la competencia.",
+        "content3": "Mantente al tanto de la hidratación - no esperes hasta tener sed.",
+        "content4": "La nutrición post-juego es crucial para el rendimiento del día siguiente.",
+        "content5": "Evita probar alimentos nuevos cerca de la competencia."
+      },
+      "performance": {
+        "content1": "Comida pre-juego 3-4 horas antes: Alimentos familiares y fácilmente digeribles.",
+        "content2": "Los carbohidratos son el combustible principal para el rendimiento de alta intensidad.",
+        "content3": "La cafeína (3-6mg/kg) 30-60 minutos antes puede mejorar el rendimiento.",
+        "content4": "Mantén la calma - las hormonas del estrés afectan la digestión y el rendimiento.",
+        "content5": "Visualiza el éxito mientras alimentas tu cuerpo."
+      },
+      "ingameHydration": {
+        "content1": "Bebe líquidos entre innings o durante descansos - no bebas de golpe.",
+        "content2": "Las bebidas deportivas ayudan si juegas más de 60 minutos en calor.",
+        "content3": "Las tabletas de electrolitos se pueden agregar al agua en condiciones calurosas.",
+        "content4": "Evita las bebidas azucaradas que causan bajones de energía.",
+        "content5": "Monitorea tu tasa de sudor para personalizar el reemplazo de líquidos."
+      },
+      "supplements": {
+        "content1": "Certificado NSF para Deporte asegura que los productos son seguros para atletas.",
+        "content2": "Proteína en polvo: Conveniente para post-entrenamiento o suplementación de comidas.",
+        "content3": "Monohidrato de creatina: Bien investigado para potencia y fuerza.",
+        "content4": "La beta-alanina puede mejorar el rendimiento de alta intensidad.",
+        "content5": "Siempre verifica la lista de sustancias prohibidas de tu organización."
+      },
+      "holistic": {
+        "content1": "Conexión mente-cuerpo: El estrés afecta la absorción de nutrientes.",
+        "content2": "Comer conscientemente mejora la digestión y la satisfacción.",
+        "content3": "Las prácticas de gratitud reducen el cortisol y la inflamación.",
+        "content4": "La exposición a la naturaleza apoya la recuperación mental y física.",
+        "content5": "La comunidad y las comidas en equipo mejoran la experiencia alimenticia."
+      }
     }
+  },
+  "tutorial": {
+    "completed": "¡Tutorial completado! Bienvenido a Hammers Modality.",
+    "failedToComplete": "Error al marcar el tutorial como completado",
+    "step": "Paso {{current}} de {{total}}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "startCompeting": "¡Empezar a Competir!",
+    "player": {
+      "welcome": {
+        "title": "Bienvenido a Hammers Modality",
+        "description": "Tu plataforma completa de entrenamiento y scouting de béisbol. Analiza tu rendimiento con retroalimentación impulsada por IA, conéctate con scouts y rastrea tu progreso hacia el siguiente nivel."
+      },
+      "creator": {
+        "title": "Conoce al Creador",
+        "description": "Conoce al desarrollador y propietario de Hammers Modality. Visita la sección de Biografía del Propietario en la barra lateral para ver su experiencia, credenciales e información de contacto."
+      },
+      "modules": {
+        "title": "Tus Módulos de Entrenamiento",
+        "description": "Accede a tus herramientas de análisis de Bateo, Pitcheo y Lanzamiento. Cada módulo está diseñado con IA de vanguardia para ayudarte a mejorar aspectos específicos de tu juego."
+      },
+      "upload": {
+        "title": "Sube y Analiza Videos",
+        "description": "Usa las tarjetas de módulos para subir videos de tus entrenamientos o juegos. Nuestra IA analiza tu mecánica en tiempo real, proporcionando retroalimentación instantánea sobre tu técnica."
+      },
+      "coaching": {
+        "title": "Obtén Coaching Personalizado",
+        "description": "Recibe puntajes de eficiencia detallados, ejercicios personalizados y retroalimentación técnica adaptada a tu rendimiento. Mejora áreas específicas con recomendaciones basadas en datos."
+      },
+      "library": {
+        "title": "Tu Biblioteca de Videos",
+        "description": "Todos tus videos se guardan en el Club de Jugadores. Revisa análisis pasados, marca videos como privados o públicos, y compártelos con scouts y entrenadores que te siguen."
+      },
+      "following": {
+        "title": "Construye tu Seguimiento",
+        "description": "Ve los scouts y entrenadores que te siguen en Mis Seguidores. Acepta o rechaza solicitudes de seguimiento, y controla quién puede ver tus videos de entrenamiento públicos."
+      },
+      "ranking": {
+        "title": "Rastrea tu Clasificación",
+        "description": "Tu clasificación se actualiza automáticamente basándose en el engagement de scouts y entrenadores. ¡Cuanta más visibilidad ganes a través de contenido de calidad, más alto subirás!"
+      },
+      "profile": {
+        "title": "Completa tu Perfil",
+        "description": "Visita Configuración para agregar tu biografía, subir fotos, listar equipos y escuelas, y conectar redes sociales. Esta información es visible para los scouts—¡hazla contar!"
+      }
+    },
+    "scout": {
+      "welcome": {
+        "title": "Bienvenidos Scouts y Entrenadores",
+        "description": "Tu plataforma integral de scouting para descubrir, evaluar y seguir jugadores talentosos. Accede a perfiles detallados, videos de entrenamiento y análisis de rendimiento."
+      },
+      "creator": {
+        "title": "Conoce al Creador",
+        "description": "Conoce al desarrollador y propietario de Hammers Modality. Visita la sección de Biografía del Propietario en la barra lateral para ver su experiencia y credenciales."
+      },
+      "discover": {
+        "title": "Descubre Talento",
+        "description": "Usa el Panel de Scout para buscar jugadores basándote en nombre, posición, ubicación y más. Encuentra gemas ocultas y rastrea estrellas emergentes en béisbol y sóftbol."
+      },
+      "search": {
+        "title": "Búsqueda Avanzada de Jugadores",
+        "description": "Aplica filtros para refinar tu búsqueda por posición, mano de lanzamiento, lado de bateo, altura, peso, año de graduación, estado y estatus de compromiso para un scouting preciso."
+      },
+      "follow": {
+        "title": "Sigue Jugadores",
+        "description": "Envía solicitudes de seguimiento a jugadores que te interesan. Cuando acepten, obtienes acceso a todos sus videos de entrenamiento públicos y datos de rendimiento."
+      },
+      "videos": {
+        "title": "Ver Videos de Jugadores",
+        "description": "Una vez que sigues a un jugador, accede a toda su biblioteca de videos en el Club de Jugadores. Mira sus sesiones de entrenamiento, metraje de juegos y análisis de IA."
+      },
+      "rankings": {
+        "title": "Sistema de Clasificaciones",
+        "description": "Los jugadores se clasifican automáticamente basándose en su engagement y visibilidad con scouts. Cuantos más scouts sigan e interactúen con un jugador, más alto se clasifican."
+      },
+      "analyze": {
+        "title": "Analiza el Rendimiento",
+        "description": "Revisa informes generados por IA para cada jugador, incluyendo puntajes de eficiencia, análisis de mecánica y retroalimentación detallada para ayudarte a tomar decisiones de reclutamiento informadas."
+      }
+    }
+  },
+  "videoPlayer": {
+    "frameByFrameMode": "Modo cuadro por cuadro",
+    "scoutViewCapture": "Vista de Scout - Captura cuadros para anotar",
+    "loopStart": "Inicio de Loop",
+    "loopEnd": "Fin de Loop",
+    "looping": "Looping: {{start}}s → {{end}}s",
+    "back": "Atrás",
+    "forward": "Adelante",
+    "capture": "Capturar",
+    "mirror": "Espejo",
+    "fullscreen": "Pantalla Completa",
+    "markLoopStart": "Marcar Inicio de Loop",
+    "markLoopEnd": "Marcar Fin de Loop",
+    "clear": "Limpiar",
+    "start": "Inicio",
+    "end": "Fin",
+    "capturedKeyFrames": "Cuadros Clave Capturados",
+    "downloadAll": "Descargar Todo ({{count}})",
+    "keyFrameCaptured": "¡Cuadro clave capturado!",
+    "videoNotReady": "Video aún no está listo",
+    "loopStartSet": "Inicio de loop establecido en {{time}}s",
+    "loopEndSet": "Fin de loop establecido en {{time}}s",
+    "loopCleared": "Loop eliminado",
+    "frameDownloaded": "¡Cuadro {{number}} descargado!",
+    "annotatedFrameDownloaded": "¡Cuadro anotado {{number}} descargado!",
+    "frameRemoved": "¡Cuadro eliminado!",
+    "cannotCaptureFrame": "No se puede capturar cuadro debido a restricciones de seguridad del video",
+    "failedToCaptureFrame": "Error al capturar cuadro",
+    "view": "Ver",
+    "annotate": "Anotar",
+    "download": "Descargar",
+    "remove": "Eliminar",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "resetZoom": "Restablecer",
+    "frameOf": "Cuadro {{current}} de {{total}}"
   },
   "weather": {
     "title": "Jugando con los Elementos",
