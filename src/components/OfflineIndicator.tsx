@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { WifiOff, Wifi } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const OfflineIndicator = () => {
+  const { t } = useTranslation();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showOfflineAlert, setShowOfflineAlert] = useState(!navigator.onLine);
 
@@ -32,7 +34,7 @@ export const OfflineIndicator = () => {
     <Alert variant="destructive" className="mb-4">
       <WifiOff className="h-4 w-4" />
       <AlertDescription>
-        You're offline. Some features are unavailable. Viewing cached content only.
+        {t('offline.message')}
       </AlertDescription>
     </Alert>
   );

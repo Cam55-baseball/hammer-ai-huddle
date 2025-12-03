@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -20,6 +21,7 @@ interface FollowRequest {
 }
 
 export function FollowRequestsPanel() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [requests, setRequests] = useState<FollowRequest[]>([]);
@@ -61,7 +63,7 @@ export function FollowRequestsPanel() {
       const formattedRequests = followsData.map(follow => ({
         ...follow,
         profiles: profileMap.get(follow.scout_id) || {
-          full_name: 'Unknown Scout',
+          full_name: t('followRequests.unknownScout'),
           avatar_url: null
         }
       }));
@@ -114,8 +116,8 @@ export function FollowRequestsPanel() {
     } catch (error) {
       console.error('Error fetching scout profile:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load scout profile',
+        title: t('common.error'),
+        description: t('followRequests.failedToLoadProfile'),
         variant: 'destructive',
       });
     }
@@ -130,16 +132,16 @@ export function FollowRequestsPanel() {
       if (error) throw error;
 
       toast({
-        title: status === 'accepted' ? 'Follow request accepted' : 'Follow request rejected',
-        description: `You have ${status} the follow request.`,
+        title: status === 'accepted' ? t('followRequests.accepted') : t('followRequests.rejected'),
+        description: status === 'accepted' ? t('followRequests.youHaveAccepted') : t('followRequests.youHaveRejected'),
       });
 
       fetchRequests();
     } catch (error) {
       console.error('Error responding to follow:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to respond to follow request',
+        title: t('common.error'),
+        description: t('followRequests.failedToRespond'),
         variant: 'destructive',
       });
     }
@@ -158,7 +160,7 @@ export function FollowRequestsPanel() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UserPlus className="h-5 w-5" />
-          Scout/Coach Follow Requests
+          {t('followRequests.title')}
           <Badge variant="secondary">{requests.length}</Badge>
         </CardTitle>
       </CardHeader>
@@ -184,7 +186,7 @@ export function FollowRequestsPanel() {
                 <div>
                   <p className="font-semibold">{request.profiles.full_name}</p>
                   <p className="text-xs text-muted-foreground">
-                    Wants to follow you
+                    {t('followRequests.wantsToFollow')}
                   </p>
                 </div>
               </div>
@@ -195,7 +197,7 @@ export function FollowRequestsPanel() {
                   onClick={() => handleViewProfile(request.scout_id)}
                 >
                   <Eye className="h-4 w-4 mr-1" />
-                  View Profile
+                  {t('followRequests.viewProfile')}
                 </Button>
                 <Button
                   size="sm"
@@ -203,7 +205,7 @@ export function FollowRequestsPanel() {
                   onClick={() => handleResponse(request.id, 'accepted')}
                 >
                   <Check className="h-4 w-4 mr-1" />
-                  Accept
+                  {t('followRequests.accept')}
                 </Button>
                 <Button
                   size="sm"
@@ -211,7 +213,7 @@ export function FollowRequestsPanel() {
                   onClick={() => handleResponse(request.id, 'rejected')}
                 >
                   <X className="h-4 w-4 mr-1" />
-                  Reject
+                  {t('followRequests.reject')}
                 </Button>
               </div>
             </div>

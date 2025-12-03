@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -53,6 +54,7 @@ interface VideoComparisonViewProps {
 }
 
 export function VideoComparisonView({ video1, video2, open, onClose }: VideoComparisonViewProps) {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const video1Ref = useRef<HTMLVideoElement>(null);
   const video2Ref = useRef<HTMLVideoElement>(null);
@@ -143,7 +145,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
       timestamp: video.currentTime
     }]);
 
-    toast.success(`Frame captured from Video ${videoNumber}`);
+    toast.success(t('videoComparison.frameCaptured', { number: videoNumber }));
   };
 
   const downloadFrame = (videoNumber: 1 | 2, index: number) => {
@@ -156,7 +158,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
     link.download = `video-${videoNumber}-frame-${index + 1}.png`;
     link.click();
 
-    toast.success('Frame downloaded');
+    toast.success(t('videoComparison.frameDownloaded'));
   };
 
   const downloadAllFrames = async () => {
@@ -173,7 +175,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
       await new Promise(resolve => setTimeout(resolve, 150));
     }
 
-    toast.success('All frames downloaded');
+    toast.success(t('videoComparison.allFramesDownloaded'));
   };
 
   const handleAnnotateFrame = (videoNumber: 1 | 2, index: number) => {
@@ -191,7 +193,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
       i === index ? { ...frame, annotated: annotatedDataUrl } : frame
     ));
 
-    toast.success('Annotation saved');
+    toast.success(t('videoComparison.annotationSaved'));
     setAnnotationDialogOpen(false);
     setSelectedFrame(null);
   };
@@ -220,7 +222,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
         <DialogContent className="max-w-full w-full p-3 sm:p-6 max-h-[95vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span className={isMobile ? 'text-lg' : ''}>Video Comparison</span>
+              <span className={isMobile ? 'text-lg' : ''}>{t('videoComparison.title')}</span>
               <Button variant="ghost" size="icon" onClick={onClose}>
                 <X className="h-4 w-4" />
               </Button>
@@ -235,7 +237,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
             onClick={() => setLayout('horizontal')}
           >
             <Columns2 className="h-4 w-4" />
-            {!isMobile && <span className="ml-2">Side by Side</span>}
+            {!isMobile && <span className="ml-2">{t('videoComparison.sideBySide')}</span>}
           </Button>
           <Button
             variant={layout === 'vertical' ? 'default' : 'outline'}
@@ -243,7 +245,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
             onClick={() => setLayout('vertical')}
           >
             <Rows2 className="h-4 w-4" />
-            {!isMobile && <span className="ml-2">Stacked</span>}
+            {!isMobile && <span className="ml-2">{t('videoComparison.stacked')}</span>}
           </Button>
           <Button
             variant={layout === 'overlay' ? 'default' : 'outline'}
@@ -251,7 +253,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
             onClick={() => setLayout('overlay')}
           >
             <Layers className="h-4 w-4" />
-            {!isMobile && <span className="ml-2">Overlay</span>}
+            {!isMobile && <span className="ml-2">{t('videoComparison.overlay')}</span>}
           </Button>
         </div>
 
@@ -280,7 +282,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                     onClick={() => captureKeyFrame(1)}
                   >
                     <Camera className="h-4 w-4" />
-                    {!isMobile && <span className="ml-2">Capture</span>}
+                    {!isMobile && <span className="ml-2">{t('videoComparison.capture')}</span>}
                   </Button>
                 </div>
                 <div className="relative w-full max-w-full overflow-hidden">
@@ -353,7 +355,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                     onClick={() => captureKeyFrame(2)}
                   >
                     <Camera className="h-4 w-4" />
-                    {!isMobile && <span className="ml-2">Capture</span>}
+                    {!isMobile && <span className="ml-2">{t('videoComparison.capture')}</span>}
                   </Button>
                 </div>
                 <div className="relative w-full max-w-full overflow-hidden">
@@ -409,7 +411,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
           {/* Overlay Opacity Control */}
           {layout === 'overlay' && (
             <div className="space-y-2">
-              <Label>Overlay Opacity: {overlayOpacity}%</Label>
+              <Label>{t('videoComparison.overlayOpacity')}: {overlayOpacity}%</Label>
               <Slider
                 value={[overlayOpacity]}
                 onValueChange={([value]) => setOverlayOpacity(value)}
@@ -433,7 +435,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
                 />
                 <Label htmlFor="sync-playback" className="flex items-center gap-2">
                   <Link2 className="h-4 w-4" />
-                  Synchronized Playback
+                  {t('videoComparison.synchronizedPlayback')}
                 </Label>
               </div>
 
@@ -452,7 +454,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
 
             {/* Playback Speed */}
             <div className="space-y-2 py-2 sm:py-0">
-              <Label>Playback Speed: {playbackSpeed}x</Label>
+              <Label>{t('videoComparison.playbackSpeed')}: {playbackSpeed}x</Label>
               <Slider
                 value={[playbackSpeed]}
                 onValueChange={([value]) => setPlaybackSpeed(value)}
@@ -465,7 +467,7 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
             {/* Time Offset */}
             {syncPlayback && (
               <div className="space-y-2 py-2 sm:py-0">
-                <Label>Time Offset: {timeOffset > 0 ? '+' : ''}{timeOffset.toFixed(2)}s</Label>
+                <Label>{t('videoComparison.timeOffset')}: {timeOffset > 0 ? '+' : ''}{timeOffset.toFixed(2)}s</Label>
                 <Slider
                   value={[timeOffset]}
                   onValueChange={([value]) => setTimeOffset(value)}
@@ -482,11 +484,11 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
           {/* Key Frames Grid */}
           <div className="space-y-4">
             <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'}`}>
-              <h3 className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>Captured Key Frames</h3>
+              <h3 className={`font-semibold ${isMobile ? 'text-base' : 'text-lg'}`}>{t('videoComparison.capturedKeyFrames')}</h3>
               {(video1KeyFrames.length > 0 || video2KeyFrames.length > 0) && (
                 <Button variant="outline" size="sm" onClick={downloadAllFrames}>
                   <Download className="h-4 w-4 mr-2" />
-                  Download All
+                  {t('videoComparison.downloadAll')}
                 </Button>
               )}
             </div>
@@ -495,9 +497,9 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                 {/* Video 1 Frames */}
                 <div className="space-y-2">
-                  <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Video 1 Frames</p>
+                  <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{t('videoComparison.video1Frames')}</p>
                   {video1KeyFrames.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No frames captured</p>
+                    <p className="text-xs text-muted-foreground">{t('videoComparison.noFramesCaptured')}</p>
                   ) : (
                     <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
                       {video1KeyFrames.map((frame, idx) => (
@@ -539,9 +541,9 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
 
                 {/* Video 2 Frames */}
                 <div className="space-y-2">
-                  <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Video 2 Frames</p>
+                  <p className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{t('videoComparison.video2Frames')}</p>
                   {video2KeyFrames.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No frames captured</p>
+                    <p className="text-xs text-muted-foreground">{t('videoComparison.noFramesCaptured')}</p>
                   ) : (
                     <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
                       {video2KeyFrames.map((frame, idx) => (

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ const THROWING_HANDS = ["R", "L", "B"];
 const BATTING_SIDES = ["R", "L", "B"];
 
 export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onClearFilters }: PlayerSearchFiltersProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   const handlePositionToggle = (position: string) => {
@@ -87,12 +89,21 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
   const activeFilterCount = getActiveFilterCount();
 
+  const getHandLabel = (hand: string) => {
+    switch (hand) {
+      case 'R': return t('playerFilters.right');
+      case 'L': return t('playerFilters.left');
+      case 'B': return t('playerFilters.both');
+      default: return hand;
+    }
+  };
+
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mb-4">
       <div className="flex items-center justify-between">
         <CollapsibleTrigger asChild>
           <Button variant="outline" className="flex items-center gap-2">
-            Advanced Filters
+            {t('playerFilters.advancedFilters')}
             {activeFilterCount > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {activeFilterCount}
@@ -104,7 +115,7 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
         {activeFilterCount > 0 && (
           <Button variant="ghost" size="sm" onClick={onClearFilters}>
             <X className="h-4 w-4 mr-1" />
-            Clear All
+            {t('playerFilters.clearAll')}
           </Button>
         )}
       </div>
@@ -113,7 +124,7 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
         <div className="space-y-6 rounded-lg border border-border bg-card p-4">
           {/* Position */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">Primary Position</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.primaryPosition')}</Label>
             <div className="flex flex-wrap gap-2">
               {POSITIONS.map((position) => (
                 <div key={position} className="flex items-center space-x-2">
@@ -132,7 +143,7 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
           {/* Throwing Hand */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">Throwing Hand</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.throwingHand')}</Label>
             <div className="flex gap-4">
               {THROWING_HANDS.map((hand) => (
                 <div key={hand} className="flex items-center space-x-2">
@@ -142,7 +153,7 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
                     onCheckedChange={() => handleThrowingHandToggle(hand)}
                   />
                   <label htmlFor={`throw-${hand}`} className="text-sm cursor-pointer">
-                    {hand === "B" ? "Both" : hand === "R" ? "Right" : "Left"}
+                    {getHandLabel(hand)}
                   </label>
                 </div>
               ))}
@@ -151,7 +162,7 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
           {/* Batting Side */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">Batting Side</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.battingSide')}</Label>
             <div className="flex gap-4">
               {BATTING_SIDES.map((side) => (
                 <div key={side} className="flex items-center space-x-2">
@@ -161,7 +172,7 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
                     onCheckedChange={() => handleBattingSideToggle(side)}
                   />
                   <label htmlFor={`bat-${side}`} className="text-sm cursor-pointer">
-                    {side === "B" ? "Both" : side === "R" ? "Right" : "Left"}
+                    {getHandLabel(side)}
                   </label>
                 </div>
               ))}
@@ -170,15 +181,15 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
           {/* Height Range */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">Height Range</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.heightRange')}</Label>
             <div className="grid grid-cols-2 gap-2">
               <Input
-                placeholder="Min (e.g., 5'8&quot;)"
+                placeholder={t('playerFilters.placeholders.minHeight')}
                 value={filters.heightMin}
                 onChange={(e) => onFilterChange({ ...filters, heightMin: e.target.value })}
               />
               <Input
-                placeholder="Max (e.g., 6'5&quot;)"
+                placeholder={t('playerFilters.placeholders.maxHeight')}
                 value={filters.heightMax}
                 onChange={(e) => onFilterChange({ ...filters, heightMax: e.target.value })}
               />
@@ -187,17 +198,17 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
           {/* Weight Range */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">Weight Range (lbs)</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.weightRange')}</Label>
             <div className="grid grid-cols-2 gap-2">
               <Input
                 type="number"
-                placeholder="Min (e.g., 150)"
+                placeholder={t('playerFilters.placeholders.minWeight')}
                 value={filters.weightMin}
                 onChange={(e) => onFilterChange({ ...filters, weightMin: e.target.value })}
               />
               <Input
                 type="number"
-                placeholder="Max (e.g., 220)"
+                placeholder={t('playerFilters.placeholders.maxWeight')}
                 value={filters.weightMax}
                 onChange={(e) => onFilterChange({ ...filters, weightMax: e.target.value })}
               />
@@ -206,10 +217,10 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
           {/* State */}
           <div>
-            <Label htmlFor="state" className="text-sm font-semibold mb-2 block">State</Label>
+            <Label htmlFor="state" className="text-sm font-semibold mb-2 block">{t('playerFilters.state')}</Label>
             <Input
               id="state"
-              placeholder="e.g., California"
+              placeholder={t('playerFilters.placeholders.state')}
               value={filters.state}
               onChange={(e) => onFilterChange({ ...filters, state: e.target.value })}
             />
@@ -217,34 +228,34 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
           {/* Commitment Status */}
           <div>
-            <Label htmlFor="commitment" className="text-sm font-semibold mb-2 block">Commitment Status</Label>
+            <Label htmlFor="commitment" className="text-sm font-semibold mb-2 block">{t('playerFilters.commitmentStatus')}</Label>
             <Select
               value={filters.commitmentStatus}
               onValueChange={(value) => onFilterChange({ ...filters, commitmentStatus: value })}
             >
               <SelectTrigger id="commitment">
-                <SelectValue placeholder="Any" />
+                <SelectValue placeholder={t('playerFilters.any')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="committed">Committed</SelectItem>
-                <SelectItem value="uncommitted">Uncommitted</SelectItem>
+                <SelectItem value="committed">{t('playerFilters.committed')}</SelectItem>
+                <SelectItem value="uncommitted">{t('playerFilters.uncommitted')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* HS Graduation Year */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">High School Graduation Year</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.hsGradYear')}</Label>
             <div className="grid grid-cols-2 gap-2">
               <Input
                 type="number"
-                placeholder="Min (e.g., 2024)"
+                placeholder={t('playerFilters.placeholders.minYear')}
                 value={filters.hsGradYearMin}
                 onChange={(e) => onFilterChange({ ...filters, hsGradYearMin: e.target.value })}
               />
               <Input
                 type="number"
-                placeholder="Max (e.g., 2028)"
+                placeholder={t('playerFilters.placeholders.maxYear')}
                 value={filters.hsGradYearMax}
                 onChange={(e) => onFilterChange({ ...filters, hsGradYearMax: e.target.value })}
               />
@@ -253,17 +264,17 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
           {/* College Graduation Year */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">College Graduation Year</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.collegeGradYear')}</Label>
             <div className="grid grid-cols-2 gap-2">
               <Input
                 type="number"
-                placeholder="Min (e.g., 2024)"
+                placeholder={t('playerFilters.placeholders.minYear')}
                 value={filters.collegeGradYearMin}
                 onChange={(e) => onFilterChange({ ...filters, collegeGradYearMin: e.target.value })}
               />
               <Input
                 type="number"
-                placeholder="Max (e.g., 2028)"
+                placeholder={t('playerFilters.placeholders.maxYear')}
                 value={filters.collegeGradYearMax}
                 onChange={(e) => onFilterChange({ ...filters, collegeGradYearMax: e.target.value })}
               />
@@ -272,7 +283,7 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
           {/* Enrolled in College */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">College Status</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.collegeStatus')}</Label>
             <Select
               value={filters.enrolledInCollege === null ? "" : filters.enrolledInCollege ? "true" : "false"}
               onValueChange={(value) =>
@@ -283,18 +294,18 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Any" />
+                <SelectValue placeholder={t('playerFilters.any')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="true">Enrolled in College</SelectItem>
-                <SelectItem value="false">Not in College</SelectItem>
+                <SelectItem value="true">{t('playerFilters.enrolledInCollege')}</SelectItem>
+                <SelectItem value="false">{t('playerFilters.notInCollege')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Professional Status */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">Professional Status</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.professionalStatus')}</Label>
             <Select
               value={filters.isProfessional === null ? "" : filters.isProfessional ? "true" : "false"}
               onValueChange={(value) =>
@@ -305,18 +316,18 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Any" />
+                <SelectValue placeholder={t('playerFilters.any')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="true">Professional</SelectItem>
-                <SelectItem value="false">Non-Professional</SelectItem>
+                <SelectItem value="true">{t('playerFilters.professional')}</SelectItem>
+                <SelectItem value="false">{t('playerFilters.nonProfessional')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Free Agent */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">Free Agent Status</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.freeAgentStatus')}</Label>
             <Select
               value={filters.isFreeAgent === null ? "" : filters.isFreeAgent ? "true" : "false"}
               onValueChange={(value) =>
@@ -327,11 +338,11 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Any" />
+                <SelectValue placeholder={t('playerFilters.any')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="true">Free Agent</SelectItem>
-                <SelectItem value="false">Not Free Agent</SelectItem>
+                <SelectItem value="true">{t('playerFilters.freeAgent')}</SelectItem>
+                <SelectItem value="false">{t('playerFilters.notFreeAgent')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -339,11 +350,11 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
           {/* MLB/Professional Affiliate */}
           <div>
             <Label htmlFor="mlb-affiliate" className="text-sm font-semibold mb-2 block">
-              {sportFilter === 'softball' ? 'Professional Affiliate' : 'MLB Affiliate'}
+              {sportFilter === 'softball' ? t('playerFilters.professionalAffiliate') : t('playerFilters.mlbAffiliate')}
             </Label>
             <Input
               id="mlb-affiliate"
-              placeholder={sportFilter === 'softball' ? 'e.g., Chicago Bandits' : 'e.g., Yankees, Dodgers'}
+              placeholder={sportFilter === 'softball' ? t('playerFilters.placeholders.softballAffiliate') : t('playerFilters.placeholders.mlbAffiliate')}
               value={filters.mlbAffiliate}
               onChange={(e) => onFilterChange({ ...filters, mlbAffiliate: e.target.value })}
             />
@@ -351,10 +362,10 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
           {/* Independent League */}
           <div>
-            <Label htmlFor="independent-league" className="text-sm font-semibold mb-2 block">Independent League</Label>
+            <Label htmlFor="independent-league" className="text-sm font-semibold mb-2 block">{t('playerFilters.independentLeague')}</Label>
             <Input
               id="independent-league"
-              placeholder="e.g., Atlantic League"
+              placeholder={t('playerFilters.placeholders.independentLeague')}
               value={filters.independentLeague}
               onChange={(e) => onFilterChange({ ...filters, independentLeague: e.target.value })}
             />
@@ -362,7 +373,7 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
           {/* Foreign Player */}
           <div>
-            <Label className="text-sm font-semibold mb-2 block">International Player</Label>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.internationalPlayer')}</Label>
             <Select
               value={filters.isForeignPlayer === null ? "" : filters.isForeignPlayer ? "true" : "false"}
               onValueChange={(value) =>
@@ -373,11 +384,11 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Any" />
+                <SelectValue placeholder={t('playerFilters.any')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="true">International</SelectItem>
-                <SelectItem value="false">Domestic</SelectItem>
+                <SelectItem value="true">{t('playerFilters.international')}</SelectItem>
+                <SelectItem value="false">{t('playerFilters.domestic')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

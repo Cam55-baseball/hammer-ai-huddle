@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ export function CancelSubscriptionDialog({
   user,
   onSuccess,
 }: CancelSubscriptionDialogProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -49,8 +51,8 @@ export function CancelSubscriptionDialog({
       if (error) throw error;
 
       toast({
-        title: "Subscriptions Canceled",
-        description: data.message || "All user subscriptions have been canceled.",
+        title: t('cancelSubscriptionDialog.subscriptionsCanceled'),
+        description: data.message || t('cancelSubscriptionDialog.allSubscriptionsCanceled'),
       });
 
       onOpenChange(false);
@@ -58,8 +60,8 @@ export function CancelSubscriptionDialog({
     } catch (error) {
       console.error("Error canceling subscriptions:", error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to cancel subscriptions",
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : t('cancelSubscriptionDialog.failedToCancel'),
         variant: "destructive",
       });
     } finally {
@@ -93,40 +95,39 @@ export function CancelSubscriptionDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            Cancel User Subscriptions
+            {t('cancelSubscriptionDialog.title')}
           </DialogTitle>
           <DialogDescription>
-            This will immediately cancel all active Stripe subscriptions for this user.
-            This action cannot be undone.
+            {t('cancelSubscriptionDialog.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div>
-            <p className="text-sm font-medium mb-1">User:</p>
+            <p className="text-sm font-medium mb-1">{t('cancelSubscriptionDialog.user')}</p>
             <p className="text-sm text-muted-foreground">{user.full_name}</p>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
 
           <div>
-            <p className="text-sm font-medium mb-2">Active Modules to Cancel:</p>
+            <p className="text-sm font-medium mb-2">{t('cancelSubscriptionDialog.activeModulesToCancel')}</p>
             <div className="flex flex-wrap gap-2">
               {user.subscribed_modules.length > 0 ? (
                 getModuleBadges()
               ) : (
-                <p className="text-sm text-muted-foreground">No active modules</p>
+                <p className="text-sm text-muted-foreground">{t('cancelSubscriptionDialog.noActiveModules')}</p>
               )}
             </div>
           </div>
 
           <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
             <p className="text-sm text-destructive font-medium">
-              ⚠️ This will:
+              {t('cancelSubscriptionDialog.warningTitle')}
             </p>
             <ul className="text-sm text-destructive mt-2 space-y-1 list-disc list-inside">
-              <li>Cancel all active Stripe subscriptions immediately</li>
-              <li>Remove all module access</li>
-              <li>Update the database to reflect canceled status</li>
+              <li>{t('cancelSubscriptionDialog.warningItem1')}</li>
+              <li>{t('cancelSubscriptionDialog.warningItem2')}</li>
+              <li>{t('cancelSubscriptionDialog.warningItem3')}</li>
             </ul>
           </div>
         </div>
@@ -137,7 +138,7 @@ export function CancelSubscriptionDialog({
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
@@ -145,7 +146,7 @@ export function CancelSubscriptionDialog({
             disabled={loading}
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Confirm Cancellation
+            {t('cancelSubscriptionDialog.confirmCancellation')}
           </Button>
         </DialogFooter>
       </DialogContent>
