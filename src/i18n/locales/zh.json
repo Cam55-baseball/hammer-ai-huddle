@@ -1101,5 +1101,202 @@
     "annotationSaved": "注释已保存",
     "followRequestSent": "关注请求已发送",
     "languageChanged": "语言已更改"
+  },
+  "videoPlayer": {
+    "frameByFrameMode": "逐帧模式",
+    "scoutViewCapture": "球探视图 - 捕获帧以进行注释",
+    "loopStart": "循环开始",
+    "loopEnd": "循环结束",
+    "looping": "循环中: {{start}}秒 → {{end}}秒",
+    "back": "后退",
+    "forward": "前进",
+    "capture": "捕获",
+    "mirror": "镜像",
+    "fullscreen": "全屏",
+    "markLoopStart": "标记循环开始",
+    "markLoopEnd": "标记循环结束",
+    "clear": "清除",
+    "start": "开始",
+    "end": "结束",
+    "capturedKeyFrames": "已捕获的关键帧",
+    "downloadAll": "全部下载 ({{count}})",
+    "keyFrameCaptured": "关键帧已捕获！",
+    "videoNotReady": "视频尚未准备好",
+    "loopStartSet": "循环开始已设置为{{time}}秒",
+    "loopEndSet": "循环结束已设置为{{time}}秒",
+    "loopCleared": "循环已清除",
+    "frameDownloaded": "帧{{number}}已下载！",
+    "annotatedFrameDownloaded": "带注释的帧{{number}}已下载！",
+    "frameRemoved": "帧已移除！",
+    "videoOrCanvasNotReady": "视频或画布未准备好",
+    "videoNotFullyLoaded": "视频未完全加载。请稍候再试。",
+    "canvasContextError": "无法获取画布上下文",
+    "failedToDrawFrame": "绘制帧失败。请刷新页面并重试。",
+    "cannotCaptureCors": "由于安全限制无法捕获帧。请刷新页面。",
+    "failedToCaptureLoading": "捕获帧失败。视频可能仍在加载中。",
+    "videoProtected": "视频受保护。此视频无法使用帧捕获功能。",
+    "failedToCapture": "捕获帧失败。请重试。",
+    "downloadingFrames": "正在下载{{count}}个帧...",
+    "stepBackward": "后退一帧",
+    "stepForward": "前进一帧"
+  },
+  "tutorial": {
+    "step": "步骤 {{current}} / {{total}}",
+    "previous": "上一步",
+    "next": "下一步",
+    "startCompeting": "开始竞争",
+    "completed": "教程完成！",
+    "failedToComplete": "无法完成教程",
+    "player": {
+      "welcome": { "title": "欢迎来到Hammers Modality！", "description": "让我们探索帮助您将比赛提升到新水平的工具。" },
+      "creator": { "title": "您的创作者资料", "description": "设置您的个人资料以个性化训练体验并与球探建立联系。" },
+      "modules": { "title": "训练模块", "description": "访问专门的击球、投掷和投球模块来提高特定技能。" },
+      "upload": { "title": "视频上传", "description": "上传您的训练视频以获得AI驱动的技术分析。" },
+      "coaching": { "title": "AI教练", "description": "根据您的视频分析获得详细的反馈和训练建议。" },
+      "library": { "title": "球员俱乐部", "description": "在您的个人库中保存和整理您的训练课程。" },
+      "following": { "title": "球探连接", "description": "与可以查看您训练进度的球探和教练建立联系。" },
+      "ranking": { "title": "排名", "description": "跟踪您的进步并在排名中与其他运动员进行比较。" },
+      "profile": { "title": "个人资料设置", "description": "自定义您的个人资料并管理您的账户设置。" }
+    },
+    "scout": {
+      "welcome": { "title": "欢迎，球探！", "description": "让我们探索发现和评估人才的工具。" },
+      "creator": { "title": "您的球探资料", "description": "设置您的资质和组织隶属关系。" },
+      "discover": { "title": "发现球员", "description": "使用高级筛选器浏览和搜索有才华的球员。" },
+      "search": { "title": "高级搜索", "description": "按位置、州、经验水平等筛选球员。" },
+      "follow": { "title": "关注球员", "description": "发送关注请求以访问球员的训练库。" },
+      "videos": { "title": "观看视频", "description": "观看训练课程并分析球员的技术。" },
+      "rankings": { "title": "球员排名", "description": "查看平台上所有球员的表现排名。" },
+      "analyze": { "title": "分析表现", "description": "查看AI分析并为球员视频添加您自己的注释。" }
+    }
+  },
+  "nutrition": {
+    "categoryContent": {
+      "bloodType": {
+        "content1": "不同血型可能对某些食物有不同的反应",
+        "content2": "了解您的血型可以帮助个性化您的营养选择",
+        "content3": "研究表明血型与营养吸收之间可能存在相关性",
+        "content4": "考虑咨询营养师获取个性化建议",
+        "content5": "血型可能影响运动员的炎症和能量水平"
+      },
+      "hydration": {
+        "content1": "最佳水分摄入可提高运动表现和恢复能力",
+        "content2": "目标是每天喝体重一半（盎司）的水",
+        "content3": "在剧烈运动和炎热天气中电解质至关重要",
+        "content4": "监测尿液颜色作为水分状态指标",
+        "content5": "训练前的水分补充与训练中喝水同样重要"
+      },
+      "mineralization": {
+        "content1": "矿物质对肌肉功能和骨骼健康至关重要",
+        "content2": "镁有助于肌肉恢复和睡眠质量",
+        "content3": "锌支持免疫功能和组织修复",
+        "content4": "钙和维生素D共同作用促进骨密度",
+        "content5": "铁对氧气运输和能量产生至关重要"
+      },
+      "recovery": {
+        "content1": "训练后恢复对提高表现至关重要",
+        "content2": "在剧烈运动后30分钟内摄入蛋白质",
+        "content3": "睡眠是最重要的恢复技术",
+        "content4": "抗炎食物有助于减少肌肉酸痛",
+        "content5": "主动恢复可能比完全休息更有益"
+      },
+      "bloodFlow": {
+        "content1": "良好的血液循环改善肌肉的营养输送",
+        "content2": "绿叶蔬菜中的一氧化氮改善血流",
+        "content3": "心血管健康直接影响运动表现",
+        "content4": "甜菜已被证明可以提高耐力",
+        "content5": "良好的循环有助于从肌肉中排出废物"
+      },
+      "lymphatic": {
+        "content1": "淋巴系统清除毒素和废物",
+        "content2": "水分摄入支持正常的淋巴功能",
+        "content3": "运动和锻炼刺激淋巴循环",
+        "content4": "干刷可以帮助淋巴引流",
+        "content5": "健康的淋巴支持免疫功能和恢复"
+      },
+      "vitamins": {
+        "content1": "维生素对能量产生和恢复至关重要",
+        "content2": "B族维生素帮助将食物转化为能量",
+        "content3": "维生素C支持免疫力和胶原蛋白合成",
+        "content4": "维生素D对骨骼健康和肌肉功能至关重要",
+        "content5": "全食物来源通常比补充剂更好"
+      },
+      "dailyTips": {
+        "content1": "每天在喝咖啡或吃东西之前先喝水",
+        "content2": "吃多彩的食物以获得营养多样性",
+        "content3": "根据训练时间表规划膳食",
+        "content4": "倾听身体的饥饿和饱腹信号",
+        "content5": "饮食习惯的一致性会带来更好的结果"
+      },
+      "longevity": {
+        "content1": "长寿从日常健康习惯开始",
+        "content2": "抗炎饮食支持长期健康",
+        "content3": "社会联系对长寿的影响与饮食一样大",
+        "content4": "规律的体育活动是健康老龄化的关键",
+        "content5": "压力管理对长期健康至关重要"
+      },
+      "weight": {
+        "content1": "体重管理关注身体成分，而不仅仅是体重秤数字",
+        "content2": "对运动员来说，肌肉量比总体重更重要",
+        "content3": "限时饮食可以优化新陈代谢",
+        "content4": "渐进的改变比极端节食更可持续",
+        "content5": "监测能量和表现，而不仅仅是体重"
+      },
+      "vegan": {
+        "content1": "植物性饮食可以支持运动表现",
+        "content2": "蛋白质组合确保完整的氨基酸摄入",
+        "content3": "B12补充对纯素运动员至关重要",
+        "content4": "植物性铁需要维生素C来吸收",
+        "content5": "欧米伽-3脂肪酸可以来自亚麻籽和坚果"
+      },
+      "restrictive": {
+        "content1": "限制性饮食需要运动员仔细规划",
+        "content2": "食物敏感性应该得到正确诊断",
+        "content3": "排除饮食可以识别食物触发因素",
+        "content4": "对于主要的饮食限制，请与营养师合作",
+        "content5": "大多数常见食物都有替代品"
+      },
+      "offSeason": {
+        "content1": "休赛期是增强力量和纠正不足的时候",
+        "content2": "关注营养质量而不是限制",
+        "content3": "利用这段时间尝试新的健康食品",
+        "content4": "解决已确定的营养缺乏问题",
+        "content5": "逐步为赛季需求准备身体"
+      },
+      "inSeason": {
+        "content1": "赛季营养支持高性能需求",
+        "content2": "在比赛期间饮食一致性变得至关重要",
+        "content3": "根据训练负荷调整卡路里摄入",
+        "content4": "根据比赛和训练安排用餐时间",
+        "content5": "保持有效的习惯，避免实验"
+      },
+      "performance": {
+        "content1": "训练前营养为训练和比赛提供燃料",
+        "content2": "碳水化合物是高强度运动的主要燃料",
+        "content3": "运动前的蛋白质可以减少肌肉分解",
+        "content4": "避免在活动前立即食用高纤维食物",
+        "content5": "用餐时机影响能量可用性"
+      },
+      "inGame": {
+        "content1": "比赛中补水在整个比赛中保持表现",
+        "content2": "简单碳水化合物在比赛中提供快速能量",
+        "content3": "电解质防止抽筋和疲劳",
+        "content4": "中场营养会影响下半场表现",
+        "content5": "在训练中练习比赛日营养"
+      },
+      "supplements": {
+        "content1": "NSF认证的补充剂确保运动员的安全",
+        "content2": "全食物应该是营养的基础",
+        "content3": "肌酸是研究最多的补充剂之一",
+        "content4": "正确使用咖啡因可以提高表现",
+        "content5": "在开始补充剂之前咨询专业人士"
+      },
+      "holistic": {
+        "content1": "整体健康连接身体、心灵和精神",
+        "content2": "压力管理影响消化和营养吸收",
+        "content3": "睡眠质量影响食物选择和新陈代谢",
+        "content4": "正念饮食提高用餐满意度",
+        "content5": "心理健康与身体健康同样重要"
+      }
+    }
   }
 }
