@@ -2424,6 +2424,20 @@
     "incomplete": "Incomplete",
     "exercisesCompleted": "{{count}} of {{total}} exercises",
     "allExercisesComplete": "All exercises complete!",
-    "tapToComplete": "Tap to mark complete"
+    "tapToComplete": "Tap to mark complete",
+    "strengthWorkout": "Strength",
+    "isometricWorkout": "Isometric",
+    "setsReps": "{{sets}}×{{reps}}",
+    "percentOf1RM": "{{percent}}% 1RM",
+    "holdDuration": "{{sets}}×{{seconds}}s",
+    "enterWeight": "Track weight (lbs)",
+    "setNumber": "Set {{number}}",
+    "experienceLevel": "Lifting Experience",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "standard": "Standard",
+    "adjustedFor": "% adjusted for {{level}} level",
+    "strengthSettings": "Strength Training Settings"
   }
 }

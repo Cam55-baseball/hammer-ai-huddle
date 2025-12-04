@@ -4,15 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Lock, Unlock, ChevronDown, ChevronUp, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Lock, Unlock, ChevronDown, ChevronUp, ChevronRight, CheckCircle2, Dumbbell, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DayWorkoutDetailDialog } from './DayWorkoutDetailDialog';
+import { Exercise, ExperienceLevel, isExerciseObject } from '@/types/workout';
 
 interface WeekData {
   week: number;
   title: string;
   focus: string;
-  days: { day: string; title: string; exercises: string[] }[];
+  days: { day: string; title: string; exercises: (string | Exercise)[] }[];
 }
 
 interface WeeklyWorkoutPlanProps {
@@ -25,6 +26,9 @@ interface WeeklyWorkoutPlanProps {
   getWeekCompletionPercent: (week: number) => number;
   getExerciseProgress: (week: number, day: string, totalExercises: number) => boolean[];
   onExerciseComplete: (week: number, day: string, exerciseIndex: number, completed: boolean, totalExercises: number) => void;
+  getWeightLog: (week: number, day: string) => { [exerciseIndex: number]: number[] };
+  onWeightUpdate: (week: number, day: string, exerciseIndex: number, setIndex: number, weight: number) => void;
+  experienceLevel: ExperienceLevel;
 }
 
 export function WeeklyWorkoutPlan({
@@ -37,12 +41,15 @@ export function WeeklyWorkoutPlan({
   getWeekCompletionPercent,
   getExerciseProgress,
   onExerciseComplete,
+  getWeightLog,
+  onWeightUpdate,
+  experienceLevel,
 }: WeeklyWorkoutPlanProps) {
   const { t } = useTranslation();
   const [expandedWeek, setExpandedWeek] = useState<number | null>(currentWeek);
   const [selectedDay, setSelectedDay] = useState<{
     weekData: WeekData;
-    day: { day: string; title: string; exercises: string[] };
+    day: { day: string; title: string; exercises: (string | Exercise)[] };
   } | null>(null);
 
   const isWeekUnlocked = (week: number) => {
@@ -52,6 +59,18 @@ export function WeeklyWorkoutPlan({
 
   const isDayCompleted = (week: number, day: string) => {
     return weekProgress[week]?.[day] || false;
+  };
+
+  const hasStrengthExercises = (exercises: (string | Exercise)[]): boolean => {
+    return exercises.some(e => isExerciseObject(e) && e.type === 'strength');
+  };
+
+  const hasIsometricExercises = (exercises: (string | Exercise)[]): boolean => {
+    return exercises.some(e => isExerciseObject(e) && e.type === 'isometric');
+  };
+
+  const getExercisePreview = (exercises: (string | Exercise)[]): string => {
+    return exercises.slice(0, 2).map(e => isExerciseObject(e) ? e.name : e).join(' • ');
   };
 
   return (
@@ -133,6 +152,9 @@ export function WeeklyWorkoutPlan({
                     <div className="grid gap-2">
                       {weekData.days.map((day) => {
                         const completed = isDayCompleted(weekData.week, day.day);
+                        const hasStrength = hasStrengthExercises(day.exercises);
+                        const hasIsometric = hasIsometricExercises(day.exercises);
+
                         return (
                           <div
                             key={day.day}
@@ -170,10 +192,22 @@ export function WeeklyWorkoutPlan({
                                   <p className="font-medium text-xs sm:text-sm truncate">
                                     {day.title}
                                   </p>
-                                  <p className="text-xs text-muted-foreground line-clamp-1">
-                                    {day.exercises.slice(0, 2).join(' • ')}
-                                    {day.exercises.length > 2 && ' ...'}
-                                  </p>
+                                  <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                                    <p className="text-xs text-muted-foreground line-clamp-1">
+                                      {getExercisePreview(day.exercises)}
+                                      {day.exercises.length > 2 && ' ...'}
+                                    </p>
+                                    {hasStrength && (
+                                      <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-orange-500/10 text-orange-600 border-orange-500/30">
+                                        <Dumbbell className="h-2.5 w-2.5" />
+                                      </Badge>
+                                    )}
+                                    {hasIsometric && (
+                                      <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-blue-500/10 text-blue-600 border-blue-500/30">
+                                        <Timer className="h-2.5 w-2.5" />
+                                      </Badge>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                               <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -231,6 +265,23 @@ export function WeeklyWorkoutPlan({
             );
           }
         }}
+        weightLog={
+          selectedDay
+            ? getWeightLog(selectedDay.weekData.week, selectedDay.day.day)
+            : {}
+        }
+        onWeightUpdate={(exerciseIndex, setIndex, weight) => {
+          if (selectedDay) {
+            onWeightUpdate(
+              selectedDay.weekData.week,
+              selectedDay.day.day,
+              exerciseIndex,
+              setIndex,
+              weight
+            );
+          }
+        }}
+        experienceLevel={experienceLevel}
       />
     </>
   );
