@@ -62,7 +62,7 @@ export function DayWorkoutDetailDialog({
     const isExerciseComplete = exerciseProgress[index] || false;
 
     if (!isExerciseObject(exercise)) {
-      // Skill exercise - simple display
+      // Skill exercise - simple display (fallback for legacy string exercises)
       return (
         <div
           key={index}
@@ -87,6 +87,43 @@ export function DayWorkoutDetailDialog({
           )}>
             {exercise}
           </p>
+        </div>
+      );
+    }
+
+    // Skill exercise with description (new format)
+    if (exercise.type === 'skill') {
+      return (
+        <div
+          key={index}
+          onClick={() => onExerciseToggle(index, !isExerciseComplete)}
+          className={cn(
+            "flex items-start gap-3 p-2 sm:p-3 rounded-lg border transition-all cursor-pointer",
+            "hover:border-primary/50",
+            isExerciseComplete
+              ? "bg-green-500/10 border-green-500/30"
+              : "bg-muted/50 border-border/50"
+          )}
+        >
+          <Checkbox
+            checked={isExerciseComplete}
+            onCheckedChange={(checked) => onExerciseToggle(index, !!checked)}
+            onClick={(e) => e.stopPropagation()}
+            className="mt-0.5 flex-shrink-0"
+          />
+          <div className="flex-1 space-y-1">
+            <p className={cn(
+              "text-sm font-medium",
+              isExerciseComplete && "line-through text-muted-foreground"
+            )}>
+              {exercise.name}
+            </p>
+            {exercise.description && (
+              <p className="text-xs text-muted-foreground">
+                {exercise.description}
+              </p>
+            )}
+          </div>
         </div>
       );
     }
@@ -149,9 +186,15 @@ export function DayWorkoutDetailDialog({
               )}
             </div>
 
+            {exercise.description && (
+              <p className="text-xs text-muted-foreground">
+                {exercise.description}
+              </p>
+            )}
+
             {exercise.notes && (
-              <p className="text-xs text-muted-foreground italic">
-                {exercise.notes}
+              <p className="text-xs text-muted-foreground/70 italic">
+                💡 {exercise.notes}
               </p>
             )}
 

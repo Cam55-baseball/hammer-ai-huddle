@@ -1,6 +1,7 @@
 export interface Exercise {
   name: string;
   type: 'skill' | 'strength' | 'isometric';
+  description?: string;
   sets?: number;
   reps?: number;
   percentOf1RM?: number;
