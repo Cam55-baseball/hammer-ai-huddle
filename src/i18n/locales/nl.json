@@ -1614,5 +1614,66 @@
       "description": "Er is een fout opgetreden bij het initialiseren van het eigenaar account.",
       "defaultMessage": "Eigenaar account kon niet worden geïnitialiseerd"
     }
+  },
+  "bounceBackBay": {
+    "title": "Bounce Back Bay",
+    "subtitle": "Blessure-educatie voor Atleten",
+    "description": "Leer sportblessures te herkennen en begrijpen.",
+    "badges": {
+      "educational": "Alleen Educatief",
+      "athleteFocused": "Atleet-Gericht",
+      "comprehensiveGuide": "Uitgebreide Gids",
+      "categories": { "all": "Alle Badges", "injury": "Blessure Studie", "tiered": "Anatomie Niveaus", "special": "Speciale Prestatie" },
+      "earned": "Verdiend",
+      "locked": "Vergrendeld",
+      "safetyDisclaimer": "Toegekend voor educatieve studie. Geen medische goedkeuring. Raadpleeg altijd een professional.",
+      "legendText": "Badges worden verdiend door educatieve inhoud te voltooien.",
+      "items": {
+        "shoulder_scholar": { "name": "Schouder Geleerde", "description": "Schouderblessure-educatie voltooid" },
+        "elbow_expert": { "name": "Elleboog Expert", "description": "Elleboog overzicht voltooid" },
+        "hamstring_headliner": { "name": "Hamstring Ster", "description": "Onderlichaam module voltooid" },
+        "ankle_analyst": { "name": "Enkel Analist", "description": "Enkelblessure-educatie voltooid" },
+        "wrist_wizard": { "name": "Pols Wizard", "description": "Pols educatie voltooid" },
+        "back_boss": { "name": "Rug Baas", "description": "Rug educatie voltooid" },
+        "bronze_anatomy": { "name": "Bronzen Anatomie Badge", "description": "3 blessures bestudeerd" },
+        "silver_anatomy": { "name": "Zilveren Anatomie Badge", "description": "7 blessures bestudeerd" },
+        "gold_anatomy": { "name": "Gouden Anatomie Badge", "description": "12+ blessures bestudeerd" },
+        "elite_recovery": { "name": "Elite Herstel Badge", "description": "Bibliotheek voltooid" },
+        "red_flag_ready": { "name": "Rode Vlag Gereed", "description": "Veiligheidseducatie voltooid" },
+        "pain_scale_pro": { "name": "Pijnschaal Pro", "description": "Pijnbewustzijn voltooid" },
+        "recovery_intelligence": { "name": "Herstel Intelligentie", "description": "Herstelmethoden voltooid" },
+        "human_body_mastery": { "name": "Lichaam Meesterschap", "description": "Alle secties voltooid" }
+      }
+    },
+    "streak": { "dayStreak": "Dagen Reeks", "sections": "Secties", "badges": "Badges", "best": "Beste", "nextBadge": "Volgende Badge", "keepLearning": "Blijf leren!" },
+    "progress": { "title": "Uw Voortgang & Badges", "subtitle": "Volg uw reis" },
+    "allAreas": "Alle Gebieden",
+    "commonSymptoms": "Symptomen",
+    "typicalTimeline": "Tijdlijn",
+    "sections": {
+      "diagnosticFlow": { "title": "Diagnostisch Stroomdiagram", "subtitle": "Begrijp uw symptomen" },
+      "painScale": { "title": "Pijnschaal Systeem", "subtitle": "Beoordeel pijnniveaus" },
+      "redFlags": { "title": "Rode Vlag Check", "subtitle": "Waarschuwingssignalen" },
+      "injuryHub": { "title": "Blessure Hub", "subtitle": "Bekijk blessures" },
+      "returnToPlay": { "title": "Terugkeer Fasen", "subtitle": "Herstelfasen" },
+      "injuryPrevention": { "title": "Blessurepreventie", "subtitle": "Verminder risico" },
+      "recoveryMethods": { "title": "Herstelmethoden", "subtitle": "Ijs, warmte, principes" },
+      "equipmentLibrary": { "title": "Apparatuur", "subtitle": "Hersteltools" }
+    },
+    "hurtingVsInjured": {
+      "title": "Pijn vs. Geblesseerd",
+      "subtitle": "Begrijp het verschil",
+      "hurting": { "title": "Normale Spierpijn", "description": "Deel van training:", "sign1": "Spierpijn die verbetert", "sign2": "Stijfheid na opwarmen", "sign3": "Vermoeidheid na training", "sign4": "Verdwijnt binnen 24-72 uur" },
+      "injured": { "title": "Mogelijke Blessure", "description": "Ernstiger:", "sign1": "Scherpe pijn", "sign2": "Pijn wordt erger", "sign3": "Zwelling of blauwe plekken", "sign4": "Kan niet belasten", "sign5": "Langer dan 72 uur" },
+      "note": { "title": "Onthoud", "description": "Alleen zelfreflectie, geen diagnose." }
+    },
+    "diagnosticFlow": { "intro": "Reflecteer op symptomen.", "step": "Stap", "steps": { "symptoms": { "title": "Identificeer Symptomen", "description": "Wat ervaart u?", "q1": "Waar?", "q2": "Welk type?", "q3": "Beïnvloedt beweging?" }, "timing": { "title": "Timing", "description": "Wanneer begon het?", "q1": "Plotseling of geleidelijk?", "q2": "Hoe lang?", "q3": "Constant of wisselend?" }, "severity": { "title": "Ernst", "description": "Hoe ernstig?", "q1": "Normale activiteiten mogelijk?", "q2": "Zwelling?", "q3": "Wordt het beter of erger?" }, "decision": { "title": "Opties", "description": "Overweeg:", "outcome1": { "condition": "Ernstige symptomen", "action": "Zoek hulp" }, "outcome2": { "condition": "Matig, 48-72 uur", "action": "Plan consult" }, "outcome3": { "condition": "Mild, verbetert", "action": "Blijf monitoren" } } } },
+    "painScale": { "intro": "Reflecteer op pijn.", "noPain": "Geen Pijn", "worstPain": "Ergste Pijn", "recommendation": "Richtlijn", "levels": { "minimal": { "label": "Minimaal", "description": "Nauwelijks merkbaar", "recommendation": "Ga door" }, "mild": { "label": "Mild", "description": "Merkbaar", "recommendation": "Pas aan" }, "moderate": { "label": "Matig", "description": "Verstoort", "recommendation": "Rust" }, "severe": { "label": "Ernstig", "description": "Significant", "recommendation": "Evaluatie" }, "extreme": { "label": "Extreem", "description": "Overweldigend", "recommendation": "Directe hulp" } }, "ranges": { "minimal": "Minimaal", "mild": "Mild", "moderate": "Matig", "severe": "Ernstig", "extreme": "Extreem" } },
+    "redFlags": { "intro": "Check symptomen.", "critical": "Kritiek", "high": "Hoog", "medium": "Medium", "items": { "deformity": "Misvorming", "numbness": "Gevoelloosheid", "inability": "Kan niet belasten", "severeSwelling": "Ernstige zwelling", "popSound": "Knak gehoord", "lockedJoint": "Geblokkeerd gewricht", "instability": "Instabiel", "worsening": "Wordt erger", "nightPain": "Nachtpijn", "fever": "Koorts" }, "seekProfessional": "Zoek Hulp", "stopActivity": "Stop", "result": { "critical": { "title": "Directe Aandacht", "description": "Kritieke signalen" }, "high": { "title": "Evaluatie Nodig", "description": "Significante signalen" }, "moderate": { "title": "Monitor", "description": "Enkele signalen" }, "clear": { "title": "Geen Rode Vlaggen", "description": "Blijf monitoren" } }, "disclaimer": { "title": "Reminder", "description": "Alleen educatief." } },
+    "disclaimer": { "title": "MEDISCHE DISCLAIMER", "subtitle": "Lees zorgvuldig", "points": { "educational": { "title": "Educatief", "description": "Alleen informatie." }, "noDiagnosis": { "title": "Geen Advies", "description": "Geen diagnose." }, "seekHelp": { "title": "Professionals", "description": "Raadpleeg experts." }, "emergency": { "title": "Noodgevallen", "description": "Directe hulp." } }, "fullText": { "para1": "Educatieve informatie.", "para2": "Geen vervanging medisch advies.", "para3": "Onder begeleiding.", "warning": "⚠️ Ernstige pijn? Zoek hulp." }, "bottomNote": "U begrijpt deze disclaimer." },
+    "returnToPlay": { "intro": "Begrijp herstelfasen.", "phase": "Fase", "keyFocus": "Focus", "phases": { "protection": { "title": "Bescherming", "description": "Bescherm gebied", "focus1": "Rust", "focus2": "Verminder zwelling", "focus3": "Voorkom meer schade", "focus4": "Voorzichtige beweging" }, "restore": { "title": "Herstel Beweging", "description": "Herstel functie", "focus1": "Bewegingsbereik", "focus2": "Basale patronen", "focus3": "Lichte versterking", "focus4": "Mobiliteit" }, "strengthen": { "title": "Versterking", "description": "Bouw kracht", "focus1": "Progressieve oefeningen", "focus2": "Stabiliteit", "focus3": "Sportspecifiek", "focus4": "Geleidelijke belasting" }, "return": { "title": "Terugkeer", "description": "Volledige training", "focus1": "Sportspecifiek", "focus2": "Wedstrijdsnelheid", "focus3": "Competitiegereed", "focus4": "Onderhoud" } }, "progressionNote": { "title": "Individueel", "description": "Elk herstel is anders." } },
+    "injuryPrevention": { "intro": "Preventie-educatie.", "categories": { "warmup": { "title": "Warming-up", "subtitle": "Voorbereiding", "tip1": "Dynamisch rekken", "tip2": "Sportspecifiek", "tip3": "Geleidelijke intensiteit" }, "strength": { "title": "Krachttraining", "subtitle": "Veerkracht", "tip1": "Progressieve overbelasting", "tip2": "Gebalanceerd", "tip3": "Core stabiliteit" }, "mobility": { "title": "Mobiliteit", "subtitle": "Bewegingskwaliteit", "tip1": "Gewrichtsmobiliteit", "tip2": "Gerichte stretching", "tip3": "Bewegingsvariatie" }, "sportSpecific": { "title": "Sportspecifiek", "subtitle": "Honkbal/Softbal", "tip1": "Pitchtelling", "tip2": "Goede mechanica", "tip3": "Positiespecifiek" } }, "patterns": { "title": "Preventiepatronen", "subtitle": "Goede gewoonten", "pattern1": "Voldoende slaap", "pattern2": "Hydratatie", "pattern3": "Geleidelijke progressie", "pattern4": "Luister naar lichaam" } },
+    "recoveryMethods": { "intro": "Herstelmethoden.", "whenToUse": "Wanneer", "ice": { "title": "IJs", "subtitle": "Acute situaties", "use1": "Acute blessures", "use2": "Ontstekingsbeheer", "use3": "Zwellingreductie", "timing": "15-20 min" }, "heat": { "title": "Warmte", "subtitle": "Chronisch", "use1": "Spierspanning", "use2": "Bloedstroom", "use3": "Ontspanning", "timing": "15-20 min" }, "principles": { "title": "Principes", "subtitle": "Basis", "rest": { "title": "Rust & Slaap", "description": "7-9 uur" }, "hydration": { "title": "Hydratatie", "description": "Voldoende vocht" } } },
+    "equipmentLibrary": { "intro": "Herstel apparatuur.", "searchPlaceholder": "Zoeken...", "allCategories": "Alle", "whatItDoes": "Functie:", "whenUsed": "Gebruik:", "noResults": "Niet gevonden", "categories": { "tape": "Tape", "sleeves": "Mouwen", "bands": "Banden", "softTissue": "Zacht Weefsel", "supports": "Ondersteuning" }, "items": { "kinesioTape": { "name": "Kinesio Tape", "description": "Elastische tape", "usage": "Spierondersteuning" }, "athleticTape": { "name": "Sporttape", "description": "Niet-elastisch", "usage": "Gewrichtsondersteuning" }, "compressionSleeve": { "name": "Compressiemouw", "description": "Compressie", "usage": "Zwellingreductie" }, "kneeSleeve": { "name": "Kniemouw", "description": "Knieondersteuning", "usage": "Warmte en compressie" }, "resistanceBands": { "name": "Weerstandsbanden", "description": "Elastische banden", "usage": "Revalidatie" }, "therapyBands": { "name": "Therapiebanden", "description": "Platte banden", "usage": "Versterking" }, "foamRoller": { "name": "Foam Roller", "description": "Zelfmassage", "usage": "Spiervoorbereiding" }, "massageBall": { "name": "Massagebal", "description": "Gericht", "usage": "Triggerpoints" }, "ankleBrace": { "name": "Enkelbrace", "description": "Enkelondersteuning", "usage": "Preventie" }, "wristSupport": { "name": "Polsondersteuning", "description": "Polssteun", "usage": "Ondersteuning" } } }
   }
 }

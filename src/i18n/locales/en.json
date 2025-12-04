@@ -2125,6 +2125,88 @@
           "usage": "Supporting wrist during activity, managing discomfort, and injury prevention."
         }
       }
+    },
+    "badges": {
+      "categories": {
+        "all": "All Badges",
+        "injury": "Injury Study",
+        "tiered": "Anatomy Tiers",
+        "special": "Special Achievement"
+      },
+      "earned": "Earned",
+      "locked": "Locked",
+      "safetyDisclaimer": "Awarded for completing educational study. This badge does not indicate medical readiness or clearance. Always consult a licensed professional.",
+      "legendText": "Badges are earned by completing educational content. They represent knowledge acquisition, not medical clearance.",
+      "items": {
+        "shoulder_scholar": {
+          "name": "Shoulder Scholar",
+          "description": "Completed Shoulder Injury Education"
+        },
+        "elbow_expert": {
+          "name": "Elbow Expert",
+          "description": "Completed UCL / Forearm / Flexor Overview"
+        },
+        "hamstring_headliner": {
+          "name": "Hamstring Headliner",
+          "description": "Completed Lower Body Module"
+        },
+        "ankle_analyst": {
+          "name": "Ankle Analyst",
+          "description": "Completed Ankle Injury Education"
+        },
+        "wrist_wizard": {
+          "name": "Wrist Wizard",
+          "description": "Completed Wrist & Hand Education"
+        },
+        "back_boss": {
+          "name": "Back Boss",
+          "description": "Completed Back & Spine Education"
+        },
+        "bronze_anatomy": {
+          "name": "Bronze Anatomy Badge",
+          "description": "Studied 3 injuries"
+        },
+        "silver_anatomy": {
+          "name": "Silver Anatomy Badge",
+          "description": "Studied 7 injuries"
+        },
+        "gold_anatomy": {
+          "name": "Gold Anatomy Badge",
+          "description": "Studied 12+ injuries"
+        },
+        "elite_recovery": {
+          "name": "Elite Recovery Badge",
+          "description": "Completed entire Bounce Back Bay library"
+        },
+        "red_flag_ready": {
+          "name": "Red Flag Ready",
+          "description": "Completed all safety education"
+        },
+        "pain_scale_pro": {
+          "name": "Pain Scale Pro",
+          "description": "Completed pain awareness section"
+        },
+        "recovery_intelligence": {
+          "name": "Recovery Intelligence",
+          "description": "Completed all recovery method education"
+        },
+        "human_body_mastery": {
+          "name": "Human Body Mastery",
+          "description": "Finished every section with full completion"
+        }
+      }
+    },
+    "streak": {
+      "dayStreak": "Day Streak",
+      "sections": "Sections",
+      "badges": "Badges",
+      "best": "Best Streak",
+      "nextBadge": "Next Badge",
+      "keepLearning": "Keep learning to unlock more!"
+    },
+    "progress": {
+      "title": "Your Progress & Badges",
+      "subtitle": "Track your educational journey"
     }
   }
 }
