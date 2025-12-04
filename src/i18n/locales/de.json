@@ -2225,5 +2225,47 @@
         }
       }
     }
+  },
+  "workoutModules": {
+    "productionLab": {
+      "title": "Produktionslabor",
+      "subtitle": "6-Wochen Schlagentwicklungsprogramm"
+    },
+    "productionStudio": {
+      "title": "Produktionsstudio",
+      "subtitle": "6-Wochen Wurfentwicklungsprogramm"
+    },
+    "yourProgress": "Dein Fortschritt",
+    "currentWeek": "Aktuelle Woche",
+    "thisWeek": "Diese Woche",
+    "overallProgress": "Gesamtfortschritt",
+    "lastActivity": "Letzte Aktivität",
+    "notStarted": "Noch nicht gestartet",
+    "week": "Woche",
+    "current": "Aktuell",
+    "progress": "Fortschritt",
+    "completeWeekToUnlock": "Schließe {{percent}}% von Woche {{week}} ab zum Freischalten",
+    "weekFocus": "Fokus",
+    "sets": "Sätze",
+    "reps": "Wiederholungen",
+    "equipmentChecklist": "Ausrüstungsliste",
+    "weekLocked": "Woche Gesperrt",
+    "weekLockedDescription": "Du musst mehr von der vorherigen Woche abschließen, um Woche {{week}} freizuschalten.",
+    "needToComplete": "Benötigt {{percent}}% ({{remaining}}% mehr)",
+    "keepGoingMessage": "Weiter so! Du machst tolle Fortschritte.",
+    "backToWorkout": "Zurück zum Training",
+    "sixWeekPlan": "6-Wochen Trainingsplan",
+    "accessRequired": "Zugang Erforderlich",
+    "subscribeToHitting": "Abonniere das Schlaganalyse-Modul für Zugang zum Produktionslabor.",
+    "subscribeToPitching": "Abonniere das Wurfanalyse-Modul für Zugang zum Produktionsstudio.",
+    "viewPlans": "Pläne Ansehen",
+    "exercises": "Übungen",
+    "markComplete": "Tag als Abgeschlossen Markieren",
+    "markIncomplete": "Tag als Unvollständig Markieren",
+    "completed": "Abgeschlossen",
+    "incomplete": "Unvollständig",
+    "exercisesCompleted": "{{count}} von {{total}} Übungen",
+    "allExercisesComplete": "Alle Übungen abgeschlossen!",
+    "tapToComplete": "Tippen zum Abschließen"
   }
 }

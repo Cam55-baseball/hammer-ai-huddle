@@ -2203,5 +2203,47 @@
         }
       }
     }
+  },
+  "workoutModules": {
+    "productionLab": {
+      "title": "Laboratorio de Producción",
+      "subtitle": "Programa de Desarrollo de Bateo de 6 Semanas"
+    },
+    "productionStudio": {
+      "title": "Estudio de Producción",
+      "subtitle": "Programa de Desarrollo de Lanzamiento de 6 Semanas"
+    },
+    "yourProgress": "Tu Progreso",
+    "currentWeek": "Semana Actual",
+    "thisWeek": "Esta Semana",
+    "overallProgress": "Progreso General",
+    "lastActivity": "Última Actividad",
+    "notStarted": "Aún no iniciado",
+    "week": "Semana",
+    "current": "Actual",
+    "progress": "Progreso",
+    "completeWeekToUnlock": "Completa el {{percent}}% de la Semana {{week}} para desbloquear",
+    "weekFocus": "Enfoque",
+    "sets": "series",
+    "reps": "repeticiones",
+    "equipmentChecklist": "Lista de Equipamiento",
+    "weekLocked": "Semana Bloqueada",
+    "weekLockedDescription": "Necesitas completar más de la semana anterior para desbloquear la Semana {{week}}.",
+    "needToComplete": "Necesitas {{percent}}% ({{remaining}}% más para avanzar)",
+    "keepGoingMessage": "¡Sigue adelante! Estás progresando muy bien.",
+    "backToWorkout": "Volver al Entrenamiento",
+    "sixWeekPlan": "Plan de Entrenamiento de 6 Semanas",
+    "accessRequired": "Acceso Requerido",
+    "subscribeToHitting": "Suscríbete al módulo de Análisis de Bateo para acceder al Laboratorio de Producción.",
+    "subscribeToPitching": "Suscríbete al módulo de Análisis de Lanzamiento para acceder al Estudio de Producción.",
+    "viewPlans": "Ver Planes",
+    "exercises": "Ejercicios",
+    "markComplete": "Marcar Día Completo",
+    "markIncomplete": "Marcar Día Incompleto",
+    "completed": "Completado",
+    "incomplete": "Incompleto",
+    "exercisesCompleted": "{{count}} de {{total}} ejercicios",
+    "allExercisesComplete": "¡Todos los ejercicios completados!",
+    "tapToComplete": "Toca para marcar completo"
   }
 }

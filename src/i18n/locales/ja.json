@@ -1760,5 +1760,47 @@
         }
       }
     }
+  },
+  "workoutModules": {
+    "productionLab": {
+      "title": "プロダクションラボ",
+      "subtitle": "6週間打撃開発プログラム"
+    },
+    "productionStudio": {
+      "title": "プロダクションスタジオ",
+      "subtitle": "6週間投球開発プログラム"
+    },
+    "yourProgress": "あなたの進捗",
+    "currentWeek": "現在の週",
+    "thisWeek": "今週",
+    "overallProgress": "全体の進捗",
+    "lastActivity": "最後のアクティビティ",
+    "notStarted": "まだ開始していません",
+    "week": "週",
+    "current": "現在",
+    "progress": "進捗",
+    "completeWeekToUnlock": "週{{week}}の{{percent}}%を完了してアンロック",
+    "weekFocus": "フォーカス",
+    "sets": "セット",
+    "reps": "回",
+    "equipmentChecklist": "機器チェックリスト",
+    "weekLocked": "週がロックされています",
+    "weekLockedDescription": "週{{week}}をアンロックするには、前の週をもっと完了する必要があります。",
+    "needToComplete": "{{percent}}%必要（あと{{remaining}}%）",
+    "keepGoingMessage": "その調子！素晴らしい進歩です。",
+    "backToWorkout": "トレーニングに戻る",
+    "sixWeekPlan": "6週間トレーニングプラン",
+    "accessRequired": "アクセスが必要です",
+    "subscribeToHitting": "打撃分析モジュールに登録してプロダクションラボにアクセス。",
+    "subscribeToPitching": "投球分析モジュールに登録してプロダクションスタジオにアクセス。",
+    "viewPlans": "プランを見る",
+    "exercises": "エクササイズ",
+    "markComplete": "日を完了としてマーク",
+    "markIncomplete": "日を未完了としてマーク",
+    "completed": "完了",
+    "incomplete": "未完了",
+    "exercisesCompleted": "{{total}}中{{count}}のエクササイズ",
+    "allExercisesComplete": "すべてのエクササイズ完了！",
+    "tapToComplete": "タップして完了"
   }
 }

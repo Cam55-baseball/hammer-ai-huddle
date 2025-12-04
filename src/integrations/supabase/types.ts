@@ -552,6 +552,7 @@ export type Database = {
           created_at: string | null
           current_week: number | null
           equipment_checklist: Json | null
+          exercise_progress: Json | null
           id: string
           last_activity: string | null
           module: string
@@ -566,6 +567,7 @@ export type Database = {
           created_at?: string | null
           current_week?: number | null
           equipment_checklist?: Json | null
+          exercise_progress?: Json | null
           id?: string
           last_activity?: string | null
           module: string
@@ -580,6 +582,7 @@ export type Database = {
           created_at?: string | null
           current_week?: number | null
           equipment_checklist?: Json | null
+          exercise_progress?: Json | null
           id?: string
           last_activity?: string | null
           module?: string
