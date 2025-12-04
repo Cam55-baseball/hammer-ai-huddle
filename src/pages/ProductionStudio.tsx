@@ -239,6 +239,9 @@ export default function ProductionStudio() {
               getWeekCompletionPercent={getWeekCompletionPercent}
               getExerciseProgress={getExerciseProgress}
               onExerciseComplete={handleExerciseComplete}
+              getWeightLog={() => ({})}
+              onWeightUpdate={() => {}}
+              experienceLevel="intermediate"
             />
           </div>
 

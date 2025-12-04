@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
+import { ExperienceLevel, WeightLog } from '@/types/workout';
 
 export interface WeekProgress {
   [day: string]: boolean;
@@ -23,6 +24,8 @@ export interface SubModuleProgress {
   week_progress: { [week: string]: WeekProgress };
   exercise_progress: ExerciseProgress;
   equipment_checklist: string[];
+  weight_log: WeightLog;
+  experience_level: ExperienceLevel;
   started_at: string;
   last_activity: string;
 }
@@ -50,10 +53,11 @@ export function useSubModuleProgress(
         .maybeSingle();
 
       if (error) throw error;
-      // Handle exercise_progress - cast to unknown first since TypeScript types may not be updated yet
       const progressData = data ? {
         ...data,
         exercise_progress: (data as unknown as { exercise_progress?: ExerciseProgress }).exercise_progress || {},
+        weight_log: (data as unknown as { weight_log?: WeightLog }).weight_log || {},
+        experience_level: ((data as unknown as { experience_level?: ExperienceLevel }).experience_level || 'intermediate') as ExperienceLevel,
       } as SubModuleProgress : null;
       setProgress(progressData);
     } catch (error) {
@@ -77,7 +81,10 @@ export function useSubModuleProgress(
       sub_module: subModule,
       current_week: 1,
       week_progress: {},
+      exercise_progress: {},
       equipment_checklist: [],
+      weight_log: {},
+      experience_level: 'intermediate',
     };
 
     try {
@@ -90,7 +97,9 @@ export function useSubModuleProgress(
       if (error) throw error;
       const progressData = {
         ...data,
-        exercise_progress: (data as unknown as { exercise_progress?: ExerciseProgress }).exercise_progress || {},
+        exercise_progress: {},
+        weight_log: {},
+        experience_level: 'intermediate' as ExperienceLevel,
       } as SubModuleProgress;
       setProgress(progressData);
       return data;
@@ -159,7 +168,6 @@ export function useSubModuleProgress(
       },
     };
 
-    // Check if all exercises are complete to auto-mark day complete
     const allComplete = updatedExercises.every(Boolean);
 
     try {
@@ -168,7 +176,6 @@ export function useSubModuleProgress(
         last_activity: new Date().toISOString(),
       };
 
-      // Auto-complete day if all exercises done
       if (allComplete) {
         const updatedWeekProgress = {
           ...progress.week_progress,
@@ -216,6 +223,82 @@ export function useSubModuleProgress(
     }
     return progress.exercise_progress[week][day];
   }, [progress]);
+
+  const updateWeightLog = useCallback(async (
+    week: number,
+    day: string,
+    exerciseIndex: number,
+    setIndex: number,
+    weight: number
+  ) => {
+    if (!user || !progress) return;
+
+    const currentWeights = progress.weight_log?.[week]?.[day]?.[exerciseIndex] || [];
+    const newWeights = [...currentWeights];
+    newWeights[setIndex] = weight;
+
+    const newWeightLog: WeightLog = {
+      ...progress.weight_log,
+      [week]: {
+        ...(progress.weight_log?.[week] || {}),
+        [day]: {
+          ...(progress.weight_log?.[week]?.[day] || {}),
+          [exerciseIndex]: newWeights,
+        },
+      },
+    };
+
+    try {
+      const { error } = await supabase
+        .from('sub_module_progress')
+        .update({
+          weight_log: newWeightLog as unknown as null,
+          last_activity: new Date().toISOString(),
+        })
+        .eq('id', progress.id);
+
+      if (error) throw error;
+
+      setProgress({
+        ...progress,
+        weight_log: newWeightLog,
+      });
+    } catch (error) {
+      console.error('Error updating weight log:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save weight',
+        variant: 'destructive',
+      });
+    }
+  }, [user, progress]);
+
+  const getWeightLog = useCallback((week: number, day: string): { [exerciseIndex: number]: number[] } => {
+    return progress?.weight_log?.[week]?.[day] || {};
+  }, [progress]);
+
+  const updateExperienceLevel = useCallback(async (level: ExperienceLevel) => {
+    if (!user || !progress) return;
+
+    try {
+      const { error } = await supabase
+        .from('sub_module_progress')
+        .update({
+          experience_level: level,
+          last_activity: new Date().toISOString(),
+        })
+        .eq('id', progress.id);
+
+      if (error) throw error;
+
+      setProgress({
+        ...progress,
+        experience_level: level,
+      });
+    } catch (error) {
+      console.error('Error updating experience level:', error);
+    }
+  }, [user, progress]);
 
   const advanceWeek = useCallback(async (newWeek: number) => {
     if (!user || !progress) return;
@@ -265,6 +348,9 @@ export function useSubModuleProgress(
     updateDayProgress,
     updateExerciseProgress,
     getExerciseProgress,
+    updateWeightLog,
+    getWeightLog,
+    updateExperienceLevel,
     advanceWeek,
     getWeekCompletionPercent,
     canUnlockWeek,
