@@ -23,6 +23,8 @@ interface WeeklyWorkoutPlanProps {
   onWeekSelect: (week: number) => void;
   canUnlockWeek: (week: number) => boolean;
   getWeekCompletionPercent: (week: number) => number;
+  getExerciseProgress: (week: number, day: string, totalExercises: number) => boolean[];
+  onExerciseComplete: (week: number, day: string, exerciseIndex: number, completed: boolean, totalExercises: number) => void;
 }
 
 export function WeeklyWorkoutPlan({
@@ -33,6 +35,8 @@ export function WeeklyWorkoutPlan({
   onWeekSelect,
   canUnlockWeek,
   getWeekCompletionPercent,
+  getExerciseProgress,
+  onExerciseComplete,
 }: WeeklyWorkoutPlanProps) {
   const { t } = useTranslation();
   const [expandedWeek, setExpandedWeek] = useState<number | null>(currentWeek);
@@ -205,6 +209,26 @@ export function WeeklyWorkoutPlan({
               selectedDay.day.day
             );
             onDayComplete(selectedDay.weekData.week, selectedDay.day.day, !completed);
+          }
+        }}
+        exerciseProgress={
+          selectedDay
+            ? getExerciseProgress(
+                selectedDay.weekData.week,
+                selectedDay.day.day,
+                selectedDay.day.exercises.length
+              )
+            : []
+        }
+        onExerciseToggle={(index, completed) => {
+          if (selectedDay) {
+            onExerciseComplete(
+              selectedDay.weekData.week,
+              selectedDay.day.day,
+              index,
+              completed,
+              selectedDay.day.exercises.length
+            );
           }
         }}
       />

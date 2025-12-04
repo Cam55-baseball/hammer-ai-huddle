@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle2, Circle, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +25,8 @@ interface DayWorkoutDetailDialogProps {
   weekFocus: string;
   isCompleted: boolean;
   onToggleComplete: () => void;
+  exerciseProgress: boolean[];
+  onExerciseToggle: (index: number, completed: boolean) => void;
 }
 
 export function DayWorkoutDetailDialog({
@@ -35,10 +38,16 @@ export function DayWorkoutDetailDialog({
   weekFocus,
   isCompleted,
   onToggleComplete,
+  exerciseProgress,
+  onExerciseToggle,
 }: DayWorkoutDetailDialogProps) {
   const { t } = useTranslation();
 
   if (!dayData) return null;
+
+  const completedCount = exerciseProgress.filter(Boolean).length;
+  const totalExercises = dayData.exercises.length;
+  const allComplete = completedCount === totalExercises;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,23 +79,54 @@ export function DayWorkoutDetailDialog({
 
         <div className="mt-4 space-y-4">
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold flex items-center gap-2">
-              <Dumbbell className="h-4 w-4 text-primary" />
-              {t('workoutModules.exercises')}
-            </h4>
-            <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
-              {dayData.exercises.map((exercise, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-3 p-2 sm:p-3 rounded-lg bg-muted/50 border border-border/50"
-                >
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
-                    {index + 1}
-                  </span>
-                  <p className="text-sm flex-1 pt-0.5">{exercise}</p>
-                </div>
-              ))}
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <Dumbbell className="h-4 w-4 text-primary" />
+                {t('workoutModules.exercises')}
+              </h4>
+              <span className={cn(
+                "text-xs font-medium",
+                allComplete ? "text-green-500" : "text-muted-foreground"
+              )}>
+                {t('workoutModules.exercisesCompleted', { count: completedCount, total: totalExercises })}
+              </span>
             </div>
+            <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
+              {dayData.exercises.map((exercise, index) => {
+                const isExerciseComplete = exerciseProgress[index] || false;
+                return (
+                  <div
+                    key={index}
+                    onClick={() => onExerciseToggle(index, !isExerciseComplete)}
+                    className={cn(
+                      "flex items-start gap-3 p-2 sm:p-3 rounded-lg border transition-all cursor-pointer",
+                      "hover:border-primary/50",
+                      isExerciseComplete
+                        ? "bg-green-500/10 border-green-500/30"
+                        : "bg-muted/50 border-border/50"
+                    )}
+                  >
+                    <Checkbox
+                      checked={isExerciseComplete}
+                      onCheckedChange={(checked) => onExerciseToggle(index, !!checked)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-0.5 flex-shrink-0"
+                    />
+                    <p className={cn(
+                      "text-sm flex-1 pt-0.5",
+                      isExerciseComplete && "line-through text-muted-foreground"
+                    )}>
+                      {exercise}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            {allComplete && (
+              <p className="text-xs text-green-500 font-medium text-center mt-2">
+                {t('workoutModules.allExercisesComplete')}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border">
