@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const InitializeOwner = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [secretKey, setSecretKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,18 +29,18 @@ const InitializeOwner = () => {
 
       if (data.success) {
         toast({
-          title: "Owner Account Initialized!",
-          description: "You can now log in as the owner.",
+          title: t('initializeOwner.success.title'),
+          description: t('initializeOwner.success.description'),
         });
         navigate("/auth");
       } else {
-        throw new Error(data.error || "Failed to initialize owner account");
+        throw new Error(data.error || t('initializeOwner.error.defaultMessage'));
       }
     } catch (error: any) {
       console.error('Error initializing owner:', error);
       toast({
-        title: "Initialization Failed",
-        description: error.message || "There was an error initializing the owner account.",
+        title: t('initializeOwner.error.title'),
+        description: error.message || t('initializeOwner.error.description'),
         variant: "destructive",
       });
     } finally {
@@ -53,42 +55,42 @@ const InitializeOwner = () => {
           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold text-2xl">H</span>
           </div>
-          <h1 className="text-3xl font-bold mb-2">Initialize Owner Account</h1>
+          <h1 className="text-3xl font-bold mb-2">{t('initializeOwner.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            ⚠️ This can only be done once. Use with caution.
+            ⚠️ {t('initializeOwner.warning')}
           </p>
         </div>
 
         <form onSubmit={handleInitialize} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email">Your Email</Label>
+            <Label htmlFor="email">{t('initializeOwner.email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="owner@example.com"
+              placeholder={t('initializeOwner.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
-              This must be an email that's already registered in the system
+              {t('initializeOwner.emailHelper')}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="secretKey">Secret Key</Label>
+            <Label htmlFor="secretKey">{t('initializeOwner.secretKey')}</Label>
             <Input
               id="secretKey"
               type="password"
-              placeholder="Enter OWNER_INIT_KEY"
+              placeholder={t('initializeOwner.secretKeyPlaceholder')}
               value={secretKey}
               onChange={(e) => setSecretKey(e.target.value)}
               required
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
-              The OWNER_INIT_KEY configured in Supabase secrets
+              {t('initializeOwner.secretKeyHelper')}
             </p>
           </div>
 
@@ -98,13 +100,13 @@ const InitializeOwner = () => {
             size="lg"
             disabled={isLoading}
           >
-            {isLoading ? "Initializing..." : "Initialize Owner Account"}
+            {isLoading ? t('initializeOwner.initializing') : t('initializeOwner.initializeButton')}
           </Button>
         </form>
 
         <div className="mt-6 text-center">
           <Button variant="ghost" onClick={() => navigate("/")}>
-            ← Back to Home
+            ← {t('initializeOwner.backToHome')}
           </Button>
         </div>
       </Card>

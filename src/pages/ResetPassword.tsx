@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,21 +8,22 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
 
-const passwordSchema = z.object({
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-  confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
 const ResetPassword = () => {
+  const { t } = useTranslation();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { updatePassword } = useAuth();
+
+  const passwordSchema = z.object({
+    password: z.string().min(6, { message: t('resetPassword.errors.passwordMinLength') }),
+    confirmPassword: z.string().min(6, { message: t('resetPassword.errors.passwordMinLength') }),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: t('resetPassword.errors.passwordsMismatch'),
+    path: ["confirmPassword"],
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,21 +35,21 @@ const ResetPassword = () => {
 
       if (error) {
         toast({
-          title: "Error",
+          title: t('common.error'),
           description: error.message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Password Updated",
-          description: "Your password has been successfully updated.",
+          title: t('resetPassword.success.title'),
+          description: t('resetPassword.success.description'),
         });
         navigate("/dashboard", { replace: true });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
-          title: "Validation Error",
+          title: t('auth.validationError'),
           description: error.errors[0].message,
           variant: "destructive",
         });
@@ -65,15 +67,15 @@ const ResetPassword = () => {
             <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
               <span className="text-primary-foreground font-bold text-2xl">H</span>
             </div>
-            <h1 className="text-2xl font-bold mb-2">Reset Your Password</h1>
+            <h1 className="text-2xl font-bold mb-2">{t('resetPassword.title')}</h1>
             <p className="text-muted-foreground">
-              Enter your new password below
+              {t('resetPassword.subtitle')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password">{t('resetPassword.newPassword')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -85,7 +87,7 @@ const ResetPassword = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">{t('resetPassword.confirmPassword')}</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -97,7 +99,7 @@ const ResetPassword = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Updating..." : "Update Password"}
+              {isLoading ? t('resetPassword.updating') : t('resetPassword.updatePassword')}
             </Button>
           </form>
         </div>

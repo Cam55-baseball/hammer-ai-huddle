@@ -1441,5 +1441,156 @@
     "addCustomName": "Agregar nombre personalizado...",
     "addDescription": "Agregar descripción...",
     "metadataUpdated": "Metadatos del cupón actualizados"
+  },
+  "selectRole": {
+    "title": "Selecciona Tu Rol",
+    "subtitle": "Elige tu rol para obtener entrenamiento personalizado",
+    "sport": "Deporte",
+    "role": "Rol",
+    "module": "Módulo",
+    "player": "Jugador",
+    "playerDescription": "¡Entra al juego!",
+    "selectPlayer": "Seleccionar Jugador",
+    "scoutCoach": "Scout/Entrenador",
+    "scoutCoachDescription": "Entrena y evalúa talento",
+    "selectRole": "Seleccionar Rol",
+    "admin": "Administrador",
+    "adminDescription": "Solicitar acceso de administrador (requiere aprobación del propietario)",
+    "requestAdminAccess": "Solicitar Acceso de Administrador",
+    "backToSportSelection": "Volver a Selección de Deporte",
+    "confirmationRequired": "Confirmación Requerida",
+    "pleaseConfirmAge": "Por favor confirma el requisito de edad para continuar.",
+    "ageVerification": {
+      "title": "Verificación de Edad Requerida",
+      "description": "Para continuar con la selección y compra del módulo, debes confirmar que tienes 18 años o más. Esto es necesario para el procesamiento del pago.",
+      "note": "Nota",
+      "parentNote": "Si tienes menos de 18 años, tu padre o tutor legal debe marcar esta casilla en tu nombre para proporcionar consentimiento para la compra del módulo.",
+      "confirmLabel": "Confirmo que tengo 18 años o más, o que mi padre/tutor legal está proporcionando consentimiento en mi nombre",
+      "continueToModules": "Continuar a Selección de Módulo"
+    }
+  },
+  "selectModules": {
+    "title": "Selecciona Tu Módulo de Entrenamiento",
+    "addModuleTitle": "Agregar un Módulo",
+    "subtitle": "Elige tu primer módulo (puedes agregar más desde el panel)",
+    "addModeSubtitle": "Elige un módulo para agregar a tu suscripción",
+    "sport": "Deporte",
+    "module": "Módulo",
+    "hitting": "Bateo",
+    "hittingDescription": "Analiza mecánica de swing, velocidad de bate y punto de contacto",
+    "pitching": "Lanzamiento",
+    "pitchingDescription": "Rastrea velocidad, punto de liberación y mecánica del brazo",
+    "throwing": "Tiro",
+    "throwingDescription": "Mejora precisión, fuerza del brazo y forma de tiro",
+    "alreadyPurchased": "Ya Comprado",
+    "selected": "Seleccionado",
+    "back": "Atrás",
+    "loading": "Cargando...",
+    "continueToPricing": "Continuar a Precios",
+    "continue": "Continuar",
+    "selectModuleToContinue": "Por favor selecciona un módulo para continuar"
+  },
+  "scoutApplicationPage": {
+    "title": "Solicitud de Scout/Entrenador",
+    "description": "Envía tus credenciales para revisión del propietario",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "email": "Correo Electrónico",
+    "sport": "Deporte",
+    "organizationLetter": "Carta de Organización (PDF, JPG, PNG - Máx 5MB)",
+    "videoSubmission": "Envío de Video (MP4, MOV, AVI - Máx 50MB)",
+    "back": "Atrás",
+    "submitting": "Enviando...",
+    "submitApplication": "Enviar Solicitud",
+    "errors": {
+      "notLoggedIn": "Debes iniciar sesión para enviar una solicitud",
+      "missingFiles": "Archivos Faltantes",
+      "missingFilesDesc": "Por favor sube tanto la carta de organización como el video",
+      "fileTooLarge": "Archivo Muy Grande",
+      "letterTooLarge": "La carta debe ser menor a 5MB",
+      "videoTooLarge": "El video debe ser menor a 50MB",
+      "submissionFailed": "Envío Fallido",
+      "submissionFailedDesc": "Error al enviar solicitud. Por favor intenta de nuevo."
+    },
+    "success": {
+      "title": "¡Solicitud Enviada!",
+      "description": "Tu solicitud ha sido enviada para revisión"
+    }
+  },
+  "scoutApplicationPending": {
+    "pending": {
+      "title": "Solicitud en Revisión",
+      "description": "Tu solicitud de scout/entrenador ha sido enviada exitosamente",
+      "message": "Tu solicitud está siendo revisada por el propietario. Recibirás una notificación cuando se tome una decisión.",
+      "timeframe": "Esto típicamente toma 1-3 días hábiles.",
+      "badge": "Revisión Pendiente"
+    },
+    "approved": {
+      "title": "¡Solicitud Aprobada!",
+      "description": "¡Felicitaciones! Ahora tienes acceso de scout",
+      "message": "Redirigiendo a tu panel de scout...",
+      "badge": "Aprobado"
+    },
+    "rejected": {
+      "title": "Solicitud No Aprobada",
+      "description": "Desafortunadamente, tu solicitud no fue aprobada en este momento",
+      "message": "Si crees que esto fue un error o deseas volver a aplicar, por favor contacta soporte.",
+      "badge": "No Aprobado"
+    },
+    "returnHome": "Volver al Inicio"
+  },
+  "selectSportScout": {
+    "title": "¿Qué Deporte Entrenas/Scoutes?",
+    "subtitle": "Selecciona el deporte con el que trabajarás",
+    "baseball": "Béisbol",
+    "baseballDescription": "Scoutea y entrena jugadores de béisbol",
+    "softball": "Softbol",
+    "softballDescription": "Scoutea y entrena jugadores de softbol",
+    "back": "Atrás",
+    "continue": "Continuar"
+  },
+  "resetPassword": {
+    "title": "Restablecer Tu Contraseña",
+    "subtitle": "Ingresa tu nueva contraseña abajo",
+    "newPassword": "Nueva Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "updating": "Actualizando...",
+    "updatePassword": "Actualizar Contraseña",
+    "success": {
+      "title": "Contraseña Actualizada",
+      "description": "Tu contraseña ha sido actualizada exitosamente."
+    },
+    "errors": {
+      "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+      "passwordsMismatch": "Las contraseñas no coinciden"
+    }
+  },
+  "chatWidget": {
+    "title": "Entrenador IA",
+    "greeting": "¡Hola! Soy tu asistente de entrenamiento IA. Puedo ayudarte con técnicas de entrenamiento de béisbol y softbol, analizar tu progreso y responder preguntas sobre biomecánica. ¿Cómo puedo ayudarte hoy?",
+    "placeholder": "Pregúntame cualquier cosa...",
+    "errorSending": "Error al enviar mensaje"
+  },
+  "initializeOwner": {
+    "title": "Inicializar Cuenta de Propietario",
+    "warning": "Esto solo se puede hacer una vez. Usar con precaución.",
+    "email": "Tu Correo Electrónico",
+    "emailPlaceholder": "propietario@ejemplo.com",
+    "emailHelper": "Este debe ser un correo que ya esté registrado en el sistema",
+    "secretKey": "Clave Secreta",
+    "secretKeyPlaceholder": "Ingresa OWNER_INIT_KEY",
+    "secretKeyHelper": "La OWNER_INIT_KEY configurada en los secretos de Supabase",
+    "initializing": "Inicializando...",
+    "initializeButton": "Inicializar Cuenta de Propietario",
+    "backToHome": "Volver al Inicio",
+    "success": {
+      "title": "¡Cuenta de Propietario Inicializada!",
+      "description": "Ahora puedes iniciar sesión como propietario."
+    },
+    "error": {
+      "title": "Inicialización Fallida",
+      "description": "Hubo un error al inicializar la cuenta de propietario.",
+      "defaultMessage": "Error al inicializar cuenta de propietario"
+    }
   }
 }

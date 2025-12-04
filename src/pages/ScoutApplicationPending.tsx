@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 
 export default function ScoutApplicationPending() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [status, setStatus] = useState<"pending" | "approved" | "rejected" | null>(null);
@@ -96,9 +98,9 @@ export default function ScoutApplicationPending() {
               <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-yellow-500/10 flex items-center justify-center">
                 <Clock className="h-8 w-8 text-yellow-500" />
               </div>
-              <CardTitle className="text-2xl">Application Under Review</CardTitle>
+              <CardTitle className="text-2xl">{t('scoutApplicationPending.pending.title')}</CardTitle>
               <CardDescription>
-                Your scout/coach application has been submitted successfully
+                {t('scoutApplicationPending.pending.description')}
               </CardDescription>
             </>
           )}
@@ -107,9 +109,9 @@ export default function ScoutApplicationPending() {
               <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center">
                 <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
-              <CardTitle className="text-2xl">Application Approved!</CardTitle>
+              <CardTitle className="text-2xl">{t('scoutApplicationPending.approved.title')}</CardTitle>
               <CardDescription>
-                Congratulations! You now have scout access
+                {t('scoutApplicationPending.approved.description')}
               </CardDescription>
             </>
           )}
@@ -118,9 +120,9 @@ export default function ScoutApplicationPending() {
               <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-red-500/10 flex items-center justify-center">
                 <XCircle className="h-8 w-8 text-red-500" />
               </div>
-              <CardTitle className="text-2xl">Application Not Approved</CardTitle>
+              <CardTitle className="text-2xl">{t('scoutApplicationPending.rejected.title')}</CardTitle>
               <CardDescription>
-                Unfortunately, your application was not approved at this time
+                {t('scoutApplicationPending.rejected.description')}
               </CardDescription>
             </>
           )}
@@ -130,33 +132,33 @@ export default function ScoutApplicationPending() {
             {status === "pending" && (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Your application is being reviewed by the owner. You will receive a notification when a decision is made.
+                  {t('scoutApplicationPending.pending.message')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  This typically takes 1-3 business days.
+                  {t('scoutApplicationPending.pending.timeframe')}
                 </p>
                 <Badge variant="outline" className="text-yellow-600 border-yellow-600">
-                  Pending Review
+                  {t('scoutApplicationPending.pending.badge')}
                 </Badge>
               </>
             )}
             {status === "approved" && (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Redirecting you to your scout dashboard...
+                  {t('scoutApplicationPending.approved.message')}
                 </p>
                 <Badge variant="outline" className="text-green-600 border-green-600">
-                  Approved
+                  {t('scoutApplicationPending.approved.badge')}
                 </Badge>
               </>
             )}
             {status === "rejected" && (
               <>
                 <p className="text-sm text-muted-foreground">
-                  If you believe this was a mistake or would like to reapply, please contact support.
+                  {t('scoutApplicationPending.rejected.message')}
                 </p>
                 <Badge variant="outline" className="text-red-600 border-red-600">
-                  Not Approved
+                  {t('scoutApplicationPending.rejected.badge')}
                 </Badge>
               </>
             )}
@@ -167,7 +169,7 @@ export default function ScoutApplicationPending() {
             onClick={() => navigate("/auth")}
             className="w-full"
           >
-            Return to Home
+            {t('scoutApplicationPending.returnHome')}
           </Button>
         </CardContent>
       </Card>

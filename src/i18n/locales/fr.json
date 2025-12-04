@@ -1463,5 +1463,156 @@
     "addCustomName": "Ajouter un nom personnalisé...",
     "addDescription": "Ajouter une description...",
     "metadataUpdated": "Métadonnées du coupon mises à jour"
+  },
+  "selectRole": {
+    "title": "Sélectionnez Votre Rôle",
+    "subtitle": "Choisissez votre rôle pour obtenir un entraînement personnalisé",
+    "sport": "Sport",
+    "role": "Rôle",
+    "module": "Module",
+    "player": "Joueur",
+    "playerDescription": "Entrez dans le jeu !",
+    "selectPlayer": "Sélectionner Joueur",
+    "scoutCoach": "Scout/Entraîneur",
+    "scoutCoachDescription": "Entraînez et évaluez les talents",
+    "selectRole": "Sélectionner Rôle",
+    "admin": "Administrateur",
+    "adminDescription": "Demander l'accès administrateur (nécessite l'approbation du propriétaire)",
+    "requestAdminAccess": "Demander l'Accès Administrateur",
+    "backToSportSelection": "Retour à la Sélection du Sport",
+    "confirmationRequired": "Confirmation Requise",
+    "pleaseConfirmAge": "Veuillez confirmer l'exigence d'âge pour continuer.",
+    "ageVerification": {
+      "title": "Vérification d'Âge Requise",
+      "description": "Pour continuer avec la sélection et l'achat du module, vous devez confirmer que vous avez 18 ans ou plus. Ceci est requis pour le traitement du paiement.",
+      "note": "Note",
+      "parentNote": "Si vous avez moins de 18 ans, votre parent ou tuteur légal doit cocher cette case en votre nom pour fournir son consentement pour l'achat du module.",
+      "confirmLabel": "Je confirme que j'ai 18 ans ou plus, ou que mon parent/tuteur légal fournit son consentement en mon nom",
+      "continueToModules": "Continuer vers la Sélection du Module"
+    }
+  },
+  "selectModules": {
+    "title": "Sélectionnez Votre Module d'Entraînement",
+    "addModuleTitle": "Ajouter un Module",
+    "subtitle": "Choisissez votre premier module (vous pouvez en ajouter d'autres depuis le tableau de bord)",
+    "addModeSubtitle": "Choisissez un module à ajouter à votre abonnement",
+    "sport": "Sport",
+    "module": "Module",
+    "hitting": "Frappe",
+    "hittingDescription": "Analysez la mécanique du swing, la vitesse de la batte et le point de contact",
+    "pitching": "Lancer",
+    "pitchingDescription": "Suivez la vélocité, le point de relâche et la mécanique du bras",
+    "throwing": "Tir",
+    "throwingDescription": "Améliorez la précision, la force du bras et la forme de lancer",
+    "alreadyPurchased": "Déjà Acheté",
+    "selected": "Sélectionné",
+    "back": "Retour",
+    "loading": "Chargement...",
+    "continueToPricing": "Continuer vers les Tarifs",
+    "continue": "Continuer",
+    "selectModuleToContinue": "Veuillez sélectionner un module pour continuer"
+  },
+  "scoutApplicationPage": {
+    "title": "Candidature Scout/Entraîneur",
+    "description": "Soumettez vos références pour examen par le propriétaire",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "email": "E-mail",
+    "sport": "Sport",
+    "organizationLetter": "Lettre d'Organisation (PDF, JPG, PNG - Max 5Mo)",
+    "videoSubmission": "Soumission Vidéo (MP4, MOV, AVI - Max 50Mo)",
+    "back": "Retour",
+    "submitting": "Soumission...",
+    "submitApplication": "Soumettre la Candidature",
+    "errors": {
+      "notLoggedIn": "Vous devez être connecté pour soumettre une candidature",
+      "missingFiles": "Fichiers Manquants",
+      "missingFilesDesc": "Veuillez télécharger la lettre d'organisation et la vidéo",
+      "fileTooLarge": "Fichier Trop Volumineux",
+      "letterTooLarge": "La lettre doit faire moins de 5Mo",
+      "videoTooLarge": "La vidéo doit faire moins de 50Mo",
+      "submissionFailed": "Échec de la Soumission",
+      "submissionFailedDesc": "Échec de la soumission. Veuillez réessayer."
+    },
+    "success": {
+      "title": "Candidature Soumise !",
+      "description": "Votre candidature a été envoyée pour examen"
+    }
+  },
+  "scoutApplicationPending": {
+    "pending": {
+      "title": "Candidature en Cours d'Examen",
+      "description": "Votre candidature scout/entraîneur a été soumise avec succès",
+      "message": "Votre candidature est en cours d'examen par le propriétaire. Vous recevrez une notification lorsqu'une décision sera prise.",
+      "timeframe": "Cela prend généralement 1-3 jours ouvrables.",
+      "badge": "En Attente d'Examen"
+    },
+    "approved": {
+      "title": "Candidature Approuvée !",
+      "description": "Félicitations ! Vous avez maintenant accès scout",
+      "message": "Redirection vers votre tableau de bord scout...",
+      "badge": "Approuvé"
+    },
+    "rejected": {
+      "title": "Candidature Non Approuvée",
+      "description": "Malheureusement, votre candidature n'a pas été approuvée pour le moment",
+      "message": "Si vous pensez qu'il s'agit d'une erreur ou souhaitez refaire une demande, veuillez contacter le support.",
+      "badge": "Non Approuvé"
+    },
+    "returnHome": "Retour à l'Accueil"
+  },
+  "selectSportScout": {
+    "title": "Quel Sport Entraînez-vous/Scoutez-vous ?",
+    "subtitle": "Sélectionnez le sport avec lequel vous travaillerez",
+    "baseball": "Baseball",
+    "baseballDescription": "Scoutez et entraînez des joueurs de baseball",
+    "softball": "Softball",
+    "softballDescription": "Scoutez et entraînez des joueurs de softball",
+    "back": "Retour",
+    "continue": "Continuer"
+  },
+  "resetPassword": {
+    "title": "Réinitialiser Votre Mot de Passe",
+    "subtitle": "Entrez votre nouveau mot de passe ci-dessous",
+    "newPassword": "Nouveau Mot de Passe",
+    "confirmPassword": "Confirmer le Mot de Passe",
+    "updating": "Mise à jour...",
+    "updatePassword": "Mettre à Jour le Mot de Passe",
+    "success": {
+      "title": "Mot de Passe Mis à Jour",
+      "description": "Votre mot de passe a été mis à jour avec succès."
+    },
+    "errors": {
+      "passwordMinLength": "Le mot de passe doit comporter au moins 6 caractères",
+      "passwordsMismatch": "Les mots de passe ne correspondent pas"
+    }
+  },
+  "chatWidget": {
+    "title": "Coach IA",
+    "greeting": "Salut ! Je suis votre assistant d'entraînement IA. Je peux vous aider avec les techniques d'entraînement de baseball et softball, analyser vos progrès et répondre aux questions sur la biomécanique. Comment puis-je vous aider aujourd'hui ?",
+    "placeholder": "Demandez-moi n'importe quoi...",
+    "errorSending": "Échec de l'envoi du message"
+  },
+  "initializeOwner": {
+    "title": "Initialiser le Compte Propriétaire",
+    "warning": "Ceci ne peut être fait qu'une seule fois. Utiliser avec précaution.",
+    "email": "Votre E-mail",
+    "emailPlaceholder": "proprietaire@exemple.com",
+    "emailHelper": "Cet e-mail doit déjà être enregistré dans le système",
+    "secretKey": "Clé Secrète",
+    "secretKeyPlaceholder": "Entrez OWNER_INIT_KEY",
+    "secretKeyHelper": "La OWNER_INIT_KEY configurée dans les secrets Supabase",
+    "initializing": "Initialisation...",
+    "initializeButton": "Initialiser le Compte Propriétaire",
+    "backToHome": "Retour à l'Accueil",
+    "success": {
+      "title": "Compte Propriétaire Initialisé !",
+      "description": "Vous pouvez maintenant vous connecter en tant que propriétaire."
+    },
+    "error": {
+      "title": "Échec de l'Initialisation",
+      "description": "Une erreur s'est produite lors de l'initialisation du compte propriétaire.",
+      "defaultMessage": "Échec de l'initialisation du compte propriétaire"
+    }
   }
 }

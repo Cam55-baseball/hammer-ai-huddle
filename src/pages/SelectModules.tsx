@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ import { Loader2 } from "lucide-react";
 type ModuleType = 'hitting' | 'pitching' | 'throwing';
 
 const SelectModules = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
@@ -44,21 +46,21 @@ const SelectModules = () => {
   const modules: { id: ModuleType; label: string; icon: string; description: string }[] = [
     {
       id: 'hitting',
-      label: 'Hitting',
+      label: t('selectModules.hitting'),
       icon: '⚡',
-      description: 'Analyze swing mechanics, bat speed, and contact point'
+      description: t('selectModules.hittingDescription')
     },
     {
       id: 'pitching',
-      label: 'Pitching',
+      label: t('selectModules.pitching'),
       icon: '🎯',
-      description: 'Track velocity, release point, and arm mechanics'
+      description: t('selectModules.pitchingDescription')
     },
     {
       id: 'throwing',
-      label: 'Throwing',
+      label: t('selectModules.throwing'),
       icon: '🔥',
-      description: 'Improve accuracy, arm strength, and throwing form'
+      description: t('selectModules.throwingDescription')
     }
   ];
 
@@ -162,15 +164,15 @@ const SelectModules = () => {
           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold text-2xl">H</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2">{isAddMode ? 'Add a Module' : 'Select Your Training Module'}</h1>
+          <h1 className="text-4xl font-bold mb-2">{isAddMode ? t('selectModules.addModuleTitle') : t('selectModules.title')}</h1>
           <p className="text-muted-foreground">
-            {isAddMode ? 'Choose one module to add to your subscription' : 'Choose your first module (you can add more later from the dashboard)'}
+            {isAddMode ? t('selectModules.addModeSubtitle') : t('selectModules.subtitle')}
           </p>
           {!isAddMode && (
             <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-              <span className="bg-muted px-3 py-1 rounded-full">Sport: {selectedSport}</span>
+              <span className="bg-muted px-3 py-1 rounded-full">{t('selectModules.sport')}: {selectedSport}</span>
               <span>→</span>
-              <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Module</span>
+              <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">{t('selectModules.module')}</span>
             </div>
           )}
         </div>
@@ -196,9 +198,9 @@ const SelectModules = () => {
                       <span className="text-3xl">{module.icon}</span>
                       <h3 className="text-xl font-bold">{module.label}</h3>
                       {purchased ? (
-                        <span className="ml-auto text-muted-foreground font-semibold">Already Purchased ✓</span>
+                        <span className="ml-auto text-muted-foreground font-semibold">{t('selectModules.alreadyPurchased')} ✓</span>
                       ) : selectedModule === module.id && (
-                        <span className="ml-auto text-primary font-semibold">Selected</span>
+                        <span className="ml-auto text-primary font-semibold">{t('selectModules.selected')}</span>
                       )}
                     </div>
                     <p className="text-muted-foreground">{module.description}</p>
@@ -215,7 +217,7 @@ const SelectModules = () => {
             onClick={() => isAddMode ? navigate("/dashboard") : navigate("/select-sport")}
             className="flex-1"
           >
-            ← Back
+            ← {t('selectModules.back')}
           </Button>
           <Button 
             onClick={handleContinue}
@@ -223,13 +225,13 @@ const SelectModules = () => {
             className="flex-1"
             size="lg"
           >
-            {loading ? "Loading..." : isAddMode ? "Continue to Pricing →" : "Continue →"}
+            {loading ? t('selectModules.loading') : isAddMode ? t('selectModules.continueToPricing') + " →" : t('selectModules.continue') + " →"}
           </Button>
         </div>
 
         {!selectedModule && (
           <p className="text-center text-sm text-muted-foreground mt-4">
-            Please select a module to continue
+            {t('selectModules.selectModuleToContinue')}
           </p>
         )}
       </div>

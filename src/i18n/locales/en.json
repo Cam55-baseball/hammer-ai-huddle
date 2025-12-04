@@ -1565,5 +1565,156 @@
     "addCustomName": "Add custom name...",
     "addDescription": "Add description...",
     "metadataUpdated": "Coupon metadata updated"
+  },
+  "selectRole": {
+    "title": "Select Your Role",
+    "subtitle": "Choose your role to get personalized training",
+    "sport": "Sport",
+    "role": "Role",
+    "module": "Module",
+    "player": "Player",
+    "playerDescription": "Get In The Game!",
+    "selectPlayer": "Select Player",
+    "scoutCoach": "Scout/Coach",
+    "scoutCoachDescription": "Train and evaluate talent",
+    "selectRole": "Select Role",
+    "admin": "Admin",
+    "adminDescription": "Request admin access (requires owner approval)",
+    "requestAdminAccess": "Request Admin Access",
+    "backToSportSelection": "Back to Sport Selection",
+    "confirmationRequired": "Confirmation Required",
+    "pleaseConfirmAge": "Please confirm the age requirement to continue.",
+    "ageVerification": {
+      "title": "Age Verification Required",
+      "description": "To proceed with module selection and purchase, you must confirm that you are 18 years of age or older. This is required for payment processing.",
+      "note": "Note",
+      "parentNote": "If you are under 18 years of age, your parent or legal guardian must check this box on your behalf to provide consent for module purchase.",
+      "confirmLabel": "I confirm that I am 18 years of age or older, or that my parent/legal guardian is providing consent on my behalf",
+      "continueToModules": "Continue to Module Selection"
+    }
+  },
+  "selectModules": {
+    "title": "Select Your Training Module",
+    "addModuleTitle": "Add a Module",
+    "subtitle": "Choose your first module (you can add more later from the dashboard)",
+    "addModeSubtitle": "Choose one module to add to your subscription",
+    "sport": "Sport",
+    "module": "Module",
+    "hitting": "Hitting",
+    "hittingDescription": "Analyze swing mechanics, bat speed, and contact point",
+    "pitching": "Pitching",
+    "pitchingDescription": "Track velocity, release point, and arm mechanics",
+    "throwing": "Throwing",
+    "throwingDescription": "Improve accuracy, arm strength, and throwing form",
+    "alreadyPurchased": "Already Purchased",
+    "selected": "Selected",
+    "back": "Back",
+    "loading": "Loading...",
+    "continueToPricing": "Continue to Pricing",
+    "continue": "Continue",
+    "selectModuleToContinue": "Please select a module to continue"
+  },
+  "scoutApplicationPage": {
+    "title": "Scout/Coach Application",
+    "description": "Submit your credentials for owner review",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "sport": "Sport",
+    "organizationLetter": "Organization Letter (PDF, JPG, PNG - Max 5MB)",
+    "videoSubmission": "Video Submission (MP4, MOV, AVI - Max 50MB)",
+    "back": "Back",
+    "submitting": "Submitting...",
+    "submitApplication": "Submit Application",
+    "errors": {
+      "notLoggedIn": "You must be logged in to submit an application",
+      "missingFiles": "Missing Files",
+      "missingFilesDesc": "Please upload both an organization letter and video submission",
+      "fileTooLarge": "File Too Large",
+      "letterTooLarge": "Letter must be under 5MB",
+      "videoTooLarge": "Video must be under 50MB",
+      "submissionFailed": "Submission Failed",
+      "submissionFailedDesc": "Failed to submit application. Please try again."
+    },
+    "success": {
+      "title": "Application Submitted!",
+      "description": "Your application has been sent for review"
+    }
+  },
+  "scoutApplicationPending": {
+    "pending": {
+      "title": "Application Under Review",
+      "description": "Your scout/coach application has been submitted successfully",
+      "message": "Your application is being reviewed by the owner. You will receive a notification when a decision is made.",
+      "timeframe": "This typically takes 1-3 business days.",
+      "badge": "Pending Review"
+    },
+    "approved": {
+      "title": "Application Approved!",
+      "description": "Congratulations! You now have scout access",
+      "message": "Redirecting you to your scout dashboard...",
+      "badge": "Approved"
+    },
+    "rejected": {
+      "title": "Application Not Approved",
+      "description": "Unfortunately, your application was not approved at this time",
+      "message": "If you believe this was a mistake or would like to reapply, please contact support.",
+      "badge": "Not Approved"
+    },
+    "returnHome": "Return to Home"
+  },
+  "selectSportScout": {
+    "title": "Which Sport Do You Coach/Scout?",
+    "subtitle": "Select the sport you'll be working with",
+    "baseball": "Baseball",
+    "baseballDescription": "Scout and coach baseball players",
+    "softball": "Softball",
+    "softballDescription": "Scout and coach softball players",
+    "back": "Back",
+    "continue": "Continue"
+  },
+  "resetPassword": {
+    "title": "Reset Your Password",
+    "subtitle": "Enter your new password below",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "updating": "Updating...",
+    "updatePassword": "Update Password",
+    "success": {
+      "title": "Password Updated",
+      "description": "Your password has been successfully updated."
+    },
+    "errors": {
+      "passwordMinLength": "Password must be at least 6 characters",
+      "passwordsMismatch": "Passwords don't match"
+    }
+  },
+  "chatWidget": {
+    "title": "AI Coach",
+    "greeting": "Hi! I'm your AI coaching assistant. I can help you with baseball and softball training techniques, analyze your progress, and answer questions about biomechanics. How can I help you today?",
+    "placeholder": "Ask me anything...",
+    "errorSending": "Failed to send message"
+  },
+  "initializeOwner": {
+    "title": "Initialize Owner Account",
+    "warning": "This can only be done once. Use with caution.",
+    "email": "Your Email",
+    "emailPlaceholder": "owner@example.com",
+    "emailHelper": "This must be an email that's already registered in the system",
+    "secretKey": "Secret Key",
+    "secretKeyPlaceholder": "Enter OWNER_INIT_KEY",
+    "secretKeyHelper": "The OWNER_INIT_KEY configured in Supabase secrets",
+    "initializing": "Initializing...",
+    "initializeButton": "Initialize Owner Account",
+    "backToHome": "Back to Home",
+    "success": {
+      "title": "Owner Account Initialized!",
+      "description": "You can now log in as the owner."
+    },
+    "error": {
+      "title": "Initialization Failed",
+      "description": "There was an error initializing the owner account.",
+      "defaultMessage": "Failed to initialize owner account"
+    }
   }
 }
