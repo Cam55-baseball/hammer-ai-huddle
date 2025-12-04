@@ -236,10 +236,21 @@ export const FrameAnnotationDialog = ({
         fabricCanvas.wrapperEl.style.touchAction = 'none';
       }
       
+      // On mobile, disable Fabric.js's internal event handling to prevent "object not found" errors
+      if (isMobile()) {
+        fabricCanvas.skipTargetFind = true;
+        fabricCanvas.selection = false;
+      }
+      
       // Ensure the brush is configured
       if (fabricCanvas.freeDrawingBrush) {
         fabricCanvas.freeDrawingBrush.color = activeColor;
         fabricCanvas.freeDrawingBrush.width = 3;
+      }
+    } else {
+      // Restore skipTargetFind when not in draw mode
+      if (isMobile()) {
+        fabricCanvas.skipTargetFind = false;
       }
     }
     
@@ -334,7 +345,7 @@ export const FrameAnnotationDialog = ({
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return; // Only single touch for drawing
       e.preventDefault();
-      e.stopPropagation();
+      e.stopImmediatePropagation(); // Stop ALL handlers including Fabric.js internals
       
       isDrawing = true;
       points = [getPointerFromTouch(e.touches[0])];
@@ -346,7 +357,7 @@ export const FrameAnnotationDialog = ({
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDrawing || e.touches.length !== 1) return;
       e.preventDefault();
-      e.stopPropagation();
+      e.stopImmediatePropagation(); // Stop ALL handlers including Fabric.js internals
       
       const point = getPointerFromTouch(e.touches[0]);
       points.push(point);
@@ -359,6 +370,7 @@ export const FrameAnnotationDialog = ({
     const handleTouchEnd = (e: TouchEvent) => {
       if (!isDrawing) return;
       e.preventDefault();
+      e.stopImmediatePropagation(); // Stop ALL handlers including Fabric.js internals
       
       isDrawing = false;
       
@@ -390,17 +402,17 @@ export const FrameAnnotationDialog = ({
       points = [];
     };
     
-    // Attach touch listeners to upper canvas
-    upperCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    upperCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    upperCanvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-    upperCanvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+    // Attach touch listeners to upper canvas with CAPTURE phase to run before Fabric.js handlers
+    upperCanvas.addEventListener('touchstart', handleTouchStart, { passive: false, capture: true });
+    upperCanvas.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+    upperCanvas.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
+    upperCanvas.addEventListener('touchcancel', handleTouchEnd, { passive: false, capture: true });
     
     return () => {
-      upperCanvas.removeEventListener('touchstart', handleTouchStart);
-      upperCanvas.removeEventListener('touchmove', handleTouchMove);
-      upperCanvas.removeEventListener('touchend', handleTouchEnd);
-      upperCanvas.removeEventListener('touchcancel', handleTouchEnd);
+      upperCanvas.removeEventListener('touchstart', handleTouchStart, { capture: true });
+      upperCanvas.removeEventListener('touchmove', handleTouchMove, { capture: true });
+      upperCanvas.removeEventListener('touchend', handleTouchEnd, { capture: true });
+      upperCanvas.removeEventListener('touchcancel', handleTouchEnd, { capture: true });
     };
   }, [fabricCanvas, activeTool, activeColor]);
 
