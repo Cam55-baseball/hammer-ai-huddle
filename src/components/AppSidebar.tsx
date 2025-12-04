@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -90,6 +91,17 @@ export function AppSidebar() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [ownerBioOpen, setOwnerBioOpen] = useState(false);
   const [selectedSport, setSelectedSport] = useState<'baseball' | 'softball'>('baseball');
+  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({
+    hitting: true,
+    pitching: true,
+  });
+
+  const toggleModule = (key: string) => {
+    setExpandedModules(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
 
   useEffect(() => {
     const savedSport = localStorage.getItem('selectedSport') as 'baseball' | 'softball';
@@ -141,6 +153,7 @@ export function AppSidebar() {
 
   const trainingModules = [
     { 
+      key: 'hitting',
       title: t('dashboard.modules.hittingAnalysis'), 
       url: `/analyze/hitting?sport=${selectedSport}`, 
       icon: Target,
@@ -152,6 +165,7 @@ export function AppSidebar() {
       }
     },
     { 
+      key: 'pitching',
       title: t('dashboard.modules.pitchingAnalysis'), 
       url: `/analyze/pitching?sport=${selectedSport}`, 
       icon: Target,
@@ -162,8 +176,8 @@ export function AppSidebar() {
         description: t('workoutModules.productionStudio.subtitle') || "6-week workout"
       }
     },
-    { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
-    { title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked },
+    { key: 'throwing', title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
+    { key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked },
   ];
 
   const accountItems = [
@@ -431,42 +445,73 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="training-modules-menu">
               {trainingModules.map((item, index) => (
-                <div key={item.title}>
-                  {/* Parent Module */}
-                  <SidebarMenuItem 
-                    className="sidebar-item"
-                    style={{ animationDelay: `${(index + mainNavItems.length) * 50}ms` }}
-                  >
-                    <SidebarMenuButton
-                      onClick={() => navigate(item.url)}
-                      isActive={isActive(item.url.split('?')[0])}
-                      tooltip={item.title}
-                      className="group sidebar-item-hover relative"
+                <div key={item.key}>
+                  {'subModule' in item && item.subModule ? (
+                    <Collapsible 
+                      open={expandedModules[item.key]} 
+                      onOpenChange={() => toggleModule(item.key)}
                     >
-                      {isActive(item.url.split('?')[0]) && <span className="sidebar-active-indicator" />}
-                      <item.icon className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:rotate-12 group-hover:text-primary" />
-                      <span className="transition-colors duration-200">{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  
-                  {/* Sub-Module with visual connector */}
-                  {'subModule' in item && item.subModule && (
+                      {/* Parent Module with Chevron */}
+                      <SidebarMenuItem 
+                        className="sidebar-item"
+                        style={{ animationDelay: `${(index + mainNavItems.length) * 50}ms` }}
+                      >
+                        <div className="flex items-center w-full">
+                          <SidebarMenuButton
+                            onClick={() => navigate(item.url)}
+                            isActive={isActive(item.url.split('?')[0])}
+                            tooltip={item.title}
+                            className="group sidebar-item-hover relative flex-1"
+                          >
+                            {isActive(item.url.split('?')[0]) && <span className="sidebar-active-indicator" />}
+                            <item.icon className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:rotate-12 group-hover:text-primary" />
+                            <span className="transition-colors duration-200">{item.title}</span>
+                          </SidebarMenuButton>
+                          
+                          <CollapsibleTrigger asChild>
+                            <button className="p-1.5 mr-2 hover:bg-accent rounded-md transition-all duration-200">
+                              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${expandedModules[item.key] ? 'rotate-180' : ''}`} />
+                            </button>
+                          </CollapsibleTrigger>
+                        </div>
+                      </SidebarMenuItem>
+                      
+                      {/* Sub-Module with animation */}
+                      <CollapsibleContent className="collapsible-content">
+                        <SidebarMenuItem 
+                          className="sidebar-sub-item"
+                        >
+                          <SidebarMenuButton
+                            onClick={() => navigate(item.subModule!.url)}
+                            isActive={isActive(item.subModule!.url)}
+                            tooltip={item.subModule!.title}
+                            className="group sidebar-item-hover relative py-1"
+                          >
+                            {isActive(item.subModule!.url) && <span className="sidebar-active-indicator" />}
+                            <item.subModule.icon className="h-3.5 w-3.5 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:rotate-180 text-primary/70 group-hover:text-primary" />
+                            <div className="flex flex-col items-start gap-0">
+                              <span className="text-sm transition-colors duration-200">{item.subModule!.title}</span>
+                              <span className="text-[10px] text-muted-foreground leading-tight">{item.subModule!.description}</span>
+                            </div>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ) : (
+                    /* Items without sub-modules */
                     <SidebarMenuItem 
-                      className="sidebar-item sidebar-sub-item"
-                      style={{ animationDelay: `${(index + mainNavItems.length) * 50 + 25}ms` }}
+                      className="sidebar-item"
+                      style={{ animationDelay: `${(index + mainNavItems.length) * 50}ms` }}
                     >
                       <SidebarMenuButton
-                        onClick={() => navigate(item.subModule!.url)}
-                        isActive={isActive(item.subModule!.url)}
-                        tooltip={item.subModule!.title}
-                        className="group sidebar-item-hover relative py-1"
+                        onClick={() => navigate(item.url)}
+                        isActive={isActive(item.url.split('?')[0])}
+                        tooltip={item.title}
+                        className="group sidebar-item-hover relative"
                       >
-                        {isActive(item.subModule!.url) && <span className="sidebar-active-indicator" />}
-                        <item.subModule.icon className="h-3.5 w-3.5 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:rotate-180 text-primary/70 group-hover:text-primary" />
-                        <div className="flex flex-col items-start gap-0">
-                          <span className="text-sm transition-colors duration-200">{item.subModule!.title}</span>
-                          <span className="text-[10px] text-muted-foreground leading-tight">{item.subModule!.description}</span>
-                        </div>
+                        {isActive(item.url.split('?')[0]) && <span className="sidebar-active-indicator" />}
+                        <item.icon className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:rotate-12 group-hover:text-primary" />
+                        <span className="transition-colors duration-200">{item.title}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )}
