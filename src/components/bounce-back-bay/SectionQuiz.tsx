@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, RefreshCw, Trophy, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { ConfettiEffect } from './ConfettiEffect';
+import { createRoot } from 'react-dom/client';
 
 interface QuizQuestion {
   questionKey: string;
@@ -17,6 +20,20 @@ interface SectionQuizProps {
   questions: QuizQuestion[];
   onPass: (sectionId: string) => void;
   isPassed?: boolean;
+}
+
+function triggerQuizConfetti() {
+  const container = document.createElement("div");
+  container.id = "quiz-confetti-container";
+  document.body.appendChild(container);
+  
+  const root = createRoot(container);
+  root.render(<ConfettiEffect />);
+  
+  setTimeout(() => {
+    root.unmount();
+    container.remove();
+  }, 5000);
 }
 
 export function SectionQuiz({ sectionId, questions, onPass, isPassed = false }: SectionQuizProps) {
@@ -45,9 +62,15 @@ export function SectionQuiz({ sectionId, questions, onPass, isPassed = false }: 
     const correctCount = questions.reduce((count, q, idx) => {
       return count + (selectedAnswers[idx] === q.correctIndex ? 1 : 0);
     }, 0);
-    const percentage = (correctCount / questions.length) * 100;
+    const percentage = Math.round((correctCount / questions.length) * 100);
     
     if (percentage >= 70) {
+      // Trigger celebration
+      triggerQuizConfetti();
+      toast.success(t('bounceBackBay.quiz.passed'), {
+        description: t('bounceBackBay.quiz.passedDescription', { score: percentage }),
+        duration: 4000,
+      });
       onPass(sectionId);
     }
   };

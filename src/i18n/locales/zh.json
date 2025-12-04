@@ -1628,6 +1628,7 @@
       "passed": "恭喜！",
       "needsRetry": "继续学习",
       "passMessage": "做得好！您已展示对本节内容的理解。",
+      "passedDescription": "您在测验中获得了{{score}}%！",
       "retryMessage": "需要70%才能通过。请复习内容后重试。",
       "retry": "重试",
       "alreadyPassed": "您已完成此测验！",

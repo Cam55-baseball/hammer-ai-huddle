@@ -1654,6 +1654,7 @@
       "passed": "おめでとうございます！",
       "needsRetry": "学習を続けましょう",
       "passMessage": "素晴らしい！このセクションの理解を示しました。",
+      "passedDescription": "クイズで{{score}}%を獲得しました！",
       "retryMessage": "合格には70%が必要です。内容を復習して再挑戦してください。",
       "retry": "再挑戦",
       "alreadyPassed": "このクイズは既に完了しています！",
