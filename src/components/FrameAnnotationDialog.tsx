@@ -118,10 +118,16 @@ export const FrameAnnotationDialog = ({
             canvas.freeDrawingBrush.width = 3;
           }
 
-          // Configure touch handling for mobile
+          // Configure touch handling for mobile - let Fabric.js handle natively
           canvas.allowTouchScrolling = false;
           if (canvas.upperCanvasEl) {
             canvas.upperCanvasEl.style.touchAction = 'none';
+          }
+          if (canvas.wrapperEl) {
+            canvas.wrapperEl.style.touchAction = 'none';
+          }
+          if (canvas.lowerCanvasEl) {
+            canvas.lowerCanvasEl.style.touchAction = 'none';
           }
 
           setFabricCanvas(canvas);
@@ -262,92 +268,20 @@ export const FrameAnnotationDialog = ({
     }
   }, [activeTool, activeColor, fabricCanvas]);
 
-  // Native touch event forwarding for draw mode on mobile
+  // Haptic feedback when starting to draw on mobile
   useEffect(() => {
     if (!fabricCanvas || activeTool !== 'draw') return;
     
-    const upperCanvas = fabricCanvas.upperCanvasEl;
-    const wrapperEl = fabricCanvas.wrapperEl;
-    if (!upperCanvas) return;
-    
-    // Convert touch events to pointer events for Fabric.js drawing
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Haptic feedback when starting to draw
-        if (navigator.vibrate) {
-          navigator.vibrate(5);
-        }
-        
-        const touch = e.touches[0];
-        const rect = upperCanvas.getBoundingClientRect();
-        const scaleX = upperCanvas.width / rect.width;
-        const scaleY = upperCanvas.height / rect.height;
-        
-        // Create synthetic mouse event for Fabric.js
-        const mouseEvent = new MouseEvent('mousedown', {
-          bubbles: true,
-          cancelable: true,
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-          button: 0
-        });
-        upperCanvas.dispatchEvent(mouseEvent);
+    const handleDrawStart = () => {
+      if (navigator.vibrate) {
+        navigator.vibrate(5);
       }
     };
     
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousemove', {
-          bubbles: true,
-          cancelable: true,
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-          button: 0
-        });
-        upperCanvas.dispatchEvent(mouseEvent);
-      }
-    };
-    
-    const handleTouchEnd = (e: TouchEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      const mouseEvent = new MouseEvent('mouseup', {
-        bubbles: true,
-        cancelable: true,
-        button: 0
-      });
-      upperCanvas.dispatchEvent(mouseEvent);
-    };
-    
-    // Attach to both upper canvas and wrapper for complete coverage
-    upperCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    upperCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    upperCanvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-    
-    if (wrapperEl) {
-      wrapperEl.addEventListener('touchstart', handleTouchStart, { passive: false });
-      wrapperEl.addEventListener('touchmove', handleTouchMove, { passive: false });
-      wrapperEl.addEventListener('touchend', handleTouchEnd, { passive: false });
-    }
+    fabricCanvas.on('mouse:down', handleDrawStart);
     
     return () => {
-      upperCanvas.removeEventListener('touchstart', handleTouchStart);
-      upperCanvas.removeEventListener('touchmove', handleTouchMove);
-      upperCanvas.removeEventListener('touchend', handleTouchEnd);
-      
-      if (wrapperEl) {
-        wrapperEl.removeEventListener('touchstart', handleTouchStart);
-        wrapperEl.removeEventListener('touchmove', handleTouchMove);
-        wrapperEl.removeEventListener('touchend', handleTouchEnd);
-      }
+      fabricCanvas.off('mouse:down', handleDrawStart);
     };
   }, [fabricCanvas, activeTool]);
 
