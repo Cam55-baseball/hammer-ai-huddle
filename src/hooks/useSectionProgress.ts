@@ -11,11 +11,11 @@ interface SectionProgressState {
   longestStreak: number;
 }
 
-// Badge unlock criteria
-const SECTION_BADGES: Record<string, string> = {
+// Badge unlock criteria - now based on quiz completion
+const QUIZ_BADGES: Record<string, string> = {
   'red-flags': 'red_flag_ready',
   'pain-scale': 'pain_scale_pro',
-  'recovery-methods': 'recovery_intelligence',
+  'recovery': 'recovery_intelligence',
 };
 
 const INJURY_BADGES: Record<string, string> = {
@@ -49,9 +49,9 @@ export function useSectionProgress(initialState?: Partial<SectionProgressState>)
   ): Promise<string[]> => {
     const newBadges: string[] = [];
 
-    // Check section-specific badges
-    for (const [section, badge] of Object.entries(SECTION_BADGES)) {
-      if (newSectionsCompleted.includes(section) && !currentBadges.includes(badge)) {
+    // Check quiz-specific badges (earned by passing quizzes)
+    for (const [quizId, badge] of Object.entries(QUIZ_BADGES)) {
+      if (newQuizzesPassed.includes(quizId) && !currentBadges.includes(badge)) {
         newBadges.push(badge);
       }
     }
@@ -157,15 +157,39 @@ export function useSectionProgress(initialState?: Partial<SectionProgressState>)
       });
     }
 
-    // Update database
-    await supabase
+    // Update database - check if row exists first
+    const today = new Date().toISOString().split('T')[0];
+    
+    const { data: existingProgress } = await supabase
       .from('user_injury_progress')
-      .update({
-        quizzes_passed: newQuizzesPassed,
-        badges_earned: updatedBadges,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id);
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (existingProgress) {
+      await supabase
+        .from('user_injury_progress')
+        .update({
+          quizzes_passed: newQuizzesPassed,
+          badges_earned: updatedBadges,
+          last_visit_date: today,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+    } else {
+      await supabase
+        .from('user_injury_progress')
+        .insert({
+          user_id: user.id,
+          quizzes_passed: newQuizzesPassed,
+          badges_earned: updatedBadges,
+          sections_completed: sectionsCompleted,
+          total_sections_viewed: sectionsCompleted.length,
+          last_visit_date: today,
+          current_streak: 1,
+          longest_streak: 1,
+        });
+    }
   }, [quizzesPassed, sectionsCompleted, badgesEarned, checkAndUnlockBadges, t]);
 
   const loadProgress = useCallback(async () => {

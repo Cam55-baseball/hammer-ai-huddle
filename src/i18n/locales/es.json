@@ -2093,6 +2093,7 @@
       "passed": "¡Felicitaciones!",
       "needsRetry": "Sigue Aprendiendo",
       "passMessage": "¡Excelente trabajo! Has demostrado comprensión de esta sección.",
+      "passedDescription": "¡Obtuviste {{score}}% en el cuestionario!",
       "retryMessage": "Necesitas 70% para aprobar. Revisa el contenido e intenta de nuevo.",
       "retry": "Intentar de Nuevo",
       "alreadyPassed": "¡Ya completaste este quiz!",

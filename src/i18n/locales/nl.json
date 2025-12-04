@@ -1657,6 +1657,7 @@
       "passed": "Gefeliciteerd!",
       "needsRetry": "Blijf Leren",
       "passMessage": "Goed gedaan! U heeft begrip van deze sectie getoond.",
+      "passedDescription": "U heeft {{score}}% gescoord op de quiz!",
       "retryMessage": "U heeft 70% nodig om te slagen. Bekijk de inhoud en probeer opnieuw.",
       "retry": "Opnieuw Proberen",
       "alreadyPassed": "U heeft deze quiz al voltooid!",

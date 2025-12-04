@@ -2115,6 +2115,7 @@
       "passed": "Félicitations!",
       "needsRetry": "Continuez à Apprendre",
       "passMessage": "Excellent travail! Vous avez démontré votre compréhension de cette section.",
+      "passedDescription": "Vous avez obtenu {{score}}% au quiz!",
       "retryMessage": "Vous avez besoin de 70% pour réussir. Révisez le contenu et réessayez.",
       "retry": "Réessayer",
       "alreadyPassed": "Vous avez déjà complété ce quiz!",
