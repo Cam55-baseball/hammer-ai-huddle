@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Hand,
   Eraser,
+  Pencil,
 } from "lucide-react";
 import { AnnotationTool } from "./FrameAnnotationDialog";
 import {
@@ -97,6 +98,15 @@ export const AnnotationToolbar = ({
             title={t('annotation.tools.select')}
           >
             <MousePointer2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={activeTool === "draw" ? "default" : "outline"}
+            size="sm"
+            onClick={() => onToolClick("draw")}
+            title={t('annotation.tools.draw')}
+            className={activeTool === "draw" ? "ring-2 ring-primary ring-offset-1" : ""}
+          >
+            <Pencil className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"

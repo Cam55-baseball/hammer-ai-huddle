@@ -1373,8 +1373,10 @@
     "loadingFrame": "Chargement du cadre...",
     "enterText": "Entrez le texte...",
     "defaultLabel": "Étiquette",
+    "drawMode": "Mode Dessin",
     "tools": {
       "select": "Sélectionner",
+      "draw": "Dessiner (main levée)",
       "deleteSelected": "Supprimer l'Objet Sélectionné",
       "addText": "Ajouter du Texte",
       "rectangle": "Rectangle",

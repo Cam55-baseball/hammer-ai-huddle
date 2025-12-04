@@ -1373,8 +1373,10 @@
     "loadingFrame": "Rahmen wird geladen...",
     "enterText": "Text eingeben...",
     "defaultLabel": "Etikett",
+    "drawMode": "Zeichenmodus",
     "tools": {
       "select": "Auswählen",
+      "draw": "Zeichnen (Freihand)",
       "deleteSelected": "Ausgewähltes Objekt Löschen",
       "addText": "Text Hinzufügen",
       "rectangle": "Rechteck",

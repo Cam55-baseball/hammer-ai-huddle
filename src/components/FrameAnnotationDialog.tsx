@@ -267,22 +267,87 @@ export const FrameAnnotationDialog = ({
     if (!fabricCanvas || activeTool !== 'draw') return;
     
     const upperCanvas = fabricCanvas.upperCanvasEl;
+    const wrapperEl = fabricCanvas.wrapperEl;
     if (!upperCanvas) return;
     
-    // Prevent default touch behaviors that might interfere with drawing
-    const preventDefaultHandler = (e: TouchEvent) => {
+    // Convert touch events to pointer events for Fabric.js drawing
+    const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 1) {
-        // Single finger - allow drawing, prevent scroll
         e.preventDefault();
+        e.stopPropagation();
+        
+        // Haptic feedback when starting to draw
+        if (navigator.vibrate) {
+          navigator.vibrate(5);
+        }
+        
+        const touch = e.touches[0];
+        const rect = upperCanvas.getBoundingClientRect();
+        const scaleX = upperCanvas.width / rect.width;
+        const scaleY = upperCanvas.height / rect.height;
+        
+        // Create synthetic mouse event for Fabric.js
+        const mouseEvent = new MouseEvent('mousedown', {
+          bubbles: true,
+          cancelable: true,
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          button: 0
+        });
+        upperCanvas.dispatchEvent(mouseEvent);
       }
     };
     
-    upperCanvas.addEventListener('touchstart', preventDefaultHandler, { passive: false });
-    upperCanvas.addEventListener('touchmove', preventDefaultHandler, { passive: false });
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousemove', {
+          bubbles: true,
+          cancelable: true,
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          button: 0
+        });
+        upperCanvas.dispatchEvent(mouseEvent);
+      }
+    };
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const mouseEvent = new MouseEvent('mouseup', {
+        bubbles: true,
+        cancelable: true,
+        button: 0
+      });
+      upperCanvas.dispatchEvent(mouseEvent);
+    };
+    
+    // Attach to both upper canvas and wrapper for complete coverage
+    upperCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    upperCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    upperCanvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    if (wrapperEl) {
+      wrapperEl.addEventListener('touchstart', handleTouchStart, { passive: false });
+      wrapperEl.addEventListener('touchmove', handleTouchMove, { passive: false });
+      wrapperEl.addEventListener('touchend', handleTouchEnd, { passive: false });
+    }
     
     return () => {
-      upperCanvas.removeEventListener('touchstart', preventDefaultHandler);
-      upperCanvas.removeEventListener('touchmove', preventDefaultHandler);
+      upperCanvas.removeEventListener('touchstart', handleTouchStart);
+      upperCanvas.removeEventListener('touchmove', handleTouchMove);
+      upperCanvas.removeEventListener('touchend', handleTouchEnd);
+      
+      if (wrapperEl) {
+        wrapperEl.removeEventListener('touchstart', handleTouchStart);
+        wrapperEl.removeEventListener('touchmove', handleTouchMove);
+        wrapperEl.removeEventListener('touchend', handleTouchEnd);
+      }
     };
   }, [fabricCanvas, activeTool]);
 
@@ -647,9 +712,15 @@ export const FrameAnnotationDialog = ({
 
           <div 
             ref={containerRef}
-            className={`relative border rounded-lg ${activeTool === 'draw' ? 'overflow-hidden' : 'overflow-auto'} bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] ${activeTool === 'draw' ? '' : 'touch-none'} ${activeTool === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''}`}
+            className={`relative border rounded-lg ${activeTool === 'draw' ? 'overflow-hidden' : 'overflow-auto'} bg-muted/20 flex items-center justify-center min-h-[300px] sm:min-h-[400px] ${activeTool === 'draw' ? '' : 'touch-none'} ${activeTool === 'pan' ? (isPanning ? 'cursor-grabbing' : 'cursor-grab') : ''} ${activeTool === 'draw' ? 'ring-2 ring-primary/50' : ''}`}
           >
-            <canvas ref={canvasRef} className={activeTool === 'draw' ? '' : 'touch-none'} />
+            {/* Draw mode indicator */}
+            {activeTool === 'draw' && (
+              <div className="absolute top-2 left-2 z-10 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-medium shadow-md animate-in fade-in">
+                {t('annotation.drawMode')}
+              </div>
+            )}
+            <canvas ref={canvasRef} className={activeTool === 'draw' ? '' : 'touch-none'} style={{ touchAction: activeTool === 'draw' ? 'none' : 'auto' }} />
             
             {/* Pinch-to-zoom visual indicator */}
             {isPinching && (
