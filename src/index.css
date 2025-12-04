@@ -202,7 +202,7 @@ All colors MUST be HSL.
   }
 
   .sidebar-sub-item {
-    @apply relative ml-3 pl-2.5 border-l-2 border-primary/30;
+    @apply relative ml-2 pl-2 border-l-2 border-primary/30;
   }
 
   .sidebar-sub-item::before {
