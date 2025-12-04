@@ -1600,7 +1600,34 @@
     "badges": {
       "educational": "Solo Educativo",
       "athleteFocused": "Enfocado en Atletas",
-      "comprehensiveGuide": "Guía Completa"
+      "comprehensiveGuide": "Guía Completa",
+      "categories": {
+        "all": "Todas las Insignias",
+        "injury": "Estudio de Lesiones",
+        "tiered": "Niveles de Anatomía",
+        "special": "Logro Especial"
+      },
+      "earned": "Obtenida",
+      "locked": "Bloqueada",
+      "safetyDisclaimer": "Otorgada por completar el estudio educativo. Esta insignia no indica preparación médica o autorización. Siempre consulta a un profesional con licencia.",
+      "legendText": "Las insignias se obtienen completando contenido educativo. Representan adquisición de conocimiento, no autorización médica.",
+      "items": {
+        "shoulder_scholar": { "name": "Experto en Hombro", "description": "Completó Educación sobre Lesiones de Hombro" },
+        "elbow_expert": { "name": "Experto en Codo", "description": "Completó Resumen de UCL / Antebrazo / Flexor" },
+        "hamstring_headliner": { "name": "Experto en Isquiotibiales", "description": "Completó Módulo de Extremidades Inferiores" },
+        "ankle_analyst": { "name": "Analista de Tobillo", "description": "Completó Educación sobre Lesiones de Tobillo" },
+        "wrist_wizard": { "name": "Mago de Muñeca", "description": "Completó Educación de Muñeca y Mano" },
+        "back_boss": { "name": "Jefe de Espalda", "description": "Completó Educación de Espalda y Columna" },
+        "bronze_anatomy": { "name": "Insignia de Anatomía Bronce", "description": "Estudió 3 lesiones" },
+        "silver_anatomy": { "name": "Insignia de Anatomía Plata", "description": "Estudió 7 lesiones" },
+        "gold_anatomy": { "name": "Insignia de Anatomía Oro", "description": "Estudió 12+ lesiones" },
+        "elite_recovery": { "name": "Insignia de Recuperación Élite", "description": "Completó toda la biblioteca de Bounce Back Bay" },
+        "diagnostic_detective": { "name": "Detective de Diagnóstico", "description": "Aprobó el cuestionario del diagrama de flujo diagnóstico" },
+        "red_flag_ready": { "name": "Listo para Señales de Alerta", "description": "Aprobó el cuestionario de señales de alerta" },
+        "pain_scale_pro": { "name": "Profesional de Escala de Dolor", "description": "Completó la sección de conciencia del dolor" },
+        "recovery_intelligence": { "name": "Inteligencia de Recuperación", "description": "Completó toda la educación sobre métodos de recuperación" },
+        "human_body_mastery": { "name": "Dominio del Cuerpo Humano", "description": "Terminó cada sección con finalización completa" }
+      }
     },
     "allAreas": "Todas las Áreas",
     "commonSymptoms": "Síntomas Comunes",
