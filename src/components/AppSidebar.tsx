@@ -493,10 +493,10 @@ export function AppSidebar() {
                             className="group sidebar-item-hover relative py-1"
                           >
                             {isActive(item.subModule!.url) && <span className="sidebar-active-indicator" />}
-                            <item.subModule.icon className="h-3.5 w-3.5 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:rotate-180 text-primary/70 group-hover:text-primary" />
-                            <div className="flex flex-col items-start gap-0">
-                              <span className="text-sm transition-colors duration-200">{item.subModule!.title}</span>
-                              <span className="text-[10px] text-muted-foreground leading-tight">{item.subModule!.description}</span>
+                            <item.subModule.icon className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:rotate-180 text-primary/70 group-hover:text-primary" />
+                            <div className="flex flex-col items-start gap-0.5">
+                              <span className="text-sm font-medium transition-colors duration-200">{item.subModule!.title}</span>
+                              <span className="text-xs text-muted-foreground/80 leading-normal">{item.subModule!.description}</span>
                             </div>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
