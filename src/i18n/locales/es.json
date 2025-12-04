@@ -2000,6 +2000,88 @@
           "usage": "Soporte de muñeca durante actividad, manejo de molestias y prevención de lesiones."
         }
       }
+    },
+    "badgeSystem": {
+      "categories": {
+        "all": "Todas",
+        "injury": "Estudio de Lesiones",
+        "tiered": "Progreso",
+        "special": "Logros Especiales"
+      },
+      "earned": "Obtenida",
+      "locked": "Bloqueada",
+      "safetyDisclaimer": "Otorgada por completar el estudio educativo de esta lesión. Esta insignia no indica preparación médica o autorización. Siempre consulta a un profesional licenciado.",
+      "legendText": "Las insignias se desbloquean al completar secciones educativas",
+      "items": {
+        "shoulder_scholar": {
+          "name": "Erudito del Hombro",
+          "description": "Completó la educación sobre lesiones de hombro"
+        },
+        "elbow_expert": {
+          "name": "Experto del Codo",
+          "description": "Completó la descripción general de UCL/Antebrazo/Flexor"
+        },
+        "hamstring_headliner": {
+          "name": "Especialista del Isquiotibial",
+          "description": "Completó el módulo de miembro inferior"
+        },
+        "ankle_analyst": {
+          "name": "Analista del Tobillo",
+          "description": "Completó la educación sobre lesiones de tobillo"
+        },
+        "wrist_wizard": {
+          "name": "Mago de la Muñeca",
+          "description": "Completó la educación sobre lesiones de muñeca"
+        },
+        "back_boss": {
+          "name": "Jefe de la Espalda",
+          "description": "Completó la educación sobre lesiones de espalda"
+        },
+        "bronze_anatomy": {
+          "name": "Insignia de Anatomía Bronce",
+          "description": "Estudió 3 lesiones"
+        },
+        "silver_anatomy": {
+          "name": "Insignia de Anatomía Plata",
+          "description": "Estudió 7 lesiones"
+        },
+        "gold_anatomy": {
+          "name": "Insignia de Anatomía Oro",
+          "description": "Estudió 12+ lesiones"
+        },
+        "elite_recovery": {
+          "name": "Insignia de Recuperación Elite",
+          "description": "Completó toda la biblioteca de Bounce Back Bay"
+        },
+        "red_flag_ready": {
+          "name": "Preparado para Señales de Alerta",
+          "description": "Completó toda la educación de seguridad"
+        },
+        "pain_scale_pro": {
+          "name": "Profesional de Escala de Dolor",
+          "description": "Completó la sección de conciencia del dolor"
+        },
+        "recovery_intelligence": {
+          "name": "Insignia de Inteligencia de Recuperación",
+          "description": "Aprobó todos los cuestionarios del módulo"
+        },
+        "human_body_mastery": {
+          "name": "Dominio del Cuerpo Humano",
+          "description": "Terminó cada lesión con 100% de precisión"
+        }
+      }
+    },
+    "streak": {
+      "dayStreak": "Días de racha",
+      "sections": "Secciones",
+      "badges": "Insignias",
+      "best": "Mejor",
+      "nextBadge": "Próxima insignia",
+      "keepLearning": "Sigue aprendiendo para desbloquear"
+    },
+    "progress": {
+      "title": "Tu Progreso e Insignias",
+      "subtitle": "Sigue tu recorrido de aprendizaje y gana insignias educativas"
     }
   }
 }

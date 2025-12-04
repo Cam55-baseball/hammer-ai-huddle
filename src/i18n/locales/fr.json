@@ -2022,6 +2022,88 @@
           "usage": "Soutien du poignet pendant l'activité, gestion de l'inconfort et prévention des blessures."
         }
       }
+    },
+    "badgeSystem": {
+      "categories": {
+        "all": "Toutes",
+        "injury": "Étude des Blessures",
+        "tiered": "Progression",
+        "special": "Réalisations Spéciales"
+      },
+      "earned": "Obtenu",
+      "locked": "Verrouillé",
+      "safetyDisclaimer": "Décerné pour avoir complété l'étude éducative de cette blessure. Ce badge n'indique pas une préparation ou autorisation médicale. Consultez toujours un professionnel agréé.",
+      "legendText": "Les badges se débloquent en complétant les sections éducatives",
+      "items": {
+        "shoulder_scholar": {
+          "name": "Érudit de l'Épaule",
+          "description": "A complété l'éducation sur les blessures de l'épaule"
+        },
+        "elbow_expert": {
+          "name": "Expert du Coude",
+          "description": "A complété l'aperçu UCL/Avant-bras/Fléchisseur"
+        },
+        "hamstring_headliner": {
+          "name": "Spécialiste des Ischio-jambiers",
+          "description": "A complété le module des membres inférieurs"
+        },
+        "ankle_analyst": {
+          "name": "Analyste de la Cheville",
+          "description": "A complété l'éducation sur les blessures de la cheville"
+        },
+        "wrist_wizard": {
+          "name": "Magicien du Poignet",
+          "description": "A complété l'éducation sur les blessures du poignet"
+        },
+        "back_boss": {
+          "name": "Boss du Dos",
+          "description": "A complété l'éducation sur les blessures du dos"
+        },
+        "bronze_anatomy": {
+          "name": "Badge Anatomie Bronze",
+          "description": "A étudié 3 blessures"
+        },
+        "silver_anatomy": {
+          "name": "Badge Anatomie Argent",
+          "description": "A étudié 7 blessures"
+        },
+        "gold_anatomy": {
+          "name": "Badge Anatomie Or",
+          "description": "A étudié 12+ blessures"
+        },
+        "elite_recovery": {
+          "name": "Badge Récupération Elite",
+          "description": "A complété toute la bibliothèque Bounce Back Bay"
+        },
+        "red_flag_ready": {
+          "name": "Prêt pour les Signaux d'Alerte",
+          "description": "A complété toute l'éducation sur la sécurité"
+        },
+        "pain_scale_pro": {
+          "name": "Pro de l'Échelle de Douleur",
+          "description": "A complété la section de sensibilisation à la douleur"
+        },
+        "recovery_intelligence": {
+          "name": "Badge Intelligence de Récupération",
+          "description": "A réussi tous les quiz du module"
+        },
+        "human_body_mastery": {
+          "name": "Maîtrise du Corps Humain",
+          "description": "A terminé chaque blessure avec 100% de précision"
+        }
+      }
+    },
+    "streak": {
+      "dayStreak": "Jours de série",
+      "sections": "Sections",
+      "badges": "Badges",
+      "best": "Meilleur",
+      "nextBadge": "Prochain badge",
+      "keepLearning": "Continuez à apprendre pour débloquer"
+    },
+    "progress": {
+      "title": "Votre Progression & Badges",
+      "subtitle": "Suivez votre parcours d'apprentissage et gagnez des badges éducatifs"
     }
   }
 }

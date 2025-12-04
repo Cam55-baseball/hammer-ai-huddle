@@ -2022,6 +2022,88 @@
           "usage": "Handgelenkunterstützung während der Aktivität, Beschwerdenmanagement und Verletzungsprävention."
         }
       }
+    },
+    "badgeSystem": {
+      "categories": {
+        "all": "Alle",
+        "injury": "Verletzungsstudium",
+        "tiered": "Fortschritt",
+        "special": "Besondere Erfolge"
+      },
+      "earned": "Erhalten",
+      "locked": "Gesperrt",
+      "safetyDisclaimer": "Verliehen für das Abschließen der Bildungsstudie dieser Verletzung. Dieses Abzeichen zeigt keine medizinische Bereitschaft oder Freigabe an. Konsultieren Sie immer einen lizenzierten Fachmann.",
+      "legendText": "Abzeichen werden durch Abschließen von Bildungsabschnitten freigeschaltet",
+      "items": {
+        "shoulder_scholar": {
+          "name": "Schulter-Gelehrter",
+          "description": "Hat die Schulterveletzungsbildung abgeschlossen"
+        },
+        "elbow_expert": {
+          "name": "Ellbogen-Experte",
+          "description": "Hat die UCL/Unterarm/Beuger-Übersicht abgeschlossen"
+        },
+        "hamstring_headliner": {
+          "name": "Oberschenkel-Spezialist",
+          "description": "Hat das Modul für untere Gliedmaßen abgeschlossen"
+        },
+        "ankle_analyst": {
+          "name": "Knöchel-Analyst",
+          "description": "Hat die Knöchelverletzungsbildung abgeschlossen"
+        },
+        "wrist_wizard": {
+          "name": "Handgelenk-Zauberer",
+          "description": "Hat die Handgelenkverletzungsbildung abgeschlossen"
+        },
+        "back_boss": {
+          "name": "Rücken-Boss",
+          "description": "Hat die Rückenverletzungsbildung abgeschlossen"
+        },
+        "bronze_anatomy": {
+          "name": "Bronze-Anatomie-Abzeichen",
+          "description": "Hat 3 Verletzungen studiert"
+        },
+        "silver_anatomy": {
+          "name": "Silber-Anatomie-Abzeichen",
+          "description": "Hat 7 Verletzungen studiert"
+        },
+        "gold_anatomy": {
+          "name": "Gold-Anatomie-Abzeichen",
+          "description": "Hat 12+ Verletzungen studiert"
+        },
+        "elite_recovery": {
+          "name": "Elite-Erholungs-Abzeichen",
+          "description": "Hat die gesamte Bounce Back Bay Bibliothek abgeschlossen"
+        },
+        "red_flag_ready": {
+          "name": "Bereit für Warnsignale",
+          "description": "Hat alle Sicherheitsbildung abgeschlossen"
+        },
+        "pain_scale_pro": {
+          "name": "Schmerzskala-Profi",
+          "description": "Hat den Schmerzbewusstseinsabschnitt abgeschlossen"
+        },
+        "recovery_intelligence": {
+          "name": "Erholungsintelligenz-Abzeichen",
+          "description": "Hat alle Modulquizze bestanden"
+        },
+        "human_body_mastery": {
+          "name": "Menschlicher Körper Meisterschaft",
+          "description": "Hat jede Verletzung mit 100% Genauigkeit abgeschlossen"
+        }
+      }
+    },
+    "streak": {
+      "dayStreak": "Tage Streak",
+      "sections": "Abschnitte",
+      "badges": "Abzeichen",
+      "best": "Beste",
+      "nextBadge": "Nächstes Abzeichen",
+      "keepLearning": "Weiterlernen zum Freischalten"
+    },
+    "progress": {
+      "title": "Ihr Fortschritt & Abzeichen",
+      "subtitle": "Verfolgen Sie Ihre Lernreise und verdienen Sie Bildungsabzeichen"
     }
   }
 }
