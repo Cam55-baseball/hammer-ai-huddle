@@ -560,6 +560,7 @@
     "playersClub": "Players Club",
     "rankings": "Rankings",
     "nutrition": "Nutrition",
+    "bounceBackBay": "Bounce Back Bay",
     "weather": "Weather",
     "profile": "Profile",
     "settings": "Settings",
@@ -1715,6 +1716,216 @@
       "title": "Initialization Failed",
       "description": "There was an error initializing the owner account.",
       "defaultMessage": "Failed to initialize owner account"
+    }
+  },
+  "bounceBackBay": {
+    "title": "Bounce Back Bay",
+    "subtitle": "Injury Education for Athletes",
+    "description": "Learn to recognize, understand, and respond to common sports injuries. Educational content to help you make informed decisions about your health.",
+    "badges": {
+      "educational": "Educational Only",
+      "athleteFocused": "Athlete-Focused",
+      "comprehensiveGuide": "Comprehensive Guide"
+    },
+    "allAreas": "All Areas",
+    "commonSymptoms": "Common Symptoms",
+    "typicalTimeline": "Typical Timeline",
+    "sections": {
+      "diagnosticFlow": {
+        "title": "Diagnostic Flow Chart",
+        "subtitle": "A guided pathway to understand your symptoms"
+      },
+      "painScale": {
+        "title": "Pain Scale System",
+        "subtitle": "Rate and understand your pain levels"
+      },
+      "redFlags": {
+        "title": "Red Flag Quick Check",
+        "subtitle": "Warning signs that need attention"
+      },
+      "injuryHub": {
+        "title": "Injury Overview Hub",
+        "subtitle": "Browse common baseball and softball injuries"
+      }
+    },
+    "hurtingVsInjured": {
+      "title": "Hurting vs. Injured",
+      "subtitle": "Understanding the difference between normal soreness and potential injury",
+      "hurting": {
+        "title": "Normal Soreness (\"Hurting\")",
+        "description": "These sensations are typically part of athletic training:",
+        "sign1": "Muscle soreness that improves with movement",
+        "sign2": "Mild stiffness that decreases after warming up",
+        "sign3": "General fatigue after intense training",
+        "sign4": "Discomfort that fades within 24-72 hours"
+      },
+      "injured": {
+        "title": "Potential Injury (\"Injured\")",
+        "description": "These signs may indicate something more serious:",
+        "sign1": "Sharp, sudden pain during activity",
+        "sign2": "Pain that gets worse with movement",
+        "sign3": "Swelling, bruising, or visible deformity",
+        "sign4": "Inability to bear weight or use the affected area",
+        "sign5": "Pain that persists beyond 72 hours"
+      },
+      "note": {
+        "title": "Remember",
+        "description": "This is for self-reflection only, not diagnosis. When in doubt, always consult a medical professional."
+      }
+    },
+    "diagnosticFlow": {
+      "intro": "Use this educational flow chart to reflect on your symptoms. This teaches recognition, not diagnosis.",
+      "step": "Step",
+      "steps": {
+        "symptoms": {
+          "title": "Identify Your Symptoms",
+          "description": "What are you experiencing?",
+          "q1": "Where exactly is the discomfort located?",
+          "q2": "What type of sensation is it (sharp, dull, aching)?",
+          "q3": "Does it affect your movement or performance?"
+        },
+        "timing": {
+          "title": "Consider the Timing",
+          "description": "When did this start?",
+          "q1": "Did it start suddenly or gradually?",
+          "q2": "How long have you had these symptoms?",
+          "q3": "Is it constant or does it come and go?"
+        },
+        "severity": {
+          "title": "Assess Severity",
+          "description": "How significant are the symptoms?",
+          "q1": "Can you continue normal activities?",
+          "q2": "Is the area swollen or discolored?",
+          "q3": "Is the pain getting better, worse, or staying the same?"
+        },
+        "decision": {
+          "title": "Consider Your Options",
+          "description": "Based on your reflection, consider these pathways:",
+          "outcome1": {
+            "condition": "Severe symptoms, sudden onset, or red flags present",
+            "action": "Seek professional evaluation promptly"
+          },
+          "outcome2": {
+            "condition": "Moderate symptoms persisting beyond 48-72 hours",
+            "action": "Consider scheduling a professional consultation"
+          },
+          "outcome3": {
+            "condition": "Mild symptoms improving with rest",
+            "action": "Continue monitoring, apply RICE principles if appropriate"
+          }
+        }
+      }
+    },
+    "painScale": {
+      "intro": "Use this scale as a personal awareness tool to reflect on your pain levels. This helps you communicate with healthcare providers.",
+      "noPain": "No Pain",
+      "worstPain": "Worst Pain",
+      "recommendation": "General Guidance",
+      "levels": {
+        "minimal": {
+          "label": "Minimal",
+          "description": "Barely noticeable discomfort that doesn't affect daily activities.",
+          "recommendation": "Generally safe to continue normal activities with awareness."
+        },
+        "mild": {
+          "label": "Mild",
+          "description": "Noticeable but doesn't significantly interfere with activities.",
+          "recommendation": "Consider modifying intensity. Monitor for changes."
+        },
+        "moderate": {
+          "label": "Moderate",
+          "description": "Interferes with concentration and some activities.",
+          "recommendation": "Consider rest and reducing activity. Evaluation may be beneficial."
+        },
+        "severe": {
+          "label": "Severe",
+          "description": "Significantly impacts ability to perform normal activities.",
+          "recommendation": "Rest recommended. Professional evaluation strongly advised."
+        },
+        "extreme": {
+          "label": "Extreme",
+          "description": "Overwhelming pain that prevents normal function.",
+          "recommendation": "Stop all activity. Seek professional help immediately."
+        }
+      },
+      "ranges": {
+        "minimal": "Minimal",
+        "mild": "Mild",
+        "moderate": "Moderate",
+        "severe": "Severe",
+        "extreme": "Extreme"
+      }
+    },
+    "redFlags": {
+      "intro": "Check any symptoms you're experiencing. This helps identify warning signs that may warrant professional attention.",
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "items": {
+        "deformity": "Visible deformity or unusual shape",
+        "numbness": "Numbness, tingling, or loss of sensation",
+        "inability": "Complete inability to bear weight or use the limb",
+        "severeSwelling": "Severe or rapidly increasing swelling",
+        "popSound": "Heard or felt a \"pop\" during injury",
+        "lockedJoint": "Joint is locked or won't move normally",
+        "instability": "Joint feels unstable or gives way",
+        "worsening": "Symptoms progressively worsening over time",
+        "nightPain": "Significant pain that disrupts sleep",
+        "fever": "Fever or signs of infection (warmth, redness)"
+      },
+      "seekProfessional": "Seek Professional Help",
+      "stopActivity": "Stop Activity",
+      "result": {
+        "critical": {
+          "title": "Immediate Attention Recommended",
+          "description": "One or more critical warning signs are present. Professional evaluation is strongly recommended as soon as possible."
+        },
+        "high": {
+          "title": "Professional Evaluation Advised",
+          "description": "Significant warning signs are present. Consider seeking professional evaluation within 24-48 hours."
+        },
+        "moderate": {
+          "title": "Monitor Closely",
+          "description": "Some warning signs present. Monitor your symptoms and consider professional consultation if they worsen."
+        },
+        "clear": {
+          "title": "No Red Flags Detected",
+          "description": "No major warning signs currently selected. Continue monitoring your condition."
+        }
+      },
+      "disclaimer": {
+        "title": "Important Reminder",
+        "description": "This checklist is educational only. It does not replace professional medical evaluation. When in doubt, always consult a healthcare provider."
+      }
+    },
+    "disclaimer": {
+      "title": "IMPORTANT MEDICAL DISCLAIMER",
+      "subtitle": "Please read this carefully before using Bounce Back Bay",
+      "points": {
+        "educational": {
+          "title": "Educational Purposes Only",
+          "description": "All content is for general educational information only."
+        },
+        "noDiagnosis": {
+          "title": "Not Medical Advice",
+          "description": "This does not diagnose, treat, or prescribe rehabilitation."
+        },
+        "seekHelp": {
+          "title": "Consult Professionals",
+          "description": "Always consult licensed medical or PT professionals for injuries."
+        },
+        "emergency": {
+          "title": "Emergency Situations",
+          "description": "Severe or worsening symptoms require immediate professional evaluation."
+        }
+      },
+      "fullText": {
+        "para1": "Bounce Back Bay is designed to provide general educational information about common sports injuries and recovery concepts.",
+        "para2": "The information provided here is NOT intended to be a substitute for professional medical advice, diagnosis, or treatment. Never disregard professional medical advice or delay in seeking it because of something you have read in this module.",
+        "para3": "All techniques, exercises, and recovery concepts described are for informational purposes only and should only be performed under the guidance of qualified healthcare professionals. Individual results may vary, and what works for one person may not be appropriate for another.",
+        "warning": "⚠️ If you experience severe pain, sudden injury, or any concerning symptoms, STOP all activity and seek immediate professional medical attention."
+      },
+      "bottomNote": "By using Bounce Back Bay, you acknowledge that you have read and understood this disclaimer."
     }
   }
 }

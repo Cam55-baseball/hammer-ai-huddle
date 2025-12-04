@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2 } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -134,6 +134,7 @@ export function AppSidebar() {
     ...(!isScout ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     { title: t('navigation.rankings'), url: "/rankings", icon: Trophy },
     { title: t('navigation.nutrition'), url: "/nutrition", icon: Apple },
+    { title: t('navigation.bounceBackBay'), url: "/bounce-back-bay", icon: HeartPulse },
     { title: t('navigation.weather'), url: "/weather", icon: Cloud },
     ...(isScout ? [{ title: t('navigation.scoutDashboard'), url: "/scout-dashboard", icon: UserPlus }] : []),
   ];

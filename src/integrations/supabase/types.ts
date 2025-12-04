@@ -101,6 +101,86 @@ export type Database = {
         }
         Relationships: []
       }
+      injury_education_content: {
+        Row: {
+          content_json: Json
+          created_at: string | null
+          display_order: number | null
+          id: string
+          injury_id: string | null
+          section_type: string
+          sport: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content_json?: Json
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          injury_id?: string | null
+          section_type: string
+          sport?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content_json?: Json
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          injury_id?: string | null
+          section_type?: string
+          sport?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injury_education_content_injury_id_fkey"
+            columns: ["injury_id"]
+            isOneToOne: false
+            referencedRelation: "injury_library"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      injury_library: {
+        Row: {
+          body_area: string
+          created_at: string | null
+          description: string
+          id: string
+          impact_on_performance: string | null
+          name: string
+          severity_range: string
+          sport_relevance: string[] | null
+          symptoms: string[]
+          typical_timeline: string | null
+        }
+        Insert: {
+          body_area: string
+          created_at?: string | null
+          description: string
+          id?: string
+          impact_on_performance?: string | null
+          name: string
+          severity_range?: string
+          sport_relevance?: string[] | null
+          symptoms?: string[]
+          typical_timeline?: string | null
+        }
+        Update: {
+          body_area?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          impact_on_performance?: string | null
+          name?: string
+          severity_range?: string
+          sport_relevance?: string[] | null
+          symptoms?: string[]
+          typical_timeline?: string | null
+        }
+        Relationships: []
+      }
       monthly_reports: {
         Row: {
           created_at: string | null
@@ -563,6 +643,45 @@ export type Database = {
           title?: string
           updated_at?: string
           video_url?: string
+        }
+        Relationships: []
+      }
+      user_injury_progress: {
+        Row: {
+          badges_earned: string[] | null
+          created_at: string | null
+          current_streak: number
+          id: string
+          last_visit_date: string | null
+          longest_streak: number
+          sections_completed: string[] | null
+          total_sections_viewed: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          badges_earned?: string[] | null
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_visit_date?: string | null
+          longest_streak?: number
+          sections_completed?: string[] | null
+          total_sections_viewed?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          badges_earned?: string[] | null
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_visit_date?: string | null
+          longest_streak?: number
+          sections_completed?: string[] | null
+          total_sections_viewed?: number
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
