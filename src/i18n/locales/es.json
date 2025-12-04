@@ -2053,9 +2053,13 @@
           "name": "Insignia de Recuperación Elite",
           "description": "Completó toda la biblioteca de Bounce Back Bay"
         },
+        "diagnostic_detective": {
+          "name": "Detective Diagnóstico",
+          "description": "Aprobó el cuestionario del diagrama de flujo diagnóstico"
+        },
         "red_flag_ready": {
           "name": "Preparado para Señales de Alerta",
-          "description": "Completó toda la educación de seguridad"
+          "description": "Aprobó el cuestionario de señales de alerta"
         },
         "pain_scale_pro": {
           "name": "Profesional de Escala de Dolor",

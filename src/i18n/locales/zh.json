@@ -1610,7 +1610,8 @@
         "silver_anatomy": { "name": "白银解剖徽章", "description": "学习了7种伤病" },
         "gold_anatomy": { "name": "黄金解剖徽章", "description": "学习了12+种伤病" },
         "elite_recovery": { "name": "精英恢复徽章", "description": "完成整个恢复湾库" },
-        "red_flag_ready": { "name": "红旗就绪", "description": "完成所有安全教育" },
+        "diagnostic_detective": { "name": "诊断侦探", "description": "通过诊断流程图测验" },
+        "red_flag_ready": { "name": "红旗就绪", "description": "通过红旗测验" },
         "pain_scale_pro": { "name": "疼痛量表专家", "description": "完成疼痛意识部分" },
         "recovery_intelligence": { "name": "恢复智慧", "description": "完成所有恢复方法教育" },
         "human_body_mastery": { "name": "人体掌握", "description": "完成所有部分的全部内容" }

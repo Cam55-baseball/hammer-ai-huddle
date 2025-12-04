@@ -1636,7 +1636,8 @@
         "silver_anatomy": { "name": "シルバー解剖学バッジ", "description": "7つの怪我を学習" },
         "gold_anatomy": { "name": "ゴールド解剖学バッジ", "description": "12以上の怪我を学習" },
         "elite_recovery": { "name": "エリート回復バッジ", "description": "Bounce Back Bayライブラリ全体を完了" },
-        "red_flag_ready": { "name": "警告サイン準備完了", "description": "すべての安全教育を完了" },
+        "diagnostic_detective": { "name": "診断探偵", "description": "診断フローチャートクイズに合格" },
+        "red_flag_ready": { "name": "警告サイン準備完了", "description": "警告サインクイズに合格" },
         "pain_scale_pro": { "name": "痛みスケールプロ", "description": "痛み認識セクションを完了" },
         "recovery_intelligence": { "name": "回復インテリジェンスバッジ", "description": "すべてのモジュールクイズに合格" },
         "human_body_mastery": { "name": "人体マスタリー", "description": "すべての怪我を100%の精度で完了" }

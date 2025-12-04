@@ -1639,7 +1639,8 @@
         "silver_anatomy": { "name": "Zilveren Anatomie Badge", "description": "7 blessures bestudeerd" },
         "gold_anatomy": { "name": "Gouden Anatomie Badge", "description": "12+ blessures bestudeerd" },
         "elite_recovery": { "name": "Elite Herstel Badge", "description": "Bibliotheek voltooid" },
-        "red_flag_ready": { "name": "Rode Vlag Gereed", "description": "Veiligheidseducatie voltooid" },
+        "diagnostic_detective": { "name": "Diagnose Detective", "description": "Diagnose stroomdiagram quiz geslaagd" },
+        "red_flag_ready": { "name": "Rode Vlag Gereed", "description": "Rode vlag quiz geslaagd" },
         "pain_scale_pro": { "name": "Pijnschaal Pro", "description": "Pijnbewustzijn voltooid" },
         "recovery_intelligence": { "name": "Herstel Intelligentie", "description": "Herstelmethoden voltooid" },
         "human_body_mastery": { "name": "Lichaam Meesterschap", "description": "Alle secties voltooid" }

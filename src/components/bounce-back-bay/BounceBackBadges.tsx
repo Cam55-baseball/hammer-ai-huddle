@@ -30,7 +30,8 @@ const allBadges: BadgeData[] = [
   { key: "silver_anatomy", icon: Medal, color: "text-slate-400", bgColor: "bg-slate-400/20", category: "tiered", requirement: 7 },
   { key: "gold_anatomy", icon: Medal, color: "text-yellow-500", bgColor: "bg-yellow-500/20", category: "tiered", requirement: 12 },
   { key: "elite_recovery", icon: Trophy, color: "text-cyan-500", bgColor: "bg-cyan-500/20", category: "tiered", requirement: 20 },
-  // Special Achievement Badges
+  // Special Achievement Badges (Quiz-based)
+  { key: "diagnostic_detective", icon: Brain, color: "text-emerald-500", bgColor: "bg-emerald-500/20", category: "special", requirement: 1 },
   { key: "red_flag_ready", icon: Shield, color: "text-red-500", bgColor: "bg-red-500/20", category: "special", requirement: 1 },
   { key: "pain_scale_pro", icon: Target, color: "text-orange-500", bgColor: "bg-orange-500/20", category: "special", requirement: 1 },
   { key: "recovery_intelligence", icon: Brain, color: "text-indigo-500", bgColor: "bg-indigo-500/20", category: "special", requirement: 1 },
