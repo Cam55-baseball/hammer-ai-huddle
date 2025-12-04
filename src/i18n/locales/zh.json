@@ -1344,8 +1344,10 @@
     "loadingFrame": "加载帧中...",
     "enterText": "输入文字...",
     "defaultLabel": "标签",
+    "drawMode": "绘画模式",
     "tools": {
       "select": "选择",
+      "draw": "绘画（自由绘制）",
       "deleteSelected": "删除选中对象",
       "addText": "添加文字",
       "rectangle": "矩形",
