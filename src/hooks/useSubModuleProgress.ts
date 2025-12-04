@@ -7,6 +7,12 @@ export interface WeekProgress {
   [day: string]: boolean;
 }
 
+export interface ExerciseProgress {
+  [week: string]: {
+    [day: string]: boolean[];
+  };
+}
+
 export interface SubModuleProgress {
   id: string;
   user_id: string;
@@ -15,6 +21,7 @@ export interface SubModuleProgress {
   sub_module: 'production_lab' | 'production_studio';
   current_week: number;
   week_progress: { [week: string]: WeekProgress };
+  exercise_progress: ExerciseProgress;
   equipment_checklist: string[];
   started_at: string;
   last_activity: string;
@@ -43,7 +50,12 @@ export function useSubModuleProgress(
         .maybeSingle();
 
       if (error) throw error;
-      setProgress(data as SubModuleProgress | null);
+      // Handle exercise_progress potentially being missing from database
+      const progressData = data ? {
+        ...data,
+        exercise_progress: data.exercise_progress || {},
+      } as SubModuleProgress : null;
+      setProgress(progressData);
     } catch (error) {
       console.error('Error fetching progress:', error);
     } finally {
@@ -76,7 +88,11 @@ export function useSubModuleProgress(
         .single();
 
       if (error) throw error;
-      setProgress(data as SubModuleProgress);
+      const progressData = {
+        ...data,
+        exercise_progress: data.exercise_progress || {},
+      } as SubModuleProgress;
+      setProgress(progressData);
       return data;
     } catch (error) {
       console.error('Error initializing progress:', error);
@@ -119,6 +135,87 @@ export function useSubModuleProgress(
       });
     }
   }, [user, progress]);
+
+  const updateExerciseProgress = useCallback(async (
+    week: number,
+    day: string,
+    exerciseIndex: number,
+    completed: boolean,
+    totalExercises: number
+  ) => {
+    if (!user || !progress) return;
+
+    const currentExercises = progress.exercise_progress?.[week]?.[day] || 
+      new Array(totalExercises).fill(false);
+    
+    const updatedExercises = [...currentExercises];
+    updatedExercises[exerciseIndex] = completed;
+
+    const updatedExerciseProgress = {
+      ...progress.exercise_progress,
+      [week]: {
+        ...(progress.exercise_progress?.[week] || {}),
+        [day]: updatedExercises,
+      },
+    };
+
+    // Check if all exercises are complete to auto-mark day complete
+    const allComplete = updatedExercises.every(Boolean);
+
+    try {
+      const updateData: Record<string, unknown> = {
+        exercise_progress: updatedExerciseProgress,
+        last_activity: new Date().toISOString(),
+      };
+
+      // Auto-complete day if all exercises done
+      if (allComplete) {
+        const updatedWeekProgress = {
+          ...progress.week_progress,
+          [week]: {
+            ...(progress.week_progress[week] || {}),
+            [day]: true,
+          },
+        };
+        updateData.week_progress = updatedWeekProgress;
+      }
+
+      const { error } = await supabase
+        .from('sub_module_progress')
+        .update(updateData)
+        .eq('id', progress.id);
+
+      if (error) throw error;
+
+      setProgress({
+        ...progress,
+        exercise_progress: updatedExerciseProgress,
+        ...(allComplete && {
+          week_progress: {
+            ...progress.week_progress,
+            [week]: {
+              ...(progress.week_progress[week] || {}),
+              [day]: true,
+            },
+          },
+        }),
+      });
+    } catch (error) {
+      console.error('Error updating exercise progress:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save exercise progress',
+        variant: 'destructive',
+      });
+    }
+  }, [user, progress]);
+
+  const getExerciseProgress = useCallback((week: number, day: string, totalExercises: number): boolean[] => {
+    if (!progress?.exercise_progress?.[week]?.[day]) {
+      return new Array(totalExercises).fill(false);
+    }
+    return progress.exercise_progress[week][day];
+  }, [progress]);
 
   const advanceWeek = useCallback(async (newWeek: number) => {
     if (!user || !progress) return;
@@ -166,6 +263,8 @@ export function useSubModuleProgress(
     loading,
     initializeProgress,
     updateDayProgress,
+    updateExerciseProgress,
+    getExerciseProgress,
     advanceWeek,
     getWeekCompletionPercent,
     canUnlockWeek,

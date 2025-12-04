@@ -2416,6 +2416,14 @@
     "accessRequired": "Access Required",
     "subscribeToHitting": "Subscribe to the Hitting Analysis module to access Production Lab.",
     "subscribeToPitching": "Subscribe to the Pitching Analysis module to access Production Studio.",
-    "viewPlans": "View Plans"
+    "viewPlans": "View Plans",
+    "exercises": "Exercises",
+    "markComplete": "Mark Day Complete",
+    "markIncomplete": "Mark Day Incomplete",
+    "completed": "Completed",
+    "incomplete": "Incomplete",
+    "exercisesCompleted": "{{count}} of {{total}} exercises",
+    "allExercisesComplete": "All exercises complete!",
+    "tapToComplete": "Tap to mark complete"
   }
 }

@@ -114,6 +114,8 @@ export default function ProductionLab() {
     loading: progressLoading,
     initializeProgress,
     updateDayProgress,
+    updateExerciseProgress,
+    getExerciseProgress,
     advanceWeek,
     getWeekCompletionPercent,
     canUnlockWeek,
@@ -176,6 +178,10 @@ export default function ProductionLab() {
     }
   };
 
+  const handleExerciseComplete = (week: number, day: string, exerciseIndex: number, completed: boolean, totalExercises: number) => {
+    updateExerciseProgress(week, day, exerciseIndex, completed, totalExercises);
+  };
+
   const handleWeekSelect = (week: number) => {
     if (!canUnlockWeek(week)) {
       setTargetWeek(week);
@@ -232,6 +238,8 @@ export default function ProductionLab() {
               onWeekSelect={handleWeekSelect}
               canUnlockWeek={canUnlockWeek}
               getWeekCompletionPercent={getWeekCompletionPercent}
+              getExerciseProgress={getExerciseProgress}
+              onExerciseComplete={handleExerciseComplete}
             />
           </div>
 
