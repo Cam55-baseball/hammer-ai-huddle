@@ -1373,10 +1373,8 @@
     "loadingFrame": "Frame laden...",
     "enterText": "Tekst invoeren...",
     "defaultLabel": "Label",
-    "drawMode": "Tekenmodus",
     "tools": {
       "select": "Selecteren",
-      "draw": "Tekenen (vrije hand)",
       "deleteSelected": "Geselecteerd Object Verwijderen",
       "addText": "Tekst Toevoegen",
       "rectangle": "Rechthoek",

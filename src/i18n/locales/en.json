@@ -1476,10 +1476,8 @@
     "loadingFrame": "Loading frame...",
     "enterText": "Enter text...",
     "defaultLabel": "Label",
-    "drawMode": "Draw Mode",
     "tools": {
       "select": "Select",
-      "draw": "Draw (freehand)",
       "deleteSelected": "Delete Selected Object",
       "addText": "Add Text",
       "rectangle": "Rectangle",

@@ -1342,10 +1342,8 @@
     "loadingFrame": "프레임 로딩 중...",
     "enterText": "텍스트 입력...",
     "defaultLabel": "레이블",
-    "drawMode": "그리기 모드",
     "tools": {
       "select": "선택",
-      "draw": "그리기 (자유형)",
       "deleteSelected": "선택한 객체 삭제",
       "addText": "텍스트 추가",
       "rectangle": "사각형",

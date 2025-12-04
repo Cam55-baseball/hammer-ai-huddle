@@ -1344,10 +1344,8 @@
     "loadingFrame": "フレームを読み込み中...",
     "enterText": "テキストを入力...",
     "defaultLabel": "ラベル",
-    "drawMode": "描画モード",
     "tools": {
       "select": "選択",
-      "draw": "描画（フリーハンド）",
       "deleteSelected": "選択したオブジェクトを削除",
       "addText": "テキストを追加",
       "rectangle": "長方形",

@@ -1351,10 +1351,8 @@
     "loadingFrame": "Cargando cuadro...",
     "enterText": "Ingresa texto...",
     "defaultLabel": "Etiqueta",
-    "drawMode": "Modo Dibujo",
     "tools": {
       "select": "Seleccionar",
-      "draw": "Dibujar (mano alzada)",
       "deleteSelected": "Eliminar Objeto Seleccionado",
       "addText": "Añadir Texto",
       "rectangle": "Rectángulo",
