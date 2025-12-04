@@ -1647,6 +1647,59 @@
     },
     "streak": { "dayStreak": "Dagen Reeks", "sections": "Secties", "badges": "Badges", "best": "Beste", "nextBadge": "Volgende Badge", "keepLearning": "Blijf leren!" },
     "progress": { "title": "Uw Voortgang & Badges", "subtitle": "Volg uw reis" },
+    "quiz": {
+      "title": "Kennistoets",
+      "description": "Beantwoord {{count}} vragen om uw begrip te testen",
+      "start": "Start Quiz",
+      "next": "Volgende",
+      "finish": "Afsluiten",
+      "score": "Uw Score",
+      "passed": "Gefeliciteerd!",
+      "needsRetry": "Blijf Leren",
+      "passMessage": "Goed gedaan! U heeft begrip van deze sectie getoond.",
+      "retryMessage": "U heeft 70% nodig om te slagen. Bekijk de inhoud en probeer opnieuw.",
+      "retry": "Opnieuw Proberen",
+      "alreadyPassed": "U heeft deze quiz al voltooid!",
+      "completed": "Voltooid",
+      "badgeEarned": "Badge Verdiend!",
+      "questions": {
+        "diagnostic": {
+          "q1": { "question": "Wat is het hoofddoel van het diagnostisch stroomdiagram?", "options": ["Medische diagnose stellen", "Helpen reflecteren op symptomen", "Doktersbezoek vervangen", "Medicatie voorschrijven"], "correct": 1 },
+          "q2": { "question": "Wat moet u eerst overwegen bij symptomen?", "options": ["Pijnstillers nemen", "Locatie en type identificeren", "Doorgaan met activiteit", "Milde symptomen negeren"], "correct": 1 },
+          "q3": { "question": "Wanneer is professionele evaluatie nodig?", "options": ["Alleen bij breuken", "Bij ernstige symptomen of rode vlaggen", "Nooit", "Alleen voor professionele atleten"], "correct": 1 }
+        },
+        "pain-scale": {
+          "q1": { "question": "Wat is het doel van de 0-10 pijnschaal?", "options": ["Blessures diagnosticeren", "Pijnniveau beschrijven", "Behandeling bepalen", "Spierkracht meten"], "correct": 1 },
+          "q2": { "question": "Wat betekent pijnniveau 4-6?", "options": ["Geen pijn", "Mild ongemak", "Matige pijn die activiteit verstoort", "Noodhulp nodig"], "correct": 2 },
+          "q3": { "question": "Wanneer moet u stoppen met activiteit?", "options": ["Bij niveau 1-2", "Wanneer pijn activiteit verstoort", "Alleen bij niveau 10", "Nooit, doordrukken"], "correct": 1 }
+        },
+        "red-flags": {
+          "q1": { "question": "Wat wordt beschouwd als een kritieke rode vlag?", "options": ["Milde spierpijn", "Vermoeidheid na activiteit", "Zichtbare misvorming of onvermogen te belasten", "Milde stijfheid"], "correct": 2 },
+          "q2": { "question": "Wat te doen bij rode vlag symptomen?", "options": ["Doorgaan met trainen", "Professionele hulp zoeken", "Alleen ijs aanbrengen", "Een week wachten"], "correct": 1 },
+          "q3": { "question": "Waarom is het herkennen van rode vlaggen belangrijk?", "options": ["Onnodige rust vermijden", "Voorkomen dat kleine blessures ernstig worden", "Medische kosten besparen", "Prestaties verbeteren"], "correct": 1 }
+        },
+        "rtp": {
+          "q1": { "question": "Wat is de juiste volgorde van terugkeer naar spel?", "options": ["Training, Bescherming, Versterking, Herstel", "Bescherming, Herstel, Versterking, Terugkeer", "Terugkeer, Versterking, Bescherming, Herstel", "Versterking, Terugkeer, Bescherming, Herstel"], "correct": 1 },
+          "q2": { "question": "Waar richt de beschermingsfase zich op?", "options": ["Volledige training", "Rust en verdere schade voorkomen", "Maximale kracht opbouwen", "Wedstrijdvoorbereiding"], "correct": 1 },
+          "q3": { "question": "Waarom variëren hersteltijdlijnen?", "options": ["Verschillende blessures vereisen verschillende genezingstijden", "Het is alleen een excuus", "Protocollen zijn altijd gelijk", "Alleen leeftijd telt"], "correct": 0 }
+        },
+        "prevention": {
+          "q1": { "question": "Wat is een effectief warming-up principe?", "options": ["30 minuten statisch rekken", "Direct volledige intensiteit", "Dynamisch rekken met geleidelijke intensiteit", "Warming-up overslaan"], "correct": 2 },
+          "q2": { "question": "Waarom helpt krachttraining bij preventie?", "options": ["Maakt spieren groter", "Bouwt veerkracht voor gewrichten", "Alleen voor bodybuilding", "Helpt niet bij preventie"], "correct": 1 },
+          "q3": { "question": "Welk is een preventiepatroon?", "options": ["Door pijn trainen", "Rust overslaan", "Voldoende slaap en geleidelijke progressie", "Dagelijks maximale intensiteit"], "correct": 2 }
+        },
+        "recovery": {
+          "q1": { "question": "Wanneer moet ijs worden gebruikt?", "options": ["Chronische spierspanning", "Acute blessures en ontsteking", "Voor activiteit", "Altijd"], "correct": 1 },
+          "q2": { "question": "Wat is het hoofdvoordeel van warmte?", "options": ["Acute zwelling verminderen", "Bloedstroom en ontspanning bevorderen", "Breuken genezen", "Medische zorg vervangen"], "correct": 1 },
+          "q3": { "question": "Wat is de aanbevolen tijd voor ijs/warmte?", "options": ["5 minuten", "15-20 minuten", "1 uur", "Hele nacht"], "correct": 1 }
+        },
+        "equipment": {
+          "q1": { "question": "Wat is het hoofdgebruik van kinesiotape?", "options": ["Gewricht volledig fixeren", "Spierondersteuning met bewegingsvrijheid", "Medische behandeling vervangen", "Alleen esthetisch"], "correct": 1 },
+          "q2": { "question": "Waarvoor wordt een foam roller gebruikt?", "options": ["Krachttraining", "Zelfmassage en spiervoorbereiding", "Gewrichtsfixatie", "Noodgevallen"], "correct": 1 },
+          "q3": { "question": "Welk voordeel bieden compressiemouwen?", "options": ["Volledige immobilisatie", "Compressie en ondersteuning", "Vervangt rust", "Permanente genezing"], "correct": 1 }
+        }
+      }
+    },
     "allAreas": "Alle Gebieden",
     "commonSymptoms": "Symptomen",
     "typicalTimeline": "Tijdlijn",

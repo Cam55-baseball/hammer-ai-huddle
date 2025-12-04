@@ -2,14 +2,34 @@ import { useTranslation } from "react-i18next";
 import { Award, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import i18n from "@/i18n";
+import { createRoot } from "react-dom/client";
+import { ConfettiEffect } from "./ConfettiEffect";
 
 interface BadgeUnlockConfig {
   badgeKey: string;
   badgeName: string;
 }
 
+function triggerConfetti() {
+  const container = document.createElement("div");
+  container.id = "confetti-container";
+  document.body.appendChild(container);
+  
+  const root = createRoot(container);
+  root.render(<ConfettiEffect />);
+  
+  // Cleanup after animation
+  setTimeout(() => {
+    root.unmount();
+    container.remove();
+  }, 5000);
+}
+
 export function showBadgeUnlockToast({ badgeKey, badgeName }: BadgeUnlockConfig) {
   const t = i18n.t.bind(i18n);
+  
+  // Trigger confetti animation
+  triggerConfetti();
   
   toast.custom(
     (id) => (
@@ -44,7 +64,7 @@ export function showBadgeUnlockToast({ badgeKey, badgeName }: BadgeUnlockConfig)
     }
   );
   
-  // Optional: Haptic feedback on mobile
+  // Haptic feedback on mobile
   if (navigator.vibrate) {
     navigator.vibrate([100, 50, 100]);
   }
