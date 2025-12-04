@@ -303,16 +303,33 @@ export const FrameAnnotationDialog = ({
     if (!upperCanvas) return;
     
     let isDrawing = false;
-    let points: { x: number; y: number }[] = [];
+    // Store both logical coords (for Path) and preview coords (for contextTop)
+    let logicalPoints: { x: number; y: number }[] = [];
+    let previewPoints: { x: number; y: number }[] = [];
     
-    // Helper to get canvas-relative coordinates from touch
-    const getPointerFromTouch = (touch: Touch) => {
+    // Get retina scaling factor (accounts for high-DPI displays)
+    const getRetinaScaling = () => {
+      return (fabricCanvas as any).getRetinaScaling?.() || window.devicePixelRatio || 1;
+    };
+    
+    // Get logical canvas coordinates from touch (for fabric.Path creation)
+    const getLogicalCoords = (touch: Touch) => {
       const rect = upperCanvas.getBoundingClientRect();
       const scaleX = fabricCanvas.width! / rect.width;
       const scaleY = fabricCanvas.height! / rect.height;
       return {
         x: (touch.clientX - rect.left) * scaleX,
         y: (touch.clientY - rect.top) * scaleY
+      };
+    };
+    
+    // Get physical/preview coordinates from touch (for contextTop drawing on retina)
+    const getPreviewCoords = (touch: Touch) => {
+      const logical = getLogicalCoords(touch);
+      const retinaScaling = getRetinaScaling();
+      return {
+        x: logical.x * retinaScaling,
+        y: logical.y * retinaScaling
       };
     };
     
@@ -333,20 +350,22 @@ export const FrameAnnotationDialog = ({
       return path;
     };
     
-    // Draw live preview on the context
+    // Draw live preview on contextTop (uses retina-scaled coordinates)
     const drawPreview = () => {
       const ctx = fabricCanvas.contextTop;
-      if (!ctx || points.length < 2) return;
+      if (!ctx || previewPoints.length < 2) return;
+      
+      const retinaScaling = getRetinaScaling();
       
       ctx.save();
       ctx.strokeStyle = activeColor;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 3 * retinaScaling; // Scale line width for retina
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i].x, points[i].y);
+      ctx.moveTo(previewPoints[0].x, previewPoints[0].y);
+      for (let i = 1; i < previewPoints.length; i++) {
+        ctx.lineTo(previewPoints[i].x, previewPoints[i].y);
       }
       ctx.stroke();
       ctx.restore();
@@ -358,7 +377,17 @@ export const FrameAnnotationDialog = ({
       e.stopImmediatePropagation(); // Stop ALL handlers including Fabric.js internals
       
       isDrawing = true;
-      points = [getPointerFromTouch(e.touches[0])];
+      const touch = e.touches[0];
+      logicalPoints = [getLogicalCoords(touch)];
+      previewPoints = [getPreviewCoords(touch)];
+      
+      // Debug logging (can be removed after testing)
+      console.log('[Draw] Touch start', {
+        retinaScaling: getRetinaScaling(),
+        hasContextTop: !!fabricCanvas.contextTop,
+        logical: logicalPoints[0],
+        preview: previewPoints[0]
+      });
       
       // Haptic feedback
       if (navigator.vibrate) navigator.vibrate(5);
@@ -369,8 +398,9 @@ export const FrameAnnotationDialog = ({
       e.preventDefault();
       e.stopImmediatePropagation(); // Stop ALL handlers including Fabric.js internals
       
-      const point = getPointerFromTouch(e.touches[0]);
-      points.push(point);
+      const touch = e.touches[0];
+      logicalPoints.push(getLogicalCoords(touch));
+      previewPoints.push(getPreviewCoords(touch));
       
       // Clear and redraw preview
       fabricCanvas.clearContext(fabricCanvas.contextTop);
@@ -387,10 +417,10 @@ export const FrameAnnotationDialog = ({
       // Clear the preview
       fabricCanvas.clearContext(fabricCanvas.contextTop);
       
-      // Create the path if we have enough points
-      if (points.length >= 2) {
+      // Create the path using LOGICAL coordinates (not retina-scaled)
+      if (logicalPoints.length >= 2) {
         try {
-          const pathData = pointsToPathData(points);
+          const pathData = pointsToPathData(logicalPoints);
           const path = new fabric.Path(pathData, {
             stroke: activeColor,
             strokeWidth: 3,
@@ -404,12 +434,15 @@ export const FrameAnnotationDialog = ({
           fabricCanvas.add(path);
           fabricCanvas.renderAll();
           saveHistory(fabricCanvas);
+          
+          console.log('[Draw] Path created with', logicalPoints.length, 'points');
         } catch (error) {
-          console.error('Error creating path:', error);
+          console.error('[Draw] Error creating path:', error);
         }
       }
       
-      points = [];
+      logicalPoints = [];
+      previewPoints = [];
     };
     
     // Attach touch listeners to upper canvas with CAPTURE phase to run before Fabric.js handlers
