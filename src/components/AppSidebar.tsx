@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
+import { useLanguage } from "@/hooks/useLanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { branding } from "@/branding";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,6 +33,8 @@ interface OwnerProfile {
   bio: string | null;
   avatar_url: string | null;
   credentials?: string[] | null;
+  original_bio?: string | null;
+  original_credentials?: string[] | null;
   social_instagram: string | null;
   social_twitter: string | null;
   social_facebook: string | null;
@@ -45,8 +48,38 @@ interface OwnerProfile {
   social_website_5?: string | null;
 }
 
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+function getCachedTranslation(language: string): OwnerProfile | null {
+  try {
+    const cached = localStorage.getItem(`ownerProfile_${language}`);
+    if (!cached) return null;
+    
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_DURATION) {
+      localStorage.removeItem(`ownerProfile_${language}`);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedTranslation(language: string, data: OwnerProfile): void {
+  try {
+    localStorage.setItem(`ownerProfile_${language}`, JSON.stringify({
+      data,
+      timestamp: Date.now(),
+    }));
+  } catch {
+    // localStorage might be full, ignore
+  }
+}
+
 export function AppSidebar() {
   const { t } = useTranslation();
+  const { currentLanguage } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
@@ -54,6 +87,7 @@ export function AppSidebar() {
   const { isAdmin } = useAdminAccess();
   const { isScout } = useScoutAccess();
   const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [ownerBioOpen, setOwnerBioOpen] = useState(false);
   const [selectedSport, setSelectedSport] = useState<'baseball' | 'softball'>('baseball');
 
@@ -66,18 +100,34 @@ export function AppSidebar() {
 
   useEffect(() => {
     const fetchOwnerProfile = async () => {
+      // Check cache first
+      const cached = getCachedTranslation(currentLanguage);
+      if (cached) {
+        setOwnerProfile(cached);
+        return;
+      }
+
+      setIsTranslating(currentLanguage !== 'en');
+      
       try {
-        const { data, error } = await supabase.functions.invoke('get-owner-profile');
+        const { data, error } = await supabase.functions.invoke('get-owner-profile', {
+          body: { targetLanguage: currentLanguage }
+        });
+        
         if (!error && data) {
           setOwnerProfile(data);
+          // Cache the result
+          setCachedTranslation(currentLanguage, data);
         }
       } catch (error) {
         console.error('Error fetching owner profile:', error);
+      } finally {
+        setIsTranslating(false);
       }
     };
 
     fetchOwnerProfile();
-  }, []);
+  }, [currentLanguage]);
 
   const mainNavItems = [
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
@@ -125,7 +175,10 @@ export function AppSidebar() {
         {ownerProfile && (
           <>
             <SidebarGroup className="border-b border-sidebar-border pb-4">
-              <SidebarGroupLabel>{t('sidebar.ownerBio')}</SidebarGroupLabel>
+              <SidebarGroupLabel className="flex items-center gap-2">
+                {t('sidebar.ownerBio')}
+                {isTranslating && <Loader2 className="h-3 w-3 animate-spin" />}
+              </SidebarGroupLabel>
               <button
                 onClick={() => setOwnerBioOpen(true)}
                 className="w-full px-4 py-2 hover:bg-accent/50 rounded-md text-left transition-colors owner-bio-section"
