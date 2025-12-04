@@ -17,6 +17,11 @@ interface FrameAnnotationDialogProps {
 
 export type AnnotationTool = "select" | "draw" | "eraser" | "text" | "rectangle" | "circle" | "arrow" | "pan";
 
+// Mobile detection helper
+const isMobile = () => {
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+};
+
 export const FrameAnnotationDialog = ({
   open,
   onOpenChange,
@@ -214,7 +219,8 @@ export const FrameAnnotationDialog = ({
   useEffect(() => {
     if (!fabricCanvas) return;
 
-    fabricCanvas.isDrawingMode = activeTool === "draw";
+    // Only enable Fabric.js native drawing on desktop - mobile uses custom touch handler
+    fabricCanvas.isDrawingMode = activeTool === "draw" && !isMobile();
     
     // When in draw mode, ensure touch events can reach the canvas
     if (activeTool === "draw") {
@@ -268,79 +274,120 @@ export const FrameAnnotationDialog = ({
     }
   }, [activeTool, activeColor, fabricCanvas]);
 
-  // Custom touch drawing handler for mobile - bypasses Fabric.js internal touch handling
+  // Mobile touch drawing - creates Path objects directly without using Fabric.js brush methods
   useEffect(() => {
-    if (!fabricCanvas || activeTool !== 'draw') return;
+    if (!fabricCanvas || activeTool !== 'draw' || !isMobile()) return;
     
     const upperCanvas = fabricCanvas.upperCanvasEl;
     if (!upperCanvas) return;
     
-    const brush = fabricCanvas.freeDrawingBrush;
-    if (!brush) return;
-    
     let isDrawing = false;
+    let points: { x: number; y: number }[] = [];
     
     // Helper to get canvas-relative coordinates from touch
-    const getPointerFromTouch = (touch: Touch): { x: number; y: number } => {
+    const getPointerFromTouch = (touch: Touch) => {
       const rect = upperCanvas.getBoundingClientRect();
       const scaleX = fabricCanvas.width! / rect.width;
       const scaleY = fabricCanvas.height! / rect.height;
-      
       return {
         x: (touch.clientX - rect.left) * scaleX,
         y: (touch.clientY - rect.top) * scaleY
       };
     };
     
-    const handleTouchStart = (e: TouchEvent) => {
-      try {
-        if (e.touches.length !== 1) return; // Only single touch for drawing
-        e.preventDefault();
-        e.stopPropagation();
-        
-        isDrawing = true;
-        const pointer = getPointerFromTouch(e.touches[0]);
-        
-        // Haptic feedback
-        if (navigator.vibrate) navigator.vibrate(5);
-        
-        // Manually invoke brush drawing - use fabric.Point
-        const point = new fabric.Point(pointer.x, pointer.y);
-        brush.onMouseDown(point, { e: e as any, pointer: point });
-      } catch (error) {
-        console.error('Draw touch start error:', error);
+    // Convert points array to SVG path string with smooth curves
+    const pointsToPathData = (pts: { x: number; y: number }[]): string => {
+      if (pts.length < 2) return '';
+      let path = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 1; i < pts.length; i++) {
+        // Use quadratic curves for smooth lines
+        if (i < pts.length - 1) {
+          const midX = (pts[i].x + pts[i + 1].x) / 2;
+          const midY = (pts[i].y + pts[i + 1].y) / 2;
+          path += ` Q ${pts[i].x} ${pts[i].y} ${midX} ${midY}`;
+        } else {
+          path += ` L ${pts[i].x} ${pts[i].y}`;
+        }
       }
+      return path;
+    };
+    
+    // Draw live preview on the context
+    const drawPreview = () => {
+      const ctx = fabricCanvas.contextTop;
+      if (!ctx || points.length < 2) return;
+      
+      ctx.save();
+      ctx.strokeStyle = activeColor;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    };
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return; // Only single touch for drawing
+      e.preventDefault();
+      e.stopPropagation();
+      
+      isDrawing = true;
+      points = [getPointerFromTouch(e.touches[0])];
+      
+      // Haptic feedback
+      if (navigator.vibrate) navigator.vibrate(5);
     };
     
     const handleTouchMove = (e: TouchEvent) => {
-      try {
-        if (!isDrawing || e.touches.length !== 1) return;
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const pointer = getPointerFromTouch(e.touches[0]);
-        const point = new fabric.Point(pointer.x, pointer.y);
-        brush.onMouseMove(point, { e: e as any, pointer: point });
-      } catch (error) {
-        console.error('Draw touch move error:', error);
-      }
+      if (!isDrawing || e.touches.length !== 1) return;
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const point = getPointerFromTouch(e.touches[0]);
+      points.push(point);
+      
+      // Clear and redraw preview
+      fabricCanvas.clearContext(fabricCanvas.contextTop);
+      drawPreview();
     };
     
     const handleTouchEnd = (e: TouchEvent) => {
-      try {
-        if (!isDrawing) return;
-        e.preventDefault();
-        
-        isDrawing = false;
-        // For mouseUp, use the last known point or a default
-        const lastPoint = new fabric.Point(0, 0);
-        brush.onMouseUp({ e: e as any, pointer: lastPoint });
-        
-        // Save to history after stroke completes
-        saveHistory(fabricCanvas);
-      } catch (error) {
-        console.error('Draw touch end error:', error);
+      if (!isDrawing) return;
+      e.preventDefault();
+      
+      isDrawing = false;
+      
+      // Clear the preview
+      fabricCanvas.clearContext(fabricCanvas.contextTop);
+      
+      // Create the path if we have enough points
+      if (points.length >= 2) {
+        try {
+          const pathData = pointsToPathData(points);
+          const path = new fabric.Path(pathData, {
+            stroke: activeColor,
+            strokeWidth: 3,
+            fill: '',
+            strokeLineCap: 'round',
+            strokeLineJoin: 'round',
+            selectable: true,
+            evented: true
+          });
+          
+          fabricCanvas.add(path);
+          fabricCanvas.renderAll();
+          saveHistory(fabricCanvas);
+        } catch (error) {
+          console.error('Error creating path:', error);
+        }
       }
+      
+      points = [];
     };
     
     // Attach touch listeners to upper canvas
