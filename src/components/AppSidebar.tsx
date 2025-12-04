@@ -489,15 +489,12 @@ export function AppSidebar() {
                           <SidebarMenuButton
                             onClick={() => navigate(item.subModule!.url)}
                             isActive={isActive(item.subModule!.url)}
-                            tooltip={item.subModule!.title}
-                            className="group sidebar-item-hover relative py-1"
+                            tooltip={`${item.subModule!.title} - ${item.subModule!.description}`}
+                            className="group sidebar-item-hover relative py-2"
                           >
                             {isActive(item.subModule!.url) && <span className="sidebar-active-indicator" />}
-                            <item.subModule.icon className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:rotate-180 text-primary/70 group-hover:text-primary" />
-                            <div className="flex flex-col items-start gap-0.5">
-                              <span className="text-sm font-medium transition-colors duration-200">{item.subModule!.title}</span>
-                              <span className="text-xs text-muted-foreground/80 leading-normal">{item.subModule!.description}</span>
-                            </div>
+                            <item.subModule.icon className="h-4 w-4 flex-shrink-0 sidebar-icon transition-all duration-200 group-hover:scale-110 text-primary/70 group-hover:text-primary" />
+                            <span className="text-sm font-medium truncate transition-colors duration-200">{item.subModule!.title}</span>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
                       </CollapsibleContent>
