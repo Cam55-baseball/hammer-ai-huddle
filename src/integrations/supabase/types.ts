@@ -547,6 +547,51 @@ export type Database = {
           },
         ]
       }
+      sub_module_progress: {
+        Row: {
+          created_at: string | null
+          current_week: number | null
+          equipment_checklist: Json | null
+          id: string
+          last_activity: string | null
+          module: string
+          sport: string
+          started_at: string | null
+          sub_module: string
+          updated_at: string | null
+          user_id: string
+          week_progress: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_week?: number | null
+          equipment_checklist?: Json | null
+          id?: string
+          last_activity?: string | null
+          module: string
+          sport: string
+          started_at?: string | null
+          sub_module: string
+          updated_at?: string | null
+          user_id: string
+          week_progress?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          current_week?: number | null
+          equipment_checklist?: Json | null
+          id?: string
+          last_activity?: string | null
+          module?: string
+          sport?: string
+          started_at?: string | null
+          sub_module?: string
+          updated_at?: string | null
+          user_id?: string
+          week_progress?: Json | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           coupon_code: string | null

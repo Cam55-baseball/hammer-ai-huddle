@@ -34,6 +34,8 @@ const Subscribers = lazy(() => import("./pages/Subscribers"));
 const PlayersClub = lazy(() => import("./pages/PlayersClub"));
 const Nutrition = lazy(() => import("./pages/Nutrition"));
 const BounceBackBay = lazy(() => import("./pages/BounceBackBay"));
+const ProductionLab = lazy(() => import("./pages/ProductionLab"));
+const ProductionStudio = lazy(() => import("./pages/ProductionStudio"));
 const ComingSoon = lazy(() => import("./pages/ComingSoon"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -74,6 +76,8 @@ const App = () => (
               <Route path="/players-club" element={<PlayersClub />} />
               <Route path="/nutrition" element={<Nutrition />} />
               <Route path="/bounce-back-bay" element={<BounceBackBay />} />
+              <Route path="/production-lab" element={<ProductionLab />} />
+              <Route path="/production-studio" element={<ProductionStudio />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
