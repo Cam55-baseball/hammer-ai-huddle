@@ -2178,9 +2178,13 @@
           "name": "Elite Recovery Badge",
           "description": "Completed entire Bounce Back Bay library"
         },
+        "diagnostic_detective": {
+          "name": "Diagnostic Detective",
+          "description": "Passed the diagnostic flow chart quiz"
+        },
         "red_flag_ready": {
           "name": "Red Flag Ready",
-          "description": "Completed all safety education"
+          "description": "Passed the red flags quiz"
         },
         "pain_scale_pro": {
           "name": "Pain Scale Pro",

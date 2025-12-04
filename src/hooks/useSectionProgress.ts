@@ -13,6 +13,7 @@ interface SectionProgressState {
 
 // Badge unlock criteria - now based on quiz completion
 const QUIZ_BADGES: Record<string, string> = {
+  'diagnostic': 'diagnostic_detective',
   'red-flags': 'red_flag_ready',
   'pain-scale': 'pain_scale_pro',
   'recovery': 'recovery_intelligence',

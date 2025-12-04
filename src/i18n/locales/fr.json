@@ -2075,9 +2075,13 @@
           "name": "Badge Récupération Elite",
           "description": "A complété toute la bibliothèque Bounce Back Bay"
         },
+        "diagnostic_detective": {
+          "name": "Détective Diagnostic",
+          "description": "A réussi le quiz sur le diagramme de flux diagnostic"
+        },
         "red_flag_ready": {
           "name": "Prêt pour les Signaux d'Alerte",
-          "description": "A complété toute l'éducation sur la sécurité"
+          "description": "A réussi le quiz sur les signaux d'alerte"
         },
         "pain_scale_pro": {
           "name": "Pro de l'Échelle de Douleur",

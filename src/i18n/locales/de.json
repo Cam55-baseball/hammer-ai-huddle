@@ -2075,9 +2075,13 @@
           "name": "Elite-Erholungs-Abzeichen",
           "description": "Hat die gesamte Bounce Back Bay Bibliothek abgeschlossen"
         },
+        "diagnostic_detective": {
+          "name": "Diagnose-Detektiv",
+          "description": "Hat das Diagnose-Flussdiagramm-Quiz bestanden"
+        },
         "red_flag_ready": {
           "name": "Bereit für Warnsignale",
-          "description": "Hat alle Sicherheitsbildung abgeschlossen"
+          "description": "Hat das Warnsignale-Quiz bestanden"
         },
         "pain_scale_pro": {
           "name": "Schmerzskala-Profi",

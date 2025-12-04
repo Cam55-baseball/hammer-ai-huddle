@@ -1617,7 +1617,8 @@
         "silver_anatomy": { "name": "실버 해부학 배지", "description": "7개 부상 학습" },
         "gold_anatomy": { "name": "골드 해부학 배지", "description": "12개 이상 부상 학습" },
         "elite_recovery": { "name": "엘리트 회복 배지", "description": "전체 Bounce Back Bay 라이브러리 완료" },
-        "red_flag_ready": { "name": "경고 신호 준비 완료", "description": "모든 안전 교육 완료" },
+        "diagnostic_detective": { "name": "진단 탐정", "description": "진단 흐름도 퀴즈 통과" },
+        "red_flag_ready": { "name": "경고 신호 준비 완료", "description": "경고 신호 퀴즈 통과" },
         "pain_scale_pro": { "name": "통증 척도 프로", "description": "통증 인식 섹션 완료" },
         "recovery_intelligence": { "name": "회복 인텔리전스 배지", "description": "모든 모듈 퀴즈 통과" },
         "human_body_mastery": { "name": "인체 마스터리", "description": "모든 부상을 100% 정확도로 완료" }
