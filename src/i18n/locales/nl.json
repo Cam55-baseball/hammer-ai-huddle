@@ -1730,5 +1730,47 @@
     "injuryPrevention": { "intro": "Preventie-educatie.", "categories": { "warmup": { "title": "Warming-up", "subtitle": "Voorbereiding", "tip1": "Dynamisch rekken", "tip2": "Sportspecifiek", "tip3": "Geleidelijke intensiteit" }, "strength": { "title": "Krachttraining", "subtitle": "Veerkracht", "tip1": "Progressieve overbelasting", "tip2": "Gebalanceerd", "tip3": "Core stabiliteit" }, "mobility": { "title": "Mobiliteit", "subtitle": "Bewegingskwaliteit", "tip1": "Gewrichtsmobiliteit", "tip2": "Gerichte stretching", "tip3": "Bewegingsvariatie" }, "sportSpecific": { "title": "Sportspecifiek", "subtitle": "Honkbal/Softbal", "tip1": "Pitchtelling", "tip2": "Goede mechanica", "tip3": "Positiespecifiek" } }, "patterns": { "title": "Preventiepatronen", "subtitle": "Goede gewoonten", "pattern1": "Voldoende slaap", "pattern2": "Hydratatie", "pattern3": "Geleidelijke progressie", "pattern4": "Luister naar lichaam" } },
     "recoveryMethods": { "intro": "Herstelmethoden.", "whenToUse": "Wanneer", "ice": { "title": "IJs", "subtitle": "Acute situaties", "use1": "Acute blessures", "use2": "Ontstekingsbeheer", "use3": "Zwellingreductie", "timing": "15-20 min" }, "heat": { "title": "Warmte", "subtitle": "Chronisch", "use1": "Spierspanning", "use2": "Bloedstroom", "use3": "Ontspanning", "timing": "15-20 min" }, "principles": { "title": "Principes", "subtitle": "Basis", "rest": { "title": "Rust & Slaap", "description": "7-9 uur" }, "hydration": { "title": "Hydratatie", "description": "Voldoende vocht" } } },
     "equipmentLibrary": { "intro": "Herstel apparatuur.", "searchPlaceholder": "Zoeken...", "allCategories": "Alle", "whatItDoes": "Functie:", "whenUsed": "Gebruik:", "noResults": "Niet gevonden", "categories": { "tape": "Tape", "sleeves": "Mouwen", "bands": "Banden", "softTissue": "Zacht Weefsel", "supports": "Ondersteuning" }, "items": { "kinesioTape": { "name": "Kinesio Tape", "description": "Elastische tape", "usage": "Spierondersteuning" }, "athleticTape": { "name": "Sporttape", "description": "Niet-elastisch", "usage": "Gewrichtsondersteuning" }, "compressionSleeve": { "name": "Compressiemouw", "description": "Compressie", "usage": "Zwellingreductie" }, "kneeSleeve": { "name": "Kniemouw", "description": "Knieondersteuning", "usage": "Warmte en compressie" }, "resistanceBands": { "name": "Weerstandsbanden", "description": "Elastische banden", "usage": "Revalidatie" }, "therapyBands": { "name": "Therapiebanden", "description": "Platte banden", "usage": "Versterking" }, "foamRoller": { "name": "Foam Roller", "description": "Zelfmassage", "usage": "Spiervoorbereiding" }, "massageBall": { "name": "Massagebal", "description": "Gericht", "usage": "Triggerpoints" }, "ankleBrace": { "name": "Enkelbrace", "description": "Enkelondersteuning", "usage": "Preventie" }, "wristSupport": { "name": "Polsondersteuning", "description": "Polssteun", "usage": "Ondersteuning" } } }
+  },
+  "workoutModules": {
+    "productionLab": {
+      "title": "Productie Lab",
+      "subtitle": "6-Weken Slagvaardigheid Ontwikkelingsprogramma"
+    },
+    "productionStudio": {
+      "title": "Productie Studio",
+      "subtitle": "6-Weken Werpen Ontwikkelingsprogramma"
+    },
+    "yourProgress": "Jouw Voortgang",
+    "currentWeek": "Huidige Week",
+    "thisWeek": "Deze Week",
+    "overallProgress": "Totale Voortgang",
+    "lastActivity": "Laatste Activiteit",
+    "notStarted": "Nog niet gestart",
+    "week": "Week",
+    "current": "Huidig",
+    "progress": "Voortgang",
+    "completeWeekToUnlock": "Voltooi {{percent}}% van Week {{week}} om te ontgrendelen",
+    "weekFocus": "Focus",
+    "sets": "sets",
+    "reps": "herhalingen",
+    "equipmentChecklist": "Uitrustingslijst",
+    "weekLocked": "Week Vergrendeld",
+    "weekLockedDescription": "Je moet meer van de vorige week voltooien om Week {{week}} te ontgrendelen.",
+    "needToComplete": "Nodig {{percent}}% ({{remaining}}% meer)",
+    "keepGoingMessage": "Ga zo door! Je maakt goede vorderingen.",
+    "backToWorkout": "Terug naar Training",
+    "sixWeekPlan": "6-Weken Trainingsplan",
+    "accessRequired": "Toegang Vereist",
+    "subscribeToHitting": "Abonneer op de Slaganalyse module om toegang te krijgen tot Productie Lab.",
+    "subscribeToPitching": "Abonneer op de Werpanalyse module om toegang te krijgen tot Productie Studio.",
+    "viewPlans": "Bekijk Plannen",
+    "exercises": "Oefeningen",
+    "markComplete": "Dag als Voltooid Markeren",
+    "markIncomplete": "Dag als Onvoltooid Markeren",
+    "completed": "Voltooid",
+    "incomplete": "Onvoltooid",
+    "exercisesCompleted": "{{count}} van {{total}} oefeningen",
+    "allExercisesComplete": "Alle oefeningen voltooid!",
+    "tapToComplete": "Tik om te voltooien"
   }
 }

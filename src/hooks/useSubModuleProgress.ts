@@ -50,10 +50,10 @@ export function useSubModuleProgress(
         .maybeSingle();
 
       if (error) throw error;
-      // Handle exercise_progress potentially being missing from database
+      // Handle exercise_progress - cast to unknown first since TypeScript types may not be updated yet
       const progressData = data ? {
         ...data,
-        exercise_progress: data.exercise_progress || {},
+        exercise_progress: (data as unknown as { exercise_progress?: ExerciseProgress }).exercise_progress || {},
       } as SubModuleProgress : null;
       setProgress(progressData);
     } catch (error) {
@@ -90,7 +90,7 @@ export function useSubModuleProgress(
       if (error) throw error;
       const progressData = {
         ...data,
-        exercise_progress: data.exercise_progress || {},
+        exercise_progress: (data as unknown as { exercise_progress?: ExerciseProgress }).exercise_progress || {},
       } as SubModuleProgress;
       setProgress(progressData);
       return data;

@@ -1717,5 +1717,47 @@
         }
       }
     }
+  },
+  "workoutModules": {
+    "productionLab": {
+      "title": "프로덕션 랩",
+      "subtitle": "6주 타격 개발 프로그램"
+    },
+    "productionStudio": {
+      "title": "프로덕션 스튜디오",
+      "subtitle": "6주 투구 개발 프로그램"
+    },
+    "yourProgress": "내 진행상황",
+    "currentWeek": "현재 주",
+    "thisWeek": "이번 주",
+    "overallProgress": "전체 진행",
+    "lastActivity": "마지막 활동",
+    "notStarted": "아직 시작 안 함",
+    "week": "주",
+    "current": "현재",
+    "progress": "진행",
+    "completeWeekToUnlock": "{{week}}주차 {{percent}}% 완료하여 잠금 해제",
+    "weekFocus": "포커스",
+    "sets": "세트",
+    "reps": "회",
+    "equipmentChecklist": "장비 체크리스트",
+    "weekLocked": "주 잠김",
+    "weekLockedDescription": "{{week}}주차를 잠금 해제하려면 이전 주를 더 완료해야 합니다.",
+    "needToComplete": "{{percent}}% 필요 ({{remaining}}% 더 필요)",
+    "keepGoingMessage": "계속 하세요! 잘 진행하고 있습니다.",
+    "backToWorkout": "운동으로 돌아가기",
+    "sixWeekPlan": "6주 훈련 계획",
+    "accessRequired": "접근 권한 필요",
+    "subscribeToHitting": "프로덕션 랩에 접근하려면 타격 분석 모듈을 구독하세요.",
+    "subscribeToPitching": "프로덕션 스튜디오에 접근하려면 투구 분석 모듈을 구독하세요.",
+    "viewPlans": "플랜 보기",
+    "exercises": "운동",
+    "markComplete": "일 완료로 표시",
+    "markIncomplete": "일 미완료로 표시",
+    "completed": "완료",
+    "incomplete": "미완료",
+    "exercisesCompleted": "{{total}}개 중 {{count}}개 운동",
+    "allExercisesComplete": "모든 운동 완료!",
+    "tapToComplete": "탭하여 완료"
   }
 }

@@ -1701,5 +1701,47 @@
     "injuryPrevention": { "intro": "预防教育降低风险。", "categories": { "warmup": { "title": "热身", "subtitle": "准备身体", "tip1": "动态拉伸", "tip2": "专项准备", "tip3": "渐进强度" }, "strength": { "title": "力量训练", "subtitle": "建立弹性", "tip1": "渐进超负荷", "tip2": "平衡训练", "tip3": "核心稳定" }, "mobility": { "title": "活动度", "subtitle": "运动质量", "tip1": "关节活动", "tip2": "针对性拉伸", "tip3": "变换运动" }, "sportSpecific": { "title": "专项预防", "subtitle": "棒球垒球策略", "tip1": "投球计数", "tip2": "正确机制", "tip3": "位置调节" } }, "patterns": { "title": "预防模式", "subtitle": "降低风险的习惯", "pattern1": "充足睡眠", "pattern2": "适当水分", "pattern3": "渐进训练", "pattern4": "倾听身体" } },
     "recoveryMethods": { "intro": "了解恢复方法。", "whenToUse": "何时使用", "ice": { "title": "冰敷", "subtitle": "急性情况", "use1": "急性损伤", "use2": "炎症管理", "use3": "减轻肿胀", "timing": "15-20分钟" }, "heat": { "title": "热敷", "subtitle": "慢性状况", "use1": "肌肉紧张", "use2": "促进血流", "use3": "放松", "timing": "15-20分钟" }, "principles": { "title": "恢复原则", "subtitle": "基础概念", "rest": { "title": "休息睡眠", "description": "7-9小时睡眠" }, "hydration": { "title": "水分", "description": "充足液体" } } },
     "equipmentLibrary": { "intro": "了解恢复设备。", "searchPlaceholder": "搜索...", "allCategories": "所有类别", "whatItDoes": "功能：", "whenUsed": "使用时机：", "noResults": "未找到", "categories": { "tape": "胶带", "sleeves": "护套", "bands": "弹力带", "softTissue": "软组织", "supports": "支撑" }, "items": { "kinesioTape": { "name": "肌内效贴", "description": "弹性治疗胶带", "usage": "肌肉支撑" }, "athleticTape": { "name": "运动胶带", "description": "非弹性胶带", "usage": "关节支撑" }, "compressionSleeve": { "name": "加压护套", "description": "弹性护套", "usage": "减轻肿胀" }, "kneeSleeve": { "name": "护膝", "description": "膝盖护套", "usage": "提供支撑" }, "resistanceBands": { "name": "阻力带", "description": "弹性带", "usage": "康复练习" }, "therapyBands": { "name": "治疗带", "description": "扁平弹性带", "usage": "温和强化" }, "foamRoller": { "name": "泡沫轴", "description": "自我按摩", "usage": "肌肉准备" }, "massageBall": { "name": "按摩球", "description": "针对性按摩", "usage": "触发点" }, "ankleBrace": { "name": "护踝", "description": "踝关节支撑", "usage": "伤病预防" }, "wristSupport": { "name": "护腕", "description": "腕关节支撑", "usage": "活动支撑" } } }
+  },
+  "workoutModules": {
+    "productionLab": {
+      "title": "生产实验室",
+      "subtitle": "6周打击发展计划"
+    },
+    "productionStudio": {
+      "title": "生产工作室",
+      "subtitle": "6周投球发展计划"
+    },
+    "yourProgress": "您的进度",
+    "currentWeek": "当前周",
+    "thisWeek": "本周",
+    "overallProgress": "总体进度",
+    "lastActivity": "最后活动",
+    "notStarted": "尚未开始",
+    "week": "周",
+    "current": "当前",
+    "progress": "进度",
+    "completeWeekToUnlock": "完成第{{week}}周的{{percent}}%以解锁",
+    "weekFocus": "重点",
+    "sets": "组",
+    "reps": "次",
+    "equipmentChecklist": "设备清单",
+    "weekLocked": "周已锁定",
+    "weekLockedDescription": "您需要完成更多上周内容才能解锁第{{week}}周。",
+    "needToComplete": "需要{{percent}}%（还需{{remaining}}%）",
+    "keepGoingMessage": "继续加油！您进步很大。",
+    "backToWorkout": "返回训练",
+    "sixWeekPlan": "6周训练计划",
+    "accessRequired": "需要访问权限",
+    "subscribeToHitting": "订阅打击分析模块以访问生产实验室。",
+    "subscribeToPitching": "订阅投球分析模块以访问生产工作室。",
+    "viewPlans": "查看计划",
+    "exercises": "练习",
+    "markComplete": "标记日完成",
+    "markIncomplete": "标记日未完成",
+    "completed": "已完成",
+    "incomplete": "未完成",
+    "exercisesCompleted": "{{total}}个练习中的{{count}}个",
+    "allExercisesComplete": "所有练习已完成！",
+    "tapToComplete": "点击标记完成"
   }
 }

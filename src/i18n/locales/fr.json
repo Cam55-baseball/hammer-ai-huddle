@@ -2225,5 +2225,47 @@
         }
       }
     }
+  },
+  "workoutModules": {
+    "productionLab": {
+      "title": "Laboratoire de Production",
+      "subtitle": "Programme de Développement de la Frappe de 6 Semaines"
+    },
+    "productionStudio": {
+      "title": "Studio de Production",
+      "subtitle": "Programme de Développement du Lancer de 6 Semaines"
+    },
+    "yourProgress": "Votre Progression",
+    "currentWeek": "Semaine Actuelle",
+    "thisWeek": "Cette Semaine",
+    "overallProgress": "Progression Globale",
+    "lastActivity": "Dernière Activité",
+    "notStarted": "Pas encore commencé",
+    "week": "Semaine",
+    "current": "Actuelle",
+    "progress": "Progression",
+    "completeWeekToUnlock": "Complétez {{percent}}% de la Semaine {{week}} pour débloquer",
+    "weekFocus": "Focus",
+    "sets": "séries",
+    "reps": "répétitions",
+    "equipmentChecklist": "Liste d'Équipement",
+    "weekLocked": "Semaine Verrouillée",
+    "weekLockedDescription": "Vous devez compléter plus de la semaine précédente pour débloquer la Semaine {{week}}.",
+    "needToComplete": "Besoin de {{percent}}% ({{remaining}}% de plus)",
+    "keepGoingMessage": "Continuez ! Vous progressez très bien.",
+    "backToWorkout": "Retour à l'Entraînement",
+    "sixWeekPlan": "Plan d'Entraînement de 6 Semaines",
+    "accessRequired": "Accès Requis",
+    "subscribeToHitting": "Abonnez-vous au module d'Analyse de Frappe pour accéder au Laboratoire de Production.",
+    "subscribeToPitching": "Abonnez-vous au module d'Analyse de Lancer pour accéder au Studio de Production.",
+    "viewPlans": "Voir les Plans",
+    "exercises": "Exercices",
+    "markComplete": "Marquer le Jour Complet",
+    "markIncomplete": "Marquer le Jour Incomplet",
+    "completed": "Complété",
+    "incomplete": "Incomplet",
+    "exercisesCompleted": "{{count}} sur {{total}} exercices",
+    "allExercisesComplete": "Tous les exercices terminés !",
+    "tapToComplete": "Appuyez pour marquer complet"
   }
 }
