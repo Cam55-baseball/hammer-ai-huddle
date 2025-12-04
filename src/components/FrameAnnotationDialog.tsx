@@ -296,59 +296,47 @@ export const FrameAnnotationDialog = ({
   }, [activeTool, activeColor, fabricCanvas]);
 
   // Mobile touch drawing - creates Path objects directly without using Fabric.js brush methods
+  // COMPLETELY bypasses Fabric.js event handling to prevent iOS Safari "NotFoundError"
   useEffect(() => {
-    // Entry-level debug logging - runs BEFORE any conditions
-    console.log('[Draw] Mobile touch effect running', {
-      hasFabricCanvas: !!fabricCanvas,
-      activeTool,
-      isMobileDevice: isMobile()
-    });
-    
     if (!fabricCanvas || activeTool !== 'draw' || !isMobile()) return;
     
     const upperCanvas = fabricCanvas.upperCanvasEl;
     const wrapperEl = fabricCanvas.wrapperEl;
     const container = containerRef.current;
     
-    if (!upperCanvas) {
-      console.log('[Draw] No upper canvas found');
-      return;
-    }
+    if (!upperCanvas) return;
     
-    console.log('[Draw] Setting up mobile touch drawing', {
-      upperCanvas: !!upperCanvas,
-      wrapperEl: !!wrapperEl,
-      container: !!container
-    });
+    console.log('[Draw] Setting up mobile touch drawing');
     
-    // IMMEDIATELY apply touch styles (not in rAF) to prevent default behaviors
-    upperCanvas.style.touchAction = 'none';
-    (upperCanvas.style as any).webkitTouchCallout = 'none';
-    (upperCanvas.style as any).webkitUserSelect = 'none';
+    // CRITICAL: Store and disable ALL Fabric.js event listeners to prevent interference
+    const storedFabricListeners = (fabricCanvas as any).__eventListeners;
+    (fabricCanvas as any).__eventListeners = {};
     
-    if (wrapperEl) {
-      wrapperEl.style.touchAction = 'none';
-      (wrapperEl.style as any).webkitTouchCallout = 'none';
-      (wrapperEl.style as any).webkitUserSelect = 'none';
-    }
+    // Disable Fabric.js's internal event processing completely
+    fabricCanvas.skipTargetFind = true;
+    fabricCanvas.selection = false;
+    fabricCanvas.isDrawingMode = false; // We handle drawing ourselves
     
-    if (container) {
-      container.style.touchAction = 'none';
-      (container.style as any).webkitTouchCallout = 'none';
-      (container.style as any).webkitUserSelect = 'none';
-    }
+    // Apply touch styles immediately
+    const applyTouchStyles = (el: HTMLElement | null) => {
+      if (!el) return;
+      el.style.touchAction = 'none';
+      (el.style as any).webkitTouchCallout = 'none';
+      (el.style as any).webkitUserSelect = 'none';
+    };
+    
+    applyTouchStyles(upperCanvas);
+    applyTouchStyles(wrapperEl);
+    applyTouchStyles(container);
     
     let isDrawing = false;
-    // Store both logical coords (for Path) and preview coords (for contextTop)
     let logicalPoints: { x: number; y: number }[] = [];
     let previewPoints: { x: number; y: number }[] = [];
     
-    // Get retina scaling factor (accounts for high-DPI displays)
     const getRetinaScaling = () => {
       return (fabricCanvas as any).getRetinaScaling?.() || window.devicePixelRatio || 1;
     };
     
-    // Get logical canvas coordinates from touch (for fabric.Path creation)
     const getLogicalCoords = (touch: Touch) => {
       const rect = upperCanvas.getBoundingClientRect();
       const scaleX = fabricCanvas.width! / rect.width;
@@ -359,7 +347,6 @@ export const FrameAnnotationDialog = ({
       };
     };
     
-    // Get physical/preview coordinates from touch (for contextTop drawing on retina)
     const getPreviewCoords = (touch: Touch) => {
       const logical = getLogicalCoords(touch);
       const retinaScaling = getRetinaScaling();
@@ -369,12 +356,10 @@ export const FrameAnnotationDialog = ({
       };
     };
     
-    // Convert points array to SVG path string with smooth curves
     const pointsToPathData = (pts: { x: number; y: number }[]): string => {
       if (pts.length < 2) return '';
       let path = `M ${pts[0].x} ${pts[0].y}`;
       for (let i = 1; i < pts.length; i++) {
-        // Use quadratic curves for smooth lines
         if (i < pts.length - 1) {
           const midX = (pts[i].x + pts[i + 1].x) / 2;
           const midY = (pts[i].y + pts[i + 1].y) / 2;
@@ -386,7 +371,6 @@ export const FrameAnnotationDialog = ({
       return path;
     };
     
-    // Draw live preview on contextTop (uses retina-scaled coordinates)
     const drawPreview = () => {
       const ctx = fabricCanvas.contextTop;
       if (!ctx || previewPoints.length < 2) return;
@@ -395,7 +379,7 @@ export const FrameAnnotationDialog = ({
       
       ctx.save();
       ctx.strokeStyle = activeColor;
-      ctx.lineWidth = 3 * retinaScaling; // Scale line width for retina
+      ctx.lineWidth = 3 * retinaScaling;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();
@@ -407,36 +391,48 @@ export const FrameAnnotationDialog = ({
       ctx.restore();
     };
     
-    const handleTouchStart = (e: TouchEvent) => {
-      console.log('[Draw] TOUCH DETECTED on', e.target);
-      
-      // Visual feedback - flash the container border green
-      if (container) {
-        container.style.borderColor = 'lime';
-        container.style.borderWidth = '3px';
-        setTimeout(() => {
-          if (container) {
-            container.style.borderColor = '';
-            container.style.borderWidth = '';
-          }
-        }, 500);
+    // Create path with retry logic for iOS Safari errors
+    const createPathWithRetry = (pathData: string, retryCount = 0) => {
+      try {
+        const path = new fabric.Path(pathData, {
+          stroke: activeColor,
+          strokeWidth: 3,
+          fill: '',
+          strokeLineCap: 'round',
+          strokeLineJoin: 'round',
+          selectable: true,
+          evented: true
+        });
+        
+        fabricCanvas.add(path);
+        fabricCanvas.renderAll();
+        saveHistory(fabricCanvas);
+        console.log('[Draw] Path created successfully');
+      } catch (error: any) {
+        console.error('[Draw] Error creating path:', error);
+        
+        // Handle iOS Safari "NotFoundError" with retry
+        if ((error.name === 'NotFoundError' || error.message?.includes('not be found')) && retryCount < 2) {
+          console.log('[Draw] Retrying path creation...');
+          requestAnimationFrame(() => createPathWithRetry(pathData, retryCount + 1));
+        } else if (retryCount >= 2) {
+          toast.error(t('annotation.drawingFailed') || 'Drawing failed. Please try again.');
+        }
       }
+    };
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
       
-      if (e.touches.length !== 1) return; // Only single touch for drawing
+      // Prevent ALL default behaviors and stop propagation
       e.preventDefault();
-      e.stopImmediatePropagation(); // Stop ALL handlers including Fabric.js internals
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       
       isDrawing = true;
       const touch = e.touches[0];
       logicalPoints = [getLogicalCoords(touch)];
       previewPoints = [getPreviewCoords(touch)];
-      
-      console.log('[Draw] Touch start', {
-        retinaScaling: getRetinaScaling(),
-        hasContextTop: !!fabricCanvas.contextTop,
-        logical: logicalPoints[0],
-        preview: previewPoints[0]
-      });
       
       // Haptic feedback
       if (navigator.vibrate) navigator.vibrate(5);
@@ -444,100 +440,80 @@ export const FrameAnnotationDialog = ({
     
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDrawing || e.touches.length !== 1) return;
+      
       e.preventDefault();
-      e.stopImmediatePropagation(); // Stop ALL handlers including Fabric.js internals
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       
       const touch = e.touches[0];
       logicalPoints.push(getLogicalCoords(touch));
       previewPoints.push(getPreviewCoords(touch));
       
-      // Clear and redraw preview
       fabricCanvas.clearContext(fabricCanvas.contextTop);
       drawPreview();
     };
     
     const handleTouchEnd = (e: TouchEvent) => {
       if (!isDrawing) return;
+      
       e.preventDefault();
-      e.stopImmediatePropagation(); // Stop ALL handlers including Fabric.js internals
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       
       isDrawing = false;
-      
-      // Clear the preview
       fabricCanvas.clearContext(fabricCanvas.contextTop);
       
-      // Create the path using LOGICAL coordinates (not retina-scaled)
       if (logicalPoints.length >= 2) {
-        try {
-          const pathData = pointsToPathData(logicalPoints);
-          const path = new fabric.Path(pathData, {
-            stroke: activeColor,
-            strokeWidth: 3,
-            fill: '',
-            strokeLineCap: 'round',
-            strokeLineJoin: 'round',
-            selectable: true,
-            evented: true
-          });
-          
-          fabricCanvas.add(path);
-          fabricCanvas.renderAll();
-          saveHistory(fabricCanvas);
-          
-          console.log('[Draw] Path created with', logicalPoints.length, 'points');
-        } catch (error) {
-          console.error('[Draw] Error creating path:', error);
-        }
+        const pathData = pointsToPathData(logicalPoints);
+        // Use requestAnimationFrame to defer path creation (helps iOS Safari)
+        requestAnimationFrame(() => createPathWithRetry(pathData));
       }
       
       logicalPoints = [];
       previewPoints = [];
     };
     
-    // iOS-specific gesture prevention
     const preventGesture = (e: Event) => {
       e.preventDefault();
+      e.stopPropagation();
     };
     
-    // Attach touch listeners to upper canvas with CAPTURE phase to run before Fabric.js handlers
-    upperCanvas.addEventListener('touchstart', handleTouchStart, { passive: false, capture: true });
-    upperCanvas.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
-    upperCanvas.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
-    upperCanvas.addEventListener('touchcancel', handleTouchEnd, { passive: false, capture: true });
+    // Attach to both upper canvas and container with capture phase
+    const elements = [upperCanvas, container].filter(Boolean) as HTMLElement[];
     
-    // iOS Safari gesture prevention
+    elements.forEach(el => {
+      el.addEventListener('touchstart', handleTouchStart, { passive: false, capture: true });
+      el.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+      el.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
+      el.addEventListener('touchcancel', handleTouchEnd, { passive: false, capture: true });
+    });
+    
+    // iOS gesture prevention
     upperCanvas.addEventListener('gesturestart', preventGesture, { passive: false });
     upperCanvas.addEventListener('gesturechange', preventGesture, { passive: false });
     
-    // ALSO attach to container as fallback
-    if (container) {
-      container.addEventListener('touchstart', handleTouchStart, { passive: false, capture: true });
-      container.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
-      container.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
-      container.addEventListener('touchcancel', handleTouchEnd, { passive: false, capture: true });
-    }
-    
     return () => {
-      upperCanvas.removeEventListener('touchstart', handleTouchStart, { capture: true });
-      upperCanvas.removeEventListener('touchmove', handleTouchMove, { capture: true });
-      upperCanvas.removeEventListener('touchend', handleTouchEnd, { capture: true });
-      upperCanvas.removeEventListener('touchcancel', handleTouchEnd, { capture: true });
+      // CRITICAL: Restore Fabric.js event listeners
+      (fabricCanvas as any).__eventListeners = storedFabricListeners;
+      fabricCanvas.skipTargetFind = false;
+      fabricCanvas.selection = true;
+      
+      elements.forEach(el => {
+        el.removeEventListener('touchstart', handleTouchStart, { capture: true });
+        el.removeEventListener('touchmove', handleTouchMove, { capture: true });
+        el.removeEventListener('touchend', handleTouchEnd, { capture: true });
+        el.removeEventListener('touchcancel', handleTouchEnd, { capture: true });
+      });
+      
       upperCanvas.removeEventListener('gesturestart', preventGesture);
       upperCanvas.removeEventListener('gesturechange', preventGesture);
       
-      if (container) {
-        container.removeEventListener('touchstart', handleTouchStart, { capture: true });
-        container.removeEventListener('touchmove', handleTouchMove, { capture: true });
-        container.removeEventListener('touchend', handleTouchEnd, { capture: true });
-        container.removeEventListener('touchcancel', handleTouchEnd, { capture: true });
-      }
-      
       // Reset styles
-      upperCanvas.style.touchAction = '';
-      if (wrapperEl) wrapperEl.style.touchAction = '';
-      if (container) container.style.touchAction = '';
+      [upperCanvas, wrapperEl, container].forEach(el => {
+        if (el) el.style.touchAction = '';
+      });
     };
-  }, [fabricCanvas, activeTool, activeColor]);
+  }, [fabricCanvas, activeTool, activeColor, t]);
 
   // Eraser/Delete functionality
   const handleDeleteSelected = () => {
