@@ -488,7 +488,11 @@ export const FrameAnnotationDialog = ({
   };
 
   const handleToolClick = (tool: AnnotationTool) => {
-    setActiveTool(tool);
+    // Defer state change to let iOS Safari complete touch event processing
+    // This prevents "NotFoundError: The object can not be found here" on iOS
+    requestAnimationFrame(() => {
+      setActiveTool(tool);
+    });
 
     if (!fabricCanvas) return;
 
