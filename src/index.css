@@ -131,9 +131,19 @@ All colors MUST be HSL.
 
 /* Sidebar Animations */
 @layer components {
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
   .sidebar-item {
-    @apply opacity-0;
-    animation: slide-in-left 0.3s ease-out forwards;
+    animation: slide-in-left 0.3s ease-out both;
   }
 
   .sidebar-item-hover {
