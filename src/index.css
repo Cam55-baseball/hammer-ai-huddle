@@ -146,6 +146,45 @@ All colors MUST be HSL.
     animation: slide-in-left 0.3s ease-out both;
   }
 
+  /* Collapsible Sub-Module Animations */
+  @keyframes collapsible-expand {
+    from {
+      opacity: 0;
+      height: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      height: var(--radix-collapsible-content-height);
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes collapsible-collapse {
+    from {
+      opacity: 1;
+      height: var(--radix-collapsible-content-height);
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      height: 0;
+      transform: translateY(-8px);
+    }
+  }
+
+  .collapsible-content {
+    overflow: hidden;
+  }
+
+  .collapsible-content[data-state="open"] {
+    animation: collapsible-expand 0.3s ease-out;
+  }
+
+  .collapsible-content[data-state="closed"] {
+    animation: collapsible-collapse 0.3s ease-out;
+  }
+
   .sidebar-item-hover {
     @apply transition-all duration-200 ease-out;
   }
