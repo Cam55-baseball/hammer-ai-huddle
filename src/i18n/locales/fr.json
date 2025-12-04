@@ -1614,5 +1614,414 @@
       "description": "Une erreur s'est produite lors de l'initialisation du compte propriétaire.",
       "defaultMessage": "Échec de l'initialisation du compte propriétaire"
     }
+  },
+  "bounceBackBay": {
+    "title": "Baie de Récupération",
+    "subtitle": "Éducation sur les Blessures pour Athlètes",
+    "description": "Apprenez à reconnaître, comprendre et réagir aux blessures sportives courantes. Contenu éducatif pour vous aider à prendre des décisions éclairées sur votre santé.",
+    "badges": {
+      "educational": "Éducatif Uniquement",
+      "athleteFocused": "Axé sur l'Athlète",
+      "comprehensiveGuide": "Guide Complet"
+    },
+    "allAreas": "Toutes les Zones",
+    "commonSymptoms": "Symptômes Courants",
+    "typicalTimeline": "Délai Typique",
+    "sections": {
+      "diagnosticFlow": {
+        "title": "Organigramme Diagnostique",
+        "subtitle": "Un parcours guidé pour comprendre vos symptômes"
+      },
+      "painScale": {
+        "title": "Système d'Échelle de Douleur",
+        "subtitle": "Évaluez et comprenez vos niveaux de douleur"
+      },
+      "redFlags": {
+        "title": "Vérification Rapide des Signaux d'Alerte",
+        "subtitle": "Signes d'avertissement nécessitant attention"
+      },
+      "injuryHub": {
+        "title": "Centre d'Information sur les Blessures",
+        "subtitle": "Parcourez les blessures courantes du baseball et softball"
+      },
+      "returnToPlay": {
+        "title": "Phases de Retour au Jeu",
+        "subtitle": "Comprendre les étapes de récupération"
+      },
+      "injuryPrevention": {
+        "title": "Prévention des Blessures",
+        "subtitle": "Réduire les risques par l'éducation"
+      },
+      "recoveryMethods": {
+        "title": "Méthodes de Récupération",
+        "subtitle": "Glace, chaleur et principes de récupération"
+      },
+      "equipmentLibrary": {
+        "title": "Bibliothèque d'Équipement",
+        "subtitle": "Outils de récupération et quand les utiliser"
+      }
+    },
+    "hurtingVsInjured": {
+      "title": "Douleur vs. Blessure",
+      "subtitle": "Comprendre la différence entre courbatures normales et blessure potentielle",
+      "hurting": {
+        "title": "Courbatures Normales (\"Douloureux\")",
+        "description": "Ces sensations font généralement partie de l'entraînement sportif:",
+        "sign1": "Douleur musculaire qui s'améliore avec le mouvement",
+        "sign2": "Légère raideur qui diminue après l'échauffement",
+        "sign3": "Fatigue générale après un entraînement intense",
+        "sign4": "Inconfort qui disparaît en 24-72 heures"
+      },
+      "injured": {
+        "title": "Blessure Potentielle (\"Blessé\")",
+        "description": "Ces signes peuvent indiquer quelque chose de plus sérieux:",
+        "sign1": "Douleur vive et soudaine pendant l'activité",
+        "sign2": "Douleur qui s'aggrave avec le mouvement",
+        "sign3": "Gonflement, ecchymoses ou déformation visible",
+        "sign4": "Incapacité à supporter le poids ou utiliser la zone affectée",
+        "sign5": "Douleur persistant au-delà de 72 heures"
+      },
+      "note": {
+        "title": "Rappel",
+        "description": "Ceci est uniquement pour l'auto-réflexion, pas le diagnostic. En cas de doute, consultez toujours un professionnel de santé."
+      }
+    },
+    "diagnosticFlow": {
+      "intro": "Utilisez cet organigramme éducatif pour réfléchir à vos symptômes. Cela enseigne la reconnaissance, pas le diagnostic.",
+      "step": "Étape",
+      "steps": {
+        "symptoms": {
+          "title": "Identifiez Vos Symptômes",
+          "description": "Que ressentez-vous?",
+          "q1": "Où exactement est située l'inconfort?",
+          "q2": "Quel type de sensation est-ce (vive, sourde, lancinante)?",
+          "q3": "Cela affecte-t-il votre mouvement ou performance?"
+        },
+        "timing": {
+          "title": "Considérez le Timing",
+          "description": "Quand cela a-t-il commencé?",
+          "q1": "Cela a-t-il commencé soudainement ou progressivement?",
+          "q2": "Depuis combien de temps avez-vous ces symptômes?",
+          "q3": "Est-ce constant ou intermittent?"
+        },
+        "severity": {
+          "title": "Évaluez la Sévérité",
+          "description": "Quelle est l'importance des symptômes?",
+          "q1": "Pouvez-vous continuer les activités normales?",
+          "q2": "La zone est-elle enflée ou décolorée?",
+          "q3": "La douleur s'améliore-t-elle, s'aggrave-t-elle ou reste stable?"
+        },
+        "decision": {
+          "title": "Considérez Vos Options",
+          "description": "Basé sur votre réflexion, considérez ces voies:",
+          "outcome1": {
+            "condition": "Symptômes sévères, début soudain ou signaux d'alerte présents",
+            "action": "Cherchez une évaluation professionnelle rapidement"
+          },
+          "outcome2": {
+            "condition": "Symptômes modérés persistant au-delà de 48-72 heures",
+            "action": "Envisagez de planifier une consultation professionnelle"
+          },
+          "outcome3": {
+            "condition": "Symptômes légers s'améliorant avec le repos",
+            "action": "Continuez à surveiller, appliquez les principes RICE si approprié"
+          }
+        }
+      }
+    },
+    "painScale": {
+      "intro": "Utilisez cette échelle comme outil de conscience personnelle pour réfléchir à vos niveaux de douleur. Cela vous aide à communiquer avec les professionnels de santé.",
+      "noPain": "Pas de Douleur",
+      "worstPain": "Pire Douleur",
+      "recommendation": "Guide Général",
+      "levels": {
+        "minimal": {
+          "label": "Minimal",
+          "description": "Inconfort à peine perceptible qui n'affecte pas les activités quotidiennes.",
+          "recommendation": "Généralement sûr de continuer les activités normales avec conscience."
+        },
+        "mild": {
+          "label": "Léger",
+          "description": "Notable mais n'interfère pas significativement avec les activités.",
+          "recommendation": "Envisagez de modifier l'intensité. Surveillez les changements."
+        },
+        "moderate": {
+          "label": "Modéré",
+          "description": "Interfère avec la concentration et certaines activités.",
+          "recommendation": "Envisagez le repos et réduisez l'activité. L'évaluation peut être bénéfique."
+        },
+        "severe": {
+          "label": "Sévère",
+          "description": "Impacte significativement la capacité à effectuer des activités normales.",
+          "recommendation": "Repos recommandé. Évaluation professionnelle fortement conseillée."
+        },
+        "extreme": {
+          "label": "Extrême",
+          "description": "Douleur accablante qui empêche le fonctionnement normal.",
+          "recommendation": "Arrêtez toute activité. Cherchez une aide professionnelle immédiatement."
+        }
+      },
+      "ranges": {
+        "minimal": "Minimal",
+        "mild": "Léger",
+        "moderate": "Modéré",
+        "severe": "Sévère",
+        "extreme": "Extrême"
+      }
+    },
+    "redFlags": {
+      "intro": "Cochez tout symptôme que vous ressentez. Cela aide à identifier les signes d'avertissement qui peuvent nécessiter une attention professionnelle.",
+      "critical": "Critique",
+      "high": "Élevé",
+      "medium": "Moyen",
+      "items": {
+        "deformity": "Déformation visible ou forme inhabituelle",
+        "numbness": "Engourdissement, picotements ou perte de sensation",
+        "inability": "Incapacité totale à supporter le poids ou utiliser le membre",
+        "severeSwelling": "Gonflement sévère ou augmentant rapidement",
+        "popSound": "A entendu ou senti un \"pop\" pendant la blessure",
+        "lockedJoint": "L'articulation est bloquée ou ne bouge pas normalement",
+        "instability": "L'articulation semble instable ou cède",
+        "worsening": "Symptômes s'aggravant progressivement avec le temps",
+        "nightPain": "Douleur significative perturbant le sommeil",
+        "fever": "Fièvre ou signes d'infection (chaleur, rougeur)"
+      },
+      "seekProfessional": "Chercher une Aide Professionnelle",
+      "stopActivity": "Arrêter l'Activité",
+      "result": {
+        "critical": {
+          "title": "Attention Immédiate Recommandée",
+          "description": "Un ou plusieurs signaux d'avertissement critiques sont présents. L'évaluation professionnelle est fortement recommandée dès que possible."
+        },
+        "high": {
+          "title": "Évaluation Professionnelle Conseillée",
+          "description": "Signaux d'avertissement significatifs présents. Envisagez de chercher une évaluation professionnelle dans les 24-48 heures."
+        },
+        "moderate": {
+          "title": "Surveiller de Près",
+          "description": "Certains signaux d'avertissement présents. Surveillez vos symptômes et envisagez une consultation professionnelle s'ils s'aggravent."
+        },
+        "clear": {
+          "title": "Aucun Signal d'Alerte Détecté",
+          "description": "Aucun signal d'avertissement majeur actuellement sélectionné. Continuez à surveiller votre condition."
+        }
+      },
+      "disclaimer": {
+        "title": "Rappel Important",
+        "description": "Cette liste est uniquement éducative. Elle ne remplace pas l'évaluation médicale professionnelle. En cas de doute, consultez toujours un professionnel de santé."
+      }
+    },
+    "disclaimer": {
+      "title": "AVERTISSEMENT MÉDICAL IMPORTANT",
+      "subtitle": "Veuillez lire attentivement avant d'utiliser Baie de Récupération",
+      "points": {
+        "educational": {
+          "title": "À Fins Éducatives Uniquement",
+          "description": "Tout le contenu est uniquement pour information éducative générale."
+        },
+        "noDiagnosis": {
+          "title": "Pas un Conseil Médical",
+          "description": "Ceci ne diagnostique pas, ne traite pas et ne prescrit pas de réhabilitation."
+        },
+        "seekHelp": {
+          "title": "Consultez des Professionnels",
+          "description": "Consultez toujours des professionnels médicaux ou de physiothérapie agréés pour les blessures."
+        },
+        "emergency": {
+          "title": "Situations d'Urgence",
+          "description": "Les symptômes sévères ou s'aggravant nécessitent une évaluation professionnelle immédiate."
+        }
+      },
+      "fullText": {
+        "para1": "Baie de Récupération est conçue pour fournir des informations éducatives générales sur les blessures sportives courantes et les concepts de récupération.",
+        "para2": "Les informations fournies ici ne sont PAS destinées à remplacer les conseils médicaux professionnels, le diagnostic ou le traitement. Ne négligez jamais les conseils médicaux professionnels et ne tardez pas à les chercher en raison de quelque chose que vous avez lu dans ce module.",
+        "para3": "Toutes les techniques, exercices et concepts de récupération décrits sont uniquement à des fins informatives et ne doivent être effectués que sous la direction de professionnels de santé qualifiés. Les résultats individuels peuvent varier, et ce qui fonctionne pour une personne peut ne pas être approprié pour une autre.",
+        "warning": "⚠️ Si vous ressentez une douleur sévère, une blessure soudaine ou des symptômes préoccupants, ARRÊTEZ toute activité et cherchez une attention médicale professionnelle immédiate."
+      },
+      "bottomNote": "En utilisant Baie de Récupération, vous reconnaissez avoir lu et compris cet avertissement."
+    },
+    "returnToPlay": {
+      "intro": "Comprendre les phases typiques de récupération peut vous aider à établir des attentes réalistes. Travaillez toujours avec des professionnels de santé pour déterminer votre calendrier spécifique.",
+      "phase": "Phase",
+      "keyFocus": "Domaines Clés",
+      "phases": {
+        "protection": {
+          "title": "Protection et Réduction des Symptômes",
+          "description": "La phase initiale se concentre sur la protection de la zone blessée et la gestion des symptômes aigus.",
+          "focus1": "Reposer et protéger la zone blessée",
+          "focus2": "Réduire la douleur et le gonflement",
+          "focus3": "Prévenir d'autres blessures",
+          "focus4": "Commencer un mouvement doux si autorisé"
+        },
+        "restore": {
+          "title": "Restaurer le Mouvement et la Fonction",
+          "description": "Restaurer progressivement l'amplitude de mouvement et les mouvements fonctionnels de base.",
+          "focus1": "Augmenter l'amplitude de mouvement",
+          "focus2": "Restaurer les schémas de mouvement de base",
+          "focus3": "Commencer un renforcement léger",
+          "focus4": "Traiter les restrictions de mobilité"
+        },
+        "strengthen": {
+          "title": "Renforcement et Activité Contrôlée",
+          "description": "Développer la force et commencer les mouvements liés au sport dans des environnements contrôlés.",
+          "focus1": "Exercices de renforcement progressif",
+          "focus2": "Améliorer la stabilité et l'équilibre",
+          "focus3": "Schémas de mouvement spécifiques au sport",
+          "focus4": "Progression graduelle de la charge"
+        },
+        "return": {
+          "title": "Retour au Sport",
+          "description": "La phase finale implique un entraînement entièrement spécifique au sport et le retour à la compétition.",
+          "focus1": "Entraînement entièrement spécifique au sport",
+          "focus2": "Activités à vitesse de jeu",
+          "focus3": "Préparation à la compétition",
+          "focus4": "Programme de maintenance continue"
+        }
+      },
+      "progressionNote": {
+        "title": "La Progression est Individuelle",
+        "description": "Chaque récupération est différente. La progression doit être guidée par les symptômes et l'évaluation professionnelle, pas par des délais arbitraires."
+      }
+    },
+    "injuryPrevention": {
+      "intro": "L'éducation à la prévention peut aider à réduire le risque de blessure. Ces concepts doivent être appliqués sous guidance professionnelle dans le cadre d'un programme d'entraînement complet.",
+      "categories": {
+        "warmup": {
+          "title": "Concepts d'Échauffement",
+          "subtitle": "Préparer le corps à l'activité",
+          "tip1": "L'étirement dynamique avant l'activité augmente le flux sanguin",
+          "tip2": "La préparation de mouvements spécifiques au sport active les groupes musculaires pertinents",
+          "tip3": "La progression graduelle de l'intensité permet au corps de s'adapter"
+        },
+        "strength": {
+          "title": "Entraînement de Force",
+          "subtitle": "Développer des muscles et articulations résilients",
+          "tip1": "La surcharge progressive développe la tolérance tissulaire avec le temps",
+          "tip2": "L'entraînement équilibré traite les muscles agonistes et antagonistes",
+          "tip3": "La stabilité du tronc soutient des schémas de mouvement efficaces"
+        },
+        "mobility": {
+          "title": "Mobilité et Flexibilité",
+          "subtitle": "Maintenir une qualité de mouvement optimale",
+          "tip1": "Le travail de mobilité articulaire soutient des amplitudes de mouvement saines",
+          "tip2": "L'étirement ciblé traite les limitations individuelles",
+          "tip3": "La variété régulière de mouvement prévient la surcharge de schémas"
+        },
+        "sportSpecific": {
+          "title": "Prévention Spécifique au Sport",
+          "subtitle": "Stratégies axées sur le baseball et le softball",
+          "tip1": "La conscience du comptage de lancers aide à gérer la charge de travail du bras",
+          "tip2": "Une mécanique de lancer appropriée réduit le stress sur les articulations",
+          "tip3": "Le conditionnement spécifique à la position traite les exigences uniques"
+        }
+      },
+      "patterns": {
+        "title": "Schémas Communs de Prévention",
+        "subtitle": "Habitudes pouvant aider à réduire le risque de blessure",
+        "pattern1": "Un sommeil adéquat soutient la récupération tissulaire",
+        "pattern2": "Une hydratation appropriée maintient la santé tissulaire",
+        "pattern3": "La progression graduelle de l'entraînement prévient la surutilisation",
+        "pattern4": "Écoutez votre corps et respectez les signes d'avertissement"
+      }
+    },
+    "recoveryMethods": {
+      "intro": "Comprendre quand et comment utiliser différentes méthodes de récupération peut soutenir votre processus de guérison. Consultez toujours des professionnels de santé pour des conseils spécifiques.",
+      "whenToUse": "Quand Envisager",
+      "ice": {
+        "title": "Glace / Thérapie par le Froid",
+        "subtitle": "Cryothérapie pour situations aiguës",
+        "use1": "Blessures aiguës (premières 24-72 heures)",
+        "use2": "Gestion de l'inflammation post-activité",
+        "use3": "Réduction du gonflement après entraînement intense",
+        "timing": "Typiquement 15-20 minutes à la fois, avec pauses entre applications"
+      },
+      "heat": {
+        "title": "Thérapie par la Chaleur",
+        "subtitle": "Thermothérapie pour conditions chroniques",
+        "use1": "Tension et raideur musculaire chronique",
+        "use2": "Avant l'activité pour favoriser le flux sanguin",
+        "use3": "Relaxation musculaire et confort",
+        "timing": "Typiquement 15-20 minutes, éviter sur blessures aiguës ou gonflement"
+      },
+      "principles": {
+        "title": "Principes Généraux de Récupération",
+        "subtitle": "Concepts fondamentaux pour une récupération optimale",
+        "rest": {
+          "title": "Repos et Sommeil",
+          "description": "Le sommeil de qualité est le moment où la plupart des réparations tissulaires se produisent. Privilégiez 7-9 heures par nuit."
+        },
+        "hydration": {
+          "title": "Hydratation",
+          "description": "Un apport hydrique adéquat soutient la livraison de nutriments et l'élimination des déchets des tissus."
+        }
+      }
+    },
+    "equipmentLibrary": {
+      "intro": "Comprendre l'équipement de récupération courant peut vous aider à prendre des décisions éclairées lorsque vous travaillez avec des professionnels de santé. Ces outils sont généralement utilisés sous guidance professionnelle.",
+      "searchPlaceholder": "Rechercher équipement...",
+      "allCategories": "Toutes les Catégories",
+      "whatItDoes": "Ce qu'il fait:",
+      "whenUsed": "Quand généralement utilisé:",
+      "noResults": "Aucun équipement trouvé correspondant à votre recherche.",
+      "categories": {
+        "tape": "Bande",
+        "sleeves": "Manchons",
+        "bands": "Élastiques",
+        "softTissue": "Tissus Mous",
+        "supports": "Supports"
+      },
+      "items": {
+        "kinesioTape": {
+          "name": "Bande Kinésiologique",
+          "description": "Bande thérapeutique élastique qui fournit un soutien tout en permettant l'amplitude de mouvement.",
+          "usage": "Souvent utilisée pour le soutien musculaire, réduire le gonflement et fournir un retour proprioceptif."
+        },
+        "athleticTape": {
+          "name": "Bande Athlétique",
+          "description": "Bande non élastique qui fournit un soutien ferme et une stabilisation articulaire.",
+          "usage": "Utilisée pour le soutien articulaire, prévenir les mouvements excessifs et la prévention des blessures."
+        },
+        "compressionSleeve": {
+          "name": "Manchon de Compression",
+          "description": "Manchon élastique fournissant une compression graduée pour soutenir la circulation.",
+          "usage": "Utilisé pour réduire le gonflement, fournir de la chaleur et soutenir la récupération."
+        },
+        "kneeSleeve": {
+          "name": "Genouillère",
+          "description": "Manchon en néoprène ou élastique spécialement conçu pour le soutien du genou.",
+          "usage": "Fournit compression, chaleur et retour proprioceptif pendant l'activité."
+        },
+        "resistanceBands": {
+          "name": "Bandes de Résistance",
+          "description": "Bandes élastiques utilisées pour des exercices de renforcement avec résistance variable.",
+          "usage": "Exercices de réhabilitation, routines d'échauffement et renforcement progressif."
+        },
+        "therapyBands": {
+          "name": "Bandes de Thérapie",
+          "description": "Bandes élastiques plates généralement utilisées en milieu de physiothérapie.",
+          "usage": "Renforcement doux, exercices d'amplitude de mouvement et programmes de réhabilitation."
+        },
+        "foamRoller": {
+          "name": "Rouleau en Mousse",
+          "description": "Outil cylindrique en mousse utilisé pour l'auto-massage et la libération myofasciale.",
+          "usage": "Préparation musculaire pré et post-activité, réduction de la tension musculaire."
+        },
+        "massageBall": {
+          "name": "Balle de Massage",
+          "description": "Petite balle ferme utilisée pour le travail ciblé des tissus mous.",
+          "usage": "Ciblage des nœuds musculaires spécifiques, points de déclenchement et zones tendues."
+        },
+        "ankleBrace": {
+          "name": "Chevillère",
+          "description": "Dispositif de soutien qui limite le mouvement de la cheville et fournit de la stabilité.",
+          "usage": "Prévention des blessures, soutien post-blessure et protection au retour au jeu."
+        },
+        "wristSupport": {
+          "name": "Support de Poignet",
+          "description": "Bandage ou attelle fournissant un soutien à l'articulation du poignet.",
+          "usage": "Soutien du poignet pendant l'activité, gestion de l'inconfort et prévention des blessures."
+        }
+      }
+    }
   }
 }

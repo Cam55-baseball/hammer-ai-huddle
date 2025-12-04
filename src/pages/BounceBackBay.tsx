@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { HeartPulse, Waves, Sparkles, Activity, AlertTriangle, ThermometerSun, ChevronDown } from "lucide-react";
+import { HeartPulse, Waves, Sparkles, Activity, AlertTriangle, ThermometerSun, ChevronDown, ArrowUpRight, Shield, Wrench, Dumbbell } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,10 @@ import { DiagnosticFlowChart } from "@/components/bounce-back-bay/DiagnosticFlow
 import { PainScaleSystem } from "@/components/bounce-back-bay/PainScaleSystem";
 import { RedFlagQuickCheck } from "@/components/bounce-back-bay/RedFlagQuickCheck";
 import { InjuryDisclaimer } from "@/components/bounce-back-bay/InjuryDisclaimer";
+import { ReturnToPlayPhases } from "@/components/bounce-back-bay/ReturnToPlayPhases";
+import { InjuryPrevention } from "@/components/bounce-back-bay/InjuryPrevention";
+import { RecoveryMethods } from "@/components/bounce-back-bay/RecoveryMethods";
+import { EquipmentLibrary } from "@/components/bounce-back-bay/EquipmentLibrary";
 import { supabase } from "@/integrations/supabase/client";
 
 interface InjuryLibraryItem {
@@ -160,6 +164,78 @@ export default function BounceBackBay() {
               </AccordionTrigger>
               <AccordionContent className="px-4 sm:px-6 pb-6">
                 <RedFlagQuickCheck />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Return to Play Phases */}
+            <AccordionItem value="return-to-play" className="border rounded-lg bg-card overflow-hidden">
+              <AccordionTrigger className="px-4 sm:px-6 py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-500/20 rounded-lg">
+                    <ArrowUpRight className="h-5 w-5 text-green-500" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold">{t('bounceBackBay.sections.returnToPlay.title')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.returnToPlay.subtitle')}</p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 sm:px-6 pb-6">
+                <ReturnToPlayPhases />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Injury Prevention */}
+            <AccordionItem value="injury-prevention" className="border rounded-lg bg-card overflow-hidden">
+              <AccordionTrigger className="px-4 sm:px-6 py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-500/20 rounded-lg">
+                    <Shield className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold">{t('bounceBackBay.sections.injuryPrevention.title')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.injuryPrevention.subtitle')}</p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 sm:px-6 pb-6">
+                <InjuryPrevention />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Recovery Methods */}
+            <AccordionItem value="recovery-methods" className="border rounded-lg bg-card overflow-hidden">
+              <AccordionTrigger className="px-4 sm:px-6 py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500/20 rounded-lg">
+                    <Dumbbell className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold">{t('bounceBackBay.sections.recoveryMethods.title')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.recoveryMethods.subtitle')}</p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 sm:px-6 pb-6">
+                <RecoveryMethods />
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Equipment Library */}
+            <AccordionItem value="equipment-library" className="border rounded-lg bg-card overflow-hidden">
+              <AccordionTrigger className="px-4 sm:px-6 py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-500/20 rounded-lg">
+                    <Wrench className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold">{t('bounceBackBay.sections.equipmentLibrary.title')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.equipmentLibrary.subtitle')}</p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 sm:px-6 pb-6">
+                <EquipmentLibrary />
               </AccordionContent>
             </AccordionItem>
 

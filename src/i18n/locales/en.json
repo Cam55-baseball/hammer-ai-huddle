@@ -1746,6 +1746,22 @@
       "injuryHub": {
         "title": "Injury Overview Hub",
         "subtitle": "Browse common baseball and softball injuries"
+      },
+      "returnToPlay": {
+        "title": "Return-to-Play Phases",
+        "subtitle": "Understand the stages of recovery"
+      },
+      "injuryPrevention": {
+        "title": "Injury Prevention",
+        "subtitle": "Reduce risk through education"
+      },
+      "recoveryMethods": {
+        "title": "Recovery Methods",
+        "subtitle": "Ice, heat, and recovery principles"
+      },
+      "equipmentLibrary": {
+        "title": "Equipment Library",
+        "subtitle": "Recovery tools and when to use them"
       }
     },
     "hurtingVsInjured": {
@@ -1926,6 +1942,189 @@
         "warning": "⚠️ If you experience severe pain, sudden injury, or any concerning symptoms, STOP all activity and seek immediate professional medical attention."
       },
       "bottomNote": "By using Bounce Back Bay, you acknowledge that you have read and understood this disclaimer."
+    },
+    "returnToPlay": {
+      "intro": "Understanding the typical phases of recovery can help you set realistic expectations. Always work with healthcare professionals to determine your specific timeline.",
+      "phase": "Phase",
+      "keyFocus": "Key Focus Areas",
+      "phases": {
+        "protection": {
+          "title": "Protection & Symptom Reduction",
+          "description": "The initial phase focuses on protecting the injured area and managing acute symptoms.",
+          "focus1": "Rest and protect the injured area",
+          "focus2": "Reduce pain and swelling",
+          "focus3": "Prevent further injury",
+          "focus4": "Begin gentle movement if cleared"
+        },
+        "restore": {
+          "title": "Restore Movement & Function",
+          "description": "Gradually restore range of motion and basic functional movements.",
+          "focus1": "Increase range of motion",
+          "focus2": "Restore basic movement patterns",
+          "focus3": "Begin light strengthening",
+          "focus4": "Address mobility restrictions"
+        },
+        "strengthen": {
+          "title": "Strengthening & Controlled Activity",
+          "description": "Build strength and begin sport-related movements in controlled settings.",
+          "focus1": "Progressive strengthening exercises",
+          "focus2": "Improve stability and balance",
+          "focus3": "Sport-specific movement patterns",
+          "focus4": "Gradual load progression"
+        },
+        "return": {
+          "title": "Return to Sport",
+          "description": "The final phase involves full sport-specific training and return to competition.",
+          "focus1": "Full sport-specific training",
+          "focus2": "Game-speed activities",
+          "focus3": "Competition readiness",
+          "focus4": "Ongoing maintenance program"
+        }
+      },
+      "progressionNote": {
+        "title": "Progression is Individual",
+        "description": "Every recovery is different. Progression should be guided by symptoms and professional evaluation, not arbitrary timelines."
+      }
+    },
+    "injuryPrevention": {
+      "intro": "Prevention education can help reduce injury risk. These concepts should be applied under professional guidance as part of a comprehensive training program.",
+      "categories": {
+        "warmup": {
+          "title": "Warm-Up Concepts",
+          "subtitle": "Preparing the body for activity",
+          "tip1": "Dynamic stretching before activity increases blood flow",
+          "tip2": "Sport-specific movement prep activates relevant muscle groups",
+          "tip3": "Gradual intensity progression allows the body to adapt"
+        },
+        "strength": {
+          "title": "Strength Training",
+          "subtitle": "Building resilient muscles and joints",
+          "tip1": "Progressive overload builds tissue tolerance over time",
+          "tip2": "Balanced training addresses both agonist and antagonist muscles",
+          "tip3": "Core stability supports efficient movement patterns"
+        },
+        "mobility": {
+          "title": "Mobility & Flexibility",
+          "subtitle": "Maintaining optimal movement quality",
+          "tip1": "Joint mobility work supports healthy movement ranges",
+          "tip2": "Targeted stretching addresses individual limitations",
+          "tip3": "Regular movement variety prevents pattern overload"
+        },
+        "sportSpecific": {
+          "title": "Sport-Specific Prevention",
+          "subtitle": "Baseball and softball focused strategies",
+          "tip1": "Pitch count awareness helps manage arm workload",
+          "tip2": "Proper throwing mechanics reduce stress on joints",
+          "tip3": "Position-specific conditioning addresses unique demands"
+        }
+      },
+      "patterns": {
+        "title": "Common Prevention Patterns",
+        "subtitle": "Habits that may help reduce injury risk",
+        "pattern1": "Adequate sleep supports tissue recovery",
+        "pattern2": "Proper hydration maintains tissue health",
+        "pattern3": "Gradual training progression prevents overuse",
+        "pattern4": "Listen to your body and respect warning signs"
+      }
+    },
+    "recoveryMethods": {
+      "intro": "Understanding when and how to use different recovery methods can support your healing process. Always consult with healthcare professionals for specific guidance.",
+      "whenToUse": "When to Consider",
+      "ice": {
+        "title": "Ice / Cold Therapy",
+        "subtitle": "Cryotherapy for acute situations",
+        "use1": "Acute injuries (first 24-72 hours)",
+        "use2": "Post-activity inflammation management",
+        "use3": "Swelling reduction after intense training",
+        "timing": "Typically 15-20 minutes at a time, with breaks between applications"
+      },
+      "heat": {
+        "title": "Heat Therapy",
+        "subtitle": "Thermotherapy for chronic conditions",
+        "use1": "Chronic muscle tension and stiffness",
+        "use2": "Before activity to promote blood flow",
+        "use3": "Muscle relaxation and comfort",
+        "timing": "Typically 15-20 minutes, avoid on acute injuries or swelling"
+      },
+      "principles": {
+        "title": "General Recovery Principles",
+        "subtitle": "Foundational concepts for optimal recovery",
+        "rest": {
+          "title": "Rest & Sleep",
+          "description": "Quality sleep is when most tissue repair occurs. Prioritize 7-9 hours nightly."
+        },
+        "hydration": {
+          "title": "Hydration",
+          "description": "Adequate fluid intake supports nutrient delivery and waste removal from tissues."
+        }
+      }
+    },
+    "equipmentLibrary": {
+      "intro": "Understanding common recovery equipment can help you make informed decisions when working with healthcare professionals. These tools are typically used under professional guidance.",
+      "searchPlaceholder": "Search equipment...",
+      "allCategories": "All Categories",
+      "whatItDoes": "What it does:",
+      "whenUsed": "When typically used:",
+      "noResults": "No equipment found matching your search.",
+      "categories": {
+        "tape": "Tape",
+        "sleeves": "Sleeves",
+        "bands": "Bands",
+        "softTissue": "Soft Tissue",
+        "supports": "Supports"
+      },
+      "items": {
+        "kinesioTape": {
+          "name": "Kinesio Tape",
+          "description": "Elastic therapeutic tape that provides support while allowing range of motion.",
+          "usage": "Often used for muscle support, reducing swelling, and providing proprioceptive feedback."
+        },
+        "athleticTape": {
+          "name": "Athletic Tape",
+          "description": "Non-elastic tape that provides firm support and joint stabilization.",
+          "usage": "Used for joint support, preventing excessive movement, and injury prevention."
+        },
+        "compressionSleeve": {
+          "name": "Compression Sleeve",
+          "description": "Elastic sleeve providing graduated compression to support circulation.",
+          "usage": "Used for reducing swelling, providing warmth, and supporting recovery."
+        },
+        "kneeSleeve": {
+          "name": "Knee Sleeve",
+          "description": "Neoprene or elastic sleeve specifically designed for knee support.",
+          "usage": "Provides compression, warmth, and proprioceptive feedback during activity."
+        },
+        "resistanceBands": {
+          "name": "Resistance Bands",
+          "description": "Elastic bands used for strengthening exercises with variable resistance.",
+          "usage": "Rehabilitation exercises, warm-up routines, and progressive strengthening."
+        },
+        "therapyBands": {
+          "name": "Therapy Bands",
+          "description": "Flat elastic bands typically used in physical therapy settings.",
+          "usage": "Gentle strengthening, range of motion exercises, and rehabilitation programs."
+        },
+        "foamRoller": {
+          "name": "Foam Roller",
+          "description": "Cylindrical foam tool used for self-massage and myofascial release.",
+          "usage": "Pre and post-activity muscle preparation, reducing muscle tension."
+        },
+        "massageBall": {
+          "name": "Massage Ball",
+          "description": "Small, firm ball used for targeted soft tissue work.",
+          "usage": "Targeting specific muscle knots, trigger points, and tight areas."
+        },
+        "ankleBrace": {
+          "name": "Ankle Brace",
+          "description": "Supportive device that limits ankle movement and provides stability.",
+          "usage": "Injury prevention, post-injury support, and return-to-play protection."
+        },
+        "wristSupport": {
+          "name": "Wrist Support",
+          "description": "Wrap or brace providing support to the wrist joint.",
+          "usage": "Supporting wrist during activity, managing discomfort, and injury prevention."
+        }
+      }
     }
   }
 }
