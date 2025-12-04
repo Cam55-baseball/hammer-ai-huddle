@@ -86,3 +86,6 @@ verify_jwt = true
 
 [functions.list-monthly-reports]
 verify_jwt = true
+
+[functions.translate-content]
+verify_jwt = false
