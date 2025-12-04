@@ -268,22 +268,94 @@ export const FrameAnnotationDialog = ({
     }
   }, [activeTool, activeColor, fabricCanvas]);
 
-  // Haptic feedback when starting to draw on mobile
+  // Custom touch drawing handler for mobile - bypasses Fabric.js internal touch handling
   useEffect(() => {
     if (!fabricCanvas || activeTool !== 'draw') return;
     
-    const handleDrawStart = () => {
-      if (navigator.vibrate) {
-        navigator.vibrate(5);
+    const upperCanvas = fabricCanvas.upperCanvasEl;
+    if (!upperCanvas) return;
+    
+    const brush = fabricCanvas.freeDrawingBrush;
+    if (!brush) return;
+    
+    let isDrawing = false;
+    
+    // Helper to get canvas-relative coordinates from touch
+    const getPointerFromTouch = (touch: Touch): { x: number; y: number } => {
+      const rect = upperCanvas.getBoundingClientRect();
+      const scaleX = fabricCanvas.width! / rect.width;
+      const scaleY = fabricCanvas.height! / rect.height;
+      
+      return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY
+      };
+    };
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      try {
+        if (e.touches.length !== 1) return; // Only single touch for drawing
+        e.preventDefault();
+        e.stopPropagation();
+        
+        isDrawing = true;
+        const pointer = getPointerFromTouch(e.touches[0]);
+        
+        // Haptic feedback
+        if (navigator.vibrate) navigator.vibrate(5);
+        
+        // Manually invoke brush drawing - use fabric.Point
+        const point = new fabric.Point(pointer.x, pointer.y);
+        brush.onMouseDown(point, { e: e as any, pointer: point });
+      } catch (error) {
+        console.error('Draw touch start error:', error);
       }
     };
     
-    fabricCanvas.on('mouse:down', handleDrawStart);
+    const handleTouchMove = (e: TouchEvent) => {
+      try {
+        if (!isDrawing || e.touches.length !== 1) return;
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const pointer = getPointerFromTouch(e.touches[0]);
+        const point = new fabric.Point(pointer.x, pointer.y);
+        brush.onMouseMove(point, { e: e as any, pointer: point });
+      } catch (error) {
+        console.error('Draw touch move error:', error);
+      }
+    };
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      try {
+        if (!isDrawing) return;
+        e.preventDefault();
+        
+        isDrawing = false;
+        // For mouseUp, use the last known point or a default
+        const lastPoint = new fabric.Point(0, 0);
+        brush.onMouseUp({ e: e as any, pointer: lastPoint });
+        
+        // Save to history after stroke completes
+        saveHistory(fabricCanvas);
+      } catch (error) {
+        console.error('Draw touch end error:', error);
+      }
+    };
+    
+    // Attach touch listeners to upper canvas
+    upperCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    upperCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    upperCanvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    upperCanvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
     
     return () => {
-      fabricCanvas.off('mouse:down', handleDrawStart);
+      upperCanvas.removeEventListener('touchstart', handleTouchStart);
+      upperCanvas.removeEventListener('touchmove', handleTouchMove);
+      upperCanvas.removeEventListener('touchend', handleTouchEnd);
+      upperCanvas.removeEventListener('touchcancel', handleTouchEnd);
     };
-  }, [fabricCanvas, activeTool]);
+  }, [fabricCanvas, activeTool, activeColor]);
 
   // Eraser/Delete functionality
   const handleDeleteSelected = () => {
