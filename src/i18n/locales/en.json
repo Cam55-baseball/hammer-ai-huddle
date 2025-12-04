@@ -2207,6 +2207,178 @@
     "progress": {
       "title": "Your Progress & Badges",
       "subtitle": "Track your educational journey"
+    },
+    "quiz": {
+      "title": "Knowledge Check",
+      "description": "Answer {{count}} questions to test your understanding",
+      "start": "Start Quiz",
+      "next": "Next",
+      "finish": "Finish",
+      "score": "Your Score",
+      "passed": "Congratulations!",
+      "needsRetry": "Keep Learning",
+      "passMessage": "Great job! You've demonstrated understanding of this section.",
+      "retryMessage": "You need 70% to pass. Review the content and try again.",
+      "retry": "Try Again",
+      "alreadyPassed": "You've completed this quiz!",
+      "completed": "Completed",
+      "badgeEarned": "Badge Earned!",
+      "questions": {
+        "diagnostic": {
+          "q1": "What is the first step when assessing a potential injury?",
+          "q2": "When should you seek immediate medical attention?",
+          "q3": "What does RICE stand for in injury treatment?",
+          "options": {
+            "q1": {
+              "a": "Continue playing through the pain",
+              "b": "Stop activity and assess the situation",
+              "c": "Apply ice immediately"
+            },
+            "q2": {
+              "a": "When you feel minor discomfort",
+              "b": "Only if there's visible bleeding",
+              "c": "When you experience severe pain, deformity, or loss of function"
+            },
+            "q3": {
+              "a": "Rest, Ice, Compression, Elevation",
+              "b": "Run, Ice, Compress, Exercise",
+              "c": "Rest, Immobilize, Cold, Evaluate"
+            }
+          }
+        },
+        "pain-scale": {
+          "q1": "What pain level indicates you should stop activity immediately?",
+          "q2": "What is the purpose of a pain scale?",
+          "q3": "How should mild discomfort (1-3) typically be managed?",
+          "options": {
+            "q1": {
+              "a": "Any pain above 1",
+              "b": "Pain level 7 or higher",
+              "c": "Only level 10 pain"
+            },
+            "q2": {
+              "a": "To communicate pain intensity consistently",
+              "b": "To determine exact injury diagnosis",
+              "c": "To avoid seeking medical care"
+            },
+            "q3": {
+              "a": "Immediate emergency care",
+              "b": "Complete bed rest",
+              "c": "Monitor, modify activity, and use preventive measures"
+            }
+          }
+        },
+        "red-flags": {
+          "q1": "Which of these is a red flag requiring immediate medical attention?",
+          "q2": "What should you do if you notice numbness or tingling?",
+          "q3": "Why are red flags important to recognize?",
+          "options": {
+            "q1": {
+              "a": "Inability to bear weight or severe deformity",
+              "b": "Mild muscle soreness after exercise",
+              "c": "Slight stiffness in the morning"
+            },
+            "q2": {
+              "a": "Ignore it and continue activity",
+              "b": "Wait a week to see if it improves",
+              "c": "Stop activity and consult a medical professional"
+            },
+            "q3": {
+              "a": "They help avoid unnecessary rest",
+              "b": "They indicate potentially serious conditions needing prompt care",
+              "c": "They are rarely important in sports"
+            }
+          }
+        },
+        "rtp": {
+          "q1": "What is the correct order for return to play progression?",
+          "q2": "When can an athlete progress to the next phase?",
+          "q3": "What should happen if pain returns during progression?",
+          "options": {
+            "q1": {
+              "a": "Full activity immediately after pain subsides",
+              "b": "Rest → Light activity → Sport-specific → Full competition",
+              "c": "Skip rehabilitation and test with game play"
+            },
+            "q2": {
+              "a": "After completing each phase without increased symptoms",
+              "b": "After exactly 24 hours",
+              "c": "Whenever they feel motivated"
+            },
+            "q3": {
+              "a": "Push through it",
+              "b": "Continue at same intensity",
+              "c": "Return to previous phase and reassess"
+            }
+          }
+        },
+        "prevention": {
+          "q1": "What is the most effective injury prevention strategy?",
+          "q2": "Why is proper warm-up important?",
+          "q3": "How does adequate sleep affect injury risk?",
+          "options": {
+            "q1": {
+              "a": "Avoiding all physical activity",
+              "b": "Taking pain medication before activity",
+              "c": "Consistent warm-up, strength training, and proper technique"
+            },
+            "q2": {
+              "a": "It wastes time",
+              "b": "It increases blood flow and prepares muscles for activity",
+              "c": "It's only for professional athletes"
+            },
+            "q3": {
+              "a": "Poor sleep significantly increases injury risk",
+              "b": "Sleep has no effect on injuries",
+              "c": "Less sleep makes athletes stronger"
+            }
+          }
+        },
+        "recovery": {
+          "q1": "When should ice be applied to an acute injury?",
+          "q2": "What is the primary benefit of compression?",
+          "q3": "How long should ice typically be applied?",
+          "options": {
+            "q1": {
+              "a": "Within first 48-72 hours of injury",
+              "b": "Only after one week",
+              "c": "Never use ice on injuries"
+            },
+            "q2": {
+              "a": "It increases blood flow",
+              "b": "It looks professional",
+              "c": "It helps control swelling and provides support"
+            },
+            "q3": {
+              "a": "Continuously for 24 hours",
+              "b": "15-20 minutes at a time with breaks",
+              "c": "5 minutes maximum"
+            }
+          }
+        },
+        "equipment": {
+          "q1": "What is the purpose of foam rolling?",
+          "q2": "When should resistance bands be used?",
+          "q3": "Why are braces and supports helpful?",
+          "options": {
+            "q1": {
+              "a": "To build muscle mass",
+              "b": "Self-myofascial release and muscle recovery",
+              "c": "To replace stretching entirely"
+            },
+            "q2": {
+              "a": "Only after surgery",
+              "b": "For rehabilitation, warm-up, and strength exercises",
+              "c": "Never, they are dangerous"
+            },
+            "q3": {
+              "a": "They cure injuries instantly",
+              "b": "They replace proper rehabilitation",
+              "c": "They provide stability and support during recovery"
+            }
+          }
+        }
+      }
     }
   }
 }

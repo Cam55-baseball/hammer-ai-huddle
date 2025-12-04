@@ -16,6 +16,8 @@ import { RecoveryMethods } from "@/components/bounce-back-bay/RecoveryMethods";
 import { EquipmentLibrary } from "@/components/bounce-back-bay/EquipmentLibrary";
 import { BounceBackBadges } from "@/components/bounce-back-bay/BounceBackBadges";
 import { BounceBackStreakCard } from "@/components/bounce-back-bay/BounceBackStreakCard";
+import { SectionQuiz, SECTION_QUIZZES } from "@/components/bounce-back-bay/SectionQuiz";
+import { useSectionProgress } from "@/hooks/useSectionProgress";
 import { supabase } from "@/integrations/supabase/client";
 
 interface InjuryLibraryItem {
@@ -34,17 +36,40 @@ interface InjuryLibraryItem {
 const TOTAL_SECTIONS = 8;
 const TOTAL_BADGES = 14;
 
+// Map accordion values to section IDs for tracking
+const SECTION_MAP: Record<string, string> = {
+  'diagnostic': 'diagnostic',
+  'pain-scale': 'pain-scale',
+  'red-flags': 'red-flags',
+  'return-to-play': 'rtp',
+  'injury-prevention': 'prevention',
+  'recovery-methods': 'recovery',
+  'equipment-library': 'equipment',
+  'injury-hub': 'injury-hub',
+};
+
 export default function BounceBackBay() {
   const { t } = useTranslation();
   const [injuries, setInjuries] = useState<InjuryLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBodyArea, setSelectedBodyArea] = useState<string | null>(null);
+  const [openSections, setOpenSections] = useState<string[]>(['diagnostic', 'pain-scale', 'red-flags']);
   
-  // Progress tracking state
-  const [earnedBadges, setEarnedBadges] = useState<string[]>([]);
-  const [sectionsCompleted, setSectionsCompleted] = useState<string[]>([]);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [longestStreak, setLongestStreak] = useState(0);
+  // Use the section progress hook
+  const {
+    sectionsCompleted,
+    badgesEarned,
+    quizzesPassed,
+    currentStreak,
+    longestStreak,
+    markSectionComplete,
+    markQuizPassed,
+    loadProgress,
+    setSectionsCompleted,
+    setBadgesEarned,
+    setCurrentStreak,
+    setLongestStreak,
+  } = useSectionProgress();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,22 +83,8 @@ export default function BounceBackBay() {
         if (injuryError) throw injuryError;
         setInjuries(injuryData || []);
 
-        // Fetch user progress
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: progressData } = await supabase
-            .from('user_injury_progress')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-
-          if (progressData) {
-            setEarnedBadges(progressData.badges_earned || []);
-            setSectionsCompleted(progressData.sections_completed || []);
-            setCurrentStreak(progressData.current_streak || 0);
-            setLongestStreak(progressData.longest_streak || 0);
-          }
-        }
+        // Load user progress via hook
+        await loadProgress();
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -82,7 +93,23 @@ export default function BounceBackBay() {
     };
 
     fetchData();
-  }, []);
+  }, [loadProgress]);
+
+  // Handle accordion section changes for tracking
+  const handleAccordionChange = (values: string[]) => {
+    // Find newly opened sections
+    const newlyOpened = values.filter(v => !openSections.includes(v));
+    
+    // Mark each newly opened section as completed
+    newlyOpened.forEach(value => {
+      const sectionId = SECTION_MAP[value];
+      if (sectionId && !sectionsCompleted.includes(sectionId)) {
+        markSectionComplete(sectionId);
+      }
+    });
+    
+    setOpenSections(values);
+  };
 
   const bodyAreas = [...new Set(injuries.map(i => i.body_area))];
   const filteredInjuries = selectedBodyArea 
@@ -158,11 +185,11 @@ export default function BounceBackBay() {
                   longestStreak={longestStreak}
                   sectionsCompleted={sectionsCompleted}
                   totalSections={TOTAL_SECTIONS}
-                  badgesEarned={earnedBadges.length}
+                  badgesEarned={badgesEarned.length}
                   totalBadges={TOTAL_BADGES}
                 />
                 <BounceBackBadges
-                  earnedBadges={earnedBadges}
+                  earnedBadges={badgesEarned}
                   sectionsCompleted={sectionsCompleted}
                 />
               </AccordionContent>
@@ -173,7 +200,12 @@ export default function BounceBackBay() {
           <HurtingVsInjured />
 
           {/* Main Content Sections */}
-          <Accordion type="multiple" className="space-y-4" defaultValue={["diagnostic", "pain-scale", "red-flags"]}>
+          <Accordion 
+            type="multiple" 
+            className="space-y-4" 
+            defaultValue={["diagnostic", "pain-scale", "red-flags"]}
+            onValueChange={handleAccordionChange}
+          >
             {/* Diagnostic Flow Chart */}
             <AccordionItem value="diagnostic" className="border rounded-lg bg-card overflow-hidden">
               <AccordionTrigger className="px-4 sm:px-6 py-4 hover:no-underline">
@@ -185,10 +217,19 @@ export default function BounceBackBay() {
                     <h3 className="font-semibold">{t('bounceBackBay.sections.diagnosticFlow.title')}</h3>
                     <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.diagnosticFlow.subtitle')}</p>
                   </div>
+                  {sectionsCompleted.includes('diagnostic') && (
+                    <Badge variant="secondary" className="ml-auto bg-green-500/20 text-green-700 dark:text-green-400">✓</Badge>
+                  )}
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 sm:px-6 pb-6">
                 <DiagnosticFlowChart />
+                <SectionQuiz 
+                  sectionId="diagnostic"
+                  questions={SECTION_QUIZZES.diagnostic}
+                  onPass={markQuizPassed}
+                  isPassed={quizzesPassed.includes('diagnostic')}
+                />
               </AccordionContent>
             </AccordionItem>
 
@@ -203,10 +244,19 @@ export default function BounceBackBay() {
                     <h3 className="font-semibold">{t('bounceBackBay.sections.painScale.title')}</h3>
                     <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.painScale.subtitle')}</p>
                   </div>
+                  {sectionsCompleted.includes('pain-scale') && (
+                    <Badge variant="secondary" className="ml-auto bg-green-500/20 text-green-700 dark:text-green-400">✓</Badge>
+                  )}
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 sm:px-6 pb-6">
                 <PainScaleSystem />
+                <SectionQuiz 
+                  sectionId="pain-scale"
+                  questions={SECTION_QUIZZES['pain-scale']}
+                  onPass={markQuizPassed}
+                  isPassed={quizzesPassed.includes('pain-scale')}
+                />
               </AccordionContent>
             </AccordionItem>
 
@@ -221,10 +271,19 @@ export default function BounceBackBay() {
                     <h3 className="font-semibold">{t('bounceBackBay.sections.redFlags.title')}</h3>
                     <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.redFlags.subtitle')}</p>
                   </div>
+                  {sectionsCompleted.includes('red-flags') && (
+                    <Badge variant="secondary" className="ml-auto bg-green-500/20 text-green-700 dark:text-green-400">✓</Badge>
+                  )}
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 sm:px-6 pb-6">
                 <RedFlagQuickCheck />
+                <SectionQuiz 
+                  sectionId="red-flags"
+                  questions={SECTION_QUIZZES['red-flags']}
+                  onPass={markQuizPassed}
+                  isPassed={quizzesPassed.includes('red-flags')}
+                />
               </AccordionContent>
             </AccordionItem>
 
@@ -239,10 +298,19 @@ export default function BounceBackBay() {
                     <h3 className="font-semibold">{t('bounceBackBay.sections.returnToPlay.title')}</h3>
                     <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.returnToPlay.subtitle')}</p>
                   </div>
+                  {sectionsCompleted.includes('rtp') && (
+                    <Badge variant="secondary" className="ml-auto bg-green-500/20 text-green-700 dark:text-green-400">✓</Badge>
+                  )}
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 sm:px-6 pb-6">
                 <ReturnToPlayPhases />
+                <SectionQuiz 
+                  sectionId="rtp"
+                  questions={SECTION_QUIZZES.rtp}
+                  onPass={markQuizPassed}
+                  isPassed={quizzesPassed.includes('rtp')}
+                />
               </AccordionContent>
             </AccordionItem>
 
@@ -257,10 +325,19 @@ export default function BounceBackBay() {
                     <h3 className="font-semibold">{t('bounceBackBay.sections.injuryPrevention.title')}</h3>
                     <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.injuryPrevention.subtitle')}</p>
                   </div>
+                  {sectionsCompleted.includes('prevention') && (
+                    <Badge variant="secondary" className="ml-auto bg-green-500/20 text-green-700 dark:text-green-400">✓</Badge>
+                  )}
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 sm:px-6 pb-6">
                 <InjuryPrevention />
+                <SectionQuiz 
+                  sectionId="prevention"
+                  questions={SECTION_QUIZZES.prevention}
+                  onPass={markQuizPassed}
+                  isPassed={quizzesPassed.includes('prevention')}
+                />
               </AccordionContent>
             </AccordionItem>
 
@@ -275,10 +352,19 @@ export default function BounceBackBay() {
                     <h3 className="font-semibold">{t('bounceBackBay.sections.recoveryMethods.title')}</h3>
                     <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.recoveryMethods.subtitle')}</p>
                   </div>
+                  {sectionsCompleted.includes('recovery') && (
+                    <Badge variant="secondary" className="ml-auto bg-green-500/20 text-green-700 dark:text-green-400">✓</Badge>
+                  )}
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 sm:px-6 pb-6">
                 <RecoveryMethods />
+                <SectionQuiz 
+                  sectionId="recovery"
+                  questions={SECTION_QUIZZES.recovery}
+                  onPass={markQuizPassed}
+                  isPassed={quizzesPassed.includes('recovery')}
+                />
               </AccordionContent>
             </AccordionItem>
 
@@ -293,10 +379,19 @@ export default function BounceBackBay() {
                     <h3 className="font-semibold">{t('bounceBackBay.sections.equipmentLibrary.title')}</h3>
                     <p className="text-sm text-muted-foreground">{t('bounceBackBay.sections.equipmentLibrary.subtitle')}</p>
                   </div>
+                  {sectionsCompleted.includes('equipment') && (
+                    <Badge variant="secondary" className="ml-auto bg-green-500/20 text-green-700 dark:text-green-400">✓</Badge>
+                  )}
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 sm:px-6 pb-6">
                 <EquipmentLibrary />
+                <SectionQuiz 
+                  sectionId="equipment"
+                  questions={SECTION_QUIZZES.equipment}
+                  onPass={markQuizPassed}
+                  isPassed={quizzesPassed.includes('equipment')}
+                />
               </AccordionContent>
             </AccordionItem>
 

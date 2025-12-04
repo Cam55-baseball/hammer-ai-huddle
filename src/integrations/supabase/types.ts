@@ -654,6 +654,7 @@ export type Database = {
           id: string
           last_visit_date: string | null
           longest_streak: number
+          quizzes_passed: string[] | null
           sections_completed: string[] | null
           total_sections_viewed: number
           updated_at: string | null
@@ -666,6 +667,7 @@ export type Database = {
           id?: string
           last_visit_date?: string | null
           longest_streak?: number
+          quizzes_passed?: string[] | null
           sections_completed?: string[] | null
           total_sections_viewed?: number
           updated_at?: string | null
@@ -678,6 +680,7 @@ export type Database = {
           id?: string
           last_visit_date?: string | null
           longest_streak?: number
+          quizzes_passed?: string[] | null
           sections_completed?: string[] | null
           total_sections_viewed?: number
           updated_at?: string | null
