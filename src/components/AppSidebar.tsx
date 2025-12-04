@@ -140,10 +140,28 @@ export function AppSidebar() {
   ];
 
   const trainingModules = [
-    { title: t('dashboard.modules.hittingAnalysis'), url: `/analyze/hitting?sport=${selectedSport}`, icon: Target },
-    { title: t('workoutModules.productionLab.title'), url: "/production-lab", icon: Dumbbell },
-    { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target },
-    { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell },
+    { 
+      title: t('dashboard.modules.hittingAnalysis'), 
+      url: `/analyze/hitting?sport=${selectedSport}`, 
+      icon: Target,
+      subModule: {
+        title: t('workoutModules.productionLab.title'),
+        url: "/production-lab",
+        icon: Dumbbell,
+        description: t('workoutModules.productionLab.subtitle') || "6-week workout"
+      }
+    },
+    { 
+      title: t('dashboard.modules.pitchingAnalysis'), 
+      url: `/analyze/pitching?sport=${selectedSport}`, 
+      icon: Target,
+      subModule: {
+        title: t('workoutModules.productionStudio.title'),
+        url: "/production-studio",
+        icon: Dumbbell,
+        description: t('workoutModules.productionStudio.subtitle') || "6-week workout"
+      }
+    },
     { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
     { title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked },
   ];
@@ -379,18 +397,26 @@ export function AppSidebar() {
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel>{t('navigation.mainNavigation')}</SidebarGroupLabel>
+          <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
+            {t('navigation.mainNavigation')}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {mainNavItems.map((item, index) => (
+                <SidebarMenuItem 
+                  key={item.title}
+                  className="sidebar-item"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
                   <SidebarMenuButton
                     onClick={() => navigate(item.url)}
                     isActive={isActive(item.url)}
                     tooltip={item.title}
+                    className="group sidebar-item-hover relative"
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    {isActive(item.url) && <span className="sidebar-active-indicator" />}
+                    <item.icon className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                    <span className="transition-colors duration-200">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -399,40 +425,78 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>{t('navigation.trainingModules')}</SidebarGroupLabel>
+          <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
+            {t('navigation.trainingModules')}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="training-modules-menu">
-              {trainingModules.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    onClick={() => navigate(item.url)}
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                    className={item.title === "Players Club" ? "players-club" : ""}
+              {trainingModules.map((item, index) => (
+                <div key={item.title}>
+                  {/* Parent Module */}
+                  <SidebarMenuItem 
+                    className="sidebar-item"
+                    style={{ animationDelay: `${(index + mainNavItems.length) * 50}ms` }}
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => navigate(item.url)}
+                      isActive={isActive(item.url.split('?')[0])}
+                      tooltip={item.title}
+                      className="group sidebar-item-hover relative"
+                    >
+                      {isActive(item.url.split('?')[0]) && <span className="sidebar-active-indicator" />}
+                      <item.icon className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:rotate-12 group-hover:text-primary" />
+                      <span className="transition-colors duration-200">{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  
+                  {/* Sub-Module with visual connector */}
+                  {'subModule' in item && item.subModule && (
+                    <SidebarMenuItem 
+                      className="sidebar-item sidebar-sub-item"
+                      style={{ animationDelay: `${(index + mainNavItems.length) * 50 + 25}ms` }}
+                    >
+                      <SidebarMenuButton
+                        onClick={() => navigate(item.subModule!.url)}
+                        isActive={isActive(item.subModule!.url)}
+                        tooltip={item.subModule!.title}
+                        className="group sidebar-item-hover relative py-1"
+                      >
+                        {isActive(item.subModule!.url) && <span className="sidebar-active-indicator" />}
+                        <item.subModule.icon className="h-3.5 w-3.5 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:rotate-180 text-primary/70 group-hover:text-primary" />
+                        <div className="flex flex-col items-start gap-0">
+                          <span className="text-sm transition-colors duration-200">{item.subModule!.title}</span>
+                          <span className="text-[10px] text-muted-foreground leading-tight">{item.subModule!.description}</span>
+                        </div>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                </div>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>{t('navigation.account')}</SidebarGroupLabel>
+          <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
+            {t('navigation.account')}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {accountItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {accountItems.map((item, index) => (
+                <SidebarMenuItem 
+                  key={item.title}
+                  className="sidebar-item"
+                  style={{ animationDelay: `${(index + mainNavItems.length + trainingModules.length + 2) * 50}ms` }}
+                >
                   <SidebarMenuButton
                     onClick={() => navigate(item.url)}
                     isActive={isActive(item.url)}
                     tooltip={item.title}
-                    className={item.title === "Profile" ? "settings-profile" : ""}
+                    className="group sidebar-item-hover relative"
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
+                    {isActive(item.url) && <span className="sidebar-active-indicator" />}
+                    <item.icon className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                    <span className="transition-colors duration-200">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -443,10 +507,14 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border p-4">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleSignOut} tooltip={t('navigation.signOut')}>
-              <LogOut className="h-4 w-4" />
-              <span>{t('navigation.signOut')}</span>
+          <SidebarMenuItem className="sidebar-item" style={{ animationDelay: '400ms' }}>
+            <SidebarMenuButton
+              onClick={handleSignOut}
+              tooltip={t('navigation.signOut')}
+              className="group sidebar-item-hover hover:bg-destructive/10"
+            >
+              <LogOut className="h-4 w-4 transition-all duration-200 group-hover:scale-110 group-hover:rotate-12 group-hover:text-destructive" />
+              <span className="transition-colors duration-200 group-hover:text-destructive">{t('navigation.signOut')}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
