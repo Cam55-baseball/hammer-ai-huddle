@@ -222,4 +222,57 @@ All colors MUST be HSL.
   .group-label-animated:hover {
     @apply tracking-wider;
   }
+
+  /* Mobile Sidebar Enhancements */
+  @keyframes mobile-slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes mobile-collapsible-expand {
+    from {
+      opacity: 0;
+      height: 0;
+      transform: translateY(-12px) scale(0.95);
+    }
+    60% {
+      transform: translateY(2px) scale(1.01);
+    }
+    to {
+      opacity: 1;
+      height: var(--radix-collapsible-content-height);
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Staggered animation for mobile sidebar items */
+  [data-mobile="true"] .sidebar-item {
+    animation: mobile-slide-in 0.35s ease-out both;
+  }
+
+  [data-mobile="true"] .sidebar-item:nth-child(1) { animation-delay: 100ms; }
+  [data-mobile="true"] .sidebar-item:nth-child(2) { animation-delay: 130ms; }
+  [data-mobile="true"] .sidebar-item:nth-child(3) { animation-delay: 160ms; }
+  [data-mobile="true"] .sidebar-item:nth-child(4) { animation-delay: 190ms; }
+  [data-mobile="true"] .sidebar-item:nth-child(5) { animation-delay: 220ms; }
+  [data-mobile="true"] .sidebar-item:nth-child(6) { animation-delay: 250ms; }
+  [data-mobile="true"] .sidebar-item:nth-child(7) { animation-delay: 280ms; }
+  [data-mobile="true"] .sidebar-item:nth-child(8) { animation-delay: 310ms; }
+
+  /* Mobile touch feedback */
+  [data-mobile="true"] .sidebar-item-hover:active {
+    transform: scale(0.98);
+    background-color: hsl(var(--accent) / 0.15);
+  }
+
+  /* Mobile collapsible spring animation */
+  [data-mobile="true"] .collapsible-content[data-state="open"] {
+    animation: mobile-collapsible-expand 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
 }

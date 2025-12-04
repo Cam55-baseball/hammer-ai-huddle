@@ -97,6 +97,11 @@ export function AppSidebar() {
   });
 
   const toggleModule = (key: string) => {
+    // Haptic feedback for mobile
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+    
     setExpandedModules(prev => ({
       ...prev,
       [key]: !prev[key]
@@ -469,8 +474,8 @@ export function AppSidebar() {
                           </SidebarMenuButton>
                           
                           <CollapsibleTrigger asChild>
-                            <button className="p-1.5 mr-2 hover:bg-accent rounded-md transition-all duration-200">
-                              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${expandedModules[item.key] ? 'rotate-180' : ''}`} />
+                            <button className="p-2 min-w-[44px] min-h-[44px] mr-2 flex items-center justify-center hover:bg-accent rounded-md transition-all duration-200 active:scale-95 touch-manipulation">
+                              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${expandedModules[item.key] ? 'rotate-180' : ''}`} />
                             </button>
                           </CollapsibleTrigger>
                         </div>
