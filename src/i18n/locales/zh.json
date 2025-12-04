@@ -1585,5 +1585,66 @@
       "description": "初始化所有者账户时出错。",
       "defaultMessage": "无法初始化所有者账户"
     }
+  },
+  "bounceBackBay": {
+    "title": "恢复湾",
+    "subtitle": "运动员伤病教育",
+    "description": "学习识别、理解和应对常见运动损伤。",
+    "badges": {
+      "educational": "仅供教育",
+      "athleteFocused": "运动员专注",
+      "comprehensiveGuide": "综合指南",
+      "categories": { "all": "所有徽章", "injury": "伤病学习", "tiered": "解剖等级", "special": "特殊成就" },
+      "earned": "已获得",
+      "locked": "未解锁",
+      "safetyDisclaimer": "完成教育学习后授予。此徽章不表示医疗准备或许可。请始终咨询持证专业人士。",
+      "legendText": "徽章通过完成教育内容获得。它们代表知识获取，而非医疗许可。",
+      "items": {
+        "shoulder_scholar": { "name": "肩部学者", "description": "完成肩部伤病教育" },
+        "elbow_expert": { "name": "肘部专家", "description": "完成UCL/前臂/屈肌概述" },
+        "hamstring_headliner": { "name": "腘绳肌明星", "description": "完成下肢模块" },
+        "ankle_analyst": { "name": "踝部分析师", "description": "完成踝部伤病教育" },
+        "wrist_wizard": { "name": "腕部巫师", "description": "完成腕部和手部教育" },
+        "back_boss": { "name": "背部老板", "description": "完成背部和脊柱教育" },
+        "bronze_anatomy": { "name": "青铜解剖徽章", "description": "学习了3种伤病" },
+        "silver_anatomy": { "name": "白银解剖徽章", "description": "学习了7种伤病" },
+        "gold_anatomy": { "name": "黄金解剖徽章", "description": "学习了12+种伤病" },
+        "elite_recovery": { "name": "精英恢复徽章", "description": "完成整个恢复湾库" },
+        "red_flag_ready": { "name": "红旗就绪", "description": "完成所有安全教育" },
+        "pain_scale_pro": { "name": "疼痛量表专家", "description": "完成疼痛意识部分" },
+        "recovery_intelligence": { "name": "恢复智慧", "description": "完成所有恢复方法教育" },
+        "human_body_mastery": { "name": "人体掌握", "description": "完成所有部分的全部内容" }
+      }
+    },
+    "streak": { "dayStreak": "连续天数", "sections": "章节", "badges": "徽章", "best": "最佳记录", "nextBadge": "下一个徽章", "keepLearning": "继续学习解锁更多！" },
+    "progress": { "title": "您的进度和徽章", "subtitle": "追踪您的教育之旅" },
+    "allAreas": "所有区域",
+    "commonSymptoms": "常见症状",
+    "typicalTimeline": "典型时间线",
+    "sections": {
+      "diagnosticFlow": { "title": "诊断流程图", "subtitle": "了解症状的引导路径" },
+      "painScale": { "title": "疼痛量表系统", "subtitle": "评估和理解您的疼痛程度" },
+      "redFlags": { "title": "红旗快速检查", "subtitle": "需要注意的警告信号" },
+      "injuryHub": { "title": "伤病概览中心", "subtitle": "浏览常见棒球和垒球伤病" },
+      "returnToPlay": { "title": "重返赛场阶段", "subtitle": "了解恢复阶段" },
+      "injuryPrevention": { "title": "伤病预防", "subtitle": "通过教育降低风险" },
+      "recoveryMethods": { "title": "恢复方法", "subtitle": "冰敷、热敷和恢复原则" },
+      "equipmentLibrary": { "title": "设备库", "subtitle": "恢复工具及使用时机" }
+    },
+    "hurtingVsInjured": {
+      "title": "疼痛 vs. 受伤",
+      "subtitle": "理解正常酸痛和潜在伤害之间的区别",
+      "hurting": { "title": "正常酸痛", "description": "这些感觉通常是运动训练的一部分：", "sign1": "运动后改善的肌肉酸痛", "sign2": "热身后减轻的轻微僵硬", "sign3": "高强度训练后的一般疲劳", "sign4": "24-72小时内消退的不适" },
+      "injured": { "title": "潜在伤害", "description": "这些迹象可能表明更严重的问题：", "sign1": "活动中突然的剧烈疼痛", "sign2": "随运动加剧的疼痛", "sign3": "肿胀、瘀伤或明显变形", "sign4": "无法负重或使用受影响区域", "sign5": "持续超过72小时的疼痛" },
+      "note": { "title": "请记住", "description": "这仅供自我反思，不作诊断。有疑问时，请务必咨询医疗专业人员。" }
+    },
+    "diagnosticFlow": { "intro": "使用此教育流程图反思您的症状。", "step": "步骤", "steps": { "symptoms": { "title": "识别您的症状", "description": "您正在经历什么？", "q1": "不适的确切位置？", "q2": "什么类型的感觉？", "q3": "是否影响您的运动？" }, "timing": { "title": "考虑时间", "description": "这是什么时候开始的？", "q1": "突然还是逐渐？", "q2": "持续多长时间？", "q3": "持续还是间歇？" }, "severity": { "title": "评估严重程度", "description": "症状有多严重？", "q1": "能继续正常活动吗？", "q2": "是否肿胀或变色？", "q3": "疼痛是在好转、恶化还是不变？" }, "decision": { "title": "考虑您的选择", "description": "根据您的反思，考虑以下途径：", "outcome1": { "condition": "严重症状或红旗", "action": "及时寻求专业评估" }, "outcome2": { "condition": "中度症状持续超过48-72小时", "action": "考虑安排专业咨询" }, "outcome3": { "condition": "休息后改善的轻微症状", "action": "继续监测" } } } },
+    "painScale": { "intro": "使用此量表反思您的疼痛程度。", "noPain": "无痛", "worstPain": "最剧烈疼痛", "recommendation": "一般指导", "levels": { "minimal": { "label": "极轻", "description": "几乎察觉不到", "recommendation": "可继续活动" }, "mild": { "label": "轻度", "description": "明显但不干扰", "recommendation": "考虑调整强度" }, "moderate": { "label": "中度", "description": "干扰活动", "recommendation": "考虑休息" }, "severe": { "label": "严重", "description": "显著影响", "recommendation": "建议休息和评估" }, "extreme": { "label": "极度", "description": "压倒性疼痛", "recommendation": "立即寻求帮助" } }, "ranges": { "minimal": "极轻", "mild": "轻度", "moderate": "中度", "severe": "严重", "extreme": "极度" } },
+    "redFlags": { "intro": "检查您正在经历的症状。", "critical": "危急", "high": "高", "medium": "中", "items": { "deformity": "明显变形", "numbness": "麻木或刺痛", "inability": "无法负重", "severeSwelling": "严重肿胀", "popSound": "听到砰声", "lockedJoint": "关节锁定", "instability": "关节不稳", "worsening": "症状恶化", "nightPain": "影响睡眠的疼痛", "fever": "发烧或感染迹象" }, "seekProfessional": "寻求专业帮助", "stopActivity": "停止活动", "result": { "critical": { "title": "建议立即就医", "description": "存在危急警告信号" }, "high": { "title": "建议专业评估", "description": "存在重大警告信号" }, "moderate": { "title": "密切监测", "description": "存在一些警告信号" }, "clear": { "title": "未检测到红旗", "description": "继续监测" } }, "disclaimer": { "title": "重要提醒", "description": "此检查清单仅供教育目的。" } },
+    "disclaimer": { "title": "重要医疗免责声明", "subtitle": "使用前请仔细阅读", "points": { "educational": { "title": "仅供教育目的", "description": "所有内容仅供教育信息。" }, "noDiagnosis": { "title": "非医疗建议", "description": "这不诊断或治疗。" }, "seekHelp": { "title": "咨询专业人士", "description": "伤病请咨询专业人士。" }, "emergency": { "title": "紧急情况", "description": "严重症状需立即评估。" } }, "fullText": { "para1": "恢复湾提供运动损伤教育信息。", "para2": "此信息不能替代专业医疗建议。", "para3": "所有技术应在专业指导下进行。", "warning": "⚠️ 严重疼痛请立即寻求医疗帮助。" }, "bottomNote": "使用即表示您已理解此免责声明。" },
+    "returnToPlay": { "intro": "了解恢复阶段。", "phase": "阶段", "keyFocus": "关键重点", "phases": { "protection": { "title": "保护和症状缓解", "description": "保护受伤区域", "focus1": "休息和保护", "focus2": "减轻肿胀", "focus3": "防止进一步受伤", "focus4": "轻柔运动" }, "restore": { "title": "恢复运动", "description": "恢复活动范围", "focus1": "增加活动范围", "focus2": "恢复运动模式", "focus3": "轻度力量训练", "focus4": "解决受限" }, "strengthen": { "title": "强化训练", "description": "增强力量", "focus1": "渐进性练习", "focus2": "提高稳定性", "focus3": "专项运动", "focus4": "增加负荷" }, "return": { "title": "重返运动", "description": "全面训练", "focus1": "专项训练", "focus2": "比赛速度", "focus3": "比赛准备", "focus4": "维护计划" } }, "progressionNote": { "title": "进展因人而异", "description": "恢复应以症状为指导。" } },
+    "injuryPrevention": { "intro": "预防教育降低风险。", "categories": { "warmup": { "title": "热身", "subtitle": "准备身体", "tip1": "动态拉伸", "tip2": "专项准备", "tip3": "渐进强度" }, "strength": { "title": "力量训练", "subtitle": "建立弹性", "tip1": "渐进超负荷", "tip2": "平衡训练", "tip3": "核心稳定" }, "mobility": { "title": "活动度", "subtitle": "运动质量", "tip1": "关节活动", "tip2": "针对性拉伸", "tip3": "变换运动" }, "sportSpecific": { "title": "专项预防", "subtitle": "棒球垒球策略", "tip1": "投球计数", "tip2": "正确机制", "tip3": "位置调节" } }, "patterns": { "title": "预防模式", "subtitle": "降低风险的习惯", "pattern1": "充足睡眠", "pattern2": "适当水分", "pattern3": "渐进训练", "pattern4": "倾听身体" } },
+    "recoveryMethods": { "intro": "了解恢复方法。", "whenToUse": "何时使用", "ice": { "title": "冰敷", "subtitle": "急性情况", "use1": "急性损伤", "use2": "炎症管理", "use3": "减轻肿胀", "timing": "15-20分钟" }, "heat": { "title": "热敷", "subtitle": "慢性状况", "use1": "肌肉紧张", "use2": "促进血流", "use3": "放松", "timing": "15-20分钟" }, "principles": { "title": "恢复原则", "subtitle": "基础概念", "rest": { "title": "休息睡眠", "description": "7-9小时睡眠" }, "hydration": { "title": "水分", "description": "充足液体" } } },
+    "equipmentLibrary": { "intro": "了解恢复设备。", "searchPlaceholder": "搜索...", "allCategories": "所有类别", "whatItDoes": "功能：", "whenUsed": "使用时机：", "noResults": "未找到", "categories": { "tape": "胶带", "sleeves": "护套", "bands": "弹力带", "softTissue": "软组织", "supports": "支撑" }, "items": { "kinesioTape": { "name": "肌内效贴", "description": "弹性治疗胶带", "usage": "肌肉支撑" }, "athleticTape": { "name": "运动胶带", "description": "非弹性胶带", "usage": "关节支撑" }, "compressionSleeve": { "name": "加压护套", "description": "弹性护套", "usage": "减轻肿胀" }, "kneeSleeve": { "name": "护膝", "description": "膝盖护套", "usage": "提供支撑" }, "resistanceBands": { "name": "阻力带", "description": "弹性带", "usage": "康复练习" }, "therapyBands": { "name": "治疗带", "description": "扁平弹性带", "usage": "温和强化" }, "foamRoller": { "name": "泡沫轴", "description": "自我按摩", "usage": "肌肉准备" }, "massageBall": { "name": "按摩球", "description": "针对性按摩", "usage": "触发点" }, "ankleBrace": { "name": "护踝", "description": "踝关节支撑", "usage": "伤病预防" }, "wristSupport": { "name": "护腕", "description": "腕关节支撑", "usage": "活动支撑" } } }
   }
 }
