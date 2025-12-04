@@ -219,70 +219,80 @@ export const FrameAnnotationDialog = ({
   useEffect(() => {
     if (!fabricCanvas) return;
 
-    // Only enable Fabric.js native drawing on desktop - mobile uses custom touch handler
-    fabricCanvas.isDrawingMode = activeTool === "draw" && !isMobile();
-    
-    // When in draw mode, ensure touch events can reach the canvas
-    if (activeTool === "draw") {
-      if (fabricCanvas.upperCanvasEl) {
-        fabricCanvas.upperCanvasEl.style.touchAction = 'none';
-        fabricCanvas.upperCanvasEl.style.pointerEvents = 'auto';
-      }
-      if (fabricCanvas.lowerCanvasEl) {
-        fabricCanvas.lowerCanvasEl.style.touchAction = 'none';
-      }
-      // Also set on the wrapper element
-      if (fabricCanvas.wrapperEl) {
-        fabricCanvas.wrapperEl.style.touchAction = 'none';
+    let pathCreatedHandler: (() => void) | null = null;
+
+    // Defer canvas modifications to let iOS Safari complete touch event processing
+    // This prevents "NotFoundError: The object can not be found here" on iOS
+    requestAnimationFrame(() => {
+      // Only enable Fabric.js native drawing on desktop - mobile uses custom touch handler
+      fabricCanvas.isDrawingMode = activeTool === "draw" && !isMobile();
+      
+      // When in draw mode, ensure touch events can reach the canvas
+      if (activeTool === "draw") {
+        if (fabricCanvas.upperCanvasEl) {
+          fabricCanvas.upperCanvasEl.style.touchAction = 'none';
+          fabricCanvas.upperCanvasEl.style.pointerEvents = 'auto';
+        }
+        if (fabricCanvas.lowerCanvasEl) {
+          fabricCanvas.lowerCanvasEl.style.touchAction = 'none';
+        }
+        // Also set on the wrapper element
+        if (fabricCanvas.wrapperEl) {
+          fabricCanvas.wrapperEl.style.touchAction = 'none';
+        }
+        
+        // On mobile, disable Fabric.js's internal event handling to prevent "object not found" errors
+        if (isMobile()) {
+          fabricCanvas.skipTargetFind = true;
+          fabricCanvas.selection = false;
+        }
+        
+        // Ensure the brush is configured
+        if (fabricCanvas.freeDrawingBrush) {
+          fabricCanvas.freeDrawingBrush.color = activeColor;
+          fabricCanvas.freeDrawingBrush.width = 3;
+        }
+      } else {
+        // Restore skipTargetFind when not in draw mode
+        if (isMobile()) {
+          fabricCanvas.skipTargetFind = false;
+        }
       }
       
-      // On mobile, disable Fabric.js's internal event handling to prevent "object not found" errors
-      if (isMobile()) {
-        fabricCanvas.skipTargetFind = true;
+      // Disable object selection in pan mode
+      if (activeTool === "pan") {
         fabricCanvas.selection = false;
+        fabricCanvas.forEachObject((obj) => {
+          obj.selectable = false;
+        });
+      } else {
+        fabricCanvas.selection = true;
+        fabricCanvas.forEachObject((obj, index) => {
+          // Keep background image unselectable
+          obj.selectable = index > 0;
+        });
       }
       
-      // Ensure the brush is configured
-      if (fabricCanvas.freeDrawingBrush) {
+      if (activeTool === "draw" && fabricCanvas.freeDrawingBrush) {
         fabricCanvas.freeDrawingBrush.color = activeColor;
         fabricCanvas.freeDrawingBrush.width = 3;
       }
-    } else {
-      // Restore skipTargetFind when not in draw mode
-      if (isMobile()) {
-        fabricCanvas.skipTargetFind = false;
-      }
-    }
-    
-    // Disable object selection in pan mode
-    if (activeTool === "pan") {
-      fabricCanvas.selection = false;
-      fabricCanvas.forEachObject((obj) => {
-        obj.selectable = false;
-      });
-    } else {
-      fabricCanvas.selection = true;
-      fabricCanvas.forEachObject((obj, index) => {
-        // Keep background image unselectable
-        obj.selectable = index > 0;
-      });
-    }
-    
-    if (activeTool === "draw" && fabricCanvas.freeDrawingBrush) {
-      fabricCanvas.freeDrawingBrush.color = activeColor;
-      fabricCanvas.freeDrawingBrush.width = 3;
-    }
 
-    // Save state after drawing
-    if (activeTool === "draw") {
-      const handlePathCreated = () => {
-        saveHistory(fabricCanvas);
-      };
-      fabricCanvas.on("path:created", handlePathCreated);
-      return () => {
-        fabricCanvas.off("path:created", handlePathCreated);
-      };
-    }
+      // Save state after drawing
+      if (activeTool === "draw") {
+        pathCreatedHandler = () => {
+          saveHistory(fabricCanvas);
+        };
+        fabricCanvas.on("path:created", pathCreatedHandler);
+      }
+    });
+
+    return () => {
+      // Clean up event listener if it was added
+      if (pathCreatedHandler) {
+        fabricCanvas.off("path:created", pathCreatedHandler);
+      }
+    };
   }, [activeTool, activeColor, fabricCanvas]);
 
   // Mobile touch drawing - creates Path objects directly without using Fabric.js brush methods
