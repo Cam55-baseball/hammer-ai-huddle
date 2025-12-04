@@ -1622,7 +1622,34 @@
     "badges": {
       "educational": "Éducatif Uniquement",
       "athleteFocused": "Axé sur l'Athlète",
-      "comprehensiveGuide": "Guide Complet"
+      "comprehensiveGuide": "Guide Complet",
+      "categories": {
+        "all": "Tous les Badges",
+        "injury": "Étude des Blessures",
+        "tiered": "Niveaux d'Anatomie",
+        "special": "Réalisation Spéciale"
+      },
+      "earned": "Obtenu",
+      "locked": "Verrouillé",
+      "safetyDisclaimer": "Décerné pour avoir complété l'étude éducative. Ce badge n'indique pas une préparation médicale ou une autorisation. Consultez toujours un professionnel agréé.",
+      "legendText": "Les badges sont obtenus en complétant le contenu éducatif. Ils représentent l'acquisition de connaissances, pas une autorisation médicale.",
+      "items": {
+        "shoulder_scholar": { "name": "Expert de l'Épaule", "description": "Éducation sur les blessures de l'épaule terminée" },
+        "elbow_expert": { "name": "Expert du Coude", "description": "Aperçu UCL / Avant-bras / Fléchisseur terminé" },
+        "hamstring_headliner": { "name": "Expert des Ischio-jambiers", "description": "Module du bas du corps terminé" },
+        "ankle_analyst": { "name": "Analyste de la Cheville", "description": "Éducation sur les blessures de la cheville terminée" },
+        "wrist_wizard": { "name": "Magicien du Poignet", "description": "Éducation poignet et main terminée" },
+        "back_boss": { "name": "Maître du Dos", "description": "Éducation dos et colonne vertébrale terminée" },
+        "bronze_anatomy": { "name": "Badge d'Anatomie Bronze", "description": "3 blessures étudiées" },
+        "silver_anatomy": { "name": "Badge d'Anatomie Argent", "description": "7 blessures étudiées" },
+        "gold_anatomy": { "name": "Badge d'Anatomie Or", "description": "12+ blessures étudiées" },
+        "elite_recovery": { "name": "Badge de Récupération Élite", "description": "Bibliothèque Bounce Back Bay complète terminée" },
+        "diagnostic_detective": { "name": "Détective Diagnostic", "description": "Quiz du diagramme de flux diagnostique réussi" },
+        "red_flag_ready": { "name": "Prêt aux Signaux d'Alarme", "description": "Quiz des signaux d'alarme réussi" },
+        "pain_scale_pro": { "name": "Pro de l'Échelle de Douleur", "description": "Section de conscience de la douleur terminée" },
+        "recovery_intelligence": { "name": "Intelligence de Récupération", "description": "Toute l'éducation sur les méthodes de récupération terminée" },
+        "human_body_mastery": { "name": "Maîtrise du Corps Humain", "description": "Chaque section terminée avec achèvement complet" }
+      }
     },
     "allAreas": "Toutes les Zones",
     "commonSymptoms": "Symptômes Courants",

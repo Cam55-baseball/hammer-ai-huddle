@@ -1722,11 +1722,6 @@
     "title": "Bounce Back Bay",
     "subtitle": "Injury Education for Athletes",
     "description": "Learn to recognize, understand, and respond to common sports injuries. Educational content to help you make informed decisions about your health.",
-    "badges": {
-      "educational": "Educational Only",
-      "athleteFocused": "Athlete-Focused",
-      "comprehensiveGuide": "Comprehensive Guide"
-    },
     "allAreas": "All Areas",
     "commonSymptoms": "Common Symptoms",
     "typicalTimeline": "Typical Timeline",
@@ -2127,6 +2122,9 @@
       }
     },
     "badges": {
+      "educational": "Educational Only",
+      "athleteFocused": "Athlete-Focused",
+      "comprehensiveGuide": "Comprehensive Guide",
       "categories": {
         "all": "All Badges",
         "injury": "Injury Study",

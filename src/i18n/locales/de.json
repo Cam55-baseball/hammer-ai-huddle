@@ -1622,7 +1622,34 @@
     "badges": {
       "educational": "Nur Bildungszwecke",
       "athleteFocused": "Athleten-orientiert",
-      "comprehensiveGuide": "Umfassender Leitfaden"
+      "comprehensiveGuide": "Umfassender Leitfaden",
+      "categories": {
+        "all": "Alle Abzeichen",
+        "injury": "Verletzungsstudium",
+        "tiered": "Anatomie-Stufen",
+        "special": "Besondere Leistung"
+      },
+      "earned": "Verdient",
+      "locked": "Gesperrt",
+      "safetyDisclaimer": "Verliehen für das Abschließen des Bildungsstudiums. Dieses Abzeichen zeigt keine medizinische Bereitschaft oder Freigabe an. Konsultieren Sie immer einen lizenzierten Fachmann.",
+      "legendText": "Abzeichen werden durch das Absolvieren von Bildungsinhalten verdient. Sie repräsentieren Wissenserwerb, keine medizinische Freigabe.",
+      "items": {
+        "shoulder_scholar": { "name": "Schulter-Gelehrter", "description": "Schulter-Verletzungsausbildung abgeschlossen" },
+        "elbow_expert": { "name": "Ellbogen-Experte", "description": "UCL / Unterarm / Flexor Übersicht abgeschlossen" },
+        "hamstring_headliner": { "name": "Oberschenkel-Experte", "description": "Unterkörper-Modul abgeschlossen" },
+        "ankle_analyst": { "name": "Knöchel-Analyst", "description": "Knöchel-Verletzungsausbildung abgeschlossen" },
+        "wrist_wizard": { "name": "Handgelenk-Zauberer", "description": "Handgelenk- und Handausbildung abgeschlossen" },
+        "back_boss": { "name": "Rücken-Boss", "description": "Rücken- und Wirbelsäulenausbildung abgeschlossen" },
+        "bronze_anatomy": { "name": "Bronze-Anatomie-Abzeichen", "description": "3 Verletzungen studiert" },
+        "silver_anatomy": { "name": "Silber-Anatomie-Abzeichen", "description": "7 Verletzungen studiert" },
+        "gold_anatomy": { "name": "Gold-Anatomie-Abzeichen", "description": "12+ Verletzungen studiert" },
+        "elite_recovery": { "name": "Elite-Erholungs-Abzeichen", "description": "Gesamte Bounce Back Bay Bibliothek abgeschlossen" },
+        "diagnostic_detective": { "name": "Diagnose-Detektiv", "description": "Diagnose-Flussdiagramm-Quiz bestanden" },
+        "red_flag_ready": { "name": "Warnzeichen-Bereit", "description": "Warnzeichen-Quiz bestanden" },
+        "pain_scale_pro": { "name": "Schmerzskala-Profi", "description": "Schmerzbewusstseins-Abschnitt abgeschlossen" },
+        "recovery_intelligence": { "name": "Erholungs-Intelligenz", "description": "Alle Erholungsmethoden-Ausbildung abgeschlossen" },
+        "human_body_mastery": { "name": "Körperbeherrschung", "description": "Jeden Abschnitt mit vollständigem Abschluss beendet" }
+      }
     },
     "allAreas": "Alle Bereiche",
     "commonSymptoms": "Häufige Symptome",
