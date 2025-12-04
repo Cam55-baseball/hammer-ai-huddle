@@ -1434,5 +1434,156 @@
     "addCustomName": "添加自定义名称...",
     "addDescription": "添加描述...",
     "metadataUpdated": "优惠码元数据已更新"
+  },
+  "selectRole": {
+    "title": "选择您的角色",
+    "subtitle": "选择您的角色以获得个性化训练",
+    "sport": "运动",
+    "role": "角色",
+    "module": "模块",
+    "player": "球员",
+    "playerDescription": "加入比赛！",
+    "selectPlayer": "选择球员",
+    "scoutCoach": "球探/教练",
+    "scoutCoachDescription": "培训和评估人才",
+    "selectRole": "选择角色",
+    "admin": "管理员",
+    "adminDescription": "申请管理员访问权限（需要所有者批准）",
+    "requestAdminAccess": "申请管理员访问权限",
+    "backToSportSelection": "返回运动选择",
+    "confirmationRequired": "需要确认",
+    "pleaseConfirmAge": "请确认年龄要求以继续。",
+    "ageVerification": {
+      "title": "需要年龄验证",
+      "description": "要继续选择和购买模块，您必须确认您已满18岁。这是支付处理所必需的。",
+      "note": "注意",
+      "parentNote": "如果您未满18岁，您的父母或法定监护人必须代您勾选此框以同意购买模块。",
+      "confirmLabel": "我确认我已满18岁，或我的父母/法定监护人代我提供同意",
+      "continueToModules": "继续选择模块"
+    }
+  },
+  "selectModules": {
+    "title": "选择您的训练模块",
+    "addModuleTitle": "添加模块",
+    "subtitle": "选择您的第一个模块（您可以稍后从仪表板添加更多）",
+    "addModeSubtitle": "选择一个模块添加到您的订阅",
+    "sport": "运动",
+    "module": "模块",
+    "hitting": "击球",
+    "hittingDescription": "分析挥棒力学、球棒速度和击球点",
+    "pitching": "投球",
+    "pitchingDescription": "跟踪速度、释放点和手臂力学",
+    "throwing": "投掷",
+    "throwingDescription": "提高准确性、手臂力量和投掷形式",
+    "alreadyPurchased": "已购买",
+    "selected": "已选择",
+    "back": "返回",
+    "loading": "加载中...",
+    "continueToPricing": "继续到定价",
+    "continue": "继续",
+    "selectModuleToContinue": "请选择一个模块以继续"
+  },
+  "scoutApplicationPage": {
+    "title": "球探/教练申请",
+    "description": "提交您的资质以供所有者审核",
+    "firstName": "名",
+    "lastName": "姓",
+    "email": "电子邮件",
+    "sport": "运动",
+    "organizationLetter": "组织信函（PDF、JPG、PNG - 最大5MB）",
+    "videoSubmission": "视频提交（MP4、MOV、AVI - 最大50MB）",
+    "back": "返回",
+    "submitting": "提交中...",
+    "submitApplication": "提交申请",
+    "errors": {
+      "notLoggedIn": "您必须登录才能提交申请",
+      "missingFiles": "缺少文件",
+      "missingFilesDesc": "请上传组织信函和视频",
+      "fileTooLarge": "文件太大",
+      "letterTooLarge": "信函必须小于5MB",
+      "videoTooLarge": "视频必须小于50MB",
+      "submissionFailed": "提交失败",
+      "submissionFailedDesc": "申请提交失败。请重试。"
+    },
+    "success": {
+      "title": "申请已提交！",
+      "description": "您的申请已发送审核"
+    }
+  },
+  "scoutApplicationPending": {
+    "pending": {
+      "title": "申请审核中",
+      "description": "您的球探/教练申请已成功提交",
+      "message": "您的申请正在由所有者审核。做出决定后您将收到通知。",
+      "timeframe": "通常需要1-3个工作日。",
+      "badge": "待审核"
+    },
+    "approved": {
+      "title": "申请已批准！",
+      "description": "恭喜！您现在拥有球探访问权限",
+      "message": "正在重定向到您的球探仪表板...",
+      "badge": "已批准"
+    },
+    "rejected": {
+      "title": "申请未批准",
+      "description": "很遗憾，您的申请目前未被批准",
+      "message": "如果您认为这是错误或想重新申请，请联系支持。",
+      "badge": "未批准"
+    },
+    "returnHome": "返回首页"
+  },
+  "selectSportScout": {
+    "title": "您教练/球探哪项运动？",
+    "subtitle": "选择您将从事的运动",
+    "baseball": "棒球",
+    "baseballDescription": "球探和教练棒球运动员",
+    "softball": "垒球",
+    "softballDescription": "球探和教练垒球运动员",
+    "back": "返回",
+    "continue": "继续"
+  },
+  "resetPassword": {
+    "title": "重置您的密码",
+    "subtitle": "在下方输入您的新密码",
+    "newPassword": "新密码",
+    "confirmPassword": "确认密码",
+    "updating": "更新中...",
+    "updatePassword": "更新密码",
+    "success": {
+      "title": "密码已更新",
+      "description": "您的密码已成功更新。"
+    },
+    "errors": {
+      "passwordMinLength": "密码必须至少6个字符",
+      "passwordsMismatch": "密码不匹配"
+    }
+  },
+  "chatWidget": {
+    "title": "AI教练",
+    "greeting": "您好！我是您的AI训练助手。我可以帮助您了解棒球和垒球训练技术，分析您的进步，并回答关于生物力学的问题。今天我能帮您什么？",
+    "placeholder": "问我任何问题...",
+    "errorSending": "发送消息失败"
+  },
+  "initializeOwner": {
+    "title": "初始化所有者账户",
+    "warning": "这只能执行一次。请谨慎使用。",
+    "email": "您的电子邮件",
+    "emailPlaceholder": "owner@example.com",
+    "emailHelper": "这必须是系统中已注册的电子邮件",
+    "secretKey": "密钥",
+    "secretKeyPlaceholder": "输入OWNER_INIT_KEY",
+    "secretKeyHelper": "在Supabase secrets中配置的OWNER_INIT_KEY",
+    "initializing": "初始化中...",
+    "initializeButton": "初始化所有者账户",
+    "backToHome": "返回首页",
+    "success": {
+      "title": "所有者账户已初始化！",
+      "description": "您现在可以作为所有者登录。"
+    },
+    "error": {
+      "title": "初始化失败",
+      "description": "初始化所有者账户时出错。",
+      "defaultMessage": "无法初始化所有者账户"
+    }
   }
 }

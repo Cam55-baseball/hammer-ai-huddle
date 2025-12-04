@@ -1434,5 +1434,156 @@
     "addCustomName": "カスタム名を追加...",
     "addDescription": "説明を追加...",
     "metadataUpdated": "クーポンメタデータが更新されました"
+  },
+  "selectRole": {
+    "title": "役割を選択",
+    "subtitle": "パーソナライズされたトレーニングのために役割を選択",
+    "sport": "スポーツ",
+    "role": "役割",
+    "module": "モジュール",
+    "player": "選手",
+    "playerDescription": "ゲームに参加！",
+    "selectPlayer": "選手を選択",
+    "scoutCoach": "スカウト/コーチ",
+    "scoutCoachDescription": "才能をトレーニング・評価",
+    "selectRole": "役割を選択",
+    "admin": "管理者",
+    "adminDescription": "管理者アクセスをリクエスト（オーナー承認が必要）",
+    "requestAdminAccess": "管理者アクセスをリクエスト",
+    "backToSportSelection": "スポーツ選択に戻る",
+    "confirmationRequired": "確認が必要",
+    "pleaseConfirmAge": "続行するには年齢要件を確認してください。",
+    "ageVerification": {
+      "title": "年齢確認が必要",
+      "description": "モジュールの選択と購入を続行するには、18歳以上であることを確認する必要があります。これは支払い処理に必要です。",
+      "note": "注意",
+      "parentNote": "18歳未満の場合、親または法定後見人がモジュール購入の同意を提供するためにこのボックスにチェックを入れる必要があります。",
+      "confirmLabel": "私は18歳以上であること、または親/法定後見人が私の代わりに同意を提供していることを確認します",
+      "continueToModules": "モジュール選択に進む"
+    }
+  },
+  "selectModules": {
+    "title": "トレーニングモジュールを選択",
+    "addModuleTitle": "モジュールを追加",
+    "subtitle": "最初のモジュールを選択（ダッシュボードから後で追加できます）",
+    "addModeSubtitle": "サブスクリプションに追加するモジュールを選択",
+    "sport": "スポーツ",
+    "module": "モジュール",
+    "hitting": "打撃",
+    "hittingDescription": "スイングメカニクス、バットスピード、コンタクトポイントを分析",
+    "pitching": "ピッチング",
+    "pitchingDescription": "速度、リリースポイント、腕のメカニクスを追跡",
+    "throwing": "スローイング",
+    "throwingDescription": "正確性、腕の強さ、スローイングフォームを改善",
+    "alreadyPurchased": "購入済み",
+    "selected": "選択済み",
+    "back": "戻る",
+    "loading": "読み込み中...",
+    "continueToPricing": "価格に進む",
+    "continue": "続行",
+    "selectModuleToContinue": "続行するにはモジュールを選択してください"
+  },
+  "scoutApplicationPage": {
+    "title": "スカウト/コーチ申請",
+    "description": "オーナーレビューのために資格を提出",
+    "firstName": "名",
+    "lastName": "姓",
+    "email": "メール",
+    "sport": "スポーツ",
+    "organizationLetter": "組織レター（PDF、JPG、PNG - 最大5MB）",
+    "videoSubmission": "ビデオ提出（MP4、MOV、AVI - 最大50MB）",
+    "back": "戻る",
+    "submitting": "送信中...",
+    "submitApplication": "申請を送信",
+    "errors": {
+      "notLoggedIn": "申請を送信するにはログインが必要です",
+      "missingFiles": "ファイルが不足",
+      "missingFilesDesc": "組織レターとビデオの両方をアップロードしてください",
+      "fileTooLarge": "ファイルが大きすぎます",
+      "letterTooLarge": "レターは5MB以下である必要があります",
+      "videoTooLarge": "ビデオは50MB以下である必要があります",
+      "submissionFailed": "送信失敗",
+      "submissionFailedDesc": "申請の送信に失敗しました。もう一度お試しください。"
+    },
+    "success": {
+      "title": "申請が送信されました！",
+      "description": "申請がレビューのために送信されました"
+    }
+  },
+  "scoutApplicationPending": {
+    "pending": {
+      "title": "申請審査中",
+      "description": "スカウト/コーチ申請が正常に送信されました",
+      "message": "申請はオーナーによって審査中です。決定が下されたら通知されます。",
+      "timeframe": "通常1〜3営業日かかります。",
+      "badge": "審査待ち"
+    },
+    "approved": {
+      "title": "申請承認！",
+      "description": "おめでとうございます！スカウトアクセスが付与されました",
+      "message": "スカウトダッシュボードにリダイレクト中...",
+      "badge": "承認"
+    },
+    "rejected": {
+      "title": "申請不承認",
+      "description": "残念ながら、現時点で申請は承認されませんでした",
+      "message": "これが間違いだと思う場合や再申請したい場合は、サポートにお問い合わせください。",
+      "badge": "不承認"
+    },
+    "returnHome": "ホームに戻る"
+  },
+  "selectSportScout": {
+    "title": "どのスポーツをコーチ/スカウトしますか？",
+    "subtitle": "作業するスポーツを選択",
+    "baseball": "野球",
+    "baseballDescription": "野球選手をスカウト・コーチ",
+    "softball": "ソフトボール",
+    "softballDescription": "ソフトボール選手をスカウト・コーチ",
+    "back": "戻る",
+    "continue": "続行"
+  },
+  "resetPassword": {
+    "title": "パスワードをリセット",
+    "subtitle": "以下に新しいパスワードを入力",
+    "newPassword": "新しいパスワード",
+    "confirmPassword": "パスワードを確認",
+    "updating": "更新中...",
+    "updatePassword": "パスワードを更新",
+    "success": {
+      "title": "パスワードが更新されました",
+      "description": "パスワードが正常に更新されました。"
+    },
+    "errors": {
+      "passwordMinLength": "パスワードは6文字以上必要です",
+      "passwordsMismatch": "パスワードが一致しません"
+    }
+  },
+  "chatWidget": {
+    "title": "AIコーチ",
+    "greeting": "こんにちは！AIトレーニングアシスタントです。野球とソフトボールのトレーニング技術、進捗分析、バイオメカニクスに関する質問をお手伝いします。今日はどのようにお手伝いできますか？",
+    "placeholder": "何でも聞いてください...",
+    "errorSending": "メッセージの送信に失敗"
+  },
+  "initializeOwner": {
+    "title": "オーナーアカウントを初期化",
+    "warning": "これは一度しか実行できません。慎重に使用してください。",
+    "email": "メールアドレス",
+    "emailPlaceholder": "owner@example.com",
+    "emailHelper": "システムに既に登録されているメールである必要があります",
+    "secretKey": "シークレットキー",
+    "secretKeyPlaceholder": "OWNER_INIT_KEYを入力",
+    "secretKeyHelper": "Supabaseシークレットで設定されたOWNER_INIT_KEY",
+    "initializing": "初期化中...",
+    "initializeButton": "オーナーアカウントを初期化",
+    "backToHome": "ホームに戻る",
+    "success": {
+      "title": "オーナーアカウントが初期化されました！",
+      "description": "オーナーとしてログインできます。"
+    },
+    "error": {
+      "title": "初期化失敗",
+      "description": "オーナーアカウントの初期化中にエラーが発生しました。",
+      "defaultMessage": "オーナーアカウントの初期化に失敗"
+    }
   }
 }

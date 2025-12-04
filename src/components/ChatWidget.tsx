@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,10 +20,11 @@ interface ChatWidgetProps {
 }
 
 export function ChatWidget({ onClose }: ChatWidgetProps) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm your AI coaching assistant. I can help you with baseball and softball training techniques, analyze your progress, and answer questions about biomechanics. How can I help you today?",
+      content: t('chatWidget.greeting'),
     },
   ]);
   const [input, setInput] = useState("");
@@ -63,8 +65,8 @@ export function ChatWidget({ onClose }: ChatWidgetProps) {
     } catch (error: any) {
       console.error("Error sending message:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to send message",
+        title: t('common.error'),
+        description: error.message || t('chatWidget.errorSending'),
         variant: "destructive",
       });
       
@@ -80,7 +82,7 @@ export function ChatWidget({ onClose }: ChatWidgetProps) {
       <CardHeader className="border-b border-border">
         <CardTitle className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-primary" />
-          AI Coach
+          {t('chatWidget.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -129,7 +131,7 @@ export function ChatWidget({ onClose }: ChatWidgetProps) {
         </ScrollArea>
         <div className="flex gap-2 border-t border-border p-4">
           <Input
-            placeholder="Ask me anything..."
+            placeholder={t('chatWidget.placeholder')}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}

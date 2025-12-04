@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { User, UserCog, Shield, ShieldCheck } from "lucide-react";
@@ -18,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 const SelectRole = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const selectedSport = (location.state as { sport?: string })?.sport || localStorage.getItem('selectedSport');
@@ -48,8 +50,8 @@ const SelectRole = () => {
   const handleAgeConfirmation = () => {
     if (!ageConfirmed) {
       toast({
-        title: "Confirmation Required",
-        description: "Please confirm the age requirement to continue.",
+        title: t('selectRole.confirmationRequired'),
+        description: t('selectRole.pleaseConfirmAge'),
         variant: "destructive",
       });
       return;
@@ -69,16 +71,16 @@ const SelectRole = () => {
           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold text-2xl">H</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2">Select Your Role</h1>
+          <h1 className="text-4xl font-bold mb-2">{t('selectRole.title')}</h1>
           <p className="text-muted-foreground">
-            Choose your role to get personalized training
+            {t('selectRole.subtitle')}
           </p>
           <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Sport: {selectedSport}</span>
+            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">{t('selectRole.sport')}: {selectedSport}</span>
             <span>→</span>
-            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Role</span>
+            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">{t('selectRole.role')}</span>
             <span>→</span>
-            <span>Module</span>
+            <span>{t('selectRole.module')}</span>
           </div>
         </div>
 
@@ -93,12 +95,12 @@ const SelectRole = () => {
                   <User className="h-12 w-12 text-primary" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold mb-2">Player</h2>
+              <h2 className="text-2xl font-bold mb-2">{t('selectRole.player')}</h2>
               <p className="text-muted-foreground mb-6">
-                Get In The Game!
+                {t('selectRole.playerDescription')}
               </p>
               <Button size="lg" className="w-full">
-                Select Player
+                {t('selectRole.selectPlayer')}
               </Button>
             </div>
           </Card>
@@ -113,12 +115,12 @@ const SelectRole = () => {
                   <UserCog className="h-12 w-12 text-primary" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold mb-2">Scout/Coach</h2>
+              <h2 className="text-2xl font-bold mb-2">{t('selectRole.scoutCoach')}</h2>
               <p className="text-muted-foreground mb-6">
-                Train and evaluate talent
+                {t('selectRole.scoutCoachDescription')}
               </p>
               <Button size="lg" className="w-full">
-                Select Role
+                {t('selectRole.selectRole')}
               </Button>
             </div>
           </Card>
@@ -133,12 +135,12 @@ const SelectRole = () => {
                   <Shield className="h-12 w-12 text-primary" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold mb-2">Admin</h2>
+              <h2 className="text-2xl font-bold mb-2">{t('selectRole.admin')}</h2>
               <p className="text-muted-foreground mb-6">
-                Request admin access (requires owner approval)
+                {t('selectRole.adminDescription')}
               </p>
               <Button size="lg" className="w-full">
-                Request Admin Access
+                {t('selectRole.requestAdminAccess')}
               </Button>
             </div>
           </Card>
@@ -146,7 +148,7 @@ const SelectRole = () => {
 
         <div className="text-center mt-6">
           <Button variant="ghost" onClick={() => navigate("/select-sport", { state: { sport: selectedSport } })}>
-            ← Back to Sport Selection
+            ← {t('selectRole.backToSportSelection')}
           </Button>
         </div>
 
@@ -156,14 +158,14 @@ const SelectRole = () => {
             <AlertDialogHeader>
               <div className="flex items-center gap-2 mb-2">
                 <ShieldCheck className="h-6 w-6 text-primary" />
-                <AlertDialogTitle className="text-xl">Age Verification Required</AlertDialogTitle>
+                <AlertDialogTitle className="text-xl">{t('selectRole.ageVerification.title')}</AlertDialogTitle>
               </div>
               <AlertDialogDescription className="text-base space-y-3">
                 <p>
-                  To proceed with module selection and purchase, you must confirm that you are 18 years of age or older. This is required for payment processing.
+                  {t('selectRole.ageVerification.description')}
                 </p>
                 <p className="text-muted-foreground italic border-l-4 border-primary/30 pl-3 py-2 bg-muted/50 rounded">
-                  <strong>Note:</strong> If you are under 18 years of age, your parent or legal guardian must check this box on your behalf to provide consent for module purchase.
+                  <strong>{t('selectRole.ageVerification.note')}:</strong> {t('selectRole.ageVerification.parentNote')}
                 </p>
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -179,7 +181,7 @@ const SelectRole = () => {
                 htmlFor="age-confirm" 
                 className="text-base font-medium cursor-pointer leading-relaxed"
               >
-                I confirm that I am 18 years of age or older, or that my parent/legal guardian is providing consent on my behalf
+                {t('selectRole.ageVerification.confirmLabel')}
               </Label>
             </div>
             
@@ -189,14 +191,14 @@ const SelectRole = () => {
                 setAgeConfirmed(false);
                 setPendingRole("");
               }}>
-                Cancel
+                {t('common.cancel')}
               </AlertDialogCancel>
               <AlertDialogAction 
                 onClick={handleAgeConfirmation}
                 disabled={!ageConfirmed}
                 className="min-w-[200px]"
               >
-                Continue to Module Selection
+                {t('selectRole.ageVerification.continueToModules')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

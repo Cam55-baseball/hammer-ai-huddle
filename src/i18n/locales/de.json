@@ -1463,5 +1463,156 @@
     "addCustomName": "Benutzerdefinierten Namen hinzufügen...",
     "addDescription": "Beschreibung hinzufügen...",
     "metadataUpdated": "Gutschein-Metadaten aktualisiert"
+  },
+  "selectRole": {
+    "title": "Wählen Sie Ihre Rolle",
+    "subtitle": "Wählen Sie Ihre Rolle für personalisiertes Training",
+    "sport": "Sport",
+    "role": "Rolle",
+    "module": "Modul",
+    "player": "Spieler",
+    "playerDescription": "Ins Spiel kommen!",
+    "selectPlayer": "Spieler Auswählen",
+    "scoutCoach": "Scout/Trainer",
+    "scoutCoachDescription": "Trainieren und Talente bewerten",
+    "selectRole": "Rolle Auswählen",
+    "admin": "Administrator",
+    "adminDescription": "Admin-Zugang anfordern (erfordert Eigentümer-Genehmigung)",
+    "requestAdminAccess": "Admin-Zugang Anfordern",
+    "backToSportSelection": "Zurück zur Sportauswahl",
+    "confirmationRequired": "Bestätigung Erforderlich",
+    "pleaseConfirmAge": "Bitte bestätigen Sie die Altersanforderung um fortzufahren.",
+    "ageVerification": {
+      "title": "Altersverifizierung Erforderlich",
+      "description": "Um mit der Modulauswahl und dem Kauf fortzufahren, müssen Sie bestätigen, dass Sie 18 Jahre oder älter sind. Dies ist für die Zahlungsabwicklung erforderlich.",
+      "note": "Hinweis",
+      "parentNote": "Wenn Sie unter 18 Jahre alt sind, muss Ihr Elternteil oder gesetzlicher Vormund dieses Kästchen in Ihrem Namen ankreuzen, um die Zustimmung zum Modulkauf zu erteilen.",
+      "confirmLabel": "Ich bestätige, dass ich 18 Jahre oder älter bin, oder dass mein Elternteil/gesetzlicher Vormund in meinem Namen zustimmt",
+      "continueToModules": "Weiter zur Modulauswahl"
+    }
+  },
+  "selectModules": {
+    "title": "Wählen Sie Ihr Trainingsmodul",
+    "addModuleTitle": "Modul Hinzufügen",
+    "subtitle": "Wählen Sie Ihr erstes Modul (Sie können später weitere vom Dashboard hinzufügen)",
+    "addModeSubtitle": "Wählen Sie ein Modul zum Hinzufügen zu Ihrem Abonnement",
+    "sport": "Sport",
+    "module": "Modul",
+    "hitting": "Schlagen",
+    "hittingDescription": "Analysieren Sie Schwungmechanik, Schlägergeschwindigkeit und Kontaktpunkt",
+    "pitching": "Werfen",
+    "pitchingDescription": "Verfolgen Sie Geschwindigkeit, Auslösepunkt und Armmechanik",
+    "throwing": "Wurf",
+    "throwingDescription": "Verbessern Sie Genauigkeit, Armstärke und Wurfform",
+    "alreadyPurchased": "Bereits Gekauft",
+    "selected": "Ausgewählt",
+    "back": "Zurück",
+    "loading": "Laden...",
+    "continueToPricing": "Weiter zu Preisen",
+    "continue": "Weiter",
+    "selectModuleToContinue": "Bitte wählen Sie ein Modul um fortzufahren"
+  },
+  "scoutApplicationPage": {
+    "title": "Scout/Trainer-Bewerbung",
+    "description": "Reichen Sie Ihre Qualifikationen zur Überprüfung durch den Eigentümer ein",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "email": "E-Mail",
+    "sport": "Sport",
+    "organizationLetter": "Organisationsschreiben (PDF, JPG, PNG - Max 5MB)",
+    "videoSubmission": "Video-Einreichung (MP4, MOV, AVI - Max 50MB)",
+    "back": "Zurück",
+    "submitting": "Einreichen...",
+    "submitApplication": "Bewerbung Einreichen",
+    "errors": {
+      "notLoggedIn": "Sie müssen angemeldet sein um eine Bewerbung einzureichen",
+      "missingFiles": "Fehlende Dateien",
+      "missingFilesDesc": "Bitte laden Sie sowohl das Organisationsschreiben als auch das Video hoch",
+      "fileTooLarge": "Datei Zu Groß",
+      "letterTooLarge": "Das Schreiben muss unter 5MB sein",
+      "videoTooLarge": "Das Video muss unter 50MB sein",
+      "submissionFailed": "Einreichung Fehlgeschlagen",
+      "submissionFailedDesc": "Bewerbung konnte nicht eingereicht werden. Bitte versuchen Sie es erneut."
+    },
+    "success": {
+      "title": "Bewerbung Eingereicht!",
+      "description": "Ihre Bewerbung wurde zur Überprüfung gesendet"
+    }
+  },
+  "scoutApplicationPending": {
+    "pending": {
+      "title": "Bewerbung Wird Überprüft",
+      "description": "Ihre Scout/Trainer-Bewerbung wurde erfolgreich eingereicht",
+      "message": "Ihre Bewerbung wird vom Eigentümer überprüft. Sie erhalten eine Benachrichtigung, wenn eine Entscheidung getroffen wurde.",
+      "timeframe": "Dies dauert in der Regel 1-3 Werktage.",
+      "badge": "Überprüfung Ausstehend"
+    },
+    "approved": {
+      "title": "Bewerbung Genehmigt!",
+      "description": "Herzlichen Glückwunsch! Sie haben jetzt Scout-Zugang",
+      "message": "Weiterleitung zu Ihrem Scout-Dashboard...",
+      "badge": "Genehmigt"
+    },
+    "rejected": {
+      "title": "Bewerbung Nicht Genehmigt",
+      "description": "Leider wurde Ihre Bewerbung zu diesem Zeitpunkt nicht genehmigt",
+      "message": "Wenn Sie glauben, dass dies ein Fehler war oder sich erneut bewerben möchten, kontaktieren Sie bitte den Support.",
+      "badge": "Nicht Genehmigt"
+    },
+    "returnHome": "Zurück zur Startseite"
+  },
+  "selectSportScout": {
+    "title": "Welchen Sport Trainieren/Scouten Sie?",
+    "subtitle": "Wählen Sie den Sport, mit dem Sie arbeiten werden",
+    "baseball": "Baseball",
+    "baseballDescription": "Scouten und trainieren Sie Baseball-Spieler",
+    "softball": "Softball",
+    "softballDescription": "Scouten und trainieren Sie Softball-Spieler",
+    "back": "Zurück",
+    "continue": "Weiter"
+  },
+  "resetPassword": {
+    "title": "Passwort Zurücksetzen",
+    "subtitle": "Geben Sie unten Ihr neues Passwort ein",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Passwort Bestätigen",
+    "updating": "Aktualisieren...",
+    "updatePassword": "Passwort Aktualisieren",
+    "success": {
+      "title": "Passwort Aktualisiert",
+      "description": "Ihr Passwort wurde erfolgreich aktualisiert."
+    },
+    "errors": {
+      "passwordMinLength": "Passwort muss mindestens 6 Zeichen haben",
+      "passwordsMismatch": "Passwörter stimmen nicht überein"
+    }
+  },
+  "chatWidget": {
+    "title": "KI-Trainer",
+    "greeting": "Hallo! Ich bin Ihr KI-Trainingsassistent. Ich kann Ihnen bei Baseball- und Softball-Trainingstechniken helfen, Ihren Fortschritt analysieren und Fragen zur Biomechanik beantworten. Wie kann ich Ihnen heute helfen?",
+    "placeholder": "Fragen Sie mich alles...",
+    "errorSending": "Nachricht konnte nicht gesendet werden"
+  },
+  "initializeOwner": {
+    "title": "Eigentümer-Konto Initialisieren",
+    "warning": "Dies kann nur einmal durchgeführt werden. Mit Vorsicht verwenden.",
+    "email": "Ihre E-Mail",
+    "emailPlaceholder": "eigentuemer@beispiel.com",
+    "emailHelper": "Diese E-Mail muss bereits im System registriert sein",
+    "secretKey": "Geheimer Schlüssel",
+    "secretKeyPlaceholder": "OWNER_INIT_KEY eingeben",
+    "secretKeyHelper": "Der in Supabase-Secrets konfigurierte OWNER_INIT_KEY",
+    "initializing": "Initialisieren...",
+    "initializeButton": "Eigentümer-Konto Initialisieren",
+    "backToHome": "Zurück zur Startseite",
+    "success": {
+      "title": "Eigentümer-Konto Initialisiert!",
+      "description": "Sie können sich jetzt als Eigentümer anmelden."
+    },
+    "error": {
+      "title": "Initialisierung Fehlgeschlagen",
+      "description": "Beim Initialisieren des Eigentümer-Kontos ist ein Fehler aufgetreten.",
+      "defaultMessage": "Eigentümer-Konto konnte nicht initialisiert werden"
+    }
   }
 }
