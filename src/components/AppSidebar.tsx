@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -141,7 +141,9 @@ export function AppSidebar() {
 
   const trainingModules = [
     { title: t('dashboard.modules.hittingAnalysis'), url: `/analyze/hitting?sport=${selectedSport}`, icon: Target },
+    { title: t('workoutModules.productionLab.title'), url: "/production-lab", icon: Dumbbell },
     { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target },
+    { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell },
     { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
     { title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked },
   ];

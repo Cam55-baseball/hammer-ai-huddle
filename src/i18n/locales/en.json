@@ -2383,5 +2383,39 @@
         }
       }
     }
+  },
+  "workoutModules": {
+    "productionLab": {
+      "title": "Production Lab",
+      "subtitle": "6-Week Hitting Development Program"
+    },
+    "productionStudio": {
+      "title": "Production Studio",
+      "subtitle": "6-Week Pitching Development Program"
+    },
+    "yourProgress": "Your Progress",
+    "currentWeek": "Current Week",
+    "thisWeek": "This Week",
+    "overallProgress": "Overall Progress",
+    "lastActivity": "Last Activity",
+    "notStarted": "Not started yet",
+    "week": "Week",
+    "current": "Current",
+    "progress": "Progress",
+    "completeWeekToUnlock": "Complete {{percent}}% of Week {{week}} to unlock",
+    "weekFocus": "Focus",
+    "sets": "sets",
+    "reps": "reps",
+    "equipmentChecklist": "Equipment Checklist",
+    "weekLocked": "Week Locked",
+    "weekLockedDescription": "You need to complete more of the previous week to unlock Week {{week}}.",
+    "needToComplete": "Need {{percent}}% ({{remaining}}% more to go)",
+    "keepGoingMessage": "Keep going! You're making great progress.",
+    "backToWorkout": "Back to Workout",
+    "sixWeekPlan": "6-Week Training Plan",
+    "accessRequired": "Access Required",
+    "subscribeToHitting": "Subscribe to the Hitting Analysis module to access Production Lab.",
+    "subscribeToPitching": "Subscribe to the Pitching Analysis module to access Production Studio.",
+    "viewPlans": "View Plans"
   }
 }
