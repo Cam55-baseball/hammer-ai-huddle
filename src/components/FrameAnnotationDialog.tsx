@@ -498,6 +498,11 @@ export const FrameAnnotationDialog = ({
   };
 
   const handleToolClick = (tool: AnnotationTool) => {
+    // Provide haptic feedback on mobile for better UX
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+
     // Defer state change to let iOS Safari complete touch event processing
     // This prevents "NotFoundError: The object can not be found here" on iOS
     requestAnimationFrame(() => {
