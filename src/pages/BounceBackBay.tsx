@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { HeartPulse, Waves, Sparkles, Activity, AlertTriangle, ThermometerSun, ChevronDown, ArrowUpRight, Shield, Wrench, Dumbbell } from "lucide-react";
+import { HeartPulse, Waves, Sparkles, Activity, AlertTriangle, ThermometerSun, ChevronDown, ArrowUpRight, Shield, Wrench, Dumbbell, Trophy } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,8 @@ import { ReturnToPlayPhases } from "@/components/bounce-back-bay/ReturnToPlayPha
 import { InjuryPrevention } from "@/components/bounce-back-bay/InjuryPrevention";
 import { RecoveryMethods } from "@/components/bounce-back-bay/RecoveryMethods";
 import { EquipmentLibrary } from "@/components/bounce-back-bay/EquipmentLibrary";
+import { BounceBackBadges } from "@/components/bounce-back-bay/BounceBackBadges";
+import { BounceBackStreakCard } from "@/components/bounce-back-bay/BounceBackStreakCard";
 import { supabase } from "@/integrations/supabase/client";
 
 interface InjuryLibraryItem {
@@ -28,30 +30,58 @@ interface InjuryLibraryItem {
   impact_on_performance: string | null;
 }
 
+// Total sections available for tracking
+const TOTAL_SECTIONS = 8;
+const TOTAL_BADGES = 14;
+
 export default function BounceBackBay() {
   const { t } = useTranslation();
   const [injuries, setInjuries] = useState<InjuryLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBodyArea, setSelectedBodyArea] = useState<string | null>(null);
+  
+  // Progress tracking state
+  const [earnedBadges, setEarnedBadges] = useState<string[]>([]);
+  const [sectionsCompleted, setSectionsCompleted] = useState<string[]>([]);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
 
   useEffect(() => {
-    const fetchInjuries = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch injuries
+        const { data: injuryData, error: injuryError } = await supabase
           .from('injury_library')
           .select('*')
           .order('body_area');
 
-        if (error) throw error;
-        setInjuries(data || []);
+        if (injuryError) throw injuryError;
+        setInjuries(injuryData || []);
+
+        // Fetch user progress
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: progressData } = await supabase
+            .from('user_injury_progress')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+          if (progressData) {
+            setEarnedBadges(progressData.badges_earned || []);
+            setSectionsCompleted(progressData.sections_completed || []);
+            setCurrentStreak(progressData.current_streak || 0);
+            setLongestStreak(progressData.longest_streak || 0);
+          }
+        }
       } catch (error) {
-        console.error('Error fetching injuries:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchInjuries();
+    fetchData();
   }, []);
 
   const bodyAreas = [...new Set(injuries.map(i => i.body_area))];
@@ -108,6 +138,37 @@ export default function BounceBackBay() {
         </div>
 
         <div className="p-4 sm:p-6 space-y-6 max-w-5xl mx-auto">
+          {/* Progress & Badges Section */}
+          <Accordion type="single" collapsible className="space-y-4">
+            <AccordionItem value="progress-badges" className="border rounded-lg bg-card overflow-hidden">
+              <AccordionTrigger className="px-4 sm:px-6 py-4 hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-yellow-500/20 rounded-lg">
+                    <Trophy className="h-5 w-5 text-yellow-500" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold">{t('bounceBackBay.progress.title')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('bounceBackBay.progress.subtitle')}</p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 sm:px-6 pb-6 space-y-6">
+                <BounceBackStreakCard
+                  currentStreak={currentStreak}
+                  longestStreak={longestStreak}
+                  sectionsCompleted={sectionsCompleted}
+                  totalSections={TOTAL_SECTIONS}
+                  badgesEarned={earnedBadges.length}
+                  totalBadges={TOTAL_BADGES}
+                />
+                <BounceBackBadges
+                  earnedBadges={earnedBadges}
+                  sectionsCompleted={sectionsCompleted}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
           {/* Hurting vs Injured - Top Card */}
           <HurtingVsInjured />
 
