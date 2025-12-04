@@ -2082,6 +2082,94 @@
     "progress": {
       "title": "Tu Progreso e Insignias",
       "subtitle": "Sigue tu recorrido de aprendizaje y gana insignias educativas"
+    },
+    "quiz": {
+      "title": "Verificación de Conocimientos",
+      "description": "Responde {{count}} preguntas para probar tu comprensión",
+      "start": "Iniciar Quiz",
+      "next": "Siguiente",
+      "finish": "Terminar",
+      "score": "Tu Puntuación",
+      "passed": "¡Felicitaciones!",
+      "needsRetry": "Sigue Aprendiendo",
+      "passMessage": "¡Excelente trabajo! Has demostrado comprensión de esta sección.",
+      "retryMessage": "Necesitas 70% para aprobar. Revisa el contenido e intenta de nuevo.",
+      "retry": "Intentar de Nuevo",
+      "alreadyPassed": "¡Ya completaste este quiz!",
+      "completed": "Completado",
+      "badgeEarned": "¡Insignia Ganada!",
+      "questions": {
+        "diagnostic": {
+          "q1": "¿Cuál es el primer paso al evaluar una posible lesión?",
+          "q2": "¿Cuándo debes buscar atención médica inmediata?",
+          "q3": "¿Qué significa RICE en el tratamiento de lesiones?",
+          "options": {
+            "q1": { "a": "Continuar jugando a pesar del dolor", "b": "Detener la actividad y evaluar la situación", "c": "Aplicar hielo inmediatamente" },
+            "q2": { "a": "Cuando sientes una molestia menor", "b": "Solo si hay sangrado visible", "c": "Cuando experimentas dolor severo, deformidad o pérdida de función" },
+            "q3": { "a": "Reposo, Hielo, Compresión, Elevación", "b": "Correr, Hielo, Comprimir, Ejercicio", "c": "Reposo, Inmovilizar, Frío, Evaluar" }
+          }
+        },
+        "pain-scale": {
+          "q1": "¿Qué nivel de dolor indica que debes detener la actividad inmediatamente?",
+          "q2": "¿Cuál es el propósito de una escala de dolor?",
+          "q3": "¿Cómo debe manejarse típicamente la molestia leve (1-3)?",
+          "options": {
+            "q1": { "a": "Cualquier dolor por encima de 1", "b": "Nivel de dolor 7 o superior", "c": "Solo dolor nivel 10" },
+            "q2": { "a": "Para comunicar la intensidad del dolor consistentemente", "b": "Para determinar el diagnóstico exacto de la lesión", "c": "Para evitar buscar atención médica" },
+            "q3": { "a": "Atención de emergencia inmediata", "b": "Reposo completo en cama", "c": "Monitorear, modificar actividad y usar medidas preventivas" }
+          }
+        },
+        "red-flags": {
+          "q1": "¿Cuál de estos es una señal de alerta que requiere atención médica inmediata?",
+          "q2": "¿Qué debes hacer si notas entumecimiento u hormigueo?",
+          "q3": "¿Por qué es importante reconocer las señales de alerta?",
+          "options": {
+            "q1": { "a": "Incapacidad para soportar peso o deformidad severa", "b": "Dolor muscular leve después del ejercicio", "c": "Ligera rigidez por la mañana" },
+            "q2": { "a": "Ignorarlo y continuar la actividad", "b": "Esperar una semana para ver si mejora", "c": "Detener la actividad y consultar a un profesional médico" },
+            "q3": { "a": "Ayudan a evitar descanso innecesario", "b": "Indican condiciones potencialmente serias que necesitan atención pronta", "c": "Raramente son importantes en deportes" }
+          }
+        },
+        "rtp": {
+          "q1": "¿Cuál es el orden correcto para la progresión de regreso al juego?",
+          "q2": "¿Cuándo puede un atleta progresar a la siguiente fase?",
+          "q3": "¿Qué debe suceder si el dolor regresa durante la progresión?",
+          "options": {
+            "q1": { "a": "Actividad completa inmediatamente después de que el dolor desaparezca", "b": "Reposo → Actividad ligera → Específico del deporte → Competencia completa", "c": "Saltar la rehabilitación y probar con juego" },
+            "q2": { "a": "Después de completar cada fase sin aumento de síntomas", "b": "Después de exactamente 24 horas", "c": "Cuando se sienta motivado" },
+            "q3": { "a": "Seguir adelante", "b": "Continuar a la misma intensidad", "c": "Regresar a la fase anterior y reevaluar" }
+          }
+        },
+        "prevention": {
+          "q1": "¿Cuál es la estrategia de prevención de lesiones más efectiva?",
+          "q2": "¿Por qué es importante el calentamiento adecuado?",
+          "q3": "¿Cómo afecta el sueño adecuado al riesgo de lesiones?",
+          "options": {
+            "q1": { "a": "Evitar toda actividad física", "b": "Tomar medicamentos para el dolor antes de la actividad", "c": "Calentamiento consistente, entrenamiento de fuerza y técnica adecuada" },
+            "q2": { "a": "Es una pérdida de tiempo", "b": "Aumenta el flujo sanguíneo y prepara los músculos para la actividad", "c": "Es solo para atletas profesionales" },
+            "q3": { "a": "El sueño deficiente aumenta significativamente el riesgo de lesiones", "b": "El sueño no tiene efecto en las lesiones", "c": "Menos sueño hace a los atletas más fuertes" }
+          }
+        },
+        "recovery": {
+          "q1": "¿Cuándo debe aplicarse hielo a una lesión aguda?",
+          "q2": "¿Cuál es el beneficio principal de la compresión?",
+          "q3": "¿Por cuánto tiempo debe aplicarse típicamente el hielo?",
+          "options": {
+            "q1": { "a": "Dentro de las primeras 48-72 horas de la lesión", "b": "Solo después de una semana", "c": "Nunca usar hielo en lesiones" },
+            "q2": { "a": "Aumenta el flujo sanguíneo", "b": "Se ve profesional", "c": "Ayuda a controlar la hinchazón y proporciona soporte" },
+            "q3": { "a": "Continuamente por 24 horas", "b": "15-20 minutos a la vez con descansos", "c": "5 minutos máximo" }
+          }
+        },
+        "equipment": {
+          "q1": "¿Cuál es el propósito del foam rolling?",
+          "q2": "¿Cuándo deben usarse las bandas de resistencia?",
+          "q3": "¿Por qué son útiles los soportes y aparatos ortopédicos?",
+          "options": {
+            "q1": { "a": "Para construir masa muscular", "b": "Liberación miofascial y recuperación muscular", "c": "Para reemplazar completamente el estiramiento" },
+            "q2": { "a": "Solo después de cirugía", "b": "Para rehabilitación, calentamiento y ejercicios de fuerza", "c": "Nunca, son peligrosas" },
+            "q3": { "a": "Curan las lesiones instantáneamente", "b": "Reemplazan la rehabilitación adecuada", "c": "Proporcionan estabilidad y soporte durante la recuperación" }
+          }
+        }
+      }
     }
   }
 }

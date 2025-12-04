@@ -2104,6 +2104,94 @@
     "progress": {
       "title": "Votre Progression & Badges",
       "subtitle": "Suivez votre parcours d'apprentissage et gagnez des badges éducatifs"
+    },
+    "quiz": {
+      "title": "Vérification des Connaissances",
+      "description": "Répondez à {{count}} questions pour tester votre compréhension",
+      "start": "Commencer le Quiz",
+      "next": "Suivant",
+      "finish": "Terminer",
+      "score": "Votre Score",
+      "passed": "Félicitations!",
+      "needsRetry": "Continuez à Apprendre",
+      "passMessage": "Excellent travail! Vous avez démontré votre compréhension de cette section.",
+      "retryMessage": "Vous avez besoin de 70% pour réussir. Révisez le contenu et réessayez.",
+      "retry": "Réessayer",
+      "alreadyPassed": "Vous avez déjà complété ce quiz!",
+      "completed": "Complété",
+      "badgeEarned": "Badge Gagné!",
+      "questions": {
+        "diagnostic": {
+          "q1": "Quelle est la première étape lors de l'évaluation d'une blessure potentielle?",
+          "q2": "Quand devez-vous consulter immédiatement un médecin?",
+          "q3": "Que signifie RICE dans le traitement des blessures?",
+          "options": {
+            "q1": { "a": "Continuer à jouer malgré la douleur", "b": "Arrêter l'activité et évaluer la situation", "c": "Appliquer de la glace immédiatement" },
+            "q2": { "a": "Quand vous ressentez un léger inconfort", "b": "Uniquement s'il y a un saignement visible", "c": "Quand vous ressentez une douleur intense, une déformation ou une perte de fonction" },
+            "q3": { "a": "Repos, Glace, Compression, Élévation", "b": "Courir, Glace, Comprimer, Exercice", "c": "Repos, Immobiliser, Froid, Évaluer" }
+          }
+        },
+        "pain-scale": {
+          "q1": "Quel niveau de douleur indique que vous devez arrêter l'activité immédiatement?",
+          "q2": "Quel est le but d'une échelle de douleur?",
+          "q3": "Comment doit-on généralement gérer l'inconfort léger (1-3)?",
+          "options": {
+            "q1": { "a": "Toute douleur au-dessus de 1", "b": "Niveau de douleur 7 ou plus", "c": "Uniquement douleur niveau 10" },
+            "q2": { "a": "Pour communiquer l'intensité de la douleur de manière cohérente", "b": "Pour déterminer le diagnostic exact de la blessure", "c": "Pour éviter de consulter un médecin" },
+            "q3": { "a": "Soins d'urgence immédiats", "b": "Repos complet au lit", "c": "Surveiller, modifier l'activité et utiliser des mesures préventives" }
+          }
+        },
+        "red-flags": {
+          "q1": "Lequel de ces éléments est un signal d'alarme nécessitant une attention médicale immédiate?",
+          "q2": "Que devez-vous faire si vous remarquez un engourdissement ou des picotements?",
+          "q3": "Pourquoi est-il important de reconnaître les signaux d'alarme?",
+          "options": {
+            "q1": { "a": "Incapacité à supporter le poids ou déformation sévère", "b": "Légère douleur musculaire après l'exercice", "c": "Légère raideur le matin" },
+            "q2": { "a": "L'ignorer et continuer l'activité", "b": "Attendre une semaine pour voir si ça s'améliore", "c": "Arrêter l'activité et consulter un professionnel médical" },
+            "q3": { "a": "Ils aident à éviter le repos inutile", "b": "Ils indiquent des conditions potentiellement graves nécessitant des soins rapides", "c": "Ils sont rarement importants dans le sport" }
+          }
+        },
+        "rtp": {
+          "q1": "Quel est l'ordre correct pour la progression du retour au jeu?",
+          "q2": "Quand un athlète peut-il progresser vers la phase suivante?",
+          "q3": "Que doit-il se passer si la douleur revient pendant la progression?",
+          "options": {
+            "q1": { "a": "Activité complète immédiatement après la disparition de la douleur", "b": "Repos → Activité légère → Spécifique au sport → Compétition complète", "c": "Sauter la rééducation et tester avec un match" },
+            "q2": { "a": "Après avoir terminé chaque phase sans augmentation des symptômes", "b": "Après exactement 24 heures", "c": "Quand il se sent motivé" },
+            "q3": { "a": "Pousser à travers", "b": "Continuer à la même intensité", "c": "Retourner à la phase précédente et réévaluer" }
+          }
+        },
+        "prevention": {
+          "q1": "Quelle est la stratégie de prévention des blessures la plus efficace?",
+          "q2": "Pourquoi l'échauffement approprié est-il important?",
+          "q3": "Comment un sommeil adéquat affecte-t-il le risque de blessure?",
+          "options": {
+            "q1": { "a": "Éviter toute activité physique", "b": "Prendre des médicaments contre la douleur avant l'activité", "c": "Échauffement régulier, entraînement de force et technique appropriée" },
+            "q2": { "a": "C'est une perte de temps", "b": "Cela augmente le flux sanguin et prépare les muscles à l'activité", "c": "C'est uniquement pour les athlètes professionnels" },
+            "q3": { "a": "Un mauvais sommeil augmente significativement le risque de blessure", "b": "Le sommeil n'a aucun effet sur les blessures", "c": "Moins de sommeil rend les athlètes plus forts" }
+          }
+        },
+        "recovery": {
+          "q1": "Quand doit-on appliquer de la glace sur une blessure aiguë?",
+          "q2": "Quel est le principal avantage de la compression?",
+          "q3": "Combien de temps doit-on généralement appliquer de la glace?",
+          "options": {
+            "q1": { "a": "Dans les 48-72 premières heures de la blessure", "b": "Uniquement après une semaine", "c": "Ne jamais utiliser de glace sur les blessures" },
+            "q2": { "a": "Cela augmente le flux sanguin", "b": "Ça a l'air professionnel", "c": "Cela aide à contrôler le gonflement et fournit un soutien" },
+            "q3": { "a": "En continu pendant 24 heures", "b": "15-20 minutes à la fois avec des pauses", "c": "5 minutes maximum" }
+          }
+        },
+        "equipment": {
+          "q1": "Quel est le but du foam rolling?",
+          "q2": "Quand doit-on utiliser des bandes de résistance?",
+          "q3": "Pourquoi les attelles et supports sont-ils utiles?",
+          "options": {
+            "q1": { "a": "Pour développer la masse musculaire", "b": "Libération myofasciale et récupération musculaire", "c": "Pour remplacer complètement les étirements" },
+            "q2": { "a": "Uniquement après une chirurgie", "b": "Pour la rééducation, l'échauffement et les exercices de force", "c": "Jamais, ils sont dangereux" },
+            "q3": { "a": "Ils guérissent les blessures instantanément", "b": "Ils remplacent la rééducation appropriée", "c": "Ils fournissent stabilité et soutien pendant la récupération" }
+          }
+        }
+      }
     }
   }
 }

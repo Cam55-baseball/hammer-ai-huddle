@@ -2104,6 +2104,94 @@
     "progress": {
       "title": "Ihr Fortschritt & Abzeichen",
       "subtitle": "Verfolgen Sie Ihre Lernreise und verdienen Sie Bildungsabzeichen"
+    },
+    "quiz": {
+      "title": "Wissensüberprüfung",
+      "description": "Beantworten Sie {{count}} Fragen, um Ihr Verständnis zu testen",
+      "start": "Quiz Starten",
+      "next": "Weiter",
+      "finish": "Beenden",
+      "score": "Ihre Punktzahl",
+      "passed": "Herzlichen Glückwunsch!",
+      "needsRetry": "Weiter Lernen",
+      "passMessage": "Großartige Arbeit! Sie haben Verständnis für diesen Abschnitt gezeigt.",
+      "retryMessage": "Sie brauchen 70% zum Bestehen. Überprüfen Sie den Inhalt und versuchen Sie es erneut.",
+      "retry": "Erneut Versuchen",
+      "alreadyPassed": "Sie haben dieses Quiz bereits abgeschlossen!",
+      "completed": "Abgeschlossen",
+      "badgeEarned": "Abzeichen Verdient!",
+      "questions": {
+        "diagnostic": {
+          "q1": "Was ist der erste Schritt bei der Beurteilung einer möglichen Verletzung?",
+          "q2": "Wann sollten Sie sofort einen Arzt aufsuchen?",
+          "q3": "Was bedeutet RICE bei der Verletzungsbehandlung?",
+          "options": {
+            "q1": { "a": "Trotz Schmerzen weiterspielen", "b": "Aktivität stoppen und Situation bewerten", "c": "Sofort Eis auflegen" },
+            "q2": { "a": "Bei leichtem Unbehagen", "b": "Nur bei sichtbarer Blutung", "c": "Bei starken Schmerzen, Deformität oder Funktionsverlust" },
+            "q3": { "a": "Ruhe, Eis, Kompression, Elevation", "b": "Rennen, Eis, Komprimieren, Übung", "c": "Ruhe, Immobilisieren, Kälte, Evaluieren" }
+          }
+        },
+        "pain-scale": {
+          "q1": "Welches Schmerzniveau zeigt an, dass Sie die Aktivität sofort stoppen sollten?",
+          "q2": "Was ist der Zweck einer Schmerzskala?",
+          "q3": "Wie sollte leichtes Unbehagen (1-3) typischerweise behandelt werden?",
+          "options": {
+            "q1": { "a": "Jeder Schmerz über 1", "b": "Schmerzniveau 7 oder höher", "c": "Nur Schmerzniveau 10" },
+            "q2": { "a": "Um Schmerzintensität konsistent zu kommunizieren", "b": "Um die genaue Verletzungsdiagnose zu bestimmen", "c": "Um medizinische Versorgung zu vermeiden" },
+            "q3": { "a": "Sofortige Notfallversorgung", "b": "Vollständige Bettruhe", "c": "Überwachen, Aktivität anpassen und präventive Maßnahmen nutzen" }
+          }
+        },
+        "red-flags": {
+          "q1": "Welches davon ist ein Warnsignal, das sofortige ärztliche Aufmerksamkeit erfordert?",
+          "q2": "Was sollten Sie tun, wenn Sie Taubheit oder Kribbeln bemerken?",
+          "q3": "Warum ist es wichtig, Warnsignale zu erkennen?",
+          "options": {
+            "q1": { "a": "Unfähigkeit Gewicht zu tragen oder schwere Deformität", "b": "Leichter Muskelkater nach dem Training", "c": "Leichte Steifheit am Morgen" },
+            "q2": { "a": "Ignorieren und Aktivität fortsetzen", "b": "Eine Woche warten ob es besser wird", "c": "Aktivität stoppen und medizinischen Fachmann konsultieren" },
+            "q3": { "a": "Sie helfen unnötige Ruhe zu vermeiden", "b": "Sie weisen auf potenziell ernste Zustände hin die schnelle Versorgung benötigen", "c": "Sie sind im Sport selten wichtig" }
+          }
+        },
+        "rtp": {
+          "q1": "Was ist die richtige Reihenfolge für die Rückkehr-zum-Spiel-Progression?",
+          "q2": "Wann kann ein Athlet zur nächsten Phase übergehen?",
+          "q3": "Was sollte passieren, wenn Schmerzen während der Progression zurückkehren?",
+          "options": {
+            "q1": { "a": "Volle Aktivität sofort nach Abklingen der Schmerzen", "b": "Ruhe → Leichte Aktivität → Sportspezifisch → Voller Wettkampf", "c": "Rehabilitation überspringen und mit Spiel testen" },
+            "q2": { "a": "Nach Abschluss jeder Phase ohne erhöhte Symptome", "b": "Nach genau 24 Stunden", "c": "Wann immer er motiviert ist" },
+            "q3": { "a": "Durchdrücken", "b": "Mit gleicher Intensität fortfahren", "c": "Zur vorherigen Phase zurückkehren und neu bewerten" }
+          }
+        },
+        "prevention": {
+          "q1": "Was ist die effektivste Strategie zur Verletzungsprävention?",
+          "q2": "Warum ist richtiges Aufwärmen wichtig?",
+          "q3": "Wie beeinflusst ausreichend Schlaf das Verletzungsrisiko?",
+          "options": {
+            "q1": { "a": "Alle körperliche Aktivität vermeiden", "b": "Schmerzmittel vor der Aktivität nehmen", "c": "Konsequentes Aufwärmen, Krafttraining und richtige Technik" },
+            "q2": { "a": "Es ist Zeitverschwendung", "b": "Es erhöht den Blutfluss und bereitet Muskeln auf Aktivität vor", "c": "Es ist nur für Profisportler" },
+            "q3": { "a": "Schlechter Schlaf erhöht das Verletzungsrisiko erheblich", "b": "Schlaf hat keinen Einfluss auf Verletzungen", "c": "Weniger Schlaf macht Athleten stärker" }
+          }
+        },
+        "recovery": {
+          "q1": "Wann sollte Eis auf eine akute Verletzung aufgetragen werden?",
+          "q2": "Was ist der Hauptvorteil von Kompression?",
+          "q3": "Wie lange sollte Eis typischerweise aufgetragen werden?",
+          "options": {
+            "q1": { "a": "Innerhalb der ersten 48-72 Stunden nach der Verletzung", "b": "Erst nach einer Woche", "c": "Niemals Eis bei Verletzungen verwenden" },
+            "q2": { "a": "Es erhöht den Blutfluss", "b": "Es sieht professionell aus", "c": "Es hilft Schwellungen zu kontrollieren und bietet Unterstützung" },
+            "q3": { "a": "Ununterbrochen 24 Stunden", "b": "15-20 Minuten am Stück mit Pausen", "c": "Maximal 5 Minuten" }
+          }
+        },
+        "equipment": {
+          "q1": "Was ist der Zweck von Foam Rolling?",
+          "q2": "Wann sollten Widerstandsbänder verwendet werden?",
+          "q3": "Warum sind Schienen und Stützen hilfreich?",
+          "options": {
+            "q1": { "a": "Um Muskelmasse aufzubauen", "b": "Myofasziale Entspannung und Muskelregeneration", "c": "Um Dehnung vollständig zu ersetzen" },
+            "q2": { "a": "Nur nach einer Operation", "b": "Für Rehabilitation, Aufwärmen und Kraftübungen", "c": "Niemals, sie sind gefährlich" },
+            "q3": { "a": "Sie heilen Verletzungen sofort", "b": "Sie ersetzen die richtige Rehabilitation", "c": "Sie bieten Stabilität und Unterstützung während der Genesung" }
+          }
+        }
+      }
     }
   }
 }

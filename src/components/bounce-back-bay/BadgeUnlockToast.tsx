@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Award, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import i18n from "@/i18n";
 
 interface BadgeUnlockConfig {
   badgeKey: string;
@@ -8,6 +9,8 @@ interface BadgeUnlockConfig {
 }
 
 export function showBadgeUnlockToast({ badgeKey, badgeName }: BadgeUnlockConfig) {
+  const t = i18n.t.bind(i18n);
+  
   toast.custom(
     (id) => (
       <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 border border-primary/30 rounded-lg p-4 shadow-xl animate-in slide-in-from-top-5 duration-500">
@@ -24,12 +27,12 @@ export function showBadgeUnlockToast({ badgeKey, badgeName }: BadgeUnlockConfig)
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="h-4 w-4 text-yellow-500 animate-pulse" />
-              <span className="font-bold text-primary">Badge Earned!</span>
+              <span className="font-bold text-primary">{t('bounceBackBay.quiz.badgeEarned')}</span>
               <Sparkles className="h-4 w-4 text-yellow-500 animate-pulse" />
             </div>
             <p className="text-sm font-medium">{badgeName}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              This badge is for educational achievement only.
+              {t('bounceBackBay.badges.safetyDisclaimer')}
             </p>
           </div>
         </div>
@@ -40,6 +43,11 @@ export function showBadgeUnlockToast({ badgeKey, badgeName }: BadgeUnlockConfig)
       position: "top-center",
     }
   );
+  
+  // Optional: Haptic feedback on mobile
+  if (navigator.vibrate) {
+    navigator.vibrate([100, 50, 100]);
+  }
 }
 
 // Hook to trigger badge unlock with sound (optional)
