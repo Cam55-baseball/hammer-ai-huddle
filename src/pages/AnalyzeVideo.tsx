@@ -765,6 +765,7 @@ export default function AnalyzeVideo() {
                             scorecard={analysis.scorecard} 
                             currentScore={analysis.efficiency_score}
                             displayFilter={scorecardFilter}
+                            contributesToProgress={contributesToProgress}
                           />
                         </div>
                       )}

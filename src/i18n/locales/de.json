@@ -457,6 +457,27 @@
     "selected": "Ausgewählt",
     "select": "Auswählen"
   },
+  "scorecard": {
+    "title": "📊 DIE SCORECARD",
+    "subtitle": "Dein Fortschrittsbericht",
+    "baselineEstablished": "Basislinie Festgelegt!",
+    "firstAnalysisMessage": "Dies ist deine erste Analyse in diesem Modul. Dein aktueller Score von {{score}}/100 dient als Basislinie. Zukünftige Uploads werden deinen Fortschritt mit der heutigen Leistung vergleichen.",
+    "keepTraining": "Trainiere weiter und lade Videos hoch, um deine Verbesserung im Laufe der Zeit zu sehen!",
+    "scoreTrend": "Score-Trend:",
+    "improving": "Verbessernd",
+    "declining": "Verschlechternd",
+    "stable": "Stabil",
+    "yourAverage": "Dein Durchschnitt",
+    "thisSession": "Diese Sitzung",
+    "aboveAverage": "über deinem Durchschnitt",
+    "belowAverage": "unter deinem Durchschnitt",
+    "improvements": "VERBESSERUNGEN",
+    "needsAttention": "BRAUCHT AUFMERKSAMKEIT",
+    "holdingSteady": "HÄLT SICH STABIL",
+    "overall": "Gesamt:",
+    "progressDisabledMessage": "Fortschrittsverfolgung ist für diese Analyse deaktiviert. Dein Score beeinflusst deinen allgemeinen Fortschrittsbericht nicht.",
+    "progressDisabledNote": "Du kannst trotzdem deinen individuellen Score sehen, aber er wird nicht mit deinen anderen Sitzungen verglichen."
+  },
   "navigation": {
     "dashboard": "Dashboard",
     "playersClub": "Spieler-Club",

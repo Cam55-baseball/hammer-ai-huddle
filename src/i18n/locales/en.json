@@ -553,7 +553,9 @@
     "improvements": "IMPROVEMENTS",
     "needsAttention": "NEEDS ATTENTION",
     "holdingSteady": "HOLDING STEADY",
-    "overall": "Overall:"
+    "overall": "Overall:",
+    "progressDisabledMessage": "Progress tracking is disabled for this analysis. Your score won't affect your overall progress report.",
+    "progressDisabledNote": "You can still view your individual score, but it won't be compared to your other sessions."
   },
   "navigation": {
     "dashboard": "Dashboard",

@@ -555,6 +555,7 @@ export function SessionDetailDialog({
                         scorecard={aiAnalysis.scorecard} 
                         currentScore={session.efficiency_score || 0}
                         displayFilter={scorecardFilter}
+                        contributesToProgress={session.contributes_to_progress !== false}
                       />
                     </div>
                   )}
