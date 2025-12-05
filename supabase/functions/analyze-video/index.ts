@@ -497,6 +497,7 @@ Deno.serve(async (req) => {
       .eq("sport", sport)
       .eq("module", module)
       .eq("status", "completed")
+      .eq("contributes_to_progress", true) // Only include videos marked for progress tracking
       .not("ai_analysis", "is", null)
       .neq("id", videoId) // Exclude current video
       .order("created_at", { ascending: true }); // Oldest first for chronological context
