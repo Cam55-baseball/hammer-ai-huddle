@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-const _cacheInvalidation = "v2";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
