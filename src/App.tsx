@@ -1,5 +1,4 @@
 import { Suspense, lazy } from "react";
-// Rebuild timestamp: 2025-12-05T00:00:00Z
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
