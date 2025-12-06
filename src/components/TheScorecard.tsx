@@ -29,36 +29,12 @@ interface TheScorecardProps {
   scorecard: ScorecardData;
   currentScore: number;
   displayFilter?: 'all' | 'improvements' | 'regressions';
-  contributesToProgress?: boolean;
 }
 
-export function TheScorecard({ scorecard, currentScore, displayFilter = 'all', contributesToProgress = true }: TheScorecardProps) {
+export function TheScorecard({ scorecard, currentScore, displayFilter = 'all' }: TheScorecardProps) {
   const { t } = useTranslation();
   
   if (!scorecard) return null;
-
-  // Show disabled message when progress tracking is off
-  if (!contributesToProgress) {
-    return (
-      <Card className="p-4 sm:p-6 bg-muted/30 border-2 border-muted">
-        <div className="space-y-3 text-center">
-          <div className="flex items-center justify-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-              <Target className="h-6 w-6 text-muted-foreground" />
-            </div>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              {t('scorecard.progressDisabledMessage')}
-            </p>
-            <p className="text-xs text-muted-foreground/70 mt-1">
-              {t('scorecard.progressDisabledNote')}
-            </p>
-          </div>
-        </div>
-      </Card>
-    );
-  }
 
   const { improvements, regressions, neutral, overall_trend, score_trend, is_first_analysis, average_historical_score } = scorecard;
 

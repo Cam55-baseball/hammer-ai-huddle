@@ -428,27 +428,6 @@
     "resumed": "モジュールが再開されました",
     "failedToResume": "モジュールの再開に失敗しました"
   },
-  "scorecard": {
-    "title": "📊 スコアカード",
-    "subtitle": "あなたの進捗レポート",
-    "baselineEstablished": "基準値が設定されました！",
-    "firstAnalysisMessage": "これはこのモジュールでの最初の分析です。現在のスコア{{score}}/100が基準値となります。今後のアップロードは今日のパフォーマンスと比較して進捗を追跡します。",
-    "keepTraining": "トレーニングを続けて動画をアップロードし、時間の経過とともに改善を確認しましょう！",
-    "scoreTrend": "スコアトレンド:",
-    "improving": "向上中",
-    "declining": "低下中",
-    "stable": "安定",
-    "yourAverage": "あなたの平均",
-    "thisSession": "今回のセッション",
-    "aboveAverage": "平均を上回っています",
-    "belowAverage": "平均を下回っています",
-    "improvements": "改善点",
-    "needsAttention": "要注意",
-    "holdingSteady": "維持中",
-    "overall": "総合:",
-    "progressDisabledMessage": "この分析では進捗追跡が無効になっています。あなたのスコアは全体の進捗レポートに影響しません。",
-    "progressDisabledNote": "個別のスコアは確認できますが、他のセッションとは比較されません。"
-  },
   "navigation": {
     "dashboard": "ダッシュボード",
     "playersClub": "プレイヤーズクラブ",

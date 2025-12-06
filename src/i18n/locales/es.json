@@ -431,27 +431,6 @@
     "resumed": "Módulo reanudado",
     "failedToResume": "Error al reanudar módulo"
   },
-  "scorecard": {
-    "title": "📊 EL MARCADOR",
-    "subtitle": "Tu Informe de Progreso",
-    "baselineEstablished": "¡Línea Base Establecida!",
-    "firstAnalysisMessage": "Este es tu primer análisis en este módulo. Tu puntuación actual de {{score}}/100 servirá como línea base. Las subidas futuras rastrearán tu progreso contra el rendimiento de hoy.",
-    "keepTraining": "¡Sigue entrenando y subiendo videos para ver tu mejora con el tiempo!",
-    "scoreTrend": "Tendencia de Puntuación:",
-    "improving": "Mejorando",
-    "declining": "Declinando",
-    "stable": "Estable",
-    "yourAverage": "Tu Promedio",
-    "thisSession": "Esta Sesión",
-    "aboveAverage": "por encima de tu promedio",
-    "belowAverage": "por debajo de tu promedio",
-    "improvements": "MEJORAS",
-    "needsAttention": "NECESITA ATENCIÓN",
-    "holdingSteady": "MANTENIÉNDOSE ESTABLE",
-    "overall": "En general:",
-    "progressDisabledMessage": "El seguimiento de progreso está desactivado para este análisis. Tu puntuación no afectará tu informe de progreso general.",
-    "progressDisabledNote": "Aún puedes ver tu puntuación individual, pero no se comparará con tus otras sesiones."
-  },
   "navigation": {
     "dashboard": "Panel Principal",
     "playersClub": "Club de Jugadores",

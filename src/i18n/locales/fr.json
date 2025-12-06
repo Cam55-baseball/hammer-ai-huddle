@@ -457,27 +457,6 @@
     "selected": "Sélectionné",
     "select": "Sélectionner"
   },
-  "scorecard": {
-    "title": "📊 LE TABLEAU DE BORD",
-    "subtitle": "Ton Rapport de Progrès",
-    "baselineEstablished": "Ligne de Base Établie!",
-    "firstAnalysisMessage": "C'est ta première analyse dans ce module. Ton score actuel de {{score}}/100 servira de ligne de base. Les téléchargements futurs suivront tes progrès par rapport à la performance d'aujourd'hui.",
-    "keepTraining": "Continue à t'entraîner et à télécharger des vidéos pour voir ton amélioration au fil du temps!",
-    "scoreTrend": "Tendance du Score:",
-    "improving": "En amélioration",
-    "declining": "En déclin",
-    "stable": "Stable",
-    "yourAverage": "Ta Moyenne",
-    "thisSession": "Cette Session",
-    "aboveAverage": "au-dessus de ta moyenne",
-    "belowAverage": "en dessous de ta moyenne",
-    "improvements": "AMÉLIORATIONS",
-    "needsAttention": "NÉCESSITE ATTENTION",
-    "holdingSteady": "RESTE STABLE",
-    "overall": "Global:",
-    "progressDisabledMessage": "Le suivi des progrès est désactivé pour cette analyse. Ton score n'affectera pas ton rapport de progrès global.",
-    "progressDisabledNote": "Tu peux toujours voir ton score individuel, mais il ne sera pas comparé à tes autres sessions."
-  },
   "navigation": {
     "dashboard": "Tableau de Bord",
     "playersClub": "Club des Joueurs",

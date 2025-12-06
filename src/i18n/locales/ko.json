@@ -428,27 +428,6 @@
     "resumed": "모듈 재개됨",
     "failedToResume": "모듈 재개 실패"
   },
-  "scorecard": {
-    "title": "📊 스코어카드",
-    "subtitle": "당신의 진행 보고서",
-    "baselineEstablished": "기준점이 설정되었습니다!",
-    "firstAnalysisMessage": "이것은 이 모듈에서의 첫 분석입니다. 현재 점수 {{score}}/100이 기준점이 됩니다. 향후 업로드는 오늘의 성과와 비교하여 진행 상황을 추적합니다.",
-    "keepTraining": "계속 훈련하고 비디오를 업로드하여 시간이 지남에 따라 향상되는 것을 확인하세요!",
-    "scoreTrend": "점수 트렌드:",
-    "improving": "향상 중",
-    "declining": "하락 중",
-    "stable": "안정",
-    "yourAverage": "당신의 평균",
-    "thisSession": "이번 세션",
-    "aboveAverage": "평균 이상",
-    "belowAverage": "평균 이하",
-    "improvements": "개선 사항",
-    "needsAttention": "주의 필요",
-    "holdingSteady": "유지 중",
-    "overall": "전체:",
-    "progressDisabledMessage": "이 분석에서는 진행 추적이 비활성화되어 있습니다. 점수가 전체 진행 보고서에 영향을 미치지 않습니다.",
-    "progressDisabledNote": "개별 점수는 여전히 볼 수 있지만 다른 세션과 비교되지 않습니다."
-  },
   "navigation": {
     "dashboard": "대시보드",
     "playersClub": "플레이어스 클럽",

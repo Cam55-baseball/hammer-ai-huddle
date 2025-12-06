@@ -457,27 +457,6 @@
     "selected": "Geselecteerd",
     "select": "Selecteren"
   },
-  "scorecard": {
-    "title": "📊 DE SCOREKAART",
-    "subtitle": "Jouw Voortgangsrapport",
-    "baselineEstablished": "Basislijn Vastgesteld!",
-    "firstAnalysisMessage": "Dit is je eerste analyse in deze module. Je huidige score van {{score}}/100 dient als basislijn. Toekomstige uploads volgen je voortgang ten opzichte van de prestaties van vandaag.",
-    "keepTraining": "Blijf trainen en video's uploaden om je verbetering in de loop van de tijd te zien!",
-    "scoreTrend": "Score Trend:",
-    "improving": "Verbeterend",
-    "declining": "Dalend",
-    "stable": "Stabiel",
-    "yourAverage": "Jouw Gemiddelde",
-    "thisSession": "Deze Sessie",
-    "aboveAverage": "boven je gemiddelde",
-    "belowAverage": "onder je gemiddelde",
-    "improvements": "VERBETERINGEN",
-    "needsAttention": "HEEFT AANDACHT NODIG",
-    "holdingSteady": "BLIJFT STABIEL",
-    "overall": "Algemeen:",
-    "progressDisabledMessage": "Voortgangstracking is uitgeschakeld voor deze analyse. Je score heeft geen invloed op je algemene voortgangsrapport.",
-    "progressDisabledNote": "Je kunt nog steeds je individuele score bekijken, maar deze wordt niet vergeleken met je andere sessies."
-  },
   "navigation": {
     "dashboard": "Dashboard",
     "playersClub": "Spelersclub",
