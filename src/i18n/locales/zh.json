@@ -1759,6 +1759,24 @@
     "strengthSettings": "力量训练设置",
     "cycleSelector": "训练周期",
     "cycleDescription": "24周周期化计划 - 4个周期，每个6周",
+    "cycles": {
+      "cycle1": {
+        "name": "向心-等长基础",
+        "description": "通过向心复合动作 + 等长姿势力量建立基础力量"
+      },
+      "cycle2": {
+        "name": "向心举重重点",
+        "description": "优先向心负荷量，等长训练变为辅助"
+      },
+      "cycle3": {
+        "name": "向心-等长强化",
+        "description": "两种模式更高强度，精细化动作模式"
+      },
+      "cycle4": {
+        "name": "离心重点",
+        "description": "离心过载实现最大肌肉增长和损伤恢复力"
+      }
+    },
     "disclaimer": {
       "title": "免责声明",
       "text": "Hammer's Modality不对运动过程中可能发生的任何伤害负责。不保证结果。在开始任何运动计划之前，请务必咨询合格的医疗专业人员。倾听您的身体，如果感到疼痛请立即停止。"

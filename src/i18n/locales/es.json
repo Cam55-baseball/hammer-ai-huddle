@@ -2261,6 +2261,24 @@
     "strengthSettings": "Configuración de Entrenamiento de Fuerza",
     "cycleSelector": "Ciclo de Entrenamiento",
     "cycleDescription": "Programa periodizado de 24 semanas - 4 ciclos de 6 semanas cada uno",
+    "cycles": {
+      "cycle1": {
+        "name": "Fundamento Concéntrico-Isométrico",
+        "description": "Construir fuerza base con movimientos compuestos concéntricos + fuerza isométrica posicional"
+      },
+      "cycle2": {
+        "name": "Enfoque en Levantamiento Concéntrico",
+        "description": "Priorizar volumen de carga concéntrica, isométricos se vuelven suplementarios"
+      },
+      "cycle3": {
+        "name": "Intensificación Concéntrico-Isométrica",
+        "description": "Mayor intensidad en ambas modalidades, patrones de movimiento refinados"
+      },
+      "cycle4": {
+        "name": "Enfoque Excéntrico",
+        "description": "Sobrecarga excéntrica para máximo crecimiento muscular y resistencia a lesiones"
+      }
+    },
     "disclaimer": {
       "title": "Aviso Legal",
       "text": "Hammer's Modality no es responsable de ninguna lesión que pueda ocurrir durante los ejercicios. No hay garantías en los resultados. Siempre consulte con un profesional de salud calificado antes de comenzar cualquier programa de ejercicios. Escuche a su cuerpo y deténgase inmediatamente si experimenta dolor."

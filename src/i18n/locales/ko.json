@@ -1775,6 +1775,24 @@
     "strengthSettings": "근력 훈련 설정",
     "cycleSelector": "훈련 사이클",
     "cycleDescription": "24주 주기화 프로그램 - 각 6주의 4사이클",
+    "cycles": {
+      "cycle1": {
+        "name": "동심-등척 기초",
+        "description": "동심 복합 동작 + 등척 자세 강화로 기초 근력 구축"
+      },
+      "cycle2": {
+        "name": "동심 웨이트리프팅 집중",
+        "description": "동심 부하량 우선, 등척은 보조적으로"
+      },
+      "cycle3": {
+        "name": "동심-등척 강화",
+        "description": "양 모달리티 강도 증가, 동작 패턴 정교화"
+      },
+      "cycle4": {
+        "name": "원심 집중",
+        "description": "최대 근육 성장과 부상 회복력을 위한 원심 과부하"
+      }
+    },
     "disclaimer": {
       "title": "면책 조항",
       "text": "Hammer's Modality는 운동 중 발생할 수 있는 부상에 대해 책임지지 않습니다. 결과를 보장하지 않습니다. 운동 프로그램을 시작하기 전에 항상 자격을 갖춘 의료 전문가와 상담하십시오. 몸의 소리를 듣고 통증이 느껴지면 즉시 중단하십시오."

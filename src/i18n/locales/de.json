@@ -2283,6 +2283,24 @@
     "strengthSettings": "Krafttraining-Einstellungen",
     "cycleSelector": "Trainingszyklus",
     "cycleDescription": "24-Wochen periodisiertes Programm - 4 Zyklen à 6 Wochen",
+    "cycles": {
+      "cycle1": {
+        "name": "Konzentrisch-Isometrisches Fundament",
+        "description": "Grundkraft durch konzentrische Verbundübungen + isometrische Positionsstärke aufbauen"
+      },
+      "cycle2": {
+        "name": "Konzentrische Gewichtheber-Fokus",
+        "description": "Konzentrische Belastungsvolumen priorisieren, Isometrie wird ergänzend"
+      },
+      "cycle3": {
+        "name": "Konzentrisch-Isometrische Intensivierung",
+        "description": "Höhere Intensität bei beiden Modalitäten, verfeinerte Bewegungsmuster"
+      },
+      "cycle4": {
+        "name": "Exzentrischer Fokus",
+        "description": "Exzentrische Überlastung für maximales Muskelwachstum und Verletzungsresilienz"
+      }
+    },
     "disclaimer": {
       "title": "Haftungsausschluss",
       "text": "Hammer's Modality ist nicht verantwortlich für Verletzungen, die während der Übungen auftreten können. Es gibt keine Garantie für Ergebnisse. Konsultieren Sie immer einen qualifizierten Gesundheitsfachmann, bevor Sie ein Trainingsprogramm beginnen. Hören Sie auf Ihren Körper und stoppen Sie sofort, wenn Sie Schmerzen verspüren."

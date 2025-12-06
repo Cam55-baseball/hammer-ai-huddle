@@ -2441,6 +2441,24 @@
     "strengthSettings": "Strength Training Settings",
     "cycleSelector": "Training Cycle",
     "cycleDescription": "24-week periodized program - 4 cycles of 6 weeks each",
+    "cycles": {
+      "cycle1": {
+        "name": "Concentric-Isometric Foundation",
+        "description": "Build base strength through concentric compound movements + isometric position strength"
+      },
+      "cycle2": {
+        "name": "Concentric Weightlifting Focus",
+        "description": "Prioritize concentric loading volume, isometrics become supplemental"
+      },
+      "cycle3": {
+        "name": "Concentric-Isometric Intensification",
+        "description": "Higher intensity on both modalities, refined movement patterns"
+      },
+      "cycle4": {
+        "name": "Eccentric Focus",
+        "description": "Eccentric overload for maximum muscle growth and injury resilience"
+      }
+    },
     "disclaimer": {
       "title": "Disclaimer",
       "text": "Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain."
