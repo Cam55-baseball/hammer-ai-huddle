@@ -2474,5 +2474,92 @@
     },
     "loading": "Laden deines geistigen Treibstoffs...",
     "error": "Lektion konnte nicht geladen werden. Bitte versuche es erneut."
+  },
+  "weeklyChallenge": {
+    "title": "Wöchentliche Herausforderung",
+    "completed_short": "abgeschlossen",
+    "daysRemaining": "{{count}} Tage verbleibend",
+    "dayProgress": "Tag {{current}} von {{total}}",
+    "checkIn": "Heute Einchecken",
+    "startChallenge": "Diese Woche's Herausforderung Starten",
+    "started": "Herausforderung gestartet! Viel Erfolg!",
+    "checkedIn": "Tag eingecheckt!",
+    "completed": "Herausforderung abgeschlossen! 🎉",
+    "challengeCompleted": "Herausforderung abgeschlossen! Tolle Arbeit!",
+    "error": "Fehler bei der Verarbeitung der Herausforderung",
+    "history": "Herausforderungs-Verlauf",
+    "days": "Tage",
+    "completedBadge": "Abgeschlossen",
+    "incompleteBadge": "Unvollständig",
+    "categories": {
+      "mental_mastery": "Mentale Meisterschaft",
+      "emotional_balance": "Emotionale Balance",
+      "leadership": "Führung",
+      "life_mastery": "Lebensmeisterschaft"
+    },
+    "challenges": {
+      "focus_week": {
+        "title": "Fokus-Woche",
+        "description": "Übe 2 Minuten fokussierte Atmung vor jedem Training oder Spiel."
+      },
+      "leadership_week": {
+        "title": "Führungs-Woche",
+        "description": "Gib täglich 3 verschiedenen Teammitgliedern spezifisches positives Feedback."
+      },
+      "gratitude_week": {
+        "title": "Dankbarkeits-Woche",
+        "description": "Schreibe jeden Morgen 3 Dinge auf, für die du dankbar bist."
+      },
+      "visualization_week": {
+        "title": "Visualisierungs-Woche",
+        "description": "Verbringe 5 Minuten mit der Visualisierung perfekter Leistung vor dem Training."
+      },
+      "discipline_week": {
+        "title": "Disziplin-Woche",
+        "description": "Absolviere deine Morgenroutine 7 Tage hintereinander ohne Ausreden."
+      },
+      "encouragement_week": {
+        "title": "Ermutigungs-Woche",
+        "description": "Sei der Erste, der ein Teammitglied ermutigt, das einen Fehler macht."
+      },
+      "presence_week": {
+        "title": "Präsenz-Woche",
+        "description": "Lege dein Handy 1 Stunde vor Training oder Spielen weg."
+      },
+      "accountability_week": {
+        "title": "Verantwortungs-Woche",
+        "description": "Mache dich diese Woche öffentlich für ein Ziel verantwortlich."
+      },
+      "calm_week": {
+        "title": "Ruhe-Woche",
+        "description": "Übe die 4-7-8 Atemtechnik dreimal täglich."
+      },
+      "purpose_week": {
+        "title": "Zweck-Woche",
+        "description": "Schreibe deine persönliche Missionserklärung und überprüfe sie täglich."
+      },
+      "energy_week": {
+        "title": "Energie-Woche",
+        "description": "Sei der Erste, der positive Energie zu jedem Training bringt."
+      },
+      "reset_day": {
+        "title": "Reset-Tag",
+        "description": "Absolviere einen 24-Stunden Digital-Detox von sozialen Medien."
+      }
+    },
+    "badges": {
+      "challenge_starter": "Herausforderungs-Starter",
+      "challenge_starter_desc": "Schließe deine erste wöchentliche Herausforderung ab",
+      "challenge_warrior": "Herausforderungs-Krieger",
+      "challenge_warrior_desc": "Schließe 5 wöchentliche Herausforderungen ab",
+      "challenge_champion": "Herausforderungs-Champion",
+      "challenge_champion_desc": "Schließe 10 wöchentliche Herausforderungen ab",
+      "challenge_legend": "Herausforderungs-Legende",
+      "challenge_legend_desc": "Schließe 25 wöchentliche Herausforderungen ab",
+      "perfect_week": "Perfekte Woche",
+      "perfect_week_desc": "Schließe alle 7 Tage einer Herausforderung ab",
+      "comeback_kid": "Das Comeback",
+      "comeback_kid_desc": "Schließe eine Herausforderung nach einem Fehlschlag ab"
+    }
   }
 }

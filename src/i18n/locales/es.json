@@ -2452,5 +2452,92 @@
     },
     "loading": "Cargando tu combustible mental...",
     "error": "Error al cargar la lección. Por favor intenta de nuevo."
+  },
+  "weeklyChallenge": {
+    "title": "Desafío Semanal",
+    "completed_short": "completados",
+    "daysRemaining": "{{count}} días restantes",
+    "dayProgress": "Día {{current}} de {{total}}",
+    "checkIn": "Registrar Hoy",
+    "startChallenge": "Comenzar el Desafío de Esta Semana",
+    "started": "¡Desafío iniciado! ¡Buena suerte!",
+    "checkedIn": "¡Día registrado!",
+    "completed": "¡Desafío completado! 🎉",
+    "challengeCompleted": "¡Desafío completado! ¡Excelente trabajo!",
+    "error": "Error al procesar el desafío",
+    "history": "Historial de Desafíos",
+    "days": "días",
+    "completedBadge": "Completado",
+    "incompleteBadge": "Incompleto",
+    "categories": {
+      "mental_mastery": "Dominio Mental",
+      "emotional_balance": "Equilibrio Emocional",
+      "leadership": "Liderazgo",
+      "life_mastery": "Dominio de Vida"
+    },
+    "challenges": {
+      "focus_week": {
+        "title": "Semana de Enfoque",
+        "description": "Practica 2 minutos de respiración enfocada antes de cada práctica o juego."
+      },
+      "leadership_week": {
+        "title": "Semana de Liderazgo",
+        "description": "Da retroalimentación positiva específica a 3 compañeros diferentes cada día."
+      },
+      "gratitude_week": {
+        "title": "Semana de Gratitud",
+        "description": "Escribe 3 cosas por las que estás agradecido cada mañana."
+      },
+      "visualization_week": {
+        "title": "Semana de Visualización",
+        "description": "Dedica 5 minutos a visualizar un rendimiento perfecto antes de practicar."
+      },
+      "discipline_week": {
+        "title": "Semana de Disciplina",
+        "description": "Completa tu rutina matutina 7 días seguidos sin excusas."
+      },
+      "encouragement_week": {
+        "title": "Semana de Ánimo",
+        "description": "Sé el primero en animar a un compañero que comete un error."
+      },
+      "presence_week": {
+        "title": "Semana de Presencia",
+        "description": "Guarda tu teléfono 1 hora antes de prácticas o juegos."
+      },
+      "accountability_week": {
+        "title": "Semana de Responsabilidad",
+        "description": "Hazte públicamente responsable de una meta esta semana."
+      },
+      "calm_week": {
+        "title": "Semana de Calma",
+        "description": "Practica la técnica de respiración 4-7-8 tres veces al día."
+      },
+      "purpose_week": {
+        "title": "Semana de Propósito",
+        "description": "Escribe tu declaración de misión personal y revísala diariamente."
+      },
+      "energy_week": {
+        "title": "Semana de Energía",
+        "description": "Sé el primero en traer energía positiva a cada práctica."
+      },
+      "reset_day": {
+        "title": "Día de Reinicio",
+        "description": "Completa una desintoxicación digital de 24 horas de redes sociales."
+      }
+    },
+    "badges": {
+      "challenge_starter": "Iniciador de Desafíos",
+      "challenge_starter_desc": "Completa tu primer desafío semanal",
+      "challenge_warrior": "Guerrero de Desafíos",
+      "challenge_warrior_desc": "Completa 5 desafíos semanales",
+      "challenge_champion": "Campeón de Desafíos",
+      "challenge_champion_desc": "Completa 10 desafíos semanales",
+      "challenge_legend": "Leyenda de Desafíos",
+      "challenge_legend_desc": "Completa 25 desafíos semanales",
+      "perfect_week": "Semana Perfecta",
+      "perfect_week_desc": "Completa los 7 días de un desafío",
+      "comeback_kid": "El Regreso",
+      "comeback_kid_desc": "Completa un desafío después de fallar uno"
+    }
   }
 }

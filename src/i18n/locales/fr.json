@@ -2474,5 +2474,92 @@
     },
     "loading": "Chargement de votre carburant mental...",
     "error": "Échec du chargement de la leçon. Veuillez réessayer."
+  },
+  "weeklyChallenge": {
+    "title": "Défi Hebdomadaire",
+    "completed_short": "terminés",
+    "daysRemaining": "{{count}} jours restants",
+    "dayProgress": "Jour {{current}} sur {{total}}",
+    "checkIn": "S'enregistrer Aujourd'hui",
+    "startChallenge": "Commencer le Défi de Cette Semaine",
+    "started": "Défi lancé ! Bonne chance !",
+    "checkedIn": "Jour enregistré !",
+    "completed": "Défi terminé ! 🎉",
+    "challengeCompleted": "Défi terminé ! Excellent travail !",
+    "error": "Échec du traitement du défi",
+    "history": "Historique des Défis",
+    "days": "jours",
+    "completedBadge": "Terminé",
+    "incompleteBadge": "Incomplet",
+    "categories": {
+      "mental_mastery": "Maîtrise Mentale",
+      "emotional_balance": "Équilibre Émotionnel",
+      "leadership": "Leadership",
+      "life_mastery": "Maîtrise de Vie"
+    },
+    "challenges": {
+      "focus_week": {
+        "title": "Semaine de Focus",
+        "description": "Pratiquez 2 minutes de respiration concentrée avant chaque entraînement ou match."
+      },
+      "leadership_week": {
+        "title": "Semaine de Leadership",
+        "description": "Donnez des commentaires positifs spécifiques à 3 coéquipiers différents chaque jour."
+      },
+      "gratitude_week": {
+        "title": "Semaine de Gratitude",
+        "description": "Écrivez 3 choses pour lesquelles vous êtes reconnaissant chaque matin."
+      },
+      "visualization_week": {
+        "title": "Semaine de Visualisation",
+        "description": "Passez 5 minutes à visualiser une performance parfaite avant l'entraînement."
+      },
+      "discipline_week": {
+        "title": "Semaine de Discipline",
+        "description": "Complétez votre routine matinale 7 jours de suite sans excuses."
+      },
+      "encouragement_week": {
+        "title": "Semaine d'Encouragement",
+        "description": "Soyez le premier à encourager un coéquipier qui fait une erreur."
+      },
+      "presence_week": {
+        "title": "Semaine de Présence",
+        "description": "Rangez votre téléphone 1 heure avant les entraînements ou matchs."
+      },
+      "accountability_week": {
+        "title": "Semaine de Responsabilité",
+        "description": "Engagez-vous publiquement sur un objectif cette semaine."
+      },
+      "calm_week": {
+        "title": "Semaine de Calme",
+        "description": "Pratiquez la technique de respiration 4-7-8 trois fois par jour."
+      },
+      "purpose_week": {
+        "title": "Semaine de But",
+        "description": "Écrivez votre déclaration de mission personnelle et revoyez-la quotidiennement."
+      },
+      "energy_week": {
+        "title": "Semaine d'Énergie",
+        "description": "Soyez le premier à apporter une énergie positive à chaque entraînement."
+      },
+      "reset_day": {
+        "title": "Jour de Réinitialisation",
+        "description": "Complétez une détox numérique de 24 heures des réseaux sociaux."
+      }
+    },
+    "badges": {
+      "challenge_starter": "Débutant de Défis",
+      "challenge_starter_desc": "Complétez votre premier défi hebdomadaire",
+      "challenge_warrior": "Guerrier de Défis",
+      "challenge_warrior_desc": "Complétez 5 défis hebdomadaires",
+      "challenge_champion": "Champion de Défis",
+      "challenge_champion_desc": "Complétez 10 défis hebdomadaires",
+      "challenge_legend": "Légende de Défis",
+      "challenge_legend_desc": "Complétez 25 défis hebdomadaires",
+      "perfect_week": "Semaine Parfaite",
+      "perfect_week_desc": "Complétez les 7 jours d'un défi",
+      "comeback_kid": "Le Retour",
+      "comeback_kid_desc": "Complétez un défi après en avoir échoué un"
+    }
   }
 }

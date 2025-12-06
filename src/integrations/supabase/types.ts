@@ -181,6 +181,51 @@ export type Database = {
         }
         Relationships: []
       }
+      mind_fuel_challenges: {
+        Row: {
+          challenge_id: string
+          challenge_week: number
+          challenge_year: number
+          completed_at: string | null
+          created_at: string | null
+          days_completed: number
+          id: string
+          started_at: string
+          status: string
+          total_days: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          challenge_week: number
+          challenge_year: number
+          completed_at?: string | null
+          created_at?: string | null
+          days_completed?: number
+          id?: string
+          started_at?: string
+          status?: string
+          total_days?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          challenge_week?: number
+          challenge_year?: number
+          completed_at?: string | null
+          created_at?: string | null
+          days_completed?: number
+          id?: string
+          started_at?: string
+          status?: string
+          total_days?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       mind_fuel_lessons: {
         Row: {
           author: string | null

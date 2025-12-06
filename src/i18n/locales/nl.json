@@ -1979,5 +1979,92 @@
     },
     "loading": "Je geestelijke brandstof laden...",
     "error": "Laden van les mislukt. Probeer het opnieuw."
+  },
+  "weeklyChallenge": {
+    "title": "Wekelijkse Uitdaging",
+    "completed_short": "voltooid",
+    "daysRemaining": "{{count}} dagen resterend",
+    "dayProgress": "Dag {{current}} van {{total}}",
+    "checkIn": "Vandaag Inchecken",
+    "startChallenge": "Start Deze Week's Uitdaging",
+    "started": "Uitdaging gestart! Succes!",
+    "checkedIn": "Dag ingecheckt!",
+    "completed": "Uitdaging voltooid! 🎉",
+    "challengeCompleted": "Uitdaging voltooid! Goed gedaan!",
+    "error": "Verwerking van uitdaging mislukt",
+    "history": "Uitdaging Geschiedenis",
+    "days": "dagen",
+    "completedBadge": "Voltooid",
+    "incompleteBadge": "Onvolledig",
+    "categories": {
+      "mental_mastery": "Mentale Meesterschap",
+      "emotional_balance": "Emotionele Balans",
+      "leadership": "Leiderschap",
+      "life_mastery": "Levensmeesterschap"
+    },
+    "challenges": {
+      "focus_week": {
+        "title": "Focus Week",
+        "description": "Oefen 2 minuten gerichte ademhaling voor elke training of wedstrijd."
+      },
+      "leadership_week": {
+        "title": "Leiderschap Week",
+        "description": "Geef dagelijks specifieke positieve feedback aan 3 verschillende teamgenoten."
+      },
+      "gratitude_week": {
+        "title": "Dankbaarheid Week",
+        "description": "Schrijf elke ochtend 3 dingen op waar je dankbaar voor bent."
+      },
+      "visualization_week": {
+        "title": "Visualisatie Week",
+        "description": "Besteed 5 minuten aan het visualiseren van perfecte prestaties voor de training."
+      },
+      "discipline_week": {
+        "title": "Discipline Week",
+        "description": "Voltooi je ochtendroutine 7 dagen op rij zonder excuses."
+      },
+      "encouragement_week": {
+        "title": "Aanmoediging Week",
+        "description": "Wees de eerste die een teamgenoot aanmoedigt die een fout maakt."
+      },
+      "presence_week": {
+        "title": "Aanwezigheid Week",
+        "description": "Leg je telefoon 1 uur voor trainingen of wedstrijden weg."
+      },
+      "accountability_week": {
+        "title": "Verantwoordelijkheid Week",
+        "description": "Maak jezelf deze week publiekelijk verantwoordelijk voor één doel."
+      },
+      "calm_week": {
+        "title": "Kalmte Week",
+        "description": "Oefen de 4-7-8 ademhalingstechniek drie keer per dag."
+      },
+      "purpose_week": {
+        "title": "Doel Week",
+        "description": "Schrijf je persoonlijke missie verklaring en bekijk deze dagelijks."
+      },
+      "energy_week": {
+        "title": "Energie Week",
+        "description": "Wees de eerste die positieve energie brengt naar elke training."
+      },
+      "reset_day": {
+        "title": "Reset Dag",
+        "description": "Voltooi een 24-uurs digitale detox van sociale media."
+      }
+    },
+    "badges": {
+      "challenge_starter": "Uitdaging Starter",
+      "challenge_starter_desc": "Voltooi je eerste wekelijkse uitdaging",
+      "challenge_warrior": "Uitdaging Krijger",
+      "challenge_warrior_desc": "Voltooi 5 wekelijkse uitdagingen",
+      "challenge_champion": "Uitdaging Kampioen",
+      "challenge_champion_desc": "Voltooi 10 wekelijkse uitdagingen",
+      "challenge_legend": "Uitdaging Legende",
+      "challenge_legend_desc": "Voltooi 25 wekelijkse uitdagingen",
+      "perfect_week": "Perfecte Week",
+      "perfect_week_desc": "Voltooi alle 7 dagen van een uitdaging",
+      "comeback_kid": "De Comeback",
+      "comeback_kid_desc": "Voltooi een uitdaging na een mislukking"
+    }
   }
 }

@@ -9,6 +9,7 @@ import MindFuelBadges from '@/components/mind-fuel/MindFuelBadges';
 import DailyLessonHero from '@/components/mind-fuel/DailyLessonHero';
 import MindFuelStandards from '@/components/mind-fuel/MindFuelStandards';
 import MindFuelCategories from '@/components/mind-fuel/MindFuelCategories';
+import MindFuelWeeklyChallenge from '@/components/mind-fuel/MindFuelWeeklyChallenge';
 import { showBadgeUnlockToast } from '@/components/mind-fuel/MindFuelBadgeUnlockToast';
 import { Loader2 } from 'lucide-react';
 
@@ -147,6 +148,9 @@ export default function MindFuel() {
           isLoading={isLoading}
           onGetNewLesson={handleGetNewLesson}
         />
+
+        {/* Weekly Challenge Section */}
+        <MindFuelWeeklyChallenge />
 
         {/* Create the Standard Section */}
         <MindFuelStandards />
