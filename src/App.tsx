@@ -1,3 +1,4 @@
+// Force rebuild to clear stale module references - Dec 2025
 import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
