@@ -1,5 +1,5 @@
 // Force rebuild to clear stale module references - Dec 2025
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, ComponentType } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,38 +17,58 @@ const cleanupCacheBustParam = () => {
   }
 };
 
-// Lazy load all pages for better performance
-const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const SelectUserRole = lazy(() => import("./pages/SelectUserRole"));
-const SelectSportScout = lazy(() => import("./pages/SelectSportScout"));
-const ScoutApplication = lazy(() => import("./pages/ScoutApplication"));
-const ScoutApplicationPending = lazy(() => import("./pages/ScoutApplicationPending"));
-const SelectSport = lazy(() => import("./pages/SelectSport"));
-const SelectModules = lazy(() => import("./pages/SelectModules"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const MyFollowers = lazy(() => import("./pages/MyFollowers"));
-const AnalyzeVideo = lazy(() => import("./pages/AnalyzeVideo"));
-const OwnerDashboard = lazy(() => import("./pages/OwnerDashboard"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const ScoutDashboard = lazy(() => import("./pages/ScoutDashboard"));
-const InitializeOwner = lazy(() => import("./pages/InitializeOwner"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Rankings = lazy(() => import("./pages/Rankings"));
-const Weather = lazy(() => import("./pages/Weather"));
-const Subscribers = lazy(() => import("./pages/Subscribers"));
-const PlayersClub = lazy(() => import("./pages/PlayersClub"));
-const Nutrition = lazy(() => import("./pages/Nutrition"));
-const BounceBackBay = lazy(() => import("./pages/BounceBackBay"));
-const MindFuel = lazy(() => import("./pages/MindFuel"));
-const ProductionLab = lazy(() => import("./pages/ProductionLab"));
-const ProductionStudio = lazy(() => import("./pages/ProductionStudio"));
-const ComingSoon = lazy(() => import("./pages/ComingSoon"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Helper function to retry dynamic imports with cache-busting
+const lazyWithRetry = <T extends ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>,
+  retries = 3
+) => {
+  return lazy(async () => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        return await componentImport();
+      } catch (error) {
+        console.warn(`Dynamic import failed (attempt ${i + 1}/${retries}):`, error);
+        if (i === retries - 1) throw error;
+        // Wait with exponential backoff before retry
+        await new Promise(resolve => setTimeout(resolve, 500 * (i + 1)));
+      }
+    }
+    throw new Error('Failed to load module after retries');
+  });
+};
+
+// Lazy load all pages with retry logic for better reliability
+const Index = lazyWithRetry(() => import("./pages/Index"));
+const Auth = lazyWithRetry(() => import("./pages/Auth"));
+const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
+const SelectUserRole = lazyWithRetry(() => import("./pages/SelectUserRole"));
+const SelectSportScout = lazyWithRetry(() => import("./pages/SelectSportScout"));
+const ScoutApplication = lazyWithRetry(() => import("./pages/ScoutApplication"));
+const ScoutApplicationPending = lazyWithRetry(() => import("./pages/ScoutApplicationPending"));
+const SelectSport = lazyWithRetry(() => import("./pages/SelectSport"));
+const SelectModules = lazyWithRetry(() => import("./pages/SelectModules"));
+const Pricing = lazyWithRetry(() => import("./pages/Pricing"));
+const Checkout = lazyWithRetry(() => import("./pages/Checkout"));
+const ProfileSetup = lazyWithRetry(() => import("./pages/ProfileSetup"));
+const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
+const MyFollowers = lazyWithRetry(() => import("./pages/MyFollowers"));
+const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
+const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
+const ScoutDashboard = lazyWithRetry(() => import("./pages/ScoutDashboard"));
+const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
+const Profile = lazyWithRetry(() => import("./pages/Profile"));
+const Rankings = lazyWithRetry(() => import("./pages/Rankings"));
+const Weather = lazyWithRetry(() => import("./pages/Weather"));
+const Subscribers = lazyWithRetry(() => import("./pages/Subscribers"));
+const PlayersClub = lazyWithRetry(() => import("./pages/PlayersClub"));
+const Nutrition = lazyWithRetry(() => import("./pages/Nutrition"));
+const BounceBackBay = lazyWithRetry(() => import("./pages/BounceBackBay"));
+const MindFuel = lazyWithRetry(() => import("./pages/MindFuel"));
+const ProductionLab = lazyWithRetry(() => import("./pages/ProductionLab"));
+const ProductionStudio = lazyWithRetry(() => import("./pages/ProductionStudio"));
+const ComingSoon = lazyWithRetry(() => import("./pages/ComingSoon"));
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
