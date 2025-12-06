@@ -36,7 +36,10 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleRetry = () => {
-    window.location.reload();
+    // Add cache-busting query param to force fresh module load
+    const url = new URL(window.location.href);
+    url.searchParams.set('_cb', Date.now().toString());
+    window.location.href = url.toString();
   };
 
   private handleReset = () => {

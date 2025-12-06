@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +6,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
+
+// Clean up cache-busting param after successful load
+const cleanupCacheBustParam = () => {
+  const url = new URL(window.location.href);
+  if (url.searchParams.has('_cb')) {
+    url.searchParams.delete('_cb');
+    window.history.replaceState({}, '', url.toString());
+  }
+};
 
 // Lazy load all pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -41,7 +50,13 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  // Clean up cache-bust param on successful load
+  useEffect(() => {
+    cleanupCacheBustParam();
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <ErrorBoundary>
@@ -86,6 +101,7 @@ const App = () => (
       </ErrorBoundary>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
