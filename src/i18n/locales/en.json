@@ -2387,7 +2387,7 @@
   "workoutModules": {
     "productionLab": {
       "title": "Iron Bambino",
-      "subtitle": "6-Week Hitting Development Program"
+      "subtitle": "24-Week Elite Power Hitter Development Program"
     },
     "productionStudio": {
       "title": "Heat Factory",
@@ -2414,8 +2414,8 @@
     "backToWorkout": "Back to Workout",
     "sixWeekPlan": "6-Week Training Plan",
     "accessRequired": "Access Required",
-    "subscribeToHitting": "Subscribe to the Hitting Analysis module to access Production Lab.",
-    "subscribeToPitching": "Subscribe to the Pitching Analysis module to access Production Studio.",
+    "subscribeToHitting": "Subscribe to the Hitting Analysis module to access Iron Bambino.",
+    "subscribeToPitching": "Subscribe to the Pitching Analysis module to access Heat Factory.",
     "viewPlans": "View Plans",
     "exercises": "Exercises",
     "markComplete": "Mark Day Complete",
@@ -2438,6 +2438,12 @@
     "advanced": "Advanced",
     "standard": "Standard",
     "adjustedFor": "% adjusted for {{level}} level",
-    "strengthSettings": "Strength Training Settings"
+    "strengthSettings": "Strength Training Settings",
+    "cycleSelector": "Training Cycle",
+    "cycleDescription": "24-week periodized program - 4 cycles of 6 weeks each",
+    "disclaimer": {
+      "title": "Disclaimer",
+      "text": "Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain."
+    }
   }
 }
