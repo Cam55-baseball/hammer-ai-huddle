@@ -41,7 +41,7 @@ export interface SubModuleProgress {
 const TOTAL_CYCLES = 4;
 const TOTAL_WEEKS = 6;
 const DAYS_PER_WEEK = 5;
-const UNLOCK_DELAY_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const UNLOCK_DELAY_MS = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 
 export function useSubModuleProgress(
   sport: 'baseball' | 'softball',
