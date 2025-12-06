@@ -2703,6 +2703,166 @@
       "reset_day": {
         "title": "Reset Day",
         "description": "Complete a 24-hour digital detox from social media."
+      },
+      "affirmation_week": {
+        "title": "Affirmation Week",
+        "description": "Repeat 3 positive affirmations to yourself every morning and night."
+      },
+      "confidence_week": {
+        "title": "Confidence Week",
+        "description": "Walk with confident posture and make eye contact for every interaction."
+      },
+      "concentration_week": {
+        "title": "Concentration Week",
+        "description": "Practice single-tasking - focus on one thing at a time without distractions."
+      },
+      "mental_toughness_week": {
+        "title": "Mental Toughness Week",
+        "description": "When things get hard, say 'bring it on' and push through."
+      },
+      "positive_self_talk_week": {
+        "title": "Positive Self-Talk Week",
+        "description": "Replace every negative thought with a positive one immediately."
+      },
+      "goal_setting_week": {
+        "title": "Goal Setting Week",
+        "description": "Set one specific goal each day and track your progress."
+      },
+      "pressure_handling_week": {
+        "title": "Pressure Handling Week",
+        "description": "Practice your skills under simulated pressure conditions daily."
+      },
+      "clutch_mindset_week": {
+        "title": "Clutch Mindset Week",
+        "description": "Visualize succeeding in high-pressure moments before bed each night."
+      },
+      "competitive_edge_week": {
+        "title": "Competitive Edge Week",
+        "description": "Find one extra thing to improve on each day beyond regular practice."
+      },
+      "mental_reset_week": {
+        "title": "Mental Reset Week",
+        "description": "Use a reset word or gesture after every mistake to clear your mind."
+      },
+      "game_day_focus_week": {
+        "title": "Game Day Focus Week",
+        "description": "Create and follow a pre-game mental preparation routine."
+      },
+      "self_compassion_week": {
+        "title": "Self-Compassion Week",
+        "description": "Treat yourself with kindness when you make mistakes - no harsh self-criticism."
+      },
+      "mindfulness_week": {
+        "title": "Mindfulness Week",
+        "description": "Spend 5 minutes each day in quiet mindful awareness."
+      },
+      "stress_release_week": {
+        "title": "Stress Release Week",
+        "description": "Practice progressive muscle relaxation before sleep each night."
+      },
+      "emotional_control_week": {
+        "title": "Emotional Control Week",
+        "description": "Pause and take 3 deep breaths before reacting to any frustration."
+      },
+      "joy_week": {
+        "title": "Joy Week",
+        "description": "Find and appreciate one moment of pure joy in your sport each day."
+      },
+      "patience_week": {
+        "title": "Patience Week",
+        "description": "Practice patience in one challenging situation each day."
+      },
+      "resilience_week": {
+        "title": "Resilience Week",
+        "description": "After every setback, write down what you learned from it."
+      },
+      "letting_go_week": {
+        "title": "Letting Go Week",
+        "description": "Release one worry or regret each day through journaling."
+      },
+      "inner_peace_week": {
+        "title": "Inner Peace Week",
+        "description": "Start and end each day with 2 minutes of peaceful silence."
+      },
+      "emotional_awareness_week": {
+        "title": "Emotional Awareness Week",
+        "description": "Check in with your emotions 3 times daily and name what you feel."
+      },
+      "communication_week": {
+        "title": "Communication Week",
+        "description": "Practice active listening - repeat back what teammates say before responding."
+      },
+      "mentorship_week": {
+        "title": "Mentorship Week",
+        "description": "Help a younger or less experienced teammate with one skill each day."
+      },
+      "team_spirit_week": {
+        "title": "Team Spirit Week",
+        "description": "Do one thing each day that benefits the team but not yourself directly."
+      },
+      "lead_by_example_week": {
+        "title": "Lead By Example Week",
+        "description": "Be first to arrive and last to leave every practice."
+      },
+      "inspire_others_week": {
+        "title": "Inspire Others Week",
+        "description": "Share an inspiring quote or story with your team each day."
+      },
+      "conflict_resolution_week": {
+        "title": "Conflict Resolution Week",
+        "description": "Address one small conflict or tension directly and constructively."
+      },
+      "servant_leadership_week": {
+        "title": "Servant Leadership Week",
+        "description": "Ask teammates 'how can I help you today?' and follow through."
+      },
+      "positivity_spread_week": {
+        "title": "Positivity Spread Week",
+        "description": "Give 5 genuine compliments to different people each day."
+      },
+      "team_culture_week": {
+        "title": "Team Culture Week",
+        "description": "Uphold team values even when no one is watching."
+      },
+      "boundary_week": {
+        "title": "Boundary Week",
+        "description": "Set and maintain one healthy boundary in your life this week."
+      },
+      "habit_stack_week": {
+        "title": "Habit Stacking Week",
+        "description": "Attach a new positive habit to an existing daily routine."
+      },
+      "time_management_week": {
+        "title": "Time Management Week",
+        "description": "Plan your next day the night before with specific time blocks."
+      },
+      "sleep_optimization_week": {
+        "title": "Sleep Optimization Week",
+        "description": "Go to bed and wake up at the same time every day this week."
+      },
+      "nutrition_focus_week": {
+        "title": "Nutrition Focus Week",
+        "description": "Eat a balanced meal with protein, carbs, and vegetables at every meal."
+      },
+      "recovery_week": {
+        "title": "Recovery Week",
+        "description": "Spend 15 minutes on recovery activities (stretching, foam rolling) daily."
+      },
+      "work_life_balance_week": {
+        "title": "Work-Life Balance Week",
+        "description": "Dedicate quality time to relationships outside of your sport each day."
+      },
+      "digital_detox_week": {
+        "title": "Digital Detox Week",
+        "description": "Limit social media to 30 minutes total per day."
+      },
+      "morning_routine_week": {
+        "title": "Morning Routine Week",
+        "description": "Create and follow a consistent 30-minute morning routine."
+      },
+      "evening_routine_week": {
+        "title": "Evening Routine Week",
+        "description": "Create and follow a relaxing 30-minute evening wind-down routine."
       }
     },
     "badges": {

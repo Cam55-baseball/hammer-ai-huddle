@@ -19,6 +19,14 @@ import {
   Flame
 } from 'lucide-react';
 
+// Category-specific colors for badges
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  mental_mastery: { bg: 'bg-violet-500/20', text: 'text-violet-300', border: 'border-violet-500/30' },
+  emotional_balance: { bg: 'bg-pink-500/20', text: 'text-pink-300', border: 'border-pink-500/30' },
+  leadership: { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/30' },
+  life_mastery: { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30' },
+};
+
 interface ChallengeData {
   id: string;
   challenge_id: string;
@@ -238,10 +246,15 @@ export default function MindFuelWeeklyChallenge() {
         <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
           <div className="flex items-start justify-between mb-3">
             <div>
-            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 mb-2">
-                {t(`weeklyChallenge.categories.${currentChallenge?.definition?.category || availableChallenge?.category}`, 
-                   currentChallenge?.definition?.category || availableChallenge?.category)}
-              </Badge>
+            {(() => {
+                const category = currentChallenge?.definition?.category || availableChallenge?.category || 'mental_mastery';
+                const colors = CATEGORY_COLORS[category] || CATEGORY_COLORS.mental_mastery;
+                return (
+                  <Badge className={`${colors.bg} ${colors.text} ${colors.border} mb-2`}>
+                    {t(`weeklyChallenge.categories.${category}`, category)}
+                  </Badge>
+                );
+              })()}
               <h3 className="font-semibold text-foreground">
                 {t(`weeklyChallenge.challenges.${challengeId}.title`, challengeId?.replace('_', ' '))}
               </h3>

@@ -2003,54 +2003,58 @@
       "life_mastery": "Levensmeesterschap"
     },
     "challenges": {
-      "focus_week": {
-        "title": "Focus Week",
-        "description": "Oefen 2 minuten gerichte ademhaling voor elke training of wedstrijd."
-      },
-      "leadership_week": {
-        "title": "Leiderschap Week",
-        "description": "Geef dagelijks specifieke positieve feedback aan 3 verschillende teamgenoten."
-      },
-      "gratitude_week": {
-        "title": "Dankbaarheid Week",
-        "description": "Schrijf elke ochtend 3 dingen op waar je dankbaar voor bent."
-      },
-      "visualization_week": {
-        "title": "Visualisatie Week",
-        "description": "Besteed 5 minuten aan het visualiseren van perfecte prestaties voor de training."
-      },
-      "discipline_week": {
-        "title": "Discipline Week",
-        "description": "Voltooi je ochtendroutine 7 dagen op rij zonder excuses."
-      },
-      "encouragement_week": {
-        "title": "Aanmoediging Week",
-        "description": "Wees de eerste die een teamgenoot aanmoedigt die een fout maakt."
-      },
-      "presence_week": {
-        "title": "Aanwezigheid Week",
-        "description": "Leg je telefoon 1 uur voor trainingen of wedstrijden weg."
-      },
-      "accountability_week": {
-        "title": "Verantwoordelijkheid Week",
-        "description": "Maak jezelf deze week publiekelijk verantwoordelijk voor één doel."
-      },
-      "calm_week": {
-        "title": "Kalmte Week",
-        "description": "Oefen de 4-7-8 ademhalingstechniek drie keer per dag."
-      },
-      "purpose_week": {
-        "title": "Doel Week",
-        "description": "Schrijf je persoonlijke missie verklaring en bekijk deze dagelijks."
-      },
-      "energy_week": {
-        "title": "Energie Week",
-        "description": "Wees de eerste die positieve energie brengt naar elke training."
-      },
-      "reset_day": {
-        "title": "Reset Dag",
-        "description": "Voltooi een 24-uurs digitale detox van sociale media."
-      }
+      "focus_week": { "title": "Focus Week", "description": "Oefen 2 minuten gerichte ademhaling voor elke training of wedstrijd." },
+      "leadership_week": { "title": "Leiderschap Week", "description": "Geef dagelijks specifieke positieve feedback aan 3 verschillende teamgenoten." },
+      "gratitude_week": { "title": "Dankbaarheid Week", "description": "Schrijf elke ochtend 3 dingen op waar je dankbaar voor bent." },
+      "visualization_week": { "title": "Visualisatie Week", "description": "Besteed 5 minuten aan het visualiseren van perfecte prestaties voor de training." },
+      "discipline_week": { "title": "Discipline Week", "description": "Voltooi je ochtendroutine 7 dagen op rij zonder excuses." },
+      "encouragement_week": { "title": "Aanmoediging Week", "description": "Wees de eerste die een teamgenoot aanmoedigt die een fout maakt." },
+      "presence_week": { "title": "Aanwezigheid Week", "description": "Leg je telefoon 1 uur voor trainingen of wedstrijden weg." },
+      "accountability_week": { "title": "Verantwoordelijkheid Week", "description": "Maak jezelf deze week publiekelijk verantwoordelijk voor één doel." },
+      "calm_week": { "title": "Kalmte Week", "description": "Oefen de 4-7-8 ademhalingstechniek drie keer per dag." },
+      "purpose_week": { "title": "Doel Week", "description": "Schrijf je persoonlijke missie verklaring en bekijk deze dagelijks." },
+      "energy_week": { "title": "Energie Week", "description": "Wees de eerste die positieve energie brengt naar elke training." },
+      "reset_day": { "title": "Reset Dag", "description": "Voltooi een 24-uurs digitale detox van sociale media." },
+      "affirmation_week": { "title": "Affirmatie Week", "description": "Herhaal 3 positieve affirmaties elke ochtend en avond." },
+      "confidence_week": { "title": "Zelfvertrouwen Week", "description": "Loop met zelfverzekerde houding en maak oogcontact bij elke interactie." },
+      "concentration_week": { "title": "Concentratie Week", "description": "Oefen single-tasking - focus op één ding tegelijk zonder afleiding." },
+      "mental_toughness_week": { "title": "Mentale Kracht Week", "description": "Als het moeilijk wordt, zeg 'kom maar op' en duw door." },
+      "positive_self_talk_week": { "title": "Positieve Zelfspraak Week", "description": "Vervang elke negatieve gedachte onmiddellijk door een positieve." },
+      "goal_setting_week": { "title": "Doelen Stellen Week", "description": "Stel elke dag een specifiek doel en volg je voortgang." },
+      "pressure_handling_week": { "title": "Druk Hanteren Week", "description": "Oefen je vaardigheden dagelijks onder gesimuleerde druk." },
+      "clutch_mindset_week": { "title": "Clutch Mentaliteit Week", "description": "Visualiseer succes in hoge druk momenten voor het slapen elke nacht." },
+      "competitive_edge_week": { "title": "Competitief Voordeel Week", "description": "Vind elke dag iets extra om te verbeteren buiten de reguliere training." },
+      "mental_reset_week": { "title": "Mentale Reset Week", "description": "Gebruik een reset woord of gebaar na elke fout om je geest te legen." },
+      "game_day_focus_week": { "title": "Wedstrijddag Focus Week", "description": "Creëer en volg een mentale voorbereidingsroutine voor de wedstrijd." },
+      "self_compassion_week": { "title": "Zelfcompassie Week", "description": "Behandel jezelf vriendelijk bij fouten - geen harde zelfkritiek." },
+      "mindfulness_week": { "title": "Mindfulness Week", "description": "Besteed elke dag 5 minuten in stille mindful bewustzijn." },
+      "stress_release_week": { "title": "Stress Loslaten Week", "description": "Oefen progressieve spierontspanning voor het slapen elke nacht." },
+      "emotional_control_week": { "title": "Emotionele Controle Week", "description": "Pauzeer en neem 3 diepe ademhalingen voor je reageert op frustratie." },
+      "joy_week": { "title": "Vreugde Week", "description": "Vind en waardeer elke dag een moment van pure vreugde in je sport." },
+      "patience_week": { "title": "Geduld Week", "description": "Oefen elke dag geduld in een uitdagende situatie." },
+      "resilience_week": { "title": "Veerkracht Week", "description": "Na elke tegenslag, schrijf op wat je ervan hebt geleerd." },
+      "letting_go_week": { "title": "Loslaten Week", "description": "Laat elke dag een zorg of spijt los door te journalen." },
+      "inner_peace_week": { "title": "Innerlijke Vrede Week", "description": "Begin en eindig elke dag met 2 minuten vredige stilte." },
+      "emotional_awareness_week": { "title": "Emotioneel Bewustzijn Week", "description": "Check 3 keer per dag je emoties en benoem wat je voelt." },
+      "communication_week": { "title": "Communicatie Week", "description": "Oefen actief luisteren - herhaal wat teamgenoten zeggen voor je reageert." },
+      "mentorship_week": { "title": "Mentorschap Week", "description": "Help elke dag een jongere of minder ervaren teamgenoot met één vaardigheid." },
+      "team_spirit_week": { "title": "Teamgeest Week", "description": "Doe elke dag iets dat het team helpt maar niet direct jezelf." },
+      "lead_by_example_week": { "title": "Leiden Door Voorbeeld Week", "description": "Wees als eerste aanwezig en vertrek als laatste bij elke training." },
+      "inspire_others_week": { "title": "Anderen Inspireren Week", "description": "Deel elke dag een inspirerend citaat of verhaal met je team." },
+      "conflict_resolution_week": { "title": "Conflictoplossing Week", "description": "Pak een klein conflict of spanning direct en constructief aan." },
+      "servant_leadership_week": { "title": "Dienend Leiderschap Week", "description": "Vraag teamgenoten 'hoe kan ik je vandaag helpen?' en voer het uit." },
+      "positivity_spread_week": { "title": "Positiviteit Verspreiden Week", "description": "Geef elke dag 5 oprechte complimenten aan verschillende mensen." },
+      "team_culture_week": { "title": "Teamcultuur Week", "description": "Handhaaf teamwaarden zelfs als niemand kijkt." },
+      "boundary_week": { "title": "Grenzen Week", "description": "Stel en handhaaf deze week een gezonde grens in je leven." },
+      "habit_stack_week": { "title": "Gewoonte Stapelen Week", "description": "Koppel een nieuwe positieve gewoonte aan een bestaande dagelijkse routine." },
+      "time_management_week": { "title": "Tijdbeheer Week", "description": "Plan je volgende dag de avond ervoor met specifieke tijdblokken." },
+      "sleep_optimization_week": { "title": "Slaap Optimalisatie Week", "description": "Ga elke dag deze week op dezelfde tijd naar bed en sta op." },
+      "nutrition_focus_week": { "title": "Voeding Focus Week", "description": "Eet bij elke maaltijd een gebalanceerde maaltijd met eiwitten, koolhydraten en groenten." },
+      "recovery_week": { "title": "Herstel Week", "description": "Besteed dagelijks 15 minuten aan herstelactiviteiten (stretchen, foam rolling)." },
+      "work_life_balance_week": { "title": "Werk-Leven Balans Week", "description": "Wijd elke dag kwaliteitstijd aan relaties buiten je sport." },
+      "digital_detox_week": { "title": "Digitale Detox Week", "description": "Beperk sociale media tot totaal 30 minuten per dag." },
+      "morning_routine_week": { "title": "Ochtendroutine Week", "description": "Creëer en volg een consistente 30-minuten ochtendroutine." },
+      "evening_routine_week": { "title": "Avondroutine Week", "description": "Creëer en volg een ontspannende 30-minuten avondroutine." }
     },
     "badges": {
       "challenge_starter": "Uitdaging Starter",

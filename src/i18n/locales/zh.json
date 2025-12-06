@@ -1974,54 +1974,58 @@
       "life_mastery": "生活掌控"
     },
     "challenges": {
-      "focus_week": {
-        "title": "专注周",
-        "description": "每次训练或比赛前进行2分钟的专注呼吸。"
-      },
-      "leadership_week": {
-        "title": "领导力周",
-        "description": "每天给3个不同的队友提供具体的正面反馈。"
-      },
-      "gratitude_week": {
-        "title": "感恩周",
-        "description": "每天早上写下3件你感激的事情。"
-      },
-      "visualization_week": {
-        "title": "可视化周",
-        "description": "训练前花5分钟想象完美的表现。"
-      },
-      "discipline_week": {
-        "title": "纪律周",
-        "description": "连续7天不找借口地完成你的晨间例程。"
-      },
-      "encouragement_week": {
-        "title": "鼓励周",
-        "description": "第一个鼓励犯错的队友。"
-      },
-      "presence_week": {
-        "title": "专注当下周",
-        "description": "训练或比赛前1小时放下手机。"
-      },
-      "accountability_week": {
-        "title": "责任周",
-        "description": "本周公开承诺一个目标并负责到底。"
-      },
-      "calm_week": {
-        "title": "平静周",
-        "description": "每天练习4-7-8呼吸法三次。"
-      },
-      "purpose_week": {
-        "title": "目标周",
-        "description": "写下你的个人使命宣言并每天复习。"
-      },
-      "energy_week": {
-        "title": "能量周",
-        "description": "每次训练时第一个带来积极的能量。"
-      },
-      "reset_day": {
-        "title": "重置日",
-        "description": "完成24小时社交媒体数字排毒。"
-      }
+      "focus_week": { "title": "专注周", "description": "每次训练或比赛前进行2分钟的专注呼吸。" },
+      "leadership_week": { "title": "领导力周", "description": "每天给3个不同的队友提供具体的正面反馈。" },
+      "gratitude_week": { "title": "感恩周", "description": "每天早上写下3件你感激的事情。" },
+      "visualization_week": { "title": "可视化周", "description": "训练前花5分钟想象完美的表现。" },
+      "discipline_week": { "title": "纪律周", "description": "连续7天不找借口地完成你的晨间例程。" },
+      "encouragement_week": { "title": "鼓励周", "description": "第一个鼓励犯错的队友。" },
+      "presence_week": { "title": "专注当下周", "description": "训练或比赛前1小时放下手机。" },
+      "accountability_week": { "title": "责任周", "description": "本周公开承诺一个目标并负责到底。" },
+      "calm_week": { "title": "平静周", "description": "每天练习4-7-8呼吸法三次。" },
+      "purpose_week": { "title": "目标周", "description": "写下你的个人使命宣言并每天复习。" },
+      "energy_week": { "title": "能量周", "description": "每次训练时第一个带来积极的能量。" },
+      "reset_day": { "title": "重置日", "description": "完成24小时社交媒体数字排毒。" },
+      "affirmation_week": { "title": "肯定周", "description": "每天早晚重复3次积极的肯定语。" },
+      "confidence_week": { "title": "自信周", "description": "走路姿态自信，每次互动都保持眼神接触。" },
+      "concentration_week": { "title": "专注力周", "description": "练习单任务处理 - 一次只专注一件事，不分心。" },
+      "mental_toughness_week": { "title": "心理韧性周", "description": "当事情变得困难时，说'放马过来'并坚持下去。" },
+      "positive_self_talk_week": { "title": "积极自我对话周", "description": "立即用积极的想法替换每一个消极的想法。" },
+      "goal_setting_week": { "title": "目标设定周", "description": "每天设定一个具体目标并跟踪你的进展。" },
+      "pressure_handling_week": { "title": "压力处理周", "description": "每天在模拟压力条件下练习你的技能。" },
+      "clutch_mindset_week": { "title": "关键时刻心态周", "description": "每晚睡前想象在高压时刻取得成功。" },
+      "competitive_edge_week": { "title": "竞争优势周", "description": "每天找到超越常规训练的额外改进点。" },
+      "mental_reset_week": { "title": "心理重置周", "description": "每次犯错后使用重置词或手势来清空思绪。" },
+      "game_day_focus_week": { "title": "比赛日专注周", "description": "创建并遵循赛前心理准备程序。" },
+      "self_compassion_week": { "title": "自我慈悲周", "description": "犯错时善待自己 - 不要苛责。" },
+      "mindfulness_week": { "title": "正念周", "description": "每天花5分钟进行安静的正念觉察。" },
+      "stress_release_week": { "title": "压力释放周", "description": "每晚睡前练习渐进性肌肉放松。" },
+      "emotional_control_week": { "title": "情绪控制周", "description": "在对任何挫折做出反应之前，暂停并深呼吸3次。" },
+      "joy_week": { "title": "快乐周", "description": "每天在运动中找到并感激一个纯粹快乐的时刻。" },
+      "patience_week": { "title": "耐心周", "description": "每天在一个具有挑战性的情况下练习耐心。" },
+      "resilience_week": { "title": "韧性周", "description": "每次挫折后，写下你从中学到了什么。" },
+      "letting_go_week": { "title": "放手周", "description": "每天通过写日记释放一个担忧或遗憾。" },
+      "inner_peace_week": { "title": "内心平静周", "description": "每天以2分钟的平静沉默开始和结束。" },
+      "emotional_awareness_week": { "title": "情绪意识周", "description": "每天3次检查你的情绪并说出你的感受。" },
+      "communication_week": { "title": "沟通周", "description": "练习积极倾听 - 在回应之前重复队友说的话。" },
+      "mentorship_week": { "title": "指导周", "description": "每天帮助一个更年轻或经验较少的队友提升一项技能。" },
+      "team_spirit_week": { "title": "团队精神周", "description": "每天做一件对团队有益但对自己没有直接好处的事。" },
+      "lead_by_example_week": { "title": "以身作则周", "description": "每次训练第一个到达，最后一个离开。" },
+      "inspire_others_week": { "title": "激励他人周", "description": "每天与团队分享一句励志名言或故事。" },
+      "conflict_resolution_week": { "title": "冲突解决周", "description": "直接和建设性地解决一个小冲突或紧张关系。" },
+      "servant_leadership_week": { "title": "服务型领导周", "description": "问队友'今天我能帮你什么？'并付诸行动。" },
+      "positivity_spread_week": { "title": "传播正能量周", "description": "每天给5个不同的人真诚的赞美。" },
+      "team_culture_week": { "title": "团队文化周", "description": "即使没人看着也要坚守团队价值观。" },
+      "boundary_week": { "title": "界限周", "description": "本周在生活中设定并维持一个健康的界限。" },
+      "habit_stack_week": { "title": "习惯叠加周", "description": "将新的积极习惯附加到现有的日常程序中。" },
+      "time_management_week": { "title": "时间管理周", "description": "前一天晚上用具体的时间块计划第二天。" },
+      "sleep_optimization_week": { "title": "睡眠优化周", "description": "本周每天在同一时间上床睡觉和起床。" },
+      "nutrition_focus_week": { "title": "营养专注周", "description": "每餐都吃含有蛋白质、碳水化合物和蔬菜的均衡膳食。" },
+      "recovery_week": { "title": "恢复周", "description": "每天花15分钟进行恢复活动（拉伸、泡沫轴滚动）。" },
+      "work_life_balance_week": { "title": "工作生活平衡周", "description": "每天把高质量的时间献给运动以外的人际关系。" },
+      "digital_detox_week": { "title": "数字排毒周", "description": "将社交媒体限制在每天总共30分钟。" },
+      "morning_routine_week": { "title": "晨间例程周", "description": "创建并遵循一致的30分钟晨间例程。" },
+      "evening_routine_week": { "title": "晚间例程周", "description": "创建并遵循放松的30分钟晚间例程。" }
     },
     "badges": {
       "challenge_starter": "挑战启动者",
