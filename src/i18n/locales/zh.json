@@ -1789,7 +1789,18 @@
     },
     "notifications": {
       "workoutUnlockedTitle": "训练已解锁！",
-      "workoutUnlockedBody": "您的下一次训练现已可用。是时候训练了！"
+      "workoutUnlockedBody": "您的下一次训练现已可用。是时候训练了！",
+      "notificationsTitle": "训练通知",
+      "notificationsDescription": "当您的下一次训练解锁时收到通知",
+      "enableNotifications": "启用通知",
+      "notificationsEnabled": "已启用",
+      "notificationsDisabled": "已禁用",
+      "notificationsBlocked": "已阻止",
+      "notificationsUnsupported": "不支持",
+      "notificationsEnabledMessage": "当您的下一次训练解锁时，您将收到通知",
+      "notificationsBlockedHelp": "要启用通知，请更新您的浏览器设置",
+      "notificationsUnsupportedMessage": "您的浏览器不支持通知",
+      "browserSettingsHelp": "点击地址栏中的锁图标以更改设置"
     },
     "disclaimer": {
       "title": "免责声明",

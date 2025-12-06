@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowLeft, Dumbbell, Zap, ChevronDown, ChevronUp, Check, Lock, AlertTriangle } from 'lucide-react';
 import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
+import { NotificationPermissionCard } from '@/components/workout-modules/NotificationPermissionCard';
 import { useWorkoutNotifications } from '@/hooks/useWorkoutNotifications';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { Exercise, DayData, WeekData, ExperienceLevel } from '@/types/workout';
@@ -261,6 +262,13 @@ export default function ProductionLab() {
             />
           </CardContent>
         </Card>
+
+        {/* Notification Permission */}
+        <NotificationPermissionCard
+          permission={notificationPermission}
+          isSupported={notificationsSupported}
+          onRequestPermission={requestPermission}
+        />
 
         {/* Weekly Plan */}
         <div className="grid gap-4 lg:grid-cols-3">

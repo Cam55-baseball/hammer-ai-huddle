@@ -1848,7 +1848,18 @@
     },
     "notifications": {
       "workoutUnlockedTitle": "ワークアウト解除！",
-      "workoutUnlockedBody": "次のワークアウトが利用可能になりました。トレーニングの時間です！"
+      "workoutUnlockedBody": "次のワークアウトが利用可能になりました。トレーニングの時間です！",
+      "notificationsTitle": "ワークアウト通知",
+      "notificationsDescription": "次のワークアウトが解除されたら通知を受け取る",
+      "enableNotifications": "通知を有効にする",
+      "notificationsEnabled": "有効",
+      "notificationsDisabled": "無効",
+      "notificationsBlocked": "ブロック",
+      "notificationsUnsupported": "未対応",
+      "notificationsEnabledMessage": "次のワークアウトが解除されると通知を受け取ります",
+      "notificationsBlockedHelp": "通知を有効にするには、ブラウザの設定を更新してください",
+      "notificationsUnsupportedMessage": "お使いのブラウザは通知に対応していません",
+      "browserSettingsHelp": "アドレスバーの鍵アイコンをクリックして設定を変更してください"
     },
     "disclaimer": {
       "title": "免責事項",

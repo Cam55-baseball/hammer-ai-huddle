@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const NOTIFICATION_STORAGE_KEY = 'workout_notification_scheduled';
@@ -6,23 +6,36 @@ const NOTIFICATION_STORAGE_KEY = 'workout_notification_scheduled';
 export function useWorkoutNotifications() {
   const { t } = useTranslation();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Reactive permission state
+  const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      return 'unsupported';
+    }
+    return Notification.permission;
+  });
+
+  const isSupported = 'Notification' in window;
 
   // Request notification permission
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (!('Notification' in window)) {
-      console.log('Notifications not supported');
+      setPermission('unsupported');
       return false;
     }
 
     if (Notification.permission === 'granted') {
+      setPermission('granted');
       return true;
     }
 
     if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission();
-      return permission === 'granted';
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      return result === 'granted';
     }
 
+    setPermission('denied');
     return false;
   }, []);
 
@@ -113,9 +126,7 @@ export function useWorkoutNotifications() {
     scheduleNotification,
     cancelNotification,
     showNotification,
-    isSupported: 'Notification' in window,
-    permission: typeof window !== 'undefined' && 'Notification' in window 
-      ? Notification.permission 
-      : 'denied',
+    isSupported,
+    permission,
   };
 }
