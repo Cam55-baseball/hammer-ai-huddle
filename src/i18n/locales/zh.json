@@ -1759,6 +1759,16 @@
     "strengthSettings": "力量训练设置",
     "cycleSelector": "训练周期",
     "cycleDescription": "24周周期化计划 - 4个周期，每个6周",
+    "trainingCycle": "训练周期",
+    "cycleProgressDescription": "完成所有6周以进入下一周期",
+    "cycleProgress": "周期 {{current}} / {{total}}",
+    "workoutComplete": "训练完成",
+    "alreadyCompleted": "已完成",
+    "unlockDisclaimer": "您必须点击"训练完成"才能结束今天的训练。下一次训练将在确认完成后24小时解锁。",
+    "unlocksIn": "{{hours}}小时{{minutes}}分钟后",
+    "unlocksInMinutes": "{{minutes}}分钟后",
+    "cycleComplete": "恭喜！您已完成周期{{cycle}}！",
+    "cycleAdvancePrompt": "准备进入周期{{next}}？",
     "cycles": {
       "cycle1": {
         "name": "向心-等长基础",

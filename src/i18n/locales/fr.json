@@ -2283,6 +2283,16 @@
     "strengthSettings": "Paramètres d'Entraînement de Force",
     "cycleSelector": "Cycle d'Entraînement",
     "cycleDescription": "Programme périodisé de 24 semaines - 4 cycles de 6 semaines chacun",
+    "trainingCycle": "Cycle d'Entraînement",
+    "cycleProgressDescription": "Complétez les 6 semaines pour passer au cycle suivant",
+    "cycleProgress": "Cycle {{current}} sur {{total}}",
+    "workoutComplete": "Entraînement Terminé",
+    "alreadyCompleted": "Déjà Terminé",
+    "unlockDisclaimer": "Vous DEVEZ cliquer sur 'Entraînement Terminé' pour terminer la session d'aujourd'hui. Le prochain entraînement sera débloqué 24 heures après confirmation.",
+    "unlocksIn": "{{hours}}h {{minutes}}m",
+    "unlocksInMinutes": "{{minutes}}m",
+    "cycleComplete": "Félicitations ! Vous avez terminé le Cycle {{cycle}} !",
+    "cycleAdvancePrompt": "Prêt à passer au Cycle {{next}} ?",
     "cycles": {
       "cycle1": {
         "name": "Fondation Concentrique-Isométrique",

@@ -1775,6 +1775,16 @@
     "strengthSettings": "근력 훈련 설정",
     "cycleSelector": "훈련 사이클",
     "cycleDescription": "24주 주기화 프로그램 - 각 6주의 4사이클",
+    "trainingCycle": "훈련 사이클",
+    "cycleProgressDescription": "다음 사이클로 진행하려면 6주를 모두 완료하세요",
+    "cycleProgress": "사이클 {{current}} / {{total}}",
+    "workoutComplete": "운동 완료",
+    "alreadyCompleted": "이미 완료됨",
+    "unlockDisclaimer": "오늘 세션을 마치려면 '운동 완료'를 클릭해야 합니다. 다음 운동은 완료 확인 후 24시간 후에 잠금 해제됩니다.",
+    "unlocksIn": "{{hours}}시간 {{minutes}}분 후",
+    "unlocksInMinutes": "{{minutes}}분 후",
+    "cycleComplete": "축하합니다! 사이클 {{cycle}}을 완료했습니다!",
+    "cycleAdvancePrompt": "사이클 {{next}}으로 진행할 준비가 되셨나요?",
     "cycles": {
       "cycle1": {
         "name": "동심-등척 기초",

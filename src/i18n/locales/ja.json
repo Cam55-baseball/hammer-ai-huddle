@@ -1818,6 +1818,16 @@
     "strengthSettings": "筋力トレーニング設定",
     "cycleSelector": "トレーニングサイクル",
     "cycleDescription": "24週間ピリオダイゼーションプログラム - 各6週間の4サイクル",
+    "trainingCycle": "トレーニングサイクル",
+    "cycleProgressDescription": "次のサイクルに進むには6週間すべてを完了してください",
+    "cycleProgress": "サイクル {{current}} / {{total}}",
+    "workoutComplete": "ワークアウト完了",
+    "alreadyCompleted": "完了済み",
+    "unlockDisclaimer": "今日のセッションを終了するには「ワークアウト完了」をクリックする必要があります。次のワークアウトは完了確認後24時間後にロック解除されます。",
+    "unlocksIn": "{{hours}}時間{{minutes}}分後",
+    "unlocksInMinutes": "{{minutes}}分後",
+    "cycleComplete": "おめでとうございます！サイクル{{cycle}}を完了しました！",
+    "cycleAdvancePrompt": "サイクル{{next}}に進む準備はできましたか？",
     "cycles": {
       "cycle1": {
         "name": "コンセントリック・アイソメトリック基礎",

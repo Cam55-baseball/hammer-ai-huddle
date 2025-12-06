@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, Circle, Dumbbell, Timer, Target } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle2, Circle, Dumbbell, Timer, Target, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Exercise, ExperienceLevel, getAdjustedPercent, isExerciseObject } from '@/types/workout';
 
@@ -305,6 +306,14 @@ export function DayWorkoutDetailDialog({
             )}
           </div>
 
+          {/* Required Disclaimer Note */}
+          <Alert className="border-amber-500/50 bg-amber-500/10">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertDescription className="text-xs text-amber-700 dark:text-amber-300">
+              {t('workoutModules.unlockDisclaimer')}
+            </AlertDescription>
+          </Alert>
+
           <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border">
             <Button
               onClick={() => {
@@ -313,16 +322,17 @@ export function DayWorkoutDetailDialog({
               }}
               variant={isCompleted ? 'outline' : 'default'}
               className="flex-1 gap-2"
+              disabled={isCompleted}
             >
               {isCompleted ? (
                 <>
-                  <Circle className="h-4 w-4" />
-                  {t('workoutModules.markIncomplete')}
+                  <CheckCircle2 className="h-4 w-4" />
+                  {t('workoutModules.alreadyCompleted')}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4" />
-                  {t('workoutModules.markComplete')}
+                  {t('workoutModules.workoutComplete')}
                 </>
               )}
             </Button>

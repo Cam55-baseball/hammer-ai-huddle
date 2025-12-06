@@ -13,9 +13,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowLeft, Dumbbell, Zap, ChevronDown, ChevronUp, Check, Lock, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Dumbbell, Zap, ChevronDown, ChevronUp, Check, Lock, AlertTriangle, Clock } from 'lucide-react';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { Exercise, DayData, WeekData, ExperienceLevel } from '@/types/workout';
 import { CYCLES, BAT_SPEED_EXERCISES, BAT_SPEED_DAY_1, BAT_SPEED_DAY_2, BAT_SPEED_DAY_3, BAT_SPEED_DAY_4, STRENGTH_DAY_BAT_SPEED, HITTING_EQUIPMENT } from '@/data/ironBambinoProgram';
@@ -26,17 +25,11 @@ const getBatSpeedExercises = (names: string[]): Exercise[] => {
 };
 
 // Generate 6-week schedule for a cycle
-// Pattern: Day 1 = Strength A + Bat Speed, Day 4 = Bat Speed Only, Day 8 = Strength B + Bat Speed, etc.
 const generateCycleWeeks = (cycleId: number): WeekData[] => {
   const cycle = CYCLES.find(c => c.id === cycleId) || CYCLES[0];
   const workoutKeys: ('A' | 'B' | 'C' | 'D')[] = ['A', 'B', 'C', 'D'];
   
-  // In 6 weeks (42 days), with strength every 4 days, we get ~10 strength sessions
-  // We'll distribute 4 unique workouts (A, B, C, D) and repeat them
   const weeks: WeekData[] = [];
-  
-  // Simplified schedule: 2 strength days + 2 bat speed days per week
-  // Week pattern: Day 1 = Strength + Bat Speed, Day 3 = Bat Speed Only, Day 5 = Strength + Bat Speed, Day 7 = Rest
   
   for (let w = 0; w < 6; w++) {
     const workoutIndex1 = (w * 2) % 4;
@@ -93,12 +86,11 @@ export default function ProductionLab() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [selectedSport, setSelectedSport] = useState<'baseball' | 'softball'>('baseball');
-  const [selectedCycle, setSelectedCycle] = useState(1);
   const [gateModalOpen, setGateModalOpen] = useState(false);
   const [targetWeek, setTargetWeek] = useState(1);
   const [equipmentChecked, setEquipmentChecked] = useState<string[]>([]);
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
-  const [selectedDay, setSelectedDay] = useState<{ week: number; day: DayData } | null>(null);
+  const [selectedDay, setSelectedDay] = useState<{ week: number; day: DayData; dayIndex: number } | null>(null);
 
   const { modules, loading: subLoading } = useSubscription();
   const {
@@ -111,9 +103,10 @@ export default function ProductionLab() {
     updateWeightLog,
     getWeightLog,
     updateExperienceLevel,
-    advanceWeek,
     getWeekCompletionPercent,
     canUnlockWeek,
+    isDayAccessible,
+    getTimeUntilUnlock,
   } = useSubModuleProgress(selectedSport, 'hitting', 'production_lab');
 
   useEffect(() => {
@@ -128,8 +121,11 @@ export default function ProductionLab() {
   }, [authLoading, subLoading, user, progressLoading, progress, initializeProgress]);
 
   const hasAccess = modules.some((m) => m.startsWith(`${selectedSport}_hitting`));
-  const weeks = generateCycleWeeks(selectedCycle);
-  const currentCycle = CYCLES.find(c => c.id === selectedCycle) || CYCLES[0];
+  
+  // Current cycle from progress (no manual selection)
+  const currentCycle = progress?.current_cycle || 1;
+  const currentCycleData = CYCLES.find(c => c.id === currentCycle) || CYCLES[0];
+  const weeks = generateCycleWeeks(currentCycle);
 
   if (authLoading || subLoading || progressLoading) {
     return <PageLoadingSkeleton />;
@@ -156,12 +152,6 @@ export default function ProductionLab() {
 
   const handleDayComplete = (week: number, day: string, completed: boolean) => {
     updateDayProgress(week, day, completed);
-    if (completed && week === currentWeek) {
-      const newPercent = getWeekCompletionPercent(week);
-      if (newPercent >= 70 && week < 6) {
-        advanceWeek(week + 1);
-      }
-    }
   };
 
   const handleExerciseComplete = (week: number, day: string, exerciseIndex: number, completed: boolean, totalExercises: number) => {
@@ -180,6 +170,17 @@ export default function ProductionLab() {
 
   const toggleEquipment = (itemId: string) => {
     setEquipmentChecked((prev) => prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId]);
+  };
+
+  const getDayIndex = (day: string): number => {
+    return parseInt(day.replace('day', '')) - 1;
+  };
+
+  const formatTimeRemaining = (hours: number, minutes: number): string => {
+    if (hours > 0) {
+      return t('workoutModules.unlocksIn', { hours, minutes });
+    }
+    return t('workoutModules.unlocksInMinutes', { minutes });
   };
 
   return (
@@ -204,31 +205,25 @@ export default function ProductionLab() {
           lastActivity={progress?.last_activity}
         />
 
-        {/* Cycle Selector */}
+        {/* Current Cycle Badge (Read-Only) */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Zap className="h-4 w-4 text-yellow-500" />
-              {t('workoutModules.cycleSelector', 'Training Cycle')}
+              {t('workoutModules.trainingCycle')}
             </CardTitle>
             <CardDescription className="text-xs">
-              {t('workoutModules.cycleDescription', '24-week periodized program - 4 cycles of 6 weeks each')}
+              {t('workoutModules.cycleProgressDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Select value={selectedCycle.toString()} onValueChange={(v) => setSelectedCycle(parseInt(v))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CYCLES.map((cycle) => (
-                  <SelectItem key={cycle.id} value={cycle.id.toString()}>
-                    Cycle {cycle.id}: {cycle.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">{currentCycle.description}</p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <Badge variant="default" className="text-sm px-3 py-1">
+                {t('workoutModules.cycleProgress', { current: currentCycle, total: 4 })}
+              </Badge>
+              <span className="text-sm font-medium">{currentCycleData.name}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">{currentCycleData.description}</p>
           </CardContent>
         </Card>
 
@@ -285,30 +280,55 @@ export default function ProductionLab() {
                   
                   {isExpanded && isUnlocked && (
                     <CardContent className="pt-0 space-y-2">
-                      {week.days.map((day) => (
-                        <div
-                          key={day.day}
-                          className="flex items-center justify-between p-2 rounded-lg border cursor-pointer hover:bg-muted/50"
-                          onClick={() => setSelectedDay({ week: week.week, day })}
-                        >
-                          <div className="flex items-center gap-2">
-                            {isDayCompleted(week.week, day.day) ? (
-                              <Check className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <div className="h-4 w-4 rounded-full border-2" />
-                            )}
-                            <span className="text-sm">{day.title}</span>
+                      {week.days.map((day, dayIdx) => {
+                        const dayIndex = getDayIndex(day.day);
+                        const isAccessible = isDayAccessible(week.week, dayIndex);
+                        const timeRemaining = getTimeUntilUnlock(week.week, dayIndex);
+                        const isComplete = isDayCompleted(week.week, day.day);
+
+                        return (
+                          <div
+                            key={day.day}
+                            className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all ${
+                              isAccessible 
+                                ? 'hover:bg-muted/50' 
+                                : 'opacity-60 cursor-not-allowed'
+                            }`}
+                            onClick={() => {
+                              if (isAccessible) {
+                                setSelectedDay({ week: week.week, day, dayIndex });
+                              }
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              {isComplete ? (
+                                <Check className="h-4 w-4 text-green-500" />
+                              ) : isAccessible ? (
+                                <div className="h-4 w-4 rounded-full border-2" />
+                              ) : (
+                                <Lock className="h-4 w-4 text-muted-foreground" />
+                              )}
+                              <span className={`text-sm ${!isAccessible ? 'text-muted-foreground' : ''}`}>
+                                {day.title}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {!isAccessible && timeRemaining && (
+                                <Badge variant="outline" className="text-xs flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {formatTimeRemaining(timeRemaining.hours, timeRemaining.minutes)}
+                                </Badge>
+                              )}
+                              {day.exercises.some(e => typeof e === 'object' && e.type === 'strength') && isAccessible && (
+                                <Badge variant="outline" className="text-xs">{t('workoutModules.strengthWorkout')}</Badge>
+                              )}
+                              {day.exercises.some(e => typeof e === 'object' && e.type === 'isometric') && isAccessible && (
+                                <Badge variant="outline" className="text-xs">{t('workoutModules.isometricWorkout')}</Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex gap-1">
-                            {day.exercises.some(e => typeof e === 'object' && e.type === 'strength') && (
-                              <Badge variant="outline" className="text-xs">{t('workoutModules.strengthWorkout')}</Badge>
-                            )}
-                            {day.exercises.some(e => typeof e === 'object' && e.type === 'isometric') && (
-                              <Badge variant="outline" className="text-xs">{t('workoutModules.isometricWorkout')}</Badge>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </CardContent>
                   )}
                 </Card>

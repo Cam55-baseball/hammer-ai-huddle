@@ -1788,6 +1788,16 @@
     "strengthSettings": "Krachttraining Instellingen",
     "cycleSelector": "Trainingscyclus",
     "cycleDescription": "24-weken geperiodiseerd programma - 4 cycli van 6 weken elk",
+    "trainingCycle": "Trainingscyclus",
+    "cycleProgressDescription": "Voltooi alle 6 weken om naar de volgende cyclus te gaan",
+    "cycleProgress": "Cyclus {{current}} van {{total}}",
+    "workoutComplete": "Training Voltooid",
+    "alreadyCompleted": "Al Voltooid",
+    "unlockDisclaimer": "U MOET op 'Training Voltooid' klikken om de sessie van vandaag te beëindigen. De volgende training wordt 24 uur na bevestiging ontgrendeld.",
+    "unlocksIn": "{{hours}}u {{minutes}}m",
+    "unlocksInMinutes": "{{minutes}}m",
+    "cycleComplete": "Gefeliciteerd! Je hebt Cyclus {{cycle}} voltooid!",
+    "cycleAdvancePrompt": "Klaar om naar Cyclus {{next}} te gaan?",
     "cycles": {
       "cycle1": {
         "name": "Concentrisch-Isometrische Basis",
