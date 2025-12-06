@@ -238,12 +238,12 @@ export default function MindFuelWeeklyChallenge() {
         <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
           <div className="flex items-start justify-between mb-3">
             <div>
-              <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 mb-2">
-                {t(`mindFuel.weeklyChallenge.categories.${currentChallenge?.definition?.category || availableChallenge?.category}`, 
+            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 mb-2">
+                {t(`weeklyChallenge.categories.${currentChallenge?.definition?.category || availableChallenge?.category}`, 
                    currentChallenge?.definition?.category || availableChallenge?.category)}
               </Badge>
               <h3 className="font-semibold text-foreground">
-                {t(`mindFuel.weeklyChallenge.challenges.${challengeId}.title`, challengeId?.replace('_', ' '))}
+                {t(`weeklyChallenge.challenges.${challengeId}.title`, challengeId?.replace('_', ' '))}
               </h3>
             </div>
             {isCompleted && (
@@ -254,7 +254,7 @@ export default function MindFuelWeeklyChallenge() {
           </div>
 
           <p className="text-sm text-muted-foreground mb-4">
-            {t(`mindFuel.weeklyChallenge.challenges.${challengeId}.description`, 
+            {t(`weeklyChallenge.challenges.${challengeId}.description`, 
                'Complete this challenge to earn badges!')}
           </p>
 
@@ -345,7 +345,7 @@ export default function MindFuelWeeklyChallenge() {
                 >
                   <div>
                     <span className="text-sm font-medium">
-                      {t(`mindFuel.weeklyChallenge.challenges.${challenge.challenge_id}.title`, 
+                      {t(`weeklyChallenge.challenges.${challenge.challenge_id}.title`, 
                          challenge.challenge_id.replace('_', ' '))}
                     </span>
                     <div className="text-xs text-muted-foreground">
