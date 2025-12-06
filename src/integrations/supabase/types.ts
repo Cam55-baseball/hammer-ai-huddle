@@ -956,7 +956,6 @@ export type Database = {
           ai_analysis: Json | null
           analysis_public: boolean | null
           blurhash: string | null
-          contributes_to_progress: boolean
           created_at: string
           efficiency_score: number | null
           id: string
@@ -980,7 +979,6 @@ export type Database = {
           ai_analysis?: Json | null
           analysis_public?: boolean | null
           blurhash?: string | null
-          contributes_to_progress?: boolean
           created_at?: string
           efficiency_score?: number | null
           id?: string
@@ -1004,7 +1002,6 @@ export type Database = {
           ai_analysis?: Json | null
           analysis_public?: boolean | null
           blurhash?: string | null
-          contributes_to_progress?: boolean
           created_at?: string
           efficiency_score?: number | null
           id?: string

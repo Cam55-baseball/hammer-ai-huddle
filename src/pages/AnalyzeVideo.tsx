@@ -73,7 +73,6 @@ export default function AnalyzeVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [analysisEnabled, setAnalysisEnabled] = useState(true);
-  const [contributesToProgress, setContributesToProgress] = useState(true);
   const [showScorecard, setShowScorecard] = useState<boolean>(() => {
     return localStorage.getItem('showProgressReport') !== 'false';
   });
@@ -145,7 +144,6 @@ export default function AnalyzeVideo() {
     setAnalysisError(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
-    setContributesToProgress(true);
     if (module && sport) {
       toast.info(t('videoAnalysis.switchedModule', `Switched to ${sport} - ${module}. Upload space cleared.`));
     }
@@ -172,7 +170,6 @@ export default function AnalyzeVideo() {
     setAnalysisError(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
-    setContributesToProgress(true);
     toast.success(t('videoAnalysis.videoRemoved', "Video removed. Select a new video to analyze."));
   };
 
@@ -254,7 +251,6 @@ export default function AnalyzeVideo() {
           video_url: publicUrl,
           thumbnail_url: thumbnailUrl,
           status: analysisEnabled ? "uploading" : "completed",
-          contributes_to_progress: contributesToProgress,
         }])
         .select()
         .single();
@@ -488,30 +484,6 @@ export default function AnalyzeVideo() {
                     onCheckedChange={setAnalysisEnabled}
                   />
                 </div>
-
-                {/* Contribute to Progress Toggle */}
-                {analysisEnabled && (
-                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="contribute-progress" className="text-sm font-medium">
-                        {t('videoAnalysis.contributeToProgress')}
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        {contributesToProgress 
-                          ? t('videoAnalysis.contributesToProgressEnabled')
-                          : t('videoAnalysis.contributesToProgressDisabled')}
-                      </p>
-                      <p className="text-xs text-amber-600 dark:text-amber-400">
-                        {t('videoAnalysis.progressContributionNote')}
-                      </p>
-                    </div>
-                    <Switch
-                      id="contribute-progress"
-                      checked={contributesToProgress}
-                      onCheckedChange={setContributesToProgress}
-                    />
-                  </div>
-                )}
 
                 <EnhancedVideoPlayer
                   videoSrc={videoPreview}
