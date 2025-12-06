@@ -1764,7 +1764,7 @@
     "cycleProgress": "周期 {{current}} / {{total}}",
     "workoutComplete": "训练完成",
     "alreadyCompleted": "已完成",
-    "unlockDisclaimer": "您必须点击"训练完成"才能结束今天的训练。下一次训练将在确认完成后24小时解锁。",
+    "unlockDisclaimer": "您必须点击「训练完成」才能结束今天的训练。下一次训练将在确认完成后24小时解锁。",
     "unlocksIn": "{{hours}}小时{{minutes}}分钟后",
     "unlocksInMinutes": "{{minutes}}分钟后",
     "cycleComplete": "恭喜！您已完成周期{{cycle}}！",
