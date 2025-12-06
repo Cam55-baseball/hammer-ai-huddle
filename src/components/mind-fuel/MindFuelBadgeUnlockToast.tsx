@@ -19,6 +19,13 @@ const BADGE_INFO: Record<string, { name: string; emoji: string }> = {
   breakthrough_day: { name: 'Breakthrough Day', emoji: '💥' },
   unlocked_potential: { name: 'Unlocked Potential', emoji: '🔓' },
   the_reset: { name: 'The Reset Badge', emoji: '🔁' },
+  // Challenge badges
+  challenge_starter: { name: 'Challenge Starter', emoji: '🚀' },
+  challenge_warrior: { name: 'Challenge Warrior', emoji: '⚔️' },
+  challenge_champion: { name: 'Challenge Champion', emoji: '🏅' },
+  challenge_legend: { name: 'Challenge Legend', emoji: '🌟' },
+  perfect_week: { name: 'Perfect Week', emoji: '✨' },
+  comeback_kid: { name: 'Comeback Kid', emoji: '💪' },
 };
 
 function triggerConfetti() {

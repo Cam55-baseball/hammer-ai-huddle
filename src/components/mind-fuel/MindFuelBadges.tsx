@@ -15,7 +15,7 @@ interface BadgeDefinition {
   name: string;
   description: string;
   emoji: string;
-  type: 'streak' | 'category' | 'special';
+  type: 'streak' | 'category' | 'special' | 'challenge';
   requirement?: number;
   category?: string;
 }
@@ -34,6 +34,14 @@ const ALL_BADGES: BadgeDefinition[] = [
   { id: 'peace_practitioner', name: 'Peace Practitioner', description: 'Explore 20+ emotional balance lessons', emoji: '☮️', type: 'category', category: 'emotional_balance', requirement: 20 },
   { id: 'leadership_elite', name: 'Leadership Elite', description: 'Explore 20+ leadership lessons', emoji: '🦁', type: 'category', category: 'leadership', requirement: 20 },
   { id: 'discipline_engine', name: 'Discipline Engine', description: 'Explore 20+ life mastery lessons', emoji: '⚙️', type: 'category', category: 'life_mastery', requirement: 20 },
+  
+  // Challenge badges
+  { id: 'challenge_starter', name: 'Challenge Starter', description: 'Complete your first weekly challenge', emoji: '🚀', type: 'challenge', requirement: 1 },
+  { id: 'challenge_warrior', name: 'Challenge Warrior', description: 'Complete 5 weekly challenges', emoji: '⚔️', type: 'challenge', requirement: 5 },
+  { id: 'challenge_champion', name: 'Challenge Champion', description: 'Complete 10 weekly challenges', emoji: '🏅', type: 'challenge', requirement: 10 },
+  { id: 'challenge_legend', name: 'Challenge Legend', description: 'Complete 25 weekly challenges', emoji: '🌟', type: 'challenge', requirement: 25 },
+  { id: 'perfect_week', name: 'Perfect Week', description: 'Complete all 7 days of a challenge', emoji: '✨', type: 'challenge' },
+  { id: 'comeback_kid', name: 'Comeback Kid', description: 'Complete a challenge after failing one', emoji: '💪', type: 'challenge' },
   
   // Special badges
   { id: 'mind_shift', name: 'The Mind Shift', description: 'Returned after a streak break', emoji: '🔄', type: 'special' },
@@ -57,6 +65,7 @@ export default function MindFuelBadges({ earnedBadges, currentStreak, categories
 
   const streakBadges = ALL_BADGES.filter(b => b.type === 'streak');
   const categoryBadges = ALL_BADGES.filter(b => b.type === 'category');
+  const challengeBadges = ALL_BADGES.filter(b => b.type === 'challenge');
   const specialBadges = ALL_BADGES.filter(b => b.type === 'special');
 
   const renderBadge = (badge: BadgeDefinition) => {
@@ -137,6 +146,16 @@ export default function MindFuelBadges({ earnedBadges, currentStreak, categories
           </h4>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             {categoryBadges.map(renderBadge)}
+          </div>
+        </div>
+
+        {/* Challenge Badges */}
+        <div>
+          <h4 className="text-sm font-medium text-muted-foreground mb-3">
+            {t('mindFuel.badges.challengeBadges', 'Challenge Achievements')}
+          </h4>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
+            {challengeBadges.map(renderBadge)}
           </div>
         </div>
 
