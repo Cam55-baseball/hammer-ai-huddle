@@ -2283,6 +2283,24 @@
     "strengthSettings": "Paramètres d'Entraînement de Force",
     "cycleSelector": "Cycle d'Entraînement",
     "cycleDescription": "Programme périodisé de 24 semaines - 4 cycles de 6 semaines chacun",
+    "cycles": {
+      "cycle1": {
+        "name": "Fondation Concentrique-Isométrique",
+        "description": "Construire la force de base par des mouvements composés concentriques + force isométrique positionnelle"
+      },
+      "cycle2": {
+        "name": "Focus Haltérophilie Concentrique",
+        "description": "Prioriser le volume de charge concentrique, les isométriques deviennent supplémentaires"
+      },
+      "cycle3": {
+        "name": "Intensification Concentrique-Isométrique",
+        "description": "Intensité plus élevée sur les deux modalités, schémas de mouvement raffinés"
+      },
+      "cycle4": {
+        "name": "Focus Excentrique",
+        "description": "Surcharge excentrique pour une croissance musculaire maximale et résilience aux blessures"
+      }
+    },
     "disclaimer": {
       "title": "Avertissement",
       "text": "Hammer's Modality n'est pas responsable des blessures pouvant survenir pendant les exercices. Il n'y a aucune garantie de résultats. Consultez toujours un professionnel de santé qualifié avant de commencer tout programme d'exercices. Écoutez votre corps et arrêtez immédiatement si vous ressentez une douleur."

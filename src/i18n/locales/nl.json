@@ -1788,6 +1788,24 @@
     "strengthSettings": "Krachttraining Instellingen",
     "cycleSelector": "Trainingscyclus",
     "cycleDescription": "24-weken geperiodiseerd programma - 4 cycli van 6 weken elk",
+    "cycles": {
+      "cycle1": {
+        "name": "Concentrisch-Isometrische Basis",
+        "description": "Basissterkste opbouwen door concentrische samengestelde bewegingen + isometrische positiesterkte"
+      },
+      "cycle2": {
+        "name": "Concentrisch Gewichtheffen Focus",
+        "description": "Concentrisch belastingsvolume prioriteren, isometrisch wordt aanvullend"
+      },
+      "cycle3": {
+        "name": "Concentrisch-Isometrische Intensivering",
+        "description": "Hogere intensiteit op beide modaliteiten, verfijnde bewegingspatronen"
+      },
+      "cycle4": {
+        "name": "Excentrische Focus",
+        "description": "Excentrische overbelasting voor maximale spiergroei en blessurebestendigheid"
+      }
+    },
     "disclaimer": {
       "title": "Disclaimer",
       "text": "Hammer's Modality is niet verantwoordelijk voor eventuele blessures die kunnen optreden tijdens oefeningen. Er zijn geen garanties voor resultaten. Raadpleeg altijd een gekwalificeerde zorgprofessional voordat u een trainingsprogramma begint. Luister naar uw lichaam en stop onmiddellijk als u pijn ervaart."
