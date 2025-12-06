@@ -1818,7 +1818,18 @@
     },
     "notifications": {
       "workoutUnlockedTitle": "Training Ontgrendeld!",
-      "workoutUnlockedBody": "Je volgende training is nu beschikbaar. Tijd om te trainen!"
+      "workoutUnlockedBody": "Je volgende training is nu beschikbaar. Tijd om te trainen!",
+      "notificationsTitle": "Trainingsmeldingen",
+      "notificationsDescription": "Ontvang een melding wanneer je volgende training wordt ontgrendeld",
+      "enableNotifications": "Meldingen Inschakelen",
+      "notificationsEnabled": "Ingeschakeld",
+      "notificationsDisabled": "Uitgeschakeld",
+      "notificationsBlocked": "Geblokkeerd",
+      "notificationsUnsupported": "Niet Ondersteund",
+      "notificationsEnabledMessage": "Je ontvangt een melding wanneer je volgende training wordt ontgrendeld",
+      "notificationsBlockedHelp": "Om meldingen in te schakelen, werk je browserinstellingen bij",
+      "notificationsUnsupportedMessage": "Je browser ondersteunt geen meldingen",
+      "browserSettingsHelp": "Klik op het slotpictogram in de adresbalk om de instellingen te wijzigen"
     },
     "disclaimer": {
       "title": "Disclaimer",

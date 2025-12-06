@@ -2471,7 +2471,18 @@
     },
     "notifications": {
       "workoutUnlockedTitle": "Workout Unlocked!",
-      "workoutUnlockedBody": "Your next workout is now available. Time to train!"
+      "workoutUnlockedBody": "Your next workout is now available. Time to train!",
+      "notificationsTitle": "Workout Notifications",
+      "notificationsDescription": "Get notified when your next workout unlocks",
+      "enableNotifications": "Enable Notifications",
+      "notificationsEnabled": "Enabled",
+      "notificationsDisabled": "Disabled",
+      "notificationsBlocked": "Blocked",
+      "notificationsUnsupported": "Unsupported",
+      "notificationsEnabledMessage": "You'll receive a notification when your next workout unlocks",
+      "notificationsBlockedHelp": "To enable notifications, please update your browser settings",
+      "notificationsUnsupportedMessage": "Your browser doesn't support notifications",
+      "browserSettingsHelp": "Click the lock icon in your browser address bar to change notification settings"
     },
     "disclaimer": {
       "title": "Disclaimer",

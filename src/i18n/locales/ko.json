@@ -1805,7 +1805,18 @@
     },
     "notifications": {
       "workoutUnlockedTitle": "운동 잠금 해제!",
-      "workoutUnlockedBody": "다음 운동을 이용할 수 있습니다. 훈련할 시간입니다!"
+      "workoutUnlockedBody": "다음 운동을 이용할 수 있습니다. 훈련할 시간입니다!",
+      "notificationsTitle": "운동 알림",
+      "notificationsDescription": "다음 운동이 잠금 해제되면 알림을 받으세요",
+      "enableNotifications": "알림 활성화",
+      "notificationsEnabled": "활성화됨",
+      "notificationsDisabled": "비활성화됨",
+      "notificationsBlocked": "차단됨",
+      "notificationsUnsupported": "지원되지 않음",
+      "notificationsEnabledMessage": "다음 운동이 잠금 해제되면 알림을 받게 됩니다",
+      "notificationsBlockedHelp": "알림을 활성화하려면 브라우저 설정을 업데이트하세요",
+      "notificationsUnsupportedMessage": "브라우저가 알림을 지원하지 않습니다",
+      "browserSettingsHelp": "주소 표시줄의 자물쇠 아이콘을 클릭하여 설정을 변경하세요"
     },
     "disclaimer": {
       "title": "면책 조항",

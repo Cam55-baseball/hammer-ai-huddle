@@ -2313,7 +2313,18 @@
     },
     "notifications": {
       "workoutUnlockedTitle": "Training Freigeschaltet!",
-      "workoutUnlockedBody": "Ihr nächstes Training ist jetzt verfügbar. Zeit zu trainieren!"
+      "workoutUnlockedBody": "Ihr nächstes Training ist jetzt verfügbar. Zeit zu trainieren!",
+      "notificationsTitle": "Training Benachrichtigungen",
+      "notificationsDescription": "Erhalten Sie Benachrichtigungen, wenn Ihr nächstes Training freigeschaltet wird",
+      "enableNotifications": "Benachrichtigungen Aktivieren",
+      "notificationsEnabled": "Aktiviert",
+      "notificationsDisabled": "Deaktiviert",
+      "notificationsBlocked": "Blockiert",
+      "notificationsUnsupported": "Nicht Unterstützt",
+      "notificationsEnabledMessage": "Sie erhalten eine Benachrichtigung, wenn Ihr nächstes Training freigeschaltet wird",
+      "notificationsBlockedHelp": "Um Benachrichtigungen zu aktivieren, aktualisieren Sie bitte Ihre Browsereinstellungen",
+      "notificationsUnsupportedMessage": "Ihr Browser unterstützt keine Benachrichtigungen",
+      "browserSettingsHelp": "Klicken Sie auf das Schloss-Symbol in der Adressleiste, um die Einstellungen zu ändern"
     },
     "disclaimer": {
       "title": "Haftungsausschluss",

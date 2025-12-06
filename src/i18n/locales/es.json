@@ -2291,7 +2291,18 @@
     },
     "notifications": {
       "workoutUnlockedTitle": "¡Entrenamiento Desbloqueado!",
-      "workoutUnlockedBody": "Tu próximo entrenamiento está disponible. ¡Es hora de entrenar!"
+      "workoutUnlockedBody": "Tu próximo entrenamiento está disponible. ¡Es hora de entrenar!",
+      "notificationsTitle": "Notificaciones de Entrenamiento",
+      "notificationsDescription": "Recibe notificaciones cuando tu próximo entrenamiento se desbloquee",
+      "enableNotifications": "Activar Notificaciones",
+      "notificationsEnabled": "Activado",
+      "notificationsDisabled": "Desactivado",
+      "notificationsBlocked": "Bloqueado",
+      "notificationsUnsupported": "No Soportado",
+      "notificationsEnabledMessage": "Recibirás una notificación cuando tu próximo entrenamiento se desbloquee",
+      "notificationsBlockedHelp": "Para activar notificaciones, actualiza la configuración de tu navegador",
+      "notificationsUnsupportedMessage": "Tu navegador no soporta notificaciones",
+      "browserSettingsHelp": "Haz clic en el icono del candado en la barra de direcciones para cambiar la configuración"
     },
     "disclaimer": {
       "title": "Aviso Legal",
