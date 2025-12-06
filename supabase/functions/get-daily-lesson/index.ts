@@ -181,8 +181,12 @@ serve(async (req) => {
 
       const { data: availableLessons } = await query;
 
-      if (availableLessons && availableLessons.length > 0) {
-        // Pick random lesson
+      // Calculate viewed percentage for AI generation trigger
+      const viewedPercentage = totalLessons ? ((viewedLessons || 0) / totalLessons) * 100 : 0;
+      const shouldGenerateAI = viewedPercentage >= 80 || !availableLessons || availableLessons.length === 0;
+
+      if (availableLessons && availableLessons.length > 0 && !shouldGenerateAI) {
+        // Pick random lesson from seeded content
         const randomIndex = Math.floor(Math.random() * availableLessons.length);
         lesson = availableLessons[randomIndex];
         isNewLesson = true;
@@ -226,8 +230,112 @@ serve(async (req) => {
           newBadges.push('unlocked_potential');
         }
       } else {
-        // All lessons viewed - could generate AI lesson here in future
-        console.log('[get-daily-lesson] All lessons viewed for user');
+        // Generate AI lesson when 80%+ viewed or no lessons available
+        console.log(`[get-daily-lesson] Generating AI lesson. Viewed: ${viewedPercentage.toFixed(1)}%`);
+        
+        const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+        
+        if (LOVABLE_API_KEY) {
+          try {
+            const categories = ['mental_mastery', 'emotional_balance', 'leadership', 'life_mastery'];
+            const contentTypes = ['lesson', 'quote', 'mantra', 'acronym', 'teaching', 'principle'];
+            const subcategories: Record<string, string[]> = {
+              mental_mastery: ['focus_concentration', 'confidence', 'pressure_handling', 'visualization', 'goal_setting', 'mental_toughness'],
+              emotional_balance: ['calm_techniques', 'failure_response', 'joy_passion', 'emotional_regulation', 'gratitude'],
+              leadership: ['captain_mindset', 'serving_team', 'holding_accountable', 'communication', 'trust_building'],
+              life_mastery: ['discipline', 'time_management', 'selfless_service', 'process_journey', 'legacy_mindset', 'continuous_improvement'],
+            };
+            
+            const selectedCategory = categories[Math.floor(Math.random() * categories.length)];
+            const selectedType = contentTypes[Math.floor(Math.random() * contentTypes.length)];
+            const categorySubcats = subcategories[selectedCategory];
+            const selectedSubcategory = categorySubcats[Math.floor(Math.random() * categorySubcats.length)];
+            
+            const sportContext = sport === 'both' ? 'baseball and softball' : sport;
+            
+            const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemini-2.5-flash',
+                messages: [
+                  {
+                    role: 'system',
+                    content: `You are a world-class mental performance coach for elite ${sportContext} athletes. Generate ONE powerful ${selectedType} for the "${selectedCategory.replace('_', ' ')}" category, specifically about "${selectedSubcategory.replace('_', ' ')}". Focus on building selfless, limitless, disciplined leaders. Keep it to 1-3 sentences maximum. Be unique, fresh, and impactful. Return ONLY the content text, no labels, prefixes, or quotation marks.`
+                  },
+                  {
+                    role: 'user',
+                    content: `Generate a unique ${selectedType} about ${selectedSubcategory.replace('_', ' ')} for ${sportContext} athletes.`
+                  }
+                ],
+              }),
+            });
+            
+            if (aiResponse.status === 429) {
+              console.log('[get-daily-lesson] Rate limit hit for AI generation');
+            } else if (aiResponse.status === 402) {
+              console.log('[get-daily-lesson] Payment required for AI generation');
+            } else if (aiResponse.ok) {
+              const aiData = await aiResponse.json();
+              const generatedText = aiData.choices?.[0]?.message?.content?.trim();
+              
+              if (generatedText && generatedText.length > 10) {
+                // Insert AI-generated lesson to database
+                const { data: newLesson, error: insertLessonError } = await supabase
+                  .from('mind_fuel_lessons')
+                  .insert({
+                    category: selectedCategory,
+                    subcategory: selectedSubcategory,
+                    content_type: selectedType,
+                    lesson_text: generatedText,
+                    sport: sport === 'both' ? null : sport,
+                    is_ai_generated: true,
+                    author: 'AI Coach',
+                  })
+                  .select()
+                  .single();
+                
+                if (!insertLessonError && newLesson) {
+                  lesson = newLesson;
+                  isNewLesson = true;
+                  
+                  // Mark as viewed
+                  await supabase
+                    .from('user_viewed_lessons')
+                    .insert({
+                      user_id: userId,
+                      lesson_id: lesson.id,
+                    });
+                  
+                  lessonsCollected += 1;
+                  categoriesExplored[selectedCategory] = (categoriesExplored[selectedCategory] || 0) + 1;
+                  
+                  // Check for category badges
+                  for (const badge of CATEGORY_BADGES) {
+                    if (
+                      categoriesExplored[badge.category] >= badge.threshold &&
+                      !badgesEarned.includes(badge.id)
+                    ) {
+                      badgesEarned = [...badgesEarned, badge.id];
+                      newBadges.push(badge.id);
+                    }
+                  }
+                  
+                  console.log(`[get-daily-lesson] AI lesson generated: ${lesson.id}`);
+                } else {
+                  console.error('[get-daily-lesson] Error inserting AI lesson:', insertLessonError);
+                }
+              }
+            }
+          } catch (aiError) {
+            console.error('[get-daily-lesson] AI generation error:', aiError);
+          }
+        } else {
+          console.log('[get-daily-lesson] No LOVABLE_API_KEY configured for AI generation');
+        }
       }
     }
 
