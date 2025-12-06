@@ -550,7 +550,9 @@ export type Database = {
       sub_module_progress: {
         Row: {
           created_at: string | null
+          current_cycle: number | null
           current_week: number | null
+          day_completion_times: Json | null
           equipment_checklist: Json | null
           exercise_progress: Json | null
           experience_level: string | null
@@ -567,7 +569,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          current_cycle?: number | null
           current_week?: number | null
+          day_completion_times?: Json | null
           equipment_checklist?: Json | null
           exercise_progress?: Json | null
           experience_level?: string | null
@@ -584,7 +588,9 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          current_cycle?: number | null
           current_week?: number | null
+          day_completion_times?: Json | null
           equipment_checklist?: Json | null
           exercise_progress?: Json | null
           experience_level?: string | null

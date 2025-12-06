@@ -2283,6 +2283,16 @@
     "strengthSettings": "Krafttraining-Einstellungen",
     "cycleSelector": "Trainingszyklus",
     "cycleDescription": "24-Wochen periodisiertes Programm - 4 Zyklen à 6 Wochen",
+    "trainingCycle": "Trainingszyklus",
+    "cycleProgressDescription": "Absolvieren Sie alle 6 Wochen, um zum nächsten Zyklus zu gelangen",
+    "cycleProgress": "Zyklus {{current}} von {{total}}",
+    "workoutComplete": "Training Abgeschlossen",
+    "alreadyCompleted": "Bereits Abgeschlossen",
+    "unlockDisclaimer": "Sie MÜSSEN auf 'Training Abgeschlossen' klicken, um die heutige Sitzung zu beenden. Das nächste Training wird 24 Stunden nach Bestätigung freigeschaltet.",
+    "unlocksIn": "{{hours}}h {{minutes}}m",
+    "unlocksInMinutes": "{{minutes}}m",
+    "cycleComplete": "Herzlichen Glückwunsch! Sie haben Zyklus {{cycle}} abgeschlossen!",
+    "cycleAdvancePrompt": "Bereit für Zyklus {{next}}?",
     "cycles": {
       "cycle1": {
         "name": "Konzentrisch-Isometrisches Fundament",

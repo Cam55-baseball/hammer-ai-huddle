@@ -2441,6 +2441,16 @@
     "strengthSettings": "Strength Training Settings",
     "cycleSelector": "Training Cycle",
     "cycleDescription": "24-week periodized program - 4 cycles of 6 weeks each",
+    "trainingCycle": "Training Cycle",
+    "cycleProgressDescription": "Complete all 6 weeks to advance to the next cycle",
+    "cycleProgress": "Cycle {{current}} of {{total}}",
+    "workoutComplete": "Workout Complete",
+    "alreadyCompleted": "Already Completed",
+    "unlockDisclaimer": "You MUST click 'Workout Complete' to finish today's session. The next workout will unlock 24 hours after you confirm completion.",
+    "unlocksIn": "{{hours}}h {{minutes}}m",
+    "unlocksInMinutes": "{{minutes}}m",
+    "cycleComplete": "Congratulations! You've completed Cycle {{cycle}}!",
+    "cycleAdvancePrompt": "Ready to advance to Cycle {{next}}?",
     "cycles": {
       "cycle1": {
         "name": "Concentric-Isometric Foundation",
