@@ -2469,6 +2469,10 @@
         "description": "Eccentric overload for maximum muscle growth and injury resilience"
       }
     },
+    "notifications": {
+      "workoutUnlockedTitle": "Workout Unlocked!",
+      "workoutUnlockedBody": "Your next workout is now available. Time to train!"
+    },
     "disclaimer": {
       "title": "Disclaimer",
       "text": "Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain."

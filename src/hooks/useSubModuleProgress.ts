@@ -178,8 +178,8 @@ export function useSubModuleProgress(
     return new Date() >= unlockTime;
   }, [progress, getNextDayUnlockTime]);
 
-  // Get time remaining until day unlocks
-  const getTimeUntilUnlock = useCallback((week: number, dayIndex: number): { hours: number; minutes: number } | null => {
+  // Get time remaining until day unlocks (includes seconds for real-time countdown)
+  const getTimeUntilUnlock = useCallback((week: number, dayIndex: number): { hours: number; minutes: number; seconds: number; unlockTime: Date } | null => {
     const unlockTime = getNextDayUnlockTime(week, dayIndex);
     if (!unlockTime) return null;
 
@@ -189,8 +189,9 @@ export function useSubModuleProgress(
     const diffMs = unlockTime.getTime() - now.getTime();
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
-    return { hours, minutes };
+    return { hours, minutes, seconds, unlockTime };
   }, [getNextDayUnlockTime]);
 
   // Complete a workout day with timestamp
@@ -565,6 +566,7 @@ export function useSubModuleProgress(
     canUnlockWeek,
     isDayAccessible,
     getTimeUntilUnlock,
+    getNextDayUnlockTime,
     getDayCompletionTime,
     completeWorkoutDay,
     refetch: fetchProgress,

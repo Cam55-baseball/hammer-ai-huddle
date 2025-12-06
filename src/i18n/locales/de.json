@@ -2311,6 +2311,10 @@
         "description": "Exzentrische Überlastung für maximales Muskelwachstum und Verletzungsresilienz"
       }
     },
+    "notifications": {
+      "workoutUnlockedTitle": "Training Freigeschaltet!",
+      "workoutUnlockedBody": "Ihr nächstes Training ist jetzt verfügbar. Zeit zu trainieren!"
+    },
     "disclaimer": {
       "title": "Haftungsausschluss",
       "text": "Hammer's Modality ist nicht verantwortlich für Verletzungen, die während der Übungen auftreten können. Es gibt keine Garantie für Ergebnisse. Konsultieren Sie immer einen qualifizierten Gesundheitsfachmann, bevor Sie ein Trainingsprogramm beginnen. Hören Sie auf Ihren Körper und stoppen Sie sofort, wenn Sie Schmerzen verspüren."

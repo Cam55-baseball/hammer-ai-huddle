@@ -1816,6 +1816,10 @@
         "description": "Excentrische overbelasting voor maximale spiergroei en blessurebestendigheid"
       }
     },
+    "notifications": {
+      "workoutUnlockedTitle": "Training Ontgrendeld!",
+      "workoutUnlockedBody": "Je volgende training is nu beschikbaar. Tijd om te trainen!"
+    },
     "disclaimer": {
       "title": "Disclaimer",
       "text": "Hammer's Modality is niet verantwoordelijk voor eventuele blessures die kunnen optreden tijdens oefeningen. Er zijn geen garanties voor resultaten. Raadpleeg altijd een gekwalificeerde zorgprofessional voordat u een trainingsprogramma begint. Luister naar uw lichaam en stop onmiddellijk als u pijn ervaart."

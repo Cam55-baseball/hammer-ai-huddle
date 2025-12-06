@@ -14,7 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowLeft, Dumbbell, Zap, ChevronDown, ChevronUp, Check, Lock, AlertTriangle, Clock } from 'lucide-react';
+import { ArrowLeft, Dumbbell, Zap, ChevronDown, ChevronUp, Check, Lock, AlertTriangle } from 'lucide-react';
+import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
+import { useWorkoutNotifications } from '@/hooks/useWorkoutNotifications';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { Exercise, DayData, WeekData, ExperienceLevel } from '@/types/workout';
 import { CYCLES, BAT_SPEED_EXERCISES, BAT_SPEED_DAY_1, BAT_SPEED_DAY_2, BAT_SPEED_DAY_3, BAT_SPEED_DAY_4, STRENGTH_DAY_BAT_SPEED, HITTING_EQUIPMENT } from '@/data/ironBambinoProgram';
@@ -91,6 +93,7 @@ export default function ProductionLab() {
   const [equipmentChecked, setEquipmentChecked] = useState<string[]>([]);
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState<{ week: number; day: DayData; dayIndex: number } | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { modules, loading: subLoading } = useSubscription();
   const {
@@ -107,7 +110,15 @@ export default function ProductionLab() {
     canUnlockWeek,
     isDayAccessible,
     getTimeUntilUnlock,
+    getNextDayUnlockTime,
   } = useSubModuleProgress(selectedSport, 'hitting', 'production_lab');
+
+  const { 
+    requestPermission, 
+    scheduleNotification, 
+    permission: notificationPermission,
+    isSupported: notificationsSupported,
+  } = useWorkoutNotifications();
 
   useEffect(() => {
     const saved = localStorage.getItem('selectedSport') as 'baseball' | 'softball';
@@ -119,6 +130,13 @@ export default function ProductionLab() {
       initializeProgress();
     }
   }, [authLoading, subLoading, user, progressLoading, progress, initializeProgress]);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if (notificationsSupported && notificationPermission === 'default') {
+      requestPermission();
+    }
+  }, [notificationsSupported, notificationPermission, requestPermission]);
 
   const hasAccess = modules.some((m) => m.startsWith(`${selectedSport}_hitting`));
   
@@ -150,8 +168,15 @@ export default function ProductionLab() {
     (Object.keys(weekProgress).reduce((sum, week) => sum + getWeekCompletionPercent(parseInt(week)), 0) / 6) * 100 / 100
   );
 
-  const handleDayComplete = (week: number, day: string, completed: boolean) => {
-    updateDayProgress(week, day, completed);
+  const handleDayComplete = async (week: number, day: string, completed: boolean) => {
+    await updateDayProgress(week, day, completed);
+    
+    // Schedule notification for next workout unlock if completing a day
+    if (completed) {
+      // Next workout unlocks 24 hours from now
+      const unlockTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      scheduleNotification(unlockTime);
+    }
   };
 
   const handleExerciseComplete = (week: number, day: string, exerciseIndex: number, completed: boolean, totalExercises: number) => {
@@ -176,12 +201,6 @@ export default function ProductionLab() {
     return parseInt(day.replace('day', '')) - 1;
   };
 
-  const formatTimeRemaining = (hours: number, minutes: number): string => {
-    if (hours > 0) {
-      return t('workoutModules.unlocksIn', { hours, minutes });
-    }
-    return t('workoutModules.unlocksInMinutes', { minutes });
-  };
 
   return (
     <DashboardLayout>
@@ -313,11 +332,11 @@ export default function ProductionLab() {
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              {!isAccessible && timeRemaining && (
-                                <Badge variant="outline" className="text-xs flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {formatTimeRemaining(timeRemaining.hours, timeRemaining.minutes)}
-                                </Badge>
+                              {!isAccessible && timeRemaining && timeRemaining.unlockTime && (
+                                <CountdownTimer 
+                                  unlockTime={timeRemaining.unlockTime}
+                                  onComplete={() => setRefreshKey(k => k + 1)}
+                                />
                               )}
                               {day.exercises.some(e => typeof e === 'object' && e.type === 'strength') && isAccessible && (
                                 <Badge variant="outline" className="text-xs">{t('workoutModules.strengthWorkout')}</Badge>
