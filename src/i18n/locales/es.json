@@ -2211,7 +2211,25 @@
     },
     "productionStudio": {
       "title": "Heat Factory",
-      "subtitle": "Programa de Desarrollo de Lanzamiento de 6 Semanas"
+      "subtitle": "Programa Elite de Desarrollo de Lanzamiento de 24 Semanas"
+    },
+    "pitchingCycles": {
+      "cycle1": {
+        "name": "Cuidado del Brazo y Fundamentos",
+        "description": "Construir base de cuidado del brazo, movilidad, fundamentos de mecánica y resistencia de tejidos para longevidad del lanzador"
+      },
+      "cycle2": {
+        "name": "Desarrollo de Velocidad",
+        "description": "Sobrecarga progresiva para velocidad con progresiones de tiro largo y protocolos de bolas con peso"
+      },
+      "cycle3": {
+        "name": "Desarrollo del Arsenal de Lanzamientos",
+        "description": "Dominio de bolas con curva, refinamiento del cambio, conceptos de túnel y precisión de comando"
+      },
+      "cycle4": {
+        "name": "Preparación para el Juego y Pico",
+        "description": "Juegos simulados, acondicionamiento en temporada y preparación para rendimiento máximo"
+      }
     },
     "yourProgress": "Tu Progreso",
     "currentWeek": "Semana Actual",
@@ -2306,7 +2324,8 @@
     },
     "disclaimer": {
       "title": "Aviso Legal",
-      "text": "Hammer's Modality no es responsable de ninguna lesión que pueda ocurrir durante los ejercicios. No hay garantías en los resultados. Siempre consulte con un profesional de salud calificado antes de comenzar cualquier programa de ejercicios. Escuche a su cuerpo y deténgase inmediatamente si experimenta dolor."
+      "text": "Hammer's Modality no es responsable de ninguna lesión que pueda ocurrir durante los ejercicios. No hay garantías en los resultados. Siempre consulte con un profesional de salud calificado antes de comenzar cualquier programa de ejercicios. Escuche a su cuerpo y deténgase inmediatamente si experimenta dolor.",
+      "pitchingText": "El entrenamiento de lanzamiento conlleva riesgo inherente de lesión en el brazo. No somos responsables de ninguna lesión que pueda ocurrir. Siempre consulte a un médico deportivo calificado antes de comenzar cualquier programa de lanzamiento. Detenga inmediatamente si experimenta dolor en el brazo, hombro o codo."
     }
   }
 }

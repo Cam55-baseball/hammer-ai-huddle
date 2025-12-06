@@ -1738,7 +1738,25 @@
     },
     "productionStudio": {
       "title": "Heat Factory",
-      "subtitle": "6-Weken Werpen Ontwikkelingsprogramma"
+      "subtitle": "24-Weken Elite Werpontwikkelingsprogramma"
+    },
+    "pitchingCycles": {
+      "cycle1": {
+        "name": "Armverzorging & Basis",
+        "description": "Armverzorgingsbasis, mobiliteit, mechanica en weefselveerkracht opbouwen voor werpuithoudingsvermogen"
+      },
+      "cycle2": {
+        "name": "Snelheidsontwikkeling",
+        "description": "Progressieve overbelasting voor snelheid met lange worp progressies en verzwaarde bal protocollen"
+      },
+      "cycle3": {
+        "name": "Worparsenaal Ontwikkeling",
+        "description": "Beheersing van brekende ballen, changeup verfijning, tunneling concepten en command precisie"
+      },
+      "cycle4": {
+        "name": "Wedstrijdgereedheid & Piek",
+        "description": "Gesimuleerde wedstrijden, in-seizoen conditionering en piekprestatie voorbereiding"
+      }
     },
     "yourProgress": "Jouw Voortgang",
     "currentWeek": "Huidige Week",
@@ -1833,7 +1851,8 @@
     },
     "disclaimer": {
       "title": "Disclaimer",
-      "text": "Hammer's Modality is niet verantwoordelijk voor eventuele blessures die kunnen optreden tijdens oefeningen. Er zijn geen garanties voor resultaten. Raadpleeg altijd een gekwalificeerde zorgprofessional voordat u een trainingsprogramma begint. Luister naar uw lichaam en stop onmiddellijk als u pijn ervaart."
+      "text": "Hammer's Modality is niet verantwoordelijk voor eventuele blessures die kunnen optreden tijdens oefeningen. Er zijn geen garanties voor resultaten. Raadpleeg altijd een gekwalificeerde zorgprofessional voordat u een trainingsprogramma begint. Luister naar uw lichaam en stop onmiddellijk als u pijn ervaart.",
+      "pitchingText": "Werptraining brengt inherente risico's op armblessures met zich mee. Wij zijn niet verantwoordelijk voor eventuele blessures die kunnen optreden. Raadpleeg altijd een gekwalificeerde sportarts voordat u een werpprogramma begint. Stop onmiddellijk als u pijn ervaart in uw arm, schouder of elleboog."
     }
   }
 }
