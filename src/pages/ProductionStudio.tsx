@@ -10,6 +10,8 @@ import { DayWorkoutDetailDialog } from '@/components/workout-modules/DayWorkoutD
 import { useSubModuleProgress } from '@/hooks/useSubModuleProgress';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
+import { useOwnerAccess } from '@/hooks/useOwnerAccess';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -133,6 +135,8 @@ export default function ProductionStudio() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const { modules, loading: subLoading } = useSubscription();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
   const {
     progress,
     loading: progressLoading,
@@ -173,13 +177,14 @@ export default function ProductionStudio() {
     }
   }, [notificationsSupported, notificationPermission, requestPermission]);
 
-  const hasAccess = modules.some((m) => m.startsWith(`${selectedSport}_pitching`));
+  const isOwnerOrAdmin = isOwner || isAdmin;
+  const hasAccess = isOwnerOrAdmin || modules.some((m) => m.startsWith(`${selectedSport}_pitching`));
   
   const currentCycle = progress?.current_cycle || 1;
   const currentCycleData = PITCHING_CYCLES.find(c => c.id === currentCycle) || PITCHING_CYCLES[0];
   const weeks = generateCycleWeeks(currentCycle);
 
-  if (authLoading || subLoading || progressLoading) {
+  if (authLoading || subLoading || progressLoading || ownerLoading || adminLoading) {
     return <PageLoadingSkeleton />;
   }
 
