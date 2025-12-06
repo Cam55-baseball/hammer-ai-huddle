@@ -1990,54 +1990,58 @@
       "life_mastery": "라이프 마스터리"
     },
     "challenges": {
-      "focus_week": {
-        "title": "집중의 주",
-        "description": "매 연습이나 경기 전 2분간 집중 호흡을 연습하세요."
-      },
-      "leadership_week": {
-        "title": "리더십의 주",
-        "description": "매일 3명의 다른 팀원에게 구체적인 긍정적 피드백을 제공하세요."
-      },
-      "gratitude_week": {
-        "title": "감사의 주",
-        "description": "매일 아침 감사한 것 3가지를 적으세요."
-      },
-      "visualization_week": {
-        "title": "시각화의 주",
-        "description": "연습 전 5분간 완벽한 퍼포먼스를 시각화하세요."
-      },
-      "discipline_week": {
-        "title": "규율의 주",
-        "description": "변명 없이 7일 연속 아침 루틴을 완료하세요."
-      },
-      "encouragement_week": {
-        "title": "격려의 주",
-        "description": "실수한 팀원을 가장 먼저 격려하세요."
-      },
-      "presence_week": {
-        "title": "현존의 주",
-        "description": "연습이나 경기 1시간 전에 휴대폰을 치워두세요."
-      },
-      "accountability_week": {
-        "title": "책임의 주",
-        "description": "이번 주 하나의 목표에 대해 공개적으로 책임지세요."
-      },
-      "calm_week": {
-        "title": "평정의 주",
-        "description": "4-7-8 호흡법을 하루 3번 연습하세요."
-      },
-      "purpose_week": {
-        "title": "목적의 주",
-        "description": "개인 미션 선언문을 작성하고 매일 검토하세요."
-      },
-      "energy_week": {
-        "title": "에너지의 주",
-        "description": "모든 연습에서 가장 먼저 긍정적인 에너지를 가져오세요."
-      },
-      "reset_day": {
-        "title": "리셋 데이",
-        "description": "소셜 미디어에서 24시간 디지털 디톡스를 완료하세요."
-      }
+      "focus_week": { "title": "집중의 주", "description": "매 연습이나 경기 전 2분간 집중 호흡을 연습하세요." },
+      "leadership_week": { "title": "리더십의 주", "description": "매일 3명의 다른 팀원에게 구체적인 긍정적 피드백을 제공하세요." },
+      "gratitude_week": { "title": "감사의 주", "description": "매일 아침 감사한 것 3가지를 적으세요." },
+      "visualization_week": { "title": "시각화의 주", "description": "연습 전 5분간 완벽한 퍼포먼스를 시각화하세요." },
+      "discipline_week": { "title": "규율의 주", "description": "변명 없이 7일 연속 아침 루틴을 완료하세요." },
+      "encouragement_week": { "title": "격려의 주", "description": "실수한 팀원을 가장 먼저 격려하세요." },
+      "presence_week": { "title": "현존의 주", "description": "연습이나 경기 1시간 전에 휴대폰을 치워두세요." },
+      "accountability_week": { "title": "책임의 주", "description": "이번 주 하나의 목표에 대해 공개적으로 책임지세요." },
+      "calm_week": { "title": "평정의 주", "description": "4-7-8 호흡법을 하루 3번 연습하세요." },
+      "purpose_week": { "title": "목적의 주", "description": "개인 미션 선언문을 작성하고 매일 검토하세요." },
+      "energy_week": { "title": "에너지의 주", "description": "모든 연습에서 가장 먼저 긍정적인 에너지를 가져오세요." },
+      "reset_day": { "title": "리셋 데이", "description": "소셜 미디어에서 24시간 디지털 디톡스를 완료하세요." },
+      "affirmation_week": { "title": "긍정 확언의 주", "description": "매일 아침과 밤에 3가지 긍정적인 확언을 반복하세요." },
+      "confidence_week": { "title": "자신감의 주", "description": "자신감 있는 자세로 걷고 모든 상호작용에서 눈을 맞추세요." },
+      "concentration_week": { "title": "집중력의 주", "description": "싱글태스킹 연습 - 방해 없이 한 번에 한 가지에 집중하세요." },
+      "mental_toughness_week": { "title": "정신적 강인함의 주", "description": "힘들 때 '덤벼라'라고 말하고 밀고 나가세요." },
+      "positive_self_talk_week": { "title": "긍정적 자기 대화의 주", "description": "모든 부정적인 생각을 즉시 긍정적인 것으로 바꾸세요." },
+      "goal_setting_week": { "title": "목표 설정의 주", "description": "매일 하나의 구체적인 목표를 설정하고 진행 상황을 추적하세요." },
+      "pressure_handling_week": { "title": "압박 대처의 주", "description": "매일 시뮬레이션된 압박 조건에서 기술을 연습하세요." },
+      "clutch_mindset_week": { "title": "클러치 마인드셋의 주", "description": "매일 밤 잠자기 전 고압 상황에서의 성공을 시각화하세요." },
+      "competitive_edge_week": { "title": "경쟁 우위의 주", "description": "정규 연습 외에 매일 개선할 추가 사항을 찾으세요." },
+      "mental_reset_week": { "title": "멘탈 리셋의 주", "description": "모든 실수 후 리셋 단어나 제스처를 사용해 마음을 비우세요." },
+      "game_day_focus_week": { "title": "경기일 집중의 주", "description": "경기 전 멘탈 준비 루틴을 만들고 따르세요." },
+      "self_compassion_week": { "title": "자기 연민의 주", "description": "실수했을 때 자신에게 친절하게 - 가혹한 자기 비판 금지." },
+      "mindfulness_week": { "title": "마음챙김의 주", "description": "매일 5분간 조용한 마음챙김 상태로 보내세요." },
+      "stress_release_week": { "title": "스트레스 해소의 주", "description": "매일 밤 잠자기 전 점진적 근육 이완을 연습하세요." },
+      "emotional_control_week": { "title": "감정 조절의 주", "description": "어떤 좌절에 반응하기 전에 멈추고 3번 깊게 숨을 쉬세요." },
+      "joy_week": { "title": "기쁨의 주", "description": "매일 스포츠에서 순수한 기쁨의 순간을 찾고 감사하세요." },
+      "patience_week": { "title": "인내의 주", "description": "매일 하나의 어려운 상황에서 인내를 연습하세요." },
+      "resilience_week": { "title": "회복력의 주", "description": "모든 좌절 후 거기서 배운 것을 적으세요." },
+      "letting_go_week": { "title": "놓아주기의 주", "description": "일기를 통해 매일 하나의 걱정이나 후회를 놓아주세요." },
+      "inner_peace_week": { "title": "내면의 평화의 주", "description": "매일 2분간의 평화로운 침묵으로 시작하고 끝내세요." },
+      "emotional_awareness_week": { "title": "감정 인식의 주", "description": "하루 3번 감정을 체크하고 느끼는 것에 이름을 붙이세요." },
+      "communication_week": { "title": "소통의 주", "description": "적극적 경청 연습 - 응답하기 전에 팀원의 말을 반복하세요." },
+      "mentorship_week": { "title": "멘토링의 주", "description": "매일 더 어리거나 경험이 적은 팀원의 한 가지 기술을 도와주세요." },
+      "team_spirit_week": { "title": "팀 정신의 주", "description": "매일 자신에게 직접적인 이익은 없지만 팀에 도움이 되는 일을 하세요." },
+      "lead_by_example_week": { "title": "모범 보이기의 주", "description": "모든 연습에 가장 먼저 도착하고 가장 마지막에 떠나세요." },
+      "inspire_others_week": { "title": "타인 영감의 주", "description": "매일 팀과 영감을 주는 명언이나 이야기를 공유하세요." },
+      "conflict_resolution_week": { "title": "갈등 해결의 주", "description": "작은 갈등이나 긴장을 직접적이고 건설적으로 다루세요." },
+      "servant_leadership_week": { "title": "섬기는 리더십의 주", "description": "팀원에게 '오늘 어떻게 도와줄까?'라고 묻고 실행하세요." },
+      "positivity_spread_week": { "title": "긍정 전파의 주", "description": "매일 5명의 다른 사람에게 진심 어린 칭찬을 하세요." },
+      "team_culture_week": { "title": "팀 문화의 주", "description": "아무도 보지 않을 때도 팀 가치를 지키세요." },
+      "boundary_week": { "title": "경계의 주", "description": "이번 주 삶에서 건강한 경계를 설정하고 유지하세요." },
+      "habit_stack_week": { "title": "습관 쌓기의 주", "description": "새로운 긍정적 습관을 기존 일상에 붙이세요." },
+      "time_management_week": { "title": "시간 관리의 주", "description": "전날 밤에 구체적인 시간 블록으로 다음 날을 계획하세요." },
+      "sleep_optimization_week": { "title": "수면 최적화의 주", "description": "이번 주 매일 같은 시간에 자고 일어나세요." },
+      "nutrition_focus_week": { "title": "영양 집중의 주", "description": "매 식사에서 단백질, 탄수화물, 채소가 균형 잡힌 식사를 하세요." },
+      "recovery_week": { "title": "회복의 주", "description": "매일 15분을 회복 활동(스트레칭, 폼롤링)에 투자하세요." },
+      "work_life_balance_week": { "title": "일과 삶의 균형의 주", "description": "매일 스포츠 외의 관계에 질 높은 시간을 바치세요." },
+      "digital_detox_week": { "title": "디지털 디톡스의 주", "description": "소셜 미디어를 하루 총 30분으로 제한하세요." },
+      "morning_routine_week": { "title": "아침 루틴의 주", "description": "일관된 30분 아침 루틴을 만들고 따르세요." },
+      "evening_routine_week": { "title": "저녁 루틴의 주", "description": "편안한 30분 저녁 루틴을 만들고 따르세요." }
     },
     "badges": {
       "challenge_starter": "챌린지 스타터",

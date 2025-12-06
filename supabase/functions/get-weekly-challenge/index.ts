@@ -6,68 +6,67 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Challenge library - 12 themed challenges that rotate weekly
+// Challenge library - 52 themed challenges that rotate weekly (one per week of the year)
 const CHALLENGES = [
-  {
-    id: 'focus_week',
-    category: 'mental_mastery',
-    totalDays: 7,
-  },
-  {
-    id: 'leadership_week',
-    category: 'leadership',
-    totalDays: 7,
-  },
-  {
-    id: 'gratitude_week',
-    category: 'emotional_balance',
-    totalDays: 7,
-  },
-  {
-    id: 'visualization_week',
-    category: 'mental_mastery',
-    totalDays: 7,
-  },
-  {
-    id: 'discipline_week',
-    category: 'life_mastery',
-    totalDays: 7,
-  },
-  {
-    id: 'encouragement_week',
-    category: 'leadership',
-    totalDays: 7,
-  },
-  {
-    id: 'presence_week',
-    category: 'life_mastery',
-    totalDays: 7,
-  },
-  {
-    id: 'accountability_week',
-    category: 'leadership',
-    totalDays: 7,
-  },
-  {
-    id: 'calm_week',
-    category: 'emotional_balance',
-    totalDays: 7,
-  },
-  {
-    id: 'purpose_week',
-    category: 'life_mastery',
-    totalDays: 7,
-  },
-  {
-    id: 'energy_week',
-    category: 'leadership',
-    totalDays: 7,
-  },
-  {
-    id: 'reset_day',
-    category: 'emotional_balance',
-    totalDays: 1,
-  },
+  // Mental Mastery (13 challenges)
+  { id: 'focus_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'visualization_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'affirmation_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'confidence_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'concentration_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'mental_toughness_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'positive_self_talk_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'goal_setting_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'pressure_handling_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'clutch_mindset_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'competitive_edge_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'mental_reset_week', category: 'mental_mastery', totalDays: 7 },
+  { id: 'game_day_focus_week', category: 'mental_mastery', totalDays: 7 },
+  
+  // Emotional Balance (13 challenges)
+  { id: 'gratitude_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'calm_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'reset_day', category: 'emotional_balance', totalDays: 1 },
+  { id: 'self_compassion_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'mindfulness_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'stress_release_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'emotional_control_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'joy_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'patience_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'resilience_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'letting_go_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'inner_peace_week', category: 'emotional_balance', totalDays: 7 },
+  { id: 'emotional_awareness_week', category: 'emotional_balance', totalDays: 7 },
+  
+  // Leadership (13 challenges)
+  { id: 'leadership_week', category: 'leadership', totalDays: 7 },
+  { id: 'encouragement_week', category: 'leadership', totalDays: 7 },
+  { id: 'accountability_week', category: 'leadership', totalDays: 7 },
+  { id: 'energy_week', category: 'leadership', totalDays: 7 },
+  { id: 'communication_week', category: 'leadership', totalDays: 7 },
+  { id: 'mentorship_week', category: 'leadership', totalDays: 7 },
+  { id: 'team_spirit_week', category: 'leadership', totalDays: 7 },
+  { id: 'lead_by_example_week', category: 'leadership', totalDays: 7 },
+  { id: 'inspire_others_week', category: 'leadership', totalDays: 7 },
+  { id: 'conflict_resolution_week', category: 'leadership', totalDays: 7 },
+  { id: 'servant_leadership_week', category: 'leadership', totalDays: 7 },
+  { id: 'positivity_spread_week', category: 'leadership', totalDays: 7 },
+  { id: 'team_culture_week', category: 'leadership', totalDays: 7 },
+  
+  // Life Mastery (13 challenges)
+  { id: 'discipline_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'presence_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'purpose_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'boundary_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'habit_stack_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'time_management_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'sleep_optimization_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'nutrition_focus_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'recovery_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'work_life_balance_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'digital_detox_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'morning_routine_week', category: 'life_mastery', totalDays: 7 },
+  { id: 'evening_routine_week', category: 'life_mastery', totalDays: 7 },
 ];
 
 // Challenge badges

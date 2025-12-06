@@ -2545,6 +2545,166 @@
       "reset_day": {
         "title": "Reset-Tag",
         "description": "Absolviere einen 24-Stunden Digital-Detox von sozialen Medien."
+      },
+      "affirmation_week": {
+        "title": "Affirmations-Woche",
+        "description": "Wiederhole 3 positive Affirmationen jeden Morgen und Abend."
+      },
+      "confidence_week": {
+        "title": "Selbstvertrauens-Woche",
+        "description": "Gehe mit selbstbewusster Haltung und halte Blickkontakt bei jeder Interaktion."
+      },
+      "concentration_week": {
+        "title": "Konzentrations-Woche",
+        "description": "Übe Single-Tasking - fokussiere dich auf eine Sache ohne Ablenkungen."
+      },
+      "mental_toughness_week": {
+        "title": "Mentale Stärke-Woche",
+        "description": "Wenn es schwer wird, sage 'Komm schon' und kämpfe weiter."
+      },
+      "positive_self_talk_week": {
+        "title": "Positiver Selbstdialog-Woche",
+        "description": "Ersetze jeden negativen Gedanken sofort durch einen positiven."
+      },
+      "goal_setting_week": {
+        "title": "Zielsetzungs-Woche",
+        "description": "Setze jeden Tag ein spezifisches Ziel und verfolge deinen Fortschritt."
+      },
+      "pressure_handling_week": {
+        "title": "Druckbewältigungs-Woche",
+        "description": "Übe deine Fähigkeiten täglich unter simulierten Druckbedingungen."
+      },
+      "clutch_mindset_week": {
+        "title": "Clutch-Mentalitäts-Woche",
+        "description": "Visualisiere Erfolg in Hochdruckmomenten vor dem Schlafengehen."
+      },
+      "competitive_edge_week": {
+        "title": "Wettbewerbsvorteil-Woche",
+        "description": "Finde jeden Tag etwas Extra zum Verbessern über das reguläre Training hinaus."
+      },
+      "mental_reset_week": {
+        "title": "Mentaler Reset-Woche",
+        "description": "Verwende ein Reset-Wort oder -Geste nach jedem Fehler, um deinen Geist zu klären."
+      },
+      "game_day_focus_week": {
+        "title": "Spieltag-Fokus-Woche",
+        "description": "Erstelle und befolge eine mentale Vorbereitungsroutine vor dem Spiel."
+      },
+      "self_compassion_week": {
+        "title": "Selbstmitgefühl-Woche",
+        "description": "Behandle dich freundlich bei Fehlern - keine harte Selbstkritik."
+      },
+      "mindfulness_week": {
+        "title": "Achtsamkeits-Woche",
+        "description": "Verbringe jeden Tag 5 Minuten in stiller achtsamer Wahrnehmung."
+      },
+      "stress_release_week": {
+        "title": "Stressabbau-Woche",
+        "description": "Übe progressive Muskelentspannung vor dem Schlafengehen jede Nacht."
+      },
+      "emotional_control_week": {
+        "title": "Emotionale Kontrolle-Woche",
+        "description": "Pausiere und nimm 3 tiefe Atemzüge bevor du auf Frustration reagierst."
+      },
+      "joy_week": {
+        "title": "Freude-Woche",
+        "description": "Finde und schätze jeden Tag einen Moment purer Freude in deinem Sport."
+      },
+      "patience_week": {
+        "title": "Geduld-Woche",
+        "description": "Übe jeden Tag Geduld in einer herausfordernden Situation."
+      },
+      "resilience_week": {
+        "title": "Resilienz-Woche",
+        "description": "Nach jedem Rückschlag schreibe auf, was du daraus gelernt hast."
+      },
+      "letting_go_week": {
+        "title": "Loslassen-Woche",
+        "description": "Lasse jeden Tag eine Sorge oder ein Bedauern durch Tagebuchschreiben los."
+      },
+      "inner_peace_week": {
+        "title": "Innerer Frieden-Woche",
+        "description": "Beginne und beende jeden Tag mit 2 Minuten friedlicher Stille."
+      },
+      "emotional_awareness_week": {
+        "title": "Emotionale Bewusstheit-Woche",
+        "description": "Überprüfe deine Emotionen 3 mal täglich und benenne was du fühlst."
+      },
+      "communication_week": {
+        "title": "Kommunikations-Woche",
+        "description": "Übe aktives Zuhören - wiederhole was Teammitglieder sagen bevor du antwortest."
+      },
+      "mentorship_week": {
+        "title": "Mentoring-Woche",
+        "description": "Hilf einem jüngeren oder weniger erfahrenen Teammitglied täglich mit einer Fähigkeit."
+      },
+      "team_spirit_week": {
+        "title": "Teamgeist-Woche",
+        "description": "Tue jeden Tag etwas, das dem Team nützt, aber nicht dir direkt."
+      },
+      "lead_by_example_week": {
+        "title": "Mit Beispiel Führen-Woche",
+        "description": "Sei bei jedem Training der Erste und gehe als Letzter."
+      },
+      "inspire_others_week": {
+        "title": "Andere Inspirieren-Woche",
+        "description": "Teile jeden Tag ein inspirierendes Zitat oder eine Geschichte mit deinem Team."
+      },
+      "conflict_resolution_week": {
+        "title": "Konfliktlösung-Woche",
+        "description": "Gehe einen kleinen Konflikt oder Spannung direkt und konstruktiv an."
+      },
+      "servant_leadership_week": {
+        "title": "Dienende Führung-Woche",
+        "description": "Frage Teammitglieder 'wie kann ich dir heute helfen?' und setze es um."
+      },
+      "positivity_spread_week": {
+        "title": "Positivität Verbreiten-Woche",
+        "description": "Mache jeden Tag 5 aufrichtige Komplimente an verschiedene Menschen."
+      },
+      "team_culture_week": {
+        "title": "Teamkultur-Woche",
+        "description": "Halte die Teamwerte auch wenn niemand zusieht aufrecht."
+      },
+      "boundary_week": {
+        "title": "Grenzen-Woche",
+        "description": "Setze und halte diese Woche eine gesunde Grenze in deinem Leben."
+      },
+      "habit_stack_week": {
+        "title": "Gewohnheitsstapelung-Woche",
+        "description": "Verknüpfe eine neue positive Gewohnheit mit einer bestehenden täglichen Routine."
+      },
+      "time_management_week": {
+        "title": "Zeitmanagement-Woche",
+        "description": "Plane deinen nächsten Tag am Vorabend mit spezifischen Zeitblöcken."
+      },
+      "sleep_optimization_week": {
+        "title": "Schlafoptimierung-Woche",
+        "description": "Gehe diese Woche jeden Tag zur gleichen Zeit ins Bett und stehe auf."
+      },
+      "nutrition_focus_week": {
+        "title": "Ernährungs-Fokus-Woche",
+        "description": "Iss bei jeder Mahlzeit eine ausgewogene Mahlzeit mit Protein, Kohlenhydraten und Gemüse."
+      },
+      "recovery_week": {
+        "title": "Erholungs-Woche",
+        "description": "Widme täglich 15 Minuten Erholungsaktivitäten (Dehnen, Foam Rolling)."
+      },
+      "work_life_balance_week": {
+        "title": "Work-Life-Balance-Woche",
+        "description": "Widme jeden Tag Qualitätszeit für Beziehungen außerhalb deines Sports."
+      },
+      "digital_detox_week": {
+        "title": "Digital-Detox-Woche",
+        "description": "Begrenze soziale Medien auf insgesamt 30 Minuten pro Tag."
+      },
+      "morning_routine_week": {
+        "title": "Morgenroutine-Woche",
+        "description": "Erstelle und befolge eine konsistente 30-minütige Morgenroutine."
+      },
+      "evening_routine_week": {
+        "title": "Abendroutine-Woche",
+        "description": "Erstelle und befolge eine entspannende 30-minütige Abendroutine."
       }
     },
     "badges": {

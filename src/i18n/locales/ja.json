@@ -2033,54 +2033,58 @@
       "life_mastery": "ライフマスタリー"
     },
     "challenges": {
-      "focus_week": {
-        "title": "集中の週",
-        "description": "練習や試合の前に2分間の集中呼吸を行いましょう。"
-      },
-      "leadership_week": {
-        "title": "リーダーシップの週",
-        "description": "毎日3人の異なるチームメイトに具体的なポジティブフィードバックを与えましょう。"
-      },
-      "gratitude_week": {
-        "title": "感謝の週",
-        "description": "毎朝感謝していることを3つ書き留めましょう。"
-      },
-      "visualization_week": {
-        "title": "ビジュアライゼーションの週",
-        "description": "練習前に5分間完璧なパフォーマンスを視覚化しましょう。"
-      },
-      "discipline_week": {
-        "title": "規律の週",
-        "description": "言い訳なしで7日連続で朝のルーティンを完了しましょう。"
-      },
-      "encouragement_week": {
-        "title": "励ましの週",
-        "description": "ミスをしたチームメイトを最初に励ましましょう。"
-      },
-      "presence_week": {
-        "title": "プレゼンスの週",
-        "description": "練習や試合の1時間前に携帯電話をしまいましょう。"
-      },
-      "accountability_week": {
-        "title": "責任の週",
-        "description": "今週1つの目標について公に責任を持ちましょう。"
-      },
-      "calm_week": {
-        "title": "落ち着きの週",
-        "description": "4-7-8呼吸法を1日3回練習しましょう。"
-      },
-      "purpose_week": {
-        "title": "目的の週",
-        "description": "個人のミッションステートメントを書き、毎日確認しましょう。"
-      },
-      "energy_week": {
-        "title": "エネルギーの週",
-        "description": "すべての練習でポジティブなエネルギーを最初にもたらしましょう。"
-      },
-      "reset_day": {
-        "title": "リセットデー",
-        "description": "ソーシャルメディアから24時間のデジタルデトックスを完了しましょう。"
-      }
+      "focus_week": { "title": "集中の週", "description": "練習や試合の前に2分間の集中呼吸を行いましょう。" },
+      "leadership_week": { "title": "リーダーシップの週", "description": "毎日3人の異なるチームメイトに具体的なポジティブフィードバックを与えましょう。" },
+      "gratitude_week": { "title": "感謝の週", "description": "毎朝感謝していることを3つ書き留めましょう。" },
+      "visualization_week": { "title": "ビジュアライゼーションの週", "description": "練習前に5分間完璧なパフォーマンスを視覚化しましょう。" },
+      "discipline_week": { "title": "規律の週", "description": "言い訳なしで7日連続で朝のルーティンを完了しましょう。" },
+      "encouragement_week": { "title": "励ましの週", "description": "ミスをしたチームメイトを最初に励ましましょう。" },
+      "presence_week": { "title": "プレゼンスの週", "description": "練習や試合の1時間前に携帯電話をしまいましょう。" },
+      "accountability_week": { "title": "責任の週", "description": "今週1つの目標について公に責任を持ちましょう。" },
+      "calm_week": { "title": "落ち着きの週", "description": "4-7-8呼吸法を1日3回練習しましょう。" },
+      "purpose_week": { "title": "目的の週", "description": "個人のミッションステートメントを書き、毎日確認しましょう。" },
+      "energy_week": { "title": "エネルギーの週", "description": "すべての練習でポジティブなエネルギーを最初にもたらしましょう。" },
+      "reset_day": { "title": "リセットデー", "description": "ソーシャルメディアから24時間のデジタルデトックスを完了しましょう。" },
+      "affirmation_week": { "title": "アファメーションの週", "description": "毎朝と夜に3つのポジティブな肯定を繰り返しましょう。" },
+      "confidence_week": { "title": "自信の週", "description": "自信のある姿勢で歩き、すべてのやり取りでアイコンタクトを取りましょう。" },
+      "concentration_week": { "title": "集中力の週", "description": "シングルタスクを練習 - 気を散らさずに一度に1つのことに集中。" },
+      "mental_toughness_week": { "title": "メンタルタフネスの週", "description": "困難な時は「かかってこい」と言って乗り越えましょう。" },
+      "positive_self_talk_week": { "title": "ポジティブセルフトークの週", "description": "すべてのネガティブな考えをすぐにポジティブなものに置き換えましょう。" },
+      "goal_setting_week": { "title": "目標設定の週", "description": "毎日1つの具体的な目標を設定し、進捗を追跡しましょう。" },
+      "pressure_handling_week": { "title": "プレッシャー対処の週", "description": "毎日シミュレートされたプレッシャー条件下でスキルを練習しましょう。" },
+      "clutch_mindset_week": { "title": "クラッチマインドセットの週", "description": "毎晩寝る前にハイプレッシャーの瞬間での成功を視覚化しましょう。" },
+      "competitive_edge_week": { "title": "競争優位の週", "description": "通常の練習を超えて毎日改善する余分なことを見つけましょう。" },
+      "mental_reset_week": { "title": "メンタルリセットの週", "description": "すべてのミスの後にリセットワードやジェスチャーを使って心をクリアにしましょう。" },
+      "game_day_focus_week": { "title": "試合当日フォーカスの週", "description": "試合前のメンタル準備ルーティンを作成し、従いましょう。" },
+      "self_compassion_week": { "title": "自己慈悲の週", "description": "ミスをした時は自分に優しく - 厳しい自己批判はしないで。" },
+      "mindfulness_week": { "title": "マインドフルネスの週", "description": "毎日5分間静かなマインドフルな意識の中で過ごしましょう。" },
+      "stress_release_week": { "title": "ストレス解放の週", "description": "毎晩寝る前に漸進的筋弛緩法を練習しましょう。" },
+      "emotional_control_week": { "title": "感情コントロールの週", "description": "フラストレーションに反応する前に一時停止して3回深呼吸しましょう。" },
+      "joy_week": { "title": "喜びの週", "description": "毎日スポーツの中で純粋な喜びの瞬間を見つけて感謝しましょう。" },
+      "patience_week": { "title": "忍耐の週", "description": "毎日1つの困難な状況で忍耐を練習しましょう。" },
+      "resilience_week": { "title": "レジリエンスの週", "description": "すべての挫折の後、そこから学んだことを書き留めましょう。" },
+      "letting_go_week": { "title": "手放しの週", "description": "日記を通じて毎日1つの心配や後悔を解放しましょう。" },
+      "inner_peace_week": { "title": "内なる平和の週", "description": "毎日2分間の平和な沈黙で始め、終わりましょう。" },
+      "emotional_awareness_week": { "title": "感情認識の週", "description": "1日3回自分の感情をチェックし、感じていることに名前を付けましょう。" },
+      "communication_week": { "title": "コミュニケーションの週", "description": "アクティブリスニングを練習 - 返答する前にチームメイトの言葉を繰り返しましょう。" },
+      "mentorship_week": { "title": "メンタリングの週", "description": "毎日、若いまたは経験の浅いチームメイトの1つのスキルを手伝いましょう。" },
+      "team_spirit_week": { "title": "チームスピリットの週", "description": "毎日、自分には直接利益がないがチームに利益をもたらすことをしましょう。" },
+      "lead_by_example_week": { "title": "模範を示すの週", "description": "すべての練習で最初に到着し、最後に去りましょう。" },
+      "inspire_others_week": { "title": "他者を鼓舞するの週", "description": "毎日チームとインスピレーションを与える引用やストーリーを共有しましょう。" },
+      "conflict_resolution_week": { "title": "紛争解決の週", "description": "小さな対立や緊張を直接的かつ建設的に対処しましょう。" },
+      "servant_leadership_week": { "title": "サーバントリーダーシップの週", "description": "チームメイトに「今日どう手伝える？」と聞いて実行しましょう。" },
+      "positivity_spread_week": { "title": "ポジティビティ拡散の週", "description": "毎日5人の異なる人に心からの褒め言葉を贈りましょう。" },
+      "team_culture_week": { "title": "チームカルチャーの週", "description": "誰も見ていない時でもチームの価値観を守りましょう。" },
+      "boundary_week": { "title": "境界線の週", "description": "今週、人生の中で1つの健康的な境界線を設定し維持しましょう。" },
+      "habit_stack_week": { "title": "習慣スタッキングの週", "description": "既存の日課に新しいポジティブな習慣を付け加えましょう。" },
+      "time_management_week": { "title": "時間管理の週", "description": "前夜に具体的な時間ブロックで翌日を計画しましょう。" },
+      "sleep_optimization_week": { "title": "睡眠最適化の週", "description": "今週は毎日同じ時間に寝て起きましょう。" },
+      "nutrition_focus_week": { "title": "栄養フォーカスの週", "description": "すべての食事でタンパク質、炭水化物、野菜のバランスの取れた食事を摂りましょう。" },
+      "recovery_week": { "title": "リカバリーの週", "description": "毎日15分をリカバリー活動（ストレッチ、フォームローリング）に費やしましょう。" },
+      "work_life_balance_week": { "title": "ワークライフバランスの週", "description": "毎日スポーツ以外の人間関係に質の高い時間を捧げましょう。" },
+      "digital_detox_week": { "title": "デジタルデトックスの週", "description": "ソーシャルメディアを1日合計30分に制限しましょう。" },
+      "morning_routine_week": { "title": "朝のルーティンの週", "description": "一貫した30分の朝のルーティンを作成し、従いましょう。" },
+      "evening_routine_week": { "title": "夜のルーティンの週", "description": "リラックスする30分の夜のルーティンを作成し、従いましょう。" }
     },
     "badges": {
       "challenge_starter": "チャレンジスターター",
