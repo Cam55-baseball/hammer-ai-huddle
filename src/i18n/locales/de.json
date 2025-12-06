@@ -2233,7 +2233,25 @@
     },
     "productionStudio": {
       "title": "Heat Factory",
-      "subtitle": "6-Wochen Wurfentwicklungsprogramm"
+      "subtitle": "24-Wochen Elite Wurfentwicklungsprogramm"
+    },
+    "pitchingCycles": {
+      "cycle1": {
+        "name": "Armpflege & Grundlagen",
+        "description": "Armpflegebasis, Mobilität, Mechanik-Grundlagen und Geweberesilienz für Wurfausdauer aufbauen"
+      },
+      "cycle2": {
+        "name": "Geschwindigkeitsentwicklung",
+        "description": "Progressive Überlastung für Geschwindigkeit mit Langwurf-Progressionen und gewichteten Ball-Protokollen"
+      },
+      "cycle3": {
+        "name": "Wurfarsenal-Entwicklung",
+        "description": "Beherrschung von Kurvenball, Changeup-Verfeinerung, Tunnel-Konzepte und Kommando-Präzision"
+      },
+      "cycle4": {
+        "name": "Spielbereitschaft & Höchstleistung",
+        "description": "Simulierte Spiele, In-Saison-Konditionierung und Vorbereitung auf Höchstleistung"
+      }
     },
     "yourProgress": "Dein Fortschritt",
     "currentWeek": "Aktuelle Woche",
@@ -2328,7 +2346,8 @@
     },
     "disclaimer": {
       "title": "Haftungsausschluss",
-      "text": "Hammer's Modality ist nicht verantwortlich für Verletzungen, die während der Übungen auftreten können. Es gibt keine Garantie für Ergebnisse. Konsultieren Sie immer einen qualifizierten Gesundheitsfachmann, bevor Sie ein Trainingsprogramm beginnen. Hören Sie auf Ihren Körper und stoppen Sie sofort, wenn Sie Schmerzen verspüren."
+      "text": "Hammer's Modality ist nicht verantwortlich für Verletzungen, die während der Übungen auftreten können. Es gibt keine Garantie für Ergebnisse. Konsultieren Sie immer einen qualifizierten Gesundheitsfachmann, bevor Sie ein Trainingsprogramm beginnen. Hören Sie auf Ihren Körper und stoppen Sie sofort, wenn Sie Schmerzen verspüren.",
+      "pitchingText": "Wurftraining birgt ein inhärentes Risiko für Armverletzungen. Wir sind nicht verantwortlich für auftretende Verletzungen. Konsultieren Sie immer einen qualifizierten Sportmediziner, bevor Sie ein Wurfprogramm beginnen. Stoppen Sie sofort, wenn Sie Schmerzen im Arm, der Schulter oder dem Ellbogen verspüren."
     }
   }
 }

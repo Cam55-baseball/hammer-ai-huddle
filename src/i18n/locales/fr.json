@@ -2233,7 +2233,25 @@
     },
     "productionStudio": {
       "title": "Heat Factory",
-      "subtitle": "Programme de Développement du Lancer de 6 Semaines"
+      "subtitle": "Programme Élite de Développement du Lancer de 24 Semaines"
+    },
+    "pitchingCycles": {
+      "cycle1": {
+        "name": "Soins du Bras et Fondamentaux",
+        "description": "Construire la base de soins du bras, mobilité, fondamentaux mécaniques et résilience tissulaire pour la longévité du lanceur"
+      },
+      "cycle2": {
+        "name": "Développement de la Vélocité",
+        "description": "Surcharge progressive pour la vélocité avec progressions de lancer long et protocoles de balles lestées"
+      },
+      "cycle3": {
+        "name": "Développement de l'Arsenal de Lancers",
+        "description": "Maîtrise des balles à effet, raffinement du changement, concepts de tunnel et précision de commande"
+      },
+      "cycle4": {
+        "name": "Préparation au Match et Pic",
+        "description": "Matchs simulés, conditionnement en saison et préparation pour la performance maximale"
+      }
     },
     "yourProgress": "Votre Progression",
     "currentWeek": "Semaine Actuelle",
@@ -2328,7 +2346,8 @@
     },
     "disclaimer": {
       "title": "Avertissement",
-      "text": "Hammer's Modality n'est pas responsable des blessures pouvant survenir pendant les exercices. Il n'y a aucune garantie de résultats. Consultez toujours un professionnel de santé qualifié avant de commencer tout programme d'exercices. Écoutez votre corps et arrêtez immédiatement si vous ressentez une douleur."
+      "text": "Hammer's Modality n'est pas responsable des blessures pouvant survenir pendant les exercices. Il n'y a aucune garantie de résultats. Consultez toujours un professionnel de santé qualifié avant de commencer tout programme d'exercices. Écoutez votre corps et arrêtez immédiatement si vous ressentez une douleur.",
+      "pitchingText": "L'entraînement au lancer comporte un risque inhérent de blessure au bras. Nous ne sommes pas responsables des blessures qui peuvent survenir. Consultez toujours un médecin du sport qualifié avant de commencer tout programme de lancer. Arrêtez immédiatement si vous ressentez une douleur au bras, à l'épaule ou au coude."
     }
   }
 }
