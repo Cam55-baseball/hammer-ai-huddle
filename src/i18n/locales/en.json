@@ -2389,9 +2389,27 @@
       "title": "Iron Bambino",
       "subtitle": "24-Week Elite Power Hitter Development Program"
     },
-    "productionStudio": {
+  "productionStudio": {
       "title": "Heat Factory",
-      "subtitle": "6-Week Pitching Development Program"
+      "subtitle": "24-Week Elite Pitching Development Program"
+    },
+    "pitchingCycles": {
+      "cycle1": {
+        "name": "Foundation & Arm Health",
+        "description": "Build arm care base, mobility, mechanics foundation, and tissue resilience for pitching longevity"
+      },
+      "cycle2": {
+        "name": "Velocity Development",
+        "description": "Progressive overload for velocity with long toss progressions and weighted ball protocols"
+      },
+      "cycle3": {
+        "name": "Pitch Arsenal Development",
+        "description": "Breaking ball mastery, changeup refinement, tunneling concepts, and command precision"
+      },
+      "cycle4": {
+        "name": "Game Readiness & Peak",
+        "description": "Simulated games, in-season conditioning, and peak performance preparation"
+      }
     },
     "yourProgress": "Your Progress",
     "currentWeek": "Current Week",
@@ -2486,7 +2504,8 @@
     },
     "disclaimer": {
       "title": "Disclaimer",
-      "text": "Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain."
+      "text": "Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain.",
+      "pitchingText": "Hammer's Modality is not responsible for any injury that may occur during exercises. Throwing programs carry inherent arm injury risk. Always warm up properly, monitor arm fatigue, and consult with a qualified professional before beginning any throwing program. Stop immediately if you experience arm pain."
     }
   }
 }
