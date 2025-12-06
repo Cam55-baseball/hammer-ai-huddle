@@ -16,7 +16,8 @@ import {
   ChevronDown, 
   Sparkles,
   Trophy,
-  Flame
+  Flame,
+  Timer
 } from 'lucide-react';
 
 // Category-specific colors for badges
@@ -35,6 +36,7 @@ interface ChallengeData {
   total_days: number;
   started_at: string;
   completed_at: string | null;
+  last_checkin_at: string | null;
 }
 
 interface ChallengeDefinition {
@@ -50,6 +52,8 @@ interface WeeklyChallengeResponse {
   completedChallengesCount: number;
   history: ChallengeData[];
   newBadges?: string[];
+  cooldownActive?: boolean;
+  cooldownEndsAt?: string | null;
 }
 
 // Challenge complete confetti animation
@@ -128,12 +132,27 @@ function triggerChallengeCompleteConfetti() {
   }, 5000);
 }
 
+// Format cooldown time remaining
+function formatCooldownTime(endsAt: string): string {
+  const remaining = new Date(endsAt).getTime() - Date.now();
+  if (remaining <= 0) return '';
+  
+  const hours = Math.floor(remaining / (1000 * 60 * 60));
+  const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  return `${minutes}m`;
+}
+
 export default function MindFuelWeeklyChallenge() {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckinLoading, setIsCheckinLoading] = useState(false);
   const [data, setData] = useState<WeeklyChallengeResponse | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [cooldownRemaining, setCooldownRemaining] = useState<string | null>(null);
 
   const fetchChallenge = useCallback(async () => {
     try {
@@ -153,6 +172,32 @@ export default function MindFuelWeeklyChallenge() {
   useEffect(() => {
     fetchChallenge();
   }, [fetchChallenge]);
+
+  // Cooldown countdown timer
+  useEffect(() => {
+    if (!data?.cooldownEndsAt) {
+      setCooldownRemaining(null);
+      return;
+    }
+
+    const updateCooldown = () => {
+      const endsAt = new Date(data.cooldownEndsAt!);
+      const remaining = endsAt.getTime() - Date.now();
+      
+      if (remaining <= 0) {
+        setCooldownRemaining(null);
+        // Refresh data when cooldown expires
+        fetchChallenge();
+      } else {
+        setCooldownRemaining(formatCooldownTime(data.cooldownEndsAt!));
+      }
+    };
+
+    updateCooldown();
+    const interval = setInterval(updateCooldown, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, [data?.cooldownEndsAt, fetchChallenge]);
 
   const handleStartChallenge = async () => {
     setIsCheckinLoading(true);
@@ -181,6 +226,12 @@ export default function MindFuelWeeklyChallenge() {
 
       if (error) throw error;
       setData(result);
+      
+      // Check if cooldown is now active (user tried to check in too soon)
+      if (result.cooldownActive && result.cooldownEndsAt) {
+        toast.error(t('mindFuel.weeklyChallenge.cooldownActive', 'Please wait before checking in again'));
+        return;
+      }
       
       if (result.currentChallenge?.status === 'completed') {
         // Trigger confetti celebration
@@ -227,6 +278,7 @@ export default function MindFuelWeeklyChallenge() {
   const progressPercent = currentChallenge 
     ? Math.round((currentChallenge.days_completed / currentChallenge.total_days) * 100)
     : 0;
+  const isCooldownActive = !!cooldownRemaining;
 
   return (
     <Card className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-red-500/10 border-amber-500/20">
@@ -306,12 +358,24 @@ export default function MindFuelWeeklyChallenge() {
                 </div>
                 <Button
                   onClick={handleCheckIn}
-                  disabled={isCheckinLoading}
+                  disabled={isCheckinLoading || isCooldownActive}
                   size="sm"
-                  className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
+                  className={isCooldownActive 
+                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                    : "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
+                  }
                 >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  {t('mindFuel.weeklyChallenge.checkIn', 'Check In Today')}
+                  {isCooldownActive ? (
+                    <>
+                      <Timer className="h-4 w-4 mr-2" />
+                      {t('mindFuel.weeklyChallenge.nextCheckIn', 'Next in {{time}}', { time: cooldownRemaining })}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      {t('mindFuel.weeklyChallenge.checkIn', 'Check In Today')}
+                    </>
+                  )}
                 </Button>
               </div>
             </>

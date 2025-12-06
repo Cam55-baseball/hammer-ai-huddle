@@ -1992,6 +1992,8 @@
     "completed": "Uitdaging voltooid! 🎉",
     "challengeCompleted": "Uitdaging voltooid! Goed gedaan!",
     "error": "Verwerking van uitdaging mislukt",
+    "nextCheckIn": "Volgende over {{time}}",
+    "cooldownActive": "Wacht even voordat je opnieuw incheckt",
     "history": "Uitdaging Geschiedenis",
     "days": "dagen",
     "completedBadge": "Voltooid",

@@ -1979,6 +1979,8 @@
     "completed": "챌린지 완료! 🎉",
     "challengeCompleted": "챌린지 완료! 잘했어요!",
     "error": "챌린지 처리 실패",
+    "nextCheckIn": "{{time}} 후 체크인",
+    "cooldownActive": "다시 체크인하기 전에 잠시 기다려 주세요",
     "history": "챌린지 기록",
     "days": "일",
     "completedBadge": "완료됨",

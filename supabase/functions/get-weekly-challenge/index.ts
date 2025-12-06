@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// 12-hour cooldown between check-ins (in milliseconds)
+const CHECKIN_COOLDOWN_MS = 12 * 60 * 60 * 1000;
+
 // Challenge library - 52 themed challenges that rotate weekly (one per week of the year)
 const CHALLENGES = [
   // Mental Mastery (13 challenges)
@@ -137,93 +140,116 @@ serve(async (req) => {
       .order('started_at', { ascending: false })
       .limit(10);
 
+    // Track cooldown status for response
+    let cooldownActive = false;
+    let cooldownEndsAt: string | null = null;
+
     // Handle check-in action
     if (action === 'check_in' && challengeData) {
       if (challengeData.status === 'active') {
-        const newDaysCompleted = Math.min(
-          challengeData.days_completed + 1,
-          challengeData.total_days
-        );
-        
-        const isNowCompleted = newDaysCompleted >= challengeData.total_days;
-        
-        const { error: updateError } = await supabase
-          .from('mind_fuel_challenges')
-          .update({
-            days_completed: newDaysCompleted,
-            status: isNowCompleted ? 'completed' : 'active',
-            completed_at: isNowCompleted ? new Date().toISOString() : null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', challengeData.id);
-
-        if (updateError) {
-          console.error('[get-weekly-challenge] Check-in error:', updateError);
-          throw updateError;
-        }
-
-        // Update local data for response
-        challengeData.days_completed = newDaysCompleted;
-        challengeData.status = isNowCompleted ? 'completed' : 'active';
-
-        // Track new badges for response
-        let awardedBadges: string[] = [];
-
-        // Check for new challenge badges
-        if (isNowCompleted) {
-          const newCompletedCount = (completedCount || 0) + 1;
+        // Check for 12-hour cooldown
+        if (challengeData.last_checkin_at) {
+          const lastCheckin = new Date(challengeData.last_checkin_at);
+          const timeSinceLastCheckin = Date.now() - lastCheckin.getTime();
           
-          // Get user's mind fuel streak data for badge updates
-          const { data: streakData } = await supabase
-            .from('mind_fuel_streaks')
-            .select('badges_earned')
-            .eq('user_id', userId)
-            .maybeSingle();
-
-          if (streakData) {
-            let badgesEarned = streakData.badges_earned || [];
-
-            for (const badge of CHALLENGE_BADGES) {
-              if (newCompletedCount >= badge.threshold && !badgesEarned.includes(badge.id)) {
-                badgesEarned = [...badgesEarned, badge.id];
-                awardedBadges.push(badge.id);
-              }
-            }
-
-            // Check for perfect week badge
-            if (newDaysCompleted === challengeData.total_days && !badgesEarned.includes('perfect_week')) {
-              badgesEarned = [...badgesEarned, 'perfect_week'];
-              awardedBadges.push('perfect_week');
-            }
-
-            // Check for comeback_kid badge (completed after having a failed challenge)
-            const { data: failedChallenges } = await supabase
-              .from('mind_fuel_challenges')
-              .select('id')
-              .eq('user_id', userId)
-              .eq('status', 'failed')
-              .limit(1);
-
-            if (failedChallenges && failedChallenges.length > 0 && !badgesEarned.includes('comeback_kid')) {
-              badgesEarned = [...badgesEarned, 'comeback_kid'];
-              awardedBadges.push('comeback_kid');
-            }
-
-            if (awardedBadges.length > 0) {
-              await supabase
-                .from('mind_fuel_streaks')
-                .update({ badges_earned: badgesEarned })
-                .eq('user_id', userId);
-              
-              console.log(`[get-weekly-challenge] Awarded badges: ${awardedBadges.join(', ')}`);
-            }
+          if (timeSinceLastCheckin < CHECKIN_COOLDOWN_MS) {
+            // Cooldown is active
+            cooldownActive = true;
+            cooldownEndsAt = new Date(lastCheckin.getTime() + CHECKIN_COOLDOWN_MS).toISOString();
+            console.log(`[get-weekly-challenge] Cooldown active. Ends at: ${cooldownEndsAt}`);
           }
         }
 
-        // Store awarded badges for response
-        (challengeData as any).newBadges = awardedBadges;
+        // Only process check-in if not in cooldown
+        if (!cooldownActive) {
+          const newDaysCompleted = Math.min(
+            challengeData.days_completed + 1,
+            challengeData.total_days
+          );
+          
+          const isNowCompleted = newDaysCompleted >= challengeData.total_days;
+          const now = new Date().toISOString();
+          
+          const { error: updateError } = await supabase
+            .from('mind_fuel_challenges')
+            .update({
+              days_completed: newDaysCompleted,
+              status: isNowCompleted ? 'completed' : 'active',
+              completed_at: isNowCompleted ? now : null,
+              last_checkin_at: now,
+              updated_at: now,
+            })
+            .eq('id', challengeData.id);
 
-        console.log(`[get-weekly-challenge] Check-in successful. Days: ${newDaysCompleted}/${challengeData.total_days}`);
+          if (updateError) {
+            console.error('[get-weekly-challenge] Check-in error:', updateError);
+            throw updateError;
+          }
+
+          // Update local data for response
+          challengeData.days_completed = newDaysCompleted;
+          challengeData.status = isNowCompleted ? 'completed' : 'active';
+          challengeData.last_checkin_at = now;
+
+          // Track new badges for response
+          let awardedBadges: string[] = [];
+
+          // Check for new challenge badges
+          if (isNowCompleted) {
+            const newCompletedCount = (completedCount || 0) + 1;
+            
+            // Get user's mind fuel streak data for badge updates
+            const { data: streakData } = await supabase
+              .from('mind_fuel_streaks')
+              .select('badges_earned')
+              .eq('user_id', userId)
+              .maybeSingle();
+
+            if (streakData) {
+              let badgesEarned = streakData.badges_earned || [];
+
+              for (const badge of CHALLENGE_BADGES) {
+                if (newCompletedCount >= badge.threshold && !badgesEarned.includes(badge.id)) {
+                  badgesEarned = [...badgesEarned, badge.id];
+                  awardedBadges.push(badge.id);
+                }
+              }
+
+              // Check for perfect week badge
+              if (newDaysCompleted === challengeData.total_days && !badgesEarned.includes('perfect_week')) {
+                badgesEarned = [...badgesEarned, 'perfect_week'];
+                awardedBadges.push('perfect_week');
+              }
+
+              // Check for comeback_kid badge (completed after having a failed challenge)
+              const { data: failedChallenges } = await supabase
+                .from('mind_fuel_challenges')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('status', 'failed')
+                .limit(1);
+
+              if (failedChallenges && failedChallenges.length > 0 && !badgesEarned.includes('comeback_kid')) {
+                badgesEarned = [...badgesEarned, 'comeback_kid'];
+                awardedBadges.push('comeback_kid');
+              }
+
+              if (awardedBadges.length > 0) {
+                await supabase
+                  .from('mind_fuel_streaks')
+                  .update({ badges_earned: badgesEarned })
+                  .eq('user_id', userId);
+                
+                console.log(`[get-weekly-challenge] Awarded badges: ${awardedBadges.join(', ')}`);
+              }
+            }
+          }
+
+          // Store awarded badges for response
+          (challengeData as any).newBadges = awardedBadges;
+
+          console.log(`[get-weekly-challenge] Check-in successful. Days: ${newDaysCompleted}/${challengeData.total_days}`);
+        }
       }
     }
 
@@ -273,6 +299,17 @@ serve(async (req) => {
       availableChallenge = CHALLENGES[challengeIndex];
     }
 
+    // Calculate cooldown info even if not checking in (for initial load)
+    if (challengeData?.last_checkin_at && !cooldownActive) {
+      const lastCheckin = new Date(challengeData.last_checkin_at);
+      const timeSinceLastCheckin = Date.now() - lastCheckin.getTime();
+      
+      if (timeSinceLastCheckin < CHECKIN_COOLDOWN_MS) {
+        cooldownActive = true;
+        cooldownEndsAt = new Date(lastCheckin.getTime() + CHECKIN_COOLDOWN_MS).toISOString();
+      }
+    }
+
     const response = {
       currentChallenge: challengeData ? {
         ...challengeData,
@@ -283,6 +320,8 @@ serve(async (req) => {
       completedChallengesCount: completedCount || 0,
       history: historyData || [],
       newBadges: (challengeData as any)?.newBadges || [],
+      cooldownActive,
+      cooldownEndsAt,
     };
 
     return new Response(JSON.stringify(response), {

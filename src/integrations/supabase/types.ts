@@ -190,6 +190,7 @@ export type Database = {
           created_at: string | null
           days_completed: number
           id: string
+          last_checkin_at: string | null
           started_at: string
           status: string
           total_days: number
@@ -204,6 +205,7 @@ export type Database = {
           created_at?: string | null
           days_completed?: number
           id?: string
+          last_checkin_at?: string | null
           started_at?: string
           status?: string
           total_days?: number
@@ -218,6 +220,7 @@ export type Database = {
           created_at?: string | null
           days_completed?: number
           id?: string
+          last_checkin_at?: string | null
           started_at?: string
           status?: string
           total_days?: number
