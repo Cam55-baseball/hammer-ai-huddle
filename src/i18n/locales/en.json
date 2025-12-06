@@ -2632,5 +2632,92 @@
     },
     "loading": "Loading your mind fuel...",
     "error": "Failed to load lesson. Please try again."
+  },
+  "weeklyChallenge": {
+    "title": "Weekly Challenge",
+    "completed_short": "completed",
+    "daysRemaining": "{{count}} days remaining",
+    "dayProgress": "Day {{current}} of {{total}}",
+    "checkIn": "Check In Today",
+    "startChallenge": "Start This Week's Challenge",
+    "started": "Challenge started! Good luck!",
+    "checkedIn": "Day checked in!",
+    "completed": "Challenge completed! 🎉",
+    "challengeCompleted": "Challenge completed! Great job!",
+    "error": "Failed to process challenge",
+    "history": "Challenge History",
+    "days": "days",
+    "completedBadge": "Completed",
+    "incompleteBadge": "Incomplete",
+    "categories": {
+      "mental_mastery": "Mental Mastery",
+      "emotional_balance": "Emotional Balance",
+      "leadership": "Leadership",
+      "life_mastery": "Life Mastery"
+    },
+    "challenges": {
+      "focus_week": {
+        "title": "Focus Week",
+        "description": "Practice 2 minutes of focused breathing before each practice or game."
+      },
+      "leadership_week": {
+        "title": "Leadership Week",
+        "description": "Give specific positive feedback to 3 different teammates each day."
+      },
+      "gratitude_week": {
+        "title": "Gratitude Week",
+        "description": "Write down 3 things you're grateful for each morning."
+      },
+      "visualization_week": {
+        "title": "Visualization Week",
+        "description": "Spend 5 minutes visualizing perfect performance before practice."
+      },
+      "discipline_week": {
+        "title": "Discipline Week",
+        "description": "Complete your morning routine 7 days in a row without excuses."
+      },
+      "encouragement_week": {
+        "title": "Encouragement Week",
+        "description": "Be the first to encourage a teammate who makes an error."
+      },
+      "presence_week": {
+        "title": "Presence Week",
+        "description": "Put your phone away 1 hour before practice or games."
+      },
+      "accountability_week": {
+        "title": "Accountability Week",
+        "description": "Hold yourself publicly accountable for one goal this week."
+      },
+      "calm_week": {
+        "title": "Calm Week",
+        "description": "Practice the 4-7-8 breathing technique 3 times daily."
+      },
+      "purpose_week": {
+        "title": "Purpose Week",
+        "description": "Write your personal mission statement and review it daily."
+      },
+      "energy_week": {
+        "title": "Energy Week",
+        "description": "Be the first to bring positive energy to every practice."
+      },
+      "reset_day": {
+        "title": "Reset Day",
+        "description": "Complete a 24-hour digital detox from social media."
+      }
+    },
+    "badges": {
+      "challenge_starter": "Challenge Starter",
+      "challenge_starter_desc": "Complete your first weekly challenge",
+      "challenge_warrior": "Challenge Warrior",
+      "challenge_warrior_desc": "Complete 5 weekly challenges",
+      "challenge_champion": "Challenge Champion",
+      "challenge_champion_desc": "Complete 10 weekly challenges",
+      "challenge_legend": "Challenge Legend",
+      "challenge_legend_desc": "Complete 25 weekly challenges",
+      "perfect_week": "Perfect Week",
+      "perfect_week_desc": "Complete all 7 days of a challenge",
+      "comeback_kid": "Comeback Kid",
+      "comeback_kid_desc": "Complete a challenge after failing one"
+    }
   }
 }

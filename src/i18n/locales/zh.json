@@ -1950,5 +1950,92 @@
     },
     "loading": "正在加载您的心灵燃料...",
     "error": "加载课程失败。请重试。"
+  },
+  "weeklyChallenge": {
+    "title": "每周挑战",
+    "completed_short": "已完成",
+    "daysRemaining": "剩余{{count}}天",
+    "dayProgress": "第{{current}}天，共{{total}}天",
+    "checkIn": "今日打卡",
+    "startChallenge": "开始本周挑战",
+    "started": "挑战已开始！加油！",
+    "checkedIn": "打卡成功！",
+    "completed": "挑战完成！🎉",
+    "challengeCompleted": "挑战完成！干得漂亮！",
+    "error": "处理挑战失败",
+    "history": "挑战历史",
+    "days": "天",
+    "completedBadge": "已完成",
+    "incompleteBadge": "未完成",
+    "categories": {
+      "mental_mastery": "心智掌控",
+      "emotional_balance": "情绪平衡",
+      "leadership": "领导力",
+      "life_mastery": "生活掌控"
+    },
+    "challenges": {
+      "focus_week": {
+        "title": "专注周",
+        "description": "每次训练或比赛前进行2分钟的专注呼吸。"
+      },
+      "leadership_week": {
+        "title": "领导力周",
+        "description": "每天给3个不同的队友提供具体的正面反馈。"
+      },
+      "gratitude_week": {
+        "title": "感恩周",
+        "description": "每天早上写下3件你感激的事情。"
+      },
+      "visualization_week": {
+        "title": "可视化周",
+        "description": "训练前花5分钟想象完美的表现。"
+      },
+      "discipline_week": {
+        "title": "纪律周",
+        "description": "连续7天不找借口地完成你的晨间例程。"
+      },
+      "encouragement_week": {
+        "title": "鼓励周",
+        "description": "第一个鼓励犯错的队友。"
+      },
+      "presence_week": {
+        "title": "专注当下周",
+        "description": "训练或比赛前1小时放下手机。"
+      },
+      "accountability_week": {
+        "title": "责任周",
+        "description": "本周公开承诺一个目标并负责到底。"
+      },
+      "calm_week": {
+        "title": "平静周",
+        "description": "每天练习4-7-8呼吸法三次。"
+      },
+      "purpose_week": {
+        "title": "目标周",
+        "description": "写下你的个人使命宣言并每天复习。"
+      },
+      "energy_week": {
+        "title": "能量周",
+        "description": "每次训练时第一个带来积极的能量。"
+      },
+      "reset_day": {
+        "title": "重置日",
+        "description": "完成24小时社交媒体数字排毒。"
+      }
+    },
+    "badges": {
+      "challenge_starter": "挑战启动者",
+      "challenge_starter_desc": "完成你的第一个每周挑战",
+      "challenge_warrior": "挑战战士",
+      "challenge_warrior_desc": "完成5个每周挑战",
+      "challenge_champion": "挑战冠军",
+      "challenge_champion_desc": "完成10个每周挑战",
+      "challenge_legend": "挑战传奇",
+      "challenge_legend_desc": "完成25个每周挑战",
+      "perfect_week": "完美一周",
+      "perfect_week_desc": "完成挑战的全部7天",
+      "comeback_kid": "东山再起",
+      "comeback_kid_desc": "失败后完成一个挑战"
+    }
   }
 }

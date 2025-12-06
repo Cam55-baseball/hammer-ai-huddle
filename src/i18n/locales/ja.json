@@ -2009,5 +2009,92 @@
     },
     "loading": "マインドフューエルを読み込み中...",
     "error": "レッスンの読み込みに失敗しました。もう一度お試しください。"
+  },
+  "weeklyChallenge": {
+    "title": "週間チャレンジ",
+    "completed_short": "完了",
+    "daysRemaining": "残り{{count}}日",
+    "dayProgress": "{{total}}日中{{current}}日目",
+    "checkIn": "今日のチェックイン",
+    "startChallenge": "今週のチャレンジを開始",
+    "started": "チャレンジ開始！頑張って！",
+    "checkedIn": "チェックイン完了！",
+    "completed": "チャレンジ達成！🎉",
+    "challengeCompleted": "チャレンジ達成！素晴らしい！",
+    "error": "チャレンジの処理に失敗しました",
+    "history": "チャレンジ履歴",
+    "days": "日",
+    "completedBadge": "完了",
+    "incompleteBadge": "未完了",
+    "categories": {
+      "mental_mastery": "メンタルマスタリー",
+      "emotional_balance": "感情バランス",
+      "leadership": "リーダーシップ",
+      "life_mastery": "ライフマスタリー"
+    },
+    "challenges": {
+      "focus_week": {
+        "title": "集中の週",
+        "description": "練習や試合の前に2分間の集中呼吸を行いましょう。"
+      },
+      "leadership_week": {
+        "title": "リーダーシップの週",
+        "description": "毎日3人の異なるチームメイトに具体的なポジティブフィードバックを与えましょう。"
+      },
+      "gratitude_week": {
+        "title": "感謝の週",
+        "description": "毎朝感謝していることを3つ書き留めましょう。"
+      },
+      "visualization_week": {
+        "title": "ビジュアライゼーションの週",
+        "description": "練習前に5分間完璧なパフォーマンスを視覚化しましょう。"
+      },
+      "discipline_week": {
+        "title": "規律の週",
+        "description": "言い訳なしで7日連続で朝のルーティンを完了しましょう。"
+      },
+      "encouragement_week": {
+        "title": "励ましの週",
+        "description": "ミスをしたチームメイトを最初に励ましましょう。"
+      },
+      "presence_week": {
+        "title": "プレゼンスの週",
+        "description": "練習や試合の1時間前に携帯電話をしまいましょう。"
+      },
+      "accountability_week": {
+        "title": "責任の週",
+        "description": "今週1つの目標について公に責任を持ちましょう。"
+      },
+      "calm_week": {
+        "title": "落ち着きの週",
+        "description": "4-7-8呼吸法を1日3回練習しましょう。"
+      },
+      "purpose_week": {
+        "title": "目的の週",
+        "description": "個人のミッションステートメントを書き、毎日確認しましょう。"
+      },
+      "energy_week": {
+        "title": "エネルギーの週",
+        "description": "すべての練習でポジティブなエネルギーを最初にもたらしましょう。"
+      },
+      "reset_day": {
+        "title": "リセットデー",
+        "description": "ソーシャルメディアから24時間のデジタルデトックスを完了しましょう。"
+      }
+    },
+    "badges": {
+      "challenge_starter": "チャレンジスターター",
+      "challenge_starter_desc": "最初の週間チャレンジを完了",
+      "challenge_warrior": "チャレンジウォリアー",
+      "challenge_warrior_desc": "5つの週間チャレンジを完了",
+      "challenge_champion": "チャレンジチャンピオン",
+      "challenge_champion_desc": "10の週間チャレンジを完了",
+      "challenge_legend": "チャレンジレジェンド",
+      "challenge_legend_desc": "25の週間チャレンジを完了",
+      "perfect_week": "パーフェクトウィーク",
+      "perfect_week_desc": "チャレンジの7日間すべてを完了",
+      "comeback_kid": "カムバックキッド",
+      "comeback_kid_desc": "失敗後にチャレンジを完了"
+    }
   }
 }

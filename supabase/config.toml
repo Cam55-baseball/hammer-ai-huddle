@@ -92,3 +92,6 @@ verify_jwt = false
 
 [functions.get-daily-lesson]
 verify_jwt = true
+
+[functions.get-weekly-challenge]
+verify_jwt = true
