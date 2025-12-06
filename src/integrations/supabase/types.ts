@@ -181,6 +181,87 @@ export type Database = {
         }
         Relationships: []
       }
+      mind_fuel_lessons: {
+        Row: {
+          author: string | null
+          category: string
+          content_type: string
+          created_at: string | null
+          id: string
+          is_ai_generated: boolean | null
+          lesson_text: string
+          sport: string | null
+          subcategory: string
+          updated_at: string | null
+        }
+        Insert: {
+          author?: string | null
+          category: string
+          content_type: string
+          created_at?: string | null
+          id?: string
+          is_ai_generated?: boolean | null
+          lesson_text: string
+          sport?: string | null
+          subcategory: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string | null
+          category?: string
+          content_type?: string
+          created_at?: string | null
+          id?: string
+          is_ai_generated?: boolean | null
+          lesson_text?: string
+          sport?: string | null
+          subcategory?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      mind_fuel_streaks: {
+        Row: {
+          badges_earned: string[] | null
+          categories_explored: Json | null
+          created_at: string | null
+          current_streak: number
+          id: string
+          last_visit_date: string | null
+          lessons_collected: number
+          longest_streak: number
+          total_visits: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          badges_earned?: string[] | null
+          categories_explored?: Json | null
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_visit_date?: string | null
+          lessons_collected?: number
+          longest_streak?: number
+          total_visits?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          badges_earned?: string[] | null
+          categories_explored?: Json | null
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_visit_date?: string | null
+          lessons_collected?: number
+          longest_streak?: number
+          total_visits?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       monthly_reports: {
         Row: {
           created_at: string | null
@@ -831,6 +912,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_viewed_lessons: {
+        Row: {
+          id: string
+          lesson_id: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          lesson_id: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          lesson_id?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_viewed_lessons_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "mind_fuel_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_viewed_tips: {
         Row: {
