@@ -23,7 +23,7 @@ import {
 // Category-specific colors for badges
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   mental_mastery: { bg: 'bg-violet-500/20', text: 'text-violet-300', border: 'border-violet-500/30' },
-  emotional_balance: { bg: 'bg-pink-500/20', text: 'text-pink-300', border: 'border-pink-500/30' },
+  emotional_balance: { bg: 'bg-sky-500/20', text: 'text-red-400', border: 'border-sky-500/30' },
   leadership: { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/30' },
   life_mastery: { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30' },
 };
