@@ -2487,6 +2487,8 @@
     "completed": "Herausforderung abgeschlossen! 🎉",
     "challengeCompleted": "Herausforderung abgeschlossen! Tolle Arbeit!",
     "error": "Fehler bei der Verarbeitung der Herausforderung",
+    "nextCheckIn": "Nächster in {{time}}",
+    "cooldownActive": "Bitte warte, bevor du erneut eincheckst",
     "history": "Herausforderungs-Verlauf",
     "days": "Tage",
     "completedBadge": "Abgeschlossen",

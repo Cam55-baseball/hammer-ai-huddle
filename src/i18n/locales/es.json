@@ -2465,6 +2465,8 @@
     "completed": "¡Desafío completado! 🎉",
     "challengeCompleted": "¡Desafío completado! ¡Excelente trabajo!",
     "error": "Error al procesar el desafío",
+    "nextCheckIn": "Próximo en {{time}}",
+    "cooldownActive": "Por favor espera antes de registrar de nuevo",
     "history": "Historial de Desafíos",
     "days": "días",
     "completedBadge": "Completado",

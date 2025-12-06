@@ -2022,6 +2022,8 @@
     "completed": "チャレンジ達成！🎉",
     "challengeCompleted": "チャレンジ達成！素晴らしい！",
     "error": "チャレンジの処理に失敗しました",
+    "nextCheckIn": "次まで {{time}}",
+    "cooldownActive": "再度チェックインする前にお待ちください",
     "history": "チャレンジ履歴",
     "days": "日",
     "completedBadge": "完了",

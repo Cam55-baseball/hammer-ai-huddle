@@ -1963,6 +1963,8 @@
     "completed": "挑战完成！🎉",
     "challengeCompleted": "挑战完成！干得漂亮！",
     "error": "处理挑战失败",
+    "nextCheckIn": "{{time}}后可打卡",
+    "cooldownActive": "请稍后再打卡",
     "history": "挑战历史",
     "days": "天",
     "completedBadge": "已完成",

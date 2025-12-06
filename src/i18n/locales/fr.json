@@ -2487,6 +2487,8 @@
     "completed": "Défi terminé ! 🎉",
     "challengeCompleted": "Défi terminé ! Excellent travail !",
     "error": "Échec du traitement du défi",
+    "nextCheckIn": "Prochain dans {{time}}",
+    "cooldownActive": "Veuillez attendre avant de vous enregistrer à nouveau",
     "history": "Historique des Défis",
     "days": "jours",
     "completedBadge": "Terminé",
