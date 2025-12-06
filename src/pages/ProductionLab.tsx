@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowLeft, Dumbbell, Zap, ChevronDown, ChevronUp, Check, Lock, AlertTriangle } from 'lucide-react';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
-import { Exercise, DayData, WeekData } from '@/types/workout';
+import { Exercise, DayData, WeekData, ExperienceLevel } from '@/types/workout';
 import { CYCLES, BAT_SPEED_EXERCISES, BAT_SPEED_DAY_1, BAT_SPEED_DAY_2, BAT_SPEED_DAY_3, BAT_SPEED_DAY_4, STRENGTH_DAY_BAT_SPEED, HITTING_EQUIPMENT } from '@/data/ironBambinoProgram';
 
 // Helper to get bat speed exercises as Exercise objects
@@ -300,10 +300,10 @@ export default function ProductionLab() {
                             <span className="text-sm">{day.title}</span>
                           </div>
                           <div className="flex gap-1">
-                            {day.exercises.some(e => e.type === 'strength') && (
+                            {day.exercises.some(e => typeof e === 'object' && e.type === 'strength') && (
                               <Badge variant="outline" className="text-xs">{t('workoutModules.strengthWorkout')}</Badge>
                             )}
-                            {day.exercises.some(e => e.type === 'isometric') && (
+                            {day.exercises.some(e => typeof e === 'object' && e.type === 'isometric') && (
                               <Badge variant="outline" className="text-xs">{t('workoutModules.isometricWorkout')}</Badge>
                             )}
                           </div>
@@ -339,25 +339,30 @@ export default function ProductionLab() {
           currentWeekPercent={weekPercent}
         />
 
-        {selectedDay && (
-          <DayWorkoutDetailDialog
-            open={!!selectedDay}
-            onOpenChange={(open) => !open && setSelectedDay(null)}
-            day={selectedDay.day}
-            week={selectedDay.week}
-            onDayComplete={(completed) => handleDayComplete(selectedDay.week, selectedDay.day.day, completed)}
-            isDayCompleted={isDayCompleted(selectedDay.week, selectedDay.day.day)}
-            getExerciseProgress={() => getExerciseProgress(selectedDay.week, selectedDay.day.day)}
-            onExerciseComplete={(index, completed, total) => 
-              handleExerciseComplete(selectedDay.week, selectedDay.day.day, index, completed, total)
-            }
-            getWeightLog={() => getWeightLog(selectedDay.week, selectedDay.day.day)}
-            onWeightUpdate={(exerciseIndex, setIndex, weight) => 
-              handleWeightUpdate(selectedDay.week, selectedDay.day.day, exerciseIndex, setIndex, weight)
-            }
-            experienceLevel={progress?.experience_level || 'intermediate'}
-          />
-        )}
+        {selectedDay && (() => {
+          const weekData = weeks.find(w => w.week === selectedDay.week);
+          return (
+            <DayWorkoutDetailDialog
+              open={!!selectedDay}
+              onOpenChange={(open) => !open && setSelectedDay(null)}
+              dayData={selectedDay.day}
+              weekNumber={selectedDay.week}
+              weekTitle={weekData?.title || ''}
+              weekFocus={weekData?.focus || ''}
+              isCompleted={isDayCompleted(selectedDay.week, selectedDay.day.day)}
+              onToggleComplete={() => handleDayComplete(selectedDay.week, selectedDay.day.day, !isDayCompleted(selectedDay.week, selectedDay.day.day))}
+              exerciseProgress={getExerciseProgress(selectedDay.week, selectedDay.day.day, selectedDay.day.exercises.length)}
+              onExerciseToggle={(index, completed) => 
+                handleExerciseComplete(selectedDay.week, selectedDay.day.day, index, completed, selectedDay.day.exercises.length)
+              }
+              weightLog={getWeightLog(selectedDay.week, selectedDay.day.day)}
+              onWeightUpdate={(exerciseIndex, setIndex, weight) => 
+                handleWeightUpdate(selectedDay.week, selectedDay.day.day, exerciseIndex, setIndex, weight)
+              }
+              experienceLevel={(progress?.experience_level as ExperienceLevel) || 'intermediate'}
+            />
+          );
+        })()}
       </div>
     </DashboardLayout>
   );
