@@ -1734,7 +1734,7 @@
   "workoutModules": {
     "productionLab": {
       "title": "Iron Bambino",
-      "subtitle": "6-Weken Slagvaardigheid Ontwikkelingsprogramma"
+      "subtitle": "24-Weken Elite Power Hitter Ontwikkelingsprogramma"
     },
     "productionStudio": {
       "title": "Heat Factory",
@@ -1761,8 +1761,8 @@
     "backToWorkout": "Terug naar Training",
     "sixWeekPlan": "6-Weken Trainingsplan",
     "accessRequired": "Toegang Vereist",
-    "subscribeToHitting": "Abonneer op de Slaganalyse module om toegang te krijgen tot Productie Lab.",
-    "subscribeToPitching": "Abonneer op de Werpanalyse module om toegang te krijgen tot Productie Studio.",
+    "subscribeToHitting": "Abonneer op de Slaganalyse module om toegang te krijgen tot Iron Bambino.",
+    "subscribeToPitching": "Abonneer op de Werpanalyse module om toegang te krijgen tot Heat Factory.",
     "viewPlans": "Bekijk Plannen",
     "exercises": "Oefeningen",
     "markComplete": "Dag als Voltooid Markeren",
@@ -1771,6 +1771,26 @@
     "incomplete": "Onvoltooid",
     "exercisesCompleted": "{{count}} van {{total}} oefeningen",
     "allExercisesComplete": "Alle oefeningen voltooid!",
-    "tapToComplete": "Tik om te voltooien"
+    "tapToComplete": "Tik om te voltooien",
+    "strengthWorkout": "Kracht",
+    "isometricWorkout": "Isometrisch",
+    "setsReps": "{{sets}}×{{reps}}",
+    "percentOf1RM": "{{percent}}% 1RM",
+    "holdDuration": "{{sets}}×{{seconds}}s",
+    "enterWeight": "Gewicht bijhouden (lbs)",
+    "setNumber": "Set {{number}}",
+    "experienceLevel": "Tilervaringsniveau",
+    "beginner": "Beginner",
+    "intermediate": "Gemiddeld",
+    "advanced": "Gevorderd",
+    "standard": "Standaard",
+    "adjustedFor": "% aangepast voor {{level}} niveau",
+    "strengthSettings": "Krachttraining Instellingen",
+    "cycleSelector": "Trainingscyclus",
+    "cycleDescription": "24-weken geperiodiseerd programma - 4 cycli van 6 weken elk",
+    "disclaimer": {
+      "title": "Disclaimer",
+      "text": "Hammer's Modality is niet verantwoordelijk voor eventuele blessures die kunnen optreden tijdens oefeningen. Er zijn geen garanties voor resultaten. Raadpleeg altijd een gekwalificeerde zorgprofessional voordat u een trainingsprogramma begint. Luister naar uw lichaam en stop onmiddellijk als u pijn ervaart."
+    }
   }
 }

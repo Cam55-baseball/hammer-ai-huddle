@@ -1721,7 +1721,7 @@
   "workoutModules": {
     "productionLab": {
       "title": "Iron Bambino",
-      "subtitle": "6주 타격 개발 프로그램"
+      "subtitle": "24주 엘리트 파워 타자 개발 프로그램"
     },
     "productionStudio": {
       "title": "Heat Factory",
@@ -1748,8 +1748,8 @@
     "backToWorkout": "운동으로 돌아가기",
     "sixWeekPlan": "6주 훈련 계획",
     "accessRequired": "접근 권한 필요",
-    "subscribeToHitting": "프로덕션 랩에 접근하려면 타격 분석 모듈을 구독하세요.",
-    "subscribeToPitching": "프로덕션 스튜디오에 접근하려면 투구 분석 모듈을 구독하세요.",
+    "subscribeToHitting": "Iron Bambino에 접근하려면 타격 분석 모듈을 구독하세요.",
+    "subscribeToPitching": "Heat Factory에 접근하려면 투구 분석 모듈을 구독하세요.",
     "viewPlans": "플랜 보기",
     "exercises": "운동",
     "markComplete": "일 완료로 표시",
@@ -1758,6 +1758,26 @@
     "incomplete": "미완료",
     "exercisesCompleted": "{{total}}개 중 {{count}}개 운동",
     "allExercisesComplete": "모든 운동 완료!",
-    "tapToComplete": "탭하여 완료"
+    "tapToComplete": "탭하여 완료",
+    "strengthWorkout": "근력",
+    "isometricWorkout": "등척성",
+    "setsReps": "{{sets}}×{{reps}}",
+    "percentOf1RM": "{{percent}}% 1RM",
+    "holdDuration": "{{sets}}×{{seconds}}초",
+    "enterWeight": "중량 기록 (lbs)",
+    "setNumber": "세트 {{number}}",
+    "experienceLevel": "리프팅 경험",
+    "beginner": "초보자",
+    "intermediate": "중급자",
+    "advanced": "고급자",
+    "standard": "표준",
+    "adjustedFor": "{{level}} 레벨에 맞게 % 조정",
+    "strengthSettings": "근력 훈련 설정",
+    "cycleSelector": "훈련 사이클",
+    "cycleDescription": "24주 주기화 프로그램 - 각 6주의 4사이클",
+    "disclaimer": {
+      "title": "면책 조항",
+      "text": "Hammer's Modality는 운동 중 발생할 수 있는 부상에 대해 책임지지 않습니다. 결과를 보장하지 않습니다. 운동 프로그램을 시작하기 전에 항상 자격을 갖춘 의료 전문가와 상담하십시오. 몸의 소리를 듣고 통증이 느껴지면 즉시 중단하십시오."
+    }
   }
 }

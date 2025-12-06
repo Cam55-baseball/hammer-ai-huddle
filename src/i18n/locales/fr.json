@@ -2229,7 +2229,7 @@
   "workoutModules": {
     "productionLab": {
       "title": "Iron Bambino",
-      "subtitle": "Programme de Développement de la Frappe de 6 Semaines"
+      "subtitle": "Programme Élite de Développement de Frappeur de Puissance de 24 Semaines"
     },
     "productionStudio": {
       "title": "Heat Factory",
@@ -2256,8 +2256,8 @@
     "backToWorkout": "Retour à l'Entraînement",
     "sixWeekPlan": "Plan d'Entraînement de 6 Semaines",
     "accessRequired": "Accès Requis",
-    "subscribeToHitting": "Abonnez-vous au module d'Analyse de Frappe pour accéder au Laboratoire de Production.",
-    "subscribeToPitching": "Abonnez-vous au module d'Analyse de Lancer pour accéder au Studio de Production.",
+    "subscribeToHitting": "Abonnez-vous au module d'Analyse de Frappe pour accéder à Iron Bambino.",
+    "subscribeToPitching": "Abonnez-vous au module d'Analyse de Lancer pour accéder à Heat Factory.",
     "viewPlans": "Voir les Plans",
     "exercises": "Exercices",
     "markComplete": "Marquer le Jour Complet",
@@ -2266,6 +2266,26 @@
     "incomplete": "Incomplet",
     "exercisesCompleted": "{{count}} sur {{total}} exercices",
     "allExercisesComplete": "Tous les exercices terminés !",
-    "tapToComplete": "Appuyez pour marquer complet"
+    "tapToComplete": "Appuyez pour marquer complet",
+    "strengthWorkout": "Force",
+    "isometricWorkout": "Isométrique",
+    "setsReps": "{{sets}}×{{reps}}",
+    "percentOf1RM": "{{percent}}% 1RM",
+    "holdDuration": "{{sets}}×{{seconds}}s",
+    "enterWeight": "Enregistrer le poids (lbs)",
+    "setNumber": "Série {{number}}",
+    "experienceLevel": "Expérience en Musculation",
+    "beginner": "Débutant",
+    "intermediate": "Intermédiaire",
+    "advanced": "Avancé",
+    "standard": "Standard",
+    "adjustedFor": "% ajusté pour niveau {{level}}",
+    "strengthSettings": "Paramètres d'Entraînement de Force",
+    "cycleSelector": "Cycle d'Entraînement",
+    "cycleDescription": "Programme périodisé de 24 semaines - 4 cycles de 6 semaines chacun",
+    "disclaimer": {
+      "title": "Avertissement",
+      "text": "Hammer's Modality n'est pas responsable des blessures pouvant survenir pendant les exercices. Il n'y a aucune garantie de résultats. Consultez toujours un professionnel de santé qualifié avant de commencer tout programme d'exercices. Écoutez votre corps et arrêtez immédiatement si vous ressentez une douleur."
+    }
   }
 }
