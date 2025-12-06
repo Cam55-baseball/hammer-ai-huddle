@@ -1705,7 +1705,7 @@
   "workoutModules": {
     "productionLab": {
       "title": "Iron Bambino",
-      "subtitle": "6周打击发展计划"
+      "subtitle": "24周精英力量打者发展计划"
     },
     "productionStudio": {
       "title": "Heat Factory",
@@ -1732,8 +1732,8 @@
     "backToWorkout": "返回训练",
     "sixWeekPlan": "6周训练计划",
     "accessRequired": "需要访问权限",
-    "subscribeToHitting": "订阅打击分析模块以访问生产实验室。",
-    "subscribeToPitching": "订阅投球分析模块以访问生产工作室。",
+    "subscribeToHitting": "订阅打击分析模块以访问Iron Bambino。",
+    "subscribeToPitching": "订阅投球分析模块以访问Heat Factory。",
     "viewPlans": "查看计划",
     "exercises": "练习",
     "markComplete": "标记日完成",
@@ -1742,6 +1742,26 @@
     "incomplete": "未完成",
     "exercisesCompleted": "{{total}}个练习中的{{count}}个",
     "allExercisesComplete": "所有练习已完成！",
-    "tapToComplete": "点击标记完成"
+    "tapToComplete": "点击标记完成",
+    "strengthWorkout": "力量",
+    "isometricWorkout": "等长",
+    "setsReps": "{{sets}}×{{reps}}",
+    "percentOf1RM": "{{percent}}% 1RM",
+    "holdDuration": "{{sets}}×{{seconds}}秒",
+    "enterWeight": "记录重量 (磅)",
+    "setNumber": "组 {{number}}",
+    "experienceLevel": "举重经验",
+    "beginner": "初学者",
+    "intermediate": "中级",
+    "advanced": "高级",
+    "standard": "标准",
+    "adjustedFor": "根据{{level}}水平调整%",
+    "strengthSettings": "力量训练设置",
+    "cycleSelector": "训练周期",
+    "cycleDescription": "24周周期化计划 - 4个周期，每个6周",
+    "disclaimer": {
+      "title": "免责声明",
+      "text": "Hammer's Modality不对运动过程中可能发生的任何伤害负责。不保证结果。在开始任何运动计划之前，请务必咨询合格的医疗专业人员。倾听您的身体，如果感到疼痛请立即停止。"
+    }
   }
 }

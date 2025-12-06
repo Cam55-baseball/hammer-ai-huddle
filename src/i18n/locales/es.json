@@ -2207,7 +2207,7 @@
   "workoutModules": {
     "productionLab": {
       "title": "Iron Bambino",
-      "subtitle": "Programa de Desarrollo de Bateo de 6 Semanas"
+      "subtitle": "Programa Elite de Desarrollo de Bateador de Poder de 24 Semanas"
     },
     "productionStudio": {
       "title": "Heat Factory",
@@ -2234,8 +2234,8 @@
     "backToWorkout": "Volver al Entrenamiento",
     "sixWeekPlan": "Plan de Entrenamiento de 6 Semanas",
     "accessRequired": "Acceso Requerido",
-    "subscribeToHitting": "Suscríbete al módulo de Análisis de Bateo para acceder al Laboratorio de Producción.",
-    "subscribeToPitching": "Suscríbete al módulo de Análisis de Lanzamiento para acceder al Estudio de Producción.",
+    "subscribeToHitting": "Suscríbete al módulo de Análisis de Bateo para acceder a Iron Bambino.",
+    "subscribeToPitching": "Suscríbete al módulo de Análisis de Lanzamiento para acceder a Heat Factory.",
     "viewPlans": "Ver Planes",
     "exercises": "Ejercicios",
     "markComplete": "Marcar Día Completo",
@@ -2244,6 +2244,26 @@
     "incomplete": "Incompleto",
     "exercisesCompleted": "{{count}} de {{total}} ejercicios",
     "allExercisesComplete": "¡Todos los ejercicios completados!",
-    "tapToComplete": "Toca para marcar completo"
+    "tapToComplete": "Toca para marcar completo",
+    "strengthWorkout": "Fuerza",
+    "isometricWorkout": "Isométrico",
+    "setsReps": "{{sets}}×{{reps}}",
+    "percentOf1RM": "{{percent}}% 1RM",
+    "holdDuration": "{{sets}}×{{seconds}}s",
+    "enterWeight": "Registrar peso (lbs)",
+    "setNumber": "Serie {{number}}",
+    "experienceLevel": "Experiencia en Levantamiento",
+    "beginner": "Principiante",
+    "intermediate": "Intermedio",
+    "advanced": "Avanzado",
+    "standard": "Estándar",
+    "adjustedFor": "% ajustado para nivel {{level}}",
+    "strengthSettings": "Configuración de Entrenamiento de Fuerza",
+    "cycleSelector": "Ciclo de Entrenamiento",
+    "cycleDescription": "Programa periodizado de 24 semanas - 4 ciclos de 6 semanas cada uno",
+    "disclaimer": {
+      "title": "Aviso Legal",
+      "text": "Hammer's Modality no es responsable de ninguna lesión que pueda ocurrir durante los ejercicios. No hay garantías en los resultados. Siempre consulte con un profesional de salud calificado antes de comenzar cualquier programa de ejercicios. Escuche a su cuerpo y deténgase inmediatamente si experimenta dolor."
+    }
   }
 }

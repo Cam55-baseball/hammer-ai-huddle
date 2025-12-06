@@ -1764,7 +1764,7 @@
   "workoutModules": {
     "productionLab": {
       "title": "Iron Bambino",
-      "subtitle": "6週間打撃開発プログラム"
+      "subtitle": "24週間エリートパワーヒッター開発プログラム"
     },
     "productionStudio": {
       "title": "Heat Factory",
@@ -1791,8 +1791,8 @@
     "backToWorkout": "トレーニングに戻る",
     "sixWeekPlan": "6週間トレーニングプラン",
     "accessRequired": "アクセスが必要です",
-    "subscribeToHitting": "打撃分析モジュールに登録してプロダクションラボにアクセス。",
-    "subscribeToPitching": "投球分析モジュールに登録してプロダクションスタジオにアクセス。",
+    "subscribeToHitting": "打撃分析モジュールに登録してIron Bambinoにアクセス。",
+    "subscribeToPitching": "投球分析モジュールに登録してHeat Factoryにアクセス。",
     "viewPlans": "プランを見る",
     "exercises": "エクササイズ",
     "markComplete": "日を完了としてマーク",
@@ -1801,6 +1801,26 @@
     "incomplete": "未完了",
     "exercisesCompleted": "{{total}}中{{count}}のエクササイズ",
     "allExercisesComplete": "すべてのエクササイズ完了！",
-    "tapToComplete": "タップして完了"
+    "tapToComplete": "タップして完了",
+    "strengthWorkout": "筋力",
+    "isometricWorkout": "アイソメトリック",
+    "setsReps": "{{sets}}×{{reps}}",
+    "percentOf1RM": "{{percent}}% 1RM",
+    "holdDuration": "{{sets}}×{{seconds}}秒",
+    "enterWeight": "重量を記録 (lbs)",
+    "setNumber": "セット {{number}}",
+    "experienceLevel": "リフティング経験",
+    "beginner": "初心者",
+    "intermediate": "中級者",
+    "advanced": "上級者",
+    "standard": "標準",
+    "adjustedFor": "{{level}}レベル用に%調整",
+    "strengthSettings": "筋力トレーニング設定",
+    "cycleSelector": "トレーニングサイクル",
+    "cycleDescription": "24週間ピリオダイゼーションプログラム - 各6週間の4サイクル",
+    "disclaimer": {
+      "title": "免責事項",
+      "text": "Hammer's Modalityは、運動中に発生する可能性のある怪我について責任を負いません。結果を保証するものではありません。運動プログラムを開始する前に、必ず資格のある医療専門家に相談してください。体の声を聞き、痛みを感じたらすぐに中止してください。"
+    }
   }
 }

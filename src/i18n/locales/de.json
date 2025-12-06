@@ -2229,7 +2229,7 @@
   "workoutModules": {
     "productionLab": {
       "title": "Iron Bambino",
-      "subtitle": "6-Wochen Schlagentwicklungsprogramm"
+      "subtitle": "24-Wochen Elite Power-Hitter Entwicklungsprogramm"
     },
     "productionStudio": {
       "title": "Heat Factory",
@@ -2256,8 +2256,8 @@
     "backToWorkout": "Zurück zum Training",
     "sixWeekPlan": "6-Wochen Trainingsplan",
     "accessRequired": "Zugang Erforderlich",
-    "subscribeToHitting": "Abonniere das Schlaganalyse-Modul für Zugang zum Produktionslabor.",
-    "subscribeToPitching": "Abonniere das Wurfanalyse-Modul für Zugang zum Produktionsstudio.",
+    "subscribeToHitting": "Abonniere das Schlaganalyse-Modul für Zugang zu Iron Bambino.",
+    "subscribeToPitching": "Abonniere das Wurfanalyse-Modul für Zugang zu Heat Factory.",
     "viewPlans": "Pläne Ansehen",
     "exercises": "Übungen",
     "markComplete": "Tag als Abgeschlossen Markieren",
@@ -2266,6 +2266,26 @@
     "incomplete": "Unvollständig",
     "exercisesCompleted": "{{count}} von {{total}} Übungen",
     "allExercisesComplete": "Alle Übungen abgeschlossen!",
-    "tapToComplete": "Tippen zum Abschließen"
+    "tapToComplete": "Tippen zum Abschließen",
+    "strengthWorkout": "Kraft",
+    "isometricWorkout": "Isometrisch",
+    "setsReps": "{{sets}}×{{reps}}",
+    "percentOf1RM": "{{percent}}% 1RM",
+    "holdDuration": "{{sets}}×{{seconds}}s",
+    "enterWeight": "Gewicht erfassen (lbs)",
+    "setNumber": "Satz {{number}}",
+    "experienceLevel": "Hebe-Erfahrung",
+    "beginner": "Anfänger",
+    "intermediate": "Fortgeschritten",
+    "advanced": "Erfahren",
+    "standard": "Standard",
+    "adjustedFor": "% angepasst für {{level}}-Niveau",
+    "strengthSettings": "Krafttraining-Einstellungen",
+    "cycleSelector": "Trainingszyklus",
+    "cycleDescription": "24-Wochen periodisiertes Programm - 4 Zyklen à 6 Wochen",
+    "disclaimer": {
+      "title": "Haftungsausschluss",
+      "text": "Hammer's Modality ist nicht verantwortlich für Verletzungen, die während der Übungen auftreten können. Es gibt keine Garantie für Ergebnisse. Konsultieren Sie immer einen qualifizierten Gesundheitsfachmann, bevor Sie ein Trainingsprogramm beginnen. Hören Sie auf Ihren Körper und stoppen Sie sofort, wenn Sie Schmerzen verspüren."
+    }
   }
 }
