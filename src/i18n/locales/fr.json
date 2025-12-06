@@ -2311,6 +2311,10 @@
         "description": "Surcharge excentrique pour une croissance musculaire maximale et résilience aux blessures"
       }
     },
+    "notifications": {
+      "workoutUnlockedTitle": "Entraînement Débloqué !",
+      "workoutUnlockedBody": "Votre prochain entraînement est maintenant disponible. C'est l'heure de s'entraîner !"
+    },
     "disclaimer": {
       "title": "Avertissement",
       "text": "Hammer's Modality n'est pas responsable des blessures pouvant survenir pendant les exercices. Il n'y a aucune garantie de résultats. Consultez toujours un professionnel de santé qualifié avant de commencer tout programme d'exercices. Écoutez votre corps et arrêtez immédiatement si vous ressentez une douleur."

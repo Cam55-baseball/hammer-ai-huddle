@@ -1787,6 +1787,10 @@
         "description": "离心过载实现最大肌肉增长和损伤恢复力"
       }
     },
+    "notifications": {
+      "workoutUnlockedTitle": "训练已解锁！",
+      "workoutUnlockedBody": "您的下一次训练现已可用。是时候训练了！"
+    },
     "disclaimer": {
       "title": "免责声明",
       "text": "Hammer's Modality不对运动过程中可能发生的任何伤害负责。不保证结果。在开始任何运动计划之前，请务必咨询合格的医疗专业人员。倾听您的身体，如果感到疼痛请立即停止。"

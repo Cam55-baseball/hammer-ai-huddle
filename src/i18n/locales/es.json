@@ -2289,6 +2289,10 @@
         "description": "Sobrecarga excéntrica para máximo crecimiento muscular y resistencia a lesiones"
       }
     },
+    "notifications": {
+      "workoutUnlockedTitle": "¡Entrenamiento Desbloqueado!",
+      "workoutUnlockedBody": "Tu próximo entrenamiento está disponible. ¡Es hora de entrenar!"
+    },
     "disclaimer": {
       "title": "Aviso Legal",
       "text": "Hammer's Modality no es responsable de ninguna lesión que pueda ocurrir durante los ejercicios. No hay garantías en los resultados. Siempre consulte con un profesional de salud calificado antes de comenzar cualquier programa de ejercicios. Escuche a su cuerpo y deténgase inmediatamente si experimenta dolor."

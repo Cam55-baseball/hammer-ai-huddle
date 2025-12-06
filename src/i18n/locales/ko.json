@@ -1803,6 +1803,10 @@
         "description": "최대 근육 성장과 부상 회복력을 위한 원심 과부하"
       }
     },
+    "notifications": {
+      "workoutUnlockedTitle": "운동 잠금 해제!",
+      "workoutUnlockedBody": "다음 운동을 이용할 수 있습니다. 훈련할 시간입니다!"
+    },
     "disclaimer": {
       "title": "면책 조항",
       "text": "Hammer's Modality는 운동 중 발생할 수 있는 부상에 대해 책임지지 않습니다. 결과를 보장하지 않습니다. 운동 프로그램을 시작하기 전에 항상 자격을 갖춘 의료 전문가와 상담하십시오. 몸의 소리를 듣고 통증이 느껴지면 즉시 중단하십시오."
