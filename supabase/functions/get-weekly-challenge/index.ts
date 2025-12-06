@@ -167,6 +167,9 @@ serve(async (req) => {
         challengeData.days_completed = newDaysCompleted;
         challengeData.status = isNowCompleted ? 'completed' : 'active';
 
+        // Track new badges for response
+        let awardedBadges: string[] = [];
+
         // Check for new challenge badges
         if (isNowCompleted) {
           const newCompletedCount = (completedCount || 0) + 1;
@@ -180,29 +183,46 @@ serve(async (req) => {
 
           if (streakData) {
             let badgesEarned = streakData.badges_earned || [];
-            const newBadges: string[] = [];
 
             for (const badge of CHALLENGE_BADGES) {
               if (newCompletedCount >= badge.threshold && !badgesEarned.includes(badge.id)) {
                 badgesEarned = [...badgesEarned, badge.id];
-                newBadges.push(badge.id);
+                awardedBadges.push(badge.id);
               }
             }
 
             // Check for perfect week badge
             if (newDaysCompleted === challengeData.total_days && !badgesEarned.includes('perfect_week')) {
               badgesEarned = [...badgesEarned, 'perfect_week'];
-              newBadges.push('perfect_week');
+              awardedBadges.push('perfect_week');
             }
 
-            if (newBadges.length > 0) {
+            // Check for comeback_kid badge (completed after having a failed challenge)
+            const { data: failedChallenges } = await supabase
+              .from('mind_fuel_challenges')
+              .select('id')
+              .eq('user_id', userId)
+              .eq('status', 'failed')
+              .limit(1);
+
+            if (failedChallenges && failedChallenges.length > 0 && !badgesEarned.includes('comeback_kid')) {
+              badgesEarned = [...badgesEarned, 'comeback_kid'];
+              awardedBadges.push('comeback_kid');
+            }
+
+            if (awardedBadges.length > 0) {
               await supabase
                 .from('mind_fuel_streaks')
                 .update({ badges_earned: badgesEarned })
                 .eq('user_id', userId);
+              
+              console.log(`[get-weekly-challenge] Awarded badges: ${awardedBadges.join(', ')}`);
             }
           }
         }
+
+        // Store awarded badges for response
+        (challengeData as any).newBadges = awardedBadges;
 
         console.log(`[get-weekly-challenge] Check-in successful. Days: ${newDaysCompleted}/${challengeData.total_days}`);
       }
@@ -263,6 +283,7 @@ serve(async (req) => {
       daysRemainingInWeek,
       completedChallengesCount: completedCount || 0,
       history: historyData || [],
+      newBadges: (challengeData as any)?.newBadges || [],
     };
 
     return new Response(JSON.stringify(response), {

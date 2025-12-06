@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { showBadgeUnlockToast } from './MindFuelBadgeUnlockToast';
 import { 
   Target, 
   CheckCircle2, 
@@ -40,6 +41,83 @@ interface WeeklyChallengeResponse {
   daysRemainingInWeek: number;
   completedChallengesCount: number;
   history: ChallengeData[];
+  newBadges?: string[];
+}
+
+// Challenge complete confetti animation
+function triggerChallengeCompleteConfetti() {
+  const container = document.createElement('div');
+  container.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+  `;
+  document.body.appendChild(container);
+
+  // Amber/orange/red themed colors for challenge completion
+  const colors = ['#f59e0b', '#f97316', '#ef4444', '#eab308', '#fb923c', '#fbbf24'];
+  const particleCount = 80;
+
+  for (let i = 0; i < particleCount; i++) {
+    const particle = document.createElement('div');
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = Math.random() * 12 + 6;
+    const left = Math.random() * 100;
+    const animationDuration = Math.random() * 2.5 + 2;
+    const delay = Math.random() * 0.8;
+    const rotation = Math.random() * 1080;
+
+    particle.style.cssText = `
+      position: absolute;
+      width: ${size}px;
+      height: ${size}px;
+      background-color: ${color};
+      left: ${left}%;
+      top: -20px;
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      animation: challenge-confetti-fall ${animationDuration}s ease-out ${delay}s forwards;
+      transform: rotate(${rotation}deg);
+    `;
+
+    container.appendChild(particle);
+  }
+
+  // Add animation keyframes if not exists
+  if (!document.getElementById('challenge-confetti-styles')) {
+    const style = document.createElement('style');
+    style.id = 'challenge-confetti-styles';
+    style.textContent = `
+      @keyframes challenge-confetti-fall {
+        0% {
+          transform: translateY(0) rotate(0deg) scale(1);
+          opacity: 1;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(1080deg) scale(0.5);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Haptic feedback
+  if (navigator.vibrate) {
+    navigator.vibrate([100, 50, 100, 50, 200]);
+  }
+
+  // Clean up
+  setTimeout(() => {
+    container.remove();
+  }, 5000);
 }
 
 export default function MindFuelWeeklyChallenge() {
@@ -97,7 +175,18 @@ export default function MindFuelWeeklyChallenge() {
       setData(result);
       
       if (result.currentChallenge?.status === 'completed') {
+        // Trigger confetti celebration
+        triggerChallengeCompleteConfetti();
         toast.success(t('mindFuel.weeklyChallenge.completed', 'Challenge completed! 🎉'));
+        
+        // Show badge unlock toasts with staggered delay
+        if (result.newBadges && result.newBadges.length > 0) {
+          result.newBadges.forEach((badgeKey: string, index: number) => {
+            setTimeout(() => {
+              showBadgeUnlockToast({ badgeKey });
+            }, 1000 + index * 1500);
+          });
+        }
       } else {
         toast.success(t('mindFuel.weeklyChallenge.checkedIn', 'Day checked in!'));
       }
