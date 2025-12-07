@@ -2900,5 +2900,895 @@
       "comeback_kid": "Comeback Kid",
       "comeback_kid_desc": "Complete a challenge after failing one"
     }
+  },
+  "workoutContent": {
+    "weekTitle": "Week {{number}}",
+    "dayTitles": {
+      "day1StrengthBatSpeed": "Day 1: Full Body Strength {{workout}} + Bat Speed",
+      "day2Rest": "Day 2: Rest",
+      "day3BatSpeed": "Day 3: Bat Speed Development",
+      "day4Rest": "Day 4: Rest",
+      "day5StrengthBatSpeed": "Day 5: Full Body Strength {{workout}} + Bat Speed",
+      "day1StrengthArmCare": "Day 1: Strength {{workout}} + Arm Care",
+      "day2RestRecovery": "Day 2: Rest & Recovery",
+      "day3VelocityDev": "Day 3: Velocity Development",
+      "day3PitchDev": "Day 3: Pitch Development",
+      "day3ThrowingDev": "Day 3: Throwing Development",
+      "day4RestRecovery": "Day 4: Rest & Recovery",
+      "day5StrengthCommand": "Day 5: Strength {{workout}} + Command Work"
+    },
+    "activeRecovery": {
+      "name": "Active Recovery",
+      "hittingDesc": "Light stretching, foam rolling, or complete rest. Allow muscles to recover from strength training.",
+      "pitchingDesc": "Light stretching, foam rolling, or complete rest. Allow muscles and arm to recover. Light J-band work optional.",
+      "pitchingDesc2": "Light stretching, foam rolling, or complete rest. Prepare for next strength session. J-band arm care encouraged."
+    },
+    "exercises": {
+      "trap_bar_deadlift": {
+        "name": "Trap Bar Deadlift",
+        "description": "Stand inside hex bar, grip handles at sides, drive through heels to stand tall. Hips and knees extend simultaneously. Explosive concentric, controlled descent.",
+        "notes": "Full hip extension at top"
+      },
+      "barbell_back_squat": {
+        "name": "Barbell Back Squat",
+        "description": "Bar on upper traps, feet shoulder-width apart. Descend until hip crease below knee, then explode up through midfoot. Chest stays high throughout.",
+        "notes": "Break parallel, explosive drive"
+      },
+      "bench_press": {
+        "name": "Bench Press",
+        "description": "Lie on bench with slight arch, grip bar just outside shoulders. Lower to mid-chest with control, pause briefly, then press explosively to lockout.",
+        "notes": "Pause at chest, drive through heels"
+      },
+      "barbell_row": {
+        "name": "Barbell Row",
+        "description": "Hinge at hips 45°, grip bar outside knees. Pull to lower ribcage while retracting shoulder blades. Keep torso stable - no heaving.",
+        "notes": "Squeeze 1s at top, strict form"
+      },
+      "landmine_rotational_press": {
+        "name": "Landmine Rotational Press",
+        "description": "Bar anchored in corner. Start at shoulder with both hands, rotate hips explosively while pressing diagonally across body. Core drives the movement.",
+        "notes": "Each side, full hip rotation"
+      },
+      "isometric_wall_sit": {
+        "name": "Isometric Wall Sit",
+        "description": "Back flat against wall, slide down until thighs parallel to floor. Press lower back into wall, engage quads maximally. Breathe steadily.",
+        "notes": "Thighs parallel, maximum quad tension"
+      },
+      "isometric_pallof_hold": {
+        "name": "Isometric Pallof Hold",
+        "description": "Cable/band at chest height, arms extended forward. Resist the rotational pull with your core - anti-rotation is the goal.",
+        "notes": "Each side, resist rotation"
+      },
+      "front_squat": {
+        "name": "Front Squat",
+        "description": "Bar on front delts with clean grip or crossed arms. Keep elbows high, descend deep with upright torso, drive up explosively through midfoot.",
+        "notes": "Elbows up, deep depth"
+      },
+      "incline_db_press": {
+        "name": "Incline Dumbbell Press",
+        "description": "On 30° incline, press dumbbells from shoulder level to full lockout. Lower with control, slight pause at bottom, explode up.",
+        "notes": "30° incline, full ROM"
+      },
+      "weighted_pullup": {
+        "name": "Weighted Pull-Up",
+        "description": "Add weight via belt or vest. From dead hang, pull until chin clears bar. Control descent, pause at bottom. Full ROM every rep.",
+        "notes": "Dead hang start, add weight"
+      },
+      "romanian_deadlift": {
+        "name": "Romanian Deadlift",
+        "description": "Bar at hip height, push hips back while keeping slight knee bend. Lower until hamstring stretch, then drive hips forward to return.",
+        "notes": "Hip hinge, hamstring stretch"
+      },
+      "cable_woodchop_high_low": {
+        "name": "Cable Woodchop High-to-Low",
+        "description": "High cable attachment, feet shoulder-width. Pull diagonally down across body with hip rotation. Arms stay extended, core drives the movement.",
+        "notes": "Each side, explosive rotation"
+      },
+      "isometric_pushup_hold": {
+        "name": "Isometric Push-Up Hold",
+        "description": "Lower to mid-position of push-up (elbows at 90°). Hold steady without sinking or rising. Engage chest, triceps, and core maximally.",
+        "notes": "Mid-position, max tension"
+      },
+      "isometric_single_glute_bridge": {
+        "name": "Isometric Single-Leg Glute Bridge",
+        "description": "One foot planted, other leg extended. Drive hip up, hold at top with straight line from knee to shoulder. Maximum glute squeeze.",
+        "notes": "Each leg, hip locked high"
+      },
+      "box_squat": {
+        "name": "Box Squat",
+        "description": "Squat back to box at parallel height. Pause briefly on box with tension maintained, then explode up. Teaches proper hip mechanics.",
+        "notes": "Pause on box, explode up"
+      },
+      "close_grip_bench": {
+        "name": "Close-Grip Bench Press",
+        "description": "Grip bar shoulder-width, elbows tucked at 45°. Lower to lower chest, pause, press explosively. Emphasizes tricep strength for finish.",
+        "notes": "Elbows tucked, tricep focus"
+      },
+      "single_arm_db_row": {
+        "name": "Single-Arm Dumbbell Row",
+        "description": "One hand and knee on bench, opposite foot planted wide. Row dumbbell to hip while actively resisting torso rotation. Control eccentric.",
+        "notes": "Each side, anti-rotation focus"
+      },
+      "bulgarian_split_squat": {
+        "name": "Bulgarian Split Squat",
+        "description": "Rear foot elevated on bench behind you. Lower until front thigh parallel, then push through front heel to stand. Keep torso upright.",
+        "notes": "Each leg, rear foot elevated"
+      },
+      "pallof_press": {
+        "name": "Pallof Press",
+        "description": "Cable at chest height, stand perpendicular. Press hands forward slowly, hold 3s at extension while resisting rotation, return with control.",
+        "notes": "3s hold at full extension"
+      },
+      "isometric_inverted_row": {
+        "name": "Isometric Inverted Row Hold",
+        "description": "Under bar at chest height, pull up and hold with chest near bar. Body in straight line from ankles to shoulders. Squeeze shoulder blades.",
+        "notes": "Chest to bar position"
+      },
+      "isometric_side_plank": {
+        "name": "Isometric Side Plank",
+        "description": "On elbow and side of foot. Hold body in straight line with hips elevated off ground. Actively push through grounded elbow.",
+        "notes": "Each side, hips high"
+      },
+      "sumo_deadlift": {
+        "name": "Sumo Deadlift",
+        "description": "Wide stance, grip inside knees. Drive through heels, push knees out, chest up. Lockout with hips through. Emphasizes hip power.",
+        "notes": "Wide stance, hips through"
+      },
+      "overhead_press": {
+        "name": "Overhead Press",
+        "description": "Bar at front shoulders, grip just outside shoulders. Brace core, press straight up while moving head back then forward. Full lockout overhead.",
+        "notes": "Strict press, full lockout"
+      },
+      "lat_pulldown": {
+        "name": "Lat Pulldown",
+        "description": "Wide grip on bar, pull down to upper chest while arching slightly. Squeeze lats at bottom, control return. Full stretch at top.",
+        "notes": "Wide grip, squeeze lats"
+      },
+      "walking_lunge": {
+        "name": "Walking Lunge",
+        "description": "Dumbbells at sides, step forward into deep lunge position. Drive through front heel to step forward into next lunge. Continuous motion.",
+        "notes": "Each leg, continuous motion"
+      },
+      "medball_rotational_slam": {
+        "name": "Med Ball Rotational Slam",
+        "description": "Med ball at hip, rotate explosively and slam ball diagonally down. Chase the ball, reset, repeat. Maximum rotational power output.",
+        "notes": "Each side, max intent"
+      },
+      "isometric_split_squat": {
+        "name": "Isometric Split Squat Hold",
+        "description": "Bottom position of split squat, front thigh parallel. Hold position without moving, maintaining upright torso and engaged glutes.",
+        "notes": "Each leg, bottom position"
+      },
+      "isometric_hollow_body": {
+        "name": "Isometric Hollow Body Hold",
+        "description": "Lie on back, lower back pressed into floor. Legs extended slightly off ground, arms overhead. Hold position without breaking core.",
+        "notes": "Lower back pressed down"
+      },
+      "incline_barbell_press": {
+        "name": "Incline Barbell Press",
+        "description": "On 30° incline with barbell. Lower to upper chest, pause, drive explosively. Upper chest emphasis.",
+        "notes": "30° incline, heavy"
+      },
+      "chest_supported_row": {
+        "name": "Chest-Supported Row",
+        "description": "Chest on incline bench, row dumbbells or bar to ribcage. Eliminates momentum, pure back strength.",
+        "notes": "No momentum, strict form"
+      },
+      "db_shoulder_press": {
+        "name": "Dumbbell Shoulder Press",
+        "description": "Seated or standing, press dumbbells from shoulder level to full overhead lockout. Control descent.",
+        "notes": "Full lockout overhead"
+      },
+      "cable_woodchop_low_high": {
+        "name": "Cable Woodchop Low-to-High",
+        "description": "Low cable attachment. Pull diagonally up across body with explosive hip rotation. Upward power production.",
+        "notes": "Each side, explosive"
+      },
+      "isometric_dead_hang": {
+        "name": "Isometric Dead Hang",
+        "description": "Hang from pull-up bar with straight arms. Engages grip, stretches lats, decompresses spine.",
+        "notes": "Grip + shoulder health"
+      },
+      "db_bench_press": {
+        "name": "Dumbbell Bench Press",
+        "description": "Independent arm pressing for balance and stability. Full range of motion, pause at bottom.",
+        "notes": "Independent arm work"
+      },
+      "pallof_press_step": {
+        "name": "Pallof Press with Step",
+        "description": "Dynamic anti-rotation. Press hands forward while stepping laterally, increasing lever arm.",
+        "notes": "Each side, step out"
+      },
+      "isometric_anti_rotation": {
+        "name": "Isometric Anti-Rotation Hold",
+        "description": "Cable/band at chest height. Arms extended, resist pull. Core stability maintenance.",
+        "notes": "Each side, core stability"
+      },
+      "glute_bridge_march": {
+        "name": "Glute Bridge March",
+        "description": "Bridge position, alternate lifting knees while maintaining level hips. Dynamic hip stability.",
+        "notes": "Each leg, hips level"
+      },
+      "step_up": {
+        "name": "Step-Up",
+        "description": "High box step-up with dumbbells. Drive through top leg, minimal push from back leg.",
+        "notes": "Each leg, high box"
+      },
+      "plank_shoulder_tap": {
+        "name": "Plank with Shoulder Tap",
+        "description": "Plank position, alternate tapping shoulders while minimizing hip rotation. Core control.",
+        "notes": "Each side, hips stable"
+      },
+      "isometric_hip_flexor": {
+        "name": "Isometric Hip Flexor Hold",
+        "description": "Standing, pull knee to chest against resistance. Hold with hip flexor engaged at maximum contraction.",
+        "notes": "Each leg, hip health"
+      },
+      "isometric_lunge_hold": {
+        "name": "Isometric Lunge Hold",
+        "description": "Bottom of lunge position, hold with tension. Develops positional strength.",
+        "notes": "Each leg, bottom position"
+      },
+      "deficit_trap_bar": {
+        "name": "Deficit Trap Bar Deadlift",
+        "description": "Stand on 2-3\" platform inside hex bar. Increased ROM demands greater hip and leg drive. Explosive concentric.",
+        "notes": "2-3\" deficit, explosive"
+      },
+      "pause_squat": {
+        "name": "Pause Squat",
+        "description": "3-second pause at bottom of squat. Eliminates stretch reflex, builds strength from dead stop.",
+        "notes": "3s pause at bottom"
+      },
+      "spoto_press": {
+        "name": "Spoto Press",
+        "description": "Pause 1\" off chest for 2 seconds, then press. Builds strength at sticking point without chest touch.",
+        "notes": "1\" off chest, 2s pause"
+      },
+      "pendlay_row": {
+        "name": "Pendlay Row",
+        "description": "From floor each rep, explosive row to lower chest. Dead stop start builds pure pulling power.",
+        "notes": "Dead stop each rep"
+      },
+      "single_leg_rdl": {
+        "name": "Single-Leg Romanian Deadlift",
+        "description": "Hinge on one leg, other leg extends behind. Balance and hamstring work. Control throughout.",
+        "notes": "Each leg, balance focus"
+      },
+      "isometric_pause_squat": {
+        "name": "Isometric Pause Squat Hold",
+        "description": "Hold at bottom of squat for extended duration. Builds positional strength and stability.",
+        "notes": "Extended hold, max tension"
+      },
+      "isometric_loaded_stretch": {
+        "name": "Isometric Loaded Stretch",
+        "description": "Hold stretched position under load. Develops strength through full range of motion.",
+        "notes": "Controlled stretch, maintain tension"
+      },
+      "front_squat_pause": {
+        "name": "Front Squat with Pause",
+        "description": "2-second pause at bottom. Core stability with heavy load.",
+        "notes": "2s pause, elbows up"
+      },
+      "z_press": {
+        "name": "Z-Press",
+        "description": "Seated on floor pressing. Eliminates leg drive, pure upper body strength.",
+        "notes": "Legs extended, strict press"
+      },
+      "cable_low_high_rotation": {
+        "name": "Cable Low-to-High Rotation",
+        "description": "Upward rotation pattern with full hip engagement.",
+        "notes": "Each side, full rotation"
+      },
+      "isometric_dead_bug": {
+        "name": "Isometric Dead Bug Hold",
+        "description": "Limbs extended, lower back pressed down. Core stability hold.",
+        "notes": "Opposite arm/leg extended"
+      },
+      "barbell_hip_thrust": {
+        "name": "Barbell Hip Thrust",
+        "description": "Bar across hips, drive hips up. Maximum glute power for drive phase.",
+        "notes": "Full hip extension, squeeze at top"
+      },
+      "half_kneel_anti_rotation": {
+        "name": "Half-Kneeling Cable Anti-Rotation",
+        "description": "Half-kneel position, cable at chest height, resist rotation. Trains trunk stability.",
+        "notes": "Each side, maintain upright posture"
+      },
+      "isometric_glute_bridge": {
+        "name": "Isometric Glute Bridge Hold",
+        "description": "Hips elevated, single or double leg. Glute endurance for repeated drive phase activation.",
+        "notes": "Full hip extension, maximum squeeze"
+      },
+      "pushup_variations": {
+        "name": "Push-Up Variations",
+        "description": "Standard, diamond, or archer push-ups. Shoulder stability with bodyweight control.",
+        "notes": "Full ROM, core engaged"
+      },
+      "face_pulls": {
+        "name": "Face Pulls",
+        "description": "Cable at face height, pull to ears with external rotation. Crucial for posterior shoulder health.",
+        "notes": "Elbows high, external rotation at finish"
+      },
+      "hip_thrust": {
+        "name": "Hip Thrust",
+        "description": "Heavy hip thrusts for glute power. Maximal drive phase force production.",
+        "notes": "Heavy loading, full extension"
+      },
+      "medball_scoop_toss": {
+        "name": "Med Ball Scoop Toss",
+        "description": "Explosive hip extension with med ball throw. Power transfer drill.",
+        "notes": "Max intent, hip extension focus"
+      },
+      "back_squat": {
+        "name": "Back Squat",
+        "description": "Heavy squatting for leg strength. Deep depth with controlled descent.",
+        "notes": "Deep, controlled reps"
+      },
+      "barbell_bench_press": {
+        "name": "Barbell Bench Press",
+        "description": "Heavy pressing for upper body power. Chest and tricep strength for acceleration.",
+        "notes": "Pause at chest, explosive drive"
+      },
+      "half_kneel_chop": {
+        "name": "Half-Kneeling Cable Chop",
+        "description": "Rotational power from half-kneeling. Hip and core integration.",
+        "notes": "Each side, explosive"
+      },
+      "half_kneel_lift": {
+        "name": "Half-Kneeling Cable Lift",
+        "description": "Low-to-high lift pattern from half-kneel.",
+        "notes": "Each side, full range"
+      },
+      "lateral_lunge": {
+        "name": "Lateral Lunge",
+        "description": "Lateral strength for hip mobility and adductor strength.",
+        "notes": "Each leg, deep lunge"
+      },
+      "face_pulls_ext_rot": {
+        "name": "Face Pulls with External Rotation",
+        "description": "Added external rotation at peak contraction. Maximum posterior shoulder work.",
+        "notes": "External rotation at finish"
+      },
+      "single_arm_landmine": {
+        "name": "Single-Arm Landmine Press",
+        "description": "Unilateral pressing with rotational element. Core stability demand.",
+        "notes": "Each arm, stable base"
+      },
+      "eccentric_trap_bar": {
+        "name": "Eccentric Trap Bar Deadlift",
+        "description": "5-second lowering phase. Maximum muscle tension during eccentric.",
+        "notes": "5s negative, controlled"
+      },
+      "eccentric_squat": {
+        "name": "Eccentric Squat",
+        "description": "5-second descent, explode up. Eccentric muscle loading.",
+        "notes": "5s down, fast up"
+      },
+      "eccentric_bench": {
+        "name": "Eccentric Bench Press",
+        "description": "5-second lowering to chest. Builds chest and tricep mass.",
+        "notes": "5s negative, pause, press"
+      },
+      "eccentric_row": {
+        "name": "Eccentric Row",
+        "description": "4-second lowering phase. Back muscle hypertrophy.",
+        "notes": "4s negative, strict form"
+      },
+      "eccentric_rdl": {
+        "name": "Eccentric RDL",
+        "description": "4-second lowering with hamstring focus. Time under tension for growth.",
+        "notes": "4s negative, control"
+      },
+      "eccentric_bulgarian": {
+        "name": "Eccentric Bulgarian Split Squat",
+        "description": "4-second descent on each rep. Quad hypertrophy focus.",
+        "notes": "4s down, each leg"
+      },
+      "eccentric_overhead": {
+        "name": "Eccentric Overhead Press",
+        "description": "4-second lowering from lockout. Shoulder mass building.",
+        "notes": "4s negative, strict"
+      },
+      "eccentric_pullup": {
+        "name": "Eccentric Pull-Up",
+        "description": "5-second lowering from top. Lat development.",
+        "notes": "5s negative, full stretch"
+      },
+      "eccentric_single_row": {
+        "name": "Eccentric Single-Arm Row",
+        "description": "4-second negative each rep. Unilateral back development.",
+        "notes": "4s negative, each side"
+      },
+      "eccentric_step_down": {
+        "name": "Eccentric Step-Down",
+        "description": "Controlled single-leg lowering from box. Quad eccentric strength.",
+        "notes": "Each leg, controlled descent"
+      },
+      "eccentric_incline": {
+        "name": "Eccentric Incline Press",
+        "description": "4-second lowering on incline. Upper chest development.",
+        "notes": "4s negative, 30° incline"
+      },
+      "eccentric_lat_pulldown": {
+        "name": "Eccentric Lat Pulldown",
+        "description": "4-second return to start. Lat eccentric loading.",
+        "notes": "4s negative, full stretch"
+      },
+      "eccentric_nordic": {
+        "name": "Eccentric Nordic Curl",
+        "description": "Slow eccentric hamstring lowering. Injury prevention focus.",
+        "notes": "Control descent, catch at bottom"
+      },
+      "eccentric_dip": {
+        "name": "Eccentric Dip",
+        "description": "5-second lowering phase. Tricep and chest development.",
+        "notes": "5s negative, deep stretch"
+      },
+      "tempo_front_squat": {
+        "name": "Tempo Front Squat",
+        "description": "4-second descent, 2-second pause, explode up. Total time under tension.",
+        "notes": "4-2-1 tempo"
+      },
+      "negative_pullup": {
+        "name": "Negative Pull-Up",
+        "description": "Jump to top, 6-second lowering. Builds pulling strength.",
+        "notes": "6s negative, full hang"
+      },
+      "eccentric_lateral_lunge": {
+        "name": "Eccentric Lateral Lunge",
+        "description": "4-second lowering into lateral lunge. Adductor development.",
+        "notes": "4s negative, each side"
+      },
+      "landmine_press": {
+        "name": "Landmine Press",
+        "description": "Single-arm press with landmine bar. Scapular-friendly overhead pressing with rotational element.",
+        "notes": "Each arm, stable core"
+      }
+    },
+    "batSpeed": {
+      "speed_swings_10": {
+        "name": "Speed Swings - 10 Reps",
+        "description": "Maximum effort speed swings with game bat. Focus on bat speed over contact quality.",
+        "notes": "Max intent, 10 reps"
+      },
+      "connection_ball": {
+        "name": "Connection Ball Drill",
+        "description": "Squeeze foam ball between arms and torso during swing. Maintains upper body connection.",
+        "notes": "Ball between biceps and chest"
+      },
+      "bat_behind_back": {
+        "name": "Bat Behind Back Rotations",
+        "description": "Hold bat across shoulders behind back. Practice hip rotation driving shoulders.",
+        "notes": "Hips lead, core engaged"
+      },
+      "wrist_snap": {
+        "name": "Wrist Snap Drill",
+        "description": "Quick wrist snaps at contact point. Develops fast hands through the zone.",
+        "notes": "Snap at contact point"
+      },
+      "resistance_band_swings": {
+        "name": "Resistance Band Speed Swings",
+        "description": "Attach band to bat for overload. Swing against resistance for power.",
+        "notes": "Fight the band, full rotation"
+      },
+      "one_handed_swings": {
+        "name": "One-Handed Speed Swings",
+        "description": "Top or bottom hand only swings. Develops hand independence and bat control.",
+        "notes": "Each hand, controlled swing"
+      },
+      "quick_hands": {
+        "name": "Quick Hands Drill",
+        "description": "Partner tosses balls from short distance. Quick reactions, short swings.",
+        "notes": "Quick swing, see ball"
+      },
+      "swing_speed_measure": {
+        "name": "Swing Speed Measurement",
+        "description": "Track bat speed with swing analyzer. Record progress over time.",
+        "notes": "Track mph, aim for improvement"
+      },
+      "bat_waggle": {
+        "name": "Bat Waggle Speed Drill",
+        "description": "Rapid bat movement at stance. Keeps hands loose and ready.",
+        "notes": "Stay loose, light grip"
+      },
+      "speed_tee_15": {
+        "name": "Speed Tee Work - 15 Swings",
+        "description": "Full speed swings off tee. Focus on max bat speed, not mechanics.",
+        "notes": "15 swings, max effort"
+      },
+      "velocity_ladder": {
+        "name": "Velocity Ladder Swings",
+        "description": "Progressive speed increase: 70%, 80%, 90%, 100%. Build to max.",
+        "notes": "4 sets, increasing intensity"
+      },
+      "bat_flip_speed": {
+        "name": "Bat Flip Speed Drill",
+        "description": "Flip bat end-over-end quickly. Develops wrist speed and control.",
+        "notes": "Quick flips, catch cleanly"
+      },
+      "no_stride_swings": {
+        "name": "No-Stride Speed Swings",
+        "description": "Swing from stance without stride. Isolates upper body speed.",
+        "notes": "No stride, upper body focus"
+      },
+      "fast_hands_reaction": {
+        "name": "Fast Hands Reaction Drill",
+        "description": "Colored ball toss - swing only at specific color. Quick decision making.",
+        "notes": "React and decide quickly"
+      },
+      "exit_speed_comp": {
+        "name": "Exit Speed Competition",
+        "description": "Compete for highest exit velocity off tee or soft toss.",
+        "notes": "Track exit speed, beat personal best"
+      },
+      "rotational_snap": {
+        "name": "Rotational Snap Drill",
+        "description": "Focus on explosive hip rotation to initiate swing. Hips lead hands.",
+        "notes": "Snap hips, transfer energy"
+      },
+      "light_bat_20": {
+        "name": "Light Bat Max Speed - 20 Swings",
+        "description": "Speed bat or lighter bat for overspeed training. Move it fast.",
+        "notes": "20 swings, maximum speed"
+      },
+      "heavy_light_contrast": {
+        "name": "Heavy-Light Contrast - 10 Sets",
+        "description": "Alternate between heavy bat and light bat swings. Contrast training effect.",
+        "notes": "5 heavy, 5 light, repeat"
+      },
+      "intent_tee_max": {
+        "name": "Intent Tee Work - Max Effort",
+        "description": "Maximum intent swings off tee. Every swing is game swing effort.",
+        "notes": "100% effort every swing"
+      },
+      "barrel_speed_focus": {
+        "name": "Barrel Speed Focus Drill",
+        "description": "Focus on barrel acceleration through the zone. Whip the barrel.",
+        "notes": "Feel barrel whip"
+      },
+      "overload_underload": {
+        "name": "Overload/Underload Protocol",
+        "description": "Complete protocol with weighted and speed bats. Full contrast session.",
+        "notes": "Heavy → regular → light"
+      }
+    },
+    "armCare": {
+      "jband_internal": {
+        "name": "J-Band Internal Rotation",
+        "description": "Elbow at 90°, rotate hand inward against band resistance. Controlled motion.",
+        "notes": "Elbow stable, 15-20 reps"
+      },
+      "jband_external": {
+        "name": "J-Band External Rotation",
+        "description": "Elbow at 90°, rotate hand outward against band resistance. Strengthen external rotators.",
+        "notes": "Slow and controlled, 15-20 reps"
+      },
+      "jband_scap": {
+        "name": "J-Band Scap Retraction",
+        "description": "Pull band apart at chest height. Squeeze shoulder blades together.",
+        "notes": "Squeeze 2s at end, 15 reps"
+      },
+      "jband_high_pulls": {
+        "name": "J-Band High Pulls",
+        "description": "Arms overhead with band, pull apart while maintaining tension.",
+        "notes": "Keep arms high, 15 reps"
+      },
+      "sleeper_stretch": {
+        "name": "Sleeper Stretch",
+        "description": "Lie on throwing side, push wrist toward floor with other hand. Internal rotation stretch.",
+        "notes": "Hold 30s, gentle pressure"
+      },
+      "crossbody_stretch": {
+        "name": "Cross-Body Stretch",
+        "description": "Pull throwing arm across body with other arm. Posterior shoulder stretch.",
+        "notes": "Hold 30s, feel stretch in back of shoulder"
+      },
+      "wrist_flex_ext": {
+        "name": "Wrist Flexion/Extension",
+        "description": "Curl and extend wrist with light weight. Forearm strength for arm health.",
+        "notes": "15 reps each direction"
+      },
+      "forearm_pro_sup": {
+        "name": "Forearm Pronation/Supination",
+        "description": "Rotate forearm palm up and palm down with light weight. Wrist mobility.",
+        "notes": "15 reps, control the rotation"
+      }
+    },
+    "velocity": {
+      "long_toss_60": {
+        "name": "Long Toss Warm-Up - 60ft",
+        "description": "Easy throws at 60 feet. Arm path warm-up, not velocity focused.",
+        "notes": "10-15 throws, easy effort"
+      },
+      "long_toss_90": {
+        "name": "Long Toss Build - 90ft",
+        "description": "Increase distance to 90 feet. Medium effort, building arm speed.",
+        "notes": "10-15 throws, medium effort"
+      },
+      "long_toss_120": {
+        "name": "Long Toss Extension - 120ft",
+        "description": "Extend to 120 feet. Higher arc allowed, building arm strength.",
+        "notes": "10-15 throws, increased effort"
+      },
+      "long_toss_max": {
+        "name": "Long Toss Max - 150-200ft",
+        "description": "Maximum comfortable distance. Arc throws for arm conditioning.",
+        "notes": "10-15 throws, max effort"
+      },
+      "pulldown_phase": {
+        "name": "Pull-Down Phase",
+        "description": "Work back from max distance with pull-down throws. Line drive trajectory.",
+        "notes": "Pull back in 30ft increments"
+      },
+      "velo_day_gun": {
+        "name": "Velo Day - Gun Readings",
+        "description": "Velocity focused session with radar readings. Track max and average.",
+        "notes": "Record velocities, track progress"
+      },
+      "weighted_7oz": {
+        "name": "Weighted Ball - 7oz Overload",
+        "description": "Heavy ball throws for arm strength. Controlled intent.",
+        "notes": "15-20 throws, not max effort"
+      },
+      "weighted_5oz": {
+        "name": "Weighted Ball - 5oz Standard",
+        "description": "Game weight ball or standard 5oz weighted ball.",
+        "notes": "15-20 throws, feel normal arm path"
+      },
+      "weighted_4oz": {
+        "name": "Weighted Ball - 4oz Underload",
+        "description": "Light ball for arm speed development. Move it fast.",
+        "notes": "15-20 throws, max arm speed"
+      },
+      "contrast_throws": {
+        "name": "Contrast Throws",
+        "description": "Alternate between overload and underload balls. Contrast training effect.",
+        "notes": "5 heavy, 5 light, repeat 2-3x"
+      },
+      "crow_hop": {
+        "name": "Crow Hop Throws",
+        "description": "Throw with crow hop for momentum and timing. Build arm speed.",
+        "notes": "Full intent, good timing"
+      },
+      "max_intent_bp": {
+        "name": "Max Intent Bullpen",
+        "description": "Bullpen session at maximum intent. Game-like velocity focus.",
+        "notes": "15-25 pitches, all max effort"
+      },
+      "plyocare_pivot": {
+        "name": "PlyoCare Pivot Pickoffs",
+        "description": "Pivot throw drill with plyocare ball. Quick feet and arm action.",
+        "notes": "10 each direction"
+      },
+      "plyocare_rollins": {
+        "name": "PlyoCare Roll-Ins",
+        "description": "Roll into throw with plyocare ball. Hip lead and arm follow.",
+        "notes": "10-15 throws, feel hip lead"
+      },
+      "plyocare_reverse": {
+        "name": "PlyoCare Reverse Throws",
+        "description": "Back to target, rotate and throw. Rotation sequencing.",
+        "notes": "10 throws, full rotation"
+      },
+      "rocker_throws": {
+        "name": "Rocker Throws",
+        "description": "Rock back and throw with momentum. Timing and weight transfer.",
+        "notes": "15 throws, feel momentum"
+      }
+    },
+    "pitchDev": {
+      "curve_grip": {
+        "name": "Curveball Grip Work",
+        "description": "Practice grip variations, finding comfortable finger pressure and seam orientation.",
+        "notes": "Find your grip"
+      },
+      "curve_spin": {
+        "name": "Curveball Spin Drills",
+        "description": "Short distance spins focusing on tight rotation and axis. See the spin.",
+        "notes": "Focus on tight spin"
+      },
+      "curve_shape": {
+        "name": "Curveball Shape Focus",
+        "description": "Full distance curves, focusing on consistent break shape and depth.",
+        "notes": "Consistent shape"
+      },
+      "slider_grip": {
+        "name": "Slider Grip Work",
+        "description": "Practice slider grip with finger pressure on inner seam. Find your comfort zone.",
+        "notes": "Find grip comfort"
+      },
+      "slider_wrist": {
+        "name": "Slider Wrist Action",
+        "description": "Isolate slider release action. Bullet spin with tight dot.",
+        "notes": "Tight dot spin"
+      },
+      "slider_tunnel": {
+        "name": "Slider Tunnel Drill",
+        "description": "Throw slider through fastball tunnel, late break for deception.",
+        "notes": "Same tunnel as fastball"
+      },
+      "changeup_grip": {
+        "name": "Changeup Grip Work",
+        "description": "Circle change, 3-finger, or other grip variations. Find what works.",
+        "notes": "Comfortable grip"
+      },
+      "changeup_arm_speed": {
+        "name": "Changeup Arm Speed Matching",
+        "description": "Match fastball arm speed with changeup grip. Deception is key.",
+        "notes": "Same arm speed"
+      },
+      "changeup_feel": {
+        "name": "Changeup Feel Drills",
+        "description": "Short distance changeups developing touch and feel for speed differential.",
+        "notes": "Feel the speed difference"
+      },
+      "quadrant_work": {
+        "name": "Quadrant Work",
+        "description": "Hit specific quadrants of strike zone. Build precision command.",
+        "notes": "Hit your spots"
+      },
+      "glove_arm_side": {
+        "name": "Glove Side/Arm Side",
+        "description": "Work both edges of plate. Develop horizontal command.",
+        "notes": "Hit corners"
+      },
+      "up_down_ladder": {
+        "name": "Up/Down Ladder",
+        "description": "Work top and bottom of zone. Vertical command development.",
+        "notes": "Vary height"
+      },
+      "pitch_sequencing": {
+        "name": "Pitch Sequencing",
+        "description": "Practice 2 and 3 pitch sequences. Build game-like patterns.",
+        "notes": "Think like a game"
+      },
+      "tunnel_drills": {
+        "name": "Tunnel Drills",
+        "description": "Throw different pitches through same tunnel. Develop deception.",
+        "notes": "Same look, different break"
+      }
+    },
+    "equipment": {
+      "hitting": {
+        "bat": {
+          "name": "Game Bat",
+          "description": "Your primary game bat"
+        },
+        "tee": {
+          "name": "Batting Tee",
+          "description": "Adjustable height preferred"
+        },
+        "balls": {
+          "name": "Baseballs/Softballs",
+          "description": "Minimum 12 balls"
+        },
+        "net": {
+          "name": "Hitting Net",
+          "description": "For indoor/outdoor practice"
+        },
+        "barbell": {
+          "name": "Barbell & Plates",
+          "description": "For compound lifts (45lb bar + plates)"
+        },
+        "dumbbells": {
+          "name": "Dumbbells",
+          "description": "Various weights 10-80+ lbs"
+        },
+        "trap_bar": {
+          "name": "Trap/Hex Bar",
+          "description": "For deadlifts - essential for program"
+        },
+        "cable_machine": {
+          "name": "Cable Machine",
+          "description": "For woodchops, rows & pallof press"
+        },
+        "pullup_bar": {
+          "name": "Pull-Up Bar",
+          "description": "For pull-ups & inverted rows"
+        },
+        "bench": {
+          "name": "Adjustable Bench",
+          "description": "Flat & incline positions"
+        },
+        "weighted_bat": {
+          "name": "Weighted Training Bat",
+          "description": "For overload training"
+        },
+        "speed_bat": {
+          "name": "Speed Training Bat",
+          "description": "For underload training"
+        },
+        "resistance_bands": {
+          "name": "Resistance Bands",
+          "description": "For hip, core & rotational work"
+        },
+        "med_ball": {
+          "name": "Medicine Ball",
+          "description": "6-10 lb for rotational power"
+        },
+        "box": {
+          "name": "Plyo Box/Step",
+          "description": "For box squats & step-ups"
+        },
+        "landmine": {
+          "name": "Landmine Attachment",
+          "description": "For rotational pressing"
+        }
+      },
+      "pitching": {
+        "glove": {
+          "name": "Pitching Glove",
+          "description": "Game-ready pitching glove"
+        },
+        "balls": {
+          "name": "Baseballs/Softballs",
+          "description": "Minimum 24 balls for volume work"
+        },
+        "mound": {
+          "name": "Pitching Mound",
+          "description": "Regulation or portable mound"
+        },
+        "jbands": {
+          "name": "J-Bands/Resistance Bands",
+          "description": "For daily arm care routine"
+        },
+        "target": {
+          "name": "Strike Zone Target",
+          "description": "For command work"
+        },
+        "barbell": {
+          "name": "Barbell & Plates",
+          "description": "For compound lifts"
+        },
+        "dumbbells": {
+          "name": "Dumbbells",
+          "description": "Various weights 10-80+ lbs"
+        },
+        "cable_machine": {
+          "name": "Cable Machine",
+          "description": "For rotational and pulling exercises"
+        },
+        "pullup_bar": {
+          "name": "Pull-Up Bar",
+          "description": "For pull-ups and hanging work"
+        },
+        "bench": {
+          "name": "Adjustable Bench",
+          "description": "Flat and incline positions"
+        },
+        "trap_bar": {
+          "name": "Trap/Hex Bar",
+          "description": "For deadlifts"
+        },
+        "weighted_balls": {
+          "name": "Weighted Baseballs",
+          "description": "Set of 4oz, 5oz, 7oz, 9oz, 11oz"
+        },
+        "plyocare": {
+          "name": "PlyoCare Balls",
+          "description": "Set of 5 weighted plyo balls"
+        },
+        "foam_roller": {
+          "name": "Foam Roller",
+          "description": "For soft tissue work"
+        },
+        "med_ball": {
+          "name": "Medicine Ball",
+          "description": "4-10 lb for rotational power"
+        },
+        "radar_gun": {
+          "name": "Radar Gun/Pocket Radar",
+          "description": "For velocity tracking"
+        },
+        "rice_bucket": {
+          "name": "Rice Bucket",
+          "description": "For forearm and grip work"
+        },
+        "lacrosse_ball": {
+          "name": "Lacrosse Ball",
+          "description": "For trigger point release"
+        }
+      }
+    }
   }
 }

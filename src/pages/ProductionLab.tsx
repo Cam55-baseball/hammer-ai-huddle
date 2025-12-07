@@ -44,6 +44,8 @@ const generateCycleWeeks = (cycleId: number): WeekData[] => {
     const days: DayData[] = [
       {
         day: 'day1',
+        titleKey: 'day1StrengthBatSpeed',
+        titleParams: { workout: workoutKeys[workoutIndex1] },
         title: `Day 1: Full Body Strength ${workoutKeys[workoutIndex1]} + Bat Speed`,
         exercises: [
           ...cycle.workouts[workoutKeys[workoutIndex1]],
@@ -52,21 +54,26 @@ const generateCycleWeeks = (cycleId: number): WeekData[] => {
       },
       {
         day: 'day2',
+        titleKey: 'day2Rest',
         title: 'Day 2: Rest',
         exercises: [{ name: 'Active Recovery', type: 'skill' as const, description: 'Light stretching, foam rolling, or complete rest. Allow muscles to recover from strength training.' }],
       },
       {
         day: 'day3',
+        titleKey: 'day3BatSpeed',
         title: 'Day 3: Bat Speed Development',
         exercises: getBatSpeedExercises(batSpeedDays[w % 4]),
       },
       {
         day: 'day4',
+        titleKey: 'day4Rest',
         title: 'Day 4: Rest',
         exercises: [{ name: 'Active Recovery', type: 'skill' as const, description: 'Light stretching, foam rolling, or complete rest. Prepare for next strength session.' }],
       },
       {
         day: 'day5',
+        titleKey: 'day5StrengthBatSpeed',
+        titleParams: { workout: workoutKeys[workoutIndex2] },
         title: `Day 5: Full Body Strength ${workoutKeys[workoutIndex2]} + Bat Speed`,
         exercises: [
           ...cycle.workouts[workoutKeys[workoutIndex2]],
@@ -341,7 +348,7 @@ export default function ProductionLab() {
                                 <Lock className="h-4 w-4 text-muted-foreground" />
                               )}
                               <span className={`text-sm ${!isAccessible ? 'text-muted-foreground' : ''}`}>
-                                {day.title}
+                                {day.titleKey ? t(`workoutContent.dayTitles.${day.titleKey}`, day.titleParams || {}) : day.title}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
