@@ -2867,7 +2867,11 @@
         "net": { "name": "ヒッティングネット", "description": "スイング練習用" },
         "pullup_bar": { "name": "プルアップバー", "description": "プルアップと懸垂用" },
         "bench": { "name": "ベンチ", "description": "ベンチプレスとサポートエクササイズ用" },
-        "cable_machine": { "name": "ケーブルマシン", "description": "ケーブルエクササイズ用（またはバンド代替）" }
+        "cable_machine": { "name": "ケーブルマシン", "description": "ケーブルエクササイズ用（またはバンド代替）" },
+        "weighted_bat": { "name": "ウェイテッドトレーニングバット", "description": "オーバーロードストレングストレーニング用" },
+        "med_ball": { "name": "メディシンボール", "description": "回転パワードリル用" },
+        "box": { "name": "プライオボックス/ステップ", "description": "ボックスジャンプとステップアップ用" },
+        "landmine": { "name": "ランドマインアタッチメント", "description": "ランドマインプレスとローテーション用" }
       },
       "pitching": {
         "glove": { "name": "ピッチンググローブ", "description": "ゲームレディのピッチンググローブ" },
@@ -2887,7 +2891,10 @@
         "med_ball": { "name": "メディシンボール", "description": "回転パワードリル用" },
         "foam_roller": { "name": "フォームローラー", "description": "回復とセルフマッサージ用" },
         "target": { "name": "ピッチングターゲット", "description": "コマンドワーク用ターゲット" },
-        "towel": { "name": "タオル", "description": "タオルドリルとアームケア用" }
+        "towel": { "name": "タオル", "description": "タオルドリルとアームケア用" },
+        "plyocare": { "name": "プライオケアボール", "description": "アームケアとベロシティトレーニング用" },
+        "rice_bucket": { "name": "ライスバケット", "description": "前腕と手の強化用" },
+        "lacrosse_ball": { "name": "ラクロスボール", "description": "トリガーポイントと筋膜リリース用" }
       }
     }
   }

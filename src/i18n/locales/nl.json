@@ -2837,7 +2837,11 @@
         "net": { "name": "Batting Net", "description": "Voor swing praktijk" },
         "pullup_bar": { "name": "Pull-Up Bar", "description": "Voor pull-ups en hangoefeningen" },
         "bench": { "name": "Bank", "description": "Voor bankdrukken en ondersteunende oefeningen" },
-        "cable_machine": { "name": "Kabel Machine", "description": "Voor kabel oefeningen (of band alternatief)" }
+        "cable_machine": { "name": "Kabel Machine", "description": "Voor kabel oefeningen (of band alternatief)" },
+        "weighted_bat": { "name": "Verzwaarde Trainingsknuppel", "description": "Voor overload kracht training" },
+        "med_ball": { "name": "Medicijnbal", "description": "Voor rotatie kracht oefeningen" },
+        "box": { "name": "Plyo Box/Step", "description": "Voor box jumps en step-ups" },
+        "landmine": { "name": "Landmine Hulpstuk", "description": "Voor landmine persen en rotaties" }
       },
       "pitching": {
         "glove": { "name": "Werper Handschoen", "description": "Wedstrijd-klare werper handschoen" },
@@ -2857,7 +2861,10 @@
         "med_ball": { "name": "Medicine Ball", "description": "Voor rotatie kracht oefeningen" },
         "foam_roller": { "name": "Foam Roller", "description": "Voor herstel en zelf-massage" },
         "target": { "name": "Pitching Target", "description": "Doel voor commando werk" },
-        "towel": { "name": "Handdoek", "description": "Voor handdoek oefeningen en armverzorging" }
+        "towel": { "name": "Handdoek", "description": "Voor handdoek oefeningen en armverzorging" },
+        "plyocare": { "name": "PlyoCare Ballen", "description": "Voor armverzorging en snelheid training" },
+        "rice_bucket": { "name": "Rijstemmer", "description": "Voor onderarm en hand versterking" },
+        "lacrosse_ball": { "name": "Lacrossebal", "description": "Voor trigger point en fascia release" }
       }
     }
   }
