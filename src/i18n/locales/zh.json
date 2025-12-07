@@ -2808,7 +2808,11 @@
         "net": { "name": "击球网", "description": "挥棒练习用" },
         "pullup_bar": { "name": "引体向上杠", "description": "引体向上和悬垂用" },
         "bench": { "name": "训练凳", "description": "卧推和辅助练习用" },
-        "cable_machine": { "name": "缆绳机", "description": "缆绳练习用（或弹力带替代）" }
+        "cable_machine": { "name": "缆绳机", "description": "缆绳练习用（或弹力带替代）" },
+        "weighted_bat": { "name": "加重训练球棒", "description": "超负荷力量训练用" },
+        "med_ball": { "name": "药球", "description": "旋转力量训练用" },
+        "box": { "name": "跳箱/踏板", "description": "箱跳和踏板上步用" },
+        "landmine": { "name": "地雷杠配件", "description": "地雷推举和旋转用" }
       },
       "pitching": {
         "glove": { "name": "投手手套", "description": "比赛用投手手套" },
@@ -2828,7 +2832,10 @@
         "med_ball": { "name": "药球", "description": "旋转力量训练用" },
         "foam_roller": { "name": "泡沫轴", "description": "恢复和自我按摩用" },
         "target": { "name": "投球靶", "description": "控球练习用靶" },
-        "towel": { "name": "毛巾", "description": "毛巾训练和手臂护理用" }
+        "towel": { "name": "毛巾", "description": "毛巾训练和手臂护理用" },
+        "plyocare": { "name": "普莱欧球", "description": "手臂护理和速度训练用" },
+        "rice_bucket": { "name": "米桶", "description": "前臂和手部强化用" },
+        "lacrosse_ball": { "name": "长曲棍球", "description": "触发点和筋膜放松用" }
       }
     }
   }

@@ -2824,7 +2824,11 @@
         "net": { "name": "히팅 네트", "description": "스윙 연습용" },
         "pullup_bar": { "name": "풀업 바", "description": "풀업과 행잉용" },
         "bench": { "name": "벤치", "description": "벤치 프레스와 보조 운동용" },
-        "cable_machine": { "name": "케이블 머신", "description": "케이블 운동용 (또는 밴드 대체)" }
+        "cable_machine": { "name": "케이블 머신", "description": "케이블 운동용 (또는 밴드 대체)" },
+        "weighted_bat": { "name": "가중 훈련 배트", "description": "오버로드 스트렝스 훈련용" },
+        "med_ball": { "name": "메디신 볼", "description": "회전 파워 드릴용" },
+        "box": { "name": "플라이오 박스/스텝", "description": "박스 점프와 스텝업용" },
+        "landmine": { "name": "랜드마인 어태치먼트", "description": "랜드마인 프레스와 로테이션용" }
       },
       "pitching": {
         "glove": { "name": "투수 글러브", "description": "경기용 투수 글러브" },
@@ -2844,7 +2848,10 @@
         "med_ball": { "name": "메디신 볼", "description": "회전 파워 드릴용" },
         "foam_roller": { "name": "폼 롤러", "description": "회복과 자가 마사지용" },
         "target": { "name": "피칭 타겟", "description": "커맨드 작업용 타겟" },
-        "towel": { "name": "타월", "description": "타월 드릴과 팔 관리용" }
+        "towel": { "name": "타월", "description": "타월 드릴과 팔 관리용" },
+        "plyocare": { "name": "플라이오케어 볼", "description": "팔 관리와 벨로시티 훈련용" },
+        "rice_bucket": { "name": "라이스 버킷", "description": "전완과 손 강화용" },
+        "lacrosse_ball": { "name": "라크로스 볼", "description": "트리거 포인트와 근막 릴리스용" }
       }
     }
   }
