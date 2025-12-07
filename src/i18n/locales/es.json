@@ -2701,5 +2701,895 @@
       "comeback_kid": "El Regreso",
       "comeback_kid_desc": "Completa un desafío después de fallar uno"
     }
+  },
+  "workoutContent": {
+    "weekTitle": "Semana {{number}}",
+    "dayTitles": {
+      "day1StrengthBatSpeed": "Día 1: Fuerza Total {{workout}} + Velocidad de Bate",
+      "day2Rest": "Día 2: Descanso",
+      "day3BatSpeed": "Día 3: Desarrollo de Velocidad de Bate",
+      "day4Rest": "Día 4: Descanso",
+      "day5StrengthBatSpeed": "Día 5: Fuerza Total {{workout}} + Velocidad de Bate",
+      "day1StrengthArmCare": "Día 1: Fuerza {{workout}} + Cuidado del Brazo",
+      "day2RestRecovery": "Día 2: Descanso y Recuperación",
+      "day3VelocityDev": "Día 3: Desarrollo de Velocidad",
+      "day3PitchDev": "Día 3: Desarrollo de Lanzamientos",
+      "day3ThrowingDev": "Día 3: Desarrollo de Tiro",
+      "day4RestRecovery": "Día 4: Descanso y Recuperación",
+      "day5StrengthCommand": "Día 5: Fuerza {{workout}} + Trabajo de Control"
+    },
+    "activeRecovery": {
+      "name": "Recuperación Activa",
+      "hittingDesc": "Estiramientos ligeros, rodillo de espuma o descanso completo. Permite que los músculos se recuperen del entrenamiento de fuerza.",
+      "pitchingDesc": "Estiramientos ligeros, rodillo de espuma o descanso completo. Permite que los músculos y el brazo se recuperen. Trabajo ligero con J-band opcional.",
+      "pitchingDesc2": "Estiramientos ligeros, rodillo de espuma o descanso completo. Prepárate para la próxima sesión de fuerza. Se recomienda cuidado del brazo con J-band."
+    },
+    "exercises": {
+      "trap_bar_deadlift": {
+        "name": "Peso Muerto con Barra Hexagonal",
+        "description": "Párate dentro de la barra hexagonal, agarra las manijas a los lados, empuja a través de los talones para ponerte de pie. Caderas y rodillas se extienden simultáneamente. Concéntrico explosivo, descenso controlado.",
+        "notes": "Extensión completa de cadera arriba"
+      },
+      "barbell_back_squat": {
+        "name": "Sentadilla con Barra",
+        "description": "Barra en los trapecios superiores, pies al ancho de hombros. Desciende hasta que el pliegue de la cadera esté por debajo de la rodilla, luego explota hacia arriba a través del mediopié. El pecho permanece alto.",
+        "notes": "Rompe paralelo, empuje explosivo"
+      },
+      "bench_press": {
+        "name": "Press de Banca",
+        "description": "Acuéstate en el banco con ligero arco, agarra la barra justo fuera de los hombros. Baja al pecho medio con control, pausa brevemente, luego presiona explosivamente hasta bloqueo.",
+        "notes": "Pausa en el pecho, empuja a través de talones"
+      },
+      "barbell_row": {
+        "name": "Remo con Barra",
+        "description": "Bisagra de cadera a 45°, agarra la barra fuera de las rodillas. Tira hacia las costillas inferiores mientras retraes los omóplatos. Mantén el torso estable - sin balanceo.",
+        "notes": "Aprieta 1s arriba, forma estricta"
+      },
+      "landmine_rotational_press": {
+        "name": "Press Rotacional con Landmine",
+        "description": "Barra anclada en esquina. Comienza al hombro con ambas manos, rota las caderas explosivamente mientras presionas diagonalmente. El core impulsa el movimiento.",
+        "notes": "Cada lado, rotación completa de cadera"
+      },
+      "isometric_wall_sit": {
+        "name": "Sentadilla Isométrica en Pared",
+        "description": "Espalda plana contra la pared, deslízate hasta que los muslos estén paralelos al suelo. Presiona la espalda baja en la pared, contrae los cuádriceps al máximo.",
+        "notes": "Muslos paralelos, máxima tensión"
+      },
+      "isometric_pallof_hold": {
+        "name": "Pallof Isométrico",
+        "description": "Cable/banda a altura del pecho, brazos extendidos hacia adelante. Resiste la tracción rotacional con tu core - la anti-rotación es el objetivo.",
+        "notes": "Cada lado, resiste la rotación"
+      },
+      "front_squat": {
+        "name": "Sentadilla Frontal",
+        "description": "Barra en deltoides frontales con agarre limpio o brazos cruzados. Mantén codos altos, desciende profundo con torso erguido, empuja explosivamente.",
+        "notes": "Codos arriba, profundidad completa"
+      },
+      "incline_db_press": {
+        "name": "Press Inclinado con Mancuernas",
+        "description": "En banco a 30°, presiona mancuernas desde el hombro hasta bloqueo completo. Baja con control, pausa breve abajo, explota arriba.",
+        "notes": "30° de inclinación, ROM completo"
+      },
+      "weighted_pullup": {
+        "name": "Dominada con Peso",
+        "description": "Añade peso con cinturón o chaleco. Desde colgado muerto, tira hasta que la barbilla pase la barra. Controla el descenso, pausa abajo.",
+        "notes": "Inicio en colgado muerto, añade peso"
+      },
+      "romanian_deadlift": {
+        "name": "Peso Muerto Rumano",
+        "description": "Barra a altura de cadera, empuja caderas hacia atrás manteniendo ligera flexión de rodilla. Baja hasta sentir estiramiento en isquiotibiales, luego empuja caderas adelante.",
+        "notes": "Bisagra de cadera, estiramiento de isquios"
+      },
+      "cable_woodchop_high_low": {
+        "name": "Leñador con Cable Alto-Bajo",
+        "description": "Cable alto, pies al ancho de hombros. Tira diagonalmente hacia abajo cruzando el cuerpo con rotación de cadera. Brazos extendidos, el core impulsa.",
+        "notes": "Cada lado, rotación explosiva"
+      },
+      "isometric_pushup_hold": {
+        "name": "Flexión Isométrica",
+        "description": "Baja a posición media de flexión (codos a 90°). Mantén sin hundirte ni subir. Contrae pecho, tríceps y core al máximo.",
+        "notes": "Posición media, máxima tensión"
+      },
+      "isometric_single_glute_bridge": {
+        "name": "Puente de Glúteo Unilateral Isométrico",
+        "description": "Un pie apoyado, otra pierna extendida. Empuja cadera arriba, mantén en línea recta de rodilla a hombro. Máxima contracción de glúteo.",
+        "notes": "Cada pierna, cadera arriba fija"
+      },
+      "box_squat": {
+        "name": "Sentadilla en Caja",
+        "description": "Sentadilla hacia atrás a caja a altura paralela. Pausa breve en caja con tensión mantenida, luego explota arriba. Enseña mecánica correcta de cadera.",
+        "notes": "Pausa en caja, explota arriba"
+      },
+      "close_grip_bench": {
+        "name": "Press de Banca Agarre Cerrado",
+        "description": "Agarra la barra al ancho de hombros, codos a 45°. Baja al pecho inferior, pausa, presiona explosivamente. Enfatiza fuerza de tríceps.",
+        "notes": "Codos pegados, enfoque en tríceps"
+      },
+      "single_arm_db_row": {
+        "name": "Remo Unilateral con Mancuerna",
+        "description": "Una mano y rodilla en banco, pie opuesto plantado amplio. Rema mancuerna hacia cadera resistiendo rotación del torso.",
+        "notes": "Cada lado, enfoque anti-rotación"
+      },
+      "bulgarian_split_squat": {
+        "name": "Sentadilla Búlgara",
+        "description": "Pie trasero elevado en banco detrás. Baja hasta que muslo delantero esté paralelo, empuja a través de talón delantero. Torso erguido.",
+        "notes": "Cada pierna, pie trasero elevado"
+      },
+      "pallof_press": {
+        "name": "Pallof Press",
+        "description": "Cable a altura de pecho, de pie perpendicular. Presiona manos adelante lentamente, mantén 3s en extensión resistiendo rotación.",
+        "notes": "Mantén 3s en extensión completa"
+      },
+      "isometric_inverted_row": {
+        "name": "Remo Invertido Isométrico",
+        "description": "Bajo la barra a altura de pecho, tira y mantén con pecho cerca de la barra. Cuerpo en línea recta de tobillos a hombros.",
+        "notes": "Pecho a posición de barra"
+      },
+      "isometric_side_plank": {
+        "name": "Plancha Lateral Isométrica",
+        "description": "Sobre codo y lado del pie. Mantén cuerpo en línea recta con caderas elevadas. Empuja activamente a través del codo apoyado.",
+        "notes": "Cada lado, caderas altas"
+      },
+      "sumo_deadlift": {
+        "name": "Peso Muerto Sumo",
+        "description": "Postura amplia, agarre dentro de rodillas. Empuja a través de talones, empuja rodillas afuera, pecho alto. Bloquea con caderas adelante.",
+        "notes": "Postura amplia, caderas adelante"
+      },
+      "overhead_press": {
+        "name": "Press de Hombro",
+        "description": "Barra al frente de hombros, agarre justo fuera de hombros. Contrae core, presiona recto arriba moviendo cabeza atrás luego adelante. Bloqueo completo.",
+        "notes": "Press estricto, bloqueo completo"
+      },
+      "lat_pulldown": {
+        "name": "Jalón al Pecho",
+        "description": "Agarre amplio, tira hacia pecho superior arqueando ligeramente. Aprieta dorsales abajo, controla el retorno. Estiramiento completo arriba.",
+        "notes": "Agarre amplio, aprieta dorsales"
+      },
+      "walking_lunge": {
+        "name": "Zancada Caminando",
+        "description": "Mancuernas a los lados, da paso adelante en zancada profunda. Empuja a través de talón delantero para dar siguiente paso.",
+        "notes": "Cada pierna, movimiento continuo"
+      },
+      "medball_rotational_slam": {
+        "name": "Slam Rotacional con Balón Medicinal",
+        "description": "Balón en cadera, rota explosivamente y golpea balón diagonalmente hacia abajo. Recupera, reinicia, repite. Máxima potencia rotacional.",
+        "notes": "Cada lado, máxima intención"
+      },
+      "isometric_split_squat": {
+        "name": "Sentadilla Dividida Isométrica",
+        "description": "Posición baja de sentadilla dividida, muslo delantero paralelo. Mantén posición con torso erguido y glúteos contraídos.",
+        "notes": "Cada pierna, posición baja"
+      },
+      "isometric_hollow_body": {
+        "name": "Hollow Body Isométrico",
+        "description": "Acostado boca arriba, espalda baja presionada al suelo. Piernas extendidas ligeramente elevadas, brazos sobre cabeza. Mantén sin romper core.",
+        "notes": "Espalda baja presionada abajo"
+      },
+      "incline_barbell_press": {
+        "name": "Press Inclinado con Barra",
+        "description": "En banco a 30° con barra. Baja al pecho superior, pausa, empuja explosivamente. Énfasis en pecho superior.",
+        "notes": "30° de inclinación, pesado"
+      },
+      "chest_supported_row": {
+        "name": "Remo con Apoyo de Pecho",
+        "description": "Pecho en banco inclinado, rema mancuernas o barra a costillas. Elimina impulso, fuerza pura de espalda.",
+        "notes": "Sin impulso, forma estricta"
+      },
+      "db_shoulder_press": {
+        "name": "Press de Hombro con Mancuernas",
+        "description": "Sentado o de pie, presiona mancuernas desde hombro hasta bloqueo completo. Controla el descenso.",
+        "notes": "Bloqueo completo arriba"
+      },
+      "cable_woodchop_low_high": {
+        "name": "Leñador con Cable Bajo-Alto",
+        "description": "Cable bajo. Tira diagonalmente hacia arriba cruzando cuerpo con rotación explosiva de cadera.",
+        "notes": "Cada lado, explosivo"
+      },
+      "isometric_dead_hang": {
+        "name": "Colgado Muerto Isométrico",
+        "description": "Cuélgate de la barra con brazos rectos. Trabaja agarre, estira dorsales, descomprime columna.",
+        "notes": "Agarre + salud del hombro"
+      },
+      "db_bench_press": {
+        "name": "Press de Banca con Mancuernas",
+        "description": "Press con brazos independientes para balance y estabilidad. Rango completo de movimiento, pausa abajo.",
+        "notes": "Trabajo independiente de brazos"
+      },
+      "pallof_press_step": {
+        "name": "Pallof Press con Paso",
+        "description": "Anti-rotación dinámica. Presiona manos adelante mientras das paso lateral, aumentando el brazo de palanca.",
+        "notes": "Cada lado, paso afuera"
+      },
+      "isometric_anti_rotation": {
+        "name": "Anti-Rotación Isométrica",
+        "description": "Cable/banda a altura de pecho. Brazos extendidos, resiste la tracción. Mantenimiento de estabilidad del core.",
+        "notes": "Cada lado, estabilidad de core"
+      },
+      "glute_bridge_march": {
+        "name": "Marcha en Puente de Glúteo",
+        "description": "Posición de puente, alterna levantando rodillas mientras mantienes caderas niveladas. Estabilidad dinámica de cadera.",
+        "notes": "Cada pierna, caderas niveladas"
+      },
+      "step_up": {
+        "name": "Step-Up",
+        "description": "Step-up en caja alta con mancuernas. Empuja a través de pierna superior, mínimo empuje de pierna trasera.",
+        "notes": "Cada pierna, caja alta"
+      },
+      "plank_shoulder_tap": {
+        "name": "Plancha con Toque de Hombro",
+        "description": "Posición de plancha, alterna tocando hombros minimizando rotación de cadera. Control del core.",
+        "notes": "Cada lado, caderas estables"
+      },
+      "isometric_hip_flexor": {
+        "name": "Flexor de Cadera Isométrico",
+        "description": "De pie, tira rodilla hacia pecho contra resistencia. Mantén con flexor de cadera contraído al máximo.",
+        "notes": "Cada pierna, salud de cadera"
+      },
+      "isometric_lunge_hold": {
+        "name": "Zancada Isométrica",
+        "description": "Posición baja de zancada, mantén con tensión. Desarrolla fuerza posicional.",
+        "notes": "Cada pierna, posición baja"
+      },
+      "deficit_trap_bar": {
+        "name": "Peso Muerto Hexagonal con Déficit",
+        "description": "Párate en plataforma de 5-8cm dentro de barra hexagonal. ROM aumentado demanda mayor impulso de cadera y piernas.",
+        "notes": "5-8cm de déficit, explosivo"
+      },
+      "pause_squat": {
+        "name": "Sentadilla con Pausa",
+        "description": "Pausa de 3 segundos en el fondo de la sentadilla. Elimina reflejo de estiramiento, construye fuerza desde parada.",
+        "notes": "Pausa 3s abajo"
+      },
+      "spoto_press": {
+        "name": "Press Spoto",
+        "description": "Pausa a 2-3cm del pecho por 2 segundos, luego presiona. Construye fuerza en punto de estancamiento.",
+        "notes": "2-3cm del pecho, pausa 2s"
+      },
+      "pendlay_row": {
+        "name": "Remo Pendlay",
+        "description": "Desde el suelo cada rep, remo explosivo al pecho inferior. Inicio desde parada construye poder puro de tracción.",
+        "notes": "Parada muerta cada rep"
+      },
+      "single_leg_rdl": {
+        "name": "Peso Muerto Rumano Unilateral",
+        "description": "Bisagra en una pierna, otra pierna se extiende atrás. Balance y trabajo de isquiotibiales.",
+        "notes": "Cada pierna, enfoque en balance"
+      },
+      "isometric_pause_squat": {
+        "name": "Sentadilla con Pausa Isométrica",
+        "description": "Mantén en el fondo de la sentadilla por duración extendida. Construye fuerza y estabilidad posicional.",
+        "notes": "Mantén extendido, máxima tensión"
+      },
+      "isometric_loaded_stretch": {
+        "name": "Estiramiento Cargado Isométrico",
+        "description": "Mantén posición estirada bajo carga. Desarrolla fuerza a través de rango completo de movimiento.",
+        "notes": "Estiramiento controlado, mantén tensión"
+      },
+      "front_squat_pause": {
+        "name": "Sentadilla Frontal con Pausa",
+        "description": "Pausa de 2 segundos abajo. Estabilidad de core con carga pesada.",
+        "notes": "Pausa 2s, codos arriba"
+      },
+      "z_press": {
+        "name": "Z-Press",
+        "description": "Press sentado en el suelo. Elimina impulso de piernas, fuerza pura de tren superior.",
+        "notes": "Piernas extendidas, press estricto"
+      },
+      "cable_low_high_rotation": {
+        "name": "Rotación Bajo-Alto con Cable",
+        "description": "Patrón de rotación hacia arriba con participación completa de cadera.",
+        "notes": "Cada lado, rotación completa"
+      },
+      "isometric_dead_bug": {
+        "name": "Dead Bug Isométrico",
+        "description": "Extremidades extendidas, espalda baja presionada abajo. Mantén estabilidad de core.",
+        "notes": "Brazo/pierna opuestos extendidos"
+      },
+      "barbell_hip_thrust": {
+        "name": "Hip Thrust con Barra",
+        "description": "Barra sobre caderas, empuja caderas arriba. Máxima potencia de glúteo para fase de impulso.",
+        "notes": "Extensión completa, aprieta arriba"
+      },
+      "half_kneel_anti_rotation": {
+        "name": "Anti-Rotación de Rodilla con Cable",
+        "description": "Posición de media rodilla, cable a altura de pecho, resiste rotación. Entrena estabilidad del tronco.",
+        "notes": "Cada lado, postura erguida"
+      },
+      "isometric_glute_bridge": {
+        "name": "Puente de Glúteo Isométrico",
+        "description": "Caderas elevadas, una o dos piernas. Resistencia de glúteo para activación repetida de fase de impulso.",
+        "notes": "Extensión completa, máximo apriete"
+      },
+      "pushup_variations": {
+        "name": "Variaciones de Flexión",
+        "description": "Flexiones estándar, diamante o arquero. Estabilidad de hombro con control de peso corporal.",
+        "notes": "ROM completo, core contraído"
+      },
+      "face_pulls": {
+        "name": "Face Pulls",
+        "description": "Cable a altura de cara, tira hacia orejas con rotación externa. Crucial para salud del hombro posterior.",
+        "notes": "Codos altos, rotación externa al final"
+      },
+      "hip_thrust": {
+        "name": "Hip Thrust",
+        "description": "Hip thrusts pesados para potencia de glúteo. Producción de fuerza máxima en fase de impulso.",
+        "notes": "Carga pesada, extensión completa"
+      },
+      "medball_scoop_toss": {
+        "name": "Lanzamiento de Cuchara con Balón",
+        "description": "Extensión explosiva de cadera con lanzamiento de balón medicinal. Ejercicio de transferencia de potencia.",
+        "notes": "Máxima intención, enfoque en extensión de cadera"
+      },
+      "back_squat": {
+        "name": "Sentadilla Trasera",
+        "description": "Sentadillas pesadas para fuerza de piernas. Profundidad completa con descenso controlado.",
+        "notes": "Profundo, reps controladas"
+      },
+      "barbell_bench_press": {
+        "name": "Press de Banca con Barra",
+        "description": "Press pesado para potencia de tren superior. Fuerza de pecho y tríceps para aceleración.",
+        "notes": "Pausa en pecho, empuje explosivo"
+      },
+      "half_kneel_chop": {
+        "name": "Leñador de Media Rodilla",
+        "description": "Potencia rotacional desde media rodilla. Integración de cadera y core.",
+        "notes": "Cada lado, explosivo"
+      },
+      "half_kneel_lift": {
+        "name": "Elevación de Media Rodilla",
+        "description": "Patrón de elevación bajo-alto desde media rodilla.",
+        "notes": "Cada lado, rango completo"
+      },
+      "lateral_lunge": {
+        "name": "Zancada Lateral",
+        "description": "Fuerza lateral para movilidad de cadera y fuerza de aductores.",
+        "notes": "Cada pierna, zancada profunda"
+      },
+      "face_pulls_ext_rot": {
+        "name": "Face Pulls con Rotación Externa",
+        "description": "Rotación externa añadida en contracción máxima. Máximo trabajo del hombro posterior.",
+        "notes": "Rotación externa al final"
+      },
+      "single_arm_landmine": {
+        "name": "Press Landmine Unilateral",
+        "description": "Press unilateral con elemento rotacional. Demanda de estabilidad de core.",
+        "notes": "Cada brazo, base estable"
+      },
+      "eccentric_trap_bar": {
+        "name": "Peso Muerto Hexagonal Excéntrico",
+        "description": "Fase de bajada de 5 segundos. Máxima tensión muscular durante excéntrico.",
+        "notes": "5s negativo, controlado"
+      },
+      "eccentric_squat": {
+        "name": "Sentadilla Excéntrica",
+        "description": "Descenso de 5 segundos, explota arriba. Carga muscular excéntrica.",
+        "notes": "5s bajando, rápido arriba"
+      },
+      "eccentric_bench": {
+        "name": "Press de Banca Excéntrico",
+        "description": "Bajada de 5 segundos al pecho. Construye masa de pecho y tríceps.",
+        "notes": "5s negativo, pausa, presiona"
+      },
+      "eccentric_row": {
+        "name": "Remo Excéntrico",
+        "description": "Fase de bajada de 4 segundos. Hipertrofia muscular de espalda.",
+        "notes": "4s negativo, forma estricta"
+      },
+      "eccentric_rdl": {
+        "name": "RDL Excéntrico",
+        "description": "Bajada de 4 segundos con enfoque en isquiotibiales. Tiempo bajo tensión para crecimiento.",
+        "notes": "4s negativo, control"
+      },
+      "eccentric_bulgarian": {
+        "name": "Búlgara Excéntrica",
+        "description": "Descenso de 4 segundos cada rep. Enfoque en hipertrofia de cuádriceps.",
+        "notes": "4s bajando, cada pierna"
+      },
+      "eccentric_overhead": {
+        "name": "Press de Hombro Excéntrico",
+        "description": "Bajada de 4 segundos desde bloqueo. Construcción de masa de hombro.",
+        "notes": "4s negativo, estricto"
+      },
+      "eccentric_pullup": {
+        "name": "Dominada Excéntrica",
+        "description": "Bajada de 5 segundos desde arriba. Desarrollo de dorsales.",
+        "notes": "5s negativo, estiramiento completo"
+      },
+      "eccentric_single_row": {
+        "name": "Remo Unilateral Excéntrico",
+        "description": "Negativo de 4 segundos cada rep. Desarrollo unilateral de espalda.",
+        "notes": "4s negativo, cada lado"
+      },
+      "eccentric_step_down": {
+        "name": "Step-Down Excéntrico",
+        "description": "Bajada controlada unilateral desde caja. Fuerza excéntrica de cuádriceps.",
+        "notes": "Cada pierna, descenso controlado"
+      },
+      "eccentric_incline": {
+        "name": "Press Inclinado Excéntrico",
+        "description": "Bajada de 4 segundos en inclinado. Desarrollo de pecho superior.",
+        "notes": "4s negativo, 30° de inclinación"
+      },
+      "eccentric_lat_pulldown": {
+        "name": "Jalón al Pecho Excéntrico",
+        "description": "Retorno de 4 segundos al inicio. Carga excéntrica de dorsales.",
+        "notes": "4s negativo, estiramiento completo"
+      },
+      "eccentric_nordic": {
+        "name": "Nordic Curl Excéntrico",
+        "description": "Bajada excéntrica lenta de isquiotibiales. Enfoque en prevención de lesiones.",
+        "notes": "Controla descenso, atrapa abajo"
+      },
+      "eccentric_dip": {
+        "name": "Fondos Excéntricos",
+        "description": "Fase de bajada de 5 segundos. Desarrollo de tríceps y pecho.",
+        "notes": "5s negativo, estiramiento profundo"
+      },
+      "tempo_front_squat": {
+        "name": "Sentadilla Frontal con Tempo",
+        "description": "Descenso 4 segundos, pausa 2 segundos, explota arriba. Tiempo total bajo tensión.",
+        "notes": "Tempo 4-2-1"
+      },
+      "negative_pullup": {
+        "name": "Dominada Negativa",
+        "description": "Salta arriba, baja 6 segundos. Construye fuerza de tracción.",
+        "notes": "6s negativo, colgado completo"
+      },
+      "eccentric_lateral_lunge": {
+        "name": "Zancada Lateral Excéntrica",
+        "description": "Bajada de 4 segundos en zancada lateral. Desarrollo de aductores.",
+        "notes": "4s negativo, cada lado"
+      },
+      "landmine_press": {
+        "name": "Press Landmine",
+        "description": "Press unilateral con barra landmine. Press sobre cabeza amigable con escápula con elemento rotacional.",
+        "notes": "Cada brazo, core estable"
+      }
+    },
+    "batSpeed": {
+      "speed_swings_10": {
+        "name": "Swings de Velocidad - 10 Reps",
+        "description": "Swings a máximo esfuerzo con bate de juego. Enfoca en velocidad de bate sobre calidad de contacto.",
+        "notes": "Máxima intención, 10 reps"
+      },
+      "connection_ball": {
+        "name": "Ejercicio de Pelota de Conexión",
+        "description": "Aprieta pelota de espuma entre brazos y torso durante el swing. Mantiene conexión del tren superior.",
+        "notes": "Pelota entre bíceps y pecho"
+      },
+      "bat_behind_back": {
+        "name": "Rotaciones con Bate Atrás",
+        "description": "Sostén bate sobre hombros detrás de espalda. Practica rotación de cadera impulsando hombros.",
+        "notes": "Caderas lideran, core contraído"
+      },
+      "wrist_snap": {
+        "name": "Ejercicio de Snap de Muñeca",
+        "description": "Snaps rápidos de muñeca en punto de contacto. Desarrolla manos rápidas a través de la zona.",
+        "notes": "Snap en punto de contacto"
+      },
+      "resistance_band_swings": {
+        "name": "Swings con Banda de Resistencia",
+        "description": "Ata banda al bate para sobrecarga. Haz swing contra resistencia para potencia.",
+        "notes": "Lucha contra la banda, rotación completa"
+      },
+      "one_handed_swings": {
+        "name": "Swings con Una Mano",
+        "description": "Swings solo con mano superior o inferior. Desarrolla independencia de manos y control del bate.",
+        "notes": "Cada mano, swing controlado"
+      },
+      "quick_hands": {
+        "name": "Ejercicio de Manos Rápidas",
+        "description": "Compañero lanza pelotas desde corta distancia. Reacciones rápidas, swings cortos.",
+        "notes": "Swing rápido, ver la pelota"
+      },
+      "swing_speed_measure": {
+        "name": "Medición de Velocidad de Swing",
+        "description": "Rastrea velocidad de bate con analizador de swing. Registra progreso a lo largo del tiempo.",
+        "notes": "Rastrea mph, busca mejora"
+      },
+      "bat_waggle": {
+        "name": "Ejercicio de Movimiento de Bate",
+        "description": "Movimiento rápido de bate en stance. Mantiene manos sueltas y listas.",
+        "notes": "Mantente suelto, agarre ligero"
+      },
+      "speed_tee_15": {
+        "name": "Trabajo en Tee de Velocidad - 15 Swings",
+        "description": "Swings a máxima velocidad desde tee. Enfoca en velocidad máxima de bate, no mecánica.",
+        "notes": "15 swings, máximo esfuerzo"
+      },
+      "velocity_ladder": {
+        "name": "Escalera de Velocidad",
+        "description": "Incremento progresivo de velocidad: 70%, 80%, 90%, 100%. Construye hasta el máximo.",
+        "notes": "4 sets, intensidad creciente"
+      },
+      "bat_flip_speed": {
+        "name": "Ejercicio de Flip de Bate Rápido",
+        "description": "Voltea bate de punta a punta rápidamente. Desarrolla velocidad y control de muñeca.",
+        "notes": "Flips rápidos, atrapa limpio"
+      },
+      "no_stride_swings": {
+        "name": "Swings Sin Paso",
+        "description": "Swing desde stance sin paso. Aísla velocidad del tren superior.",
+        "notes": "Sin paso, enfoque tren superior"
+      },
+      "fast_hands_reaction": {
+        "name": "Ejercicio de Reacción Manos Rápidas",
+        "description": "Lanzamiento de pelota de color - solo haz swing a color específico. Toma de decisión rápida.",
+        "notes": "Reacciona y decide rápido"
+      },
+      "exit_speed_comp": {
+        "name": "Competencia de Velocidad de Salida",
+        "description": "Compite por la mayor velocidad de salida desde tee o soft toss.",
+        "notes": "Rastrea velocidad de salida, supera marca personal"
+      },
+      "rotational_snap": {
+        "name": "Ejercicio de Snap Rotacional",
+        "description": "Enfoca en rotación explosiva de cadera para iniciar swing. Caderas lideran manos.",
+        "notes": "Snaps de cadera, transfiere energía"
+      },
+      "light_bat_20": {
+        "name": "Bate Ligero Máxima Velocidad - 20 Swings",
+        "description": "Bate de velocidad o bate más ligero para entrenamiento de sobre-velocidad. Muévelo rápido.",
+        "notes": "20 swings, máxima velocidad"
+      },
+      "heavy_light_contrast": {
+        "name": "Contraste Pesado-Ligero - 10 Sets",
+        "description": "Alterna entre swings con bate pesado y ligero. Efecto de entrenamiento de contraste.",
+        "notes": "5 pesado, 5 ligero, repite"
+      },
+      "intent_tee_max": {
+        "name": "Trabajo en Tee de Intención - Máximo Esfuerzo",
+        "description": "Swings de máxima intención desde tee. Cada swing es esfuerzo de swing de juego.",
+        "notes": "100% de esfuerzo cada swing"
+      },
+      "barrel_speed_focus": {
+        "name": "Ejercicio de Enfoque en Velocidad del Barril",
+        "description": "Enfoca en aceleración del barril a través de la zona. Látigo del barril.",
+        "notes": "Siente el látigo del barril"
+      },
+      "overload_underload": {
+        "name": "Protocolo Sobrecarga/Subcarga",
+        "description": "Protocolo completo con bates pesados y de velocidad. Sesión de contraste completa.",
+        "notes": "Pesado → regular → ligero"
+      }
+    },
+    "armCare": {
+      "jband_internal": {
+        "name": "Rotación Interna con J-Band",
+        "description": "Codo a 90°, rota mano hacia adentro contra resistencia de banda. Movimiento controlado.",
+        "notes": "Codo estable, 15-20 reps"
+      },
+      "jband_external": {
+        "name": "Rotación Externa con J-Band",
+        "description": "Codo a 90°, rota mano hacia afuera contra resistencia de banda. Fortalece rotadores externos.",
+        "notes": "Lento y controlado, 15-20 reps"
+      },
+      "jband_scap": {
+        "name": "Retracción Escapular con J-Band",
+        "description": "Separa banda a altura de pecho. Aprieta omóplatos juntos.",
+        "notes": "Aprieta 2s al final, 15 reps"
+      },
+      "jband_high_pulls": {
+        "name": "Jalones Altos con J-Band",
+        "description": "Brazos sobre cabeza con banda, separa manteniendo tensión.",
+        "notes": "Mantén brazos altos, 15 reps"
+      },
+      "sleeper_stretch": {
+        "name": "Estiramiento Sleeper",
+        "description": "Acuéstate sobre lado de lanzar, empuja muñeca hacia suelo con otra mano. Estiramiento de rotación interna.",
+        "notes": "Mantén 30s, presión suave"
+      },
+      "crossbody_stretch": {
+        "name": "Estiramiento Cruzado",
+        "description": "Tira brazo de lanzar cruzando cuerpo con otro brazo. Estiramiento del hombro posterior.",
+        "notes": "Mantén 30s, siente estiramiento atrás del hombro"
+      },
+      "wrist_flex_ext": {
+        "name": "Flexión/Extensión de Muñeca",
+        "description": "Flexiona y extiende muñeca con peso ligero. Fuerza de antebrazo para salud del brazo.",
+        "notes": "15 reps cada dirección"
+      },
+      "forearm_pro_sup": {
+        "name": "Pronación/Supinación de Antebrazo",
+        "description": "Rota antebrazo palma arriba y palma abajo con peso ligero. Movilidad de muñeca.",
+        "notes": "15 reps, controla la rotación"
+      }
+    },
+    "velocity": {
+      "long_toss_60": {
+        "name": "Long Toss Calentamiento - 18m",
+        "description": "Tiros fáciles a 18 metros. Calentamiento de trayectoria del brazo, no enfocado en velocidad.",
+        "notes": "10-15 tiros, esfuerzo fácil"
+      },
+      "long_toss_90": {
+        "name": "Long Toss Construcción - 27m",
+        "description": "Aumenta distancia a 27 metros. Esfuerzo medio, construyendo velocidad del brazo.",
+        "notes": "10-15 tiros, esfuerzo medio"
+      },
+      "long_toss_120": {
+        "name": "Long Toss Extensión - 37m",
+        "description": "Extiende a 37 metros. Arco mayor permitido, construyendo fuerza del brazo.",
+        "notes": "10-15 tiros, esfuerzo aumentado"
+      },
+      "long_toss_max": {
+        "name": "Long Toss Máximo - 45-60m",
+        "description": "Distancia máxima cómoda. Tiros con arco para acondicionamiento del brazo.",
+        "notes": "10-15 tiros, esfuerzo máximo"
+      },
+      "pulldown_phase": {
+        "name": "Fase de Pull-Down",
+        "description": "Trabaja de regreso desde distancia máxima con tiros pull-down. Trayectoria de línea recta.",
+        "notes": "Regresa en incrementos de 10m"
+      },
+      "velo_day_gun": {
+        "name": "Día de Velocidad - Lecturas de Radar",
+        "description": "Sesión enfocada en velocidad con lecturas de radar. Rastrea máximo y promedio.",
+        "notes": "Registra velocidades, rastrea progreso"
+      },
+      "weighted_7oz": {
+        "name": "Pelota Pesada - 200g Sobrecarga",
+        "description": "Tiros con pelota pesada para fuerza del brazo. Intención controlada.",
+        "notes": "15-20 tiros, no esfuerzo máximo"
+      },
+      "weighted_5oz": {
+        "name": "Pelota Estándar - 140g",
+        "description": "Pelota de peso de juego o pelota pesada estándar de 140g.",
+        "notes": "15-20 tiros, siente trayectoria normal"
+      },
+      "weighted_4oz": {
+        "name": "Pelota Ligera - 110g Subcarga",
+        "description": "Pelota ligera para desarrollo de velocidad del brazo. Muévela rápido.",
+        "notes": "15-20 tiros, máxima velocidad del brazo"
+      },
+      "contrast_throws": {
+        "name": "Tiros de Contraste",
+        "description": "Alterna entre pelotas de sobrecarga y subcarga. Efecto de entrenamiento de contraste.",
+        "notes": "5 pesada, 5 ligera, repite 2-3x"
+      },
+      "crow_hop": {
+        "name": "Tiros con Crow Hop",
+        "description": "Tira con crow hop para momentum y timing. Construye velocidad del brazo.",
+        "notes": "Intención completa, buen timing"
+      },
+      "max_intent_bp": {
+        "name": "Bullpen de Máxima Intención",
+        "description": "Sesión de bullpen a máxima intención. Enfoque de velocidad como en juego.",
+        "notes": "15-25 lanzamientos, todo máximo esfuerzo"
+      },
+      "plyocare_pivot": {
+        "name": "PlyoCare Pivot Pickoffs",
+        "description": "Ejercicio de tiro pivot con pelota plyocare. Pies rápidos y acción del brazo.",
+        "notes": "10 cada dirección"
+      },
+      "plyocare_rollins": {
+        "name": "PlyoCare Roll-Ins",
+        "description": "Rueda hacia el tiro con pelota plyocare. Cadera lidera y brazo sigue.",
+        "notes": "10-15 tiros, siente cadera liderando"
+      },
+      "plyocare_reverse": {
+        "name": "PlyoCare Tiros Reversos",
+        "description": "Espalda al objetivo, rota y tira. Secuenciación de rotación.",
+        "notes": "10 tiros, rotación completa"
+      },
+      "rocker_throws": {
+        "name": "Tiros Rocker",
+        "description": "Balancea atrás y tira con momentum. Timing y transferencia de peso.",
+        "notes": "15 tiros, siente el momentum"
+      }
+    },
+    "pitchDev": {
+      "curve_grip": {
+        "name": "Trabajo de Agarre de Curva",
+        "description": "Practica variaciones de agarre, encontrando presión de dedos y orientación de costuras cómoda.",
+        "notes": "Encuentra tu agarre"
+      },
+      "curve_spin": {
+        "name": "Ejercicios de Spin de Curva",
+        "description": "Spins de corta distancia enfocando en rotación apretada y eje. Ve el spin.",
+        "notes": "Enfoca en spin apretado"
+      },
+      "curve_shape": {
+        "name": "Enfoque en Forma de Curva",
+        "description": "Curvas a distancia completa, enfocando en forma de quiebre y profundidad consistente.",
+        "notes": "Forma consistente"
+      },
+      "slider_grip": {
+        "name": "Trabajo de Agarre de Slider",
+        "description": "Practica agarre de slider con presión de dedo en costura interior. Encuentra tu zona de confort.",
+        "notes": "Encuentra comodidad de agarre"
+      },
+      "slider_wrist": {
+        "name": "Acción de Muñeca de Slider",
+        "description": "Aísla acción de release de slider. Spin de bala con punto apretado.",
+        "notes": "Spin de punto apretado"
+      },
+      "slider_tunnel": {
+        "name": "Ejercicio de Túnel de Slider",
+        "description": "Tira slider a través del túnel de recta, quiebre tardío para engaño.",
+        "notes": "Mismo túnel que recta"
+      },
+      "changeup_grip": {
+        "name": "Trabajo de Agarre de Cambio",
+        "description": "Circle change, 3 dedos u otras variaciones de agarre. Encuentra lo que funciona.",
+        "notes": "Agarre cómodo"
+      },
+      "changeup_arm_speed": {
+        "name": "Igualación de Velocidad de Brazo de Cambio",
+        "description": "Iguala velocidad de brazo de recta con agarre de cambio. El engaño es clave.",
+        "notes": "Misma velocidad de brazo"
+      },
+      "changeup_feel": {
+        "name": "Ejercicios de Sensación de Cambio",
+        "description": "Cambios de corta distancia desarrollando tacto y sensación para diferencial de velocidad.",
+        "notes": "Siente la diferencia de velocidad"
+      },
+      "quadrant_work": {
+        "name": "Trabajo de Cuadrantes",
+        "description": "Pega cuadrantes específicos de la zona de strike. Construye comando de precisión.",
+        "notes": "Pega tus spots"
+      },
+      "glove_arm_side": {
+        "name": "Lado de Guante/Lado de Brazo",
+        "description": "Trabaja ambos bordes del plato. Desarrolla comando horizontal.",
+        "notes": "Pega las esquinas"
+      },
+      "up_down_ladder": {
+        "name": "Escalera Arriba/Abajo",
+        "description": "Trabaja arriba y abajo de la zona. Desarrollo de comando vertical.",
+        "notes": "Varía altura"
+      },
+      "pitch_sequencing": {
+        "name": "Secuenciación de Lanzamientos",
+        "description": "Practica secuencias de 2 y 3 lanzamientos. Construye patrones como en juego.",
+        "notes": "Piensa como un juego"
+      },
+      "tunnel_drills": {
+        "name": "Ejercicios de Túnel",
+        "description": "Tira diferentes lanzamientos a través del mismo túnel. Desarrolla engaño.",
+        "notes": "Misma apariencia, diferente quiebre"
+      }
+    },
+    "equipment": {
+      "hitting": {
+        "bat": {
+          "name": "Bate de Juego",
+          "description": "Tu bate principal de juego"
+        },
+        "tee": {
+          "name": "Tee de Bateo",
+          "description": "Preferible altura ajustable"
+        },
+        "balls": {
+          "name": "Pelotas",
+          "description": "Mínimo 12 pelotas"
+        },
+        "net": {
+          "name": "Red de Bateo",
+          "description": "Para práctica interior/exterior"
+        },
+        "barbell": {
+          "name": "Barra y Discos",
+          "description": "Para levantamientos compuestos (barra de 20kg + discos)"
+        },
+        "dumbbells": {
+          "name": "Mancuernas",
+          "description": "Varios pesos 5-35+ kg"
+        },
+        "trap_bar": {
+          "name": "Barra Hexagonal",
+          "description": "Para peso muerto - esencial para el programa"
+        },
+        "cable_machine": {
+          "name": "Máquina de Cable",
+          "description": "Para leñadores, remos y pallof press"
+        },
+        "pullup_bar": {
+          "name": "Barra de Dominadas",
+          "description": "Para dominadas y remos invertidos"
+        },
+        "bench": {
+          "name": "Banco Ajustable",
+          "description": "Posiciones plana e inclinada"
+        },
+        "weighted_bat": {
+          "name": "Bate de Entrenamiento Pesado",
+          "description": "Para entrenamiento de sobrecarga"
+        },
+        "speed_bat": {
+          "name": "Bate de Velocidad",
+          "description": "Para entrenamiento de subcarga"
+        },
+        "resistance_bands": {
+          "name": "Bandas de Resistencia",
+          "description": "Para trabajo de cadera, core y rotacional"
+        },
+        "med_ball": {
+          "name": "Balón Medicinal",
+          "description": "3-5 kg para potencia rotacional"
+        },
+        "box": {
+          "name": "Caja/Step Pliométrico",
+          "description": "Para sentadillas en caja y step-ups"
+        },
+        "landmine": {
+          "name": "Accesorio Landmine",
+          "description": "Para press rotacional"
+        }
+      },
+      "pitching": {
+        "glove": {
+          "name": "Guante de Lanzar",
+          "description": "Guante listo para juego"
+        },
+        "balls": {
+          "name": "Pelotas",
+          "description": "Mínimo 24 pelotas para trabajo de volumen"
+        },
+        "mound": {
+          "name": "Montículo",
+          "description": "Montículo reglamentario o portátil"
+        },
+        "jbands": {
+          "name": "J-Bands/Bandas de Resistencia",
+          "description": "Para rutina diaria de cuidado del brazo"
+        },
+        "target": {
+          "name": "Objetivo de Zona de Strike",
+          "description": "Para trabajo de comando"
+        },
+        "barbell": {
+          "name": "Barra y Discos",
+          "description": "Para levantamientos compuestos"
+        },
+        "dumbbells": {
+          "name": "Mancuernas",
+          "description": "Varios pesos 5-35+ kg"
+        },
+        "cable_machine": {
+          "name": "Máquina de Cable",
+          "description": "Para ejercicios rotacionales y de tracción"
+        },
+        "pullup_bar": {
+          "name": "Barra de Dominadas",
+          "description": "Para dominadas y trabajo colgado"
+        },
+        "bench": {
+          "name": "Banco Ajustable",
+          "description": "Posiciones plana e inclinada"
+        },
+        "trap_bar": {
+          "name": "Barra Hexagonal",
+          "description": "Para peso muerto"
+        },
+        "weighted_balls": {
+          "name": "Pelotas Pesadas",
+          "description": "Set de 110g, 140g, 200g, 255g, 310g"
+        },
+        "plyocare": {
+          "name": "Pelotas PlyoCare",
+          "description": "Set de 5 pelotas plyo pesadas"
+        },
+        "foam_roller": {
+          "name": "Rodillo de Espuma",
+          "description": "Para trabajo de tejido blando"
+        },
+        "med_ball": {
+          "name": "Balón Medicinal",
+          "description": "2-5 kg para potencia rotacional"
+        },
+        "radar_gun": {
+          "name": "Radar/Pocket Radar",
+          "description": "Para seguimiento de velocidad"
+        },
+        "rice_bucket": {
+          "name": "Cubeta de Arroz",
+          "description": "Para trabajo de antebrazo y agarre"
+        },
+        "lacrosse_ball": {
+          "name": "Pelota de Lacrosse",
+          "description": "Para liberación de puntos gatillo"
+        }
+      }
+    }
   }
 }

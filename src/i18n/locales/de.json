@@ -2723,5 +2723,895 @@
       "comeback_kid": "Das Comeback",
       "comeback_kid_desc": "Schließe eine Herausforderung nach einem Fehlschlag ab"
     }
+  },
+  "workoutContent": {
+    "weekTitle": "Woche {{number}}",
+    "dayTitles": {
+      "day1StrengthBatSpeed": "Tag 1: Ganzkörper-Kraft {{workout}} + Schlaggeschwindigkeit",
+      "day2Rest": "Tag 2: Ruhe",
+      "day3BatSpeed": "Tag 3: Schlaggeschwindigkeits-Entwicklung",
+      "day4Rest": "Tag 4: Ruhe",
+      "day5StrengthBatSpeed": "Tag 5: Ganzkörper-Kraft {{workout}} + Schlaggeschwindigkeit",
+      "day1StrengthArmCare": "Tag 1: Kraft {{workout}} + Armpflege",
+      "day2RestRecovery": "Tag 2: Ruhe & Erholung",
+      "day3VelocityDev": "Tag 3: Geschwindigkeitsentwicklung",
+      "day3PitchDev": "Tag 3: Wurf-Entwicklung",
+      "day3ThrowingDev": "Tag 3: Wurf-Entwicklung",
+      "day4RestRecovery": "Tag 4: Ruhe & Erholung",
+      "day5StrengthCommand": "Tag 5: Kraft {{workout}} + Kontrollarbeit"
+    },
+    "activeRecovery": {
+      "name": "Aktive Erholung",
+      "hittingDesc": "Leichtes Dehnen, Faszienrolle oder vollständige Ruhe. Lassen Sie die Muskeln vom Krafttraining erholen.",
+      "pitchingDesc": "Leichtes Dehnen, Faszienrolle oder vollständige Ruhe. Lassen Sie Muskeln und Arm erholen. Leichte J-Band-Arbeit optional.",
+      "pitchingDesc2": "Leichtes Dehnen, Faszienrolle oder vollständige Ruhe. Bereiten Sie sich auf die nächste Krafteinheit vor. J-Band-Armpflege empfohlen."
+    },
+    "exercises": {
+      "trap_bar_deadlift": {
+        "name": "Trap-Bar-Kreuzheben",
+        "description": "Stehen Sie in der Hex-Bar, greifen Sie die Griffe an den Seiten, drücken Sie durch die Fersen zum Aufstehen. Hüfte und Knie strecken sich gleichzeitig.",
+        "notes": "Volle Hüftstreckung oben"
+      },
+      "barbell_back_squat": {
+        "name": "Langhantel-Kniebeuge",
+        "description": "Stange auf oberen Trapezius, Füße schulterbreit. Senken Sie sich, bis die Hüftfalte unter dem Knie ist, dann explosiv nach oben drücken.",
+        "notes": "Parallel brechen, explosiver Antrieb"
+      },
+      "bench_press": {
+        "name": "Bankdrücken",
+        "description": "Auf der Bank liegen mit leichtem Bogen, Stange knapp außerhalb der Schultern greifen. Mit Kontrolle zur Mitte der Brust senken, kurz pausieren, dann explosiv drücken.",
+        "notes": "Pause an der Brust, durch Fersen drücken"
+      },
+      "barbell_row": {
+        "name": "Langhantel-Rudern",
+        "description": "Hüftgelenk bei 45°, Stange außerhalb der Knie greifen. Zu den unteren Rippen ziehen, Schulterblätter zusammenziehen. Rumpf stabil halten.",
+        "notes": "1s oben halten, strikte Form"
+      },
+      "landmine_rotational_press": {
+        "name": "Landmine Rotations-Drücken",
+        "description": "Stange in Ecke verankert. An der Schulter mit beiden Händen starten, Hüften explosiv rotieren beim diagonalen Drücken.",
+        "notes": "Jede Seite, volle Hüftrotation"
+      },
+      "isometric_wall_sit": {
+        "name": "Isometrischer Wandsitz",
+        "description": "Rücken flach an der Wand, nach unten gleiten bis Oberschenkel parallel zum Boden. Unteren Rücken in die Wand drücken, Quadrizeps maximal anspannen.",
+        "notes": "Oberschenkel parallel, maximale Spannung"
+      },
+      "isometric_pallof_hold": {
+        "name": "Isometrischer Pallof-Halt",
+        "description": "Kabel/Band auf Brusthöhe, Arme nach vorne gestreckt. Der Rotationszug mit dem Core widerstehen - Anti-Rotation ist das Ziel.",
+        "notes": "Jede Seite, Rotation widerstehen"
+      },
+      "front_squat": {
+        "name": "Frontkniebeuge",
+        "description": "Stange auf vorderen Deltamuskeln mit Clean-Griff oder gekreuzten Armen. Ellbogen hoch halten, tief mit aufrechtem Rumpf absenken, explosiv hochdrücken.",
+        "notes": "Ellbogen hoch, volle Tiefe"
+      },
+      "incline_db_press": {
+        "name": "Schrägbank-Kurzhanteldrücken",
+        "description": "Auf 30°-Schrägbank, Kurzhanteln von Schulterhöhe bis zur vollen Streckung drücken. Kontrolliert senken, kurze Pause unten, explosiv hoch.",
+        "notes": "30° Neigung, voller ROM"
+      },
+      "weighted_pullup": {
+        "name": "Klimmzug mit Gewicht",
+        "description": "Gewicht über Gürtel oder Weste hinzufügen. Vom Tothang ziehen bis Kinn über der Stange. Abstieg kontrollieren.",
+        "notes": "Start im Tothang, Gewicht hinzufügen"
+      },
+      "romanian_deadlift": {
+        "name": "Rumänisches Kreuzheben",
+        "description": "Stange auf Hüfthöhe, Hüften nach hinten drücken mit leichter Kniebeugung. Senken bis zur Dehnung der hinteren Oberschenkelmuskulatur.",
+        "notes": "Hüftgelenk, Dehnung hintere Oberschenkel"
+      },
+      "cable_woodchop_high_low": {
+        "name": "Kabel-Holzhacker Hoch-Tief",
+        "description": "Kabel oben, Füße schulterbreit. Diagonal nach unten über den Körper ziehen mit Hüftrotation.",
+        "notes": "Jede Seite, explosive Rotation"
+      },
+      "isometric_pushup_hold": {
+        "name": "Isometrischer Liegestütz-Halt",
+        "description": "In Mittelposition des Liegestützes senken (Ellbogen bei 90°). Halten ohne zu sinken oder zu steigen. Brust, Trizeps und Core maximal anspannen.",
+        "notes": "Mittelposition, maximale Spannung"
+      },
+      "isometric_single_glute_bridge": {
+        "name": "Isometrische Einbein-Gesäßbrücke",
+        "description": "Ein Fuß gepflanzt, anderes Bein gestreckt. Hüfte nach oben drücken, in gerader Linie vom Knie zur Schulter halten. Maximale Gesäßkontraktion.",
+        "notes": "Jedes Bein, Hüfte hoch fixiert"
+      },
+      "box_squat": {
+        "name": "Box-Kniebeuge",
+        "description": "Rückwärts zur Box auf Parallelhöhe squatten. Kurz auf Box pausieren mit gehaltener Spannung, dann explosiv hoch. Lehrt korrekte Hüftmechanik.",
+        "notes": "Pause auf Box, explosiv hoch"
+      },
+      "close_grip_bench": {
+        "name": "Enges Bankdrücken",
+        "description": "Stange schulterbreit greifen, Ellbogen bei 45°. Zur unteren Brust senken, pausieren, explosiv drücken. Betont Trizeps-Kraft.",
+        "notes": "Ellbogen eng, Trizeps-Fokus"
+      },
+      "single_arm_db_row": {
+        "name": "Einarm-Kurzhantelrudern",
+        "description": "Eine Hand und Knie auf Bank, gegenüberliegender Fuß weit gepflanzt. Kurzhantel zur Hüfte rudern, dabei Rumpfrotation widerstehen.",
+        "notes": "Jede Seite, Anti-Rotations-Fokus"
+      },
+      "bulgarian_split_squat": {
+        "name": "Bulgarische Kniebeuge",
+        "description": "Hinterer Fuß auf Bank hinter Ihnen erhöht. Senken bis vorderer Oberschenkel parallel, durch vordere Ferse drücken.",
+        "notes": "Jedes Bein, hinterer Fuß erhöht"
+      },
+      "pallof_press": {
+        "name": "Pallof Press",
+        "description": "Kabel auf Brusthöhe, senkrecht stehen. Hände langsam nach vorne drücken, 3s in Streckung halten, Rotation widerstehen.",
+        "notes": "3s halten in voller Streckung"
+      },
+      "isometric_inverted_row": {
+        "name": "Isometrisches Umgekehrtes Rudern",
+        "description": "Unter der Stange auf Brusthöhe, hochziehen und halten mit Brust nahe der Stange. Körper in gerader Linie.",
+        "notes": "Brust zur Stangenposition"
+      },
+      "isometric_side_plank": {
+        "name": "Isometrischer Seitenstütz",
+        "description": "Auf Ellbogen und Fußseite. Körper in gerader Linie halten mit Hüften vom Boden gehoben. Aktiv durch verankerten Ellbogen drücken.",
+        "notes": "Jede Seite, Hüften hoch"
+      },
+      "sumo_deadlift": {
+        "name": "Sumo-Kreuzheben",
+        "description": "Breite Haltung, Griff innerhalb der Knie. Durch Fersen drücken, Knie nach außen drücken, Brust hoch. Mit Hüften nach vorne verriegeln.",
+        "notes": "Breite Haltung, Hüften durch"
+      },
+      "overhead_press": {
+        "name": "Schulterdrücken",
+        "description": "Stange vor den Schultern, Griff knapp außerhalb der Schultern. Core anspannen, gerade nach oben drücken. Volle Streckung oben.",
+        "notes": "Striktes Drücken, volle Streckung"
+      },
+      "lat_pulldown": {
+        "name": "Latziehen",
+        "description": "Breiter Griff an der Stange, zur oberen Brust ziehen mit leichtem Bogen. Lats unten zusammendrücken, kontrolliert zurück.",
+        "notes": "Breiter Griff, Lats zusammendrücken"
+      },
+      "walking_lunge": {
+        "name": "Gehende Ausfallschritte",
+        "description": "Kurzhanteln an den Seiten, nach vorne in tiefe Ausfallschrittposition treten. Durch vordere Ferse zum nächsten Schritt drücken.",
+        "notes": "Jedes Bein, kontinuierliche Bewegung"
+      },
+      "medball_rotational_slam": {
+        "name": "Medball Rotations-Slam",
+        "description": "Medball an der Hüfte, explosiv rotieren und Ball diagonal nach unten schlagen. Holen, zurücksetzen, wiederholen.",
+        "notes": "Jede Seite, maximale Intention"
+      },
+      "isometric_split_squat": {
+        "name": "Isometrischer Ausfallschritt-Halt",
+        "description": "Untere Position des Ausfallschritts, vorderer Oberschenkel parallel. Position mit aufrechtem Rumpf und angespanntem Gesäß halten.",
+        "notes": "Jedes Bein, untere Position"
+      },
+      "isometric_hollow_body": {
+        "name": "Isometrischer Hollow Body Halt",
+        "description": "Auf dem Rücken liegend, unterer Rücken in den Boden gedrückt. Beine gestreckt leicht vom Boden, Arme über dem Kopf. Position halten ohne Core zu brechen.",
+        "notes": "Unterer Rücken eingedrückt"
+      },
+      "incline_barbell_press": {
+        "name": "Schrägbank-Langhanteldrücken",
+        "description": "Auf 30°-Schrägbank mit Langhantel. Zur oberen Brust senken, pausieren, explosiv drücken. Obere Brust-Betonung.",
+        "notes": "30° Neigung, schwer"
+      },
+      "chest_supported_row": {
+        "name": "Brustgestütztes Rudern",
+        "description": "Brust auf Schrägbank, Kurzhanteln oder Stange zu den Rippen rudern. Eliminiert Schwung, reine Rückenkraft.",
+        "notes": "Kein Schwung, strikte Form"
+      },
+      "db_shoulder_press": {
+        "name": "Kurzhantel-Schulterdrücken",
+        "description": "Sitzend oder stehend, Kurzhanteln von Schulterhöhe zur vollen Streckung drücken. Abstieg kontrollieren.",
+        "notes": "Volle Streckung oben"
+      },
+      "cable_woodchop_low_high": {
+        "name": "Kabel-Holzhacker Tief-Hoch",
+        "description": "Kabel unten. Diagonal nach oben über den Körper ziehen mit explosiver Hüftrotation.",
+        "notes": "Jede Seite, explosiv"
+      },
+      "isometric_dead_hang": {
+        "name": "Isometrischer Tothang",
+        "description": "An der Stange mit gestreckten Armen hängen. Greifkraft arbeiten, Lats dehnen, Wirbelsäule dekomprimieren.",
+        "notes": "Griff + Schultergesundheit"
+      },
+      "db_bench_press": {
+        "name": "Kurzhantel-Bankdrücken",
+        "description": "Unabhängiges Arm-Drücken für Balance und Stabilität. Voller Bewegungsumfang, Pause unten.",
+        "notes": "Unabhängige Armarbeit"
+      },
+      "pallof_press_step": {
+        "name": "Pallof Press mit Schritt",
+        "description": "Dynamische Anti-Rotation. Hände nach vorne drücken beim seitlichen Schritt, Hebelarm vergrößern.",
+        "notes": "Jede Seite, Schritt heraus"
+      },
+      "isometric_anti_rotation": {
+        "name": "Isometrische Anti-Rotation",
+        "description": "Kabel/Band auf Brusthöhe. Arme gestreckt, Zug widerstehen. Core-Stabilitäts-Halt.",
+        "notes": "Jede Seite, Core-Stabilität"
+      },
+      "glute_bridge_march": {
+        "name": "Gesäßbrücken-Marsch",
+        "description": "Brückenposition, abwechselnd Knie heben bei waagerechten Hüften. Dynamische Hüftstabilität.",
+        "notes": "Jedes Bein, Hüften waagerecht"
+      },
+      "step_up": {
+        "name": "Step-Up",
+        "description": "Step-Up auf hohe Box mit Kurzhanteln. Durch oberes Bein drücken, minimaler Druck vom hinteren Bein.",
+        "notes": "Jedes Bein, hohe Box"
+      },
+      "plank_shoulder_tap": {
+        "name": "Plank mit Schultertippen",
+        "description": "Plankposition, abwechselnd Schultern tippen bei minimaler Hüftrotation. Core-Kontrolle.",
+        "notes": "Jede Seite, Hüften stabil"
+      },
+      "isometric_hip_flexor": {
+        "name": "Isometrischer Hüftbeuger-Halt",
+        "description": "Stehend, Knie zur Brust ziehen gegen Widerstand. Mit Hüftbeuger maximal angespannt halten.",
+        "notes": "Jedes Bein, Hüftgesundheit"
+      },
+      "isometric_lunge_hold": {
+        "name": "Isometrischer Ausfallschritt-Halt",
+        "description": "Untere Position des Ausfallschritts, mit Spannung halten. Entwickelt Positionskraft.",
+        "notes": "Jedes Bein, untere Position"
+      },
+      "deficit_trap_bar": {
+        "name": "Defizit Trap-Bar-Kreuzheben",
+        "description": "Auf 5-8cm Plattform in der Hex-Bar stehen. Erhöhter ROM erfordert mehr Hüft- und Beinantrieb.",
+        "notes": "5-8cm Defizit, explosiv"
+      },
+      "pause_squat": {
+        "name": "Pause-Kniebeuge",
+        "description": "3 Sekunden Pause unten in der Kniebeuge. Eliminiert Dehnungsreflex, baut Kraft aus dem Stand auf.",
+        "notes": "3s Pause unten"
+      },
+      "spoto_press": {
+        "name": "Spoto Press",
+        "description": "2-3cm über der Brust für 2 Sekunden pausieren, dann drücken. Baut Kraft am Stagnationspunkt auf.",
+        "notes": "2-3cm von Brust, 2s Pause"
+      },
+      "pendlay_row": {
+        "name": "Pendlay-Rudern",
+        "description": "Vom Boden jede Wiederholung, explosives Rudern zur unteren Brust. Tothang-Start baut reine Zugkraft auf.",
+        "notes": "Tothang jede Wiederholung"
+      },
+      "single_leg_rdl": {
+        "name": "Einbein-Rumänisches Kreuzheben",
+        "description": "Auf einem Bein kippen, anderes Bein streckt sich nach hinten. Balance und Arbeit der hinteren Oberschenkel.",
+        "notes": "Jedes Bein, Balance-Fokus"
+      },
+      "isometric_pause_squat": {
+        "name": "Isometrische Pause-Kniebeuge-Halt",
+        "description": "Unten in der Kniebeuge für längere Dauer halten. Baut Positionskraft und Stabilität auf.",
+        "notes": "Verlängertes Halten, maximale Spannung"
+      },
+      "isometric_loaded_stretch": {
+        "name": "Isometrische Belastete Dehnung",
+        "description": "Gedehnte Position unter Last halten. Entwickelt Kraft über volle Bewegungsreichweite.",
+        "notes": "Kontrollierte Dehnung, Spannung halten"
+      },
+      "front_squat_pause": {
+        "name": "Frontkniebeuge mit Pause",
+        "description": "2 Sekunden Pause unten. Core-Stabilität mit schwerer Last.",
+        "notes": "2s Pause, Ellbogen hoch"
+      },
+      "z_press": {
+        "name": "Z-Press",
+        "description": "Sitzend auf dem Boden drücken. Eliminiert Beinantrieb, reine Oberkörperkraft.",
+        "notes": "Beine gestreckt, striktes Drücken"
+      },
+      "cable_low_high_rotation": {
+        "name": "Kabel Tief-Hoch-Rotation",
+        "description": "Aufwärts-Rotationsmuster mit voller Hüftbeteiligung.",
+        "notes": "Jede Seite, volle Rotation"
+      },
+      "isometric_dead_bug": {
+        "name": "Isometrischer Dead Bug Halt",
+        "description": "Gliedmaßen gestreckt, unterer Rücken eingedrückt. Core-Stabilitäts-Halt.",
+        "notes": "Gegenüber Arm/Bein gestreckt"
+      },
+      "barbell_hip_thrust": {
+        "name": "Langhantel-Hip Thrust",
+        "description": "Stange über Hüften, Hüften nach oben drücken. Maximale Gesäßkraft für Antriebsphase.",
+        "notes": "Volle Streckung, oben zusammendrücken"
+      },
+      "half_kneel_anti_rotation": {
+        "name": "Halbkniend Kabel-Anti-Rotation",
+        "description": "Halbknieposition, Kabel auf Brusthöhe, Rotation widerstehen. Trainiert Rumpfstabilität.",
+        "notes": "Jede Seite, aufrechte Haltung"
+      },
+      "isometric_glute_bridge": {
+        "name": "Isometrische Gesäßbrücke-Halt",
+        "description": "Hüften erhöht, ein oder zwei Beine. Gesäß-Ausdauer für wiederholte Antriebsphasen-Aktivierung.",
+        "notes": "Volle Streckung, maximales Zusammendrücken"
+      },
+      "pushup_variations": {
+        "name": "Liegestütz-Variationen",
+        "description": "Standard-, Diamant- oder Bogenschützen-Liegestütze. Schulterstabilität mit Körpergewichtskontrolle.",
+        "notes": "Voller ROM, Core angespannt"
+      },
+      "face_pulls": {
+        "name": "Face Pulls",
+        "description": "Kabel auf Gesichtshöhe, zu den Ohren ziehen mit externer Rotation. Entscheidend für hintere Schultergesundheit.",
+        "notes": "Ellbogen hoch, externe Rotation am Ende"
+      },
+      "hip_thrust": {
+        "name": "Hip Thrust",
+        "description": "Schwere Hip Thrusts für Gesäßkraft. Maximale Kraftproduktion in Antriebsphase.",
+        "notes": "Schwere Last, volle Streckung"
+      },
+      "medball_scoop_toss": {
+        "name": "Medball Schaufelwurf",
+        "description": "Explosive Hüftstreckung mit Medball-Wurf. Kraftübertragungsübung.",
+        "notes": "Maximale Intention, Hüftstreck-Fokus"
+      },
+      "back_squat": {
+        "name": "Rücken-Kniebeuge",
+        "description": "Schweres Kniebeugen für Beinkraft. Volle Tiefe mit kontrolliertem Abstieg.",
+        "notes": "Tief, kontrollierte Wiederholungen"
+      },
+      "barbell_bench_press": {
+        "name": "Langhantel-Bankdrücken",
+        "description": "Schweres Drücken für Oberkörperkraft. Brust- und Trizeps-Kraft für Beschleunigung.",
+        "notes": "Pause an Brust, explosiver Antrieb"
+      },
+      "half_kneel_chop": {
+        "name": "Halbkniend Kabel-Holzhacker",
+        "description": "Rotationskraft aus dem Halbknien. Hüft- und Core-Integration.",
+        "notes": "Jede Seite, explosiv"
+      },
+      "half_kneel_lift": {
+        "name": "Halbkniend Kabel-Heben",
+        "description": "Tief-Hoch-Hebemuster aus dem Halbknien.",
+        "notes": "Jede Seite, volle Reichweite"
+      },
+      "lateral_lunge": {
+        "name": "Seitlicher Ausfallschritt",
+        "description": "Seitliche Kraft für Hüftmobilität und Adduktoren-Kraft.",
+        "notes": "Jedes Bein, tiefer Ausfallschritt"
+      },
+      "face_pulls_ext_rot": {
+        "name": "Face Pulls mit Externer Rotation",
+        "description": "Zusätzliche externe Rotation bei maximaler Kontraktion. Maximale hintere Schulterarbeit.",
+        "notes": "Externe Rotation am Ende"
+      },
+      "single_arm_landmine": {
+        "name": "Einarm-Landmine-Drücken",
+        "description": "Einseitiges Drücken mit Rotationselement. Core-Stabilitätsanforderung.",
+        "notes": "Jeder Arm, stabile Basis"
+      },
+      "eccentric_trap_bar": {
+        "name": "Exzentrisches Trap-Bar-Kreuzheben",
+        "description": "5-Sekunden-Absenkphase. Maximale Muskelspannung während des Exzentrischen.",
+        "notes": "5s Negativ, kontrolliert"
+      },
+      "eccentric_squat": {
+        "name": "Exzentrische Kniebeuge",
+        "description": "5-Sekunden-Abstieg, explosiv hoch. Exzentrische Muskelbelastung.",
+        "notes": "5s runter, schnell hoch"
+      },
+      "eccentric_bench": {
+        "name": "Exzentrisches Bankdrücken",
+        "description": "5-Sekunden-Absenkung zur Brust. Baut Brust- und Trizeps-Masse auf.",
+        "notes": "5s Negativ, Pause, drücken"
+      },
+      "eccentric_row": {
+        "name": "Exzentrisches Rudern",
+        "description": "4-Sekunden-Absenkphase. Rückenmuskel-Hypertrophie.",
+        "notes": "4s Negativ, strikte Form"
+      },
+      "eccentric_rdl": {
+        "name": "Exzentrisches RDL",
+        "description": "4-Sekunden-Absenkung mit Fokus auf hintere Oberschenkel. Zeit unter Spannung für Wachstum.",
+        "notes": "4s Negativ, Kontrolle"
+      },
+      "eccentric_bulgarian": {
+        "name": "Exzentrische Bulgarische Kniebeuge",
+        "description": "4-Sekunden-Abstieg bei jeder Wiederholung. Quadrizeps-Hypertrophie-Fokus.",
+        "notes": "4s runter, jedes Bein"
+      },
+      "eccentric_overhead": {
+        "name": "Exzentrisches Schulterdrücken",
+        "description": "4-Sekunden-Absenkung von der Streckung. Schulter-Masseaufbau.",
+        "notes": "4s Negativ, strikt"
+      },
+      "eccentric_pullup": {
+        "name": "Exzentrischer Klimmzug",
+        "description": "5-Sekunden-Absenkung von oben. Lat-Entwicklung.",
+        "notes": "5s Negativ, volle Dehnung"
+      },
+      "eccentric_single_row": {
+        "name": "Exzentrisches Einarm-Rudern",
+        "description": "4-Sekunden-Negativ bei jeder Wiederholung. Einseitige Rückenentwicklung.",
+        "notes": "4s Negativ, jede Seite"
+      },
+      "eccentric_step_down": {
+        "name": "Exzentrischer Step-Down",
+        "description": "Kontrolliertes einbeiniges Absenken von der Box. Quadrizeps-exzentrische Kraft.",
+        "notes": "Jedes Bein, kontrollierter Abstieg"
+      },
+      "eccentric_incline": {
+        "name": "Exzentrisches Schrägbankdrücken",
+        "description": "4-Sekunden-Absenkung auf Schrägbank. Obere Brust-Entwicklung.",
+        "notes": "4s Negativ, 30° Neigung"
+      },
+      "eccentric_lat_pulldown": {
+        "name": "Exzentrisches Latziehen",
+        "description": "4-Sekunden-Rückkehr zum Start. Lat-exzentrische Belastung.",
+        "notes": "4s Negativ, volle Dehnung"
+      },
+      "eccentric_nordic": {
+        "name": "Exzentrischer Nordic Curl",
+        "description": "Langsames exzentrisches Absenken der hinteren Oberschenkel. Verletzungspräventions-Fokus.",
+        "notes": "Abstieg kontrollieren, unten auffangen"
+      },
+      "eccentric_dip": {
+        "name": "Exzentrische Dips",
+        "description": "5-Sekunden-Absenkphase. Trizeps- und Brust-Entwicklung.",
+        "notes": "5s Negativ, tiefe Dehnung"
+      },
+      "tempo_front_squat": {
+        "name": "Tempo-Frontkniebeuge",
+        "description": "4-Sekunden-Abstieg, 2-Sekunden-Pause, explosiv hoch. Gesamtzeit unter Spannung.",
+        "notes": "4-2-1 Tempo"
+      },
+      "negative_pullup": {
+        "name": "Negativer Klimmzug",
+        "description": "Nach oben springen, 6 Sekunden absenken. Baut Zugkraft auf.",
+        "notes": "6s Negativ, voller Hang"
+      },
+      "eccentric_lateral_lunge": {
+        "name": "Exzentrischer Seitlicher Ausfallschritt",
+        "description": "4-Sekunden-Absenkung in den seitlichen Ausfallschritt. Adduktoren-Entwicklung.",
+        "notes": "4s Negativ, jede Seite"
+      },
+      "landmine_press": {
+        "name": "Landmine-Drücken",
+        "description": "Einarmiges Drücken mit Landmine-Stange. Schulterfreundliches Überkopfdrücken mit Rotationselement.",
+        "notes": "Jeder Arm, stabiler Core"
+      }
+    },
+    "batSpeed": {
+      "speed_swings_10": {
+        "name": "Geschwindigkeits-Schwünge - 10 Wiederholungen",
+        "description": "Maximale Anstrengungsschwünge mit Spielschläger. Fokus auf Schlägergeschwindigkeit statt Kontaktqualität.",
+        "notes": "Maximale Intention, 10 Wiederholungen"
+      },
+      "connection_ball": {
+        "name": "Verbindungsball-Übung",
+        "description": "Schaumstoffball zwischen Armen und Rumpf während des Schwungs zusammendrücken. Hält Oberkörperverbindung.",
+        "notes": "Ball zwischen Bizeps und Brust"
+      },
+      "bat_behind_back": {
+        "name": "Schläger-Hinter-Rücken-Rotationen",
+        "description": "Schläger über Schultern hinter dem Rücken halten. Hüftrotation üben, die Schultern antreibt.",
+        "notes": "Hüften führen, Core angespannt"
+      },
+      "wrist_snap": {
+        "name": "Handgelenk-Snap-Übung",
+        "description": "Schnelle Handgelenk-Snaps am Kontaktpunkt. Entwickelt schnelle Hände durch die Zone.",
+        "notes": "Snap am Kontaktpunkt"
+      },
+      "resistance_band_swings": {
+        "name": "Widerstandsband-Geschwindigkeitsschwünge",
+        "description": "Band am Schläger für Überlast befestigen. Gegen Widerstand schwingen für Kraft.",
+        "notes": "Gegen Band kämpfen, volle Rotation"
+      },
+      "one_handed_swings": {
+        "name": "Einhand-Geschwindigkeitsschwünge",
+        "description": "Nur obere oder untere Hand Schwünge. Entwickelt Handunabhängigkeit und Schlägerkontrolle.",
+        "notes": "Jede Hand, kontrollierter Schwung"
+      },
+      "quick_hands": {
+        "name": "Schnelle-Hände-Übung",
+        "description": "Partner wirft Bälle aus kurzer Distanz. Schnelle Reaktionen, kurze Schwünge.",
+        "notes": "Schneller Schwung, Ball sehen"
+      },
+      "swing_speed_measure": {
+        "name": "Schwunggeschwindigkeitsmessung",
+        "description": "Schlägergeschwindigkeit mit Schwunganalysator verfolgen. Fortschritt über Zeit aufzeichnen.",
+        "notes": "km/h verfolgen, Verbesserung anstreben"
+      },
+      "bat_waggle": {
+        "name": "Schläger-Wackeln-Übung",
+        "description": "Schnelle Schlägerbewegung in der Haltung. Hält Hände locker und bereit.",
+        "notes": "Locker bleiben, leichter Griff"
+      },
+      "speed_tee_15": {
+        "name": "Geschwindigkeits-Tee-Arbeit - 15 Schwünge",
+        "description": "Volle Geschwindigkeitsschwünge vom Tee. Fokus auf max Schlägergeschwindigkeit, nicht Mechanik.",
+        "notes": "15 Schwünge, maximale Anstrengung"
+      },
+      "velocity_ladder": {
+        "name": "Geschwindigkeitsleiter-Schwünge",
+        "description": "Progressive Geschwindigkeitssteigerung: 70%, 80%, 90%, 100%. Zum Maximum aufbauen.",
+        "notes": "4 Sets, steigende Intensität"
+      },
+      "bat_flip_speed": {
+        "name": "Schläger-Flip-Geschwindigkeitsübung",
+        "description": "Schläger schnell Ende-über-Ende drehen. Entwickelt Handgelenkgeschwindigkeit und Kontrolle.",
+        "notes": "Schnelle Flips, sauber fangen"
+      },
+      "no_stride_swings": {
+        "name": "Schwünge ohne Schritt",
+        "description": "Aus der Haltung schwingen ohne Schritt. Isoliert Oberkörpergeschwindigkeit.",
+        "notes": "Kein Schritt, Oberkörper-Fokus"
+      },
+      "fast_hands_reaction": {
+        "name": "Schnelle-Hände-Reaktionsübung",
+        "description": "Farbiger Ballwurf - nur bei bestimmter Farbe schwingen. Schnelle Entscheidungsfindung.",
+        "notes": "Schnell reagieren und entscheiden"
+      },
+      "exit_speed_comp": {
+        "name": "Austrittsgeschwindigkeits-Wettbewerb",
+        "description": "Wettbewerb um höchste Austrittsgeschwindigkeit vom Tee oder Soft Toss.",
+        "notes": "Austrittsgeschwindigkeit verfolgen, persönlichen Rekord schlagen"
+      },
+      "rotational_snap": {
+        "name": "Rotations-Snap-Übung",
+        "description": "Fokus auf explosive Hüftrotation zum Schwungstart. Hüften führen Hände.",
+        "notes": "Hüften snappen, Energie übertragen"
+      },
+      "light_bat_20": {
+        "name": "Leichter Schläger Max Geschwindigkeit - 20 Schwünge",
+        "description": "Geschwindigkeitsschläger oder leichterer Schläger für Übergeschwindigkeitstraining. Schnell bewegen.",
+        "notes": "20 Schwünge, maximale Geschwindigkeit"
+      },
+      "heavy_light_contrast": {
+        "name": "Schwer-Leicht-Kontrast - 10 Sets",
+        "description": "Wechsel zwischen schwerem und leichtem Schlägerschwung. Kontrasttrainingseffekt.",
+        "notes": "5 schwer, 5 leicht, wiederholen"
+      },
+      "intent_tee_max": {
+        "name": "Intentions-Tee-Arbeit - Max Anstrengung",
+        "description": "Maximale Intentionsschwünge vom Tee. Jeder Schwung ist Spielschwung-Anstrengung.",
+        "notes": "100% Anstrengung bei jedem Schwung"
+      },
+      "barrel_speed_focus": {
+        "name": "Schlagflächen-Geschwindigkeits-Fokus-Übung",
+        "description": "Fokus auf Schlagflächenbeschleunigung durch die Zone. Schlagfläche peitschen.",
+        "notes": "Schlagflächen-Peitsche fühlen"
+      },
+      "overload_underload": {
+        "name": "Überlast/Unterlast-Protokoll",
+        "description": "Komplettes Protokoll mit gewichteten und Geschwindigkeitsschlägern. Volle Kontrastsitzung.",
+        "notes": "Schwer → regulär → leicht"
+      }
+    },
+    "armCare": {
+      "jband_internal": {
+        "name": "J-Band Innenrotation",
+        "description": "Ellbogen bei 90°, Hand gegen Bandwiderstand nach innen rotieren. Kontrollierte Bewegung.",
+        "notes": "Ellbogen stabil, 15-20 Wiederholungen"
+      },
+      "jband_external": {
+        "name": "J-Band Außenrotation",
+        "description": "Ellbogen bei 90°, Hand gegen Bandwiderstand nach außen rotieren. Außenrotatoren stärken.",
+        "notes": "Langsam und kontrolliert, 15-20 Wiederholungen"
+      },
+      "jband_scap": {
+        "name": "J-Band Schulterblatt-Retraktion",
+        "description": "Band auf Brusthöhe auseinanderziehen. Schulterblätter zusammendrücken.",
+        "notes": "2s am Ende zusammendrücken, 15 Wiederholungen"
+      },
+      "jband_high_pulls": {
+        "name": "J-Band Hohe Züge",
+        "description": "Arme über dem Kopf mit Band, auseinanderziehen bei gehaltener Spannung.",
+        "notes": "Arme hoch halten, 15 Wiederholungen"
+      },
+      "sleeper_stretch": {
+        "name": "Sleeper-Dehnung",
+        "description": "Auf Wurfseite liegen, Handgelenk mit anderer Hand zum Boden drücken. Innenrotations-Dehnung.",
+        "notes": "30s halten, sanfter Druck"
+      },
+      "crossbody_stretch": {
+        "name": "Quer-Körper-Dehnung",
+        "description": "Wurfarm mit anderem Arm über den Körper ziehen. Hintere Schulter-Dehnung.",
+        "notes": "30s halten, Dehnung hinten an Schulter spüren"
+      },
+      "wrist_flex_ext": {
+        "name": "Handgelenk Beugung/Streckung",
+        "description": "Handgelenk mit leichtem Gewicht beugen und strecken. Unterarmkraft für Armgesundheit.",
+        "notes": "15 Wiederholungen jede Richtung"
+      },
+      "forearm_pro_sup": {
+        "name": "Unterarm Pronation/Supination",
+        "description": "Unterarm mit leichtem Gewicht Handfläche nach oben und unten drehen. Handgelenkmobilität.",
+        "notes": "15 Wiederholungen, Rotation kontrollieren"
+      }
+    },
+    "velocity": {
+      "long_toss_60": {
+        "name": "Long Toss Aufwärmen - 18m",
+        "description": "Leichte Würfe auf 18 Meter. Armbahn-Aufwärmen, nicht geschwindigkeitsfokussiert.",
+        "notes": "10-15 Würfe, leichte Anstrengung"
+      },
+      "long_toss_90": {
+        "name": "Long Toss Aufbau - 27m",
+        "description": "Distanz auf 27 Meter erhöhen. Mittlere Anstrengung, Armgeschwindigkeit aufbauen.",
+        "notes": "10-15 Würfe, mittlere Anstrengung"
+      },
+      "long_toss_120": {
+        "name": "Long Toss Erweiterung - 37m",
+        "description": "Auf 37 Meter erweitern. Höherer Bogen erlaubt, Armkraft aufbauen.",
+        "notes": "10-15 Würfe, erhöhte Anstrengung"
+      },
+      "long_toss_max": {
+        "name": "Long Toss Max - 45-60m",
+        "description": "Maximale komfortable Distanz. Bogenwürfe für Armkonditionierung.",
+        "notes": "10-15 Würfe, maximale Anstrengung"
+      },
+      "pulldown_phase": {
+        "name": "Pull-Down-Phase",
+        "description": "Von max Distanz mit Pull-Down-Würfen zurückarbeiten. Gerade Linienbahn.",
+        "notes": "In 10m Schritten zurückkommen"
+      },
+      "velo_day_gun": {
+        "name": "Velo-Tag - Radar-Messungen",
+        "description": "Geschwindigkeitsfokussierte Sitzung mit Radar-Messungen. Max und Durchschnitt verfolgen.",
+        "notes": "Geschwindigkeiten aufzeichnen, Fortschritt verfolgen"
+      },
+      "weighted_7oz": {
+        "name": "Gewichteter Ball - 200g Überlast",
+        "description": "Schwere Ballwürfe für Armkraft. Kontrollierte Intention.",
+        "notes": "15-20 Würfe, nicht max Anstrengung"
+      },
+      "weighted_5oz": {
+        "name": "Standard Ball - 140g",
+        "description": "Spielgewicht-Ball oder Standard-140g-Gewichtsball.",
+        "notes": "15-20 Würfe, normale Armbahn fühlen"
+      },
+      "weighted_4oz": {
+        "name": "Leichter Ball - 110g Unterlast",
+        "description": "Leichter Ball für Armgeschwindigkeitsentwicklung. Schnell bewegen.",
+        "notes": "15-20 Würfe, max Armgeschwindigkeit"
+      },
+      "contrast_throws": {
+        "name": "Kontrastwürfe",
+        "description": "Zwischen Überlast- und Unterlast-Bällen wechseln. Kontrasttrainingseffekt.",
+        "notes": "5 schwer, 5 leicht, 2-3x wiederholen"
+      },
+      "crow_hop": {
+        "name": "Crow Hop Würfe",
+        "description": "Mit Crow Hop für Momentum und Timing werfen. Armgeschwindigkeit aufbauen.",
+        "notes": "Volle Intention, gutes Timing"
+      },
+      "max_intent_bp": {
+        "name": "Max Intentions Bullpen",
+        "description": "Bullpen-Sitzung bei maximaler Intention. Spielähnlicher Geschwindigkeitsfokus.",
+        "notes": "15-25 Würfe, alles max Anstrengung"
+      },
+      "plyocare_pivot": {
+        "name": "PlyoCare Pivot Pickoffs",
+        "description": "Pivot-Wurf-Übung mit Plyocare-Ball. Schnelle Füße und Armaktion.",
+        "notes": "10 jede Richtung"
+      },
+      "plyocare_rollins": {
+        "name": "PlyoCare Roll-Ins",
+        "description": "In den Wurf rollen mit Plyocare-Ball. Hüfte führt und Arm folgt.",
+        "notes": "10-15 Würfe, Hüftführung fühlen"
+      },
+      "plyocare_reverse": {
+        "name": "PlyoCare Rückwärtswürfe",
+        "description": "Rücken zum Ziel, rotieren und werfen. Rotationssequenzierung.",
+        "notes": "10 Würfe, volle Rotation"
+      },
+      "rocker_throws": {
+        "name": "Rocker-Würfe",
+        "description": "Zurückschwingen und mit Momentum werfen. Timing und Gewichtstransfer.",
+        "notes": "15 Würfe, Momentum fühlen"
+      }
+    },
+    "pitchDev": {
+      "curve_grip": {
+        "name": "Curve-Griffarbeit",
+        "description": "Griffvariationen üben, komfortablen Fingerdruck und Nahtausrichtung finden.",
+        "notes": "Ihren Griff finden"
+      },
+      "curve_spin": {
+        "name": "Curve-Spin-Übungen",
+        "description": "Kurzdistanz-Spins mit Fokus auf enge Rotation und Achse. Den Spin sehen.",
+        "notes": "Fokus auf engen Spin"
+      },
+      "curve_shape": {
+        "name": "Curve-Form-Fokus",
+        "description": "Volle Distanz Curves, Fokus auf konsistente Bruchform und Tiefe.",
+        "notes": "Konsistente Form"
+      },
+      "slider_grip": {
+        "name": "Slider-Griffarbeit",
+        "description": "Slider-Griff mit Fingerdruck auf innerer Naht üben. Ihre Komfortzone finden.",
+        "notes": "Griffkomfort finden"
+      },
+      "slider_wrist": {
+        "name": "Slider-Handgelenkaktion",
+        "description": "Slider-Release-Aktion isolieren. Kugelspin mit engem Punkt.",
+        "notes": "Enger Punkt-Spin"
+      },
+      "slider_tunnel": {
+        "name": "Slider-Tunnel-Übung",
+        "description": "Slider durch Fastball-Tunnel werfen, später Bruch für Täuschung.",
+        "notes": "Gleicher Tunnel wie Fastball"
+      },
+      "changeup_grip": {
+        "name": "Changeup-Griffarbeit",
+        "description": "Circle Change, 3-Finger oder andere Griffvariationen. Finden Sie, was funktioniert.",
+        "notes": "Komfortabler Griff"
+      },
+      "changeup_arm_speed": {
+        "name": "Changeup-Armgeschwindigkeits-Anpassung",
+        "description": "Fastball-Armgeschwindigkeit mit Changeup-Griff anpassen. Täuschung ist der Schlüssel.",
+        "notes": "Gleiche Armgeschwindigkeit"
+      },
+      "changeup_feel": {
+        "name": "Changeup-Gefühl-Übungen",
+        "description": "Kurzdistanz-Changeups, Berührung und Gefühl für Geschwindigkeitsdifferenz entwickeln.",
+        "notes": "Den Geschwindigkeitsunterschied fühlen"
+      },
+      "quadrant_work": {
+        "name": "Quadranten-Arbeit",
+        "description": "Spezifische Quadranten der Strikezone treffen. Präzisionskontrolle aufbauen.",
+        "notes": "Ihre Spots treffen"
+      },
+      "glove_arm_side": {
+        "name": "Handschuh-Seite/Arm-Seite",
+        "description": "Beide Plattenränder bearbeiten. Horizontale Kontrolle entwickeln.",
+        "notes": "Ecken treffen"
+      },
+      "up_down_ladder": {
+        "name": "Hoch/Runter-Leiter",
+        "description": "Oben und unten in der Zone arbeiten. Vertikale Kontrollentwicklung.",
+        "notes": "Höhe variieren"
+      },
+      "pitch_sequencing": {
+        "name": "Wurf-Sequenzierung",
+        "description": "2- und 3-Wurf-Sequenzen üben. Spielähnliche Muster aufbauen.",
+        "notes": "Wie im Spiel denken"
+      },
+      "tunnel_drills": {
+        "name": "Tunnel-Übungen",
+        "description": "Verschiedene Würfe durch denselben Tunnel werfen. Täuschung entwickeln.",
+        "notes": "Gleiches Aussehen, anderer Bruch"
+      }
+    },
+    "equipment": {
+      "hitting": {
+        "bat": {
+          "name": "Spielschläger",
+          "description": "Ihr primärer Spielschläger"
+        },
+        "tee": {
+          "name": "Schlag-Tee",
+          "description": "Verstellbare Höhe bevorzugt"
+        },
+        "balls": {
+          "name": "Bälle",
+          "description": "Minimum 12 Bälle"
+        },
+        "net": {
+          "name": "Schlag-Netz",
+          "description": "Für Innen-/Außentraining"
+        },
+        "barbell": {
+          "name": "Langhantel & Gewichte",
+          "description": "Für Verbundübungen (20kg Stange + Gewichte)"
+        },
+        "dumbbells": {
+          "name": "Kurzhanteln",
+          "description": "Verschiedene Gewichte 5-35+ kg"
+        },
+        "trap_bar": {
+          "name": "Trap/Hex Bar",
+          "description": "Für Kreuzheben - essentiell für Programm"
+        },
+        "cable_machine": {
+          "name": "Kabelzug-Maschine",
+          "description": "Für Holzhacker, Rudern & Pallof Press"
+        },
+        "pullup_bar": {
+          "name": "Klimmzugstange",
+          "description": "Für Klimmzüge & umgekehrtes Rudern"
+        },
+        "bench": {
+          "name": "Verstellbare Bank",
+          "description": "Flache & geneigte Positionen"
+        },
+        "weighted_bat": {
+          "name": "Gewichteter Trainingsschläger",
+          "description": "Für Überlast-Training"
+        },
+        "speed_bat": {
+          "name": "Geschwindigkeitsschläger",
+          "description": "Für Unterlast-Training"
+        },
+        "resistance_bands": {
+          "name": "Widerstandsbänder",
+          "description": "Für Hüft-, Core- & Rotationsarbeit"
+        },
+        "med_ball": {
+          "name": "Medizinball",
+          "description": "3-5 kg für Rotationskraft"
+        },
+        "box": {
+          "name": "Plyo-Box/Step",
+          "description": "Für Box-Kniebeugen & Step-Ups"
+        },
+        "landmine": {
+          "name": "Landmine-Aufsatz",
+          "description": "Für Rotationsdrücken"
+        }
+      },
+      "pitching": {
+        "glove": {
+          "name": "Pitcher-Handschuh",
+          "description": "Spielfertiger Pitcher-Handschuh"
+        },
+        "balls": {
+          "name": "Bälle",
+          "description": "Minimum 24 Bälle für Volumenarbeit"
+        },
+        "mound": {
+          "name": "Pitcher-Hügel",
+          "description": "Regulation oder tragbarer Hügel"
+        },
+        "jbands": {
+          "name": "J-Bands/Widerstandsbänder",
+          "description": "Für tägliche Armpflege-Routine"
+        },
+        "target": {
+          "name": "Strikezone-Ziel",
+          "description": "Für Kontrollarbeit"
+        },
+        "barbell": {
+          "name": "Langhantel & Gewichte",
+          "description": "Für Verbundübungen"
+        },
+        "dumbbells": {
+          "name": "Kurzhanteln",
+          "description": "Verschiedene Gewichte 5-35+ kg"
+        },
+        "cable_machine": {
+          "name": "Kabelzug-Maschine",
+          "description": "Für Rotations- und Zugübungen"
+        },
+        "pullup_bar": {
+          "name": "Klimmzugstange",
+          "description": "Für Klimmzüge und Hangarbeit"
+        },
+        "bench": {
+          "name": "Verstellbare Bank",
+          "description": "Flache und geneigte Positionen"
+        },
+        "trap_bar": {
+          "name": "Trap/Hex Bar",
+          "description": "Für Kreuzheben"
+        },
+        "weighted_balls": {
+          "name": "Gewichtete Bälle",
+          "description": "Set aus 110g, 140g, 200g, 255g, 310g"
+        },
+        "plyocare": {
+          "name": "PlyoCare-Bälle",
+          "description": "Set aus 5 gewichteten Plyo-Bällen"
+        },
+        "foam_roller": {
+          "name": "Faszienrolle",
+          "description": "Für Weichteilarbeit"
+        },
+        "med_ball": {
+          "name": "Medizinball",
+          "description": "2-5 kg für Rotationskraft"
+        },
+        "radar_gun": {
+          "name": "Radar/Pocket Radar",
+          "description": "Für Geschwindigkeitsverfolgung"
+        },
+        "rice_bucket": {
+          "name": "Reis-Eimer",
+          "description": "Für Unterarm- und Griffarbeit"
+        },
+        "lacrosse_ball": {
+          "name": "Lacrosse-Ball",
+          "description": "Für Triggerpunkt-Release"
+        }
+      }
+    }
   }
 }
