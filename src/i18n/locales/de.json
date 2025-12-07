@@ -3613,5 +3613,21 @@
         }
       }
     }
+  },
+  "workoutStreak": {
+    "title": "Trainings-Serie",
+    "currentStreak": "Aktuelle Serie",
+    "longestStreak": "Längste Serie",
+    "totalWorkouts": "Gesamte Trainings",
+    "dayStreak": "Tag Serie",
+    "daysStreak": "Tage Serie",
+    "keepGoing": "Weiter so!",
+    "newRecord": "Neuer Rekord!",
+    "milestone100": "🎉 100 Trainings-Meilenstein!",
+    "milestone500": "🔥 500 Trainings-Legende!",
+    "noStreak": "Starte deine Serie heute!",
+    "streakBroken": "Serie zurückgesetzt - lass uns neu aufbauen!",
+    "fireUnlocked": "Feuer wird bei 5 Tagen freigeschaltet!",
+    "glowUnlocked": "Flamme glüht bei 25 Tagen!"
   }
 }

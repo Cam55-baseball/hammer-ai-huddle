@@ -36,6 +36,11 @@ export interface SubModuleProgress {
   day_completion_times: DayCompletionTimes;
   started_at: string;
   last_activity: string;
+  // Streak tracking
+  workout_streak_current: number;
+  workout_streak_longest: number;
+  total_workouts_completed: number;
+  last_workout_date: string | null;
 }
 
 const TOTAL_CYCLES = 4;
@@ -73,6 +78,10 @@ export function useSubModuleProgress(
         experience_level: ((data as unknown as { experience_level?: ExperienceLevel }).experience_level || 'intermediate') as ExperienceLevel,
         current_cycle: (data as unknown as { current_cycle?: number }).current_cycle || 1,
         day_completion_times: (data as unknown as { day_completion_times?: DayCompletionTimes }).day_completion_times || {},
+        workout_streak_current: (data as unknown as { workout_streak_current?: number }).workout_streak_current || 0,
+        workout_streak_longest: (data as unknown as { workout_streak_longest?: number }).workout_streak_longest || 0,
+        total_workouts_completed: (data as unknown as { total_workouts_completed?: number }).total_workouts_completed || 0,
+        last_workout_date: (data as unknown as { last_workout_date?: string | null }).last_workout_date || null,
       } as SubModuleProgress : null;
       setProgress(progressData);
     } catch (error) {
@@ -119,6 +128,10 @@ export function useSubModuleProgress(
         experience_level: 'intermediate' as ExperienceLevel,
         current_cycle: 1,
         day_completion_times: {},
+        workout_streak_current: 0,
+        workout_streak_longest: 0,
+        total_workouts_completed: 0,
+        last_workout_date: null,
       } as SubModuleProgress;
       setProgress(progressData);
       return data;
@@ -194,11 +207,37 @@ export function useSubModuleProgress(
     return { hours, minutes, seconds, unlockTime };
   }, [getNextDayUnlockTime]);
 
-  // Complete a workout day with timestamp
+  // Calculate streak based on calendar days
+  const calculateStreak = useCallback((lastWorkoutDate: string | null, currentStreak: number): number => {
+    if (!lastWorkoutDate) return 1; // First workout starts streak at 1
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const lastDate = new Date(lastWorkoutDate);
+    lastDate.setHours(0, 0, 0, 0);
+    
+    const diffDays = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      // Same day - no change to streak
+      return currentStreak;
+    } else if (diffDays === 1) {
+      // Consecutive day - increment streak
+      return currentStreak + 1;
+    } else {
+      // Gap in days - reset streak
+      return 1;
+    }
+  }, []);
+
+  // Complete a workout day with timestamp and streak tracking
   const completeWorkoutDay = useCallback(async (week: number, day: string) => {
     if (!user || !progress) return;
 
-    const now = new Date().toISOString();
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const todayDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
 
     const updatedWeekProgress = {
       ...progress.week_progress,
@@ -212,9 +251,14 @@ export function useSubModuleProgress(
       ...progress.day_completion_times,
       [week]: {
         ...(progress.day_completion_times?.[week] || {}),
-        [day]: now,
+        [day]: nowIso,
       },
     };
+
+    // Calculate new streak values
+    const newStreak = calculateStreak(progress.last_workout_date, progress.workout_streak_current);
+    const newLongestStreak = Math.max(newStreak, progress.workout_streak_longest);
+    const newTotalWorkouts = progress.total_workouts_completed + 1;
 
     try {
       const { error } = await supabase
@@ -222,7 +266,12 @@ export function useSubModuleProgress(
         .update({
           week_progress: updatedWeekProgress,
           day_completion_times: updatedDayCompletionTimes as unknown as null,
-          last_activity: now,
+          last_activity: nowIso,
+          workout_streak_current: newStreak,
+          workout_streak_longest: newLongestStreak,
+          total_workouts_completed: newTotalWorkouts,
+          last_workout_date: todayDate,
+          streak_last_updated: nowIso,
         })
         .eq('id', progress.id);
 
@@ -232,7 +281,11 @@ export function useSubModuleProgress(
         ...progress,
         week_progress: updatedWeekProgress,
         day_completion_times: updatedDayCompletionTimes,
-        last_activity: now,
+        last_activity: nowIso,
+        workout_streak_current: newStreak,
+        workout_streak_longest: newLongestStreak,
+        total_workouts_completed: newTotalWorkouts,
+        last_workout_date: todayDate,
       });
 
       toast({
@@ -259,7 +312,7 @@ export function useSubModuleProgress(
         variant: 'destructive',
       });
     }
-  }, [user, progress]);
+  }, [user, progress, calculateStreak]);
 
   // Check if current cycle is complete and advance to next
   const checkAndAdvanceCycle = useCallback(async () => {

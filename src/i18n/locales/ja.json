@@ -2897,5 +2897,21 @@
         "lacrosse_ball": { "name": "ラクロスボール", "description": "トリガーポイントと筋膜リリース用" }
       }
     }
+  },
+  "workoutStreak": {
+    "title": "トレーニング連続記録",
+    "currentStreak": "現在の連続記録",
+    "longestStreak": "最長連続記録",
+    "totalWorkouts": "総トレーニング数",
+    "dayStreak": "日連続",
+    "daysStreak": "日連続",
+    "keepGoing": "この調子で頑張ろう！",
+    "newRecord": "新記録！",
+    "milestone100": "🎉 100回トレーニング達成！",
+    "milestone500": "🔥 500回トレーニング伝説！",
+    "noStreak": "今日から連続記録を始めよう！",
+    "streakBroken": "連続記録リセット - また積み上げよう！",
+    "fireUnlocked": "5日で炎が解放されます！",
+    "glowUnlocked": "25日で炎が輝きます！"
   }
 }

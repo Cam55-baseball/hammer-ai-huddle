@@ -3790,5 +3790,21 @@
         }
       }
     }
+  },
+  "workoutStreak": {
+    "title": "Training Streak",
+    "currentStreak": "Current Streak",
+    "longestStreak": "Longest Streak",
+    "totalWorkouts": "Total Workouts",
+    "dayStreak": "day streak",
+    "daysStreak": "days streak",
+    "keepGoing": "Keep going!",
+    "newRecord": "New Record!",
+    "milestone100": "🎉 100 Workout Milestone!",
+    "milestone500": "🔥 500 Workout Legend!",
+    "noStreak": "Start your streak today!",
+    "streakBroken": "Streak reset - let's build it back!",
+    "fireUnlocked": "Fire unlocks at 5 days!",
+    "glowUnlocked": "Flame is glowing at 25 days!"
   }
 }
