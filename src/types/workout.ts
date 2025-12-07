@@ -13,6 +13,8 @@ export interface Exercise {
 export interface DayData {
   day: string;
   title: string;
+  titleKey?: string;
+  titleParams?: Record<string, string | number>;
   exercises: (string | Exercise)[];
 }
 
