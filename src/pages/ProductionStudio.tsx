@@ -80,6 +80,8 @@ const generateCycleWeeks = (cycleId: number): WeekData[] => {
     const days: DayData[] = [
       {
         day: 'day1',
+        titleKey: 'day1StrengthArmCare',
+        titleParams: { workout: workoutKeys[workoutIndex1] },
         title: `Day 1: Strength ${workoutKeys[workoutIndex1]} + Arm Care`,
         exercises: [
           ...cycle.workouts[workoutKeys[workoutIndex1]],
@@ -88,21 +90,26 @@ const generateCycleWeeks = (cycleId: number): WeekData[] => {
       },
       {
         day: 'day2',
+        titleKey: 'day2RestRecovery',
         title: 'Day 2: Rest & Recovery',
         exercises: [{ name: 'Active Recovery', type: 'skill' as const, description: 'Light stretching, foam rolling, or complete rest. Allow muscles and arm to recover. Light J-band work optional.' }],
       },
       {
         day: 'day3',
+        titleKey: cycleId === 2 ? 'day3VelocityDev' : cycleId === 3 ? 'day3PitchDev' : 'day3ThrowingDev',
         title: cycleId === 2 ? 'Day 3: Velocity Development' : cycleId === 3 ? 'Day 3: Pitch Development' : 'Day 3: Throwing Development',
         exercises: getThrowingExercises(throwingDay1),
       },
       {
         day: 'day4',
+        titleKey: 'day4RestRecovery',
         title: 'Day 4: Rest & Recovery',
         exercises: [{ name: 'Active Recovery', type: 'skill' as const, description: 'Light stretching, foam rolling, or complete rest. Prepare for next strength session. J-band arm care encouraged.' }],
       },
       {
         day: 'day5',
+        titleKey: 'day5StrengthCommand',
+        titleParams: { workout: workoutKeys[workoutIndex2] },
         title: `Day 5: Strength ${workoutKeys[workoutIndex2]} + Command Work`,
         exercises: [
           ...cycle.workouts[workoutKeys[workoutIndex2]],
@@ -371,7 +378,7 @@ export default function ProductionStudio() {
                                 <Lock className="h-4 w-4 text-muted-foreground" />
                               )}
                               <span className={`text-sm ${!isAccessible ? 'text-muted-foreground' : ''}`}>
-                                {day.title}
+                                {day.titleKey ? t(`workoutContent.dayTitles.${day.titleKey}`, day.titleParams || {}) : day.title}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">

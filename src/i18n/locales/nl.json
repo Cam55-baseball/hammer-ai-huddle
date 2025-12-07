@@ -2111,15 +2111,410 @@
         "description": "Lig op bank met lichte boog, pak stang net buiten schouders. Gecontroleerd naar borst zakken, kort pauzeren, explosief drukken.",
         "notes": "Pauze op borst, door hielen drukken"
       },
+      "barbell_row": {
+        "name": "Barbell Row",
+        "description": "Heup scharnier 45°, pak stang buiten knieën. Trek naar onderste ribben terwijl je schouderbladen terugtrekt. Romp stabiel houden.",
+        "notes": "1s bovenaan knijpen, strikte vorm"
+      },
+      "landmine_rotational_press": {
+        "name": "Landmine Rotatie Press",
+        "description": "Stang verankerd in hoek. Begin op schouder met beide handen, roteer heupen explosief terwijl je diagonaal over lichaam drukt. Core drijft de beweging.",
+        "notes": "Elke kant, volledige heuprotatie"
+      },
+      "isometric_wall_sit": {
+        "name": "Isometrische Muurzit",
+        "description": "Rug plat tegen muur, glij naar beneden tot dijen parallel aan vloer. Druk onderrug tegen muur, span quads maximaal aan.",
+        "notes": "Dijen parallel, maximale quad spanning"
+      },
+      "isometric_pallof_hold": {
+        "name": "Isometrische Pallof Hold",
+        "description": "Kabel/band op borsthoogte, armen naar voren gestrekt. Weersta de rotatie met je core - anti-rotatie is het doel.",
+        "notes": "Elke kant, weersta rotatie"
+      },
       "front_squat": {
         "name": "Front Squat",
         "description": "Stang op voorste deltaspieren met clean grip of gekruiste armen. Ellebogen hoog, diep zakken met rechtop torso, explosief omhoog.",
         "notes": "Ellebogen omhoog, volledige diepte"
       },
+      "incline_db_press": {
+        "name": "Incline Dumbbell Press",
+        "description": "Op 30° incline, druk dumbbells van schouderhoogte naar volledige lockout. Gecontroleerd zakken, kort pauzeren onderaan, explosief omhoog.",
+        "notes": "30° incline, volledige ROM"
+      },
+      "weighted_pullup": {
+        "name": "Weighted Pull-Up",
+        "description": "Voeg gewicht toe via riem of vest. Van dead hang, trek tot kin boven stang. Controleer afdaling.",
+        "notes": "Dead hang start, gewicht toevoegen"
+      },
+      "romanian_deadlift": {
+        "name": "Roemeense Deadlift",
+        "description": "Stang op heupniveau, duw heupen naar achteren terwijl je lichte kniebuiging houdt. Zakken tot hamstring stretch, dan heupen naar voren.",
+        "notes": "Heup scharnier, hamstring stretch"
+      },
+      "cable_woodchop_high_low": {
+        "name": "Cable Woodchop Hoog-naar-Laag",
+        "description": "Hoge kabel, voeten schouderbreedte. Trek diagonaal naar beneden over lichaam met heuprotatie. Armen gestrekt, core drijft beweging.",
+        "notes": "Elke kant, explosieve rotatie"
+      },
+      "isometric_pushup_hold": {
+        "name": "Isometrische Push-Up Hold",
+        "description": "Zak naar middenpositie van push-up (ellebogen 90°). Stabiel houden zonder te zakken of stijgen. Maximale spanning in borst, triceps en core.",
+        "notes": "Middenpositie, max spanning"
+      },
+      "isometric_single_glute_bridge": {
+        "name": "Isometrische Enkele Been Glute Bridge",
+        "description": "Eén voet geplant, ander been gestrekt. Duw heup omhoog, houd vast bovenaan met rechte lijn van knie naar schouder. Maximale glute squeeze.",
+        "notes": "Elk been, heup hoog vergrendeld"
+      },
+      "box_squat": {
+        "name": "Box Squat",
+        "description": "Squat terug naar box op parallelle hoogte. Kort pauzeren op box met spanning behouden, dan explosief omhoog. Leert juiste heupmechanica.",
+        "notes": "Pauze op box, explosief omhoog"
+      },
+      "close_grip_bench": {
+        "name": "Close-Grip Bankdrukken",
+        "description": "Pak stang schouderbreedte, ellebogen 45° ingeklapt. Zak naar onderborst, pauzeer, explosief drukken. Benadrukt tricep kracht.",
+        "notes": "Ellebogen ingeklapt, tricep focus"
+      },
+      "single_arm_db_row": {
+        "name": "Enkele Arm Dumbbell Row",
+        "description": "Eén hand en knie op bank, andere voet breed geplant. Row dumbbell naar heup terwijl je actief rotatieweerstand biedt.",
+        "notes": "Elke kant, anti-rotatie focus"
+      },
+      "bulgarian_split_squat": {
+        "name": "Bulgaarse Split Squat",
+        "description": "Achtervoet verhoogd op bank achter je. Zak tot voordij parallel, duw door voorhiel om te staan. Houd torso rechtop.",
+        "notes": "Elk been, achtervoet verhoogd"
+      },
+      "pallof_press": {
+        "name": "Pallof Press",
+        "description": "Kabel op borsthoogte, sta loodrecht. Druk handen langzaam naar voren, houd 3s bij extensie terwijl je rotatie weerstaat, gecontroleerd terug.",
+        "notes": "3s hold bij volledige extensie"
+      },
+      "isometric_inverted_row": {
+        "name": "Isometrische Inverted Row Hold",
+        "description": "Onder stang op borsthoogte, trek omhoog en houd vast met borst bij stang. Lichaam in rechte lijn van enkels tot schouders.",
+        "notes": "Borst bij stang positie"
+      },
+      "isometric_side_plank": {
+        "name": "Isometrische Zijplank",
+        "description": "Op elleboog en zijkant voet. Houd lichaam in rechte lijn met heupen van grond. Actief duwen door steunelleboog.",
+        "notes": "Elke kant, heupen hoog"
+      },
+      "sumo_deadlift": {
+        "name": "Sumo Deadlift",
+        "description": "Brede stand, grip binnen knieën. Duw door hielen, duw knieën naar buiten, borst omhoog. Lockout met heupen door.",
+        "notes": "Brede stand, heupen door"
+      },
       "overhead_press": {
         "name": "Schouder Press",
         "description": "Stang voor schouders, grip net buiten schouders. Span core aan, recht omhoog drukken. Volledige lockout.",
         "notes": "Strikte press, volledige lockout"
+      },
+      "lat_pulldown": {
+        "name": "Lat Pulldown",
+        "description": "Brede grip, trek naar bovenborst met lichte boog. Knijp lats onderaan, controleer terugkeer. Volledige stretch bovenaan.",
+        "notes": "Brede grip, lats knijpen"
+      },
+      "walking_lunge": {
+        "name": "Walking Lunge",
+        "description": "Dumbbells aan zijkanten, stap vooruit in diepe lunge. Duw door voorhiel om vooruit te stappen in volgende lunge. Continue beweging.",
+        "notes": "Elk been, continue beweging"
+      },
+      "medball_rotational_slam": {
+        "name": "Med Ball Rotatie Slam",
+        "description": "Med ball bij heup, roteer explosief en slam bal diagonaal naar beneden. Volg bal, reset, herhaal. Maximale rotatie kracht output.",
+        "notes": "Elke kant, max intentie"
+      },
+      "isometric_split_squat": {
+        "name": "Isometrische Split Squat Hold",
+        "description": "Onderpositie van split squat, voordij parallel. Houd positie zonder bewegen, behoud rechtop torso en aangespannen glutes.",
+        "notes": "Elk been, onderpositie"
+      },
+      "isometric_hollow_body": {
+        "name": "Isometrische Hollow Body Hold",
+        "description": "Lig op rug, onderrug tegen vloer gedrukt. Benen gestrekt net van grond, armen boven hoofd. Houd positie zonder core te breken.",
+        "notes": "Onderrug naar beneden gedrukt"
+      },
+      "incline_barbell_press": {
+        "name": "Incline Barbell Press",
+        "description": "Op 30° incline met barbell. Zak naar bovenborst, pauzeer, explosief drukken. Bovenborst focus.",
+        "notes": "30° incline, zwaar"
+      },
+      "chest_supported_row": {
+        "name": "Chest-Supported Row",
+        "description": "Borst op incline bank, row dumbbells of stang naar ribben. Elimineert momentum, pure rugkracht.",
+        "notes": "Geen momentum, strikte vorm"
+      },
+      "db_shoulder_press": {
+        "name": "Dumbbell Schouder Press",
+        "description": "Zittend of staand, druk dumbbells van schouderhoogte naar volledige overhead lockout. Controleer afdaling.",
+        "notes": "Volledige lockout overhead"
+      },
+      "cable_woodchop_low_high": {
+        "name": "Cable Woodchop Laag-naar-Hoog",
+        "description": "Lage kabel. Trek diagonaal omhoog over lichaam met explosieve heuprotatie. Opwaartse kracht productie.",
+        "notes": "Elke kant, explosief"
+      },
+      "isometric_dead_hang": {
+        "name": "Isometrische Dead Hang",
+        "description": "Hang aan pull-up bar met gestrekte armen. Traint grip, strekt lats, decompresseert wervelkolom.",
+        "notes": "Grip + schouder gezondheid"
+      },
+      "db_bench_press": {
+        "name": "Dumbbell Bankdrukken",
+        "description": "Onafhankelijke arm pressing voor balans en stabiliteit. Volledige ROM, pauzeer onderaan.",
+        "notes": "Onafhankelijk armwerk"
+      },
+      "pallof_press_step": {
+        "name": "Pallof Press met Stap",
+        "description": "Dynamische anti-rotatie. Druk handen naar voren terwijl je zijwaarts stapt, vergroot hefboomarm.",
+        "notes": "Elke kant, stap uit"
+      },
+      "isometric_anti_rotation": {
+        "name": "Isometrische Anti-Rotatie Hold",
+        "description": "Kabel/band op borsthoogte. Armen gestrekt, weersta trek. Core stabiliteit onderhoud.",
+        "notes": "Elke kant, core stabiliteit"
+      },
+      "glute_bridge_march": {
+        "name": "Glute Bridge March",
+        "description": "Bridge positie, wissel knieën heffen terwijl heupen level blijven. Dynamische heup stabiliteit.",
+        "notes": "Elk been, heupen level"
+      },
+      "step_up": {
+        "name": "Step-Up",
+        "description": "Hoge box step-up met dumbbells. Duw door bovenste been, minimale duw van achterbeen.",
+        "notes": "Elk been, hoge box"
+      },
+      "plank_shoulder_tap": {
+        "name": "Plank met Schouder Tap",
+        "description": "Plank positie, wissel schouders tikken terwijl heuprotatie minimaal blijft. Core controle.",
+        "notes": "Elke kant, heupen stabiel"
+      },
+      "isometric_hip_flexor": {
+        "name": "Isometrische Heupflexor Hold",
+        "description": "Staand, trek knie naar borst tegen weerstand. Houd vast met heupflexor aangespannen bij maximale contractie.",
+        "notes": "Elk been, heup gezondheid"
+      },
+      "isometric_lunge_hold": {
+        "name": "Isometrische Lunge Hold",
+        "description": "Onderpositie van lunge, houd met spanning. Ontwikkelt positionele kracht.",
+        "notes": "Elk been, onderpositie"
+      },
+      "deficit_trap_bar": {
+        "name": "Deficit Trap Bar Deadlift",
+        "description": "Sta op 5-8cm platform in hex bar. Verhoogde ROM vereist grotere heup en been drive. Explosieve concentrisch.",
+        "notes": "5-8cm deficit, explosief"
+      },
+      "pause_squat": {
+        "name": "Pauze Squat",
+        "description": "3 seconden pauze onderaan squat. Elimineert stretch reflex, bouwt kracht vanuit stilstand.",
+        "notes": "3s pauze onderaan"
+      },
+      "spoto_press": {
+        "name": "Spoto Press",
+        "description": "Pauzeer 2.5cm van borst voor 2 seconden, dan drukken. Bouwt kracht bij stickingpoint zonder borst te raken.",
+        "notes": "2.5cm van borst, 2s pauze"
+      },
+      "pendlay_row": {
+        "name": "Pendlay Row",
+        "description": "Van vloer elke rep, explosieve row naar onderborst. Dead stop start bouwt pure trekkracht.",
+        "notes": "Dead stop elke rep"
+      },
+      "single_leg_rdl": {
+        "name": "Enkele Been RDL",
+        "description": "Scharnier op één been, ander been strekt naar achteren. Balans en hamstring werk. Controle doorheen.",
+        "notes": "Elk been, balans focus"
+      },
+      "isometric_pause_squat": {
+        "name": "Isometrische Pauze Squat Hold",
+        "description": "Houd onderaan squat voor verlengde duur. Bouwt positionele kracht en stabiliteit.",
+        "notes": "Verlengde hold, max spanning"
+      },
+      "isometric_loaded_stretch": {
+        "name": "Isometrische Belaste Stretch",
+        "description": "Houd gestrekte positie onder belasting. Ontwikkelt kracht door volledige ROM.",
+        "notes": "Gecontroleerde stretch, behoud spanning"
+      },
+      "front_squat_pause": {
+        "name": "Front Squat met Pauze",
+        "description": "2 seconden pauze onderaan. Core stabiliteit met zware belasting.",
+        "notes": "2s pauze, ellebogen omhoog"
+      },
+      "z_press": {
+        "name": "Z-Press",
+        "description": "Zittend op vloer drukken. Elimineert been drive, pure bovenlichaam kracht.",
+        "notes": "Benen gestrekt, strikte press"
+      },
+      "cable_low_high_rotation": {
+        "name": "Cable Laag-naar-Hoog Rotatie",
+        "description": "Opwaarts rotatie patroon met volledige heup engagement.",
+        "notes": "Elke kant, volledige rotatie"
+      },
+      "isometric_dead_bug": {
+        "name": "Isometrische Dead Bug Hold",
+        "description": "Ledematen gestrekt, onderrug naar beneden gedrukt. Core stabiliteit hold.",
+        "notes": "Tegenovergestelde arm/been gestrekt"
+      },
+      "barbell_hip_thrust": {
+        "name": "Barbell Hip Thrust",
+        "description": "Stang over heupen, duw heupen omhoog. Maximale glute kracht voor drive fase.",
+        "notes": "Volledige heup extensie, knijp bovenaan"
+      },
+      "half_kneel_anti_rotation": {
+        "name": "Half-Knielen Kabel Anti-Rotatie",
+        "description": "Half-knielpositie, kabel op borsthoogte, weersta rotatie. Traint romp stabiliteit.",
+        "notes": "Elke kant, behoud rechtop houding"
+      },
+      "isometric_glute_bridge": {
+        "name": "Isometrische Glute Bridge Hold",
+        "description": "Heupen verhoogd, enkel of dubbel been. Glute uithoudingsvermogen voor herhaalde drive fase activatie.",
+        "notes": "Volledige heup extensie, maximale squeeze"
+      },
+      "pushup_variations": {
+        "name": "Push-Up Variaties",
+        "description": "Standaard, diamond, of archer push-ups. Schouder stabiliteit met lichaamsgewicht controle.",
+        "notes": "Volledige ROM, core aangespannen"
+      },
+      "face_pulls": {
+        "name": "Face Pulls",
+        "description": "Kabel op gezichtshoogte, trek naar oren met externe rotatie. Cruciaal voor achterste schouder gezondheid.",
+        "notes": "Ellebogen hoog, externe rotatie aan einde"
+      },
+      "hip_thrust": {
+        "name": "Hip Thrust",
+        "description": "Zware hip thrusts voor glute kracht. Maximale drive fase kracht productie.",
+        "notes": "Zware belasting, volledige extensie"
+      },
+      "medball_scoop_toss": {
+        "name": "Med Ball Scoop Toss",
+        "description": "Explosieve heup extensie met med ball worp. Kracht transfer drill.",
+        "notes": "Max intentie, heup extensie focus"
+      },
+      "back_squat": {
+        "name": "Back Squat",
+        "description": "Zware squats voor beenkracht. Diepe diepte met gecontroleerde afdaling.",
+        "notes": "Diep, gecontroleerde reps"
+      },
+      "barbell_bench_press": {
+        "name": "Barbell Bankdrukken",
+        "description": "Zwaar drukken voor bovenlichaam kracht. Borst en tricep kracht voor acceleratie.",
+        "notes": "Pauze op borst, explosieve drive"
+      },
+      "half_kneel_chop": {
+        "name": "Half-Knielen Kabel Chop",
+        "description": "Rotatie kracht vanuit half-knielen. Heup en core integratie.",
+        "notes": "Elke kant, explosief"
+      },
+      "half_kneel_lift": {
+        "name": "Half-Knielen Kabel Lift",
+        "description": "Laag-naar-hoog lift patroon vanuit half-knielen.",
+        "notes": "Elke kant, volledige range"
+      },
+      "lateral_lunge": {
+        "name": "Laterale Lunge",
+        "description": "Laterale kracht voor heup mobiliteit en adductor kracht.",
+        "notes": "Elk been, diepe lunge"
+      },
+      "face_pulls_ext_rot": {
+        "name": "Face Pulls met Externe Rotatie",
+        "description": "Toegevoegde externe rotatie bij piek contractie. Maximum achterste schouder werk.",
+        "notes": "Externe rotatie aan einde"
+      },
+      "single_arm_landmine": {
+        "name": "Enkele Arm Landmine Press",
+        "description": "Unilaterale pressing met rotatie element. Core stabiliteit eis.",
+        "notes": "Elke arm, stabiele basis"
+      },
+      "eccentric_trap_bar": {
+        "name": "Eccentrische Trap Bar Deadlift",
+        "description": "5 seconden dalingsfase. Maximale spierspanning tijdens eccentrisch.",
+        "notes": "5s negatief, gecontroleerd"
+      },
+      "eccentric_squat": {
+        "name": "Eccentrische Squat",
+        "description": "5 seconden afdaling, explosief omhoog. Eccentrische spierbelasting.",
+        "notes": "5s naar beneden, snel omhoog"
+      },
+      "eccentric_bench": {
+        "name": "Eccentrisch Bankdrukken",
+        "description": "5 seconden zakken naar borst. Bouwt borst en tricep massa.",
+        "notes": "5s negatief, pauze, drukken"
+      },
+      "eccentric_row": {
+        "name": "Eccentrische Row",
+        "description": "4 seconden dalingsfase. Rugspier hypertrofie.",
+        "notes": "4s negatief, strikte vorm"
+      },
+      "eccentric_rdl": {
+        "name": "Eccentrische RDL",
+        "description": "4 seconden zakken met hamstring focus. Time under tension voor groei.",
+        "notes": "4s negatief, controle"
+      },
+      "eccentric_bulgarian": {
+        "name": "Eccentrische Bulgaarse Split Squat",
+        "description": "4 seconden afdaling elke rep. Quad hypertrofie focus.",
+        "notes": "4s naar beneden, elk been"
+      },
+      "eccentric_overhead": {
+        "name": "Eccentrische Overhead Press",
+        "description": "4 seconden zakken vanuit lockout. Schouder massa opbouw.",
+        "notes": "4s negatief, strikt"
+      },
+      "eccentric_pullup": {
+        "name": "Eccentrische Pull-Up",
+        "description": "5 seconden zakken vanuit top. Lat ontwikkeling.",
+        "notes": "5s negatief, volledige stretch"
+      },
+      "eccentric_single_row": {
+        "name": "Eccentrische Enkele Arm Row",
+        "description": "4 seconden negatief elke rep. Unilaterale rug ontwikkeling.",
+        "notes": "4s negatief, elke kant"
+      },
+      "eccentric_step_down": {
+        "name": "Eccentrische Step-Down",
+        "description": "Gecontroleerde enkele been daling van box. Quad eccentrische kracht.",
+        "notes": "Elk been, gecontroleerde afdaling"
+      },
+      "eccentric_incline": {
+        "name": "Eccentrische Incline Press",
+        "description": "4 seconden zakken op incline. Bovenborst ontwikkeling.",
+        "notes": "4s negatief, 30° incline"
+      },
+      "eccentric_lat_pulldown": {
+        "name": "Eccentrische Lat Pulldown",
+        "description": "4 seconden terug naar start. Lat eccentrische belasting.",
+        "notes": "4s negatief, volledige stretch"
+      },
+      "eccentric_nordic": {
+        "name": "Eccentrische Nordic Curl",
+        "description": "Langzame eccentrische hamstring daling. Blessure preventie focus.",
+        "notes": "Controleer afdaling, vang onderaan"
+      },
+      "eccentric_dip": {
+        "name": "Eccentrische Dip",
+        "description": "5 seconden dalingsfase. Tricep en borst ontwikkeling.",
+        "notes": "5s negatief, diepe stretch"
+      },
+      "tempo_front_squat": {
+        "name": "Tempo Front Squat",
+        "description": "4 seconden afdaling, 2 seconden pauze, explosief omhoog. Totale time under tension.",
+        "notes": "4-2-1 tempo"
+      },
+      "negative_pullup": {
+        "name": "Negatieve Pull-Up",
+        "description": "Spring naar top, 6 seconden zakken. Bouwt trekkracht.",
+        "notes": "6s negatief, volledige hang"
+      },
+      "eccentric_lateral_lunge": {
+        "name": "Eccentrische Laterale Lunge",
+        "description": "4 seconden zakken in laterale lunge. Adductor ontwikkeling.",
+        "notes": "4s negatief, elke kant"
+      },
+      "landmine_press": {
+        "name": "Landmine Press",
+        "description": "Enkele arm press met landmine stang. Scapula-vriendelijke overhead pressing met rotatie element.",
+        "notes": "Elke arm, stabiele core"
       }
     },
     "batSpeed": {
@@ -2132,6 +2527,101 @@
         "name": "Connectie Bal Oefening",
         "description": "Klem schuimbal tussen armen en romp tijdens swing. Behoudt bovenlichaam connectie.",
         "notes": "Bal tussen biceps en borst"
+      },
+      "bat_behind_back": {
+        "name": "Knuppel Achter Rug Rotaties",
+        "description": "Houd knuppel over schouders achter rug. Oefen heuprotatie die schouders aandrijft.",
+        "notes": "Heupen leiden, core aangespannen"
+      },
+      "wrist_snap": {
+        "name": "Pols Snap Oefening",
+        "description": "Snelle pols snaps bij contactpunt. Ontwikkelt snelle handen door de zone.",
+        "notes": "Snap bij contactpunt"
+      },
+      "resistance_band_swings": {
+        "name": "Weerstandsband Snelheid Swings",
+        "description": "Bevestig band aan knuppel voor overload. Swing tegen weerstand voor kracht.",
+        "notes": "Vecht tegen band, volledige rotatie"
+      },
+      "one_handed_swings": {
+        "name": "Eenhandige Snelheid Swings",
+        "description": "Alleen boven- of onderhand swings. Ontwikkelt hand onafhankelijkheid en knuppel controle.",
+        "notes": "Elke hand, gecontroleerde swing"
+      },
+      "quick_hands": {
+        "name": "Snelle Handen Oefening",
+        "description": "Partner gooit ballen van korte afstand. Snelle reacties, korte swings.",
+        "notes": "Snelle swing, zie bal"
+      },
+      "swing_speed_measure": {
+        "name": "Swing Snelheid Meting",
+        "description": "Track knuppelsnelheid met swing analyzer. Registreer voortgang over tijd.",
+        "notes": "Track km/u, streef naar verbetering"
+      },
+      "bat_waggle": {
+        "name": "Knuppel Waggle Snelheid Oefening",
+        "description": "Snelle knuppelbeweging in stance. Houdt handen los en klaar.",
+        "notes": "Blijf los, lichte grip"
+      },
+      "speed_tee_15": {
+        "name": "Snelheid Tee Werk - 15 Swings",
+        "description": "Volledige snelheid swings van tee. Focus op max knuppelsnelheid, niet mechanica.",
+        "notes": "15 swings, max inspanning"
+      },
+      "velocity_ladder": {
+        "name": "Snelheid Ladder Swings",
+        "description": "Progressieve snelheidstoename: 70%, 80%, 90%, 100%. Bouw naar max.",
+        "notes": "4 sets, toenemende intensiteit"
+      },
+      "bat_flip_speed": {
+        "name": "Knuppel Flip Snelheid Oefening",
+        "description": "Flip knuppel end-over-end snel. Ontwikkelt polssnelheid en controle.",
+        "notes": "Snelle flips, schoon vangen"
+      },
+      "no_stride_swings": {
+        "name": "Geen Stap Snelheid Swings",
+        "description": "Swing vanuit stance zonder stap. Isoleert bovenlichaam snelheid.",
+        "notes": "Geen stap, bovenlichaam focus"
+      },
+      "fast_hands_reaction": {
+        "name": "Snelle Handen Reactie Oefening",
+        "description": "Gekleurde bal gooi - swing alleen op specifieke kleur. Snelle besluitvorming.",
+        "notes": "Reageer en beslis snel"
+      },
+      "exit_speed_comp": {
+        "name": "Exit Snelheid Competitie",
+        "description": "Competeer voor hoogste exit velocity van tee of soft toss.",
+        "notes": "Track exit snelheid, versla persoonlijke best"
+      },
+      "rotational_snap": {
+        "name": "Rotatie Snap Oefening",
+        "description": "Focus op explosieve heuprotatie om swing te initiëren. Heupen leiden handen.",
+        "notes": "Snap heupen, transfer energie"
+      },
+      "light_bat_20": {
+        "name": "Lichte Knuppel Max Snelheid - 20 Swings",
+        "description": "Snelheidsknuppel of lichtere knuppel voor overspeed training. Beweeg het snel.",
+        "notes": "20 swings, maximale snelheid"
+      },
+      "heavy_light_contrast": {
+        "name": "Zwaar-Licht Contrast - 10 Sets",
+        "description": "Wissel tussen zware en lichte knuppel swings. Contrast trainingseffect.",
+        "notes": "5 zwaar, 5 licht, herhaal"
+      },
+      "intent_tee_max": {
+        "name": "Intentie Tee Werk - Max Inspanning",
+        "description": "Maximale intentie swings van tee. Elke swing is wedstrijd swing inspanning.",
+        "notes": "100% inspanning elke swing"
+      },
+      "barrel_speed_focus": {
+        "name": "Barrel Snelheid Focus Oefening",
+        "description": "Focus op barrel acceleratie door de zone. Zweep de barrel.",
+        "notes": "Voel barrel zweep"
+      },
+      "overload_underload": {
+        "name": "Overload/Underload Protocol",
+        "description": "Compleet protocol met gewogen en snelheidsknuppels. Volledige contrast sessie.",
+        "notes": "Zwaar → normaal → licht"
       }
     },
     "armCare": {
@@ -2144,6 +2634,36 @@
         "name": "J-Band Externe Rotatie",
         "description": "Elleboog op 90°, draai hand naar buiten tegen bandweerstand. Versterk externe rotatoren.",
         "notes": "Langzaam en gecontroleerd, 15-20 reps"
+      },
+      "jband_scap": {
+        "name": "J-Band Scapula Retractie",
+        "description": "Trek band uit elkaar op borsthoogte. Knijp schouderbladen samen.",
+        "notes": "2s knijpen aan einde, 15 reps"
+      },
+      "jband_high_pulls": {
+        "name": "J-Band Hoge Pulls",
+        "description": "Armen boven hoofd met band, trek uit elkaar terwijl je spanning houdt.",
+        "notes": "Houd armen hoog, 15 reps"
+      },
+      "sleeper_stretch": {
+        "name": "Sleeper Stretch",
+        "description": "Lig op werpzijde, duw pols naar vloer met andere hand. Interne rotatie stretch.",
+        "notes": "30s houden, zachte druk"
+      },
+      "crossbody_stretch": {
+        "name": "Cross-Body Stretch",
+        "description": "Trek werparm over lichaam met andere arm. Achterste schouder stretch.",
+        "notes": "30s houden, voel stretch in achterkant schouder"
+      },
+      "wrist_flex_ext": {
+        "name": "Pols Flexie/Extensie",
+        "description": "Krul en strek pols met licht gewicht. Onderarm kracht voor arm gezondheid.",
+        "notes": "15 reps elke richting"
+      },
+      "forearm_pro_sup": {
+        "name": "Onderarm Pronatie/Supinatie",
+        "description": "Roteer onderarm palm omhoog en palm omlaag met licht gewicht. Pols mobiliteit.",
+        "notes": "15 reps, controleer rotatie"
       }
     },
     "velocity": {
@@ -2152,10 +2672,80 @@
         "description": "Lichte worpen op 18 meter. Armpad warming-up, niet snelheid gefocust.",
         "notes": "10-15 worpen, lichte inspanning"
       },
+      "long_toss_90": {
+        "name": "Long Toss Opbouw - 27m",
+        "description": "Verhoog afstand naar 27 meter. Gemiddelde inspanning, armsnelheid opbouwen.",
+        "notes": "10-15 worpen, gemiddelde inspanning"
+      },
+      "long_toss_120": {
+        "name": "Long Toss Extensie - 36m",
+        "description": "Verleng naar 36 meter. Hogere boog toegestaan, armkracht opbouwen.",
+        "notes": "10-15 worpen, verhoogde inspanning"
+      },
       "long_toss_max": {
         "name": "Long Toss Max - 45-60m",
         "description": "Maximale comfortabele afstand. Boog worpen voor arm conditioning.",
         "notes": "10-15 worpen, maximale inspanning"
+      },
+      "pulldown_phase": {
+        "name": "Pulldown Fase",
+        "description": "Werk terug van max afstand met pulldown worpen. Lijn drive traject.",
+        "notes": "Trek terug in 9m incrementen"
+      },
+      "velo_day_gun": {
+        "name": "Velo Dag - Gun Metingen",
+        "description": "Snelheid gefocuste sessie met radar metingen. Track max en gemiddelde.",
+        "notes": "Registreer snelheden, track voortgang"
+      },
+      "weighted_7oz": {
+        "name": "Gewogen Bal - 200g Overload",
+        "description": "Zware bal worpen voor armkracht. Gecontroleerde intentie.",
+        "notes": "15-20 worpen, niet max inspanning"
+      },
+      "weighted_5oz": {
+        "name": "Gewogen Bal - 140g Standaard",
+        "description": "Wedstrijd gewicht bal of standaard 140g gewogen bal.",
+        "notes": "15-20 worpen, voel normale armpad"
+      },
+      "weighted_4oz": {
+        "name": "Gewogen Bal - 110g Underload",
+        "description": "Lichte bal voor armsnelheid ontwikkeling. Beweeg het snel.",
+        "notes": "15-20 worpen, max armsnelheid"
+      },
+      "contrast_throws": {
+        "name": "Contrast Worpen",
+        "description": "Wissel tussen overload en underload ballen. Contrast trainingseffect.",
+        "notes": "5 zwaar, 5 licht, herhaal 2-3x"
+      },
+      "crow_hop": {
+        "name": "Crow Hop Worpen",
+        "description": "Werp met crow hop voor momentum en timing. Armsnelheid opbouwen.",
+        "notes": "Volledige intentie, goede timing"
+      },
+      "max_intent_bp": {
+        "name": "Max Intentie Bullpen",
+        "description": "Bullpen sessie op maximale intentie. Wedstrijd-achtige snelheid focus.",
+        "notes": "15-25 worpen, allemaal max inspanning"
+      },
+      "plyocare_pivot": {
+        "name": "PlyoCare Pivot Pickoffs",
+        "description": "Pivot worp drill met plyocare bal. Snelle voeten en arm actie.",
+        "notes": "10 elke richting"
+      },
+      "plyocare_rollins": {
+        "name": "PlyoCare Roll-Ins",
+        "description": "Rol in worp met plyocare bal. Heup leidt en arm volgt.",
+        "notes": "10-15 worpen, voel heup leiden"
+      },
+      "plyocare_reverse": {
+        "name": "PlyoCare Reverse Worpen",
+        "description": "Rug naar doel, roteer en werp. Rotatie sequencing.",
+        "notes": "10 worpen, volledige rotatie"
+      },
+      "rocker_throws": {
+        "name": "Rocker Worpen",
+        "description": "Wieg terug en werp met momentum. Timing en gewicht transfer.",
+        "notes": "15 worpen, voel momentum"
       }
     },
     "pitchDev": {
@@ -2164,10 +2754,70 @@
         "description": "Oefen grip variaties, vind comfortabele vingerdruk en naadoriëntatie.",
         "notes": "Vind je grip"
       },
+      "curve_spin": {
+        "name": "Curve Spin Oefeningen",
+        "description": "Korte afstand spins focusend op strakke rotatie en as. Zie de spin.",
+        "notes": "Focus op strakke spin"
+      },
+      "curve_shape": {
+        "name": "Curve Vorm Focus",
+        "description": "Volledige afstand curves, focusend op consistente breek vorm en diepte.",
+        "notes": "Consistente vorm"
+      },
+      "slider_grip": {
+        "name": "Slider Grip Werk",
+        "description": "Oefen slider grip met vingerdruk op binnenste naad. Vind je comfort zone.",
+        "notes": "Vind grip comfort"
+      },
+      "slider_wrist": {
+        "name": "Slider Pols Actie",
+        "description": "Isoleer slider release actie. Kogel spin met strakke stip.",
+        "notes": "Strakke stip spin"
+      },
+      "slider_tunnel": {
+        "name": "Slider Tunnel Oefening",
+        "description": "Gooi slider door fastball tunnel, late breek voor misleiding.",
+        "notes": "Zelfde tunnel als fastball"
+      },
       "changeup_grip": {
         "name": "Changeup Grip Werk",
         "description": "Circle change, 3-vinger of andere grip variaties. Vind wat werkt.",
         "notes": "Comfortabele grip"
+      },
+      "changeup_arm_speed": {
+        "name": "Changeup Arm Snelheid Matching",
+        "description": "Match fastball armsnelheid met changeup grip. Misleiding is key.",
+        "notes": "Zelfde armsnelheid"
+      },
+      "changeup_feel": {
+        "name": "Changeup Gevoel Oefeningen",
+        "description": "Korte afstand changeups voor touch en gevoel voor snelheidsverschil.",
+        "notes": "Voel snelheidsverschil"
+      },
+      "quadrant_work": {
+        "name": "Kwadrant Werk",
+        "description": "Raak specifieke kwadranten van strike zone. Bouw precisie commando.",
+        "notes": "Raak je spots"
+      },
+      "glove_arm_side": {
+        "name": "Handschoen Zijde/Arm Zijde",
+        "description": "Werk beide randen van plate. Ontwikkel horizontaal commando.",
+        "notes": "Raak hoeken"
+      },
+      "up_down_ladder": {
+        "name": "Op/Neer Ladder",
+        "description": "Werk top en bodem van zone. Verticaal commando ontwikkeling.",
+        "notes": "Varieer hoogte"
+      },
+      "pitch_sequencing": {
+        "name": "Pitch Sequencing",
+        "description": "Oefen 2 en 3 pitch sequenties. Bouw wedstrijd-achtige patronen.",
+        "notes": "Denk als een wedstrijd"
+      },
+      "tunnel_drills": {
+        "name": "Tunnel Oefeningen",
+        "description": "Gooi verschillende pitches door dezelfde tunnel. Ontwikkel misleiding.",
+        "notes": "Zelfde look, verschillende breek"
       }
     },
     "equipment": {
@@ -2177,13 +2827,37 @@
         "balls": { "name": "Ballen", "description": "Minimaal 12 ballen" },
         "barbell": { "name": "Halter & Gewichten", "description": "Voor samengestelde liften (20kg stang + gewichten)" },
         "dumbbells": { "name": "Dumbbells", "description": "Verschillende gewichten 5-35+ kg" },
-        "trap_bar": { "name": "Trap/Hex Bar", "description": "Voor deadlifts - essentieel voor programma" }
+        "trap_bar": { "name": "Trap/Hex Bar", "description": "Voor deadlifts - essentieel voor programma" },
+        "speed_bat": { "name": "Snelheidsknuppel", "description": "Lichte knuppel voor overspeed training" },
+        "heavy_bat": { "name": "Gewogen Knuppel", "description": "Voor overload swing oefeningen" },
+        "resistance_bands": { "name": "Weerstandsbanden", "description": "Voor band swings en warming-up" },
+        "connection_ball": { "name": "Connectie Bal", "description": "Schuimbal of swing connectie hulp" },
+        "swing_analyzer": { "name": "Swing Analyzer", "description": "Knuppelsnelheid tracking apparaat" },
+        "plyo_balls": { "name": "Plyo Ballen", "description": "Gewogen plyo ballen voor kracht oefeningen" },
+        "net": { "name": "Batting Net", "description": "Voor swing praktijk" },
+        "pullup_bar": { "name": "Pull-Up Bar", "description": "Voor pull-ups en hangoefeningen" },
+        "bench": { "name": "Bank", "description": "Voor bankdrukken en ondersteunende oefeningen" },
+        "cable_machine": { "name": "Kabel Machine", "description": "Voor kabel oefeningen (of band alternatief)" }
       },
       "pitching": {
         "glove": { "name": "Werper Handschoen", "description": "Wedstrijd-klare werper handschoen" },
         "balls": { "name": "Ballen", "description": "Minimaal 24 ballen voor volume werk" },
         "jbands": { "name": "J-Bands/Weerstandsbanden", "description": "Voor dagelijkse armverzorging routine" },
-        "weighted_balls": { "name": "Verzwaarde Ballen", "description": "Set van 110g, 140g, 200g, 255g, 310g" }
+        "weighted_balls": { "name": "Verzwaarde Ballen", "description": "Set van 110g, 140g, 200g, 255g, 310g" },
+        "plyocare_balls": { "name": "PlyCare Ballen", "description": "PlyCare ball set in verschillende gewichten" },
+        "radar_gun": { "name": "Radar Gun", "description": "Snelheid tracking apparaat" },
+        "mound": { "name": "Draagbare Mound", "description": "Draagbare pitching mound voor oefening" },
+        "catcher": { "name": "Catcher/Net", "description": "Catcher of net voor bullpen werk" },
+        "barbell": { "name": "Halter & Gewichten", "description": "Voor samengestelde liften (20kg stang + gewichten)" },
+        "dumbbells": { "name": "Dumbbells", "description": "Verschillende gewichten 5-35+ kg" },
+        "trap_bar": { "name": "Trap/Hex Bar", "description": "Voor deadlifts - essentieel voor programma" },
+        "pullup_bar": { "name": "Pull-Up Bar", "description": "Voor pull-ups en hangen" },
+        "bench": { "name": "Bank", "description": "Voor pers oefeningen" },
+        "cable_machine": { "name": "Kabel Machine", "description": "Voor kabel werk (of band alternatief)" },
+        "med_ball": { "name": "Medicine Ball", "description": "Voor rotatie kracht oefeningen" },
+        "foam_roller": { "name": "Foam Roller", "description": "Voor herstel en zelf-massage" },
+        "target": { "name": "Pitching Target", "description": "Doel voor commando werk" },
+        "towel": { "name": "Handdoek", "description": "Voor handdoek oefeningen en armverzorging" }
       }
     }
   }
