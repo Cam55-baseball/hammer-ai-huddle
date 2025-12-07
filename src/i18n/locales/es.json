@@ -3591,5 +3591,21 @@
         }
       }
     }
+  },
+  "workoutStreak": {
+    "title": "Racha de Entrenamiento",
+    "currentStreak": "Racha Actual",
+    "longestStreak": "Racha Más Larga",
+    "totalWorkouts": "Entrenamientos Totales",
+    "dayStreak": "día de racha",
+    "daysStreak": "días de racha",
+    "keepGoing": "¡Sigue así!",
+    "newRecord": "¡Nuevo Récord!",
+    "milestone100": "🎉 ¡100 Entrenamientos!",
+    "milestone500": "🔥 ¡Leyenda de 500 Entrenamientos!",
+    "noStreak": "¡Comienza tu racha hoy!",
+    "streakBroken": "Racha reiniciada - ¡vamos a reconstruirla!",
+    "fireUnlocked": "¡El fuego se desbloquea a los 5 días!",
+    "glowUnlocked": "¡La llama brilla a los 25 días!"
   }
 }

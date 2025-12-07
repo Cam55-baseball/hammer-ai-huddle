@@ -687,14 +687,19 @@ export type Database = {
           experience_level: string | null
           id: string
           last_activity: string | null
+          last_workout_date: string | null
           module: string
           sport: string
           started_at: string | null
+          streak_last_updated: string | null
           sub_module: string
+          total_workouts_completed: number | null
           updated_at: string | null
           user_id: string
           week_progress: Json | null
           weight_log: Json | null
+          workout_streak_current: number | null
+          workout_streak_longest: number | null
         }
         Insert: {
           created_at?: string | null
@@ -706,14 +711,19 @@ export type Database = {
           experience_level?: string | null
           id?: string
           last_activity?: string | null
+          last_workout_date?: string | null
           module: string
           sport: string
           started_at?: string | null
+          streak_last_updated?: string | null
           sub_module: string
+          total_workouts_completed?: number | null
           updated_at?: string | null
           user_id: string
           week_progress?: Json | null
           weight_log?: Json | null
+          workout_streak_current?: number | null
+          workout_streak_longest?: number | null
         }
         Update: {
           created_at?: string | null
@@ -725,14 +735,19 @@ export type Database = {
           experience_level?: string | null
           id?: string
           last_activity?: string | null
+          last_workout_date?: string | null
           module?: string
           sport?: string
           started_at?: string | null
+          streak_last_updated?: string | null
           sub_module?: string
+          total_workouts_completed?: number | null
           updated_at?: string | null
           user_id?: string
           week_progress?: Json | null
           weight_log?: Json | null
+          workout_streak_current?: number | null
+          workout_streak_longest?: number | null
         }
         Relationships: []
       }

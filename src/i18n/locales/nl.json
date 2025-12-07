@@ -2867,5 +2867,21 @@
         "lacrosse_ball": { "name": "Lacrossebal", "description": "Voor trigger point en fascia release" }
       }
     }
+  },
+  "workoutStreak": {
+    "title": "Training Reeks",
+    "currentStreak": "Huidige Reeks",
+    "longestStreak": "Langste Reeks",
+    "totalWorkouts": "Totaal Trainingen",
+    "dayStreak": "dag reeks",
+    "daysStreak": "dagen reeks",
+    "keepGoing": "Ga zo door!",
+    "newRecord": "Nieuw Record!",
+    "milestone100": "🎉 100 Trainingen Mijlpaal!",
+    "milestone500": "🔥 500 Trainingen Legende!",
+    "noStreak": "Begin vandaag je reeks!",
+    "streakBroken": "Reeks gereset - laten we opnieuw bouwen!",
+    "fireUnlocked": "Vuur ontgrendelt bij 5 dagen!",
+    "glowUnlocked": "Vlam gloeit bij 25 dagen!"
   }
 }

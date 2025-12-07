@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowLeft, Dumbbell, Flame, ChevronDown, ChevronUp, Check, Lock, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Dumbbell, ChevronDown, ChevronUp, Check, Lock, AlertTriangle } from 'lucide-react';
+import { WorkoutStreakCard } from '@/components/workout-modules/WorkoutStreakCard';
 import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
 import { NotificationPermissionCard } from '@/components/workout-modules/NotificationPermissionCard';
 import { useWorkoutNotifications } from '@/hooks/useWorkoutNotifications';
@@ -267,27 +268,12 @@ export default function ProductionStudio() {
           lastActivity={progress?.last_activity}
         />
 
-        {/* Current Cycle Badge (Read-Only) */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Flame className="h-4 w-4 text-orange-500" />
-              {t('workoutModules.trainingCycle')}
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {t('workoutModules.cycleProgressDescription')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-3 flex-wrap">
-              <Badge variant="default" className="text-sm px-3 py-1">
-                {t('workoutModules.cycleProgress', { current: currentCycle, total: 4 })}
-              </Badge>
-              <span className="text-sm font-medium">{t(`workoutModules.pitchingCycles.cycle${currentCycle}.name`)}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">{t(`workoutModules.pitchingCycles.cycle${currentCycle}.description`)}</p>
-          </CardContent>
-        </Card>
+        {/* Workout Streak Card */}
+        <WorkoutStreakCard
+          currentStreak={progress?.workout_streak_current || 0}
+          longestStreak={progress?.workout_streak_longest || 0}
+          totalWorkouts={progress?.total_workouts_completed || 0}
+        />
 
         {/* Experience Level */}
         <Card>
