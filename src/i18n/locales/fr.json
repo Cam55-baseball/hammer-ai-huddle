@@ -2723,5 +2723,895 @@
       "comeback_kid": "Le Retour",
       "comeback_kid_desc": "Complétez un défi après en avoir échoué un"
     }
+  },
+  "workoutContent": {
+    "weekTitle": "Semaine {{number}}",
+    "dayTitles": {
+      "day1StrengthBatSpeed": "Jour 1: Force Totale {{workout}} + Vitesse de Batte",
+      "day2Rest": "Jour 2: Repos",
+      "day3BatSpeed": "Jour 3: Développement Vitesse de Batte",
+      "day4Rest": "Jour 4: Repos",
+      "day5StrengthBatSpeed": "Jour 5: Force Totale {{workout}} + Vitesse de Batte",
+      "day1StrengthArmCare": "Jour 1: Force {{workout}} + Soin du Bras",
+      "day2RestRecovery": "Jour 2: Repos et Récupération",
+      "day3VelocityDev": "Jour 3: Développement de Vélocité",
+      "day3PitchDev": "Jour 3: Développement des Lancers",
+      "day3ThrowingDev": "Jour 3: Développement du Lancer",
+      "day4RestRecovery": "Jour 4: Repos et Récupération",
+      "day5StrengthCommand": "Jour 5: Force {{workout}} + Travail de Contrôle"
+    },
+    "activeRecovery": {
+      "name": "Récupération Active",
+      "hittingDesc": "Étirements légers, rouleau de mousse ou repos complet. Permettez aux muscles de récupérer de l'entraînement de force.",
+      "pitchingDesc": "Étirements légers, rouleau de mousse ou repos complet. Permettez aux muscles et au bras de récupérer. Travail léger J-band optionnel.",
+      "pitchingDesc2": "Étirements légers, rouleau de mousse ou repos complet. Préparez-vous pour la prochaine session de force. Soin du bras J-band encouragé."
+    },
+    "exercises": {
+      "trap_bar_deadlift": {
+        "name": "Soulevé de Terre Barre Hexagonale",
+        "description": "Debout dans la barre hex, saisissez les poignées sur les côtés, poussez à travers les talons pour vous lever. Hanches et genoux s'étendent simultanément.",
+        "notes": "Extension complète des hanches en haut"
+      },
+      "barbell_back_squat": {
+        "name": "Squat Arrière avec Barre",
+        "description": "Barre sur les trapèzes supérieurs, pieds largeur d'épaules. Descendez jusqu'à ce que le pli de la hanche soit sous le genou, puis explosez vers le haut.",
+        "notes": "Cassez le parallèle, poussée explosive"
+      },
+      "bench_press": {
+        "name": "Développé Couché",
+        "description": "Allongé sur le banc avec léger arc, saisissez la barre juste à l'extérieur des épaules. Descendez à la poitrine avec contrôle, pause brève, puis poussez explosivement.",
+        "notes": "Pause sur la poitrine, poussez à travers les talons"
+      },
+      "barbell_row": {
+        "name": "Rowing Barre",
+        "description": "Charnière de hanche à 45°, saisissez la barre à l'extérieur des genoux. Tirez vers les côtes basses en rétractant les omoplates. Gardez le torse stable.",
+        "notes": "Serrez 1s en haut, forme stricte"
+      },
+      "landmine_rotational_press": {
+        "name": "Développé Rotatif Landmine",
+        "description": "Barre ancrée dans le coin. Commencez à l'épaule avec les deux mains, faites pivoter les hanches explosivement en poussant diagonalement.",
+        "notes": "Chaque côté, rotation complète des hanches"
+      },
+      "isometric_wall_sit": {
+        "name": "Chaise Isométrique au Mur",
+        "description": "Dos plat contre le mur, glissez jusqu'à ce que les cuisses soient parallèles au sol. Pressez le bas du dos dans le mur, engagez les quadriceps au maximum.",
+        "notes": "Cuisses parallèles, tension maximale"
+      },
+      "isometric_pallof_hold": {
+        "name": "Maintien Pallof Isométrique",
+        "description": "Câble/bande à hauteur de poitrine, bras tendus devant. Résistez à la traction rotationnelle avec votre core - l'anti-rotation est l'objectif.",
+        "notes": "Chaque côté, résistez à la rotation"
+      },
+      "front_squat": {
+        "name": "Squat Avant",
+        "description": "Barre sur les deltoïdes avant avec prise clean ou bras croisés. Gardez les coudes hauts, descendez profondément avec torse droit, explosez vers le haut.",
+        "notes": "Coudes hauts, profondeur complète"
+      },
+      "incline_db_press": {
+        "name": "Développé Incliné Haltères",
+        "description": "Sur banc à 30°, poussez les haltères du niveau des épaules au verrouillage complet. Descendez avec contrôle, pause brève en bas, explosez.",
+        "notes": "30° d'inclinaison, ROM complet"
+      },
+      "weighted_pullup": {
+        "name": "Traction Lestée",
+        "description": "Ajoutez du poids via ceinture ou gilet. Depuis la suspension morte, tirez jusqu'à ce que le menton passe la barre. Contrôlez la descente.",
+        "notes": "Départ suspension morte, ajoutez du poids"
+      },
+      "romanian_deadlift": {
+        "name": "Soulevé de Terre Roumain",
+        "description": "Barre à hauteur de hanche, poussez les hanches en arrière avec légère flexion du genou. Descendez jusqu'à l'étirement des ischio-jambiers, puis poussez les hanches en avant.",
+        "notes": "Charnière de hanche, étirement ischio-jambiers"
+      },
+      "cable_woodchop_high_low": {
+        "name": "Bûcheron Câble Haut-Bas",
+        "description": "Câble haut, pieds largeur d'épaules. Tirez diagonalement vers le bas en croisant le corps avec rotation des hanches.",
+        "notes": "Chaque côté, rotation explosive"
+      },
+      "isometric_pushup_hold": {
+        "name": "Maintien Pompe Isométrique",
+        "description": "Descendez en position médiane de pompe (coudes à 90°). Maintenez sans bouger. Engagez pectoraux, triceps et core au maximum.",
+        "notes": "Position médiane, tension maximale"
+      },
+      "isometric_single_glute_bridge": {
+        "name": "Pont Fessier Unipodal Isométrique",
+        "description": "Un pied planté, autre jambe tendue. Poussez la hanche vers le haut, maintenez en ligne droite du genou à l'épaule. Contraction maximale du fessier.",
+        "notes": "Chaque jambe, hanche verrouillée haute"
+      },
+      "box_squat": {
+        "name": "Squat sur Boîte",
+        "description": "Squat vers l'arrière jusqu'à une boîte à hauteur parallèle. Pause brève sur la boîte avec tension maintenue, puis explosez. Enseigne la mécanique correcte des hanches.",
+        "notes": "Pause sur boîte, explosez"
+      },
+      "close_grip_bench": {
+        "name": "Développé Prise Serrée",
+        "description": "Saisissez la barre largeur d'épaules, coudes à 45°. Descendez au bas de la poitrine, pause, poussez explosivement. Emphase sur la force des triceps.",
+        "notes": "Coudes serrés, focus triceps"
+      },
+      "single_arm_db_row": {
+        "name": "Rowing Unilatéral Haltère",
+        "description": "Une main et genou sur banc, pied opposé planté large. Ramez l'haltère vers la hanche en résistant à la rotation du torse.",
+        "notes": "Chaque côté, focus anti-rotation"
+      },
+      "bulgarian_split_squat": {
+        "name": "Squat Bulgare",
+        "description": "Pied arrière élevé sur banc derrière vous. Descendez jusqu'à ce que cuisse avant soit parallèle, puis poussez à travers le talon avant.",
+        "notes": "Chaque jambe, pied arrière élevé"
+      },
+      "pallof_press": {
+        "name": "Pallof Press",
+        "description": "Câble à hauteur de poitrine, debout perpendiculaire. Poussez les mains en avant lentement, maintenez 3s en extension en résistant à la rotation.",
+        "notes": "Maintien 3s en extension complète"
+      },
+      "isometric_inverted_row": {
+        "name": "Rowing Inversé Isométrique",
+        "description": "Sous la barre à hauteur de poitrine, tirez et maintenez avec poitrine près de la barre. Corps en ligne droite des chevilles aux épaules.",
+        "notes": "Poitrine à la position de la barre"
+      },
+      "isometric_side_plank": {
+        "name": "Planche Latérale Isométrique",
+        "description": "Sur coude et côté du pied. Maintenez le corps en ligne droite avec hanches élevées. Poussez activement à travers le coude ancré.",
+        "notes": "Chaque côté, hanches hautes"
+      },
+      "sumo_deadlift": {
+        "name": "Soulevé de Terre Sumo",
+        "description": "Position large, prise à l'intérieur des genoux. Poussez à travers les talons, poussez les genoux vers l'extérieur, poitrine haute. Verrouillez avec hanches en avant.",
+        "notes": "Position large, hanches en avant"
+      },
+      "overhead_press": {
+        "name": "Développé Épaules",
+        "description": "Barre devant les épaules, prise juste à l'extérieur des épaules. Contractez le core, poussez droit vers le haut. Verrouillage complet au-dessus.",
+        "notes": "Press strict, verrouillage complet"
+      },
+      "lat_pulldown": {
+        "name": "Tirage Vertical",
+        "description": "Prise large sur la barre, tirez vers la poitrine haute en arquant légèrement. Serrez les dorsaux en bas, contrôlez le retour.",
+        "notes": "Prise large, serrez dorsaux"
+      },
+      "walking_lunge": {
+        "name": "Fente Marchée",
+        "description": "Haltères sur les côtés, faites un pas en avant dans une fente profonde. Poussez à travers le talon avant pour le prochain pas.",
+        "notes": "Chaque jambe, mouvement continu"
+      },
+      "medball_rotational_slam": {
+        "name": "Slam Rotatif Medball",
+        "description": "Medball à la hanche, pivotez explosivement et frappez le ballon diagonalement vers le bas. Récupérez, réinitialisez, répétez.",
+        "notes": "Chaque côté, intention maximale"
+      },
+      "isometric_split_squat": {
+        "name": "Squat Fendu Isométrique",
+        "description": "Position basse de squat fendu, cuisse avant parallèle. Maintenez la position avec torse droit et fessiers engagés.",
+        "notes": "Chaque jambe, position basse"
+      },
+      "isometric_hollow_body": {
+        "name": "Hollow Body Isométrique",
+        "description": "Allongé sur le dos, bas du dos pressé au sol. Jambes tendues légèrement décollées, bras au-dessus de la tête. Maintenez sans casser le core.",
+        "notes": "Bas du dos pressé au sol"
+      },
+      "incline_barbell_press": {
+        "name": "Développé Incliné Barre",
+        "description": "Sur banc à 30° avec barre. Descendez à la poitrine haute, pause, poussez explosivement. Emphase pectoraux supérieurs.",
+        "notes": "30° d'inclinaison, lourd"
+      },
+      "chest_supported_row": {
+        "name": "Rowing Appui Poitrine",
+        "description": "Poitrine sur banc incliné, ramez haltères ou barre aux côtes. Élimine l'élan, force pure du dos.",
+        "notes": "Pas d'élan, forme stricte"
+      },
+      "db_shoulder_press": {
+        "name": "Développé Épaules Haltères",
+        "description": "Assis ou debout, poussez les haltères du niveau des épaules au verrouillage complet. Contrôlez la descente.",
+        "notes": "Verrouillage complet au-dessus"
+      },
+      "cable_woodchop_low_high": {
+        "name": "Bûcheron Câble Bas-Haut",
+        "description": "Câble bas. Tirez diagonalement vers le haut en croisant le corps avec rotation explosive des hanches.",
+        "notes": "Chaque côté, explosif"
+      },
+      "isometric_dead_hang": {
+        "name": "Suspension Morte Isométrique",
+        "description": "Suspendez-vous à la barre avec bras tendus. Engage la prise, étire les dorsaux, décompresse la colonne.",
+        "notes": "Prise + santé des épaules"
+      },
+      "db_bench_press": {
+        "name": "Développé Couché Haltères",
+        "description": "Press avec bras indépendants pour équilibre et stabilité. Amplitude complète de mouvement, pause en bas.",
+        "notes": "Travail bras indépendant"
+      },
+      "pallof_press_step": {
+        "name": "Pallof Press avec Pas",
+        "description": "Anti-rotation dynamique. Poussez les mains en avant tout en faisant un pas latéral, augmentant le bras de levier.",
+        "notes": "Chaque côté, pas vers l'extérieur"
+      },
+      "isometric_anti_rotation": {
+        "name": "Anti-Rotation Isométrique",
+        "description": "Câble/bande à hauteur de poitrine. Bras tendus, résistez à la traction. Maintien de stabilité du core.",
+        "notes": "Chaque côté, stabilité du core"
+      },
+      "glute_bridge_march": {
+        "name": "Marche en Pont Fessier",
+        "description": "Position de pont, alternez lever les genoux tout en maintenant les hanches de niveau. Stabilité dynamique des hanches.",
+        "notes": "Chaque jambe, hanches de niveau"
+      },
+      "step_up": {
+        "name": "Step-Up",
+        "description": "Step-up sur boîte haute avec haltères. Poussez à travers la jambe supérieure, poussée minimale de la jambe arrière.",
+        "notes": "Chaque jambe, boîte haute"
+      },
+      "plank_shoulder_tap": {
+        "name": "Planche avec Touche Épaule",
+        "description": "Position de planche, alternez toucher les épaules en minimisant la rotation des hanches. Contrôle du core.",
+        "notes": "Chaque côté, hanches stables"
+      },
+      "isometric_hip_flexor": {
+        "name": "Fléchisseur de Hanche Isométrique",
+        "description": "Debout, tirez le genou vers la poitrine contre résistance. Maintenez avec fléchisseur de hanche engagé au maximum.",
+        "notes": "Chaque jambe, santé de la hanche"
+      },
+      "isometric_lunge_hold": {
+        "name": "Fente Isométrique",
+        "description": "Position basse de fente, maintenez avec tension. Développe la force positionnelle.",
+        "notes": "Chaque jambe, position basse"
+      },
+      "deficit_trap_bar": {
+        "name": "Soulevé Hexagonal avec Déficit",
+        "description": "Debout sur plateforme de 5-8cm dans la barre hex. ROM augmentée demande plus de poussée des hanches et jambes.",
+        "notes": "5-8cm de déficit, explosif"
+      },
+      "pause_squat": {
+        "name": "Squat avec Pause",
+        "description": "Pause de 3 secondes en bas du squat. Élimine le réflexe d'étirement, construit la force depuis l'arrêt.",
+        "notes": "Pause 3s en bas"
+      },
+      "spoto_press": {
+        "name": "Press Spoto",
+        "description": "Pause à 2-3cm de la poitrine pendant 2 secondes, puis poussez. Construit la force au point de blocage.",
+        "notes": "2-3cm de la poitrine, pause 2s"
+      },
+      "pendlay_row": {
+        "name": "Rowing Pendlay",
+        "description": "Depuis le sol à chaque rep, rowing explosif vers le bas de la poitrine. Départ arrêté construit la puissance de traction pure.",
+        "notes": "Arrêt mort chaque rep"
+      },
+      "single_leg_rdl": {
+        "name": "Soulevé Roumain Unilatéral",
+        "description": "Charnière sur une jambe, autre jambe s'étend derrière. Équilibre et travail des ischio-jambiers.",
+        "notes": "Chaque jambe, focus équilibre"
+      },
+      "isometric_pause_squat": {
+        "name": "Squat avec Pause Isométrique",
+        "description": "Maintenez en bas du squat pendant une durée prolongée. Construit force et stabilité positionnelles.",
+        "notes": "Maintien prolongé, tension maximale"
+      },
+      "isometric_loaded_stretch": {
+        "name": "Étirement Chargé Isométrique",
+        "description": "Maintenez la position étirée sous charge. Développe la force sur toute l'amplitude de mouvement.",
+        "notes": "Étirement contrôlé, maintenez tension"
+      },
+      "front_squat_pause": {
+        "name": "Squat Avant avec Pause",
+        "description": "Pause de 2 secondes en bas. Stabilité du core avec charge lourde.",
+        "notes": "Pause 2s, coudes hauts"
+      },
+      "z_press": {
+        "name": "Z-Press",
+        "description": "Press assis au sol. Élimine la poussée des jambes, force pure du haut du corps.",
+        "notes": "Jambes tendues, press strict"
+      },
+      "cable_low_high_rotation": {
+        "name": "Rotation Bas-Haut Câble",
+        "description": "Patron de rotation vers le haut avec engagement complet des hanches.",
+        "notes": "Chaque côté, rotation complète"
+      },
+      "isometric_dead_bug": {
+        "name": "Dead Bug Isométrique",
+        "description": "Membres étendus, bas du dos pressé au sol. Maintien de stabilité du core.",
+        "notes": "Bras/jambe opposés étendus"
+      },
+      "barbell_hip_thrust": {
+        "name": "Hip Thrust Barre",
+        "description": "Barre sur les hanches, poussez les hanches vers le haut. Puissance maximale des fessiers pour phase de poussée.",
+        "notes": "Extension complète, serrez en haut"
+      },
+      "half_kneel_anti_rotation": {
+        "name": "Anti-Rotation Demi-Genou Câble",
+        "description": "Position demi-genou, câble à hauteur de poitrine, résistez à la rotation. Entraîne la stabilité du tronc.",
+        "notes": "Chaque côté, posture droite"
+      },
+      "isometric_glute_bridge": {
+        "name": "Pont Fessier Isométrique",
+        "description": "Hanches élevées, une ou deux jambes. Endurance des fessiers pour activation répétée de phase de poussée.",
+        "notes": "Extension complète, contraction maximale"
+      },
+      "pushup_variations": {
+        "name": "Variations de Pompes",
+        "description": "Pompes standard, diamant ou archer. Stabilité des épaules avec contrôle du poids du corps.",
+        "notes": "ROM complet, core engagé"
+      },
+      "face_pulls": {
+        "name": "Face Pulls",
+        "description": "Câble à hauteur du visage, tirez vers les oreilles avec rotation externe. Crucial pour santé de l'épaule postérieure.",
+        "notes": "Coudes hauts, rotation externe à la fin"
+      },
+      "hip_thrust": {
+        "name": "Hip Thrust",
+        "description": "Hip thrusts lourds pour puissance des fessiers. Production de force maximale en phase de poussée.",
+        "notes": "Charge lourde, extension complète"
+      },
+      "medball_scoop_toss": {
+        "name": "Lancer Cuillère Medball",
+        "description": "Extension explosive des hanches avec lancer de medball. Exercice de transfert de puissance.",
+        "notes": "Intention maximale, focus extension hanches"
+      },
+      "back_squat": {
+        "name": "Squat Arrière",
+        "description": "Squats lourds pour force des jambes. Profondeur complète avec descente contrôlée.",
+        "notes": "Profond, reps contrôlées"
+      },
+      "barbell_bench_press": {
+        "name": "Développé Couché Barre",
+        "description": "Press lourd pour puissance du haut du corps. Force pectoraux et triceps pour accélération.",
+        "notes": "Pause sur poitrine, poussée explosive"
+      },
+      "half_kneel_chop": {
+        "name": "Bûcheron Demi-Genou",
+        "description": "Puissance rotationnelle depuis demi-genou. Intégration hanches et core.",
+        "notes": "Chaque côté, explosif"
+      },
+      "half_kneel_lift": {
+        "name": "Élévation Demi-Genou",
+        "description": "Patron d'élévation bas-haut depuis demi-genou.",
+        "notes": "Chaque côté, amplitude complète"
+      },
+      "lateral_lunge": {
+        "name": "Fente Latérale",
+        "description": "Force latérale pour mobilité des hanches et force des adducteurs.",
+        "notes": "Chaque jambe, fente profonde"
+      },
+      "face_pulls_ext_rot": {
+        "name": "Face Pulls avec Rotation Externe",
+        "description": "Rotation externe ajoutée en contraction maximale. Travail maximum de l'épaule postérieure.",
+        "notes": "Rotation externe à la fin"
+      },
+      "single_arm_landmine": {
+        "name": "Press Landmine Unilatéral",
+        "description": "Press unilatéral avec élément rotationnel. Demande de stabilité du core.",
+        "notes": "Chaque bras, base stable"
+      },
+      "eccentric_trap_bar": {
+        "name": "Soulevé Hexagonal Excentrique",
+        "description": "Phase de descente de 5 secondes. Tension musculaire maximale pendant l'excentrique.",
+        "notes": "5s négatif, contrôlé"
+      },
+      "eccentric_squat": {
+        "name": "Squat Excentrique",
+        "description": "Descente de 5 secondes, explosez vers le haut. Charge musculaire excentrique.",
+        "notes": "5s descente, rapide montée"
+      },
+      "eccentric_bench": {
+        "name": "Développé Couché Excentrique",
+        "description": "Descente de 5 secondes vers la poitrine. Construit masse pectoraux et triceps.",
+        "notes": "5s négatif, pause, poussez"
+      },
+      "eccentric_row": {
+        "name": "Rowing Excentrique",
+        "description": "Phase de descente de 4 secondes. Hypertrophie musculaire du dos.",
+        "notes": "4s négatif, forme stricte"
+      },
+      "eccentric_rdl": {
+        "name": "RDL Excentrique",
+        "description": "Descente de 4 secondes avec focus ischio-jambiers. Temps sous tension pour croissance.",
+        "notes": "4s négatif, contrôle"
+      },
+      "eccentric_bulgarian": {
+        "name": "Bulgare Excentrique",
+        "description": "Descente de 4 secondes chaque rep. Focus hypertrophie quadriceps.",
+        "notes": "4s descente, chaque jambe"
+      },
+      "eccentric_overhead": {
+        "name": "Press Épaules Excentrique",
+        "description": "Descente de 4 secondes depuis verrouillage. Construction masse épaules.",
+        "notes": "4s négatif, strict"
+      },
+      "eccentric_pullup": {
+        "name": "Traction Excentrique",
+        "description": "Descente de 5 secondes depuis le haut. Développement des dorsaux.",
+        "notes": "5s négatif, étirement complet"
+      },
+      "eccentric_single_row": {
+        "name": "Rowing Unilatéral Excentrique",
+        "description": "Négatif de 4 secondes chaque rep. Développement unilatéral du dos.",
+        "notes": "4s négatif, chaque côté"
+      },
+      "eccentric_step_down": {
+        "name": "Step-Down Excentrique",
+        "description": "Descente contrôlée unipodal depuis boîte. Force excentrique quadriceps.",
+        "notes": "Chaque jambe, descente contrôlée"
+      },
+      "eccentric_incline": {
+        "name": "Développé Incliné Excentrique",
+        "description": "Descente de 4 secondes en incliné. Développement pectoraux supérieurs.",
+        "notes": "4s négatif, 30° inclinaison"
+      },
+      "eccentric_lat_pulldown": {
+        "name": "Tirage Vertical Excentrique",
+        "description": "Retour de 4 secondes au départ. Charge excentrique des dorsaux.",
+        "notes": "4s négatif, étirement complet"
+      },
+      "eccentric_nordic": {
+        "name": "Nordic Curl Excentrique",
+        "description": "Descente excentrique lente ischio-jambiers. Focus prévention des blessures.",
+        "notes": "Contrôlez descente, rattrapez en bas"
+      },
+      "eccentric_dip": {
+        "name": "Dips Excentriques",
+        "description": "Phase de descente de 5 secondes. Développement triceps et pectoraux.",
+        "notes": "5s négatif, étirement profond"
+      },
+      "tempo_front_squat": {
+        "name": "Squat Avant Tempo",
+        "description": "Descente 4 secondes, pause 2 secondes, explosez. Temps total sous tension.",
+        "notes": "Tempo 4-2-1"
+      },
+      "negative_pullup": {
+        "name": "Traction Négative",
+        "description": "Sautez en haut, descendez 6 secondes. Construit force de traction.",
+        "notes": "6s négatif, suspension complète"
+      },
+      "eccentric_lateral_lunge": {
+        "name": "Fente Latérale Excentrique",
+        "description": "Descente de 4 secondes en fente latérale. Développement adducteurs.",
+        "notes": "4s négatif, chaque côté"
+      },
+      "landmine_press": {
+        "name": "Press Landmine",
+        "description": "Press unilatéral avec barre landmine. Press au-dessus ami pour la scapula avec élément rotationnel.",
+        "notes": "Chaque bras, core stable"
+      }
+    },
+    "batSpeed": {
+      "speed_swings_10": {
+        "name": "Swings de Vitesse - 10 Reps",
+        "description": "Swings à effort maximum avec batte de jeu. Focus sur vitesse de batte plutôt que qualité de contact.",
+        "notes": "Intention maximale, 10 reps"
+      },
+      "connection_ball": {
+        "name": "Exercice Balle de Connexion",
+        "description": "Serrez une balle en mousse entre bras et torse pendant le swing. Maintient la connexion du haut du corps.",
+        "notes": "Balle entre biceps et poitrine"
+      },
+      "bat_behind_back": {
+        "name": "Rotations Batte Derrière",
+        "description": "Tenez la batte sur les épaules derrière le dos. Pratiquez la rotation des hanches entraînant les épaules.",
+        "notes": "Hanches mènent, core engagé"
+      },
+      "wrist_snap": {
+        "name": "Exercice Snap du Poignet",
+        "description": "Snaps rapides du poignet au point de contact. Développe des mains rapides à travers la zone.",
+        "notes": "Snap au point de contact"
+      },
+      "resistance_band_swings": {
+        "name": "Swings avec Bande de Résistance",
+        "description": "Attachez une bande à la batte pour surcharge. Swinguez contre la résistance pour la puissance.",
+        "notes": "Combattez la bande, rotation complète"
+      },
+      "one_handed_swings": {
+        "name": "Swings à Une Main",
+        "description": "Swings main haute ou basse uniquement. Développe l'indépendance des mains et le contrôle de la batte.",
+        "notes": "Chaque main, swing contrôlé"
+      },
+      "quick_hands": {
+        "name": "Exercice Mains Rapides",
+        "description": "Partenaire lance des balles de courte distance. Réactions rapides, swings courts.",
+        "notes": "Swing rapide, voir la balle"
+      },
+      "swing_speed_measure": {
+        "name": "Mesure de Vitesse de Swing",
+        "description": "Suivez la vitesse de batte avec analyseur de swing. Enregistrez les progrès au fil du temps.",
+        "notes": "Suivez km/h, visez amélioration"
+      },
+      "bat_waggle": {
+        "name": "Exercice Mouvement de Batte",
+        "description": "Mouvement rapide de batte en position. Garde les mains souples et prêtes.",
+        "notes": "Restez souple, prise légère"
+      },
+      "speed_tee_15": {
+        "name": "Travail Tee Vitesse - 15 Swings",
+        "description": "Swings à pleine vitesse depuis le tee. Focus sur vitesse max de batte, pas mécanique.",
+        "notes": "15 swings, effort maximum"
+      },
+      "velocity_ladder": {
+        "name": "Échelle de Vélocité",
+        "description": "Augmentation progressive de vitesse: 70%, 80%, 90%, 100%. Construisez jusqu'au maximum.",
+        "notes": "4 sets, intensité croissante"
+      },
+      "bat_flip_speed": {
+        "name": "Exercice Flip de Batte Rapide",
+        "description": "Faites tourner la batte bout à bout rapidement. Développe vitesse et contrôle du poignet.",
+        "notes": "Flips rapides, attrapez proprement"
+      },
+      "no_stride_swings": {
+        "name": "Swings Sans Pas",
+        "description": "Swing depuis la position sans pas. Isole la vitesse du haut du corps.",
+        "notes": "Pas de pas, focus haut du corps"
+      },
+      "fast_hands_reaction": {
+        "name": "Exercice Réaction Mains Rapides",
+        "description": "Lancer de balle colorée - swinguez seulement sur couleur spécifique. Prise de décision rapide.",
+        "notes": "Réagissez et décidez rapidement"
+      },
+      "exit_speed_comp": {
+        "name": "Compétition Vitesse de Sortie",
+        "description": "Compétition pour la plus haute vélocité de sortie depuis tee ou soft toss.",
+        "notes": "Suivez vitesse sortie, battez record perso"
+      },
+      "rotational_snap": {
+        "name": "Exercice Snap Rotationnel",
+        "description": "Focus sur rotation explosive des hanches pour initier le swing. Hanches mènent les mains.",
+        "notes": "Snap des hanches, transférez énergie"
+      },
+      "light_bat_20": {
+        "name": "Batte Légère Vitesse Max - 20 Swings",
+        "description": "Batte de vitesse ou batte plus légère pour entraînement survitesse. Bougez-la vite.",
+        "notes": "20 swings, vitesse maximale"
+      },
+      "heavy_light_contrast": {
+        "name": "Contraste Lourd-Léger - 10 Sets",
+        "description": "Alternez entre swings batte lourde et légère. Effet d'entraînement par contraste.",
+        "notes": "5 lourd, 5 léger, répétez"
+      },
+      "intent_tee_max": {
+        "name": "Travail Tee Intention - Effort Max",
+        "description": "Swings à intention maximale depuis tee. Chaque swing est effort de swing de jeu.",
+        "notes": "100% effort chaque swing"
+      },
+      "barrel_speed_focus": {
+        "name": "Exercice Focus Vitesse du Barrel",
+        "description": "Focus sur accélération du barrel à travers la zone. Fouettez le barrel.",
+        "notes": "Sentez le fouet du barrel"
+      },
+      "overload_underload": {
+        "name": "Protocole Surcharge/Sous-charge",
+        "description": "Protocole complet avec battes lestées et de vitesse. Session de contraste complète.",
+        "notes": "Lourd → régulier → léger"
+      }
+    },
+    "armCare": {
+      "jband_internal": {
+        "name": "Rotation Interne J-Band",
+        "description": "Coude à 90°, tournez la main vers l'intérieur contre résistance de bande. Mouvement contrôlé.",
+        "notes": "Coude stable, 15-20 reps"
+      },
+      "jband_external": {
+        "name": "Rotation Externe J-Band",
+        "description": "Coude à 90°, tournez la main vers l'extérieur contre résistance de bande. Renforcez rotateurs externes.",
+        "notes": "Lent et contrôlé, 15-20 reps"
+      },
+      "jband_scap": {
+        "name": "Rétraction Scapulaire J-Band",
+        "description": "Écartez la bande à hauteur de poitrine. Serrez les omoplates ensemble.",
+        "notes": "Serrez 2s à la fin, 15 reps"
+      },
+      "jband_high_pulls": {
+        "name": "Tirages Hauts J-Band",
+        "description": "Bras au-dessus de la tête avec bande, écartez en maintenant la tension.",
+        "notes": "Gardez bras hauts, 15 reps"
+      },
+      "sleeper_stretch": {
+        "name": "Étirement Sleeper",
+        "description": "Allongé sur le côté de lancer, poussez le poignet vers le sol avec l'autre main. Étirement rotation interne.",
+        "notes": "Tenez 30s, pression douce"
+      },
+      "crossbody_stretch": {
+        "name": "Étirement en Travers",
+        "description": "Tirez le bras de lancer en travers du corps avec l'autre bras. Étirement épaule postérieure.",
+        "notes": "Tenez 30s, sentez étirement arrière épaule"
+      },
+      "wrist_flex_ext": {
+        "name": "Flexion/Extension du Poignet",
+        "description": "Fléchissez et étendez le poignet avec poids léger. Force avant-bras pour santé du bras.",
+        "notes": "15 reps chaque direction"
+      },
+      "forearm_pro_sup": {
+        "name": "Pronation/Supination Avant-bras",
+        "description": "Tournez l'avant-bras paume vers le haut et vers le bas avec poids léger. Mobilité du poignet.",
+        "notes": "15 reps, contrôlez la rotation"
+      }
+    },
+    "velocity": {
+      "long_toss_60": {
+        "name": "Long Toss Échauffement - 18m",
+        "description": "Lancers faciles à 18 mètres. Échauffement trajectoire du bras, pas focus vélocité.",
+        "notes": "10-15 lancers, effort facile"
+      },
+      "long_toss_90": {
+        "name": "Long Toss Construction - 27m",
+        "description": "Augmentez distance à 27 mètres. Effort moyen, construisant vitesse du bras.",
+        "notes": "10-15 lancers, effort moyen"
+      },
+      "long_toss_120": {
+        "name": "Long Toss Extension - 37m",
+        "description": "Étendez à 37 mètres. Arc plus haut permis, construisant force du bras.",
+        "notes": "10-15 lancers, effort augmenté"
+      },
+      "long_toss_max": {
+        "name": "Long Toss Max - 45-60m",
+        "description": "Distance maximale confortable. Lancers en arc pour conditionnement du bras.",
+        "notes": "10-15 lancers, effort maximum"
+      },
+      "pulldown_phase": {
+        "name": "Phase Pull-Down",
+        "description": "Revenez depuis distance max avec lancers pull-down. Trajectoire en ligne droite.",
+        "notes": "Revenez par incréments de 10m"
+      },
+      "velo_day_gun": {
+        "name": "Jour Vélo - Lectures Radar",
+        "description": "Session focus vélocité avec lectures radar. Suivez max et moyenne.",
+        "notes": "Enregistrez vélocités, suivez progrès"
+      },
+      "weighted_7oz": {
+        "name": "Balle Lestée - 200g Surcharge",
+        "description": "Lancers balle lourde pour force du bras. Intention contrôlée.",
+        "notes": "15-20 lancers, pas effort max"
+      },
+      "weighted_5oz": {
+        "name": "Balle Standard - 140g",
+        "description": "Balle poids de jeu ou balle lestée standard de 140g.",
+        "notes": "15-20 lancers, sentez trajectoire normale"
+      },
+      "weighted_4oz": {
+        "name": "Balle Légère - 110g Sous-charge",
+        "description": "Balle légère pour développement vitesse du bras. Bougez-la vite.",
+        "notes": "15-20 lancers, vitesse max du bras"
+      },
+      "contrast_throws": {
+        "name": "Lancers de Contraste",
+        "description": "Alternez entre balles surcharge et sous-charge. Effet d'entraînement par contraste.",
+        "notes": "5 lourde, 5 légère, répétez 2-3x"
+      },
+      "crow_hop": {
+        "name": "Lancers Crow Hop",
+        "description": "Lancez avec crow hop pour momentum et timing. Construisez vitesse du bras.",
+        "notes": "Intention complète, bon timing"
+      },
+      "max_intent_bp": {
+        "name": "Bullpen Intention Maximale",
+        "description": "Session bullpen à intention maximale. Focus vélocité comme en jeu.",
+        "notes": "15-25 lancers, tout effort max"
+      },
+      "plyocare_pivot": {
+        "name": "PlyoCare Pivot Pickoffs",
+        "description": "Exercice de lancer pivot avec balle plyocare. Pieds rapides et action du bras.",
+        "notes": "10 chaque direction"
+      },
+      "plyocare_rollins": {
+        "name": "PlyoCare Roll-Ins",
+        "description": "Roulez vers le lancer avec balle plyocare. Hanche mène et bras suit.",
+        "notes": "10-15 lancers, sentez hanche mener"
+      },
+      "plyocare_reverse": {
+        "name": "PlyoCare Lancers Inversés",
+        "description": "Dos à la cible, pivotez et lancez. Séquençage de rotation.",
+        "notes": "10 lancers, rotation complète"
+      },
+      "rocker_throws": {
+        "name": "Lancers Rocker",
+        "description": "Balancez en arrière et lancez avec momentum. Timing et transfert de poids.",
+        "notes": "15 lancers, sentez le momentum"
+      }
+    },
+    "pitchDev": {
+      "curve_grip": {
+        "name": "Travail Prise Courbe",
+        "description": "Pratiquez variations de prise, trouvant pression des doigts et orientation des coutures confortable.",
+        "notes": "Trouvez votre prise"
+      },
+      "curve_spin": {
+        "name": "Exercices Spin Courbe",
+        "description": "Spins courte distance focus sur rotation serrée et axe. Voyez le spin.",
+        "notes": "Focus sur spin serré"
+      },
+      "curve_shape": {
+        "name": "Focus Forme Courbe",
+        "description": "Courbes distance complète, focus sur forme et profondeur de cassure consistantes.",
+        "notes": "Forme consistante"
+      },
+      "slider_grip": {
+        "name": "Travail Prise Slider",
+        "description": "Pratiquez prise slider avec pression doigt sur couture intérieure. Trouvez votre zone de confort.",
+        "notes": "Trouvez confort de prise"
+      },
+      "slider_wrist": {
+        "name": "Action Poignet Slider",
+        "description": "Isolez action de release slider. Spin balle avec point serré.",
+        "notes": "Spin point serré"
+      },
+      "slider_tunnel": {
+        "name": "Exercice Tunnel Slider",
+        "description": "Lancez slider à travers tunnel de fastball, cassure tardive pour tromperie.",
+        "notes": "Même tunnel que fastball"
+      },
+      "changeup_grip": {
+        "name": "Travail Prise Changeup",
+        "description": "Circle change, 3 doigts ou autres variations de prise. Trouvez ce qui fonctionne.",
+        "notes": "Prise confortable"
+      },
+      "changeup_arm_speed": {
+        "name": "Égalisation Vitesse Bras Changeup",
+        "description": "Égalisez vitesse de bras fastball avec prise changeup. La tromperie est clé.",
+        "notes": "Même vitesse de bras"
+      },
+      "changeup_feel": {
+        "name": "Exercices Sensation Changeup",
+        "description": "Changeups courte distance développant toucher et sensation pour différentiel de vitesse.",
+        "notes": "Sentez la différence de vitesse"
+      },
+      "quadrant_work": {
+        "name": "Travail par Quadrants",
+        "description": "Touchez quadrants spécifiques de la zone de strike. Construisez commande de précision.",
+        "notes": "Touchez vos spots"
+      },
+      "glove_arm_side": {
+        "name": "Côté Gant/Côté Bras",
+        "description": "Travaillez les deux bords du marbre. Développez commande horizontale.",
+        "notes": "Touchez les coins"
+      },
+      "up_down_ladder": {
+        "name": "Échelle Haut/Bas",
+        "description": "Travaillez haut et bas de zone. Développement commande verticale.",
+        "notes": "Variez la hauteur"
+      },
+      "pitch_sequencing": {
+        "name": "Séquençage des Lancers",
+        "description": "Pratiquez séquences de 2 et 3 lancers. Construisez patterns comme en jeu.",
+        "notes": "Pensez comme un jeu"
+      },
+      "tunnel_drills": {
+        "name": "Exercices de Tunnel",
+        "description": "Lancez différents lancers à travers même tunnel. Développez tromperie.",
+        "notes": "Même apparence, cassure différente"
+      }
+    },
+    "equipment": {
+      "hitting": {
+        "bat": {
+          "name": "Batte de Jeu",
+          "description": "Votre batte principale de jeu"
+        },
+        "tee": {
+          "name": "Tee de Frappe",
+          "description": "Hauteur ajustable préférée"
+        },
+        "balls": {
+          "name": "Balles",
+          "description": "Minimum 12 balles"
+        },
+        "net": {
+          "name": "Filet de Frappe",
+          "description": "Pour pratique intérieur/extérieur"
+        },
+        "barbell": {
+          "name": "Barre et Poids",
+          "description": "Pour mouvements composés (barre 20kg + poids)"
+        },
+        "dumbbells": {
+          "name": "Haltères",
+          "description": "Poids variés 5-35+ kg"
+        },
+        "trap_bar": {
+          "name": "Barre Hexagonale",
+          "description": "Pour soulevés de terre - essentiel au programme"
+        },
+        "cable_machine": {
+          "name": "Machine à Câble",
+          "description": "Pour bûcherons, rowings et pallof press"
+        },
+        "pullup_bar": {
+          "name": "Barre de Traction",
+          "description": "Pour tractions et rowings inversés"
+        },
+        "bench": {
+          "name": "Banc Ajustable",
+          "description": "Positions plate et inclinée"
+        },
+        "weighted_bat": {
+          "name": "Batte d'Entraînement Lestée",
+          "description": "Pour entraînement surcharge"
+        },
+        "speed_bat": {
+          "name": "Batte de Vitesse",
+          "description": "Pour entraînement sous-charge"
+        },
+        "resistance_bands": {
+          "name": "Bandes de Résistance",
+          "description": "Pour travail hanches, core et rotationnel"
+        },
+        "med_ball": {
+          "name": "Médecine-Ball",
+          "description": "3-5 kg pour puissance rotationnelle"
+        },
+        "box": {
+          "name": "Boîte Plyo/Step",
+          "description": "Pour squats sur boîte et step-ups"
+        },
+        "landmine": {
+          "name": "Accessoire Landmine",
+          "description": "Pour press rotationnels"
+        }
+      },
+      "pitching": {
+        "glove": {
+          "name": "Gant de Lanceur",
+          "description": "Gant prêt pour le jeu"
+        },
+        "balls": {
+          "name": "Balles",
+          "description": "Minimum 24 balles pour travail de volume"
+        },
+        "mound": {
+          "name": "Monticule",
+          "description": "Monticule réglementaire ou portable"
+        },
+        "jbands": {
+          "name": "J-Bands/Bandes de Résistance",
+          "description": "Pour routine quotidienne soin du bras"
+        },
+        "target": {
+          "name": "Cible Zone de Strike",
+          "description": "Pour travail de commande"
+        },
+        "barbell": {
+          "name": "Barre et Poids",
+          "description": "Pour mouvements composés"
+        },
+        "dumbbells": {
+          "name": "Haltères",
+          "description": "Poids variés 5-35+ kg"
+        },
+        "cable_machine": {
+          "name": "Machine à Câble",
+          "description": "Pour exercices rotationnels et de traction"
+        },
+        "pullup_bar": {
+          "name": "Barre de Traction",
+          "description": "Pour tractions et travail en suspension"
+        },
+        "bench": {
+          "name": "Banc Ajustable",
+          "description": "Positions plate et inclinée"
+        },
+        "trap_bar": {
+          "name": "Barre Hexagonale",
+          "description": "Pour soulevés de terre"
+        },
+        "weighted_balls": {
+          "name": "Balles Lestées",
+          "description": "Set de 110g, 140g, 200g, 255g, 310g"
+        },
+        "plyocare": {
+          "name": "Balles PlyoCare",
+          "description": "Set de 5 balles plyo lestées"
+        },
+        "foam_roller": {
+          "name": "Rouleau de Mousse",
+          "description": "Pour travail tissus mous"
+        },
+        "med_ball": {
+          "name": "Médecine-Ball",
+          "description": "2-5 kg pour puissance rotationnelle"
+        },
+        "radar_gun": {
+          "name": "Radar/Pocket Radar",
+          "description": "Pour suivi vélocité"
+        },
+        "rice_bucket": {
+          "name": "Seau de Riz",
+          "description": "Pour travail avant-bras et prise"
+        },
+        "lacrosse_ball": {
+          "name": "Balle de Lacrosse",
+          "description": "Pour libération points trigger"
+        }
+      }
+    }
   }
 }

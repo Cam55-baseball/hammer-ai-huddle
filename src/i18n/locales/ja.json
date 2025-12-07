@@ -2102,5 +2102,139 @@
       "comeback_kid": "カムバックキッド",
       "comeback_kid_desc": "失敗後にチャレンジを完了"
     }
+  },
+  "workoutContent": {
+    "weekTitle": "第{{number}}週",
+    "dayTitles": {
+      "day1StrengthBatSpeed": "1日目: 全身筋力 {{workout}} + バット速度",
+      "day2Rest": "2日目: 休息",
+      "day3BatSpeed": "3日目: バット速度開発",
+      "day4Rest": "4日目: 休息",
+      "day5StrengthBatSpeed": "5日目: 全身筋力 {{workout}} + バット速度",
+      "day1StrengthArmCare": "1日目: 筋力 {{workout}} + アームケア",
+      "day2RestRecovery": "2日目: 休息と回復",
+      "day3VelocityDev": "3日目: 球速開発",
+      "day3PitchDev": "3日目: 投球開発",
+      "day3ThrowingDev": "3日目: スロー開発",
+      "day4RestRecovery": "4日目: 休息と回復",
+      "day5StrengthCommand": "5日目: 筋力 {{workout}} + コントロール練習"
+    },
+    "activeRecovery": {
+      "name": "アクティブリカバリー",
+      "hittingDesc": "軽いストレッチ、フォームローラー、または完全休養。筋力トレーニングからの筋肉回復を促進。",
+      "pitchingDesc": "軽いストレッチ、フォームローラー、または完全休養。筋肉と腕の回復を促進。軽いJバンドワークはオプション。",
+      "pitchingDesc2": "軽いストレッチ、フォームローラー、または完全休養。次の筋力セッションに備える。Jバンドアームケア推奨。"
+    },
+    "exercises": {
+      "trap_bar_deadlift": {
+        "name": "トラップバーデッドリフト",
+        "description": "ヘックスバー内に立ち、サイドのハンドルを握り、かかとを通して押し上げる。股関節と膝が同時に伸展。爆発的なコンセントリック、コントロールされた下降。",
+        "notes": "トップでの完全な股関節伸展"
+      },
+      "barbell_back_squat": {
+        "name": "バーベルバックスクワット",
+        "description": "上部僧帽筋にバーを乗せ、足は肩幅。股関節の折り目が膝より下になるまで下降、その後ミッドフットを通して爆発的に押し上げる。",
+        "notes": "パラレルを破る、爆発的なドライブ"
+      },
+      "bench_press": {
+        "name": "ベンチプレス",
+        "description": "軽いアーチでベンチに横たわり、肩のすぐ外側でバーを握る。コントロールしながら胸中央まで下げ、短く停止、その後爆発的に押し上げる。",
+        "notes": "胸で一時停止、かかとを通して押す"
+      },
+      "barbell_row": {
+        "name": "バーベルロウ",
+        "description": "股関節を45度でヒンジ、膝の外側でバーを握る。肩甲骨を引きながら下部肋骨まで引く。体幹は安定させる。",
+        "notes": "トップで1秒保持、厳格なフォーム"
+      },
+      "front_squat": {
+        "name": "フロントスクワット",
+        "description": "クリーングリップまたは腕を交差させて前三角筋にバーを乗せる。肘を高く保ち、直立した体幹で深く下降、爆発的に押し上げる。",
+        "notes": "肘を上げて、完全な深さ"
+      },
+      "weighted_pullup": {
+        "name": "ウェイテッドプルアップ",
+        "description": "ベルトまたはベストで重量を追加。デッドハングから顎がバーを超えるまで引く。下降をコントロール。",
+        "notes": "デッドハングスタート、重量追加"
+      },
+      "romanian_deadlift": {
+        "name": "ルーマニアンデッドリフト",
+        "description": "バーを腰の高さに、軽い膝の曲げを維持しながら腰を後ろに押す。ハムストリングのストレッチを感じるまで下げ、腰を前に押す。",
+        "notes": "ヒップヒンジ、ハムストリングストレッチ"
+      },
+      "overhead_press": {
+        "name": "オーバーヘッドプレス",
+        "description": "バーを肩の前に、肩のすぐ外側で握る。コアを引き締め、まっすぐ上に押す。完全なロックアウト。",
+        "notes": "ストリクトプレス、完全なロックアウト"
+      },
+      "back_squat": {
+        "name": "バックスクワット",
+        "description": "脚力のための重いスクワット。コントロールされた下降で完全な深さ。",
+        "notes": "深く、コントロールされたレップ"
+      }
+    },
+    "batSpeed": {
+      "speed_swings_10": {
+        "name": "スピードスイング - 10レップ",
+        "description": "ゲームバットで最大努力スイング。コンタクトの質よりバット速度に集中。",
+        "notes": "最大意図、10レップ"
+      },
+      "connection_ball": {
+        "name": "コネクションボールドリル",
+        "description": "スイング中に腕と胴体の間にフォームボールを挟む。上半身の接続を維持。",
+        "notes": "ボールは上腕二頭筋と胸の間"
+      }
+    },
+    "armCare": {
+      "jband_internal": {
+        "name": "Jバンド内旋",
+        "description": "肘を90度に、バンドの抵抗に対して手を内側に回転。コントロールされた動き。",
+        "notes": "肘を安定させて、15-20レップ"
+      },
+      "jband_external": {
+        "name": "Jバンド外旋",
+        "description": "肘を90度に、バンドの抵抗に対して手を外側に回転。外旋筋を強化。",
+        "notes": "ゆっくりコントロール、15-20レップ"
+      }
+    },
+    "velocity": {
+      "long_toss_60": {
+        "name": "ロングトス ウォームアップ - 18m",
+        "description": "18メートルで軽いスロー。アームパスのウォームアップ、球速重視ではない。",
+        "notes": "10-15スロー、軽い努力"
+      },
+      "long_toss_max": {
+        "name": "ロングトス マックス - 45-60m",
+        "description": "快適な最大距離。アームコンディショニングのためのアークスロー。",
+        "notes": "10-15スロー、最大努力"
+      }
+    },
+    "pitchDev": {
+      "curve_grip": {
+        "name": "カーブグリップワーク",
+        "description": "グリップのバリエーションを練習、快適な指圧とシームの向きを見つける。",
+        "notes": "自分のグリップを見つける"
+      },
+      "changeup_grip": {
+        "name": "チェンジアップグリップワーク",
+        "description": "サークルチェンジ、3本指、またはその他のグリップバリエーション。効果的なものを見つける。",
+        "notes": "快適なグリップ"
+      }
+    },
+    "equipment": {
+      "hitting": {
+        "bat": { "name": "ゲームバット", "description": "あなたのメインゲームバット" },
+        "tee": { "name": "バッティングティー", "description": "調整可能な高さが望ましい" },
+        "balls": { "name": "ボール", "description": "最低12個" },
+        "barbell": { "name": "バーベル＆プレート", "description": "コンパウンドリフト用（20kgバー＋プレート）" },
+        "dumbbells": { "name": "ダンベル", "description": "様々な重量5-35kg以上" },
+        "trap_bar": { "name": "トラップ/ヘックスバー", "description": "デッドリフト用 - プログラムに必須" }
+      },
+      "pitching": {
+        "glove": { "name": "ピッチンググローブ", "description": "ゲームレディのピッチンググローブ" },
+        "balls": { "name": "ボール", "description": "ボリュームワーク用に最低24個" },
+        "jbands": { "name": "Jバンド/レジスタンスバンド", "description": "毎日のアームケアルーティン用" },
+        "weighted_balls": { "name": "ウェイテッドボール", "description": "110g、140g、200g、255g、310gのセット" }
+      }
+    }
   }
 }

@@ -2072,5 +2072,119 @@
       "comeback_kid": "De Comeback",
       "comeback_kid_desc": "Voltooi een uitdaging na een mislukking"
     }
+  },
+  "workoutContent": {
+    "weekTitle": "Week {{number}}",
+    "dayTitles": {
+      "day1StrengthBatSpeed": "Dag 1: Volledige Lichaam Kracht {{workout}} + Slagsnelheid",
+      "day2Rest": "Dag 2: Rust",
+      "day3BatSpeed": "Dag 3: Slagsnelheid Ontwikkeling",
+      "day4Rest": "Dag 4: Rust",
+      "day5StrengthBatSpeed": "Dag 5: Volledige Lichaam Kracht {{workout}} + Slagsnelheid",
+      "day1StrengthArmCare": "Dag 1: Kracht {{workout}} + Armverzorging",
+      "day2RestRecovery": "Dag 2: Rust & Herstel",
+      "day3VelocityDev": "Dag 3: Snelheid Ontwikkeling",
+      "day3PitchDev": "Dag 3: Worp Ontwikkeling",
+      "day3ThrowingDev": "Dag 3: Gooi Ontwikkeling",
+      "day4RestRecovery": "Dag 4: Rust & Herstel",
+      "day5StrengthCommand": "Dag 5: Kracht {{workout}} + Controlewerk"
+    },
+    "activeRecovery": {
+      "name": "Actief Herstel",
+      "hittingDesc": "Lichte stretching, foam roller of volledige rust. Laat spieren herstellen van krachttraining.",
+      "pitchingDesc": "Lichte stretching, foam roller of volledige rust. Laat spieren en arm herstellen. Licht J-band werk optioneel.",
+      "pitchingDesc2": "Lichte stretching, foam roller of volledige rust. Bereid je voor op volgende krachtsessie. J-band armverzorging aangeraden."
+    },
+    "exercises": {
+      "trap_bar_deadlift": {
+        "name": "Trap Bar Deadlift",
+        "description": "Sta in de hex bar, pak handgrepen aan de zijkanten, duw door je hielen om te staan. Heupen en knieën strekken gelijktijdig.",
+        "notes": "Volledige heupextensie bovenaan"
+      },
+      "barbell_back_squat": {
+        "name": "Barbell Squat",
+        "description": "Stang op bovenste trapezius, voeten schouderbreedte. Zak tot heupplooi onder knie, explosief omhoog drukken.",
+        "notes": "Breek parallel, explosieve aandrijving"
+      },
+      "bench_press": {
+        "name": "Bankdrukken",
+        "description": "Lig op bank met lichte boog, pak stang net buiten schouders. Gecontroleerd naar borst zakken, kort pauzeren, explosief drukken.",
+        "notes": "Pauze op borst, door hielen drukken"
+      },
+      "front_squat": {
+        "name": "Front Squat",
+        "description": "Stang op voorste deltaspieren met clean grip of gekruiste armen. Ellebogen hoog, diep zakken met rechtop torso, explosief omhoog.",
+        "notes": "Ellebogen omhoog, volledige diepte"
+      },
+      "overhead_press": {
+        "name": "Schouder Press",
+        "description": "Stang voor schouders, grip net buiten schouders. Span core aan, recht omhoog drukken. Volledige lockout.",
+        "notes": "Strikte press, volledige lockout"
+      }
+    },
+    "batSpeed": {
+      "speed_swings_10": {
+        "name": "Snelheid Swings - 10 Reps",
+        "description": "Maximale inspanning swings met wedstrijd knuppel. Focus op knuppelsnelheid boven contactkwaliteit.",
+        "notes": "Maximale intentie, 10 reps"
+      },
+      "connection_ball": {
+        "name": "Connectie Bal Oefening",
+        "description": "Klem schuimbal tussen armen en romp tijdens swing. Behoudt bovenlichaam connectie.",
+        "notes": "Bal tussen biceps en borst"
+      }
+    },
+    "armCare": {
+      "jband_internal": {
+        "name": "J-Band Interne Rotatie",
+        "description": "Elleboog op 90°, draai hand naar binnen tegen bandweerstand. Gecontroleerde beweging.",
+        "notes": "Elleboog stabiel, 15-20 reps"
+      },
+      "jband_external": {
+        "name": "J-Band Externe Rotatie",
+        "description": "Elleboog op 90°, draai hand naar buiten tegen bandweerstand. Versterk externe rotatoren.",
+        "notes": "Langzaam en gecontroleerd, 15-20 reps"
+      }
+    },
+    "velocity": {
+      "long_toss_60": {
+        "name": "Long Toss Warming-up - 18m",
+        "description": "Lichte worpen op 18 meter. Armpad warming-up, niet snelheid gefocust.",
+        "notes": "10-15 worpen, lichte inspanning"
+      },
+      "long_toss_max": {
+        "name": "Long Toss Max - 45-60m",
+        "description": "Maximale comfortabele afstand. Boog worpen voor arm conditioning.",
+        "notes": "10-15 worpen, maximale inspanning"
+      }
+    },
+    "pitchDev": {
+      "curve_grip": {
+        "name": "Curve Grip Werk",
+        "description": "Oefen grip variaties, vind comfortabele vingerdruk en naadoriëntatie.",
+        "notes": "Vind je grip"
+      },
+      "changeup_grip": {
+        "name": "Changeup Grip Werk",
+        "description": "Circle change, 3-vinger of andere grip variaties. Vind wat werkt.",
+        "notes": "Comfortabele grip"
+      }
+    },
+    "equipment": {
+      "hitting": {
+        "bat": { "name": "Wedstrijd Knuppel", "description": "Je primaire wedstrijd knuppel" },
+        "tee": { "name": "Batting Tee", "description": "Verstelbare hoogte gewenst" },
+        "balls": { "name": "Ballen", "description": "Minimaal 12 ballen" },
+        "barbell": { "name": "Halter & Gewichten", "description": "Voor samengestelde liften (20kg stang + gewichten)" },
+        "dumbbells": { "name": "Dumbbells", "description": "Verschillende gewichten 5-35+ kg" },
+        "trap_bar": { "name": "Trap/Hex Bar", "description": "Voor deadlifts - essentieel voor programma" }
+      },
+      "pitching": {
+        "glove": { "name": "Werper Handschoen", "description": "Wedstrijd-klare werper handschoen" },
+        "balls": { "name": "Ballen", "description": "Minimaal 24 ballen voor volume werk" },
+        "jbands": { "name": "J-Bands/Weerstandsbanden", "description": "Voor dagelijkse armverzorging routine" },
+        "weighted_balls": { "name": "Verzwaarde Ballen", "description": "Set van 110g, 140g, 200g, 255g, 310g" }
+      }
+    }
   }
 }

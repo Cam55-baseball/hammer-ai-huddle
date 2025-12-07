@@ -2059,5 +2059,119 @@
       "comeback_kid": "컴백 키드",
       "comeback_kid_desc": "실패 후 챌린지 완료"
     }
+  },
+  "workoutContent": {
+    "weekTitle": "{{number}}주차",
+    "dayTitles": {
+      "day1StrengthBatSpeed": "1일차: 전신 근력 {{workout}} + 배트 스피드",
+      "day2Rest": "2일차: 휴식",
+      "day3BatSpeed": "3일차: 배트 스피드 개발",
+      "day4Rest": "4일차: 휴식",
+      "day5StrengthBatSpeed": "5일차: 전신 근력 {{workout}} + 배트 스피드",
+      "day1StrengthArmCare": "1일차: 근력 {{workout}} + 팔 관리",
+      "day2RestRecovery": "2일차: 휴식 및 회복",
+      "day3VelocityDev": "3일차: 구속 개발",
+      "day3PitchDev": "3일차: 투구 개발",
+      "day3ThrowingDev": "3일차: 송구 개발",
+      "day4RestRecovery": "4일차: 휴식 및 회복",
+      "day5StrengthCommand": "5일차: 근력 {{workout}} + 제구 훈련"
+    },
+    "activeRecovery": {
+      "name": "능동적 회복",
+      "hittingDesc": "가벼운 스트레칭, 폼롤러 또는 완전 휴식. 근력 훈련으로부터 근육 회복 허용.",
+      "pitchingDesc": "가벼운 스트레칭, 폼롤러 또는 완전 휴식. 근육과 팔 회복 허용. 가벼운 J밴드 운동 선택 사항.",
+      "pitchingDesc2": "가벼운 스트레칭, 폼롤러 또는 완전 휴식. 다음 근력 세션 준비. J밴드 팔 관리 권장."
+    },
+    "exercises": {
+      "trap_bar_deadlift": {
+        "name": "트랩바 데드리프트",
+        "description": "헥스바 안에 서서 옆 손잡이를 잡고 뒤꿈치를 통해 밀어 일어남. 고관절과 무릎이 동시에 펴짐.",
+        "notes": "상단에서 완전한 고관절 신전"
+      },
+      "barbell_back_squat": {
+        "name": "바벨 백스쿼트",
+        "description": "상부 승모근에 바를 올리고 어깨 너비로 발 위치. 고관절 주름이 무릎 아래로 갈 때까지 내려간 후 폭발적으로 밀어 올림.",
+        "notes": "평행 깨기, 폭발적 드라이브"
+      },
+      "bench_press": {
+        "name": "벤치 프레스",
+        "description": "가벼운 아치로 벤치에 누워 어깨 바로 바깥쪽에서 바를 잡음. 제어하며 가슴 중앙으로 내리고 잠시 정지 후 폭발적으로 밀어 올림.",
+        "notes": "가슴에서 정지, 뒤꿈치로 밀기"
+      },
+      "front_squat": {
+        "name": "프론트 스쿼트",
+        "description": "클린 그립 또는 팔 교차로 전면 삼각근에 바를 올림. 팔꿈치 높이 유지하고 똑바른 몸통으로 깊이 내려간 후 폭발적으로 밀어 올림.",
+        "notes": "팔꿈치 위로, 완전한 깊이"
+      },
+      "overhead_press": {
+        "name": "오버헤드 프레스",
+        "description": "어깨 앞에 바, 어깨 바로 바깥쪽 그립. 코어 조이고 똑바로 위로 밀기. 완전한 락아웃.",
+        "notes": "스트릭트 프레스, 완전한 락아웃"
+      }
+    },
+    "batSpeed": {
+      "speed_swings_10": {
+        "name": "스피드 스윙 - 10회",
+        "description": "게임 배트로 최대 노력 스윙. 접촉 품질보다 배트 스피드에 집중.",
+        "notes": "최대 의도, 10회"
+      },
+      "connection_ball": {
+        "name": "연결 볼 드릴",
+        "description": "스윙 중 팔과 몸통 사이에 폼볼 끼우기. 상체 연결 유지.",
+        "notes": "볼은 이두와 가슴 사이"
+      }
+    },
+    "armCare": {
+      "jband_internal": {
+        "name": "J밴드 내회전",
+        "description": "팔꿈치 90도에서 밴드 저항에 맞서 손을 안쪽으로 회전. 제어된 동작.",
+        "notes": "팔꿈치 안정, 15-20회"
+      },
+      "jband_external": {
+        "name": "J밴드 외회전",
+        "description": "팔꿈치 90도에서 밴드 저항에 맞서 손을 바깥쪽으로 회전. 외회전근 강화.",
+        "notes": "느리고 제어되게, 15-20회"
+      }
+    },
+    "velocity": {
+      "long_toss_60": {
+        "name": "롱토스 워밍업 - 18m",
+        "description": "18미터에서 쉬운 던지기. 팔 경로 워밍업, 구속 집중 아님.",
+        "notes": "10-15회 던지기, 쉬운 노력"
+      },
+      "long_toss_max": {
+        "name": "롱토스 맥스 - 45-60m",
+        "description": "편안한 최대 거리. 팔 컨디셔닝을 위한 아크 던지기.",
+        "notes": "10-15회 던지기, 최대 노력"
+      }
+    },
+    "pitchDev": {
+      "curve_grip": {
+        "name": "커브 그립 작업",
+        "description": "그립 변형 연습, 편안한 손가락 압력과 솔기 방향 찾기.",
+        "notes": "자신의 그립 찾기"
+      },
+      "changeup_grip": {
+        "name": "체인지업 그립 작업",
+        "description": "서클 체인지, 3핑거 또는 다른 그립 변형. 효과적인 것 찾기.",
+        "notes": "편안한 그립"
+      }
+    },
+    "equipment": {
+      "hitting": {
+        "bat": { "name": "게임 배트", "description": "주요 게임 배트" },
+        "tee": { "name": "배팅 티", "description": "조절 가능한 높이 선호" },
+        "balls": { "name": "공", "description": "최소 12개" },
+        "barbell": { "name": "바벨 & 플레이트", "description": "복합 리프트용 (20kg 바 + 플레이트)" },
+        "dumbbells": { "name": "덤벨", "description": "다양한 무게 5-35kg 이상" },
+        "trap_bar": { "name": "트랩/헥스 바", "description": "데드리프트용 - 프로그램 필수" }
+      },
+      "pitching": {
+        "glove": { "name": "투수 글러브", "description": "경기용 투수 글러브" },
+        "balls": { "name": "공", "description": "볼륨 작업을 위해 최소 24개" },
+        "jbands": { "name": "J밴드/저항 밴드", "description": "일일 팔 관리 루틴용" },
+        "weighted_balls": { "name": "가중 야구공", "description": "110g, 140g, 200g, 255g, 310g 세트" }
+      }
+    }
   }
 }

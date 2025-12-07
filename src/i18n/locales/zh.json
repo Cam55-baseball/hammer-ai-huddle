@@ -2043,5 +2043,124 @@
       "comeback_kid": "东山再起",
       "comeback_kid_desc": "失败后完成一个挑战"
     }
+  },
+  "workoutContent": {
+    "weekTitle": "第{{number}}周",
+    "dayTitles": {
+      "day1StrengthBatSpeed": "第1天: 全身力量 {{workout}} + 挥棒速度",
+      "day2Rest": "第2天: 休息",
+      "day3BatSpeed": "第3天: 挥棒速度发展",
+      "day4Rest": "第4天: 休息",
+      "day5StrengthBatSpeed": "第5天: 全身力量 {{workout}} + 挥棒速度",
+      "day1StrengthArmCare": "第1天: 力量 {{workout}} + 手臂护理",
+      "day2RestRecovery": "第2天: 休息与恢复",
+      "day3VelocityDev": "第3天: 球速发展",
+      "day3PitchDev": "第3天: 投球发展",
+      "day3ThrowingDev": "第3天: 投掷发展",
+      "day4RestRecovery": "第4天: 休息与恢复",
+      "day5StrengthCommand": "第5天: 力量 {{workout}} + 控球练习"
+    },
+    "activeRecovery": {
+      "name": "主动恢复",
+      "hittingDesc": "轻度拉伸、泡沫轴或完全休息。让肌肉从力量训练中恢复。",
+      "pitchingDesc": "轻度拉伸、泡沫轴或完全休息。让肌肉和手臂恢复。轻度J带练习可选。",
+      "pitchingDesc2": "轻度拉伸、泡沫轴或完全休息。为下一次力量训练做准备。建议进行J带手臂护理。"
+    },
+    "exercises": {
+      "trap_bar_deadlift": {
+        "name": "六角杠硬拉",
+        "description": "站在六角杠内，握住两侧把手，通过脚跟发力站起。髋部和膝盖同时伸展。爆发性向心，控制下降。",
+        "notes": "顶部完全髋部伸展"
+      },
+      "barbell_back_squat": {
+        "name": "杠铃深蹲",
+        "description": "杠铃放在上斜方肌，双脚与肩同宽。下蹲直到髋部折痕低于膝盖，然后爆发性向上推。",
+        "notes": "破平行位，爆发性驱动"
+      },
+      "bench_press": {
+        "name": "卧推",
+        "description": "躺在卧推凳上微微拱背，握杠略宽于肩。控制下降至胸中部，短暂停顿，然后爆发性推起。",
+        "notes": "胸部暂停，通过脚跟发力"
+      },
+      "front_squat": {
+        "name": "前蹲",
+        "description": "杠铃放在前三角肌上，采用翻握或交叉握法。保持肘部高位，直立躯干深蹲，爆发性向上推。",
+        "notes": "肘部抬高，完全深度"
+      },
+      "overhead_press": {
+        "name": "过头推举",
+        "description": "杠铃在肩前，握法略宽于肩。收紧核心，直接向上推。完全锁定。",
+        "notes": "严格推举，完全锁定"
+      },
+      "back_squat": {
+        "name": "后蹲",
+        "description": "重量深蹲锻炼腿部力量。控制下降达到完全深度。",
+        "notes": "深蹲，控制动作"
+      }
+    },
+    "batSpeed": {
+      "speed_swings_10": {
+        "name": "速度挥棒 - 10次",
+        "description": "用比赛用棒进行最大努力挥棒。专注于挥棒速度而非接触质量。",
+        "notes": "最大意图，10次"
+      },
+      "connection_ball": {
+        "name": "连接球训练",
+        "description": "挥棒时在手臂和躯干之间夹住泡沫球。保持上半身连接。",
+        "notes": "球夹在二头肌和胸部之间"
+      }
+    },
+    "armCare": {
+      "jband_internal": {
+        "name": "J带内旋",
+        "description": "肘部90度，对抗弹力带阻力向内旋转。控制动作。",
+        "notes": "肘部稳定，15-20次"
+      },
+      "jband_external": {
+        "name": "J带外旋",
+        "description": "肘部90度，对抗弹力带阻力向外旋转。加强外旋肌群。",
+        "notes": "缓慢控制，15-20次"
+      }
+    },
+    "velocity": {
+      "long_toss_60": {
+        "name": "长传热身 - 18米",
+        "description": "18米轻松投掷。手臂轨迹热身，不以球速为重。",
+        "notes": "10-15次投掷，轻松努力"
+      },
+      "long_toss_max": {
+        "name": "长传最大距离 - 45-60米",
+        "description": "舒适的最大距离。弧线投掷用于手臂调节。",
+        "notes": "10-15次投掷，最大努力"
+      }
+    },
+    "pitchDev": {
+      "curve_grip": {
+        "name": "曲球握法练习",
+        "description": "练习握法变化，找到舒适的手指压力和缝线方向。",
+        "notes": "找到你的握法"
+      },
+      "changeup_grip": {
+        "name": "变速球握法练习",
+        "description": "圆圈变速、三指或其他握法变化。找到有效的方法。",
+        "notes": "舒适的握法"
+      }
+    },
+    "equipment": {
+      "hitting": {
+        "bat": { "name": "比赛用棒", "description": "你的主要比赛用棒" },
+        "tee": { "name": "击球架", "description": "可调高度优先" },
+        "balls": { "name": "棒球/垒球", "description": "至少12个" },
+        "barbell": { "name": "杠铃和杠铃片", "description": "用于复合举重（20kg杠铃+杠铃片）" },
+        "dumbbells": { "name": "哑铃", "description": "各种重量5-35公斤以上" },
+        "trap_bar": { "name": "六角杠", "description": "用于硬拉 - 项目必需" }
+      },
+      "pitching": {
+        "glove": { "name": "投手手套", "description": "比赛用投手手套" },
+        "balls": { "name": "棒球/垒球", "description": "大量练习需要至少24个" },
+        "jbands": { "name": "J带/弹力带", "description": "用于日常手臂护理" },
+        "weighted_balls": { "name": "加重棒球", "description": "110g、140g、200g、255g、310g一套" }
+      }
+    }
   }
 }
