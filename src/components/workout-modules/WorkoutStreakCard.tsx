@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Flame, Trophy, Star } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Flame, Trophy, Star, Sparkles } from 'lucide-react';
+import { ConfettiEffect } from '@/components/bounce-back-bay/ConfettiEffect';
+
+const WORKOUT_MILESTONES = [10, 50, 100, 200, 350, 500, 700, 1000];
 
 interface WorkoutStreakCardProps {
   currentStreak: number;
   longestStreak: number;
   totalWorkouts: number;
+  reachedMilestone?: number | null;
 }
 
 // Color tiers based on total workouts (every 100)
@@ -30,17 +35,69 @@ const getFlameCount = (totalWorkouts: number): number => {
   return Math.max(1, Math.floor(totalWorkouts / 500) + 1);
 };
 
-export function WorkoutStreakCard({ currentStreak, longestStreak, totalWorkouts }: WorkoutStreakCardProps) {
+export function WorkoutStreakCard({ currentStreak, longestStreak, totalWorkouts, reachedMilestone }: WorkoutStreakCardProps) {
   const { t } = useTranslation();
-  
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showMilestoneBadge, setShowMilestoneBadge] = useState(false);
+  const [displayedMilestone, setDisplayedMilestone] = useState<number | null>(null);
+
+  // Trigger confetti when milestone is reached
+  useEffect(() => {
+    if (reachedMilestone && WORKOUT_MILESTONES.includes(reachedMilestone)) {
+      setDisplayedMilestone(reachedMilestone);
+      setShowConfetti(true);
+      setShowMilestoneBadge(true);
+      
+      // Haptic feedback on mobile
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100, 50, 100]);
+      }
+      
+      // Hide milestone badge after 5 seconds
+      const badgeTimer = setTimeout(() => {
+        setShowMilestoneBadge(false);
+        setDisplayedMilestone(null);
+      }, 5000);
+      
+      return () => clearTimeout(badgeTimer);
+    }
+  }, [reachedMilestone]);
+
   const showFlame = currentStreak >= 5;
   const isGlowing = currentStreak >= 25;
   const colorTier = getColorTier(totalWorkouts);
   const flameCount = getFlameCount(totalWorkouts);
   const isNewRecord = currentStreak > 0 && currentStreak >= longestStreak;
 
+  // Get particle count based on milestone
+  const getParticleCount = (milestone: number): number => {
+    if (milestone >= 1000) return 100;
+    if (milestone >= 500) return 80;
+    if (milestone >= 200) return 60;
+    if (milestone >= 100) return 50;
+    return 40;
+  };
+
+  // Get milestone translation key
+  const getMilestoneKey = (milestone: number): string => {
+    return `workoutStreak.milestone${milestone}`;
+  };
+
   return (
     <Card className="relative overflow-hidden">
+      {/* Confetti Effect for Milestones */}
+      {showConfetti && displayedMilestone && (
+        <ConfettiEffect 
+          particleCount={getParticleCount(displayedMilestone)} 
+          duration={displayedMilestone >= 500 ? 4000 : 3000}
+        />
+      )}
+
+      {/* Milestone Achievement Badge */}
+      {showMilestoneBadge && displayedMilestone && (
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent z-10 animate-pulse" />
+      )}
+
       {/* Background glow effect for 25+ streak */}
       {isGlowing && (
         <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-${colorTier.color.replace('text-', '')}/10 to-transparent animate-pulse`} />
@@ -96,8 +153,21 @@ export function WorkoutStreakCard({ currentStreak, longestStreak, totalWorkouts 
           )}
         </div>
 
+        {/* Milestone Achievement Badge */}
+        {showMilestoneBadge && displayedMilestone && (
+          <div className="flex flex-col items-center justify-center gap-2 animate-scale-in">
+            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 px-3 py-1">
+              <Sparkles className="h-4 w-4 mr-1" />
+              {t('workoutStreak.milestoneUnlocked')}
+            </Badge>
+            <p className="text-sm font-medium text-center text-primary">
+              {t(getMilestoneKey(displayedMilestone))}
+            </p>
+          </div>
+        )}
+
         {/* New Record Badge */}
-        {isNewRecord && currentStreak > 0 && (
+        {isNewRecord && currentStreak > 0 && !showMilestoneBadge && (
           <div className="flex items-center justify-center gap-1 text-amber-500">
             <Star className="h-4 w-4 fill-current" />
             <span className="text-sm font-medium">{t('workoutStreak.newRecord')}</span>

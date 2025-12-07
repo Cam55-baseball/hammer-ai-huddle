@@ -260,6 +260,10 @@ export function useSubModuleProgress(
     const newLongestStreak = Math.max(newStreak, progress.workout_streak_longest);
     const newTotalWorkouts = progress.total_workouts_completed + 1;
 
+    // Check if new total hits a milestone
+    const WORKOUT_MILESTONES = [10, 50, 100, 200, 350, 500, 700, 1000];
+    const reachedMilestone = WORKOUT_MILESTONES.includes(newTotalWorkouts) ? newTotalWorkouts : null;
+
     try {
       const { error } = await supabase
         .from('sub_module_progress')
@@ -290,7 +294,9 @@ export function useSubModuleProgress(
 
       toast({
         title: 'Workout Complete!',
-        description: 'Next workout unlocks in 24 hours.',
+        description: reachedMilestone 
+          ? `Milestone achieved: ${reachedMilestone} workouts! Next unlocks in 12 hours.`
+          : 'Next workout unlocks in 12 hours.',
       });
 
       // Check if week is complete (all 5 days done)
@@ -304,6 +310,8 @@ export function useSubModuleProgress(
         // Cycle complete - check if can advance to next cycle
         await checkAndAdvanceCycle();
       }
+
+      return { reachedMilestone };
     } catch (error) {
       console.error('Error completing workout day:', error);
       toast({
@@ -311,6 +319,7 @@ export function useSubModuleProgress(
         description: 'Failed to save workout completion',
         variant: 'destructive',
       });
+      return { reachedMilestone: null };
     }
   }, [user, progress, calculateStreak]);
 
@@ -381,12 +390,12 @@ export function useSubModuleProgress(
     }
   }, [user, progress]);
 
-  const updateDayProgress = useCallback(async (week: number, day: string, completed: boolean) => {
+  const updateDayProgress = useCallback(async (week: number, day: string, completed: boolean): Promise<{ reachedMilestone: number | null } | void> => {
     if (!user || !progress) return;
 
     if (completed) {
-      // Use the new completeWorkoutDay for completion
-      await completeWorkoutDay(week, day);
+      // Use the new completeWorkoutDay for completion and return result
+      return await completeWorkoutDay(week, day);
     } else {
       // Handle uncomplete (remove completion timestamp)
       const updatedWeekProgress = {
