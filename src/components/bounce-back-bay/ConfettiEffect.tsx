@@ -9,6 +9,11 @@ interface ConfettiParticle {
   rotation: number;
 }
 
+interface ConfettiEffectProps {
+  particleCount?: number;
+  duration?: number;
+}
+
 const COLORS = [
   "hsl(var(--primary))",
   "#FFD700",
@@ -18,7 +23,7 @@ const COLORS = [
   "#EC4899",
 ];
 
-export function ConfettiEffect() {
+export function ConfettiEffect({ particleCount: propParticleCount, duration: propDuration }: ConfettiEffectProps = {}) {
   const [particles, setParticles] = useState<ConfettiParticle[]>([]);
   const [isVisible, setIsVisible] = useState(true);
 
@@ -28,10 +33,11 @@ export function ConfettiEffect() {
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    const particleCount = prefersReducedMotion ? 20 : 60;
+    const count = propParticleCount ?? (prefersReducedMotion ? 20 : 60);
+    const animDuration = propDuration ?? 4000;
 
     const newParticles: ConfettiParticle[] = Array.from(
-      { length: particleCount },
+      { length: count },
       (_, i) => ({
         id: i,
         x: Math.random() * 100,
@@ -47,10 +53,10 @@ export function ConfettiEffect() {
     // Cleanup after animation
     const timeout = setTimeout(() => {
       setIsVisible(false);
-    }, 4000);
+    }, animDuration);
 
     return () => clearTimeout(timeout);
-  }, []);
+  }, [propParticleCount, propDuration]);
 
   if (!isVisible) return null;
 

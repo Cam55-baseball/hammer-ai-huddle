@@ -141,6 +141,7 @@ export default function ProductionStudio() {
   const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState<{ week: number; day: DayData; dayIndex: number } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [reachedMilestone, setReachedMilestone] = useState<number | null>(null);
 
   const { modules, loading: subLoading } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
@@ -216,10 +217,17 @@ export default function ProductionStudio() {
   );
 
   const handleDayComplete = async (week: number, day: string, completed: boolean) => {
-    await updateDayProgress(week, day, completed);
+    const result = await updateDayProgress(week, day, completed);
+    
+    // Check for milestone achievement
+    if (result && 'reachedMilestone' in result && result.reachedMilestone) {
+      setReachedMilestone(result.reachedMilestone);
+      // Reset after animation
+      setTimeout(() => setReachedMilestone(null), 6000);
+    }
     
     if (completed) {
-      const unlockTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const unlockTime = new Date(Date.now() + 12 * 60 * 60 * 1000);
       scheduleNotification(unlockTime);
     }
   };
@@ -273,6 +281,7 @@ export default function ProductionStudio() {
           currentStreak={progress?.workout_streak_current || 0}
           longestStreak={progress?.workout_streak_longest || 0}
           totalWorkouts={progress?.total_workouts_completed || 0}
+          reachedMilestone={reachedMilestone}
         />
 
         {/* Experience Level */}
