@@ -2082,20 +2082,410 @@
         "description": "躺在卧推凳上微微拱背，握杠略宽于肩。控制下降至胸中部，短暂停顿，然后爆发性推起。",
         "notes": "胸部暂停，通过脚跟发力"
       },
+      "barbell_row": {
+        "name": "杠铃划船",
+        "description": "髋部铰链45度，膝盖外侧握杠。回缩肩胛骨同时拉至下肋骨。躯干保持稳定。",
+        "notes": "顶部保持1秒，严格姿势"
+      },
+      "landmine_rotational_press": {
+        "name": "地雷旋转推举",
+        "description": "杠铃固定在角落。双手从肩部开始，爆发性旋转髋部同时斜向推出。核心驱动动作。",
+        "notes": "每侧，完全髋部旋转"
+      },
+      "isometric_wall_sit": {
+        "name": "等长靠墙静蹲",
+        "description": "背部贴墙，下滑直到大腿与地面平行。下背部贴墙，最大程度激活股四头肌。",
+        "notes": "大腿平行，最大股四头肌张力"
+      },
+      "isometric_pallof_hold": {
+        "name": "等长帕洛夫保持",
+        "description": "胸部高度的缆绳/弹力带，手臂向前伸展。用核心抵抗旋转力 - 抗旋转是目标。",
+        "notes": "每侧，抵抗旋转"
+      },
       "front_squat": {
         "name": "前蹲",
         "description": "杠铃放在前三角肌上，采用翻握或交叉握法。保持肘部高位，直立躯干深蹲，爆发性向上推。",
         "notes": "肘部抬高，完全深度"
+      },
+      "incline_db_press": {
+        "name": "上斜哑铃推举",
+        "description": "在30度斜凳上，从肩部高度推至完全锁定。控制下降，底部轻微停顿，爆发性上推。",
+        "notes": "30度斜度，完全活动范围"
+      },
+      "weighted_pullup": {
+        "name": "负重引体向上",
+        "description": "通过腰带或背心增加重量。从死悬垂开始，拉至下巴超过杠。控制下降。",
+        "notes": "死悬垂开始，增加重量"
+      },
+      "romanian_deadlift": {
+        "name": "罗马尼亚硬拉",
+        "description": "杠铃在髋部高度，保持轻微膝盖弯曲同时将髋部向后推。下降至感受腘绳肌拉伸，然后髋部向前推。",
+        "notes": "髋铰链，腘绳肌拉伸"
+      },
+      "cable_woodchop_high_low": {
+        "name": "缆绳高到低砍伐",
+        "description": "高位缆绳，双脚与肩同宽。髋部旋转同时斜向下拉过身体。手臂保持伸展，核心驱动动作。",
+        "notes": "每侧，爆发性旋转"
+      },
+      "isometric_pushup_hold": {
+        "name": "等长俯卧撑保持",
+        "description": "下降至俯卧撑中间位置（肘部90度）。稳定保持不下沉或上升。最大程度激活胸肌、三头肌和核心。",
+        "notes": "中间位置，最大张力"
+      },
+      "isometric_single_glute_bridge": {
+        "name": "等长单腿臀桥",
+        "description": "一脚着地，另一腿伸展。髋部向上推，在顶部保持膝盖到肩膀成一直线。最大臀肌收缩。",
+        "notes": "每腿，髋部锁定在高位"
+      },
+      "box_squat": {
+        "name": "箱式深蹲",
+        "description": "向后深蹲坐到平行高度的箱子上。保持张力在箱子上短暂停顿，然后爆发性站起。教授正确的髋部力学。",
+        "notes": "箱子上停顿，爆发性站起"
+      },
+      "close_grip_bench": {
+        "name": "窄握卧推",
+        "description": "与肩同宽握杠，肘部内收45度。下降至下胸，停顿，爆发性推起。强调三头肌力量。",
+        "notes": "肘部内收，三头肌专注"
+      },
+      "single_arm_db_row": {
+        "name": "单臂哑铃划船",
+        "description": "一手一膝在凳上，另一脚宽距站立。划哑铃至髋部同时积极抵抗躯干旋转。控制离心。",
+        "notes": "每侧，抗旋转专注"
+      },
+      "bulgarian_split_squat": {
+        "name": "保加利亚分腿蹲",
+        "description": "后脚抬起放在身后的凳子上。下降直到前大腿平行，然后通过前脚跟推起站立。保持躯干直立。",
+        "notes": "每腿，后脚抬起"
+      },
+      "pallof_press": {
+        "name": "帕洛夫推举",
+        "description": "胸部高度缆绳，垂直站立。慢慢将手向前推，在伸展位保持3秒同时抵抗旋转，控制返回。",
+        "notes": "完全伸展位保持3秒"
+      },
+      "isometric_inverted_row": {
+        "name": "等长反向划船保持",
+        "description": "在胸部高度的杠下，拉起并保持胸部靠近杠。身体从脚踝到肩膀成一直线。收紧肩胛骨。",
+        "notes": "胸部靠近杠位置"
+      },
+      "isometric_side_plank": {
+        "name": "等长侧平板",
+        "description": "用肘部和脚侧支撑。保持身体成一直线，髋部离地抬起。积极通过接地的肘部推。",
+        "notes": "每侧，髋部抬高"
+      },
+      "sumo_deadlift": {
+        "name": "相扑硬拉",
+        "description": "宽站距，膝盖内侧握杠。通过脚跟推，膝盖外推，胸部抬起。髋部穿过锁定。强调髋部力量。",
+        "notes": "宽站距，髋部穿过"
       },
       "overhead_press": {
         "name": "过头推举",
         "description": "杠铃在肩前，握法略宽于肩。收紧核心，直接向上推。完全锁定。",
         "notes": "严格推举，完全锁定"
       },
+      "lat_pulldown": {
+        "name": "高位下拉",
+        "description": "宽握，拉至上胸同时轻微拱背。底部收紧背阔肌，控制返回。顶部完全拉伸。",
+        "notes": "宽握，收紧背阔肌"
+      },
+      "walking_lunge": {
+        "name": "行走弓步",
+        "description": "两侧持哑铃，向前踏入深弓步位置。通过前脚跟推起踏入下一个弓步。连续动作。",
+        "notes": "每腿，连续动作"
+      },
+      "medball_rotational_slam": {
+        "name": "药球旋转砸地",
+        "description": "药球在髋部，爆发性旋转并斜向下砸球。追球，重置，重复。最大旋转力量输出。",
+        "notes": "每侧，最大意图"
+      },
+      "isometric_split_squat": {
+        "name": "等长分腿蹲保持",
+        "description": "分腿蹲底部位置，前大腿平行。保持位置不动，保持直立躯干和激活的臀肌。",
+        "notes": "每腿，底部位置"
+      },
+      "isometric_hollow_body": {
+        "name": "等长空心保持",
+        "description": "仰卧，下背部压向地面。双腿伸展略离地，手臂过头。保持位置不破坏核心。",
+        "notes": "下背部压下"
+      },
+      "incline_barbell_press": {
+        "name": "上斜杠铃推举",
+        "description": "30度斜凳上杠铃。下降至上胸，停顿，爆发性推起。上胸强调。",
+        "notes": "30度斜度，重量"
+      },
+      "chest_supported_row": {
+        "name": "俯卧划船",
+        "description": "胸部靠在斜凳上，划哑铃或杠铃至肋骨。消除惯性，纯背部力量。",
+        "notes": "无惯性，严格姿势"
+      },
+      "db_shoulder_press": {
+        "name": "哑铃肩推",
+        "description": "坐姿或站姿，从肩部高度推哑铃至完全过头锁定。控制下降。",
+        "notes": "完全过头锁定"
+      },
+      "cable_woodchop_low_high": {
+        "name": "缆绳低到高砍伐",
+        "description": "低位缆绳。爆发性髋部旋转同时斜向上拉过身体。向上力量产生。",
+        "notes": "每侧，爆发性"
+      },
+      "isometric_dead_hang": {
+        "name": "等长死悬垂",
+        "description": "手臂伸直悬挂在引体向上杠上。锻炼握力，拉伸背阔肌，减压脊柱。",
+        "notes": "握力 + 肩部健康"
+      },
+      "db_bench_press": {
+        "name": "哑铃卧推",
+        "description": "独立手臂推举用于平衡和稳定。完全活动范围，底部停顿。",
+        "notes": "独立手臂工作"
+      },
+      "pallof_press_step": {
+        "name": "帕洛夫推举带步",
+        "description": "动态抗旋转。向前推手同时侧向迈步，增加力臂。",
+        "notes": "每侧，向外迈步"
+      },
+      "isometric_anti_rotation": {
+        "name": "等长抗旋转保持",
+        "description": "胸部高度缆绳/弹力带。手臂伸展，抵抗拉力。核心稳定性维护。",
+        "notes": "每侧，核心稳定性"
+      },
+      "glute_bridge_march": {
+        "name": "臀桥踏步",
+        "description": "臀桥位置，保持髋部水平同时交替抬膝。动态髋部稳定性。",
+        "notes": "每腿，髋部水平"
+      },
+      "step_up": {
+        "name": "上台阶",
+        "description": "持哑铃高箱上台阶。通过上腿推，最小化后腿推力。",
+        "notes": "每腿，高箱"
+      },
+      "plank_shoulder_tap": {
+        "name": "平板肩触",
+        "description": "平板位置，最小化髋部旋转同时交替触肩。核心控制。",
+        "notes": "每侧，髋部稳定"
+      },
+      "isometric_hip_flexor": {
+        "name": "等长髋屈肌保持",
+        "description": "站立，对抗阻力将膝盖拉向胸部。在最大收缩位保持髋屈肌激活。",
+        "notes": "每腿，髋部健康"
+      },
+      "isometric_lunge_hold": {
+        "name": "等长弓步保持",
+        "description": "弓步底部位置，保持张力。发展位置性力量。",
+        "notes": "每腿，底部位置"
+      },
+      "deficit_trap_bar": {
+        "name": "垫高六角杠硬拉",
+        "description": "站在六角杠内5-8厘米的平台上。增加的活动范围需要更大的髋部和腿部驱动。爆发性向心。",
+        "notes": "5-8厘米垫高，爆发性"
+      },
+      "pause_squat": {
+        "name": "停顿深蹲",
+        "description": "深蹲底部3秒停顿。消除拉伸反射，从静止位置建立力量。",
+        "notes": "底部3秒停顿"
+      },
+      "spoto_press": {
+        "name": "斯波托推举",
+        "description": "距胸2.5厘米处停顿2秒，然后推起。在粘滞点建立力量而不触胸。",
+        "notes": "距胸2.5厘米，2秒停顿"
+      },
+      "pendlay_row": {
+        "name": "潘德雷划船",
+        "description": "每次从地面开始，爆发性划至下胸。死停开始建立纯拉力。",
+        "notes": "每次死停"
+      },
+      "single_leg_rdl": {
+        "name": "单腿罗马尼亚硬拉",
+        "description": "单腿铰链，另一腿向后伸展。平衡和腘绳肌训练。全程控制。",
+        "notes": "每腿，平衡专注"
+      },
+      "isometric_pause_squat": {
+        "name": "等长停顿深蹲保持",
+        "description": "深蹲底部延长保持。建立位置性力量和稳定性。",
+        "notes": "延长保持，最大张力"
+      },
+      "isometric_loaded_stretch": {
+        "name": "等长负重拉伸",
+        "description": "在负重下保持拉伸位置。通过完全活动范围发展力量。",
+        "notes": "控制拉伸，保持张力"
+      },
+      "front_squat_pause": {
+        "name": "停顿前蹲",
+        "description": "底部2秒停顿。重负荷下的核心稳定性。",
+        "notes": "2秒停顿，肘部抬起"
+      },
+      "z_press": {
+        "name": "Z推举",
+        "description": "坐在地上推举。消除腿部驱动，纯上身力量。",
+        "notes": "腿伸直，严格推举"
+      },
+      "cable_low_high_rotation": {
+        "name": "缆绳低到高旋转",
+        "description": "完全髋部参与的向上旋转模式。",
+        "notes": "每侧，完全旋转"
+      },
+      "isometric_dead_bug": {
+        "name": "等长死虫保持",
+        "description": "四肢伸展，下背部压下。核心稳定性保持。",
+        "notes": "对角手臂/腿伸展"
+      },
+      "barbell_hip_thrust": {
+        "name": "杠铃臀推",
+        "description": "杠铃横跨髋部，向上推髋。驱动阶段的最大臀肌力量。",
+        "notes": "完全髋部伸展，顶部挤压"
+      },
+      "half_kneel_anti_rotation": {
+        "name": "半跪缆绳抗旋转",
+        "description": "半跪位置，胸部高度缆绳，抵抗旋转。训练躯干稳定性。",
+        "notes": "每侧，保持直立姿势"
+      },
+      "isometric_glute_bridge": {
+        "name": "等长臀桥保持",
+        "description": "髋部抬起，单腿或双腿。重复驱动阶段激活的臀肌耐力。",
+        "notes": "完全髋部伸展，最大挤压"
+      },
+      "pushup_variations": {
+        "name": "俯卧撑变式",
+        "description": "标准、钻石或弓箭手俯卧撑。自重控制下的肩部稳定性。",
+        "notes": "完全活动范围，核心激活"
+      },
+      "face_pulls": {
+        "name": "面拉",
+        "description": "面部高度缆绳，外旋同时拉向耳朵。对后肩健康至关重要。",
+        "notes": "肘部高，结束时外旋"
+      },
+      "hip_thrust": {
+        "name": "臀推",
+        "description": "臀肌力量的重臀推。最大驱动阶段力量产生。",
+        "notes": "重负荷，完全伸展"
+      },
+      "medball_scoop_toss": {
+        "name": "药球铲抛",
+        "description": "药球抛掷的爆发性髋部伸展。力量转移训练。",
+        "notes": "最大意图，髋部伸展专注"
+      },
       "back_squat": {
         "name": "后蹲",
         "description": "重量深蹲锻炼腿部力量。控制下降达到完全深度。",
         "notes": "深蹲，控制动作"
+      },
+      "barbell_bench_press": {
+        "name": "杠铃卧推",
+        "description": "上身力量的重推举。加速的胸和三头肌力量。",
+        "notes": "胸部停顿，爆发性驱动"
+      },
+      "half_kneel_chop": {
+        "name": "半跪缆绳砍伐",
+        "description": "半跪位置的旋转力量。髋部和核心整合。",
+        "notes": "每侧，爆发性"
+      },
+      "half_kneel_lift": {
+        "name": "半跪缆绳提举",
+        "description": "半跪位置的低到高提举模式。",
+        "notes": "每侧，完全范围"
+      },
+      "lateral_lunge": {
+        "name": "侧弓步",
+        "description": "髋部活动性和内收肌力量的侧向力量。",
+        "notes": "每腿，深弓步"
+      },
+      "face_pulls_ext_rot": {
+        "name": "面拉带外旋",
+        "description": "峰值收缩时增加外旋。最大后肩训练。",
+        "notes": "结束时外旋"
+      },
+      "single_arm_landmine": {
+        "name": "单臂地雷推举",
+        "description": "带旋转元素的单侧推举。核心稳定性需求。",
+        "notes": "每臂，稳定基础"
+      },
+      "eccentric_trap_bar": {
+        "name": "离心六角杠硬拉",
+        "description": "5秒下降阶段。离心期间最大肌肉张力。",
+        "notes": "5秒负相，控制"
+      },
+      "eccentric_squat": {
+        "name": "离心深蹲",
+        "description": "5秒下降，爆发性上升。离心肌肉负荷。",
+        "notes": "5秒下，快速上"
+      },
+      "eccentric_bench": {
+        "name": "离心卧推",
+        "description": "5秒下降至胸。建立胸和三头肌质量。",
+        "notes": "5秒负相，停顿，推举"
+      },
+      "eccentric_row": {
+        "name": "离心划船",
+        "description": "4秒下降阶段。背部肌肉增大。",
+        "notes": "4秒负相，严格姿势"
+      },
+      "eccentric_rdl": {
+        "name": "离心罗马尼亚硬拉",
+        "description": "腘绳肌专注的4秒下降。增长的张力持续时间。",
+        "notes": "4秒负相，控制"
+      },
+      "eccentric_bulgarian": {
+        "name": "离心保加利亚分腿蹲",
+        "description": "每次4秒下降。股四头肌增大专注。",
+        "notes": "4秒下，每腿"
+      },
+      "eccentric_overhead": {
+        "name": "离心过头推举",
+        "description": "从锁定位4秒下降。肩部质量建设。",
+        "notes": "4秒负相，严格"
+      },
+      "eccentric_pullup": {
+        "name": "离心引体向上",
+        "description": "从顶部5秒下降。背阔肌发展。",
+        "notes": "5秒负相，完全拉伸"
+      },
+      "eccentric_single_row": {
+        "name": "离心单臂划船",
+        "description": "每次4秒负相。单侧背部发展。",
+        "notes": "4秒负相，每侧"
+      },
+      "eccentric_step_down": {
+        "name": "离心下台阶",
+        "description": "从箱子控制单腿下降。股四头肌离心力量。",
+        "notes": "每腿，控制下降"
+      },
+      "eccentric_incline": {
+        "name": "离心上斜推举",
+        "description": "上斜4秒下降。上胸发展。",
+        "notes": "4秒负相，30度斜"
+      },
+      "eccentric_lat_pulldown": {
+        "name": "离心高位下拉",
+        "description": "4秒返回起始位。背阔肌离心负荷。",
+        "notes": "4秒负相，完全拉伸"
+      },
+      "eccentric_nordic": {
+        "name": "离心北欧弯举",
+        "description": "缓慢离心腘绳肌下降。预防伤害专注。",
+        "notes": "控制下降，底部接住"
+      },
+      "eccentric_dip": {
+        "name": "离心双杠臂屈伸",
+        "description": "5秒下降阶段。三头肌和胸部发展。",
+        "notes": "5秒负相，深度拉伸"
+      },
+      "tempo_front_squat": {
+        "name": "节奏前蹲",
+        "description": "4秒下降，2秒停顿，爆发性上升。总张力持续时间。",
+        "notes": "4-2-1节奏"
+      },
+      "negative_pullup": {
+        "name": "负相引体向上",
+        "description": "跳到顶部，6秒下降。建立拉力。",
+        "notes": "6秒负相，完全悬垂"
+      },
+      "eccentric_lateral_lunge": {
+        "name": "离心侧弓步",
+        "description": "4秒下降进入侧弓步。内收肌发展。",
+        "notes": "4秒负相，每侧"
+      },
+      "landmine_press": {
+        "name": "地雷推举",
+        "description": "地雷杠单臂推举。带旋转元素的肩胛友好过头推举。",
+        "notes": "每臂，稳定核心"
       }
     },
     "batSpeed": {
@@ -2108,6 +2498,101 @@
         "name": "连接球训练",
         "description": "挥棒时在手臂和躯干之间夹住泡沫球。保持上半身连接。",
         "notes": "球夹在二头肌和胸部之间"
+      },
+      "bat_behind_back": {
+        "name": "背后持棒旋转",
+        "description": "将球棒横跨肩膀放在背后。练习髋部旋转驱动肩膀。",
+        "notes": "髋部引导，核心激活"
+      },
+      "wrist_snap": {
+        "name": "手腕弹击训练",
+        "description": "在接触点快速弹击手腕。发展通过击球区的快手。",
+        "notes": "在接触点弹击"
+      },
+      "resistance_band_swings": {
+        "name": "弹力带速度挥棒",
+        "description": "将弹力带连接到球棒进行超负荷。对抗阻力挥棒以发展力量。",
+        "notes": "对抗弹力带，完全旋转"
+      },
+      "one_handed_swings": {
+        "name": "单手速度挥棒",
+        "description": "仅用上手或下手挥棒。发展手的独立性和球棒控制。",
+        "notes": "每只手，控制挥棒"
+      },
+      "quick_hands": {
+        "name": "快手训练",
+        "description": "伙伴从近距离抛球。快速反应，短挥棒。",
+        "notes": "快速挥棒，看球"
+      },
+      "swing_speed_measure": {
+        "name": "挥棒速度测量",
+        "description": "用挥棒分析仪追踪球棒速度。记录随时间的进步。",
+        "notes": "追踪mph，追求进步"
+      },
+      "bat_waggle": {
+        "name": "球棒晃动速度训练",
+        "description": "在站姿时快速移动球棒。保持手部放松和准备状态。",
+        "notes": "保持放松，轻握"
+      },
+      "speed_tee_15": {
+        "name": "速度击球架 - 15次挥棒",
+        "description": "从击球架全速挥棒。专注于最大球棒速度，而非技术。",
+        "notes": "15次挥棒，最大努力"
+      },
+      "velocity_ladder": {
+        "name": "速度阶梯挥棒",
+        "description": "逐步增加速度：70%，80%，90%，100%。建立到最大。",
+        "notes": "4组，逐渐增加强度"
+      },
+      "bat_flip_speed": {
+        "name": "翻棒速度训练",
+        "description": "快速翻转球棒首尾相接。发展手腕速度和控制。",
+        "notes": "快速翻转，干净接住"
+      },
+      "no_stride_swings": {
+        "name": "无跨步速度挥棒",
+        "description": "从站姿无跨步挥棒。隔离上半身速度。",
+        "notes": "无跨步，上半身专注"
+      },
+      "fast_hands_reaction": {
+        "name": "快手反应训练",
+        "description": "彩色球抛掷 - 只对特定颜色挥棒。快速决策。",
+        "notes": "快速反应和决定"
+      },
+      "exit_speed_comp": {
+        "name": "出棒速度比赛",
+        "description": "比赛从击球架或软抛获得最高出棒速度。",
+        "notes": "追踪出棒速度，打破个人最佳"
+      },
+      "rotational_snap": {
+        "name": "旋转弹击训练",
+        "description": "专注于爆发性髋部旋转来启动挥棒。髋部引导手。",
+        "notes": "弹击髋部，转移能量"
+      },
+      "light_bat_20": {
+        "name": "轻棒最大速度 - 20次挥棒",
+        "description": "超速训练用的速度棒或轻棒。快速移动。",
+        "notes": "20次挥棒，最大速度"
+      },
+      "heavy_light_contrast": {
+        "name": "重轻对比 - 10组",
+        "description": "在重棒和轻棒挥棒之间交替。对比训练效果。",
+        "notes": "5重，5轻，重复"
+      },
+      "intent_tee_max": {
+        "name": "意图击球架 - 最大努力",
+        "description": "从击球架最大意图挥棒。每次挥棒都是比赛挥棒努力。",
+        "notes": "每次挥棒100%努力"
+      },
+      "barrel_speed_focus": {
+        "name": "棒头速度专注训练",
+        "description": "专注于棒头通过击球区的加速。甩动棒头。",
+        "notes": "感受棒头甩动"
+      },
+      "overload_underload": {
+        "name": "超负荷/低负荷协议",
+        "description": "用加重棒和速度棒的完整协议。全对比训练课程。",
+        "notes": "重 → 普通 → 轻"
       }
     },
     "armCare": {
@@ -2120,6 +2605,36 @@
         "name": "J带外旋",
         "description": "肘部90度，对抗弹力带阻力向外旋转。加强外旋肌群。",
         "notes": "缓慢控制，15-20次"
+      },
+      "jband_scap": {
+        "name": "J带肩胛回缩",
+        "description": "在胸部高度将弹力带拉开。收紧肩胛骨。",
+        "notes": "结束时保持2秒，15次"
+      },
+      "jband_high_pulls": {
+        "name": "J带高拉",
+        "description": "手臂举过头顶持弹力带，保持张力同时拉开。",
+        "notes": "保持手臂高位，15次"
+      },
+      "sleeper_stretch": {
+        "name": "睡眠者拉伸",
+        "description": "侧卧于投掷侧，用另一只手将手腕推向地面。内旋拉伸。",
+        "notes": "保持30秒，轻柔压力"
+      },
+      "crossbody_stretch": {
+        "name": "跨身拉伸",
+        "description": "用另一只手臂将投掷手臂拉过身体。后肩拉伸。",
+        "notes": "保持30秒，感受肩后拉伸"
+      },
+      "wrist_flex_ext": {
+        "name": "手腕屈伸",
+        "description": "用轻重量卷曲和伸展手腕。手臂健康的前臂力量。",
+        "notes": "每个方向15次"
+      },
+      "forearm_pro_sup": {
+        "name": "前臂旋转",
+        "description": "用轻重量将前臂旋转至手掌向上和手掌向下。手腕活动性。",
+        "notes": "15次，控制旋转"
       }
     },
     "velocity": {
@@ -2128,10 +2643,80 @@
         "description": "18米轻松投掷。手臂轨迹热身，不以球速为重。",
         "notes": "10-15次投掷，轻松努力"
       },
+      "long_toss_90": {
+        "name": "长传递进 - 27米",
+        "description": "距离增加到27米。中等努力，建立手臂速度。",
+        "notes": "10-15次投掷，中等努力"
+      },
+      "long_toss_120": {
+        "name": "长传延伸 - 36米",
+        "description": "延伸到36米。允许较高弧度，建立手臂力量。",
+        "notes": "10-15次投掷，努力增加"
+      },
       "long_toss_max": {
         "name": "长传最大距离 - 45-60米",
         "description": "舒适的最大距离。弧线投掷用于手臂调节。",
         "notes": "10-15次投掷，最大努力"
+      },
+      "pulldown_phase": {
+        "name": "下拉阶段",
+        "description": "从最大距离用下拉投掷返回。平直线轨迹。",
+        "notes": "每9米递减回拉"
+      },
+      "velo_day_gun": {
+        "name": "球速日 - 测速枪读数",
+        "description": "带雷达读数的球速专注训练。追踪最大和平均值。",
+        "notes": "记录球速，追踪进步"
+      },
+      "weighted_7oz": {
+        "name": "加重球 - 200克超负荷",
+        "description": "手臂力量的重球投掷。控制意图。",
+        "notes": "15-20次投掷，非最大努力"
+      },
+      "weighted_5oz": {
+        "name": "加重球 - 140克标准",
+        "description": "比赛重量球或标准140克加重球。",
+        "notes": "15-20次投掷，感受正常手臂轨迹"
+      },
+      "weighted_4oz": {
+        "name": "加重球 - 110克低负荷",
+        "description": "手臂速度发展的轻球。快速移动。",
+        "notes": "15-20次投掷，最大手臂速度"
+      },
+      "contrast_throws": {
+        "name": "对比投掷",
+        "description": "在超负荷和低负荷球之间交替。对比训练效果。",
+        "notes": "5重，5轻，重复2-3次"
+      },
+      "crow_hop": {
+        "name": "乌鸦跳投掷",
+        "description": "用乌鸦跳投掷以获得动量和时机。建立手臂速度。",
+        "notes": "全意图，良好时机"
+      },
+      "max_intent_bp": {
+        "name": "最大意图牛棚",
+        "description": "最大意图的牛棚训练。比赛般的球速专注。",
+        "notes": "15-25球，全部最大努力"
+      },
+      "plyocare_pivot": {
+        "name": "普莱奥球轴心牵制",
+        "description": "用普莱奥球的轴心投掷训练。快速脚步和手臂动作。",
+        "notes": "每个方向10次"
+      },
+      "plyocare_rollins": {
+        "name": "普莱奥球滚入",
+        "description": "用普莱奥球滚入投掷。髋部引导手臂跟随。",
+        "notes": "10-15次投掷，感受髋部引导"
+      },
+      "plyocare_reverse": {
+        "name": "普莱奥球反向投掷",
+        "description": "背对目标，旋转投掷。旋转顺序。",
+        "notes": "10次投掷，完全旋转"
+      },
+      "rocker_throws": {
+        "name": "摇摆投掷",
+        "description": "后摆后带动量投掷。时机和重心转移。",
+        "notes": "15次投掷，感受动量"
       }
     },
     "pitchDev": {
@@ -2140,10 +2725,70 @@
         "description": "练习握法变化，找到舒适的手指压力和缝线方向。",
         "notes": "找到你的握法"
       },
+      "curve_spin": {
+        "name": "曲球旋转训练",
+        "description": "近距离旋转专注于紧密旋转和轴。看旋转。",
+        "notes": "专注紧密旋转"
+      },
+      "curve_shape": {
+        "name": "曲球形状专注",
+        "description": "全距离曲球，专注于一致的弧度形状和深度。",
+        "notes": "一致的形状"
+      },
+      "slider_grip": {
+        "name": "滑球握法练习",
+        "description": "练习滑球握法，手指压在内侧缝线上。找到舒适区。",
+        "notes": "找到握法舒适度"
+      },
+      "slider_wrist": {
+        "name": "滑球手腕动作",
+        "description": "隔离滑球释放动作。子弹旋转带紧密点。",
+        "notes": "紧密点旋转"
+      },
+      "slider_tunnel": {
+        "name": "滑球隧道训练",
+        "description": "通过快速球隧道投滑球，延迟弧度以欺骗。",
+        "notes": "与快速球相同隧道"
+      },
       "changeup_grip": {
         "name": "变速球握法练习",
         "description": "圆圈变速、三指或其他握法变化。找到有效的方法。",
         "notes": "舒适的握法"
+      },
+      "changeup_arm_speed": {
+        "name": "变速球手臂速度匹配",
+        "description": "用变速球握法匹配快速球手臂速度。欺骗是关键。",
+        "notes": "相同手臂速度"
+      },
+      "changeup_feel": {
+        "name": "变速球触感训练",
+        "description": "近距离变速球发展速度差的触感和感觉。",
+        "notes": "感受速度差异"
+      },
+      "quadrant_work": {
+        "name": "象限练习",
+        "description": "打击好球区的特定象限。建立精准控制。",
+        "notes": "打你的位置"
+      },
+      "glove_arm_side": {
+        "name": "手套侧/手臂侧",
+        "description": "在本垒板两边工作。发展水平控制。",
+        "notes": "打角落"
+      },
+      "up_down_ladder": {
+        "name": "上/下阶梯",
+        "description": "在好球区上下工作。垂直控制发展。",
+        "notes": "变化高度"
+      },
+      "pitch_sequencing": {
+        "name": "投球序列",
+        "description": "练习2球和3球序列。建立比赛般的模式。",
+        "notes": "像比赛一样思考"
+      },
+      "tunnel_drills": {
+        "name": "隧道训练",
+        "description": "通过相同隧道投不同球种。发展欺骗性。",
+        "notes": "相同外观，不同弧度"
       }
     },
     "equipment": {
@@ -2153,13 +2798,37 @@
         "balls": { "name": "棒球/垒球", "description": "至少12个" },
         "barbell": { "name": "杠铃和杠铃片", "description": "用于复合举重（20kg杠铃+杠铃片）" },
         "dumbbells": { "name": "哑铃", "description": "各种重量5-35公斤以上" },
-        "trap_bar": { "name": "六角杠", "description": "用于硬拉 - 项目必需" }
+        "trap_bar": { "name": "六角杠", "description": "用于硬拉 - 项目必需" },
+        "speed_bat": { "name": "速度棒", "description": "超速训练用轻量球棒" },
+        "heavy_bat": { "name": "加重棒", "description": "超负荷挥棒训练用" },
+        "resistance_bands": { "name": "弹力带", "description": "弹力带挥棒和热身用" },
+        "connection_ball": { "name": "连接球", "description": "泡沫球或挥棒连接辅助工具" },
+        "swing_analyzer": { "name": "挥棒分析仪", "description": "球棒速度追踪设备" },
+        "plyo_balls": { "name": "普莱奥球", "description": "力量训练用加重普莱奥球" },
+        "net": { "name": "击球网", "description": "挥棒练习用" },
+        "pullup_bar": { "name": "引体向上杠", "description": "引体向上和悬垂用" },
+        "bench": { "name": "训练凳", "description": "卧推和辅助练习用" },
+        "cable_machine": { "name": "缆绳机", "description": "缆绳练习用（或弹力带替代）" }
       },
       "pitching": {
         "glove": { "name": "投手手套", "description": "比赛用投手手套" },
         "balls": { "name": "棒球/垒球", "description": "大量练习需要至少24个" },
         "jbands": { "name": "J带/弹力带", "description": "用于日常手臂护理" },
-        "weighted_balls": { "name": "加重棒球", "description": "110g、140g、200g、255g、310g一套" }
+        "weighted_balls": { "name": "加重棒球", "description": "110g、140g、200g、255g、310g一套" },
+        "plyocare_balls": { "name": "普莱奥球", "description": "各种重量的普莱奥球套装" },
+        "radar_gun": { "name": "测速枪", "description": "球速追踪设备" },
+        "mound": { "name": "便携式投手丘", "description": "练习用便携式投手丘" },
+        "catcher": { "name": "捕手/网", "description": "牛棚练习用捕手或网" },
+        "barbell": { "name": "杠铃和杠铃片", "description": "复合举重用（20kg杠铃+杠铃片）" },
+        "dumbbells": { "name": "哑铃", "description": "各种重量5-35公斤以上" },
+        "trap_bar": { "name": "六角杠", "description": "硬拉用 - 项目必需" },
+        "pullup_bar": { "name": "引体向上杠", "description": "引体向上和悬垂用" },
+        "bench": { "name": "训练凳", "description": "推举练习用" },
+        "cable_machine": { "name": "缆绳机", "description": "缆绳练习用（或弹力带替代）" },
+        "med_ball": { "name": "药球", "description": "旋转力量训练用" },
+        "foam_roller": { "name": "泡沫轴", "description": "恢复和自我按摩用" },
+        "target": { "name": "投球靶", "description": "控球练习用靶" },
+        "towel": { "name": "毛巾", "description": "毛巾训练和手臂护理用" }
       }
     }
   }

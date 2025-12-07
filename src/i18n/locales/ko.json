@@ -2098,15 +2098,410 @@
         "description": "가벼운 아치로 벤치에 누워 어깨 바로 바깥쪽에서 바를 잡음. 제어하며 가슴 중앙으로 내리고 잠시 정지 후 폭발적으로 밀어 올림.",
         "notes": "가슴에서 정지, 뒤꿈치로 밀기"
       },
+      "barbell_row": {
+        "name": "바벨 로우",
+        "description": "고관절 45도 힌지, 무릎 바깥쪽에서 바를 잡음. 견갑골을 후인하며 하부 갈비뼈까지 당김. 몸통 안정 유지.",
+        "notes": "상단에서 1초 유지, 엄격한 폼"
+      },
+      "landmine_rotational_press": {
+        "name": "랜드마인 회전 프레스",
+        "description": "바를 코너에 고정. 양손으로 어깨에서 시작, 폭발적으로 고관절 회전하며 대각선으로 밀기. 코어가 동작 주도.",
+        "notes": "각 측면, 완전한 고관절 회전"
+      },
+      "isometric_wall_sit": {
+        "name": "등장성 벽 앉기",
+        "description": "등을 벽에 평평하게 대고 대퇴가 바닥과 평행할 때까지 미끄러져 내려감. 허리를 벽에 누르고 대퇴사두근 최대 수축.",
+        "notes": "대퇴 평행, 최대 대퇴사두근 긴장"
+      },
+      "isometric_pallof_hold": {
+        "name": "등장성 팔로프 홀드",
+        "description": "가슴 높이에서 케이블/밴드, 팔을 앞으로 뻗음. 코어로 회전력에 저항 - 항회전이 목표.",
+        "notes": "각 측면, 회전 저항"
+      },
       "front_squat": {
         "name": "프론트 스쿼트",
         "description": "클린 그립 또는 팔 교차로 전면 삼각근에 바를 올림. 팔꿈치 높이 유지하고 똑바른 몸통으로 깊이 내려간 후 폭발적으로 밀어 올림.",
         "notes": "팔꿈치 위로, 완전한 깊이"
       },
+      "incline_db_press": {
+        "name": "인클라인 덤벨 프레스",
+        "description": "30도 인클라인에서 어깨 높이부터 완전 락아웃까지 덤벨 밀기. 제어하며 내리고 하단에서 잠시 정지, 폭발적으로 올림.",
+        "notes": "30도 인클라인, 완전한 ROM"
+      },
+      "weighted_pullup": {
+        "name": "웨이티드 풀업",
+        "description": "벨트나 조끼로 무게 추가. 데드행에서 턱이 바 위로 갈 때까지 당김. 하강 제어.",
+        "notes": "데드행 시작, 무게 추가"
+      },
+      "romanian_deadlift": {
+        "name": "루마니안 데드리프트",
+        "description": "바를 고관절 높이에, 약간의 무릎 굽힘 유지하며 고관절을 뒤로 밀기. 햄스트링 스트레치 느낄 때까지 내리고 고관절을 앞으로 밀기.",
+        "notes": "힙 힌지, 햄스트링 스트레치"
+      },
+      "cable_woodchop_high_low": {
+        "name": "케이블 우드찹 (하이 투 로우)",
+        "description": "높은 케이블, 어깨 너비 발. 고관절 회전과 함께 대각선 아래로 몸을 가로질러 당김. 팔은 펴진 상태, 코어가 동작 주도.",
+        "notes": "각 측면, 폭발적 회전"
+      },
+      "isometric_pushup_hold": {
+        "name": "등장성 푸쉬업 홀드",
+        "description": "푸쉬업 중간 위치(팔꿈치 90도)로 내림. 가라앉거나 올라가지 않고 안정되게 유지. 가슴, 삼두, 코어 최대 수축.",
+        "notes": "중간 위치, 최대 긴장"
+      },
+      "isometric_single_glute_bridge": {
+        "name": "등장성 싱글레그 글루트 브릿지",
+        "description": "한 발을 바닥에, 다른 다리는 뻗음. 고관절을 올려 무릎에서 어깨까지 일직선으로 상단 유지. 최대 글루트 수축.",
+        "notes": "각 다리, 고관절 높이 고정"
+      },
+      "box_squat": {
+        "name": "박스 스쿼트",
+        "description": "평행 높이의 박스로 뒤로 스쿼트. 긴장 유지하며 박스에서 잠시 정지, 폭발적으로 일어남. 적절한 고관절 역학 교육.",
+        "notes": "박스에서 정지, 폭발적으로 일어남"
+      },
+      "close_grip_bench": {
+        "name": "클로즈 그립 벤치 프레스",
+        "description": "어깨 너비로 바를 잡고 팔꿈치 45도 접음. 하부 가슴까지 내리고 정지, 폭발적으로 밀기. 삼두근 강도 강조.",
+        "notes": "팔꿈치 접음, 삼두근 집중"
+      },
+      "single_arm_db_row": {
+        "name": "싱글 암 덤벨 로우",
+        "description": "한 손과 한 무릎을 벤치에, 반대쪽 발은 넓게. 몸통 회전에 적극적으로 저항하며 덤벨을 고관절까지 당김.",
+        "notes": "각 측면, 항회전 집중"
+      },
+      "bulgarian_split_squat": {
+        "name": "불가리안 스플릿 스쿼트",
+        "description": "뒷발을 뒤 벤치에 올림. 앞 대퇴가 평행할 때까지 내리고 앞 뒤꿈치로 밀어 일어남. 몸통 직립 유지.",
+        "notes": "각 다리, 뒷발 올림"
+      },
+      "pallof_press": {
+        "name": "팔로프 프레스",
+        "description": "가슴 높이 케이블, 수직으로 서기. 천천히 손을 앞으로 밀고 신전에서 3초 유지하며 회전 저항, 제어하며 복귀.",
+        "notes": "완전 신전에서 3초 유지"
+      },
+      "isometric_inverted_row": {
+        "name": "등장성 인버티드 로우 홀드",
+        "description": "가슴 높이 바 아래에서 가슴이 바에 가깝게 당겨 유지. 발목부터 어깨까지 일직선. 견갑골 조임.",
+        "notes": "가슴이 바 위치"
+      },
+      "isometric_side_plank": {
+        "name": "등장성 사이드 플랭크",
+        "description": "팔꿈치와 발 옆면으로 지지. 고관절을 바닥에서 들어 일직선 유지. 지지하는 팔꿈치로 적극적으로 밀기.",
+        "notes": "각 측면, 고관절 높이"
+      },
+      "sumo_deadlift": {
+        "name": "스모 데드리프트",
+        "description": "넓은 스탠스, 무릎 안쪽에서 그립. 뒤꿈치로 밀고 무릎 바깥으로 밀고 가슴 올림. 고관절 통과 락아웃. 고관절 파워 강조.",
+        "notes": "넓은 스탠스, 고관절 통과"
+      },
       "overhead_press": {
         "name": "오버헤드 프레스",
         "description": "어깨 앞에 바, 어깨 바로 바깥쪽 그립. 코어 조이고 똑바로 위로 밀기. 완전한 락아웃.",
         "notes": "스트릭트 프레스, 완전한 락아웃"
+      },
+      "lat_pulldown": {
+        "name": "랫 풀다운",
+        "description": "넓은 그립, 약간 아치하며 상부 가슴까지 당김. 하단에서 광배근 조임, 제어하며 복귀. 상단에서 완전한 스트레치.",
+        "notes": "넓은 그립, 광배근 조임"
+      },
+      "walking_lunge": {
+        "name": "워킹 런지",
+        "description": "양옆에 덤벨, 깊은 런지 위치로 앞으로 스텝. 앞 뒤꿈치로 밀어 다음 런지로 스텝. 연속 동작.",
+        "notes": "각 다리, 연속 동작"
+      },
+      "medball_rotational_slam": {
+        "name": "메디신볼 회전 슬램",
+        "description": "메디신볼을 고관절에, 폭발적으로 회전하며 대각선 아래로 슬램. 공 추적, 리셋, 반복. 최대 회전 파워 출력.",
+        "notes": "각 측면, 최대 의도"
+      },
+      "isometric_split_squat": {
+        "name": "등장성 스플릿 스쿼트 홀드",
+        "description": "스플릿 스쿼트 하단 위치, 앞 대퇴 평행. 직립 몸통과 수축된 글루트 유지하며 움직이지 않고 위치 유지.",
+        "notes": "각 다리, 하단 위치"
+      },
+      "isometric_hollow_body": {
+        "name": "등장성 할로우 바디 홀드",
+        "description": "등을 대고 누워 허리를 바닥에 누름. 다리는 바닥에서 약간 올려 뻗고 팔은 머리 위. 코어 깨지지 않게 위치 유지.",
+        "notes": "허리를 아래로 누름"
+      },
+      "incline_barbell_press": {
+        "name": "인클라인 바벨 프레스",
+        "description": "30도 인클라인에서 바벨. 상부 가슴까지 내리고 정지, 폭발적으로 밀기. 상부 가슴 강조.",
+        "notes": "30도 인클라인, 무겁게"
+      },
+      "chest_supported_row": {
+        "name": "체스트 서포티드 로우",
+        "description": "가슴을 인클라인 벤치에 대고 덤벨이나 바를 갈비뼈까지 당김. 모멘텀 제거, 순수 등 근력.",
+        "notes": "모멘텀 없음, 엄격한 폼"
+      },
+      "db_shoulder_press": {
+        "name": "덤벨 숄더 프레스",
+        "description": "앉거나 서서 어깨 높이부터 완전 오버헤드 락아웃까지 덤벨 밀기. 하강 제어.",
+        "notes": "완전한 오버헤드 락아웃"
+      },
+      "cable_woodchop_low_high": {
+        "name": "케이블 우드찹 (로우 투 하이)",
+        "description": "낮은 케이블. 폭발적인 고관절 회전과 함께 대각선 위로 몸을 가로질러 당김. 상향 파워 생성.",
+        "notes": "각 측면, 폭발적"
+      },
+      "isometric_dead_hang": {
+        "name": "등장성 데드 행",
+        "description": "팔을 펴고 풀업바에 매달림. 그립 훈련, 광배근 스트레치, 척추 감압.",
+        "notes": "그립 + 어깨 건강"
+      },
+      "db_bench_press": {
+        "name": "덤벨 벤치 프레스",
+        "description": "균형과 안정성을 위한 독립적 팔 프레싱. 완전한 가동 범위, 하단에서 정지.",
+        "notes": "독립적 팔 동작"
+      },
+      "pallof_press_step": {
+        "name": "팔로프 프레스 위드 스텝",
+        "description": "동적 항회전. 옆으로 스텝하며 손을 앞으로 밀어 레버암 증가.",
+        "notes": "각 측면, 스텝 아웃"
+      },
+      "isometric_anti_rotation": {
+        "name": "등장성 항회전 홀드",
+        "description": "가슴 높이 케이블/밴드. 팔을 펴고 당김에 저항. 코어 안정성 유지.",
+        "notes": "각 측면, 코어 안정성"
+      },
+      "glute_bridge_march": {
+        "name": "글루트 브릿지 마치",
+        "description": "브릿지 위치에서 고관절 수평 유지하며 번갈아 무릎 들기. 동적 고관절 안정성.",
+        "notes": "각 다리, 고관절 수평"
+      },
+      "step_up": {
+        "name": "스텝업",
+        "description": "덤벨 들고 높은 박스 스텝업. 위쪽 다리로 밀고 뒷다리 밀기 최소화.",
+        "notes": "각 다리, 높은 박스"
+      },
+      "plank_shoulder_tap": {
+        "name": "플랭크 숄더 탭",
+        "description": "플랭크 위치에서 고관절 회전 최소화하며 번갈아 어깨 터치. 코어 컨트롤.",
+        "notes": "각 측면, 고관절 안정"
+      },
+      "isometric_hip_flexor": {
+        "name": "등장성 고관절 굴곡근 홀드",
+        "description": "서서 저항에 대해 무릎을 가슴으로 당김. 최대 수축에서 고관절 굴곡근 수축 유지.",
+        "notes": "각 다리, 고관절 건강"
+      },
+      "isometric_lunge_hold": {
+        "name": "등장성 런지 홀드",
+        "description": "런지 하단 위치에서 긴장 유지하며 홀드. 위치적 강도 발달.",
+        "notes": "각 다리, 하단 위치"
+      },
+      "deficit_trap_bar": {
+        "name": "데피시트 트랩바 데드리프트",
+        "description": "헥스바 안에서 5-8cm 플랫폼 위에 서기. 증가된 ROM이 더 큰 고관절과 다리 드라이브 요구. 폭발적 콘센트릭.",
+        "notes": "5-8cm 데피시트, 폭발적"
+      },
+      "pause_squat": {
+        "name": "포즈 스쿼트",
+        "description": "스쿼트 하단에서 3초 정지. 스트레치 리플렉스 제거, 정지 상태에서 강도 구축.",
+        "notes": "하단에서 3초 정지"
+      },
+      "spoto_press": {
+        "name": "스포토 프레스",
+        "description": "가슴에서 2.5cm 떨어진 곳에서 2초 정지 후 밀기. 가슴 터치 없이 스티킹 포인트에서 강도 구축.",
+        "notes": "가슴에서 2.5cm, 2초 정지"
+      },
+      "pendlay_row": {
+        "name": "펜들레이 로우",
+        "description": "매 반복 바닥에서, 하부 가슴으로 폭발적 로우. 데드 스탑 시작이 순수 당기는 힘 구축.",
+        "notes": "매 반복 데드 스탑"
+      },
+      "single_leg_rdl": {
+        "name": "싱글레그 루마니안 데드리프트",
+        "description": "한 다리로 힌지, 다른 다리는 뒤로 뻗음. 균형과 햄스트링 운동. 전체적으로 제어.",
+        "notes": "각 다리, 균형 집중"
+      },
+      "isometric_pause_squat": {
+        "name": "등장성 포즈 스쿼트 홀드",
+        "description": "스쿼트 하단에서 연장된 시간 홀드. 위치적 강도와 안정성 구축.",
+        "notes": "연장 홀드, 최대 긴장"
+      },
+      "isometric_loaded_stretch": {
+        "name": "등장성 로드 스트레치",
+        "description": "부하 하에서 스트레치 위치 홀드. 전체 가동 범위에서 강도 발달.",
+        "notes": "제어된 스트레치, 긴장 유지"
+      },
+      "front_squat_pause": {
+        "name": "프론트 스쿼트 포즈",
+        "description": "하단에서 2초 정지. 무거운 부하에서 코어 안정성.",
+        "notes": "2초 정지, 팔꿈치 위로"
+      },
+      "z_press": {
+        "name": "Z 프레스",
+        "description": "바닥에 앉아서 프레스. 다리 드라이브 제거, 순수 상체 강도.",
+        "notes": "다리 펴고, 스트릭트 프레스"
+      },
+      "cable_low_high_rotation": {
+        "name": "케이블 로우 투 하이 로테이션",
+        "description": "완전한 고관절 참여로 상향 회전 패턴.",
+        "notes": "각 측면, 완전한 회전"
+      },
+      "isometric_dead_bug": {
+        "name": "등장성 데드버그 홀드",
+        "description": "사지를 펴고 허리를 아래로 누름. 코어 안정성 홀드.",
+        "notes": "대각 팔/다리 펴기"
+      },
+      "barbell_hip_thrust": {
+        "name": "바벨 힙 스러스트",
+        "description": "바를 고관절에 가로질러 놓고 고관절을 올림. 드라이브 페이즈의 최대 글루트 파워.",
+        "notes": "완전한 고관절 신전, 상단에서 조임"
+      },
+      "half_kneel_anti_rotation": {
+        "name": "하프 닐링 케이블 항회전",
+        "description": "하프 닐 위치, 가슴 높이 케이블, 회전 저항. 몸통 안정성 훈련.",
+        "notes": "각 측면, 직립 자세 유지"
+      },
+      "isometric_glute_bridge": {
+        "name": "등장성 글루트 브릿지 홀드",
+        "description": "고관절 올리고 한 다리 또는 두 다리. 반복적 드라이브 페이즈 활성화를 위한 글루트 지구력.",
+        "notes": "완전한 고관절 신전, 최대 조임"
+      },
+      "pushup_variations": {
+        "name": "푸쉬업 변형",
+        "description": "스탠다드, 다이아몬드, 또는 아처 푸쉬업. 자체 중량 제어로 어깨 안정성.",
+        "notes": "완전한 ROM, 코어 수축"
+      },
+      "face_pulls": {
+        "name": "페이스 풀",
+        "description": "얼굴 높이 케이블, 외회전하며 귀쪽으로 당김. 후면 어깨 건강에 중요.",
+        "notes": "팔꿈치 높이, 마무리에서 외회전"
+      },
+      "hip_thrust": {
+        "name": "힙 스러스트",
+        "description": "글루트 파워를 위한 무거운 힙 스러스트. 최대 드라이브 페이즈 힘 생성.",
+        "notes": "무거운 부하, 완전 신전"
+      },
+      "medball_scoop_toss": {
+        "name": "메디신볼 스쿱 토스",
+        "description": "메디신볼 던지기로 폭발적 고관절 신전. 파워 전달 드릴.",
+        "notes": "최대 의도, 고관절 신전 집중"
+      },
+      "back_squat": {
+        "name": "백 스쿼트",
+        "description": "다리 근력을 위한 무거운 스쿼팅. 제어된 하강으로 완전한 깊이.",
+        "notes": "깊게, 제어된 반복"
+      },
+      "barbell_bench_press": {
+        "name": "바벨 벤치 프레스",
+        "description": "상체 파워를 위한 무거운 프레싱. 가속을 위한 가슴과 삼두 강도.",
+        "notes": "가슴에서 정지, 폭발적 드라이브"
+      },
+      "half_kneel_chop": {
+        "name": "하프 닐링 케이블 찹",
+        "description": "하프 닐링에서 회전 파워. 고관절과 코어 통합.",
+        "notes": "각 측면, 폭발적"
+      },
+      "half_kneel_lift": {
+        "name": "하프 닐링 케이블 리프트",
+        "description": "하프 닐에서 로우 투 하이 리프트 패턴.",
+        "notes": "각 측면, 전체 범위"
+      },
+      "lateral_lunge": {
+        "name": "래터럴 런지",
+        "description": "고관절 가동성과 내전근 강도를 위한 측면 강도.",
+        "notes": "각 다리, 깊은 런지"
+      },
+      "face_pulls_ext_rot": {
+        "name": "페이스 풀 외회전 포함",
+        "description": "피크 수축에서 추가 외회전. 최대 후면 어깨 운동.",
+        "notes": "마무리에서 외회전"
+      },
+      "single_arm_landmine": {
+        "name": "싱글 암 랜드마인 프레스",
+        "description": "회전 요소가 있는 편측 프레싱. 코어 안정성 요구.",
+        "notes": "각 팔, 안정된 기반"
+      },
+      "eccentric_trap_bar": {
+        "name": "이센트릭 트랩바 데드리프트",
+        "description": "5초 하강 페이즈. 이센트릭 중 최대 근육 긴장.",
+        "notes": "5초 네거티브, 제어"
+      },
+      "eccentric_squat": {
+        "name": "이센트릭 스쿼트",
+        "description": "5초 하강, 폭발적으로 올라감. 이센트릭 근육 부하.",
+        "notes": "5초 다운, 빠르게 업"
+      },
+      "eccentric_bench": {
+        "name": "이센트릭 벤치 프레스",
+        "description": "가슴까지 5초 하강. 가슴과 삼두 질량 구축.",
+        "notes": "5초 네거티브, 정지, 프레스"
+      },
+      "eccentric_row": {
+        "name": "이센트릭 로우",
+        "description": "4초 하강 페이즈. 등 근육 비대.",
+        "notes": "4초 네거티브, 엄격한 폼"
+      },
+      "eccentric_rdl": {
+        "name": "이센트릭 RDL",
+        "description": "햄스트링 집중 4초 하강. 성장을 위한 텐션 하 시간.",
+        "notes": "4초 네거티브, 제어"
+      },
+      "eccentric_bulgarian": {
+        "name": "이센트릭 불가리안 스플릿 스쿼트",
+        "description": "각 반복 4초 하강. 대퇴사두근 비대 집중.",
+        "notes": "4초 다운, 각 다리"
+      },
+      "eccentric_overhead": {
+        "name": "이센트릭 오버헤드 프레스",
+        "description": "락아웃에서 4초 하강. 어깨 질량 구축.",
+        "notes": "4초 네거티브, 스트릭트"
+      },
+      "eccentric_pullup": {
+        "name": "이센트릭 풀업",
+        "description": "상단에서 5초 하강. 광배근 발달.",
+        "notes": "5초 네거티브, 완전 스트레치"
+      },
+      "eccentric_single_row": {
+        "name": "이센트릭 싱글 암 로우",
+        "description": "각 반복 4초 네거티브. 편측 등 발달.",
+        "notes": "4초 네거티브, 각 측면"
+      },
+      "eccentric_step_down": {
+        "name": "이센트릭 스텝다운",
+        "description": "박스에서 제어된 한 다리 하강. 대퇴사두근 이센트릭 강도.",
+        "notes": "각 다리, 제어된 하강"
+      },
+      "eccentric_incline": {
+        "name": "이센트릭 인클라인 프레스",
+        "description": "인클라인에서 4초 하강. 상부 가슴 발달.",
+        "notes": "4초 네거티브, 30도 인클라인"
+      },
+      "eccentric_lat_pulldown": {
+        "name": "이센트릭 랫 풀다운",
+        "description": "시작으로 4초 복귀. 광배근 이센트릭 부하.",
+        "notes": "4초 네거티브, 완전 스트레치"
+      },
+      "eccentric_nordic": {
+        "name": "이센트릭 노르딕 컬",
+        "description": "느린 이센트릭 햄스트링 하강. 부상 예방 집중.",
+        "notes": "하강 제어, 하단에서 잡기"
+      },
+      "eccentric_dip": {
+        "name": "이센트릭 딥",
+        "description": "5초 하강 페이즈. 삼두와 가슴 발달.",
+        "notes": "5초 네거티브, 깊은 스트레치"
+      },
+      "tempo_front_squat": {
+        "name": "템포 프론트 스쿼트",
+        "description": "4초 하강, 2초 정지, 폭발적으로 올라감. 총 텐션 하 시간.",
+        "notes": "4-2-1 템포"
+      },
+      "negative_pullup": {
+        "name": "네거티브 풀업",
+        "description": "상단으로 점프, 6초 하강. 당기는 힘 구축.",
+        "notes": "6초 네거티브, 완전 행"
+      },
+      "eccentric_lateral_lunge": {
+        "name": "이센트릭 래터럴 런지",
+        "description": "래터럴 런지로 4초 하강. 내전근 발달.",
+        "notes": "4초 네거티브, 각 측면"
+      },
+      "landmine_press": {
+        "name": "랜드마인 프레스",
+        "description": "랜드마인 바로 싱글 암 프레스. 회전 요소가 있는 견갑골 친화적 오버헤드 프레싱.",
+        "notes": "각 팔, 안정된 코어"
       }
     },
     "batSpeed": {
@@ -2119,6 +2514,101 @@
         "name": "연결 볼 드릴",
         "description": "스윙 중 팔과 몸통 사이에 폼볼 끼우기. 상체 연결 유지.",
         "notes": "볼은 이두와 가슴 사이"
+      },
+      "bat_behind_back": {
+        "name": "등 뒤 배트 회전",
+        "description": "어깨 뒤에 배트를 가로질러 잡기. 고관절 회전이 어깨를 구동하는 것을 연습.",
+        "notes": "고관절 리드, 코어 수축"
+      },
+      "wrist_snap": {
+        "name": "손목 스냅 드릴",
+        "description": "접촉점에서 빠른 손목 스냅. 존을 통한 빠른 손 발달.",
+        "notes": "접촉점에서 스냅"
+      },
+      "resistance_band_swings": {
+        "name": "저항 밴드 스피드 스윙",
+        "description": "배트에 밴드 부착하여 오버로드. 저항에 대해 스윙하여 파워 발달.",
+        "notes": "밴드와 싸우기, 완전한 회전"
+      },
+      "one_handed_swings": {
+        "name": "한손 스피드 스윙",
+        "description": "윗손 또는 아랫손만 스윙. 손 독립성과 배트 컨트롤 발달.",
+        "notes": "각 손, 제어된 스윙"
+      },
+      "quick_hands": {
+        "name": "퀵 핸즈 드릴",
+        "description": "파트너가 가까운 거리에서 볼 토스. 빠른 반응, 짧은 스윙.",
+        "notes": "빠른 스윙, 볼 보기"
+      },
+      "swing_speed_measure": {
+        "name": "스윙 스피드 측정",
+        "description": "스윙 분석기로 배트 스피드 추적. 시간에 따른 진전 기록.",
+        "notes": "km/h 추적, 개선 목표"
+      },
+      "bat_waggle": {
+        "name": "배트 와글 스피드 드릴",
+        "description": "스탠스에서 빠른 배트 움직임. 손을 느슨하고 준비 상태로 유지.",
+        "notes": "느슨하게, 가벼운 그립"
+      },
+      "speed_tee_15": {
+        "name": "스피드 티 워크 - 15 스윙",
+        "description": "티에서 전속력 스윙. 메카닉이 아닌 최대 배트 스피드에 집중.",
+        "notes": "15 스윙, 최대 노력"
+      },
+      "velocity_ladder": {
+        "name": "벨로시티 래더 스윙",
+        "description": "점진적 속도 증가: 70%, 80%, 90%, 100%. 최대까지 빌드.",
+        "notes": "4세트, 강도 증가"
+      },
+      "bat_flip_speed": {
+        "name": "배트 플립 스피드 드릴",
+        "description": "배트를 빠르게 엔드 오버 엔드로 플립. 손목 스피드와 컨트롤 발달.",
+        "notes": "빠른 플립, 깔끔하게 캐치"
+      },
+      "no_stride_swings": {
+        "name": "노 스트라이드 스피드 스윙",
+        "description": "스트라이드 없이 스탠스에서 스윙. 상체 스피드 분리.",
+        "notes": "스트라이드 없음, 상체 집중"
+      },
+      "fast_hands_reaction": {
+        "name": "패스트 핸즈 리액션 드릴",
+        "description": "색깔 볼 토스 - 특정 색에만 스윙. 빠른 의사 결정.",
+        "notes": "빠르게 반응하고 결정"
+      },
+      "exit_speed_comp": {
+        "name": "출구 속도 경쟁",
+        "description": "티 또는 소프트 토스에서 가장 높은 출구 속도 경쟁.",
+        "notes": "출구 속도 추적, 개인 최고 달성"
+      },
+      "rotational_snap": {
+        "name": "회전 스냅 드릴",
+        "description": "스윙 시작을 위한 폭발적 고관절 회전에 집중. 고관절이 손을 리드.",
+        "notes": "고관절 스냅, 에너지 전달"
+      },
+      "light_bat_20": {
+        "name": "라이트 배트 맥스 스피드 - 20 스윙",
+        "description": "오버스피드 훈련용 스피드 배트 또는 가벼운 배트. 빠르게 움직이기.",
+        "notes": "20 스윙, 최대 속도"
+      },
+      "heavy_light_contrast": {
+        "name": "헤비-라이트 컨트라스트 - 10 세트",
+        "description": "무거운 배트와 가벼운 배트 스윙 교대. 대비 훈련 효과.",
+        "notes": "5 무거운, 5 가벼운, 반복"
+      },
+      "intent_tee_max": {
+        "name": "인텐트 티 워크 - 맥스 에포트",
+        "description": "티에서 최대 의도 스윙. 모든 스윙이 게임 스윙 노력.",
+        "notes": "모든 스윙 100% 노력"
+      },
+      "barrel_speed_focus": {
+        "name": "배럴 스피드 포커스 드릴",
+        "description": "존을 통한 배럴 가속에 집중. 배럴 휩.",
+        "notes": "배럴 휩 느끼기"
+      },
+      "overload_underload": {
+        "name": "오버로드/언더로드 프로토콜",
+        "description": "가중 및 스피드 배트로 완전한 프로토콜. 전체 대비 세션.",
+        "notes": "무거운 → 보통 → 가벼운"
       }
     },
     "armCare": {
@@ -2131,6 +2621,36 @@
         "name": "J밴드 외회전",
         "description": "팔꿈치 90도에서 밴드 저항에 맞서 손을 바깥쪽으로 회전. 외회전근 강화.",
         "notes": "느리고 제어되게, 15-20회"
+      },
+      "jband_scap": {
+        "name": "J밴드 견갑골 후인",
+        "description": "가슴 높이에서 밴드를 당겨 벌림. 견갑골 모으기.",
+        "notes": "끝에서 2초 조임, 15회"
+      },
+      "jband_high_pulls": {
+        "name": "J밴드 하이 풀",
+        "description": "밴드로 팔을 머리 위에, 긴장 유지하며 당겨 벌림.",
+        "notes": "팔 높이 유지, 15회"
+      },
+      "sleeper_stretch": {
+        "name": "슬리퍼 스트레치",
+        "description": "투구 측면으로 누워 다른 손으로 손목을 바닥으로 밀기. 내회전 스트레치.",
+        "notes": "30초 유지, 부드러운 압력"
+      },
+      "crossbody_stretch": {
+        "name": "크로스 바디 스트레치",
+        "description": "다른 팔로 투구 팔을 몸을 가로질러 당김. 후면 어깨 스트레치.",
+        "notes": "30초 유지, 어깨 뒤에서 스트레치 느끼기"
+      },
+      "wrist_flex_ext": {
+        "name": "손목 굴곡/신전",
+        "description": "가벼운 무게로 손목을 컬하고 펴기. 팔 건강을 위한 전완근 강도.",
+        "notes": "각 방향 15회"
+      },
+      "forearm_pro_sup": {
+        "name": "전완 회내/회외",
+        "description": "가벼운 무게로 전완을 손바닥 위와 손바닥 아래로 회전. 손목 가동성.",
+        "notes": "15회, 회전 제어"
       }
     },
     "velocity": {
@@ -2139,10 +2659,80 @@
         "description": "18미터에서 쉬운 던지기. 팔 경로 워밍업, 구속 집중 아님.",
         "notes": "10-15회 던지기, 쉬운 노력"
       },
+      "long_toss_90": {
+        "name": "롱토스 빌드 - 27m",
+        "description": "27미터까지 거리 증가. 중간 노력, 팔 속도 빌드.",
+        "notes": "10-15회 던지기, 중간 노력"
+      },
+      "long_toss_120": {
+        "name": "롱토스 익스텐션 - 36m",
+        "description": "36미터까지 확장. 더 높은 아크 허용, 팔 강도 빌드.",
+        "notes": "10-15회 던지기, 증가된 노력"
+      },
       "long_toss_max": {
         "name": "롱토스 맥스 - 45-60m",
         "description": "편안한 최대 거리. 팔 컨디셔닝을 위한 아크 던지기.",
         "notes": "10-15회 던지기, 최대 노력"
+      },
+      "pulldown_phase": {
+        "name": "풀다운 페이즈",
+        "description": "최대 거리에서 풀다운 던지기로 복귀. 라인 드라이브 궤적.",
+        "notes": "9m씩 되돌아오기"
+      },
+      "velo_day_gun": {
+        "name": "벨로 데이 - 건 리딩",
+        "description": "레이더 리딩으로 구속 집중 세션. 최대와 평균 추적.",
+        "notes": "구속 기록, 진전 추적"
+      },
+      "weighted_7oz": {
+        "name": "가중 볼 - 200g 오버로드",
+        "description": "팔 강도를 위한 무거운 볼 던지기. 제어된 의도.",
+        "notes": "15-20회 던지기, 최대 노력 아님"
+      },
+      "weighted_5oz": {
+        "name": "가중 볼 - 140g 스탠다드",
+        "description": "게임 무게 볼 또는 표준 140g 가중 볼.",
+        "notes": "15-20회 던지기, 정상 팔 경로 느끼기"
+      },
+      "weighted_4oz": {
+        "name": "가중 볼 - 110g 언더로드",
+        "description": "팔 속도 발달을 위한 가벼운 볼. 빠르게 움직이기.",
+        "notes": "15-20회 던지기, 최대 팔 속도"
+      },
+      "contrast_throws": {
+        "name": "컨트라스트 스로우",
+        "description": "오버로드와 언더로드 볼 교대. 대비 훈련 효과.",
+        "notes": "5 무거운, 5 가벼운, 2-3회 반복"
+      },
+      "crow_hop": {
+        "name": "크로우 홉 스로우",
+        "description": "모멘텀과 타이밍을 위해 크로우 홉으로 던지기. 팔 속도 빌드.",
+        "notes": "전체 인텐트, 좋은 타이밍"
+      },
+      "max_intent_bp": {
+        "name": "맥스 인텐트 불펜",
+        "description": "최대 인텐트로 불펜 세션. 게임 같은 구속 집중.",
+        "notes": "15-25구, 모두 최대 노력"
+      },
+      "plyocare_pivot": {
+        "name": "플라이오케어 피벗 픽오프",
+        "description": "플라이오케어 볼로 피벗 던지기 드릴. 빠른 발과 팔 액션.",
+        "notes": "각 방향 10회"
+      },
+      "plyocare_rollins": {
+        "name": "플라이오케어 롤인",
+        "description": "플라이오케어 볼로 던지기에 롤인. 고관절 리드와 팔 팔로우.",
+        "notes": "10-15회 던지기, 고관절 리드 느끼기"
+      },
+      "plyocare_reverse": {
+        "name": "플라이오케어 리버스 스로우",
+        "description": "타겟에 등을 지고 회전하며 던지기. 회전 시퀀싱.",
+        "notes": "10회 던지기, 완전한 회전"
+      },
+      "rocker_throws": {
+        "name": "로커 스로우",
+        "description": "뒤로 흔들고 모멘텀으로 던지기. 타이밍과 무게 이동.",
+        "notes": "15회 던지기, 모멘텀 느끼기"
       }
     },
     "pitchDev": {
@@ -2151,10 +2741,70 @@
         "description": "그립 변형 연습, 편안한 손가락 압력과 솔기 방향 찾기.",
         "notes": "자신의 그립 찾기"
       },
+      "curve_spin": {
+        "name": "커브 스핀 드릴",
+        "description": "짧은 거리 스핀으로 타이트한 회전과 축에 집중. 스핀 보기.",
+        "notes": "타이트한 스핀에 집중"
+      },
+      "curve_shape": {
+        "name": "커브 쉐이프 포커스",
+        "description": "풀 거리 커브, 일관된 브레이크 모양과 깊이에 집중.",
+        "notes": "일관된 쉐이프"
+      },
+      "slider_grip": {
+        "name": "슬라이더 그립 작업",
+        "description": "내측 솔기에 손가락 압력을 둔 슬라이더 그립 연습. 편안한 존 찾기.",
+        "notes": "그립 편안함 찾기"
+      },
+      "slider_wrist": {
+        "name": "슬라이더 손목 액션",
+        "description": "슬라이더 릴리스 액션 분리. 타이트한 점으로 불릿 스핀.",
+        "notes": "타이트한 점 스핀"
+      },
+      "slider_tunnel": {
+        "name": "슬라이더 터널 드릴",
+        "description": "패스트볼 터널을 통해 슬라이더 던지기, 기만을 위한 늦은 브레이크.",
+        "notes": "패스트볼과 같은 터널"
+      },
       "changeup_grip": {
         "name": "체인지업 그립 작업",
         "description": "서클 체인지, 3핑거 또는 다른 그립 변형. 효과적인 것 찾기.",
         "notes": "편안한 그립"
+      },
+      "changeup_arm_speed": {
+        "name": "체인지업 팔 속도 매칭",
+        "description": "체인지업 그립으로 패스트볼 팔 속도 매칭. 기만이 핵심.",
+        "notes": "같은 팔 속도"
+      },
+      "changeup_feel": {
+        "name": "체인지업 필 드릴",
+        "description": "속도 차이에 대한 터치와 필을 발달시키는 짧은 거리 체인지업.",
+        "notes": "속도 차이 느끼기"
+      },
+      "quadrant_work": {
+        "name": "쿼드런트 워크",
+        "description": "스트라이크 존의 특정 쿼드런트 맞추기. 정밀 커맨드 빌드.",
+        "notes": "스팟 맞추기"
+      },
+      "glove_arm_side": {
+        "name": "글러브 사이드/팔 사이드",
+        "description": "플레이트 양 가장자리 작업. 수평 커맨드 발달.",
+        "notes": "코너 맞추기"
+      },
+      "up_down_ladder": {
+        "name": "업/다운 래더",
+        "description": "존의 상하 작업. 수직 커맨드 발달.",
+        "notes": "높이 변화"
+      },
+      "pitch_sequencing": {
+        "name": "피치 시퀀싱",
+        "description": "2구와 3구 시퀀스 연습. 게임 같은 패턴 빌드.",
+        "notes": "게임처럼 생각하기"
+      },
+      "tunnel_drills": {
+        "name": "터널 드릴",
+        "description": "같은 터널로 다른 구종 던지기. 기만 발달.",
+        "notes": "같은 룩, 다른 브레이크"
       }
     },
     "equipment": {
@@ -2164,13 +2814,37 @@
         "balls": { "name": "공", "description": "최소 12개" },
         "barbell": { "name": "바벨 & 플레이트", "description": "복합 리프트용 (20kg 바 + 플레이트)" },
         "dumbbells": { "name": "덤벨", "description": "다양한 무게 5-35kg 이상" },
-        "trap_bar": { "name": "트랩/헥스 바", "description": "데드리프트용 - 프로그램 필수" }
+        "trap_bar": { "name": "트랩/헥스 바", "description": "데드리프트용 - 프로그램 필수" },
+        "speed_bat": { "name": "스피드 배트", "description": "오버스피드 훈련용 경량 배트" },
+        "heavy_bat": { "name": "가중 배트", "description": "오버로드 스윙 드릴용" },
+        "resistance_bands": { "name": "저항 밴드", "description": "밴드 스윙과 워밍업용" },
+        "connection_ball": { "name": "연결 볼", "description": "폼볼 또는 스윙 연결 보조" },
+        "swing_analyzer": { "name": "스윙 분석기", "description": "배트 속도 추적 장치" },
+        "plyo_balls": { "name": "플라이오 볼", "description": "파워 드릴용 가중 플라이오 볼" },
+        "net": { "name": "히팅 네트", "description": "스윙 연습용" },
+        "pullup_bar": { "name": "풀업 바", "description": "풀업과 행잉용" },
+        "bench": { "name": "벤치", "description": "벤치 프레스와 보조 운동용" },
+        "cable_machine": { "name": "케이블 머신", "description": "케이블 운동용 (또는 밴드 대체)" }
       },
       "pitching": {
         "glove": { "name": "투수 글러브", "description": "경기용 투수 글러브" },
         "balls": { "name": "공", "description": "볼륨 작업을 위해 최소 24개" },
         "jbands": { "name": "J밴드/저항 밴드", "description": "일일 팔 관리 루틴용" },
-        "weighted_balls": { "name": "가중 야구공", "description": "110g, 140g, 200g, 255g, 310g 세트" }
+        "weighted_balls": { "name": "가중 야구공", "description": "110g, 140g, 200g, 255g, 310g 세트" },
+        "plyocare_balls": { "name": "플라이오케어 볼", "description": "다양한 무게의 플라이오케어 볼 세트" },
+        "radar_gun": { "name": "레이더 건", "description": "구속 추적 장치" },
+        "mound": { "name": "포터블 마운드", "description": "연습용 포터블 피칭 마운드" },
+        "catcher": { "name": "캐처/네트", "description": "불펜 작업용 캐처 또는 네트" },
+        "barbell": { "name": "바벨 & 플레이트", "description": "복합 리프트용 (20kg 바 + 플레이트)" },
+        "dumbbells": { "name": "덤벨", "description": "다양한 무게 5-35kg 이상" },
+        "trap_bar": { "name": "트랩/헥스 바", "description": "데드리프트용 - 프로그램 필수" },
+        "pullup_bar": { "name": "풀업 바", "description": "풀업과 행잉용" },
+        "bench": { "name": "벤치", "description": "프레스 운동용" },
+        "cable_machine": { "name": "케이블 머신", "description": "케이블 작업용 (또는 밴드 대체)" },
+        "med_ball": { "name": "메디신 볼", "description": "회전 파워 드릴용" },
+        "foam_roller": { "name": "폼 롤러", "description": "회복과 자가 마사지용" },
+        "target": { "name": "피칭 타겟", "description": "커맨드 작업용 타겟" },
+        "towel": { "name": "타월", "description": "타월 드릴과 팔 관리용" }
       }
     }
   }
