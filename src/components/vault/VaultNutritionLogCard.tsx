@@ -26,10 +26,28 @@ interface NutritionLog {
 interface VaultNutritionLogCardProps {
   todaysLog: NutritionLog | null;
   onSave: (data: Omit<NutritionLog, 'id'>) => Promise<{ success: boolean }>;
+  isLoading?: boolean;
 }
 
-export function VaultNutritionLogCard({ todaysLog, onSave }: VaultNutritionLogCardProps) {
+export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: VaultNutritionLogCardProps) {
   const { t } = useTranslation();
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-5 rounded bg-muted animate-pulse" />
+              <div className="h-5 w-32 bg-muted rounded animate-pulse" />
+            </div>
+            <div className="h-4 w-4 bg-muted rounded animate-pulse" />
+          </div>
+          <div className="h-4 w-48 bg-muted rounded animate-pulse mt-1" />
+        </CardHeader>
+      </Card>
+    );
+  }
   const [isOpen, setIsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   

@@ -941,6 +941,7 @@
     "dailyTip": "Dagelijkse Gezondheidstip",
     "newTip": "Nieuwe Tip",
     "tipsCollected": "Verzamelde Tips",
+    "daysToUnlock": "{{days}} dagen om te ontgrendelen",
     "streak": "Reeks",
     "currentStreak": "Huidige Reeks",
     "longestStreak": "Langste Reeks",

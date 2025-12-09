@@ -9,10 +9,52 @@ import { cn } from '@/lib/utils';
 interface VaultStreakCardProps {
   streak: VaultStreak | null;
   compact?: boolean;
+  isLoading?: boolean;
 }
 
-export function VaultStreakCard({ streak, compact = false }: VaultStreakCardProps) {
+export function VaultStreakCard({ streak, compact = false, isLoading = false }: VaultStreakCardProps) {
   const { t } = useTranslation();
+
+  if (isLoading) {
+    if (compact) {
+      return (
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20">
+          <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+            <div className="h-3 w-28 bg-muted rounded animate-pulse" />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <Card className="overflow-hidden border-orange-500/20 bg-gradient-to-br from-background to-orange-500/5">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-5 rounded bg-muted animate-pulse" />
+            <div className="h-5 w-24 bg-muted rounded animate-pulse" />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-center">
+            <div className="h-12 w-16 bg-muted rounded animate-pulse" />
+          </div>
+          <div className="h-4 w-32 mx-auto bg-muted rounded animate-pulse" />
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+              <div className="h-3 w-8 bg-muted rounded animate-pulse" />
+            </div>
+            <div className="h-2 w-full bg-muted rounded animate-pulse" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="h-14 bg-muted/50 rounded-md animate-pulse" />
+            <div className="h-14 bg-muted/50 rounded-md animate-pulse" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const currentStreak = streak?.current_streak || 0;
   const longestStreak = streak?.longest_streak || 0;

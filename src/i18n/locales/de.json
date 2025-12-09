@@ -941,6 +941,7 @@
     "dailyTip": "Täglicher Gesundheitstipp",
     "newTip": "Neuer Tipp",
     "tipsCollected": "Gesammelte Tipps",
+    "daysToUnlock": "{{days}} Tage zum Freischalten",
     "streak": "Serie",
     "currentStreak": "Aktuelle Serie",
     "longestStreak": "Längste Serie",

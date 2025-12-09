@@ -269,7 +269,7 @@ export default function Vault() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Streak & Quizzes */}
             <div className="space-y-6">
-              <VaultStreakCard streak={streak} />
+              <VaultStreakCard streak={streak} isLoading={loading} />
 
               {/* Daily Focus Quizzes */}
               <Card>
@@ -427,6 +427,7 @@ export default function Vault() {
                   <VaultNutritionLogCard 
                     todaysLog={nutritionLog}
                     onSave={handleSaveNutrition}
+                    isLoading={loading}
                   />
 
                   {/* Saved Drills & Tips */}

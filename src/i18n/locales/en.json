@@ -996,6 +996,7 @@
     "dailyTip": "Daily Health Tip",
     "newTip": "New Tip",
     "tipsCollected": "Tips Collected",
+    "daysToUnlock": "{{days}} days to unlock",
     "streak": "Streak",
     "currentStreak": "Current Streak",
     "longestStreak": "Longest Streak",
