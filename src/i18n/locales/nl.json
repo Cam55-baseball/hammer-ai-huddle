@@ -2906,18 +2906,27 @@
     },
     "tabs": {
       "today": "Vandaag",
-      "history": "Geschiedenis"
+      "history": "Geschiedenis",
+      "weekly": "Wekelijks"
+    },
+    "delete": {
+      "success": "Invoer succesvol verwijderd"
     },
     "quiz": {
       "title": "Dagelijkse Focus Check",
       "todayStatus": "Vandaag's Check-ins",
       "preLift": "Voor Training",
+      "preLiftTitle": "Check-in Voor Training",
       "morning": "Ochtend",
+      "morningTitle": "Ochtend Check-in",
+      "morningTip": "Probeer binnen 15 minuten na het wakker worden te voltooien",
       "night": "Nacht",
+      "nightTitle": "Avond Reflectie",
       "completed": "Voltooid",
       "notStarted": "Niet Gestart",
       "saved": "Quiz succesvol opgeslagen!",
       "error": "Quiz opslaan mislukt",
+      "description": "Beoordeel hoe je je nu voelt",
       "mentalReadiness": "Mentale Gereedheid",
       "emotionalState": "Emotionele Staat",
       "physicalReadiness": "Fysieke Gereedheid",
@@ -2925,6 +2934,21 @@
       "wakeTime": "Ontwaaktijd",
       "sleepTimeHint": "Hoe laat ging je naar bed?",
       "wakeTimeHint": "Hoe laat werd je wakker?",
+      "sleepTip": "Vul dit ongeveer een uur voor het slapen in voor de beste resultaten",
+      "level1": "Zeer Laag",
+      "level2": "Laag",
+      "level3": "Matig",
+      "level4": "Hoog",
+      "level5": "Zeer Hoog",
+      "reflectionTitle": "Avond Reflectie",
+      "didWell": "Wat heb ik vandaag goed gedaan?",
+      "didWellPlaceholder": "Deel wat goed ging...",
+      "couldImprove": "Wat kan ik verbeteren?",
+      "couldImprovePlaceholder": "Denk na over groeimogelijkheden...",
+      "learned": "Wat heb ik vandaag geleerd?",
+      "learnedPlaceholder": "Alle lessen of inzichten...",
+      "motivation": "Wat motiveert mij?",
+      "motivationPlaceholder": "Wat drijft je vooruit...",
       "reflectionPrompts": {
         "title": "Avond Reflectie",
         "didWell": "Wat heb ik vandaag goed gedaan?",
@@ -2968,8 +2992,13 @@
     },
     "reminder": {
       "title": "6-Weken Recap",
+      "subtitle": "Volg je voortgang naar je gepersonaliseerde recap",
       "message": "Voltooi dagelijkse entries om je gepersonaliseerde recap te ontgrendelen",
       "daysRemaining": "dagen resterend",
+      "dayUntilRecap": "1 dag tot je volgende recap",
+      "daysUntilRecap": "{{days}} dagen tot je volgende recap",
+      "recapProgress": "Recap Voortgang",
+      "stayConsistent": "Blijf consistent. Je toekomstige zelf zal je dankbaar zijn.",
       "progress": "Voortgang"
     },
     "history": {
