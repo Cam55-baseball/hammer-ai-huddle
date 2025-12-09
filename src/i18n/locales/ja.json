@@ -3307,7 +3307,13 @@
       "saved": "Vaultに保存済み",
       "alreadySaved": "すでに保存済み",
       "saveSuccess": "ドリルをVaultに保存しました！",
-      "saveFailed": "ドリルの保存に失敗しました"
+      "saveFailed": "ドリルの保存に失敗しました",
+      "purpose": "目的",
+      "steps": "ステップ",
+      "repsSets": "回数/セット",
+      "equipment": "器具",
+      "coachingCues": "コーチングのヒント",
+      "noDetails": "このドリルの追加詳細はありません。"
     }
   }
 }

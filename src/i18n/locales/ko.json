@@ -3264,7 +3264,13 @@
       "saved": "Vault에 저장됨",
       "alreadySaved": "이미 저장됨",
       "saveSuccess": "드릴이 Vault에 저장되었습니다!",
-      "saveFailed": "드릴 저장 실패"
+      "saveFailed": "드릴 저장 실패",
+      "purpose": "목적",
+      "steps": "단계",
+      "repsSets": "반복/세트",
+      "equipment": "장비",
+      "coachingCues": "코칭 힌트",
+      "noDetails": "이 드릴에 대한 추가 세부 정보가 없습니다."
     }
   }
 }
