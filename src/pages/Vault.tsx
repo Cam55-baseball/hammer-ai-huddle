@@ -25,6 +25,13 @@ import { useVault } from '@/hooks/useVault';
 import { VaultStreakCard } from '@/components/vault/VaultStreakCard';
 import { VaultDailyReminder } from '@/components/vault/VaultDailyReminder';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
+import { VaultNutritionLogCard } from '@/components/vault/VaultNutritionLogCard';
+import { VaultSavedItemsCard } from '@/components/vault/VaultSavedItemsCard';
+import { VaultPerformanceTestCard } from '@/components/vault/VaultPerformanceTestCard';
+import { VaultProgressPhotosCard } from '@/components/vault/VaultProgressPhotosCard';
+import { VaultScoutGradesCard } from '@/components/vault/VaultScoutGradesCard';
+import { VaultRecapCard } from '@/components/vault/VaultRecapCard';
+import { VaultHistoryTab } from '@/components/vault/VaultHistoryTab';
 
 export default function Vault() {
   const { t } = useTranslation();
@@ -35,8 +42,24 @@ export default function Vault() {
     todaysQuizzes,
     todaysNotes,
     workoutNotes,
+    nutritionLog,
+    savedDrills,
+    savedTips,
+    performanceTests,
+    progressPhotos,
+    scoutGrades,
+    recaps,
+    entriesWithData,
     saveFocusQuiz,
     saveFreeNote,
+    saveNutritionLog,
+    deleteSavedDrill,
+    deleteSavedTip,
+    savePerformanceTest,
+    saveProgressPhoto,
+    saveScoutGrade,
+    generateRecap,
+    fetchHistoryForDate,
     checkVaultAccess,
   } = useVault();
 
@@ -75,6 +98,11 @@ export default function Vault() {
     return (daysInCycle / 42) * 100;
   };
 
+  const canGenerateRecap = () => {
+    if (!streak?.total_entries) return false;
+    return streak.total_entries >= 42 && getDaysUntilRecap() === 0;
+  };
+
   const hasCompletedQuiz = (type: string) => {
     return todaysQuizzes.some(q => q.quiz_type === type);
   };
@@ -103,6 +131,56 @@ export default function Vault() {
       toast.success(t('vault.quiz.saved'));
     } else {
       toast.error(t('vault.quiz.error'));
+    }
+    return result;
+  };
+
+  const handleSaveNutrition = async (data: any) => {
+    const result = await saveNutritionLog(data);
+    if (result.success) {
+      toast.success(t('vault.nutrition.saved'));
+    } else {
+      toast.error(t('vault.nutrition.error'));
+    }
+    return result;
+  };
+
+  const handleSavePerformanceTest = async (testType: string, results: Record<string, number>) => {
+    const result = await savePerformanceTest(testType, results);
+    if (result.success) {
+      toast.success(t('vault.performance.saved'));
+    } else {
+      toast.error(t('vault.performance.error'));
+    }
+    return result;
+  };
+
+  const handleSaveProgressPhoto = async (data: any) => {
+    const result = await saveProgressPhoto(data);
+    if (result.success) {
+      toast.success(t('vault.photos.saved'));
+    } else {
+      toast.error(t('vault.photos.error'));
+    }
+    return result;
+  };
+
+  const handleSaveScoutGrade = async (data: any) => {
+    const result = await saveScoutGrade(data);
+    if (result.success) {
+      toast.success(t('vault.scoutGrades.saved'));
+    } else {
+      toast.error(t('vault.scoutGrades.error'));
+    }
+    return result;
+  };
+
+  const handleGenerateRecap = async () => {
+    const result = await generateRecap();
+    if (result.success) {
+      toast.success(t('vault.recap.generated'));
+    } else {
+      toast.error(t('vault.recap.error'));
     }
     return result;
   };
@@ -335,14 +413,53 @@ export default function Vault() {
                       </CardContent>
                     </Card>
                   )}
+
+                  {/* Nutrition Log */}
+                  <VaultNutritionLogCard 
+                    todaysLog={nutritionLog}
+                    onSave={handleSaveNutrition}
+                  />
+
+                  {/* Saved Drills & Tips */}
+                  <VaultSavedItemsCard
+                    drills={savedDrills}
+                    tips={savedTips}
+                    onDeleteDrill={deleteSavedDrill}
+                    onDeleteTip={deleteSavedTip}
+                  />
+
+                  {/* Performance Tests */}
+                  <VaultPerformanceTestCard
+                    tests={performanceTests}
+                    onSave={handleSavePerformanceTest}
+                  />
+
+                  {/* Progress Photos */}
+                  <VaultProgressPhotosCard
+                    photos={progressPhotos}
+                    onSave={handleSaveProgressPhoto}
+                  />
+
+                  {/* Scout Self-Grades */}
+                  <VaultScoutGradesCard
+                    grades={scoutGrades}
+                    onSave={handleSaveScoutGrade}
+                  />
+
+                  {/* 6-Week Recap */}
+                  <VaultRecapCard
+                    recaps={recaps}
+                    canGenerate={canGenerateRecap()}
+                    daysUntilNextRecap={getDaysUntilRecap()}
+                    onGenerate={handleGenerateRecap}
+                  />
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-4">
-                  <Card>
-                    <CardContent className="p-6 text-center text-muted-foreground">
-                      <p>{t('vault.history.comingSoon')}</p>
-                    </CardContent>
-                  </Card>
+                  <VaultHistoryTab
+                    fetchHistoryForDate={fetchHistoryForDate}
+                    entriesWithData={entriesWithData}
+                  />
                 </TabsContent>
               </Tabs>
             </div>
