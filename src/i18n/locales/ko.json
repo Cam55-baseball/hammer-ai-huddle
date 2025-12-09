@@ -907,6 +907,9 @@
     "allModules": "모든 모듈"
   },
   "nutrition": {
+    "saveTip": "팁 저장",
+    "tipSaved": "저장됨",
+    "tipSavedSuccess": "팁이 보관함에 저장되었습니다!",
     "title": "Iron Horse 프로덕션",
     "subtitle": "엘리트 운동선수를 위한 식단 제안",
     "dailyTip": "오늘의 건강 팁",

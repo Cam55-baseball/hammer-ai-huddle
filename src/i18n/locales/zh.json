@@ -907,6 +907,9 @@
     "allModules": "所有模块"
   },
   "nutrition": {
+    "saveTip": "保存提示",
+    "tipSaved": "已保存",
+    "tipSavedSuccess": "提示已保存到您的保险库！",
     "title": "Iron Horse 生产",
     "subtitle": "精英运动员的饮食与全面健康建议",
     "dailyTip": "每日健康提示",

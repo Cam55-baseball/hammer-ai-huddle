@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Lightbulb, RefreshCw, Sparkles, Clock } from 'lucide-react';
+import { Lightbulb, RefreshCw, Sparkles, Clock, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
+import { useVault } from '@/hooks/useVault';
+import { toast } from 'sonner';
 
 interface StreakData {
   currentStreak: number;
@@ -33,6 +35,7 @@ interface TipData {
 
 export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
   const { t } = useTranslation();
+  const { saveTip, savedTips } = useVault();
   const [tip, setTip] = useState<TipData | null>(null);
   const [categoryName, setCategoryName] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -41,6 +44,44 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
   const [limitReached, setLimitReached] = useState(false);
   const [limitMessage, setLimitMessage] = useState('');
   const [dailyTipsRemaining, setDailyTipsRemaining] = useState(2);
+  const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Check if current tip is already saved
+  useEffect(() => {
+    if (tip && savedTips) {
+      const alreadySaved = savedTips.some(t => 
+        t.tip_text === tip.tip_text && 
+        t.module_origin === 'nutrition'
+      );
+      setIsSaved(alreadySaved);
+    } else {
+      setIsSaved(false);
+    }
+  }, [tip, savedTips]);
+
+  const handleSaveTip = async () => {
+    if (!tip || saving) return;
+    setSaving(true);
+    
+    const result = await saveTip({
+      tip_text: tip.tip_text,
+      tip_category: categoryName || tip.category,
+      module_origin: 'nutrition',
+    });
+    
+    setSaving(false);
+    
+    if (result.success) {
+      setIsSaved(true);
+      toast.success(t('nutrition.tipSavedSuccess'));
+    } else if (result.error === 'already_saved') {
+      setIsSaved(true);
+      toast.info(t('vault.drills.alreadySaved'));
+    } else {
+      toast.error(result.error || t('common.error'));
+    }
+  };
 
   const fetchTip = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -65,6 +106,7 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
         setViewedPercentage(data.viewedPercentage || 0);
         setLimitReached(false);
         setDailyTipsRemaining(data.dailyTipsRemaining ?? 1);
+        setIsSaved(false); // Reset saved state for new tip
       }
 
       // Pass streak data to parent
@@ -183,16 +225,30 @@ export function DailyTipHero({ sport, onStreakUpdate }: DailyTipHeroProps) {
               <span className="text-xs text-muted-foreground">
                 {t('nutrition.percentExplored', { percent: viewedPercentage })}
               </span>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => fetchTip(true)}
-                disabled={refreshing || dailyTipsRemaining <= 0}
-                className="gap-1 h-7 px-2"
-              >
-                <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden xs:inline">{t('nutrition.newTip')}</span>
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSaveTip}
+                  disabled={isSaved || saving}
+                  className={`gap-1 h-7 px-2 ${isSaved ? 'text-red-500' : ''}`}
+                >
+                  <Heart className={`h-3 w-3 ${isSaved ? 'fill-current' : ''}`} />
+                  <span className="hidden xs:inline">
+                    {isSaved ? t('nutrition.tipSaved') : t('nutrition.saveTip')}
+                  </span>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => fetchTip(true)}
+                  disabled={refreshing || dailyTipsRemaining <= 0}
+                  className="gap-1 h-7 px-2"
+                >
+                  <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+                  <span className="hidden xs:inline">{t('nutrition.newTip')}</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>

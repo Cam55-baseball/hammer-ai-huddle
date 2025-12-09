@@ -936,6 +936,9 @@
     "allModules": "Tous les Modules"
   },
   "nutrition": {
+    "saveTip": "Enregistrer le Conseil",
+    "tipSaved": "Enregistré",
+    "tipSavedSuccess": "Conseil enregistré dans votre Coffre !",
     "title": "Production Iron Horse",
     "subtitle": "Conseils Diététiques et Santé Holistique pour Athlètes d'Élite",
     "dailyTip": "Conseil Santé du Jour",

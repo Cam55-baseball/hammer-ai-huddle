@@ -936,6 +936,9 @@
     "allModules": "Alle Modules"
   },
   "nutrition": {
+    "saveTip": "Tip Opslaan",
+    "tipSaved": "Opgeslagen",
+    "tipSavedSuccess": "Tip opgeslagen in je Kluis!",
     "title": "Iron Horse Productie",
     "subtitle": "Voedings- en Holistische Gezondheid voor Topsporters",
     "dailyTip": "Dagelijkse Gezondheidstip",
