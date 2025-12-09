@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from 'date-fns';
 
 export interface VaultEntry {
   id: string;
@@ -716,6 +717,153 @@ export function useVault() {
     setEntriesWithData(Array.from(allDates).filter(d => d));
   }, [user]);
 
+  // Delete functions for history entries
+  const deleteQuiz = useCallback(async (id: string) => {
+    await supabase.from('vault_focus_quizzes').delete().eq('id', id);
+    await fetchTodaysQuizzes();
+    await fetchEntriesWithData();
+  }, [fetchTodaysQuizzes, fetchEntriesWithData]);
+
+  const deleteFreeNote = useCallback(async (id: string) => {
+    await supabase.from('vault_free_notes').delete().eq('id', id);
+    await fetchTodaysNotes();
+    await fetchEntriesWithData();
+  }, [fetchTodaysNotes, fetchEntriesWithData]);
+
+  const deleteWorkoutNote = useCallback(async (id: string) => {
+    await supabase.from('vault_workout_notes').delete().eq('id', id);
+    await fetchWorkoutNotes();
+    await fetchEntriesWithData();
+  }, [fetchWorkoutNotes, fetchEntriesWithData]);
+
+  const deleteNutritionLog = useCallback(async (id: string) => {
+    await supabase.from('vault_nutrition_logs').delete().eq('id', id);
+    await fetchNutritionLog();
+    await fetchEntriesWithData();
+  }, [fetchNutritionLog, fetchEntriesWithData]);
+
+  const deletePerformanceTest = useCallback(async (id: string) => {
+    await supabase.from('vault_performance_tests').delete().eq('id', id);
+    await fetchPerformanceTests();
+    await fetchEntriesWithData();
+  }, [fetchPerformanceTests, fetchEntriesWithData]);
+
+  const deleteProgressPhoto = useCallback(async (id: string) => {
+    await supabase.from('vault_progress_photos').delete().eq('id', id);
+    await fetchProgressPhotos();
+    await fetchEntriesWithData();
+  }, [fetchProgressPhotos, fetchEntriesWithData]);
+
+  const deleteScoutGrade = useCallback(async (id: string) => {
+    await supabase.from('vault_scout_grades').delete().eq('id', id);
+    await fetchScoutGrades();
+    await fetchEntriesWithData();
+  }, [fetchScoutGrades, fetchEntriesWithData]);
+
+  // Fetch weekly data for summary
+  const fetchWeeklyData = useCallback(async (weekStartStr: string) => {
+    if (!user) return {
+      weekStart: weekStartStr,
+      weekEnd: weekStartStr,
+      quizzes: [],
+      workouts: [],
+      nutrition: [],
+      performanceTests: [],
+      totalWorkouts: 0,
+      totalWeightLifted: 0,
+      avgEnergy: 0,
+      avgMental: 0,
+      avgEmotional: 0,
+      avgPhysical: 0,
+      dailyData: [],
+    };
+
+    const weekStart = new Date(weekStartStr);
+    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+    const weekEndStr = format(weekEnd, 'yyyy-MM-dd');
+
+    const [
+      { data: quizzes },
+      { data: workouts },
+      { data: nutrition },
+      { data: perfTests }
+    ] = await Promise.all([
+      supabase.from('vault_focus_quizzes').select('*').eq('user_id', user.id)
+        .gte('entry_date', weekStartStr).lte('entry_date', weekEndStr),
+      supabase.from('vault_workout_notes').select('*').eq('user_id', user.id)
+        .gte('entry_date', weekStartStr).lte('entry_date', weekEndStr),
+      supabase.from('vault_nutrition_logs').select('*').eq('user_id', user.id)
+        .gte('entry_date', weekStartStr).lte('entry_date', weekEndStr),
+      supabase.from('vault_performance_tests').select('*').eq('user_id', user.id)
+        .gte('test_date', weekStartStr).lte('test_date', weekEndStr),
+    ]);
+
+    const totalWorkouts = workouts?.length || 0;
+    const totalWeightLifted = workouts?.reduce((sum, w) => sum + (w.total_weight_lifted || 0), 0) || 0;
+    
+    const energyValues = nutrition?.filter(n => n.energy_level).map(n => n.energy_level!) || [];
+    const avgEnergy = energyValues.length > 0 ? energyValues.reduce((a, b) => a + b, 0) / energyValues.length : 0;
+    
+    const mentalValues = quizzes?.filter(q => q.mental_readiness).map(q => q.mental_readiness) || [];
+    const emotionalValues = quizzes?.filter(q => q.emotional_state).map(q => q.emotional_state) || [];
+    const physicalValues = quizzes?.filter(q => q.physical_readiness).map(q => q.physical_readiness) || [];
+    
+    const avgMental = mentalValues.length > 0 ? mentalValues.reduce((a, b) => a + b, 0) / mentalValues.length : 0;
+    const avgEmotional = emotionalValues.length > 0 ? emotionalValues.reduce((a, b) => a + b, 0) / emotionalValues.length : 0;
+    const avgPhysical = physicalValues.length > 0 ? physicalValues.reduce((a, b) => a + b, 0) / physicalValues.length : 0;
+
+    // Build daily data
+    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+    const dailyData = days.map(day => {
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const dayQuizzes = quizzes?.filter(q => q.entry_date === dateStr) || [];
+      const dayWorkouts = workouts?.filter(w => w.entry_date === dateStr) || [];
+      const dayNutrition = nutrition?.filter(n => n.entry_date === dateStr) || [];
+      
+      const avgDayMental = dayQuizzes.length > 0 
+        ? dayQuizzes.reduce((sum, q) => sum + q.mental_readiness, 0) / dayQuizzes.length 
+        : null;
+      const avgDayEmotional = dayQuizzes.length > 0 
+        ? dayQuizzes.reduce((sum, q) => sum + q.emotional_state, 0) / dayQuizzes.length 
+        : null;
+      const avgDayPhysical = dayQuizzes.length > 0 
+        ? dayQuizzes.reduce((sum, q) => sum + q.physical_readiness, 0) / dayQuizzes.length 
+        : null;
+      
+      const dayWeight = dayWorkouts.reduce((sum, w) => sum + (w.total_weight_lifted || 0), 0);
+      const dayEnergy = dayNutrition.length > 0 && dayNutrition[0].energy_level 
+        ? dayNutrition[0].energy_level 
+        : null;
+      
+      return {
+        day: dateStr,
+        dayShort: format(day, 'EEE'),
+        mental: avgDayMental,
+        emotional: avgDayEmotional,
+        physical: avgDayPhysical,
+        weight: dayWeight,
+        energy: dayEnergy,
+        hasEntry: dayQuizzes.length > 0 || dayWorkouts.length > 0 || dayNutrition.length > 0,
+      };
+    });
+
+    return {
+      weekStart: weekStartStr,
+      weekEnd: weekEndStr,
+      quizzes: quizzes || [],
+      workouts: workouts || [],
+      nutrition: nutrition || [],
+      performanceTests: perfTests || [],
+      totalWorkouts,
+      totalWeightLifted,
+      avgEnergy,
+      avgMental,
+      avgEmotional,
+      avgPhysical,
+      dailyData,
+    };
+  }, [user]);
+
   // Load initial data
   useEffect(() => {
     const loadData = async () => {
@@ -735,5 +883,7 @@ export function useVault() {
     loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLog, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData,
     saveFocusQuiz, saveFreeNote, saveWorkoutNote, updateStreak, checkVaultAccess, fetchWorkoutNotes,
     saveNutritionLog, deleteSavedDrill, deleteSavedTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
+    deleteQuiz, deleteFreeNote, deleteWorkoutNote, deleteNutritionLog, deletePerformanceTest, deleteProgressPhoto, deleteScoutGrade,
+    fetchWeeklyData, fetchEntriesWithData,
   };
 }
