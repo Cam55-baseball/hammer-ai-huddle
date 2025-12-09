@@ -1088,7 +1088,9 @@
     "trainingUnknown": "Onbekend",
     "precipitationChance": "neerslagkans",
     "failedToLoadWeather": "Laden van weergegevens mislukt",
-    "noConditions": "Geen specifieke omstandigheden om te analyseren"
+    "noConditions": "Geen specifieke omstandigheden om te analyseren",
+    "sunrise": "Zonsopgang",
+    "sunset": "Zonsondergang"
   },
   "scout": {
     "dashboard": "Scout Dashboard",

@@ -1263,7 +1263,9 @@
     "trainingUnknown": "Desconocido",
     "precipitationChance": "probabilidad de precipitación",
     "failedToLoadWeather": "Error al cargar datos del clima",
-    "noConditions": "No hay condiciones específicas para analizar"
+    "noConditions": "No hay condiciones específicas para analizar",
+    "sunrise": "Amanecer",
+    "sunset": "Atardecer"
   },
   "scout": {
     "dashboard": "Panel de Scout",

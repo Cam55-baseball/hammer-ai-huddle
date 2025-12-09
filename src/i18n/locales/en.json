@@ -1388,7 +1388,9 @@
     "trainingUnknown": "Unknown",
     "precipitationChance": "precipitation chance",
     "failedToLoadWeather": "Failed to load weather data",
-    "noConditions": "No specific conditions to analyze"
+    "noConditions": "No specific conditions to analyze",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset"
   },
   "scout": {
     "dashboard": "Scout Dashboard",

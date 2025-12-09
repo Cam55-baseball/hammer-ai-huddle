@@ -1059,7 +1059,9 @@
     "trainingUnknown": "不明",
     "precipitationChance": "降水確率",
     "failedToLoadWeather": "天気データの読み込みに失敗",
-    "noConditions": "分析する特定の条件なし"
+    "noConditions": "分析する特定の条件なし",
+    "sunrise": "日の出",
+    "sunset": "日の入り"
   },
   "scout": {
     "dashboard": "スカウトダッシュボード",
