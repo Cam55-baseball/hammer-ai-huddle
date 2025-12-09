@@ -2604,16 +2604,52 @@
     },
     "categories": {
       "title": "Learning Categories",
-      "mental_mastery": "Mental Mastery",
-      "mental_mastery_desc": "High-Performance Psychology",
-      "emotional_balance": "Emotional Balance",
-      "emotional_balance_desc": "Peace & Inner Calm",
-      "leadership": "Leadership",
-      "leadership_desc": "Character Building & Team",
-      "life_mastery": "Life Mastery",
-      "life_mastery_desc": "Discipline & Excellence",
-      "explored": "{{count}} explored",
-      "progress": "{{current}}/{{total}} lessons"
+      "explored": "explored",
+      "contentTypes": "Includes quotes, mantras, teachings & principles",
+      "mental_mastery": {
+        "name": "Mental Mastery",
+        "description": "Focus, visualization, discipline & high-performance psychology",
+        "details": "Master the mental game with lessons on focus, visualization techniques, pre-game routines, and elite athlete psychology.",
+        "subcategories": {
+          "focus": "Focus",
+          "visualization": "Visualization",
+          "discipline": "Discipline",
+          "psychology": "Psychology"
+        }
+      },
+      "emotional_balance": {
+        "name": "Emotional Balance",
+        "description": "Peace, fear management, breathing & meditation techniques",
+        "details": "Find inner calm through breathing exercises, meditation practices, fear management, and emotional regulation.",
+        "subcategories": {
+          "peace": "Peace",
+          "fear": "Fear Management",
+          "breathing": "Breathing",
+          "meditation": "Meditation"
+        }
+      },
+      "leadership": {
+        "name": "Leadership",
+        "description": "Character, accountability, teamwork & legacy building",
+        "details": "Develop leadership skills through character building, team accountability, communication, and creating lasting impact.",
+        "subcategories": {
+          "character": "Character",
+          "accountability": "Accountability",
+          "teamwork": "Teamwork",
+          "legacy": "Legacy"
+        }
+      },
+      "life_mastery": {
+        "name": "Life Mastery",
+        "description": "Habits, time management, purpose & creating standards",
+        "details": "Build championship habits with time management, purpose-driven goals, and high personal standards.",
+        "subcategories": {
+          "habits": "Habits",
+          "time": "Time Management",
+          "purpose": "Purpose",
+          "standards": "Standards"
+        }
+      }
     },
     "subcategories": {
       "focus_concentration": "Focus & Concentration",

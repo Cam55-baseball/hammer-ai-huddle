@@ -1919,16 +1919,52 @@
     },
     "categories": {
       "title": "학습 카테고리",
-      "mental_mastery": "정신 마스터리",
-      "mental_mastery_desc": "고성능 심리학",
-      "emotional_balance": "감정 균형",
-      "emotional_balance_desc": "평화와 내적 평온",
-      "leadership": "리더십",
-      "leadership_desc": "인격 및 팀 구축",
-      "life_mastery": "라이프 마스터리",
-      "life_mastery_desc": "규율과 우수성",
-      "explored": "{{count}}개 탐구",
-      "progress": "{{current}}/{{total}} 레슨"
+      "explored": "탐구",
+      "contentTypes": "명언, 만트라, 가르침, 원칙 포함",
+      "mental_mastery": {
+        "name": "정신 마스터리",
+        "description": "집중, 시각화, 규율 및 고성능 심리학",
+        "details": "집중력, 시각화 기술, 경기 전 루틴, 엘리트 선수 심리학 레슨으로 정신 게임을 마스터하세요.",
+        "subcategories": {
+          "focus": "집중",
+          "visualization": "시각화",
+          "discipline": "규율",
+          "psychology": "심리학"
+        }
+      },
+      "emotional_balance": {
+        "name": "감정 균형",
+        "description": "평화, 두려움 관리, 호흡 및 명상 기술",
+        "details": "호흡 운동, 명상 실습, 두려움 관리, 감정 조절을 통해 내면의 평온을 찾으세요.",
+        "subcategories": {
+          "peace": "평화",
+          "fear": "두려움 관리",
+          "breathing": "호흡",
+          "meditation": "명상"
+        }
+      },
+      "leadership": {
+        "name": "리더십",
+        "description": "인격, 책임감, 팀워크 및 레거시 구축",
+        "details": "인격 형성, 팀 책임, 소통, 지속적인 영향력 창출을 통해 리더십 기술을 개발하세요.",
+        "subcategories": {
+          "character": "인격",
+          "accountability": "책임감",
+          "teamwork": "팀워크",
+          "legacy": "레거시"
+        }
+      },
+      "life_mastery": {
+        "name": "라이프 마스터리",
+        "description": "습관, 시간 관리, 목적 및 기준 만들기",
+        "details": "시간 관리, 목적 지향적 목표, 높은 개인 기준으로 챔피언 습관을 구축하세요.",
+        "subcategories": {
+          "habits": "습관",
+          "time": "시간 관리",
+          "purpose": "목적",
+          "standards": "기준"
+        }
+      }
     },
     "subcategories": {
       "focus_concentration": "집중과 몰입",

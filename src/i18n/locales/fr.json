@@ -2427,16 +2427,52 @@
     },
     "categories": {
       "title": "Catégories d'Apprentissage",
-      "mental_mastery": "Maîtrise Mentale",
-      "mental_mastery_desc": "Psychologie de Haute Performance",
-      "emotional_balance": "Équilibre Émotionnel",
-      "emotional_balance_desc": "Paix et Calme Intérieur",
-      "leadership": "Leadership",
-      "leadership_desc": "Construction du Caractère et d'Équipe",
-      "life_mastery": "Maîtrise de Vie",
-      "life_mastery_desc": "Discipline et Excellence",
-      "explored": "{{count}} explorées",
-      "progress": "{{current}}/{{total}} leçons"
+      "explored": "explorées",
+      "contentTypes": "Inclut des citations, mantras, enseignements et principes",
+      "mental_mastery": {
+        "name": "Maîtrise Mentale",
+        "description": "Concentration, visualisation, discipline et psychologie de haute performance",
+        "details": "Maîtrisez le jeu mental avec des leçons sur la concentration, les techniques de visualisation, les routines pré-match et la psychologie des athlètes d'élite.",
+        "subcategories": {
+          "focus": "Concentration",
+          "visualization": "Visualisation",
+          "discipline": "Discipline",
+          "psychology": "Psychologie"
+        }
+      },
+      "emotional_balance": {
+        "name": "Équilibre Émotionnel",
+        "description": "Paix, gestion de la peur, respiration et techniques de méditation",
+        "details": "Trouvez le calme intérieur grâce aux exercices de respiration, pratiques de méditation, gestion de la peur et régulation émotionnelle.",
+        "subcategories": {
+          "peace": "Paix",
+          "fear": "Gestion de la Peur",
+          "breathing": "Respiration",
+          "meditation": "Méditation"
+        }
+      },
+      "leadership": {
+        "name": "Leadership",
+        "description": "Caractère, responsabilité, travail d'équipe et construction d'héritage",
+        "details": "Développez vos compétences en leadership grâce à la construction du caractère, la responsabilité d'équipe, la communication et la création d'un impact durable.",
+        "subcategories": {
+          "character": "Caractère",
+          "accountability": "Responsabilité",
+          "teamwork": "Travail d'Équipe",
+          "legacy": "Héritage"
+        }
+      },
+      "life_mastery": {
+        "name": "Maîtrise de Vie",
+        "description": "Habitudes, gestion du temps, objectif et création de standards",
+        "details": "Construisez des habitudes de champion avec la gestion du temps, des objectifs axés sur le but et des standards personnels élevés.",
+        "subcategories": {
+          "habits": "Habitudes",
+          "time": "Gestion du Temps",
+          "purpose": "Objectif",
+          "standards": "Standards"
+        }
+      }
     },
     "subcategories": {
       "focus_concentration": "Focus et Concentration",

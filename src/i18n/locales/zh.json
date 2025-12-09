@@ -1903,16 +1903,52 @@
     },
     "categories": {
       "title": "学习类别",
-      "mental_mastery": "心智掌控",
-      "mental_mastery_desc": "高性能心理学",
-      "emotional_balance": "情绪平衡",
-      "emotional_balance_desc": "平和与内心宁静",
-      "leadership": "领导力",
-      "leadership_desc": "品格与团队建设",
-      "life_mastery": "生活掌控",
-      "life_mastery_desc": "纪律与卓越",
-      "explored": "已探索{{count}}个",
-      "progress": "{{current}}/{{total}}课程"
+      "explored": "已探索",
+      "contentTypes": "包括名言、咒语、教导和原则",
+      "mental_mastery": {
+        "name": "心智掌控",
+        "description": "专注、可视化、纪律和高性能心理学",
+        "details": "通过专注力、可视化技巧、赛前例程和精英运动员心理学的课程掌握心理游戏。",
+        "subcategories": {
+          "focus": "专注",
+          "visualization": "可视化",
+          "discipline": "纪律",
+          "psychology": "心理学"
+        }
+      },
+      "emotional_balance": {
+        "name": "情绪平衡",
+        "description": "平和、恐惧管理、呼吸和冥想技巧",
+        "details": "通过呼吸练习、冥想实践、恐惧管理和情绪调节找到内心平静。",
+        "subcategories": {
+          "peace": "平和",
+          "fear": "恐惧管理",
+          "breathing": "呼吸",
+          "meditation": "冥想"
+        }
+      },
+      "leadership": {
+        "name": "领导力",
+        "description": "品格、责任感、团队合作和遗产建设",
+        "details": "通过品格建设、团队责任、沟通和创造持久影响来发展领导技能。",
+        "subcategories": {
+          "character": "品格",
+          "accountability": "责任感",
+          "teamwork": "团队合作",
+          "legacy": "遗产"
+        }
+      },
+      "life_mastery": {
+        "name": "生活掌控",
+        "description": "习惯、时间管理、目标和创建标准",
+        "details": "通过时间管理、目标导向的目标和高个人标准建立冠军习惯。",
+        "subcategories": {
+          "habits": "习惯",
+          "time": "时间管理",
+          "purpose": "目标",
+          "standards": "标准"
+        }
+      }
     },
     "subcategories": {
       "focus_concentration": "专注与集中",

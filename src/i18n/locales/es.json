@@ -2405,16 +2405,52 @@
     },
     "categories": {
       "title": "Categorías de Aprendizaje",
-      "mental_mastery": "Dominio Mental",
-      "mental_mastery_desc": "Psicología de Alto Rendimiento",
-      "emotional_balance": "Equilibrio Emocional",
-      "emotional_balance_desc": "Paz y Calma Interior",
-      "leadership": "Liderazgo",
-      "leadership_desc": "Construcción de Carácter y Equipo",
-      "life_mastery": "Dominio de Vida",
-      "life_mastery_desc": "Disciplina y Excelencia",
-      "explored": "{{count}} exploradas",
-      "progress": "{{current}}/{{total}} lecciones"
+      "explored": "exploradas",
+      "contentTypes": "Incluye citas, mantras, enseñanzas y principios",
+      "mental_mastery": {
+        "name": "Dominio Mental",
+        "description": "Enfoque, visualización, disciplina y psicología de alto rendimiento",
+        "details": "Domina el juego mental con lecciones sobre enfoque, técnicas de visualización, rutinas pre-partido y psicología de atletas de élite.",
+        "subcategories": {
+          "focus": "Enfoque",
+          "visualization": "Visualización",
+          "discipline": "Disciplina",
+          "psychology": "Psicología"
+        }
+      },
+      "emotional_balance": {
+        "name": "Equilibrio Emocional",
+        "description": "Paz, gestión del miedo, respiración y técnicas de meditación",
+        "details": "Encuentra calma interior a través de ejercicios de respiración, prácticas de meditación, gestión del miedo y regulación emocional.",
+        "subcategories": {
+          "peace": "Paz",
+          "fear": "Gestión del Miedo",
+          "breathing": "Respiración",
+          "meditation": "Meditación"
+        }
+      },
+      "leadership": {
+        "name": "Liderazgo",
+        "description": "Carácter, responsabilidad, trabajo en equipo y construcción de legado",
+        "details": "Desarrolla habilidades de liderazgo a través de la construcción del carácter, responsabilidad del equipo, comunicación y creación de impacto duradero.",
+        "subcategories": {
+          "character": "Carácter",
+          "accountability": "Responsabilidad",
+          "teamwork": "Trabajo en Equipo",
+          "legacy": "Legado"
+        }
+      },
+      "life_mastery": {
+        "name": "Dominio de Vida",
+        "description": "Hábitos, gestión del tiempo, propósito y creación de estándares",
+        "details": "Construye hábitos de campeón con gestión del tiempo, metas impulsadas por propósito y altos estándares personales.",
+        "subcategories": {
+          "habits": "Hábitos",
+          "time": "Gestión del Tiempo",
+          "purpose": "Propósito",
+          "standards": "Estándares"
+        }
+      }
     },
     "subcategories": {
       "focus_concentration": "Enfoque y Concentración",
