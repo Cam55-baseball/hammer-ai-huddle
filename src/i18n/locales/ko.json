@@ -938,6 +938,7 @@
     "best": "최고:",
     "tipsCollectedCount": "수집한 팁",
     "ofTipsExplored": "탐색한 팁",
+    "tipsExplored": "{{total}}개 팁 중 {{percent}}% 탐색 완료",
     "milestoneBadges": "마일스톤 배지",
     "dailyLimitReached": "일일 한도 도달",
     "noTipsRemaining": "남은 팁 0개",

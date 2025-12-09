@@ -967,6 +967,7 @@
     "best": "Meilleur:",
     "tipsCollectedCount": "conseils collectés",
     "ofTipsExplored": "de conseils explorés",
+    "tipsExplored": "{{percent}}% des {{total}} conseils explorés",
     "milestoneBadges": "Badges de Jalons",
     "dailyLimitReached": "Limite Quotidienne Atteinte",
     "noTipsRemaining": "0 conseils restants",

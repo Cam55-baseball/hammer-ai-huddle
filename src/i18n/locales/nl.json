@@ -967,6 +967,7 @@
     "best": "Beste:",
     "tipsCollectedCount": "tips verzameld",
     "ofTipsExplored": "van tips verkend",
+    "tipsExplored": "{{percent}}% van {{total}} tips verkend",
     "milestoneBadges": "Mijlpaal Badges",
     "dailyLimitReached": "Dagelijkse Limiet Bereikt",
     "noTipsRemaining": "0 tips over",
