@@ -3820,7 +3820,42 @@
       "noTests": "Sin pruebas registradas aún",
       "testHistory": "Historial de Pruebas",
       "saved": "¡Prueba de rendimiento guardada!",
-      "error": "Error al guardar prueba de rendimiento"
+      "error": "Error al guardar prueba de rendimiento",
+      "newTest": "Registrar Nueva Prueba",
+      "recentTests": "Pruebas Recientes",
+      "save": "Guardar Resultados",
+      "metrics": {
+        "bat_speed": "Velocidad del Bate",
+        "exit_velocity": "Velocidad de Salida",
+        "launch_angle": "Ángulo de Lanzamiento",
+        "sprint_60": "Sprint 60 Yardas",
+        "vertical_jump": "Salto Vertical",
+        "velocity": "Velocidad",
+        "spin_rate": "Velocidad de Giro",
+        "command_score": "Puntuación de Control",
+        "arm_health": "Salud del Brazo",
+        "accuracy_score": "Puntuación de Precisión",
+        "pop_time": "Tiempo de Reacción",
+        "arm_speed": "Velocidad del Brazo"
+      }
+    },
+    "progressPhotos": {
+      "title": "Fotos de Progreso",
+      "description": "Registra tu composición corporal a lo largo del tiempo",
+      "weight": "Peso (lbs)",
+      "bodyFat": "Grasa Corporal %",
+      "arm": "Brazo (pulg)",
+      "chest": "Pecho (pulg)",
+      "waist": "Cintura (pulg)",
+      "leg": "Pierna (pulg)",
+      "notes": "Notas",
+      "notesPlaceholder": "Notas sobre tu progreso...",
+      "save": "Guardar Entrada de Progreso",
+      "saved": "¡Entrada de progreso guardada!",
+      "upload": "Subir Fotos",
+      "uploadHint": "Máx 4 fotos, 10MB cada una",
+      "invalidFiles": "Algunos archivos no son válidos",
+      "recent": "Entradas Recientes"
     },
     "photos": {
       "title": "Fotos de Progreso",
@@ -3850,6 +3885,10 @@
       "fielding": "Fildeo",
       "leadership": "Liderazgo",
       "selfEfficacy": "Auto-Eficacia",
+      "selfEvaluate": "Evalúate (Escala 20-80)",
+      "notes": "Notas",
+      "notesPlaceholder": "Reflexiones sobre tu auto-evaluación...",
+      "nextGradeIn": "Próxima calificación en {{days}} días",
       "scale20": "20 - Muy Por Debajo del Promedio",
       "scale40": "40 - Por Debajo del Promedio",
       "scale50": "50 - Promedio",
@@ -3861,7 +3900,23 @@
       "history": "Historial de Calificaciones",
       "noGrades": "Sin calificaciones registradas aún",
       "nextGrading": "Próxima calificación disponible en",
-      "daysRemaining": "días"
+      "daysRemaining": "días",
+      "categories": {
+        "hitting": "Bateo",
+        "power": "Poder",
+        "speed": "Velocidad",
+        "defense": "Defensa",
+        "throwing": "Lanzamiento",
+        "leadership": "Liderazgo",
+        "self_efficacy": "Auto-Eficacia"
+      },
+      "levels": {
+        "elite": "Élite",
+        "plus": "Superior",
+        "average": "Promedio",
+        "below": "Bajo Prom.",
+        "poor": "Bajo"
+      }
     },
     "recap": {
       "title": "Resumen de 6 Semanas",

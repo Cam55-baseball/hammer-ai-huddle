@@ -3041,7 +3041,7 @@
     },
     "performance": {
       "title": "表现测试",
-      "description": "每6周记录表现指标以跟踪进步",
+      "description": "随时间追踪您的运动表现",
       "selectModule": "选择模块",
       "selectTest": "选择测试",
       "exitVelo": "击球速度 (mph)",
@@ -3057,7 +3057,42 @@
       "history": "测试历史",
       "previous": "上次",
       "improvement": "提升",
-      "decline": "下降"
+      "decline": "下降",
+      "newTest": "记录新测试",
+      "recentTests": "最近测试",
+      "save": "保存测试结果",
+      "metrics": {
+        "bat_speed": "球棒速度",
+        "exit_velocity": "击球速度",
+        "launch_angle": "发射角度",
+        "sprint_60": "60码冲刺",
+        "vertical_jump": "垂直跳跃",
+        "velocity": "速度",
+        "spin_rate": "转速",
+        "command_score": "控球分数",
+        "arm_health": "手臂健康",
+        "accuracy_score": "精准度分数",
+        "pop_time": "反应时间",
+        "arm_speed": "手臂速度"
+      }
+    },
+    "progressPhotos": {
+      "title": "进度照片",
+      "description": "随时间追踪您的身体成分",
+      "weight": "体重 (lbs)",
+      "bodyFat": "体脂率 %",
+      "arm": "手臂 (英寸)",
+      "chest": "胸围 (英寸)",
+      "waist": "腰围 (英寸)",
+      "leg": "腿围 (英寸)",
+      "notes": "备注",
+      "notesPlaceholder": "关于您进步的备注...",
+      "save": "保存进度记录",
+      "saved": "进度记录已保存！",
+      "upload": "上传照片",
+      "uploadHint": "最多4张，每张10MB",
+      "invalidFiles": "部分文件无效",
+      "recent": "最近记录"
     },
     "photos": {
       "title": "进度照片",
@@ -3087,6 +3122,10 @@
       "fielding": "防守",
       "leadership": "领导力",
       "selfEfficacy": "自我效能",
+      "selfEvaluate": "自我评估 (20-80评分)",
+      "notes": "备注",
+      "notesPlaceholder": "关于您自我评估的想法...",
+      "nextGradeIn": "下次评分还有{{days}}天",
       "scale20": "20 - 远低于平均",
       "scale40": "40 - 低于平均",
       "scale50": "50 - 平均",
@@ -3096,7 +3135,24 @@
       "saved": "球探评分已保存！",
       "error": "保存评分失败",
       "noGrades": "暂无评分历史",
-      "lastGraded": "上次评分"
+      "lastGraded": "上次评分",
+      "history": "评分历史",
+      "categories": {
+        "hitting": "打击",
+        "power": "力量",
+        "speed": "速度",
+        "defense": "防守",
+        "throwing": "传球",
+        "leadership": "领导力",
+        "self_efficacy": "自我效能"
+      },
+      "levels": {
+        "elite": "精英",
+        "plus": "优秀",
+        "average": "平均",
+        "below": "低于平均",
+        "poor": "较差"
+      }
     },
     "recap": {
       "title": "六周总结",
