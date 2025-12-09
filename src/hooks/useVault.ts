@@ -29,8 +29,8 @@ export interface WeightIncrease {
   exercise_name: string;
   previous_weight: number;
   new_weight: number;
-  set_index: number;
   increase_amount: number;
+  set_index?: number;
 }
 
 export interface VaultFocusQuiz {

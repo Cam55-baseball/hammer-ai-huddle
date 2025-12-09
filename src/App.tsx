@@ -67,6 +67,7 @@ const BounceBackBay = lazyWithRetry(() => import("./pages/BounceBackBay"));
 const MindFuel = lazyWithRetry(() => import("./pages/MindFuel"));
 const ProductionLab = lazyWithRetry(() => import("./pages/ProductionLab"));
 const ProductionStudio = lazyWithRetry(() => import("./pages/ProductionStudio"));
+const Vault = lazyWithRetry(() => import("./pages/Vault"));
 const ComingSoon = lazyWithRetry(() => import("./pages/ComingSoon"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
@@ -116,6 +117,7 @@ const App = () => {
               <Route path="/bounce-back-bay" element={<BounceBackBay />} />
               <Route path="/production-lab" element={<ProductionLab />} />
               <Route path="/production-studio" element={<ProductionStudio />} />
+              <Route path="/vault" element={<Vault />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

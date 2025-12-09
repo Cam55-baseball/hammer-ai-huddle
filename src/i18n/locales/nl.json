@@ -2890,5 +2890,98 @@
     "streakBroken": "Reeks gereset - laten we opnieuw bouwen!",
     "fireUnlocked": "Vuur ontgrendelt bij 5 dagen!",
     "glowUnlocked": "Vlam gloeit bij 25 dagen!"
+  },
+  "vault": {
+    "title": "De Kluis",
+    "subtitle": "Je privé prestatie dagboek",
+    "description": "Volg je dagelijkse mindset, workouts en voortgang op één veilige plek",
+    "locked": {
+      "title": "De Kluis is Vergrendeld",
+      "description": "Abonneer op een trainingsmodule om De Kluis te ontgrendelen en je reis bij te houden",
+      "unlockButton": "Bekijk Prijzen"
+    },
+    "tabs": {
+      "today": "Vandaag",
+      "history": "Geschiedenis"
+    },
+    "quiz": {
+      "title": "Dagelijkse Focus Check",
+      "todayStatus": "Vandaag's Check-ins",
+      "preLift": "Voor Training",
+      "morning": "Ochtend",
+      "night": "Nacht",
+      "completed": "Voltooid",
+      "notStarted": "Niet Gestart",
+      "saved": "Quiz succesvol opgeslagen!",
+      "error": "Quiz opslaan mislukt",
+      "mentalReadiness": "Mentale Gereedheid",
+      "emotionalState": "Emotionele Staat",
+      "physicalReadiness": "Fysieke Gereedheid",
+      "sleepTime": "Slaaptijd",
+      "wakeTime": "Ontwaaktijd",
+      "sleepTimeHint": "Hoe laat ging je naar bed?",
+      "wakeTimeHint": "Hoe laat werd je wakker?",
+      "reflectionPrompts": {
+        "title": "Avond Reflectie",
+        "didWell": "Wat heb ik vandaag goed gedaan?",
+        "improve": "Wat kan ik morgen verbeteren?",
+        "learned": "Wat heb ik vandaag geleerd?",
+        "motivation": "Wat motiveert mij?"
+      },
+      "submit": "Check-in Opslaan",
+      "submitting": "Opslaan..."
+    },
+    "freeNote": {
+      "title": "Snelle Notitie",
+      "placeholder": "Schrijf een snelle gedachte of notitie voor vandaag...",
+      "save": "Notitie Opslaan",
+      "saved": "Notitie opgeslagen!",
+      "error": "Notitie opslaan mislukt",
+      "alreadySaved": "Notitie al opgeslagen voor vandaag"
+    },
+    "workoutNotes": {
+      "title": "Workout Notities",
+      "description": "Voeg notities toe over de workout van vandaag",
+      "todayTitle": "Vandaag's Workouts",
+      "notesLabel": "Notities",
+      "notesPlaceholder": "Hoe voelde de workout? Notities voor jezelf?",
+      "weightIncreases": "Gewicht Verhogingen",
+      "totalLifted": "Totaal Gewicht Getild",
+      "skipNotes": "Overslaan",
+      "saveNotes": "Notities Opslaan",
+      "noNotes": "Geen workout notities vandaag"
+    },
+    "streak": {
+      "title": "Je Kluis Reeks",
+      "current": "Huidige Reeks",
+      "longest": "Langste Reeks",
+      "total": "Totaal Entries",
+      "days": "dagen",
+      "day": "dag",
+      "badges": "Verdiende Badges",
+      "startStreak": "Begin je reeks vandaag!",
+      "keepGoing": "Ga zo door!"
+    },
+    "reminder": {
+      "title": "6-Weken Recap",
+      "message": "Voltooi dagelijkse entries om je gepersonaliseerde recap te ontgrendelen",
+      "daysRemaining": "dagen resterend",
+      "progress": "Voortgang"
+    },
+    "history": {
+      "comingSoon": "Geschiedenis weergave binnenkort",
+      "description": "Bekijk je eerdere entries en volg je voortgang door de tijd"
+    },
+    "badges": {
+      "first_entry": "Eerste Entry",
+      "week_warrior": "Week Krijger",
+      "consistency_king": "Consistentie Koning",
+      "vault_master": "Kluis Meester",
+      "reflection_pro": "Reflectie Pro",
+      "strength_tracker": "Kracht Tracker"
+    }
+  },
+  "navigation": {
+    "vault": "De Kluis"
   }
 }

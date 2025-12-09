@@ -3636,5 +3636,98 @@
     "streakBroken": "Serie zurückgesetzt - lass uns neu aufbauen!",
     "fireUnlocked": "Feuer wird bei 5 Tagen freigeschaltet!",
     "glowUnlocked": "Flamme glüht bei 25 Tagen!"
+  },
+  "vault": {
+    "title": "Der Tresor",
+    "subtitle": "Dein privates Leistungstagebuch",
+    "description": "Verfolge deine tägliche Einstellung, Workouts und Fortschritte an einem sicheren Ort",
+    "locked": {
+      "title": "Der Tresor ist Gesperrt",
+      "description": "Abonniere ein Trainingsmodul, um Den Tresor freizuschalten und deine Reise zu verfolgen",
+      "unlockButton": "Preise Ansehen"
+    },
+    "tabs": {
+      "today": "Heute",
+      "history": "Verlauf"
+    },
+    "quiz": {
+      "title": "Täglicher Fokus-Check",
+      "todayStatus": "Heutige Check-ins",
+      "preLift": "Vor dem Training",
+      "morning": "Morgen",
+      "night": "Nacht",
+      "completed": "Abgeschlossen",
+      "notStarted": "Nicht Gestartet",
+      "saved": "Quiz erfolgreich gespeichert!",
+      "error": "Quiz speichern fehlgeschlagen",
+      "mentalReadiness": "Mentale Bereitschaft",
+      "emotionalState": "Emotionaler Zustand",
+      "physicalReadiness": "Körperliche Bereitschaft",
+      "sleepTime": "Schlafenszeit",
+      "wakeTime": "Aufwachzeit",
+      "sleepTimeHint": "Wann bist du ins Bett gegangen?",
+      "wakeTimeHint": "Wann bist du aufgewacht?",
+      "reflectionPrompts": {
+        "title": "Abendreflexion",
+        "didWell": "Was habe ich heute gut gemacht?",
+        "improve": "Was kann ich morgen verbessern?",
+        "learned": "Was habe ich heute gelernt?",
+        "motivation": "Was motiviert mich?"
+      },
+      "submit": "Check-in Speichern",
+      "submitting": "Speichern..."
+    },
+    "freeNote": {
+      "title": "Schnelle Notiz",
+      "placeholder": "Schreibe einen schnellen Gedanken oder eine Notiz für heute...",
+      "save": "Notiz Speichern",
+      "saved": "Notiz gespeichert!",
+      "error": "Notiz speichern fehlgeschlagen",
+      "alreadySaved": "Notiz bereits für heute gespeichert"
+    },
+    "workoutNotes": {
+      "title": "Workout-Notizen",
+      "description": "Füge Notizen zum heutigen Workout hinzu",
+      "todayTitle": "Heutige Workouts",
+      "notesLabel": "Notizen",
+      "notesPlaceholder": "Wie hat sich das Workout angefühlt? Notizen für dich selbst?",
+      "weightIncreases": "Gewichtssteigerungen",
+      "totalLifted": "Gesamtgewicht Gehoben",
+      "skipNotes": "Überspringen",
+      "saveNotes": "Notizen Speichern",
+      "noNotes": "Keine Workout-Notizen heute"
+    },
+    "streak": {
+      "title": "Deine Tresor-Serie",
+      "current": "Aktuelle Serie",
+      "longest": "Längste Serie",
+      "total": "Gesamteinträge",
+      "days": "Tage",
+      "day": "Tag",
+      "badges": "Verdiente Abzeichen",
+      "startStreak": "Starte deine Serie heute!",
+      "keepGoing": "Weiter so!"
+    },
+    "reminder": {
+      "title": "6-Wochen Rückblick",
+      "message": "Vervollständige tägliche Einträge, um deinen personalisierten Rückblick freizuschalten",
+      "daysRemaining": "Tage verbleibend",
+      "progress": "Fortschritt"
+    },
+    "history": {
+      "comingSoon": "Verlaufsansicht kommt bald",
+      "description": "Sieh deine vergangenen Einträge und verfolge deinen Fortschritt über Zeit"
+    },
+    "badges": {
+      "first_entry": "Erster Eintrag",
+      "week_warrior": "Wochen-Krieger",
+      "consistency_king": "König der Konsistenz",
+      "vault_master": "Tresor-Meister",
+      "reflection_pro": "Reflexions-Profi",
+      "strength_tracker": "Kraft-Tracker"
+    }
+  },
+  "navigation": {
+    "vault": "Der Tresor"
   }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, BookOpen } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,7 @@ import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { branding } from "@/branding";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -87,6 +88,7 @@ export function AppSidebar() {
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
   const { isScout } = useScoutAccess();
+  const { modules } = useSubscription();
   const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [ownerBioOpen, setOwnerBioOpen] = useState(false);
@@ -95,6 +97,9 @@ export function AppSidebar() {
     hitting: true,
     pitching: true,
   });
+
+  // Check if user has vault access (any module subscription or owner/admin)
+  const hasVaultAccess = isOwner || isAdmin || modules.length > 0;
 
   const toggleModule = (key: string) => {
     // Haptic feedback for mobile
@@ -184,6 +189,13 @@ export function AppSidebar() {
     },
     { key: 'throwing', title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
     { key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked },
+    { 
+      key: 'vault', 
+      title: t('navigation.vault', 'The Vault'), 
+      url: "/vault", 
+      icon: hasVaultAccess ? BookOpen : Lock,
+      locked: !hasVaultAccess
+    },
   ];
 
   const accountItems = [
