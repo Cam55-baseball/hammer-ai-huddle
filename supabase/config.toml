@@ -98,3 +98,6 @@ verify_jwt = true
 
 [functions.generate-vault-recap]
 verify_jwt = true
+
+[functions.get-today-tips]
+verify_jwt = true
