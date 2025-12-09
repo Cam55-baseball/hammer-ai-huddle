@@ -911,6 +911,7 @@
     "saveTip": "保存提示",
     "tipSaved": "已保存",
     "tipSavedSuccess": "提示已保存到您的保险库！",
+    "tipSaveHint": "点击心形图标将您喜欢的提示保存到宝库",
     "todaysTips": "今日提示",
     "todaysTipsCount": "今日提示 ({{count}}/2)",
     "reviewTips": "查看您今天的提示",
