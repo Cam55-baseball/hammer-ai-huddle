@@ -93,7 +93,7 @@ export function useVault() {
         .from('vault_streaks')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching streak:', error);
@@ -140,7 +140,7 @@ export function useVault() {
         .select('*')
         .eq('user_id', user.id)
         .eq('entry_date', today)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching notes:', error);
@@ -194,7 +194,7 @@ export function useVault() {
         .from('vault_streaks')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
         console.error('Error checking streak:', fetchError);
@@ -426,7 +426,7 @@ export function useVault() {
         .from('subscriptions')
         .select('subscribed_modules')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error || !data) return false;
 
