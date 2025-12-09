@@ -1063,6 +1063,7 @@ export type Database = {
           created_at: string | null
           emotional_state: number
           entry_date: string
+          hours_slept: number | null
           id: string
           mental_readiness: number
           physical_readiness: number
@@ -1071,6 +1072,7 @@ export type Database = {
           reflection_improve: string | null
           reflection_learned: string | null
           reflection_motivation: string | null
+          sleep_quality: number | null
           sleep_time: string | null
           user_id: string
           wake_time: string | null
@@ -1079,6 +1081,7 @@ export type Database = {
           created_at?: string | null
           emotional_state: number
           entry_date?: string
+          hours_slept?: number | null
           id?: string
           mental_readiness: number
           physical_readiness: number
@@ -1087,6 +1090,7 @@ export type Database = {
           reflection_improve?: string | null
           reflection_learned?: string | null
           reflection_motivation?: string | null
+          sleep_quality?: number | null
           sleep_time?: string | null
           user_id: string
           wake_time?: string | null
@@ -1095,6 +1099,7 @@ export type Database = {
           created_at?: string | null
           emotional_state?: number
           entry_date?: string
+          hours_slept?: number | null
           id?: string
           mental_readiness?: number
           physical_readiness?: number
@@ -1103,6 +1108,7 @@ export type Database = {
           reflection_improve?: string | null
           reflection_learned?: string | null
           reflection_motivation?: string | null
+          sleep_quality?: number | null
           sleep_time?: string | null
           user_id?: string
           wake_time?: string | null
