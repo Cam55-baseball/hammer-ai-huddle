@@ -74,6 +74,82 @@ export interface VaultStreak {
   updated_at: string;
 }
 
+export interface VaultNutritionLog {
+  id: string;
+  calories: number | null;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fats_g: number | null;
+  hydration_oz: number | null;
+  energy_level: number | null;
+  digestion_notes: string | null;
+  supplements: string[];
+}
+
+export interface VaultSavedDrill {
+  id: string;
+  drill_name: string;
+  drill_description: string | null;
+  module_origin: string;
+  sport: string;
+  saved_at: string;
+}
+
+export interface VaultSavedTip {
+  id: string;
+  tip_text: string;
+  tip_category: string | null;
+  module_origin: string;
+  saved_at: string;
+}
+
+export interface VaultPerformanceTest {
+  id: string;
+  test_type: string;
+  sport: string;
+  module: string;
+  test_date: string;
+  results: Record<string, number>;
+  previous_results: Record<string, number> | null;
+}
+
+export interface VaultProgressPhoto {
+  id: string;
+  photo_date: string;
+  photo_urls: string[];
+  weight_lbs: number | null;
+  body_fat_percent: number | null;
+  arm_measurement: number | null;
+  chest_measurement: number | null;
+  waist_measurement: number | null;
+  leg_measurement: number | null;
+  notes: string | null;
+}
+
+export interface VaultScoutGrade {
+  id: string;
+  graded_at: string;
+  next_prompt_date: string | null;
+  hitting_grade: number | null;
+  power_grade: number | null;
+  speed_grade: number | null;
+  defense_grade: number | null;
+  throwing_grade: number | null;
+  leadership_grade: number | null;
+  self_efficacy_grade: number | null;
+  notes: string | null;
+}
+
+export interface VaultRecap {
+  id: string;
+  recap_period_start: string;
+  recap_period_end: string;
+  total_weight_lifted: number | null;
+  strength_change_percent: number | null;
+  recap_data: Record<string, unknown>;
+  generated_at: string;
+}
+
 export function useVault() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -81,6 +157,14 @@ export function useVault() {
   const [todaysQuizzes, setTodaysQuizzes] = useState<VaultFocusQuiz[]>([]);
   const [todaysNotes, setTodaysNotes] = useState<VaultFreeNote | null>(null);
   const [workoutNotes, setWorkoutNotes] = useState<VaultWorkoutNote[]>([]);
+  const [nutritionLog, setNutritionLog] = useState<VaultNutritionLog | null>(null);
+  const [savedDrills, setSavedDrills] = useState<VaultSavedDrill[]>([]);
+  const [savedTips, setSavedTips] = useState<VaultSavedTip[]>([]);
+  const [performanceTests, setPerformanceTests] = useState<VaultPerformanceTest[]>([]);
+  const [progressPhotos, setProgressPhotos] = useState<VaultProgressPhoto[]>([]);
+  const [scoutGrades, setScoutGrades] = useState<VaultScoutGrade[]>([]);
+  const [recaps, setRecaps] = useState<VaultRecap[]>([]);
+  const [entriesWithData, setEntriesWithData] = useState<string[]>([]);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -437,38 +521,160 @@ export function useVault() {
     }
   }, [user]);
 
+  // Fetch nutrition log
+  const fetchNutritionLog = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('vault_nutrition_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('entry_date', today)
+      .maybeSingle();
+    if (data) setNutritionLog({ ...data, supplements: (data.supplements as string[]) || [] });
+  }, [user, today]);
+
+  // Save nutrition log
+  const saveNutritionLog = useCallback(async (logData: Omit<VaultNutritionLog, 'id'>) => {
+    if (!user) return { success: false };
+    const { error } = await supabase.from('vault_nutrition_logs').upsert({
+      user_id: user.id, entry_date: today, ...logData,
+    }, { onConflict: 'user_id,entry_date' });
+    if (!error) { await updateStreak(); await fetchNutritionLog(); }
+    return { success: !error };
+  }, [user, today, updateStreak, fetchNutritionLog]);
+
+  // Fetch saved items
+  const fetchSavedItems = useCallback(async () => {
+    if (!user) return;
+    const [{ data: drills }, { data: tips }] = await Promise.all([
+      supabase.from('vault_saved_drills').select('*').eq('user_id', user.id).order('saved_at', { ascending: false }),
+      supabase.from('vault_saved_tips').select('*').eq('user_id', user.id).order('saved_at', { ascending: false }),
+    ]);
+    setSavedDrills((drills || []) as VaultSavedDrill[]);
+    setSavedTips((tips || []) as VaultSavedTip[]);
+  }, [user]);
+
+  const deleteSavedDrill = useCallback(async (id: string) => {
+    await supabase.from('vault_saved_drills').delete().eq('id', id);
+    await fetchSavedItems();
+  }, [fetchSavedItems]);
+
+  const deleteSavedTip = useCallback(async (id: string) => {
+    await supabase.from('vault_saved_tips').delete().eq('id', id);
+    await fetchSavedItems();
+  }, [fetchSavedItems]);
+
+  // Fetch performance tests
+  const fetchPerformanceTests = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase.from('vault_performance_tests').select('*').eq('user_id', user.id).order('test_date', { ascending: false }).limit(20);
+    setPerformanceTests((data || []).map(t => ({ ...t, results: t.results as Record<string, number>, previous_results: t.previous_results as Record<string, number> | null })));
+  }, [user]);
+
+  const savePerformanceTest = useCallback(async (testType: string, results: Record<string, number>) => {
+    if (!user) return { success: false };
+    const lastTest = performanceTests.find(t => t.test_type === testType);
+    const { error } = await supabase.from('vault_performance_tests').insert({
+      user_id: user.id, test_type: testType, sport: 'baseball', module: testType, results, previous_results: lastTest?.results || null,
+    });
+    if (!error) await fetchPerformanceTests();
+    return { success: !error };
+  }, [user, performanceTests, fetchPerformanceTests]);
+
+  // Fetch progress photos
+  const fetchProgressPhotos = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase.from('vault_progress_photos').select('*').eq('user_id', user.id).order('photo_date', { ascending: false }).limit(20);
+    setProgressPhotos((data || []).map(p => ({ ...p, photo_urls: (p.photo_urls as string[]) || [] })));
+  }, [user]);
+
+  const saveProgressPhoto = useCallback(async (photoData: { photos: File[]; weight_lbs: number | null; body_fat_percent: number | null; arm_measurement: number | null; chest_measurement: number | null; waist_measurement: number | null; leg_measurement: number | null; notes: string | null; }) => {
+    if (!user) return { success: false };
+    const photoUrls: string[] = [];
+    for (const file of photoData.photos) {
+      const path = `${user.id}/progress/${Date.now()}_${file.name}`;
+      const { error } = await supabase.storage.from('vault-photos').upload(path, file);
+      if (!error) photoUrls.push(path);
+    }
+    const { error } = await supabase.from('vault_progress_photos').insert({
+      user_id: user.id, photo_urls: photoUrls, weight_lbs: photoData.weight_lbs, body_fat_percent: photoData.body_fat_percent,
+      arm_measurement: photoData.arm_measurement, chest_measurement: photoData.chest_measurement, waist_measurement: photoData.waist_measurement,
+      leg_measurement: photoData.leg_measurement, notes: photoData.notes,
+    });
+    if (!error) await fetchProgressPhotos();
+    return { success: !error };
+  }, [user, fetchProgressPhotos]);
+
+  // Fetch scout grades
+  const fetchScoutGrades = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase.from('vault_scout_grades').select('*').eq('user_id', user.id).order('graded_at', { ascending: false }).limit(10);
+    setScoutGrades((data || []) as VaultScoutGrade[]);
+  }, [user]);
+
+  const saveScoutGrade = useCallback(async (gradeData: { hitting_grade: number | null; power_grade: number | null; speed_grade: number | null; defense_grade: number | null; throwing_grade: number | null; leadership_grade: number | null; self_efficacy_grade: number | null; notes: string | null; }) => {
+    if (!user) return { success: false };
+    const nextPrompt = new Date(); nextPrompt.setDate(nextPrompt.getDate() + 14);
+    const { error } = await supabase.from('vault_scout_grades').insert({
+      user_id: user.id, ...gradeData, next_prompt_date: nextPrompt.toISOString(),
+    });
+    if (!error) await fetchScoutGrades();
+    return { success: !error };
+  }, [user, fetchScoutGrades]);
+
+  // Fetch recaps
+  const fetchRecaps = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase.from('vault_recaps').select('*').eq('user_id', user.id).order('generated_at', { ascending: false }).limit(10);
+    setRecaps((data || []).map(r => ({ ...r, recap_data: r.recap_data as Record<string, unknown> })));
+  }, [user]);
+
+  const generateRecap = useCallback(async () => {
+    if (!user) return { success: false };
+    const endDate = new Date(); const startDate = new Date(); startDate.setDate(startDate.getDate() - 42);
+    const { error } = await supabase.from('vault_recaps').insert({
+      user_id: user.id, recap_period_start: startDate.toISOString().split('T')[0], recap_period_end: endDate.toISOString().split('T')[0],
+      recap_data: { summary: 'Your 6-week training recap', highlights: ['Consistent training'], focus_areas: ['Continue progressing'] },
+    });
+    if (!error) await fetchRecaps();
+    return { success: !error };
+  }, [user, fetchRecaps]);
+
+  // Fetch history for date
+  const fetchHistoryForDate = useCallback(async (date: string) => {
+    if (!user) return { date, quizzes: [], notes: [], workouts: [], nutritionLogged: false };
+    const [{ data: quizzes }, { data: notes }, { data: workouts }, { data: nutrition }] = await Promise.all([
+      supabase.from('vault_focus_quizzes').select('*').eq('user_id', user.id).eq('entry_date', date),
+      supabase.from('vault_free_notes').select('*').eq('user_id', user.id).eq('entry_date', date),
+      supabase.from('vault_workout_notes').select('*').eq('user_id', user.id).eq('entry_date', date),
+      supabase.from('vault_nutrition_logs').select('id').eq('user_id', user.id).eq('entry_date', date).maybeSingle(),
+    ]);
+    return {
+      date,
+      quizzes: (quizzes || []) as VaultFocusQuiz[],
+      notes: (notes || []) as VaultFreeNote[],
+      workouts: (workouts || []).map(w => ({ ...w, weight_increases: (w.weight_increases || []) as unknown as WeightIncrease[] })) as VaultWorkoutNote[],
+      nutritionLogged: !!nutrition,
+    };
+  }, [user]);
+
   // Load initial data
   useEffect(() => {
     const loadData = async () => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
+      if (!user) { setLoading(false); return; }
       setLoading(true);
       await Promise.all([
-        fetchStreak(),
-        fetchTodaysQuizzes(),
-        fetchTodaysNotes(),
-        fetchWorkoutNotes(),
+        fetchStreak(), fetchTodaysQuizzes(), fetchTodaysNotes(), fetchWorkoutNotes(),
+        fetchNutritionLog(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchRecaps(),
       ]);
       setLoading(false);
     };
-
     loadData();
-  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes]);
+  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLog, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps]);
 
   return {
-    loading,
-    streak,
-    todaysQuizzes,
-    todaysNotes,
-    workoutNotes,
-    saveFocusQuiz,
-    saveFreeNote,
-    saveWorkoutNote,
-    updateStreak,
-    checkVaultAccess,
-    fetchWorkoutNotes,
+    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLog, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData,
+    saveFocusQuiz, saveFreeNote, saveWorkoutNote, updateStreak, checkVaultAccess, fetchWorkoutNotes,
+    saveNutritionLog, deleteSavedDrill, deleteSavedTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
   };
 }
