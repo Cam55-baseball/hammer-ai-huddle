@@ -3842,7 +3842,42 @@
       "noTests": "Noch keine Tests aufgezeichnet",
       "testHistory": "Testverlauf",
       "saved": "Leistungstest gespeichert!",
-      "error": "Leistungstest speichern fehlgeschlagen"
+      "error": "Speichern fehlgeschlagen",
+      "newTest": "Neuen Test Aufnehmen",
+      "recentTests": "Letzte Tests",
+      "save": "Ergebnisse Speichern",
+      "metrics": {
+        "bat_speed": "Schlägergeschwindigkeit",
+        "exit_velocity": "Abschlaggeschwindigkeit",
+        "launch_angle": "Abflugwinkel",
+        "sprint_60": "60-Yard Sprint",
+        "vertical_jump": "Vertikalsprung",
+        "velocity": "Geschwindigkeit",
+        "spin_rate": "Drehrate",
+        "command_score": "Kontrollwert",
+        "arm_health": "Armgesundheit",
+        "accuracy_score": "Genauigkeitswert",
+        "pop_time": "Reaktionszeit",
+        "arm_speed": "Armgeschwindigkeit"
+      }
+    },
+    "progressPhotos": {
+      "title": "Fortschrittsfotos",
+      "description": "Verfolge deine Körperzusammensetzung über Zeit",
+      "weight": "Gewicht (lbs)",
+      "bodyFat": "Körperfett %",
+      "arm": "Arm (Zoll)",
+      "chest": "Brust (Zoll)",
+      "waist": "Taille (Zoll)",
+      "leg": "Bein (Zoll)",
+      "notes": "Notizen",
+      "notesPlaceholder": "Notizen zu deinem Fortschritt...",
+      "save": "Fortschritt Speichern",
+      "saved": "Fortschrittseintrag gespeichert!",
+      "upload": "Fotos Hochladen",
+      "uploadHint": "Max 4 Fotos, je 10MB",
+      "invalidFiles": "Einige Dateien ungültig",
+      "recent": "Letzte Einträge"
     },
     "photos": {
       "title": "Fortschrittsfotos",
@@ -3858,7 +3893,7 @@
       "noPhotos": "Noch keine Fortschrittsfotos",
       "save": "Fortschrittseintrag Speichern",
       "saved": "Fortschrittseintrag gespeichert!",
-      "error": "Fortschrittseintrag speichern fehlgeschlagen",
+      "error": "Speichern fehlgeschlagen",
       "viewPhoto": "Foto Ansehen",
       "recentEntries": "Neueste Einträge"
     },
@@ -3872,6 +3907,10 @@
       "fielding": "Feldarbeit",
       "leadership": "Führung",
       "selfEfficacy": "Selbstwirksamkeit",
+      "selfEvaluate": "Bewerte Dich (20-80 Skala)",
+      "notes": "Notizen",
+      "notesPlaceholder": "Gedanken zu deiner Selbstbewertung...",
+      "nextGradeIn": "Nächste Bewertung in {{days}} Tagen",
       "scale20": "20 - Weit Unter dem Durchschnitt",
       "scale40": "40 - Unter dem Durchschnitt",
       "scale50": "50 - Durchschnitt",
@@ -3879,11 +3918,27 @@
       "scale80": "80 - Elite",
       "save": "Bewertungen Speichern",
       "saved": "Bewertungen gespeichert!",
-      "error": "Bewertungen speichern fehlgeschlagen",
+      "error": "Speichern fehlgeschlagen",
       "history": "Bewertungsverlauf",
-      "noGrades": "Noch keine Bewertungen aufgezeichnet",
+      "noGrades": "Noch keine Bewertungen",
       "nextGrading": "Nächste Bewertung verfügbar in",
-      "daysRemaining": "Tagen"
+      "daysRemaining": "Tagen",
+      "categories": {
+        "hitting": "Schlagen",
+        "power": "Kraft",
+        "speed": "Geschwindigkeit",
+        "defense": "Verteidigung",
+        "throwing": "Werfen",
+        "leadership": "Führung",
+        "self_efficacy": "Selbstwirksamkeit"
+      },
+      "levels": {
+        "elite": "Elite",
+        "plus": "Überdurchschnittlich",
+        "average": "Durchschnitt",
+        "below": "Unter Durchschn.",
+        "poor": "Schwach"
+      }
     },
     "recap": {
       "title": "6-Wochen Rückblick",

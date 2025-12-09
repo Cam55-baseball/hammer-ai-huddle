@@ -3842,7 +3842,42 @@
       "noTests": "Aucun test enregistré encore",
       "testHistory": "Historique des Tests",
       "saved": "Test de performance sauvegardé!",
-      "error": "Échec de sauvegarde du test de performance"
+      "error": "Échec de sauvegarde du test",
+      "newTest": "Enregistrer Nouveau Test",
+      "recentTests": "Tests Récents",
+      "save": "Sauvegarder Résultats",
+      "metrics": {
+        "bat_speed": "Vitesse de Batte",
+        "exit_velocity": "Vitesse de Sortie",
+        "launch_angle": "Angle de Lancement",
+        "sprint_60": "Sprint 60 Yards",
+        "vertical_jump": "Saut Vertical",
+        "velocity": "Vélocité",
+        "spin_rate": "Taux de Rotation",
+        "command_score": "Score de Contrôle",
+        "arm_health": "Santé du Bras",
+        "accuracy_score": "Score de Précision",
+        "pop_time": "Temps de Réaction",
+        "arm_speed": "Vitesse du Bras"
+      }
+    },
+    "progressPhotos": {
+      "title": "Photos de Progrès",
+      "description": "Suivez votre composition corporelle au fil du temps",
+      "weight": "Poids (lbs)",
+      "bodyFat": "Graisse Corporelle %",
+      "arm": "Bras (po)",
+      "chest": "Poitrine (po)",
+      "waist": "Taille (po)",
+      "leg": "Jambe (po)",
+      "notes": "Notes",
+      "notesPlaceholder": "Notes sur votre progrès...",
+      "save": "Sauvegarder Entrée",
+      "saved": "Entrée de progrès sauvegardée!",
+      "upload": "Télécharger Photos",
+      "uploadHint": "Max 4 photos, 10Mo chacune",
+      "invalidFiles": "Certains fichiers non valides",
+      "recent": "Entrées Récentes"
     },
     "photos": {
       "title": "Photos de Progrès",
@@ -3858,7 +3893,7 @@
       "noPhotos": "Aucune photo de progrès encore",
       "save": "Sauvegarder Entrée de Progrès",
       "saved": "Entrée de progrès sauvegardée!",
-      "error": "Échec de sauvegarde de l'entrée de progrès",
+      "error": "Échec de sauvegarde de l'entrée",
       "viewPhoto": "Voir Photo",
       "recentEntries": "Entrées Récentes"
     },
@@ -3872,6 +3907,10 @@
       "fielding": "Défense",
       "leadership": "Leadership",
       "selfEfficacy": "Auto-Efficacité",
+      "selfEvaluate": "Évaluez-vous (Échelle 20-80)",
+      "notes": "Notes",
+      "notesPlaceholder": "Réflexions sur votre auto-évaluation...",
+      "nextGradeIn": "Prochaine évaluation dans {{days}} jours",
       "scale20": "20 - Bien En Dessous de la Moyenne",
       "scale40": "40 - En Dessous de la Moyenne",
       "scale50": "50 - Moyenne",
@@ -3879,11 +3918,27 @@
       "scale80": "80 - Élite",
       "save": "Sauvegarder Notes",
       "saved": "Notes sauvegardées!",
-      "error": "Échec de sauvegarde des notes",
+      "error": "Échec de sauvegarde",
       "history": "Historique des Notes",
-      "noGrades": "Aucune note enregistrée encore",
+      "noGrades": "Aucune note enregistrée",
       "nextGrading": "Prochaine évaluation disponible dans",
-      "daysRemaining": "jours"
+      "daysRemaining": "jours",
+      "categories": {
+        "hitting": "Frappe",
+        "power": "Puissance",
+        "speed": "Vitesse",
+        "defense": "Défense",
+        "throwing": "Lancer",
+        "leadership": "Leadership",
+        "self_efficacy": "Auto-Efficacité"
+      },
+      "levels": {
+        "elite": "Élite",
+        "plus": "Supérieur",
+        "average": "Moyen",
+        "below": "Sous Moy.",
+        "poor": "Faible"
+      }
     },
     "recap": {
       "title": "Récapitulatif 6 Semaines",

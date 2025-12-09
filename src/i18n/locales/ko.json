@@ -3073,7 +3073,42 @@
       "history": "테스트 기록",
       "previous": "이전",
       "improvement": "향상",
-      "decline": "하락"
+      "decline": "하락",
+      "newTest": "새 테스트 기록",
+      "recentTests": "최근 테스트",
+      "save": "테스트 결과 저장",
+      "metrics": {
+        "bat_speed": "배트 속도",
+        "exit_velocity": "타구 속도",
+        "launch_angle": "발사각",
+        "sprint_60": "60야드 스프린트",
+        "vertical_jump": "수직 점프",
+        "velocity": "속도",
+        "spin_rate": "회전수",
+        "command_score": "제구력 점수",
+        "arm_health": "팔 건강",
+        "accuracy_score": "정확도 점수",
+        "pop_time": "팝 타임",
+        "arm_speed": "팔 속도"
+      }
+    },
+    "progressPhotos": {
+      "title": "진행 사진",
+      "description": "시간에 따른 신체 구성 추적",
+      "weight": "체중 (lbs)",
+      "bodyFat": "체지방률 %",
+      "arm": "팔 (인치)",
+      "chest": "가슴 (인치)",
+      "waist": "허리 (인치)",
+      "leg": "다리 (인치)",
+      "notes": "메모",
+      "notesPlaceholder": "진행 상황에 대한 메모...",
+      "save": "진행 상황 저장",
+      "saved": "진행 기록이 저장되었습니다!",
+      "upload": "사진 업로드",
+      "uploadHint": "최대 4장, 각 10MB",
+      "invalidFiles": "일부 파일이 유효하지 않습니다",
+      "recent": "최근 항목"
     },
     "photos": {
       "title": "진행 사진",
@@ -3103,6 +3138,10 @@
       "fielding": "수비",
       "leadership": "리더십",
       "selfEfficacy": "자기효능감",
+      "selfEvaluate": "자기 평가 (20-80 척도)",
+      "notes": "메모",
+      "notesPlaceholder": "자기 평가에 대한 생각...",
+      "nextGradeIn": "다음 평가까지 {{days}}일",
       "scale20": "20 - 평균 이하",
       "scale40": "40 - 약간 평균 이하",
       "scale50": "50 - 평균",
@@ -3112,7 +3151,24 @@
       "saved": "스카우트 평가가 저장되었습니다!",
       "error": "평가 저장 실패",
       "noGrades": "평가 기록이 없습니다",
-      "lastGraded": "마지막 평가"
+      "lastGraded": "마지막 평가",
+      "history": "평가 기록",
+      "categories": {
+        "hitting": "타격",
+        "power": "파워",
+        "speed": "스피드",
+        "defense": "수비",
+        "throwing": "송구",
+        "leadership": "리더십",
+        "self_efficacy": "자기효능감"
+      },
+      "levels": {
+        "elite": "엘리트",
+        "plus": "우수",
+        "average": "평균",
+        "below": "평균 이하",
+        "poor": "낮음"
+      }
     },
     "recap": {
       "title": "6주 요약",

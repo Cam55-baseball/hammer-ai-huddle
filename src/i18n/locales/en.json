@@ -4019,7 +4019,42 @@
       "noTests": "No tests recorded yet",
       "testHistory": "Test History",
       "saved": "Performance test saved!",
-      "error": "Failed to save performance test"
+      "error": "Failed to save performance test",
+      "newTest": "Record New Test",
+      "recentTests": "Recent Tests",
+      "save": "Save Test Results",
+      "metrics": {
+        "bat_speed": "Bat Speed",
+        "exit_velocity": "Exit Velocity",
+        "launch_angle": "Launch Angle",
+        "sprint_60": "60-Yard Sprint",
+        "vertical_jump": "Vertical Jump",
+        "velocity": "Velocity",
+        "spin_rate": "Spin Rate",
+        "command_score": "Command Score",
+        "arm_health": "Arm Health",
+        "accuracy_score": "Accuracy Score",
+        "pop_time": "Pop Time",
+        "arm_speed": "Arm Speed"
+      }
+    },
+    "progressPhotos": {
+      "title": "Progress Photos",
+      "description": "Track your body composition over time",
+      "weight": "Weight (lbs)",
+      "bodyFat": "Body Fat %",
+      "arm": "Arm (in)",
+      "chest": "Chest (in)",
+      "waist": "Waist (in)",
+      "leg": "Leg (in)",
+      "notes": "Notes",
+      "notesPlaceholder": "Any notes about your progress...",
+      "save": "Save Progress Entry",
+      "saved": "Progress entry saved!",
+      "upload": "Upload Photos",
+      "uploadHint": "Max 4 photos, 10MB each",
+      "invalidFiles": "Some files were invalid",
+      "recent": "Recent Entries"
     },
     "photos": {
       "title": "Progress Photos",
@@ -4049,6 +4084,10 @@
       "fielding": "Fielding",
       "leadership": "Leadership",
       "selfEfficacy": "Self-Efficacy",
+      "selfEvaluate": "Evaluate Yourself (20-80 Scale)",
+      "notes": "Notes",
+      "notesPlaceholder": "Any thoughts on your self-evaluation...",
+      "nextGradeIn": "Next grading available in {{days}} days",
       "scale20": "20 - Well Below Average",
       "scale40": "40 - Below Average",
       "scale50": "50 - Average",
@@ -4060,7 +4099,23 @@
       "history": "Grade History",
       "noGrades": "No grades recorded yet",
       "nextGrading": "Next grading available in",
-      "daysRemaining": "days"
+      "daysRemaining": "days",
+      "categories": {
+        "hitting": "Hitting",
+        "power": "Power",
+        "speed": "Speed",
+        "defense": "Defense",
+        "throwing": "Throwing",
+        "leadership": "Leadership",
+        "self_efficacy": "Self-Efficacy"
+      },
+      "levels": {
+        "elite": "Elite",
+        "plus": "Plus",
+        "average": "Average",
+        "below": "Below Avg",
+        "poor": "Poor"
+      }
     },
     "recap": {
       "title": "6-Week Recap",

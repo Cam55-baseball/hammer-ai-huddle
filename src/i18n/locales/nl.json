@@ -3086,7 +3086,42 @@
       "history": "Testgeschiedenis",
       "previous": "Vorige",
       "improvement": "Verbetering",
-      "decline": "Achteruitgang"
+      "decline": "Achteruitgang",
+      "newTest": "Nieuwe Test Vastleggen",
+      "recentTests": "Recente Tests",
+      "save": "Resultaten Opslaan",
+      "metrics": {
+        "bat_speed": "Knuppelsnelheid",
+        "exit_velocity": "Slagsnelheid",
+        "launch_angle": "Lanceerhoek",
+        "sprint_60": "60-Yard Sprint",
+        "vertical_jump": "Verticale Sprong",
+        "velocity": "Snelheid",
+        "spin_rate": "Draaisnelheid",
+        "command_score": "Controlescore",
+        "arm_health": "Armgezondheid",
+        "accuracy_score": "Nauwkeurigheidsscore",
+        "pop_time": "Reactietijd",
+        "arm_speed": "Armsnelheid"
+      }
+    },
+    "progressPhotos": {
+      "title": "Voortgangsfoto's",
+      "description": "Volg je lichaamssamenstelling over tijd",
+      "weight": "Gewicht (lbs)",
+      "bodyFat": "Vetpercentage %",
+      "arm": "Arm (inch)",
+      "chest": "Borst (inch)",
+      "waist": "Taille (inch)",
+      "leg": "Been (inch)",
+      "notes": "Notities",
+      "notesPlaceholder": "Notities over je voortgang...",
+      "save": "Voortgang Opslaan",
+      "saved": "Voortgangsvermelding opgeslagen!",
+      "upload": "Foto's Uploaden",
+      "uploadHint": "Max 4 foto's, elk 10MB",
+      "invalidFiles": "Sommige bestanden ongeldig",
+      "recent": "Recente Vermeldingen"
     },
     "photos": {
       "title": "Voortgangsfoto's",
@@ -3116,6 +3151,10 @@
       "fielding": "Verdediging",
       "leadership": "Leiderschap",
       "selfEfficacy": "Zelfvertrouwen",
+      "selfEvaluate": "Beoordeel Jezelf (20-80 Schaal)",
+      "notes": "Notities",
+      "notesPlaceholder": "Gedachten over je zelfbeoordeling...",
+      "nextGradeIn": "Volgende beoordeling over {{days}} dagen",
       "scale20": "20 - Ver onder gemiddeld",
       "scale40": "40 - Onder gemiddeld",
       "scale50": "50 - Gemiddeld",
@@ -3125,7 +3164,24 @@
       "saved": "Scout beoordeling opgeslagen!",
       "error": "Opslaan beoordeling mislukt",
       "noGrades": "Nog geen beoordelingsgeschiedenis",
-      "lastGraded": "Laatst beoordeeld"
+      "lastGraded": "Laatst beoordeeld",
+      "history": "Beoordelingsgeschiedenis",
+      "categories": {
+        "hitting": "Slagvaardigheid",
+        "power": "Kracht",
+        "speed": "Snelheid",
+        "defense": "Verdediging",
+        "throwing": "Werpen",
+        "leadership": "Leiderschap",
+        "self_efficacy": "Zelfvertrouwen"
+      },
+      "levels": {
+        "elite": "Elite",
+        "plus": "Bovengemiddeld",
+        "average": "Gemiddeld",
+        "below": "Ondergemiddeld",
+        "poor": "Zwak"
+      }
     },
     "recap": {
       "title": "6-weken samenvatting",

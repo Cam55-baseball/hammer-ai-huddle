@@ -3116,7 +3116,42 @@
       "history": "テスト履歴",
       "previous": "前回",
       "improvement": "改善",
-      "decline": "低下"
+      "decline": "低下",
+      "newTest": "新しいテストを記録",
+      "recentTests": "最近のテスト",
+      "save": "テスト結果を保存",
+      "metrics": {
+        "bat_speed": "バット速度",
+        "exit_velocity": "打球速度",
+        "launch_angle": "打球角度",
+        "sprint_60": "60ヤードスプリント",
+        "vertical_jump": "垂直跳び",
+        "velocity": "速度",
+        "spin_rate": "回転数",
+        "command_score": "コントロールスコア",
+        "arm_health": "腕の健康",
+        "accuracy_score": "精度スコア",
+        "pop_time": "ポップタイム",
+        "arm_speed": "腕の速度"
+      }
+    },
+    "progressPhotos": {
+      "title": "経過写真",
+      "description": "時間の経過とともに体組成を追跡",
+      "weight": "体重 (lbs)",
+      "bodyFat": "体脂肪率 %",
+      "arm": "腕 (インチ)",
+      "chest": "胸 (インチ)",
+      "waist": "ウエスト (インチ)",
+      "leg": "脚 (インチ)",
+      "notes": "メモ",
+      "notesPlaceholder": "進捗についてのメモ...",
+      "save": "進捗を保存",
+      "saved": "進捗が保存されました！",
+      "upload": "写真をアップロード",
+      "uploadHint": "最大4枚、各10MB",
+      "invalidFiles": "無効なファイルがあります",
+      "recent": "最近のエントリー"
     },
     "photos": {
       "title": "経過写真",
@@ -3146,6 +3181,10 @@
       "fielding": "守備",
       "leadership": "リーダーシップ",
       "selfEfficacy": "自己効力感",
+      "selfEvaluate": "自己評価 (20-80スケール)",
+      "notes": "メモ",
+      "notesPlaceholder": "自己評価についての考え...",
+      "nextGradeIn": "次の評価まで{{days}}日",
       "scale20": "20 - 平均以下",
       "scale40": "40 - やや平均以下",
       "scale50": "50 - 平均",
@@ -3155,7 +3194,24 @@
       "saved": "スカウト評価を保存しました！",
       "error": "評価の保存に失敗しました",
       "noGrades": "評価履歴はまだありません",
-      "lastGraded": "前回の評価"
+      "lastGraded": "前回の評価",
+      "history": "評価履歴",
+      "categories": {
+        "hitting": "打撃",
+        "power": "パワー",
+        "speed": "スピード",
+        "defense": "守備",
+        "throwing": "送球",
+        "leadership": "リーダーシップ",
+        "self_efficacy": "自己効力感"
+      },
+      "levels": {
+        "elite": "エリート",
+        "plus": "プラス",
+        "average": "平均",
+        "below": "平均以下",
+        "poor": "低い"
+      }
     },
     "recap": {
       "title": "6週間レキャップ",
