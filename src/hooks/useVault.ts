@@ -398,9 +398,9 @@ export function useVault() {
           week_number: weekNumber,
           day_number: dayNumber,
           notes,
-          weight_increases: weightIncreases as unknown as Record<string, unknown>[],
+          weight_increases: JSON.parse(JSON.stringify(weightIncreases)),
           total_weight_lifted: totalWeightLifted,
-        });
+        }]);
 
       if (error) {
         console.error('Error saving workout note:', error);
