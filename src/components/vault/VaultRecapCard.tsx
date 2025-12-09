@@ -103,12 +103,12 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
                       <Sparkles className="h-4 w-4 absolute -top-1 -right-1 text-amber-500 animate-pulse" />
                     </div>
                     <p className="text-sm font-medium">{t('vault.recap.readyToGenerate')}</p>
-                    <p className="text-xs text-muted-foreground">AI-powered insights from your training data</p>
+                    <p className="text-xs text-muted-foreground">{t('vault.recap.aiPoweredInsights')}</p>
                     <Button onClick={handleGenerate} disabled={generating} className="w-full gap-2">
                       {generating ? (
                         <>
                           <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          Analyzing your data...
+                          {t('vault.recap.analyzing')}
                         </>
                       ) : (
                         <>
@@ -181,7 +181,7 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
                             {recap.recap_data.workout_stats?.total_workouts && (
                               <Badge variant="secondary" className="text-xs gap-1">
                                 <Activity className="h-3 w-3" />
-                                {recap.recap_data.workout_stats.total_workouts} workouts
+                                {recap.recap_data.workout_stats.total_workouts} {t('vault.recap.workoutsLabel')}
                               </Badge>
                             )}
                           </div>
@@ -205,7 +205,7 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
               {t('vault.recap.detailTitle')}
               <Badge variant="outline" className="text-xs gap-1 ml-2">
                 <Sparkles className="h-3 w-3" />
-                AI Generated
+                {t('vault.recap.aiGenerated')}
               </Badge>
             </DialogTitle>
             <DialogDescription>
@@ -226,12 +226,12 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
                     <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
                       <Dumbbell className="h-5 w-5 mx-auto mb-1 text-orange-500" />
                       <p className="text-lg font-bold">{selectedRecap.recap_data.workout_stats.total_workouts}</p>
-                      <p className="text-xs text-muted-foreground">Workouts</p>
+                      <p className="text-xs text-muted-foreground">{t('vault.recap.workoutsLabel')}</p>
                     </div>
                     <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20 text-center">
                       <Activity className="h-5 w-5 mx-auto mb-1 text-violet-500" />
                       <p className="text-lg font-bold">{selectedRecap.total_weight_lifted?.toLocaleString() || 0}</p>
-                      <p className="text-xs text-muted-foreground">Total lbs</p>
+                      <p className="text-xs text-muted-foreground">{t('vault.recap.totalLbs')}</p>
                     </div>
                   </>
                 )}
@@ -248,14 +248,14 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
                     <p className="text-lg font-bold">
                       {selectedRecap.strength_change_percent > 0 ? '+' : ''}{selectedRecap.strength_change_percent}%
                     </p>
-                    <p className="text-xs text-muted-foreground">Strength</p>
+                    <p className="text-xs text-muted-foreground">{t('vault.recap.strength')}</p>
                   </div>
                 )}
                 {selectedRecap.recap_data.mental_stats && selectedRecap.recap_data.mental_stats.quiz_count > 0 && (
                   <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-center">
                     <Brain className="h-5 w-5 mx-auto mb-1 text-cyan-500" />
                     <p className="text-lg font-bold">{selectedRecap.recap_data.mental_stats.avg_mental.toFixed(1)}/5</p>
-                    <p className="text-xs text-muted-foreground">Avg Mental</p>
+                    <p className="text-xs text-muted-foreground">{t('vault.recap.avgMental')}</p>
                   </div>
                 )}
               </div>
@@ -294,7 +294,7 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-green-500" />
-                    Improvements
+                    {t('vault.recap.improvements')}
                   </h4>
                   <div className="space-y-2">
                     {selectedRecap.recap_data.improvements.map((imp, i) => (
@@ -330,7 +330,7 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <Lightbulb className="h-4 w-4 text-primary" />
-                    Recommendations for Next 6 Weeks
+                    {t('vault.recap.recommendations')}
                   </h4>
                   <div className="space-y-2">
                     {selectedRecap.recap_data.recommendations.map((rec, i) => (
@@ -346,24 +346,24 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
               {/* Additional Stats */}
               {(selectedRecap.recap_data.mental_stats?.quiz_count || selectedRecap.recap_data.nutrition_stats?.logs_count) && (
                 <div className="pt-3 border-t border-border">
-                  <h4 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Additional Data</h4>
+                  <h4 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t('vault.recap.additionalData')}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedRecap.recap_data.mental_stats && selectedRecap.recap_data.mental_stats.quiz_count > 0 && (
                       <Badge variant="secondary" className="text-xs gap-1">
                         <Heart className="h-3 w-3" />
-                        {selectedRecap.recap_data.mental_stats.quiz_count} focus quizzes
+                        {selectedRecap.recap_data.mental_stats.quiz_count} {t('vault.recap.focusQuizzes')}
                       </Badge>
                     )}
                     {selectedRecap.recap_data.nutrition_stats && selectedRecap.recap_data.nutrition_stats.logs_count > 0 && (
                       <Badge variant="secondary" className="text-xs gap-1">
                         <Activity className="h-3 w-3" />
-                        {selectedRecap.recap_data.nutrition_stats.logs_count} nutrition logs
+                        {selectedRecap.recap_data.nutrition_stats.logs_count} {t('vault.recap.nutritionLogs')}
                       </Badge>
                     )}
                     {selectedRecap.recap_data.workout_stats?.weight_increases && selectedRecap.recap_data.workout_stats.weight_increases > 0 && (
                       <Badge variant="secondary" className="text-xs gap-1 text-green-600">
                         <TrendingUp className="h-3 w-3" />
-                        {selectedRecap.recap_data.workout_stats.weight_increases} weight increases
+                        {selectedRecap.recap_data.workout_stats.weight_increases} {t('vault.recap.weightIncreases')}
                       </Badge>
                     )}
                   </div>
