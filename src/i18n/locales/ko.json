@@ -920,6 +920,7 @@
     "dailyTip": "오늘의 건강 팁",
     "newTip": "새 팁 받기",
     "tipsCollected": "수집한 팁",
+    "percentExplored": "{{percent}}% 팁 탐색 완료",
     "daysToUnlock": "{{days}}일 후 잠금 해제",
     "streak": "연속",
     "currentStreak": "현재 연속",
