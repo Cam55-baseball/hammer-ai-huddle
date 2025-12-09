@@ -967,6 +967,7 @@
     "best": "Beste:",
     "tipsCollectedCount": "Tipps gesammelt",
     "ofTipsExplored": "der Tipps erkundet",
+    "tipsExplored": "{{percent}}% von {{total}} Tipps erkundet",
     "milestoneBadges": "Meilenstein-Abzeichen",
     "dailyLimitReached": "Tageslimit Erreicht",
     "noTipsRemaining": "0 Tipps verbleibend",

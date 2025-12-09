@@ -938,6 +938,7 @@
     "best": "最高:",
     "tipsCollectedCount": "収集したヒント",
     "ofTipsExplored": "探索済みヒント",
+    "tipsExplored": "{{total}}件中{{percent}}%のヒントを探索済み",
     "milestoneBadges": "マイルストーンバッジ",
     "dailyLimitReached": "1日の制限に達しました",
     "noTipsRemaining": "残り0ヒント",

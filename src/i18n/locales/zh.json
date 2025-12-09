@@ -938,6 +938,7 @@
     "best": "最佳:",
     "tipsCollectedCount": "已收集提示",
     "ofTipsExplored": "已探索提示",
+    "tipsExplored": "已探索 {{total}} 个提示中的 {{percent}}%",
     "milestoneBadges": "里程碑徽章",
     "dailyLimitReached": "已达每日限制",
     "noTipsRemaining": "剩余0条提示",
