@@ -871,6 +871,7 @@
     "dailyTip": "Consejo de Salud Diario",
     "newTip": "Nuevo Consejo",
     "tipsCollected": "Consejos Recolectados",
+    "daysToUnlock": "{{days}} días para desbloquear",
     "streak": "Racha",
     "currentStreak": "Racha Actual",
     "longestStreak": "Racha Más Larga",

@@ -912,6 +912,7 @@
     "dailyTip": "每日健康提示",
     "newTip": "新提示",
     "tipsCollected": "已收集提示",
+    "daysToUnlock": "{{days}}天后解锁",
     "streak": "连续",
     "currentStreak": "当前连续",
     "longestStreak": "最长连续",

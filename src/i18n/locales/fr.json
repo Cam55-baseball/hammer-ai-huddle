@@ -941,6 +941,7 @@
     "dailyTip": "Conseil Santé du Jour",
     "newTip": "Nouveau Conseil",
     "tipsCollected": "Conseils Collectés",
+    "daysToUnlock": "{{days}} jours pour débloquer",
     "streak": "Série",
     "currentStreak": "Série Actuelle",
     "longestStreak": "Plus Longue Série",
