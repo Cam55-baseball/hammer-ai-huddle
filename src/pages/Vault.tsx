@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { ConfettiEffect } from '@/components/bounce-back-bay/ConfettiEffect';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -77,6 +78,14 @@ export default function Vault() {
   const [selectedQuizType, setSelectedQuizType] = useState<'pre_lift' | 'night' | 'morning'>('pre_lift');
   const [freeNote, setFreeNote] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  // Check if all 3 daily quizzes are completed
+  const allQuizzesCompleted = useCallback(() => {
+    return todaysQuizzes.some(q => q.quiz_type === 'morning') &&
+           todaysQuizzes.some(q => q.quiz_type === 'pre_lift') &&
+           todaysQuizzes.some(q => q.quiz_type === 'night');
+  }, [todaysQuizzes]);
 
   // Check access
   useEffect(() => {
@@ -134,9 +143,22 @@ export default function Vault() {
   };
 
   const handleQuizSubmit = async (data: any) => {
+    const quizzesBeforeSave = todaysQuizzes.length;
     const result = await saveFocusQuiz(selectedQuizType, data);
     if (result.success) {
       toast.success(t('vault.quiz.saved'));
+      
+      // Check if this completes all 3 quizzes (was 2 before, now 3)
+      if (quizzesBeforeSave === 2) {
+        setTimeout(() => {
+          setShowConfetti(true);
+          toast.success(t('vault.quiz.allCompleted'), {
+            icon: '🎉',
+            duration: 5000,
+          });
+          setTimeout(() => setShowConfetti(false), 4000);
+        }, 300);
+      }
     } else {
       toast.error(t('vault.quiz.error'));
     }
@@ -210,9 +232,10 @@ export default function Vault() {
 
   // Locked state
   if (!hasAccess) {
-    return (
-      <DashboardLayout>
-        <div className="container mx-auto p-4 sm:p-6 max-w-6xl">
+  return (
+    <DashboardLayout>
+      {showConfetti && <ConfettiEffect particleCount={80} duration={4000} />}
+      <div className="container mx-auto p-4 sm:p-6 max-w-6xl">
           <div className="space-y-6">
             {/* Hero Header */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-background p-6 sm:p-8 border border-primary/20">

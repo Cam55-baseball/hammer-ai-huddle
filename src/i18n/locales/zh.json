@@ -2944,6 +2944,7 @@
       "notStarted": "未开始",
       "saved": "问卷保存成功！",
       "error": "保存问卷失败",
+      "allCompleted": "太棒了！您已完成所有3项每日打卡！",
       "description": "评估你现在的感受",
       "mentalReadiness": "心理准备",
       "emotionalState": "情绪状态",

@@ -3697,6 +3697,7 @@
       "notStarted": "No Iniciado",
       "saved": "¡Quiz guardado exitosamente!",
       "error": "Error al guardar quiz",
+      "allCompleted": "¡Increíble! ¡Has completado los 3 chequeos diarios!",
       "description": "Califica cómo te sientes ahora",
       "mentalReadiness": "Preparación Mental",
       "emotionalState": "Estado Emocional",
