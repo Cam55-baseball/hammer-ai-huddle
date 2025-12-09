@@ -3234,7 +3234,12 @@
       "totalEntries": "총 항목 수",
       "badgesEarned": "획득한 배지",
       "days": "일",
-      "weightLifted": "들어올린 중량"
+      "weightLifted": "들어올린 중량",
+      "sleepTrend": "수면 추이",
+      "hoursSlept": "수면 시간",
+      "sleepQuality": "수면 질",
+      "hours": "시간",
+      "quality": "질"
     },
     "badges": {
       "first_entry": "첫 항목",
@@ -3243,6 +3248,13 @@
       "vault_master": "금고 마스터",
       "reflection_pro": "반성 프로",
       "strength_tracker": "근력 트래커"
+    },
+    "drills": {
+      "save": "Vault에 저장",
+      "saved": "Vault에 저장됨",
+      "alreadySaved": "이미 저장됨",
+      "saveSuccess": "드릴이 Vault에 저장되었습니다!",
+      "saveFailed": "드릴 저장 실패"
     }
   }
 }

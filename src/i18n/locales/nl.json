@@ -3247,7 +3247,12 @@
       "totalEntries": "Totaal invoeren",
       "badgesEarned": "Verdiende badges",
       "days": "dagen",
-      "weightLifted": "Gewicht geheven"
+      "weightLifted": "Gewicht geheven",
+      "sleepTrend": "Slaaptrend",
+      "hoursSlept": "Uren geslapen",
+      "sleepQuality": "Slaapkwaliteit",
+      "hours": "Uren",
+      "quality": "Kwaliteit"
     },
     "badges": {
       "first_entry": "Eerste Entry",
@@ -3256,6 +3261,13 @@
       "vault_master": "Kluis Meester",
       "reflection_pro": "Reflectie Pro",
       "strength_tracker": "Kracht Tracker"
+    },
+    "drills": {
+      "save": "Opslaan in Vault",
+      "saved": "Opgeslagen in Vault",
+      "alreadySaved": "Al opgeslagen",
+      "saveSuccess": "Oefening opgeslagen in je Vault!",
+      "saveFailed": "Oefening opslaan mislukt"
     }
   }
 }

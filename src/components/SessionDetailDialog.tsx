@@ -21,7 +21,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { Upload, X, Download, Play } from 'lucide-react';
+import { Upload, X, Download, Play, Heart } from 'lucide-react';
+import { useVault } from '@/hooks/useVault';
 import { EnhancedVideoPlayer } from '@/components/EnhancedVideoPlayer';
 
 interface SessionDetailDialogProps {
@@ -60,6 +61,38 @@ export function SessionDetailDialog({
     const saved = localStorage.getItem('scorecardDisplayFilter');
     return (saved === 'improvements' || saved === 'regressions') ? saved : 'all';
   });
+  const [savedDrillIds, setSavedDrillIds] = useState<Set<string>>(new Set());
+  const { saveDrill, savedDrills } = useVault();
+
+  // Track which drills are already saved
+  useEffect(() => {
+    if (savedDrills && session.ai_analysis?.drills) {
+      const saved = new Set(
+        savedDrills
+          .filter(d => d.module_origin === session.module && d.sport === session.sport)
+          .map(d => d.drill_name)
+      );
+      setSavedDrillIds(saved);
+    }
+  }, [savedDrills, session.ai_analysis?.drills, session.module, session.sport]);
+
+  const handleSaveDrill = async (drill: any) => {
+    const result = await saveDrill({
+      drill_name: drill.title,
+      drill_description: drill.purpose || null,
+      module_origin: session.module || '',
+      sport: session.sport,
+    });
+
+    if (result.success) {
+      setSavedDrillIds(prev => new Set(prev).add(drill.title));
+      toast.success(t('vault.drills.saveSuccess', 'Drill saved to your Vault!'));
+    } else if (result.error === 'already_saved') {
+      toast.info(t('vault.drills.alreadySaved', 'Already saved'));
+    } else {
+      toast.error(t('vault.drills.saveFailed', 'Failed to save drill'));
+    }
+  };
 
   const handleScorecardToggle = (checked: boolean) => {
     setShowScorecard(checked);
@@ -477,41 +510,58 @@ export function SessionDetailDialog({
                 <div className="space-y-3">
                   <Label>{t('sessionDetail.recommendedDrills')}</Label>
                   <div className="space-y-4">
-                    {aiAnalysis.drills.map((drill: any, index: number) => (
-                      <div key={index} className="border rounded-lg p-4 space-y-3">
-                        <h4 className="font-semibold">{drill.title}</h4>
-                        {drill.purpose && (
-                          <p className="text-sm text-muted-foreground">{drill.purpose}</p>
-                        )}
-                        
-                        {drill.steps && drill.steps.length > 0 && (
-                          <div className="space-y-1">
-                            <Label className="text-xs">{t('sessionDetail.steps')}</Label>
-                            <ol className="list-decimal list-inside text-sm space-y-1">
-                              {drill.steps.map((step: string, i: number) => (
-                                <li key={i}>{step}</li>
-                              ))}
-                            </ol>
+                    {aiAnalysis.drills.map((drill: any, index: number) => {
+                      const isSaved = savedDrillIds.has(drill.title);
+                      return (
+                        <div key={index} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-semibold flex-1">{drill.title}</h4>
+                            {isOwner && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleSaveDrill(drill)}
+                                disabled={isSaved}
+                                className={isSaved ? "text-red-500" : "text-muted-foreground hover:text-red-500"}
+                                title={isSaved ? t('vault.drills.saved', 'Saved to Vault') : t('vault.drills.save', 'Save to Vault')}
+                              >
+                                <Heart className={`h-5 w-5 ${isSaved ? 'fill-current' : ''}`} />
+                              </Button>
+                            )}
                           </div>
-                        )}
-                        
-                        {drill.cues && drill.cues.length > 0 && (
-                          <div className="space-y-1">
-                            <Label className="text-xs">{t('sessionDetail.coachingCues')}</Label>
-                            <ul className="list-disc list-inside text-sm space-y-1">
-                              {drill.cues.map((cue: string, i: number) => (
-                                <li key={i}>{cue}</li>
-                              ))}
-                            </ul>
+                          {drill.purpose && (
+                            <p className="text-sm text-muted-foreground">{drill.purpose}</p>
+                          )}
+                          
+                          {drill.steps && drill.steps.length > 0 && (
+                            <div className="space-y-1">
+                              <Label className="text-xs">{t('sessionDetail.steps')}</Label>
+                              <ol className="list-decimal list-inside text-sm space-y-1">
+                                {drill.steps.map((step: string, i: number) => (
+                                  <li key={i}>{step}</li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
+                          
+                          {drill.cues && drill.cues.length > 0 && (
+                            <div className="space-y-1">
+                              <Label className="text-xs">{t('sessionDetail.coachingCues')}</Label>
+                              <ul className="list-disc list-inside text-sm space-y-1">
+                                {drill.cues.map((cue: string, i: number) => (
+                                  <li key={i}>{cue}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          <div className="flex gap-4 text-xs text-muted-foreground">
+                            {drill.equipment && <span>{t('sessionDetail.equipment')}: {drill.equipment}</span>}
+                            {drill.reps_sets && <span>{t('sessionDetail.repsSets')}: {drill.reps_sets}</span>}
                           </div>
-                        )}
-                        
-                        <div className="flex gap-4 text-xs text-muted-foreground">
-                          {drill.equipment && <span>{t('sessionDetail.equipment')}: {drill.equipment}</span>}
-                          {drill.reps_sets && <span>{t('sessionDetail.repsSets')}: {drill.reps_sets}</span>}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

@@ -3277,7 +3277,12 @@
       "totalEntries": "総エントリー",
       "badgesEarned": "獲得バッジ",
       "days": "日",
-      "weightLifted": "ウェイト"
+      "weightLifted": "ウェイト",
+      "sleepTrend": "睡眠トレンド",
+      "hoursSlept": "睡眠時間",
+      "sleepQuality": "睡眠の質",
+      "hours": "時間",
+      "quality": "質"
     },
     "badges": {
       "first_entry": "初エントリー",
@@ -3286,6 +3291,13 @@
       "vault_master": "ボールトマスター",
       "reflection_pro": "振り返りプロ",
       "strength_tracker": "強度トラッカー"
+    },
+    "drills": {
+      "save": "Vaultに保存",
+      "saved": "Vaultに保存済み",
+      "alreadySaved": "すでに保存済み",
+      "saveSuccess": "ドリルをVaultに保存しました！",
+      "saveFailed": "ドリルの保存に失敗しました"
     }
   }
 }

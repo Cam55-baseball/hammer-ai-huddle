@@ -4002,7 +4002,19 @@
       "totalEntries": "Total des entrées",
       "badgesEarned": "Badges obtenus",
       "days": "jours",
-      "weightLifted": "Poids soulevé"
+      "weightLifted": "Poids soulevé",
+      "sleepTrend": "Tendance sommeil",
+      "hoursSlept": "Heures dormies",
+      "sleepQuality": "Qualité du sommeil",
+      "hours": "Heures",
+      "quality": "Qualité"
+    },
+    "drills": {
+      "save": "Sauvegarder dans Vault",
+      "saved": "Sauvegardé dans Vault",
+      "alreadySaved": "Déjà sauvegardé",
+      "saveSuccess": "Exercice sauvegardé dans votre Vault !",
+      "saveFailed": "Échec de la sauvegarde de l'exercice"
     }
   }
 }
