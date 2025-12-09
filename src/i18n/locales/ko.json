@@ -2960,6 +2960,7 @@
       "notStarted": "시작되지 않음",
       "saved": "퀴즈가 저장되었습니다!",
       "error": "퀴즈 저장 실패",
+      "allCompleted": "대단해요! 3개의 일일 체크인을 모두 완료했습니다!",
       "description": "지금 기분을 평가하세요",
       "mentalReadiness": "정신적 준비",
       "emotionalState": "감정 상태",

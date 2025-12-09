@@ -3896,6 +3896,7 @@
       "notStarted": "Not Started",
       "saved": "Quiz saved successfully!",
       "error": "Failed to save quiz",
+      "allCompleted": "Amazing! You've completed all 3 daily check-ins!",
       "description": "Rate how you feel right now",
       "mentalReadiness": "Mental Readiness",
       "emotionalState": "Emotional State",
