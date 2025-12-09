@@ -1058,7 +1058,9 @@
     "trainingUnknown": "알 수 없음",
     "precipitationChance": "강수 확률",
     "failedToLoadWeather": "날씨 데이터 로딩 실패",
-    "noConditions": "분석할 특정 조건 없음"
+    "noConditions": "분석할 특정 조건 없음",
+    "sunrise": "일출",
+    "sunset": "일몰"
   },
   "scout": {
     "dashboard": "스카우트 대시보드",

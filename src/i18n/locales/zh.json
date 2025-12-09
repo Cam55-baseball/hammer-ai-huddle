@@ -1059,7 +1059,9 @@
     "trainingUnknown": "未知",
     "precipitationChance": "降水概率",
     "failedToLoadWeather": "加载天气数据失败",
-    "noConditions": "没有特定条件可分析"
+    "noConditions": "没有特定条件可分析",
+    "sunrise": "日出",
+    "sunset": "日落"
   },
   "scout": {
     "dashboard": "球探仪表板",

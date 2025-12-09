@@ -1088,7 +1088,9 @@
     "trainingUnknown": "Unbekannt",
     "precipitationChance": "Niederschlagswahrscheinlichkeit",
     "failedToLoadWeather": "Laden der Wetterdaten fehlgeschlagen",
-    "noConditions": "Keine spezifischen Bedingungen zu analysieren"
+    "noConditions": "Keine spezifischen Bedingungen zu analysieren",
+    "sunrise": "Sonnenaufgang",
+    "sunset": "Sonnenuntergang"
   },
   "scout": {
     "dashboard": "Scout-Dashboard",

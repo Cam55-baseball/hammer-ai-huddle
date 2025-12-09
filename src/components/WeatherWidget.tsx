@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap } from "lucide-react";
+import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap, Sunrise, Sunset } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -49,6 +49,8 @@ interface WeatherData {
   windDirection: string;
   visibility: number;
   uvIndex: number;
+  sunrise?: string;
+  sunset?: string;
   sportAnalysis?: SportAnalysis;
   dailyForecast?: DailyForecast[];
   drillRecommendations?: DrillRecommendation[];
@@ -395,6 +397,40 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Sunrise Card */}
+              {weather.sunrise && (
+                <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-amber-100 text-amber-600 group-hover:scale-110 transition-transform">
+                        <Sunrise className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.sunrise')}</p>
+                        <p className="text-lg font-bold">{weather.sunrise}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Sunset Card */}
+              {weather.sunset && (
+                <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-600 group-hover:scale-110 transition-transform">
+                        <Sunset className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.sunset')}</p>
+                        <p className="text-lg font-bold">{weather.sunset}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
 

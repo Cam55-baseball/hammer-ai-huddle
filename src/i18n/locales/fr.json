@@ -1088,7 +1088,9 @@
     "trainingUnknown": "Inconnu",
     "precipitationChance": "probabilité de précipitations",
     "failedToLoadWeather": "Échec du chargement des données météo",
-    "noConditions": "Pas de conditions spécifiques à analyser"
+    "noConditions": "Pas de conditions spécifiques à analyser",
+    "sunrise": "Lever du soleil",
+    "sunset": "Coucher du soleil"
   },
   "scout": {
     "dashboard": "Tableau Scout",

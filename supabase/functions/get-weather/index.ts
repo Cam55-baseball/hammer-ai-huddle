@@ -329,6 +329,15 @@ function mapWeatherCodeToDescription(code: number | undefined): string {
   return "Unknown";
 }
 
+function formatTimeToAMPM(isoString: string): string {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -439,7 +448,7 @@ serve(async (req) => {
       throw new Error("Invalid location coordinates");
     }
 
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,weather_code&hourly=uv_index,visibility&daily=temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max,precipitation_probability_max&timezone=auto&forecast_days=7`;
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,weather_code&hourly=uv_index,visibility&daily=temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max,precipitation_probability_max,sunrise,sunset&timezone=auto&forecast_days=7`;
     console.log(`Open-Meteo Weather API URL: ${weatherUrl}`);
 
     const response = await fetch(weatherUrl, {
@@ -522,6 +531,10 @@ serve(async (req) => {
       }
     }
 
+    // Extract sunrise and sunset times (from first day)
+    const sunrise = daily.sunrise?.[0] ? formatTimeToAMPM(daily.sunrise[0]) : null;
+    const sunset = daily.sunset?.[0] ? formatTimeToAMPM(daily.sunset[0]) : null;
+
     const weatherData = {
       location: resolvedLocationName,
       ...weatherMetrics,
@@ -529,7 +542,9 @@ serve(async (req) => {
       condition: mapWeatherCodeToDescription(current.weather_code),
       sportAnalysis: calculateSportConditions(weatherMetrics, sportType),
       dailyForecast: dailyForecasts,
-      drillRecommendations: generateDrillRecommendations(weatherMetrics, sportType)
+      drillRecommendations: generateDrillRecommendations(weatherMetrics, sportType),
+      sunrise,
+      sunset
     };
 
     return new Response(JSON.stringify(weatherData), {
