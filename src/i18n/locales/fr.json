@@ -477,7 +477,10 @@
     "scoutApplications": "Candidatures Scout",
     "subscribers": "Abonnés",
     "adminDashboard": "Tableau Admin",
-    "signOut": "Se Déconnecter"
+    "signOut": "Se Déconnecter",
+    "vault": "Le Coffre-Fort",
+    "bounceBackBay": "Baie de Récupération",
+    "mindFuel": "Carburant Mental"
   },
   "sidebar": {
     "ownerBio": "Bio du Propriétaire",
@@ -3896,8 +3899,5 @@
       "days": "jours",
       "weightLifted": "Poids soulevé"
     }
-  },
-  "navigation": {
-    "vault": "Le Coffre-Fort"
   }
 }

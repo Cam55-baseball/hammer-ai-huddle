@@ -461,6 +461,7 @@ export default function Vault() {
                     canGenerate={canGenerateRecap()}
                     daysUntilNextRecap={getDaysUntilRecap()}
                     onGenerate={handleGenerateRecap}
+                    isLoading={loading}
                   />
                 </TabsContent>
 

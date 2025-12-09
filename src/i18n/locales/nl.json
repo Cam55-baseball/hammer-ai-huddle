@@ -477,7 +477,10 @@
     "scoutApplications": "Scout Aanvragen",
     "subscribers": "Abonnees",
     "adminDashboard": "Admin Dashboard",
-    "signOut": "Uitloggen"
+    "signOut": "Uitloggen",
+    "vault": "De Kluis",
+    "bounceBackBay": "Herstel Baai",
+    "mindFuel": "Mentale Brandstof"
   },
   "sidebar": {
     "ownerBio": "Eigenaar Bio",
@@ -3148,8 +3151,5 @@
       "reflection_pro": "Reflectie Pro",
       "strength_tracker": "Kracht Tracker"
     }
-  },
-  "navigation": {
-    "vault": "De Kluis"
   }
 }

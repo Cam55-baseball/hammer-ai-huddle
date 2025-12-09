@@ -451,7 +451,10 @@
     "scoutApplications": "Solicitudes de Scout",
     "subscribers": "Suscriptores",
     "adminDashboard": "Panel de Admin",
-    "signOut": "Cerrar Sesión"
+    "signOut": "Cerrar Sesión",
+    "vault": "La Bóveda",
+    "bounceBackBay": "Bahía de Recuperación",
+    "mindFuel": "Combustible Mental"
   },
   "sidebar": {
     "ownerBio": "Bio del Propietario",
@@ -3874,8 +3877,5 @@
       "days": "días",
       "weightLifted": "Peso levantado"
     }
-  },
-  "navigation": {
-    "vault": "La Bóveda"
   }
 }
