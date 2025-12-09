@@ -77,8 +77,8 @@ export function SessionDetailDialog({
   }, [savedDrills, session.ai_analysis?.drills, session.module, session.sport]);
 
   const handleSaveDrill = async (drill: any) => {
-    // Build complete description with all drill info
-    let fullDescription = drill.purpose || '';
+    // Build complete description with explicit section markers for consistent parsing
+    let fullDescription = `Purpose: ${drill.purpose || 'N/A'}`;
     
     if (drill.steps && drill.steps.length > 0) {
       fullDescription += `\n\nSteps:\n${drill.steps.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`;
@@ -89,7 +89,7 @@ export function SessionDetailDialog({
     }
     
     if (drill.equipment) {
-      fullDescription += `\nEquipment: ${drill.equipment}`;
+      fullDescription += `\n\nEquipment: ${drill.equipment}`;
     }
     
     if (drill.cues && drill.cues.length > 0) {
