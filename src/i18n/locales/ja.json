@@ -920,6 +920,7 @@
     "dailyTip": "毎日の健康ヒント",
     "newTip": "新しいヒント",
     "tipsCollected": "収集したヒント",
+    "percentExplored": "{{percent}}%のヒントを探索済み",
     "daysToUnlock": "あと{{days}}日で解除",
     "streak": "連続",
     "currentStreak": "現在の連続",

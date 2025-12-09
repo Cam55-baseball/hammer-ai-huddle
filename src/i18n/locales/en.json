@@ -1004,6 +1004,7 @@
     "dailyTip": "Daily Health Tip",
     "newTip": "New Tip",
     "tipsCollected": "Tips Collected",
+    "percentExplored": "{{percent}}% of tips explored",
     "daysToUnlock": "{{days}} days to unlock",
     "streak": "Streak",
     "currentStreak": "Current Streak",
