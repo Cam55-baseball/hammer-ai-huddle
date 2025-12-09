@@ -1932,16 +1932,52 @@
     },
     "categories": {
       "title": "Leercategorieën",
-      "mental_mastery": "Mentale Meesterschap",
-      "mental_mastery_desc": "Hoog-Prestatie Psychologie",
-      "emotional_balance": "Emotionele Balans",
-      "emotional_balance_desc": "Vrede & Innerlijke Kalmte",
-      "leadership": "Leiderschap",
-      "leadership_desc": "Karakter & Teamvorming",
-      "life_mastery": "Levensmeesterschap",
-      "life_mastery_desc": "Discipline & Excellentie",
-      "explored": "{{count}} verkend",
-      "progress": "{{current}}/{{total}} lessen"
+      "explored": "verkend",
+      "contentTypes": "Bevat citaten, mantra's, leringen en principes",
+      "mental_mastery": {
+        "name": "Mentale Meesterschap",
+        "description": "Focus, visualisatie, discipline en hoog-prestatie psychologie",
+        "details": "Beheers het mentale spel met lessen over focus, visualisatietechnieken, pre-wedstrijd routines en elite atleten psychologie.",
+        "subcategories": {
+          "focus": "Focus",
+          "visualization": "Visualisatie",
+          "discipline": "Discipline",
+          "psychology": "Psychologie"
+        }
+      },
+      "emotional_balance": {
+        "name": "Emotionele Balans",
+        "description": "Vrede, angstbeheersing, ademhaling en meditatietechnieken",
+        "details": "Vind innerlijke kalmte door ademhalingsoefeningen, meditatiepraktijken, angstbeheersing en emotionele regulatie.",
+        "subcategories": {
+          "peace": "Vrede",
+          "fear": "Angstbeheersing",
+          "breathing": "Ademhaling",
+          "meditation": "Meditatie"
+        }
+      },
+      "leadership": {
+        "name": "Leiderschap",
+        "description": "Karakter, verantwoordelijkheid, teamwerk en erfgoed opbouwen",
+        "details": "Ontwikkel leiderschapsvaardigheden door karaktervorming, teamverantwoordelijkheid, communicatie en duurzame impact creëren.",
+        "subcategories": {
+          "character": "Karakter",
+          "accountability": "Verantwoordelijkheid",
+          "teamwork": "Teamwerk",
+          "legacy": "Erfgoed"
+        }
+      },
+      "life_mastery": {
+        "name": "Levensmeesterschap",
+        "description": "Gewoontes, tijdbeheer, doel en standaarden creëren",
+        "details": "Bouw kampioengewoontes met tijdbeheer, doelgerichte doelen en hoge persoonlijke standaarden.",
+        "subcategories": {
+          "habits": "Gewoontes",
+          "time": "Tijdbeheer",
+          "purpose": "Doel",
+          "standards": "Standaarden"
+        }
+      }
     },
     "subcategories": {
       "focus_concentration": "Focus & Concentratie",

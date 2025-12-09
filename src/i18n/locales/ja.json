@@ -1962,16 +1962,52 @@
     },
     "categories": {
       "title": "学習カテゴリー",
-      "mental_mastery": "メンタルマスタリー",
-      "mental_mastery_desc": "ハイパフォーマンス心理学",
-      "emotional_balance": "感情バランス",
-      "emotional_balance_desc": "平和と内なる静けさ",
-      "leadership": "リーダーシップ",
-      "leadership_desc": "人格とチームビルディング",
-      "life_mastery": "ライフマスタリー",
-      "life_mastery_desc": "規律と卓越性",
-      "explored": "{{count}}件探求済み",
-      "progress": "{{current}}/{{total}}レッスン"
+      "explored": "探求済み",
+      "contentTypes": "名言、マントラ、教え、原則を含む",
+      "mental_mastery": {
+        "name": "メンタルマスタリー",
+        "description": "集中、ビジュアライゼーション、規律、ハイパフォーマンス心理学",
+        "details": "集中力、ビジュアライゼーション技術、試合前ルーティン、エリートアスリート心理学のレッスンでメンタルゲームをマスターしよう。",
+        "subcategories": {
+          "focus": "集中",
+          "visualization": "ビジュアライゼーション",
+          "discipline": "規律",
+          "psychology": "心理学"
+        }
+      },
+      "emotional_balance": {
+        "name": "感情バランス",
+        "description": "平和、恐怖管理、呼吸法、瞑想テクニック",
+        "details": "呼吸エクササイズ、瞑想実践、恐怖管理、感情調整を通じて内なる静けさを見つけよう。",
+        "subcategories": {
+          "peace": "平和",
+          "fear": "恐怖管理",
+          "breathing": "呼吸法",
+          "meditation": "瞑想"
+        }
+      },
+      "leadership": {
+        "name": "リーダーシップ",
+        "description": "人格、責任、チームワーク、レガシー構築",
+        "details": "人格形成、チーム責任、コミュニケーション、持続的なインパクトの創造を通じてリーダーシップスキルを発展させよう。",
+        "subcategories": {
+          "character": "人格",
+          "accountability": "責任",
+          "teamwork": "チームワーク",
+          "legacy": "レガシー"
+        }
+      },
+      "life_mastery": {
+        "name": "ライフマスタリー",
+        "description": "習慣、時間管理、目的、基準作り",
+        "details": "時間管理、目的志向の目標、高い個人基準でチャンピオンの習慣を構築しよう。",
+        "subcategories": {
+          "habits": "習慣",
+          "time": "時間管理",
+          "purpose": "目的",
+          "standards": "基準"
+        }
+      }
     },
     "subcategories": {
       "focus_concentration": "集中と専念",

@@ -2427,16 +2427,52 @@
     },
     "categories": {
       "title": "Lernkategorien",
-      "mental_mastery": "Mentale Meisterschaft",
-      "mental_mastery_desc": "Hochleistungs-Psychologie",
-      "emotional_balance": "Emotionale Balance",
-      "emotional_balance_desc": "Frieden & Innere Ruhe",
-      "leadership": "Führung",
-      "leadership_desc": "Charakter- & Teambildung",
-      "life_mastery": "Lebensmeisterschaft",
-      "life_mastery_desc": "Disziplin & Exzellenz",
-      "explored": "{{count}} erkundet",
-      "progress": "{{current}}/{{total}} Lektionen"
+      "explored": "erkundet",
+      "contentTypes": "Enthält Zitate, Mantras, Lehren und Prinzipien",
+      "mental_mastery": {
+        "name": "Mentale Meisterschaft",
+        "description": "Fokus, Visualisierung, Disziplin und Hochleistungs-Psychologie",
+        "details": "Meistere das mentale Spiel mit Lektionen über Fokus, Visualisierungstechniken, Vor-Spiel-Routinen und Psychologie der Elite-Athleten.",
+        "subcategories": {
+          "focus": "Fokus",
+          "visualization": "Visualisierung",
+          "discipline": "Disziplin",
+          "psychology": "Psychologie"
+        }
+      },
+      "emotional_balance": {
+        "name": "Emotionale Balance",
+        "description": "Frieden, Angstbewältigung, Atmung und Meditationstechniken",
+        "details": "Finde innere Ruhe durch Atemübungen, Meditationspraktiken, Angstbewältigung und emotionale Regulierung.",
+        "subcategories": {
+          "peace": "Frieden",
+          "fear": "Angstbewältigung",
+          "breathing": "Atmung",
+          "meditation": "Meditation"
+        }
+      },
+      "leadership": {
+        "name": "Führung",
+        "description": "Charakter, Verantwortlichkeit, Teamarbeit und Vermächtnis aufbauen",
+        "details": "Entwickle Führungsqualitäten durch Charakterbildung, Teamverantwortung, Kommunikation und nachhaltigen Einfluss.",
+        "subcategories": {
+          "character": "Charakter",
+          "accountability": "Verantwortlichkeit",
+          "teamwork": "Teamarbeit",
+          "legacy": "Vermächtnis"
+        }
+      },
+      "life_mastery": {
+        "name": "Lebensmeisterschaft",
+        "description": "Gewohnheiten, Zeitmanagement, Zweck und Standards schaffen",
+        "details": "Baue Meistergewohnheiten mit Zeitmanagement, zielorientierten Zielen und hohen persönlichen Standards auf.",
+        "subcategories": {
+          "habits": "Gewohnheiten",
+          "time": "Zeitmanagement",
+          "purpose": "Zweck",
+          "standards": "Standards"
+        }
+      }
     },
     "subcategories": {
       "focus_concentration": "Fokus & Konzentration",
