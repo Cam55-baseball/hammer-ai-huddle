@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { NutritionDisclaimer } from '@/components/NutritionDisclaimer';
 import { DailyTipHero } from '@/components/DailyTipHero';
 import { NutritionCategory } from '@/components/NutritionCategory';
+import { TodaysTipsReview } from '@/components/TodaysTipsReview';
 import { NutritionStreakCard } from '@/components/NutritionStreakCard';
 import { NutritionBadges } from '@/components/NutritionBadges';
 import { useAuth } from '@/hooks/useAuth';
@@ -102,6 +103,9 @@ export default function Nutrition() {
 
         {/* Daily Tip */}
         <DailyTipHero sport={currentSport} onStreakUpdate={handleStreakUpdate} />
+
+        {/* Today's Tips Review */}
+        <TodaysTipsReview />
 
         {/* Categories */}
         <div className="space-y-3">
