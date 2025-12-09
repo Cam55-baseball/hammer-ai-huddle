@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   ChevronLeft, ChevronRight, Calendar, Dumbbell, Brain, 
-  Apple, TrendingUp, Zap, Activity, Target
+  Apple, TrendingUp, Zap, Activity, Target, Moon
 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, isSameWeek, eachDayOfInterval } from 'date-fns';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -36,6 +36,8 @@ interface DailyStats {
   weight: number;
   energy: number | null;
   hasEntry: boolean;
+  hoursSlept: number | null;
+  sleepQuality: number | null;
 }
 
 interface VaultWeeklySummaryProps {
@@ -215,6 +217,73 @@ export function VaultWeeklySummary({ fetchWeeklyData, streak }: VaultWeeklySumma
                       stroke="#22c55e" 
                       strokeWidth={2}
                       dot={{ fill: '#22c55e' }}
+                      connectNulls
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Sleep Trend Chart */}
+          {weeklyData?.dailyData && weeklyData.dailyData.some(d => d.hoursSlept !== null) && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Moon className="h-4 w-4 text-indigo-500" />
+                  {t('vault.weekly.sleepTrend')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={weeklyData.dailyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="dayShort" 
+                      tick={{ fontSize: 12 }} 
+                      stroke="hsl(var(--muted-foreground))"
+                    />
+                    <YAxis 
+                      yAxisId="hours"
+                      domain={[0, 12]} 
+                      tick={{ fontSize: 12 }} 
+                      stroke="hsl(var(--muted-foreground))"
+                      label={{ value: t('vault.weekly.hours'), angle: -90, position: 'insideLeft', fontSize: 10 }}
+                    />
+                    <YAxis 
+                      yAxisId="quality"
+                      orientation="right"
+                      domain={[0, 5]} 
+                      tick={{ fontSize: 12 }} 
+                      stroke="hsl(var(--muted-foreground))"
+                      label={{ value: t('vault.weekly.quality'), angle: 90, position: 'insideRight', fontSize: 10 }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Legend />
+                    <Line 
+                      yAxisId="hours"
+                      type="monotone" 
+                      dataKey="hoursSlept" 
+                      name={t('vault.weekly.hoursSlept')}
+                      stroke="#6366f1" 
+                      strokeWidth={2}
+                      dot={{ fill: '#6366f1' }}
+                      connectNulls
+                    />
+                    <Line 
+                      yAxisId="quality"
+                      type="monotone" 
+                      dataKey="sleepQuality" 
+                      name={t('vault.weekly.sleepQuality')}
+                      stroke="#a855f7" 
+                      strokeWidth={2}
+                      dot={{ fill: '#a855f7' }}
                       connectNulls
                     />
                   </LineChart>

@@ -4179,7 +4179,19 @@
       "totalEntries": "Total Entries",
       "badgesEarned": "Badges Earned",
       "days": "days",
-      "weightLifted": "Weight Lifted"
+      "weightLifted": "Weight Lifted",
+      "sleepTrend": "Sleep Trend",
+      "hoursSlept": "Hours Slept",
+      "sleepQuality": "Sleep Quality",
+      "hours": "Hours",
+      "quality": "Quality"
+    },
+    "drills": {
+      "save": "Save to Vault",
+      "saved": "Saved to Vault",
+      "alreadySaved": "Already saved",
+      "saveSuccess": "Drill saved to your Vault!",
+      "saveFailed": "Failed to save drill"
     }
   }
 }

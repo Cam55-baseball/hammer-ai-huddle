@@ -3218,7 +3218,12 @@
       "totalEntries": "总条目数",
       "badgesEarned": "已获徽章",
       "days": "天",
-      "weightLifted": "举重"
+      "weightLifted": "举重",
+      "sleepTrend": "睡眠趋势",
+      "hoursSlept": "睡眠时长",
+      "sleepQuality": "睡眠质量",
+      "hours": "小时",
+      "quality": "质量"
     },
     "badges": {
       "first_entry": "首次条目",
@@ -3227,6 +3232,13 @@
       "vault_master": "保险库大师",
       "reflection_pro": "反思专家",
       "strength_tracker": "力量追踪器"
+    },
+    "drills": {
+      "save": "保存到Vault",
+      "saved": "已保存到Vault",
+      "alreadySaved": "已保存",
+      "saveSuccess": "训练已保存到您的Vault！",
+      "saveFailed": "保存训练失败"
     }
   }
 }

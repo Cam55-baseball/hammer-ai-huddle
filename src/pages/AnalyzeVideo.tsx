@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home } from "lucide-react";
+import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
@@ -23,6 +23,7 @@ import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSke
 import { TheScorecard } from "@/components/TheScorecard";
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
+import { useVault } from "@/hooks/useVault";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
@@ -80,6 +81,38 @@ export default function AnalyzeVideo() {
     const saved = localStorage.getItem('scorecardDisplayFilter');
     return (saved === 'improvements' || saved === 'regressions') ? saved : 'all';
   });
+  const [savedDrillIds, setSavedDrillIds] = useState<Set<string>>(new Set());
+  const { saveDrill, savedDrills } = useVault();
+
+  // Track which drills are already saved
+  useEffect(() => {
+    if (savedDrills && analysis?.drills) {
+      const saved = new Set(
+        savedDrills
+          .filter(d => d.module_origin === module && d.sport === sport)
+          .map(d => d.drill_name)
+      );
+      setSavedDrillIds(saved);
+    }
+  }, [savedDrills, analysis?.drills, module, sport]);
+
+  const handleSaveDrill = async (drill: any) => {
+    const result = await saveDrill({
+      drill_name: drill.title,
+      drill_description: drill.purpose || null,
+      module_origin: module || '',
+      sport: sport,
+    });
+
+    if (result.success) {
+      setSavedDrillIds(prev => new Set(prev).add(drill.title));
+      toast.success(t('vault.drills.saveSuccess', 'Drill saved to your Vault!'));
+    } else if (result.error === 'already_saved') {
+      toast.info(t('vault.drills.alreadySaved', 'Already saved'));
+    } else {
+      toast.error(t('vault.drills.saveFailed', 'Failed to save drill'));
+    }
+  };
 
   const handleScorecardToggle = (checked: boolean) => {
     setShowScorecard(checked);
@@ -652,43 +685,60 @@ export default function AnalyzeVideo() {
                     <div className="pt-4 border-t">
                       <h4 className="text-lg font-semibold mb-4">{t('videoAnalysis.recommendedDrills')}</h4>
                       <div className="space-y-4">
-                        {analysis.drills.map((drill: any, index: number) => (
-                          <Card key={index} className="p-4 bg-muted/50">
-                            <h5 className="font-semibold text-base mb-1">{drill.title}</h5>
-                            <p className="text-sm text-muted-foreground mb-3">{drill.purpose}</p>
-                            
-                            <div className="space-y-2 mb-3">
-                              <p className="text-sm font-medium">{t('videoAnalysis.steps')}</p>
-                              <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-                                {drill.steps?.map((step: string, stepIndex: number) => (
-                                  <li key={stepIndex}>{step}</li>
-                                ))}
-                              </ol>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2 text-xs">
-                              <span className="bg-primary/10 text-primary px-2 py-1 rounded">
-                                {drill.reps_sets}
-                              </span>
-                              <span className="bg-secondary/50 text-secondary-foreground px-2 py-1 rounded">
-                                {drill.equipment}
-                              </span>
-                            </div>
-
-                            {drill.cues && drill.cues.length > 0 && (
-                              <div className="mt-3 pt-3 border-t border-border/50">
-                                <p className="text-xs font-medium mb-1">{t('videoAnalysis.coachingCues')}</p>
-                                <div className="flex flex-wrap gap-1">
-                                  {drill.cues.map((cue: string, cueIndex: number) => (
-                                    <span key={cueIndex} className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
-                                      {cue}
-                                    </span>
-                                  ))}
+                        {analysis.drills.map((drill: any, index: number) => {
+                          const isSaved = savedDrillIds.has(drill.title);
+                          return (
+                            <Card key={index} className="p-4 bg-muted/50">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1">
+                                  <h5 className="font-semibold text-base mb-1">{drill.title}</h5>
+                                  <p className="text-sm text-muted-foreground mb-3">{drill.purpose}</p>
                                 </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleSaveDrill(drill)}
+                                  disabled={isSaved}
+                                  className={isSaved ? "text-red-500" : "text-muted-foreground hover:text-red-500"}
+                                  title={isSaved ? t('vault.drills.saved', 'Saved to Vault') : t('vault.drills.save', 'Save to Vault')}
+                                >
+                                  <Heart className={`h-5 w-5 ${isSaved ? 'fill-current' : ''}`} />
+                                </Button>
                               </div>
-                            )}
-                          </Card>
-                        ))}
+                              
+                              <div className="space-y-2 mb-3">
+                                <p className="text-sm font-medium">{t('videoAnalysis.steps')}</p>
+                                <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                                  {drill.steps?.map((step: string, stepIndex: number) => (
+                                    <li key={stepIndex}>{step}</li>
+                                  ))}
+                                </ol>
+                              </div>
+
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <span className="bg-primary/10 text-primary px-2 py-1 rounded">
+                                  {drill.reps_sets}
+                                </span>
+                                <span className="bg-secondary/50 text-secondary-foreground px-2 py-1 rounded">
+                                  {drill.equipment}
+                                </span>
+                              </div>
+
+                              {drill.cues && drill.cues.length > 0 && (
+                                <div className="mt-3 pt-3 border-t border-border/50">
+                                  <p className="text-xs font-medium mb-1">{t('videoAnalysis.coachingCues')}</p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {drill.cues.map((cue: string, cueIndex: number) => (
+                                      <span key={cueIndex} className="text-xs text-muted-foreground bg-background px-2 py-0.5 rounded">
+                                        {cue}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </Card>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

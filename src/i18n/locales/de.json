@@ -4002,7 +4002,19 @@
       "totalEntries": "Einträge gesamt",
       "badgesEarned": "Abzeichen erhalten",
       "days": "Tage",
-      "weightLifted": "Gewicht gehoben"
+      "weightLifted": "Gewicht gehoben",
+      "sleepTrend": "Schlaftrend",
+      "hoursSlept": "Schlafstunden",
+      "sleepQuality": "Schlafqualität",
+      "hours": "Stunden",
+      "quality": "Qualität"
+    },
+    "drills": {
+      "save": "Im Vault speichern",
+      "saved": "Im Vault gespeichert",
+      "alreadySaved": "Bereits gespeichert",
+      "saveSuccess": "Übung in Vault gespeichert!",
+      "saveFailed": "Speichern der Übung fehlgeschlagen"
     }
   }
 }

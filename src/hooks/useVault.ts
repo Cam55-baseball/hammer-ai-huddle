@@ -577,6 +577,37 @@ export function useVault() {
     await fetchSavedItems();
   }, [fetchSavedItems]);
 
+  // Save drill to vault (from analysis)
+  const saveDrill = useCallback(async (drill: {
+    drill_name: string;
+    drill_description: string | null;
+    module_origin: string;
+    sport: string;
+  }) => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    // Check if already saved (prevent duplicates)
+    const existing = savedDrills.find(d => 
+      d.drill_name === drill.drill_name && 
+      d.module_origin === drill.module_origin &&
+      d.sport === drill.sport
+    );
+    if (existing) return { success: false, error: 'already_saved' };
+
+    const { error } = await supabase.from('vault_saved_drills').insert({
+      user_id: user.id,
+      ...drill,
+    });
+
+    if (error) {
+      console.error('Error saving drill:', error);
+      return { success: false, error: error.message };
+    }
+
+    await fetchSavedItems();
+    return { success: true };
+  }, [user, savedDrills, fetchSavedItems]);
+
   // Fetch performance tests
   const fetchPerformanceTests = useCallback(async () => {
     if (!user) return;
@@ -832,13 +863,16 @@ export function useVault() {
     const avgEmotional = emotionalValues.length > 0 ? emotionalValues.reduce((a, b) => a + b, 0) / emotionalValues.length : 0;
     const avgPhysical = physicalValues.length > 0 ? physicalValues.reduce((a, b) => a + b, 0) / physicalValues.length : 0;
 
-    // Build daily data
+    // Build daily data with sleep data from morning quizzes
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
     const dailyData = days.map(day => {
       const dateStr = format(day, 'yyyy-MM-dd');
       const dayQuizzes = quizzes?.filter(q => q.entry_date === dateStr) || [];
       const dayWorkouts = workouts?.filter(w => w.entry_date === dateStr) || [];
       const dayNutrition = nutrition?.filter(n => n.entry_date === dateStr) || [];
+      
+      // Get morning quiz for sleep data
+      const morningQuiz = dayQuizzes.find(q => q.quiz_type === 'morning');
       
       const avgDayMental = dayQuizzes.length > 0 
         ? dayQuizzes.reduce((sum, q) => sum + q.mental_readiness, 0) / dayQuizzes.length 
@@ -864,6 +898,8 @@ export function useVault() {
         weight: dayWeight,
         energy: dayEnergy,
         hasEntry: dayQuizzes.length > 0 || dayWorkouts.length > 0 || dayNutrition.length > 0,
+        hoursSlept: morningQuiz?.hours_slept || null,
+        sleepQuality: morningQuiz?.sleep_quality || null,
       };
     });
 
@@ -902,8 +938,8 @@ export function useVault() {
   return {
     loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLog, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData,
     saveFocusQuiz, saveFreeNote, saveWorkoutNote, updateStreak, checkVaultAccess, fetchWorkoutNotes,
-    saveNutritionLog, deleteSavedDrill, deleteSavedTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
+    saveNutritionLog, deleteSavedDrill, deleteSavedTip, saveDrill, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
     deleteQuiz, deleteFreeNote, deleteWorkoutNote, deleteNutritionLog, deletePerformanceTest, deleteProgressPhoto, deleteScoutGrade,
-    fetchWeeklyData, fetchEntriesWithData,
+    fetchWeeklyData, fetchEntriesWithData, fetchSavedItems,
   };
 }
