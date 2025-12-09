@@ -528,6 +528,12 @@ export function SessionDetailDialog({
               {aiAnalysis.drills && aiAnalysis.drills.length > 0 && (
                 <div className="space-y-3">
                   <Label>{t('sessionDetail.recommendedDrills')}</Label>
+                  {isOwner && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Heart className="h-4 w-4" />
+                      {t('videoAnalysis.drillSaveHint')}
+                    </p>
+                  )}
                   <div className="space-y-4">
                     {aiAnalysis.drills.map((drill: any, index: number) => {
                       const isSaved = savedDrillIds.has(drill.title);

@@ -702,7 +702,11 @@ export default function AnalyzeVideo() {
 
                   {analysis.drills && analysis.drills.length > 0 && (
                     <div className="pt-4 border-t">
-                      <h4 className="text-lg font-semibold mb-4">{t('videoAnalysis.recommendedDrills')}</h4>
+                      <h4 className="text-lg font-semibold mb-2">{t('videoAnalysis.recommendedDrills')}</h4>
+                      <p className="text-sm text-muted-foreground mb-4 flex items-center gap-1.5">
+                        <Heart className="h-4 w-4" />
+                        {t('videoAnalysis.drillSaveHint')}
+                      </p>
                       <div className="space-y-4">
                         {analysis.drills.map((drill: any, index: number) => {
                           const isSaved = savedDrillIds.has(drill.title);
