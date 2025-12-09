@@ -2935,6 +2935,17 @@
       "sleepTimeHint": "Hoe laat ging je naar bed?",
       "wakeTimeHint": "Hoe laat werd je wakker?",
       "sleepTip": "Vul dit ongeveer een uur voor het slapen in voor de beste resultaten",
+      "preLiftTip": "Beoordeel je huidige staat voor de training om te volgen hoe paraatheid de prestaties beïnvloedt",
+      "morningReminderFromNight": "💡 Morgen: Voltooi je ochtend check-in binnen 15 minuten na het wakker worden!",
+      "pending": "In afwachting",
+      "phoneFree": {
+        "title": "Waarom 1 uur geen telefoon voor het slapen?",
+        "blueLight": "Vermindert blootstelling aan blauw licht dat je circadiaanse ritme verstoort",
+        "melatonin": "Verbetert de natuurlijke melatonineproductie voor sneller in slaap vallen",
+        "rem": "Verbetert de REM-slaapkwaliteit voor betere geheugenconsolidatie",
+        "recovery": "Versnelt fysiek herstel en spierherstel 's nachts",
+        "cortisol": "Verlaagt cortisolniveaus, vermindert stress en angst"
+      },
       "level1": "Zeer Laag",
       "level2": "Laag",
       "level3": "Matig",

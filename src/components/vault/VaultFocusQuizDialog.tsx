@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, Info } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, Info, ChevronDown, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VaultFocusQuizDialogProps {
@@ -199,6 +200,85 @@ export function VaultFocusQuizDialog({
           </div>
         </DialogHeader>
 
+        {/* Tips Section - NOW AT TOP */}
+        <div className="space-y-3 mt-4">
+          {/* Morning Quiz Tip */}
+          {quizType === 'morning' && (
+            <Alert className="bg-amber-500/10 border-amber-500/30">
+              <Sun className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-sm">
+                {t('vault.quiz.morningTip')}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Pre-Lift Quiz Tip */}
+          {quizType === 'pre_lift' && (
+            <Alert className="bg-orange-500/10 border-orange-500/30">
+              <Dumbbell className="h-4 w-4 text-orange-500" />
+              <AlertDescription className="text-sm">
+                {t('vault.quiz.preLiftTip')}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Night Quiz Tips */}
+          {quizType === 'night' && (
+            <div className="space-y-3">
+              {/* Sleep tip */}
+              <Alert className="bg-indigo-500/10 border-indigo-500/30">
+                <Moon className="h-4 w-4 text-indigo-500" />
+                <AlertDescription className="text-sm">
+                  {t('vault.quiz.sleepTip')}
+                </AlertDescription>
+              </Alert>
+
+              {/* Morning reminder */}
+              <Alert className="bg-amber-500/10 border-amber-500/30">
+                <Sun className="h-4 w-4 text-amber-500" />
+                <AlertDescription className="text-sm font-medium">
+                  {t('vault.quiz.morningReminderFromNight')}
+                </AlertDescription>
+              </Alert>
+
+              {/* Phone-free educational content */}
+              <Collapsible className="bg-card/50 rounded-xl border border-border/50 p-3">
+                <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="h-4 w-4" />
+                    {t('vault.quiz.phoneFree.title')}
+                  </div>
+                  <ChevronDown className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3">
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span>🔵</span>
+                      <span>{t('vault.quiz.phoneFree.blueLight')}</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>💤</span>
+                      <span>{t('vault.quiz.phoneFree.melatonin')}</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>🧠</span>
+                      <span>{t('vault.quiz.phoneFree.rem')}</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>💪</span>
+                      <span>{t('vault.quiz.phoneFree.recovery')}</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span>😌</span>
+                      <span>{t('vault.quiz.phoneFree.cortisol')}</span>
+                    </li>
+                  </ul>
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          )}
+        </div>
+
         <div className="mt-6 space-y-4">
           {/* Mental Readiness */}
           <RatingButtonGroup
@@ -274,25 +354,7 @@ export function VaultFocusQuizDialog({
                   className="min-h-[80px] resize-none"
                 />
               </div>
-
-              {/* Sleep tip */}
-              <Alert className="bg-indigo-500/10 border-indigo-500/30 mt-4">
-                <Info className="h-4 w-4 text-indigo-500" />
-                <AlertDescription className="text-sm">
-                  {t('vault.quiz.sleepTip')}
-                </AlertDescription>
-              </Alert>
             </div>
-          )}
-
-          {/* Morning Quiz Tip */}
-          {quizType === 'morning' && (
-            <Alert className="bg-amber-500/10 border-amber-500/30 mt-2">
-              <Info className="h-4 w-4 text-amber-500" />
-              <AlertDescription className="text-sm">
-                {t('vault.quiz.morningTip')}
-              </AlertDescription>
-            </Alert>
           )}
 
           {/* Submit Buttons */}
