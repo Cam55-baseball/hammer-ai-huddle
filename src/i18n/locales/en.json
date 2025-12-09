@@ -995,6 +995,7 @@
     "saveTip": "Save Tip",
     "tipSaved": "Saved",
     "tipSavedSuccess": "Tip saved to your Vault!",
+    "tipSaveHint": "Tap the heart icon to save your favorite tips to The Vault",
     "todaysTips": "Today's Tips",
     "todaysTipsCount": "Today's Tips ({{count}}/2)",
     "reviewTips": "Review your tips from today",

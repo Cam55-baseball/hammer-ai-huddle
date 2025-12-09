@@ -940,6 +940,7 @@
     "saveTip": "Tipp Speichern",
     "tipSaved": "Gespeichert",
     "tipSavedSuccess": "Tipp in deinem Tresor gespeichert!",
+    "tipSaveHint": "Tippe auf das Herz-Symbol, um deine Lieblingstipps im Tresor zu speichern",
     "todaysTips": "Heutige Tipps",
     "todaysTipsCount": "Heutige Tipps ({{count}}/2)",
     "reviewTips": "Überprüfen Sie Ihre heutigen Tipps",

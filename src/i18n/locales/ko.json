@@ -911,6 +911,7 @@
     "saveTip": "팁 저장",
     "tipSaved": "저장됨",
     "tipSavedSuccess": "팁이 보관함에 저장되었습니다!",
+    "tipSaveHint": "하트 아이콘을 탭하여 좋아하는 팁을 금고에 저장하세요",
     "todaysTips": "오늘의 팁",
     "todaysTipsCount": "오늘의 팁 ({{count}}/2)",
     "reviewTips": "오늘 본 팁 확인하기",

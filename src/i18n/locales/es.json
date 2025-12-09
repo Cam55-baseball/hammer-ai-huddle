@@ -870,6 +870,7 @@
     "saveTip": "Guardar Consejo",
     "tipSaved": "Guardado",
     "tipSavedSuccess": "¡Consejo guardado en tu Bóveda!",
+    "tipSaveHint": "Toca el ícono de corazón para guardar tus consejos favoritos en La Bóveda",
     "todaysTips": "Consejos de Hoy",
     "todaysTipsCount": "Consejos de Hoy ({{count}}/2)",
     "reviewTips": "Revisa tus consejos de hoy",

@@ -940,6 +940,7 @@
     "saveTip": "Enregistrer le Conseil",
     "tipSaved": "Enregistré",
     "tipSavedSuccess": "Conseil enregistré dans votre Coffre !",
+    "tipSaveHint": "Appuyez sur l'icône cœur pour sauvegarder vos conseils préférés dans Le Coffre",
     "todaysTips": "Conseils d'Aujourd'hui",
     "todaysTipsCount": "Conseils d'Aujourd'hui ({{count}}/2)",
     "reviewTips": "Revoyez vos conseils d'aujourd'hui",

@@ -116,6 +116,10 @@ export function TodaysTipsReview() {
         
         <CollapsibleContent>
           <CardContent className="space-y-3 pt-0">
+            <p className="text-sm text-muted-foreground flex items-center gap-1.5 pb-2">
+              <Heart className="h-4 w-4" />
+              {t('nutrition.tipSaveHint')}
+            </p>
             {tips.map((tip, index) => {
               const isSaved = savedTipIds.has(tip.id);
               

@@ -940,6 +940,7 @@
     "saveTip": "Tip Opslaan",
     "tipSaved": "Opgeslagen",
     "tipSavedSuccess": "Tip opgeslagen in je Kluis!",
+    "tipSaveHint": "Tik op het hartpictogram om je favoriete tips in De Kluis op te slaan",
     "todaysTips": "Tips van Vandaag",
     "todaysTipsCount": "Tips van Vandaag ({{count}}/2)",
     "reviewTips": "Bekijk je tips van vandaag",

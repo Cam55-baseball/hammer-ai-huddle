@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, BookOpen } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -189,13 +189,6 @@ export function AppSidebar() {
     },
     { key: 'throwing', title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
     { key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked },
-    { 
-      key: 'vault', 
-      title: t('navigation.vault', 'The Vault'), 
-      url: "/vault", 
-      icon: hasVaultAccess ? BookOpen : Lock,
-      locked: !hasVaultAccess
-    },
   ];
 
   const accountItems = [
@@ -427,6 +420,30 @@ export function AppSidebar() {
             </Dialog>
           </>
         )}
+
+        {/* The Vault - Featured Section */}
+        <SidebarGroup className="border-b border-sidebar-border pb-3">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem className="sidebar-item">
+                <SidebarMenuButton
+                  onClick={() => navigate("/vault")}
+                  isActive={isActive("/vault")}
+                  tooltip={t('navigation.vault', 'The Vault')}
+                  className="group sidebar-item-hover relative bg-gradient-to-r from-amber-500/10 to-yellow-500/10 hover:from-amber-500/20 hover:to-yellow-500/20"
+                >
+                  {isActive("/vault") && <span className="sidebar-active-indicator" />}
+                  {hasVaultAccess ? (
+                    <Star className="h-4 w-4 text-amber-500 sidebar-icon transition-all duration-200 group-hover:scale-110" />
+                  ) : (
+                    <Lock className="h-4 w-4 text-muted-foreground sidebar-icon transition-all duration-200 group-hover:scale-110" />
+                  )}
+                  <span className="font-medium transition-colors duration-200">{t('navigation.vault', 'The Vault')}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         <SidebarGroup>
           <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
