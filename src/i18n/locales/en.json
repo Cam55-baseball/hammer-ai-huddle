@@ -991,6 +991,9 @@
     "allModules": "All Modules"
   },
   "nutrition": {
+    "saveTip": "Save Tip",
+    "tipSaved": "Saved",
+    "tipSavedSuccess": "Tip saved to your Vault!",
     "title": "Iron Horse Production",
     "subtitle": "Dietary & Holistic Health for Elite Athletes",
     "dailyTip": "Daily Health Tip",

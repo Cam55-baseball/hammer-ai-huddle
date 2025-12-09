@@ -907,6 +907,9 @@
     "allModules": "全てのモジュール"
   },
   "nutrition": {
+    "saveTip": "ヒントを保存",
+    "tipSaved": "保存済み",
+    "tipSavedSuccess": "ヒントをVaultに保存しました！",
     "title": "アイアンホースプロダクション",
     "subtitle": "エリートアスリートのための食事とホリスティックヘルス",
     "dailyTip": "毎日の健康ヒント",

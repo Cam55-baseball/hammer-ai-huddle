@@ -608,6 +608,35 @@ export function useVault() {
     return { success: true };
   }, [user, savedDrills, fetchSavedItems]);
 
+  // Save tip to vault (from nutrition)
+  const saveTip = useCallback(async (tip: {
+    tip_text: string;
+    tip_category: string | null;
+    module_origin: string;
+  }) => {
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    // Check if already saved (prevent duplicates)
+    const existing = savedTips.find(t => 
+      t.tip_text === tip.tip_text && 
+      t.module_origin === tip.module_origin
+    );
+    if (existing) return { success: false, error: 'already_saved' };
+
+    const { error } = await supabase.from('vault_saved_tips').insert({
+      user_id: user.id,
+      ...tip,
+    });
+
+    if (error) {
+      console.error('Error saving tip:', error);
+      return { success: false, error: error.message };
+    }
+
+    await fetchSavedItems();
+    return { success: true };
+  }, [user, savedTips, fetchSavedItems]);
+
   // Fetch performance tests
   const fetchPerformanceTests = useCallback(async () => {
     if (!user) return;
@@ -938,7 +967,7 @@ export function useVault() {
   return {
     loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLog, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData,
     saveFocusQuiz, saveFreeNote, saveWorkoutNote, updateStreak, checkVaultAccess, fetchWorkoutNotes,
-    saveNutritionLog, deleteSavedDrill, deleteSavedTip, saveDrill, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
+    saveNutritionLog, deleteSavedDrill, deleteSavedTip, saveDrill, saveTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
     deleteQuiz, deleteFreeNote, deleteWorkoutNote, deleteNutritionLog, deletePerformanceTest, deleteProgressPhoto, deleteScoutGrade,
     fetchWeeklyData, fetchEntriesWithData, fetchSavedItems,
   };

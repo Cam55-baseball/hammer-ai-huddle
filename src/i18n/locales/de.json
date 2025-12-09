@@ -936,6 +936,9 @@
     "allModules": "Alle Module"
   },
   "nutrition": {
+    "saveTip": "Tipp Speichern",
+    "tipSaved": "Gespeichert",
+    "tipSavedSuccess": "Tipp in deinem Tresor gespeichert!",
     "title": "Iron Horse Produktion",
     "subtitle": "Ernährungs- und Ganzheitliche Gesundheit für Spitzensportler",
     "dailyTip": "Täglicher Gesundheitstipp",
