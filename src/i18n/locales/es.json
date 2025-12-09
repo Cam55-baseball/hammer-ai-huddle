@@ -3630,18 +3630,27 @@
     },
     "tabs": {
       "today": "Hoy",
-      "history": "Historial"
+      "history": "Historial",
+      "weekly": "Semanal"
+    },
+    "delete": {
+      "success": "Entrada eliminada exitosamente"
     },
     "quiz": {
       "title": "Chequeo de Enfoque Diario",
       "todayStatus": "Chequeos de Hoy",
       "preLift": "Pre-Entrenamiento",
+      "preLiftTitle": "Chequeo Pre-Entrenamiento",
       "morning": "Mañana",
+      "morningTitle": "Chequeo Matutino",
+      "morningTip": "Intenta completar dentro de 15 minutos de despertar",
       "night": "Noche",
+      "nightTitle": "Reflexión Nocturna",
       "completed": "Completado",
       "notStarted": "No Iniciado",
       "saved": "¡Quiz guardado exitosamente!",
       "error": "Error al guardar quiz",
+      "description": "Califica cómo te sientes ahora",
       "mentalReadiness": "Preparación Mental",
       "emotionalState": "Estado Emocional",
       "physicalReadiness": "Preparación Física",
@@ -3649,6 +3658,21 @@
       "wakeTime": "Hora de Despertar",
       "sleepTimeHint": "¿A qué hora te fuiste a dormir?",
       "wakeTimeHint": "¿A qué hora te despertaste?",
+      "sleepTip": "Completa esto aproximadamente una hora antes de dormir para mejores resultados",
+      "level1": "Muy Bajo",
+      "level2": "Bajo",
+      "level3": "Moderado",
+      "level4": "Alto",
+      "level5": "Muy Alto",
+      "reflectionTitle": "Reflexión Nocturna",
+      "didWell": "¿Qué hice bien hoy?",
+      "didWellPlaceholder": "Comparte lo que salió bien...",
+      "couldImprove": "¿Qué podría mejorar?",
+      "couldImprovePlaceholder": "Piensa en áreas de crecimiento...",
+      "learned": "¿Qué aprendí hoy?",
+      "learnedPlaceholder": "Cualquier lección o idea...",
+      "motivation": "¿Qué me motiva?",
+      "motivationPlaceholder": "¿Qué te impulsa hacia adelante?",
       "reflectionPrompts": {
         "title": "Reflexión Nocturna",
         "didWell": "¿Qué hice bien hoy?",
@@ -3692,8 +3716,13 @@
     },
     "reminder": {
       "title": "Resumen de 6 Semanas",
+      "subtitle": "Sigue tu progreso hacia tu resumen personalizado",
       "message": "Completa entradas diarias para desbloquear tu resumen personalizado",
       "daysRemaining": "días restantes",
+      "dayUntilRecap": "1 día hasta tu próximo resumen",
+      "daysUntilRecap": "{{days}} días hasta tu próximo resumen",
+      "recapProgress": "Progreso del Resumen",
+      "stayConsistent": "Mantente constante. Tu yo futuro te lo agradecerá.",
       "progress": "Progreso"
     },
     "history": {

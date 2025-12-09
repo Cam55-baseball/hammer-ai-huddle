@@ -2877,18 +2877,27 @@
     },
     "tabs": {
       "today": "今天",
-      "history": "历史"
+      "history": "历史",
+      "weekly": "每周"
+    },
+    "delete": {
+      "success": "条目删除成功"
     },
     "quiz": {
       "title": "每日专注检查",
       "todayStatus": "今日签到",
       "preLift": "训练前",
+      "preLiftTitle": "训练前签到",
       "morning": "早晨",
+      "morningTitle": "早晨签到",
+      "morningTip": "尝试在醒来后15分钟内完成",
       "night": "夜晚",
+      "nightTitle": "晚间反思",
       "completed": "已完成",
       "notStarted": "未开始",
       "saved": "问卷保存成功！",
       "error": "保存问卷失败",
+      "description": "评估你现在的感受",
       "mentalReadiness": "心理准备",
       "emotionalState": "情绪状态",
       "physicalReadiness": "身体准备",
@@ -2896,6 +2905,21 @@
       "wakeTime": "起床时间",
       "sleepTimeHint": "您几点睡觉？",
       "wakeTimeHint": "您几点起床？",
+      "sleepTip": "为获得最佳效果，请在睡前约一小时完成",
+      "level1": "非常低",
+      "level2": "低",
+      "level3": "中等",
+      "level4": "高",
+      "level5": "非常高",
+      "reflectionTitle": "晚间反思",
+      "didWell": "今天我做得好的是什么？",
+      "didWellPlaceholder": "分享进展顺利的事情...",
+      "couldImprove": "我可以改进什么？",
+      "couldImprovePlaceholder": "思考成长领域...",
+      "learned": "今天我学到了什么？",
+      "learnedPlaceholder": "任何经验或见解...",
+      "motivation": "什么在激励我？",
+      "motivationPlaceholder": "是什么驱动你前进...",
       "reflectionPrompts": {
         "title": "晚间反思",
         "didWell": "今天我做得好的是什么？",
@@ -2939,8 +2963,13 @@
     },
     "reminder": {
       "title": "6周回顾",
+      "subtitle": "追踪您的个性化回顾进度",
       "message": "完成每日条目以解锁您的个性化回顾",
       "daysRemaining": "天剩余",
+      "dayUntilRecap": "距离下次回顾还有1天",
+      "daysUntilRecap": "距离下次回顾还有{{days}}天",
+      "recapProgress": "回顾进度",
+      "stayConsistent": "保持一致。未来的你会感谢现在的你。",
       "progress": "进度"
     },
     "history": {

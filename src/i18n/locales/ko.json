@@ -2893,18 +2893,27 @@
     },
     "tabs": {
       "today": "오늘",
-      "history": "기록"
+      "history": "기록",
+      "weekly": "주간"
+    },
+    "delete": {
+      "success": "항목이 성공적으로 삭제되었습니다"
     },
     "quiz": {
       "title": "일일 집중 체크",
       "todayStatus": "오늘의 체크인",
       "preLift": "훈련 전",
+      "preLiftTitle": "훈련 전 체크인",
       "morning": "아침",
+      "morningTitle": "아침 체크인",
+      "morningTip": "일어난 후 15분 이내에 완료해 보세요",
       "night": "밤",
+      "nightTitle": "저녁 반성",
       "completed": "완료됨",
       "notStarted": "시작되지 않음",
       "saved": "퀴즈가 저장되었습니다!",
       "error": "퀴즈 저장 실패",
+      "description": "지금 기분을 평가하세요",
       "mentalReadiness": "정신적 준비",
       "emotionalState": "감정 상태",
       "physicalReadiness": "신체적 준비",
@@ -2912,6 +2921,21 @@
       "wakeTime": "기상 시간",
       "sleepTimeHint": "몇 시에 잠자리에 들었나요?",
       "wakeTimeHint": "몇 시에 일어났나요?",
+      "sleepTip": "최상의 결과를 위해 잠자리에 들기 약 1시간 전에 완료하세요",
+      "level1": "매우 낮음",
+      "level2": "낮음",
+      "level3": "보통",
+      "level4": "높음",
+      "level5": "매우 높음",
+      "reflectionTitle": "저녁 반성",
+      "didWell": "오늘 잘한 것은?",
+      "didWellPlaceholder": "잘된 것을 공유하세요...",
+      "couldImprove": "개선할 수 있는 것은?",
+      "couldImprovePlaceholder": "성장 영역에 대해 생각해 보세요...",
+      "learned": "오늘 배운 것은?",
+      "learnedPlaceholder": "교훈이나 통찰력...",
+      "motivation": "무엇이 동기를 부여하나요?",
+      "motivationPlaceholder": "무엇이 당신을 앞으로 나아가게 하나요...",
       "reflectionPrompts": {
         "title": "저녁 반성",
         "didWell": "오늘 잘한 것은?",
@@ -2955,8 +2979,13 @@
     },
     "reminder": {
       "title": "6주 리뷰",
+      "subtitle": "개인화된 리뷰를 향한 진행 상황 추적",
       "message": "개인화된 리뷰를 해제하려면 일일 항목을 완료하세요",
       "daysRemaining": "일 남음",
+      "dayUntilRecap": "다음 리뷰까지 1일",
+      "daysUntilRecap": "다음 리뷰까지 {{days}}일",
+      "recapProgress": "리뷰 진행",
+      "stayConsistent": "꾸준히 하세요. 미래의 당신이 감사할 것입니다.",
       "progress": "진행"
     },
     "history": {

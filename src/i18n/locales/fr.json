@@ -3652,18 +3652,27 @@
     },
     "tabs": {
       "today": "Aujourd'hui",
-      "history": "Historique"
+      "history": "Historique",
+      "weekly": "Hebdomadaire"
+    },
+    "delete": {
+      "success": "Entrée supprimée avec succès"
     },
     "quiz": {
       "title": "Vérification de Focus Quotidien",
       "todayStatus": "Vérifications d'Aujourd'hui",
       "preLift": "Pré-Entraînement",
+      "preLiftTitle": "Vérification Pré-Entraînement",
       "morning": "Matin",
+      "morningTitle": "Vérification du Matin",
+      "morningTip": "Essayez de compléter dans les 15 minutes après le réveil",
       "night": "Nuit",
+      "nightTitle": "Réflexion du Soir",
       "completed": "Terminé",
       "notStarted": "Non Commencé",
       "saved": "Quiz sauvegardé avec succès!",
       "error": "Échec de sauvegarde du quiz",
+      "description": "Évaluez comment vous vous sentez maintenant",
       "mentalReadiness": "Préparation Mentale",
       "emotionalState": "État Émotionnel",
       "physicalReadiness": "Préparation Physique",
@@ -3671,6 +3680,21 @@
       "wakeTime": "Heure de Réveil",
       "sleepTimeHint": "À quelle heure vous êtes-vous couché?",
       "wakeTimeHint": "À quelle heure vous êtes-vous réveillé?",
+      "sleepTip": "Complétez environ une heure avant de dormir pour de meilleurs résultats",
+      "level1": "Très Bas",
+      "level2": "Bas",
+      "level3": "Modéré",
+      "level4": "Élevé",
+      "level5": "Très Élevé",
+      "reflectionTitle": "Réflexion du Soir",
+      "didWell": "Qu'ai-je bien fait aujourd'hui?",
+      "didWellPlaceholder": "Partagez ce qui s'est bien passé...",
+      "couldImprove": "Que pourrais-je améliorer?",
+      "couldImprovePlaceholder": "Réfléchissez aux domaines de croissance...",
+      "learned": "Qu'ai-je appris aujourd'hui?",
+      "learnedPlaceholder": "Toutes leçons ou idées...",
+      "motivation": "Qu'est-ce qui me motive?",
+      "motivationPlaceholder": "Qu'est-ce qui vous pousse en avant...",
       "reflectionPrompts": {
         "title": "Réflexion du Soir",
         "didWell": "Qu'ai-je bien fait aujourd'hui?",
@@ -3714,8 +3738,13 @@
     },
     "reminder": {
       "title": "Récapitulatif 6 Semaines",
+      "subtitle": "Suivez votre progression vers votre récapitulatif personnalisé",
       "message": "Complétez les entrées quotidiennes pour débloquer votre récapitulatif personnalisé",
       "daysRemaining": "jours restants",
+      "dayUntilRecap": "1 jour avant votre prochain récapitulatif",
+      "daysUntilRecap": "{{days}} jours avant votre prochain récapitulatif",
+      "recapProgress": "Progression du Récap",
+      "stayConsistent": "Restez constant. Votre futur vous remerciera.",
       "progress": "Progrès"
     },
     "history": {

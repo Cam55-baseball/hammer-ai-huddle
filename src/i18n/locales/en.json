@@ -3829,18 +3829,27 @@
     },
     "tabs": {
       "today": "Today",
-      "history": "History"
+      "history": "History",
+      "weekly": "Weekly"
+    },
+    "delete": {
+      "success": "Entry deleted successfully"
     },
     "quiz": {
       "title": "Daily Focus Check",
       "todayStatus": "Today's Check-ins",
       "preLift": "Pre-Lift",
+      "preLiftTitle": "Pre-Lift Check-in",
       "morning": "Morning",
+      "morningTitle": "Morning Check-in",
+      "morningTip": "Try to complete within 15 minutes of waking up",
       "night": "Night",
+      "nightTitle": "Night Reflection",
       "completed": "Completed",
       "notStarted": "Not Started",
       "saved": "Quiz saved successfully!",
       "error": "Failed to save quiz",
+      "description": "Rate how you feel right now",
       "mentalReadiness": "Mental Readiness",
       "emotionalState": "Emotional State",
       "physicalReadiness": "Physical Readiness",
@@ -3848,6 +3857,21 @@
       "wakeTime": "Wake Time",
       "sleepTimeHint": "What time did you go to bed?",
       "wakeTimeHint": "What time did you wake up?",
+      "sleepTip": "Complete this about an hour before bed for best results",
+      "level1": "Very Low",
+      "level2": "Low",
+      "level3": "Moderate",
+      "level4": "High",
+      "level5": "Very High",
+      "reflectionTitle": "Evening Reflection",
+      "didWell": "What did I do well today?",
+      "didWellPlaceholder": "Share what went well...",
+      "couldImprove": "What could I improve?",
+      "couldImprovePlaceholder": "Think about areas for growth...",
+      "learned": "What did I learn today?",
+      "learnedPlaceholder": "Any lessons or insights...",
+      "motivation": "What's motivating me?",
+      "motivationPlaceholder": "What drives you forward...",
       "reflectionPrompts": {
         "title": "Evening Reflection",
         "didWell": "What did I do well today?",
@@ -3891,8 +3915,13 @@
     },
     "reminder": {
       "title": "6-Week Recap",
+      "subtitle": "Track your progress toward your personalized recap",
       "message": "Complete daily entries to unlock your personalized recap",
       "daysRemaining": "days remaining",
+      "dayUntilRecap": "1 day until your next recap",
+      "daysUntilRecap": "{{days}} days until your next recap",
+      "recapProgress": "Recap Progress",
+      "stayConsistent": "Stay consistent. Your future self will thank you.",
       "progress": "Progress"
     },
     "history": {

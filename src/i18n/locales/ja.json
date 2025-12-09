@@ -2936,18 +2936,27 @@
     },
     "tabs": {
       "today": "今日",
-      "history": "履歴"
+      "history": "履歴",
+      "weekly": "週間"
+    },
+    "delete": {
+      "success": "エントリーが正常に削除されました"
     },
     "quiz": {
       "title": "デイリーフォーカスチェック",
       "todayStatus": "今日のチェックイン",
       "preLift": "トレーニング前",
+      "preLiftTitle": "トレーニング前チェックイン",
       "morning": "朝",
+      "morningTitle": "朝のチェックイン",
+      "morningTip": "起床後15分以内に完了してみてください",
       "night": "夜",
+      "nightTitle": "夜の振り返り",
       "completed": "完了",
       "notStarted": "未開始",
       "saved": "クイズが保存されました！",
       "error": "クイズの保存に失敗しました",
+      "description": "今の気分を評価してください",
       "mentalReadiness": "メンタル準備",
       "emotionalState": "感情状態",
       "physicalReadiness": "身体準備",
@@ -2955,6 +2964,21 @@
       "wakeTime": "起床時間",
       "sleepTimeHint": "何時に寝ましたか？",
       "wakeTimeHint": "何時に起きましたか？",
+      "sleepTip": "最良の結果を得るために就寝の約1時間前に完了してください",
+      "level1": "非常に低い",
+      "level2": "低い",
+      "level3": "普通",
+      "level4": "高い",
+      "level5": "非常に高い",
+      "reflectionTitle": "夜の振り返り",
+      "didWell": "今日うまくできたことは？",
+      "didWellPlaceholder": "うまくいったことを共有...",
+      "couldImprove": "改善できることは？",
+      "couldImprovePlaceholder": "成長分野について考える...",
+      "learned": "今日学んだことは？",
+      "learnedPlaceholder": "学びや気づき...",
+      "motivation": "何がモチベーションですか？",
+      "motivationPlaceholder": "前に進む原動力は...",
       "reflectionPrompts": {
         "title": "夜の振り返り",
         "didWell": "今日うまくできたことは？",
@@ -2998,8 +3022,13 @@
     },
     "reminder": {
       "title": "6週間レビュー",
+      "subtitle": "パーソナライズされたレビューへの進捗を追跡",
       "message": "毎日のエントリーを完了してパーソナライズされたレビューを解除",
       "daysRemaining": "日残り",
+      "dayUntilRecap": "次のレビューまで1日",
+      "daysUntilRecap": "次のレビューまで{{days}}日",
+      "recapProgress": "レビュー進捗",
+      "stayConsistent": "一貫性を保ちましょう。未来のあなたが感謝します。",
       "progress": "進捗"
     },
     "history": {

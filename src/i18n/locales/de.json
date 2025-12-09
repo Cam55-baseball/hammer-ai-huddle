@@ -3652,18 +3652,27 @@
     },
     "tabs": {
       "today": "Heute",
-      "history": "Verlauf"
+      "history": "Verlauf",
+      "weekly": "Wöchentlich"
+    },
+    "delete": {
+      "success": "Eintrag erfolgreich gelöscht"
     },
     "quiz": {
       "title": "Täglicher Fokus-Check",
       "todayStatus": "Heutige Check-ins",
       "preLift": "Vor dem Training",
+      "preLiftTitle": "Check-in vor dem Training",
       "morning": "Morgen",
+      "morningTitle": "Morgen Check-in",
+      "morningTip": "Versuche innerhalb von 15 Minuten nach dem Aufwachen abzuschließen",
       "night": "Nacht",
+      "nightTitle": "Abendreflexion",
       "completed": "Abgeschlossen",
       "notStarted": "Nicht Gestartet",
       "saved": "Quiz erfolgreich gespeichert!",
       "error": "Quiz speichern fehlgeschlagen",
+      "description": "Bewerte wie du dich gerade fühlst",
       "mentalReadiness": "Mentale Bereitschaft",
       "emotionalState": "Emotionaler Zustand",
       "physicalReadiness": "Körperliche Bereitschaft",
@@ -3671,6 +3680,21 @@
       "wakeTime": "Aufwachzeit",
       "sleepTimeHint": "Wann bist du ins Bett gegangen?",
       "wakeTimeHint": "Wann bist du aufgewacht?",
+      "sleepTip": "Fülle dies etwa eine Stunde vor dem Schlafengehen aus für beste Ergebnisse",
+      "level1": "Sehr Niedrig",
+      "level2": "Niedrig",
+      "level3": "Moderat",
+      "level4": "Hoch",
+      "level5": "Sehr Hoch",
+      "reflectionTitle": "Abendreflexion",
+      "didWell": "Was habe ich heute gut gemacht?",
+      "didWellPlaceholder": "Teile was gut lief...",
+      "couldImprove": "Was könnte ich verbessern?",
+      "couldImprovePlaceholder": "Denke über Wachstumsbereiche nach...",
+      "learned": "Was habe ich heute gelernt?",
+      "learnedPlaceholder": "Alle Lektionen oder Erkenntnisse...",
+      "motivation": "Was motiviert mich?",
+      "motivationPlaceholder": "Was treibt dich voran...",
       "reflectionPrompts": {
         "title": "Abendreflexion",
         "didWell": "Was habe ich heute gut gemacht?",
@@ -3714,8 +3738,13 @@
     },
     "reminder": {
       "title": "6-Wochen Rückblick",
+      "subtitle": "Verfolge deinen Fortschritt zu deinem personalisierten Rückblick",
       "message": "Vervollständige tägliche Einträge, um deinen personalisierten Rückblick freizuschalten",
       "daysRemaining": "Tage verbleibend",
+      "dayUntilRecap": "1 Tag bis zu deinem nächsten Rückblick",
+      "daysUntilRecap": "{{days}} Tage bis zu deinem nächsten Rückblick",
+      "recapProgress": "Rückblick-Fortschritt",
+      "stayConsistent": "Bleib konstant. Dein zukünftiges Ich wird es dir danken.",
       "progress": "Fortschritt"
     },
     "history": {
