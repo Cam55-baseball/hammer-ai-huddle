@@ -3662,6 +3662,11 @@
       "preLiftTip": "Evalúa tu estado actual antes de entrenar para rastrear cómo la preparación afecta el rendimiento",
       "morningReminderFromNight": "💡 Mañana: ¡Completa tu Check-in Matutino dentro de los 15 minutos después de despertar!",
       "pending": "Pendiente",
+      "hoursSlept": "Horas Dormidas",
+      "sleepQuality": "Calidad del Sueño",
+      "sleepQualityDesc": "Califica la calidad de tu sueño anoche",
+      "sleepData": "Datos de Sueño",
+      "hoursSleptPlaceholder": "ej. 7.5",
       "phoneFree": {
         "title": "¿Por qué 1 hora sin teléfono antes de dormir?",
         "blueLight": "Reduce la exposición a luz azul que interrumpe tu ritmo circadiano",
@@ -3723,7 +3728,11 @@
       "day": "día",
       "badges": "Insignias Ganadas",
       "startStreak": "¡Comienza tu racha hoy!",
-      "keepGoing": "¡Sigue así!"
+      "keepGoing": "¡Sigue así!",
+      "toNextMilestone": "días para la próxima meta",
+      "totalEntries": "Entradas Totales",
+      "badgesEarned": "Insignias Ganadas",
+      "active": "Activo"
     },
     "reminder": {
       "title": "Resumen de 6 Semanas",

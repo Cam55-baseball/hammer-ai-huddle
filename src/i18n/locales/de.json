@@ -3684,6 +3684,11 @@
       "preLiftTip": "Bewerte deinen aktuellen Zustand vor dem Training um zu verfolgen wie Bereitschaft die Leistung beeinflusst",
       "morningReminderFromNight": "💡 Morgen: Vervollständige dein Morgen-Check-in innerhalb von 15 Minuten nach dem Aufwachen!",
       "pending": "Ausstehend",
+      "hoursSlept": "Schlafstunden",
+      "sleepQuality": "Schlafqualität",
+      "sleepQualityDesc": "Bewerte deine Schlafqualität letzte Nacht",
+      "sleepData": "Schlafdaten",
+      "hoursSleptPlaceholder": "z.B. 7.5",
       "phoneFree": {
         "title": "Warum 1 Stunde ohne Handy vor dem Schlafengehen?",
         "blueLight": "Reduziert Blaulichtbelastung die deinen zirkadianen Rhythmus stört",
@@ -3745,7 +3750,11 @@
       "day": "Tag",
       "badges": "Verdiente Abzeichen",
       "startStreak": "Starte deine Serie heute!",
-      "keepGoing": "Weiter so!"
+      "keepGoing": "Weiter so!",
+      "toNextMilestone": "Tage bis zum nächsten Meilenstein",
+      "totalEntries": "Gesamteinträge",
+      "badgesEarned": "Verdiente Abzeichen",
+      "active": "Aktiv"
     },
     "reminder": {
       "title": "6-Wochen Rückblick",

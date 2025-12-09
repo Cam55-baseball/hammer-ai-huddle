@@ -3861,6 +3861,11 @@
       "preLiftTip": "Rate your current state before training to track how readiness affects performance",
       "morningReminderFromNight": "💡 Tomorrow: Complete your Morning Check-in within 15 minutes of waking up!",
       "pending": "Pending",
+      "hoursSlept": "Hours Slept",
+      "sleepQuality": "Sleep Quality",
+      "sleepQualityDesc": "Rate your sleep quality last night",
+      "sleepData": "Sleep Data",
+      "hoursSleptPlaceholder": "e.g. 7.5",
       "phoneFree": {
         "title": "Why 1 Hour Phone-Free Before Bed?",
         "blueLight": "Reduces blue light exposure that disrupts your circadian rhythm",
@@ -3922,7 +3927,11 @@
       "day": "day",
       "badges": "Badges Earned",
       "startStreak": "Start your streak today!",
-      "keepGoing": "Keep it up!"
+      "keepGoing": "Keep it up!",
+      "toNextMilestone": "days to next milestone",
+      "totalEntries": "Total Entries",
+      "badgesEarned": "Badges Earned",
+      "active": "Active"
     },
     "reminder": {
       "title": "6-Week Recap",

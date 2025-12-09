@@ -2968,6 +2968,11 @@
       "preLiftTip": "準備状態がパフォーマンスにどう影響するかを追跡するため、トレーニング前に現在の状態を評価してください",
       "morningReminderFromNight": "💡 明日：起床後15分以内にモーニングチェックインを完了してください！",
       "pending": "未完了",
+      "hoursSlept": "睡眠時間",
+      "sleepQuality": "睡眠の質",
+      "sleepQualityDesc": "昨夜の睡眠の質を評価してください",
+      "sleepData": "睡眠データ",
+      "hoursSleptPlaceholder": "例：7.5",
       "phoneFree": {
         "title": "なぜ就寝前1時間はスマホなしがいいの？",
         "blueLight": "体内時計を乱すブルーライトへの露出を減らします",
@@ -3029,7 +3034,11 @@
       "day": "日",
       "badges": "獲得バッジ",
       "startStreak": "今日から連続を始めよう！",
-      "keepGoing": "この調子！"
+      "keepGoing": "この調子！",
+      "toNextMilestone": "日後に次のマイルストーン",
+      "totalEntries": "総エントリー",
+      "badgesEarned": "獲得バッジ",
+      "active": "アクティブ"
     },
     "reminder": {
       "title": "6週間レビュー",

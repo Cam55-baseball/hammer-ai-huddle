@@ -2938,6 +2938,11 @@
       "preLiftTip": "Beoordeel je huidige staat voor de training om te volgen hoe paraatheid de prestaties beïnvloedt",
       "morningReminderFromNight": "💡 Morgen: Voltooi je ochtend check-in binnen 15 minuten na het wakker worden!",
       "pending": "In afwachting",
+      "hoursSlept": "Uren Geslapen",
+      "sleepQuality": "Slaapkwaliteit",
+      "sleepQualityDesc": "Beoordeel je slaapkwaliteit vannacht",
+      "sleepData": "Slaapgegevens",
+      "hoursSleptPlaceholder": "bijv. 7.5",
       "phoneFree": {
         "title": "Waarom 1 uur geen telefoon voor het slapen?",
         "blueLight": "Vermindert blootstelling aan blauw licht dat je circadiaanse ritme verstoort",
@@ -2999,7 +3004,11 @@
       "day": "dag",
       "badges": "Verdiende Badges",
       "startStreak": "Begin je reeks vandaag!",
-      "keepGoing": "Ga zo door!"
+      "keepGoing": "Ga zo door!",
+      "toNextMilestone": "dagen tot volgende mijlpaal",
+      "totalEntries": "Totaal Entries",
+      "badgesEarned": "Verdiende Badges",
+      "active": "Actief"
     },
     "reminder": {
       "title": "6-Weken Recap",

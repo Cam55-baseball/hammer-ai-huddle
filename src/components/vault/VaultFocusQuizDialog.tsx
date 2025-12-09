@@ -10,9 +10,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, Info, ChevronDown, Smartphone } from 'lucide-react';
+import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VaultFocusQuizDialogProps {
@@ -27,6 +28,8 @@ interface VaultFocusQuizDialogProps {
     reflection_improve?: string;
     reflection_learned?: string;
     reflection_motivation?: string;
+    hours_slept?: number;
+    sleep_quality?: number;
   }) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -123,6 +126,10 @@ export function VaultFocusQuizDialog({
   const [couldImprove, setCouldImprove] = useState('');
   const [learned, setLearned] = useState('');
   const [motivation, setMotivation] = useState('');
+  
+  // Morning quiz sleep tracking
+  const [hoursSlept, setHoursSlept] = useState<number | ''>('');
+  const [sleepQuality, setSleepQuality] = useState(3);
 
   const getQuizIcon = () => {
     switch (quizType) {
@@ -167,6 +174,11 @@ export function VaultFocusQuizDialog({
       data.reflection_motivation = motivation || undefined;
     }
 
+    if (quizType === 'morning') {
+      data.hours_slept = hoursSlept || undefined;
+      data.sleep_quality = sleepQuality;
+    }
+
     const result = await onSubmit(data);
     setLoading(false);
     
@@ -179,6 +191,8 @@ export function VaultFocusQuizDialog({
       setCouldImprove('');
       setLearned('');
       setMotivation('');
+      setHoursSlept('');
+      setSleepQuality(3);
       onOpenChange(false);
     }
   };
@@ -210,6 +224,40 @@ export function VaultFocusQuizDialog({
                 {t('vault.quiz.morningTip')}
               </AlertDescription>
             </Alert>
+          )}
+
+          {/* Morning Quiz - Sleep Tracking Section */}
+          {quizType === 'morning' && (
+            <div className="space-y-4 p-4 bg-indigo-500/5 rounded-xl border border-indigo-500/20">
+              <h4 className="text-sm font-bold flex items-center gap-2">
+                <Moon className="h-4 w-4 text-indigo-500" />
+                {t('vault.quiz.sleepData')}
+              </h4>
+              
+              {/* Hours Slept Input */}
+              <div className="space-y-2">
+                <Label className="text-sm">{t('vault.quiz.hoursSlept')}</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  max="24"
+                  value={hoursSlept}
+                  onChange={(e) => setHoursSlept(e.target.value ? parseFloat(e.target.value) : '')}
+                  placeholder={t('vault.quiz.hoursSleptPlaceholder')}
+                  className="max-w-[140px]"
+                />
+              </div>
+              
+              {/* Sleep Quality Rating */}
+              <RatingButtonGroup
+                value={sleepQuality}
+                onChange={setSleepQuality}
+                label={t('vault.quiz.sleepQuality')}
+                icon={<Moon className="h-5 w-5 text-indigo-500" />}
+                getLevelLabel={getLevelLabel}
+              />
+            </div>
           )}
 
           {/* Pre-Lift Quiz Tip */}

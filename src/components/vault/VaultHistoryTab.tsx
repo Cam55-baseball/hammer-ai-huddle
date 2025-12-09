@@ -253,6 +253,25 @@ export function VaultHistoryTab({
                       <p className="font-bold">{quiz.physical_readiness}/5</p>
                     </div>
                   </div>
+                  
+                  {/* Sleep Data for Morning Quiz */}
+                  {quiz.quiz_type === 'morning' && (quiz.hours_slept || quiz.sleep_quality) && (
+                    <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border">
+                      {quiz.hours_slept && (
+                        <div className="text-center p-2 bg-indigo-500/10 rounded">
+                          <p className="text-xs text-muted-foreground">{t('vault.quiz.hoursSlept')}</p>
+                          <p className="font-bold text-indigo-600">{quiz.hours_slept}h</p>
+                        </div>
+                      )}
+                      {quiz.sleep_quality && (
+                        <div className="text-center p-2 bg-indigo-500/10 rounded">
+                          <p className="text-xs text-muted-foreground">{t('vault.quiz.sleepQuality')}</p>
+                          <p className="font-bold text-indigo-600">{quiz.sleep_quality}/5</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   {quiz.reflection_did_well && (
                     <p className="text-sm mt-2 text-muted-foreground">
                       <span className="font-medium text-foreground">{t('vault.quiz.reflectionPrompts.didWell')}:</span> {quiz.reflection_did_well}
