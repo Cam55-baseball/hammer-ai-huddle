@@ -22,7 +22,6 @@ interface PerformanceTest {
 
 interface VaultPerformanceTestCardProps {
   tests: PerformanceTest[];
-  sport: string;
   onSave: (testType: string, results: Record<string, number>) => Promise<{ success: boolean }>;
 }
 
@@ -47,7 +46,7 @@ const TEST_METRICS: Record<string, { unit: string; higher_better: boolean }> = {
   vertical_jump: { unit: 'in', higher_better: true },
 };
 
-export function VaultPerformanceTestCard({ tests, sport, onSave }: VaultPerformanceTestCardProps) {
+export function VaultPerformanceTestCard({ tests, onSave }: VaultPerformanceTestCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
