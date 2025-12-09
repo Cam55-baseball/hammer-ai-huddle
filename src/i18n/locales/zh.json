@@ -3248,7 +3248,13 @@
       "saved": "已保存到Vault",
       "alreadySaved": "已保存",
       "saveSuccess": "训练已保存到您的Vault！",
-      "saveFailed": "保存训练失败"
+      "saveFailed": "保存训练失败",
+      "purpose": "目的",
+      "steps": "步骤",
+      "repsSets": "次数/组数",
+      "equipment": "器材",
+      "coachingCues": "教练提示",
+      "noDetails": "此训练没有其他详细信息。"
     }
   }
 }

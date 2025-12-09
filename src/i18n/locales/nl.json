@@ -3277,7 +3277,13 @@
       "saved": "Opgeslagen in Vault",
       "alreadySaved": "Al opgeslagen",
       "saveSuccess": "Oefening opgeslagen in je Vault!",
-      "saveFailed": "Oefening opslaan mislukt"
+      "saveFailed": "Oefening opslaan mislukt",
+      "purpose": "Doel",
+      "steps": "Stappen",
+      "repsSets": "Herhalingen/Sets",
+      "equipment": "Apparatuur",
+      "coachingCues": "Coaching Tips",
+      "noDetails": "Geen extra details beschikbaar voor deze oefening."
     }
   }
 }

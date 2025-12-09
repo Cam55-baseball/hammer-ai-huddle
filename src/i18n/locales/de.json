@@ -4024,7 +4024,13 @@
       "saved": "Im Vault gespeichert",
       "alreadySaved": "Bereits gespeichert",
       "saveSuccess": "Übung in Vault gespeichert!",
-      "saveFailed": "Speichern der Übung fehlgeschlagen"
+      "saveFailed": "Speichern der Übung fehlgeschlagen",
+      "purpose": "Zweck",
+      "steps": "Schritte",
+      "repsSets": "Wiederholungen/Sätze",
+      "equipment": "Ausrüstung",
+      "coachingCues": "Coaching-Hinweise",
+      "noDetails": "Keine zusätzlichen Details für diese Übung verfügbar."
     }
   }
 }

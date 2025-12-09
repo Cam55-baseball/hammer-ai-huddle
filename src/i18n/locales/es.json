@@ -4002,7 +4002,13 @@
       "saved": "Guardado en Vault",
       "alreadySaved": "Ya guardado",
       "saveSuccess": "¡Ejercicio guardado en tu Vault!",
-      "saveFailed": "Error al guardar ejercicio"
+      "saveFailed": "Error al guardar ejercicio",
+      "purpose": "Propósito",
+      "steps": "Pasos",
+      "repsSets": "Repeticiones/Series",
+      "equipment": "Equipamiento",
+      "coachingCues": "Indicaciones",
+      "noDetails": "No hay detalles adicionales para este ejercicio."
     }
   }
 }

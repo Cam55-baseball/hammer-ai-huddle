@@ -4024,7 +4024,13 @@
       "saved": "Sauvegardé dans Vault",
       "alreadySaved": "Déjà sauvegardé",
       "saveSuccess": "Exercice sauvegardé dans votre Vault !",
-      "saveFailed": "Échec de la sauvegarde de l'exercice"
+      "saveFailed": "Échec de la sauvegarde de l'exercice",
+      "purpose": "Objectif",
+      "steps": "Étapes",
+      "repsSets": "Répétitions/Séries",
+      "equipment": "Équipement",
+      "coachingCues": "Conseils",
+      "noDetails": "Aucun détail supplémentaire disponible pour cet exercice."
     }
   }
 }

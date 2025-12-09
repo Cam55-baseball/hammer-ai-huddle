@@ -4201,7 +4201,13 @@
       "saved": "Saved to Vault",
       "alreadySaved": "Already saved",
       "saveSuccess": "Drill saved to your Vault!",
-      "saveFailed": "Failed to save drill"
+      "saveFailed": "Failed to save drill",
+      "purpose": "Purpose",
+      "steps": "Steps",
+      "repsSets": "Reps/Sets",
+      "equipment": "Equipment",
+      "coachingCues": "Coaching Cues",
+      "noDetails": "No additional details available for this drill."
     }
   }
 }
