@@ -468,11 +468,11 @@ serve(async (req) => {
 
     const uvIndex = uvValues.length ? uvValues[0] : 0;
     const visibilityKm = visibilityValues.length ? visibilityValues[0] / 1000 : 10; // visibility in meters -> km
-    const visibilityMiles = visibilityKm * 0.621371;
+    const visibilityMiles = Math.round(visibilityKm * 0.621371);
 
     const temperatureF = current.temperature_2m * 9 / 5 + 32;
     const feelsLikeF = current.apparent_temperature != null ? current.apparent_temperature * 9 / 5 + 32 : temperatureF;
-    const windSpeedMph = current.wind_speed_10m != null ? current.wind_speed_10m * 0.621371 : 0;
+    const windSpeedMph = current.wind_speed_10m != null ? Math.round(current.wind_speed_10m * 0.621371) : 0;
 
     const windDirectionDeg = current.wind_direction_10m;
     const windDirection = typeof windDirectionDeg === "number" ? degreesToCardinal(windDirectionDeg) : "N/A";
