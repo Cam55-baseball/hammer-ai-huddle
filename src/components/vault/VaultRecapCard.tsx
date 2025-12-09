@@ -7,7 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   FileText, ChevronDown, Calendar, TrendingUp, Dumbbell, 
-  Brain, Target, Award, Download, Eye 
+  Brain, Target, Award, Sparkles, Lightbulb, CheckCircle2,
+  Activity, Zap, Heart
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
@@ -22,15 +23,26 @@ interface VaultRecap {
     highlights?: string[];
     improvements?: string[];
     focus_areas?: string[];
+    recommendations?: string[];
     workout_stats?: {
       total_workouts: number;
       total_weight: number;
-      avg_intensity: number;
+      weight_increases: number;
+      avg_session_weight: number;
     };
     mental_stats?: {
-      avg_readiness: number;
-      best_days: string[];
+      avg_mental: number;
+      avg_emotional: number;
+      avg_physical: number;
+      quiz_count: number;
     };
+    nutrition_stats?: {
+      avg_calories: number;
+      avg_protein: number;
+      avg_energy: number;
+      logs_count: number;
+    };
+    performance_tests?: number;
   };
   generated_at: string;
 }
@@ -86,10 +98,24 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
               <div className="p-4 rounded-lg bg-gradient-to-br from-violet-500/10 to-primary/10 border border-violet-500/20">
                 {canGenerate ? (
                   <div className="text-center space-y-3">
-                    <Award className="h-10 w-10 mx-auto text-violet-500" />
+                    <div className="relative">
+                      <Award className="h-10 w-10 mx-auto text-violet-500" />
+                      <Sparkles className="h-4 w-4 absolute -top-1 -right-1 text-amber-500 animate-pulse" />
+                    </div>
                     <p className="text-sm font-medium">{t('vault.recap.readyToGenerate')}</p>
-                    <Button onClick={handleGenerate} disabled={generating} className="w-full">
-                      {generating ? t('common.loading') : t('vault.recap.generate')}
+                    <p className="text-xs text-muted-foreground">AI-powered insights from your training data</p>
+                    <Button onClick={handleGenerate} disabled={generating} className="w-full gap-2">
+                      {generating ? (
+                        <>
+                          <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          Analyzing your data...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" />
+                          {t('vault.recap.generate')}
+                        </>
+                      )}
                     </Button>
                   </div>
                 ) : (
@@ -117,7 +143,8 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
                       {recaps.map((recap) => (
                         <div
                           key={recap.id}
-                          className="p-3 rounded-lg bg-muted/50 border border-border hover:bg-muted/70 transition-colors"
+                          className="p-3 rounded-lg bg-muted/50 border border-border hover:bg-muted/70 transition-colors cursor-pointer"
+                          onClick={() => handleViewRecap(recap)}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -126,24 +153,20 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
                                 {new Date(recap.recap_period_start).toLocaleDateString()} - {new Date(recap.recap_period_end).toLocaleDateString()}
                               </span>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewRecap(recap)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              {t('vault.recap.view')}
-                            </Button>
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <Sparkles className="h-3 w-3" />
+                              AI
+                            </Badge>
                           </div>
                           
                           <div className="flex flex-wrap gap-2">
-                            {recap.total_weight_lifted && (
+                            {recap.total_weight_lifted && recap.total_weight_lifted > 0 && (
                               <Badge variant="secondary" className="text-xs gap-1">
                                 <Dumbbell className="h-3 w-3" />
                                 {recap.total_weight_lifted.toLocaleString()} lbs
                               </Badge>
                             )}
-                            {recap.strength_change_percent !== null && (
+                            {recap.strength_change_percent !== null && recap.strength_change_percent !== 0 && (
                               <Badge 
                                 variant="outline" 
                                 className={`text-xs gap-1 ${
@@ -153,6 +176,12 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
                               >
                                 <TrendingUp className="h-3 w-3" />
                                 {recap.strength_change_percent > 0 ? '+' : ''}{recap.strength_change_percent}%
+                              </Badge>
+                            )}
+                            {recap.recap_data.workout_stats?.total_workouts && (
+                              <Badge variant="secondary" className="text-xs gap-1">
+                                <Activity className="h-3 w-3" />
+                                {recap.recap_data.workout_stats.total_workouts} workouts
                               </Badge>
                             )}
                           </div>
@@ -169,11 +198,15 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
 
       {/* Recap Detail Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-violet-500" />
               {t('vault.recap.detailTitle')}
+              <Badge variant="outline" className="text-xs gap-1 ml-2">
+                <Sparkles className="h-3 w-3" />
+                AI Generated
+              </Badge>
             </DialogTitle>
             <DialogDescription>
               {selectedRecap && (
@@ -185,73 +218,155 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
           </DialogHeader>
 
           {selectedRecap && (
-            <div className="space-y-4">
-              {/* Summary Stats */}
-              <div className="grid grid-cols-2 gap-3">
-                {selectedRecap.total_weight_lifted && (
-                  <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <Dumbbell className="h-6 w-6 mx-auto mb-1 text-orange-500" />
-                    <p className="text-lg font-bold">{selectedRecap.total_weight_lifted.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">{t('vault.recap.totalWeight')}</p>
-                  </div>
+            <div className="space-y-5">
+              {/* Stats Overview Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {selectedRecap.recap_data.workout_stats && (
+                  <>
+                    <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
+                      <Dumbbell className="h-5 w-5 mx-auto mb-1 text-orange-500" />
+                      <p className="text-lg font-bold">{selectedRecap.recap_data.workout_stats.total_workouts}</p>
+                      <p className="text-xs text-muted-foreground">Workouts</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20 text-center">
+                      <Activity className="h-5 w-5 mx-auto mb-1 text-violet-500" />
+                      <p className="text-lg font-bold">{selectedRecap.total_weight_lifted?.toLocaleString() || 0}</p>
+                      <p className="text-xs text-muted-foreground">Total lbs</p>
+                    </div>
+                  </>
                 )}
                 {selectedRecap.strength_change_percent !== null && (
-                  <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <TrendingUp className={`h-6 w-6 mx-auto mb-1 ${
-                      selectedRecap.strength_change_percent > 0 ? 'text-green-500' : 'text-red-500'
+                  <div className={`p-3 rounded-lg text-center ${
+                    selectedRecap.strength_change_percent > 0 ? 'bg-green-500/10 border border-green-500/20' : 
+                    selectedRecap.strength_change_percent < 0 ? 'bg-red-500/10 border border-red-500/20' : 
+                    'bg-muted/50 border border-border'
+                  }`}>
+                    <TrendingUp className={`h-5 w-5 mx-auto mb-1 ${
+                      selectedRecap.strength_change_percent > 0 ? 'text-green-500' : 
+                      selectedRecap.strength_change_percent < 0 ? 'text-red-500' : 'text-muted-foreground'
                     }`} />
                     <p className="text-lg font-bold">
                       {selectedRecap.strength_change_percent > 0 ? '+' : ''}{selectedRecap.strength_change_percent}%
                     </p>
-                    <p className="text-xs text-muted-foreground">{t('vault.recap.strengthChange')}</p>
+                    <p className="text-xs text-muted-foreground">Strength</p>
+                  </div>
+                )}
+                {selectedRecap.recap_data.mental_stats && selectedRecap.recap_data.mental_stats.quiz_count > 0 && (
+                  <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-center">
+                    <Brain className="h-5 w-5 mx-auto mb-1 text-cyan-500" />
+                    <p className="text-lg font-bold">{selectedRecap.recap_data.mental_stats.avg_mental.toFixed(1)}/5</p>
+                    <p className="text-xs text-muted-foreground">Avg Mental</p>
                   </div>
                 )}
               </div>
 
-              {/* Summary */}
+              {/* AI Summary */}
               {selectedRecap.recap_data.summary && (
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Brain className="h-4 w-4" />
-                    {t('vault.recap.summary')}
-                  </h4>
-                  <p className="text-sm text-muted-foreground">{selectedRecap.recap_data.summary}</p>
+                <div className="p-4 rounded-lg bg-gradient-to-br from-violet-500/10 to-primary/5 border border-violet-500/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="h-4 w-4 text-violet-500" />
+                    <h4 className="text-sm font-semibold">{t('vault.recap.summary')}</h4>
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed">{selectedRecap.recap_data.summary}</p>
                 </div>
               )}
 
               {/* Highlights */}
               {selectedRecap.recap_data.highlights && selectedRecap.recap_data.highlights.length > 0 && (
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium flex items-center gap-2">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
                     <Award className="h-4 w-4 text-amber-500" />
                     {t('vault.recap.highlights')}
                   </h4>
-                  <ul className="space-y-1">
+                  <div className="space-y-2">
                     {selectedRecap.recap_data.highlights.map((h, i) => (
-                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                        <span className="text-green-500">✓</span>
-                        {h}
-                      </li>
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                        <CheckCircle2 className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                        <span className="text-sm">{h}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Improvements */}
+              {selectedRecap.recap_data.improvements && selectedRecap.recap_data.improvements.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                    Improvements
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedRecap.recap_data.improvements.map((imp, i) => (
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-green-500/5 border border-green-500/10">
+                        <Zap className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                        <span className="text-sm">{imp}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {/* Focus Areas */}
               {selectedRecap.recap_data.focus_areas && selectedRecap.recap_data.focus_areas.length > 0 && (
-                <div className="space-y-1">
-                  <h4 className="text-sm font-medium flex items-center gap-2">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
                     <Target className="h-4 w-4 text-cyan-500" />
                     {t('vault.recap.focusAreas')}
                   </h4>
-                  <ul className="space-y-1">
+                  <div className="space-y-2">
                     {selectedRecap.recap_data.focus_areas.map((f, i) => (
-                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                        <span className="text-cyan-500">→</span>
-                        {f}
-                      </li>
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
+                        <Target className="h-4 w-4 text-cyan-500 mt-0.5 shrink-0" />
+                        <span className="text-sm">{f}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {selectedRecap.recap_data.recommendations && selectedRecap.recap_data.recommendations.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4 text-primary" />
+                    Recommendations for Next 6 Weeks
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedRecap.recap_data.recommendations.map((rec, i) => (
+                      <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                        <Lightbulb className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        <span className="text-sm">{rec}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Stats */}
+              {(selectedRecap.recap_data.mental_stats?.quiz_count || selectedRecap.recap_data.nutrition_stats?.logs_count) && (
+                <div className="pt-3 border-t border-border">
+                  <h4 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Additional Data</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRecap.recap_data.mental_stats && selectedRecap.recap_data.mental_stats.quiz_count > 0 && (
+                      <Badge variant="secondary" className="text-xs gap-1">
+                        <Heart className="h-3 w-3" />
+                        {selectedRecap.recap_data.mental_stats.quiz_count} focus quizzes
+                      </Badge>
+                    )}
+                    {selectedRecap.recap_data.nutrition_stats && selectedRecap.recap_data.nutrition_stats.logs_count > 0 && (
+                      <Badge variant="secondary" className="text-xs gap-1">
+                        <Activity className="h-3 w-3" />
+                        {selectedRecap.recap_data.nutrition_stats.logs_count} nutrition logs
+                      </Badge>
+                    )}
+                    {selectedRecap.recap_data.workout_stats?.weight_increases && selectedRecap.recap_data.workout_stats.weight_increases > 0 && (
+                      <Badge variant="secondary" className="text-xs gap-1 text-green-600">
+                        <TrendingUp className="h-3 w-3" />
+                        {selectedRecap.recap_data.workout_stats.weight_increases} weight increases
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

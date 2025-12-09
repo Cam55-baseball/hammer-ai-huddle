@@ -631,14 +631,22 @@ export function useVault() {
   }, [user]);
 
   const generateRecap = useCallback(async () => {
-    if (!user) return { success: false };
-    const endDate = new Date(); const startDate = new Date(); startDate.setDate(startDate.getDate() - 42);
-    const { error } = await supabase.from('vault_recaps').insert({
-      user_id: user.id, recap_period_start: startDate.toISOString().split('T')[0], recap_period_end: endDate.toISOString().split('T')[0],
-      recap_data: { summary: 'Your 6-week training recap', highlights: ['Consistent training'], focus_areas: ['Continue progressing'] },
-    });
-    if (!error) await fetchRecaps();
-    return { success: !error };
+    if (!user) return { success: false, error: 'Not authenticated' };
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-vault-recap');
+      
+      if (error) {
+        console.error('Error generating recap:', error);
+        return { success: false, error: error.message };
+      }
+      
+      await fetchRecaps();
+      return { success: true, data };
+    } catch (err) {
+      console.error('Error calling recap function:', err);
+      return { success: false, error: 'Failed to generate recap' };
+    }
   }, [user, fetchRecaps]);
 
   // Fetch history for date - includes all vault data types
