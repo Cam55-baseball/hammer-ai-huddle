@@ -8,10 +8,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   CalendarIcon, ChevronLeft, ChevronRight, 
-  Dumbbell, Brain, Apple, NotebookPen, Sparkles 
+  Dumbbell, Brain, Apple, NotebookPen, Sparkles,
+  Activity, Camera, Star, Droplets
 } from 'lucide-react';
 import { format, subDays, addDays, isSameDay, startOfDay } from 'date-fns';
-import { VaultFocusQuiz, VaultFreeNote, VaultWorkoutNote } from '@/hooks/useVault';
+import { 
+  VaultFocusQuiz, VaultFreeNote, VaultWorkoutNote, 
+  VaultPerformanceTest, VaultProgressPhoto, VaultScoutGrade, VaultNutritionLog 
+} from '@/hooks/useVault';
 
 interface HistoryEntry {
   date: string;
@@ -19,11 +23,15 @@ interface HistoryEntry {
   notes: VaultFreeNote[];
   workouts: VaultWorkoutNote[];
   nutritionLogged: boolean;
+  nutritionLog: VaultNutritionLog | null;
+  performanceTests: VaultPerformanceTest[];
+  progressPhotos: VaultProgressPhoto[];
+  scoutGrades: VaultScoutGrade[];
 }
 
 interface VaultHistoryTabProps {
   fetchHistoryForDate: (date: string) => Promise<HistoryEntry>;
-  entriesWithData: string[]; // dates that have data
+  entriesWithData: string[];
 }
 
 export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultHistoryTabProps) {
@@ -53,6 +61,26 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
     const dateStr = format(date, 'yyyy-MM-dd');
     return entriesWithData.includes(dateStr);
   };
+
+  const hasAnyEntries = historyData && (
+    historyData.quizzes.length > 0 || 
+    historyData.notes.length > 0 || 
+    historyData.workouts.length > 0 ||
+    historyData.nutritionLogged ||
+    historyData.performanceTests.length > 0 ||
+    historyData.progressPhotos.length > 0 ||
+    historyData.scoutGrades.length > 0
+  );
+
+  const gradeCategories = [
+    { key: 'hitting_grade', label: t('vault.scoutGrades.hitting') },
+    { key: 'power_grade', label: t('vault.scoutGrades.power') },
+    { key: 'speed_grade', label: t('vault.scoutGrades.speed') },
+    { key: 'defense_grade', label: t('vault.scoutGrades.fielding') },
+    { key: 'throwing_grade', label: t('vault.scoutGrades.arm') },
+    { key: 'leadership_grade', label: t('vault.scoutGrades.leadership') },
+    { key: 'self_efficacy_grade', label: t('vault.scoutGrades.selfEfficacy') },
+  ];
 
   return (
     <div className="space-y-4">
@@ -112,12 +140,7 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
             {t('common.loading')}
           </CardContent>
         </Card>
-      ) : !historyData || (
-        historyData.quizzes.length === 0 && 
-        historyData.notes.length === 0 && 
-        historyData.workouts.length === 0 &&
-        !historyData.nutritionLogged
-      ) ? (
+      ) : !hasAnyEntries ? (
         <Card>
           <CardContent className="p-6 text-center text-muted-foreground">
             <p>{t('vault.history.noEntries')}</p>
@@ -127,7 +150,7 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
         <ScrollArea className="max-h-[500px]">
           <div className="space-y-3">
             {/* Focus Quizzes */}
-            {historyData.quizzes.map((quiz) => (
+            {historyData?.quizzes.map((quiz) => (
               <Card key={quiz.id}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
@@ -163,7 +186,7 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
             ))}
 
             {/* Free Notes */}
-            {historyData.notes.map((note) => (
+            {historyData?.notes.map((note) => (
               <Card key={note.id}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
@@ -181,7 +204,7 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
             ))}
 
             {/* Workout Notes */}
-            {historyData.workouts.map((workout) => (
+            {historyData?.workouts.map((workout) => (
               <Card key={workout.id}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
@@ -210,8 +233,54 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
               </Card>
             ))}
 
-            {/* Nutrition Logged */}
-            {historyData.nutritionLogged && (
+            {/* Nutrition Log */}
+            {historyData?.nutritionLog && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Apple className="h-4 w-4 text-green-500" />
+                    {t('vault.nutrition.title')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                    {historyData.nutritionLog.calories && (
+                      <div className="text-center p-2 bg-muted/50 rounded">
+                        <p className="text-xs text-muted-foreground">{t('vault.nutrition.calories')}</p>
+                        <p className="font-bold">{historyData.nutritionLog.calories}</p>
+                      </div>
+                    )}
+                    {historyData.nutritionLog.protein_g && (
+                      <div className="text-center p-2 bg-muted/50 rounded">
+                        <p className="text-xs text-muted-foreground">{t('vault.nutrition.protein')}</p>
+                        <p className="font-bold">{historyData.nutritionLog.protein_g}g</p>
+                      </div>
+                    )}
+                    {historyData.nutritionLog.carbs_g && (
+                      <div className="text-center p-2 bg-muted/50 rounded">
+                        <p className="text-xs text-muted-foreground">{t('vault.nutrition.carbs')}</p>
+                        <p className="font-bold">{historyData.nutritionLog.carbs_g}g</p>
+                      </div>
+                    )}
+                    {historyData.nutritionLog.hydration_oz && (
+                      <div className="text-center p-2 bg-muted/50 rounded">
+                        <p className="text-xs text-muted-foreground">{t('vault.nutrition.hydration')}</p>
+                        <p className="font-bold">{historyData.nutritionLog.hydration_oz}oz</p>
+                      </div>
+                    )}
+                  </div>
+                  {historyData.nutritionLog.energy_level && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{t('vault.nutrition.energyLevel')}:</span>
+                      <Badge variant="secondary">{historyData.nutritionLog.energy_level}/10</Badge>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Nutrition Logged (fallback if no full log) */}
+            {historyData?.nutritionLogged && !historyData.nutritionLog && (
               <Card>
                 <CardContent className="p-4 flex items-center gap-3">
                   <Apple className="h-5 w-5 text-green-500" />
@@ -219,6 +288,125 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
                 </CardContent>
               </Card>
             )}
+
+            {/* Performance Tests */}
+            {historyData?.performanceTests.map((test) => (
+              <Card key={test.id}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-blue-500" />
+                    {t('vault.history.performanceTestEntry')}
+                    <Badge variant="outline" className="ml-auto text-xs capitalize">
+                      {test.test_type.replace('_', ' ')}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {Object.entries(test.results).map(([key, value]) => (
+                      <div key={key} className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                        <span className="text-xs text-muted-foreground capitalize">{key.replace('_', ' ')}</span>
+                        <div className="flex items-center gap-1">
+                          <span className="font-bold">{value}</span>
+                          {test.previous_results?.[key] && (
+                            <span className={`text-xs ${value > test.previous_results[key] ? 'text-green-500' : value < test.previous_results[key] ? 'text-red-500' : 'text-muted-foreground'}`}>
+                              ({value > test.previous_results[key] ? '+' : ''}{(value - test.previous_results[key]).toFixed(1)})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Progress Photos */}
+            {historyData?.progressPhotos.map((photo) => (
+              <Card key={photo.id}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Camera className="h-4 w-4 text-purple-500" />
+                    {t('vault.history.progressPhotoEntry')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                    {photo.weight_lbs && (
+                      <div className="text-center p-2 bg-muted/50 rounded">
+                        <p className="text-xs text-muted-foreground">{t('vault.photos.weight')}</p>
+                        <p className="font-bold">{photo.weight_lbs} lbs</p>
+                      </div>
+                    )}
+                    {photo.body_fat_percent && (
+                      <div className="text-center p-2 bg-muted/50 rounded">
+                        <p className="text-xs text-muted-foreground">{t('vault.photos.bodyFat')}</p>
+                        <p className="font-bold">{photo.body_fat_percent}%</p>
+                      </div>
+                    )}
+                    {photo.arm_measurement && (
+                      <div className="text-center p-2 bg-muted/50 rounded">
+                        <p className="text-xs text-muted-foreground">{t('vault.photos.arm')}</p>
+                        <p className="font-bold">{photo.arm_measurement}"</p>
+                      </div>
+                    )}
+                    {photo.chest_measurement && (
+                      <div className="text-center p-2 bg-muted/50 rounded">
+                        <p className="text-xs text-muted-foreground">{t('vault.photos.chest')}</p>
+                        <p className="font-bold">{photo.chest_measurement}"</p>
+                      </div>
+                    )}
+                    {photo.waist_measurement && (
+                      <div className="text-center p-2 bg-muted/50 rounded">
+                        <p className="text-xs text-muted-foreground">{t('vault.photos.waist')}</p>
+                        <p className="font-bold">{photo.waist_measurement}"</p>
+                      </div>
+                    )}
+                    {photo.leg_measurement && (
+                      <div className="text-center p-2 bg-muted/50 rounded">
+                        <p className="text-xs text-muted-foreground">{t('vault.photos.leg')}</p>
+                        <p className="font-bold">{photo.leg_measurement}"</p>
+                      </div>
+                    )}
+                  </div>
+                  {photo.notes && (
+                    <p className="text-sm mt-2 text-muted-foreground">{photo.notes}</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Scout Grades */}
+            {historyData?.scoutGrades.map((grade) => (
+              <Card key={grade.id}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    {t('vault.history.scoutGradeEntry')}
+                    <Badge variant="outline" className="ml-auto text-xs">
+                      {format(new Date(grade.graded_at), 'h:mm a')}
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                    {gradeCategories.map(({ key, label }) => {
+                      const value = grade[key as keyof VaultScoutGrade] as number | null;
+                      if (!value) return null;
+                      return (
+                        <div key={key} className="text-center p-2 bg-muted/50 rounded">
+                          <p className="text-xs text-muted-foreground">{label}</p>
+                          <p className="font-bold">{value}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {grade.notes && (
+                    <p className="text-sm mt-2 text-muted-foreground">{grade.notes}</p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </ScrollArea>
       )}

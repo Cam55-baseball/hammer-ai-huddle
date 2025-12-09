@@ -3900,7 +3900,12 @@
       "quizEntry": "Focus Quiz",
       "noteEntry": "Quick Note",
       "workoutEntry": "Workout Log",
-      "nutritionEntry": "Nutrition Log"
+      "nutritionEntry": "Nutrition Log",
+      "performanceTestEntry": "Performance Test",
+      "progressPhotoEntry": "Progress Photos",
+      "scoutGradeEntry": "Self Scout Grade",
+      "today": "Today",
+      "nutritionLogged": "Nutrition logged for this day"
     },
     "badges": {
       "first_entry": "First Entry",

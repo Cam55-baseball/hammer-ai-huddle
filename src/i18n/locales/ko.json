@@ -2963,6 +2963,11 @@
       "noteEntry": "자유 메모",
       "workoutEntry": "운동 메모",
       "nutritionEntry": "영양 기록",
+      "performanceTestEntry": "퍼포먼스 테스트",
+      "progressPhotoEntry": "진행 사진",
+      "scoutGradeEntry": "자기 스카우트 평가",
+      "today": "오늘",
+      "nutritionLogged": "이 날 영양이 기록되었습니다",
       "loading": "기록 로드 중..."
     },
     "nutrition": {

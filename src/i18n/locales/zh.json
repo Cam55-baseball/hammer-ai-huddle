@@ -2947,6 +2947,11 @@
       "noteEntry": "自由笔记",
       "workoutEntry": "训练笔记",
       "nutritionEntry": "营养日志",
+      "performanceTestEntry": "表现测试",
+      "progressPhotoEntry": "进度照片",
+      "scoutGradeEntry": "自我评分",
+      "today": "今天",
+      "nutritionLogged": "今日营养已记录",
       "loading": "加载历史中..."
     },
     "nutrition": {
