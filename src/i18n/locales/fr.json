@@ -3681,6 +3681,17 @@
       "sleepTimeHint": "À quelle heure vous êtes-vous couché?",
       "wakeTimeHint": "À quelle heure vous êtes-vous réveillé?",
       "sleepTip": "Complétez environ une heure avant de dormir pour de meilleurs résultats",
+      "preLiftTip": "Évaluez votre état actuel avant l'entraînement pour suivre comment la préparation affecte la performance",
+      "morningReminderFromNight": "💡 Demain: Complétez votre check-in du matin dans les 15 minutes après le réveil!",
+      "pending": "En attente",
+      "phoneFree": {
+        "title": "Pourquoi 1 heure sans téléphone avant de dormir?",
+        "blueLight": "Réduit l'exposition à la lumière bleue qui perturbe votre rythme circadien",
+        "melatonin": "Améliore la production naturelle de mélatonine pour un endormissement plus rapide",
+        "rem": "Améliore la qualité du sommeil paradoxal pour une meilleure consolidation de la mémoire",
+        "recovery": "Accélère la récupération physique et la réparation musculaire pendant la nuit",
+        "cortisol": "Réduit les niveaux de cortisol, diminuant le stress et l'anxiété"
+      },
       "level1": "Très Bas",
       "level2": "Bas",
       "level3": "Modéré",

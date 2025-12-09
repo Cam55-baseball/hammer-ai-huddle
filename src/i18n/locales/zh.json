@@ -2906,6 +2906,17 @@
       "sleepTimeHint": "您几点睡觉？",
       "wakeTimeHint": "您几点起床？",
       "sleepTip": "为获得最佳效果，请在睡前约一小时完成",
+      "preLiftTip": "在训练前评估您的当前状态，以跟踪准备情况如何影响表现",
+      "morningReminderFromNight": "💡 明天：请在起床后15分钟内完成您的晨间签到！",
+      "pending": "待完成",
+      "phoneFree": {
+        "title": "为什么睡前1小时不用手机？",
+        "blueLight": "减少扰乱生物钟的蓝光暴露",
+        "melatonin": "改善自然褪黑素分泌，更快入睡",
+        "rem": "提高REM睡眠质量，改善记忆巩固",
+        "recovery": "加速夜间身体恢复和肌肉修复",
+        "cortisol": "降低皮质醇水平，减少压力和焦虑"
+      },
       "level1": "非常低",
       "level2": "低",
       "level3": "中等",

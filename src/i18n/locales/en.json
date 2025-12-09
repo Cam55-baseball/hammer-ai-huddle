@@ -3858,6 +3858,17 @@
       "sleepTimeHint": "What time did you go to bed?",
       "wakeTimeHint": "What time did you wake up?",
       "sleepTip": "Complete this about an hour before bed for best results",
+      "preLiftTip": "Rate your current state before training to track how readiness affects performance",
+      "morningReminderFromNight": "💡 Tomorrow: Complete your Morning Check-in within 15 minutes of waking up!",
+      "pending": "Pending",
+      "phoneFree": {
+        "title": "Why 1 Hour Phone-Free Before Bed?",
+        "blueLight": "Reduces blue light exposure that disrupts your circadian rhythm",
+        "melatonin": "Improves natural melatonin production for faster sleep onset",
+        "rem": "Enhances REM sleep quality for better memory consolidation",
+        "recovery": "Accelerates physical recovery and muscle repair overnight",
+        "cortisol": "Lowers cortisol levels, reducing stress and anxiety"
+      },
       "level1": "Very Low",
       "level2": "Low",
       "level3": "Moderate",

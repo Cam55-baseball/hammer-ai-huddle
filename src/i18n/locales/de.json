@@ -3681,6 +3681,17 @@
       "sleepTimeHint": "Wann bist du ins Bett gegangen?",
       "wakeTimeHint": "Wann bist du aufgewacht?",
       "sleepTip": "Fülle dies etwa eine Stunde vor dem Schlafengehen aus für beste Ergebnisse",
+      "preLiftTip": "Bewerte deinen aktuellen Zustand vor dem Training um zu verfolgen wie Bereitschaft die Leistung beeinflusst",
+      "morningReminderFromNight": "💡 Morgen: Vervollständige dein Morgen-Check-in innerhalb von 15 Minuten nach dem Aufwachen!",
+      "pending": "Ausstehend",
+      "phoneFree": {
+        "title": "Warum 1 Stunde ohne Handy vor dem Schlafengehen?",
+        "blueLight": "Reduziert Blaulichtbelastung die deinen zirkadianen Rhythmus stört",
+        "melatonin": "Verbessert die natürliche Melatoninproduktion für schnelleres Einschlafen",
+        "rem": "Verbessert die REM-Schlafqualität für bessere Gedächtniskonsolidierung",
+        "recovery": "Beschleunigt die körperliche Erholung und Muskelreparatur über Nacht",
+        "cortisol": "Senkt den Cortisolspiegel und reduziert Stress und Angst"
+      },
       "level1": "Sehr Niedrig",
       "level2": "Niedrig",
       "level3": "Moderat",
