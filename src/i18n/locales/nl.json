@@ -3092,6 +3092,32 @@
       "viewRecap": "Samenvatting bekijken",
       "downloadPdf": "PDF downloaden"
     },
+    "delete": {
+      "confirmTitle": "Invoer verwijderen?",
+      "confirmMessage": "Deze actie kan niet ongedaan worden gemaakt. Deze invoer wordt permanent verwijderd.",
+      "success": "Invoer succesvol verwijderd"
+    },
+    "weekly": {
+      "thisWeek": "Deze week",
+      "noData": "Geen gegevens deze week",
+      "totalWorkouts": "Totaal trainingen",
+      "totalWeight": "Totaal gewicht (lbs)",
+      "avgEnergy": "Gem. energie",
+      "quizzesCompleted": "Voltooide quizzen",
+      "readinessTrend": "Gereedheidstrend",
+      "weightTrend": "Gewichtstrend",
+      "activityHeatmap": "Activiteit heatmap",
+      "weeklyHighlights": "Wekelijkse hoogtepunten",
+      "mental": "Mentaal",
+      "emotional": "Emotioneel",
+      "physical": "Fysiek",
+      "currentStreak": "Huidige reeks",
+      "longestStreak": "Langste reeks",
+      "totalEntries": "Totaal invoeren",
+      "badgesEarned": "Verdiende badges",
+      "days": "dagen",
+      "weightLifted": "Gewicht geheven"
+    },
     "badges": {
       "first_entry": "Eerste Entry",
       "week_warrior": "Week Krijger",

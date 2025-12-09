@@ -3122,6 +3122,32 @@
       "viewRecap": "レキャップを見る",
       "downloadPdf": "PDFをダウンロード"
     },
+    "delete": {
+      "confirmTitle": "エントリーを削除しますか？",
+      "confirmMessage": "この操作は元に戻せません。このエントリーは完全に削除されます。",
+      "success": "エントリーを削除しました"
+    },
+    "weekly": {
+      "thisWeek": "今週",
+      "noData": "今週のデータなし",
+      "totalWorkouts": "総トレーニング",
+      "totalWeight": "総重量 (lbs)",
+      "avgEnergy": "平均エネルギー",
+      "quizzesCompleted": "完了したクイズ",
+      "readinessTrend": "レディネストレンド",
+      "weightTrend": "ウェイトリフト推移",
+      "activityHeatmap": "アクティビティヒートマップ",
+      "weeklyHighlights": "週間ハイライト",
+      "mental": "メンタル",
+      "emotional": "感情",
+      "physical": "身体",
+      "currentStreak": "現在の連続記録",
+      "longestStreak": "最長連続記録",
+      "totalEntries": "総エントリー",
+      "badgesEarned": "獲得バッジ",
+      "days": "日",
+      "weightLifted": "ウェイト"
+    },
     "badges": {
       "first_entry": "初エントリー",
       "week_warrior": "週間ウォリアー",

@@ -3063,6 +3063,32 @@
       "viewRecap": "查看总结",
       "downloadPdf": "下载PDF"
     },
+    "delete": {
+      "confirmTitle": "删除条目？",
+      "confirmMessage": "此操作无法撤消。此条目将被永久删除。",
+      "success": "条目删除成功"
+    },
+    "weekly": {
+      "thisWeek": "本周",
+      "noData": "本周无数据",
+      "totalWorkouts": "总训练次数",
+      "totalWeight": "总重量 (磅)",
+      "avgEnergy": "平均能量",
+      "quizzesCompleted": "已完成问卷",
+      "readinessTrend": "准备趋势",
+      "weightTrend": "举重趋势",
+      "activityHeatmap": "活动热力图",
+      "weeklyHighlights": "每周亮点",
+      "mental": "心理",
+      "emotional": "情绪",
+      "physical": "身体",
+      "currentStreak": "当前连续天数",
+      "longestStreak": "最长连续天数",
+      "totalEntries": "总条目数",
+      "badgesEarned": "已获徽章",
+      "days": "天",
+      "weightLifted": "举重"
+    },
     "badges": {
       "first_entry": "首次条目",
       "week_warrior": "周战士",
