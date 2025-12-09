@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Bookmark, ChevronDown, Trash2, Target, Lightbulb } from 'lucide-react';
+import { Bookmark, ChevronDown, ChevronUp, Trash2, Target, Lightbulb } from 'lucide-react';
 
 interface SavedDrill {
   id: string;
@@ -37,6 +37,7 @@ export function VaultSavedItemsCard({ drills, tips, onDeleteDrill, onDeleteTip }
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('drills');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [expandedDrillId, setExpandedDrillId] = useState<string | null>(null);
 
   const handleDeleteDrill = async (id: string) => {
     setDeletingId(id);
@@ -95,40 +96,67 @@ export function VaultSavedItemsCard({ drills, tips, onDeleteDrill, onDeleteTip }
                 ) : (
                   <ScrollArea className="max-h-[300px]">
                     <div className="space-y-2">
-                      {drills.map((drill) => (
-                        <div
-                          key={drill.id}
-                          className="p-3 rounded-lg bg-muted/50 border border-border"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm">{drill.drill_name}</p>
-                              {drill.drill_description && (
-                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                  {drill.drill_description}
-                                </p>
-                              )}
-                              <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {drill.module_origin}
-                                </Badge>
-                                <Badge variant="secondary" className="text-xs">
-                                  {drill.sport}
-                                </Badge>
+                      {drills.map((drill) => {
+                        const isExpanded = expandedDrillId === drill.id;
+                        const hasLongDescription = drill.drill_description && drill.drill_description.length > 100;
+                        
+                        return (
+                          <div
+                            key={drill.id}
+                            className="p-3 rounded-lg bg-muted/50 border border-border"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm">{drill.drill_name}</p>
+                                {drill.drill_description && (
+                                  <div className="mt-1">
+                                    <p className={`text-xs text-muted-foreground whitespace-pre-wrap break-words ${!isExpanded && hasLongDescription ? 'line-clamp-2' : ''}`}>
+                                      {drill.drill_description}
+                                    </p>
+                                    {hasLongDescription && (
+                                      <Button
+                                        variant="link"
+                                        size="sm"
+                                        className="h-auto p-0 text-xs text-primary mt-1"
+                                        onClick={() => setExpandedDrillId(isExpanded ? null : drill.id)}
+                                      >
+                                        {isExpanded ? (
+                                          <span className="flex items-center gap-1">
+                                            <ChevronUp className="h-3 w-3" />
+                                            {t('vault.savedItems.showLess', 'Show less')}
+                                          </span>
+                                        ) : (
+                                          <span className="flex items-center gap-1">
+                                            <ChevronDown className="h-3 w-3" />
+                                            {t('vault.savedItems.readMore', 'Read more')}
+                                          </span>
+                                        )}
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {drill.module_origin}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {drill.sport}
+                                  </Badge>
+                                </div>
                               </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => handleDeleteDrill(drill.id)}
+                                disabled={deletingId === drill.id}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => handleDeleteDrill(drill.id)}
-                              disabled={deletingId === drill.id}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </ScrollArea>
                 )}

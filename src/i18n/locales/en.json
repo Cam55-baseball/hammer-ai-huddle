@@ -3998,7 +3998,9 @@
       "savedFrom": "Saved from",
       "deleteDrill": "Remove drill",
       "deleteTip": "Remove tip",
-      "deleted": "Item removed"
+      "deleted": "Item removed",
+      "readMore": "Read more",
+      "showLess": "Show less"
     },
     "performance": {
       "title": "Performance Tests",

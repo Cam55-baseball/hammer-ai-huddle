@@ -3096,7 +3096,9 @@
       "savedFrom": "保存元",
       "remove": "削除",
       "removed": "アイテムを削除しました",
-      "error": "アイテムの削除に失敗しました"
+      "error": "アイテムの削除に失敗しました",
+      "readMore": "もっと読む",
+      "showLess": "閉じる"
     },
     "performance": {
       "title": "パフォーマンステスト",

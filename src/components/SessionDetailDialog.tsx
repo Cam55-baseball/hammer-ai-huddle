@@ -77,9 +77,28 @@ export function SessionDetailDialog({
   }, [savedDrills, session.ai_analysis?.drills, session.module, session.sport]);
 
   const handleSaveDrill = async (drill: any) => {
+    // Build complete description with all drill info
+    let fullDescription = drill.purpose || '';
+    
+    if (drill.steps && drill.steps.length > 0) {
+      fullDescription += `\n\nSteps:\n${drill.steps.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`;
+    }
+    
+    if (drill.reps_sets) {
+      fullDescription += `\n\nReps/Sets: ${drill.reps_sets}`;
+    }
+    
+    if (drill.equipment) {
+      fullDescription += `\nEquipment: ${drill.equipment}`;
+    }
+    
+    if (drill.cues && drill.cues.length > 0) {
+      fullDescription += `\n\nCoaching Cues: ${drill.cues.join(', ')}`;
+    }
+
     const result = await saveDrill({
       drill_name: drill.title,
-      drill_description: drill.purpose || null,
+      drill_description: fullDescription || null,
       module_origin: session.module || '',
       sport: session.sport,
     });
