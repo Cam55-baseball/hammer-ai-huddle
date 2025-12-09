@@ -3821,7 +3821,9 @@
       "savedFrom": "Gespeichert von",
       "deleteDrill": "Übung Entfernen",
       "deleteTip": "Tipp Entfernen",
-      "deleted": "Element entfernt"
+      "deleted": "Element entfernt",
+      "readMore": "Mehr lesen",
+      "showLess": "Weniger anzeigen"
     },
     "performance": {
       "title": "Leistungstests",

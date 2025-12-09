@@ -3066,7 +3066,9 @@
       "savedFrom": "Opgeslagen van",
       "remove": "Verwijderen",
       "removed": "Item verwijderd",
-      "error": "Verwijderen item mislukt"
+      "error": "Verwijderen item mislukt",
+      "readMore": "Lees meer",
+      "showLess": "Minder tonen"
     },
     "performance": {
       "title": "Prestatietests",

@@ -3053,7 +3053,9 @@
       "savedFrom": "저장 출처",
       "remove": "삭제",
       "removed": "항목이 삭제되었습니다",
-      "error": "항목 삭제 실패"
+      "error": "항목 삭제 실패",
+      "readMore": "더 보기",
+      "showLess": "접기"
     },
     "performance": {
       "title": "퍼포먼스 테스트",

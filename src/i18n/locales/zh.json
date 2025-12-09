@@ -3037,7 +3037,9 @@
       "savedFrom": "保存自",
       "remove": "删除",
       "removed": "项目已删除",
-      "error": "删除项目失败"
+      "error": "删除项目失败",
+      "readMore": "阅读更多",
+      "showLess": "收起"
     },
     "performance": {
       "title": "表现测试",

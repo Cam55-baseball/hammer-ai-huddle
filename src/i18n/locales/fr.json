@@ -3821,7 +3821,9 @@
       "savedFrom": "Sauvegardé de",
       "deleteDrill": "Supprimer l'exercice",
       "deleteTip": "Supprimer le conseil",
-      "deleted": "Élément supprimé"
+      "deleted": "Élément supprimé",
+      "readMore": "Lire plus",
+      "showLess": "Afficher moins"
     },
     "performance": {
       "title": "Tests de Performance",
