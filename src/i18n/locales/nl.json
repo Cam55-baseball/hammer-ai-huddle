@@ -2976,6 +2976,11 @@
       "noteEntry": "Vrije notitie",
       "workoutEntry": "Workout notitie",
       "nutritionEntry": "Voedingslog",
+      "performanceTestEntry": "Prestatietest",
+      "progressPhotoEntry": "Voortgangsfoto's",
+      "scoutGradeEntry": "Zelf-scout beoordeling",
+      "today": "Vandaag",
+      "nutritionLogged": "Voeding gelogd voor deze dag",
       "loading": "Geschiedenis laden..."
     },
     "nutrition": {

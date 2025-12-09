@@ -3701,7 +3701,12 @@
       "quizEntry": "Cuestionario de Enfoque",
       "noteEntry": "Nota Rápida",
       "workoutEntry": "Registro de Entrenamiento",
-      "nutritionEntry": "Registro Nutricional"
+      "nutritionEntry": "Registro Nutricional",
+      "performanceTestEntry": "Prueba de Rendimiento",
+      "progressPhotoEntry": "Fotos de Progreso",
+      "scoutGradeEntry": "Auto-Evaluación Scout",
+      "today": "Hoy",
+      "nutritionLogged": "Nutrición registrada para este día"
     },
     "badges": {
       "first_entry": "Primera Entrada",

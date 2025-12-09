@@ -3723,7 +3723,12 @@
       "quizEntry": "Quiz de Focus",
       "noteEntry": "Note Rapide",
       "workoutEntry": "Journal d'Entraînement",
-      "nutritionEntry": "Journal Nutritionnel"
+      "nutritionEntry": "Journal Nutritionnel",
+      "performanceTestEntry": "Test de Performance",
+      "progressPhotoEntry": "Photos de Progrès",
+      "scoutGradeEntry": "Auto-Évaluation Scout",
+      "today": "Aujourd'hui",
+      "nutritionLogged": "Nutrition enregistrée pour ce jour"
     },
     "badges": {
       "first_entry": "Première Entrée",

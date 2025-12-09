@@ -3006,6 +3006,11 @@
       "noteEntry": "フリーノート",
       "workoutEntry": "ワークアウトノート",
       "nutritionEntry": "栄養ログ",
+      "performanceTestEntry": "パフォーマンステスト",
+      "progressPhotoEntry": "進捗写真",
+      "scoutGradeEntry": "自己スカウト評価",
+      "today": "今日",
+      "nutritionLogged": "この日の栄養が記録されています",
       "loading": "履歴を読み込み中..."
     },
     "nutrition": {

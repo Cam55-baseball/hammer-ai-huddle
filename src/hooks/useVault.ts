@@ -640,22 +640,80 @@ export function useVault() {
     return { success: !error };
   }, [user, fetchRecaps]);
 
-  // Fetch history for date
+  // Fetch history for date - includes all vault data types
   const fetchHistoryForDate = useCallback(async (date: string) => {
-    if (!user) return { date, quizzes: [], notes: [], workouts: [], nutritionLogged: false };
-    const [{ data: quizzes }, { data: notes }, { data: workouts }, { data: nutrition }] = await Promise.all([
+    if (!user) return { 
+      date, quizzes: [], notes: [], workouts: [], nutritionLogged: false,
+      performanceTests: [], progressPhotos: [], scoutGrades: [], nutritionLog: null
+    };
+    
+    const [
+      { data: quizzes }, 
+      { data: notes }, 
+      { data: workouts }, 
+      { data: nutrition },
+      { data: perfTests },
+      { data: photos },
+      { data: grades }
+    ] = await Promise.all([
       supabase.from('vault_focus_quizzes').select('*').eq('user_id', user.id).eq('entry_date', date),
       supabase.from('vault_free_notes').select('*').eq('user_id', user.id).eq('entry_date', date),
       supabase.from('vault_workout_notes').select('*').eq('user_id', user.id).eq('entry_date', date),
-      supabase.from('vault_nutrition_logs').select('id').eq('user_id', user.id).eq('entry_date', date).maybeSingle(),
+      supabase.from('vault_nutrition_logs').select('*').eq('user_id', user.id).eq('entry_date', date).maybeSingle(),
+      supabase.from('vault_performance_tests').select('*').eq('user_id', user.id).eq('test_date', date),
+      supabase.from('vault_progress_photos').select('*').eq('user_id', user.id).eq('photo_date', date),
+      supabase.from('vault_scout_grades').select('*').eq('user_id', user.id).gte('graded_at', `${date}T00:00:00`).lt('graded_at', `${date}T23:59:59`),
     ]);
+    
     return {
       date,
       quizzes: (quizzes || []) as VaultFocusQuiz[],
       notes: (notes || []) as VaultFreeNote[],
       workouts: (workouts || []).map(w => ({ ...w, weight_increases: (w.weight_increases || []) as unknown as WeightIncrease[] })) as VaultWorkoutNote[],
       nutritionLogged: !!nutrition,
+      nutritionLog: nutrition ? { ...nutrition, supplements: (nutrition.supplements as string[]) || [] } as VaultNutritionLog : null,
+      performanceTests: (perfTests || []).map(t => ({ ...t, results: t.results as Record<string, number>, previous_results: t.previous_results as Record<string, number> | null })) as VaultPerformanceTest[],
+      progressPhotos: (photos || []).map(p => ({ ...p, photo_urls: (p.photo_urls as string[]) || [] })) as VaultProgressPhoto[],
+      scoutGrades: (grades || []) as VaultScoutGrade[],
     };
+  }, [user]);
+
+  // Populate entriesWithData for calendar highlighting
+  const fetchEntriesWithData = useCallback(async () => {
+    if (!user) return;
+    
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 90);
+    const startDate = thirtyDaysAgo.toISOString().split('T')[0];
+    
+    const [
+      { data: quizDates },
+      { data: noteDates },
+      { data: workoutDates },
+      { data: nutritionDates },
+      { data: perfDates },
+      { data: photoDates },
+      { data: gradeDates }
+    ] = await Promise.all([
+      supabase.from('vault_focus_quizzes').select('entry_date').eq('user_id', user.id).gte('entry_date', startDate),
+      supabase.from('vault_free_notes').select('entry_date').eq('user_id', user.id).gte('entry_date', startDate),
+      supabase.from('vault_workout_notes').select('entry_date').eq('user_id', user.id).gte('entry_date', startDate),
+      supabase.from('vault_nutrition_logs').select('entry_date').eq('user_id', user.id).gte('entry_date', startDate),
+      supabase.from('vault_performance_tests').select('test_date').eq('user_id', user.id).gte('test_date', startDate),
+      supabase.from('vault_progress_photos').select('photo_date').eq('user_id', user.id).gte('photo_date', startDate),
+      supabase.from('vault_scout_grades').select('graded_at').eq('user_id', user.id).gte('graded_at', startDate),
+    ]);
+    
+    const allDates = new Set<string>();
+    quizDates?.forEach(q => allDates.add(q.entry_date));
+    noteDates?.forEach(n => allDates.add(n.entry_date));
+    workoutDates?.forEach(w => allDates.add(w.entry_date));
+    nutritionDates?.forEach(n => allDates.add(n.entry_date));
+    perfDates?.forEach(p => allDates.add(p.test_date));
+    photoDates?.forEach(p => allDates.add(p.photo_date));
+    gradeDates?.forEach(g => allDates.add(g.graded_at?.split('T')[0] || ''));
+    
+    setEntriesWithData(Array.from(allDates).filter(d => d));
   }, [user]);
 
   // Load initial data
@@ -666,11 +724,12 @@ export function useVault() {
       await Promise.all([
         fetchStreak(), fetchTodaysQuizzes(), fetchTodaysNotes(), fetchWorkoutNotes(),
         fetchNutritionLog(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchRecaps(),
+        fetchEntriesWithData(),
       ]);
       setLoading(false);
     };
     loadData();
-  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLog, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps]);
+  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLog, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps, fetchEntriesWithData]);
 
   return {
     loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLog, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData,
