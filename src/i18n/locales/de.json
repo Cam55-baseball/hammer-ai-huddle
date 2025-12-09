@@ -477,7 +477,10 @@
     "scoutApplications": "Scout-Bewerbungen",
     "subscribers": "Abonnenten",
     "adminDashboard": "Admin-Dashboard",
-    "signOut": "Abmelden"
+    "signOut": "Abmelden",
+    "vault": "Der Tresor",
+    "bounceBackBay": "Erholungsbucht",
+    "mindFuel": "Geistiger Treibstoff"
   },
   "sidebar": {
     "ownerBio": "Eigentümer-Bio",
@@ -3896,8 +3899,5 @@
       "days": "Tage",
       "weightLifted": "Gewicht gehoben"
     }
-  },
-  "navigation": {
-    "vault": "Der Tresor"
   }
 }

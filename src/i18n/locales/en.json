@@ -576,7 +576,10 @@
     "scoutApplications": "Scout Applications",
     "subscribers": "Subscribers",
     "adminDashboard": "Admin Dashboard",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "vault": "The Vault",
+    "bounceBackBay": "Bounce Back Bay",
+    "mindFuel": "Mind Fuel"
   },
   "sidebar": {
     "ownerBio": "Owner Bio",
@@ -4073,8 +4076,5 @@
       "days": "days",
       "weightLifted": "Weight Lifted"
     }
-  },
-  "navigation": {
-    "vault": "The Vault"
   }
 }

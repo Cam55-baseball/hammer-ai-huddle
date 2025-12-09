@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FileText, ChevronDown, Calendar, TrendingUp, Dumbbell, 
   Brain, Target, Award, Sparkles, Lightbulb, CheckCircle2,
@@ -52,9 +53,10 @@ interface VaultRecapCardProps {
   canGenerate: boolean;
   daysUntilNextRecap: number;
   onGenerate: () => Promise<{ success: boolean }>;
+  isLoading?: boolean;
 }
 
-export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGenerate }: VaultRecapCardProps) {
+export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGenerate, isLoading }: VaultRecapCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -71,6 +73,39 @@ export function VaultRecapCard({ recaps, canGenerate, daysUntilNextRecap, onGene
     setSelectedRecap(recap);
     setViewDialogOpen(true);
   };
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-5 w-5 rounded" />
+              <Skeleton className="h-5 w-32" />
+            </div>
+            <Skeleton className="h-4 w-4" />
+          </div>
+          <Skeleton className="h-4 w-48 mt-2" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="p-4 rounded-lg border border-border">
+            <div className="text-center space-y-3">
+              <Skeleton className="h-10 w-10 mx-auto rounded-full" />
+              <Skeleton className="h-4 w-32 mx-auto" />
+              <Skeleton className="h-3 w-48 mx-auto" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-16 w-full rounded-lg" />
+            <Skeleton className="h-16 w-full rounded-lg" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>

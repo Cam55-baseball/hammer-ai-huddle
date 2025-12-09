@@ -448,7 +448,10 @@
     "scoutApplications": "球探申请",
     "subscribers": "订阅者",
     "adminDashboard": "管理员仪表板",
-    "signOut": "退出登录"
+    "signOut": "退出登录",
+    "vault": "保险库",
+    "bounceBackBay": "恢复湾",
+    "mindFuel": "心灵燃料"
   },
   "sidebar": {
     "ownerBio": "所有者简介",
@@ -3119,8 +3122,5 @@
       "reflection_pro": "反思专家",
       "strength_tracker": "力量追踪器"
     }
-  },
-  "navigation": {
-    "vault": "保险库"
   }
 }

@@ -448,7 +448,10 @@
     "scoutApplications": "スカウト申請",
     "subscribers": "購読者",
     "adminDashboard": "管理者ダッシュボード",
-    "signOut": "ログアウト"
+    "signOut": "ログアウト",
+    "vault": "ザ・ボールト",
+    "bounceBackBay": "バウンスバックベイ",
+    "mindFuel": "マインドフュール"
   },
   "sidebar": {
     "ownerBio": "オーナー紹介",
@@ -3178,8 +3181,5 @@
       "reflection_pro": "振り返りプロ",
       "strength_tracker": "強度トラッカー"
     }
-  },
-  "navigation": {
-    "vault": "ザ・ボールト"
   }
 }

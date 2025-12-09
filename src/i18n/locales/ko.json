@@ -448,7 +448,10 @@
     "scoutApplications": "스카우트 신청",
     "subscribers": "구독자",
     "adminDashboard": "관리자 대시보드",
-    "signOut": "로그아웃"
+    "signOut": "로그아웃",
+    "vault": "금고",
+    "bounceBackBay": "회복 만",
+    "mindFuel": "마인드 연료"
   },
   "sidebar": {
     "ownerBio": "소유자 소개",
@@ -3135,8 +3138,5 @@
       "reflection_pro": "반성 프로",
       "strength_tracker": "근력 트래커"
     }
-  },
-  "navigation": {
-    "vault": "금고"
   }
 }
