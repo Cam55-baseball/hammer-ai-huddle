@@ -1034,6 +1034,474 @@ export type Database = {
           },
         ]
       }
+      vault_entries: {
+        Row: {
+          created_at: string | null
+          entry_date: string
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_focus_quizzes: {
+        Row: {
+          created_at: string | null
+          emotional_state: number
+          entry_date: string
+          id: string
+          mental_readiness: number
+          physical_readiness: number
+          quiz_type: string
+          reflection_did_well: string | null
+          reflection_improve: string | null
+          reflection_learned: string | null
+          reflection_motivation: string | null
+          sleep_time: string | null
+          user_id: string
+          wake_time: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          emotional_state: number
+          entry_date?: string
+          id?: string
+          mental_readiness: number
+          physical_readiness: number
+          quiz_type: string
+          reflection_did_well?: string | null
+          reflection_improve?: string | null
+          reflection_learned?: string | null
+          reflection_motivation?: string | null
+          sleep_time?: string | null
+          user_id: string
+          wake_time?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          emotional_state?: number
+          entry_date?: string
+          id?: string
+          mental_readiness?: number
+          physical_readiness?: number
+          quiz_type?: string
+          reflection_did_well?: string | null
+          reflection_improve?: string | null
+          reflection_learned?: string | null
+          reflection_motivation?: string | null
+          sleep_time?: string | null
+          user_id?: string
+          wake_time?: string | null
+        }
+        Relationships: []
+      }
+      vault_free_notes: {
+        Row: {
+          created_at: string | null
+          entry_date: string
+          id: string
+          note_text: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          note_text: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          note_text?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_nutrition_logs: {
+        Row: {
+          calories: number | null
+          carbs_g: number | null
+          created_at: string | null
+          digestion_notes: string | null
+          energy_level: number | null
+          entry_date: string
+          fats_g: number | null
+          hydration_oz: number | null
+          id: string
+          micros: Json | null
+          protein_g: number | null
+          supplements: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string | null
+          digestion_notes?: string | null
+          energy_level?: number | null
+          entry_date?: string
+          fats_g?: number | null
+          hydration_oz?: number | null
+          id?: string
+          micros?: Json | null
+          protein_g?: number | null
+          supplements?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string | null
+          digestion_notes?: string | null
+          energy_level?: number | null
+          entry_date?: string
+          fats_g?: number | null
+          hydration_oz?: number | null
+          id?: string
+          micros?: Json | null
+          protein_g?: number | null
+          supplements?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_performance_tests: {
+        Row: {
+          created_at: string | null
+          id: string
+          module: string
+          previous_results: Json | null
+          results: Json
+          sport: string
+          test_date: string
+          test_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          module: string
+          previous_results?: Json | null
+          results?: Json
+          sport: string
+          test_date?: string
+          test_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          module?: string
+          previous_results?: Json | null
+          results?: Json
+          sport?: string
+          test_date?: string
+          test_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_progress_photos: {
+        Row: {
+          arm_measurement: number | null
+          bmi: number | null
+          body_fat_percent: number | null
+          chest_measurement: number | null
+          created_at: string | null
+          id: string
+          leg_measurement: number | null
+          notes: string | null
+          photo_date: string
+          photo_urls: Json | null
+          user_id: string
+          waist_measurement: number | null
+          weight_lbs: number | null
+        }
+        Insert: {
+          arm_measurement?: number | null
+          bmi?: number | null
+          body_fat_percent?: number | null
+          chest_measurement?: number | null
+          created_at?: string | null
+          id?: string
+          leg_measurement?: number | null
+          notes?: string | null
+          photo_date?: string
+          photo_urls?: Json | null
+          user_id: string
+          waist_measurement?: number | null
+          weight_lbs?: number | null
+        }
+        Update: {
+          arm_measurement?: number | null
+          bmi?: number | null
+          body_fat_percent?: number | null
+          chest_measurement?: number | null
+          created_at?: string | null
+          id?: string
+          leg_measurement?: number | null
+          notes?: string | null
+          photo_date?: string
+          photo_urls?: Json | null
+          user_id?: string
+          waist_measurement?: number | null
+          weight_lbs?: number | null
+        }
+        Relationships: []
+      }
+      vault_recaps: {
+        Row: {
+          downloaded_at: string | null
+          generated_at: string | null
+          id: string
+          recap_data: Json
+          recap_period_end: string
+          recap_period_start: string
+          saved_to_library: boolean | null
+          strength_change_percent: number | null
+          total_weight_lifted: number | null
+          user_id: string
+        }
+        Insert: {
+          downloaded_at?: string | null
+          generated_at?: string | null
+          id?: string
+          recap_data?: Json
+          recap_period_end: string
+          recap_period_start: string
+          saved_to_library?: boolean | null
+          strength_change_percent?: number | null
+          total_weight_lifted?: number | null
+          user_id: string
+        }
+        Update: {
+          downloaded_at?: string | null
+          generated_at?: string | null
+          id?: string
+          recap_data?: Json
+          recap_period_end?: string
+          recap_period_start?: string
+          saved_to_library?: boolean | null
+          strength_change_percent?: number | null
+          total_weight_lifted?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_saved_drills: {
+        Row: {
+          drill_description: string | null
+          drill_name: string
+          id: string
+          module_origin: string
+          saved_at: string | null
+          sport: string
+          user_id: string
+        }
+        Insert: {
+          drill_description?: string | null
+          drill_name: string
+          id?: string
+          module_origin: string
+          saved_at?: string | null
+          sport: string
+          user_id: string
+        }
+        Update: {
+          drill_description?: string | null
+          drill_name?: string
+          id?: string
+          module_origin?: string
+          saved_at?: string | null
+          sport?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_saved_tips: {
+        Row: {
+          id: string
+          module_origin: string
+          saved_at: string | null
+          tip_category: string | null
+          tip_text: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          module_origin: string
+          saved_at?: string | null
+          tip_category?: string | null
+          tip_text: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          module_origin?: string
+          saved_at?: string | null
+          tip_category?: string | null
+          tip_text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_scout_grades: {
+        Row: {
+          defense_grade: number | null
+          graded_at: string | null
+          hitting_grade: number | null
+          id: string
+          leadership_grade: number | null
+          next_prompt_date: string | null
+          notes: string | null
+          power_grade: number | null
+          self_efficacy_grade: number | null
+          speed_grade: number | null
+          throwing_grade: number | null
+          user_id: string
+        }
+        Insert: {
+          defense_grade?: number | null
+          graded_at?: string | null
+          hitting_grade?: number | null
+          id?: string
+          leadership_grade?: number | null
+          next_prompt_date?: string | null
+          notes?: string | null
+          power_grade?: number | null
+          self_efficacy_grade?: number | null
+          speed_grade?: number | null
+          throwing_grade?: number | null
+          user_id: string
+        }
+        Update: {
+          defense_grade?: number | null
+          graded_at?: string | null
+          hitting_grade?: number | null
+          id?: string
+          leadership_grade?: number | null
+          next_prompt_date?: string | null
+          notes?: string | null
+          power_grade?: number | null
+          self_efficacy_grade?: number | null
+          speed_grade?: number | null
+          throwing_grade?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_streaks: {
+        Row: {
+          badges_earned: string[] | null
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          journal_streak: number | null
+          last_entry_date: string | null
+          longest_streak: number | null
+          nutrition_streak: number | null
+          quiz_streak: number | null
+          total_entries: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          badges_earned?: string[] | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          journal_streak?: number | null
+          last_entry_date?: string | null
+          longest_streak?: number | null
+          nutrition_streak?: number | null
+          quiz_streak?: number | null
+          total_entries?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          badges_earned?: string[] | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          journal_streak?: number | null
+          last_entry_date?: string | null
+          longest_streak?: number | null
+          nutrition_streak?: number | null
+          quiz_streak?: number | null
+          total_entries?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_workout_notes: {
+        Row: {
+          created_at: string | null
+          day_number: number
+          entry_date: string
+          id: string
+          module: string
+          notes: string | null
+          sport: string
+          sub_module: string
+          total_weight_lifted: number | null
+          user_id: string
+          week_number: number
+          weight_increases: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_number: number
+          entry_date?: string
+          id?: string
+          module: string
+          notes?: string | null
+          sport: string
+          sub_module: string
+          total_weight_lifted?: number | null
+          user_id: string
+          week_number: number
+          weight_increases?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          day_number?: number
+          entry_date?: string
+          id?: string
+          module?: string
+          notes?: string | null
+          sport?: string
+          sub_module?: string
+          total_weight_lifted?: number | null
+          user_id?: string
+          week_number?: number
+          weight_increases?: Json | null
+        }
+        Relationships: []
+      }
       video_annotations: {
         Row: {
           annotation_data: string
