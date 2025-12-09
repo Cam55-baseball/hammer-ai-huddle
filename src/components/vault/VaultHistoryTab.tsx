@@ -6,12 +6,23 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   CalendarIcon, ChevronLeft, ChevronRight, 
   Dumbbell, Brain, Apple, NotebookPen, Sparkles,
-  Activity, Camera, Star, Droplets
+  Activity, Camera, Star, Droplets, Trash2
 } from 'lucide-react';
 import { format, subDays, addDays, isSameDay, startOfDay } from 'date-fns';
+import { toast } from 'sonner';
 import { 
   VaultFocusQuiz, VaultFreeNote, VaultWorkoutNote, 
   VaultPerformanceTest, VaultProgressPhoto, VaultScoutGrade, VaultNutritionLog 
@@ -29,27 +40,77 @@ interface HistoryEntry {
   scoutGrades: VaultScoutGrade[];
 }
 
+interface DeleteTarget {
+  type: 'quiz' | 'note' | 'workout' | 'nutrition' | 'performanceTest' | 'photo' | 'scoutGrade';
+  id: string;
+  name: string;
+}
+
 interface VaultHistoryTabProps {
   fetchHistoryForDate: (date: string) => Promise<HistoryEntry>;
   entriesWithData: string[];
+  onDeleteQuiz?: (id: string) => Promise<void>;
+  onDeleteNote?: (id: string) => Promise<void>;
+  onDeleteWorkout?: (id: string) => Promise<void>;
+  onDeleteNutrition?: (id: string) => Promise<void>;
+  onDeletePerformanceTest?: (id: string) => Promise<void>;
+  onDeletePhoto?: (id: string) => Promise<void>;
+  onDeleteGrade?: (id: string) => Promise<void>;
 }
 
-export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultHistoryTabProps) {
+export function VaultHistoryTab({ 
+  fetchHistoryForDate, 
+  entriesWithData,
+  onDeleteQuiz,
+  onDeleteNote,
+  onDeleteWorkout,
+  onDeleteNutrition,
+  onDeletePerformanceTest,
+  onDeletePhoto,
+  onDeleteGrade,
+}: VaultHistoryTabProps) {
   const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [historyData, setHistoryData] = useState<HistoryEntry | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const loadData = async () => {
+    setLoading(true);
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    const data = await fetchHistoryForDate(dateStr);
+    setHistoryData(data);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      const data = await fetchHistoryForDate(dateStr);
-      setHistoryData(data);
-      setLoading(false);
-    };
     loadData();
   }, [selectedDate, fetchHistoryForDate]);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    
+    try {
+      switch (deleteTarget.type) {
+        case 'quiz': await onDeleteQuiz?.(deleteTarget.id); break;
+        case 'note': await onDeleteNote?.(deleteTarget.id); break;
+        case 'workout': await onDeleteWorkout?.(deleteTarget.id); break;
+        case 'nutrition': await onDeleteNutrition?.(deleteTarget.id); break;
+        case 'performanceTest': await onDeletePerformanceTest?.(deleteTarget.id); break;
+        case 'photo': await onDeletePhoto?.(deleteTarget.id); break;
+        case 'scoutGrade': await onDeleteGrade?.(deleteTarget.id); break;
+      }
+      toast.success(t('vault.delete.success'));
+      await loadData();
+    } catch (error) {
+      toast.error(t('common.error'));
+    }
+    
+    setIsDeleting(false);
+    setDeleteTarget(null);
+  };
 
   const goToPreviousDay = () => setSelectedDate(subDays(selectedDate, 1));
   const goToNextDay = () => setSelectedDate(addDays(selectedDate, 1));
@@ -81,6 +142,17 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
     { key: 'leadership_grade', label: t('vault.scoutGrades.leadership') },
     { key: 'self_efficacy_grade', label: t('vault.scoutGrades.selfEfficacy') },
   ];
+
+  const DeleteButton = ({ onClick }: { onClick: () => void }) => (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-6 w-6 text-muted-foreground hover:text-destructive"
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </Button>
+  );
 
   return (
     <div className="space-y-4">
@@ -156,9 +228,14 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
                     {t(`vault.quiz.${quiz.quiz_type}`)}
-                    <Badge variant="outline" className="ml-auto text-xs">
-                      {format(new Date(quiz.created_at), 'h:mm a')}
-                    </Badge>
+                    <div className="ml-auto flex items-center gap-1">
+                      <Badge variant="outline" className="text-xs">
+                        {format(new Date(quiz.created_at), 'h:mm a')}
+                      </Badge>
+                      {onDeleteQuiz && (
+                        <DeleteButton onClick={() => setDeleteTarget({ type: 'quiz', id: quiz.id, name: t(`vault.quiz.${quiz.quiz_type}`) })} />
+                      )}
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -192,9 +269,14 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
                   <CardTitle className="text-sm flex items-center gap-2">
                     <NotebookPen className="h-4 w-4 text-primary" />
                     {t('vault.freeNote.title')}
-                    <Badge variant="outline" className="ml-auto text-xs">
-                      {format(new Date(note.created_at), 'h:mm a')}
-                    </Badge>
+                    <div className="ml-auto flex items-center gap-1">
+                      <Badge variant="outline" className="text-xs">
+                        {format(new Date(note.created_at), 'h:mm a')}
+                      </Badge>
+                      {onDeleteNote && (
+                        <DeleteButton onClick={() => setDeleteTarget({ type: 'note', id: note.id, name: t('vault.freeNote.title') })} />
+                      )}
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -210,13 +292,16 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Dumbbell className="h-4 w-4 text-orange-500" />
                     {t('vault.workoutNotes.title')}
-                    <div className="flex gap-1 ml-auto">
+                    <div className="flex gap-1 ml-auto items-center">
                       <Badge variant="secondary" className="text-xs">
                         {t('workoutModules.week')} {workout.week_number}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
                         {t('workoutModules.day')} {workout.day_number}
                       </Badge>
+                      {onDeleteWorkout && (
+                        <DeleteButton onClick={() => setDeleteTarget({ type: 'workout', id: workout.id, name: t('vault.workoutNotes.title') })} />
+                      )}
                     </div>
                   </CardTitle>
                 </CardHeader>
@@ -240,6 +325,11 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Apple className="h-4 w-4 text-green-500" />
                     {t('vault.nutrition.title')}
+                    {onDeleteNutrition && (
+                      <div className="ml-auto">
+                        <DeleteButton onClick={() => setDeleteTarget({ type: 'nutrition', id: historyData.nutritionLog!.id, name: t('vault.nutrition.title') })} />
+                      </div>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -410,6 +500,24 @@ export function VaultHistoryTab({ fetchHistoryForDate, entriesWithData }: VaultH
           </div>
         </ScrollArea>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('vault.delete.confirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('vault.delete.confirmMessage')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isDeleting ? t('common.loading') : t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

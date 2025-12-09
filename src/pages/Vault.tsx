@@ -32,7 +32,7 @@ import { VaultProgressPhotosCard } from '@/components/vault/VaultProgressPhotosC
 import { VaultScoutGradesCard } from '@/components/vault/VaultScoutGradesCard';
 import { VaultRecapCard } from '@/components/vault/VaultRecapCard';
 import { VaultHistoryTab } from '@/components/vault/VaultHistoryTab';
-
+import { VaultWeeklySummary } from '@/components/vault/VaultWeeklySummary';
 export default function Vault() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -61,6 +61,14 @@ export default function Vault() {
     generateRecap,
     fetchHistoryForDate,
     checkVaultAccess,
+    deleteQuiz,
+    deleteFreeNote,
+    deleteWorkoutNote,
+    deleteNutritionLog,
+    deletePerformanceTest,
+    deleteProgressPhoto,
+    deleteScoutGrade,
+    fetchWeeklyData,
   } = useVault();
 
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
@@ -329,8 +337,9 @@ export default function Vault() {
             {/* Right Column - Main Content */}
             <div className="lg:col-span-2 space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="today">{t('vault.tabs.today')}</TabsTrigger>
+                  <TabsTrigger value="weekly">{t('vault.tabs.weekly')}</TabsTrigger>
                   <TabsTrigger value="history">{t('vault.tabs.history')}</TabsTrigger>
                 </TabsList>
 
@@ -455,10 +464,24 @@ export default function Vault() {
                   />
                 </TabsContent>
 
+                <TabsContent value="weekly" className="mt-4">
+                  <VaultWeeklySummary
+                    fetchWeeklyData={fetchWeeklyData}
+                    streak={streak}
+                  />
+                </TabsContent>
+
                 <TabsContent value="history" className="mt-4">
                   <VaultHistoryTab
                     fetchHistoryForDate={fetchHistoryForDate}
                     entriesWithData={entriesWithData}
+                    onDeleteQuiz={deleteQuiz}
+                    onDeleteNote={deleteFreeNote}
+                    onDeleteWorkout={deleteWorkoutNote}
+                    onDeleteNutrition={deleteNutritionLog}
+                    onDeletePerformanceTest={deletePerformanceTest}
+                    onDeletePhoto={deleteProgressPhoto}
+                    onDeleteGrade={deleteScoutGrade}
                   />
                 </TabsContent>
               </Tabs>
