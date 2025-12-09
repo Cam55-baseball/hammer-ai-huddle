@@ -48,6 +48,8 @@ export interface VaultFocusQuiz {
   reflection_motivation?: string;
   sleep_time?: string;
   wake_time?: string;
+  hours_slept?: number;
+  sleep_quality?: number;
   created_at: string;
 }
 
@@ -378,6 +380,8 @@ export function useVault() {
       reflection_improve?: string;
       reflection_learned?: string;
       reflection_motivation?: string;
+      hours_slept?: number;
+      sleep_quality?: number;
     }
   ) => {
     if (!user) return { success: false, error: 'Not authenticated' };
@@ -405,7 +409,15 @@ export function useVault() {
           user_id: user.id,
           entry_date: today,
           quiz_type: quizType,
-          ...data,
+          mental_readiness: data.mental_readiness,
+          emotional_state: data.emotional_state,
+          physical_readiness: data.physical_readiness,
+          reflection_did_well: data.reflection_did_well,
+          reflection_improve: data.reflection_improve,
+          reflection_learned: data.reflection_learned,
+          reflection_motivation: data.reflection_motivation,
+          hours_slept: data.hours_slept,
+          sleep_quality: data.sleep_quality,
           sleep_time: sleepTime,
           wake_time: wakeTime,
         }, {

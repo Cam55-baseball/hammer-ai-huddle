@@ -99,10 +99,10 @@ export function VaultStreakCard({ streak, compact = false, isLoading = false }: 
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold">
-            {currentStreak} {t('vault.streak.dayStreak')}
+            {currentStreak} {currentStreak === 1 ? t('vault.streak.day') : t('vault.streak.days')}
           </p>
           <p className="text-xs text-muted-foreground truncate">
-            {t('vault.streak.keepConsistent')}
+            {t('vault.streak.keepGoing')}
           </p>
         </div>
         {currentStreak > 0 && (
@@ -134,14 +134,14 @@ export function VaultStreakCard({ streak, compact = false, isLoading = false }: 
         </div>
         <p className="text-center text-sm text-muted-foreground">
           {currentStreak === 1
-            ? t('vault.streak.dayStreak')
-            : t('vault.streak.daysStreak', { count: currentStreak })}
+            ? t('vault.streak.day')
+            : t('vault.streak.days')}
         </p>
 
         {/* Progress to Next Milestone */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span>{t('vault.streak.nextMilestone', { days: nextMilestone })}</span>
+            <span>{nextMilestone - currentStreak} {t('vault.streak.toNextMilestone')}</span>
             <span>{Math.round(progressToNext)}%</span>
           </div>
           <Progress value={progressToNext} className="h-2" />
