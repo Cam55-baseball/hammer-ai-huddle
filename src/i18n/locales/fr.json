@@ -3636,5 +3636,98 @@
     "streakBroken": "Série réinitialisée - reconstruisons-la!",
     "fireUnlocked": "Le feu se débloque à 5 jours!",
     "glowUnlocked": "La flamme brille à 25 jours!"
+  },
+  "vault": {
+    "title": "Le Coffre-Fort",
+    "subtitle": "Votre journal de performance privé",
+    "description": "Suivez votre mentalité quotidienne, vos entraînements et vos progrès en un seul endroit sécurisé",
+    "locked": {
+      "title": "Le Coffre-Fort est Verrouillé",
+      "description": "Abonnez-vous à un module d'entraînement pour débloquer Le Coffre-Fort et commencer à suivre votre parcours",
+      "unlockButton": "Voir les Tarifs"
+    },
+    "tabs": {
+      "today": "Aujourd'hui",
+      "history": "Historique"
+    },
+    "quiz": {
+      "title": "Vérification de Focus Quotidien",
+      "todayStatus": "Vérifications d'Aujourd'hui",
+      "preLift": "Pré-Entraînement",
+      "morning": "Matin",
+      "night": "Nuit",
+      "completed": "Terminé",
+      "notStarted": "Non Commencé",
+      "saved": "Quiz sauvegardé avec succès!",
+      "error": "Échec de sauvegarde du quiz",
+      "mentalReadiness": "Préparation Mentale",
+      "emotionalState": "État Émotionnel",
+      "physicalReadiness": "Préparation Physique",
+      "sleepTime": "Heure de Coucher",
+      "wakeTime": "Heure de Réveil",
+      "sleepTimeHint": "À quelle heure vous êtes-vous couché?",
+      "wakeTimeHint": "À quelle heure vous êtes-vous réveillé?",
+      "reflectionPrompts": {
+        "title": "Réflexion du Soir",
+        "didWell": "Qu'ai-je bien fait aujourd'hui?",
+        "improve": "Que puis-je améliorer demain?",
+        "learned": "Qu'ai-je appris aujourd'hui?",
+        "motivation": "Qu'est-ce qui me motive?"
+      },
+      "submit": "Sauvegarder la Vérification",
+      "submitting": "Sauvegarde..."
+    },
+    "freeNote": {
+      "title": "Note Rapide",
+      "placeholder": "Écrivez une pensée ou note rapide pour aujourd'hui...",
+      "save": "Sauvegarder Note",
+      "saved": "Note sauvegardée!",
+      "error": "Échec de sauvegarde de la note",
+      "alreadySaved": "Note déjà sauvegardée pour aujourd'hui"
+    },
+    "workoutNotes": {
+      "title": "Notes d'Entraînement",
+      "description": "Ajoutez des notes sur l'entraînement d'aujourd'hui",
+      "todayTitle": "Entraînements d'Aujourd'hui",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Comment s'est passé l'entraînement? Des notes pour vous-même?",
+      "weightIncreases": "Augmentations de Poids",
+      "totalLifted": "Poids Total Soulevé",
+      "skipNotes": "Passer",
+      "saveNotes": "Sauvegarder Notes",
+      "noNotes": "Pas de notes d'entraînement aujourd'hui"
+    },
+    "streak": {
+      "title": "Votre Série Coffre-Fort",
+      "current": "Série Actuelle",
+      "longest": "Plus Longue Série",
+      "total": "Entrées Totales",
+      "days": "jours",
+      "day": "jour",
+      "badges": "Badges Gagnés",
+      "startStreak": "Commencez votre série aujourd'hui!",
+      "keepGoing": "Continuez!"
+    },
+    "reminder": {
+      "title": "Récapitulatif 6 Semaines",
+      "message": "Complétez les entrées quotidiennes pour débloquer votre récapitulatif personnalisé",
+      "daysRemaining": "jours restants",
+      "progress": "Progrès"
+    },
+    "history": {
+      "comingSoon": "Vue historique à venir",
+      "description": "Consultez vos entrées passées et suivez vos progrès au fil du temps"
+    },
+    "badges": {
+      "first_entry": "Première Entrée",
+      "week_warrior": "Guerrier de la Semaine",
+      "consistency_king": "Roi de la Consistance",
+      "vault_master": "Maître du Coffre-Fort",
+      "reflection_pro": "Pro de la Réflexion",
+      "strength_tracker": "Tracker de Force"
+    }
+  },
+  "navigation": {
+    "vault": "Le Coffre-Fort"
   }
 }

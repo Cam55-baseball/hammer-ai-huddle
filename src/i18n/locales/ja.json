@@ -2920,5 +2920,98 @@
     "streakBroken": "連続記録リセット - また積み上げよう！",
     "fireUnlocked": "5日で炎が解放されます！",
     "glowUnlocked": "25日で炎が輝きます！"
+  },
+  "vault": {
+    "title": "ザ・ボールト",
+    "subtitle": "あなたのプライベートパフォーマンス日記",
+    "description": "日々のマインドセット、ワークアウト、進捗を一箇所で安全に記録",
+    "locked": {
+      "title": "ボールトはロックされています",
+      "description": "トレーニングモジュールに登録してボールトを解除し、旅を記録しましょう",
+      "unlockButton": "料金を見る"
+    },
+    "tabs": {
+      "today": "今日",
+      "history": "履歴"
+    },
+    "quiz": {
+      "title": "デイリーフォーカスチェック",
+      "todayStatus": "今日のチェックイン",
+      "preLift": "トレーニング前",
+      "morning": "朝",
+      "night": "夜",
+      "completed": "完了",
+      "notStarted": "未開始",
+      "saved": "クイズが保存されました！",
+      "error": "クイズの保存に失敗しました",
+      "mentalReadiness": "メンタル準備",
+      "emotionalState": "感情状態",
+      "physicalReadiness": "身体準備",
+      "sleepTime": "就寝時間",
+      "wakeTime": "起床時間",
+      "sleepTimeHint": "何時に寝ましたか？",
+      "wakeTimeHint": "何時に起きましたか？",
+      "reflectionPrompts": {
+        "title": "夜の振り返り",
+        "didWell": "今日うまくできたことは？",
+        "improve": "明日改善できることは？",
+        "learned": "今日学んだことは？",
+        "motivation": "何がモチベーションですか？"
+      },
+      "submit": "チェックインを保存",
+      "submitting": "保存中..."
+    },
+    "freeNote": {
+      "title": "クイックノート",
+      "placeholder": "今日の考えやメモを書いてください...",
+      "save": "ノートを保存",
+      "saved": "ノートが保存されました！",
+      "error": "ノートの保存に失敗しました",
+      "alreadySaved": "今日のノートは既に保存されています"
+    },
+    "workoutNotes": {
+      "title": "ワークアウトノート",
+      "description": "今日のワークアウトについてメモを追加",
+      "todayTitle": "今日のワークアウト",
+      "notesLabel": "ノート",
+      "notesPlaceholder": "ワークアウトはどうでしたか？自分へのメモは？",
+      "weightIncreases": "重量増加",
+      "totalLifted": "合計挙上重量",
+      "skipNotes": "スキップ",
+      "saveNotes": "ノートを保存",
+      "noNotes": "今日のワークアウトノートはありません"
+    },
+    "streak": {
+      "title": "あなたのボールト連続記録",
+      "current": "現在の連続",
+      "longest": "最長連続",
+      "total": "総エントリー",
+      "days": "日",
+      "day": "日",
+      "badges": "獲得バッジ",
+      "startStreak": "今日から連続を始めよう！",
+      "keepGoing": "この調子！"
+    },
+    "reminder": {
+      "title": "6週間レビュー",
+      "message": "毎日のエントリーを完了してパーソナライズされたレビューを解除",
+      "daysRemaining": "日残り",
+      "progress": "進捗"
+    },
+    "history": {
+      "comingSoon": "履歴ビューは近日公開",
+      "description": "過去のエントリーを確認し、時間の経過とともに進捗を追跡"
+    },
+    "badges": {
+      "first_entry": "初エントリー",
+      "week_warrior": "週間ウォリアー",
+      "consistency_king": "一貫性キング",
+      "vault_master": "ボールトマスター",
+      "reflection_pro": "振り返りプロ",
+      "strength_tracker": "強度トラッカー"
+    }
+  },
+  "navigation": {
+    "vault": "ザ・ボールト"
   }
 }

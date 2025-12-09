@@ -3813,5 +3813,98 @@
     "streakBroken": "Streak reset - let's build it back!",
     "fireUnlocked": "Fire unlocks at 5 days!",
     "glowUnlocked": "Flame is glowing at 25 days!"
+  },
+  "vault": {
+    "title": "The Vault",
+    "subtitle": "Your private performance journal",
+    "description": "Track your daily mindset, workouts, and progress in one secure place",
+    "locked": {
+      "title": "The Vault is Locked",
+      "description": "Subscribe to any training module to unlock The Vault and start tracking your journey",
+      "unlockButton": "View Pricing"
+    },
+    "tabs": {
+      "today": "Today",
+      "history": "History"
+    },
+    "quiz": {
+      "title": "Daily Focus Check",
+      "todayStatus": "Today's Check-ins",
+      "preLift": "Pre-Lift",
+      "morning": "Morning",
+      "night": "Night",
+      "completed": "Completed",
+      "notStarted": "Not Started",
+      "saved": "Quiz saved successfully!",
+      "error": "Failed to save quiz",
+      "mentalReadiness": "Mental Readiness",
+      "emotionalState": "Emotional State",
+      "physicalReadiness": "Physical Readiness",
+      "sleepTime": "Sleep Time",
+      "wakeTime": "Wake Time",
+      "sleepTimeHint": "What time did you go to bed?",
+      "wakeTimeHint": "What time did you wake up?",
+      "reflectionPrompts": {
+        "title": "Evening Reflection",
+        "didWell": "What did I do well today?",
+        "improve": "What can I improve tomorrow?",
+        "learned": "What did I learn today?",
+        "motivation": "What's motivating me?"
+      },
+      "submit": "Save Check-in",
+      "submitting": "Saving..."
+    },
+    "freeNote": {
+      "title": "Quick Note",
+      "placeholder": "Write a quick thought or note for today...",
+      "save": "Save Note",
+      "saved": "Note saved!",
+      "error": "Failed to save note",
+      "alreadySaved": "Note already saved for today"
+    },
+    "workoutNotes": {
+      "title": "Workout Notes",
+      "description": "Add notes about today's workout",
+      "todayTitle": "Today's Workouts",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "How did the workout feel? Any notes for yourself?",
+      "weightIncreases": "Weight Increases",
+      "totalLifted": "Total Weight Lifted",
+      "skipNotes": "Skip",
+      "saveNotes": "Save Notes",
+      "noNotes": "No workout notes today"
+    },
+    "streak": {
+      "title": "Your Vault Streak",
+      "current": "Current Streak",
+      "longest": "Longest Streak",
+      "total": "Total Entries",
+      "days": "days",
+      "day": "day",
+      "badges": "Badges Earned",
+      "startStreak": "Start your streak today!",
+      "keepGoing": "Keep it up!"
+    },
+    "reminder": {
+      "title": "6-Week Recap",
+      "message": "Complete daily entries to unlock your personalized recap",
+      "daysRemaining": "days remaining",
+      "progress": "Progress"
+    },
+    "history": {
+      "comingSoon": "History view coming soon",
+      "description": "View your past entries and track your progress over time"
+    },
+    "badges": {
+      "first_entry": "First Entry",
+      "week_warrior": "Week Warrior",
+      "consistency_king": "Consistency King",
+      "vault_master": "Vault Master",
+      "reflection_pro": "Reflection Pro",
+      "strength_tracker": "Strength Tracker"
+    }
+  },
+  "navigation": {
+    "vault": "The Vault"
   }
 }

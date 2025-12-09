@@ -2877,5 +2877,98 @@
     "streakBroken": "연속 기록 초기화 - 다시 시작합시다!",
     "fireUnlocked": "5일에 불꽃이 해금됩니다!",
     "glowUnlocked": "25일에 불꽃이 빛납니다!"
+  },
+  "vault": {
+    "title": "금고",
+    "subtitle": "당신의 개인 성과 일지",
+    "description": "일일 마인드셋, 운동, 진행 상황을 한 곳에서 안전하게 추적",
+    "locked": {
+      "title": "금고가 잠겨있습니다",
+      "description": "금고를 해제하고 여정을 기록하려면 훈련 모듈을 구독하세요",
+      "unlockButton": "가격 보기"
+    },
+    "tabs": {
+      "today": "오늘",
+      "history": "기록"
+    },
+    "quiz": {
+      "title": "일일 집중 체크",
+      "todayStatus": "오늘의 체크인",
+      "preLift": "훈련 전",
+      "morning": "아침",
+      "night": "밤",
+      "completed": "완료됨",
+      "notStarted": "시작되지 않음",
+      "saved": "퀴즈가 저장되었습니다!",
+      "error": "퀴즈 저장 실패",
+      "mentalReadiness": "정신적 준비",
+      "emotionalState": "감정 상태",
+      "physicalReadiness": "신체적 준비",
+      "sleepTime": "취침 시간",
+      "wakeTime": "기상 시간",
+      "sleepTimeHint": "몇 시에 잠자리에 들었나요?",
+      "wakeTimeHint": "몇 시에 일어났나요?",
+      "reflectionPrompts": {
+        "title": "저녁 반성",
+        "didWell": "오늘 잘한 것은?",
+        "improve": "내일 개선할 수 있는 것은?",
+        "learned": "오늘 배운 것은?",
+        "motivation": "무엇이 동기를 부여하나요?"
+      },
+      "submit": "체크인 저장",
+      "submitting": "저장 중..."
+    },
+    "freeNote": {
+      "title": "빠른 메모",
+      "placeholder": "오늘의 빠른 생각이나 메모를 작성하세요...",
+      "save": "메모 저장",
+      "saved": "메모가 저장되었습니다!",
+      "error": "메모 저장 실패",
+      "alreadySaved": "오늘의 메모가 이미 저장되었습니다"
+    },
+    "workoutNotes": {
+      "title": "운동 메모",
+      "description": "오늘 운동에 대한 메모 추가",
+      "todayTitle": "오늘의 운동",
+      "notesLabel": "메모",
+      "notesPlaceholder": "운동은 어땠나요? 자신에게 메모할 것이 있나요?",
+      "weightIncreases": "중량 증가",
+      "totalLifted": "총 들어올린 중량",
+      "skipNotes": "건너뛰기",
+      "saveNotes": "메모 저장",
+      "noNotes": "오늘 운동 메모 없음"
+    },
+    "streak": {
+      "title": "당신의 금고 연속 기록",
+      "current": "현재 연속",
+      "longest": "최장 연속",
+      "total": "총 항목",
+      "days": "일",
+      "day": "일",
+      "badges": "획득한 배지",
+      "startStreak": "오늘 연속 기록을 시작하세요!",
+      "keepGoing": "계속 화이팅!"
+    },
+    "reminder": {
+      "title": "6주 리뷰",
+      "message": "개인화된 리뷰를 해제하려면 일일 항목을 완료하세요",
+      "daysRemaining": "일 남음",
+      "progress": "진행"
+    },
+    "history": {
+      "comingSoon": "기록 보기 곧 출시",
+      "description": "과거 항목을 보고 시간에 따른 진행 상황 추적"
+    },
+    "badges": {
+      "first_entry": "첫 항목",
+      "week_warrior": "주간 전사",
+      "consistency_king": "일관성의 왕",
+      "vault_master": "금고 마스터",
+      "reflection_pro": "반성 프로",
+      "strength_tracker": "근력 트래커"
+    }
+  },
+  "navigation": {
+    "vault": "금고"
   }
 }

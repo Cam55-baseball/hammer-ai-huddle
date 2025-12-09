@@ -3614,5 +3614,98 @@
     "streakBroken": "Racha reiniciada - ¡vamos a reconstruirla!",
     "fireUnlocked": "¡El fuego se desbloquea a los 5 días!",
     "glowUnlocked": "¡La llama brilla a los 25 días!"
+  },
+  "vault": {
+    "title": "La Bóveda",
+    "subtitle": "Tu diario privado de rendimiento",
+    "description": "Registra tu mentalidad diaria, entrenamientos y progreso en un solo lugar seguro",
+    "locked": {
+      "title": "La Bóveda está Bloqueada",
+      "description": "Suscríbete a cualquier módulo de entrenamiento para desbloquear La Bóveda y comenzar a registrar tu viaje",
+      "unlockButton": "Ver Precios"
+    },
+    "tabs": {
+      "today": "Hoy",
+      "history": "Historial"
+    },
+    "quiz": {
+      "title": "Chequeo de Enfoque Diario",
+      "todayStatus": "Chequeos de Hoy",
+      "preLift": "Pre-Entrenamiento",
+      "morning": "Mañana",
+      "night": "Noche",
+      "completed": "Completado",
+      "notStarted": "No Iniciado",
+      "saved": "¡Quiz guardado exitosamente!",
+      "error": "Error al guardar quiz",
+      "mentalReadiness": "Preparación Mental",
+      "emotionalState": "Estado Emocional",
+      "physicalReadiness": "Preparación Física",
+      "sleepTime": "Hora de Dormir",
+      "wakeTime": "Hora de Despertar",
+      "sleepTimeHint": "¿A qué hora te fuiste a dormir?",
+      "wakeTimeHint": "¿A qué hora te despertaste?",
+      "reflectionPrompts": {
+        "title": "Reflexión Nocturna",
+        "didWell": "¿Qué hice bien hoy?",
+        "improve": "¿Qué puedo mejorar mañana?",
+        "learned": "¿Qué aprendí hoy?",
+        "motivation": "¿Qué me motiva?"
+      },
+      "submit": "Guardar Chequeo",
+      "submitting": "Guardando..."
+    },
+    "freeNote": {
+      "title": "Nota Rápida",
+      "placeholder": "Escribe un pensamiento o nota rápida para hoy...",
+      "save": "Guardar Nota",
+      "saved": "¡Nota guardada!",
+      "error": "Error al guardar nota",
+      "alreadySaved": "Nota ya guardada para hoy"
+    },
+    "workoutNotes": {
+      "title": "Notas de Entrenamiento",
+      "description": "Agrega notas sobre el entrenamiento de hoy",
+      "todayTitle": "Entrenamientos de Hoy",
+      "notesLabel": "Notas",
+      "notesPlaceholder": "¿Cómo te sentiste en el entrenamiento? ¿Alguna nota para ti mismo?",
+      "weightIncreases": "Aumentos de Peso",
+      "totalLifted": "Peso Total Levantado",
+      "skipNotes": "Saltar",
+      "saveNotes": "Guardar Notas",
+      "noNotes": "Sin notas de entrenamiento hoy"
+    },
+    "streak": {
+      "title": "Tu Racha de Bóveda",
+      "current": "Racha Actual",
+      "longest": "Racha Más Larga",
+      "total": "Entradas Totales",
+      "days": "días",
+      "day": "día",
+      "badges": "Insignias Ganadas",
+      "startStreak": "¡Comienza tu racha hoy!",
+      "keepGoing": "¡Sigue así!"
+    },
+    "reminder": {
+      "title": "Resumen de 6 Semanas",
+      "message": "Completa entradas diarias para desbloquear tu resumen personalizado",
+      "daysRemaining": "días restantes",
+      "progress": "Progreso"
+    },
+    "history": {
+      "comingSoon": "Vista de historial próximamente",
+      "description": "Ve tus entradas pasadas y sigue tu progreso a lo largo del tiempo"
+    },
+    "badges": {
+      "first_entry": "Primera Entrada",
+      "week_warrior": "Guerrero Semanal",
+      "consistency_king": "Rey de la Consistencia",
+      "vault_master": "Maestro de la Bóveda",
+      "reflection_pro": "Pro de la Reflexión",
+      "strength_tracker": "Rastreador de Fuerza"
+    }
+  },
+  "navigation": {
+    "vault": "La Bóveda"
   }
 }

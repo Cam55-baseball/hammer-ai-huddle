@@ -2861,5 +2861,98 @@
     "streakBroken": "连续记录重置 - 让我们重新开始！",
     "fireUnlocked": "5天后解锁火焰！",
     "glowUnlocked": "25天后火焰发光！"
+  },
+  "vault": {
+    "title": "保险库",
+    "subtitle": "您的私人表现日记",
+    "description": "在一个安全的地方追踪您的日常心态、锻炼和进度",
+    "locked": {
+      "title": "保险库已锁定",
+      "description": "订阅任何训练模块以解锁保险库并开始记录您的旅程",
+      "unlockButton": "查看定价"
+    },
+    "tabs": {
+      "today": "今天",
+      "history": "历史"
+    },
+    "quiz": {
+      "title": "每日专注检查",
+      "todayStatus": "今日签到",
+      "preLift": "训练前",
+      "morning": "早晨",
+      "night": "夜晚",
+      "completed": "已完成",
+      "notStarted": "未开始",
+      "saved": "问卷保存成功！",
+      "error": "保存问卷失败",
+      "mentalReadiness": "心理准备",
+      "emotionalState": "情绪状态",
+      "physicalReadiness": "身体准备",
+      "sleepTime": "就寝时间",
+      "wakeTime": "起床时间",
+      "sleepTimeHint": "您几点睡觉？",
+      "wakeTimeHint": "您几点起床？",
+      "reflectionPrompts": {
+        "title": "晚间反思",
+        "didWell": "今天我做得好的是什么？",
+        "improve": "明天我可以改进什么？",
+        "learned": "今天我学到了什么？",
+        "motivation": "什么在激励我？"
+      },
+      "submit": "保存签到",
+      "submitting": "保存中..."
+    },
+    "freeNote": {
+      "title": "快速笔记",
+      "placeholder": "写下今天的快速想法或笔记...",
+      "save": "保存笔记",
+      "saved": "笔记已保存！",
+      "error": "保存笔记失败",
+      "alreadySaved": "今天的笔记已保存"
+    },
+    "workoutNotes": {
+      "title": "锻炼笔记",
+      "description": "添加关于今天锻炼的笔记",
+      "todayTitle": "今日锻炼",
+      "notesLabel": "笔记",
+      "notesPlaceholder": "锻炼感觉如何？给自己的笔记？",
+      "weightIncreases": "重量增加",
+      "totalLifted": "总举重量",
+      "skipNotes": "跳过",
+      "saveNotes": "保存笔记",
+      "noNotes": "今天没有锻炼笔记"
+    },
+    "streak": {
+      "title": "您的保险库连续记录",
+      "current": "当前连续",
+      "longest": "最长连续",
+      "total": "总条目",
+      "days": "天",
+      "day": "天",
+      "badges": "获得徽章",
+      "startStreak": "今天开始您的连续记录！",
+      "keepGoing": "继续加油！"
+    },
+    "reminder": {
+      "title": "6周回顾",
+      "message": "完成每日条目以解锁您的个性化回顾",
+      "daysRemaining": "天剩余",
+      "progress": "进度"
+    },
+    "history": {
+      "comingSoon": "历史视图即将推出",
+      "description": "查看您过去的条目并随时间跟踪您的进度"
+    },
+    "badges": {
+      "first_entry": "首次条目",
+      "week_warrior": "周战士",
+      "consistency_king": "一致性之王",
+      "vault_master": "保险库大师",
+      "reflection_pro": "反思专家",
+      "strength_tracker": "力量追踪器"
+    }
+  },
+  "navigation": {
+    "vault": "保险库"
   }
 }
