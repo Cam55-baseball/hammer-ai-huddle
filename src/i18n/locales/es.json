@@ -3830,6 +3830,32 @@
       "highlights": "Destacados",
       "focusAreas": "Áreas de Enfoque",
       "daysUntilNext": "días hasta el próximo resumen"
+    },
+    "delete": {
+      "confirmTitle": "¿Eliminar entrada?",
+      "confirmMessage": "Esta acción no se puede deshacer. Esta entrada se eliminará permanentemente.",
+      "success": "Entrada eliminada correctamente"
+    },
+    "weekly": {
+      "thisWeek": "Esta semana",
+      "noData": "Sin datos esta semana",
+      "totalWorkouts": "Entrenamientos totales",
+      "totalWeight": "Peso total (lbs)",
+      "avgEnergy": "Energía media",
+      "quizzesCompleted": "Cuestionarios completados",
+      "readinessTrend": "Tendencia de preparación",
+      "weightTrend": "Tendencia de peso levantado",
+      "activityHeatmap": "Mapa de calor de actividad",
+      "weeklyHighlights": "Destacados semanales",
+      "mental": "Mental",
+      "emotional": "Emocional",
+      "physical": "Físico",
+      "currentStreak": "Racha actual",
+      "longestStreak": "Mayor racha",
+      "totalEntries": "Entradas totales",
+      "badgesEarned": "Insignias obtenidas",
+      "days": "días",
+      "weightLifted": "Peso levantado"
     }
   },
   "navigation": {

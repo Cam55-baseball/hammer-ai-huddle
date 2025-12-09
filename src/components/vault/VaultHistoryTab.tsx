@@ -386,9 +386,18 @@ export function VaultHistoryTab({
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Activity className="h-4 w-4 text-blue-500" />
                     {t('vault.history.performanceTestEntry')}
-                    <Badge variant="outline" className="ml-auto text-xs capitalize">
-                      {test.test_type.replace('_', ' ')}
-                    </Badge>
+                    <div className="ml-auto flex items-center gap-1">
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {test.test_type.replace('_', ' ')}
+                      </Badge>
+                      {onDeletePerformanceTest && (
+                        <DeleteButton onClick={() => setDeleteTarget({ 
+                          type: 'performanceTest', 
+                          id: test.id, 
+                          name: t('vault.history.performanceTestEntry') 
+                        })} />
+                      )}
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -418,6 +427,15 @@ export function VaultHistoryTab({
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Camera className="h-4 w-4 text-purple-500" />
                     {t('vault.history.progressPhotoEntry')}
+                    {onDeletePhoto && (
+                      <div className="ml-auto">
+                        <DeleteButton onClick={() => setDeleteTarget({ 
+                          type: 'photo', 
+                          id: photo.id, 
+                          name: t('vault.history.progressPhotoEntry') 
+                        })} />
+                      </div>
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -473,9 +491,18 @@ export function VaultHistoryTab({
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500" />
                     {t('vault.history.scoutGradeEntry')}
-                    <Badge variant="outline" className="ml-auto text-xs">
-                      {format(new Date(grade.graded_at), 'h:mm a')}
-                    </Badge>
+                    <div className="ml-auto flex items-center gap-1">
+                      <Badge variant="outline" className="text-xs">
+                        {format(new Date(grade.graded_at), 'h:mm a')}
+                      </Badge>
+                      {onDeleteGrade && (
+                        <DeleteButton onClick={() => setDeleteTarget({ 
+                          type: 'scoutGrade', 
+                          id: grade.id, 
+                          name: t('vault.history.scoutGradeEntry') 
+                        })} />
+                      )}
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">

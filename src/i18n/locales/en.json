@@ -4029,6 +4029,32 @@
       "highlights": "Highlights",
       "focusAreas": "Focus Areas",
       "daysUntilNext": "days until next recap"
+    },
+    "delete": {
+      "confirmTitle": "Delete Entry?",
+      "confirmMessage": "This action cannot be undone. This entry will be permanently removed.",
+      "success": "Entry deleted successfully"
+    },
+    "weekly": {
+      "thisWeek": "This Week",
+      "noData": "No data for this week",
+      "totalWorkouts": "Total Workouts",
+      "totalWeight": "Total Weight (lbs)",
+      "avgEnergy": "Avg. Energy",
+      "quizzesCompleted": "Quizzes Completed",
+      "readinessTrend": "Readiness Trend",
+      "weightTrend": "Weight Lifted Trend",
+      "activityHeatmap": "Activity Heatmap",
+      "weeklyHighlights": "Weekly Highlights",
+      "mental": "Mental",
+      "emotional": "Emotional",
+      "physical": "Physical",
+      "currentStreak": "Current Streak",
+      "longestStreak": "Longest Streak",
+      "totalEntries": "Total Entries",
+      "badgesEarned": "Badges Earned",
+      "days": "days",
+      "weightLifted": "Weight Lifted"
     }
   },
   "navigation": {

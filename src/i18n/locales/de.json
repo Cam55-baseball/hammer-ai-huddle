@@ -3852,6 +3852,32 @@
       "highlights": "Highlights",
       "focusAreas": "Fokus-Bereiche",
       "daysUntilNext": "Tage bis zum nächsten Rückblick"
+    },
+    "delete": {
+      "confirmTitle": "Eintrag löschen?",
+      "confirmMessage": "Diese Aktion kann nicht rückgängig gemacht werden. Dieser Eintrag wird dauerhaft entfernt.",
+      "success": "Eintrag erfolgreich gelöscht"
+    },
+    "weekly": {
+      "thisWeek": "Diese Woche",
+      "noData": "Keine Daten diese Woche",
+      "totalWorkouts": "Trainings gesamt",
+      "totalWeight": "Gesamtgewicht (lbs)",
+      "avgEnergy": "Durchschn. Energie",
+      "quizzesCompleted": "Abgeschlossene Quiz",
+      "readinessTrend": "Bereitschaftstrend",
+      "weightTrend": "Gehobenes Gewicht Trend",
+      "activityHeatmap": "Aktivitäts-Heatmap",
+      "weeklyHighlights": "Wochen-Highlights",
+      "mental": "Mental",
+      "emotional": "Emotional",
+      "physical": "Körperlich",
+      "currentStreak": "Aktuelle Serie",
+      "longestStreak": "Längste Serie",
+      "totalEntries": "Einträge gesamt",
+      "badgesEarned": "Abzeichen erhalten",
+      "days": "Tage",
+      "weightLifted": "Gewicht gehoben"
     }
   },
   "navigation": {

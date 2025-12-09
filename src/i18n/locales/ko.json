@@ -3079,6 +3079,32 @@
       "viewRecap": "요약 보기",
       "downloadPdf": "PDF 다운로드"
     },
+    "delete": {
+      "confirmTitle": "항목을 삭제하시겠습니까?",
+      "confirmMessage": "이 작업은 취소할 수 없습니다. 이 항목이 영구적으로 삭제됩니다.",
+      "success": "항목이 삭제되었습니다"
+    },
+    "weekly": {
+      "thisWeek": "이번 주",
+      "noData": "이번 주 데이터 없음",
+      "totalWorkouts": "총 운동 횟수",
+      "totalWeight": "총 중량 (lbs)",
+      "avgEnergy": "평균 에너지",
+      "quizzesCompleted": "완료된 퀴즈",
+      "readinessTrend": "준비 상태 추이",
+      "weightTrend": "들어올린 중량 추이",
+      "activityHeatmap": "활동 히트맵",
+      "weeklyHighlights": "주간 하이라이트",
+      "mental": "정신",
+      "emotional": "감정",
+      "physical": "신체",
+      "currentStreak": "현재 연속 기록",
+      "longestStreak": "최장 연속 기록",
+      "totalEntries": "총 항목 수",
+      "badgesEarned": "획득한 배지",
+      "days": "일",
+      "weightLifted": "들어올린 중량"
+    },
     "badges": {
       "first_entry": "첫 항목",
       "week_warrior": "주간 전사",
