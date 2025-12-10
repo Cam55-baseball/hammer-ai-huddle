@@ -4091,6 +4091,18 @@
         "category": "Catégorie",
         "change": "Changement",
         "noChange": "Aucun changement"
+      },
+      "scaleReference": {
+        "title": "Référence Échelle 20-80",
+        "mlbAverage": "Moy. MLB",
+        "auslAverage": "Moy. AUSL",
+        "poor": "Faible",
+        "belowAverage": "Sous Moy.",
+        "average": "Moyen",
+        "aboveAverage": "Au-dessus Moy.",
+        "plus": "Supérieur",
+        "elite": "Élite",
+        "hallOfFame": "HOF"
       }
     },
     "recap": {

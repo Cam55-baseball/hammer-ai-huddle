@@ -4069,6 +4069,18 @@
         "category": "Categoría",
         "change": "Cambio",
         "noChange": "Sin cambio"
+      },
+      "scaleReference": {
+        "title": "Referencia de Escala 20-80",
+        "mlbAverage": "Prom. MLB",
+        "auslAverage": "Prom. AUSL",
+        "poor": "Bajo",
+        "belowAverage": "Bajo Prom.",
+        "average": "Promedio",
+        "aboveAverage": "Sobre Prom.",
+        "plus": "Superior",
+        "elite": "Élite",
+        "hallOfFame": "HOF"
       }
     },
     "recap": {

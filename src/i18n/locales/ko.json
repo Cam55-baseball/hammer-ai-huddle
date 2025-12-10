@@ -3321,6 +3321,18 @@
         "category": "카테고리",
         "change": "변화",
         "noChange": "변화 없음"
+      },
+      "scaleReference": {
+        "title": "20-80 스카우트 척도 참조",
+        "mlbAverage": "MLB 평균",
+        "auslAverage": "AUSL 평균",
+        "poor": "낮음",
+        "belowAverage": "평균 이하",
+        "average": "평균",
+        "aboveAverage": "평균 이상",
+        "plus": "우수",
+        "elite": "엘리트",
+        "hallOfFame": "명예의 전당"
       }
     },
     "recap": {
