@@ -120,6 +120,14 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
         },
+        "vault-pulse": {
+          "0%, 100%": { 
+            boxShadow: "0 0 0 0 hsl(var(--amber-glow, 45 100% 50%) / 0.4)",
+          },
+          "50%": { 
+            boxShadow: "0 0 12px 4px hsl(var(--amber-glow, 45 100% 50%) / 0.6)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -130,6 +138,7 @@ export default {
         "icon-wiggle": "icon-wiggle 0.5s ease-in-out",
         "fade-in-up": "fade-in-up 0.2s ease-out",
         "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
+        "vault-pulse": "vault-pulse 2s ease-in-out infinite",
       },
     },
   },

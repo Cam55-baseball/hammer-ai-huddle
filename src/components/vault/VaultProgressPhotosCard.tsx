@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Camera, ChevronDown, Calendar, Upload, ImageIcon, Ruler, Scale } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Camera, ChevronDown, Calendar, Upload, ImageIcon, Ruler, Scale, Lock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProgressPhoto {
@@ -22,6 +23,7 @@ interface ProgressPhoto {
   waist_measurement: number | null;
   leg_measurement: number | null;
   notes: string | null;
+  next_entry_date?: string | null;
 }
 
 interface VaultProgressPhotosCardProps {
@@ -38,6 +40,8 @@ interface VaultProgressPhotosCardProps {
   }) => Promise<{ success: boolean }>;
 }
 
+const LOCK_PERIOD_WEEKS = 6;
+
 export function VaultProgressPhotosCard({ photos, onSave }: VaultProgressPhotosCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -52,6 +56,13 @@ export function VaultProgressPhotosCard({ photos, onSave }: VaultProgressPhotosC
   const [waist, setWaist] = useState('');
   const [leg, setLeg] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Check if entry is locked
+  const latestPhoto = photos[0];
+  const isLocked = latestPhoto?.next_entry_date && new Date(latestPhoto.next_entry_date) > new Date();
+  const daysRemaining = latestPhoto?.next_entry_date 
+    ? Math.max(0, Math.ceil((new Date(latestPhoto.next_entry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -105,6 +116,12 @@ export function VaultProgressPhotosCard({ photos, onSave }: VaultProgressPhotosC
                 {photos.length > 0 && (
                   <Badge variant="secondary" className="text-xs">{photos.length}</Badge>
                 )}
+                {isLocked && (
+                  <Badge variant="outline" className="text-xs gap-1 text-amber-600 border-amber-600">
+                    <Lock className="h-3 w-3" />
+                    {t('vault.lockPeriod.locked')}
+                  </Badge>
+                )}
               </div>
               <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </div>
@@ -114,129 +131,167 @@ export function VaultProgressPhotosCard({ photos, onSave }: VaultProgressPhotosC
         
         <CollapsibleContent>
           <CardContent className="space-y-4">
-            {/* Photo Upload */}
-            <div className="space-y-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <Button
-                variant="outline"
-                className="w-full h-24 border-dashed"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                  <Upload className="h-6 w-6" />
-                  <span className="text-sm">{t('vault.progressPhotos.upload')}</span>
-                  <span className="text-xs">{t('vault.progressPhotos.uploadHint')}</span>
+            {/* Lock Period Info */}
+            <Alert className="bg-amber-500/10 border-amber-500/30">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-sm">
+                <p className="font-medium text-amber-700 dark:text-amber-400">
+                  {t('vault.lockPeriod.sixWeeks')}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('vault.lockPeriod.entriesImmutable')}
+                </p>
+              </AlertDescription>
+            </Alert>
+
+            {isLocked ? (
+              <Alert>
+                <Lock className="h-4 w-4" />
+                <AlertDescription>
+                  <span className="font-medium">{t('vault.lockPeriod.sectionLocked')}</span>
+                  <br />
+                  <span className="text-sm text-muted-foreground">
+                    {t('vault.lockPeriod.lockedUntil', { days: daysRemaining })}
+                  </span>
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                {/* Photo Upload */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Camera className="h-4 w-4 text-green-500" />
+                    <Label className="font-medium text-green-700 dark:text-green-400">
+                      {t('vault.lockPeriod.readyToRecord')}
+                    </Label>
+                  </div>
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <Button
+                    variant="outline"
+                    className="w-full h-24 border-dashed"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Upload className="h-6 w-6" />
+                      <span className="text-sm">{t('vault.progressPhotos.upload')}</span>
+                      <span className="text-xs">{t('vault.progressPhotos.uploadHint')}</span>
+                    </div>
+                  </Button>
+                  
+                  {selectedFiles.length > 0 && (
+                    <div className="flex gap-2 flex-wrap">
+                      {selectedFiles.map((file, i) => (
+                        <Badge key={i} variant="secondary" className="gap-1">
+                          <ImageIcon className="h-3 w-3" />
+                          {file.name.slice(0, 20)}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </Button>
-              
-              {selectedFiles.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
-                  {selectedFiles.map((file, i) => (
-                    <Badge key={i} variant="secondary" className="gap-1">
-                      <ImageIcon className="h-3 w-3" />
-                      {file.name.slice(0, 20)}
-                    </Badge>
-                  ))}
+
+                {/* Measurements */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs flex items-center gap-1">
+                      <Scale className="h-3 w-3" />
+                      {t('vault.progressPhotos.weight')}
+                    </Label>
+                    <Input
+                      type="number"
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                      placeholder="180 lbs"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">{t('vault.progressPhotos.bodyFat')}</Label>
+                    <Input
+                      type="number"
+                      value={bodyFat}
+                      onChange={(e) => setBodyFat(e.target.value)}
+                      placeholder="15%"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs flex items-center gap-1">
+                      <Ruler className="h-3 w-3" />
+                      {t('vault.progressPhotos.arm')}
+                    </Label>
+                    <Input
+                      type="number"
+                      value={arm}
+                      onChange={(e) => setArm(e.target.value)}
+                      placeholder="16 in"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">{t('vault.progressPhotos.chest')}</Label>
+                    <Input
+                      type="number"
+                      value={chest}
+                      onChange={(e) => setChest(e.target.value)}
+                      placeholder="42 in"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">{t('vault.progressPhotos.waist')}</Label>
+                    <Input
+                      type="number"
+                      value={waist}
+                      onChange={(e) => setWaist(e.target.value)}
+                      placeholder="32 in"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">{t('vault.progressPhotos.leg')}</Label>
+                    <Input
+                      type="number"
+                      value={leg}
+                      onChange={(e) => setLeg(e.target.value)}
+                      placeholder="25 in"
+                      className="h-9"
+                    />
+                  </div>
                 </div>
-              )}
-            </div>
 
-            {/* Measurements */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs flex items-center gap-1">
-                  <Scale className="h-3 w-3" />
-                  {t('vault.progressPhotos.weight')}
-                </Label>
-                <Input
-                  type="number"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  placeholder="180 lbs"
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">{t('vault.progressPhotos.bodyFat')}</Label>
-                <Input
-                  type="number"
-                  value={bodyFat}
-                  onChange={(e) => setBodyFat(e.target.value)}
-                  placeholder="15%"
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs flex items-center gap-1">
-                  <Ruler className="h-3 w-3" />
-                  {t('vault.progressPhotos.arm')}
-                </Label>
-                <Input
-                  type="number"
-                  value={arm}
-                  onChange={(e) => setArm(e.target.value)}
-                  placeholder="16 in"
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">{t('vault.progressPhotos.chest')}</Label>
-                <Input
-                  type="number"
-                  value={chest}
-                  onChange={(e) => setChest(e.target.value)}
-                  placeholder="42 in"
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">{t('vault.progressPhotos.waist')}</Label>
-                <Input
-                  type="number"
-                  value={waist}
-                  onChange={(e) => setWaist(e.target.value)}
-                  placeholder="32 in"
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">{t('vault.progressPhotos.leg')}</Label>
-                <Input
-                  type="number"
-                  value={leg}
-                  onChange={(e) => setLeg(e.target.value)}
-                  placeholder="25 in"
-                  className="h-9"
-                />
-              </div>
-            </div>
+                {/* Notes */}
+                <div className="space-y-1">
+                  <Label className="text-xs">{t('vault.progressPhotos.notes')}</Label>
+                  <Textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder={t('vault.progressPhotos.notesPlaceholder')}
+                    className="min-h-[60px]"
+                  />
+                </div>
 
-            {/* Notes */}
-            <div className="space-y-1">
-              <Label className="text-xs">{t('vault.progressPhotos.notes')}</Label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder={t('vault.progressPhotos.notesPlaceholder')}
-                className="min-h-[60px]"
-              />
-            </div>
+                <Button onClick={handleSave} disabled={saving} className="w-full">
+                  {saving ? t('common.loading') : t('vault.progressPhotos.save')}
+                </Button>
+              </>
+            )}
 
-            <Button onClick={handleSave} disabled={saving} className="w-full">
-              {saving ? t('common.loading') : t('vault.progressPhotos.save')}
-            </Button>
-
-            {/* Recent Entries */}
+            {/* Recent Entries (Read-Only History) */}
             {recentPhotos.length > 0 && (
               <div className="space-y-2 pt-2 border-t">
-                <Label className="text-sm font-medium">{t('vault.progressPhotos.recent')}</Label>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-medium">{t('vault.progressPhotos.recent')}</Label>
+                  <Badge variant="outline" className="text-xs">{t('vault.lockPeriod.readOnly')}</Badge>
+                </div>
                 <ScrollArea className="max-h-[200px]">
                   <div className="space-y-2">
                     {recentPhotos.map((photo) => (

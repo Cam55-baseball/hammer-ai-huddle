@@ -3700,6 +3700,15 @@
       "description": "Abonniere ein Trainingsmodul, um Den Tresor freizuschalten und deine Reise zu verfolgen",
       "unlockButton": "Preise Ansehen"
     },
+    "lockPeriod": {
+      "sixWeeks": "Einträge erfolgen alle 6 Wochen. Der Bereich wird nach jedem Eintrag gesperrt und ist 6 Wochen nicht verfügbar.",
+      "lockedUntil": "Nächster Eintrag verfügbar in {{days}} Tagen",
+      "entriesImmutable": "Frühere Einträge können nicht geändert werden und werden dauerhaft für Fortschrittsberichte gespeichert.",
+      "sectionLocked": "Bereich Gesperrt",
+      "readyToRecord": "Bereit zur Aufnahme",
+      "locked": "Gesperrt",
+      "readOnly": "Nur Lesen"
+    },
     "tabs": {
       "today": "Heute",
       "history": "Verlauf",

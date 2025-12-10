@@ -2954,6 +2954,15 @@
       "description": "Abonneer op een trainingsmodule om De Kluis te ontgrendelen en je reis bij te houden",
       "unlockButton": "Bekijk Prijzen"
     },
+    "lockPeriod": {
+      "sixWeeks": "Invoer is elke 6 weken. De sectie wordt na elke invoer vergrendeld en is 6 weken niet beschikbaar.",
+      "lockedUntil": "Volgende invoer beschikbaar over {{days}} dagen",
+      "entriesImmutable": "Eerdere invoeren kunnen niet worden gewijzigd en worden permanent opgeslagen voor voortgangsrapporten.",
+      "sectionLocked": "Sectie Vergrendeld",
+      "readyToRecord": "Klaar om te Registreren",
+      "locked": "Vergrendeld",
+      "readOnly": "Alleen Lezen"
+    },
     "tabs": {
       "today": "Vandaag",
       "history": "Geschiedenis",

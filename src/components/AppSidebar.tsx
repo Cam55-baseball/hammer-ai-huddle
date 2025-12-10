@@ -9,6 +9,7 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useVaultPendingStatus } from "@/hooks/useVaultPendingStatus";
 import { supabase } from "@/integrations/supabase/client";
 import { branding } from "@/branding";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -89,6 +90,7 @@ export function AppSidebar() {
   const { isAdmin } = useAdminAccess();
   const { isScout } = useScoutAccess();
   const { modules } = useSubscription();
+  const { hasPendingItems, pendingCount } = useVaultPendingStatus();
   const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [ownerBioOpen, setOwnerBioOpen] = useState(false);
@@ -430,7 +432,9 @@ export function AppSidebar() {
                   onClick={() => navigate("/vault")}
                   isActive={isActive("/vault")}
                   tooltip={t('navigation.vault', 'The Vault')}
-                  className="group sidebar-item-hover relative bg-gradient-to-r from-amber-500/10 to-yellow-500/10 hover:from-amber-500/20 hover:to-yellow-500/20"
+                  className={`group sidebar-item-hover relative bg-gradient-to-r from-amber-500/10 to-yellow-500/10 hover:from-amber-500/20 hover:to-yellow-500/20 ${
+                    hasVaultAccess && hasPendingItems ? 'animate-vault-pulse' : ''
+                  }`}
                 >
                   {isActive("/vault") && <span className="sidebar-active-indicator" />}
                   {hasVaultAccess ? (
@@ -439,6 +443,11 @@ export function AppSidebar() {
                     <Lock className="h-4 w-4 text-muted-foreground sidebar-icon transition-all duration-200 group-hover:scale-110" />
                   )}
                   <span className="font-medium transition-colors duration-200">{t('navigation.vault', 'The Vault')}</span>
+                  {hasVaultAccess && hasPendingItems && pendingCount > 0 && (
+                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
+                      {pendingCount > 9 ? '9+' : pendingCount}
+                    </span>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

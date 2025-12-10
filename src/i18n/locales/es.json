@@ -3678,6 +3678,15 @@
       "description": "Suscríbete a cualquier módulo de entrenamiento para desbloquear La Bóveda y comenzar a registrar tu viaje",
       "unlockButton": "Ver Precios"
     },
+    "lockPeriod": {
+      "sixWeeks": "Las entradas son cada 6 semanas. La sección se bloqueará después de cada entrada y no estará disponible durante 6 semanas.",
+      "lockedUntil": "Próxima entrada disponible en {{days}} días",
+      "entriesImmutable": "Las entradas anteriores no se pueden modificar y se almacenan permanentemente para informes de progreso.",
+      "sectionLocked": "Sección Bloqueada",
+      "readyToRecord": "Listo para Registrar",
+      "locked": "Bloqueado",
+      "readOnly": "Solo Lectura"
+    },
     "tabs": {
       "today": "Hoy",
       "history": "Historial",

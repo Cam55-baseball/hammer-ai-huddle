@@ -3700,6 +3700,15 @@
       "description": "Abonnez-vous à un module d'entraînement pour débloquer Le Coffre-Fort et commencer à suivre votre parcours",
       "unlockButton": "Voir les Tarifs"
     },
+    "lockPeriod": {
+      "sixWeeks": "Les entrées sont sur une base de 6 semaines. La section sera verrouillée après chaque entrée et indisponible pendant 6 semaines.",
+      "lockedUntil": "Prochaine entrée disponible dans {{days}} jours",
+      "entriesImmutable": "Les entrées précédentes ne peuvent pas être modifiées et sont stockées de façon permanente pour les rapports de progression.",
+      "sectionLocked": "Section Verrouillée",
+      "readyToRecord": "Prêt à Enregistrer",
+      "locked": "Verrouillé",
+      "readOnly": "Lecture Seule"
+    },
     "tabs": {
       "today": "Aujourd'hui",
       "history": "Historique",

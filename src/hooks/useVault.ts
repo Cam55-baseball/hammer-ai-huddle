@@ -114,6 +114,7 @@ export interface VaultPerformanceTest {
   test_date: string;
   results: Record<string, number>;
   previous_results: Record<string, number> | null;
+  next_entry_date?: string | null;
 }
 
 export interface VaultProgressPhoto {
@@ -127,6 +128,7 @@ export interface VaultProgressPhoto {
   waist_measurement: number | null;
   leg_measurement: number | null;
   notes: string | null;
+  next_entry_date?: string | null;
 }
 
 export interface VaultScoutGrade {
@@ -647,8 +649,13 @@ export function useVault() {
   const savePerformanceTest = useCallback(async (testType: string, results: Record<string, number>) => {
     if (!user) return { success: false };
     const lastTest = performanceTests.find(t => t.test_type === testType);
+    // Calculate next entry date (6 weeks from now)
+    const nextEntryDate = new Date();
+    nextEntryDate.setDate(nextEntryDate.getDate() + 42); // 6 weeks = 42 days
+    
     const { error } = await supabase.from('vault_performance_tests').insert({
       user_id: user.id, test_type: testType, sport: 'baseball', module: testType, results, previous_results: lastTest?.results || null,
+      next_entry_date: nextEntryDate.toISOString().split('T')[0],
     });
     if (!error) await fetchPerformanceTests();
     return { success: !error };
@@ -669,10 +676,15 @@ export function useVault() {
       const { error } = await supabase.storage.from('vault-photos').upload(path, file);
       if (!error) photoUrls.push(path);
     }
+    // Calculate next entry date (6 weeks from now)
+    const nextEntryDate = new Date();
+    nextEntryDate.setDate(nextEntryDate.getDate() + 42); // 6 weeks = 42 days
+    
     const { error } = await supabase.from('vault_progress_photos').insert({
       user_id: user.id, photo_urls: photoUrls, weight_lbs: photoData.weight_lbs, body_fat_percent: photoData.body_fat_percent,
       arm_measurement: photoData.arm_measurement, chest_measurement: photoData.chest_measurement, waist_measurement: photoData.waist_measurement,
       leg_measurement: photoData.leg_measurement, notes: photoData.notes,
+      next_entry_date: nextEntryDate.toISOString().split('T')[0],
     });
     if (!error) await fetchProgressPhotos();
     return { success: !error };
@@ -687,7 +699,10 @@ export function useVault() {
 
   const saveScoutGrade = useCallback(async (gradeData: { hitting_grade: number | null; power_grade: number | null; speed_grade: number | null; defense_grade: number | null; throwing_grade: number | null; leadership_grade: number | null; self_efficacy_grade: number | null; notes: string | null; }) => {
     if (!user) return { success: false };
-    const nextPrompt = new Date(); nextPrompt.setDate(nextPrompt.getDate() + 14);
+    // Calculate next entry date (6 weeks from now)
+    const nextPrompt = new Date(); 
+    nextPrompt.setDate(nextPrompt.getDate() + 42); // 6 weeks = 42 days
+    
     const { error } = await supabase.from('vault_scout_grades').insert({
       user_id: user.id, ...gradeData, next_prompt_date: nextPrompt.toISOString(),
     });

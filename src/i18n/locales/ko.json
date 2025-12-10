@@ -2941,6 +2941,15 @@
       "description": "금고를 해제하고 여정을 기록하려면 훈련 모듈을 구독하세요",
       "unlockButton": "가격 보기"
     },
+    "lockPeriod": {
+      "sixWeeks": "항목은 6주마다 기록됩니다. 각 항목 후 해당 섹션은 6주 동안 잠깁니다.",
+      "lockedUntil": "다음 항목까지 {{days}}일 남음",
+      "entriesImmutable": "이전 항목은 수정할 수 없으며 진행 보고서를 위해 영구 저장됩니다.",
+      "sectionLocked": "섹션 잠김",
+      "readyToRecord": "기록 준비 완료",
+      "locked": "잠김",
+      "readOnly": "읽기 전용"
+    },
     "tabs": {
       "today": "오늘",
       "history": "기록",

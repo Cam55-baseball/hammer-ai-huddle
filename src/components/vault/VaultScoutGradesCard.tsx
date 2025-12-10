@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Star, ChevronDown, Clock, AlertCircle, Calendar } from 'lucide-react';
+import { Star, ChevronDown, Lock, AlertCircle, Calendar } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ScoutGrade {
@@ -38,6 +38,8 @@ interface VaultScoutGradesCardProps {
     notes: string | null;
   }) => Promise<{ success: boolean }>;
 }
+
+const LOCK_PERIOD_WEEKS = 6;
 
 const GRADE_CATEGORIES = [
   'hitting',
@@ -124,6 +126,12 @@ export function VaultScoutGradesCard({ grades, onSave }: VaultScoutGradesCardPro
                 {grades.length > 0 && (
                   <Badge variant="secondary" className="text-xs">{grades.length}</Badge>
                 )}
+                {!canGradeToday && (
+                  <Badge variant="outline" className="text-xs gap-1 text-amber-600 border-amber-600">
+                    <Lock className="h-3 w-3" />
+                    {t('vault.lockPeriod.locked')}
+                  </Badge>
+                )}
               </div>
               <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </div>
@@ -133,20 +141,37 @@ export function VaultScoutGradesCard({ grades, onSave }: VaultScoutGradesCardPro
         
         <CollapsibleContent>
           <CardContent className="space-y-4">
-            {!canGradeToday && (
+            {/* Lock Period Info */}
+            <Alert className="bg-amber-500/10 border-amber-500/30">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-sm">
+                <p className="font-medium text-amber-700 dark:text-amber-400">
+                  {t('vault.lockPeriod.sixWeeks')}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('vault.lockPeriod.entriesImmutable')}
+                </p>
+              </AlertDescription>
+            </Alert>
+
+            {!canGradeToday ? (
               <Alert>
-                <Clock className="h-4 w-4" />
+                <Lock className="h-4 w-4" />
                 <AlertDescription>
-                  {t('vault.scoutGrades.nextGradeIn', { days: daysUntilNextGrade })}
+                  <span className="font-medium">{t('vault.lockPeriod.sectionLocked')}</span>
+                  <br />
+                  <span className="text-sm text-muted-foreground">
+                    {t('vault.lockPeriod.lockedUntil', { days: daysUntilNextGrade })}
+                  </span>
                 </AlertDescription>
               </Alert>
-            )}
-
-            {canGradeToday && (
+            ) : (
               <div className="space-y-4 p-3 rounded-lg bg-muted/30 border border-border">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  <span className="text-sm font-medium">{t('vault.scoutGrades.selfEvaluate')}</span>
+                  <Star className="h-4 w-4 text-green-500" />
+                  <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                    {t('vault.lockPeriod.readyToRecord')}
+                  </span>
                 </div>
 
                 {GRADE_CATEGORIES.map((category) => (
@@ -196,10 +221,13 @@ export function VaultScoutGradesCard({ grades, onSave }: VaultScoutGradesCardPro
               </div>
             )}
 
-            {/* History */}
+            {/* History (Read-Only) */}
             {grades.length > 0 && (
               <div className="space-y-2 pt-2">
-                <Label className="text-sm font-medium">{t('vault.scoutGrades.history')}</Label>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-medium">{t('vault.scoutGrades.history')}</Label>
+                  <Badge variant="outline" className="text-xs">{t('vault.lockPeriod.readOnly')}</Badge>
+                </div>
                 <ScrollArea className="max-h-[200px]">
                   <div className="space-y-2">
                     {grades.slice(0, 5).map((grade) => (

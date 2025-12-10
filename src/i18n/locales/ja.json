@@ -2984,6 +2984,15 @@
       "description": "トレーニングモジュールに登録してボールトを解除し、旅を記録しましょう",
       "unlockButton": "料金を見る"
     },
+    "lockPeriod": {
+      "sixWeeks": "エントリーは6週間ごとです。各エントリー後、セクションは6週間ロックされます。",
+      "lockedUntil": "次のエントリーまで{{days}}日",
+      "entriesImmutable": "以前のエントリーは変更できず、進捗レポート用に永続的に保存されます。",
+      "sectionLocked": "セクションロック中",
+      "readyToRecord": "記録準備完了",
+      "locked": "ロック中",
+      "readOnly": "読み取り専用"
+    },
     "tabs": {
       "today": "今日",
       "history": "履歴",
