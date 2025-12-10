@@ -3466,6 +3466,25 @@
     "tasksCompleted": "{{completed}}/{{total}} 完了",
     "allComplete": "やり遂げた！",
     "doIt": "実行",
+    "sections": {
+      "dailyCheckins": "デイリーチェックイン",
+      "training": "トレーニング",
+      "cycleTracking": "サイクルトラッキング"
+    },
+    "quiz": {
+      "morning": {
+        "title": "朝のチェックインを完了",
+        "description": "睡眠の質と朝の準備状態を記録"
+      },
+      "prelift": {
+        "title": "トレーニング前チェックインを完了",
+        "description": "トレーニング前にメンタルフォーカスを設定"
+      },
+      "night": {
+        "title": "夜のチェックインを完了",
+        "description": "一日を振り返り、休息の準備をする"
+      }
+    },
     "workout": {
       "hitting": {
         "title": "Iron Bambinoワークアウトを完了",
@@ -3493,6 +3512,23 @@
     "nutrition": {
       "title": "栄養を記録",
       "description": "The Vaultでパフォーマンスを燃料補給"
+    },
+    "tracking": {
+      "performance": {
+        "title": "パフォーマンステストを記録",
+        "description": "6週間のアスレチック指標を追跡",
+        "badge": "6週"
+      },
+      "photos": {
+        "title": "進捗写真を記録",
+        "description": "6週間の体の変化を記録",
+        "badge": "6週"
+      },
+      "grades": {
+        "title": "スカウト自己評価を設定",
+        "description": "20-80スケールでスキルを評価",
+        "badge": "12週"
+      }
     },
     "recapCountdown": {
       "title": "6週間レキャップ",

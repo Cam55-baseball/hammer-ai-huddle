@@ -4183,6 +4183,25 @@
     "tasksCompleted": "{{completed}}/{{total}} erledigt",
     "allComplete": "GESCHAFFT!",
     "doIt": "LOS",
+    "sections": {
+      "dailyCheckins": "TÄGLICHE CHECK-INS",
+      "training": "TRAINING",
+      "cycleTracking": "ZYKLUS-TRACKING"
+    },
+    "quiz": {
+      "morning": {
+        "title": "Morgen-Check-in Abschließen",
+        "description": "Schlafqualität und Morgenbereitschaft protokollieren"
+      },
+      "prelift": {
+        "title": "Vor-Training-Check-in Abschließen",
+        "description": "Mentalen Fokus vor dem Training setzen"
+      },
+      "night": {
+        "title": "Abend-Check-in Abschließen",
+        "description": "Über den Tag reflektieren und auf Ruhe vorbereiten"
+      }
+    },
     "workout": {
       "hitting": {
         "title": "Iron Bambino Training Abschließen",
@@ -4210,6 +4229,23 @@
     "nutrition": {
       "title": "Ernährung Protokollieren",
       "description": "Unterstütze deine Leistung im Vault"
+    },
+    "tracking": {
+      "performance": {
+        "title": "Leistungstests Protokollieren",
+        "description": "Verfolge deine 6-Wochen Athletik-Metriken",
+        "badge": "6 WO"
+      },
+      "photos": {
+        "title": "Fortschrittsfotos Protokollieren",
+        "description": "Dokumentiere deinen 6-Wochen Körperfortschritt",
+        "badge": "6 WO"
+      },
+      "grades": {
+        "title": "Scout-Selbstbewertungen Setzen",
+        "description": "Bewerte deine Fähigkeiten auf der 20-80 Skala",
+        "badge": "12 WO"
+      }
     },
     "recapCountdown": {
       "title": "6-WOCHEN RECAP",

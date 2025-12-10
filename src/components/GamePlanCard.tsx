@@ -28,6 +28,113 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     navigate(task.link);
   };
 
+  // Group tasks by section
+  const checkinTasks = tasks.filter(t => t.section === 'checkin');
+  const trainingTasks = tasks.filter(t => t.section === 'training');
+  const trackingTasks = tasks.filter(t => t.section === 'tracking');
+
+  const renderTask = (task: GamePlanTask) => {
+    const Icon = task.icon;
+    const isIncomplete = !task.completed;
+    const isTracking = task.section === 'tracking';
+    
+    return (
+      <button
+        key={task.id}
+        onClick={() => handleTaskClick(task)}
+        className={cn(
+          "w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
+          "hover:scale-[1.01] active:scale-[0.99] cursor-pointer",
+          "border-2",
+          task.completed
+            ? "bg-green-500/20 border-green-500/50"
+            : isTracking
+              ? "bg-purple-500/10 border-purple-500/60 game-plan-pulse-purple"
+              : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
+        )}
+      >
+        {/* Icon */}
+        <div className={cn(
+          "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
+          task.completed 
+            ? "bg-green-500" 
+            : isTracking
+              ? "bg-purple-500"
+              : "bg-amber-500"
+        )}>
+          <Icon className={cn(
+            "h-5 w-5 sm:h-6 sm:w-6",
+            task.completed ? "text-white" : isTracking ? "text-white" : "text-secondary"
+          )} />
+        </div>
+        
+        {/* Content */}
+        <div className="flex-1 text-left min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className={cn(
+              "text-sm sm:text-base truncate",
+              task.completed 
+                ? "font-semibold text-muted-foreground line-through" 
+                : "font-black text-primary-foreground"
+            )}>
+              {t(task.titleKey)}
+            </h3>
+            {task.badge && !task.completed && (
+              <span className={cn(
+                "flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider",
+                isTracking ? "bg-purple-500/30 text-purple-300" : "bg-amber-500/30 text-amber-300"
+              )}>
+                {t(task.badge)}
+              </span>
+            )}
+          </div>
+          <p className={cn(
+            "text-xs sm:text-sm truncate",
+            task.completed ? "text-muted-foreground/60" : "text-muted-foreground"
+          )}>
+            {t(task.descriptionKey)}
+          </p>
+        </div>
+        
+        {/* Status indicator */}
+        <div className={cn(
+          "flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center",
+          task.completed
+            ? "bg-green-500 text-white"
+            : isTracking
+              ? "border-3 border-dashed border-purple-500/70"
+              : "border-3 border-dashed border-amber-500/70"
+        )}>
+          {task.completed ? (
+            <Check className="h-4 w-4 sm:h-5 sm:w-5" />
+          ) : (
+            <Zap className={cn(
+              "h-3 w-3 sm:h-4 sm:w-4 animate-pulse",
+              isTracking ? "text-purple-500" : "text-amber-500"
+            )} />
+          )}
+        </div>
+
+        {/* Urgency indicator for incomplete tasks */}
+        {isIncomplete && (
+          <div className={cn(
+            "hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border",
+            isTracking 
+              ? "bg-purple-500/20 border-purple-500/40" 
+              : "bg-amber-500/20 border-amber-500/40"
+          )}>
+            <span className={cn(
+              "text-[10px] font-black uppercase tracking-wider",
+              isTracking ? "text-purple-400" : "text-amber-400"
+            )}>
+              {t('gamePlan.doIt')}
+            </span>
+          </div>
+        )}
+      </button>
+    );
+  };
+
   if (loading) {
     return (
       <Card className="relative overflow-hidden border-3 border-primary/50 bg-secondary">
@@ -124,81 +231,49 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         </div>
 
-        {/* Task List */}
-        <div className="space-y-2">
-          {tasks.map((task) => {
-            const Icon = task.icon;
-            const isIncomplete = !task.completed;
-            
-            return (
-              <button
-                key={task.id}
-                onClick={() => handleTaskClick(task)}
-                className={cn(
-                  "w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
-                  "hover:scale-[1.01] active:scale-[0.99] cursor-pointer",
-                  "border-2",
-                  task.completed
-                    ? "bg-green-500/20 border-green-500/50"
-                    : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
-                )}
-              >
-                {/* Icon */}
-                <div className={cn(
-                  "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
-                  task.completed 
-                    ? "bg-green-500" 
-                    : "bg-amber-500"
-                )}>
-                  <Icon className={cn(
-                    "h-5 w-5 sm:h-6 sm:w-6",
-                    task.completed ? "text-white" : "text-secondary"
-                  )} />
-                </div>
-                
-                {/* Content */}
-                <div className="flex-1 text-left min-w-0">
-                  <h3 className={cn(
-                    "text-sm sm:text-base truncate",
-                    task.completed 
-                      ? "font-semibold text-muted-foreground line-through" 
-                      : "font-black text-primary-foreground"
-                  )}>
-                    {t(task.titleKey)}
-                  </h3>
-                  <p className={cn(
-                    "text-xs sm:text-sm truncate",
-                    task.completed ? "text-muted-foreground/60" : "text-muted-foreground"
-                  )}>
-                    {t(task.descriptionKey)}
-                  </p>
-                </div>
-                
-                {/* Status indicator */}
-                <div className={cn(
-                  "flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center",
-                  task.completed
-                    ? "bg-green-500 text-white"
-                    : "border-3 border-dashed border-amber-500/70"
-                )}>
-                  {task.completed ? (
-                    <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-                  ) : (
-                    <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-amber-500 animate-pulse" />
-                  )}
-                </div>
+        {/* Task Sections */}
+        <div className="space-y-4">
+          {/* Daily Check-ins Section */}
+          {checkinTasks.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                <span className="h-px flex-1 bg-primary/30" />
+                {t('gamePlan.sections.dailyCheckins')}
+                <span className="h-px flex-1 bg-primary/30" />
+              </h3>
+              <div className="space-y-2">
+                {checkinTasks.map(renderTask)}
+              </div>
+            </div>
+          )}
 
-                {/* Urgency indicator for incomplete tasks */}
-                {isIncomplete && (
-                  <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/40">
-                    <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider">
-                      {t('gamePlan.doIt')}
-                    </span>
-                  </div>
-                )}
-              </button>
-            );
-          })}
+          {/* Training Section */}
+          {trainingTasks.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                <span className="h-px flex-1 bg-primary/30" />
+                {t('gamePlan.sections.training')}
+                <span className="h-px flex-1 bg-primary/30" />
+              </h3>
+              <div className="space-y-2">
+                {trainingTasks.map(renderTask)}
+              </div>
+            </div>
+          )}
+
+          {/* Cycle Tracking Section (only shown when items are due) */}
+          {trackingTasks.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-black text-purple-400 uppercase tracking-widest flex items-center gap-2">
+                <span className="h-px flex-1 bg-purple-500/30" />
+                {t('gamePlan.sections.cycleTracking')}
+                <span className="h-px flex-1 bg-purple-500/30" />
+              </h3>
+              <div className="space-y-2">
+                {trackingTasks.map(renderTask)}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 6-Week Recap Countdown */}
@@ -235,6 +310,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         }
         .game-plan-pulse {
           animation: game-plan-pulse 2s ease-in-out infinite;
+        }
+        @keyframes game-plan-pulse-purple {
+          0%, 100% { 
+            box-shadow: 0 0 0 0 hsl(270 70% 50% / 0.4);
+          }
+          50% { 
+            box-shadow: 0 0 0 4px hsl(270 70% 50% / 0.1);
+          }
+        }
+        .game-plan-pulse-purple {
+          animation: game-plan-pulse-purple 2s ease-in-out infinite;
         }
       `}</style>
     </Card>
