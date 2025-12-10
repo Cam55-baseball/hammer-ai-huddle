@@ -380,6 +380,18 @@ export function VaultNutritionLogCard({
                   <Plus className="h-3 w-3" />
                   {t('vault.nutrition.logEntry')}
                 </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-7 gap-1 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setGoalsDialogOpen(true);
+                  }}
+                >
+                  <Settings className="h-3 w-3" />
+                  {t('vault.nutrition.setGoals')}
+                </Button>
               </div>
               <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
             </div>
