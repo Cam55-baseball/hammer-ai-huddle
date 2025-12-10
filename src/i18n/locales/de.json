@@ -3709,6 +3709,10 @@
       "locked": "Gesperrt",
       "readOnly": "Nur Lesen"
     },
+    "sixWeekTracking": {
+      "title": "6-Wochen-Tracking",
+      "description": "Einmal pro 6-Wochen-Zyklus für genaue Fortschrittsberichte erfassen"
+    },
     "tabs": {
       "today": "Heute",
       "history": "Verlauf",

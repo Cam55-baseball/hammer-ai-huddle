@@ -2950,6 +2950,10 @@
       "locked": "잠김",
       "readOnly": "읽기 전용"
     },
+    "sixWeekTracking": {
+      "title": "6주 추적",
+      "description": "정확한 진행 보고서를 위해 6주 주기마다 한 번 기록하세요"
+    },
     "tabs": {
       "today": "오늘",
       "history": "기록",

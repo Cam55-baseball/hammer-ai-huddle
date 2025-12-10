@@ -3887,6 +3887,10 @@
       "locked": "Locked",
       "readOnly": "Read-Only"
     },
+    "sixWeekTracking": {
+      "title": "6-Week Tracking",
+      "description": "Record once per 6-week cycle for accurate progress reports"
+    },
     "tabs": {
       "today": "Today",
       "history": "History",

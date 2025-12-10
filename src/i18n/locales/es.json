@@ -3687,6 +3687,10 @@
       "locked": "Bloqueado",
       "readOnly": "Solo Lectura"
     },
+    "sixWeekTracking": {
+      "title": "Seguimiento de 6 Semanas",
+      "description": "Registra una vez por ciclo de 6 semanas para informes precisos"
+    },
     "tabs": {
       "today": "Hoy",
       "history": "Historial",

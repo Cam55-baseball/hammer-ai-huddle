@@ -3709,6 +3709,10 @@
       "locked": "Verrouillé",
       "readOnly": "Lecture Seule"
     },
+    "sixWeekTracking": {
+      "title": "Suivi de 6 Semaines",
+      "description": "Enregistrez une fois par cycle de 6 semaines pour des rapports précis"
+    },
     "tabs": {
       "today": "Aujourd'hui",
       "history": "Historique",

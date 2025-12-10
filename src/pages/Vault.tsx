@@ -21,6 +21,7 @@ import {
   CheckCircle,
   Clock,
   Sparkles,
+  CalendarDays,
 } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { VaultStreakCard } from '@/components/vault/VaultStreakCard';
@@ -518,23 +519,37 @@ export default function Vault() {
                     onDeleteTip={deleteSavedTip}
                   />
 
-                  {/* Performance Tests */}
-                  <VaultPerformanceTestCard
-                    tests={performanceTests}
-                    onSave={handleSavePerformanceTest}
-                  />
+                  {/* 6-Week Tracking Section */}
+                  <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 sm:p-6 space-y-4">
+                    {/* Section Header */}
+                    <div className="flex items-center gap-3 pb-3 border-b border-primary/20">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <CalendarDays className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg">{t('vault.sixWeekTracking.title')}</h3>
+                        <p className="text-sm text-muted-foreground">{t('vault.sixWeekTracking.description')}</p>
+                      </div>
+                    </div>
 
-                  {/* Progress Photos */}
-                  <VaultProgressPhotosCard
-                    photos={progressPhotos}
-                    onSave={handleSaveProgressPhoto}
-                  />
+                    {/* Performance Tests */}
+                    <VaultPerformanceTestCard
+                      tests={performanceTests}
+                      onSave={handleSavePerformanceTest}
+                    />
 
-                  {/* Scout Self-Grades */}
-                  <VaultScoutGradesCard
-                    grades={scoutGrades}
-                    onSave={handleSaveScoutGrade}
-                  />
+                    {/* Progress Photos */}
+                    <VaultProgressPhotosCard
+                      photos={progressPhotos}
+                      onSave={handleSaveProgressPhoto}
+                    />
+
+                    {/* Scout Self-Grades */}
+                    <VaultScoutGradesCard
+                      grades={scoutGrades}
+                      onSave={handleSaveScoutGrade}
+                    />
+                  </div>
 
                   {/* 6-Week Recap */}
                   <VaultRecapCard

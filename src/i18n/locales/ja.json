@@ -2993,6 +2993,10 @@
       "locked": "ロック中",
       "readOnly": "読み取り専用"
     },
+    "sixWeekTracking": {
+      "title": "6週間トラッキング",
+      "description": "6週間サイクルごとに一度記録し、正確なレポートを作成"
+    },
     "tabs": {
       "today": "今日",
       "history": "履歴",
