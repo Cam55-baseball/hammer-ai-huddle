@@ -91,6 +91,8 @@ export function VaultNutritionLogCard({
   const [favoritesOpen, setFavoritesOpen] = useState(false);
   const [goalsDialogOpen, setGoalsDialogOpen] = useState(false);
   const [saveFavoriteDialogOpen, setSaveFavoriteDialogOpen] = useState(false);
+  const [saveFavoriteFromLogDialogOpen, setSaveFavoriteFromLogDialogOpen] = useState(false);
+  const [mealToFavorite, setMealToFavorite] = useState<NutritionLog | null>(null);
   const [saving, setSaving] = useState(false);
   const [savingGoals, setSavingGoals] = useState(false);
   const [savingFavorite, setSavingFavorite] = useState(false);
@@ -267,6 +269,39 @@ export function VaultNutritionLogCard({
     setUsingFavoriteId(null);
     if (result.success) {
       toast.success(t('vault.nutrition.addedFromFavorite'));
+    }
+  };
+
+  const handleFavoriteFromLog = (log: NutritionLog) => {
+    setMealToFavorite(log);
+    setFavoriteMealName(log.meal_title || '');
+    setSaveFavoriteFromLogDialogOpen(true);
+  };
+
+  const handleSaveFavoriteFromLog = async () => {
+    if (!favoriteMealName.trim()) {
+      toast.error(t('vault.nutrition.enterMealName'));
+      return;
+    }
+    if (!mealToFavorite) return;
+    
+    setSavingFavorite(true);
+    const result = await onSaveFavorite({
+      meal_name: favoriteMealName.trim(),
+      calories: mealToFavorite.calories,
+      protein_g: mealToFavorite.protein_g,
+      carbs_g: mealToFavorite.carbs_g,
+      fats_g: mealToFavorite.fats_g,
+      hydration_oz: mealToFavorite.hydration_oz,
+      meal_type: mealToFavorite.meal_type,
+      supplements: mealToFavorite.supplements || [],
+    });
+    setSavingFavorite(false);
+    if (result.success) {
+      toast.success(t('vault.nutrition.savedAsFavorite'));
+      setFavoriteMealName('');
+      setMealToFavorite(null);
+      setSaveFavoriteFromLogDialogOpen(false);
     }
   };
 
@@ -684,10 +719,18 @@ export function VaultNutritionLogCard({
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap hidden sm:block">
                             {log.calories || 0} cal • {log.protein_g || 0}P • {log.carbs_g || 0}C • {log.fats_g || 0}F
                           </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-pink-500 hover:text-pink-600"
+                            onClick={() => handleFavoriteFromLog(log)}
+                          >
+                            <Heart className="h-3 w-3" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -840,6 +883,41 @@ export function VaultNutritionLogCard({
                 <AlertDescription>{t('vault.nutrition.noMealsLogged')}</AlertDescription>
               </Alert>
             )}
+
+            {/* Save Favorite from Log Dialog */}
+            <Dialog open={saveFavoriteFromLogDialogOpen} onOpenChange={setSaveFavoriteFromLogDialogOpen}>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Heart className="h-5 w-5 text-pink-500" />
+                    {t('vault.nutrition.saveAsFavorite')}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>{t('vault.nutrition.mealName')}</Label>
+                    <Input
+                      value={favoriteMealName}
+                      onChange={(e) => setFavoriteMealName(e.target.value)}
+                      placeholder={t('vault.nutrition.mealTitlePlaceholder')}
+                    />
+                  </div>
+                  {mealToFavorite && (
+                    <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                      {mealToFavorite.calories || 0} cal • {mealToFavorite.protein_g || 0}P • {mealToFavorite.carbs_g || 0}C • {mealToFavorite.fats_g || 0}F
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setSaveFavoriteFromLogDialogOpen(false)} className="flex-1">
+                      {t('common.cancel')}
+                    </Button>
+                    <Button onClick={handleSaveFavoriteFromLog} disabled={savingFavorite} className="flex-1">
+                      {savingFavorite ? t('common.loading') : t('common.save')}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
