@@ -3431,23 +3431,42 @@
   },
   "gamePlan": {
     "title": "HET SPEELPLAN",
-    "subtitle": "Je dagelijkse missie",
-    "tasksCompleted": "{{completed}}/{{total}} taken",
-    "allComplete": "Alles klaar! 🎉",
+    "subtitle": "Missie van Vandaag",
+    "tasksLabel": "TAKEN",
+    "tasksCompleted": "{{completed}}/{{total}} klaar",
+    "allComplete": "GELUKT!",
+    "doIt": "DOE HET",
     "workout": {
-      "title": "Voltooi de Training van Vandaag",
-      "description": "Iron Bambino of Heat Factory sessie"
+      "hitting": {
+        "title": "Voltooi Iron Bambino Training",
+        "description": "Versterk je slagspieren"
+      },
+      "pitching": {
+        "title": "Voltooi Heat Factory Training",
+        "description": "Ontwikkel snelheid en armkracht"
+      }
+    },
+    "video": {
+      "hitting": {
+        "title": "Analyseer een Slagvideo",
+        "description": "Upload en analyseer je swing"
+      },
+      "pitching": {
+        "title": "Analyseer een Werpvideo",
+        "description": "Bekijk je werpmechanica"
+      },
+      "throwing": {
+        "title": "Analyseer een Gooi-video",
+        "description": "Perfectioneer je armactie"
+      }
     },
     "nutrition": {
       "title": "Log Je Voeding",
-      "description": "Houd je dagelijkse inname bij in The Vault"
-    },
-    "video": {
-      "title": "Analyseer een Video",
-      "description": "Upload en bekijk je techniek"
+      "description": "Voed je prestatie in The Vault"
     },
     "recapCountdown": {
-      "title": "6-Weken Samenvatting",
+      "title": "6-WEKEN RECAP",
+      "days": "DAGEN",
       "daysRemaining": "{{days}} dagen resterend"
     }
   }

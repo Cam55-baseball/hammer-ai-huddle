@@ -4178,23 +4178,42 @@
   },
   "gamePlan": {
     "title": "LE PLAN DE JEU",
-    "subtitle": "Votre mission quotidienne",
-    "tasksCompleted": "{{completed}}/{{total}} tâches",
-    "allComplete": "Tout terminé ! 🎉",
+    "subtitle": "Mission du Jour",
+    "tasksLabel": "TÂCHES",
+    "tasksCompleted": "{{completed}}/{{total}} terminées",
+    "allComplete": "MISSION ACCOMPLIE!",
+    "doIt": "FAIS-LE",
     "workout": {
-      "title": "Terminer l'Entraînement du Jour",
-      "description": "Séance Iron Bambino ou Heat Factory"
+      "hitting": {
+        "title": "Terminer l'Entraînement Iron Bambino",
+        "description": "Renforcez vos muscles de frappe"
+      },
+      "pitching": {
+        "title": "Terminer l'Entraînement Heat Factory",
+        "description": "Développez la vélocité et la force du bras"
+      }
+    },
+    "video": {
+      "hitting": {
+        "title": "Analyser une Vidéo de Frappe",
+        "description": "Téléchargez et analysez votre swing"
+      },
+      "pitching": {
+        "title": "Analyser une Vidéo de Lancer",
+        "description": "Examinez votre mécanique de lancer"
+      },
+      "throwing": {
+        "title": "Analyser une Vidéo de Lancer",
+        "description": "Perfectionnez votre action de bras"
+      }
     },
     "nutrition": {
       "title": "Enregistrer Votre Nutrition",
-      "description": "Suivez votre apport quotidien dans The Vault"
-    },
-    "video": {
-      "title": "Analyser une Vidéo",
-      "description": "Téléchargez et examinez votre mécanique"
+      "description": "Alimentez votre performance dans The Vault"
     },
     "recapCountdown": {
-      "title": "Récapitulatif 6 Semaines",
+      "title": "RÉCAP 6 SEMAINES",
+      "days": "JOURS",
       "daysRemaining": "{{days}} jours restants"
     }
   }

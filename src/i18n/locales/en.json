@@ -4356,23 +4356,42 @@
   },
   "gamePlan": {
     "title": "THE GAME PLAN",
-    "subtitle": "Your daily mission",
-    "tasksCompleted": "{{completed}}/{{total}} tasks",
-    "allComplete": "All complete! 🎉",
+    "subtitle": "Today's Mission",
+    "tasksLabel": "TASKS",
+    "tasksCompleted": "{{completed}}/{{total}} done",
+    "allComplete": "CRUSHED IT!",
+    "doIt": "DO IT",
     "workout": {
-      "title": "Complete Today's Workout",
-      "description": "Iron Bambino or Heat Factory session"
+      "hitting": {
+        "title": "Complete Iron Bambino Workout",
+        "description": "Power up your hitting muscles"
+      },
+      "pitching": {
+        "title": "Complete Heat Factory Workout",
+        "description": "Build velocity and arm strength"
+      }
+    },
+    "video": {
+      "hitting": {
+        "title": "Analyze a Hitting Video",
+        "description": "Upload and break down your swing"
+      },
+      "pitching": {
+        "title": "Analyze a Pitching Video",
+        "description": "Review your pitching mechanics"
+      },
+      "throwing": {
+        "title": "Analyze a Throwing Video",
+        "description": "Perfect your arm action"
+      }
     },
     "nutrition": {
       "title": "Log Your Nutrition",
-      "description": "Track your daily intake in The Vault"
-    },
-    "video": {
-      "title": "Analyze a Video",
-      "description": "Upload and review your mechanics"
+      "description": "Fuel your performance in The Vault"
     },
     "recapCountdown": {
-      "title": "6-Week Recap",
+      "title": "6-WEEK RECAP",
+      "days": "DAYS",
       "daysRemaining": "{{days}} days remaining"
     }
   }

@@ -3402,23 +3402,42 @@
   },
   "gamePlan": {
     "title": "今日计划",
-    "subtitle": "你的每日任务",
-    "tasksCompleted": "{{completed}}/{{total}} 任务",
-    "allComplete": "全部完成！🎉",
+    "subtitle": "今日任务",
+    "tasksLabel": "任务",
+    "tasksCompleted": "{{completed}}/{{total}} 已完成",
+    "allComplete": "全部完成！",
+    "doIt": "开始",
     "workout": {
-      "title": "完成今天的训练",
-      "description": "Iron Bambino或Heat Factory训练"
+      "hitting": {
+        "title": "完成Iron Bambino训练",
+        "description": "增强击球肌肉力量"
+      },
+      "pitching": {
+        "title": "完成Heat Factory训练",
+        "description": "提升球速和手臂力量"
+      }
+    },
+    "video": {
+      "hitting": {
+        "title": "分析击球视频",
+        "description": "上传并分析你的挥棒"
+      },
+      "pitching": {
+        "title": "分析投球视频",
+        "description": "检查你的投球动作"
+      },
+      "throwing": {
+        "title": "分析投掷视频",
+        "description": "完善你的手臂动作"
+      }
     },
     "nutrition": {
       "title": "记录营养",
-      "description": "在The Vault中跟踪每日摄入"
-    },
-    "video": {
-      "title": "分析视频",
-      "description": "上传并检查你的动作"
+      "description": "在The Vault中为你的表现加油"
     },
     "recapCountdown": {
       "title": "6周回顾",
+      "days": "天",
       "daysRemaining": "剩余{{days}}天"
     }
   }

@@ -3419,22 +3419,41 @@
   "gamePlan": {
     "title": "게임 플랜",
     "subtitle": "오늘의 미션",
-    "tasksCompleted": "{{completed}}/{{total}} 작업",
-    "allComplete": "모두 완료! 🎉",
+    "tasksLabel": "작업",
+    "tasksCompleted": "{{completed}}/{{total}} 완료",
+    "allComplete": "해냈어!",
+    "doIt": "시작",
     "workout": {
-      "title": "오늘의 운동 완료",
-      "description": "Iron Bambino 또는 Heat Factory 세션"
+      "hitting": {
+        "title": "Iron Bambino 운동 완료",
+        "description": "타격 근육 강화"
+      },
+      "pitching": {
+        "title": "Heat Factory 운동 완료",
+        "description": "구속과 팔 힘 향상"
+      }
+    },
+    "video": {
+      "hitting": {
+        "title": "타격 영상 분석",
+        "description": "스윙을 업로드하고 분석"
+      },
+      "pitching": {
+        "title": "투구 영상 분석",
+        "description": "투구 메커니즘 검토"
+      },
+      "throwing": {
+        "title": "송구 영상 분석",
+        "description": "팔 동작 완벽하게"
+      }
     },
     "nutrition": {
       "title": "영양 기록",
-      "description": "The Vault에서 일일 섭취량 추적"
-    },
-    "video": {
-      "title": "영상 분석",
-      "description": "업로드하고 메커니즘 검토"
+      "description": "The Vault에서 성과에 연료 공급"
     },
     "recapCountdown": {
       "title": "6주 요약",
+      "days": "일",
       "daysRemaining": "{{days}}일 남음"
     }
   }
