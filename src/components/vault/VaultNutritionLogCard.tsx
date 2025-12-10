@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,10 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie } from 'lucide-react';
+import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie, Zap, Dumbbell, Trash2, Clock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 interface NutritionLog {
   id: string;
@@ -23,16 +25,152 @@ interface NutritionLog {
   digestion_notes: string | null;
   supplements: string[];
   meal_type: string | null;
+  logged_at: string | null;
 }
 
 interface VaultNutritionLogCardProps {
-  todaysLog: NutritionLog | null;
-  onSave: (data: Omit<NutritionLog, 'id'>) => Promise<{ success: boolean }>;
+  todaysLogs: NutritionLog[];
+  onSave: (data: Omit<NutritionLog, 'id' | 'logged_at'>) => Promise<{ success: boolean }>;
+  onDelete: (id: string) => Promise<{ success: boolean }>;
   isLoading?: boolean;
 }
 
-export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: VaultNutritionLogCardProps) {
+// Macro presets with common meal values
+const MACRO_PRESETS = [
+  { id: 'pre_workout', calories: 350, protein: 20, carbs: 50, fats: 8, icon: Zap },
+  { id: 'post_workout', calories: 500, protein: 40, carbs: 60, fats: 12, icon: Dumbbell },
+  { id: 'protein_shake', calories: 200, protein: 30, carbs: 10, fats: 5, icon: Droplets },
+  { id: 'light_breakfast', calories: 400, protein: 20, carbs: 45, fats: 15, icon: Coffee },
+  { id: 'power_lunch', calories: 700, protein: 45, carbs: 70, fats: 25, icon: Salad },
+  { id: 'recovery_dinner', calories: 650, protein: 40, carbs: 65, fats: 22, icon: UtensilsCrossed },
+  { id: 'healthy_snack', calories: 200, protein: 10, carbs: 25, fats: 8, icon: Cookie },
+  { id: 'hydration_only', calories: 0, protein: 0, carbs: 0, fats: 0, icon: Droplets },
+];
+
+export function VaultNutritionLogCard({ todaysLogs, onSave, onDelete, isLoading = false }: VaultNutritionLogCardProps) {
   const { t } = useTranslation();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  
+  // Form state
+  const [mealType, setMealType] = useState<string>('');
+  const [calories, setCalories] = useState<string>('');
+  const [protein, setProtein] = useState<string>('');
+  const [carbs, setCarbs] = useState<string>('');
+  const [fats, setFats] = useState<string>('');
+  const [hydration, setHydration] = useState<string>('');
+  const [energyLevel, setEnergyLevel] = useState<number[]>([5]);
+  const [digestionNotes, setDigestionNotes] = useState('');
+  const [supplements, setSupplements] = useState<string[]>([]);
+  const [newSupplement, setNewSupplement] = useState('');
+
+  // Calculate daily totals
+  const dailyTotals = useMemo(() => {
+    return todaysLogs.reduce((acc, log) => ({
+      calories: acc.calories + (log.calories || 0),
+      protein: acc.protein + (log.protein_g || 0),
+      carbs: acc.carbs + (log.carbs_g || 0),
+      fats: acc.fats + (log.fats_g || 0),
+      hydration: acc.hydration + (log.hydration_oz || 0),
+      energySum: acc.energySum + (log.energy_level || 0),
+      energyCount: acc.energyCount + (log.energy_level ? 1 : 0),
+    }), { calories: 0, protein: 0, carbs: 0, fats: 0, hydration: 0, energySum: 0, energyCount: 0 });
+  }, [todaysLogs]);
+
+  const avgEnergy = dailyTotals.energyCount > 0 
+    ? Math.round(dailyTotals.energySum / dailyTotals.energyCount) 
+    : 0;
+
+  const resetForm = () => {
+    setMealType('');
+    setCalories('');
+    setProtein('');
+    setCarbs('');
+    setFats('');
+    setHydration('');
+    setEnergyLevel([5]);
+    setDigestionNotes('');
+    setSupplements([]);
+    setNewSupplement('');
+  };
+
+  const applyPreset = (preset: typeof MACRO_PRESETS[0]) => {
+    setCalories(preset.calories.toString());
+    setProtein(preset.protein.toString());
+    setCarbs(preset.carbs.toString());
+    setFats(preset.fats.toString());
+    if (preset.id === 'hydration_only') {
+      setMealType('hydration');
+    }
+  };
+
+  const handleAddSupplement = () => {
+    if (newSupplement.trim() && !supplements.includes(newSupplement.trim())) {
+      setSupplements([...supplements, newSupplement.trim()]);
+      setNewSupplement('');
+    }
+  };
+
+  const handleRemoveSupplement = (supp: string) => {
+    setSupplements(supplements.filter(s => s !== supp));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    const result = await onSave({
+      calories: calories ? parseInt(calories) : null,
+      protein_g: protein ? parseFloat(protein) : null,
+      carbs_g: carbs ? parseFloat(carbs) : null,
+      fats_g: fats ? parseFloat(fats) : null,
+      hydration_oz: hydration ? parseFloat(hydration) : null,
+      energy_level: energyLevel[0],
+      digestion_notes: digestionNotes || null,
+      supplements,
+      meal_type: mealType || null,
+    });
+    setSaving(false);
+    if (result.success) {
+      toast.success(t('vault.nutrition.mealLogged'));
+      resetForm();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    await onDelete(id);
+    setDeletingId(null);
+  };
+
+  const handleLogEntry = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen(true);
+  };
+
+  const hasData = todaysLogs.length > 0;
+
+  const mealTypeOptions = [
+    { value: 'breakfast', icon: Coffee, label: t('vault.nutrition.breakfast') },
+    { value: 'lunch', icon: Salad, label: t('vault.nutrition.lunch') },
+    { value: 'dinner', icon: UtensilsCrossed, label: t('vault.nutrition.dinner') },
+    { value: 'snack', icon: Cookie, label: t('vault.nutrition.snack') },
+    { value: 'hydration', icon: Droplets, label: t('vault.nutrition.hydrationOnly') },
+  ];
+
+  const getMealIcon = (type: string | null) => {
+    const option = mealTypeOptions.find(o => o.value === type);
+    return option ? option.icon : Apple;
+  };
+
+  const formatTime = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    try {
+      return format(new Date(dateStr), 'h:mm a');
+    } catch {
+      return '';
+    }
+  };
 
   if (isLoading) {
     return (
@@ -50,62 +188,6 @@ export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: 
       </Card>
     );
   }
-
-  const [isOpen, setIsOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  
-  const [mealType, setMealType] = useState<string>(todaysLog?.meal_type || '');
-  const [calories, setCalories] = useState<string>(todaysLog?.calories?.toString() || '');
-  const [protein, setProtein] = useState<string>(todaysLog?.protein_g?.toString() || '');
-  const [carbs, setCarbs] = useState<string>(todaysLog?.carbs_g?.toString() || '');
-  const [fats, setFats] = useState<string>(todaysLog?.fats_g?.toString() || '');
-  const [hydration, setHydration] = useState<string>(todaysLog?.hydration_oz?.toString() || '');
-  const [energyLevel, setEnergyLevel] = useState<number[]>([todaysLog?.energy_level || 5]);
-  const [digestionNotes, setDigestionNotes] = useState(todaysLog?.digestion_notes || '');
-  const [supplements, setSupplements] = useState<string[]>(todaysLog?.supplements || []);
-  const [newSupplement, setNewSupplement] = useState('');
-
-  const handleAddSupplement = () => {
-    if (newSupplement.trim() && !supplements.includes(newSupplement.trim())) {
-      setSupplements([...supplements, newSupplement.trim()]);
-      setNewSupplement('');
-    }
-  };
-
-  const handleRemoveSupplement = (supp: string) => {
-    setSupplements(supplements.filter(s => s !== supp));
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    await onSave({
-      calories: calories ? parseInt(calories) : null,
-      protein_g: protein ? parseFloat(protein) : null,
-      carbs_g: carbs ? parseFloat(carbs) : null,
-      fats_g: fats ? parseFloat(fats) : null,
-      hydration_oz: hydration ? parseFloat(hydration) : null,
-      energy_level: energyLevel[0],
-      digestion_notes: digestionNotes || null,
-      supplements,
-      meal_type: mealType || null,
-    });
-    setSaving(false);
-  };
-
-  const handleLogEntry = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsOpen(true);
-  };
-
-  const hasData = todaysLog && (todaysLog.calories || todaysLog.protein_g || todaysLog.hydration_oz);
-
-  const mealTypeOptions = [
-    { value: 'breakfast', icon: Coffee, label: t('vault.nutrition.breakfast') },
-    { value: 'lunch', icon: Salad, label: t('vault.nutrition.lunch') },
-    { value: 'dinner', icon: UtensilsCrossed, label: t('vault.nutrition.dinner') },
-    { value: 'snack', icon: Cookie, label: t('vault.nutrition.snack') },
-    { value: 'hydration', icon: Droplets, label: t('vault.nutrition.hydrationOnly') },
-  ];
 
   return (
     <Card>
@@ -135,12 +217,24 @@ export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: 
         
         <CollapsibleContent>
           <CardContent className="space-y-4">
-            {hasData && (
-              <Alert className="bg-green-500/10 border-green-500/30">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <AlertDescription>{t('vault.nutrition.logged')}</AlertDescription>
-              </Alert>
-            )}
+            {/* Quick Presets */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium">{t('vault.nutrition.presets')}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {MACRO_PRESETS.map((preset) => (
+                  <Button
+                    key={preset.id}
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={() => applyPreset(preset)}
+                  >
+                    <preset.icon className="h-3 w-3" />
+                    <span className="hidden sm:inline">{t(`vault.nutrition.${preset.id}`)}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
 
             {/* Meal Type */}
             <div className="space-y-2">
@@ -290,8 +384,101 @@ export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: 
             </div>
 
             <Button onClick={handleSave} disabled={saving} className="w-full">
-              {saving ? t('common.loading') : t('vault.nutrition.save')}
+              {saving ? t('common.loading') : t('vault.nutrition.logThisMeal')}
             </Button>
+
+            {/* Today's Meals History */}
+            {todaysLogs.length > 0 && (
+              <div className="space-y-3 pt-4 border-t">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <Label className="text-sm font-medium">{t('vault.nutrition.todaysMeals')}</Label>
+                  <Badge variant="secondary" className="text-xs">{todaysLogs.length}</Badge>
+                </div>
+                
+                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                  {todaysLogs.map((log) => {
+                    const MealIcon = getMealIcon(log.meal_type);
+                    return (
+                      <div 
+                        key={log.id} 
+                        className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-sm"
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <MealIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-medium truncate">
+                              {log.meal_type ? t(`vault.nutrition.${log.meal_type}`) : t('vault.nutrition.meal')}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatTime(log.logged_at)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {log.calories || 0} cal • {log.protein_g || 0}P • {log.carbs_g || 0}C • {log.fats_g || 0}F
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(log.id)}
+                            disabled={deletingId === log.id}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Daily Totals Summary */}
+            {todaysLogs.length > 0 && (
+              <div className="p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="h-4 w-4 text-green-500" />
+                  <span className="text-sm font-medium">{t('vault.nutrition.dailyTotals')}</span>
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs">
+                  <div>
+                    <div className="font-bold text-foreground">{dailyTotals.calories}</div>
+                    <div className="text-muted-foreground">cal</div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-foreground">{Math.round(dailyTotals.protein)}g</div>
+                    <div className="text-muted-foreground">protein</div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-foreground">{Math.round(dailyTotals.carbs)}g</div>
+                    <div className="text-muted-foreground">carbs</div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-foreground">{Math.round(dailyTotals.fats)}g</div>
+                    <div className="text-muted-foreground">fats</div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-blue-500">{Math.round(dailyTotals.hydration)} oz</div>
+                    <div className="text-muted-foreground">water</div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-foreground">{avgEnergy}/10</div>
+                    <div className="text-muted-foreground">energy</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {todaysLogs.length === 0 && (
+              <Alert className="bg-muted/50">
+                <Apple className="h-4 w-4" />
+                <AlertDescription>{t('vault.nutrition.noMealsLogged')}</AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Collapsible>

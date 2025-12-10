@@ -49,13 +49,13 @@ interface DeleteTarget {
 interface VaultHistoryTabProps {
   fetchHistoryForDate: (date: string) => Promise<HistoryEntry>;
   entriesWithData: string[];
-  onDeleteQuiz?: (id: string) => Promise<void>;
-  onDeleteNote?: (id: string) => Promise<void>;
-  onDeleteWorkout?: (id: string) => Promise<void>;
-  onDeleteNutrition?: (id: string) => Promise<void>;
-  onDeletePerformanceTest?: (id: string) => Promise<void>;
-  onDeletePhoto?: (id: string) => Promise<void>;
-  onDeleteGrade?: (id: string) => Promise<void>;
+  onDeleteQuiz?: (id: string) => Promise<void | { success: boolean }>;
+  onDeleteNote?: (id: string) => Promise<void | { success: boolean }>;
+  onDeleteWorkout?: (id: string) => Promise<void | { success: boolean }>;
+  onDeleteNutrition?: (id: string) => Promise<void | { success: boolean }>;
+  onDeletePerformanceTest?: (id: string) => Promise<void | { success: boolean }>;
+  onDeletePhoto?: (id: string) => Promise<void | { success: boolean }>;
+  onDeleteGrade?: (id: string) => Promise<void | { success: boolean }>;
 }
 
 export function VaultHistoryTab({ 
