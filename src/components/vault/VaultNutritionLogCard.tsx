@@ -834,121 +834,10 @@ export function VaultNutritionLogCard({
                     <Zap className="h-4 w-4 text-green-500" />
                     <span className="text-sm font-medium">{t('vault.nutrition.dailyProgress')}</span>
                   </div>
-                  <Dialog open={goalsDialogOpen} onOpenChange={setGoalsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
-                        <Settings className="h-3 w-3" />
-                        {t('vault.nutrition.setGoals')}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-sm">
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                          <Settings className="h-5 w-5" />
-                          {t('vault.nutrition.setGoals')}
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label>{t('vault.nutrition.calorieGoal')}</Label>
-                          <Input
-                            type="number"
-                            value={goalCalories}
-                            onChange={(e) => setGoalCalories(e.target.value)}
-                            placeholder="2000"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('vault.nutrition.proteinGoal')}</Label>
-                          <Input
-                            type="number"
-                            value={goalProtein}
-                            onChange={(e) => setGoalProtein(e.target.value)}
-                            placeholder="150"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('vault.nutrition.carbsGoal')}</Label>
-                          <Input
-                            type="number"
-                            value={goalCarbs}
-                            onChange={(e) => setGoalCarbs(e.target.value)}
-                            placeholder="250"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('vault.nutrition.fatsGoal')}</Label>
-                          <Input
-                            type="number"
-                            value={goalFats}
-                            onChange={(e) => setGoalFats(e.target.value)}
-                            placeholder="70"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('vault.nutrition.hydrationGoal')}</Label>
-                          <Input
-                            type="number"
-                            value={goalHydration}
-                            onChange={(e) => setGoalHydration(e.target.value)}
-                            placeholder="100"
-                          />
-                        </div>
-                        
-                        {/* Supplement Goals Section */}
-                        <div className="space-y-2 pt-4 border-t">
-                          <div className="flex items-center gap-2">
-                            <Pill className="h-4 w-4 text-purple-500" />
-                            <Label>{t('vault.nutrition.supplementGoals')}</Label>
-                          </div>
-                          
-                          {goalSupplements.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5">
-                              {goalSupplements.map((supp) => (
-                                <Badge key={supp} variant="secondary" className="gap-1 text-xs">
-                                  {supp}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveGoalSupplement(supp)}
-                                    className="ml-0.5 hover:text-destructive"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                          
-                          <div className="flex gap-2">
-                            <Input
-                              value={newGoalSupplement}
-                              onChange={(e) => setNewGoalSupplement(e.target.value)}
-                              placeholder={t('vault.nutrition.addSupplementGoal')}
-                              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddGoalSupplement())}
-                              className="flex-1"
-                            />
-                            <Button 
-                              type="button" 
-                              size="sm" 
-                              onClick={handleAddGoalSupplement}
-                              disabled={!newGoalSupplement.trim()}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        <div className="flex gap-2 pt-2">
-                          <Button variant="outline" onClick={() => setGoalsDialogOpen(false)} className="flex-1">
-                            {t('common.cancel')}
-                          </Button>
-                          <Button onClick={handleSaveGoals} disabled={savingGoals} className="flex-1">
-                            {savingGoals ? t('common.loading') : t('common.save')}
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={() => setGoalsDialogOpen(true)}>
+                    <Settings className="h-3 w-3" />
+                    {t('vault.nutrition.setGoals')}
+                  </Button>
                 </div>
 
                 <div className="space-y-3">
@@ -1005,6 +894,117 @@ export function VaultNutritionLogCard({
                 <AlertDescription>{t('vault.nutrition.noMealsLogged')}</AlertDescription>
               </Alert>
             )}
+
+            {/* Goals Dialog - Always rendered so header button works */}
+            <Dialog open={goalsDialogOpen} onOpenChange={setGoalsDialogOpen}>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    {t('vault.nutrition.setGoals')}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>{t('vault.nutrition.calorieGoal')}</Label>
+                    <Input
+                      type="number"
+                      value={goalCalories}
+                      onChange={(e) => setGoalCalories(e.target.value)}
+                      placeholder="2000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('vault.nutrition.proteinGoal')}</Label>
+                    <Input
+                      type="number"
+                      value={goalProtein}
+                      onChange={(e) => setGoalProtein(e.target.value)}
+                      placeholder="150"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('vault.nutrition.carbsGoal')}</Label>
+                    <Input
+                      type="number"
+                      value={goalCarbs}
+                      onChange={(e) => setGoalCarbs(e.target.value)}
+                      placeholder="250"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('vault.nutrition.fatsGoal')}</Label>
+                    <Input
+                      type="number"
+                      value={goalFats}
+                      onChange={(e) => setGoalFats(e.target.value)}
+                      placeholder="70"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('vault.nutrition.hydrationGoal')}</Label>
+                    <Input
+                      type="number"
+                      value={goalHydration}
+                      onChange={(e) => setGoalHydration(e.target.value)}
+                      placeholder="100"
+                    />
+                  </div>
+                  
+                  {/* Supplement Goals Section */}
+                  <div className="space-y-2 pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <Pill className="h-4 w-4 text-purple-500" />
+                      <Label>{t('vault.nutrition.supplementGoals')}</Label>
+                    </div>
+                    
+                    {goalSupplements.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {goalSupplements.map((supp) => (
+                          <Badge key={supp} variant="secondary" className="gap-1 text-xs">
+                            {supp}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveGoalSupplement(supp)}
+                              className="ml-0.5 hover:text-destructive"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="flex gap-2">
+                      <Input
+                        value={newGoalSupplement}
+                        onChange={(e) => setNewGoalSupplement(e.target.value)}
+                        placeholder={t('vault.nutrition.addSupplementGoal')}
+                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddGoalSupplement())}
+                        className="flex-1"
+                      />
+                      <Button 
+                        type="button" 
+                        size="sm" 
+                        onClick={handleAddGoalSupplement}
+                        disabled={!newGoalSupplement.trim()}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="outline" onClick={() => setGoalsDialogOpen(false)} className="flex-1">
+                      {t('common.cancel')}
+                    </Button>
+                    <Button onClick={handleSaveGoals} disabled={savingGoals} className="flex-1">
+                      {savingGoals ? t('common.loading') : t('common.save')}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Save Favorite from Log Dialog */}
             <Dialog open={saveFavoriteFromLogDialogOpen} onOpenChange={setSaveFavoriteFromLogDialogOpen}>
