@@ -1780,6 +1780,7 @@
     }
   },
   "workoutModules": {
+    "day": "日目",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "24週間エリートパワーヒッター開発プログラム"
@@ -3000,9 +3001,6 @@
     "twelveWeekTracking": {
       "title": "12週間トラッキング",
       "description": "12週間サイクルごとに一度自己評価し、包括的な進捗評価を行う"
-    },
-    "lockPeriod": {
-      "twelveWeeks": "このセクションは12週間ごとにのみ更新できます。"
     },
     "tabs": {
       "today": "今日",
