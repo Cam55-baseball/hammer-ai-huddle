@@ -1,0 +1,1 @@
+ALTER TABLE vault_nutrition_logs ADD COLUMN IF NOT EXISTS meal_title TEXT;

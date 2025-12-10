@@ -3132,7 +3132,20 @@
       "hydrationGoal": "每日水分目标 (oz)",
       "goalsSaved": "目标已保存！",
       "dailyProgress": "每日进度",
-      "overGoal": "超标"
+      "overGoal": "超标",
+      "mealTitle": "餐食标题",
+      "mealTitlePlaceholder": "例如：蛋白奶昔、能量早餐...",
+      "favoriteMeals": "收藏餐食",
+      "favoriteMealsHint": "将常吃的餐食保存为收藏，一键快速记录！",
+      "saveAsFavorite": "保存为收藏",
+      "quickAdd": "快速添加",
+      "usedTimes": "使用{{count}}次",
+      "savedAsFavorite": "餐食已保存到收藏！",
+      "enterMealName": "请输入这餐的名称",
+      "favoriteRemoved": "收藏已删除",
+      "addedFromFavorite": "已从收藏添加餐食！",
+      "noFavorites": "还没有收藏的餐食。保存第一个吧！",
+      "mealName": "餐食名称"
     },
     "nutritionWeekly": {
       "title": "每周营养总结",

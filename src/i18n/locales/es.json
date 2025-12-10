@@ -3894,7 +3894,20 @@
       "hydrationGoal": "Objetivo Diario de Hidratación (oz)",
       "goalsSaved": "¡Objetivos guardados!",
       "dailyProgress": "Progreso Diario",
-      "overGoal": "Excedido"
+      "overGoal": "Excedido",
+      "mealTitle": "Título de Comida",
+      "mealTitlePlaceholder": "ej., Batido de Proteínas, Desayuno Potente...",
+      "favoriteMeals": "Comidas Favoritas",
+      "favoriteMealsHint": "¡Guarda tus comidas habituales como favoritas para registrarlas con un toque!",
+      "saveAsFavorite": "Guardar como Favorito",
+      "quickAdd": "Agregar Rápido",
+      "usedTimes": "Usado {{count}} veces",
+      "savedAsFavorite": "¡Comida guardada en favoritos!",
+      "enterMealName": "Por favor ingresa un nombre para esta comida",
+      "favoriteRemoved": "Favorito eliminado",
+      "addedFromFavorite": "¡Comida agregada desde favoritos!",
+      "noFavorites": "Aún no tienes comidas favoritas. ¡Guarda la primera!",
+      "mealName": "Nombre de Comida"
     },
     "nutritionWeekly": {
       "title": "Resumen Nutricional Semanal",

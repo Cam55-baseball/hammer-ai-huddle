@@ -3916,7 +3916,20 @@
       "hydrationGoal": "Objectif Hydratation Quotidien (oz)",
       "goalsSaved": "Objectifs enregistrés!",
       "dailyProgress": "Progrès Quotidien",
-      "overGoal": "Dépassé"
+      "overGoal": "Dépassé",
+      "mealTitle": "Titre du Repas",
+      "mealTitlePlaceholder": "ex., Shake Protéiné, Petit-déjeuner Énergétique...",
+      "favoriteMeals": "Repas Favoris",
+      "favoriteMealsHint": "Sauvegardez vos repas habituels en favoris pour un enregistrement en un clic!",
+      "saveAsFavorite": "Sauvegarder en Favori",
+      "quickAdd": "Ajout Rapide",
+      "usedTimes": "Utilisé {{count}} fois",
+      "savedAsFavorite": "Repas sauvegardé en favoris!",
+      "enterMealName": "Veuillez entrer un nom pour ce repas",
+      "favoriteRemoved": "Favori supprimé",
+      "addedFromFavorite": "Repas ajouté depuis les favoris!",
+      "noFavorites": "Pas encore de repas favoris. Sauvegardez le premier!",
+      "mealName": "Nom du Repas"
     },
     "nutritionWeekly": {
       "title": "Résumé Nutritionnel Hebdomadaire",

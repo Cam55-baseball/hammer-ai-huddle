@@ -3161,7 +3161,20 @@
       "hydrationGoal": "Dagelijks Hydratatiedoel (oz)",
       "goalsSaved": "Doelen opgeslagen!",
       "dailyProgress": "Dagelijkse Voortgang",
-      "overGoal": "Over doel"
+      "overGoal": "Over doel",
+      "mealTitle": "Maaltijdtitel",
+      "mealTitlePlaceholder": "bijv., Eiwitshake, Power Ontbijt...",
+      "favoriteMeals": "Favoriete Maaltijden",
+      "favoriteMealsHint": "Sla je veelgegeten maaltijden op als favorieten voor snel loggen!",
+      "saveAsFavorite": "Opslaan als Favoriet",
+      "quickAdd": "Snel Toevoegen",
+      "usedTimes": "{{count}} keer gebruikt",
+      "savedAsFavorite": "Maaltijd opgeslagen als favoriet!",
+      "enterMealName": "Voer een naam in voor deze maaltijd",
+      "favoriteRemoved": "Favoriet verwijderd",
+      "addedFromFavorite": "Maaltijd toegevoegd vanuit favorieten!",
+      "noFavorites": "Nog geen favoriete maaltijden. Sla je eerste op!",
+      "mealName": "Maaltijdnaam"
     },
     "nutritionWeekly": {
       "title": "Wekelijks Voedingsoverzicht",

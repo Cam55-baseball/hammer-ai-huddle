@@ -3148,7 +3148,20 @@
       "hydrationGoal": "일일 수분 목표 (oz)",
       "goalsSaved": "목표가 저장되었습니다!",
       "dailyProgress": "일일 진행률",
-      "overGoal": "초과"
+      "overGoal": "초과",
+      "mealTitle": "식사 제목",
+      "mealTitlePlaceholder": "예: 프로틴 쉐이크, 파워 아침...",
+      "favoriteMeals": "즐겨찾는 식사",
+      "favoriteMealsHint": "자주 먹는 식사를 즐겨찾기에 저장하여 원터치로 기록하세요!",
+      "saveAsFavorite": "즐겨찾기에 저장",
+      "quickAdd": "빠른 추가",
+      "usedTimes": "{{count}}회 사용",
+      "savedAsFavorite": "식사를 즐겨찾기에 저장했습니다!",
+      "enterMealName": "이 식사의 이름을 입력하세요",
+      "favoriteRemoved": "즐겨찾기가 삭제되었습니다",
+      "addedFromFavorite": "즐겨찾기에서 식사를 추가했습니다!",
+      "noFavorites": "아직 즐겨찾는 식사가 없습니다. 첫 번째를 저장하세요!",
+      "mealName": "식사 이름"
     },
     "nutritionWeekly": {
       "title": "주간 영양 요약",

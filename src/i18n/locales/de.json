@@ -3916,7 +3916,20 @@
       "hydrationGoal": "Tägliches Hydrationsziel (oz)",
       "goalsSaved": "Ziele gespeichert!",
       "dailyProgress": "Täglicher Fortschritt",
-      "overGoal": "Über Ziel"
+      "overGoal": "Über Ziel",
+      "mealTitle": "Mahlzeit-Titel",
+      "mealTitlePlaceholder": "z.B., Protein-Shake, Power-Frühstück...",
+      "favoriteMeals": "Lieblingsmahlzeiten",
+      "favoriteMealsHint": "Speichere deine häufigen Mahlzeiten als Favoriten für schnelles Erfassen!",
+      "saveAsFavorite": "Als Favorit Speichern",
+      "quickAdd": "Schnell Hinzufügen",
+      "usedTimes": "{{count}} mal verwendet",
+      "savedAsFavorite": "Mahlzeit als Favorit gespeichert!",
+      "enterMealName": "Bitte gib einen Namen für diese Mahlzeit ein",
+      "favoriteRemoved": "Favorit entfernt",
+      "addedFromFavorite": "Mahlzeit aus Favoriten hinzugefügt!",
+      "noFavorites": "Noch keine Lieblingsmahlzeiten. Speichere deine erste!",
+      "mealName": "Mahlzeit-Name"
     },
     "nutritionWeekly": {
       "title": "Wöchentliche Ernährungszusammenfassung",
