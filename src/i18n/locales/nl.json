@@ -3163,6 +3163,23 @@
       "dailyProgress": "Dagelijkse Voortgang",
       "overGoal": "Over doel"
     },
+    "nutritionWeekly": {
+      "title": "Wekelijks Voedingsoverzicht",
+      "avgDailyIntake": "Gemiddelde Dagelijkse Inname",
+      "goalTrends": "Doelbereiking Trends",
+      "dailyBreakdown": "Dagelijkse Uitsplitsing",
+      "weeklyInsights": "Wekelijkse Inzichten",
+      "noData": "Nog geen voedingsgegevens deze week",
+      "avg": "gem",
+      "meals": "maaltijden",
+      "daysLogged": "Dagen Gelogd",
+      "totalMeals": "Totaal Maaltijden",
+      "bestDayInsight": "Beste dag: {{day}} - hoogste doelbereiking",
+      "proteinLowInsight": "Eiwitinname gemiddeld {{percent}}% van doel",
+      "hydrationLowInsight": "Hydratatie moet verbeteren - gemiddeld {{percent}}%",
+      "consistencyGoodInsight": "Geweldige consistentie! {{days}} dagen gelogd deze week",
+      "consistencyLowInsight": "Probeer voeding consistenter te loggen"
+    },
     "savedItems": {
       "title": "Opgeslagen items",
       "description": "Oefeningen en tips opgeslagen vanuit andere modules",

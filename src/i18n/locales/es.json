@@ -3896,6 +3896,23 @@
       "dailyProgress": "Progreso Diario",
       "overGoal": "Excedido"
     },
+    "nutritionWeekly": {
+      "title": "Resumen Nutricional Semanal",
+      "avgDailyIntake": "Ingesta Diaria Promedio",
+      "goalTrends": "Tendencias de Logro de Objetivos",
+      "dailyBreakdown": "Desglose Diario",
+      "weeklyInsights": "Información Semanal",
+      "noData": "Sin datos nutricionales esta semana aún",
+      "avg": "prom",
+      "meals": "comidas",
+      "daysLogged": "Días Registrados",
+      "totalMeals": "Comidas Totales",
+      "bestDayInsight": "Mejor día: {{day}} - mayor logro de objetivos",
+      "proteinLowInsight": "Ingesta de proteínas promediando {{percent}}% del objetivo",
+      "hydrationLowInsight": "La hidratación necesita mejorar - promediando {{percent}}%",
+      "consistencyGoodInsight": "¡Gran consistencia! {{days}} días registrados esta semana",
+      "consistencyLowInsight": "Intenta registrar nutrición más consistentemente"
+    },
     "savedItems": {
       "title": "Ejercicios y Consejos Guardados",
       "description": "Tu contenido de entrenamiento guardado de otros módulos",

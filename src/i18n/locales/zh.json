@@ -3134,6 +3134,23 @@
       "dailyProgress": "每日进度",
       "overGoal": "超标"
     },
+    "nutritionWeekly": {
+      "title": "每周营养总结",
+      "avgDailyIntake": "日均摄入量",
+      "goalTrends": "目标达成趋势",
+      "dailyBreakdown": "每日明细",
+      "weeklyInsights": "每周洞察",
+      "noData": "本周暂无营养数据",
+      "avg": "平均",
+      "meals": "餐",
+      "daysLogged": "记录天数",
+      "totalMeals": "总餐数",
+      "bestDayInsight": "最佳日: {{day}} - 目标达成率最高",
+      "proteinLowInsight": "蛋白质摄入平均为目标的{{percent}}%",
+      "hydrationLowInsight": "需要改善水分摄入 - 平均{{percent}}%",
+      "consistencyGoodInsight": "保持良好！本周记录了{{days}}天",
+      "consistencyLowInsight": "尝试更一致地记录营养"
+    },
     "savedItems": {
       "title": "已保存项目",
       "description": "从其他模块保存的训练和提示",

@@ -3918,6 +3918,23 @@
       "dailyProgress": "Täglicher Fortschritt",
       "overGoal": "Über Ziel"
     },
+    "nutritionWeekly": {
+      "title": "Wöchentliche Ernährungszusammenfassung",
+      "avgDailyIntake": "Durchschnittliche Tagesaufnahme",
+      "goalTrends": "Zielerreichungs-Trends",
+      "dailyBreakdown": "Tägliche Aufschlüsselung",
+      "weeklyInsights": "Wöchentliche Einblicke",
+      "noData": "Noch keine Ernährungsdaten für diese Woche",
+      "avg": "Durchschn.",
+      "meals": "Mahlzeiten",
+      "daysLogged": "Tage Erfasst",
+      "totalMeals": "Gesamte Mahlzeiten",
+      "bestDayInsight": "Bester Tag: {{day}} - höchste Zielerreichung",
+      "proteinLowInsight": "Proteinaufnahme durchschnittlich {{percent}}% des Ziels",
+      "hydrationLowInsight": "Hydratation muss verbessert werden - durchschnittlich {{percent}}%",
+      "consistencyGoodInsight": "Tolle Beständigkeit! {{days}} Tage diese Woche erfasst",
+      "consistencyLowInsight": "Versuche Ernährung regelmäßiger zu erfassen"
+    },
     "savedItems": {
       "title": "Gespeicherte Übungen & Tipps",
       "description": "Deine gespeicherten Trainingsinhalte aus anderen Modulen",
