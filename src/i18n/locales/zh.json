@@ -3452,7 +3452,12 @@
     },
     "nutrition": {
       "title": "记录营养",
-      "description": "在The Vault中为你的表现加油"
+      "description": "在The Vault中为你的表现加油",
+      "quickLog": "+ 记录",
+      "quickLogDialog": {
+        "title": "快速营养记录",
+        "subtitle": "几秒钟内记录你的餐食"
+      }
     },
     "tracking": {
       "performance": {

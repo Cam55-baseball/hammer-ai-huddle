@@ -4228,7 +4228,12 @@
     },
     "nutrition": {
       "title": "Ernährung Protokollieren",
-      "description": "Unterstütze deine Leistung im Vault"
+      "description": "Unterstütze deine Leistung im Vault",
+      "quickLog": "+ Eintrag",
+      "quickLogDialog": {
+        "title": "Schnell-Ernährungsprotokoll",
+        "subtitle": "Protokolliere deine Mahlzeit in Sekunden"
+      }
     },
     "tracking": {
       "performance": {

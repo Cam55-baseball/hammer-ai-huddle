@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Check, Target, Clock, Trophy, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Check, Target, Clock, Trophy, Zap, Plus } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
+import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { cn } from '@/lib/utils';
 
 interface GamePlanCardProps {
@@ -13,7 +16,8 @@ interface GamePlanCardProps {
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { tasks, completedCount, totalCount, daysUntilRecap, recapProgress, loading } = useGamePlan(selectedSport);
+  const { tasks, completedCount, totalCount, daysUntilRecap, recapProgress, loading, refetch } = useGamePlan(selectedSport);
+  const [quickLogOpen, setQuickLogOpen] = useState(false);
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'short', 
@@ -28,6 +32,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     navigate(task.link);
   };
 
+  const handleQuickLogClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQuickLogOpen(true);
+  };
+
   // Group tasks by section
   const checkinTasks = tasks.filter(t => t.section === 'checkin');
   const trainingTasks = tasks.filter(t => t.section === 'training');
@@ -37,14 +46,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const Icon = task.icon;
     const isIncomplete = !task.completed;
     const isTracking = task.section === 'tracking';
+    const isNutritionTask = task.id === 'nutrition';
     
     return (
-      <button
+      <div
         key={task.id}
-        onClick={() => handleTaskClick(task)}
         className={cn(
           "w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
-          "hover:scale-[1.01] active:scale-[0.99] cursor-pointer",
           "border-2",
           task.completed
             ? "bg-green-500/20 border-green-500/50"
@@ -53,48 +61,67 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
         )}
       >
-        {/* Icon */}
-        <div className={cn(
-          "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
-          task.completed 
-            ? "bg-green-500" 
-            : isTracking
-              ? "bg-purple-500"
-              : "bg-amber-500"
-        )}>
-          <Icon className={cn(
-            "h-5 w-5 sm:h-6 sm:w-6",
-            task.completed ? "text-white" : isTracking ? "text-white" : "text-secondary"
-          )} />
-        </div>
-        
-        {/* Content */}
-        <div className="flex-1 text-left min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className={cn(
-              "text-sm sm:text-base truncate",
-              task.completed 
-                ? "font-semibold text-muted-foreground line-through" 
-                : "font-black text-primary-foreground"
-            )}>
-              {t(task.titleKey)}
-            </h3>
-            {task.badge && !task.completed && (
-              <span className={cn(
-                "flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider",
-                isTracking ? "bg-purple-500/30 text-purple-300" : "bg-amber-500/30 text-amber-300"
-              )}>
-                {t(task.badge)}
-              </span>
-            )}
-          </div>
-          <p className={cn(
-            "text-xs sm:text-sm truncate",
-            task.completed ? "text-muted-foreground/60" : "text-muted-foreground"
+        {/* Clickable main area */}
+        <button
+          onClick={() => handleTaskClick(task)}
+          className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
+        >
+          {/* Icon */}
+          <div className={cn(
+            "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
+            task.completed 
+              ? "bg-green-500" 
+              : isTracking
+                ? "bg-purple-500"
+                : "bg-amber-500"
           )}>
-            {t(task.descriptionKey)}
-          </p>
-        </div>
+            <Icon className={cn(
+              "h-5 w-5 sm:h-6 sm:w-6",
+              task.completed ? "text-white" : isTracking ? "text-white" : "text-secondary"
+            )} />
+          </div>
+          
+          {/* Content */}
+          <div className="flex-1 text-left min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className={cn(
+                "text-sm sm:text-base truncate",
+                task.completed 
+                  ? "font-semibold text-muted-foreground line-through" 
+                  : "font-black text-primary-foreground"
+              )}>
+                {t(task.titleKey)}
+              </h3>
+              {task.badge && !task.completed && (
+                <span className={cn(
+                  "flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider",
+                  isTracking ? "bg-purple-500/30 text-purple-300" : "bg-amber-500/30 text-amber-300"
+                )}>
+                  {t(task.badge)}
+                </span>
+              )}
+            </div>
+            <p className={cn(
+              "text-xs sm:text-sm truncate",
+              task.completed ? "text-muted-foreground/60" : "text-muted-foreground"
+            )}>
+              {t(task.descriptionKey)}
+            </p>
+          </div>
+        </button>
+
+        {/* Quick Log button for nutrition task */}
+        {isNutritionTask && !task.completed && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleQuickLogClick}
+            className="flex-shrink-0 h-8 gap-1 text-xs border-green-500/50 text-green-400 hover:bg-green-500/20 hover:text-green-300"
+          >
+            <Plus className="h-3 w-3" />
+            {t('gamePlan.nutrition.quickLog')}
+          </Button>
+        )}
         
         {/* Status indicator */}
         <div className={cn(
@@ -116,7 +143,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         </div>
 
         {/* Urgency indicator for incomplete tasks */}
-        {isIncomplete && (
+        {isIncomplete && !isNutritionTask && (
           <div className={cn(
             "hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border",
             isTracking 
@@ -131,7 +158,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             </span>
           </div>
         )}
-      </button>
+      </div>
     );
   };
 
@@ -297,6 +324,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           <Progress value={recapProgress} className="h-2.5 bg-muted/20" />
         </div>
       </CardContent>
+      
+      {/* Quick Nutrition Log Dialog */}
+      <QuickNutritionLogDialog
+        open={quickLogOpen}
+        onOpenChange={setQuickLogOpen}
+        onSuccess={refetch}
+      />
       
       {/* Pulsing animation for incomplete tasks */}
       <style>{`

@@ -3511,7 +3511,12 @@
     },
     "nutrition": {
       "title": "栄養を記録",
-      "description": "The Vaultでパフォーマンスを燃料補給"
+      "description": "The Vaultでパフォーマンスを燃料補給",
+      "quickLog": "+ 記録",
+      "quickLogDialog": {
+        "title": "クイック栄養記録",
+        "subtitle": "数秒で食事を記録"
+      }
     },
     "tracking": {
       "performance": {

@@ -3481,7 +3481,12 @@
     },
     "nutrition": {
       "title": "Log Je Voeding",
-      "description": "Voed je prestatie in The Vault"
+      "description": "Voed je prestatie in The Vault",
+      "quickLog": "+ Log",
+      "quickLogDialog": {
+        "title": "Snelle Voedingslog",
+        "subtitle": "Log je maaltijd in seconden"
+      }
     },
     "tracking": {
       "performance": {
