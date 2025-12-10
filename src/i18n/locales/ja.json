@@ -3193,6 +3193,23 @@
       "dailyProgress": "1日の進捗",
       "overGoal": "超過"
     },
+    "nutritionWeekly": {
+      "title": "週間栄養サマリー",
+      "avgDailyIntake": "1日平均摂取量",
+      "goalTrends": "目標達成トレンド",
+      "dailyBreakdown": "日別内訳",
+      "weeklyInsights": "週間インサイト",
+      "noData": "今週の栄養データはまだありません",
+      "avg": "平均",
+      "meals": "食事",
+      "daysLogged": "記録した日数",
+      "totalMeals": "合計食事数",
+      "bestDayInsight": "ベストデー: {{day}} - 最高の目標達成率",
+      "proteinLowInsight": "タンパク質摂取量は目標の{{percent}}%です",
+      "hydrationLowInsight": "水分補給の改善が必要 - 平均{{percent}}%",
+      "consistencyGoodInsight": "素晴らしい継続性！今週{{days}}日記録しました",
+      "consistencyLowInsight": "より一貫して栄養を記録してみてください"
+    },
     "savedItems": {
       "title": "保存したアイテム",
       "description": "他のモジュールから保存したドリルとヒント",

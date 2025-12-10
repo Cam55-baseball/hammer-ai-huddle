@@ -4096,6 +4096,23 @@
       "dailyProgress": "Daily Progress",
       "overGoal": "Over"
     },
+    "nutritionWeekly": {
+      "title": "Weekly Nutrition Summary",
+      "avgDailyIntake": "Average Daily Intake",
+      "goalTrends": "Goal Achievement Trends",
+      "dailyBreakdown": "Daily Breakdown",
+      "weeklyInsights": "Weekly Insights",
+      "noData": "No nutrition data for this week yet",
+      "avg": "avg",
+      "meals": "meals",
+      "daysLogged": "Days Logged",
+      "totalMeals": "Total Meals",
+      "bestDayInsight": "Best day: {{day}} - highest goal achievement",
+      "proteinLowInsight": "Protein intake averaging {{percent}}% of target",
+      "hydrationLowInsight": "Hydration needs improvement - averaging {{percent}}%",
+      "consistencyGoodInsight": "Great consistency! Logged {{days}} days this week",
+      "consistencyLowInsight": "Try to log nutrition more consistently"
+    },
     "savedItems": {
       "title": "Saved Drills & Tips",
       "description": "Your saved training content from other modules",

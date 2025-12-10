@@ -3150,6 +3150,23 @@
       "dailyProgress": "일일 진행률",
       "overGoal": "초과"
     },
+    "nutritionWeekly": {
+      "title": "주간 영양 요약",
+      "avgDailyIntake": "일일 평균 섭취량",
+      "goalTrends": "목표 달성 추세",
+      "dailyBreakdown": "일별 분석",
+      "weeklyInsights": "주간 인사이트",
+      "noData": "이번 주 영양 데이터가 아직 없습니다",
+      "avg": "평균",
+      "meals": "식사",
+      "daysLogged": "기록된 일수",
+      "totalMeals": "총 식사 수",
+      "bestDayInsight": "최고의 날: {{day}} - 가장 높은 목표 달성률",
+      "proteinLowInsight": "단백질 섭취량이 목표의 {{percent}}% 수준입니다",
+      "hydrationLowInsight": "수분 섭취 개선 필요 - 평균 {{percent}}%",
+      "consistencyGoodInsight": "훌륭한 일관성! 이번 주 {{days}}일 기록했습니다",
+      "consistencyLowInsight": "영양 기록을 더 일관되게 해보세요"
+    },
     "savedItems": {
       "title": "저장된 항목",
       "description": "다른 모듈에서 저장한 훈련과 팁",

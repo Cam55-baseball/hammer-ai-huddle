@@ -35,6 +35,8 @@ import { VaultScoutGradesCard } from '@/components/vault/VaultScoutGradesCard';
 import { VaultRecapCard } from '@/components/vault/VaultRecapCard';
 import { VaultHistoryTab } from '@/components/vault/VaultHistoryTab';
 import { VaultWeeklySummary } from '@/components/vault/VaultWeeklySummary';
+import { VaultNutritionWeeklySummary } from '@/components/vault/VaultNutritionWeeklySummary';
+
 export default function Vault() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -73,6 +75,7 @@ export default function Vault() {
     deleteProgressPhoto,
     deleteScoutGrade,
     fetchWeeklyData,
+    fetchWeeklyNutrition,
   } = useVault();
 
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
@@ -594,10 +597,14 @@ export default function Vault() {
                   />
                 </TabsContent>
 
-                <TabsContent value="weekly" className="mt-4">
-                  <VaultWeeklySummary
+                <TabsContent value="weekly" className="mt-4 space-y-6">
+                  <VaultWeeklySummary 
                     fetchWeeklyData={fetchWeeklyData}
                     streak={streak}
+                  />
+                  <VaultNutritionWeeklySummary 
+                    fetchWeeklyNutrition={fetchWeeklyNutrition}
+                    goals={nutritionGoals}
                   />
                 </TabsContent>
 

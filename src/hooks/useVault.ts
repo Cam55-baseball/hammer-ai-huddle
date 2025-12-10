@@ -1019,6 +1019,87 @@ export function useVault() {
     };
   }, [user]);
 
+  // Fetch weekly nutrition data for summary
+  const fetchWeeklyNutrition = useCallback(async (weekStartStr: string) => {
+    const defaultData = {
+      weekStart: weekStartStr,
+      weekEnd: weekStartStr,
+      dailyData: [],
+      avgCalories: 0,
+      avgProtein: 0,
+      avgCarbs: 0,
+      avgFats: 0,
+      avgHydration: 0,
+      daysLogged: 0,
+      totalMeals: 0,
+    };
+
+    if (!user) return defaultData;
+
+    const weekStart = new Date(weekStartStr);
+    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+    const weekEndStr = format(weekEnd, 'yyyy-MM-dd');
+
+    const { data: logs } = await supabase
+      .from('vault_nutrition_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('entry_date', weekStartStr)
+      .lte('entry_date', weekEndStr)
+      .order('entry_date');
+
+    if (!logs || logs.length === 0) return defaultData;
+
+    // Build daily data
+    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+    const dailyData = days.map(day => {
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const dayLogs = logs.filter(l => l.entry_date === dateStr);
+      
+      const totalCalories = dayLogs.reduce((sum, l) => sum + (l.calories || 0), 0);
+      const totalProtein = dayLogs.reduce((sum, l) => sum + (Number(l.protein_g) || 0), 0);
+      const totalCarbs = dayLogs.reduce((sum, l) => sum + (Number(l.carbs_g) || 0), 0);
+      const totalFats = dayLogs.reduce((sum, l) => sum + (Number(l.fats_g) || 0), 0);
+      const totalHydration = dayLogs.reduce((sum, l) => sum + (Number(l.hydration_oz) || 0), 0);
+      
+      return {
+        day: dateStr,
+        dayShort: format(day, 'EEE'),
+        calories: totalCalories,
+        protein: totalProtein,
+        carbs: totalCarbs,
+        fats: totalFats,
+        hydration: totalHydration,
+        hasMeals: dayLogs.length > 0,
+        mealCount: dayLogs.length,
+      };
+    });
+
+    // Calculate averages (only from days with data)
+    const daysWithData = dailyData.filter(d => d.hasMeals);
+    const daysLogged = daysWithData.length;
+    const totalMeals = logs.length;
+
+    const avgCalories = daysLogged > 0 ? daysWithData.reduce((sum, d) => sum + d.calories, 0) / daysLogged : 0;
+    const avgProtein = daysLogged > 0 ? daysWithData.reduce((sum, d) => sum + d.protein, 0) / daysLogged : 0;
+    const avgCarbs = daysLogged > 0 ? daysWithData.reduce((sum, d) => sum + d.carbs, 0) / daysLogged : 0;
+    const avgFats = daysLogged > 0 ? daysWithData.reduce((sum, d) => sum + d.fats, 0) / daysLogged : 0;
+    const avgHydration = daysLogged > 0 ? daysWithData.reduce((sum, d) => sum + d.hydration, 0) / daysLogged : 0;
+
+    return {
+      weekStart: weekStartStr,
+      weekEnd: weekEndStr,
+      dailyData,
+      avgCalories,
+      avgProtein,
+      avgCarbs,
+      avgFats,
+      avgHydration,
+      daysLogged,
+      totalMeals,
+    };
+  }, [user]);
+
   // Load initial data
   useEffect(() => {
     const loadData = async () => {
@@ -1039,6 +1120,6 @@ export function useVault() {
     saveFocusQuiz, saveFreeNote, saveWorkoutNote, updateStreak, checkVaultAccess, fetchWorkoutNotes,
     saveNutritionLog, saveNutritionGoals, deleteSavedDrill, deleteSavedTip, saveDrill, saveTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
     deleteQuiz, deleteFreeNote, deleteWorkoutNote, deleteNutritionLog, deletePerformanceTest, deleteProgressPhoto, deleteScoutGrade,
-    fetchWeeklyData, fetchEntriesWithData, fetchSavedItems,
+    fetchWeeklyData, fetchWeeklyNutrition, fetchEntriesWithData, fetchSavedItems,
   };
 }
