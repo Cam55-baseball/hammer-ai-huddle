@@ -3862,9 +3862,13 @@
       "reflection_pro": "Reflexions-Profi",
       "strength_tracker": "Kraft-Tracker"
     },
+    "dailyCheckIn": {
+      "title": "Täglicher Check-In",
+      "description": "Vervollständige deine Bereitschaftsprüfungen und Ernährungsverfolgung"
+    },
     "nutrition": {
       "title": "Ernährungstagebuch",
-      "description": "Verfolge deine tägliche Ernährung und Energielevel",
+      "description": "Protokolliere Mahlzeiten, Snacks und Flüssigkeit über den Tag",
       "calories": "Kalorien",
       "protein": "Protein (g)",
       "carbs": "Kohlenhydrate (g)",
@@ -4011,6 +4015,14 @@
         "average": "Durchschnitt",
         "below": "Unter Durchschn.",
         "poor": "Schwach"
+      },
+      "progression": {
+        "title": "Notenentwicklung",
+        "cycles": "Zyklen",
+        "cycle": "Zyklus",
+        "category": "Kategorie",
+        "change": "Änderung",
+        "noChange": "Keine Änderung"
       }
     },
     "recap": {

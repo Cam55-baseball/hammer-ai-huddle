@@ -3137,9 +3137,13 @@
       "nutritionLogged": "この日の栄養が記録されています",
       "loading": "履歴を読み込み中..."
     },
+    "dailyCheckIn": {
+      "title": "毎日のチェックイン",
+      "description": "準備チェックと栄養管理を完了しましょう"
+    },
     "nutrition": {
       "title": "栄養ログ",
-      "description": "毎日の栄養とエネルギーレベルを記録",
+      "description": "食事、スナック、水分補給を一日中記録",
       "calories": "カロリー",
       "protein": "タンパク質 (g)",
       "carbs": "炭水化物 (g)",
@@ -3284,6 +3288,14 @@
         "average": "平均",
         "below": "平均以下",
         "poor": "低い"
+      },
+      "progression": {
+        "title": "グレード推移",
+        "cycles": "サイクル",
+        "cycle": "サイクル",
+        "category": "カテゴリー",
+        "change": "変化",
+        "noChange": "変化なし"
       }
     },
     "recap": {

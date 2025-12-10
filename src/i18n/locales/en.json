@@ -4040,9 +4040,13 @@
       "reflection_pro": "Reflection Pro",
       "strength_tracker": "Strength Tracker"
     },
+    "dailyCheckIn": {
+      "title": "Daily Check-In",
+      "description": "Complete your readiness checks and nutrition tracking"
+    },
     "nutrition": {
       "title": "Nutrition Log",
-      "description": "Track your daily nutrition and energy levels",
+      "description": "Log meals, snacks, and hydration throughout the day",
       "calories": "Calories",
       "protein": "Protein (g)",
       "carbs": "Carbs (g)",
@@ -4189,6 +4193,14 @@
         "average": "Average",
         "below": "Below Avg",
         "poor": "Poor"
+      },
+      "progression": {
+        "title": "Grade Progression",
+        "cycles": "cycles",
+        "cycle": "Cycle",
+        "category": "Category",
+        "change": "Change",
+        "noChange": "No change"
       }
     },
     "recap": {

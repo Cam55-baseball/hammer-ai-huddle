@@ -3107,9 +3107,13 @@
       "nutritionLogged": "Voeding gelogd voor deze dag",
       "loading": "Geschiedenis laden..."
     },
+    "dailyCheckIn": {
+      "title": "Dagelijkse Check-In",
+      "description": "Voltooi je gereedheidscontroles en voedingstracking"
+    },
     "nutrition": {
       "title": "Voedingslog",
-      "description": "Volg dagelijkse voeding en energieniveaus",
+      "description": "Log maaltijden, snacks en hydratatie gedurende de dag",
       "calories": "Calorieën",
       "protein": "Eiwitten (g)",
       "carbs": "Koolhydraten (g)",
@@ -3254,6 +3258,14 @@
         "average": "Gemiddeld",
         "below": "Ondergemiddeld",
         "poor": "Zwak"
+      },
+      "progression": {
+        "title": "Cijferontwikkeling",
+        "cycles": "cycli",
+        "cycle": "Cyclus",
+        "category": "Categorie",
+        "change": "Verandering",
+        "noChange": "Geen verandering"
       }
     },
     "recap": {

@@ -295,124 +295,145 @@ export default function Vault() {
             <div className="space-y-6">
               <VaultStreakCard streak={streak} isLoading={loading} />
 
-              {/* Daily Focus Quizzes */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    {t('vault.quiz.title')}
-                  </CardTitle>
-                  <CardDescription>
-                    {t('vault.quiz.todayStatus')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Quiz Completion Status Grid */}
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* Morning Status */}
-                    <div 
-                      className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
-                        hasCompletedQuiz('morning') 
-                          ? 'bg-green-500/10 border-green-500' 
-                          : 'bg-muted/50 border-border'
-                      }`}
-                    >
-                      <Sun className={`h-5 w-5 ${hasCompletedQuiz('morning') ? 'text-amber-500' : 'text-muted-foreground'}`} />
-                      <span className="text-xs mt-1 font-medium">{t('vault.quiz.morning')}</span>
-                      {hasCompletedQuiz('morning') ? (
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-1" />
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground mt-1">{t('vault.quiz.pending')}</span>
-                      )}
-                    </div>
-
-                    {/* Pre-Lift Status */}
-                    <div 
-                      className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
-                        hasCompletedQuiz('pre_lift') 
-                          ? 'bg-green-500/10 border-green-500' 
-                          : 'bg-muted/50 border-border'
-                      }`}
-                    >
-                      <Dumbbell className={`h-5 w-5 ${hasCompletedQuiz('pre_lift') ? 'text-orange-500' : 'text-muted-foreground'}`} />
-                      <span className="text-xs mt-1 font-medium">{t('vault.quiz.preLift')}</span>
-                      {hasCompletedQuiz('pre_lift') ? (
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-1" />
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground mt-1">{t('vault.quiz.pending')}</span>
-                      )}
-                    </div>
-
-                    {/* Night Status */}
-                    <div 
-                      className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
-                        hasCompletedQuiz('night') 
-                          ? 'bg-green-500/10 border-green-500' 
-                          : 'bg-muted/50 border-border'
-                      }`}
-                    >
-                      <Moon className={`h-5 w-5 ${hasCompletedQuiz('night') ? 'text-indigo-500' : 'text-muted-foreground'}`} />
-                      <span className="text-xs mt-1 font-medium">{t('vault.quiz.night')}</span>
-                      {hasCompletedQuiz('night') ? (
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-1" />
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground mt-1">{t('vault.quiz.pending')}</span>
-                      )}
-                    </div>
+              {/* Daily Check-In Container */}
+              <div className="rounded-xl border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-background p-4 sm:p-6 space-y-4">
+                {/* Section Header */}
+                <div className="flex items-center gap-3 pb-3 border-b border-emerald-500/20">
+                  <div className="p-2 rounded-lg bg-emerald-500/10">
+                    <Sparkles className="h-5 w-5 text-emerald-500" />
                   </div>
-
-                  {/* Quiz Buttons */}
-                  <div className="space-y-2 pt-2 border-t border-border">
-                    {/* Morning Quiz */}
-                    <Button
-                      variant={hasCompletedQuiz('morning') ? 'secondary' : 'outline'}
-                      className="w-full justify-start gap-3"
-                      onClick={() => openQuizDialog('morning')}
-                      disabled={hasCompletedQuiz('morning')}
-                    >
-                      <Sun className="h-4 w-4 text-amber-500" />
-                      <span className="flex-1 text-left">{t('vault.quiz.morning')}</span>
-                      {hasCompletedQuiz('morning') ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-
-                    {/* Pre-Lift Quiz */}
-                    <Button
-                      variant={hasCompletedQuiz('pre_lift') ? 'secondary' : 'outline'}
-                      className="w-full justify-start gap-3"
-                      onClick={() => openQuizDialog('pre_lift')}
-                      disabled={hasCompletedQuiz('pre_lift')}
-                    >
-                      <Dumbbell className="h-4 w-4 text-orange-500" />
-                      <span className="flex-1 text-left">{t('vault.quiz.preLift')}</span>
-                      {hasCompletedQuiz('pre_lift') ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-
-                    {/* Night Quiz */}
-                    <Button
-                      variant={hasCompletedQuiz('night') ? 'secondary' : 'outline'}
-                      className="w-full justify-start gap-3"
-                      onClick={() => openQuizDialog('night')}
-                      disabled={hasCompletedQuiz('night')}
-                    >
-                      <Moon className="h-4 w-4 text-indigo-500" />
-                      <span className="flex-1 text-left">{t('vault.quiz.night')}</span>
-                      {hasCompletedQuiz('night') ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
+                  <div>
+                    <h3 className="font-bold text-lg">{t('vault.dailyCheckIn.title')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('vault.dailyCheckIn.description')}</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Daily Focus Quizzes */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      {t('vault.quiz.title')}
+                    </CardTitle>
+                    <CardDescription>
+                      {t('vault.quiz.todayStatus')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Quiz Completion Status Grid */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {/* Morning Status */}
+                      <div 
+                        className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
+                          hasCompletedQuiz('morning') 
+                            ? 'bg-green-500/10 border-green-500' 
+                            : 'bg-muted/50 border-border'
+                        }`}
+                      >
+                        <Sun className={`h-5 w-5 ${hasCompletedQuiz('morning') ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                        <span className="text-xs mt-1 font-medium">{t('vault.quiz.morning')}</span>
+                        {hasCompletedQuiz('morning') ? (
+                          <CheckCircle className="h-4 w-4 text-green-500 mt-1" />
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground mt-1">{t('vault.quiz.pending')}</span>
+                        )}
+                      </div>
+
+                      {/* Pre-Lift Status */}
+                      <div 
+                        className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
+                          hasCompletedQuiz('pre_lift') 
+                            ? 'bg-green-500/10 border-green-500' 
+                            : 'bg-muted/50 border-border'
+                        }`}
+                      >
+                        <Dumbbell className={`h-5 w-5 ${hasCompletedQuiz('pre_lift') ? 'text-orange-500' : 'text-muted-foreground'}`} />
+                        <span className="text-xs mt-1 font-medium">{t('vault.quiz.preLift')}</span>
+                        {hasCompletedQuiz('pre_lift') ? (
+                          <CheckCircle className="h-4 w-4 text-green-500 mt-1" />
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground mt-1">{t('vault.quiz.pending')}</span>
+                        )}
+                      </div>
+
+                      {/* Night Status */}
+                      <div 
+                        className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${
+                          hasCompletedQuiz('night') 
+                            ? 'bg-green-500/10 border-green-500' 
+                            : 'bg-muted/50 border-border'
+                        }`}
+                      >
+                        <Moon className={`h-5 w-5 ${hasCompletedQuiz('night') ? 'text-indigo-500' : 'text-muted-foreground'}`} />
+                        <span className="text-xs mt-1 font-medium">{t('vault.quiz.night')}</span>
+                        {hasCompletedQuiz('night') ? (
+                          <CheckCircle className="h-4 w-4 text-green-500 mt-1" />
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground mt-1">{t('vault.quiz.pending')}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quiz Buttons */}
+                    <div className="space-y-2 pt-2 border-t border-border">
+                      {/* Morning Quiz */}
+                      <Button
+                        variant={hasCompletedQuiz('morning') ? 'secondary' : 'outline'}
+                        className="w-full justify-start gap-3"
+                        onClick={() => openQuizDialog('morning')}
+                        disabled={hasCompletedQuiz('morning')}
+                      >
+                        <Sun className="h-4 w-4 text-amber-500" />
+                        <span className="flex-1 text-left">{t('vault.quiz.morning')}</span>
+                        {hasCompletedQuiz('morning') ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+
+                      {/* Pre-Lift Quiz */}
+                      <Button
+                        variant={hasCompletedQuiz('pre_lift') ? 'secondary' : 'outline'}
+                        className="w-full justify-start gap-3"
+                        onClick={() => openQuizDialog('pre_lift')}
+                        disabled={hasCompletedQuiz('pre_lift')}
+                      >
+                        <Dumbbell className="h-4 w-4 text-orange-500" />
+                        <span className="flex-1 text-left">{t('vault.quiz.preLift')}</span>
+                        {hasCompletedQuiz('pre_lift') ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+
+                      {/* Night Quiz */}
+                      <Button
+                        variant={hasCompletedQuiz('night') ? 'secondary' : 'outline'}
+                        className="w-full justify-start gap-3"
+                        onClick={() => openQuizDialog('night')}
+                        disabled={hasCompletedQuiz('night')}
+                      >
+                        <Moon className="h-4 w-4 text-indigo-500" />
+                        <span className="flex-1 text-left">{t('vault.quiz.night')}</span>
+                        {hasCompletedQuiz('night') ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Nutrition Log */}
+                <VaultNutritionLogCard 
+                  todaysLog={nutritionLog}
+                  onSave={handleSaveNutrition}
+                  isLoading={loading}
+                />
+              </div>
             </div>
 
             {/* Right Column - Main Content */}
@@ -503,13 +524,6 @@ export default function Vault() {
                       </CardContent>
                     </Card>
                   )}
-
-                  {/* Nutrition Log */}
-                  <VaultNutritionLogCard 
-                    todaysLog={nutritionLog}
-                    onSave={handleSaveNutrition}
-                    isLoading={loading}
-                  />
 
                   {/* Saved Drills & Tips */}
                   <VaultSavedItemsCard
