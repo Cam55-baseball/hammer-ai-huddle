@@ -4228,7 +4228,12 @@
     },
     "nutrition": {
       "title": "Enregistrer Votre Nutrition",
-      "description": "Alimentez votre performance dans The Vault"
+      "description": "Alimentez votre performance dans The Vault",
+      "quickLog": "+ Journal",
+      "quickLogDialog": {
+        "title": "Journal Nutrition Rapide",
+        "subtitle": "Enregistrez votre repas en quelques secondes"
+      }
     },
     "tracking": {
       "performance": {

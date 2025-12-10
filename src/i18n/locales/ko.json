@@ -3468,7 +3468,12 @@
     },
     "nutrition": {
       "title": "영양 기록",
-      "description": "The Vault에서 성과에 연료 공급"
+      "description": "The Vault에서 성과에 연료 공급",
+      "quickLog": "+ 기록",
+      "quickLogDialog": {
+        "title": "빠른 영양 기록",
+        "subtitle": "몇 초 만에 식사 기록"
+      }
     },
     "tracking": {
       "performance": {

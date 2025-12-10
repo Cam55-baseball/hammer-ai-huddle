@@ -4206,7 +4206,12 @@
     },
     "nutrition": {
       "title": "Registra Tu Nutrición",
-      "description": "Alimenta tu rendimiento en The Vault"
+      "description": "Alimenta tu rendimiento en The Vault",
+      "quickLog": "+ Registrar",
+      "quickLogDialog": {
+        "title": "Registro Rápido de Nutrición",
+        "subtitle": "Registra tu comida en segundos"
+      }
     },
     "tracking": {
       "performance": {

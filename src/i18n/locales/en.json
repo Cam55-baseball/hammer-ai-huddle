@@ -4406,7 +4406,12 @@
     },
     "nutrition": {
       "title": "Log Your Nutrition",
-      "description": "Fuel your performance in The Vault"
+      "description": "Fuel your performance in The Vault",
+      "quickLog": "+ Log",
+      "quickLogDialog": {
+        "title": "Quick Nutrition Log",
+        "subtitle": "Log your meal in seconds"
+      }
     },
     "tracking": {
       "performance": {
