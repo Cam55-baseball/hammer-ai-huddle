@@ -4203,6 +4203,7 @@
     "tasksCompleted": "{{completed}}/{{total}} terminées",
     "allComplete": "MISSION ACCOMPLIE!",
     "doIt": "FAIS-LE",
+    "locked": "VERROUILLÉ",
     "quickActions": {
       "logMeal": "Enregistrer Repas"
     },

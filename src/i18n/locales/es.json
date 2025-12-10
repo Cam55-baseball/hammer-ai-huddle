@@ -4181,6 +4181,7 @@
     "tasksCompleted": "{{completed}}/{{total}} completadas",
     "allComplete": "¡LO LOGRASTE!",
     "doIt": "HAZLO",
+    "locked": "BLOQUEADO",
     "quickActions": {
       "logMeal": "Registrar Comida"
     },

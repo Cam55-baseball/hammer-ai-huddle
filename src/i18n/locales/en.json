@@ -4381,6 +4381,7 @@
     "tasksCompleted": "{{completed}}/{{total}} done",
     "allComplete": "CRUSHED IT!",
     "doIt": "DO IT",
+    "locked": "LOCKED",
     "quickActions": {
       "logMeal": "Log Meal"
     },
