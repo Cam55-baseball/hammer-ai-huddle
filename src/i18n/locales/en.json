@@ -3891,6 +3891,13 @@
       "title": "6-Week Tracking",
       "description": "Record once per 6-week cycle for accurate progress reports"
     },
+    "twelveWeekTracking": {
+      "title": "12-Week Tracking",
+      "description": "Self-evaluate once per 12-week cycle for comprehensive progress assessment"
+    },
+    "lockPeriod": {
+      "twelveWeeks": "This section can only be updated once every 12 weeks."
+    },
     "tabs": {
       "today": "Today",
       "history": "History",

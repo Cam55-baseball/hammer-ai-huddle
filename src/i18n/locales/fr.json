@@ -3713,6 +3713,13 @@
       "title": "Suivi de 6 Semaines",
       "description": "Enregistrez une fois par cycle de 6 semaines pour des rapports précis"
     },
+    "twelveWeekTracking": {
+      "title": "Suivi de 12 Semaines",
+      "description": "Auto-évaluez une fois par cycle de 12 semaines pour une évaluation complète des progrès"
+    },
+    "lockPeriod": {
+      "twelveWeeks": "Cette section ne peut être mise à jour qu'une fois toutes les 12 semaines."
+    },
     "tabs": {
       "today": "Aujourd'hui",
       "history": "Historique",

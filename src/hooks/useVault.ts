@@ -699,9 +699,9 @@ export function useVault() {
 
   const saveScoutGrade = useCallback(async (gradeData: { hitting_grade: number | null; power_grade: number | null; speed_grade: number | null; defense_grade: number | null; throwing_grade: number | null; leadership_grade: number | null; self_efficacy_grade: number | null; notes: string | null; }) => {
     if (!user) return { success: false };
-    // Calculate next entry date (6 weeks from now)
+    // Calculate next entry date (12 weeks from now)
     const nextPrompt = new Date(); 
-    nextPrompt.setDate(nextPrompt.getDate() + 42); // 6 weeks = 42 days
+    nextPrompt.setDate(nextPrompt.getDate() + 84); // 12 weeks = 84 days
     
     const { error } = await supabase.from('vault_scout_grades').insert({
       user_id: user.id, ...gradeData, next_prompt_date: nextPrompt.toISOString(),

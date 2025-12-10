@@ -2997,6 +2997,13 @@
       "title": "6週間トラッキング",
       "description": "6週間サイクルごとに一度記録し、正確なレポートを作成"
     },
+    "twelveWeekTracking": {
+      "title": "12週間トラッキング",
+      "description": "12週間サイクルごとに一度自己評価し、包括的な進捗評価を行う"
+    },
+    "lockPeriod": {
+      "twelveWeeks": "このセクションは12週間ごとにのみ更新できます。"
+    },
     "tabs": {
       "today": "今日",
       "history": "履歴",

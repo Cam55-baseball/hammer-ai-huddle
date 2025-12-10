@@ -2938,6 +2938,13 @@
       "title": "6周跟踪",
       "description": "每6周记录一次，以获得准确的进度报告"
     },
+    "twelveWeekTracking": {
+      "title": "12周跟踪",
+      "description": "每12周自我评估一次，进行全面的进度评估"
+    },
+    "lockPeriod": {
+      "twelveWeeks": "此部分每12周只能更新一次。"
+    },
     "tabs": {
       "today": "今天",
       "history": "历史",
