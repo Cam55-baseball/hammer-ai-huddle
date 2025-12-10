@@ -55,6 +55,7 @@ export default function Vault() {
     scoutGrades,
     recaps,
     entriesWithData,
+    favoriteMeals,
     saveFocusQuiz,
     saveFreeNote,
     saveNutritionLog,
@@ -76,6 +77,9 @@ export default function Vault() {
     deleteScoutGrade,
     fetchWeeklyData,
     fetchWeeklyNutrition,
+    saveFavoriteMeal,
+    deleteFavoriteMeal,
+    useFavoriteMeal,
   } = useVault();
 
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);

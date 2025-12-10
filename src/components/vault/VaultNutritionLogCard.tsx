@@ -11,10 +11,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie, Zap, Dumbbell, Trash2, Clock, Settings, Flame, FlameKindling, AlertTriangle } from 'lucide-react';
+import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie, Zap, Dumbbell, Trash2, Clock, Settings, Flame, FlameKindling, AlertTriangle, Heart, Star, Lightbulb } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { VaultFavoriteMeal } from '@/hooks/useVault';
 
 interface NutritionLog {
   id: string;
@@ -41,9 +42,13 @@ interface NutritionGoals {
 interface VaultNutritionLogCardProps {
   todaysLogs: NutritionLog[];
   goals: NutritionGoals | null;
+  favoriteMeals: VaultFavoriteMeal[];
   onSave: (data: Omit<NutritionLog, 'id' | 'logged_at'>) => Promise<{ success: boolean }>;
   onDelete: (id: string) => Promise<{ success: boolean }>;
   onSaveGoals: (goals: NutritionGoals) => Promise<{ success: boolean }>;
+  onSaveFavorite: (meal: Omit<VaultFavoriteMeal, 'id' | 'usage_count' | 'created_at' | 'last_used_at'>) => Promise<{ success: boolean }>;
+  onDeleteFavorite: (id: string) => Promise<{ success: boolean }>;
+  onUseFavorite: (favorite: VaultFavoriteMeal) => Promise<{ success: boolean }>;
   isLoading?: boolean;
 }
 
@@ -67,14 +72,30 @@ const DEFAULT_GOALS: NutritionGoals = {
   hydration_goal: 100,
 };
 
-export function VaultNutritionLogCard({ todaysLogs, goals, onSave, onDelete, onSaveGoals, isLoading = false }: VaultNutritionLogCardProps) {
+export function VaultNutritionLogCard({ 
+  todaysLogs, 
+  goals, 
+  favoriteMeals,
+  onSave, 
+  onDelete, 
+  onSaveGoals,
+  onSaveFavorite,
+  onDeleteFavorite,
+  onUseFavorite,
+  isLoading = false 
+}: VaultNutritionLogCardProps) {
   const { t } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [favoritesOpen, setFavoritesOpen] = useState(false);
   const [goalsDialogOpen, setGoalsDialogOpen] = useState(false);
+  const [saveFavoriteDialogOpen, setSaveFavoriteDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savingGoals, setSavingGoals] = useState(false);
+  const [savingFavorite, setSavingFavorite] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingFavoriteId, setDeletingFavoriteId] = useState<string | null>(null);
+  const [usingFavoriteId, setUsingFavoriteId] = useState<string | null>(null);
   
   // Form state
   const [mealType, setMealType] = useState<string>('');
@@ -87,6 +108,9 @@ export function VaultNutritionLogCard({ todaysLogs, goals, onSave, onDelete, onS
   const [digestionNotes, setDigestionNotes] = useState('');
   const [supplements, setSupplements] = useState<string[]>([]);
   const [newSupplement, setNewSupplement] = useState('');
+  
+  // Favorite meal name
+  const [favoriteMealName, setFavoriteMealName] = useState('');
 
   // Goals form state
   const currentGoals = goals || DEFAULT_GOALS;
@@ -202,12 +226,53 @@ export function VaultNutritionLogCard({ todaysLogs, goals, onSave, onDelete, onS
     setDeletingId(null);
   };
 
+  const handleSaveFavorite = async () => {
+    if (!favoriteMealName.trim()) {
+      toast.error(t('vault.nutrition.enterMealName'));
+      return;
+    }
+    setSavingFavorite(true);
+    const result = await onSaveFavorite({
+      meal_name: favoriteMealName.trim(),
+      calories: calories ? parseInt(calories) : null,
+      protein_g: protein ? parseFloat(protein) : null,
+      carbs_g: carbs ? parseFloat(carbs) : null,
+      fats_g: fats ? parseFloat(fats) : null,
+      hydration_oz: hydration ? parseFloat(hydration) : null,
+      meal_type: mealType || null,
+      supplements,
+    });
+    setSavingFavorite(false);
+    if (result.success) {
+      toast.success(t('vault.nutrition.savedAsFavorite'));
+      setFavoriteMealName('');
+      setSaveFavoriteDialogOpen(false);
+    }
+  };
+
+  const handleDeleteFavorite = async (id: string) => {
+    setDeletingFavoriteId(id);
+    await onDeleteFavorite(id);
+    setDeletingFavoriteId(null);
+    toast.success(t('vault.nutrition.favoriteRemoved'));
+  };
+
+  const handleUseFavorite = async (favorite: VaultFavoriteMeal) => {
+    setUsingFavoriteId(favorite.id);
+    const result = await onUseFavorite(favorite);
+    setUsingFavoriteId(null);
+    if (result.success) {
+      toast.success(t('vault.nutrition.addedFromFavorite'));
+    }
+  };
+
   const handleLogEntry = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsOpen(true);
   };
 
   const hasData = todaysLogs.length > 0;
+  const hasFavorites = favoriteMeals.length > 0;
 
   const mealTypeOptions = [
     { value: 'breakfast', icon: Coffee, label: t('vault.nutrition.breakfast') },
@@ -285,6 +350,80 @@ export function VaultNutritionLogCard({ todaysLogs, goals, onSave, onDelete, onS
         
         <CollapsibleContent>
           <CardContent className="space-y-4">
+            {/* Favorite Meals Section */}
+            <Collapsible open={favoritesOpen} onOpenChange={setFavoritesOpen}>
+              <CollapsibleTrigger asChild>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 cursor-pointer hover:bg-amber-500/15 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-amber-500" />
+                    <span className="text-sm font-medium">{t('vault.nutrition.favoriteMeals')}</span>
+                    {hasFavorites && <Badge variant="secondary" className="text-xs">{favoriteMeals.length}</Badge>}
+                  </div>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${favoritesOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-3">
+                {/* Hint about favorites */}
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 mb-3 text-sm">
+                  <Lightbulb className="h-4 w-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-muted-foreground">{t('vault.nutrition.favoriteMealsHint')}</span>
+                </div>
+                
+                {hasFavorites ? (
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {favoriteMeals.map((fav) => {
+                      const MealIcon = getMealIcon(fav.meal_type);
+                      return (
+                        <div 
+                          key={fav.id} 
+                          className="flex items-center justify-between p-2 rounded-lg bg-muted/50 text-sm"
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <MealIcon className="h-4 w-4 flex-shrink-0 text-amber-500" />
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-medium truncate">{fav.meal_name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {fav.calories || 0} cal • {fav.protein_g || 0}P • {fav.carbs_g || 0}C
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {t('vault.nutrition.usedTimes', { count: fav.usage_count || 0 })}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => handleUseFavorite(fav)}
+                              disabled={usingFavoriteId === fav.id}
+                            >
+                              <Plus className="h-3 w-3" />
+                              {t('vault.nutrition.quickAdd')}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                              onClick={() => handleDeleteFavorite(fav.id)}
+                              disabled={deletingFavoriteId === fav.id}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-sm text-muted-foreground">
+                    <Star className="h-6 w-6 mx-auto mb-1 opacity-50" />
+                    {t('vault.nutrition.noFavorites')}
+                  </div>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+
             {/* Quick Presets */}
             <div className="space-y-2">
               <Label className="text-xs font-medium">{t('vault.nutrition.presets')}</Label>
@@ -451,9 +590,56 @@ export function VaultNutritionLogCard({ todaysLogs, goals, onSave, onDelete, onS
               />
             </div>
 
-            <Button onClick={handleSave} disabled={saving} className="w-full">
-              {saving ? t('common.loading') : t('vault.nutrition.logThisMeal')}
-            </Button>
+            {/* Save Buttons */}
+            <div className="flex gap-2">
+              <Button onClick={handleSave} disabled={saving} className="flex-1">
+                {saving ? t('common.loading') : t('vault.nutrition.logThisMeal')}
+              </Button>
+              
+              {/* Save to Favorites Dialog */}
+              <Dialog open={saveFavoriteDialogOpen} onOpenChange={setSaveFavoriteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    disabled={!calories && !protein && !carbs && !fats}
+                    title={t('vault.nutrition.saveToFavorites')}
+                  >
+                    <Heart className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Heart className="h-5 w-5 text-amber-500" />
+                      {t('vault.nutrition.saveToFavorites')}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label>{t('vault.nutrition.mealName')}</Label>
+                      <Input
+                        value={favoriteMealName}
+                        onChange={(e) => setFavoriteMealName(e.target.value)}
+                        placeholder={t('vault.nutrition.enterMealName')}
+                      />
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50 text-sm">
+                      <p>{calories || 0} cal • {protein || 0}g P • {carbs || 0}g C • {fats || 0}g F</p>
+                      {mealType && <p className="text-muted-foreground text-xs mt-1">{t(`vault.nutrition.${mealType}`)}</p>}
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button variant="outline" onClick={() => setSaveFavoriteDialogOpen(false)} className="flex-1">
+                        {t('common.cancel')}
+                      </Button>
+                      <Button onClick={handleSaveFavorite} disabled={savingFavorite} className="flex-1">
+                        {savingFavorite ? t('common.loading') : t('common.save')}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
 
             {/* Today's Meals History */}
             {todaysLogs.length > 0 && (
