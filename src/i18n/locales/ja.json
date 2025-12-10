@@ -3144,6 +3144,13 @@
     "nutrition": {
       "title": "栄養ログ",
       "description": "毎食、スナック、飲み物の後に更新して、一日の摂取量を追跡",
+      "mealType": "食事タイプ",
+      "breakfast": "朝食",
+      "lunch": "昼食",
+      "dinner": "夕食",
+      "snack": "スナック",
+      "hydrationOnly": "水分補給",
+      "logEntry": "記録する",
       "calories": "カロリー",
       "protein": "タンパク質 (g)",
       "carbs": "炭水化物 (g)",

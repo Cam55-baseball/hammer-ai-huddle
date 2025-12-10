@@ -3101,6 +3101,13 @@
     "nutrition": {
       "title": "영양 기록",
       "description": "매 식사, 간식, 음료 후에 업데이트하여 일일 섭취량을 추적하세요",
+      "mealType": "식사 유형",
+      "breakfast": "아침",
+      "lunch": "점심",
+      "dinner": "저녁",
+      "snack": "간식",
+      "hydrationOnly": "수분",
+      "logEntry": "기록하기",
       "calories": "칼로리",
       "protein": "단백질 (g)",
       "carbs": "탄수화물 (g)",

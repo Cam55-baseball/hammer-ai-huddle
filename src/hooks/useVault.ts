@@ -87,6 +87,7 @@ export interface VaultNutritionLog {
   energy_level: number | null;
   digestion_notes: string | null;
   supplements: string[];
+  meal_type: string | null;
 }
 
 export interface VaultSavedDrill {
@@ -545,7 +546,11 @@ export function useVault() {
       .eq('user_id', user.id)
       .eq('entry_date', today)
       .maybeSingle();
-    if (data) setNutritionLog({ ...data, supplements: (data.supplements as string[]) || [] });
+    if (data) setNutritionLog({ 
+      ...data, 
+      supplements: (data.supplements as string[]) || [],
+      meal_type: data.meal_type || null,
+    });
   }, [user, today]);
 
   // Save nutrition log

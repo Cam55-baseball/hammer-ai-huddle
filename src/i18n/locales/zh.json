@@ -3085,6 +3085,13 @@
     "nutrition": {
       "title": "营养日志",
       "description": "每餐、零食和饮料后更新，追踪您的每日摄入量",
+      "mealType": "餐食类型",
+      "breakfast": "早餐",
+      "lunch": "午餐",
+      "dinner": "晚餐",
+      "snack": "零食",
+      "hydrationOnly": "水分",
+      "logEntry": "记录",
       "calories": "卡路里",
       "protein": "蛋白质 (g)",
       "carbs": "碳水化合物 (g)",
