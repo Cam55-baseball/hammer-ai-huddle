@@ -3846,7 +3846,7 @@
     },
     "nutrition": {
       "title": "Registro Nutricional",
-      "description": "Registra comidas, snacks e hidratación durante el día",
+      "description": "Actualiza después de cada comida, snack y bebida para rastrear tu ingesta diaria",
       "calories": "Calorías",
       "protein": "Proteína (g)",
       "carbs": "Carbohidratos (g)",

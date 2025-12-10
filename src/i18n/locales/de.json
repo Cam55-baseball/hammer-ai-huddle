@@ -3868,7 +3868,7 @@
     },
     "nutrition": {
       "title": "Ernährungstagebuch",
-      "description": "Protokolliere Mahlzeiten, Snacks und Flüssigkeit über den Tag",
+      "description": "Aktualisiere nach jeder Mahlzeit, jedem Snack und Getränk um deine tägliche Aufnahme zu verfolgen",
       "calories": "Kalorien",
       "protein": "Protein (g)",
       "carbs": "Kohlenhydrate (g)",

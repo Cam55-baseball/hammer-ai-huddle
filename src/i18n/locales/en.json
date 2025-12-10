@@ -4046,7 +4046,7 @@
     },
     "nutrition": {
       "title": "Nutrition Log",
-      "description": "Log meals, snacks, and hydration throughout the day",
+      "description": "Update after every meal, snack, and drink to track your daily intake",
       "calories": "Calories",
       "protein": "Protein (g)",
       "carbs": "Carbs (g)",
