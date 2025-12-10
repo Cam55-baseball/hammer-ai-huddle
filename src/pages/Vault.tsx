@@ -92,6 +92,7 @@ export default function Vault() {
   const [freeNote, setFreeNote] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [userSport, setUserSport] = useState<'baseball' | 'softball'>('baseball');
   
   // Refs for scrolling to sections
   const performanceTestsRef = useRef<HTMLDivElement>(null);
@@ -147,11 +148,17 @@ export default function Vault() {
            todaysQuizzes.some(q => q.quiz_type === 'night');
   }, [todaysQuizzes]);
 
-  // Check access
+  // Check access and detect sport
   useEffect(() => {
     const checkAccess = async () => {
       const access = await checkVaultAccess();
       setHasAccess(access);
+      
+      // Detect sport from localStorage or subscribed modules
+      const storedSport = localStorage.getItem('selectedSport');
+      if (storedSport === 'softball' || storedSport === 'baseball') {
+        setUserSport(storedSport);
+      }
     };
     checkAccess();
   }, [checkVaultAccess]);
@@ -651,6 +658,7 @@ export default function Vault() {
                     <div ref={scoutGradesRef}>
                       <VaultScoutGradesCard
                         grades={scoutGrades}
+                        sport={userSport}
                         onSave={handleSaveScoutGrade}
                       />
                     </div>

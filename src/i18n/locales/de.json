@@ -4091,6 +4091,18 @@
         "category": "Kategorie",
         "change": "Änderung",
         "noChange": "Keine Änderung"
+      },
+      "scaleReference": {
+        "title": "20-80 Skala Referenz",
+        "mlbAverage": "MLB Durchschn.",
+        "auslAverage": "AUSL Durchschn.",
+        "poor": "Schwach",
+        "belowAverage": "Unter Durchschn.",
+        "average": "Durchschnitt",
+        "aboveAverage": "Über Durchschn.",
+        "plus": "Überdurchschn.",
+        "elite": "Elite",
+        "hallOfFame": "HOF"
       }
     },
     "recap": {

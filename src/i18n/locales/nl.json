@@ -3334,6 +3334,18 @@
         "category": "Categorie",
         "change": "Verandering",
         "noChange": "Geen verandering"
+      },
+      "scaleReference": {
+        "title": "20-80 Scout Schaal Referentie",
+        "mlbAverage": "MLB Gem.",
+        "auslAverage": "AUSL Gem.",
+        "poor": "Zwak",
+        "belowAverage": "Onder Gem.",
+        "average": "Gemiddeld",
+        "aboveAverage": "Boven Gem.",
+        "plus": "Bovengemiddeld",
+        "elite": "Elite",
+        "hallOfFame": "HOF"
       }
     },
     "recap": {

@@ -3364,6 +3364,18 @@
         "category": "カテゴリー",
         "change": "変化",
         "noChange": "変化なし"
+      },
+      "scaleReference": {
+        "title": "20-80 スカウトスケール参照",
+        "mlbAverage": "MLB平均",
+        "auslAverage": "AUSL平均",
+        "poor": "低い",
+        "belowAverage": "平均以下",
+        "average": "平均",
+        "aboveAverage": "平均以上",
+        "plus": "プラス",
+        "elite": "エリート",
+        "hallOfFame": "殿堂"
       }
     },
     "recap": {

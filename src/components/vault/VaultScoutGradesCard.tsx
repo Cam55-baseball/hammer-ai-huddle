@@ -35,6 +35,7 @@ interface ScoutGrade {
 
 interface VaultScoutGradesCardProps {
   grades: ScoutGrade[];
+  sport?: 'baseball' | 'softball';
   onSave: (data: {
     hitting_grade: number | null;
     power_grade: number | null;
@@ -86,7 +87,21 @@ const getChangeIndicator = (change: number) => {
   return { icon: Minus, color: 'text-amber-500', bgColor: 'bg-amber-500/10' };
 };
 
-export function VaultScoutGradesCard({ grades, onSave }: VaultScoutGradesCardProps) {
+// Scale tick marks at increments of 5
+const SCALE_TICKS = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
+
+// Key labeled positions on the scale
+const KEY_LABELS: Record<number, string> = {
+  20: 'poor',
+  35: 'belowAverage',
+  45: 'leagueAverage', // This one is sport-specific
+  50: 'average',
+  60: 'aboveAverage',
+  70: 'elite',
+  80: 'hallOfFame',
+};
+
+export function VaultScoutGradesCard({ grades, sport = 'baseball', onSave }: VaultScoutGradesCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
@@ -292,6 +307,59 @@ export function VaultScoutGradesCard({ grades, onSave }: VaultScoutGradesCardPro
                   </span>
                 </div>
 
+                {/* Scale Reference Card */}
+                <div className="p-3 rounded-lg bg-gradient-to-r from-red-500/10 via-amber-500/10 to-green-500/10 border border-border mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold">{t('vault.scoutGrades.scaleReference.title')}</span>
+                  </div>
+                  <div className="relative h-6 rounded bg-gradient-to-r from-red-500/30 via-amber-500/30 to-green-500/30">
+                    {/* Tick marks */}
+                    {SCALE_TICKS.map((tick) => {
+                      const position = ((tick - 20) / 60) * 100;
+                      const isKeyLabel = KEY_LABELS[tick];
+                      return (
+                        <div
+                          key={tick}
+                          className="absolute top-0 h-full flex flex-col items-center"
+                          style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
+                        >
+                          <div className={`w-px ${isKeyLabel ? 'h-full bg-foreground/40' : 'h-2 bg-foreground/20'}`} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Labels below the scale */}
+                  <div className="relative mt-1">
+                    {Object.entries(KEY_LABELS).map(([value, labelKey]) => {
+                      const position = ((Number(value) - 20) / 60) * 100;
+                      const displayLabel = labelKey === 'leagueAverage' 
+                        ? (sport === 'softball' 
+                          ? t('vault.scoutGrades.scaleReference.auslAverage')
+                          : t('vault.scoutGrades.scaleReference.mlbAverage'))
+                        : t(`vault.scoutGrades.scaleReference.${labelKey}`);
+                      const isCenter = Number(value) === 45 || Number(value) === 50;
+                      return (
+                        <div
+                          key={value}
+                          className="absolute text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap"
+                          style={{ 
+                            left: `${position}%`, 
+                            transform: 'translateX(-50%)',
+                            fontWeight: Number(value) === 45 ? 600 : 400,
+                            color: Number(value) === 45 ? 'hsl(var(--primary))' : undefined
+                          }}
+                        >
+                          <div className="flex flex-col items-center">
+                            <span className="font-medium">{value}</span>
+                            <span className="hidden sm:block">{displayLabel}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {GRADE_CATEGORIES.map((category) => (
                   <div key={category} className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -315,10 +383,36 @@ export function VaultScoutGradesCard({ grades, onSave }: VaultScoutGradesCardPro
                       step={5}
                       className="py-1"
                     />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>20</span>
-                      <span>50</span>
-                      <span>80</span>
+                    {/* Enhanced tick marks */}
+                    <div className="relative h-4 px-1">
+                      {SCALE_TICKS.map((tick) => {
+                        const position = ((tick - 20) / 60) * 100;
+                        const isKeyTick = tick % 10 === 0 || tick === 45;
+                        const isCurrentValue = gradeValues[category][0] === tick;
+                        return (
+                          <div
+                            key={tick}
+                            className="absolute flex flex-col items-center"
+                            style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
+                          >
+                            <div className={`w-px ${isKeyTick ? 'h-2' : 'h-1'} ${isCurrentValue ? 'bg-primary' : 'bg-muted-foreground/40'}`} />
+                            {isKeyTick && (
+                              <span className={`text-[9px] ${isCurrentValue ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
+                                {tick}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {/* 45 special marker */}
+                      <div
+                        className="absolute flex flex-col items-center"
+                        style={{ left: `${((45 - 20) / 60) * 100}%`, transform: 'translateX(-50%)' }}
+                      >
+                        <span className="text-[8px] text-primary font-semibold mt-3">
+                          {sport === 'softball' ? 'AUSL' : 'MLB'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}

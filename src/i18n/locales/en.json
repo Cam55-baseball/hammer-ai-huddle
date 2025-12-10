@@ -4269,6 +4269,18 @@
         "category": "Category",
         "change": "Change",
         "noChange": "No change"
+      },
+      "scaleReference": {
+        "title": "20-80 Scouting Scale Reference",
+        "mlbAverage": "MLB Avg",
+        "auslAverage": "AUSL Avg",
+        "poor": "Poor",
+        "belowAverage": "Below Avg",
+        "average": "Average",
+        "aboveAverage": "Above Avg",
+        "plus": "Plus",
+        "elite": "Elite",
+        "hallOfFame": "HOF"
       }
     },
     "recap": {

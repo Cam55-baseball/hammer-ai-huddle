@@ -3305,6 +3305,18 @@
         "category": "类别",
         "change": "变化",
         "noChange": "无变化"
+      },
+      "scaleReference": {
+        "title": "20-80 球探评级参考",
+        "mlbAverage": "MLB平均",
+        "auslAverage": "AUSL平均",
+        "poor": "较差",
+        "belowAverage": "低于平均",
+        "average": "平均",
+        "aboveAverage": "高于平均",
+        "plus": "优秀",
+        "elite": "精英",
+        "hallOfFame": "名人堂"
       }
     },
     "recap": {
