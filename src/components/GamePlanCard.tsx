@@ -35,6 +35,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   const handleTaskClick = (task: GamePlanTask) => {
+    // Handle mindfuel and healthtip - navigate directly
+    if (task.id === 'mindfuel' || task.id === 'healthtip') {
+      navigate(task.link);
+      return;
+    }
+
     // Handle quiz tasks - open dialog directly
     if (task.taskType === 'quiz') {
       if (task.id === 'quiz-morning') {
