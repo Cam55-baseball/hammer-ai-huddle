@@ -3884,7 +3884,17 @@
       "noMealsLogged": "Aún no hay comidas registradas hoy. ¡Usa el formulario para registrar tu primera comida!",
       "dailyTotals": "Totales Diarios",
       "mealLogged": "¡Comida registrada exitosamente!",
-      "logThisMeal": "Registrar Esta Comida"
+      "logThisMeal": "Registrar Esta Comida",
+      "goals": "Objetivos",
+      "setGoals": "Establecer Objetivos",
+      "calorieGoal": "Objetivo Diario de Calorías",
+      "proteinGoal": "Objetivo Diario de Proteínas (g)",
+      "carbsGoal": "Objetivo Diario de Carbohidratos (g)",
+      "fatsGoal": "Objetivo Diario de Grasas (g)",
+      "hydrationGoal": "Objetivo Diario de Hidratación (oz)",
+      "goalsSaved": "¡Objetivos guardados!",
+      "dailyProgress": "Progreso Diario",
+      "overGoal": "Excedido"
     },
     "savedItems": {
       "title": "Ejercicios y Consejos Guardados",
