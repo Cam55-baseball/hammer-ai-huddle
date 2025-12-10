@@ -3466,6 +3466,9 @@
     "tasksCompleted": "{{completed}}/{{total}} 完了",
     "allComplete": "やり遂げた！",
     "doIt": "実行",
+    "quickActions": {
+      "logMeal": "食事を記録"
+    },
     "sections": {
       "dailyCheckins": "デイリーチェックイン",
       "training": "トレーニング",

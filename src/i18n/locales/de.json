@@ -4183,6 +4183,9 @@
     "tasksCompleted": "{{completed}}/{{total}} erledigt",
     "allComplete": "GESCHAFFT!",
     "doIt": "LOS",
+    "quickActions": {
+      "logMeal": "Mahlzeit Eintragen"
+    },
     "sections": {
       "dailyCheckins": "TÄGLICHE CHECK-INS",
       "training": "TRAINING",

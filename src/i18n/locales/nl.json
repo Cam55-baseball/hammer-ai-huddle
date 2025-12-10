@@ -3436,6 +3436,9 @@
     "tasksCompleted": "{{completed}}/{{total}} klaar",
     "allComplete": "GELUKT!",
     "doIt": "DOE HET",
+    "quickActions": {
+      "logMeal": "Maaltijd Loggen"
+    },
     "sections": {
       "dailyCheckins": "DAGELIJKSE CHECK-INS",
       "training": "TRAINING",

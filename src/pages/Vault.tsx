@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ConfettiEffect } from '@/components/bounce-back-bay/ConfettiEffect';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -40,6 +40,7 @@ import { VaultNutritionWeeklySummary } from '@/components/vault/VaultNutritionWe
 export default function Vault() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     loading,
     streak,
@@ -91,6 +92,53 @@ export default function Vault() {
   const [freeNote, setFreeNote] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Refs for scrolling to sections
+  const performanceTestsRef = useRef<HTMLDivElement>(null);
+  const progressPhotosRef = useRef<HTMLDivElement>(null);
+  const scoutGradesRef = useRef<HTMLDivElement>(null);
+  const nutritionRef = useRef<HTMLDivElement>(null);
+
+  // Handle URL params for direct navigation
+  useEffect(() => {
+    const openQuiz = searchParams.get('openQuiz');
+    const openSection = searchParams.get('openSection');
+    
+    if (openQuiz) {
+      // Open quiz dialog directly
+      if (openQuiz === 'morning') {
+        setSelectedQuizType('morning');
+        setQuizDialogOpen(true);
+      } else if (openQuiz === 'pre_lift' || openQuiz === 'prelift') {
+        setSelectedQuizType('pre_lift');
+        setQuizDialogOpen(true);
+      } else if (openQuiz === 'night') {
+        setSelectedQuizType('night');
+        setQuizDialogOpen(true);
+      }
+      // Clear the param
+      searchParams.delete('openQuiz');
+      setSearchParams(searchParams, { replace: true });
+    }
+    
+    if (openSection) {
+      // Scroll to section after a short delay for rendering
+      setTimeout(() => {
+        if (openSection === 'performance-tests' && performanceTestsRef.current) {
+          performanceTestsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (openSection === 'progress-photos' && progressPhotosRef.current) {
+          progressPhotosRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (openSection === 'scout-grades' && scoutGradesRef.current) {
+          scoutGradesRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (openSection === 'nutrition' && nutritionRef.current) {
+          nutritionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+      // Clear the param
+      searchParams.delete('openSection');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // Check if all 3 daily quizzes are completed
   const allQuizzesCompleted = useCallback(() => {
@@ -107,6 +155,7 @@ export default function Vault() {
     };
     checkAccess();
   }, [checkVaultAccess]);
+
 
   // Calculate days until 6-week recap
   const getDaysUntilRecap = () => {
@@ -439,20 +488,22 @@ export default function Vault() {
                 </Card>
 
                 {/* Nutrition Log */}
-                <VaultNutritionLogCard 
-                  todaysLogs={nutritionLogs}
-                  goals={nutritionGoals}
-                  supplementTracking={supplementTracking}
-                  onSave={handleSaveNutrition}
-                  onDelete={deleteNutritionLog}
-                  onSaveGoals={saveNutritionGoals}
-                  onToggleSupplementTaken={toggleSupplementTaken}
-                  isLoading={loading}
-                  favoriteMeals={favoriteMeals}
-                  onSaveFavorite={saveFavoriteMeal}
-                  onDeleteFavorite={deleteFavoriteMeal}
-                  onUseFavorite={useFavoriteMeal}
-                />
+                <div ref={nutritionRef}>
+                  <VaultNutritionLogCard 
+                    todaysLogs={nutritionLogs}
+                    goals={nutritionGoals}
+                    supplementTracking={supplementTracking}
+                    onSave={handleSaveNutrition}
+                    onDelete={deleteNutritionLog}
+                    onSaveGoals={saveNutritionGoals}
+                    onToggleSupplementTaken={toggleSupplementTaken}
+                    isLoading={loading}
+                    favoriteMeals={favoriteMeals}
+                    onSaveFavorite={saveFavoriteMeal}
+                    onDeleteFavorite={deleteFavoriteMeal}
+                    onUseFavorite={useFavoriteMeal}
+                  />
+                </div>
               </div>
             </div>
 
@@ -567,16 +618,20 @@ export default function Vault() {
                     </div>
 
                     {/* Performance Tests */}
-                    <VaultPerformanceTestCard
-                      tests={performanceTests}
-                      onSave={handleSavePerformanceTest}
-                    />
+                    <div ref={performanceTestsRef}>
+                      <VaultPerformanceTestCard
+                        tests={performanceTests}
+                        onSave={handleSavePerformanceTest}
+                      />
+                    </div>
 
                     {/* Progress Photos */}
-                    <VaultProgressPhotosCard
-                      photos={progressPhotos}
-                      onSave={handleSaveProgressPhoto}
-                    />
+                    <div ref={progressPhotosRef}>
+                      <VaultProgressPhotosCard
+                        photos={progressPhotos}
+                        onSave={handleSaveProgressPhoto}
+                      />
+                    </div>
                   </div>
 
                   {/* 12-Week Tracking Section */}
@@ -593,10 +648,12 @@ export default function Vault() {
                     </div>
 
                     {/* Scout Self-Grades */}
-                    <VaultScoutGradesCard
-                      grades={scoutGrades}
-                      onSave={handleSaveScoutGrade}
-                    />
+                    <div ref={scoutGradesRef}>
+                      <VaultScoutGradesCard
+                        grades={scoutGrades}
+                        onSave={handleSaveScoutGrade}
+                      />
+                    </div>
                   </div>
 
                   {/* 6-Week Recap */}

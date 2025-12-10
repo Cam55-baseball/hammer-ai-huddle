@@ -4183,6 +4183,9 @@
     "tasksCompleted": "{{completed}}/{{total}} terminées",
     "allComplete": "MISSION ACCOMPLIE!",
     "doIt": "FAIS-LE",
+    "quickActions": {
+      "logMeal": "Enregistrer Repas"
+    },
     "sections": {
       "dailyCheckins": "CHECK-INS QUOTIDIENS",
       "training": "ENTRAÎNEMENT",

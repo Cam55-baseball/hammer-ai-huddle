@@ -4361,6 +4361,9 @@
     "tasksCompleted": "{{completed}}/{{total}} done",
     "allComplete": "CRUSHED IT!",
     "doIt": "DO IT",
+    "quickActions": {
+      "logMeal": "Log Meal"
+    },
     "sections": {
       "dailyCheckins": "DAILY CHECK-INS",
       "training": "TRAINING",
