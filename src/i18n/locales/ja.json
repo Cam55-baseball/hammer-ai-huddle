@@ -3462,22 +3462,41 @@
   "gamePlan": {
     "title": "ゲームプラン",
     "subtitle": "今日のミッション",
-    "tasksCompleted": "{{completed}}/{{total}} タスク",
-    "allComplete": "すべて完了！🎉",
+    "tasksLabel": "タスク",
+    "tasksCompleted": "{{completed}}/{{total}} 完了",
+    "allComplete": "やり遂げた！",
+    "doIt": "実行",
     "workout": {
-      "title": "今日のワークアウトを完了",
-      "description": "Iron BambinoまたはHeat Factoryセッション"
+      "hitting": {
+        "title": "Iron Bambinoワークアウトを完了",
+        "description": "打撃筋力を強化"
+      },
+      "pitching": {
+        "title": "Heat Factoryワークアウトを完了",
+        "description": "球速と腕の力を向上"
+      }
+    },
+    "video": {
+      "hitting": {
+        "title": "打撃ビデオを分析",
+        "description": "スイングをアップロードして分析"
+      },
+      "pitching": {
+        "title": "投球ビデオを分析",
+        "description": "投球メカニクスを確認"
+      },
+      "throwing": {
+        "title": "スローイングビデオを分析",
+        "description": "アームアクションを完璧に"
+      }
     },
     "nutrition": {
       "title": "栄養を記録",
-      "description": "The Vaultで毎日の摂取量を追跡"
-    },
-    "video": {
-      "title": "ビデオを分析",
-      "description": "アップロードしてメカニクスを確認"
+      "description": "The Vaultでパフォーマンスを燃料補給"
     },
     "recapCountdown": {
       "title": "6週間レキャップ",
+      "days": "日",
       "daysRemaining": "残り{{days}}日"
     }
   }

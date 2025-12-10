@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Check, Target, Clock, Sparkles } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { cn } from '@/lib/utils';
 
@@ -16,10 +16,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { tasks, completedCount, totalCount, daysUntilRecap, recapProgress, loading } = useGamePlan(selectedSport);
 
   const today = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    month: 'long', 
+    weekday: 'short', 
+    month: 'short', 
     day: 'numeric' 
-  });
+  }).toUpperCase();
 
   const allComplete = completedCount === totalCount && totalCount > 0;
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
@@ -30,15 +30,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
   if (loading) {
     return (
-      <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10">
+      <Card className="relative overflow-hidden border-3 border-primary/50 bg-secondary">
         <CardContent className="p-4 sm:p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-6 w-48 bg-muted rounded" />
+            <div className="h-8 w-56 bg-muted rounded" />
             <div className="h-4 w-32 bg-muted rounded" />
             <div className="space-y-3">
-              <div className="h-16 bg-muted rounded-lg" />
-              <div className="h-16 bg-muted rounded-lg" />
-              <div className="h-16 bg-muted rounded-lg" />
+              <div className="h-14 bg-muted rounded-lg" />
+              <div className="h-14 bg-muted rounded-lg" />
+              <div className="h-14 bg-muted rounded-lg" />
             </div>
           </div>
         </CardContent>
@@ -47,46 +47,54 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   }
 
   return (
-    <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-accent/10 shadow-xl shadow-primary/10">
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/20 to-transparent rounded-bl-full" />
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-accent/20 to-transparent rounded-tr-full" />
+    <Card className="relative overflow-hidden border-3 border-primary bg-secondary shadow-2xl">
+      {/* Athletic diagonal stripe accent */}
+      <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 transform rotate-45 translate-x-20 -translate-y-20" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/10 transform -rotate-45 -translate-x-16 translate-y-16" />
       
-      <CardContent className="relative p-4 sm:p-6 space-y-4 sm:space-y-5">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <CardContent className="relative p-4 sm:p-6 space-y-4">
+        {/* Bold Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/20">
-              <Target className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            <div className="p-2.5 rounded-lg bg-primary">
+              <Target className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-primary-foreground tracking-tight uppercase">
                 {t('gamePlan.title')}
               </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">{today}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-bold text-primary tracking-wide">{today}</span>
+                <span className="text-xs text-muted-foreground">•</span>
+                <span className="text-xs sm:text-sm text-muted-foreground font-medium">
+                  {t('gamePlan.subtitle')}
+                </span>
+              </div>
             </div>
           </div>
           
-          {/* Progress indicator */}
-          <div className="flex items-center gap-2 bg-card/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/50">
+          {/* Progress Ring */}
+          <div className="flex items-center gap-3 bg-background/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-primary/30">
             {allComplete ? (
-              <>
-                <Sparkles className="h-4 w-4 text-green-500 animate-pulse" />
-                <span className="text-sm font-medium text-green-500">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-full bg-green-500">
+                  <Trophy className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-sm font-black text-green-400 uppercase tracking-wide">
                   {t('gamePlan.allComplete')}
                 </span>
-              </>
+              </div>
             ) : (
               <>
-                <div className="relative h-8 w-8">
-                  <svg className="h-8 w-8 -rotate-90" viewBox="0 0 36 36">
+                <div className="relative h-12 w-12">
+                  <svg className="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
                     <circle
                       cx="18"
                       cy="18"
                       r="14"
                       fill="none"
-                      className="stroke-muted"
-                      strokeWidth="3"
+                      className="stroke-muted/30"
+                      strokeWidth="4"
                     />
                     <circle
                       cx="18"
@@ -94,108 +102,139 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                       r="14"
                       fill="none"
                       className="stroke-primary"
-                      strokeWidth="3"
+                      strokeWidth="4"
                       strokeDasharray={`${progressPercent * 0.88} 88`}
                       strokeLinecap="round"
                     />
                   </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
-                    {completedCount}
+                  <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-primary-foreground">
+                    {completedCount}/{totalCount}
                   </span>
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  {t('gamePlan.tasksCompleted', { completed: completedCount, total: totalCount })}
-                </span>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    {t('gamePlan.tasksLabel')}
+                  </span>
+                  <span className="text-sm font-black text-primary-foreground">
+                    {t('gamePlan.tasksCompleted', { completed: completedCount, total: totalCount })}
+                  </span>
+                </div>
               </>
             )}
           </div>
         </div>
 
-        {/* Task list */}
-        <div className="space-y-2 sm:space-y-3">
+        {/* Task List */}
+        <div className="space-y-2">
           {tasks.map((task) => {
             const Icon = task.icon;
+            const isIncomplete = !task.completed;
+            
             return (
               <button
                 key={task.id}
                 onClick={() => handleTaskClick(task)}
                 className={cn(
-                  "w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-300",
-                  "hover:scale-[1.02] active:scale-[0.98] cursor-pointer",
+                  "w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
+                  "hover:scale-[1.01] active:scale-[0.99] cursor-pointer",
                   "border-2",
                   task.completed
-                    ? "bg-green-500/10 border-green-500/30 hover:bg-green-500/15"
-                    : "bg-card/50 border-primary/20 hover:border-primary/40 hover:bg-card/80",
-                  !task.completed && "animate-pulse-subtle"
+                    ? "bg-green-500/20 border-green-500/50"
+                    : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
                 )}
               >
                 {/* Icon */}
                 <div className={cn(
                   "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
                   task.completed 
-                    ? "bg-green-500/20" 
-                    : "bg-primary/20"
+                    ? "bg-green-500" 
+                    : "bg-amber-500"
                 )}>
                   <Icon className={cn(
-                    "h-4 w-4 sm:h-5 sm:w-5",
-                    task.completed ? "text-green-500" : "text-primary"
+                    "h-5 w-5 sm:h-6 sm:w-6",
+                    task.completed ? "text-white" : "text-secondary"
                   )} />
                 </div>
                 
                 {/* Content */}
                 <div className="flex-1 text-left min-w-0">
                   <h3 className={cn(
-                    "text-sm sm:text-base font-semibold truncate",
-                    task.completed && "line-through text-muted-foreground"
+                    "text-sm sm:text-base truncate",
+                    task.completed 
+                      ? "font-semibold text-muted-foreground line-through" 
+                      : "font-black text-primary-foreground"
                   )}>
-                    {t(task.title)}
+                    {t(task.titleKey)}
                   </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                    {t(task.description)}
+                  <p className={cn(
+                    "text-xs sm:text-sm truncate",
+                    task.completed ? "text-muted-foreground/60" : "text-muted-foreground"
+                  )}>
+                    {t(task.descriptionKey)}
                   </p>
                 </div>
                 
                 {/* Status indicator */}
                 <div className={cn(
-                  "flex-shrink-0 h-6 w-6 sm:h-7 sm:w-7 rounded-full flex items-center justify-center",
+                  "flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center",
                   task.completed
                     ? "bg-green-500 text-white"
-                    : "border-2 border-dashed border-muted-foreground/30"
+                    : "border-3 border-dashed border-amber-500/70"
                 )}>
-                  {task.completed && <Check className="h-3 w-3 sm:h-4 sm:w-4" />}
+                  {task.completed ? (
+                    <Check className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-amber-500 animate-pulse" />
+                  )}
                 </div>
+
+                {/* Urgency indicator for incomplete tasks */}
+                {isIncomplete && (
+                  <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/20 border border-amber-500/40">
+                    <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider">
+                      {t('gamePlan.doIt')}
+                    </span>
+                  </div>
+                )}
               </button>
             );
           })}
         </div>
 
         {/* 6-Week Recap Countdown */}
-        <div className="pt-3 sm:pt-4 border-t border-border/50">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 min-w-0">
-              <Clock className="h-4 w-4 text-accent flex-shrink-0" />
-              <span className="text-sm font-medium text-foreground truncate">
+        <div className="pt-3 border-t border-primary/30">
+          <div className="flex items-center justify-between gap-4 mb-2">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              <span className="text-sm font-bold text-primary-foreground uppercase tracking-wide">
                 {t('gamePlan.recapCountdown.title')}
               </span>
             </div>
-            <span className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">
-              {t('gamePlan.recapCountdown.daysRemaining', { days: daysUntilRecap })}
-            </span>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/30">
+              <span className="text-sm font-black text-primary">
+                {daysUntilRecap}
+              </span>
+              <span className="text-xs font-bold text-muted-foreground uppercase">
+                {t('gamePlan.recapCountdown.days')}
+              </span>
+            </div>
           </div>
-          <div className="mt-2">
-            <Progress value={recapProgress} className="h-2" />
-          </div>
+          <Progress value={recapProgress} className="h-2.5 bg-muted/20" />
         </div>
       </CardContent>
       
-      {/* Subtle animation style */}
+      {/* Pulsing animation for incomplete tasks */}
       <style>{`
-        @keyframes pulse-subtle {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.85; }
+        @keyframes game-plan-pulse {
+          0%, 100% { 
+            box-shadow: 0 0 0 0 hsl(45 93% 47% / 0.4);
+          }
+          50% { 
+            box-shadow: 0 0 0 4px hsl(45 93% 47% / 0.1);
+          }
         }
-        .animate-pulse-subtle {
-          animation: pulse-subtle 3s ease-in-out infinite;
+        .game-plan-pulse {
+          animation: game-plan-pulse 2s ease-in-out infinite;
         }
       `}</style>
     </Card>

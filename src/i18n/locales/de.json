@@ -4178,23 +4178,42 @@
   },
   "gamePlan": {
     "title": "DER SPIELPLAN",
-    "subtitle": "Deine tägliche Mission",
-    "tasksCompleted": "{{completed}}/{{total}} Aufgaben",
-    "allComplete": "Alles erledigt! 🎉",
+    "subtitle": "Heutige Mission",
+    "tasksLabel": "AUFGABEN",
+    "tasksCompleted": "{{completed}}/{{total}} erledigt",
+    "allComplete": "GESCHAFFT!",
+    "doIt": "LOS",
     "workout": {
-      "title": "Heutiges Training Abschließen",
-      "description": "Iron Bambino oder Heat Factory Einheit"
+      "hitting": {
+        "title": "Iron Bambino Training Abschließen",
+        "description": "Stärke deine Schlagmuskeln"
+      },
+      "pitching": {
+        "title": "Heat Factory Training Abschließen",
+        "description": "Entwickle Geschwindigkeit und Armkraft"
+      }
+    },
+    "video": {
+      "hitting": {
+        "title": "Schlagvideo Analysieren",
+        "description": "Lade hoch und analysiere deinen Schwung"
+      },
+      "pitching": {
+        "title": "Wurfvideo Analysieren",
+        "description": "Überprüfe deine Wurftechnik"
+      },
+      "throwing": {
+        "title": "Wurfvideo Analysieren",
+        "description": "Perfektioniere deine Armbewegung"
+      }
     },
     "nutrition": {
       "title": "Ernährung Protokollieren",
-      "description": "Verfolge deine tägliche Aufnahme im Vault"
-    },
-    "video": {
-      "title": "Ein Video Analysieren",
-      "description": "Lade hoch und überprüfe deine Technik"
+      "description": "Unterstütze deine Leistung im Vault"
     },
     "recapCountdown": {
-      "title": "6-Wochen Zusammenfassung",
+      "title": "6-WOCHEN RECAP",
+      "days": "TAGE",
       "daysRemaining": "{{days}} Tage verbleibend"
     }
   }

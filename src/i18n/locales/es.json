@@ -4156,23 +4156,42 @@
   },
   "gamePlan": {
     "title": "EL PLAN DE JUEGO",
-    "subtitle": "Tu misión diaria",
-    "tasksCompleted": "{{completed}}/{{total}} tareas",
-    "allComplete": "¡Todo completado! 🎉",
+    "subtitle": "Misión de Hoy",
+    "tasksLabel": "TAREAS",
+    "tasksCompleted": "{{completed}}/{{total}} completadas",
+    "allComplete": "¡LO LOGRASTE!",
+    "doIt": "HAZLO",
     "workout": {
-      "title": "Completa el Entrenamiento de Hoy",
-      "description": "Sesión de Iron Bambino o Heat Factory"
+      "hitting": {
+        "title": "Completa el Entrenamiento Iron Bambino",
+        "description": "Fortalece tus músculos de bateo"
+      },
+      "pitching": {
+        "title": "Completa el Entrenamiento Heat Factory",
+        "description": "Desarrolla velocidad y fuerza del brazo"
+      }
+    },
+    "video": {
+      "hitting": {
+        "title": "Analiza un Video de Bateo",
+        "description": "Sube y analiza tu swing"
+      },
+      "pitching": {
+        "title": "Analiza un Video de Lanzamiento",
+        "description": "Revisa tu mecánica de pitcheo"
+      },
+      "throwing": {
+        "title": "Analiza un Video de Tiro",
+        "description": "Perfecciona tu acción de brazo"
+      }
     },
     "nutrition": {
       "title": "Registra Tu Nutrición",
-      "description": "Registra tu ingesta diaria en The Vault"
-    },
-    "video": {
-      "title": "Analiza un Video",
-      "description": "Sube y revisa tu mecánica"
+      "description": "Alimenta tu rendimiento en The Vault"
     },
     "recapCountdown": {
-      "title": "Resumen de 6 Semanas",
+      "title": "RESUMEN 6 SEMANAS",
+      "days": "DÍAS",
       "daysRemaining": "{{days}} días restantes"
     }
   }
