@@ -301,6 +301,27 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         </div>
 
+        {/* 6-Week Recap Countdown - Compact Box */}
+        <div className="flex items-center gap-3 bg-background/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-primary/30">
+          <Clock className="h-4 w-4 text-primary flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                {t('gamePlan.recapCountdown.title')}
+              </span>
+              <Progress value={recapProgress} className="h-1.5 flex-1 bg-muted/20 max-w-24" />
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 flex-shrink-0">
+            <span className="text-sm font-black text-primary">
+              {daysUntilRecap}
+            </span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase">
+              {t('gamePlan.recapCountdown.days')}
+            </span>
+          </div>
+        </div>
+
         {/* Task Sections */}
         <div className="space-y-4">
           {/* Daily Check-ins Section */}
@@ -359,26 +380,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           )}
         </div>
 
-        {/* 6-Week Recap Countdown */}
-        <div className="pt-3 border-t border-primary/30">
-          <div className="flex items-center justify-between gap-4 mb-2">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              <span className="text-sm font-bold text-primary-foreground uppercase tracking-wide">
-                {t('gamePlan.recapCountdown.title')}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/30">
-              <span className="text-sm font-black text-primary">
-                {daysUntilRecap}
-              </span>
-              <span className="text-xs font-bold text-muted-foreground uppercase">
-                {t('gamePlan.recapCountdown.days')}
-              </span>
-            </div>
-          </div>
-          <Progress value={recapProgress} className="h-2.5 bg-muted/20" />
-        </div>
       </CardContent>
       
       {/* Quick Nutrition Log Dialog */}

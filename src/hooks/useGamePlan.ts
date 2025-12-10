@@ -26,6 +26,9 @@ export interface GamePlanData {
   loading: boolean;
 }
 
+// Strength training days for Iron Bambino and Heat Factory (Day 1 and Day 5)
+const STRENGTH_TRAINING_DAYS = [1, 5];
+
 export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const { user } = useAuth();
   const { modules: subscribedModules } = useSubscription();
@@ -34,6 +37,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [daysUntilRecap, setDaysUntilRecap] = useState(42);
   const [recapProgress, setRecapProgress] = useState(0);
   const [trackingDue, setTrackingDue] = useState<Record<string, boolean>>({});
+  const [isStrengthDay, setIsStrengthDay] = useState(false);
 
   // Parse subscribed modules to determine access
   const hasHittingAccess = subscribedModules.some(m => m.includes('hitting'));
@@ -65,6 +69,64 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       status['quiz-morning'] = quizData?.some(q => q.quiz_type === 'morning') || false;
       status['quiz-prelift'] = quizData?.some(q => q.quiz_type === 'pre_lift') || false;
       status['quiz-night'] = quizData?.some(q => q.quiz_type === 'night') || false;
+
+      // Detect if today is a strength training day based on user's current program day
+      let strengthDayDetected = false;
+      
+      // Check Iron Bambino progress for hitting users
+      if (hasHittingAccess) {
+        const { data: hittingProgress } = await supabase
+          .from('sub_module_progress')
+          .select('week_progress, current_week')
+          .eq('user_id', user.id)
+          .eq('sport', selectedSport)
+          .eq('module', 'hitting')
+          .eq('sub_module', 'iron_bambino')
+          .maybeSingle();
+        
+        if (hittingProgress?.week_progress) {
+          const weekProgress = hittingProgress.week_progress as Record<string, boolean[]>;
+          const currentWeek = hittingProgress.current_week || 1;
+          const weekKey = `week${currentWeek}`;
+          const days = weekProgress[weekKey] || [];
+          // Find the next uncompleted day (1-indexed)
+          const nextDay = days.findIndex(completed => !completed) + 1 || 1;
+          if (STRENGTH_TRAINING_DAYS.includes(nextDay)) {
+            strengthDayDetected = true;
+          }
+        } else {
+          // No progress yet, default to Day 1 which is a strength day
+          strengthDayDetected = true;
+        }
+      }
+      
+      // Check Heat Factory progress for pitching users
+      if (hasPitchingAccess && !strengthDayDetected) {
+        const { data: pitchingProgress } = await supabase
+          .from('sub_module_progress')
+          .select('week_progress, current_week')
+          .eq('user_id', user.id)
+          .eq('sport', selectedSport)
+          .eq('module', 'pitching')
+          .eq('sub_module', 'heat_factory')
+          .maybeSingle();
+        
+        if (pitchingProgress?.week_progress) {
+          const weekProgress = pitchingProgress.week_progress as Record<string, boolean[]>;
+          const currentWeek = pitchingProgress.current_week || 1;
+          const weekKey = `week${currentWeek}`;
+          const days = weekProgress[weekKey] || [];
+          const nextDay = days.findIndex(completed => !completed) + 1 || 1;
+          if (STRENGTH_TRAINING_DAYS.includes(nextDay)) {
+            strengthDayDetected = true;
+          }
+        } else {
+          // No progress yet, default to Day 1 which is a strength day
+          strengthDayDetected = true;
+        }
+      }
+      
+      setIsStrengthDay(strengthDayDetected);
 
       // Fetch workout completion for hitting (Iron Bambino)
       if (hasHittingAccess) {
@@ -261,16 +323,19 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       section: 'checkin',
     });
 
-    tasks.push({
-      id: 'quiz-prelift',
-      titleKey: 'gamePlan.quiz.prelift.title',
-      descriptionKey: 'gamePlan.quiz.prelift.description',
-      completed: completionStatus['quiz-prelift'] || false,
-      icon: Brain,
-      link: '/vault',
-      taskType: 'quiz',
-      section: 'checkin',
-    });
+    // Only show Pre-Lift Check-in on strength training days (Day 1 and Day 5)
+    if (isStrengthDay && (hasHittingAccess || hasPitchingAccess)) {
+      tasks.push({
+        id: 'quiz-prelift',
+        titleKey: 'gamePlan.quiz.prelift.title',
+        descriptionKey: 'gamePlan.quiz.prelift.description',
+        completed: completionStatus['quiz-prelift'] || false,
+        icon: Brain,
+        link: '/vault',
+        taskType: 'quiz',
+        section: 'checkin',
+      });
+    }
 
     tasks.push({
       id: 'quiz-night',
