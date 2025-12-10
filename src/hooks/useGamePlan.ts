@@ -15,8 +15,6 @@ export interface GamePlanTask {
   taskType: 'workout' | 'video' | 'nutrition' | 'quiz' | 'tracking';
   section: 'checkin' | 'training' | 'tracking';
   badge?: string;
-  unlockTime?: Date;
-  isLocked?: boolean;
 }
 
 export interface GamePlanData {
@@ -40,7 +38,6 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [recapProgress, setRecapProgress] = useState(0);
   const [trackingDue, setTrackingDue] = useState<Record<string, boolean>>({});
   const [isStrengthDay, setIsStrengthDay] = useState(false);
-  const [workoutUnlockTimes, setWorkoutUnlockTimes] = useState<Record<string, Date | null>>({});
 
   // Parse subscribed modules to determine access
   const hasHittingAccess = subscribedModules.some(m => m.includes('hitting'));
@@ -73,16 +70,14 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       status['quiz-prelift'] = quizData?.some(q => q.quiz_type === 'pre_lift') || false;
       status['quiz-night'] = quizData?.some(q => q.quiz_type === 'night') || false;
 
-      // Detect if today is a strength training day and calculate unlock times
+      // Detect if today is a strength training day based on user's current program day
       let strengthDayDetected = false;
-      const unlockTimes: Record<string, Date | null> = {};
-      const UNLOCK_DELAY_MS = 12 * 60 * 60 * 1000; // 12 hours
       
       // Check Iron Bambino progress for hitting users
       if (hasHittingAccess) {
         const { data: hittingProgress } = await supabase
           .from('sub_module_progress')
-          .select('week_progress, current_week, day_completion_times')
+          .select('week_progress, current_week')
           .eq('user_id', user.id)
           .eq('sport', selectedSport)
           .eq('module', 'hitting')
@@ -99,30 +94,17 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           if (STRENGTH_TRAINING_DAYS.includes(nextDay)) {
             strengthDayDetected = true;
           }
-          
-          // Calculate unlock time based on previous day completion
-          if (nextDay > 1) {
-            const dayCompletionTimes = (hittingProgress.day_completion_times || {}) as Record<string, string>;
-            const prevDayKey = `week${currentWeek}_day${nextDay - 1}`;
-            const prevDayCompletion = dayCompletionTimes[prevDayKey];
-            if (prevDayCompletion) {
-              const unlockTime = new Date(new Date(prevDayCompletion).getTime() + UNLOCK_DELAY_MS);
-              if (unlockTime > new Date()) {
-                unlockTimes['workout-hitting'] = unlockTime;
-              }
-            }
-          }
         } else {
-          // No progress yet, default to Day 1 which is a strength day (no lock)
+          // No progress yet, default to Day 1 which is a strength day
           strengthDayDetected = true;
         }
       }
       
       // Check Heat Factory progress for pitching users
-      if (hasPitchingAccess) {
+      if (hasPitchingAccess && !strengthDayDetected) {
         const { data: pitchingProgress } = await supabase
           .from('sub_module_progress')
-          .select('week_progress, current_week, day_completion_times')
+          .select('week_progress, current_week')
           .eq('user_id', user.id)
           .eq('sport', selectedSport)
           .eq('module', 'pitching')
@@ -135,32 +117,16 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           const weekKey = `week${currentWeek}`;
           const days = weekProgress[weekKey] || [];
           const nextDay = days.findIndex(completed => !completed) + 1 || 1;
-          if (!strengthDayDetected && STRENGTH_TRAINING_DAYS.includes(nextDay)) {
+          if (STRENGTH_TRAINING_DAYS.includes(nextDay)) {
             strengthDayDetected = true;
-          }
-          
-          // Calculate unlock time based on previous day completion
-          if (nextDay > 1) {
-            const dayCompletionTimes = (pitchingProgress.day_completion_times || {}) as Record<string, string>;
-            const prevDayKey = `week${currentWeek}_day${nextDay - 1}`;
-            const prevDayCompletion = dayCompletionTimes[prevDayKey];
-            if (prevDayCompletion) {
-              const unlockTime = new Date(new Date(prevDayCompletion).getTime() + UNLOCK_DELAY_MS);
-              if (unlockTime > new Date()) {
-                unlockTimes['workout-pitching'] = unlockTime;
-              }
-            }
           }
         } else {
-          // No progress yet, default to Day 1 which is a strength day (no lock)
-          if (!strengthDayDetected) {
-            strengthDayDetected = true;
-          }
+          // No progress yet, default to Day 1 which is a strength day
+          strengthDayDetected = true;
         }
       }
       
       setIsStrengthDay(strengthDayDetected);
-      setWorkoutUnlockTimes(unlockTimes);
 
       // Fetch workout completion for hitting (Iron Bambino)
       if (hasHittingAccess) {
@@ -419,7 +385,6 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   // === TRAINING SECTION ===
   // Workout tasks
   if (hasHittingAccess) {
-    const hittingUnlockTime = workoutUnlockTimes['workout-hitting'];
     tasks.push({
       id: 'workout-hitting',
       titleKey: 'gamePlan.workout.hitting.title',
@@ -430,13 +395,10 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       module: 'hitting',
       taskType: 'workout',
       section: 'training',
-      unlockTime: hittingUnlockTime || undefined,
-      isLocked: !!hittingUnlockTime,
     });
   }
 
   if (hasPitchingAccess) {
-    const pitchingUnlockTime = workoutUnlockTimes['workout-pitching'];
     tasks.push({
       id: 'workout-pitching',
       titleKey: 'gamePlan.workout.pitching.title',
@@ -447,8 +409,6 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       module: 'pitching',
       taskType: 'workout',
       section: 'training',
-      unlockTime: pitchingUnlockTime || undefined,
-      isLocked: !!pitchingUnlockTime,
     });
   }
 

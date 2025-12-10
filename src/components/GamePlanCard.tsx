@@ -4,11 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Check, Target, Clock, Trophy, Zap, Plus, Lock } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
-import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
 import { useVault } from '@/hooks/useVault';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -188,41 +187,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
         {/* Urgency indicator for incomplete tasks */}
         {isIncomplete && (
-          <div className="flex items-center gap-2">
-            {/* Countdown timer for locked workout tasks */}
-            {task.isLocked && task.unlockTime && (
-              <CountdownTimer
-                unlockTime={task.unlockTime}
-                onComplete={refetch}
-                className="border-muted-foreground/30 text-muted-foreground"
-              />
-            )}
-            
-            {/* DO IT or LOCKED indicator */}
-            <div className={cn(
-              "hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border",
-              task.isLocked
-                ? "bg-muted/20 border-muted-foreground/40"
-                : isTracking 
-                  ? "bg-purple-500/20 border-purple-500/40" 
-                  : "bg-amber-500/20 border-amber-500/40"
+          <div className={cn(
+            "hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border",
+            isTracking 
+              ? "bg-purple-500/20 border-purple-500/40" 
+              : "bg-amber-500/20 border-amber-500/40"
+          )}>
+            <span className={cn(
+              "text-[10px] font-black uppercase tracking-wider",
+              isTracking ? "text-purple-400" : "text-amber-400"
             )}>
-              {task.isLocked ? (
-                <>
-                  <Lock className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                    {t('gamePlan.locked')}
-                  </span>
-                </>
-              ) : (
-                <span className={cn(
-                  "text-[10px] font-black uppercase tracking-wider",
-                  isTracking ? "text-purple-400" : "text-amber-400"
-                )}>
-                  {t('gamePlan.doIt')}
-                </span>
-              )}
-            </div>
+              {t('gamePlan.doIt')}
+            </span>
           </div>
         )}
       </div>

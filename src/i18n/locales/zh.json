@@ -3427,7 +3427,6 @@
     "tasksCompleted": "{{completed}}/{{total}} 已完成",
     "allComplete": "全部完成！",
     "doIt": "开始",
-    "locked": "锁定",
     "quickActions": {
       "logMeal": "记录餐食"
     },

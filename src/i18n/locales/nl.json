@@ -3456,7 +3456,6 @@
     "tasksCompleted": "{{completed}}/{{total}} klaar",
     "allComplete": "GELUKT!",
     "doIt": "DOE HET",
-    "locked": "VERGRENDELD",
     "quickActions": {
       "logMeal": "Maaltijd Loggen"
     },

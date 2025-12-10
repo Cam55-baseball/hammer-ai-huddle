@@ -4203,7 +4203,6 @@
     "tasksCompleted": "{{completed}}/{{total}} erledigt",
     "allComplete": "GESCHAFFT!",
     "doIt": "LOS",
-    "locked": "GESPERRT",
     "quickActions": {
       "logMeal": "Mahlzeit Eintragen"
     },
