@@ -88,6 +88,7 @@ export interface VaultNutritionLog {
   digestion_notes: string | null;
   supplements: string[];
   meal_type: string | null;
+  logged_at: string | null;
 }
 
 export interface VaultSavedDrill {
@@ -163,7 +164,7 @@ export function useVault() {
   const [todaysQuizzes, setTodaysQuizzes] = useState<VaultFocusQuiz[]>([]);
   const [todaysNotes, setTodaysNotes] = useState<VaultFreeNote | null>(null);
   const [workoutNotes, setWorkoutNotes] = useState<VaultWorkoutNote[]>([]);
-  const [nutritionLog, setNutritionLog] = useState<VaultNutritionLog | null>(null);
+  const [nutritionLogs, setNutritionLogs] = useState<VaultNutritionLog[]>([]);
   const [savedDrills, setSavedDrills] = useState<VaultSavedDrill[]>([]);
   const [savedTips, setSavedTips] = useState<VaultSavedTip[]>([]);
   const [performanceTests, setPerformanceTests] = useState<VaultPerformanceTest[]>([]);
@@ -537,31 +538,47 @@ export function useVault() {
     }
   }, [user]);
 
-  // Fetch nutrition log
-  const fetchNutritionLog = useCallback(async () => {
+  // Fetch nutrition logs (multiple entries per day)
+  const fetchNutritionLogs = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
       .from('vault_nutrition_logs')
       .select('*')
       .eq('user_id', user.id)
       .eq('entry_date', today)
-      .maybeSingle();
-    if (data) setNutritionLog({ 
-      ...data, 
-      supplements: (data.supplements as string[]) || [],
-      meal_type: data.meal_type || null,
-    });
+      .order('logged_at', { ascending: false });
+    setNutritionLogs((data || []).map(d => ({ 
+      ...d, 
+      supplements: (d.supplements as string[]) || [],
+      meal_type: d.meal_type || null,
+      logged_at: d.logged_at || null,
+    })));
   }, [user, today]);
 
-  // Save nutrition log
-  const saveNutritionLog = useCallback(async (logData: Omit<VaultNutritionLog, 'id'>) => {
+  // Save nutrition log (insert new entry each time)
+  const saveNutritionLog = useCallback(async (logData: Omit<VaultNutritionLog, 'id' | 'logged_at'>) => {
     if (!user) return { success: false };
-    const { error } = await supabase.from('vault_nutrition_logs').upsert({
-      user_id: user.id, entry_date: today, ...logData,
-    }, { onConflict: 'user_id,entry_date' });
-    if (!error) { await updateStreak(); await fetchNutritionLog(); }
+    const { error } = await supabase.from('vault_nutrition_logs').insert({
+      user_id: user.id, 
+      entry_date: today, 
+      logged_at: new Date().toISOString(),
+      ...logData,
+    });
+    if (!error) { await updateStreak(); await fetchNutritionLogs(); }
     return { success: !error };
-  }, [user, today, updateStreak, fetchNutritionLog]);
+  }, [user, today, updateStreak, fetchNutritionLogs]);
+
+  // Delete nutrition log entry
+  const deleteNutritionLog = useCallback(async (id: string) => {
+    if (!user) return { success: false };
+    const { error } = await supabase
+      .from('vault_nutrition_logs')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+    if (!error) await fetchNutritionLogs();
+    return { success: !error };
+  }, [user, fetchNutritionLogs]);
 
   // Fetch saved items
   const fetchSavedItems = useCallback(async () => {
@@ -836,11 +853,7 @@ export function useVault() {
     await fetchEntriesWithData();
   }, [fetchWorkoutNotes, fetchEntriesWithData]);
 
-  const deleteNutritionLog = useCallback(async (id: string) => {
-    await supabase.from('vault_nutrition_logs').delete().eq('id', id);
-    await fetchNutritionLog();
-    await fetchEntriesWithData();
-  }, [fetchNutritionLog, fetchEntriesWithData]);
+  // deleteNutritionLog is already defined above
 
   const deletePerformanceTest = useCallback(async (id: string) => {
     await supabase.from('vault_performance_tests').delete().eq('id', id);
@@ -976,16 +989,16 @@ export function useVault() {
       setLoading(true);
       await Promise.all([
         fetchStreak(), fetchTodaysQuizzes(), fetchTodaysNotes(), fetchWorkoutNotes(),
-        fetchNutritionLog(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchRecaps(),
+        fetchNutritionLogs(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchRecaps(),
         fetchEntriesWithData(),
       ]);
       setLoading(false);
     };
     loadData();
-  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLog, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps, fetchEntriesWithData]);
+  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLogs, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps, fetchEntriesWithData]);
 
   return {
-    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLog, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData,
+    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLogs, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData,
     saveFocusQuiz, saveFreeNote, saveWorkoutNote, updateStreak, checkVaultAccess, fetchWorkoutNotes,
     saveNutritionLog, deleteSavedDrill, deleteSavedTip, saveDrill, saveTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
     deleteQuiz, deleteFreeNote, deleteWorkoutNote, deleteNutritionLog, deletePerformanceTest, deleteProgressPhoto, deleteScoutGrade,

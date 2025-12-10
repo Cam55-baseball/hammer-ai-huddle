@@ -44,7 +44,7 @@ export default function Vault() {
     todaysQuizzes,
     todaysNotes,
     workoutNotes,
-    nutritionLog,
+    nutritionLogs,
     savedDrills,
     savedTips,
     performanceTests,
@@ -429,8 +429,9 @@ export default function Vault() {
 
                 {/* Nutrition Log */}
                 <VaultNutritionLogCard 
-                  todaysLog={nutritionLog}
+                  todaysLogs={nutritionLogs}
                   onSave={handleSaveNutrition}
+                  onDelete={deleteNutritionLog}
                   isLoading={loading}
                 />
               </div>
