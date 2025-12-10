@@ -1198,6 +1198,7 @@ export type Database = {
           created_at: string | null
           id: string
           module: string
+          next_entry_date: string | null
           previous_results: Json | null
           results: Json
           sport: string
@@ -1209,6 +1210,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           module: string
+          next_entry_date?: string | null
           previous_results?: Json | null
           results?: Json
           sport: string
@@ -1220,6 +1222,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           module?: string
+          next_entry_date?: string | null
           previous_results?: Json | null
           results?: Json
           sport?: string
@@ -1238,6 +1241,7 @@ export type Database = {
           created_at: string | null
           id: string
           leg_measurement: number | null
+          next_entry_date: string | null
           notes: string | null
           photo_date: string
           photo_urls: Json | null
@@ -1253,6 +1257,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           leg_measurement?: number | null
+          next_entry_date?: string | null
           notes?: string | null
           photo_date?: string
           photo_urls?: Json | null
@@ -1268,6 +1273,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           leg_measurement?: number | null
+          next_entry_date?: string | null
           notes?: string | null
           photo_date?: string
           photo_urls?: Json | null

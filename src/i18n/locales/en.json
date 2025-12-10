@@ -3877,6 +3877,16 @@
       "description": "Subscribe to any training module to unlock The Vault and start tracking your journey",
       "unlockButton": "View Pricing"
     },
+    "lockPeriod": {
+      "sixWeeks": "Entry is on a 6-week basis. Section will be locked after each entry and not available for 6 weeks.",
+      "twelveWeeks": "Entry is on a 12-week basis. Section will be locked after each entry and not available for 12 weeks.",
+      "lockedUntil": "Next entry available in {{days}} days",
+      "entriesImmutable": "Previous entries cannot be modified and are stored permanently for progress reports.",
+      "sectionLocked": "Section Locked",
+      "readyToRecord": "Ready to Record",
+      "locked": "Locked",
+      "readOnly": "Read-Only"
+    },
     "tabs": {
       "today": "Today",
       "history": "History",

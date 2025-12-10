@@ -2925,6 +2925,15 @@
       "description": "订阅任何训练模块以解锁保险库并开始记录您的旅程",
       "unlockButton": "查看定价"
     },
+    "lockPeriod": {
+      "sixWeeks": "条目每6周记录一次。每次记录后，该部分将被锁定6周。",
+      "lockedUntil": "下次记录还有{{days}}天",
+      "entriesImmutable": "之前的条目无法修改，将永久存储用于进度报告。",
+      "sectionLocked": "部分已锁定",
+      "readyToRecord": "准备记录",
+      "locked": "已锁定",
+      "readOnly": "只读"
+    },
     "tabs": {
       "today": "今天",
       "history": "历史",

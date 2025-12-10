@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Activity, ChevronDown, TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Activity, ChevronDown, TrendingUp, TrendingDown, Minus, Calendar, Lock, AlertCircle } from 'lucide-react';
 
 interface PerformanceTest {
   id: string;
@@ -18,12 +19,15 @@ interface PerformanceTest {
   test_date: string;
   results: Record<string, number>;
   previous_results: Record<string, number> | null;
+  next_entry_date?: string | null;
 }
 
 interface VaultPerformanceTestCardProps {
   tests: PerformanceTest[];
   onSave: (testType: string, results: Record<string, number>) => Promise<{ success: boolean }>;
 }
+
+const LOCK_PERIOD_WEEKS = 6;
 
 const TEST_TYPES = {
   hitting: ['bat_speed', 'exit_velocity', 'launch_angle', 'sprint_60', 'vertical_jump'],
@@ -54,6 +58,13 @@ export function VaultPerformanceTestCard({ tests, onSave }: VaultPerformanceTest
   const [testResults, setTestResults] = useState<Record<string, string>>({});
 
   const metrics = TEST_TYPES[selectedModule as keyof typeof TEST_TYPES] || TEST_TYPES.hitting;
+
+  // Check if entry is locked
+  const latestTest = tests[0];
+  const isLocked = latestTest?.next_entry_date && new Date(latestTest.next_entry_date) > new Date();
+  const daysRemaining = latestTest?.next_entry_date 
+    ? Math.max(0, Math.ceil((new Date(latestTest.next_entry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   const handleSave = async () => {
     const results: Record<string, number> = {};
@@ -93,6 +104,12 @@ export function VaultPerformanceTestCard({ tests, onSave }: VaultPerformanceTest
                 {tests.length > 0 && (
                   <Badge variant="secondary" className="text-xs">{tests.length}</Badge>
                 )}
+                {isLocked && (
+                  <Badge variant="outline" className="text-xs gap-1 text-amber-600 border-amber-600">
+                    <Lock className="h-3 w-3" />
+                    {t('vault.lockPeriod.locked')}
+                  </Badge>
+                )}
               </div>
               <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </div>
@@ -102,48 +119,82 @@ export function VaultPerformanceTestCard({ tests, onSave }: VaultPerformanceTest
         
         <CollapsibleContent>
           <CardContent className="space-y-4">
-            {/* New Test Entry */}
-            <div className="p-3 rounded-lg bg-muted/30 border border-border space-y-3">
-              <Label className="font-medium">{t('vault.performance.newTest')}</Label>
-              
-              <Select value={selectedModule} onValueChange={setSelectedModule}>
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hitting">{t('onboarding.hitting')}</SelectItem>
-                  <SelectItem value="pitching">{t('onboarding.pitching')}</SelectItem>
-                  <SelectItem value="throwing">{t('onboarding.throwing')}</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Lock Period Info */}
+            <Alert className="bg-amber-500/10 border-amber-500/30">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-sm">
+                <p className="font-medium text-amber-700 dark:text-amber-400">
+                  {t('vault.lockPeriod.sixWeeks')}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('vault.lockPeriod.entriesImmutable')}
+                </p>
+              </AlertDescription>
+            </Alert>
 
-              <div className="grid grid-cols-2 gap-2">
-                {metrics.map((metric) => (
-                  <div key={metric} className="space-y-1">
-                    <Label className="text-xs">
-                      {t(`vault.performance.metrics.${metric}`)} ({TEST_METRICS[metric]?.unit})
-                    </Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={testResults[metric] || ''}
-                      onChange={(e) => setTestResults({ ...testResults, [metric]: e.target.value })}
-                      placeholder="0"
-                      className="h-8"
-                    />
-                  </div>
-                ))}
+            {isLocked ? (
+              <Alert>
+                <Lock className="h-4 w-4" />
+                <AlertDescription>
+                  <span className="font-medium">{t('vault.lockPeriod.sectionLocked')}</span>
+                  <br />
+                  <span className="text-sm text-muted-foreground">
+                    {t('vault.lockPeriod.lockedUntil', { days: daysRemaining })}
+                  </span>
+                </AlertDescription>
+              </Alert>
+            ) : (
+              /* New Test Entry */
+              <div className="p-3 rounded-lg bg-muted/30 border border-border space-y-3">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-green-500" />
+                  <Label className="font-medium text-green-700 dark:text-green-400">
+                    {t('vault.lockPeriod.readyToRecord')}
+                  </Label>
+                </div>
+                
+                <Select value={selectedModule} onValueChange={setSelectedModule}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hitting">{t('onboarding.hitting')}</SelectItem>
+                    <SelectItem value="pitching">{t('onboarding.pitching')}</SelectItem>
+                    <SelectItem value="throwing">{t('onboarding.throwing')}</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {metrics.map((metric) => (
+                    <div key={metric} className="space-y-1">
+                      <Label className="text-xs">
+                        {t(`vault.performance.metrics.${metric}`)} ({TEST_METRICS[metric]?.unit})
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={testResults[metric] || ''}
+                        onChange={(e) => setTestResults({ ...testResults, [metric]: e.target.value })}
+                        placeholder="0"
+                        className="h-8"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <Button onClick={handleSave} disabled={saving} size="sm" className="w-full">
+                  {saving ? t('common.loading') : t('vault.performance.save')}
+                </Button>
               </div>
+            )}
 
-              <Button onClick={handleSave} disabled={saving} size="sm" className="w-full">
-                {saving ? t('common.loading') : t('vault.performance.save')}
-              </Button>
-            </div>
-
-            {/* Recent Tests */}
+            {/* Recent Tests (Read-Only History) */}
             {recentTests.length > 0 && (
               <div className="space-y-2">
-                <Label className="text-sm font-medium">{t('vault.performance.recentTests')}</Label>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-medium">{t('vault.performance.recentTests')}</Label>
+                  <Badge variant="outline" className="text-xs">{t('vault.lockPeriod.readOnly')}</Badge>
+                </div>
                 <ScrollArea className="max-h-[200px]">
                   <div className="space-y-2">
                     {recentTests.map((test) => (
