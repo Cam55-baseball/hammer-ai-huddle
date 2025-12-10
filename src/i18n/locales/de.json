@@ -3713,6 +3713,13 @@
       "title": "6-Wochen-Tracking",
       "description": "Einmal pro 6-Wochen-Zyklus für genaue Fortschrittsberichte erfassen"
     },
+    "twelveWeekTracking": {
+      "title": "12-Wochen-Tracking",
+      "description": "Selbstevaluierung einmal pro 12-Wochen-Zyklus für umfassende Fortschrittsbewertung"
+    },
+    "lockPeriod": {
+      "twelveWeeks": "Dieser Abschnitt kann nur alle 12 Wochen aktualisiert werden."
+    },
     "tabs": {
       "today": "Heute",
       "history": "Verlauf",

@@ -2967,6 +2967,13 @@
       "title": "6-Weken Tracking",
       "description": "Registreer eenmaal per 6-weken cyclus voor nauwkeurige rapporten"
     },
+    "twelveWeekTracking": {
+      "title": "12-Weken Tracking",
+      "description": "Zelfevaluatie eenmaal per 12-weken cyclus voor uitgebreide voortgangsbeoordeling"
+    },
+    "lockPeriod": {
+      "twelveWeeks": "Deze sectie kan slechts eenmaal per 12 weken worden bijgewerkt."
+    },
     "tabs": {
       "today": "Vandaag",
       "history": "Geschiedenis",

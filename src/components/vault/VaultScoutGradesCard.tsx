@@ -39,7 +39,7 @@ interface VaultScoutGradesCardProps {
   }) => Promise<{ success: boolean }>;
 }
 
-const LOCK_PERIOD_WEEKS = 6;
+const LOCK_PERIOD_WEEKS = 12;
 
 const GRADE_CATEGORIES = [
   'hitting',
@@ -146,7 +146,7 @@ export function VaultScoutGradesCard({ grades, onSave }: VaultScoutGradesCardPro
               <AlertCircle className="h-4 w-4 text-amber-500" />
               <AlertDescription className="text-sm">
                 <p className="font-medium text-amber-700 dark:text-amber-400">
-                  {t('vault.lockPeriod.sixWeeks')}
+                  {t('vault.lockPeriod.twelveWeeks')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {t('vault.lockPeriod.entriesImmutable')}

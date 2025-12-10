@@ -3691,6 +3691,13 @@
       "title": "Seguimiento de 6 Semanas",
       "description": "Registra una vez por ciclo de 6 semanas para informes precisos"
     },
+    "twelveWeekTracking": {
+      "title": "Seguimiento de 12 Semanas",
+      "description": "Autoevalúa una vez por ciclo de 12 semanas para una evaluación integral del progreso"
+    },
+    "lockPeriod": {
+      "twelveWeeks": "Esta sección solo puede actualizarse una vez cada 12 semanas."
+    },
     "tabs": {
       "today": "Hoy",
       "history": "Historial",

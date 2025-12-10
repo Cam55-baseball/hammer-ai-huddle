@@ -543,6 +543,20 @@ export default function Vault() {
                       photos={progressPhotos}
                       onSave={handleSaveProgressPhoto}
                     />
+                  </div>
+
+                  {/* 12-Week Tracking Section */}
+                  <div className="rounded-xl border-2 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-background p-4 sm:p-6 space-y-4">
+                    {/* Section Header */}
+                    <div className="flex items-center gap-3 pb-3 border-b border-amber-500/20">
+                      <div className="p-2 rounded-lg bg-amber-500/10">
+                        <Clock className="h-5 w-5 text-amber-500" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg">{t('vault.twelveWeekTracking.title')}</h3>
+                        <p className="text-sm text-muted-foreground">{t('vault.twelveWeekTracking.description')}</p>
+                      </div>
+                    </div>
 
                     {/* Scout Self-Grades */}
                     <VaultScoutGradesCard
