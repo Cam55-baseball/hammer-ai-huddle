@@ -3443,6 +3443,7 @@
     "tasksCompleted": "{{completed}}/{{total}} 완료",
     "allComplete": "해냈어!",
     "doIt": "시작",
+    "locked": "잠김",
     "quickActions": {
       "logMeal": "식사 기록"
     },

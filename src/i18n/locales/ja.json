@@ -3486,6 +3486,7 @@
     "tasksCompleted": "{{completed}}/{{total}} 完了",
     "allComplete": "やり遂げた！",
     "doIt": "実行",
+    "locked": "ロック中",
     "quickActions": {
       "logMeal": "食事を記録"
     },
