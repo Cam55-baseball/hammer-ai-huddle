@@ -3436,6 +3436,25 @@
     "tasksCompleted": "{{completed}}/{{total}} klaar",
     "allComplete": "GELUKT!",
     "doIt": "DOE HET",
+    "sections": {
+      "dailyCheckins": "DAGELIJKSE CHECK-INS",
+      "training": "TRAINING",
+      "cycleTracking": "CYCLUS TRACKING"
+    },
+    "quiz": {
+      "morning": {
+        "title": "Voltooi Ochtend Check-in",
+        "description": "Log slaapkwaliteit en ochtendgereedheid"
+      },
+      "prelift": {
+        "title": "Voltooi Pre-Training Check-in",
+        "description": "Stel je mentale focus in voor training"
+      },
+      "night": {
+        "title": "Voltooi Avond Check-in",
+        "description": "Reflecteer op je dag en bereid je voor op rust"
+      }
+    },
     "workout": {
       "hitting": {
         "title": "Voltooi Iron Bambino Training",
@@ -3463,6 +3482,23 @@
     "nutrition": {
       "title": "Log Je Voeding",
       "description": "Voed je prestatie in The Vault"
+    },
+    "tracking": {
+      "performance": {
+        "title": "Log Prestatietesten",
+        "description": "Volg je 6-weken atletische metingen",
+        "badge": "6 WK"
+      },
+      "photos": {
+        "title": "Log Voortgangsfoto's",
+        "description": "Documenteer je 6-weken lichaamsvoortgang",
+        "badge": "6 WK"
+      },
+      "grades": {
+        "title": "Stel Scout Zelfbeoordelingen In",
+        "description": "Beoordeel je vaardigheden op de 20-80 schaal",
+        "badge": "12 WK"
+      }
     },
     "recapCountdown": {
       "title": "6-WEKEN RECAP",

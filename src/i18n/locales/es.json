@@ -4161,6 +4161,25 @@
     "tasksCompleted": "{{completed}}/{{total}} completadas",
     "allComplete": "¡LO LOGRASTE!",
     "doIt": "HAZLO",
+    "sections": {
+      "dailyCheckins": "CHECK-INS DIARIOS",
+      "training": "ENTRENAMIENTO",
+      "cycleTracking": "SEGUIMIENTO DE CICLO"
+    },
+    "quiz": {
+      "morning": {
+        "title": "Completar Check-in Matutino",
+        "description": "Registra la calidad del sueño y tu estado matutino"
+      },
+      "prelift": {
+        "title": "Completar Check-in Pre-Entrenamiento",
+        "description": "Establece tu enfoque mental antes de entrenar"
+      },
+      "night": {
+        "title": "Completar Check-in Nocturno",
+        "description": "Reflexiona sobre tu día y prepárate para descansar"
+      }
+    },
     "workout": {
       "hitting": {
         "title": "Completa el Entrenamiento Iron Bambino",
@@ -4188,6 +4207,23 @@
     "nutrition": {
       "title": "Registra Tu Nutrición",
       "description": "Alimenta tu rendimiento en The Vault"
+    },
+    "tracking": {
+      "performance": {
+        "title": "Registrar Pruebas de Rendimiento",
+        "description": "Rastrea tus métricas atléticas de 6 semanas",
+        "badge": "6 SEM"
+      },
+      "photos": {
+        "title": "Registrar Fotos de Progreso",
+        "description": "Documenta tu progreso corporal de 6 semanas",
+        "badge": "6 SEM"
+      },
+      "grades": {
+        "title": "Establecer Auto-Calificaciones Scout",
+        "description": "Califica tus habilidades en la escala 20-80",
+        "badge": "12 SEM"
+      }
     },
     "recapCountdown": {
       "title": "RESUMEN 6 SEMANAS",

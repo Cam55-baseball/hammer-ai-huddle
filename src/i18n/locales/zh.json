@@ -3407,6 +3407,25 @@
     "tasksCompleted": "{{completed}}/{{total}} 已完成",
     "allComplete": "全部完成！",
     "doIt": "开始",
+    "sections": {
+      "dailyCheckins": "每日签到",
+      "training": "训练",
+      "cycleTracking": "周期跟踪"
+    },
+    "quiz": {
+      "morning": {
+        "title": "完成晨间签到",
+        "description": "记录睡眠质量和早晨状态"
+      },
+      "prelift": {
+        "title": "完成训练前签到",
+        "description": "训练前设定心理专注"
+      },
+      "night": {
+        "title": "完成夜间签到",
+        "description": "反思一天并准备休息"
+      }
+    },
     "workout": {
       "hitting": {
         "title": "完成Iron Bambino训练",
@@ -3434,6 +3453,23 @@
     "nutrition": {
       "title": "记录营养",
       "description": "在The Vault中为你的表现加油"
+    },
+    "tracking": {
+      "performance": {
+        "title": "记录体能测试",
+        "description": "追踪你的6周运动指标",
+        "badge": "6周"
+      },
+      "photos": {
+        "title": "记录进度照片",
+        "description": "记录你的6周身体变化",
+        "badge": "6周"
+      },
+      "grades": {
+        "title": "设置球探自评",
+        "description": "用20-80分制评估你的技能",
+        "badge": "12周"
+      }
     },
     "recapCountdown": {
       "title": "6周回顾",

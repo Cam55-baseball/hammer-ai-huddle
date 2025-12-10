@@ -4361,6 +4361,25 @@
     "tasksCompleted": "{{completed}}/{{total}} done",
     "allComplete": "CRUSHED IT!",
     "doIt": "DO IT",
+    "sections": {
+      "dailyCheckins": "DAILY CHECK-INS",
+      "training": "TRAINING",
+      "cycleTracking": "CYCLE TRACKING"
+    },
+    "quiz": {
+      "morning": {
+        "title": "Complete Morning Check-in",
+        "description": "Log sleep quality and morning readiness"
+      },
+      "prelift": {
+        "title": "Complete Pre-Lift Check-in",
+        "description": "Set your mental focus before training"
+      },
+      "night": {
+        "title": "Complete Night Check-in",
+        "description": "Reflect on your day and prepare for rest"
+      }
+    },
     "workout": {
       "hitting": {
         "title": "Complete Iron Bambino Workout",
@@ -4388,6 +4407,23 @@
     "nutrition": {
       "title": "Log Your Nutrition",
       "description": "Fuel your performance in The Vault"
+    },
+    "tracking": {
+      "performance": {
+        "title": "Log Performance Tests",
+        "description": "Track your 6-week athletic metrics",
+        "badge": "6-WEEK"
+      },
+      "photos": {
+        "title": "Log Progress Photos",
+        "description": "Document your 6-week body progress",
+        "badge": "6-WEEK"
+      },
+      "grades": {
+        "title": "Set Scout Self-Grades",
+        "description": "Rate your skills on the 20-80 scale",
+        "badge": "12-WEEK"
+      }
     },
     "recapCountdown": {
       "title": "6-WEEK RECAP",

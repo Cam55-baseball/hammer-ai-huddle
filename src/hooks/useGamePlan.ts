@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Dumbbell, Flame, Video, Apple, LucideIcon } from 'lucide-react';
+import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon } from 'lucide-react';
 
 export interface GamePlanTask {
   id: string;
@@ -12,7 +12,9 @@ export interface GamePlanTask {
   icon: LucideIcon;
   link: string;
   module?: 'hitting' | 'pitching' | 'throwing';
-  taskType: 'workout' | 'video' | 'nutrition';
+  taskType: 'workout' | 'video' | 'nutrition' | 'quiz' | 'tracking';
+  section: 'checkin' | 'training' | 'tracking';
+  badge?: string;
 }
 
 export interface GamePlanData {
@@ -31,17 +33,12 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [completionStatus, setCompletionStatus] = useState<Record<string, boolean>>({});
   const [daysUntilRecap, setDaysUntilRecap] = useState(42);
   const [recapProgress, setRecapProgress] = useState(0);
+  const [trackingDue, setTrackingDue] = useState<Record<string, boolean>>({});
 
   // Parse subscribed modules to determine access
-  const hasHittingAccess = subscribedModules.some(m => 
-    m.includes('hitting')
-  );
-  const hasPitchingAccess = subscribedModules.some(m => 
-    m.includes('pitching')
-  );
-  const hasThrowingAccess = subscribedModules.some(m => 
-    m.includes('throwing')
-  );
+  const hasHittingAccess = subscribedModules.some(m => m.includes('hitting'));
+  const hasPitchingAccess = subscribedModules.some(m => m.includes('pitching'));
+  const hasThrowingAccess = subscribedModules.some(m => m.includes('throwing'));
   const hasAnyModuleAccess = subscribedModules.length > 0;
 
   const getTodayDate = () => {
@@ -55,8 +52,20 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     setLoading(true);
     const today = getTodayDate();
     const status: Record<string, boolean> = {};
+    const tracking: Record<string, boolean> = {};
     
     try {
+      // Fetch today's focus quizzes completion
+      const { data: quizData } = await supabase
+        .from('vault_focus_quizzes')
+        .select('quiz_type')
+        .eq('user_id', user.id)
+        .eq('entry_date', today);
+
+      status['quiz-morning'] = quizData?.some(q => q.quiz_type === 'morning') || false;
+      status['quiz-prelift'] = quizData?.some(q => q.quiz_type === 'pre_lift') || false;
+      status['quiz-night'] = quizData?.some(q => q.quiz_type === 'night') || false;
+
       // Fetch workout completion for hitting (Iron Bambino)
       if (hasHittingAccess) {
         const { data: hittingWorkout } = await supabase
@@ -133,14 +142,51 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       
       status['nutrition'] = (nutritionData?.length || 0) > 0;
 
+      // Check 6-week tracking: Performance Tests
+      const { data: perfTestData } = await supabase
+        .from('vault_performance_tests')
+        .select('next_entry_date')
+        .eq('user_id', user.id)
+        .order('test_date', { ascending: false })
+        .limit(1);
+
+      const perfNextDate = perfTestData?.[0]?.next_entry_date;
+      tracking['tracking-performance'] = perfTestData?.length === 0 || 
+        !perfNextDate || new Date(perfNextDate) <= new Date(today);
+
+      // Check 6-week tracking: Progress Photos
+      const { data: photoData } = await supabase
+        .from('vault_progress_photos')
+        .select('next_entry_date')
+        .eq('user_id', user.id)
+        .order('photo_date', { ascending: false })
+        .limit(1);
+
+      const photoNextDate = photoData?.[0]?.next_entry_date;
+      tracking['tracking-photos'] = photoData?.length === 0 || 
+        !photoNextDate || new Date(photoNextDate) <= new Date(today);
+
+      // Check 12-week tracking: Scout Self-Grades
+      const { data: gradeData } = await supabase
+        .from('vault_scout_grades')
+        .select('next_prompt_date')
+        .eq('user_id', user.id)
+        .order('graded_at', { ascending: false })
+        .limit(1);
+
+      const gradeNextDate = gradeData?.[0]?.next_prompt_date;
+      tracking['tracking-grades'] = gradeData?.length === 0 || 
+        !gradeNextDate || new Date(gradeNextDate) <= new Date(today);
+
       setCompletionStatus(status);
+      setTrackingDue(tracking);
 
       // Fetch recap countdown
       const { data: streakData } = await supabase
         .from('vault_streaks')
         .select('created_at')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (streakData?.created_at) {
         const startDate = new Date(streakData.created_at);
@@ -155,7 +201,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           .from('subscriptions')
           .select('created_at')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
         
         if (subData?.created_at) {
           const startDate = new Date(subData.created_at);
@@ -182,6 +228,54 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   // Build dynamic task list based on user's module access
   const tasks: GamePlanTask[] = [];
 
+  // === DAILY CHECK-INS SECTION ===
+  if (hasAnyModuleAccess) {
+    tasks.push({
+      id: 'quiz-morning',
+      titleKey: 'gamePlan.quiz.morning.title',
+      descriptionKey: 'gamePlan.quiz.morning.description',
+      completed: completionStatus['quiz-morning'] || false,
+      icon: Sun,
+      link: '/vault',
+      taskType: 'quiz',
+      section: 'checkin',
+    });
+
+    tasks.push({
+      id: 'quiz-prelift',
+      titleKey: 'gamePlan.quiz.prelift.title',
+      descriptionKey: 'gamePlan.quiz.prelift.description',
+      completed: completionStatus['quiz-prelift'] || false,
+      icon: Brain,
+      link: '/vault',
+      taskType: 'quiz',
+      section: 'checkin',
+    });
+
+    tasks.push({
+      id: 'quiz-night',
+      titleKey: 'gamePlan.quiz.night.title',
+      descriptionKey: 'gamePlan.quiz.night.description',
+      completed: completionStatus['quiz-night'] || false,
+      icon: Moon,
+      link: '/vault',
+      taskType: 'quiz',
+      section: 'checkin',
+    });
+
+    tasks.push({
+      id: 'nutrition',
+      titleKey: 'gamePlan.nutrition.title',
+      descriptionKey: 'gamePlan.nutrition.description',
+      completed: completionStatus['nutrition'] || false,
+      icon: Apple,
+      link: '/vault',
+      taskType: 'nutrition',
+      section: 'checkin',
+    });
+  }
+
+  // === TRAINING SECTION ===
   // Workout tasks
   if (hasHittingAccess) {
     tasks.push({
@@ -193,6 +287,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       link: `/analyze/hitting?sport=${selectedSport}&tab=iron-bambino`,
       module: 'hitting',
       taskType: 'workout',
+      section: 'training',
     });
   }
 
@@ -206,6 +301,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       link: `/analyze/pitching?sport=${selectedSport}&tab=heat-factory`,
       module: 'pitching',
       taskType: 'workout',
+      section: 'training',
     });
   }
 
@@ -220,6 +316,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       link: `/analyze/hitting?sport=${selectedSport}`,
       module: 'hitting',
       taskType: 'video',
+      section: 'training',
     });
   }
 
@@ -233,6 +330,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       link: `/analyze/pitching?sport=${selectedSport}`,
       module: 'pitching',
       taskType: 'video',
+      section: 'training',
     });
   }
 
@@ -246,19 +344,50 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       link: `/analyze/throwing?sport=${selectedSport}`,
       module: 'throwing',
       taskType: 'video',
+      section: 'training',
     });
   }
 
-  // Nutrition task (always shown if user has any module)
-  if (hasAnyModuleAccess) {
+  // === CYCLE TRACKING SECTION (only shown when due) ===
+  if (hasAnyModuleAccess && trackingDue['tracking-performance']) {
     tasks.push({
-      id: 'nutrition',
-      titleKey: 'gamePlan.nutrition.title',
-      descriptionKey: 'gamePlan.nutrition.description',
-      completed: completionStatus['nutrition'] || false,
-      icon: Apple,
+      id: 'tracking-performance',
+      titleKey: 'gamePlan.tracking.performance.title',
+      descriptionKey: 'gamePlan.tracking.performance.description',
+      completed: false,
+      icon: Activity,
       link: '/vault',
-      taskType: 'nutrition',
+      taskType: 'tracking',
+      section: 'tracking',
+      badge: 'gamePlan.tracking.performance.badge',
+    });
+  }
+
+  if (hasAnyModuleAccess && trackingDue['tracking-photos']) {
+    tasks.push({
+      id: 'tracking-photos',
+      titleKey: 'gamePlan.tracking.photos.title',
+      descriptionKey: 'gamePlan.tracking.photos.description',
+      completed: false,
+      icon: Camera,
+      link: '/vault',
+      taskType: 'tracking',
+      section: 'tracking',
+      badge: 'gamePlan.tracking.photos.badge',
+    });
+  }
+
+  if (hasAnyModuleAccess && trackingDue['tracking-grades']) {
+    tasks.push({
+      id: 'tracking-grades',
+      titleKey: 'gamePlan.tracking.grades.title',
+      descriptionKey: 'gamePlan.tracking.grades.description',
+      completed: false,
+      icon: Star,
+      link: '/vault',
+      taskType: 'tracking',
+      section: 'tracking',
+      badge: 'gamePlan.tracking.grades.badge',
     });
   }
 
