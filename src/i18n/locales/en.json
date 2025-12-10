@@ -4094,7 +4094,20 @@
       "hydrationGoal": "Daily Hydration Goal (oz)",
       "goalsSaved": "Goals saved!",
       "dailyProgress": "Daily Progress",
-      "overGoal": "Over"
+      "overGoal": "Over",
+      "mealTitle": "Meal Title",
+      "mealTitlePlaceholder": "e.g., Protein Shake, Power Breakfast...",
+      "favoriteMeals": "Favorite Meals",
+      "favoriteMealsHint": "Save your commonly eaten meals as favorites for one-tap logging!",
+      "saveAsFavorite": "Save as Favorite",
+      "quickAdd": "Quick Add",
+      "usedTimes": "Used {{count}} times",
+      "savedAsFavorite": "Meal saved to favorites!",
+      "enterMealName": "Please enter a name for this meal",
+      "favoriteRemoved": "Favorite removed",
+      "addedFromFavorite": "Meal added from favorites!",
+      "noFavorites": "No favorite meals yet. Save your first one!",
+      "mealName": "Meal Name"
     },
     "nutritionWeekly": {
       "title": "Weekly Nutrition Summary",

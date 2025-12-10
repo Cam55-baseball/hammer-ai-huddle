@@ -28,6 +28,7 @@ interface NutritionLog {
   digestion_notes: string | null;
   supplements: string[];
   meal_type: string | null;
+  meal_title: string | null;
   logged_at: string | null;
 }
 
@@ -99,6 +100,7 @@ export function VaultNutritionLogCard({
   
   // Form state
   const [mealType, setMealType] = useState<string>('');
+  const [mealTitle, setMealTitle] = useState<string>('');
   const [calories, setCalories] = useState<string>('');
   const [protein, setProtein] = useState<string>('');
   const [carbs, setCarbs] = useState<string>('');
@@ -152,6 +154,7 @@ export function VaultNutritionLogCard({
 
   const resetForm = () => {
     setMealType('');
+    setMealTitle('');
     setCalories('');
     setProtein('');
     setCarbs('');
@@ -196,6 +199,7 @@ export function VaultNutritionLogCard({
       digestion_notes: digestionNotes || null,
       supplements,
       meal_type: mealType || null,
+      meal_title: mealTitle || null,
     });
     setSaving(false);
     if (result.success) {
@@ -465,6 +469,17 @@ export function VaultNutritionLogCard({
               </ToggleGroup>
             </div>
 
+            {/* Meal Title */}
+            <div className="space-y-1">
+              <Label className="text-xs">{t('vault.nutrition.mealTitle')}</Label>
+              <Input
+                value={mealTitle}
+                onChange={(e) => setMealTitle(e.target.value)}
+                placeholder={t('vault.nutrition.mealTitlePlaceholder')}
+                className="h-9"
+              />
+            </div>
+
             {/* Macros */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="space-y-1">
@@ -662,10 +677,10 @@ export function VaultNutritionLogCard({
                           <MealIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col min-w-0">
                             <span className="font-medium truncate">
-                              {log.meal_type ? t(`vault.nutrition.${log.meal_type}`) : t('vault.nutrition.meal')}
+                              {log.meal_title || (log.meal_type ? t(`vault.nutrition.${log.meal_type}`) : t('vault.nutrition.meal'))}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {formatTime(log.logged_at)}
+                              {log.meal_type ? t(`vault.nutrition.${log.meal_type}`) : ''} • {formatTime(log.logged_at)}
                             </span>
                           </div>
                         </div>

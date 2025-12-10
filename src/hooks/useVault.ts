@@ -88,6 +88,7 @@ export interface VaultNutritionLog {
   digestion_notes: string | null;
   supplements: string[];
   meal_type: string | null;
+  meal_title: string | null;
   logged_at: string | null;
 }
 
@@ -695,6 +696,7 @@ export function useVault() {
       digestion_notes: null,
       supplements: favorite.supplements,
       meal_type: favorite.meal_type,
+      meal_title: favorite.meal_name,
     });
     
     await fetchFavoriteMeals();

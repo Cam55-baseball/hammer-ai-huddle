@@ -3191,7 +3191,20 @@
       "hydrationGoal": "1日の水分目標 (oz)",
       "goalsSaved": "目標を保存しました！",
       "dailyProgress": "1日の進捗",
-      "overGoal": "超過"
+      "overGoal": "超過",
+      "mealTitle": "食事タイトル",
+      "mealTitlePlaceholder": "例: プロテインシェイク、パワー朝食...",
+      "favoriteMeals": "お気に入りの食事",
+      "favoriteMealsHint": "よく食べる食事をお気に入りに保存して、ワンタップで記録！",
+      "saveAsFavorite": "お気に入りに保存",
+      "quickAdd": "クイック追加",
+      "usedTimes": "{{count}}回使用",
+      "savedAsFavorite": "食事をお気に入りに保存しました！",
+      "enterMealName": "この食事の名前を入力してください",
+      "favoriteRemoved": "お気に入りを削除しました",
+      "addedFromFavorite": "お気に入りから食事を追加しました！",
+      "noFavorites": "まだお気に入りの食事がありません。最初の一つを保存しましょう！",
+      "mealName": "食事名"
     },
     "nutritionWeekly": {
       "title": "週間栄養サマリー",
