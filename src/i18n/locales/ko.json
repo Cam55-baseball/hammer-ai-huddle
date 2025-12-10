@@ -3094,9 +3094,13 @@
       "nutritionLogged": "이 날 영양이 기록되었습니다",
       "loading": "기록 로드 중..."
     },
+    "dailyCheckIn": {
+      "title": "매일 체크인",
+      "description": "준비 상태 확인 및 영양 추적을 완료하세요"
+    },
     "nutrition": {
       "title": "영양 기록",
-      "description": "일일 영양 및 에너지 수준 추적",
+      "description": "하루 종일 식사, 간식, 수분 섭취를 기록하세요",
       "calories": "칼로리",
       "protein": "단백질 (g)",
       "carbs": "탄수화물 (g)",
@@ -3241,6 +3245,14 @@
         "average": "평균",
         "below": "평균 이하",
         "poor": "낮음"
+      },
+      "progression": {
+        "title": "등급 진행",
+        "cycles": "주기",
+        "cycle": "주기",
+        "category": "카테고리",
+        "change": "변화",
+        "noChange": "변화 없음"
       }
     },
     "recap": {

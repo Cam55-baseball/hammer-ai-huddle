@@ -3862,9 +3862,13 @@
       "reflection_pro": "Pro de la Réflexion",
       "strength_tracker": "Tracker de Force"
     },
+    "dailyCheckIn": {
+      "title": "Check-In Quotidien",
+      "description": "Complétez vos contrôles de préparation et suivi nutritionnel"
+    },
     "nutrition": {
       "title": "Journal Nutritionnel",
-      "description": "Suivez votre nutrition quotidienne et vos niveaux d'énergie",
+      "description": "Enregistrez repas, collations et hydratation tout au long de la journée",
       "calories": "Calories",
       "protein": "Protéines (g)",
       "carbs": "Glucides (g)",
@@ -4011,6 +4015,14 @@
         "average": "Moyen",
         "below": "Sous Moy.",
         "poor": "Faible"
+      },
+      "progression": {
+        "title": "Progression des Notes",
+        "cycles": "cycles",
+        "cycle": "Cycle",
+        "category": "Catégorie",
+        "change": "Changement",
+        "noChange": "Aucun changement"
       }
     },
     "recap": {

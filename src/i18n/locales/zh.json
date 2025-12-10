@@ -3078,9 +3078,13 @@
       "nutritionLogged": "今日营养已记录",
       "loading": "加载历史中..."
     },
+    "dailyCheckIn": {
+      "title": "每日签到",
+      "description": "完成您的准备检查和营养追踪"
+    },
     "nutrition": {
       "title": "营养日志",
-      "description": "记录每日营养和能量水平",
+      "description": "记录一天中的餐食、零食和水分摄入",
       "calories": "卡路里",
       "protein": "蛋白质 (g)",
       "carbs": "碳水化合物 (g)",
@@ -3225,6 +3229,14 @@
         "average": "平均",
         "below": "低于平均",
         "poor": "较差"
+      },
+      "progression": {
+        "title": "成绩进展",
+        "cycles": "周期",
+        "cycle": "周期",
+        "category": "类别",
+        "change": "变化",
+        "noChange": "无变化"
       }
     },
     "recap": {

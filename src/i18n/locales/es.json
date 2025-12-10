@@ -3840,9 +3840,13 @@
       "reflection_pro": "Pro de la Reflexión",
       "strength_tracker": "Rastreador de Fuerza"
     },
+    "dailyCheckIn": {
+      "title": "Check-In Diario",
+      "description": "Completa tus controles de preparación y seguimiento nutricional"
+    },
     "nutrition": {
       "title": "Registro Nutricional",
-      "description": "Registra tu nutrición diaria y niveles de energía",
+      "description": "Registra comidas, snacks e hidratación durante el día",
       "calories": "Calorías",
       "protein": "Proteína (g)",
       "carbs": "Carbohidratos (g)",
@@ -3989,6 +3993,14 @@
         "average": "Promedio",
         "below": "Bajo Prom.",
         "poor": "Bajo"
+      },
+      "progression": {
+        "title": "Progresión de Calificaciones",
+        "cycles": "ciclos",
+        "cycle": "Ciclo",
+        "category": "Categoría",
+        "change": "Cambio",
+        "noChange": "Sin cambio"
       }
     },
     "recap": {
