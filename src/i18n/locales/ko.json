@@ -3415,5 +3415,27 @@
       "coachingCues": "코칭 힌트",
       "noDetails": "이 드릴에 대한 추가 세부 정보가 없습니다."
     }
+  },
+  "gamePlan": {
+    "title": "게임 플랜",
+    "subtitle": "오늘의 미션",
+    "tasksCompleted": "{{completed}}/{{total}} 작업",
+    "allComplete": "모두 완료! 🎉",
+    "workout": {
+      "title": "오늘의 운동 완료",
+      "description": "Iron Bambino 또는 Heat Factory 세션"
+    },
+    "nutrition": {
+      "title": "영양 기록",
+      "description": "The Vault에서 일일 섭취량 추적"
+    },
+    "video": {
+      "title": "영상 분석",
+      "description": "업로드하고 메커니즘 검토"
+    },
+    "recapCountdown": {
+      "title": "6주 요약",
+      "daysRemaining": "{{days}}일 남음"
+    }
   }
 }

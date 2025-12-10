@@ -4175,5 +4175,27 @@
       "coachingCues": "Conseils",
       "noDetails": "Aucun détail supplémentaire disponible pour cet exercice."
     }
+  },
+  "gamePlan": {
+    "title": "LE PLAN DE JEU",
+    "subtitle": "Votre mission quotidienne",
+    "tasksCompleted": "{{completed}}/{{total}} tâches",
+    "allComplete": "Tout terminé ! 🎉",
+    "workout": {
+      "title": "Terminer l'Entraînement du Jour",
+      "description": "Séance Iron Bambino ou Heat Factory"
+    },
+    "nutrition": {
+      "title": "Enregistrer Votre Nutrition",
+      "description": "Suivez votre apport quotidien dans The Vault"
+    },
+    "video": {
+      "title": "Analyser une Vidéo",
+      "description": "Téléchargez et examinez votre mécanique"
+    },
+    "recapCountdown": {
+      "title": "Récapitulatif 6 Semaines",
+      "daysRemaining": "{{days}} jours restants"
+    }
   }
 }
