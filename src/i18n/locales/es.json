@@ -4161,6 +4161,9 @@
     "tasksCompleted": "{{completed}}/{{total}} completadas",
     "allComplete": "¡LO LOGRASTE!",
     "doIt": "HAZLO",
+    "quickActions": {
+      "logMeal": "Registrar Comida"
+    },
     "sections": {
       "dailyCheckins": "CHECK-INS DIARIOS",
       "training": "ENTRENAMIENTO",

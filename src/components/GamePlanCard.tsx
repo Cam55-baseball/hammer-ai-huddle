@@ -7,7 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Check, Target, Clock, Trophy, Zap, Plus } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
+import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
+import { useVault } from '@/hooks/useVault';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface GamePlanCardProps {
   selectedSport: 'baseball' | 'softball';
@@ -17,7 +20,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { tasks, completedCount, totalCount, daysUntilRecap, recapProgress, loading, refetch } = useGamePlan(selectedSport);
+  const { saveFocusQuiz } = useVault();
   const [quickLogOpen, setQuickLogOpen] = useState(false);
+  const [quizDialogOpen, setQuizDialogOpen] = useState(false);
+  const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'short', 
@@ -29,12 +35,57 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   const handleTaskClick = (task: GamePlanTask) => {
+    // Handle quiz tasks - open dialog directly
+    if (task.taskType === 'quiz') {
+      if (task.id === 'quiz-morning') {
+        setActiveQuizType('morning');
+        setQuizDialogOpen(true);
+      } else if (task.id === 'quiz-prelift') {
+        setActiveQuizType('pre_lift');
+        setQuizDialogOpen(true);
+      } else if (task.id === 'quiz-night') {
+        setActiveQuizType('night');
+        setQuizDialogOpen(true);
+      }
+      return;
+    }
+
+    // Handle tracking tasks - navigate to vault with section param
+    if (task.taskType === 'tracking') {
+      if (task.id === 'tracking-performance') {
+        navigate('/vault?openSection=performance-tests');
+      } else if (task.id === 'tracking-photos') {
+        navigate('/vault?openSection=progress-photos');
+      } else if (task.id === 'tracking-grades') {
+        navigate('/vault?openSection=scout-grades');
+      }
+      return;
+    }
+
+    // Handle nutrition task - navigate to vault with nutrition section
+    if (task.taskType === 'nutrition') {
+      navigate('/vault?openSection=nutrition');
+      return;
+    }
+
+    // Default: navigate to task link
     navigate(task.link);
   };
 
   const handleQuickLogClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setQuickLogOpen(true);
+  };
+
+  const handleQuizSubmit = async (data: any) => {
+    const result = await saveFocusQuiz(activeQuizType, data);
+    if (result.success) {
+      toast.success(t('vault.quiz.saved'));
+      refetch();
+    } else {
+      toast.error(t('vault.quiz.error'));
+    }
+    return result;
   };
 
   // Group tasks by section
@@ -46,7 +97,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const Icon = task.icon;
     const isIncomplete = !task.completed;
     const isTracking = task.section === 'tracking';
-    const isNutritionTask = task.id === 'nutrition';
     
     return (
       <div
@@ -109,19 +159,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             </p>
           </div>
         </button>
-
-        {/* Quick Log button for nutrition task */}
-        {isNutritionTask && !task.completed && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleQuickLogClick}
-            className="flex-shrink-0 h-8 gap-1 text-xs border-green-500/50 text-green-400 hover:bg-green-500/20 hover:text-green-300"
-          >
-            <Plus className="h-3 w-3" />
-            {t('gamePlan.nutrition.quickLog')}
-          </Button>
-        )}
         
         {/* Status indicator */}
         <div className={cn(
@@ -143,7 +180,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         </div>
 
         {/* Urgency indicator for incomplete tasks */}
-        {isIncomplete && !isNutritionTask && (
+        {isIncomplete && (
           <div className={cn(
             "hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border",
             isTracking 
@@ -268,6 +305,19 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 {t('gamePlan.sections.dailyCheckins')}
                 <span className="h-px flex-1 bg-primary/30" />
               </h3>
+              
+              {/* Quick Action Button - Always visible */}
+              <div className="flex justify-center pb-1">
+                <Button
+                  size="sm"
+                  onClick={handleQuickLogClick}
+                  className="gap-2 bg-green-600 hover:bg-green-700 text-white font-bold"
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('gamePlan.quickActions.logMeal')}
+                </Button>
+              </div>
+              
               <div className="space-y-2">
                 {checkinTasks.map(renderTask)}
               </div>
@@ -330,6 +380,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         open={quickLogOpen}
         onOpenChange={setQuickLogOpen}
         onSuccess={refetch}
+      />
+      
+      {/* Focus Quiz Dialog */}
+      <VaultFocusQuizDialog
+        open={quizDialogOpen}
+        onOpenChange={setQuizDialogOpen}
+        quizType={activeQuizType}
+        onSubmit={handleQuizSubmit}
       />
       
       {/* Pulsing animation for incomplete tasks */}

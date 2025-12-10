@@ -3407,6 +3407,9 @@
     "tasksCompleted": "{{completed}}/{{total}} 已完成",
     "allComplete": "全部完成！",
     "doIt": "开始",
+    "quickActions": {
+      "logMeal": "记录餐食"
+    },
     "sections": {
       "dailyCheckins": "每日签到",
       "training": "训练",
