@@ -1750,6 +1750,7 @@
     "equipmentLibrary": { "intro": "Herstel apparatuur.", "searchPlaceholder": "Zoeken...", "allCategories": "Alle", "whatItDoes": "Functie:", "whenUsed": "Gebruik:", "noResults": "Niet gevonden", "categories": { "tape": "Tape", "sleeves": "Mouwen", "bands": "Banden", "softTissue": "Zacht Weefsel", "supports": "Ondersteuning" }, "items": { "kinesioTape": { "name": "Kinesio Tape", "description": "Elastische tape", "usage": "Spierondersteuning" }, "athleticTape": { "name": "Sporttape", "description": "Niet-elastisch", "usage": "Gewrichtsondersteuning" }, "compressionSleeve": { "name": "Compressiemouw", "description": "Compressie", "usage": "Zwellingreductie" }, "kneeSleeve": { "name": "Kniemouw", "description": "Knieondersteuning", "usage": "Warmte en compressie" }, "resistanceBands": { "name": "Weerstandsbanden", "description": "Elastische banden", "usage": "Revalidatie" }, "therapyBands": { "name": "Therapiebanden", "description": "Platte banden", "usage": "Versterking" }, "foamRoller": { "name": "Foam Roller", "description": "Zelfmassage", "usage": "Spiervoorbereiding" }, "massageBall": { "name": "Massagebal", "description": "Gericht", "usage": "Triggerpoints" }, "ankleBrace": { "name": "Enkelbrace", "description": "Enkelondersteuning", "usage": "Preventie" }, "wristSupport": { "name": "Polsondersteuning", "description": "Polssteun", "usage": "Ondersteuning" } } }
   },
   "workoutModules": {
+    "day": "Dag",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "24-Weken Elite Power Hitter Ontwikkelingsprogramma"
@@ -2970,9 +2971,6 @@
     "twelveWeekTracking": {
       "title": "12-Weken Tracking",
       "description": "Zelfevaluatie eenmaal per 12-weken cyclus voor uitgebreide voortgangsbeoordeling"
-    },
-    "lockPeriod": {
-      "twelveWeeks": "Deze sectie kan slechts eenmaal per 12 weken worden bijgewerkt."
     },
     "tabs": {
       "today": "Vandaag",

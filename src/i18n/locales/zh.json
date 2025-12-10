@@ -1721,6 +1721,7 @@
     "equipmentLibrary": { "intro": "了解恢复设备。", "searchPlaceholder": "搜索...", "allCategories": "所有类别", "whatItDoes": "功能：", "whenUsed": "使用时机：", "noResults": "未找到", "categories": { "tape": "胶带", "sleeves": "护套", "bands": "弹力带", "softTissue": "软组织", "supports": "支撑" }, "items": { "kinesioTape": { "name": "肌内效贴", "description": "弹性治疗胶带", "usage": "肌肉支撑" }, "athleticTape": { "name": "运动胶带", "description": "非弹性胶带", "usage": "关节支撑" }, "compressionSleeve": { "name": "加压护套", "description": "弹性护套", "usage": "减轻肿胀" }, "kneeSleeve": { "name": "护膝", "description": "膝盖护套", "usage": "提供支撑" }, "resistanceBands": { "name": "阻力带", "description": "弹性带", "usage": "康复练习" }, "therapyBands": { "name": "治疗带", "description": "扁平弹性带", "usage": "温和强化" }, "foamRoller": { "name": "泡沫轴", "description": "自我按摩", "usage": "肌肉准备" }, "massageBall": { "name": "按摩球", "description": "针对性按摩", "usage": "触发点" }, "ankleBrace": { "name": "护踝", "description": "踝关节支撑", "usage": "伤病预防" }, "wristSupport": { "name": "护腕", "description": "腕关节支撑", "usage": "活动支撑" } } }
   },
   "workoutModules": {
+    "day": "第",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "24周精英力量打者发展计划"
@@ -2941,9 +2942,6 @@
     "twelveWeekTracking": {
       "title": "12周跟踪",
       "description": "每12周自我评估一次，进行全面的进度评估"
-    },
-    "lockPeriod": {
-      "twelveWeeks": "此部分每12周只能更新一次。"
     },
     "tabs": {
       "today": "今天",

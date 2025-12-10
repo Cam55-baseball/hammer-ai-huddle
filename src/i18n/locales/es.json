@@ -2223,6 +2223,7 @@
     }
   },
   "workoutModules": {
+    "day": "Día",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "Programa Elite de Desarrollo de Bateador de Poder de 24 Semanas"
@@ -3694,9 +3695,6 @@
     "twelveWeekTracking": {
       "title": "Seguimiento de 12 Semanas",
       "description": "Autoevalúa una vez por ciclo de 12 semanas para una evaluación integral del progreso"
-    },
-    "lockPeriod": {
-      "twelveWeeks": "Esta sección solo puede actualizarse una vez cada 12 semanas."
     },
     "tabs": {
       "today": "Hoy",

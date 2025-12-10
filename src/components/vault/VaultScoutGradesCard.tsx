@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Star, ChevronDown, Lock, AlertCircle, Calendar, TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+
 import {
   Table,
   TableBody,
@@ -88,17 +88,14 @@ const getChangeIndicator = (change: number) => {
   return { icon: Minus, color: 'text-amber-500', bgColor: 'bg-amber-500/10' };
 };
 
-// Scale tick marks at increments of 5
-const SCALE_TICKS = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80];
+// Simplified scale tick marks - only key positions for cleaner display
+const SCALE_TICKS = [20, 30, 40, 45, 50, 60, 70, 80];
 
 // Key labeled positions on the scale
 const KEY_LABELS: Record<number, string> = {
   20: 'poor',
-  35: 'belowAverage',
-  45: 'leagueAverage', // This one is sport-specific
-  50: 'average',
+  45: 'leagueAverage', // Sport-specific (MLB/AUSL)
   60: 'aboveAverage',
-  70: 'elite',
   80: 'hallOfFame',
 };
 
@@ -308,68 +305,34 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', onSave }: Vau
                   </span>
                 </div>
 
-                {/* Scale Reference Card with Tooltips */}
-                <TooltipProvider>
-                  <div className="p-3 rounded-lg bg-gradient-to-r from-red-500/10 via-amber-500/10 to-green-500/10 border border-border mb-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <BarChart3 className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-semibold">{t('vault.scoutGrades.scaleReference.title')}</span>
-                    </div>
-                    <div className="relative h-6 rounded bg-gradient-to-r from-red-500/30 via-amber-500/30 to-green-500/30">
-                      {/* Tick marks */}
-                      {SCALE_TICKS.map((tick) => {
-                        const position = ((tick - 20) / 60) * 100;
-                        const isKeyLabel = KEY_LABELS[tick];
-                        return (
-                          <div
-                            key={tick}
-                            className="absolute top-0 h-full flex flex-col items-center"
-                            style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
-                          >
-                            <div className={`w-px ${isKeyLabel ? 'h-full bg-foreground/40' : 'h-2 bg-foreground/20'}`} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {/* Labels below the scale with tooltips */}
-                    <div className="relative mt-1 h-10">
-                      {Object.entries(KEY_LABELS).map(([value, labelKey]) => {
-                        const position = ((Number(value) - 20) / 60) * 100;
-                        const displayLabel = labelKey === 'leagueAverage' 
-                          ? (sport === 'softball' 
-                            ? t('vault.scoutGrades.scaleReference.auslAverage')
-                            : t('vault.scoutGrades.scaleReference.mlbAverage'))
-                          : t(`vault.scoutGrades.scaleReference.${labelKey}`);
-                        const tooltipKey = labelKey === 'leagueAverage'
-                          ? (sport === 'softball' ? 'auslAverageTooltip' : 'mlbAverageTooltip')
-                          : `${labelKey}Tooltip`;
-                        return (
-                          <Tooltip key={value}>
-                            <TooltipTrigger asChild>
-                              <div
-                                className="absolute text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap cursor-help"
-                                style={{ 
-                                  left: `${position}%`, 
-                                  transform: 'translateX(-50%)',
-                                  fontWeight: Number(value) === 45 ? 600 : 400,
-                                  color: Number(value) === 45 ? 'hsl(var(--primary))' : undefined
-                                }}
-                              >
-                                <div className="flex flex-col items-center">
-                                  <span className="font-medium">{value}</span>
-                                  <span className="hidden sm:block underline decoration-dotted">{displayLabel}</span>
-                                </div>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-[200px] text-center">
-                              <p className="text-xs">{t(`vault.scoutGrades.scaleReference.tooltips.${tooltipKey}`)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        );
-                      })}
-                    </div>
+                {/* Simplified Scale Reference */}
+                <div className="p-3 rounded-lg bg-gradient-to-r from-red-500/10 via-amber-500/10 to-green-500/10 border border-border mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold">{t('vault.scoutGrades.scaleReference.title')}</span>
                   </div>
-                </TooltipProvider>
+                  
+                  {/* Visual scale bar */}
+                  <div className="relative h-3 rounded-full bg-gradient-to-r from-red-500/40 via-amber-500/40 to-green-500/40 mb-2">
+                    {/* 45 marker - the important reference point */}
+                    <div 
+                      className="absolute top-0 h-full w-0.5 bg-primary"
+                      style={{ left: `${((45 - 20) / 60) * 100}%` }}
+                    />
+                  </div>
+                  
+                  {/* Simple labels */}
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-red-500 font-medium">20</span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-primary font-bold text-sm">45</span>
+                      <span className="text-primary text-[10px]">
+                        {sport === 'softball' ? 'AUSL Avg' : 'MLB Avg'}
+                      </span>
+                    </div>
+                    <span className="text-green-500 font-medium">80</span>
+                  </div>
+                </div>
 
                 {GRADE_CATEGORIES.map((category) => (
                   <div key={category} className="space-y-2">
@@ -394,36 +357,30 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', onSave }: Vau
                       step={5}
                       className="py-1"
                     />
-                    {/* Enhanced tick marks */}
-                    <div className="relative h-4 px-1">
-                      {SCALE_TICKS.map((tick) => {
+                    {/* Simplified tick marks - only key positions */}
+                    <div className="relative h-5 px-1">
+                      {[20, 45, 60, 80].map((tick) => {
                         const position = ((tick - 20) / 60) * 100;
-                        const isKeyTick = tick % 10 === 0 || tick === 45;
                         const isCurrentValue = gradeValues[category][0] === tick;
+                        const is45 = tick === 45;
                         return (
                           <div
                             key={tick}
                             className="absolute flex flex-col items-center"
                             style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
                           >
-                            <div className={`w-px ${isKeyTick ? 'h-2' : 'h-1'} ${isCurrentValue ? 'bg-primary' : 'bg-muted-foreground/40'}`} />
-                            {isKeyTick && (
-                              <span className={`text-[9px] ${isCurrentValue ? 'text-primary font-bold' : 'text-muted-foreground'}`}>
-                                {tick}
+                            <div className={`w-px h-2 ${is45 ? 'bg-primary' : isCurrentValue ? 'bg-primary' : 'bg-muted-foreground/40'}`} />
+                            <span className={`text-[9px] ${is45 ? 'text-primary font-bold' : isCurrentValue ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                              {tick === 45 ? (sport === 'softball' ? '45' : '45') : tick}
+                            </span>
+                            {is45 && (
+                              <span className="text-[7px] text-primary font-semibold">
+                                {sport === 'softball' ? 'AUSL' : 'MLB'}
                               </span>
                             )}
                           </div>
                         );
                       })}
-                      {/* 45 special marker */}
-                      <div
-                        className="absolute flex flex-col items-center"
-                        style={{ left: `${((45 - 20) / 60) * 100}%`, transform: 'translateX(-50%)' }}
-                      >
-                        <span className="text-[8px] text-primary font-semibold mt-3">
-                          {sport === 'softball' ? 'AUSL' : 'MLB'}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 ))}

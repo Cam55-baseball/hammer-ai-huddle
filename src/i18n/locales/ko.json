@@ -1737,6 +1737,7 @@
     }
   },
   "workoutModules": {
+    "day": "일차",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "24주 엘리트 파워 타자 개발 프로그램"
@@ -2957,9 +2958,6 @@
     "twelveWeekTracking": {
       "title": "12주 추적",
       "description": "종합적인 진행 상황 평가를 위해 12주 주기마다 한 번 자기 평가하세요"
-    },
-    "lockPeriod": {
-      "twelveWeeks": "이 섹션은 12주마다 한 번만 업데이트할 수 있습니다."
     },
     "tabs": {
       "today": "오늘",
