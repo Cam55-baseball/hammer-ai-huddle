@@ -3868,7 +3868,7 @@
     },
     "nutrition": {
       "title": "Journal Nutritionnel",
-      "description": "Enregistrez repas, collations et hydratation tout au long de la journée",
+      "description": "Mettez à jour après chaque repas, collation et boisson pour suivre votre consommation quotidienne",
       "calories": "Calories",
       "protein": "Protéines (g)",
       "carbs": "Glucides (g)",

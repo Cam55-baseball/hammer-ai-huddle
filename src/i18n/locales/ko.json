@@ -3100,7 +3100,7 @@
     },
     "nutrition": {
       "title": "영양 기록",
-      "description": "하루 종일 식사, 간식, 수분 섭취를 기록하세요",
+      "description": "매 식사, 간식, 음료 후에 업데이트하여 일일 섭취량을 추적하세요",
       "calories": "칼로리",
       "protein": "단백질 (g)",
       "carbs": "탄수화물 (g)",
