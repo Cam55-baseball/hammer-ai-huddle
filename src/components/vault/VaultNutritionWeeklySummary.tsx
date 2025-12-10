@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { 
   ChevronLeft, ChevronRight, Calendar, Apple, 
-  TrendingUp, TrendingDown, Minus, Droplets, Beef, Wheat, Flame
+  TrendingUp, TrendingDown, Minus, Droplets, Beef, Wheat, Flame, ArrowLeftRight
 } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, isSameWeek } from 'date-fns';
 import { VaultNutritionGoals } from '@/hooks/useVault';
@@ -45,6 +45,7 @@ export function VaultNutritionWeeklySummary({ fetchWeeklyNutrition, goals }: Vau
   const { t } = useTranslation();
   const [currentWeek, setCurrentWeek] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [weeklyData, setWeeklyData] = useState<WeeklyNutritionData | null>(null);
+  const [lastWeekData, setLastWeekData] = useState<WeeklyNutritionData | null>(null);
   const [loading, setLoading] = useState(false);
 
   const isCurrentWeek = isSameWeek(currentWeek, new Date(), { weekStartsOn: 1 });
@@ -52,8 +53,15 @@ export function VaultNutritionWeeklySummary({ fetchWeeklyNutrition, goals }: Vau
   const loadWeeklyData = useCallback(async () => {
     setLoading(true);
     const weekStart = format(currentWeek, 'yyyy-MM-dd');
-    const data = await fetchWeeklyNutrition(weekStart);
-    setWeeklyData(data);
+    const lastWeekStart = format(subWeeks(currentWeek, 1), 'yyyy-MM-dd');
+    
+    const [current, previous] = await Promise.all([
+      fetchWeeklyNutrition(weekStart),
+      fetchWeeklyNutrition(lastWeekStart),
+    ]);
+    
+    setWeeklyData(current);
+    setLastWeekData(previous);
     setLoading(false);
   }, [currentWeek, fetchWeeklyNutrition]);
 
@@ -68,6 +76,7 @@ export function VaultNutritionWeeklySummary({ fetchWeeklyNutrition, goals }: Vau
   const weekLabel = `${format(currentWeek, 'MMM d')} - ${format(weekEndDate, 'MMM d, yyyy')}`;
 
   const hasData = weeklyData && weeklyData.daysLogged > 0;
+  const hasLastWeekData = lastWeekData && lastWeekData.daysLogged > 0;
 
   // Calculate goal achievement percentages
   const getGoalPercentage = (actual: number, goal: number) => {
@@ -81,16 +90,18 @@ export function VaultNutritionWeeklySummary({ fetchWeeklyNutrition, goals }: Vau
     return 'text-red-500';
   };
 
-  const getGoalBgColor = (percentage: number) => {
-    if (percentage >= 80 && percentage <= 120) return 'bg-green-500';
-    if (percentage >= 50) return 'bg-amber-500';
-    return 'bg-red-500';
+  // Trend calculation helpers
+  const getTrendInfo = (current: number, previous: number) => {
+    if (!previous || previous === 0) return { icon: Minus, color: 'text-muted-foreground', percent: 0, label: 'stable' };
+    const percentChange = ((current - previous) / previous) * 100;
+    if (percentChange > 5) return { icon: TrendingUp, color: 'text-green-500', percent: Math.round(percentChange), label: 'up' };
+    if (percentChange < -5) return { icon: TrendingDown, color: 'text-red-500', percent: Math.round(percentChange), label: 'down' };
+    return { icon: Minus, color: 'text-amber-500', percent: Math.round(percentChange), label: 'stable' };
   };
 
   const getDayIndicator = (day: DailyNutritionStats) => {
     if (!day.hasMeals) return { icon: '—', color: 'text-muted-foreground', bgColor: 'bg-muted/50' };
     
-    // Calculate average goal achievement for the day
     let totalPercent = 0;
     let count = 0;
     
@@ -115,7 +126,6 @@ export function VaultNutritionWeeklySummary({ fetchWeeklyNutrition, goals }: Vau
     
     const insights: string[] = [];
     
-    // Find best day
     const bestDay = weeklyData.dailyData
       .filter(d => d.hasMeals)
       .sort((a, b) => {
@@ -130,19 +140,16 @@ export function VaultNutritionWeeklySummary({ fetchWeeklyNutrition, goals }: Vau
       insights.push(t('vault.nutritionWeekly.bestDayInsight', { day: bestDay.dayShort }));
     }
     
-    // Protein check
     const proteinPercent = getGoalPercentage(weeklyData.avgProtein, goals.protein_goal || 150);
     if (proteinPercent < 80) {
       insights.push(t('vault.nutritionWeekly.proteinLowInsight', { percent: proteinPercent }));
     }
     
-    // Hydration check
     const hydrationPercent = getGoalPercentage(weeklyData.avgHydration, goals.hydration_goal || 100);
     if (hydrationPercent < 60) {
       insights.push(t('vault.nutritionWeekly.hydrationLowInsight', { percent: hydrationPercent }));
     }
     
-    // Consistency check
     if (weeklyData.daysLogged >= 5) {
       insights.push(t('vault.nutritionWeekly.consistencyGoodInsight', { days: weeklyData.daysLogged }));
     } else if (weeklyData.daysLogged < 3) {
@@ -150,6 +157,33 @@ export function VaultNutritionWeeklySummary({ fetchWeeklyNutrition, goals }: Vau
     }
     
     return insights;
+  };
+
+  // Calculate overall trend
+  const getOverallTrend = () => {
+    if (!weeklyData || !lastWeekData || !hasLastWeekData) return null;
+    
+    const metrics = [
+      { current: weeklyData.avgCalories, previous: lastWeekData.avgCalories },
+      { current: weeklyData.avgProtein, previous: lastWeekData.avgProtein },
+      { current: weeklyData.avgCarbs, previous: lastWeekData.avgCarbs },
+      { current: weeklyData.avgFats, previous: lastWeekData.avgFats },
+      { current: weeklyData.avgHydration, previous: lastWeekData.avgHydration },
+    ];
+    
+    let improvements = 0;
+    let regressions = 0;
+    
+    metrics.forEach(({ current, previous }) => {
+      if (!previous) return;
+      const change = ((current - previous) / previous) * 100;
+      if (change > 5) improvements++;
+      else if (change < -5) regressions++;
+    });
+    
+    if (improvements > regressions) return { label: t('vault.nutritionWeekly.improving'), color: 'text-green-500', icon: TrendingUp };
+    if (regressions > improvements) return { label: t('vault.nutritionWeekly.declining'), color: 'text-red-500', icon: TrendingDown };
+    return { label: t('vault.nutritionWeekly.stable'), color: 'text-amber-500', icon: Minus };
   };
 
   return (
@@ -201,6 +235,78 @@ export function VaultNutritionWeeklySummary({ fetchWeeklyNutrition, goals }: Vau
         </Card>
       ) : (
         <>
+          {/* Week vs Week Comparison */}
+          {hasLastWeekData && (
+            <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <ArrowLeftRight className="h-4 w-4 text-purple-500" />
+                  {t('vault.nutritionWeekly.weekComparison')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {/* Comparison rows */}
+                {[
+                  { key: 'calories', label: t('vault.nutrition.calories'), current: weeklyData?.avgCalories || 0, previous: lastWeekData?.avgCalories || 0, icon: Flame, iconColor: 'text-orange-500' },
+                  { key: 'protein', label: t('vault.nutrition.protein'), current: weeklyData?.avgProtein || 0, previous: lastWeekData?.avgProtein || 0, icon: Beef, iconColor: 'text-red-500', unit: 'g' },
+                  { key: 'carbs', label: t('vault.nutrition.carbs'), current: weeklyData?.avgCarbs || 0, previous: lastWeekData?.avgCarbs || 0, icon: Wheat, iconColor: 'text-amber-500', unit: 'g' },
+                  { key: 'hydration', label: t('vault.nutrition.hydration'), current: weeklyData?.avgHydration || 0, previous: lastWeekData?.avgHydration || 0, icon: Droplets, iconColor: 'text-blue-500', unit: 'oz' },
+                ].map((item) => {
+                  const trend = getTrendInfo(item.current, item.previous);
+                  const TrendIcon = trend.icon;
+                  return (
+                    <div key={item.key} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <item.icon className={`h-4 w-4 ${item.iconColor}`} />
+                        <span>{item.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">
+                          {Math.round(item.previous)}{item.unit || ''}
+                        </span>
+                        <span>→</span>
+                        <span className="font-medium">
+                          {Math.round(item.current)}{item.unit || ''}
+                        </span>
+                        <div className={`flex items-center gap-1 ${trend.color}`}>
+                          <TrendIcon className="h-4 w-4" />
+                          <Badge variant="outline" className={`text-xs ${trend.color} border-current`}>
+                            {trend.percent > 0 ? '+' : ''}{trend.percent}%
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Overall Trend */}
+                {(() => {
+                  const trend = getOverallTrend();
+                  if (!trend) return null;
+                  const TrendIcon = trend.icon;
+                  return (
+                    <div className="pt-2 border-t border-purple-500/20 flex items-center justify-between">
+                      <span className="text-sm font-medium">{t('vault.nutritionWeekly.overallTrend')}</span>
+                      <div className={`flex items-center gap-2 ${trend.color}`}>
+                        <TrendIcon className="h-5 w-5" />
+                        <span className="font-medium">{trend.label}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          )}
+
+          {!hasLastWeekData && (
+            <Card className="bg-muted/50">
+              <CardContent className="p-4 text-center text-sm text-muted-foreground">
+                <ArrowLeftRight className="h-5 w-5 mx-auto mb-1 opacity-50" />
+                {t('vault.nutritionWeekly.noLastWeekData')}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Average Daily Intake */}
           <Card>
             <CardHeader className="pb-2">
@@ -245,75 +351,26 @@ export function VaultNutritionWeeklySummary({ fetchWeeklyNutrition, goals }: Vau
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {/* Calories */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>{t('vault.nutrition.calories')}</span>
-                    <span className={getGoalColor(getGoalPercentage(weeklyData?.avgCalories || 0, goals.calorie_goal))}>
-                      {getGoalPercentage(weeklyData?.avgCalories || 0, goals.calorie_goal)}% {t('vault.nutritionWeekly.avg')}
-                    </span>
+                {[
+                  { key: 'calories', label: t('vault.nutrition.calories'), value: weeklyData?.avgCalories || 0, goal: goals.calorie_goal },
+                  { key: 'protein', label: t('vault.nutrition.protein'), value: weeklyData?.avgProtein || 0, goal: goals.protein_goal },
+                  { key: 'carbs', label: t('vault.nutrition.carbs'), value: weeklyData?.avgCarbs || 0, goal: goals.carbs_goal },
+                  { key: 'fats', label: t('vault.nutrition.fats'), value: weeklyData?.avgFats || 0, goal: goals.fats_goal },
+                  { key: 'hydration', label: t('vault.nutrition.hydration'), value: weeklyData?.avgHydration || 0, goal: goals.hydration_goal },
+                ].map(item => (
+                  <div key={item.key} className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span>{item.label}</span>
+                      <span className={getGoalColor(getGoalPercentage(item.value, item.goal))}>
+                        {getGoalPercentage(item.value, item.goal)}% {t('vault.nutritionWeekly.avg')}
+                      </span>
+                    </div>
+                    <Progress 
+                      value={Math.min(getGoalPercentage(item.value, item.goal), 100)} 
+                      className="h-2"
+                    />
                   </div>
-                  <Progress 
-                    value={Math.min(getGoalPercentage(weeklyData?.avgCalories || 0, goals.calorie_goal), 100)} 
-                    className="h-2"
-                  />
-                </div>
-                
-                {/* Protein */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>{t('vault.nutrition.protein')}</span>
-                    <span className={getGoalColor(getGoalPercentage(weeklyData?.avgProtein || 0, goals.protein_goal))}>
-                      {getGoalPercentage(weeklyData?.avgProtein || 0, goals.protein_goal)}% {t('vault.nutritionWeekly.avg')}
-                    </span>
-                  </div>
-                  <Progress 
-                    value={Math.min(getGoalPercentage(weeklyData?.avgProtein || 0, goals.protein_goal), 100)} 
-                    className="h-2"
-                  />
-                </div>
-                
-                {/* Carbs */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>{t('vault.nutrition.carbs')}</span>
-                    <span className={getGoalColor(getGoalPercentage(weeklyData?.avgCarbs || 0, goals.carbs_goal))}>
-                      {getGoalPercentage(weeklyData?.avgCarbs || 0, goals.carbs_goal)}% {t('vault.nutritionWeekly.avg')}
-                    </span>
-                  </div>
-                  <Progress 
-                    value={Math.min(getGoalPercentage(weeklyData?.avgCarbs || 0, goals.carbs_goal), 100)} 
-                    className="h-2"
-                  />
-                </div>
-                
-                {/* Fats */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>{t('vault.nutrition.fats')}</span>
-                    <span className={getGoalColor(getGoalPercentage(weeklyData?.avgFats || 0, goals.fats_goal))}>
-                      {getGoalPercentage(weeklyData?.avgFats || 0, goals.fats_goal)}% {t('vault.nutritionWeekly.avg')}
-                    </span>
-                  </div>
-                  <Progress 
-                    value={Math.min(getGoalPercentage(weeklyData?.avgFats || 0, goals.fats_goal), 100)} 
-                    className="h-2"
-                  />
-                </div>
-                
-                {/* Hydration */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span>{t('vault.nutrition.hydration')}</span>
-                    <span className={getGoalColor(getGoalPercentage(weeklyData?.avgHydration || 0, goals.hydration_goal))}>
-                      {getGoalPercentage(weeklyData?.avgHydration || 0, goals.hydration_goal)}% {t('vault.nutritionWeekly.avg')}
-                    </span>
-                  </div>
-                  <Progress 
-                    value={Math.min(getGoalPercentage(weeklyData?.avgHydration || 0, goals.hydration_goal), 100)} 
-                    className="h-2"
-                  />
-                </div>
+                ))}
               </CardContent>
             </Card>
           )}

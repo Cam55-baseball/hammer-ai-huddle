@@ -1058,6 +1058,54 @@ export type Database = {
         }
         Relationships: []
       }
+      vault_favorite_meals: {
+        Row: {
+          calories: number | null
+          carbs_g: number | null
+          created_at: string | null
+          fats_g: number | null
+          hydration_oz: number | null
+          id: string
+          last_used_at: string | null
+          meal_name: string
+          meal_type: string | null
+          protein_g: number | null
+          supplements: Json | null
+          usage_count: number | null
+          user_id: string
+        }
+        Insert: {
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string | null
+          fats_g?: number | null
+          hydration_oz?: number | null
+          id?: string
+          last_used_at?: string | null
+          meal_name: string
+          meal_type?: string | null
+          protein_g?: number | null
+          supplements?: Json | null
+          usage_count?: number | null
+          user_id: string
+        }
+        Update: {
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string | null
+          fats_g?: number | null
+          hydration_oz?: number | null
+          id?: string
+          last_used_at?: string | null
+          meal_name?: string
+          meal_type?: string | null
+          protein_g?: number | null
+          supplements?: Json | null
+          usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       vault_focus_quizzes: {
         Row: {
           created_at: string | null

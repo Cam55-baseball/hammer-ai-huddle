@@ -166,6 +166,21 @@ export interface VaultRecap {
   generated_at: string;
 }
 
+export interface VaultFavoriteMeal {
+  id: string;
+  meal_name: string;
+  calories: number | null;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fats_g: number | null;
+  hydration_oz: number | null;
+  meal_type: string | null;
+  supplements: string[];
+  usage_count: number;
+  created_at: string;
+  last_used_at: string | null;
+}
+
 export function useVault() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -182,6 +197,7 @@ export function useVault() {
   const [scoutGrades, setScoutGrades] = useState<VaultScoutGrade[]>([]);
   const [recaps, setRecaps] = useState<VaultRecap[]>([]);
   const [entriesWithData, setEntriesWithData] = useState<string[]>([]);
+  const [favoriteMeals, setFavoriteMeals] = useState<VaultFavoriteMeal[]>([]);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -616,6 +632,74 @@ export function useVault() {
     if (!error) await fetchNutritionGoals();
     return { success: !error };
   }, [user, fetchNutritionGoals]);
+
+  // Fetch favorite meals
+  const fetchFavoriteMeals = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('vault_favorite_meals')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('usage_count', { ascending: false });
+    setFavoriteMeals((data || []).map(m => ({
+      ...m,
+      supplements: (m.supplements as string[]) || [],
+    })) as VaultFavoriteMeal[]);
+  }, [user]);
+
+  // Save meal to favorites
+  const saveFavoriteMeal = useCallback(async (meal: Omit<VaultFavoriteMeal, 'id' | 'usage_count' | 'created_at' | 'last_used_at'>) => {
+    if (!user) return { success: false };
+    const { error } = await supabase.from('vault_favorite_meals').insert({
+      user_id: user.id,
+      ...meal,
+    });
+    if (!error) await fetchFavoriteMeals();
+    return { success: !error };
+  }, [user, fetchFavoriteMeals]);
+
+  // Delete favorite meal
+  const deleteFavoriteMeal = useCallback(async (id: string) => {
+    if (!user) return { success: false };
+    const { error } = await supabase
+      .from('vault_favorite_meals')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+    if (!error) await fetchFavoriteMeals();
+    return { success: !error };
+  }, [user, fetchFavoriteMeals]);
+
+  // Use favorite meal (increment usage and log)
+  const useFavoriteMeal = useCallback(async (favorite: VaultFavoriteMeal) => {
+    if (!user) return { success: false };
+    
+    // Update usage count and last_used_at
+    await supabase
+      .from('vault_favorite_meals')
+      .update({
+        usage_count: (favorite.usage_count || 0) + 1,
+        last_used_at: new Date().toISOString(),
+      })
+      .eq('id', favorite.id)
+      .eq('user_id', user.id);
+    
+    // Log the meal
+    const result = await saveNutritionLog({
+      calories: favorite.calories,
+      protein_g: favorite.protein_g,
+      carbs_g: favorite.carbs_g,
+      fats_g: favorite.fats_g,
+      hydration_oz: favorite.hydration_oz,
+      energy_level: null,
+      digestion_notes: null,
+      supplements: favorite.supplements,
+      meal_type: favorite.meal_type,
+    });
+    
+    await fetchFavoriteMeals();
+    return result;
+  }, [user, saveNutritionLog, fetchFavoriteMeals]);
 
   // Fetch saved items
   const fetchSavedItems = useCallback(async () => {
@@ -1108,18 +1192,19 @@ export function useVault() {
       await Promise.all([
         fetchStreak(), fetchTodaysQuizzes(), fetchTodaysNotes(), fetchWorkoutNotes(),
         fetchNutritionLogs(), fetchNutritionGoals(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchRecaps(),
-        fetchEntriesWithData(),
+        fetchEntriesWithData(), fetchFavoriteMeals(),
       ]);
       setLoading(false);
     };
     loadData();
-  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLogs, fetchNutritionGoals, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps, fetchEntriesWithData]);
+  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLogs, fetchNutritionGoals, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps, fetchEntriesWithData, fetchFavoriteMeals]);
 
   return {
-    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLogs, nutritionGoals, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData,
+    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLogs, nutritionGoals, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData, favoriteMeals,
     saveFocusQuiz, saveFreeNote, saveWorkoutNote, updateStreak, checkVaultAccess, fetchWorkoutNotes,
     saveNutritionLog, saveNutritionGoals, deleteSavedDrill, deleteSavedTip, saveDrill, saveTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
     deleteQuiz, deleteFreeNote, deleteWorkoutNote, deleteNutritionLog, deletePerformanceTest, deleteProgressPhoto, deleteScoutGrade,
     fetchWeeklyData, fetchWeeklyNutrition, fetchEntriesWithData, fetchSavedItems,
+    saveFavoriteMeal, deleteFavoriteMeal, useFavoriteMeal,
   };
 }
