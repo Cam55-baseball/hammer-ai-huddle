@@ -357,24 +357,28 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', onSave }: Vau
                       step={5}
                       className="py-1"
                     />
-                    {/* Simplified tick marks - only key positions */}
-                    <div className="relative h-5 px-1">
-                      {[20, 45, 60, 80].map((tick) => {
+                    {/* Tick marks showing 5-point increments */}
+                    <div className="relative h-6 px-1">
+                      {[20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80].map((tick) => {
                         const position = ((tick - 20) / 60) * 100;
                         const isCurrentValue = gradeValues[category][0] === tick;
                         const is45 = tick === 45;
+                        const isMajor = [20, 30, 40, 45, 50, 60, 70, 80].includes(tick);
+                        const isMinor = [25, 35, 55, 65, 75].includes(tick);
                         return (
                           <div
                             key={tick}
                             className="absolute flex flex-col items-center"
                             style={{ left: `${position}%`, transform: 'translateX(-50%)' }}
                           >
-                            <div className={`w-px h-2 ${is45 ? 'bg-primary' : isCurrentValue ? 'bg-primary' : 'bg-muted-foreground/40'}`} />
-                            <span className={`text-[9px] ${is45 ? 'text-primary font-bold' : isCurrentValue ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
-                              {tick === 45 ? (sport === 'softball' ? '45' : '45') : tick}
-                            </span>
+                            <div className={`w-px ${isMajor ? 'h-2' : 'h-1'} ${is45 ? 'bg-primary' : isCurrentValue ? 'bg-primary' : isMajor ? 'bg-muted-foreground/60' : 'bg-muted-foreground/30'}`} />
+                            {isMajor && (
+                              <span className={`text-[8px] leading-tight ${is45 ? 'text-primary font-bold' : isCurrentValue ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                                {tick}
+                              </span>
+                            )}
                             {is45 && (
-                              <span className="text-[7px] text-primary font-semibold">
+                              <span className="text-[7px] text-primary font-semibold leading-none">
                                 {sport === 'softball' ? 'AUSL' : 'MLB'}
                               </span>
                             )}
