@@ -444,6 +444,10 @@ export default function Vault() {
                   onDelete={deleteNutritionLog}
                   onSaveGoals={saveNutritionGoals}
                   isLoading={loading}
+                  favoriteMeals={favoriteMeals}
+                  onSaveFavorite={saveFavoriteMeal}
+                  onDeleteFavorite={deleteFavoriteMeal}
+                  onUseFavorite={useFavoriteMeal}
                 />
               </div>
             </div>
