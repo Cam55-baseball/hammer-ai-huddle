@@ -4353,5 +4353,27 @@
       "coachingCues": "Coaching Cues",
       "noDetails": "No additional details available for this drill."
     }
+  },
+  "gamePlan": {
+    "title": "THE GAME PLAN",
+    "subtitle": "Your daily mission",
+    "tasksCompleted": "{{completed}}/{{total}} tasks",
+    "allComplete": "All complete! 🎉",
+    "workout": {
+      "title": "Complete Today's Workout",
+      "description": "Iron Bambino or Heat Factory session"
+    },
+    "nutrition": {
+      "title": "Log Your Nutrition",
+      "description": "Track your daily intake in The Vault"
+    },
+    "video": {
+      "title": "Analyze a Video",
+      "description": "Upload and review your mechanics"
+    },
+    "recapCountdown": {
+      "title": "6-Week Recap",
+      "daysRemaining": "{{days}} days remaining"
+    }
   }
 }

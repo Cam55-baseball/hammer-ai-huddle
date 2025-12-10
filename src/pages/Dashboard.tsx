@@ -18,6 +18,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
+import { GamePlanCard } from "@/components/GamePlanCard";
 import { toast } from "sonner";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
 import dashboardHero2 from "@/assets/dashboard-hero-1.jpg";
@@ -334,6 +335,8 @@ export default function Dashboard() {
           </div>
         </Card>
 
+        {/* The Game Plan - Daily To-Do List */}
+        <GamePlanCard selectedSport={selectedSport} />
 
         {/* Sport Switch Confirmation Dialog */}
         <AlertDialog open={showSportSwitchDialog} onOpenChange={setShowSportSwitchDialog}>

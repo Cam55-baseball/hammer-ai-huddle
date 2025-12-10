@@ -4175,5 +4175,27 @@
       "coachingCues": "Coaching-Hinweise",
       "noDetails": "Keine zusätzlichen Details für diese Übung verfügbar."
     }
+  },
+  "gamePlan": {
+    "title": "DER SPIELPLAN",
+    "subtitle": "Deine tägliche Mission",
+    "tasksCompleted": "{{completed}}/{{total}} Aufgaben",
+    "allComplete": "Alles erledigt! 🎉",
+    "workout": {
+      "title": "Heutiges Training Abschließen",
+      "description": "Iron Bambino oder Heat Factory Einheit"
+    },
+    "nutrition": {
+      "title": "Ernährung Protokollieren",
+      "description": "Verfolge deine tägliche Aufnahme im Vault"
+    },
+    "video": {
+      "title": "Ein Video Analysieren",
+      "description": "Lade hoch und überprüfe deine Technik"
+    },
+    "recapCountdown": {
+      "title": "6-Wochen Zusammenfassung",
+      "daysRemaining": "{{days}} Tage verbleibend"
+    }
   }
 }

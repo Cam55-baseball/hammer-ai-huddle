@@ -3458,5 +3458,27 @@
       "coachingCues": "コーチングのヒント",
       "noDetails": "このドリルの追加詳細はありません。"
     }
+  },
+  "gamePlan": {
+    "title": "ゲームプラン",
+    "subtitle": "今日のミッション",
+    "tasksCompleted": "{{completed}}/{{total}} タスク",
+    "allComplete": "すべて完了！🎉",
+    "workout": {
+      "title": "今日のワークアウトを完了",
+      "description": "Iron BambinoまたはHeat Factoryセッション"
+    },
+    "nutrition": {
+      "title": "栄養を記録",
+      "description": "The Vaultで毎日の摂取量を追跡"
+    },
+    "video": {
+      "title": "ビデオを分析",
+      "description": "アップロードしてメカニクスを確認"
+    },
+    "recapCountdown": {
+      "title": "6週間レキャップ",
+      "daysRemaining": "残り{{days}}日"
+    }
   }
 }

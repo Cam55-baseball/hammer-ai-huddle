@@ -3428,5 +3428,27 @@
       "coachingCues": "Coaching Tips",
       "noDetails": "Geen extra details beschikbaar voor deze oefening."
     }
+  },
+  "gamePlan": {
+    "title": "HET SPEELPLAN",
+    "subtitle": "Je dagelijkse missie",
+    "tasksCompleted": "{{completed}}/{{total}} taken",
+    "allComplete": "Alles klaar! 🎉",
+    "workout": {
+      "title": "Voltooi de Training van Vandaag",
+      "description": "Iron Bambino of Heat Factory sessie"
+    },
+    "nutrition": {
+      "title": "Log Je Voeding",
+      "description": "Houd je dagelijkse inname bij in The Vault"
+    },
+    "video": {
+      "title": "Analyseer een Video",
+      "description": "Upload en bekijk je techniek"
+    },
+    "recapCountdown": {
+      "title": "6-Weken Samenvatting",
+      "daysRemaining": "{{days}} dagen resterend"
+    }
   }
 }

@@ -3399,5 +3399,27 @@
       "coachingCues": "教练提示",
       "noDetails": "此训练没有其他详细信息。"
     }
+  },
+  "gamePlan": {
+    "title": "今日计划",
+    "subtitle": "你的每日任务",
+    "tasksCompleted": "{{completed}}/{{total}} 任务",
+    "allComplete": "全部完成！🎉",
+    "workout": {
+      "title": "完成今天的训练",
+      "description": "Iron Bambino或Heat Factory训练"
+    },
+    "nutrition": {
+      "title": "记录营养",
+      "description": "在The Vault中跟踪每日摄入"
+    },
+    "video": {
+      "title": "分析视频",
+      "description": "上传并检查你的动作"
+    },
+    "recapCountdown": {
+      "title": "6周回顾",
+      "daysRemaining": "剩余{{days}}天"
+    }
   }
 }
