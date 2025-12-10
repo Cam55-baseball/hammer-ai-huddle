@@ -4107,7 +4107,13 @@
       "favoriteRemoved": "Favorite removed",
       "addedFromFavorite": "Meal added from favorites!",
       "noFavorites": "No favorite meals yet. Save your first one!",
-      "mealName": "Meal Name"
+      "mealName": "Meal Name",
+      "supplementGoals": "Supplement Goals",
+      "dailySupplements": "Daily Supplements",
+      "takenToday": "taken today",
+      "addSupplementGoal": "Add supplement to track",
+      "noSupplementGoals": "No supplements set. Add your daily supplements in Set Goals.",
+      "markAsTaken": "Mark as taken"
     },
     "nutritionWeekly": {
       "title": "Weekly Nutrition Summary",

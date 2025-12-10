@@ -99,6 +99,14 @@ export interface VaultNutritionGoals {
   carbs_goal: number;
   fats_goal: number;
   hydration_goal: number;
+  supplement_goals: string[];
+}
+
+export interface VaultSupplementTracking {
+  id: string;
+  user_id: string;
+  entry_date: string;
+  supplements_taken: string[];
 }
 
 export interface VaultSavedDrill {
@@ -191,6 +199,7 @@ export function useVault() {
   const [workoutNotes, setWorkoutNotes] = useState<VaultWorkoutNote[]>([]);
   const [nutritionLogs, setNutritionLogs] = useState<VaultNutritionLog[]>([]);
   const [nutritionGoals, setNutritionGoals] = useState<VaultNutritionGoals | null>(null);
+  const [supplementTracking, setSupplementTracking] = useState<VaultSupplementTracking | null>(null);
   const [savedDrills, setSavedDrills] = useState<VaultSavedDrill[]>([]);
   const [savedTips, setSavedTips] = useState<VaultSavedTip[]>([]);
   const [performanceTests, setPerformanceTests] = useState<VaultPerformanceTest[]>([]);
@@ -616,7 +625,10 @@ export function useVault() {
       .eq('user_id', user.id)
       .maybeSingle();
     if (data) {
-      setNutritionGoals(data as VaultNutritionGoals);
+      setNutritionGoals({
+        ...data,
+        supplement_goals: (data.supplement_goals as string[]) || [],
+      } as VaultNutritionGoals);
     }
   }, [user]);
 
@@ -633,6 +645,48 @@ export function useVault() {
     if (!error) await fetchNutritionGoals();
     return { success: !error };
   }, [user, fetchNutritionGoals]);
+
+  // Fetch supplement tracking for today
+  const fetchSupplementTracking = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('vault_supplement_tracking')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('entry_date', today)
+      .maybeSingle();
+    if (data) {
+      setSupplementTracking({
+        ...data,
+        supplements_taken: (data.supplements_taken as string[]) || [],
+      } as VaultSupplementTracking);
+    } else {
+      setSupplementTracking(null);
+    }
+  }, [user, today]);
+
+  // Toggle supplement taken status
+  const toggleSupplementTaken = useCallback(async (supplementName: string) => {
+    if (!user) return { success: false };
+    
+    const currentTaken = supplementTracking?.supplements_taken || [];
+    const isCurrentlyTaken = currentTaken.includes(supplementName);
+    const newTaken = isCurrentlyTaken 
+      ? currentTaken.filter(s => s !== supplementName)
+      : [...currentTaken, supplementName];
+    
+    const { error } = await supabase
+      .from('vault_supplement_tracking')
+      .upsert({
+        user_id: user.id,
+        entry_date: today,
+        supplements_taken: newTaken,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,entry_date' });
+    
+    if (!error) await fetchSupplementTracking();
+    return { success: !error };
+  }, [user, today, supplementTracking, fetchSupplementTracking]);
 
   // Fetch favorite meals
   const fetchFavoriteMeals = useCallback(async () => {
@@ -1193,18 +1247,18 @@ export function useVault() {
       setLoading(true);
       await Promise.all([
         fetchStreak(), fetchTodaysQuizzes(), fetchTodaysNotes(), fetchWorkoutNotes(),
-        fetchNutritionLogs(), fetchNutritionGoals(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchRecaps(),
+        fetchNutritionLogs(), fetchNutritionGoals(), fetchSupplementTracking(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchRecaps(),
         fetchEntriesWithData(), fetchFavoriteMeals(),
       ]);
       setLoading(false);
     };
     loadData();
-  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLogs, fetchNutritionGoals, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps, fetchEntriesWithData, fetchFavoriteMeals]);
+  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLogs, fetchNutritionGoals, fetchSupplementTracking, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps, fetchEntriesWithData, fetchFavoriteMeals]);
 
   return {
-    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLogs, nutritionGoals, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData, favoriteMeals,
+    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLogs, nutritionGoals, supplementTracking, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData, favoriteMeals,
     saveFocusQuiz, saveFreeNote, saveWorkoutNote, updateStreak, checkVaultAccess, fetchWorkoutNotes,
-    saveNutritionLog, saveNutritionGoals, deleteSavedDrill, deleteSavedTip, saveDrill, saveTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
+    saveNutritionLog, saveNutritionGoals, toggleSupplementTaken, deleteSavedDrill, deleteSavedTip, saveDrill, saveTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
     deleteQuiz, deleteFreeNote, deleteWorkoutNote, deleteNutritionLog, deletePerformanceTest, deleteProgressPhoto, deleteScoutGrade,
     fetchWeeklyData, fetchWeeklyNutrition, fetchEntriesWithData, fetchSavedItems,
     saveFavoriteMeal, deleteFavoriteMeal, useFavoriteMeal,

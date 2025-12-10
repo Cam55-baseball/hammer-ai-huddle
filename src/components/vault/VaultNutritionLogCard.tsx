@@ -11,7 +11,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie, Zap, Dumbbell, Trash2, Clock, Settings, Flame, FlameKindling, AlertTriangle, Heart, Star, Lightbulb } from 'lucide-react';
+import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie, Zap, Dumbbell, Trash2, Clock, Settings, Flame, FlameKindling, AlertTriangle, Heart, Star, Lightbulb, Check } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -38,15 +39,22 @@ interface NutritionGoals {
   carbs_goal: number;
   fats_goal: number;
   hydration_goal: number;
+  supplement_goals: string[];
+}
+
+interface SupplementTracking {
+  supplements_taken: string[];
 }
 
 interface VaultNutritionLogCardProps {
   todaysLogs: NutritionLog[];
   goals: NutritionGoals | null;
+  supplementTracking: SupplementTracking | null;
   favoriteMeals: VaultFavoriteMeal[];
   onSave: (data: Omit<NutritionLog, 'id' | 'logged_at'>) => Promise<{ success: boolean }>;
   onDelete: (id: string) => Promise<{ success: boolean }>;
   onSaveGoals: (goals: NutritionGoals) => Promise<{ success: boolean }>;
+  onToggleSupplementTaken: (supplementName: string) => Promise<{ success: boolean }>;
   onSaveFavorite: (meal: Omit<VaultFavoriteMeal, 'id' | 'usage_count' | 'created_at' | 'last_used_at'>) => Promise<{ success: boolean }>;
   onDeleteFavorite: (id: string) => Promise<{ success: boolean }>;
   onUseFavorite: (favorite: VaultFavoriteMeal) => Promise<{ success: boolean }>;
@@ -71,15 +79,18 @@ const DEFAULT_GOALS: NutritionGoals = {
   carbs_goal: 250,
   fats_goal: 70,
   hydration_goal: 100,
+  supplement_goals: [],
 };
 
 export function VaultNutritionLogCard({ 
   todaysLogs, 
   goals, 
+  supplementTracking,
   favoriteMeals,
   onSave, 
   onDelete, 
   onSaveGoals,
+  onToggleSupplementTaken,
   onSaveFavorite,
   onDeleteFavorite,
   onUseFavorite,
@@ -123,6 +134,8 @@ export function VaultNutritionLogCard({
   const [goalCarbs, setGoalCarbs] = useState(currentGoals.carbs_goal.toString());
   const [goalFats, setGoalFats] = useState(currentGoals.fats_goal.toString());
   const [goalHydration, setGoalHydration] = useState(currentGoals.hydration_goal.toString());
+  const [goalSupplements, setGoalSupplements] = useState<string[]>(currentGoals.supplement_goals || []);
+  const [newGoalSupplement, setNewGoalSupplement] = useState('');
 
   // Calculate daily totals
   const dailyTotals = useMemo(() => {
@@ -218,12 +231,24 @@ export function VaultNutritionLogCard({
       carbs_goal: parseInt(goalCarbs) || DEFAULT_GOALS.carbs_goal,
       fats_goal: parseInt(goalFats) || DEFAULT_GOALS.fats_goal,
       hydration_goal: parseInt(goalHydration) || DEFAULT_GOALS.hydration_goal,
+      supplement_goals: goalSupplements,
     });
     setSavingGoals(false);
     if (result.success) {
       toast.success(t('vault.nutrition.goalsSaved'));
       setGoalsDialogOpen(false);
     }
+  };
+
+  const handleAddGoalSupplement = () => {
+    if (newGoalSupplement.trim() && !goalSupplements.includes(newGoalSupplement.trim())) {
+      setGoalSupplements([...goalSupplements, newGoalSupplement.trim()]);
+      setNewGoalSupplement('');
+    }
+  };
+
+  const handleRemoveGoalSupplement = (supp: string) => {
+    setGoalSupplements(goalSupplements.filter(s => s !== supp));
   };
 
   const handleDelete = async (id: string) => {
@@ -475,6 +500,47 @@ export function VaultNutritionLogCard({
               </CollapsibleContent>
             </Collapsible>
 
+            {/* Daily Supplements Checklist */}
+            {currentGoals.supplement_goals && currentGoals.supplement_goals.length > 0 && (
+              <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-purple-500/5 border border-purple-500/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Pill className="h-4 w-4 text-purple-500" />
+                    <span className="text-sm font-medium">{t('vault.nutrition.dailySupplements')}</span>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {supplementTracking?.supplements_taken?.length || 0}/{currentGoals.supplement_goals.length} {t('vault.nutrition.takenToday')}
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {currentGoals.supplement_goals.map((supp) => {
+                    const isTaken = supplementTracking?.supplements_taken?.includes(supp) || false;
+                    return (
+                      <div 
+                        key={supp}
+                        onClick={() => onToggleSupplementTaken(supp)}
+                        className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
+                          isTaken 
+                            ? 'bg-green-500/20 border border-green-500/30' 
+                            : 'bg-muted/50 hover:bg-muted border border-transparent'
+                        }`}
+                      >
+                        <Checkbox 
+                          checked={isTaken}
+                          onCheckedChange={() => onToggleSupplementTaken(supp)}
+                          className="h-4 w-4"
+                        />
+                        <span className={`text-sm ${isTaken ? 'text-green-600 dark:text-green-400 line-through' : ''}`}>
+                          {supp}
+                        </span>
+                        {isTaken && <Check className="h-3 w-3 text-green-500 ml-auto" />}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             {/* Quick Presets */}
             <div className="space-y-2">
               <Label className="text-xs font-medium">{t('vault.nutrition.presets')}</Label>
@@ -828,6 +894,50 @@ export function VaultNutritionLogCard({
                             placeholder="100"
                           />
                         </div>
+                        
+                        {/* Supplement Goals Section */}
+                        <div className="space-y-2 pt-4 border-t">
+                          <div className="flex items-center gap-2">
+                            <Pill className="h-4 w-4 text-purple-500" />
+                            <Label>{t('vault.nutrition.supplementGoals')}</Label>
+                          </div>
+                          
+                          {goalSupplements.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {goalSupplements.map((supp) => (
+                                <Badge key={supp} variant="secondary" className="gap-1 text-xs">
+                                  {supp}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveGoalSupplement(supp)}
+                                    className="ml-0.5 hover:text-destructive"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <div className="flex gap-2">
+                            <Input
+                              value={newGoalSupplement}
+                              onChange={(e) => setNewGoalSupplement(e.target.value)}
+                              placeholder={t('vault.nutrition.addSupplementGoal')}
+                              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddGoalSupplement())}
+                              className="flex-1"
+                            />
+                            <Button 
+                              type="button" 
+                              size="sm" 
+                              onClick={handleAddGoalSupplement}
+                              disabled={!newGoalSupplement.trim()}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
                         <div className="flex gap-2 pt-2">
                           <Button variant="outline" onClick={() => setGoalsDialogOpen(false)} className="flex-1">
                             {t('common.cancel')}

@@ -3929,7 +3929,13 @@
       "favoriteRemoved": "Favorit entfernt",
       "addedFromFavorite": "Mahlzeit aus Favoriten hinzugefügt!",
       "noFavorites": "Noch keine Lieblingsmahlzeiten. Speichere deine erste!",
-      "mealName": "Mahlzeit-Name"
+      "mealName": "Mahlzeit-Name",
+      "supplementGoals": "Ergänzungsziele",
+      "dailySupplements": "Tägliche Nahrungsergänzungsmittel",
+      "takenToday": "heute eingenommen",
+      "addSupplementGoal": "Ergänzung zum Verfolgen hinzufügen",
+      "noSupplementGoals": "Keine Ergänzungen festgelegt. Füge deine täglichen Ergänzungen in Ziele Festlegen hinzu.",
+      "markAsTaken": "Als eingenommen markieren"
     },
     "nutritionWeekly": {
       "title": "Wöchentliche Ernährungszusammenfassung",

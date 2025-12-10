@@ -3174,7 +3174,13 @@
       "favoriteRemoved": "Favoriet verwijderd",
       "addedFromFavorite": "Maaltijd toegevoegd vanuit favorieten!",
       "noFavorites": "Nog geen favoriete maaltijden. Sla je eerste op!",
-      "mealName": "Maaltijdnaam"
+      "mealName": "Maaltijdnaam",
+      "supplementGoals": "Supplementdoelen",
+      "dailySupplements": "Dagelijkse Supplementen",
+      "takenToday": "vandaag ingenomen",
+      "addSupplementGoal": "Supplement toevoegen om te volgen",
+      "noSupplementGoals": "Geen supplementen ingesteld. Voeg je dagelijkse supplementen toe in Doelen Instellen.",
+      "markAsTaken": "Markeer als ingenomen"
     },
     "nutritionWeekly": {
       "title": "Wekelijks Voedingsoverzicht",

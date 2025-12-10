@@ -3907,7 +3907,13 @@
       "favoriteRemoved": "Favorito eliminado",
       "addedFromFavorite": "¡Comida agregada desde favoritos!",
       "noFavorites": "Aún no tienes comidas favoritas. ¡Guarda la primera!",
-      "mealName": "Nombre de Comida"
+      "mealName": "Nombre de Comida",
+      "supplementGoals": "Metas de Suplementos",
+      "dailySupplements": "Suplementos Diarios",
+      "takenToday": "tomados hoy",
+      "addSupplementGoal": "Agregar suplemento para rastrear",
+      "noSupplementGoals": "No hay suplementos configurados. Agrega tus suplementos diarios en Configurar Metas.",
+      "markAsTaken": "Marcar como tomado"
     },
     "nutritionWeekly": {
       "title": "Resumen Nutricional Semanal",

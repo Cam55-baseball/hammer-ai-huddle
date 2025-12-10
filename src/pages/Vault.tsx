@@ -56,10 +56,12 @@ export default function Vault() {
     recaps,
     entriesWithData,
     favoriteMeals,
+    supplementTracking,
     saveFocusQuiz,
     saveFreeNote,
     saveNutritionLog,
     saveNutritionGoals,
+    toggleSupplementTaken,
     deleteSavedDrill,
     deleteSavedTip,
     savePerformanceTest,
@@ -440,9 +442,11 @@ export default function Vault() {
                 <VaultNutritionLogCard 
                   todaysLogs={nutritionLogs}
                   goals={nutritionGoals}
+                  supplementTracking={supplementTracking}
                   onSave={handleSaveNutrition}
                   onDelete={deleteNutritionLog}
                   onSaveGoals={saveNutritionGoals}
+                  onToggleSupplementTaken={toggleSupplementTaken}
                   isLoading={loading}
                   favoriteMeals={favoriteMeals}
                   onSaveFavorite={saveFavoriteMeal}
