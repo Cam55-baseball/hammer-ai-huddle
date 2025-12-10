@@ -2934,6 +2934,10 @@
       "locked": "已锁定",
       "readOnly": "只读"
     },
+    "sixWeekTracking": {
+      "title": "6周跟踪",
+      "description": "每6周记录一次，以获得准确的进度报告"
+    },
     "tabs": {
       "today": "今天",
       "history": "历史",
