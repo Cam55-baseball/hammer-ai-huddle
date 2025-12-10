@@ -37,6 +37,7 @@ interface ScoutGrade {
 interface VaultScoutGradesCardProps {
   grades: ScoutGrade[];
   sport?: 'baseball' | 'softball';
+  autoOpen?: boolean;
   onSave: (data: {
     hitting_grade: number | null;
     power_grade: number | null;
@@ -99,9 +100,16 @@ const KEY_LABELS: Record<number, string> = {
   80: 'hallOfFame',
 };
 
-export function VaultScoutGradesCard({ grades, sport = 'baseball', onSave }: VaultScoutGradesCardProps) {
+export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = false, onSave }: VaultScoutGradesCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Auto-open when navigating from Game Plan
+  useEffect(() => {
+    if (autoOpen) {
+      setIsOpen(true);
+    }
+  }, [autoOpen]);
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   

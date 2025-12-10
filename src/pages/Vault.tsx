@@ -659,6 +659,7 @@ export default function Vault() {
                       <VaultScoutGradesCard
                         grades={scoutGrades}
                         sport={userSport}
+                        autoOpen={searchParams.get('openSection') === 'scout-grades'}
                         onSave={handleSaveScoutGrade}
                       />
                     </div>
