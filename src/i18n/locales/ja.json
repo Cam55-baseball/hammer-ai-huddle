@@ -3375,7 +3375,17 @@
         "aboveAverage": "平均以上",
         "plus": "プラス",
         "elite": "エリート",
-        "hallOfFame": "殿堂"
+        "hallOfFame": "殿堂",
+        "tooltips": {
+          "poorTooltip": "競争レベルに達するには大幅な開発が必要",
+          "belowAverageTooltip": "プロの基準以下だが潜在能力を示している",
+          "mlbAverageTooltip": "メジャーリーグレベルでは平均と見なされます",
+          "auslAverageTooltip": "プロリーグレベルでは平均と見なされます",
+          "averageTooltip": "標準的な期待に応える堅実なツール",
+          "aboveAverageTooltip": "同僚の中で際立つ平均以上のツール",
+          "eliteTooltip": "トッププロ選手に見られるエリートレベルのツール",
+          "hallOfFameTooltip": "世代的才能 - プロの中でもめったに見られない"
+        }
       }
     },
     "recap": {
@@ -3532,6 +3542,14 @@
         "title": "クイック栄養記録",
         "subtitle": "数秒で食事を記録"
       }
+    },
+    "mindfuel": {
+      "title": "今日のマインドフューエルを取得",
+      "description": "今日のメンタルトレーニングレッスンを探索"
+    },
+    "healthtip": {
+      "title": "今日の健康ヒントを取得",
+      "description": "今日の栄養の洞察を発見"
     },
     "tracking": {
       "performance": {

@@ -4280,7 +4280,17 @@
         "aboveAverage": "Above Avg",
         "plus": "Plus",
         "elite": "Elite",
-        "hallOfFame": "HOF"
+        "hallOfFame": "HOF",
+        "tooltips": {
+          "poorTooltip": "Significant development needed to reach competitive level",
+          "belowAverageTooltip": "Below professional standards but showing potential",
+          "mlbAverageTooltip": "You'd be considered average at the major league level",
+          "auslAverageTooltip": "You'd be considered average at the professional league level",
+          "averageTooltip": "Solid tool that meets standard expectations",
+          "aboveAverageTooltip": "Above-average tool that stands out among peers",
+          "eliteTooltip": "Elite-level tool found in top professional players",
+          "hallOfFameTooltip": "Generational talent - rarely seen even among pros"
+        }
       }
     },
     "recap": {
@@ -4427,6 +4437,14 @@
         "title": "Quick Nutrition Log",
         "subtitle": "Log your meal in seconds"
       }
+    },
+    "mindfuel": {
+      "title": "Get Your Daily Mind Fuel",
+      "description": "Explore today's mental training lesson"
+    },
+    "healthtip": {
+      "title": "Get Your Daily Health Tip",
+      "description": "Discover today's nutrition insight"
     },
     "tracking": {
       "performance": {

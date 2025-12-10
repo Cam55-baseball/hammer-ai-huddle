@@ -4080,7 +4080,17 @@
         "aboveAverage": "Sobre Prom.",
         "plus": "Superior",
         "elite": "Élite",
-        "hallOfFame": "HOF"
+        "hallOfFame": "HOF",
+        "tooltips": {
+          "poorTooltip": "Se necesita desarrollo significativo para alcanzar nivel competitivo",
+          "belowAverageTooltip": "Por debajo de los estándares profesionales pero mostrando potencial",
+          "mlbAverageTooltip": "Serías considerado promedio a nivel de Grandes Ligas",
+          "auslAverageTooltip": "Serías considerado promedio a nivel de liga profesional",
+          "averageTooltip": "Herramienta sólida que cumple las expectativas estándar",
+          "aboveAverageTooltip": "Herramienta por encima del promedio que destaca entre pares",
+          "eliteTooltip": "Herramienta de nivel élite encontrada en los mejores profesionales",
+          "hallOfFameTooltip": "Talento generacional - raramente visto incluso entre profesionales"
+        }
       }
     },
     "recap": {
@@ -4227,6 +4237,14 @@
         "title": "Registro Rápido de Nutrición",
         "subtitle": "Registra tu comida en segundos"
       }
+    },
+    "mindfuel": {
+      "title": "Obtén Tu Mind Fuel Diario",
+      "description": "Explora la lección de entrenamiento mental de hoy"
+    },
+    "healthtip": {
+      "title": "Obtén Tu Consejo de Salud Diario",
+      "description": "Descubre el consejo nutricional de hoy"
     },
     "tracking": {
       "performance": {
