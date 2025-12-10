@@ -4102,7 +4102,17 @@
         "aboveAverage": "Au-dessus Moy.",
         "plus": "Supérieur",
         "elite": "Élite",
-        "hallOfFame": "HOF"
+        "hallOfFame": "HOF",
+        "tooltips": {
+          "poorTooltip": "Développement significatif nécessaire pour atteindre un niveau compétitif",
+          "belowAverageTooltip": "En dessous des standards professionnels mais montrant du potentiel",
+          "mlbAverageTooltip": "Vous seriez considéré comme moyen au niveau des ligues majeures",
+          "auslAverageTooltip": "Vous seriez considéré comme moyen au niveau de la ligue professionnelle",
+          "averageTooltip": "Outil solide qui répond aux attentes standard",
+          "aboveAverageTooltip": "Outil au-dessus de la moyenne qui se démarque parmi les pairs",
+          "eliteTooltip": "Outil de niveau élite trouvé chez les meilleurs professionnels",
+          "hallOfFameTooltip": "Talent générationnel - rarement vu même chez les pros"
+        }
       }
     },
     "recap": {
@@ -4249,6 +4259,14 @@
         "title": "Journal Nutrition Rapide",
         "subtitle": "Enregistrez votre repas en quelques secondes"
       }
+    },
+    "mindfuel": {
+      "title": "Obtenez Votre Mind Fuel Quotidien",
+      "description": "Explorez la leçon d'entraînement mental d'aujourd'hui"
+    },
+    "healthtip": {
+      "title": "Obtenez Votre Conseil Santé Quotidien",
+      "description": "Découvrez le conseil nutrition d'aujourd'hui"
     },
     "tracking": {
       "performance": {

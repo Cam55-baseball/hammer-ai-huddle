@@ -4102,7 +4102,17 @@
         "aboveAverage": "Über Durchschn.",
         "plus": "Überdurchschn.",
         "elite": "Elite",
-        "hallOfFame": "HOF"
+        "hallOfFame": "HOF",
+        "tooltips": {
+          "poorTooltip": "Erhebliche Entwicklung erforderlich, um wettbewerbsfähiges Niveau zu erreichen",
+          "belowAverageTooltip": "Unter professionellen Standards, zeigt aber Potenzial",
+          "mlbAverageTooltip": "Du würdest auf Major-League-Niveau als durchschnittlich gelten",
+          "auslAverageTooltip": "Du würdest auf professionellem Liga-Niveau als durchschnittlich gelten",
+          "averageTooltip": "Solides Werkzeug, das Standarderwartungen erfüllt",
+          "aboveAverageTooltip": "Überdurchschnittliches Werkzeug, das sich unter Gleichaltrigen abhebt",
+          "eliteTooltip": "Elite-Werkzeug, das bei Top-Profis zu finden ist",
+          "hallOfFameTooltip": "Generationstalent - selbst unter Profis selten gesehen"
+        }
       }
     },
     "recap": {
@@ -4249,6 +4259,14 @@
         "title": "Schnell-Ernährungsprotokoll",
         "subtitle": "Protokolliere deine Mahlzeit in Sekunden"
       }
+    },
+    "mindfuel": {
+      "title": "Hole Dir Deinen Täglichen Mind Fuel",
+      "description": "Erkunde die heutige mentale Trainingslektion"
+    },
+    "healthtip": {
+      "title": "Hole Dir Deinen Täglichen Gesundheitstipp",
+      "description": "Entdecke die heutige Ernährungseinsicht"
     },
     "tracking": {
       "performance": {

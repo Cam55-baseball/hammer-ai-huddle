@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon } from 'lucide-react';
+import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon, Lightbulb, Sparkles } from 'lucide-react';
 
 export interface GamePlanTask {
   id: string;
@@ -142,6 +142,26 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       
       status['nutrition'] = (nutritionData?.length || 0) > 0;
 
+      // Fetch mind fuel lesson completion for today
+      const { data: mindFuelData } = await supabase
+        .from('user_viewed_lessons')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('viewed_at', `${today}T00:00:00`)
+        .limit(1);
+      
+      status['mindfuel'] = (mindFuelData?.length || 0) > 0;
+
+      // Fetch health tip completion for today
+      const { data: healthTipData } = await supabase
+        .from('user_viewed_tips')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('viewed_at', `${today}T00:00:00`)
+        .limit(1);
+      
+      status['healthtip'] = (healthTipData?.length || 0) > 0;
+
       // Check 6-week tracking: Performance Tests
       const { data: perfTestData } = await supabase
         .from('vault_performance_tests')
@@ -273,6 +293,28 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       taskType: 'nutrition',
       section: 'checkin',
     });
+
+    tasks.push({
+      id: 'mindfuel',
+      titleKey: 'gamePlan.mindfuel.title',
+      descriptionKey: 'gamePlan.mindfuel.description',
+      completed: completionStatus['mindfuel'] || false,
+      icon: Sparkles,
+      link: '/mind-fuel',
+      taskType: 'quiz',
+      section: 'checkin',
+    });
+
+    tasks.push({
+      id: 'healthtip',
+      titleKey: 'gamePlan.healthtip.title',
+      descriptionKey: 'gamePlan.healthtip.description',
+      completed: completionStatus['healthtip'] || false,
+      icon: Lightbulb,
+      link: '/nutrition',
+      taskType: 'quiz',
+      section: 'checkin',
+    });
   }
 
   // === TRAINING SECTION ===
@@ -284,7 +326,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       descriptionKey: 'gamePlan.workout.hitting.description',
       completed: completionStatus['workout-hitting'] || false,
       icon: Dumbbell,
-      link: `/analyze/hitting?sport=${selectedSport}&tab=iron-bambino`,
+      link: '/production-lab',
       module: 'hitting',
       taskType: 'workout',
       section: 'training',
@@ -298,7 +340,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       descriptionKey: 'gamePlan.workout.pitching.description',
       completed: completionStatus['workout-pitching'] || false,
       icon: Flame,
-      link: `/analyze/pitching?sport=${selectedSport}&tab=heat-factory`,
+      link: '/production-studio',
       module: 'pitching',
       taskType: 'workout',
       section: 'training',

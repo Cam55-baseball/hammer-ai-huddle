@@ -3332,7 +3332,17 @@
         "aboveAverage": "평균 이상",
         "plus": "우수",
         "elite": "엘리트",
-        "hallOfFame": "명예의 전당"
+        "hallOfFame": "명예의 전당",
+        "tooltips": {
+          "poorTooltip": "경쟁 수준에 도달하려면 상당한 개발이 필요",
+          "belowAverageTooltip": "프로 기준 이하지만 잠재력을 보이고 있음",
+          "mlbAverageTooltip": "메이저 리그 수준에서 평균으로 간주됩니다",
+          "auslAverageTooltip": "프로 리그 수준에서 평균으로 간주됩니다",
+          "averageTooltip": "표준 기대치를 충족하는 견고한 도구",
+          "aboveAverageTooltip": "동료들 사이에서 눈에 띄는 평균 이상의 도구",
+          "eliteTooltip": "최고 프로 선수들에게서 발견되는 엘리트급 도구",
+          "hallOfFameTooltip": "세대적 재능 - 프로들 사이에서도 드물게 볼 수 있음"
+        }
       }
     },
     "recap": {
@@ -3489,6 +3499,14 @@
         "title": "빠른 영양 기록",
         "subtitle": "몇 초 만에 식사 기록"
       }
+    },
+    "mindfuel": {
+      "title": "오늘의 마인드 퓨얼 받기",
+      "description": "오늘의 정신 훈련 레슨 탐색"
+    },
+    "healthtip": {
+      "title": "오늘의 건강 팁 받기",
+      "description": "오늘의 영양 인사이트 발견"
     },
     "tracking": {
       "performance": {

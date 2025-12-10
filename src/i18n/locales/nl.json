@@ -3345,7 +3345,17 @@
         "aboveAverage": "Boven Gem.",
         "plus": "Bovengemiddeld",
         "elite": "Elite",
-        "hallOfFame": "HOF"
+        "hallOfFame": "HOF",
+        "tooltips": {
+          "poorTooltip": "Significante ontwikkeling nodig om competitief niveau te bereiken",
+          "belowAverageTooltip": "Onder professionele standaarden maar potentieel tonend",
+          "mlbAverageTooltip": "Je zou als gemiddeld worden beschouwd op major league niveau",
+          "auslAverageTooltip": "Je zou als gemiddeld worden beschouwd op professioneel liga niveau",
+          "averageTooltip": "Solide tool die aan standaard verwachtingen voldoet",
+          "aboveAverageTooltip": "Bovengemiddelde tool die opvalt onder leeftijdsgenoten",
+          "eliteTooltip": "Elite-niveau tool gevonden bij top professionele spelers",
+          "hallOfFameTooltip": "Generatietalent - zelfs onder profs zelden gezien"
+        }
       }
     },
     "recap": {
@@ -3502,6 +3512,14 @@
         "title": "Snelle Voedingslog",
         "subtitle": "Log je maaltijd in seconden"
       }
+    },
+    "mindfuel": {
+      "title": "Krijg Je Dagelijkse Mind Fuel",
+      "description": "Verken de mentale trainingsles van vandaag"
+    },
+    "healthtip": {
+      "title": "Krijg Je Dagelijkse Gezondheidstip",
+      "description": "Ontdek het voedingsinzicht van vandaag"
     },
     "tracking": {
       "performance": {

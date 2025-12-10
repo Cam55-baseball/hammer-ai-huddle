@@ -3316,7 +3316,17 @@
         "aboveAverage": "高于平均",
         "plus": "优秀",
         "elite": "精英",
-        "hallOfFame": "名人堂"
+        "hallOfFame": "名人堂",
+        "tooltips": {
+          "poorTooltip": "需要大幅发展才能达到竞争水平",
+          "belowAverageTooltip": "低于职业标准但显示出潜力",
+          "mlbAverageTooltip": "你在大联盟级别会被认为是平均水平",
+          "auslAverageTooltip": "你在职业联赛级别会被认为是平均水平",
+          "averageTooltip": "满足标准期望的可靠工具",
+          "aboveAverageTooltip": "在同龄人中脱颖而出的高于平均水平的工具",
+          "eliteTooltip": "在顶级职业球员中发现的精英级工具",
+          "hallOfFameTooltip": "世代人才 - 即使在职业球员中也很少见"
+        }
       }
     },
     "recap": {
@@ -3473,6 +3483,14 @@
         "title": "快速营养记录",
         "subtitle": "几秒钟内记录你的餐食"
       }
+    },
+    "mindfuel": {
+      "title": "获取今日心灵燃料",
+      "description": "探索今天的心理训练课程"
+    },
+    "healthtip": {
+      "title": "获取今日健康提示",
+      "description": "发现今天的营养洞察"
     },
     "tracking": {
       "performance": {
