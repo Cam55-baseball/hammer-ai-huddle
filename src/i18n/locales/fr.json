@@ -3929,7 +3929,13 @@
       "favoriteRemoved": "Favori supprimé",
       "addedFromFavorite": "Repas ajouté depuis les favoris!",
       "noFavorites": "Pas encore de repas favoris. Sauvegardez le premier!",
-      "mealName": "Nom du Repas"
+      "mealName": "Nom du Repas",
+      "supplementGoals": "Objectifs de Suppléments",
+      "dailySupplements": "Suppléments Quotidiens",
+      "takenToday": "pris aujourd'hui",
+      "addSupplementGoal": "Ajouter un supplément à suivre",
+      "noSupplementGoals": "Aucun supplément défini. Ajoutez vos suppléments quotidiens dans Définir les Objectifs.",
+      "markAsTaken": "Marquer comme pris"
     },
     "nutritionWeekly": {
       "title": "Résumé Nutritionnel Hebdomadaire",

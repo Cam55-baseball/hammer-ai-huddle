@@ -3145,7 +3145,13 @@
       "favoriteRemoved": "收藏已删除",
       "addedFromFavorite": "已从收藏添加餐食！",
       "noFavorites": "还没有收藏的餐食。保存第一个吧！",
-      "mealName": "餐食名称"
+      "mealName": "餐食名称",
+      "supplementGoals": "补充剂目标",
+      "dailySupplements": "每日补充剂",
+      "takenToday": "今日已服用",
+      "addSupplementGoal": "添加要追踪的补充剂",
+      "noSupplementGoals": "未设置补充剂。在设置目标中添加每日补充剂。",
+      "markAsTaken": "标记为已服用"
     },
     "nutritionWeekly": {
       "title": "每周营养总结",

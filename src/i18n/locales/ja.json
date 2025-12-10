@@ -3204,7 +3204,13 @@
       "favoriteRemoved": "お気に入りを削除しました",
       "addedFromFavorite": "お気に入りから食事を追加しました！",
       "noFavorites": "まだお気に入りの食事がありません。最初の一つを保存しましょう！",
-      "mealName": "食事名"
+      "mealName": "食事名",
+      "supplementGoals": "サプリメント目標",
+      "dailySupplements": "毎日のサプリメント",
+      "takenToday": "今日摂取済み",
+      "addSupplementGoal": "追跡するサプリメントを追加",
+      "noSupplementGoals": "サプリメントが設定されていません。目標設定で毎日のサプリメントを追加してください。",
+      "markAsTaken": "摂取済みにする"
     },
     "nutritionWeekly": {
       "title": "週間栄養サマリー",

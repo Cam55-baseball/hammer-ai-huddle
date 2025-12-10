@@ -1199,6 +1199,7 @@ export type Database = {
           hydration_goal: number | null
           id: string
           protein_goal: number | null
+          supplement_goals: Json | null
           updated_at: string | null
           user_id: string
         }
@@ -1210,6 +1211,7 @@ export type Database = {
           hydration_goal?: number | null
           id?: string
           protein_goal?: number | null
+          supplement_goals?: Json | null
           updated_at?: string | null
           user_id: string
         }
@@ -1221,6 +1223,7 @@ export type Database = {
           hydration_goal?: number | null
           id?: string
           protein_goal?: number | null
+          supplement_goals?: Json | null
           updated_at?: string | null
           user_id?: string
         }
@@ -1557,6 +1560,33 @@ export type Database = {
           nutrition_streak?: number | null
           quiz_streak?: number | null
           total_entries?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vault_supplement_tracking: {
+        Row: {
+          created_at: string | null
+          entry_date: string
+          id: string
+          supplements_taken: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          supplements_taken?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          supplements_taken?: Json | null
           updated_at?: string | null
           user_id?: string
         }
