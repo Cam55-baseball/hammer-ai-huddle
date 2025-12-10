@@ -4047,6 +4047,13 @@
     "nutrition": {
       "title": "Nutrition Log",
       "description": "Update after every meal, snack, and drink to track your daily intake",
+      "mealType": "Meal Type",
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack",
+      "hydrationOnly": "Hydration",
+      "logEntry": "Log Entry",
       "calories": "Calories",
       "protein": "Protein (g)",
       "carbs": "Carbs (g)",

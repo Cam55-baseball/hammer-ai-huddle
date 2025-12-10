@@ -3869,6 +3869,13 @@
     "nutrition": {
       "title": "Journal Nutritionnel",
       "description": "Mettez à jour après chaque repas, collation et boisson pour suivre votre consommation quotidienne",
+      "mealType": "Type de Repas",
+      "breakfast": "Petit-déjeuner",
+      "lunch": "Déjeuner",
+      "dinner": "Dîner",
+      "snack": "Collation",
+      "hydrationOnly": "Hydratation",
+      "logEntry": "Enregistrer",
       "calories": "Calories",
       "protein": "Protéines (g)",
       "carbs": "Glucides (g)",

@@ -3114,6 +3114,13 @@
     "nutrition": {
       "title": "Voedingslog",
       "description": "Werk bij na elke maaltijd, snack en drankje om je dagelijkse inname te volgen",
+      "mealType": "Maaltijdtype",
+      "breakfast": "Ontbijt",
+      "lunch": "Lunch",
+      "dinner": "Diner",
+      "snack": "Snack",
+      "hydrationOnly": "Hydratatie",
+      "logEntry": "Invoeren",
       "calories": "Calorieën",
       "protein": "Eiwitten (g)",
       "carbs": "Koolhydraten (g)",

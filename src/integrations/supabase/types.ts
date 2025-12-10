@@ -1153,6 +1153,7 @@ export type Database = {
           fats_g: number | null
           hydration_oz: number | null
           id: string
+          meal_type: string | null
           micros: Json | null
           protein_g: number | null
           supplements: Json | null
@@ -1169,6 +1170,7 @@ export type Database = {
           fats_g?: number | null
           hydration_oz?: number | null
           id?: string
+          meal_type?: string | null
           micros?: Json | null
           protein_g?: number | null
           supplements?: Json | null
@@ -1185,6 +1187,7 @@ export type Database = {
           fats_g?: number | null
           hydration_oz?: number | null
           id?: string
+          meal_type?: string | null
           micros?: Json | null
           protein_g?: number | null
           supplements?: Json | null

@@ -3869,6 +3869,13 @@
     "nutrition": {
       "title": "Ernährungstagebuch",
       "description": "Aktualisiere nach jeder Mahlzeit, jedem Snack und Getränk um deine tägliche Aufnahme zu verfolgen",
+      "mealType": "Mahlzeitentyp",
+      "breakfast": "Frühstück",
+      "lunch": "Mittagessen",
+      "dinner": "Abendessen",
+      "snack": "Snack",
+      "hydrationOnly": "Hydration",
+      "logEntry": "Eintragen",
       "calories": "Kalorien",
       "protein": "Protein (g)",
       "carbs": "Kohlenhydrate (g)",

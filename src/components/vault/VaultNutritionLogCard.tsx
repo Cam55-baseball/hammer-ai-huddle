@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface NutritionLog {
@@ -21,6 +22,7 @@ interface NutritionLog {
   energy_level: number | null;
   digestion_notes: string | null;
   supplements: string[];
+  meal_type: string | null;
 }
 
 interface VaultNutritionLogCardProps {
@@ -48,9 +50,11 @@ export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: 
       </Card>
     );
   }
+
   const [isOpen, setIsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   
+  const [mealType, setMealType] = useState<string>(todaysLog?.meal_type || '');
   const [calories, setCalories] = useState<string>(todaysLog?.calories?.toString() || '');
   const [protein, setProtein] = useState<string>(todaysLog?.protein_g?.toString() || '');
   const [carbs, setCarbs] = useState<string>(todaysLog?.carbs_g?.toString() || '');
@@ -83,11 +87,25 @@ export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: 
       energy_level: energyLevel[0],
       digestion_notes: digestionNotes || null,
       supplements,
+      meal_type: mealType || null,
     });
     setSaving(false);
   };
 
+  const handleLogEntry = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsOpen(true);
+  };
+
   const hasData = todaysLog && (todaysLog.calories || todaysLog.protein_g || todaysLog.hydration_oz);
+
+  const mealTypeOptions = [
+    { value: 'breakfast', icon: Coffee, label: t('vault.nutrition.breakfast') },
+    { value: 'lunch', icon: Salad, label: t('vault.nutrition.lunch') },
+    { value: 'dinner', icon: UtensilsCrossed, label: t('vault.nutrition.dinner') },
+    { value: 'snack', icon: Cookie, label: t('vault.nutrition.snack') },
+    { value: 'hydration', icon: Droplets, label: t('vault.nutrition.hydrationOnly') },
+  ];
 
   return (
     <Card>
@@ -95,12 +113,21 @@ export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: 
         <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Apple className="h-5 w-5 text-green-500" />
                 <CardTitle className="text-lg">{t('vault.nutrition.title')}</CardTitle>
                 {hasData && <CheckCircle className="h-4 w-4 text-green-500" />}
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-7 gap-1 text-xs ml-2"
+                  onClick={handleLogEntry}
+                >
+                  <Plus className="h-3 w-3" />
+                  {t('vault.nutrition.logEntry')}
+                </Button>
               </div>
-              <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
             </div>
             <CardDescription>{t('vault.nutrition.description')}</CardDescription>
           </CardHeader>
@@ -114,6 +141,28 @@ export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: 
                 <AlertDescription>{t('vault.nutrition.logged')}</AlertDescription>
               </Alert>
             )}
+
+            {/* Meal Type */}
+            <div className="space-y-2">
+              <Label className="text-xs">{t('vault.nutrition.mealType')}</Label>
+              <ToggleGroup 
+                type="single" 
+                value={mealType} 
+                onValueChange={(val) => val && setMealType(val)}
+                className="flex flex-wrap gap-1 justify-start"
+              >
+                {mealTypeOptions.map((option) => (
+                  <ToggleGroupItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="flex-1 min-w-[70px] gap-1 text-xs h-9 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                  >
+                    <option.icon className="h-3 w-3" />
+                    <span className="hidden sm:inline">{option.label}</span>
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
 
             {/* Macros */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -174,7 +223,7 @@ export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: 
               </div>
             </div>
 
-            {/* Energy Level */}
+            {/* Energy Level with number labels */}
             <div className="space-y-2">
               <Label className="text-xs">{t('vault.nutrition.energyLevel')}: {energyLevel[0]}/10</Label>
               <Slider
@@ -185,9 +234,19 @@ export function VaultNutritionLogCard({ todaysLog, onSave, isLoading = false }: 
                 step={1}
                 className="py-2"
               />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{t('vault.nutrition.low')}</span>
-                <span>{t('vault.nutrition.high')}</span>
+              <div className="flex justify-between px-1">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                  <span 
+                    key={num} 
+                    className={`text-[10px] w-4 text-center ${
+                      num === energyLevel[0] 
+                        ? 'text-primary font-bold' 
+                        : 'text-muted-foreground'
+                    }`}
+                  >
+                    {num}
+                  </span>
+                ))}
               </div>
             </div>
 
