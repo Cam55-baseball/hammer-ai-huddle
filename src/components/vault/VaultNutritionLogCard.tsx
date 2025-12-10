@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -136,6 +136,18 @@ export function VaultNutritionLogCard({
   const [goalHydration, setGoalHydration] = useState(currentGoals.hydration_goal.toString());
   const [goalSupplements, setGoalSupplements] = useState<string[]>(currentGoals.supplement_goals || []);
   const [newGoalSupplement, setNewGoalSupplement] = useState('');
+
+  // Sync goals form state when goals prop changes
+  useEffect(() => {
+    if (goals) {
+      setGoalCalories(goals.calorie_goal.toString());
+      setGoalProtein(goals.protein_goal.toString());
+      setGoalCarbs(goals.carbs_goal.toString());
+      setGoalFats(goals.fats_goal.toString());
+      setGoalHydration(goals.hydration_goal.toString());
+      setGoalSupplements(goals.supplement_goals || []);
+    }
+  }, [goals]);
 
   // Calculate daily totals
   const dailyTotals = useMemo(() => {
