@@ -9,7 +9,9 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie, Zap, Dumbbell, Trash2, Clock } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie, Zap, Dumbbell, Trash2, Clock, Settings, Flame, FlameKindling, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -28,10 +30,20 @@ interface NutritionLog {
   logged_at: string | null;
 }
 
+interface NutritionGoals {
+  calorie_goal: number;
+  protein_goal: number;
+  carbs_goal: number;
+  fats_goal: number;
+  hydration_goal: number;
+}
+
 interface VaultNutritionLogCardProps {
   todaysLogs: NutritionLog[];
+  goals: NutritionGoals | null;
   onSave: (data: Omit<NutritionLog, 'id' | 'logged_at'>) => Promise<{ success: boolean }>;
   onDelete: (id: string) => Promise<{ success: boolean }>;
+  onSaveGoals: (goals: NutritionGoals) => Promise<{ success: boolean }>;
   isLoading?: boolean;
 }
 
@@ -47,11 +59,21 @@ const MACRO_PRESETS = [
   { id: 'hydration_only', calories: 0, protein: 0, carbs: 0, fats: 0, icon: Droplets },
 ];
 
-export function VaultNutritionLogCard({ todaysLogs, onSave, onDelete, isLoading = false }: VaultNutritionLogCardProps) {
+const DEFAULT_GOALS: NutritionGoals = {
+  calorie_goal: 2000,
+  protein_goal: 150,
+  carbs_goal: 250,
+  fats_goal: 70,
+  hydration_goal: 100,
+};
+
+export function VaultNutritionLogCard({ todaysLogs, goals, onSave, onDelete, onSaveGoals, isLoading = false }: VaultNutritionLogCardProps) {
   const { t } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [goalsDialogOpen, setGoalsDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingGoals, setSavingGoals] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
   // Form state
@@ -65,6 +87,14 @@ export function VaultNutritionLogCard({ todaysLogs, onSave, onDelete, isLoading 
   const [digestionNotes, setDigestionNotes] = useState('');
   const [supplements, setSupplements] = useState<string[]>([]);
   const [newSupplement, setNewSupplement] = useState('');
+
+  // Goals form state
+  const currentGoals = goals || DEFAULT_GOALS;
+  const [goalCalories, setGoalCalories] = useState(currentGoals.calorie_goal.toString());
+  const [goalProtein, setGoalProtein] = useState(currentGoals.protein_goal.toString());
+  const [goalCarbs, setGoalCarbs] = useState(currentGoals.carbs_goal.toString());
+  const [goalFats, setGoalFats] = useState(currentGoals.fats_goal.toString());
+  const [goalHydration, setGoalHydration] = useState(currentGoals.hydration_goal.toString());
 
   // Calculate daily totals
   const dailyTotals = useMemo(() => {
@@ -82,6 +112,19 @@ export function VaultNutritionLogCard({ todaysLogs, onSave, onDelete, isLoading 
   const avgEnergy = dailyTotals.energyCount > 0 
     ? Math.round(dailyTotals.energySum / dailyTotals.energyCount) 
     : 0;
+
+  // Calculate progress percentages
+  const getProgress = (current: number, goal: number) => {
+    if (goal === 0) return 0;
+    return Math.round((current / goal) * 100);
+  };
+
+  const getProgressColor = (percentage: number) => {
+    if (percentage > 110) return 'bg-destructive';
+    if (percentage >= 90) return 'bg-green-500';
+    if (percentage >= 50) return 'bg-amber-500';
+    return 'bg-destructive';
+  };
 
   const resetForm = () => {
     setMealType('');
@@ -137,6 +180,22 @@ export function VaultNutritionLogCard({ todaysLogs, onSave, onDelete, isLoading 
     }
   };
 
+  const handleSaveGoals = async () => {
+    setSavingGoals(true);
+    const result = await onSaveGoals({
+      calorie_goal: parseInt(goalCalories) || DEFAULT_GOALS.calorie_goal,
+      protein_goal: parseInt(goalProtein) || DEFAULT_GOALS.protein_goal,
+      carbs_goal: parseInt(goalCarbs) || DEFAULT_GOALS.carbs_goal,
+      fats_goal: parseInt(goalFats) || DEFAULT_GOALS.fats_goal,
+      hydration_goal: parseInt(goalHydration) || DEFAULT_GOALS.hydration_goal,
+    });
+    setSavingGoals(false);
+    if (result.success) {
+      toast.success(t('vault.nutrition.goalsSaved'));
+      setGoalsDialogOpen(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     await onDelete(id);
@@ -171,6 +230,15 @@ export function VaultNutritionLogCard({ todaysLogs, onSave, onDelete, isLoading 
       return '';
     }
   };
+
+  // Progress bar items
+  const progressItems = [
+    { key: 'calories', label: t('vault.nutrition.calories'), current: dailyTotals.calories, goal: currentGoals.calorie_goal, unit: '', icon: Flame, iconColor: 'text-orange-500' },
+    { key: 'protein', label: t('vault.nutrition.protein'), current: Math.round(dailyTotals.protein), goal: currentGoals.protein_goal, unit: 'g', icon: FlameKindling, iconColor: 'text-red-500' },
+    { key: 'carbs', label: t('vault.nutrition.carbs'), current: Math.round(dailyTotals.carbs), goal: currentGoals.carbs_goal, unit: 'g', icon: Cookie, iconColor: 'text-amber-500' },
+    { key: 'fats', label: t('vault.nutrition.fats'), current: Math.round(dailyTotals.fats), goal: currentGoals.fats_goal, unit: 'g', icon: Droplets, iconColor: 'text-green-500' },
+    { key: 'hydration', label: t('vault.nutrition.hydration'), current: Math.round(dailyTotals.hydration), goal: currentGoals.hydration_goal, unit: 'oz', icon: Droplets, iconColor: 'text-blue-500' },
+  ];
 
   if (isLoading) {
     return (
@@ -436,37 +504,129 @@ export function VaultNutritionLogCard({ todaysLogs, onSave, onDelete, isLoading 
               </div>
             )}
 
-            {/* Daily Totals Summary */}
+            {/* Daily Progress with Goal Tracking */}
             {todaysLogs.length > 0 && (
-              <div className="p-3 rounded-lg bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Zap className="h-4 w-4 text-green-500" />
-                  <span className="text-sm font-medium">{t('vault.nutrition.dailyTotals')}</span>
+              <div className="space-y-3 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-green-500" />
+                    <span className="text-sm font-medium">{t('vault.nutrition.dailyProgress')}</span>
+                  </div>
+                  <Dialog open={goalsDialogOpen} onOpenChange={setGoalsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
+                        <Settings className="h-3 w-3" />
+                        {t('vault.nutrition.setGoals')}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-sm">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Settings className="h-5 w-5" />
+                          {t('vault.nutrition.setGoals')}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label>{t('vault.nutrition.calorieGoal')}</Label>
+                          <Input
+                            type="number"
+                            value={goalCalories}
+                            onChange={(e) => setGoalCalories(e.target.value)}
+                            placeholder="2000"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{t('vault.nutrition.proteinGoal')}</Label>
+                          <Input
+                            type="number"
+                            value={goalProtein}
+                            onChange={(e) => setGoalProtein(e.target.value)}
+                            placeholder="150"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{t('vault.nutrition.carbsGoal')}</Label>
+                          <Input
+                            type="number"
+                            value={goalCarbs}
+                            onChange={(e) => setGoalCarbs(e.target.value)}
+                            placeholder="250"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{t('vault.nutrition.fatsGoal')}</Label>
+                          <Input
+                            type="number"
+                            value={goalFats}
+                            onChange={(e) => setGoalFats(e.target.value)}
+                            placeholder="70"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{t('vault.nutrition.hydrationGoal')}</Label>
+                          <Input
+                            type="number"
+                            value={goalHydration}
+                            onChange={(e) => setGoalHydration(e.target.value)}
+                            placeholder="100"
+                          />
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                          <Button variant="outline" onClick={() => setGoalsDialogOpen(false)} className="flex-1">
+                            {t('common.cancel')}
+                          </Button>
+                          <Button onClick={handleSaveGoals} disabled={savingGoals} className="flex-1">
+                            {savingGoals ? t('common.loading') : t('common.save')}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs">
-                  <div>
-                    <div className="font-bold text-foreground">{dailyTotals.calories}</div>
-                    <div className="text-muted-foreground">cal</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-foreground">{Math.round(dailyTotals.protein)}g</div>
-                    <div className="text-muted-foreground">protein</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-foreground">{Math.round(dailyTotals.carbs)}g</div>
-                    <div className="text-muted-foreground">carbs</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-foreground">{Math.round(dailyTotals.fats)}g</div>
-                    <div className="text-muted-foreground">fats</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-blue-500">{Math.round(dailyTotals.hydration)} oz</div>
-                    <div className="text-muted-foreground">water</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-foreground">{avgEnergy}/10</div>
-                    <div className="text-muted-foreground">energy</div>
+
+                <div className="space-y-3">
+                  {progressItems.map((item) => {
+                    const percentage = getProgress(item.current, item.goal);
+                    const isOver = percentage > 100;
+                    return (
+                      <div key={item.key} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <item.icon className={`h-3.5 w-3.5 ${item.iconColor}`} />
+                            <span className="text-muted-foreground">{item.label}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-medium">
+                              {item.current} / {item.goal}{item.unit}
+                            </span>
+                            <span className={`text-xs ${percentage >= 90 && percentage <= 110 ? 'text-green-500' : percentage >= 50 ? 'text-amber-500' : 'text-destructive'}`}>
+                              {percentage}%
+                            </span>
+                            {isOver && (
+                              <Badge variant="destructive" className="h-4 px-1 text-[10px] gap-0.5">
+                                <AlertTriangle className="h-2.5 w-2.5" />
+                                {t('vault.nutrition.overGoal')}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <Progress 
+                          value={Math.min(percentage, 100)} 
+                          className="h-2"
+                          indicatorClassName={getProgressColor(percentage)}
+                        />
+                      </div>
+                    );
+                  })}
+
+                  {/* Energy Level */}
+                  <div className="flex items-center justify-between text-xs pt-2 border-t">
+                    <div className="flex items-center gap-1.5">
+                      <Zap className="h-3.5 w-3.5 text-yellow-500" />
+                      <span className="text-muted-foreground">{t('vault.nutrition.energyLevel')}</span>
+                    </div>
+                    <span className="font-medium">{avgEnergy}/10</span>
                   </div>
                 </div>
               </div>

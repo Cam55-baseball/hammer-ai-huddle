@@ -1142,6 +1142,42 @@ export type Database = {
         }
         Relationships: []
       }
+      vault_nutrition_goals: {
+        Row: {
+          calorie_goal: number | null
+          carbs_goal: number | null
+          created_at: string | null
+          fats_goal: number | null
+          hydration_goal: number | null
+          id: string
+          protein_goal: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          calorie_goal?: number | null
+          carbs_goal?: number | null
+          created_at?: string | null
+          fats_goal?: number | null
+          hydration_goal?: number | null
+          id?: string
+          protein_goal?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          calorie_goal?: number | null
+          carbs_goal?: number | null
+          created_at?: string | null
+          fats_goal?: number | null
+          hydration_goal?: number | null
+          id?: string
+          protein_goal?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       vault_nutrition_logs: {
         Row: {
           calories: number | null

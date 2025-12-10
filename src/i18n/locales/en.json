@@ -4084,7 +4084,17 @@
       "noMealsLogged": "No meals logged yet today. Use the form above to log your first meal!",
       "dailyTotals": "Daily Totals",
       "mealLogged": "Meal logged successfully!",
-      "logThisMeal": "Log This Meal"
+      "logThisMeal": "Log This Meal",
+      "goals": "Goals",
+      "setGoals": "Set Goals",
+      "calorieGoal": "Daily Calorie Goal",
+      "proteinGoal": "Daily Protein Goal (g)",
+      "carbsGoal": "Daily Carbs Goal (g)",
+      "fatsGoal": "Daily Fats Goal (g)",
+      "hydrationGoal": "Daily Hydration Goal (oz)",
+      "goalsSaved": "Goals saved!",
+      "dailyProgress": "Daily Progress",
+      "overGoal": "Over"
     },
     "savedItems": {
       "title": "Saved Drills & Tips",

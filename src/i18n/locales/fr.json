@@ -3906,7 +3906,17 @@
       "noMealsLogged": "Aucun repas enregistré aujourd'hui. Utilisez le formulaire pour enregistrer votre premier repas!",
       "dailyTotals": "Totaux Quotidiens",
       "mealLogged": "Repas enregistré avec succès!",
-      "logThisMeal": "Enregistrer ce Repas"
+      "logThisMeal": "Enregistrer ce Repas",
+      "goals": "Objectifs",
+      "setGoals": "Définir les Objectifs",
+      "calorieGoal": "Objectif Calorique Quotidien",
+      "proteinGoal": "Objectif Protéines Quotidien (g)",
+      "carbsGoal": "Objectif Glucides Quotidien (g)",
+      "fatsGoal": "Objectif Lipides Quotidien (g)",
+      "hydrationGoal": "Objectif Hydratation Quotidien (oz)",
+      "goalsSaved": "Objectifs enregistrés!",
+      "dailyProgress": "Progrès Quotidien",
+      "overGoal": "Dépassé"
     },
     "savedItems": {
       "title": "Exercices et Conseils Sauvegardés",

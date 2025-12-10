@@ -3906,7 +3906,17 @@
       "noMealsLogged": "Noch keine Mahlzeiten heute erfasst. Nutze das Formular um deine erste Mahlzeit zu erfassen!",
       "dailyTotals": "Tägliche Summen",
       "mealLogged": "Mahlzeit erfolgreich erfasst!",
-      "logThisMeal": "Diese Mahlzeit Erfassen"
+      "logThisMeal": "Diese Mahlzeit Erfassen",
+      "goals": "Ziele",
+      "setGoals": "Ziele Festlegen",
+      "calorieGoal": "Tägliches Kalorienziel",
+      "proteinGoal": "Tägliches Proteinziel (g)",
+      "carbsGoal": "Tägliches Kohlenhydratziel (g)",
+      "fatsGoal": "Tägliches Fettziel (g)",
+      "hydrationGoal": "Tägliches Hydrationsziel (oz)",
+      "goalsSaved": "Ziele gespeichert!",
+      "dailyProgress": "Täglicher Fortschritt",
+      "overGoal": "Über Ziel"
     },
     "savedItems": {
       "title": "Gespeicherte Übungen & Tipps",

@@ -91,6 +91,15 @@ export interface VaultNutritionLog {
   logged_at: string | null;
 }
 
+export interface VaultNutritionGoals {
+  id: string;
+  calorie_goal: number;
+  protein_goal: number;
+  carbs_goal: number;
+  fats_goal: number;
+  hydration_goal: number;
+}
+
 export interface VaultSavedDrill {
   id: string;
   drill_name: string;
@@ -165,6 +174,7 @@ export function useVault() {
   const [todaysNotes, setTodaysNotes] = useState<VaultFreeNote | null>(null);
   const [workoutNotes, setWorkoutNotes] = useState<VaultWorkoutNote[]>([]);
   const [nutritionLogs, setNutritionLogs] = useState<VaultNutritionLog[]>([]);
+  const [nutritionGoals, setNutritionGoals] = useState<VaultNutritionGoals | null>(null);
   const [savedDrills, setSavedDrills] = useState<VaultSavedDrill[]>([]);
   const [savedTips, setSavedTips] = useState<VaultSavedTip[]>([]);
   const [performanceTests, setPerformanceTests] = useState<VaultPerformanceTest[]>([]);
@@ -580,6 +590,33 @@ export function useVault() {
     return { success: !error };
   }, [user, fetchNutritionLogs]);
 
+  // Fetch nutrition goals
+  const fetchNutritionGoals = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('vault_nutrition_goals')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (data) {
+      setNutritionGoals(data as VaultNutritionGoals);
+    }
+  }, [user]);
+
+  // Save nutrition goals
+  const saveNutritionGoals = useCallback(async (goals: Omit<VaultNutritionGoals, 'id'>) => {
+    if (!user) return { success: false };
+    const { error } = await supabase
+      .from('vault_nutrition_goals')
+      .upsert({
+        user_id: user.id,
+        ...goals,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+    if (!error) await fetchNutritionGoals();
+    return { success: !error };
+  }, [user, fetchNutritionGoals]);
+
   // Fetch saved items
   const fetchSavedItems = useCallback(async () => {
     if (!user) return;
@@ -989,18 +1026,18 @@ export function useVault() {
       setLoading(true);
       await Promise.all([
         fetchStreak(), fetchTodaysQuizzes(), fetchTodaysNotes(), fetchWorkoutNotes(),
-        fetchNutritionLogs(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchRecaps(),
+        fetchNutritionLogs(), fetchNutritionGoals(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchRecaps(),
         fetchEntriesWithData(),
       ]);
       setLoading(false);
     };
     loadData();
-  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLogs, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps, fetchEntriesWithData]);
+  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLogs, fetchNutritionGoals, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps, fetchEntriesWithData]);
 
   return {
-    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLogs, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData,
+    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLogs, nutritionGoals, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData,
     saveFocusQuiz, saveFreeNote, saveWorkoutNote, updateStreak, checkVaultAccess, fetchWorkoutNotes,
-    saveNutritionLog, deleteSavedDrill, deleteSavedTip, saveDrill, saveTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
+    saveNutritionLog, saveNutritionGoals, deleteSavedDrill, deleteSavedTip, saveDrill, saveTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
     deleteQuiz, deleteFreeNote, deleteWorkoutNote, deleteNutritionLog, deletePerformanceTest, deleteProgressPhoto, deleteScoutGrade,
     fetchWeeklyData, fetchEntriesWithData, fetchSavedItems,
   };
