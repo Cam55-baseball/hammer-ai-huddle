@@ -101,3 +101,9 @@ verify_jwt = true
 
 [functions.get-today-tips]
 verify_jwt = true
+
+[functions.get-scout-pending-reviews]
+verify_jwt = true
+
+[functions.mark-video-reviewed]
+verify_jwt = true

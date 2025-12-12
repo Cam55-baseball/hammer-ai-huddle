@@ -3528,5 +3528,19 @@
       "days": "일",
       "daysRemaining": "{{days}}일 남음"
     }
+  },
+  "scoutGamePlan": {
+    "title": "스카우트 리뷰",
+    "subtitle": "선수 동영상 리뷰",
+    "video": "동영상",
+    "videos": "동영상",
+    "reviewVideos": "리뷰할 새 동영상",
+    "review": "리뷰",
+    "allReviewed": "모두 완료!",
+    "pendingLabel": "대기 중",
+    "videosToReview": "{{count}}개의 동영상 리뷰 필요",
+    "playerUploads": "선수 업로드",
+    "noVideosToReview": "리뷰할 새 동영상이 없습니다",
+    "checkBackLater": "선수들이 새 콘텐츠를 업로드하면 다시 확인하세요"
   }
 }

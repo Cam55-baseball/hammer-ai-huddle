@@ -3571,5 +3571,19 @@
       "days": "日",
       "daysRemaining": "残り{{days}}日"
     }
+  },
+  "scoutGamePlan": {
+    "title": "スカウトレビュー",
+    "subtitle": "選手動画のレビュー",
+    "video": "動画",
+    "videos": "動画",
+    "reviewVideos": "レビュー待ちの新しい動画",
+    "review": "レビュー",
+    "allReviewed": "全て完了！",
+    "pendingLabel": "保留中",
+    "videosToReview": "{{count}}件の動画をレビュー",
+    "playerUploads": "選手のアップロード",
+    "noVideosToReview": "レビューする新しい動画はありません",
+    "checkBackLater": "選手が新しいコンテンツをアップロードしたら確認してください"
   }
 }

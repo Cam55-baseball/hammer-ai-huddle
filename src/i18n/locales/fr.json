@@ -4288,5 +4288,19 @@
       "days": "JOURS",
       "daysRemaining": "{{days}} jours restants"
     }
+  },
+  "scoutGamePlan": {
+    "title": "REVUE DE RECRUTEMENT",
+    "subtitle": "Revue des vidéos des joueurs",
+    "video": "vidéo",
+    "videos": "vidéos",
+    "reviewVideos": "Nouvelles vidéos à revoir",
+    "review": "REVOIR",
+    "allReviewed": "TOUT EST À JOUR !",
+    "pendingLabel": "EN ATTENTE",
+    "videosToReview": "{{count}} vidéos à revoir",
+    "playerUploads": "TÉLÉCHARGEMENTS DES JOUEURS",
+    "noVideosToReview": "Pas de nouvelles vidéos à revoir",
+    "checkBackLater": "Revenez quand vos joueurs téléchargent du nouveau contenu"
   }
 }

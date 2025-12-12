@@ -3541,5 +3541,19 @@
       "days": "DAGEN",
       "daysRemaining": "{{days}} dagen resterend"
     }
+  },
+  "scoutGamePlan": {
+    "title": "SCOUTING REVIEW",
+    "subtitle": "Spelervideo's beoordelen",
+    "video": "video",
+    "videos": "video's",
+    "reviewVideos": "Nieuwe video's om te beoordelen",
+    "review": "BEOORDEEL",
+    "allReviewed": "HELEMAAL BIJ!",
+    "pendingLabel": "IN AFWACHTING",
+    "videosToReview": "{{count}} video's te beoordelen",
+    "playerUploads": "SPELER UPLOADS",
+    "noVideosToReview": "Geen nieuwe video's om te beoordelen",
+    "checkBackLater": "Kom terug wanneer je spelers nieuwe content uploaden"
   }
 }
