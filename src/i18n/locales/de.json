@@ -4288,5 +4288,19 @@
       "days": "TAGE",
       "daysRemaining": "{{days}} Tage verbleibend"
     }
+  },
+  "scoutGamePlan": {
+    "title": "SCOUTING-ÜBERPRÜFUNG",
+    "subtitle": "Spielervideos überprüfen",
+    "video": "Video",
+    "videos": "Videos",
+    "reviewVideos": "Neue Videos zum Überprüfen",
+    "review": "PRÜFEN",
+    "allReviewed": "ALLES ERLEDIGT!",
+    "pendingLabel": "AUSSTEHEND",
+    "videosToReview": "{{count}} Videos zu überprüfen",
+    "playerUploads": "SPIELER-UPLOADS",
+    "noVideosToReview": "Keine neuen Videos zu überprüfen",
+    "checkBackLater": "Schau später vorbei, wenn deine Spieler neue Inhalte hochladen"
   }
 }

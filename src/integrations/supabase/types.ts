@@ -676,6 +676,45 @@ export type Database = {
           },
         ]
       }
+      scout_video_reviews: {
+        Row: {
+          id: string
+          player_id: string
+          reviewed_at: string
+          scout_id: string
+          video_id: string
+        }
+        Insert: {
+          id?: string
+          player_id: string
+          reviewed_at?: string
+          scout_id: string
+          video_id: string
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          reviewed_at?: string
+          scout_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_video_reviews_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_video_reviews_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sub_module_progress: {
         Row: {
           created_at: string | null

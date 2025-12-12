@@ -4266,5 +4266,19 @@
       "days": "DÍAS",
       "daysRemaining": "{{days}} días restantes"
     }
+  },
+  "scoutGamePlan": {
+    "title": "REVISIÓN DE SCOUTING",
+    "subtitle": "Revisión de videos de jugadores",
+    "video": "video",
+    "videos": "videos",
+    "reviewVideos": "Nuevos videos para revisar",
+    "review": "REVISAR",
+    "allReviewed": "¡TODO AL DÍA!",
+    "pendingLabel": "PENDIENTE",
+    "videosToReview": "{{count}} videos para revisar",
+    "playerUploads": "SUBIDAS DE JUGADORES",
+    "noVideosToReview": "No hay nuevos videos para revisar",
+    "checkBackLater": "Vuelve cuando tus jugadores suban nuevo contenido"
   }
 }

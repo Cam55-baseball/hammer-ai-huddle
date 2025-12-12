@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
+import { ScoutGamePlanCard } from "@/components/ScoutGamePlanCard";
 import { toast } from "sonner";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
 import dashboardHero2 from "@/assets/dashboard-hero-1.jpg";
@@ -34,6 +36,7 @@ export default function Dashboard() {
   const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
+  const { isScout, loading: scoutLoading } = useScoutAccess();
   const navigate = useNavigate();
   const [selectedSport, setSelectedSport] = useState<SportType>(() => {
     const saved = localStorage.getItem('selectedSport');
@@ -335,8 +338,12 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* The Game Plan - Daily To-Do List */}
-        <GamePlanCard selectedSport={selectedSport} />
+        {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts/coaches) */}
+        {isScout ? (
+          <ScoutGamePlanCard />
+        ) : (
+          <GamePlanCard selectedSport={selectedSport} />
+        )}
 
         {/* Sport Switch Confirmation Dialog */}
         <AlertDialog open={showSportSwitchDialog} onOpenChange={setShowSportSwitchDialog}>

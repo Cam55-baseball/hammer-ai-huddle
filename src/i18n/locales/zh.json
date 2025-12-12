@@ -3512,5 +3512,19 @@
       "days": "天",
       "daysRemaining": "剩余{{days}}天"
     }
+  },
+  "scoutGamePlan": {
+    "title": "球探审核",
+    "subtitle": "球员视频审核",
+    "video": "视频",
+    "videos": "视频",
+    "reviewVideos": "待审核的新视频",
+    "review": "审核",
+    "allReviewed": "全部完成！",
+    "pendingLabel": "待处理",
+    "videosToReview": "{{count}}个视频待审核",
+    "playerUploads": "球员上传",
+    "noVideosToReview": "没有新视频需要审核",
+    "checkBackLater": "当您的球员上传新内容时再回来查看"
   }
 }

@@ -4466,5 +4466,19 @@
       "days": "DAYS",
       "daysRemaining": "{{days}} days remaining"
     }
+  },
+  "scoutGamePlan": {
+    "title": "SCOUTING REVIEW",
+    "subtitle": "Player video reviews",
+    "video": "video",
+    "videos": "videos",
+    "reviewVideos": "New videos to review",
+    "review": "REVIEW",
+    "allReviewed": "ALL CAUGHT UP!",
+    "pendingLabel": "PENDING",
+    "videosToReview": "{{count}} videos to review",
+    "playerUploads": "PLAYER UPLOADS",
+    "noVideosToReview": "No new videos to review",
+    "checkBackLater": "Check back when your players upload new content"
   }
 }
