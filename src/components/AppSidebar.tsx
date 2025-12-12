@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -223,9 +223,24 @@ export function AppSidebar() {
         {ownerProfile && (
           <>
             <SidebarGroup className="border-b border-sidebar-border pb-4">
-              <SidebarGroupLabel className="flex items-center gap-2">
-                {t('sidebar.ownerBio')}
-                {isTranslating && <Loader2 className="h-3 w-3 animate-spin" />}
+              <SidebarGroupLabel className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  {t('sidebar.ownerBio')}
+                  {isTranslating && <Loader2 className="h-3 w-3 animate-spin" />}
+                </span>
+                <a
+                  href="https://hammers-modality-shop.fourthwall.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold 
+                             bg-gradient-to-r from-primary to-primary/70 rounded-full
+                             hover:scale-105 hover:shadow-[0_0_12px_hsl(var(--primary)/0.5)] 
+                             transition-all duration-200 text-primary-foreground"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ShoppingBag className="h-3 w-3" />
+                  Merch
+                </a>
               </SidebarGroupLabel>
               <button
                 onClick={() => setOwnerBioOpen(true)}
