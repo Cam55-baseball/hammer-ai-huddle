@@ -4251,8 +4251,16 @@
         "defense": "Defense",
         "throwing": "Throwing",
         "leadership": "Leadership",
-        "self_efficacy": "Self-Efficacy"
+        "self_efficacy": "Self-Efficacy",
+        "fastball": "Fastball",
+        "offspeed": "Off-Speed",
+        "breaking_ball": "Breaking Ball",
+        "control": "Control",
+        "delivery": "Delivery",
+        "rise_ball": "Rise Ball"
       },
+      "pitchingTitle": "Pitching Self-Grades",
+      "pitchingDescription": "Rate your pitching tools on the 20-80 scale",
       "levels": {
         "elite": "Elite",
         "plus": "Plus",

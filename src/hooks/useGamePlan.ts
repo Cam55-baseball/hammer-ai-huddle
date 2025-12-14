@@ -248,17 +248,35 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       tracking['tracking-photos'] = photoData?.length === 0 || 
         !photoNextDate || new Date(photoNextDate) <= new Date(today);
 
-      // Check 12-week tracking: Scout Self-Grades
-      const { data: gradeData } = await supabase
-        .from('vault_scout_grades')
-        .select('next_prompt_date')
-        .eq('user_id', user.id)
-        .order('graded_at', { ascending: false })
-        .limit(1);
+      // Check 12-week tracking: Scout Self-Grades (Hitting/Throwing)
+      if (hasHittingAccess || hasThrowingAccess) {
+        const { data: gradeData } = await supabase
+          .from('vault_scout_grades')
+          .select('next_prompt_date')
+          .eq('user_id', user.id)
+          .eq('grade_type', 'hitting_throwing')
+          .order('graded_at', { ascending: false })
+          .limit(1);
 
-      const gradeNextDate = gradeData?.[0]?.next_prompt_date;
-      tracking['tracking-grades'] = gradeData?.length === 0 || 
-        !gradeNextDate || new Date(gradeNextDate) <= new Date(today);
+        const gradeNextDate = gradeData?.[0]?.next_prompt_date;
+        tracking['tracking-grades'] = gradeData?.length === 0 || 
+          !gradeNextDate || new Date(gradeNextDate) <= new Date(today);
+      }
+
+      // Check 12-week tracking: Scout Self-Grades (Pitching)
+      if (hasPitchingAccess) {
+        const { data: pitchingGradeData } = await supabase
+          .from('vault_scout_grades')
+          .select('next_prompt_date')
+          .eq('user_id', user.id)
+          .eq('grade_type', 'pitching')
+          .order('graded_at', { ascending: false })
+          .limit(1);
+
+        const pitchingGradeNextDate = pitchingGradeData?.[0]?.next_prompt_date;
+        tracking['tracking-pitching-grades'] = pitchingGradeData?.length === 0 || 
+          !pitchingGradeNextDate || new Date(pitchingGradeNextDate) <= new Date(today);
+      }
 
       setCompletionStatus(status);
       setTrackingDue(tracking);
@@ -491,10 +509,24 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       descriptionKey: 'gamePlan.tracking.grades.description',
       completed: false,
       icon: Star,
-      link: '/vault',
+      link: '/vault?openSection=scout-grades',
       taskType: 'tracking',
       section: 'tracking',
       badge: 'gamePlan.tracking.grades.badge',
+    });
+  }
+
+  if (hasPitchingAccess && trackingDue['tracking-pitching-grades']) {
+    tasks.push({
+      id: 'tracking-pitching-grades',
+      titleKey: 'gamePlan.tracking.pitchingGrades.title',
+      descriptionKey: 'gamePlan.tracking.pitchingGrades.description',
+      completed: false,
+      icon: Star,
+      link: '/vault?openSection=pitching-grades',
+      taskType: 'tracking',
+      section: 'tracking',
+      badge: 'gamePlan.tracking.pitchingGrades.badge',
     });
   }
 

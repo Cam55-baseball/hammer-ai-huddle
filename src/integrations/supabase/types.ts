@@ -1516,42 +1516,63 @@ export type Database = {
       }
       vault_scout_grades: {
         Row: {
+          breaking_ball_grade: number | null
+          control_grade: number | null
           defense_grade: number | null
+          delivery_grade: number | null
+          fastball_grade: number | null
+          grade_type: string
           graded_at: string | null
           hitting_grade: number | null
           id: string
           leadership_grade: number | null
           next_prompt_date: string | null
           notes: string | null
+          offspeed_grade: number | null
           power_grade: number | null
+          rise_ball_grade: number | null
           self_efficacy_grade: number | null
           speed_grade: number | null
           throwing_grade: number | null
           user_id: string
         }
         Insert: {
+          breaking_ball_grade?: number | null
+          control_grade?: number | null
           defense_grade?: number | null
+          delivery_grade?: number | null
+          fastball_grade?: number | null
+          grade_type?: string
           graded_at?: string | null
           hitting_grade?: number | null
           id?: string
           leadership_grade?: number | null
           next_prompt_date?: string | null
           notes?: string | null
+          offspeed_grade?: number | null
           power_grade?: number | null
+          rise_ball_grade?: number | null
           self_efficacy_grade?: number | null
           speed_grade?: number | null
           throwing_grade?: number | null
           user_id: string
         }
         Update: {
+          breaking_ball_grade?: number | null
+          control_grade?: number | null
           defense_grade?: number | null
+          delivery_grade?: number | null
+          fastball_grade?: number | null
+          grade_type?: string
           graded_at?: string | null
           hitting_grade?: number | null
           id?: string
           leadership_grade?: number | null
           next_prompt_date?: string | null
           notes?: string | null
+          offspeed_grade?: number | null
           power_grade?: number | null
+          rise_ball_grade?: number | null
           self_efficacy_grade?: number | null
           speed_grade?: number | null
           throwing_grade?: number | null

@@ -155,6 +155,8 @@ export interface VaultScoutGrade {
   id: string;
   graded_at: string;
   next_prompt_date: string | null;
+  grade_type: 'hitting_throwing' | 'pitching';
+  // Hitting/Throwing grades
   hitting_grade: number | null;
   power_grade: number | null;
   speed_grade: number | null;
@@ -162,6 +164,13 @@ export interface VaultScoutGrade {
   throwing_grade: number | null;
   leadership_grade: number | null;
   self_efficacy_grade: number | null;
+  // Pitching-specific grades
+  fastball_grade: number | null;
+  offspeed_grade: number | null;
+  breaking_ball_grade: number | null;
+  control_grade: number | null;
+  delivery_grade: number | null;
+  rise_ball_grade: number | null; // Softball only
   notes: string | null;
 }
 
@@ -205,6 +214,7 @@ export function useVault() {
   const [performanceTests, setPerformanceTests] = useState<VaultPerformanceTest[]>([]);
   const [progressPhotos, setProgressPhotos] = useState<VaultProgressPhoto[]>([]);
   const [scoutGrades, setScoutGrades] = useState<VaultScoutGrade[]>([]);
+  const [pitchingGrades, setPitchingGrades] = useState<VaultScoutGrade[]>([]);
   const [recaps, setRecaps] = useState<VaultRecap[]>([]);
   const [entriesWithData, setEntriesWithData] = useState<string[]>([]);
   const [favoriteMeals, setFavoriteMeals] = useState<VaultFavoriteMeal[]>([]);
@@ -889,25 +899,69 @@ export function useVault() {
     return { success: !error };
   }, [user, fetchProgressPhotos]);
 
-  // Fetch scout grades
+  // Fetch scout grades (hitting/throwing)
   const fetchScoutGrades = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase.from('vault_scout_grades').select('*').eq('user_id', user.id).order('graded_at', { ascending: false }).limit(10);
-    setScoutGrades((data || []) as VaultScoutGrade[]);
+    const { data } = await supabase
+      .from('vault_scout_grades')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('grade_type', 'hitting_throwing')
+      .order('graded_at', { ascending: false })
+      .limit(10);
+    setScoutGrades((data || []).map(g => ({ ...g, grade_type: g.grade_type || 'hitting_throwing' })) as VaultScoutGrade[]);
   }, [user]);
 
-  const saveScoutGrade = useCallback(async (gradeData: { hitting_grade: number | null; power_grade: number | null; speed_grade: number | null; defense_grade: number | null; throwing_grade: number | null; leadership_grade: number | null; self_efficacy_grade: number | null; notes: string | null; }) => {
+  // Fetch pitching grades
+  const fetchPitchingGrades = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('vault_scout_grades')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('grade_type', 'pitching')
+      .order('graded_at', { ascending: false })
+      .limit(10);
+    setPitchingGrades((data || []).map(g => ({ ...g, grade_type: 'pitching' as const })) as VaultScoutGrade[]);
+  }, [user]);
+
+  const saveScoutGrade = useCallback(async (gradeData: {
+    grade_type: 'hitting_throwing' | 'pitching';
+    hitting_grade?: number | null;
+    power_grade?: number | null;
+    speed_grade?: number | null;
+    defense_grade?: number | null;
+    throwing_grade?: number | null;
+    leadership_grade?: number | null;
+    self_efficacy_grade?: number | null;
+    fastball_grade?: number | null;
+    offspeed_grade?: number | null;
+    breaking_ball_grade?: number | null;
+    control_grade?: number | null;
+    delivery_grade?: number | null;
+    rise_ball_grade?: number | null;
+    notes: string | null;
+  }) => {
     if (!user) return { success: false };
     // Calculate next entry date (12 weeks from now)
-    const nextPrompt = new Date(); 
+    const nextPrompt = new Date();
     nextPrompt.setDate(nextPrompt.getDate() + 84); // 12 weeks = 84 days
-    
+
     const { error } = await supabase.from('vault_scout_grades').insert({
-      user_id: user.id, ...gradeData, next_prompt_date: nextPrompt.toISOString(),
+      user_id: user.id,
+      ...gradeData,
+      next_prompt_date: nextPrompt.toISOString(),
     });
-    if (!error) await fetchScoutGrades();
+    
+    if (!error) {
+      if (gradeData.grade_type === 'pitching') {
+        await fetchPitchingGrades();
+      } else {
+        await fetchScoutGrades();
+      }
+    }
     return { success: !error };
-  }, [user, fetchScoutGrades]);
+  }, [user, fetchScoutGrades, fetchPitchingGrades]);
 
   // Fetch recaps
   const fetchRecaps = useCallback(async () => {
@@ -1247,16 +1301,16 @@ export function useVault() {
       setLoading(true);
       await Promise.all([
         fetchStreak(), fetchTodaysQuizzes(), fetchTodaysNotes(), fetchWorkoutNotes(),
-        fetchNutritionLogs(), fetchNutritionGoals(), fetchSupplementTracking(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchRecaps(),
+        fetchNutritionLogs(), fetchNutritionGoals(), fetchSupplementTracking(), fetchSavedItems(), fetchPerformanceTests(), fetchProgressPhotos(), fetchScoutGrades(), fetchPitchingGrades(), fetchRecaps(),
         fetchEntriesWithData(), fetchFavoriteMeals(),
       ]);
       setLoading(false);
     };
     loadData();
-  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLogs, fetchNutritionGoals, fetchSupplementTracking, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchRecaps, fetchEntriesWithData, fetchFavoriteMeals]);
+  }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLogs, fetchNutritionGoals, fetchSupplementTracking, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchPitchingGrades, fetchRecaps, fetchEntriesWithData, fetchFavoriteMeals]);
 
   return {
-    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLogs, nutritionGoals, supplementTracking, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, recaps, entriesWithData, favoriteMeals,
+    loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLogs, nutritionGoals, supplementTracking, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, pitchingGrades, recaps, entriesWithData, favoriteMeals,
     saveFocusQuiz, saveFreeNote, saveWorkoutNote, updateStreak, checkVaultAccess, fetchWorkoutNotes,
     saveNutritionLog, saveNutritionGoals, toggleSupplementTaken, deleteSavedDrill, deleteSavedTip, saveDrill, saveTip, savePerformanceTest, saveProgressPhoto, saveScoutGrade, generateRecap, fetchHistoryForDate,
     deleteQuiz, deleteFreeNote, deleteWorkoutNote, deleteNutritionLog, deletePerformanceTest, deleteProgressPhoto, deleteScoutGrade,
