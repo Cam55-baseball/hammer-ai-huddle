@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Star, ChevronDown, Lock, AlertCircle, Calendar, TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
+import { Star, ChevronDown, Lock, AlertCircle, TrendingUp, TrendingDown, Minus, BarChart3, Flame } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import {
@@ -24,6 +24,8 @@ interface ScoutGrade {
   id: string;
   graded_at: string;
   next_prompt_date: string | null;
+  grade_type: 'hitting_throwing' | 'pitching';
+  // Hitting/Throwing grades
   hitting_grade: number | null;
   power_grade: number | null;
   speed_grade: number | null;
@@ -31,33 +33,74 @@ interface ScoutGrade {
   throwing_grade: number | null;
   leadership_grade: number | null;
   self_efficacy_grade: number | null;
+  // Pitching grades
+  fastball_grade: number | null;
+  offspeed_grade: number | null;
+  breaking_ball_grade: number | null;
+  control_grade: number | null;
+  delivery_grade: number | null;
+  rise_ball_grade: number | null;
   notes: string | null;
 }
+
+type GradeType = 'hitting_throwing' | 'pitching';
 
 interface VaultScoutGradesCardProps {
   grades: ScoutGrade[];
   sport?: 'baseball' | 'softball';
+  gradeType?: GradeType;
   autoOpen?: boolean;
   onSave: (data: {
-    hitting_grade: number | null;
-    power_grade: number | null;
-    speed_grade: number | null;
-    defense_grade: number | null;
-    throwing_grade: number | null;
-    leadership_grade: number | null;
-    self_efficacy_grade: number | null;
+    grade_type: GradeType;
+    hitting_grade?: number | null;
+    power_grade?: number | null;
+    speed_grade?: number | null;
+    defense_grade?: number | null;
+    throwing_grade?: number | null;
+    leadership_grade?: number | null;
+    self_efficacy_grade?: number | null;
+    fastball_grade?: number | null;
+    offspeed_grade?: number | null;
+    breaking_ball_grade?: number | null;
+    control_grade?: number | null;
+    delivery_grade?: number | null;
+    rise_ball_grade?: number | null;
     notes: string | null;
   }) => Promise<{ success: boolean }>;
 }
 
 const LOCK_PERIOD_WEEKS = 12;
 
-const GRADE_CATEGORIES = [
+// Hitting/Throwing categories
+const HITTING_THROWING_CATEGORIES = [
   'hitting',
   'power',
   'speed',
   'defense',
   'throwing',
+  'leadership',
+  'self_efficacy',
+] as const;
+
+// Pitching categories - baseball
+const PITCHING_CATEGORIES_BASEBALL = [
+  'fastball',
+  'offspeed',
+  'breaking_ball',
+  'control',
+  'delivery',
+  'leadership',
+  'self_efficacy',
+] as const;
+
+// Pitching categories - softball (includes rise ball)
+const PITCHING_CATEGORIES_SOFTBALL = [
+  'rise_ball',
+  'fastball',
+  'offspeed',
+  'breaking_ball',
+  'control',
+  'delivery',
   'leadership',
   'self_efficacy',
 ] as const;
@@ -79,6 +122,12 @@ const getGradeValue = (grade: ScoutGrade, category: string): number | null => {
     case 'throwing': return grade.throwing_grade;
     case 'leadership': return grade.leadership_grade;
     case 'self_efficacy': return grade.self_efficacy_grade;
+    case 'fastball': return grade.fastball_grade;
+    case 'offspeed': return grade.offspeed_grade;
+    case 'breaking_ball': return grade.breaking_ball_grade;
+    case 'control': return grade.control_grade;
+    case 'delivery': return grade.delivery_grade;
+    case 'rise_ball': return grade.rise_ball_grade;
     default: return null;
   }
 };
@@ -89,20 +138,20 @@ const getChangeIndicator = (change: number) => {
   return { icon: Minus, color: 'text-amber-500', bgColor: 'bg-amber-500/10' };
 };
 
-// Simplified scale tick marks - only key positions for cleaner display
-const SCALE_TICKS = [20, 30, 40, 45, 50, 60, 70, 80];
-
-// Key labeled positions on the scale
-const KEY_LABELS: Record<number, string> = {
-  20: 'poor',
-  45: 'leagueAverage', // Sport-specific (MLB/AUSL)
-  60: 'aboveAverage',
-  80: 'hallOfFame',
-};
-
-export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = false, onSave }: VaultScoutGradesCardProps) {
+export function VaultScoutGradesCard({ 
+  grades, 
+  sport = 'baseball', 
+  gradeType = 'hitting_throwing',
+  autoOpen = false, 
+  onSave 
+}: VaultScoutGradesCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Get categories based on grade type and sport
+  const categories = gradeType === 'pitching'
+    ? (sport === 'softball' ? PITCHING_CATEGORIES_SOFTBALL : PITCHING_CATEGORIES_BASEBALL)
+    : HITTING_THROWING_CATEGORIES;
 
   // Auto-open when navigating from Game Plan
   useEffect(() => {
@@ -110,18 +159,20 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = fa
       setIsOpen(true);
     }
   }, [autoOpen]);
+  
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   
-  const [gradeValues, setGradeValues] = useState<Record<string, number[]>>({
-    hitting: [50],
-    power: [50],
-    speed: [50],
-    defense: [50],
-    throwing: [50],
-    leadership: [50],
-    self_efficacy: [50],
-  });
+  // Initialize grade values
+  const getInitialValues = () => {
+    const values: Record<string, number[]> = {};
+    categories.forEach(cat => {
+      values[cat] = [50];
+    });
+    return values;
+  };
+  
+  const [gradeValues, setGradeValues] = useState<Record<string, number[]>>(getInitialValues);
   const [notes, setNotes] = useState('');
 
   const latestGrade = grades[0];
@@ -134,7 +185,7 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = fa
     : 0;
 
   // Calculate progression data - show up to 4 most recent cycles
-  const progressionData = grades.slice(0, 4).reverse(); // Oldest to newest
+  const progressionData = grades.slice(0, 4).reverse();
   const hasProgression = progressionData.length >= 2;
 
   // Calculate total change (first vs last)
@@ -148,33 +199,58 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = fa
 
   useEffect(() => {
     if (latestGrade) {
-      setGradeValues({
-        hitting: [latestGrade.hitting_grade || 50],
-        power: [latestGrade.power_grade || 50],
-        speed: [latestGrade.speed_grade || 50],
-        defense: [latestGrade.defense_grade || 50],
-        throwing: [latestGrade.throwing_grade || 50],
-        leadership: [latestGrade.leadership_grade || 50],
-        self_efficacy: [latestGrade.self_efficacy_grade || 50],
+      const newValues: Record<string, number[]> = {};
+      categories.forEach(cat => {
+        const value = getGradeValue(latestGrade, cat);
+        newValues[cat] = [value || 50];
       });
+      setGradeValues(newValues);
     }
-  }, [latestGrade]);
+  }, [latestGrade, categories]);
 
   const handleSave = async () => {
     setSaving(true);
-    await onSave({
-      hitting_grade: gradeValues.hitting[0],
-      power_grade: gradeValues.power[0],
-      speed_grade: gradeValues.speed[0],
-      defense_grade: gradeValues.defense[0],
-      throwing_grade: gradeValues.throwing[0],
-      leadership_grade: gradeValues.leadership[0],
-      self_efficacy_grade: gradeValues.self_efficacy[0],
+    
+    const gradeData: any = {
+      grade_type: gradeType,
       notes: notes || null,
-    });
+    };
+
+    // Add values for the appropriate categories
+    if (gradeType === 'hitting_throwing') {
+      gradeData.hitting_grade = gradeValues.hitting?.[0] ?? null;
+      gradeData.power_grade = gradeValues.power?.[0] ?? null;
+      gradeData.speed_grade = gradeValues.speed?.[0] ?? null;
+      gradeData.defense_grade = gradeValues.defense?.[0] ?? null;
+      gradeData.throwing_grade = gradeValues.throwing?.[0] ?? null;
+      gradeData.leadership_grade = gradeValues.leadership?.[0] ?? null;
+      gradeData.self_efficacy_grade = gradeValues.self_efficacy?.[0] ?? null;
+    } else {
+      gradeData.fastball_grade = gradeValues.fastball?.[0] ?? null;
+      gradeData.offspeed_grade = gradeValues.offspeed?.[0] ?? null;
+      gradeData.breaking_ball_grade = gradeValues.breaking_ball?.[0] ?? null;
+      gradeData.control_grade = gradeValues.control?.[0] ?? null;
+      gradeData.delivery_grade = gradeValues.delivery?.[0] ?? null;
+      gradeData.rise_ball_grade = gradeValues.rise_ball?.[0] ?? null;
+      gradeData.leadership_grade = gradeValues.leadership?.[0] ?? null;
+      gradeData.self_efficacy_grade = gradeValues.self_efficacy?.[0] ?? null;
+    }
+
+    await onSave(gradeData);
     setNotes('');
     setSaving(false);
   };
+
+  const title = gradeType === 'pitching' 
+    ? t('vault.scoutGrades.pitchingTitle') 
+    : t('vault.scoutGrades.title');
+  
+  const description = gradeType === 'pitching'
+    ? t('vault.scoutGrades.pitchingDescription')
+    : t('vault.scoutGrades.description');
+
+  const CardIcon = gradeType === 'pitching' ? Flame : Star;
+  const iconColor = gradeType === 'pitching' ? 'text-orange-500' : 'text-yellow-500';
 
   return (
     <Card>
@@ -183,8 +259,8 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = fa
           <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500" />
-                <CardTitle className="text-lg">{t('vault.scoutGrades.title')}</CardTitle>
+                <CardIcon className={`h-5 w-5 ${iconColor}`} />
+                <CardTitle className="text-lg">{title}</CardTitle>
                 {grades.length > 0 && (
                   <Badge variant="secondary" className="text-xs">{grades.length}</Badge>
                 )}
@@ -197,7 +273,7 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = fa
               </div>
               <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </div>
-            <CardDescription>{t('vault.scoutGrades.description')}</CardDescription>
+            <CardDescription>{description}</CardDescription>
           </CardHeader>
         </CollapsibleTrigger>
         
@@ -252,7 +328,7 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = fa
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {GRADE_CATEGORIES.map((category) => {
+                          {categories.map((category) => {
                             const totalChange = calculateTotalChange(category);
                             const { icon: Icon, color, bgColor } = getChangeIndicator(totalChange);
                             return (
@@ -307,7 +383,7 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = fa
             ) : (
               <div className="space-y-4 p-3 rounded-lg bg-muted/30 border border-border">
                 <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-green-500" />
+                  <CardIcon className={`h-4 w-4 ${gradeType === 'pitching' ? 'text-orange-500' : 'text-green-500'}`} />
                   <span className="text-sm font-medium text-green-700 dark:text-green-400">
                     {t('vault.lockPeriod.readyToRecord')}
                   </span>
@@ -342,23 +418,23 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = fa
                   </div>
                 </div>
 
-                {GRADE_CATEGORIES.map((category) => (
+                {categories.map((category) => (
                   <div key={category} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label className="text-sm">{t(`vault.scoutGrades.categories.${category}`)}</Label>
                       <Badge 
                         variant="outline" 
                         className={`text-xs ${
-                          gradeValues[category][0] >= 70 ? 'text-green-500 border-green-500' :
-                          gradeValues[category][0] >= 50 ? 'text-amber-500 border-amber-500' :
+                          (gradeValues[category]?.[0] || 50) >= 70 ? 'text-green-500 border-green-500' :
+                          (gradeValues[category]?.[0] || 50) >= 50 ? 'text-amber-500 border-amber-500' :
                           'text-red-500 border-red-500'
                         }`}
                       >
-                        {gradeValues[category][0]} - {t(`vault.scoutGrades.levels.${gradeToLabel(gradeValues[category][0])}`)}
+                        {gradeValues[category]?.[0] || 50} - {t(`vault.scoutGrades.levels.${gradeToLabel(gradeValues[category]?.[0] || 50)}`)}
                       </Badge>
                     </div>
                     <Slider
-                      value={gradeValues[category]}
+                      value={gradeValues[category] || [50]}
                       onValueChange={(val) => setGradeValues({ ...gradeValues, [category]: val })}
                       min={20}
                       max={80}
@@ -369,10 +445,9 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = fa
                     <div className="relative h-6 px-1">
                       {[20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80].map((tick) => {
                         const position = ((tick - 20) / 60) * 100;
-                        const isCurrentValue = gradeValues[category][0] === tick;
+                        const isCurrentValue = (gradeValues[category]?.[0] || 50) === tick;
                         const is45 = tick === 45;
                         const isMajor = [20, 30, 40, 45, 50, 60, 70, 80].includes(tick);
-                        const isMinor = [25, 35, 55, 65, 75].includes(tick);
                         return (
                           <div
                             key={tick}
@@ -397,42 +472,59 @@ export function VaultScoutGradesCard({ grades, sport = 'baseball', autoOpen = fa
                   </div>
                 ))}
 
-                <div className="space-y-1 pt-2">
-                  <Label className="text-xs">{t('vault.scoutGrades.notes')}</Label>
+                {/* Notes */}
+                <div className="space-y-2 pt-2 border-t border-border">
+                  <Label className="text-sm">{t('vault.scoutGrades.notes')}</Label>
                   <Textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder={t('vault.scoutGrades.notesPlaceholder')}
-                    className="min-h-[60px]"
+                    className="min-h-[80px]"
                   />
                 </div>
 
-                <Button onClick={handleSave} disabled={saving} className="w-full">
+                {/* Save Button */}
+                <Button 
+                  onClick={handleSave} 
+                  disabled={saving}
+                  className="w-full"
+                >
                   {saving ? t('common.loading') : t('vault.scoutGrades.save')}
                 </Button>
               </div>
             )}
 
-            {/* History (Read-Only) */}
+            {/* Previous Grades */}
             {grades.length > 0 && (
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm font-medium">{t('vault.scoutGrades.history')}</Label>
-                  <Badge variant="outline" className="text-xs">{t('vault.lockPeriod.readOnly')}</Badge>
-                </div>
+              <div className="space-y-2 pt-2 border-t border-border">
+                <h4 className="text-sm font-medium text-muted-foreground">{t('vault.scoutGrades.history')}</h4>
                 <ScrollArea className="max-h-[200px]">
                   <div className="space-y-2">
-                    {grades.slice(0, 5).map((grade) => (
-                      <div key={grade.id} className="p-3 rounded-lg bg-muted/50 border border-border">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(grade.graded_at).toLocaleDateString()}
+                    {grades.map((grade) => (
+                      <div key={grade.id} className="p-3 rounded-lg bg-muted/30 border border-border">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(grade.graded_at).toLocaleDateString(undefined, { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </span>
                         </div>
-                        <div className="grid grid-cols-4 gap-1 text-xs">
-                          {grade.hitting_grade && <span>Hit: {grade.hitting_grade}</span>}
-                          {grade.power_grade && <span>Pow: {grade.power_grade}</span>}
-                          {grade.speed_grade && <span>Spd: {grade.speed_grade}</span>}
-                          {grade.defense_grade && <span>Def: {grade.defense_grade}</span>}
+                        <div className="flex flex-wrap gap-1">
+                          {categories.slice(0, 4).map((cat) => {
+                            const value = getGradeValue(grade, cat);
+                            return value ? (
+                              <Badge key={cat} variant="outline" className="text-[10px]">
+                                {t(`vault.scoutGrades.categories.${cat}`)}: {value}
+                              </Badge>
+                            ) : null;
+                          })}
+                          {categories.length > 4 && (
+                            <Badge variant="outline" className="text-[10px]">
+                              +{categories.length - 4} more
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     ))}

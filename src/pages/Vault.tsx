@@ -24,6 +24,7 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
+import { useSubscription } from '@/hooks/useSubscription';
 import { VaultStreakCard } from '@/components/vault/VaultStreakCard';
 import { VaultDailyReminder } from '@/components/vault/VaultDailyReminder';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
@@ -54,6 +55,7 @@ export default function Vault() {
     performanceTests,
     progressPhotos,
     scoutGrades,
+    pitchingGrades,
     recaps,
     entriesWithData,
     favoriteMeals,
@@ -93,12 +95,21 @@ export default function Vault() {
   const [savingNote, setSavingNote] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [userSport, setUserSport] = useState<'baseball' | 'softball'>('baseball');
+  const { modules: subscribedModules } = useSubscription();
   
   // Refs for scrolling to sections
   const performanceTestsRef = useRef<HTMLDivElement>(null);
   const progressPhotosRef = useRef<HTMLDivElement>(null);
   const scoutGradesRef = useRef<HTMLDivElement>(null);
+  const pitchingGradesRef = useRef<HTMLDivElement>(null);
   const nutritionRef = useRef<HTMLDivElement>(null);
+  
+  // Detect module access for grader display
+  const hasHittingModule = subscribedModules.some(m => m.includes('hitting'));
+  const hasThrowingModule = subscribedModules.some(m => m.includes('throwing'));
+  const hasPitchingModule = subscribedModules.some(m => m.includes('pitching'));
+  const showHittingThrowingGrader = hasHittingModule || hasThrowingModule;
+  const showPitchingGrader = hasPitchingModule;
 
   // Handle URL params for direct navigation
   useEffect(() => {
@@ -642,28 +653,46 @@ export default function Vault() {
                   </div>
 
                   {/* 12-Week Tracking Section */}
-                  <div className="rounded-xl border-2 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-background p-4 sm:p-6 space-y-4">
-                    {/* Section Header */}
-                    <div className="flex items-center gap-3 pb-3 border-b border-amber-500/20">
-                      <div className="p-2 rounded-lg bg-amber-500/10">
-                        <Clock className="h-5 w-5 text-amber-500" />
+                  {(showHittingThrowingGrader || showPitchingGrader) && (
+                    <div className="rounded-xl border-2 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-background p-4 sm:p-6 space-y-4">
+                      {/* Section Header */}
+                      <div className="flex items-center gap-3 pb-3 border-b border-amber-500/20">
+                        <div className="p-2 rounded-lg bg-amber-500/10">
+                          <Clock className="h-5 w-5 text-amber-500" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg">{t('vault.twelveWeekTracking.title')}</h3>
+                          <p className="text-sm text-muted-foreground">{t('vault.twelveWeekTracking.description')}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-lg">{t('vault.twelveWeekTracking.title')}</h3>
-                        <p className="text-sm text-muted-foreground">{t('vault.twelveWeekTracking.description')}</p>
-                      </div>
-                    </div>
 
-                    {/* Scout Self-Grades */}
-                    <div ref={scoutGradesRef}>
-                      <VaultScoutGradesCard
-                        grades={scoutGrades}
-                        sport={userSport}
-                        autoOpen={searchParams.get('openSection') === 'scout-grades'}
-                        onSave={handleSaveScoutGrade}
-                      />
+                      {/* Hitting/Throwing Scout Self-Grades */}
+                      {showHittingThrowingGrader && (
+                        <div ref={scoutGradesRef}>
+                          <VaultScoutGradesCard
+                            grades={scoutGrades}
+                            sport={userSport}
+                            gradeType="hitting_throwing"
+                            autoOpen={searchParams.get('openSection') === 'scout-grades'}
+                            onSave={handleSaveScoutGrade}
+                          />
+                        </div>
+                      )}
+
+                      {/* Pitching Scout Self-Grades */}
+                      {showPitchingGrader && (
+                        <div ref={pitchingGradesRef}>
+                          <VaultScoutGradesCard
+                            grades={pitchingGrades}
+                            sport={userSport}
+                            gradeType="pitching"
+                            autoOpen={searchParams.get('openSection') === 'pitching-grades'}
+                            onSave={handleSaveScoutGrade}
+                          />
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
 
                   {/* 6-Week Recap */}
                   <VaultRecapCard
