@@ -3122,7 +3122,15 @@
       "saved": "영양 기록이 저장되었습니다!",
       "error": "영양 기록 저장 실패",
       "logged": "오늘 기록됨",
-      "presets": "빠른 프리셋",
+      "quickPresets": "빠른 프리셋",
+      "logMeal": "식사 기록",
+      "presets": {
+        "pre_workout": "운동 전",
+        "post_workout": "운동 후",
+        "protein_shake": "프로틴 쉐이크",
+        "light_meal": "가벼운 식사",
+        "power_meal": "파워 식사"
+      },
       "pre_workout": "운동 전",
       "post_workout": "운동 후",
       "protein_shake": "프로틴 쉐이크",

@@ -3891,7 +3891,15 @@
       "saved": "Journal nutritionnel sauvegardé!",
       "error": "Échec de sauvegarde du journal nutritionnel",
       "logged": "Enregistré aujourd'hui",
-      "presets": "Préréglages Rapides",
+      "quickPresets": "Préréglages Rapides",
+      "logMeal": "Enregistrer Repas",
+      "presets": {
+        "pre_workout": "Pré-Entraînement",
+        "post_workout": "Post-Entraînement",
+        "protein_shake": "Shake Protéiné",
+        "light_meal": "Repas Léger",
+        "power_meal": "Repas Énergétique"
+      },
       "pre_workout": "Pré-Entraînement",
       "post_workout": "Post-Entraînement",
       "protein_shake": "Shake Protéiné",

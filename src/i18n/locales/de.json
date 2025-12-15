@@ -3891,7 +3891,15 @@
       "saved": "Ernährungseintrag gespeichert!",
       "error": "Ernährungseintrag speichern fehlgeschlagen",
       "logged": "Heute erfasst",
-      "presets": "Schnellauswahl",
+      "quickPresets": "Schnellauswahl",
+      "logMeal": "Mahlzeit Speichern",
+      "presets": {
+        "pre_workout": "Vor dem Training",
+        "post_workout": "Nach dem Training",
+        "protein_shake": "Protein-Shake",
+        "light_meal": "Leichte Mahlzeit",
+        "power_meal": "Power-Mahlzeit"
+      },
       "pre_workout": "Vor dem Training",
       "post_workout": "Nach dem Training",
       "protein_shake": "Protein-Shake",

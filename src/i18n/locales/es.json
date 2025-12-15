@@ -3869,7 +3869,15 @@
       "saved": "¡Registro nutricional guardado!",
       "error": "Error al guardar registro nutricional",
       "logged": "Registrado hoy",
-      "presets": "Preajustes Rápidos",
+      "quickPresets": "Preajustes Rápidos",
+      "logMeal": "Registrar Comida",
+      "presets": {
+        "pre_workout": "Pre-Entreno",
+        "post_workout": "Post-Entreno",
+        "protein_shake": "Batido de Proteína",
+        "light_meal": "Comida Ligera",
+        "power_meal": "Comida Energética"
+      },
       "pre_workout": "Pre-Entreno",
       "post_workout": "Post-Entreno",
       "protein_shake": "Batido de Proteína",

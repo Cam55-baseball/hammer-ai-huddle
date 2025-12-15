@@ -3106,7 +3106,15 @@
       "saved": "营养日志已保存！",
       "error": "保存营养日志失败",
       "logged": "今日已记录",
-      "presets": "快速预设",
+      "quickPresets": "快速预设",
+      "logMeal": "记录餐食",
+      "presets": {
+        "pre_workout": "运动前餐",
+        "post_workout": "运动后餐",
+        "protein_shake": "蛋白质奶昔",
+        "light_meal": "清淡餐食",
+        "power_meal": "能量餐"
+      },
       "pre_workout": "运动前",
       "post_workout": "运动后",
       "protein_shake": "蛋白奶昔",
