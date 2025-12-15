@@ -3287,8 +3287,16 @@
         "defense": "防守",
         "throwing": "传球",
         "leadership": "领导力",
-        "self_efficacy": "自我效能"
+        "self_efficacy": "自我效能",
+        "fastball": "快速球",
+        "offspeed": "变速球",
+        "breaking_ball": "变化球",
+        "control": "控球",
+        "delivery": "投球动作",
+        "rise_ball": "上升球"
       },
+      "pitchingTitle": "投球自评",
+      "pitchingDescription": "在20-80评分标准上评估您的投球能力",
       "levels": {
         "elite": "精英",
         "plus": "优秀",

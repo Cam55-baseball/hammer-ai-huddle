@@ -3346,8 +3346,16 @@
         "defense": "守備",
         "throwing": "送球",
         "leadership": "リーダーシップ",
-        "self_efficacy": "自己効力感"
+        "self_efficacy": "自己効力感",
+        "fastball": "ファストボール",
+        "offspeed": "チェンジアップ",
+        "breaking_ball": "変化球",
+        "control": "コントロール",
+        "delivery": "投球フォーム",
+        "rise_ball": "ライズボール"
       },
+      "pitchingTitle": "ピッチング自己評価",
+      "pitchingDescription": "20-80スケールでピッチング能力を評価",
       "levels": {
         "elite": "エリート",
         "plus": "プラス",

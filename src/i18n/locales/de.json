@@ -4073,8 +4073,16 @@
         "defense": "Verteidigung",
         "throwing": "Werfen",
         "leadership": "Führung",
-        "self_efficacy": "Selbstwirksamkeit"
+        "self_efficacy": "Selbstwirksamkeit",
+        "fastball": "Fastball",
+        "offspeed": "Off-Speed",
+        "breaking_ball": "Breaking Ball",
+        "control": "Kontrolle",
+        "delivery": "Wurfbewegung",
+        "rise_ball": "Rise Ball"
       },
+      "pitchingTitle": "Pitching-Selbstbewertung",
+      "pitchingDescription": "Bewerten Sie Ihre Pitching-Fähigkeiten auf der 20-80 Skala",
       "levels": {
         "elite": "Elite",
         "plus": "Überdurchschnittlich",
