@@ -4051,8 +4051,16 @@
         "defense": "Defensa",
         "throwing": "Lanzamiento",
         "leadership": "Liderazgo",
-        "self_efficacy": "Auto-Eficacia"
+        "self_efficacy": "Auto-Eficacia",
+        "fastball": "Recta",
+        "offspeed": "Cambio de Velocidad",
+        "breaking_ball": "Bola con Quiebre",
+        "control": "Control",
+        "delivery": "Mecánica",
+        "rise_ball": "Bola Ascendente"
       },
+      "pitchingTitle": "Auto-Calificaciones de Pitcheo",
+      "pitchingDescription": "Califica tus herramientas de pitcheo en la escala 20-80",
       "levels": {
         "elite": "Élite",
         "plus": "Superior",

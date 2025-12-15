@@ -4073,8 +4073,16 @@
         "defense": "Défense",
         "throwing": "Lancer",
         "leadership": "Leadership",
-        "self_efficacy": "Auto-Efficacité"
+        "self_efficacy": "Auto-Efficacité",
+        "fastball": "Balle Rapide",
+        "offspeed": "Hors-Vitesse",
+        "breaking_ball": "Balle Courbe",
+        "control": "Contrôle",
+        "delivery": "Livraison",
+        "rise_ball": "Balle Montante"
       },
+      "pitchingTitle": "Auto-Évaluation Lancer",
+      "pitchingDescription": "Évaluez vos outils de lancer sur l'échelle 20-80",
       "levels": {
         "elite": "Élite",
         "plus": "Supérieur",

@@ -3316,8 +3316,16 @@
         "defense": "Verdediging",
         "throwing": "Werpen",
         "leadership": "Leiderschap",
-        "self_efficacy": "Zelfvertrouwen"
+        "self_efficacy": "Zelfvertrouwen",
+        "fastball": "Fastball",
+        "offspeed": "Off-Speed",
+        "breaking_ball": "Breaking Ball",
+        "control": "Controle",
+        "delivery": "Werpbeweging",
+        "rise_ball": "Rise Ball"
       },
+      "pitchingTitle": "Pitching Zelfbeoordeling",
+      "pitchingDescription": "Beoordeel je pitching vaardigheden op de 20-80 schaal",
       "levels": {
         "elite": "Elite",
         "plus": "Bovengemiddeld",

@@ -3303,8 +3303,16 @@
         "defense": "수비",
         "throwing": "송구",
         "leadership": "리더십",
-        "self_efficacy": "자기효능감"
+        "self_efficacy": "자기효능감",
+        "fastball": "패스트볼",
+        "offspeed": "체인지업",
+        "breaking_ball": "변화구",
+        "control": "제구력",
+        "delivery": "투구폼",
+        "rise_ball": "라이즈볼"
       },
+      "pitchingTitle": "투구 자기평가",
+      "pitchingDescription": "20-80 스케일로 투구 능력 평가",
       "levels": {
         "elite": "엘리트",
         "plus": "우수",

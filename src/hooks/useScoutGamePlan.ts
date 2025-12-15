@@ -25,25 +25,30 @@ export const useScoutGamePlan = (): ScoutGamePlanData => {
 
   const fetchPendingReviews = useCallback(async () => {
     if (!user) {
+      console.log('[useScoutGamePlan] No user, skipping fetch');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
+      console.log('[useScoutGamePlan] Fetching pending reviews for user:', user.id);
       
       const { data, error } = await supabase.functions.invoke('get-scout-pending-reviews');
+
+      console.log('[useScoutGamePlan] Response:', { data, error });
 
       if (error) {
         console.error('[useScoutGamePlan] Error fetching pending reviews:', error);
         setPlayers([]);
         setTotalUnreviewed(0);
       } else if (data) {
+        console.log('[useScoutGamePlan] Setting players:', data.players?.length || 0, 'total unreviewed:', data.totalUnreviewed || 0);
         setPlayers(data.players || []);
         setTotalUnreviewed(data.totalUnreviewed || 0);
       }
     } catch (error) {
-      console.error('[useScoutGamePlan] Error:', error);
+      console.error('[useScoutGamePlan] Catch error:', error);
       setPlayers([]);
       setTotalUnreviewed(0);
     } finally {
