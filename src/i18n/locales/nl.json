@@ -3135,7 +3135,15 @@
       "saved": "Voedingslog opgeslagen!",
       "error": "Opslaan voedingslog mislukt",
       "logged": "Vandaag gelogd",
-      "presets": "Snelle Presets",
+      "quickPresets": "Snelle Presets",
+      "logMeal": "Maaltijd Loggen",
+      "presets": {
+        "pre_workout": "Pre-Workout",
+        "post_workout": "Post-Workout",
+        "protein_shake": "Proteïneshake",
+        "light_meal": "Lichte Maaltijd",
+        "power_meal": "Krachtige Maaltijd"
+      },
       "pre_workout": "Pre-Workout",
       "post_workout": "Post-Workout",
       "protein_shake": "Eiwitshake",

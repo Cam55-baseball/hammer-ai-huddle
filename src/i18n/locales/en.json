@@ -4069,7 +4069,15 @@
       "saved": "Nutrition log saved!",
       "error": "Failed to save nutrition log",
       "logged": "Logged today",
-      "presets": "Quick Presets",
+      "quickPresets": "Quick Presets",
+      "logMeal": "Log Meal",
+      "presets": {
+        "pre_workout": "Pre-Workout",
+        "post_workout": "Post-Workout",
+        "protein_shake": "Protein Shake",
+        "light_meal": "Light Meal",
+        "power_meal": "Power Meal"
+      },
       "pre_workout": "Pre-Workout",
       "post_workout": "Post-Workout",
       "protein_shake": "Protein Shake",

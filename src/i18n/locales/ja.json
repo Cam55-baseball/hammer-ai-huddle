@@ -3166,7 +3166,15 @@
       "error": "栄養ログの保存に失敗しました",
       "logged": "本日記録済み",
       "meal": "食事",
-      "presets": "クイックプリセット",
+      "quickPresets": "クイックプリセット",
+      "logMeal": "食事を記録",
+      "presets": {
+        "pre_workout": "ワークアウト前",
+        "post_workout": "ワークアウト後",
+        "protein_shake": "プロテインシェイク",
+        "light_meal": "軽食",
+        "power_meal": "パワーミール"
+      },
       "pre_workout": "ワークアウト前",
       "post_workout": "ワークアウト後",
       "protein_shake": "プロテインシェイク",
