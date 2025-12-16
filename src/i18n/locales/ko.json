@@ -3064,7 +3064,8 @@
       "toNextMilestone": "일 후 다음 마일스톤",
       "totalEntries": "총 항목",
       "badgesEarned": "획득한 배지",
-      "active": "활성"
+      "active": "활성",
+      "entries": "항목"
     },
     "reminder": {
       "title": "6주 리뷰",
@@ -3397,7 +3398,11 @@
       "readyToGenerate": "생성 준비 완료!",
       "detailTitle": "6주 훈련 요약",
       "pastRecaps": "지난 요약",
-      "daysRemaining": "다음 요약까지 {{days}}일"
+      "daysRemaining": "다음 요약까지 {{days}}일",
+      "sixWeekCycle": "6주 사이클",
+      "ready": "준비 완료!",
+      "daysLeft": "일 남음",
+      "keepLogging": "매일 기록하여 요약을 잠금 해제하세요"
     },
     "delete": {
       "confirmTitle": "항목을 삭제하시겠습니까?",

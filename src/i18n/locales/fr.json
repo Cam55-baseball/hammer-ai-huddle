@@ -3823,7 +3823,8 @@
       "toNextMilestone": "jours jusqu'au prochain jalon",
       "totalEntries": "Entrées Totales",
       "badgesEarned": "Badges Gagnés",
-      "active": "Actif"
+      "active": "Actif",
+      "entries": "entrées"
     },
     "reminder": {
       "title": "Récapitulatif 6 Semaines",
@@ -4165,7 +4166,11 @@
       "readyToGenerate": "Prêt à générer !",
       "detailTitle": "Récapitulatif d'Entraînement 6 Semaines",
       "pastRecaps": "Récaps précédents",
-      "daysRemaining": "{{days}} jours avant le prochain récap"
+      "daysRemaining": "{{days}} jours avant le prochain récap",
+      "sixWeekCycle": "Cycle de 6 Semaines",
+      "ready": "Prêt !",
+      "daysLeft": "jours restants",
+      "keepLogging": "Continuez à enregistrer quotidiennement pour débloquer votre récap"
     },
     "delete": {
       "confirmTitle": "Supprimer l'entrée ?",

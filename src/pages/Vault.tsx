@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { useSubscription } from '@/hooks/useSubscription';
-import { VaultStreakCard } from '@/components/vault/VaultStreakCard';
+import { VaultStreakRecapCard } from '@/components/vault/VaultStreakRecapCard';
 import { VaultDailyReminder } from '@/components/vault/VaultDailyReminder';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { VaultNutritionLogCard } from '@/components/vault/VaultNutritionLogCard';
@@ -33,7 +33,7 @@ import { VaultSavedItemsCard } from '@/components/vault/VaultSavedItemsCard';
 import { VaultPerformanceTestCard } from '@/components/vault/VaultPerformanceTestCard';
 import { VaultProgressPhotosCard } from '@/components/vault/VaultProgressPhotosCard';
 import { VaultScoutGradesCard } from '@/components/vault/VaultScoutGradesCard';
-import { VaultRecapCard } from '@/components/vault/VaultRecapCard';
+// VaultRecapCard removed - merged into VaultStreakRecapCard
 import { VaultHistoryTab } from '@/components/vault/VaultHistoryTab';
 import { VaultWeeklySummary } from '@/components/vault/VaultWeeklySummary';
 import { VaultNutritionWeeklySummary } from '@/components/vault/VaultNutritionWeeklySummary';
@@ -134,21 +134,31 @@ export default function Vault() {
     }
     
     if (openSection) {
-      // Scroll to section after a short delay for rendering
-      setTimeout(() => {
-        if (openSection === 'performance-tests' && performanceTestsRef.current) {
-          performanceTestsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else if (openSection === 'progress-photos' && progressPhotosRef.current) {
-          progressPhotosRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else if (openSection === 'scout-grades' && scoutGradesRef.current) {
-          scoutGradesRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else if (openSection === 'nutrition' && nutritionRef.current) {
-          nutritionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Ensure "Today" tab is active for sections that live there
+      if (['scout-grades', 'pitching-grades', 'performance-tests', 'progress-photos', 'nutrition'].includes(openSection)) {
+        setActiveTab('today');
+      }
+      
+      // Scroll to section after longer delay for full rendering
+      const scrollToSection = () => {
+        let targetRef: React.RefObject<HTMLDivElement> | null = null;
+        
+        if (openSection === 'performance-tests') targetRef = performanceTestsRef;
+        else if (openSection === 'progress-photos') targetRef = progressPhotosRef;
+        else if (openSection === 'scout-grades') targetRef = scoutGradesRef;
+        else if (openSection === 'pitching-grades') targetRef = pitchingGradesRef;
+        else if (openSection === 'nutrition') targetRef = nutritionRef;
+        
+        if (targetRef?.current) {
+          targetRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Clear params after successful scroll
+          searchParams.delete('openSection');
+          setSearchParams(searchParams, { replace: true });
         }
-      }, 300);
-      // Clear the param
-      searchParams.delete('openSection');
-      setSearchParams(searchParams, { replace: true });
+      };
+      
+      // Initial attempt after 500ms for component mount
+      setTimeout(scrollToSection, 500);
     }
   }, [searchParams, setSearchParams]);
 
@@ -371,7 +381,15 @@ export default function Vault() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Streak & Quizzes */}
             <div className="space-y-6">
-              <VaultStreakCard streak={streak} isLoading={loading} />
+              <VaultStreakRecapCard 
+                streak={streak} 
+                recaps={recaps}
+                canGenerateRecap={canGenerateRecap()}
+                daysUntilNextRecap={getDaysUntilRecap()}
+                recapProgress={getRecapProgress()}
+                onGenerateRecap={handleGenerateRecap}
+                isLoading={loading} 
+              />
 
               {/* Daily Check-In Container */}
               <div className="rounded-xl border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-background p-4 sm:p-6 space-y-4">
@@ -694,14 +712,7 @@ export default function Vault() {
                     </div>
                   )}
 
-                  {/* 6-Week Recap */}
-                  <VaultRecapCard
-                    recaps={recaps}
-                    canGenerate={canGenerateRecap()}
-                    daysUntilNextRecap={getDaysUntilRecap()}
-                    onGenerate={handleGenerateRecap}
-                    isLoading={loading}
-                  />
+                  {/* 6-Week Recap moved to VaultStreakRecapCard in left column */}
                 </TabsContent>
 
                 <TabsContent value="weekly" className="mt-4 space-y-6">

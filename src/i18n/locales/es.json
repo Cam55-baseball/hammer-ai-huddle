@@ -3801,7 +3801,8 @@
       "toNextMilestone": "días para la próxima meta",
       "totalEntries": "Entradas Totales",
       "badgesEarned": "Insignias Ganadas",
-      "active": "Activo"
+      "active": "Activo",
+      "entries": "entradas"
     },
     "reminder": {
       "title": "Resumen de 6 Semanas",
@@ -4143,7 +4144,11 @@
       "readyToGenerate": "¡Listo para generar!",
       "detailTitle": "Resumen de Entrenamiento de 6 Semanas",
       "pastRecaps": "Resúmenes anteriores",
-      "daysRemaining": "{{days}} días para el próximo resumen"
+      "daysRemaining": "{{days}} días para el próximo resumen",
+      "sixWeekCycle": "Ciclo de 6 Semanas",
+      "ready": "¡Listo!",
+      "daysLeft": "días restantes",
+      "keepLogging": "Sigue registrando a diario para desbloquear tu resumen"
     },
     "delete": {
       "confirmTitle": "¿Eliminar entrada?",

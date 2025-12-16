@@ -3823,7 +3823,8 @@
       "toNextMilestone": "Tage bis zum nächsten Meilenstein",
       "totalEntries": "Gesamteinträge",
       "badgesEarned": "Verdiente Abzeichen",
-      "active": "Aktiv"
+      "active": "Aktiv",
+      "entries": "Einträge"
     },
     "reminder": {
       "title": "6-Wochen Rückblick",
@@ -4165,7 +4166,11 @@
       "readyToGenerate": "Bereit zum Generieren!",
       "detailTitle": "6-Wochen Trainingsrückblick",
       "pastRecaps": "Frühere Recaps",
-      "daysRemaining": "{{days}} Tage bis zum nächsten Recap"
+      "daysRemaining": "{{days}} Tage bis zum nächsten Recap",
+      "sixWeekCycle": "6-Wochen-Zyklus",
+      "ready": "Bereit!",
+      "daysLeft": "Tage übrig",
+      "keepLogging": "Logge täglich weiter, um dein Recap freizuschalten"
     },
     "delete": {
       "confirmTitle": "Eintrag löschen?",

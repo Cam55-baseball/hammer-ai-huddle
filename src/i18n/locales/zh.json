@@ -3048,7 +3048,8 @@
       "toNextMilestone": "天后达到下一个里程碑",
       "totalEntries": "总条目",
       "badgesEarned": "获得徽章",
-      "active": "活跃"
+      "active": "活跃",
+      "entries": "条目"
     },
     "reminder": {
       "title": "6周回顾",
@@ -3381,7 +3382,11 @@
       "readyToGenerate": "准备生成！",
       "detailTitle": "6周训练回顾",
       "pastRecaps": "过往回顾",
-      "daysRemaining": "距离下次回顾还有{{days}}天"
+      "daysRemaining": "距离下次回顾还有{{days}}天",
+      "sixWeekCycle": "6周周期",
+      "ready": "准备就绪！",
+      "daysLeft": "天剩余",
+      "keepLogging": "继续每日记录以解锁您的回顾"
     },
     "delete": {
       "confirmTitle": "删除条目？",
