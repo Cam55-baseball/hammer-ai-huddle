@@ -3107,7 +3107,8 @@
       "toNextMilestone": "日後に次のマイルストーン",
       "totalEntries": "総エントリー",
       "badgesEarned": "獲得バッジ",
-      "active": "アクティブ"
+      "active": "アクティブ",
+      "entries": "エントリー"
     },
     "reminder": {
       "title": "6週間レビュー",
@@ -3440,7 +3441,11 @@
       "readyToGenerate": "生成準備完了！",
       "detailTitle": "6週間トレーニング振り返り",
       "pastRecaps": "過去の振り返り",
-      "daysRemaining": "次の振り返りまであと{{days}}日"
+      "daysRemaining": "次の振り返りまであと{{days}}日",
+      "sixWeekCycle": "6週間サイクル",
+      "ready": "準備完了！",
+      "daysLeft": "日残り",
+      "keepLogging": "毎日記録を続けて振り返りを解除しよう"
     },
     "delete": {
       "confirmTitle": "エントリーを削除しますか？",

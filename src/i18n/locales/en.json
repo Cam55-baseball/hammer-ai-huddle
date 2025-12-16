@@ -4001,7 +4001,8 @@
       "toNextMilestone": "days to next milestone",
       "totalEntries": "Total Entries",
       "badgesEarned": "Badges Earned",
-      "active": "Active"
+      "active": "Active",
+      "entries": "entries"
     },
     "reminder": {
       "title": "6-Week Recap",
@@ -4343,7 +4344,11 @@
       "readyToGenerate": "Ready to Generate!",
       "detailTitle": "6-Week Training Recap",
       "pastRecaps": "Past Recaps",
-      "daysRemaining": "{{days}} days until next recap"
+      "daysRemaining": "{{days}} days until next recap",
+      "sixWeekCycle": "6-Week Cycle",
+      "ready": "Ready!",
+      "daysLeft": "days left",
+      "keepLogging": "Keep logging daily to unlock your recap"
     },
     "delete": {
       "confirmTitle": "Delete Entry?",

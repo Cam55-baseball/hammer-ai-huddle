@@ -3077,7 +3077,8 @@
       "toNextMilestone": "dagen tot volgende mijlpaal",
       "totalEntries": "Totaal Entries",
       "badgesEarned": "Verdiende Badges",
-      "active": "Actief"
+      "active": "Actief",
+      "entries": "invoeren"
     },
     "reminder": {
       "title": "6-Weken Recap",
@@ -3410,7 +3411,11 @@
       "readyToGenerate": "Klaar om te genereren!",
       "detailTitle": "6-weken trainingssamenvatting",
       "pastRecaps": "Eerdere samenvattingen",
-      "daysRemaining": "{{days}} dagen tot volgende samenvatting"
+      "daysRemaining": "{{days}} dagen tot volgende samenvatting",
+      "sixWeekCycle": "6-weken cyclus",
+      "ready": "Klaar!",
+      "daysLeft": "dagen over",
+      "keepLogging": "Blijf dagelijks loggen om je samenvatting te ontgrendelen"
     },
     "delete": {
       "confirmTitle": "Invoer verwijderen?",
