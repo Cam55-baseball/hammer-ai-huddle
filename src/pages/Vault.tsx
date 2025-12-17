@@ -26,7 +26,7 @@ import {
 import { useVault } from '@/hooks/useVault';
 import { useSubscription } from '@/hooks/useSubscription';
 import { VaultStreakRecapCard } from '@/components/vault/VaultStreakRecapCard';
-import { VaultDailyReminder } from '@/components/vault/VaultDailyReminder';
+
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { VaultNutritionLogCard } from '@/components/vault/VaultNutritionLogCard';
 import { VaultSavedItemsCard } from '@/components/vault/VaultSavedItemsCard';
@@ -343,11 +343,6 @@ export default function Vault() {
               </div>
             </div>
 
-            <VaultDailyReminder
-              daysUntilRecap={42}
-              recapProgress={0}
-              isLocked={true}
-            />
           </div>
         </div>
       </DashboardLayout>
@@ -372,11 +367,6 @@ export default function Vault() {
             </div>
           </div>
 
-          {/* Daily Reminder - Main Visual */}
-          <VaultDailyReminder
-            daysUntilRecap={getDaysUntilRecap()}
-            recapProgress={getRecapProgress()}
-          />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Streak & Quizzes */}

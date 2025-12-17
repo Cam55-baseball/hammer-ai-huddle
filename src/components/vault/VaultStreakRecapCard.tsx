@@ -260,6 +260,13 @@ export function VaultStreakRecapCard({
               </CollapsibleContent>
             </Collapsible>
           )}
+
+          {/* Motivational Quote */}
+          <div className="text-center pt-3 border-t border-primary/10">
+            <p className="text-xs italic text-muted-foreground">
+              "{t('vault.reminder.stayConsistent')}"
+            </p>
+          </div>
         </CardContent>
       </Card>
 
