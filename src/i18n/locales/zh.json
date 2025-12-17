@@ -1118,7 +1118,8 @@
     "anyCommitment": "任何",
     "anyYear": "任何年份",
     "showFilters": "显示筛选",
-    "hideFilters": "隐藏筛选"
+    "hideFilters": "隐藏筛选",
+    "following": "关注的球员"
   },
   "subscription": {
     "title": "订阅",
@@ -3525,6 +3526,11 @@
       "grades": {
         "title": "设置球探自评",
         "description": "用20-80分制评估你的技能",
+        "badge": "12周"
+      },
+      "pitchingGrades": {
+        "title": "设置投球自我评分",
+        "description": "在20-80等级上评估您的投球技能",
         "badge": "12周"
       }
     },

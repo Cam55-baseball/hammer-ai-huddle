@@ -1322,7 +1322,8 @@
     "anyCommitment": "Cualquiera",
     "anyYear": "Cualquier Año",
     "showFilters": "Mostrar Filtros",
-    "hideFilters": "Ocultar Filtros"
+    "hideFilters": "Ocultar Filtros",
+    "following": "Jugadores Siguiendo"
   },
   "subscription": {
     "title": "Suscripción",
@@ -4279,6 +4280,11 @@
       "grades": {
         "title": "Establecer Auto-Calificaciones Scout",
         "description": "Califica tus habilidades en la escala 20-80",
+        "badge": "12 SEM"
+      },
+      "pitchingGrades": {
+        "title": "Establecer Autocalificaciones de Lanzamiento",
+        "description": "Califica tus habilidades de lanzamiento en la escala 20-80",
         "badge": "12 SEM"
       }
     },

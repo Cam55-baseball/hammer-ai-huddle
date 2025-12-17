@@ -1117,7 +1117,8 @@
     "anyCommitment": "모두",
     "anyYear": "모든 연도",
     "showFilters": "필터 보기",
-    "hideFilters": "필터 숨기기"
+    "hideFilters": "필터 숨기기",
+    "following": "팔로우 중인 선수"
   },
   "subscription": {
     "title": "구독",
@@ -3541,6 +3542,11 @@
       "grades": {
         "title": "스카우트 자기 평가 설정",
         "description": "20-80 척도로 기술 평가",
+        "badge": "12주"
+      },
+      "pitchingGrades": {
+        "title": "투구 자기 평가 설정",
+        "description": "20-80 척도로 투구 기술 평가",
         "badge": "12주"
       }
     },
