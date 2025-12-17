@@ -1118,7 +1118,8 @@
     "anyCommitment": "全て",
     "anyYear": "全ての年",
     "showFilters": "フィルターを表示",
-    "hideFilters": "フィルターを非表示"
+    "hideFilters": "フィルターを非表示",
+    "following": "フォロー中の選手"
   },
   "subscription": {
     "title": "サブスクリプション",
@@ -3584,6 +3585,11 @@
       "grades": {
         "title": "スカウト自己評価を設定",
         "description": "20-80スケールでスキルを評価",
+        "badge": "12週"
+      },
+      "pitchingGrades": {
+        "title": "投球の自己評価を設定",
+        "description": "20-80スケールで投球スキルを評価",
         "badge": "12週"
       }
     },

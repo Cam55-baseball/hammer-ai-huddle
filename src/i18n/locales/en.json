@@ -1447,7 +1447,8 @@
     "anyCommitment": "Any",
     "anyYear": "Any Year",
     "showFilters": "Show Filters",
-    "hideFilters": "Hide Filters"
+    "hideFilters": "Hide Filters",
+    "following": "Following Players"
   },
   "subscription": {
     "title": "Subscription",
@@ -4479,6 +4480,11 @@
       "grades": {
         "title": "Set Scout Self-Grades",
         "description": "Rate your skills on the 20-80 scale",
+        "badge": "12-WEEK"
+      },
+      "pitchingGrades": {
+        "title": "Set Pitching Self-Grades",
+        "description": "Rate your pitching skills on the 20-80 scale",
         "badge": "12-WEEK"
       }
     },

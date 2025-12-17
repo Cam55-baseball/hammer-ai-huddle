@@ -1147,7 +1147,8 @@
     "anyCommitment": "Alle",
     "anyYear": "Jedes Jahr",
     "showFilters": "Filter Anzeigen",
-    "hideFilters": "Filter Ausblenden"
+    "hideFilters": "Filter Ausblenden",
+    "following": "Gefolgte Spieler"
   },
   "subscription": {
     "title": "Abonnement",
@@ -4301,6 +4302,11 @@
       "grades": {
         "title": "Scout-Selbstbewertungen Setzen",
         "description": "Bewerte deine Fähigkeiten auf der 20-80 Skala",
+        "badge": "12 WO"
+      },
+      "pitchingGrades": {
+        "title": "Pitching-Selbstbewertungen Setzen",
+        "description": "Bewerten Sie Ihre Pitching-Fähigkeiten auf der 20-80-Skala",
         "badge": "12 WO"
       }
     },

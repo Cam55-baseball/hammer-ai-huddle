@@ -1147,7 +1147,8 @@
     "anyCommitment": "Tous",
     "anyYear": "Toute Année",
     "showFilters": "Afficher les Filtres",
-    "hideFilters": "Masquer les Filtres"
+    "hideFilters": "Masquer les Filtres",
+    "following": "Joueurs Suivis"
   },
   "subscription": {
     "title": "Abonnement",
@@ -4301,6 +4302,11 @@
       "grades": {
         "title": "Définir les Auto-Évaluations Scout",
         "description": "Évaluez vos compétences sur l'échelle 20-80",
+        "badge": "12 SEM"
+      },
+      "pitchingGrades": {
+        "title": "Définir Auto-évaluations de Lancer",
+        "description": "Évaluez vos compétences de lancer sur l'échelle 20-80",
         "badge": "12 SEM"
       }
     },

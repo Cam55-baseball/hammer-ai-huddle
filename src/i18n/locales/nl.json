@@ -1147,7 +1147,8 @@
     "anyCommitment": "Alle",
     "anyYear": "Elk Jaar",
     "showFilters": "Filters Tonen",
-    "hideFilters": "Filters Verbergen"
+    "hideFilters": "Filters Verbergen",
+    "following": "Gevolgde Spelers"
   },
   "subscription": {
     "title": "Abonnement",
@@ -3554,6 +3555,11 @@
       "grades": {
         "title": "Stel Scout Zelfbeoordelingen In",
         "description": "Beoordeel je vaardigheden op de 20-80 schaal",
+        "badge": "12 WK"
+      },
+      "pitchingGrades": {
+        "title": "Pitching Zelfbeoordelingen Instellen",
+        "description": "Beoordeel je pitching-vaardigheden op de 20-80 schaal",
         "badge": "12 WK"
       }
     },
