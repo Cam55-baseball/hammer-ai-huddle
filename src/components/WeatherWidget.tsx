@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap, Sunrise, Sunset } from "lucide-react";
+import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap, Sunrise, Sunset, Clock } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -39,6 +39,16 @@ interface DrillRecommendation {
   icon: string;
 }
 
+interface HourlyForecast {
+  time: string;
+  temperature: number;
+  condition: string;
+  weatherCode: number;
+  windSpeed: number;
+  precipitationChance: number;
+  humidity: number;
+}
+
 interface WeatherData {
   location: string;
   temperature: number;
@@ -53,6 +63,7 @@ interface WeatherData {
   sunset?: string;
   sportAnalysis?: SportAnalysis;
   dailyForecast?: DailyForecast[];
+  hourlyForecast?: HourlyForecast[];
   drillRecommendations?: DrillRecommendation[];
 }
 
@@ -68,6 +79,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   const [location, setLocation] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showForecast, setShowForecast] = useState(false);
+  const [showHourlyForecast, setShowHourlyForecast] = useState(false);
   const [showDrills, setShowDrills] = useState(false);
   const { toast } = useToast();
 
@@ -225,6 +237,23 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
       case 'low': return 'bg-gray-100 text-gray-700 border-gray-300';
       default: return 'bg-gray-100 text-gray-700 border-gray-300';
     }
+  };
+
+  const formatHourlyTime = (timeString: string, index: number) => {
+    if (index === 0) return t('weather.now');
+    const date = new Date(timeString);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
+  };
+
+  const getHourlyWeatherIcon = (condition: string, size: string = 'h-5 w-5') => {
+    const c = condition.toLowerCase();
+    if (c.includes('clear') || c.includes('sunny')) return <Sun className={`${size} text-amber-500`} />;
+    if (c.includes('partly')) return <CloudSun className={`${size} text-sky-500`} />;
+    if (c.includes('cloud') || c.includes('overcast')) return <Cloud className={`${size} text-gray-500`} />;
+    if (c.includes('rain') || c.includes('drizzle')) return <CloudRain className={`${size} text-blue-500`} />;
+    if (c.includes('storm') || c.includes('thunder')) return <Zap className={`${size} text-purple-500`} />;
+    if (c.includes('snow') || c.includes('sleet')) return <Snowflake className={`${size} text-blue-400`} />;
+    return <Cloud className={`${size} text-gray-500`} />;
   };
 
   const weatherGradient = weather ? getWeatherGradient(weather.condition) : 'from-sky-400 via-blue-500 to-indigo-600';
@@ -542,6 +571,56 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                   </p>
                 </CardContent>
               </Card>
+            </div>
+          )}
+
+          {/* Hourly Forecast Toggle */}
+          {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+            <Button 
+              variant="outline" 
+              className="w-full group hover:bg-primary hover:text-primary-foreground transition-all"
+              onClick={() => setShowHourlyForecast(!showHourlyForecast)}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              {showHourlyForecast ? t('weather.hideHourlyForecast') : t('weather.toggleHourlyForecast')}
+            </Button>
+          )}
+
+          {/* Hourly Forecast Cards */}
+          {showHourlyForecast && weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+            <div className="space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-300">
+              <h4 className="font-bold text-base flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                {t('weather.hourlyForecastTitle')}
+              </h4>
+              
+              <div className="overflow-x-auto pb-2 -mx-2 px-2">
+                <div className="flex gap-2" style={{ minWidth: 'max-content' }}>
+                  {weather.hourlyForecast.map((hour, index) => (
+                    <Card key={hour.time} className="flex-shrink-0 w-20 overflow-hidden hover:shadow-md transition-all border-border/50">
+                      <CardContent className="p-2 text-center">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">
+                          {formatHourlyTime(hour.time, index)}
+                        </p>
+                        <div className="flex justify-center mb-1">
+                          {getHourlyWeatherIcon(hour.condition, 'h-6 w-6')}
+                        </div>
+                        <p className="text-lg font-bold">{hour.temperature}°</p>
+                        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-1">
+                          <Wind className="h-3 w-3" />
+                          <span>{hour.windSpeed}</span>
+                        </div>
+                        {hour.precipitationChance > 0 && (
+                          <div className="flex items-center justify-center gap-1 text-xs text-blue-500 mt-0.5">
+                            <CloudRain className="h-3 w-3" />
+                            <span>{hour.precipitationChance}%</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
