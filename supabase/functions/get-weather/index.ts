@@ -26,6 +26,16 @@ interface DailyForecast {
   recommendationColor: 'green' | 'yellow' | 'red';
 }
 
+interface HourlyForecast {
+  time: string;
+  temperature: number;
+  condition: string;
+  weatherCode: number;
+  windSpeed: number;
+  precipitationChance: number;
+  humidity: number;
+}
+
 interface DrillRecommendation {
   category: string;
   drills: string[];
@@ -448,7 +458,7 @@ serve(async (req) => {
       throw new Error("Invalid location coordinates");
     }
 
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,weather_code&hourly=uv_index,visibility&daily=temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max,precipitation_probability_max,sunrise,sunset&timezone=auto&forecast_days=7`;
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,weather_code&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation_probability,weather_code,uv_index,visibility&daily=temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max,precipitation_probability_max,sunrise,sunset&timezone=auto&forecast_days=7`;
     console.log(`Open-Meteo Weather API URL: ${weatherUrl}`);
 
     const response = await fetch(weatherUrl, {
@@ -494,6 +504,39 @@ serve(async (req) => {
       visibility: visibilityMiles,
       uvIndex: uvIndex ?? 0,
     };
+
+    // Process hourly forecast data (next 33 hours)
+    const hourlyForecasts: HourlyForecast[] = [];
+    const hourlyTimes: string[] = hourly.time || [];
+    const hourlyTemps: number[] = hourly.temperature_2m || [];
+    const hourlyHumidity: number[] = hourly.relative_humidity_2m || [];
+    const hourlyWindSpeed: number[] = hourly.wind_speed_10m || [];
+    const hourlyPrecipProb: number[] = hourly.precipitation_probability || [];
+    const hourlyWeatherCode: number[] = hourly.weather_code || [];
+    
+    const currentTime = new Date();
+    const currentHourIndex = hourlyTimes.findIndex((time: string) => {
+      const hourDate = new Date(time);
+      return hourDate >= currentTime;
+    });
+    
+    const startIndex = Math.max(0, currentHourIndex);
+    for (let i = startIndex; i < Math.min(startIndex + 33, hourlyTimes.length); i++) {
+      const tempC = hourlyTemps[i] ?? 0;
+      const tempF = tempC * 9 / 5 + 32;
+      const windSpeedKmh = hourlyWindSpeed[i] ?? 0;
+      const windSpeedMph = windSpeedKmh * 0.621371;
+      
+      hourlyForecasts.push({
+        time: hourlyTimes[i],
+        temperature: Math.round(tempF),
+        condition: mapWeatherCodeToDescription(hourlyWeatherCode[i]),
+        weatherCode: hourlyWeatherCode[i] ?? 0,
+        windSpeed: Math.round(windSpeedMph),
+        precipitationChance: Math.round(hourlyPrecipProb[i] ?? 0),
+        humidity: Math.round(hourlyHumidity[i] ?? 0),
+      });
+    }
 
     // Process daily forecast data
     const daily = data.daily || {};
@@ -542,6 +585,7 @@ serve(async (req) => {
       condition: mapWeatherCodeToDescription(current.weather_code),
       sportAnalysis: calculateSportConditions(weatherMetrics, sportType),
       dailyForecast: dailyForecasts,
+      hourlyForecast: hourlyForecasts,
       drillRecommendations: generateDrillRecommendations(weatherMetrics, sportType),
       sunrise,
       sunset

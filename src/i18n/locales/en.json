@@ -1393,7 +1393,11 @@
     "failedToLoadWeather": "Failed to load weather data",
     "noConditions": "No specific conditions to analyze",
     "sunrise": "Sunrise",
-    "sunset": "Sunset"
+    "sunset": "Sunset",
+    "toggleHourlyForecast": "Show Hourly Forecast",
+    "hideHourlyForecast": "Hide Hourly Forecast",
+    "hourlyForecastTitle": "33-Hour Forecast",
+    "now": "Now"
   },
   "scout": {
     "dashboard": "Scout Dashboard",
@@ -2432,6 +2436,8 @@
       }
     },
     "yourProgress": "Your Progress",
+    "progressAndStreak": "Your Progress",
+    "weekLabel": "Week {{current}}/{{total}}",
     "currentWeek": "Current Week",
     "thisWeek": "This Week",
     "overallProgress": "Overall Progress",
@@ -3852,6 +3858,8 @@
     "currentStreak": "Current Streak",
     "longestStreak": "Longest Streak",
     "totalWorkouts": "Total Workouts",
+    "best": "Best",
+    "total": "Total",
     "dayStreak": "day streak",
     "daysStreak": "days streak",
     "keepGoing": "Keep going!",

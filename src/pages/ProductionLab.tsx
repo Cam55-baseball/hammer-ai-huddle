@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
-import { WorkoutProgressCard } from '@/components/workout-modules/WorkoutProgressCard';
+import { WorkoutProgressStreakCard } from '@/components/workout-modules/WorkoutProgressStreakCard';
 import { EquipmentList } from '@/components/workout-modules/EquipmentList';
 import { WeekGateModal } from '@/components/workout-modules/WeekGateModal';
 import { ExperienceLevelSelector } from '@/components/workout-modules/ExperienceLevelSelector';
@@ -17,7 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowLeft, Dumbbell, ChevronDown, ChevronUp, Check, Lock, AlertTriangle } from 'lucide-react';
-import { WorkoutStreakCard } from '@/components/workout-modules/WorkoutStreakCard';
 import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
 import { NotificationPermissionCard } from '@/components/workout-modules/NotificationPermissionCard';
 import { useWorkoutNotifications } from '@/hooks/useWorkoutNotifications';
@@ -238,16 +237,12 @@ export default function ProductionLab() {
           </div>
         </div>
 
-        {/* Progress Card */}
-        <WorkoutProgressCard
+        {/* Combined Progress & Streak Card */}
+        <WorkoutProgressStreakCard
           currentWeek={currentWeek}
           weekCompletionPercent={weekPercent}
           overallPercent={overallPercent}
           lastActivity={progress?.last_activity}
-        />
-
-        {/* Workout Streak Card */}
-        <WorkoutStreakCard
           currentStreak={progress?.workout_streak_current || 0}
           longestStreak={progress?.workout_streak_longest || 0}
           totalWorkouts={progress?.total_workouts_completed || 0}
