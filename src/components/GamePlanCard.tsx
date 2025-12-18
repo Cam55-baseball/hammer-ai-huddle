@@ -58,13 +58,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
     // Handle tracking tasks - navigate to vault with section param
     if (task.taskType === 'tracking') {
-      if (task.id === 'tracking-performance') {
-        navigate('/vault?openSection=performance-tests');
-      } else if (task.id === 'tracking-photos') {
-        navigate('/vault?openSection=progress-photos');
-      } else if (task.id === 'tracking-grades') {
-        navigate('/vault?openSection=scout-grades');
-      }
+      navigate(task.link);
       return;
     }
 
