@@ -370,7 +370,37 @@ serve(async (req) => {
     let longitude: number | null = null;
     let resolvedLocationName = location as string;
 
-    const coordMatch = location.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+    // Check for US ZIP code pattern first (e.g., "33601" or "33601, USA")
+    const zipPattern = /^(\d{5})(?:\s*,?\s*(?:USA|US|United\s*States))?$/i;
+    const zipMatch = location.trim().match(zipPattern);
+    
+    if (zipMatch) {
+      const zipCode = zipMatch[1];
+      console.log(`Detected US ZIP code: ${zipCode}`);
+      
+      try {
+        const zipResponse = await fetch(`https://api.zippopotam.us/us/${zipCode}`, {
+          signal: AbortSignal.timeout(5000),
+        });
+        
+        if (zipResponse.ok) {
+          const zipData = await zipResponse.json();
+          if (zipData.places && zipData.places.length > 0) {
+            latitude = parseFloat(zipData.places[0].latitude);
+            longitude = parseFloat(zipData.places[0].longitude);
+            resolvedLocationName = `${zipData.places[0]['place name']}, ${zipData.places[0]['state abbreviation']}, USA`;
+            console.log(`Resolved ZIP ${zipCode} to: ${resolvedLocationName} (${latitude}, ${longitude})`);
+          }
+        } else {
+          console.warn(`ZIP code lookup failed for: ${zipCode}, status: ${zipResponse.status}`);
+        }
+      } catch (zipError) {
+        console.error(`ZIP code lookup error:`, zipError);
+      }
+    }
+    
+    // Check for coordinate format if not resolved via ZIP
+    const coordMatch = !latitude ? location.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/) : null;
 
     if (coordMatch) {
       latitude = parseFloat(coordMatch[1]);

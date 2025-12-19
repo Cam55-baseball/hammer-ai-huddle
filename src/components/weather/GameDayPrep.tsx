@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sun, Compass, Thermometer, Shield, Wind, Clock, Cloud, CloudRain, CloudSun, Snowflake, Zap, CheckCircle2, Lightbulb, Copy, Droplets, AlertTriangle } from "lucide-react";
+import { Sun, Compass, Thermometer, Shield, Wind, Clock, Cloud, CloudRain, CloudSun, Snowflake, Zap, CheckCircle2, Lightbulb, Copy, Droplets, AlertTriangle, Moon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -228,16 +228,48 @@ const formatHourOption = (time: string, index: number, t: any): string => {
   return `${date.toLocaleDateString('en-US', { weekday: 'short' })} ${timeStr}`;
 };
 
-// Get condition icon component
-const getConditionIcon = (condition: string, size: string = 'h-4 w-4') => {
+// Check if time is night based on sunrise/sunset
+const isNightTime = (hourTime: string, sunrise: string, sunset: string): boolean => {
+  const date = new Date(hourTime);
+  const hour = date.getHours();
+  const hourMinutes = hour * 60;
+  
+  const sunriseMinutes = parseTimeToMinutes(sunrise);
+  const sunsetMinutes = parseTimeToMinutes(sunset);
+  
+  return hourMinutes < sunriseMinutes || hourMinutes >= sunsetMinutes;
+};
+
+// Get condition icon component with night mode support
+const getConditionIcon = (condition: string, size: string = 'h-4 w-4', isNight: boolean = false) => {
   const c = condition.toLowerCase();
-  if (c.includes('clear') || c.includes('sunny')) return <Sun className={`${size} text-amber-500`} />;
-  if (c.includes('partly')) return <CloudSun className={`${size} text-sky-500`} />;
+  
+  // Clear/sunny - show moon at night
+  if (c.includes('clear') || c.includes('sunny')) {
+    return isNight 
+      ? <Moon className={`${size} text-yellow-200`} />
+      : <Sun className={`${size} text-amber-500`} />;
+  }
+  
+  // Partly cloudy - show moon with cloud at night
+  if (c.includes('partly')) {
+    return isNight 
+      ? <div className="relative inline-flex items-center">
+          <Cloud className={`${size} text-gray-400`} />
+          <Moon className="h-2.5 w-2.5 text-yellow-200 absolute -top-0.5 -right-1" />
+        </div>
+      : <CloudSun className={`${size} text-sky-500`} />;
+  }
+  
   if (c.includes('cloud') || c.includes('overcast')) return <Cloud className={`${size} text-gray-500`} />;
   if (c.includes('rain') || c.includes('drizzle')) return <CloudRain className={`${size} text-blue-500`} />;
   if (c.includes('storm') || c.includes('thunder')) return <Zap className={`${size} text-purple-500`} />;
   if (c.includes('snow') || c.includes('sleet')) return <Snowflake className={`${size} text-blue-400`} />;
-  return <Cloud className={`${size} text-gray-500`} />;
+  
+  // Default - show moon at night for unknown conditions
+  return isNight 
+    ? <Moon className={`${size} text-gray-400`} />
+    : <Cloud className={`${size} text-gray-500`} />;
 };
 
 // Get sun impact positions
@@ -410,7 +442,11 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball', temperature, 
                 <SelectTrigger className="w-full h-10">
                   <SelectValue>
                     <div className="flex items-center gap-2">
-                      {selectedForecast && getConditionIcon(selectedForecast.condition)}
+                      {selectedForecast && getConditionIcon(
+                        selectedForecast.condition, 
+                        'h-4 w-4', 
+                        isNightTime(selectedForecast.time, sunrise, sunset)
+                      )}
                       <span className="truncate">
                         {selectedForecast 
                           ? `${formatHourOption(selectedForecast.time, selectedHourIndex, t)} • ${Math.round(selectedForecast.temperature)}°F`
@@ -421,15 +457,18 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball', temperature, 
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-card border border-border z-50 max-h-[300px]">
-                  {hourlyForecast.slice(0, 33).map((hour, idx) => (
-                    <SelectItem key={idx} value={idx.toString()}>
-                      <div className="flex items-center gap-2 py-0.5">
-                        {getConditionIcon(hour.condition)}
-                        <span className="flex-1">{formatHourOption(hour.time, idx, t)}</span>
-                        <span className="font-semibold">{Math.round(hour.temperature)}°F</span>
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {hourlyForecast.slice(0, 33).map((hour, idx) => {
+                    const hourIsNight = isNightTime(hour.time, sunrise, sunset);
+                    return (
+                      <SelectItem key={idx} value={idx.toString()}>
+                        <div className="flex items-center gap-2 py-0.5">
+                          {getConditionIcon(hour.condition, 'h-4 w-4', hourIsNight)}
+                          <span className="flex-1">{formatHourOption(hour.time, idx, t)}</span>
+                          <span className="font-semibold">{Math.round(hour.temperature)}°F</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

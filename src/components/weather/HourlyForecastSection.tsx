@@ -394,12 +394,12 @@ export function HourlyForecastSection({ hourlyForecast, sunrise, sunset }: Hourl
                         </p>
                       )}
                       
-                      {/* Stats row */}
-                      <div className="flex justify-center items-center gap-2 pt-1">
+                      {/* Stats row - always show wind, humidity, and precipitation */}
+                      <div className="flex justify-center items-center gap-1.5 pt-1">
                         {/* Wind indicator */}
                         <div className={`flex items-center gap-0.5 text-[10px] ${isNight ? 'text-white/60' : 'text-white/70'}`}>
                           <Wind className={`h-3 w-3 ${hour.windSpeed > 15 ? 'animate-pulse' : ''}`} />
-                          <span>{hour.windSpeed}</span>
+                          <span>{Math.round(hour.windSpeed)}</span>
                         </div>
                         
                         {/* Humidity */}
@@ -407,18 +407,29 @@ export function HourlyForecastSection({ hourlyForecast, sunrise, sunset }: Hourl
                           <Droplets className="h-3 w-3" />
                           <span>{hour.humidity}%</span>
                         </div>
+                        
+                        {/* Precipitation - always visible with color coding */}
+                        <div className={`flex items-center gap-0.5 text-[10px] ${
+                          hour.precipitationChance >= 70 ? 'text-red-300' :
+                          hour.precipitationChance >= 50 ? 'text-orange-300' :
+                          hour.precipitationChance >= 30 ? 'text-yellow-300' :
+                          'text-blue-200'
+                        }`}>
+                          <CloudRain className="h-3 w-3" />
+                          <span>{hour.precipitationChance}%</span>
+                        </div>
                       </div>
                       
-                      {/* Precipitation chance bar */}
-                      {hour.precipitationChance > 0 && (
+                      {/* Precipitation bar for high chance (visual emphasis) */}
+                      {hour.precipitationChance >= 30 && (
                         <div className="pt-1 px-1">
-                          <div className="flex items-center justify-center gap-1 mb-1">
-                            <CloudRain className="h-3 w-3 text-blue-200" />
-                            <span className="text-[10px] text-blue-200 font-semibold">{hour.precipitationChance}%</span>
-                          </div>
-                          <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
+                          <div className="h-1 bg-white/20 rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-gradient-to-r from-blue-400 to-blue-300 rounded-full transition-all duration-500"
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                hour.precipitationChance >= 70 ? 'bg-gradient-to-r from-red-400 to-red-300' :
+                                hour.precipitationChance >= 50 ? 'bg-gradient-to-r from-orange-400 to-orange-300' :
+                                'bg-gradient-to-r from-yellow-400 to-yellow-300'
+                              }`}
                               style={{ width: `${hour.precipitationChance}%` }}
                             />
                           </div>
