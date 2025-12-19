@@ -514,10 +514,11 @@ serve(async (req) => {
     const hourlyPrecipProb: number[] = hourly.precipitation_probability || [];
     const hourlyWeatherCode: number[] = hourly.weather_code || [];
     
-    const currentTime = new Date();
+    // Use current.time from Open-Meteo (already in location's local timezone)
+    // This avoids timezone mismatch issues with server UTC vs location local time
+    const currentTimeStr = current.time; // e.g., "2024-12-19T14:00"
     const currentHourIndex = hourlyTimes.findIndex((time: string) => {
-      const hourDate = new Date(time);
-      return hourDate >= currentTime;
+      return time >= currentTimeStr;
     });
     
     const startIndex = Math.max(0, currentHourIndex);
