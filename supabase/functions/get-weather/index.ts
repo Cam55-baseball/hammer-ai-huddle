@@ -516,10 +516,23 @@ serve(async (req) => {
     
     // Use current.time from Open-Meteo (already in location's local timezone)
     // This avoids timezone mismatch issues with server UTC vs location local time
-    const currentTimeStr = current.time; // e.g., "2024-12-19T14:00"
+    const currentTimeStr = current.time; // e.g., "2024-12-19T15:00" or "2024-12-19T15:25"
+    
+    // Extract just the hour portion for comparison (handles cases where current.time has minutes)
+    // Format: "2024-12-19T15:25" -> "2024-12-19T15" for matching against "2024-12-19T15:00"
+    const currentHourPrefix = currentTimeStr.slice(0, 13); // "2024-12-19T15"
+    
+    console.log(`Current time from API: ${currentTimeStr}`);
+    console.log(`Current hour prefix for matching: ${currentHourPrefix}`);
+    console.log(`First few hourly times: ${hourlyTimes.slice(0, 5).join(', ')}`);
+    
     const currentHourIndex = hourlyTimes.findIndex((time: string) => {
-      return time >= currentTimeStr;
+      // Compare just the date and hour portions
+      const timeHourPrefix = time.slice(0, 13); // e.g., "2024-12-19T15"
+      return timeHourPrefix >= currentHourPrefix;
     });
+    
+    console.log(`Found start index: ${currentHourIndex}`);
     
     const startIndex = Math.max(0, currentHourIndex);
     for (let i = startIndex; i < Math.min(startIndex + 33, hourlyTimes.length); i++) {

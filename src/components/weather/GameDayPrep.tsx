@@ -156,63 +156,160 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball' }: GameDayPrep
         </div>
         
         {/* Baseball Field Graphic with Sun Position */}
-        <div className="relative aspect-square max-w-[280px] mx-auto">
-          {/* Field Background */}
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            {/* Grass background */}
-            <circle cx="50" cy="50" r="48" fill="hsl(var(--muted))" />
+        <div className="relative aspect-square max-w-[300px] mx-auto">
+          <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-lg">
+            {/* Definitions */}
+            <defs>
+              {/* Grass gradient */}
+              <linearGradient id="grassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="hsl(142 60% 35%)" />
+                <stop offset="100%" stopColor="hsl(142 55% 28%)" />
+              </linearGradient>
+              
+              {/* Outfield grass gradient */}
+              <linearGradient id="outfieldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="hsl(142 65% 38%)" />
+                <stop offset="100%" stopColor="hsl(142 60% 32%)" />
+              </linearGradient>
+              
+              {/* Infield dirt gradient */}
+              <linearGradient id="dirtGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="hsl(30 45% 50%)" />
+                <stop offset="100%" stopColor="hsl(30 40% 42%)" />
+              </linearGradient>
+              
+              {/* Warning track */}
+              <linearGradient id="warningTrackGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="hsl(30 35% 45%)" />
+                <stop offset="100%" stopColor="hsl(30 30% 38%)" />
+              </linearGradient>
+              
+              {/* Sun glow */}
+              <radialGradient id="sunGlow">
+                <stop offset="0%" stopColor="hsl(45 100% 70%)" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="hsl(45 100% 60%)" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="hsl(45 100% 55%)" stopOpacity="0" />
+              </radialGradient>
+              
+              {/* Grass mow pattern */}
+              <pattern id="grassPattern" width="8" height="8" patternUnits="userSpaceOnUse">
+                <rect width="4" height="8" fill="hsl(142 58% 34%)" opacity="0.3" />
+              </pattern>
+            </defs>
             
-            {/* Outfield grass (darker) */}
+            {/* Background - sky/stadium */}
+            <rect width="200" height="200" fill="hsl(var(--muted))" rx="8" />
+            
+            {/* Warning track arc */}
             <path
-              d="M 50 50 L 10 50 A 40 40 0 0 1 90 50 Z"
-              fill="hsl(142 76% 30%)"
-              transform="rotate(-45 50 50)"
+              d="M 20 180 Q 20 20 180 180"
+              fill="url(#warningTrackGradient)"
             />
             
-            {/* Infield dirt */}
+            {/* Outfield grass */}
+            <path
+              d="M 30 175 Q 30 35 170 175"
+              fill="url(#outfieldGradient)"
+            />
+            
+            {/* Grass mow pattern overlay */}
+            <path
+              d="M 30 175 Q 30 35 170 175"
+              fill="url(#grassPattern)"
+              opacity="0.4"
+            />
+            
+            {/* Infield grass (arc behind bases) */}
+            <ellipse cx="100" cy="150" rx="55" ry="40" fill="url(#grassGradient)" />
+            
+            {/* Infield dirt diamond */}
             <polygon
-              points="50,75 30,55 50,35 70,55"
-              fill="hsl(30 50% 45%)"
+              points="100,180 55,135 100,90 145,135"
+              fill="url(#dirtGradient)"
             />
             
-            {/* Bases */}
-            <rect x="48" y="33" width="4" height="4" fill="white" transform="rotate(45 50 35)" /> {/* 2nd */}
-            <rect x="28" y="53" width="4" height="4" fill="white" transform="rotate(45 30 55)" /> {/* 3rd */}
-            <rect x="68" y="53" width="4" height="4" fill="white" transform="rotate(45 70 55)" /> {/* 1st */}
-            <polygon points="48,73 52,73 52,77 48,77" fill="white" /> {/* Home */}
+            {/* Base paths (white lines) */}
+            <line x1="100" y1="175" x2="60" y2="135" stroke="white" strokeWidth="1.5" opacity="0.9" />
+            <line x1="60" y1="135" x2="100" y2="95" stroke="white" strokeWidth="1.5" opacity="0.9" />
+            <line x1="100" y1="95" x2="140" y2="135" stroke="white" strokeWidth="1.5" opacity="0.9" />
+            <line x1="140" y1="135" x2="100" y2="175" stroke="white" strokeWidth="1.5" opacity="0.9" />
+            
+            {/* Foul lines extending to outfield */}
+            <line x1="100" y1="175" x2="25" y2="100" stroke="white" strokeWidth="1.5" opacity="0.8" />
+            <line x1="100" y1="175" x2="175" y2="100" stroke="white" strokeWidth="1.5" opacity="0.8" />
             
             {/* Pitcher's mound */}
-            <circle cx="50" cy="55" r="3" fill="hsl(30 40% 55%)" />
+            <ellipse cx="100" cy="140" rx="8" ry="6" fill="hsl(30 35% 55%)" />
+            <rect x="97" y="138" width="6" height="2" fill="white" rx="0.5" />
             
-            {/* Position labels */}
-            <text x="50" y="25" textAnchor="middle" className="text-[5px] fill-foreground font-bold">CF</text>
-            <text x="25" y="40" textAnchor="middle" className="text-[5px] fill-foreground font-bold">LF</text>
-            <text x="75" y="40" textAnchor="middle" className="text-[5px] fill-foreground font-bold">RF</text>
-            <text x="50" y="82" textAnchor="middle" className="text-[5px] fill-foreground font-bold">HP</text>
+            {/* Batter's boxes */}
+            <rect x="85" y="168" width="8" height="12" fill="none" stroke="white" strokeWidth="1" opacity="0.7" />
+            <rect x="107" y="168" width="8" height="12" fill="none" stroke="white" strokeWidth="1" opacity="0.7" />
             
-            {/* Direction indicator */}
-            <text x="50" y="10" textAnchor="middle" className="text-[6px] fill-primary font-bold">
-              {fieldDirection.toUpperCase()}
-            </text>
+            {/* Catcher's box */}
+            <rect x="92" y="180" width="16" height="8" fill="none" stroke="white" strokeWidth="1" opacity="0.5" />
+            
+            {/* Home plate (pentagon) */}
+            <polygon
+              points="100,177 95,173 95,169 105,169 105,173"
+              fill="white"
+              stroke="hsl(30 30% 40%)"
+              strokeWidth="0.5"
+            />
+            
+            {/* First base */}
+            <rect x="136" y="131" width="8" height="8" fill="white" transform="rotate(45 140 135)" />
+            
+            {/* Second base */}
+            <rect x="96" y="91" width="8" height="8" fill="white" transform="rotate(45 100 95)" />
+            
+            {/* Third base */}
+            <rect x="56" y="131" width="8" height="8" fill="white" transform="rotate(45 60 135)" />
+            
+            {/* On-deck circles */}
+            <circle cx="70" cy="175" r="5" fill="none" stroke="white" strokeWidth="1" opacity="0.5" />
+            <circle cx="130" cy="175" r="5" fill="none" stroke="white" strokeWidth="1" opacity="0.5" />
+            
+            {/* Position labels with background */}
+            <g className="text-[8px] font-bold">
+              <text x="100" y="55" textAnchor="middle" fill="white" className="drop-shadow-sm">CF</text>
+              <text x="45" y="90" textAnchor="middle" fill="white" className="drop-shadow-sm">LF</text>
+              <text x="155" y="90" textAnchor="middle" fill="white" className="drop-shadow-sm">RF</text>
+              <text x="60" y="125" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">3B</text>
+              <text x="140" y="125" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">1B</text>
+              <text x="100" y="85" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">2B</text>
+              <text x="73" y="155" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">SS</text>
+              <text x="100" y="150" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">P</text>
+            </g>
+            
+            {/* Direction indicator arrow */}
+            <g transform="translate(100, 25)">
+              <polygon points="0,-8 -5,2 0,0 5,2" fill="hsl(var(--primary))" />
+              <text y="12" textAnchor="middle" className="text-[9px] font-bold" fill="hsl(var(--primary))">
+                {fieldDirection.toUpperCase()}
+              </text>
+            </g>
             
             {/* Sun position indicator */}
             {!isNight && (
-              <g transform={`translate(${sunPosition.x}, ${sunPosition.y})`}>
-                {/* Sun glow */}
-                <circle r="8" fill="url(#sunGlow)" className="animate-pulse" />
-                {/* Sun core */}
-                <circle r="5" fill="hsl(45 100% 55%)" />
+              <g transform={`translate(${sunPosition.x * 2}, ${sunPosition.y * 2})`}>
+                {/* Outer glow */}
+                <circle r="18" fill="url(#sunGlow)" className="animate-pulse" />
+                {/* Sun body */}
+                <circle r="10" fill="hsl(45 100% 55%)" />
+                <circle r="7" fill="hsl(45 100% 65%)" />
                 {/* Sun rays */}
-                <g className="origin-center">
-                  {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+                <g>
+                  {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle) => (
                     <line
                       key={angle}
                       x1="0"
-                      y1="-6"
+                      y1="-12"
                       x2="0"
-                      y2="-8"
-                      stroke="hsl(45 100% 55%)"
-                      strokeWidth="1"
+                      y2="-16"
+                      stroke="hsl(45 100% 60%)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
                       transform={`rotate(${angle})`}
                     />
                   ))}
@@ -222,19 +319,11 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball' }: GameDayPrep
             
             {/* Moon for night */}
             {isNight && (
-              <g transform={`translate(${sunPosition.x}, ${sunPosition.y})`}>
-                <circle r="5" fill="hsl(220 20% 80%)" />
-                <circle r="5" cx="2" cy="-2" fill="hsl(var(--muted))" />
+              <g transform={`translate(${sunPosition.x * 2}, ${sunPosition.y * 2})`}>
+                <circle r="12" fill="hsl(220 20% 85%)" />
+                <circle r="12" cx="4" cy="-4" fill="hsl(var(--muted))" />
               </g>
             )}
-            
-            {/* Gradient definition for sun glow */}
-            <defs>
-              <radialGradient id="sunGlow">
-                <stop offset="0%" stopColor="hsl(45 100% 70%)" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="hsl(45 100% 55%)" stopOpacity="0" />
-              </radialGradient>
-            </defs>
           </svg>
           
           {/* Sun position label */}
