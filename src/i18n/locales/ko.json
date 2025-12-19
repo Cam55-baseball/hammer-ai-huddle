@@ -1063,7 +1063,11 @@
     "failedToLoadWeather": "날씨 데이터 로딩 실패",
     "noConditions": "분석할 특정 조건 없음",
     "sunrise": "일출",
-    "sunset": "일몰"
+    "sunset": "일몰",
+    "toggleHourlyForecast": "시간별 예보 표시",
+    "hideHourlyForecast": "시간별 예보 숨기기",
+    "hourlyForecastTitle": "33시간 예보",
+    "now": "지금"
   },
   "scout": {
     "dashboard": "스카우트 대시보드",
@@ -1739,6 +1743,8 @@
   },
   "workoutModules": {
     "day": "일차",
+    "progressAndStreak": "당신의 진행 상황",
+    "weekLabel": "{{current}}/{{total}}주차",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "24주 엘리트 파워 타자 개발 프로그램"
@@ -2916,6 +2922,8 @@
     "currentStreak": "현재 연속",
     "longestStreak": "최장 연속",
     "totalWorkouts": "총 훈련 횟수",
+    "best": "최고",
+    "total": "총",
     "dayStreak": "일 연속",
     "daysStreak": "일 연속",
     "keepGoing": "계속 화이팅!",

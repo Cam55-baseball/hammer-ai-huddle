@@ -1064,7 +1064,11 @@
     "failedToLoadWeather": "天気データの読み込みに失敗",
     "noConditions": "分析する特定の条件なし",
     "sunrise": "日の出",
-    "sunset": "日の入り"
+    "sunset": "日の入り",
+    "toggleHourlyForecast": "時間別予報を表示",
+    "hideHourlyForecast": "時間別予報を非表示",
+    "hourlyForecastTitle": "33時間予報",
+    "now": "今"
   },
   "scout": {
     "dashboard": "スカウトダッシュボード",
@@ -1782,6 +1786,8 @@
   },
   "workoutModules": {
     "day": "日目",
+    "progressAndStreak": "あなたの進捗",
+    "weekLabel": "{{current}}/{{total}}週目",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "24週間エリートパワーヒッター開発プログラム"
@@ -2959,6 +2965,8 @@
     "currentStreak": "現在の連続記録",
     "longestStreak": "最長連続記録",
     "totalWorkouts": "総トレーニング数",
+    "best": "最高",
+    "total": "合計",
     "dayStreak": "日連続",
     "daysStreak": "日連続",
     "keepGoing": "この調子で頑張ろう！",

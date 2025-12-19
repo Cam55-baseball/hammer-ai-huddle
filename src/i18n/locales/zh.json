@@ -1064,7 +1064,11 @@
     "failedToLoadWeather": "加载天气数据失败",
     "noConditions": "没有特定条件可分析",
     "sunrise": "日出",
-    "sunset": "日落"
+    "sunset": "日落",
+    "toggleHourlyForecast": "显示每小时预报",
+    "hideHourlyForecast": "隐藏每小时预报",
+    "hourlyForecastTitle": "33小时预报",
+    "now": "现在"
   },
   "scout": {
     "dashboard": "球探仪表板",
@@ -1723,6 +1727,8 @@
   },
   "workoutModules": {
     "day": "第",
+    "progressAndStreak": "您的进度",
+    "weekLabel": "第{{current}}/{{total}}周",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "24周精英力量打者发展计划"
@@ -2900,6 +2906,8 @@
     "currentStreak": "当前连续",
     "longestStreak": "最长连续",
     "totalWorkouts": "总训练次数",
+    "best": "最佳",
+    "total": "总计",
     "dayStreak": "天连续",
     "daysStreak": "天连续",
     "keepGoing": "继续加油！",
