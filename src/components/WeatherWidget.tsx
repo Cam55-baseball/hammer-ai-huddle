@@ -389,6 +389,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               temperature={weather.temperature}
               uvIndex={weather.uvIndex}
               windSpeed={weather.windSpeed}
+              hourlyForecast={weather.hourlyForecast}
             />
           )}
 
