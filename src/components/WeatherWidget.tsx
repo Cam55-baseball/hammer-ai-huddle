@@ -552,26 +552,6 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             </Button>
           )}
 
-          {/* Game Day Prep Toggle */}
-          {weather?.sunrise && weather?.sunset && (
-            <Button 
-              variant="outline" 
-              className="w-full group hover:bg-amber-500 hover:text-white transition-all"
-              onClick={() => setShowGameDayPrep(!showGameDayPrep)}
-            >
-              <Sun className="h-4 w-4 mr-2 group-hover:animate-pulse" />
-              {showGameDayPrep ? t('weather.gameDayPrep.hide') : t('weather.gameDayPrep.show')}
-            </Button>
-          )}
-
-          {/* Game Day Prep Content */}
-          {showGameDayPrep && weather?.sunrise && weather?.sunset && (
-            <GameDayPrep 
-              sunrise={weather.sunrise} 
-              sunset={weather.sunset} 
-              sport={sport}
-            />
-          )}
 
           {/* Drill Recommendations List */}
           {showDrills && weather?.drillRecommendations && weather.drillRecommendations.length > 0 && (
