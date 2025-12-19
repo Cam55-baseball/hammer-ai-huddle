@@ -403,16 +403,26 @@ serve(async (req) => {
       }
     } else {
       // Clean up location string - Open-Meteo works better with just city names
-      // Remove common patterns like ", FL", ", fl", ", Florida", etc.
+      // Remove common patterns like ", FL", " FL", ", Florida", " Florida", etc.
       let cleanLocation = location.trim();
-      const statePattern = /,\s*([A-Za-z]{2}|[A-Za-z]+)$/i;
-      const cityOnly = cleanLocation.replace(statePattern, '').trim();
       
-      // Try searches in order: full location, then city only
-      const searchTerms = [cleanLocation];
-      if (cityOnly !== cleanLocation) {
+      // Pattern for comma-separated state: "Tampa, FL" or "Tampa, Florida"
+      const commaStatePattern = /,\s*([A-Za-z]{2}|[A-Za-z]+)$/i;
+      // Pattern for space-separated state: "Tampa FL" or "Tampa Florida" (2-letter or common state names)
+      const spaceStatePattern = /\s+(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s+Hampshire|New\s+Jersey|New\s+Mexico|New\s+York|North\s+Carolina|North\s+Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s+Island|South\s+Carolina|South\s+Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s+Virginia|Wisconsin|Wyoming)$/i;
+      
+      let cityOnly = cleanLocation.replace(commaStatePattern, '').trim();
+      if (cityOnly === cleanLocation) {
+        // No comma pattern matched, try space pattern
+        cityOnly = cleanLocation.replace(spaceStatePattern, '').trim();
+      }
+      
+      // Try searches in order: city only first (more likely to work), then full location
+      const searchTerms: string[] = [];
+      if (cityOnly !== cleanLocation && cityOnly.length > 0) {
         searchTerms.push(cityOnly);
       }
+      searchTerms.push(cleanLocation);
       
       let geoData: any = null;
       let searchUsed = '';
