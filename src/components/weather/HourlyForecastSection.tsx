@@ -266,8 +266,21 @@ export function HourlyForecastSection({ hourlyForecast, sunrise, sunset }: Hourl
               0%, 100% { opacity: 1; }
               50% { opacity: 0.3; }
             }
+            @keyframes rainDrop {
+              0% { transform: translateY(-8px) rotate(15deg); opacity: 0; }
+              20% { opacity: 1; }
+              100% { transform: translateY(70px) rotate(15deg); opacity: 0; }
+            }
+            @keyframes snowFall {
+              0% { transform: translateY(-8px) translateX(0) rotate(0deg); opacity: 0; }
+              20% { opacity: 0.9; }
+              50% { transform: translateY(30px) translateX(4px) rotate(180deg); opacity: 0.7; }
+              100% { transform: translateY(70px) translateX(-4px) rotate(360deg); opacity: 0; }
+            }
             .animate-float { animation: float 3s ease-in-out infinite; }
             .animate-twinkle { animation: twinkle 2s ease-in-out infinite; }
+            .animate-rain { animation: rainDrop 0.8s linear infinite; }
+            .animate-snow { animation: snowFall 2.5s ease-in-out infinite; }
           `}</style>
           <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
             {forecastWithLabels.map(({ hour, index, showPeriodLabel, periodLabel }) => {
@@ -313,6 +326,40 @@ export function HourlyForecastSection({ hourlyForecast, sunrise, sunset }: Hourl
                           <div className="absolute top-5 right-4 w-0.5 h-0.5 bg-white/30 rounded-full animate-twinkle" style={{ animationDelay: '0.7s' }} />
                           <div className="absolute bottom-8 left-4 w-0.5 h-0.5 bg-white/20 rounded-full animate-twinkle" style={{ animationDelay: '1.2s' }} />
                         </>
+                      )}
+                      
+                      {/* Rain precipitation overlay */}
+                      {hour.precipitationChance >= 30 && (hour.condition.toLowerCase().includes('rain') || hour.condition.toLowerCase().includes('drizzle') || hour.condition.toLowerCase().includes('shower')) && (
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                          {Array.from({ length: Math.min(Math.floor(hour.precipitationChance / 10), 12) }).map((_, i) => (
+                            <div
+                              key={`rain-${i}`}
+                              className="absolute w-0.5 h-3 bg-gradient-to-b from-transparent via-blue-300/80 to-blue-400/60 rounded-full animate-rain"
+                              style={{
+                                left: `${10 + (i * 8)}%`,
+                                animationDelay: `${i * 0.12}s`,
+                                animationDuration: `${0.6 + Math.random() * 0.4}s`
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Snow precipitation overlay */}
+                      {hour.precipitationChance >= 30 && (hour.condition.toLowerCase().includes('snow') || hour.condition.toLowerCase().includes('sleet') || hour.condition.toLowerCase().includes('flurr')) && (
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                          {Array.from({ length: Math.min(Math.floor(hour.precipitationChance / 12), 10) }).map((_, i) => (
+                            <div
+                              key={`snow-${i}`}
+                              className="absolute w-1.5 h-1.5 bg-white/80 rounded-full animate-snow"
+                              style={{
+                                left: `${8 + (i * 10)}%`,
+                                animationDelay: `${i * 0.3}s`,
+                                animationDuration: `${2 + Math.random() * 1.5}s`
+                              }}
+                            />
+                          ))}
+                        </div>
                       )}
                     </div>
                     

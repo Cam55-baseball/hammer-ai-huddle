@@ -9,6 +9,7 @@ import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HourlyForecastSection } from "@/components/weather/HourlyForecastSection";
+import { SunTimeline } from "@/components/weather/SunTimeline";
 interface SportAnalysis {
   sport: string;
   ballFlight: string;
@@ -359,6 +360,11 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               </div>
             </div>
           </div>
+
+          {/* Sunrise/Sunset Timeline */}
+          {weather.sunrise && weather.sunset && (
+            <SunTimeline sunrise={weather.sunrise} sunset={weather.sunset} />
+          )}
 
           {/* Hourly Forecast Toggle - Moved above stats */}
           {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
