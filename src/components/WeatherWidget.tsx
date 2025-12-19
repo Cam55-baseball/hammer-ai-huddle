@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap, Sunrise, Sunset, Clock } from "lucide-react";
+import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap, Sunrise, Sunset, Clock, Globe } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HourlyForecastSection } from "@/components/weather/HourlyForecastSection";
@@ -61,6 +61,7 @@ interface WeatherData {
   uvIndex: number;
   sunrise?: string;
   sunset?: string;
+  timezone?: string;
   sportAnalysis?: SportAnalysis;
   dailyForecast?: DailyForecast[];
   hourlyForecast?: HourlyForecast[];
@@ -317,10 +318,16 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             <div className="relative z-10">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  {/* Location */}
-                  <div className="flex items-center gap-2 text-white/80 mb-1">
+                  {/* Location with Timezone */}
+                  <div className="flex items-center gap-2 text-white/80 mb-1 flex-wrap">
                     <MapPin className="h-4 w-4" />
                     <span className="text-sm font-medium">{weather.location}</span>
+                    {weather.timezone && (
+                      <div className="flex items-center gap-1 px-2 py-0.5 bg-white/20 rounded-full text-[10px] font-semibold">
+                        <Globe className="h-3 w-3" />
+                        <span>{weather.timezone}</span>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Temperature - Large Display */}
@@ -352,6 +359,27 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               </div>
             </div>
           </div>
+
+          {/* Hourly Forecast Toggle - Moved above stats */}
+          {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+            <Button 
+              variant="outline" 
+              className="w-full group hover:bg-primary hover:text-primary-foreground transition-all"
+              onClick={() => setShowHourlyForecast(!showHourlyForecast)}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              {showHourlyForecast ? t('weather.hideHourlyForecast') : t('weather.toggleHourlyForecast')}
+            </Button>
+          )}
+
+          {/* Hourly Forecast Cards */}
+          {showHourlyForecast && weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
+            <HourlyForecastSection 
+              hourlyForecast={weather.hourlyForecast} 
+              sunrise={weather.sunrise}
+              sunset={weather.sunset}
+            />
+          )}
 
           {/* Stats Grid - Enhanced Cards */}
           {expanded && (
@@ -574,22 +602,6 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             </div>
           )}
 
-          {/* Hourly Forecast Toggle */}
-          {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
-            <Button 
-              variant="outline" 
-              className="w-full group hover:bg-primary hover:text-primary-foreground transition-all"
-              onClick={() => setShowHourlyForecast(!showHourlyForecast)}
-            >
-              <Clock className="h-4 w-4 mr-2" />
-              {showHourlyForecast ? t('weather.hideHourlyForecast') : t('weather.toggleHourlyForecast')}
-            </Button>
-          )}
-
-          {/* Hourly Forecast Cards - Stunning Visual Design */}
-          {showHourlyForecast && weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
-            <HourlyForecastSection hourlyForecast={weather.hourlyForecast} />
-          )}
 
           {/* 7-Day Forecast Toggle */}
           {weather?.dailyForecast && weather.dailyForecast.length > 0 && (

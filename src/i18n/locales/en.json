@@ -1405,7 +1405,9 @@
     "tomorrowMorning": "Tomorrow Morning",
     "tomorrowAfternoon": "Tomorrow Afternoon",
     "tomorrowEvening": "Tomorrow Evening",
-    "tomorrowNight": "Tomorrow Night"
+    "tomorrowNight": "Tomorrow Night",
+    "swipe": "Swipe",
+    "poor": "Poor"
   },
   "scout": {
     "dashboard": "Scout Dashboard",
