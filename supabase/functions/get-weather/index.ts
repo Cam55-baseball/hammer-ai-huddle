@@ -484,7 +484,8 @@ serve(async (req) => {
       }
 
       if (!geoData || !geoData.results || !geoData.results.length) {
-        throw new Error("Location not found");
+        console.error(`Location not found for any search terms: ${searchTerms.join(', ')}`);
+        throw new Error(`Location "${cleanLocation}" not found. Try a city name (e.g., "Tampa") or ZIP code (e.g., "33601").`);
       }
 
       const firstResult = geoData.results[0];
