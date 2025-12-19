@@ -2,15 +2,18 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sun, Compass } from "lucide-react";
+import { Sun, Compass, Thermometer, Shield, Wind } from "lucide-react";
 
 interface GameDayPrepProps {
   sunrise: string;
   sunset: string;
   sport?: 'baseball' | 'softball';
+  temperature?: number;
+  uvIndex?: number;
+  windSpeed?: number;
 }
 
-type FieldDirection = 'north' | 'south' | 'east' | 'west';
+type FieldDirection = 'north' | 'northeast' | 'east' | 'southeast' | 'south' | 'southwest' | 'west' | 'northwest';
 
 // Parse time string like "6:45 AM" to minutes since midnight
 const parseTimeToMinutes = (timeStr: string): number => {
@@ -46,9 +49,13 @@ const getRelativeSunPosition = (sunAzimuth: number, fieldDirection: FieldDirecti
   // Field direction angle (where batter faces)
   const fieldAngles: Record<FieldDirection, number> = {
     north: 0,
+    northeast: 45,
     east: 90,
+    southeast: 135,
     south: 180,
-    west: 270
+    southwest: 225,
+    west: 270,
+    northwest: 315
   };
   
   const fieldAngle = fieldAngles[fieldDirection];
@@ -110,7 +117,51 @@ const getSunImpactBullets = (sunPosition: { label: string }, sunAzimuth: number,
   return bullets;
 };
 
-export function GameDayPrep({ sunrise, sunset, sport = 'baseball' }: GameDayPrepProps) {
+// Get temperature-based outfit recommendations
+const getTemperatureGear = (temperature: number | undefined, t: any): { text: string; icon: string } => {
+  if (temperature === undefined) return { text: t('weather.gameDayPrep.noTempData'), icon: '🌡️' };
+  
+  if (temperature < 45) {
+    return { text: t('weather.gameDayPrep.coldWeatherGear'), icon: '🧤' };
+  } else if (temperature < 60) {
+    return { text: t('weather.gameDayPrep.coolWeatherGear'), icon: '🧥' };
+  } else if (temperature < 75) {
+    return { text: t('weather.gameDayPrep.moderateWeatherGear'), icon: '👕' };
+  } else if (temperature < 85) {
+    return { text: t('weather.gameDayPrep.warmWeatherGear'), icon: '🩳' };
+  }
+  return { text: t('weather.gameDayPrep.hotWeatherGear'), icon: '💦' };
+};
+
+// Get UV-based protection recommendations
+const getUVProtection = (uvIndex: number | undefined, t: any): { text: string; icon: string; level: string } => {
+  if (uvIndex === undefined) return { text: t('weather.gameDayPrep.noUVData'), icon: '☀️', level: 'unknown' };
+  
+  if (uvIndex <= 2) {
+    return { text: t('weather.gameDayPrep.uvLow'), icon: '😎', level: 'low' };
+  } else if (uvIndex <= 5) {
+    return { text: t('weather.gameDayPrep.uvModerate'), icon: '🧴', level: 'moderate' };
+  } else if (uvIndex <= 7) {
+    return { text: t('weather.gameDayPrep.uvHigh'), icon: '⚠️', level: 'high' };
+  } else if (uvIndex <= 10) {
+    return { text: t('weather.gameDayPrep.uvVeryHigh'), icon: '🛡️', level: 'very-high' };
+  }
+  return { text: t('weather.gameDayPrep.uvExtreme'), icon: '🚨', level: 'extreme' };
+};
+
+// Get wind-based gear recommendations
+const getWindGear = (windSpeed: number | undefined, t: any): { text: string; icon: string } => {
+  if (windSpeed === undefined) return { text: t('weather.gameDayPrep.noWindData'), icon: '💨' };
+  
+  if (windSpeed < 10) {
+    return { text: t('weather.gameDayPrep.windLight'), icon: '✓' };
+  } else if (windSpeed < 20) {
+    return { text: t('weather.gameDayPrep.windModerate'), icon: '🌬️' };
+  }
+  return { text: t('weather.gameDayPrep.windStrong'), icon: '💨' };
+};
+
+export function GameDayPrep({ sunrise, sunset, sport = 'baseball', temperature, uvIndex, windSpeed }: GameDayPrepProps) {
   const { t } = useTranslation();
   const [fieldDirection, setFieldDirection] = useState<FieldDirection>('north');
   
@@ -126,6 +177,11 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball' }: GameDayPrep
   const impactBullets = getSunImpactBullets(sunPosition, sunAzimuth, sunriseMinutes, sunsetMinutes, currentTime, t);
   
   const isNight = currentTime < sunriseMinutes || currentTime > sunsetMinutes;
+
+  // Outfit recommendations
+  const tempGear = getTemperatureGear(temperature, t);
+  const uvProtection = getUVProtection(uvIndex, t);
+  const windGear = getWindGear(windSpeed, t);
 
   return (
     <Card className="overflow-hidden border-0 shadow-lg animate-in fade-in-50 slide-in-from-top-2 duration-300">
@@ -148,9 +204,13 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball' }: GameDayPrep
             </SelectTrigger>
             <SelectContent className="bg-card border border-border z-50">
               <SelectItem value="north">{t('weather.gameDayPrep.north')}</SelectItem>
-              <SelectItem value="south">{t('weather.gameDayPrep.south')}</SelectItem>
+              <SelectItem value="northeast">{t('weather.gameDayPrep.northeast')}</SelectItem>
               <SelectItem value="east">{t('weather.gameDayPrep.east')}</SelectItem>
+              <SelectItem value="southeast">{t('weather.gameDayPrep.southeast')}</SelectItem>
+              <SelectItem value="south">{t('weather.gameDayPrep.south')}</SelectItem>
+              <SelectItem value="southwest">{t('weather.gameDayPrep.southwest')}</SelectItem>
               <SelectItem value="west">{t('weather.gameDayPrep.west')}</SelectItem>
+              <SelectItem value="northwest">{t('weather.gameDayPrep.northwest')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -310,7 +370,7 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball' }: GameDayPrep
               <text x="55" y="125" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">3B</text>
               <text x="145" y="125" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">1B</text>
               <text x="100" y="88" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">2B</text>
-              <text x="72" y="152" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">SS</text>
+              <text x="70" y="108" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">SS</text>
               <text x="100" y="145" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">P</text>
             </g>
             
@@ -386,6 +446,68 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball' }: GameDayPrep
             ))}
           </ul>
         </div>
+
+        {/* Outfit Recommendations */}
+        {(temperature !== undefined || uvIndex !== undefined || windSpeed !== undefined) && (
+          <div className="space-y-3 border-t border-border pt-4">
+            <h5 className="font-bold text-sm flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              {t('weather.gameDayPrep.outfitRecommendations')}
+            </h5>
+            
+            <div className="space-y-3">
+              {/* Temperature Gear */}
+              {temperature !== undefined && (
+                <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Thermometer className="h-4 w-4 text-orange-500" />
+                    <span>{t('weather.gameDayPrep.temperatureGear')}</span>
+                    <span className="text-muted-foreground">({Math.round(temperature)}°F)</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground flex items-start gap-2">
+                    <span>{tempGear.icon}</span>
+                    <span>{tempGear.text}</span>
+                  </p>
+                </div>
+              )}
+              
+              {/* UV Protection */}
+              {uvIndex !== undefined && (
+                <div className={`p-3 rounded-lg space-y-1 ${
+                  uvProtection.level === 'extreme' ? 'bg-red-500/10 border border-red-500/30' :
+                  uvProtection.level === 'very-high' ? 'bg-orange-500/10 border border-orange-500/30' :
+                  uvProtection.level === 'high' ? 'bg-amber-500/10 border border-amber-500/30' :
+                  'bg-muted/50'
+                }`}>
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Sun className="h-4 w-4 text-yellow-500" />
+                    <span>{t('weather.gameDayPrep.uvProtection')}</span>
+                    <span className="text-muted-foreground">(UV {uvIndex})</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground flex items-start gap-2">
+                    <span>{uvProtection.icon}</span>
+                    <span>{uvProtection.text}</span>
+                  </p>
+                </div>
+              )}
+              
+              {/* Wind Gear */}
+              {windSpeed !== undefined && (
+                <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Wind className="h-4 w-4 text-sky-500" />
+                    <span>{t('weather.gameDayPrep.windGear')}</span>
+                    <span className="text-muted-foreground">({Math.round(windSpeed)} mph)</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground flex items-start gap-2">
+                    <span>{windGear.icon}</span>
+                    <span>{windGear.text}</span>
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

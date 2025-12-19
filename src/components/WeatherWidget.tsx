@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap, Sunrise, Sunset, Clock, Globe } from "lucide-react";
+import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap, Sunrise, Sunset, Clock, Globe, Compass } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HourlyForecastSection } from "@/components/weather/HourlyForecastSection";
@@ -366,6 +366,30 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
           {/* Sunrise/Sunset Timeline */}
           {weather.sunrise && weather.sunset && (
             <SunTimeline sunrise={weather.sunrise} sunset={weather.sunset} />
+          )}
+
+          {/* Game Day Prep Toggle */}
+          {weather.sunrise && weather.sunset && (
+            <Button 
+              variant="outline" 
+              className="w-full group hover:bg-primary hover:text-primary-foreground transition-all"
+              onClick={() => setShowGameDayPrep(!showGameDayPrep)}
+            >
+              <Compass className="h-4 w-4 mr-2" />
+              {showGameDayPrep ? t('weather.gameDayPrep.hide') : t('weather.gameDayPrep.show')}
+            </Button>
+          )}
+
+          {/* Game Day Prep Card */}
+          {showGameDayPrep && weather.sunrise && weather.sunset && (
+            <GameDayPrep 
+              sunrise={weather.sunrise} 
+              sunset={weather.sunset} 
+              sport={sport}
+              temperature={weather.temperature}
+              uvIndex={weather.uvIndex}
+              windSpeed={weather.windSpeed}
+            />
           )}
 
           {/* Hourly Forecast Toggle - Moved above stats */}
