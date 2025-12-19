@@ -44,6 +44,25 @@ interface DrillRecommendation {
   icon: string;
 }
 
+interface WeatherAlert {
+  event: string;
+  headline: string;
+  severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
+  urgency: string;
+  description: string;
+  instruction: string;
+  expires: string;
+  areaDesc: string;
+}
+
+interface AirQuality {
+  usAqi: number;
+  pm10: number;
+  pm25: number;
+  category: string;
+  color: string;
+}
+
 function calculateSportConditions(weather: WeatherMetrics, sport: string) {
   const { temperature, humidity, windSpeed, windDirection, visibility, uvIndex } = weather;
   
@@ -348,6 +367,104 @@ function formatTimeToAMPM(isoString: string): string {
   });
 }
 
+function getAqiCategory(aqi: number): { category: string; color: string } {
+  if (aqi <= 50) return { category: 'Good', color: 'green' };
+  if (aqi <= 100) return { category: 'Moderate', color: 'yellow' };
+  if (aqi <= 150) return { category: 'Unhealthy for Sensitive Groups', color: 'orange' };
+  if (aqi <= 200) return { category: 'Unhealthy', color: 'red' };
+  if (aqi <= 300) return { category: 'Very Unhealthy', color: 'purple' };
+  return { category: 'Hazardous', color: 'maroon' };
+}
+
+function mapNwsSeverity(severity: string): 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown' {
+  const s = severity?.toLowerCase() || '';
+  if (s === 'extreme') return 'Extreme';
+  if (s === 'severe') return 'Severe';
+  if (s === 'moderate') return 'Moderate';
+  if (s === 'minor') return 'Minor';
+  return 'Unknown';
+}
+
+async function fetchWeatherAlerts(lat: number, lon: number): Promise<WeatherAlert[]> {
+  try {
+    // NWS API requires User-Agent header
+    const alertsUrl = `https://api.weather.gov/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`;
+    console.log(`Fetching NWS alerts from: ${alertsUrl}`);
+    
+    const response = await fetch(alertsUrl, {
+      headers: {
+        'User-Agent': 'HammersModality/1.0 (weather-app)',
+        'Accept': 'application/geo+json',
+      },
+      signal: AbortSignal.timeout(5000),
+    });
+    
+    if (!response.ok) {
+      console.warn(`NWS alerts returned status: ${response.status}`);
+      return [];
+    }
+    
+    const data = await response.json();
+    const features = data.features || [];
+    
+    const alerts: WeatherAlert[] = features.slice(0, 5).map((feature: any) => {
+      const props = feature.properties || {};
+      return {
+        event: props.event || 'Unknown Alert',
+        headline: props.headline || props.event || 'Weather Alert',
+        severity: mapNwsSeverity(props.severity),
+        urgency: props.urgency || 'Unknown',
+        description: props.description || '',
+        instruction: props.instruction || '',
+        expires: props.expires ? new Date(props.expires).toLocaleString() : 'Unknown',
+        areaDesc: props.areaDesc || '',
+      };
+    });
+    
+    console.log(`Found ${alerts.length} weather alerts`);
+    return alerts;
+  } catch (error) {
+    console.error('Error fetching weather alerts:', error);
+    return [];
+  }
+}
+
+async function fetchAirQuality(lat: number, lon: number): Promise<AirQuality | null> {
+  try {
+    const aqUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm10,pm2_5`;
+    console.log(`Fetching air quality from: ${aqUrl}`);
+    
+    const response = await fetch(aqUrl, {
+      signal: AbortSignal.timeout(5000),
+    });
+    
+    if (!response.ok) {
+      console.warn(`Air quality API returned status: ${response.status}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    const current = data.current || {};
+    
+    const usAqi = current.us_aqi ?? 0;
+    const { category, color } = getAqiCategory(usAqi);
+    
+    const airQuality: AirQuality = {
+      usAqi: Math.round(usAqi),
+      pm10: Math.round(current.pm10 ?? 0),
+      pm25: Math.round(current.pm2_5 ?? 0),
+      category,
+      color,
+    };
+    
+    console.log(`Air quality: AQI ${airQuality.usAqi} (${airQuality.category})`);
+    return airQuality;
+  } catch (error) {
+    console.error('Error fetching air quality:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -431,23 +548,18 @@ serve(async (req) => {
       } catch (reverseGeoError) {
         console.error(`Reverse geocoding error:`, reverseGeoError);
       }
-    } else {
+    } else if (!latitude) {
       // Clean up location string - Open-Meteo works better with just city names
-      // Remove common patterns like ", FL", " FL", ", Florida", " Florida", etc.
       let cleanLocation = location.trim();
       
-      // Pattern for comma-separated state: "Tampa, FL" or "Tampa, Florida"
       const commaStatePattern = /,\s*([A-Za-z]{2}|[A-Za-z]+)$/i;
-      // Pattern for space-separated state: "Tampa FL" or "Tampa Florida" (2-letter or common state names)
       const spaceStatePattern = /\s+(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s+Hampshire|New\s+Jersey|New\s+Mexico|New\s+York|North\s+Carolina|North\s+Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s+Island|South\s+Carolina|South\s+Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s+Virginia|Wisconsin|Wyoming)$/i;
       
       let cityOnly = cleanLocation.replace(commaStatePattern, '').trim();
       if (cityOnly === cleanLocation) {
-        // No comma pattern matched, try space pattern
         cityOnly = cleanLocation.replace(spaceStatePattern, '').trim();
       }
       
-      // Try searches in order: city only first (more likely to work), then full location
       const searchTerms: string[] = [];
       if (cityOnly !== cleanLocation && cityOnly.length > 0) {
         searchTerms.push(cityOnly);
@@ -455,7 +567,6 @@ serve(async (req) => {
       searchTerms.push(cleanLocation);
       
       let geoData: any = null;
-      let searchUsed = '';
       
       for (const searchTerm of searchTerms) {
         const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchTerm)}&count=5&language=en&format=json`;
@@ -475,7 +586,6 @@ serve(async (req) => {
         
         if (data.results && data.results.length > 0) {
           geoData = data;
-          searchUsed = searchTerm;
           console.log(`Found location with search term: ${searchTerm}`);
           break;
         }
@@ -499,22 +609,25 @@ serve(async (req) => {
       throw new Error("Invalid location coordinates");
     }
 
+    // Fetch weather, alerts, and air quality in parallel
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,weather_code&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation_probability,weather_code,uv_index,visibility&daily=temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max,precipitation_probability_max,sunrise,sunset&timezone=auto&forecast_days=7`;
     console.log(`Open-Meteo Weather API URL: ${weatherUrl}`);
 
-    const response = await fetch(weatherUrl, {
-      signal: AbortSignal.timeout(10000),
-    });
+    const [weatherResponse, weatherAlerts, airQuality] = await Promise.all([
+      fetch(weatherUrl, { signal: AbortSignal.timeout(10000) }),
+      fetchWeatherAlerts(latitude, longitude),
+      fetchAirQuality(latitude, longitude),
+    ]);
 
-    console.log(`Open-Meteo response status: ${response.status}`);
+    console.log(`Open-Meteo response status: ${weatherResponse.status}`);
 
-    if (!response.ok) {
-      const errorText = await response.text();
+    if (!weatherResponse.ok) {
+      const errorText = await weatherResponse.text();
       console.error(`Open-Meteo error response: ${errorText}`);
-      throw new Error(`Weather API returned ${response.status}`);
+      throw new Error(`Weather API returned ${weatherResponse.status}`);
     }
 
-    const data = await response.json();
+    const data = await weatherResponse.json();
 
     if (!data.current) {
       console.error(`Invalid Open-Meteo response structure: ${JSON.stringify(data).substring(0, 200)}`);
@@ -527,7 +640,7 @@ serve(async (req) => {
     const visibilityValues: number[] = hourly.visibility || [];
 
     const uvIndex = uvValues.length ? uvValues[0] : 0;
-    const visibilityKm = visibilityValues.length ? visibilityValues[0] / 1000 : 10; // visibility in meters -> km
+    const visibilityKm = visibilityValues.length ? visibilityValues[0] / 1000 : 10;
     const visibilityMiles = Math.round(visibilityKm * 0.621371);
 
     const temperatureF = current.temperature_2m * 9 / 5 + 32;
@@ -555,21 +668,14 @@ serve(async (req) => {
     const hourlyPrecipProb: number[] = hourly.precipitation_probability || [];
     const hourlyWeatherCode: number[] = hourly.weather_code || [];
     
-    // Use current.time from Open-Meteo (already in location's local timezone)
-    // This avoids timezone mismatch issues with server UTC vs location local time
-    const currentTimeStr = current.time; // e.g., "2024-12-19T15:00" or "2024-12-19T15:25"
-    
-    // Extract just the hour portion for comparison (handles cases where current.time has minutes)
-    // Format: "2024-12-19T15:25" -> "2024-12-19T15" for matching against "2024-12-19T15:00"
-    const currentHourPrefix = currentTimeStr.slice(0, 13); // "2024-12-19T15"
+    const currentTimeStr = current.time;
+    const currentHourPrefix = currentTimeStr.slice(0, 13);
     
     console.log(`Current time from API: ${currentTimeStr}`);
     console.log(`Current hour prefix for matching: ${currentHourPrefix}`);
-    console.log(`First few hourly times: ${hourlyTimes.slice(0, 5).join(', ')}`);
     
     const currentHourIndex = hourlyTimes.findIndex((time: string) => {
-      // Compare just the date and hour portions
-      const timeHourPrefix = time.slice(0, 13); // e.g., "2024-12-19T15"
+      const timeHourPrefix = time.slice(0, 13);
       return timeHourPrefix >= currentHourPrefix;
     });
     
@@ -638,6 +744,8 @@ serve(async (req) => {
 
     const weatherData = {
       location: resolvedLocationName,
+      latitude,
+      longitude,
       ...weatherMetrics,
       feelsLike: feelsLikeF,
       condition: mapWeatherCodeToDescription(current.weather_code),
@@ -647,7 +755,9 @@ serve(async (req) => {
       drillRecommendations: generateDrillRecommendations(weatherMetrics, sportType),
       sunrise,
       sunset,
-      timezone
+      timezone,
+      weatherAlerts,
+      airQuality,
     };
 
     return new Response(JSON.stringify(weatherData), {

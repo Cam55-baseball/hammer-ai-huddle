@@ -5,12 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap, Sunrise, Sunset, Clock, Globe, Compass } from "lucide-react";
+import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap, Clock, Globe, Compass, Star, AlertTriangle, ChevronDown, ChevronUp, Haze } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HourlyForecastSection } from "@/components/weather/HourlyForecastSection";
 import { SunTimeline } from "@/components/weather/SunTimeline";
 import { GameDayPrep } from "@/components/weather/GameDayPrep";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 interface SportAnalysis {
   sport: string;
   ballFlight: string;
@@ -51,8 +53,37 @@ interface HourlyForecast {
   humidity: number;
 }
 
+interface WeatherAlert {
+  event: string;
+  headline: string;
+  severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
+  urgency: string;
+  description: string;
+  instruction: string;
+  expires: string;
+  areaDesc: string;
+}
+
+interface AirQuality {
+  usAqi: number;
+  pm10: number;
+  pm25: number;
+  category: string;
+  color: string;
+}
+
+interface FavoriteLocation {
+  id: string;
+  location_name: string;
+  latitude: number;
+  longitude: number;
+  is_default: boolean;
+}
+
 interface WeatherData {
   location: string;
+  latitude?: number;
+  longitude?: number;
   temperature: number;
   feelsLike: number;
   condition: string;
@@ -68,6 +99,8 @@ interface WeatherData {
   dailyForecast?: DailyForecast[];
   hourlyForecast?: HourlyForecast[];
   drillRecommendations?: DrillRecommendation[];
+  weatherAlerts?: WeatherAlert[];
+  airQuality?: AirQuality | null;
 }
 
 interface WeatherWidgetProps {
@@ -85,7 +118,40 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   const [showHourlyForecast, setShowHourlyForecast] = useState(false);
   const [showDrills, setShowDrills] = useState(false);
   const [showGameDayPrep, setShowGameDayPrep] = useState(false);
+  const [favorites, setFavorites] = useState<FavoriteLocation[]>([]);
+  const [expandedAlerts, setExpandedAlerts] = useState<string[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Check if current location is already a favorite
+  const isCurrentLocationFavorite = weather && favorites.some(
+    f => f.location_name === weather.location
+  );
+
+  // Fetch user and favorites on mount
+  useEffect(() => {
+    const fetchUserAndFavorites = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        const { data: favData } = await supabase
+          .from('weather_favorite_locations')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (favData) {
+          setFavorites(favData);
+          // If there's a default location and no weather loaded yet, use it
+          const defaultLoc = favData.find(f => f.is_default);
+          if (defaultLoc && !weather) {
+            fetchWeather(`${defaultLoc.latitude},${defaultLoc.longitude}`, sport);
+          }
+        }
+      }
+    };
+    fetchUserAndFavorites();
+  }, []);
 
   const fetchWeather = async (searchLocation?: string, sportParam?: 'baseball' | 'softball') => {
     const sportToUse = sportParam || sport;
@@ -142,6 +208,111 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
     }
   };
 
+  const handleSaveLocation = async () => {
+    if (!userId || !weather || !weather.latitude || !weather.longitude) return;
+    
+    try {
+      const { error } = await supabase
+        .from('weather_favorite_locations')
+        .insert({
+          user_id: userId,
+          location_name: weather.location,
+          latitude: weather.latitude,
+          longitude: weather.longitude,
+          is_default: favorites.length === 0, // First one becomes default
+        });
+      
+      if (error) throw error;
+      
+      // Refresh favorites
+      const { data: favData } = await supabase
+        .from('weather_favorite_locations')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (favData) setFavorites(favData);
+      
+      toast({
+        title: t('weather.favorites.saved'),
+        description: weather.location,
+      });
+    } catch (err: any) {
+      toast({
+        title: t('common.error'),
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveFavorite = async (favId: string) => {
+    try {
+      await supabase
+        .from('weather_favorite_locations')
+        .delete()
+        .eq('id', favId);
+      
+      setFavorites(favorites.filter(f => f.id !== favId));
+      toast({ title: t('weather.favorites.removed') });
+    } catch (err: any) {
+      toast({
+        title: t('common.error'),
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSelectFavorite = (favId: string) => {
+    const fav = favorites.find(f => f.id === favId);
+    if (fav) {
+      fetchWeather(`${fav.latitude},${fav.longitude}`, sport);
+    }
+  };
+
+  const handleSetDefault = async (favId: string) => {
+    if (!userId) return;
+    
+    try {
+      // First, unset all defaults
+      await supabase
+        .from('weather_favorite_locations')
+        .update({ is_default: false })
+        .eq('user_id', userId);
+      
+      // Set the new default
+      await supabase
+        .from('weather_favorite_locations')
+        .update({ is_default: true })
+        .eq('id', favId);
+      
+      // Refresh favorites
+      const { data: favData } = await supabase
+        .from('weather_favorite_locations')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (favData) setFavorites(favData);
+      toast({ title: t('weather.favorites.defaultSet') });
+    } catch (err: any) {
+      toast({
+        title: t('common.error'),
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleAlertExpanded = (alertEvent: string) => {
+    setExpandedAlerts(prev => 
+      prev.includes(alertEvent) 
+        ? prev.filter(e => e !== alertEvent)
+        : [...prev, alertEvent]
+    );
+  };
+
   useEffect(() => {
     fetchWeather(undefined, sport);
   }, [sport]);
@@ -176,6 +347,40 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
     if (c.includes('storm') || c.includes('thunder')) return <Zap className="h-16 w-16 sm:h-20 sm:w-20 text-white drop-shadow-lg" />;
     if (c.includes('snow') || c.includes('sleet')) return <Snowflake className="h-16 w-16 sm:h-20 sm:w-20 text-blue-800 drop-shadow-lg" />;
     return <Cloud className="h-16 w-16 sm:h-20 sm:w-20 text-white drop-shadow-lg" />;
+  };
+
+  const getAlertSeverityClass = (severity: string) => {
+    switch (severity) {
+      case 'Extreme':
+        return 'bg-red-600 text-white border-red-700';
+      case 'Severe':
+        return 'bg-red-500 text-white border-red-600';
+      case 'Moderate':
+        return 'bg-orange-500 text-white border-orange-600';
+      case 'Minor':
+        return 'bg-yellow-500 text-black border-yellow-600';
+      default:
+        return 'bg-gray-500 text-white border-gray-600';
+    }
+  };
+
+  const getAqiColorClass = (color: string) => {
+    switch (color) {
+      case 'green':
+        return 'bg-green-100 text-green-700';
+      case 'yellow':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'orange':
+        return 'bg-orange-100 text-orange-700';
+      case 'red':
+        return 'bg-red-100 text-red-700';
+      case 'purple':
+        return 'bg-purple-100 text-purple-700';
+      case 'maroon':
+        return 'bg-rose-100 text-rose-800';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
   };
 
   if (loading && !weather) {
@@ -243,28 +448,11 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
     }
   };
 
-  const formatHourlyTime = (timeString: string, index: number) => {
-    if (index === 0) return t('weather.now');
-    const date = new Date(timeString);
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
-  };
-
-  const getHourlyWeatherIcon = (condition: string, size: string = 'h-5 w-5') => {
-    const c = condition.toLowerCase();
-    if (c.includes('clear') || c.includes('sunny')) return <Sun className={`${size} text-amber-500`} />;
-    if (c.includes('partly')) return <CloudSun className={`${size} text-sky-500`} />;
-    if (c.includes('cloud') || c.includes('overcast')) return <Cloud className={`${size} text-gray-500`} />;
-    if (c.includes('rain') || c.includes('drizzle')) return <CloudRain className={`${size} text-blue-500`} />;
-    if (c.includes('storm') || c.includes('thunder')) return <Zap className={`${size} text-purple-500`} />;
-    if (c.includes('snow') || c.includes('sleet')) return <Snowflake className={`${size} text-blue-400`} />;
-    return <Cloud className={`${size} text-gray-500`} />;
-  };
-
   const weatherGradient = weather ? getWeatherGradient(weather.condition) : 'from-sky-400 via-blue-500 to-indigo-600';
 
   return (
     <div className="space-y-4 max-w-full overflow-x-hidden">
-      {/* Search Bar - Glass-morphism Style */}
+      {/* Search Bar with Favorites */}
       <div className="relative">
         <div className="flex gap-2 p-1 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm">
           <div className="relative flex-1">
@@ -280,8 +468,87 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
           <Button onClick={handleSearch} disabled={loading} className="rounded-lg">
             <Search className="h-4 w-4" />
           </Button>
+          
+          {/* Save to Favorites Button */}
+          {userId && weather && weather.latitude && !isCurrentLocationFavorite && (
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleSaveLocation}
+              className="rounded-lg"
+              title={t('weather.favorites.save')}
+            >
+              <Star className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {/* Favorites Dropdown */}
+          {favorites.length > 0 && (
+            <Select onValueChange={handleSelectFavorite}>
+              <SelectTrigger className="w-[140px] rounded-lg">
+                <SelectValue placeholder={t('weather.favorites.selectFavorite')} />
+              </SelectTrigger>
+              <SelectContent>
+                {favorites.map((fav) => (
+                  <SelectItem key={fav.id} value={fav.id}>
+                    <div className="flex items-center gap-2">
+                      {fav.is_default && <Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
+                      <span className="truncate max-w-[100px]">{fav.location_name.split(',')[0]}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
+
+      {/* Weather Alerts Banner */}
+      {weather?.weatherAlerts && weather.weatherAlerts.length > 0 && (
+        <div className="space-y-2">
+          {weather.weatherAlerts.map((alert, index) => (
+            <Card 
+              key={`${alert.event}-${index}`} 
+              className={`overflow-hidden border-2 ${getAlertSeverityClass(alert.severity)}`}
+            >
+              <CardContent className="p-3">
+                <div 
+                  className="flex items-center justify-between cursor-pointer"
+                  onClick={() => toggleAlertExpanded(alert.event)}
+                >
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    <div>
+                      <p className="font-bold text-sm">{alert.event}</p>
+                      <p className="text-xs opacity-90">{t('weather.alerts.expires')}: {alert.expires}</p>
+                    </div>
+                  </div>
+                  {expandedAlerts.includes(alert.event) ? (
+                    <ChevronUp className="h-5 w-5" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5" />
+                  )}
+                </div>
+                
+                {expandedAlerts.includes(alert.event) && (
+                  <div className="mt-3 pt-3 border-t border-current/20 space-y-2 text-sm">
+                    <p className="opacity-90">{alert.headline}</p>
+                    {alert.description && (
+                      <p className="text-xs opacity-80 whitespace-pre-wrap">{alert.description.substring(0, 500)}...</p>
+                    )}
+                    {alert.instruction && (
+                      <div className="mt-2 p-2 bg-black/10 rounded">
+                        <p className="font-semibold text-xs">{t('weather.alerts.instructions')}:</p>
+                        <p className="text-xs opacity-90">{alert.instruction}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {error && !weather && (
         <Card className="border-destructive/50 bg-destructive/5">
@@ -393,7 +660,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             />
           )}
 
-          {/* Hourly Forecast Toggle - Moved above stats */}
+          {/* Hourly Forecast Toggle */}
           {weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
             <Button 
               variant="outline" 
@@ -414,9 +681,9 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             />
           )}
 
-          {/* Stats Grid - Enhanced Cards */}
+          {/* Stats Grid - Enhanced Cards with Air Quality */}
           {expanded && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
               {/* Wind Card */}
               <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
                 <CardContent className="p-4">
@@ -483,6 +750,30 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                       <p className="text-xs text-muted-foreground">
                         {weather.uvIndex >= 8 ? t('weather.veryHigh') : weather.uvIndex >= 6 ? t('weather.high') : weather.uvIndex >= 3 ? t('weather.moderate') : t('weather.low')}
                       </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Air Quality Card */}
+              <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-xl group-hover:scale-110 transition-transform ${
+                      weather.airQuality ? getAqiColorClass(weather.airQuality.color) : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      <Haze className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.airQuality.title')}</p>
+                      {weather.airQuality ? (
+                        <>
+                          <p className="text-lg font-bold">{weather.airQuality.usAqi}</p>
+                          <p className="text-xs text-muted-foreground">{weather.airQuality.category}</p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">{t('weather.airQuality.unavailable')}</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>

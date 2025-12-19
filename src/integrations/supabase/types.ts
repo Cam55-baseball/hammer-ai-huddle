@@ -1868,6 +1868,36 @@ export type Database = {
         }
         Relationships: []
       }
+      weather_favorite_locations: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          latitude: number
+          location_name: string
+          longitude: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          latitude: number
+          location_name: string
+          longitude: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          latitude?: number
+          location_name?: string
+          longitude?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       retention_status: {

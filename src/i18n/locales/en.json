@@ -1499,7 +1499,24 @@
     "tomorrowEvening": "Tomorrow Evening",
     "tomorrowNight": "Tomorrow Night",
     "swipe": "Swipe",
-    "poor": "Poor"
+    "poor": "Poor",
+    "favorites": {
+      "save": "Save Location",
+      "saved": "Location Saved",
+      "removed": "Location Removed",
+      "selectFavorite": "Saved",
+      "noFavorites": "No saved locations",
+      "defaultSet": "Default location set"
+    },
+    "alerts": {
+      "title": "Weather Alerts",
+      "expires": "Expires",
+      "instructions": "Safety Instructions"
+    },
+    "airQuality": {
+      "title": "Air Quality",
+      "unavailable": "N/A"
+    }
   },
   "scout": {
     "dashboard": "Scout Dashboard",
