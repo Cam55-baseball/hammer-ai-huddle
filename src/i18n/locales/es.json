@@ -1268,7 +1268,11 @@
     "failedToLoadWeather": "Error al cargar datos del clima",
     "noConditions": "No hay condiciones específicas para analizar",
     "sunrise": "Amanecer",
-    "sunset": "Atardecer"
+    "sunset": "Atardecer",
+    "toggleHourlyForecast": "Mostrar Pronóstico por Hora",
+    "hideHourlyForecast": "Ocultar Pronóstico por Hora",
+    "hourlyForecastTitle": "Pronóstico de 33 Horas",
+    "now": "Ahora"
   },
   "scout": {
     "dashboard": "Panel de Scout",
@@ -2225,6 +2229,8 @@
   },
   "workoutModules": {
     "day": "Día",
+    "progressAndStreak": "Tu Progreso",
+    "weekLabel": "Semana {{current}}/{{total}}",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "Programa Elite de Desarrollo de Bateador de Poder de 24 Semanas"
@@ -3653,6 +3659,8 @@
     "currentStreak": "Racha Actual",
     "longestStreak": "Racha Más Larga",
     "totalWorkouts": "Entrenamientos Totales",
+    "best": "Mejor",
+    "total": "Total",
     "dayStreak": "día de racha",
     "daysStreak": "días de racha",
     "keepGoing": "¡Sigue así!",

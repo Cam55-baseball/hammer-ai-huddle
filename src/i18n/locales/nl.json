@@ -1093,7 +1093,11 @@
     "failedToLoadWeather": "Laden van weergegevens mislukt",
     "noConditions": "Geen specifieke omstandigheden om te analyseren",
     "sunrise": "Zonsopgang",
-    "sunset": "Zonsondergang"
+    "sunset": "Zonsondergang",
+    "toggleHourlyForecast": "Uurlijkse Voorspelling Tonen",
+    "hideHourlyForecast": "Uurlijkse Voorspelling Verbergen",
+    "hourlyForecastTitle": "33-Uurs Voorspelling",
+    "now": "Nu"
   },
   "scout": {
     "dashboard": "Scout Dashboard",
@@ -1752,6 +1756,8 @@
   },
   "workoutModules": {
     "day": "Dag",
+    "progressAndStreak": "Je Voortgang",
+    "weekLabel": "Week {{current}}/{{total}}",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "24-Weken Elite Power Hitter Ontwikkelingsprogramma"
@@ -2929,6 +2935,8 @@
     "currentStreak": "Huidige Reeks",
     "longestStreak": "Langste Reeks",
     "totalWorkouts": "Totaal Trainingen",
+    "best": "Beste",
+    "total": "Totaal",
     "dayStreak": "dag reeks",
     "daysStreak": "dagen reeks",
     "keepGoing": "Ga zo door!",

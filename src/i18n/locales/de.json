@@ -1093,7 +1093,11 @@
     "failedToLoadWeather": "Laden der Wetterdaten fehlgeschlagen",
     "noConditions": "Keine spezifischen Bedingungen zu analysieren",
     "sunrise": "Sonnenaufgang",
-    "sunset": "Sonnenuntergang"
+    "sunset": "Sonnenuntergang",
+    "toggleHourlyForecast": "Stündliche Vorhersage Anzeigen",
+    "hideHourlyForecast": "Stündliche Vorhersage Ausblenden",
+    "hourlyForecastTitle": "33-Stunden-Vorhersage",
+    "now": "Jetzt"
   },
   "scout": {
     "dashboard": "Scout-Dashboard",
@@ -2247,6 +2251,8 @@
   },
   "workoutModules": {
     "day": "Tag",
+    "progressAndStreak": "Dein Fortschritt",
+    "weekLabel": "Woche {{current}}/{{total}}",
     "productionLab": {
       "title": "Iron Bambino",
       "subtitle": "24-Wochen Elite Power-Hitter Entwicklungsprogramm"
@@ -3675,6 +3681,8 @@
     "currentStreak": "Aktuelle Serie",
     "longestStreak": "Längste Serie",
     "totalWorkouts": "Gesamte Trainings",
+    "best": "Bester",
+    "total": "Gesamt",
     "dayStreak": "Tag Serie",
     "daysStreak": "Tage Serie",
     "keepGoing": "Weiter so!",
