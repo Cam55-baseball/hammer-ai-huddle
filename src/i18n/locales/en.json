@@ -1397,7 +1397,15 @@
     "toggleHourlyForecast": "Show Hourly Forecast",
     "hideHourlyForecast": "Hide Hourly Forecast",
     "hourlyForecastTitle": "33-Hour Forecast",
-    "now": "Now"
+    "now": "Now",
+    "todayMorning": "Today Morning",
+    "todayAfternoon": "Today Afternoon",
+    "todayEvening": "Today Evening",
+    "tonight": "Tonight",
+    "tomorrowMorning": "Tomorrow Morning",
+    "tomorrowAfternoon": "Tomorrow Afternoon",
+    "tomorrowEvening": "Tomorrow Evening",
+    "tomorrowNight": "Tomorrow Night"
   },
   "scout": {
     "dashboard": "Scout Dashboard",

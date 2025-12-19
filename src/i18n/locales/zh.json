@@ -1068,7 +1068,15 @@
     "toggleHourlyForecast": "显示每小时预报",
     "hideHourlyForecast": "隐藏每小时预报",
     "hourlyForecastTitle": "33小时预报",
-    "now": "现在"
+    "now": "现在",
+    "todayMorning": "今天上午",
+    "todayAfternoon": "今天下午",
+    "todayEvening": "今天傍晚",
+    "tonight": "今晚",
+    "tomorrowMorning": "明天上午",
+    "tomorrowAfternoon": "明天下午",
+    "tomorrowEvening": "明天傍晚",
+    "tomorrowNight": "明晚"
   },
   "scout": {
     "dashboard": "球探仪表板",
