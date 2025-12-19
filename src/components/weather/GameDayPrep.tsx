@@ -160,29 +160,35 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball' }: GameDayPrep
           <svg viewBox="0 0 200 200" className="w-full h-full drop-shadow-lg">
             {/* Definitions */}
             <defs>
-              {/* Grass gradient */}
-              <linearGradient id="grassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="hsl(142 60% 35%)" />
-                <stop offset="100%" stopColor="hsl(142 55% 28%)" />
+              {/* Outfield grass gradient */}
+              <linearGradient id="outfieldGrass" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="hsl(120 45% 35%)" />
+                <stop offset="100%" stopColor="hsl(120 50% 28%)" />
               </linearGradient>
               
-              {/* Outfield grass gradient */}
-              <linearGradient id="outfieldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="hsl(142 65% 38%)" />
-                <stop offset="100%" stopColor="hsl(142 60% 32%)" />
+              {/* Infield grass gradient */}
+              <linearGradient id="infieldGrass" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="hsl(120 50% 38%)" />
+                <stop offset="100%" stopColor="hsl(120 45% 32%)" />
               </linearGradient>
               
               {/* Infield dirt gradient */}
-              <linearGradient id="dirtGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="hsl(30 45% 50%)" />
-                <stop offset="100%" stopColor="hsl(30 40% 42%)" />
+              <linearGradient id="infieldDirt" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="hsl(28 55% 52%)" />
+                <stop offset="100%" stopColor="hsl(28 50% 44%)" />
               </linearGradient>
               
-              {/* Warning track */}
-              <linearGradient id="warningTrackGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="hsl(30 35% 45%)" />
-                <stop offset="100%" stopColor="hsl(30 30% 38%)" />
+              {/* Warning track gradient */}
+              <linearGradient id="warningTrack" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="hsl(28 40% 48%)" />
+                <stop offset="100%" stopColor="hsl(28 35% 40%)" />
               </linearGradient>
+              
+              {/* Grass mowing stripe pattern - alternating */}
+              <pattern id="mowPattern" width="12" height="200" patternUnits="userSpaceOnUse" patternTransform="rotate(-15)">
+                <rect width="6" height="200" fill="hsl(120 48% 36%)" />
+                <rect x="6" width="6" height="200" fill="hsl(120 45% 32%)" />
+              </pattern>
               
               {/* Sun glow */}
               <radialGradient id="sunGlow">
@@ -191,101 +197,127 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball' }: GameDayPrep
                 <stop offset="100%" stopColor="hsl(45 100% 55%)" stopOpacity="0" />
               </radialGradient>
               
-              {/* Grass mow pattern */}
-              <pattern id="grassPattern" width="8" height="8" patternUnits="userSpaceOnUse">
-                <rect width="4" height="8" fill="hsl(142 58% 34%)" opacity="0.3" />
-              </pattern>
+              {/* Clip path for outfield fan shape */}
+              <clipPath id="outfieldClip">
+                <path d="M 100 185 L 5 90 Q 5 5 100 5 Q 195 5 195 90 L 100 185 Z" />
+              </clipPath>
+              
+              {/* Clip path for inner grass */}
+              <clipPath id="innerGrassClip">
+                <path d="M 100 180 L 15 85 Q 15 15 100 15 Q 185 15 185 85 L 100 180 Z" />
+              </clipPath>
             </defs>
             
-            {/* Background - sky/stadium */}
+            {/* Background */}
             <rect width="200" height="200" fill="hsl(var(--muted))" rx="8" />
             
-            {/* Warning track arc */}
+            {/* Outfield fence/wall */}
             <path
-              d="M 20 180 Q 20 20 180 180"
-              fill="url(#warningTrackGradient)"
+              d="M 100 188 L 2 88 Q 2 2 100 2 Q 198 2 198 88 L 100 188 Z"
+              fill="hsl(150 25% 25%)"
+              stroke="hsl(150 20% 20%)"
+              strokeWidth="2"
             />
             
-            {/* Outfield grass */}
+            {/* Warning track - brown dirt around outfield perimeter */}
             <path
-              d="M 30 175 Q 30 35 170 175"
-              fill="url(#outfieldGradient)"
+              d="M 100 185 L 5 88 Q 5 5 100 5 Q 195 5 195 88 L 100 185 Z"
+              fill="url(#warningTrack)"
             />
             
-            {/* Grass mow pattern overlay */}
+            {/* Outfield grass base */}
             <path
-              d="M 30 175 Q 30 35 170 175"
-              fill="url(#grassPattern)"
-              opacity="0.4"
+              d="M 100 178 L 15 85 Q 15 15 100 15 Q 185 15 185 85 L 100 178 Z"
+              fill="url(#outfieldGrass)"
             />
             
-            {/* Infield grass (arc behind bases) */}
-            <ellipse cx="100" cy="150" rx="55" ry="40" fill="url(#grassGradient)" />
+            {/* Grass mowing stripes overlay */}
+            <g clipPath="url(#innerGrassClip)">
+              <rect x="0" y="0" width="200" height="200" fill="url(#mowPattern)" opacity="0.6" />
+            </g>
             
-            {/* Infield dirt diamond */}
-            <polygon
-              points="100,180 55,135 100,90 145,135"
-              fill="url(#dirtGradient)"
+            {/* Infield grass cutout (arc behind bases) */}
+            <ellipse cx="100" cy="148" rx="52" ry="38" fill="url(#infieldGrass)" />
+            
+            {/* Infield dirt area */}
+            <path
+              d="M 100 182 
+                 L 52 138 
+                 Q 48 130 52 122
+                 L 100 82
+                 L 148 122
+                 Q 152 130 148 138
+                 L 100 182 Z"
+              fill="url(#infieldDirt)"
             />
             
-            {/* Base paths (white lines) */}
-            <line x1="100" y1="175" x2="60" y2="135" stroke="white" strokeWidth="1.5" opacity="0.9" />
-            <line x1="60" y1="135" x2="100" y2="95" stroke="white" strokeWidth="1.5" opacity="0.9" />
-            <line x1="100" y1="95" x2="140" y2="135" stroke="white" strokeWidth="1.5" opacity="0.9" />
-            <line x1="140" y1="135" x2="100" y2="175" stroke="white" strokeWidth="1.5" opacity="0.9" />
+            {/* Home plate dirt circle extension */}
+            <ellipse cx="100" cy="176" rx="18" ry="12" fill="url(#infieldDirt)" />
+            
+            {/* Pitcher's mound dirt circle */}
+            <ellipse cx="100" cy="135" rx="12" ry="9" fill="hsl(28 45% 55%)" />
             
             {/* Foul lines extending to outfield */}
-            <line x1="100" y1="175" x2="25" y2="100" stroke="white" strokeWidth="1.5" opacity="0.8" />
-            <line x1="100" y1="175" x2="175" y2="100" stroke="white" strokeWidth="1.5" opacity="0.8" />
+            <line x1="100" y1="178" x2="8" y2="86" stroke="white" strokeWidth="2" opacity="0.95" />
+            <line x1="100" y1="178" x2="192" y2="86" stroke="white" strokeWidth="2" opacity="0.95" />
             
-            {/* Pitcher's mound */}
-            <ellipse cx="100" cy="140" rx="8" ry="6" fill="hsl(30 35% 55%)" />
-            <rect x="97" y="138" width="6" height="2" fill="white" rx="0.5" />
+            {/* Base paths (white lines) */}
+            <line x1="100" y1="174" x2="55" y2="135" stroke="white" strokeWidth="1.5" opacity="0.85" />
+            <line x1="55" y1="135" x2="100" y2="96" stroke="white" strokeWidth="1.5" opacity="0.85" />
+            <line x1="100" y1="96" x2="145" y2="135" stroke="white" strokeWidth="1.5" opacity="0.85" />
+            <line x1="145" y1="135" x2="100" y2="174" stroke="white" strokeWidth="1.5" opacity="0.85" />
             
-            {/* Batter's boxes */}
-            <rect x="85" y="168" width="8" height="12" fill="none" stroke="white" strokeWidth="1" opacity="0.7" />
-            <rect x="107" y="168" width="8" height="12" fill="none" stroke="white" strokeWidth="1" opacity="0.7" />
-            
-            {/* Catcher's box */}
-            <rect x="92" y="180" width="16" height="8" fill="none" stroke="white" strokeWidth="1" opacity="0.5" />
+            {/* Pitcher's mound rubber */}
+            <rect x="96" y="133" width="8" height="2" fill="white" rx="0.5" />
             
             {/* Home plate (pentagon) */}
             <polygon
-              points="100,177 95,173 95,169 105,169 105,173"
+              points="100,176 94,172 94,167 106,167 106,172"
               fill="white"
-              stroke="hsl(30 30% 40%)"
+              stroke="hsl(28 30% 40%)"
               strokeWidth="0.5"
             />
             
+            {/* Batter's boxes */}
+            <rect x="82" y="164" width="10" height="14" fill="none" stroke="white" strokeWidth="1" opacity="0.7" />
+            <rect x="108" y="164" width="10" height="14" fill="none" stroke="white" strokeWidth="1" opacity="0.7" />
+            
             {/* First base */}
-            <rect x="136" y="131" width="8" height="8" fill="white" transform="rotate(45 140 135)" />
+            <rect x="141" y="131" width="8" height="8" fill="white" transform="rotate(45 145 135)" />
             
             {/* Second base */}
-            <rect x="96" y="91" width="8" height="8" fill="white" transform="rotate(45 100 95)" />
+            <rect x="96" y="92" width="8" height="8" fill="white" transform="rotate(45 100 96)" />
             
             {/* Third base */}
-            <rect x="56" y="131" width="8" height="8" fill="white" transform="rotate(45 60 135)" />
+            <rect x="51" y="131" width="8" height="8" fill="white" transform="rotate(45 55 135)" />
             
             {/* On-deck circles */}
-            <circle cx="70" cy="175" r="5" fill="none" stroke="white" strokeWidth="1" opacity="0.5" />
-            <circle cx="130" cy="175" r="5" fill="none" stroke="white" strokeWidth="1" opacity="0.5" />
+            <circle cx="65" cy="175" r="6" fill="none" stroke="white" strokeWidth="1" opacity="0.6" />
+            <circle cx="135" cy="175" r="6" fill="none" stroke="white" strokeWidth="1" opacity="0.6" />
             
-            {/* Position labels with background */}
-            <g className="text-[8px] font-bold">
-              <text x="100" y="55" textAnchor="middle" fill="white" className="drop-shadow-sm">CF</text>
-              <text x="45" y="90" textAnchor="middle" fill="white" className="drop-shadow-sm">LF</text>
-              <text x="155" y="90" textAnchor="middle" fill="white" className="drop-shadow-sm">RF</text>
-              <text x="60" y="125" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">3B</text>
-              <text x="140" y="125" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">1B</text>
-              <text x="100" y="85" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">2B</text>
-              <text x="73" y="155" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">SS</text>
-              <text x="100" y="150" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">P</text>
+            {/* Dugouts */}
+            <rect x="8" y="165" width="22" height="30" rx="2" fill="hsl(120 30% 25%)" stroke="hsl(120 25% 20%)" strokeWidth="1" />
+            <rect x="170" y="165" width="22" height="30" rx="2" fill="hsl(120 30% 25%)" stroke="hsl(120 25% 20%)" strokeWidth="1" />
+            {/* Dugout roofs */}
+            <rect x="6" y="162" width="26" height="5" rx="1" fill="hsl(120 20% 18%)" />
+            <rect x="168" y="162" width="26" height="5" rx="1" fill="hsl(120 20% 18%)" />
+            
+            {/* Position labels */}
+            <g className="text-[8px] font-bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+              <text x="100" y="45" textAnchor="middle" fill="white">CF</text>
+              <text x="40" y="70" textAnchor="middle" fill="white">LF</text>
+              <text x="160" y="70" textAnchor="middle" fill="white">RF</text>
+              <text x="55" y="125" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">3B</text>
+              <text x="145" y="125" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">1B</text>
+              <text x="100" y="88" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">2B</text>
+              <text x="72" y="152" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">SS</text>
+              <text x="100" y="145" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="6">P</text>
             </g>
             
             {/* Direction indicator arrow */}
             <g transform="translate(100, 25)">
-              <polygon points="0,-8 -5,2 0,0 5,2" fill="hsl(var(--primary))" />
-              <text y="12" textAnchor="middle" className="text-[9px] font-bold" fill="hsl(var(--primary))">
+              <polygon points="0,-10 -6,2 0,-2 6,2" fill="hsl(var(--primary))" />
+              <text y="14" textAnchor="middle" className="text-[9px] font-bold" fill="hsl(var(--primary))">
                 {fieldDirection.toUpperCase()}
               </text>
             </g>
