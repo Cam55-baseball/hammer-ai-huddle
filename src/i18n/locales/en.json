@@ -1477,7 +1477,14 @@
       "uvExtreme": "Avoid midday sun if possible, full UV protection required",
       "windLight": "Standard gear sufficient",
       "windModerate": "Secure cap, lightweight windbreaker for dugout",
-      "windStrong": "Windproof outer layer, secure all loose equipment"
+      "windStrong": "Windproof outer layer, secure all loose equipment",
+      "copyToClipboard": "Share",
+      "copiedToClipboard": "Game Day Prep copied to clipboard!",
+      "precipitationWarning": "Precipitation Warning",
+      "precipitationPossible": "Possible rain — pack light rain gear and equipment covers",
+      "precipitationLikely": "Rain likely — bring rain jacket, tarp, and protect all equipment",
+      "precipitationHigh": "High chance of rain — full rain preparation recommended, consider delays",
+      "rainChance": "chance"
     },
     "toggleHourlyForecast": "Show Hourly Forecast",
     "hideHourlyForecast": "Hide Hourly Forecast",

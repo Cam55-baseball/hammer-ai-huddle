@@ -2,8 +2,10 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sun, Compass, Thermometer, Shield, Wind, Clock, Cloud, CloudRain, CloudSun, Snowflake, Zap, CheckCircle2, Lightbulb } from "lucide-react";
+import { Sun, Compass, Thermometer, Shield, Wind, Clock, Cloud, CloudRain, CloudSun, Snowflake, Zap, CheckCircle2, Lightbulb, Copy, Droplets, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface HourlyForecast {
   time: string;
@@ -265,6 +267,7 @@ const getSunImpactPositions = (sunPosition: { label: string }, isNight: boolean,
 
 export function GameDayPrep({ sunrise, sunset, sport = 'baseball', temperature, uvIndex, windSpeed, hourlyForecast }: GameDayPrepProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [fieldDirection, setFieldDirection] = useState<FieldDirection>('north');
   const [selectedHourIndex, setSelectedHourIndex] = useState(0);
   
@@ -280,6 +283,7 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball', temperature, 
   const activeTemperature = selectedForecast?.temperature ?? temperature;
   const activeWindSpeed = selectedForecast?.windSpeed ?? windSpeed;
   const activeCondition = selectedForecast?.condition ?? 'Clear';
+  const activePrecipitationChance = selectedForecast?.precipitationChance ?? 0;
   
   // Calculate time for sun position based on selected hour
   const selectedTimeMinutes = useMemo(() => {
@@ -303,14 +307,90 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball', temperature, 
   const uvProtection = getUVProtection(uvIndex, t);
   const windGear = getWindGear(activeWindSpeed, t);
   const sunImpactPositions = getSunImpactPositions(sunPosition, isNight, t);
+  
+  // Get precipitation warning info
+  const getPrecipitationWarning = (chance: number): { level: 'low' | 'moderate' | 'high'; message: string; color: string } | null => {
+    if (chance < 30) return null;
+    if (chance < 50) return { level: 'low', message: t('weather.gameDayPrep.precipitationPossible'), color: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-700' };
+    if (chance < 70) return { level: 'moderate', message: t('weather.gameDayPrep.precipitationLikely'), color: 'bg-orange-500/10 border-orange-500/30 text-orange-700' };
+    return { level: 'high', message: t('weather.gameDayPrep.precipitationHigh'), color: 'bg-destructive/10 border-destructive/30 text-destructive' };
+  };
+  
+  const precipWarning = getPrecipitationWarning(activePrecipitationChance);
+  
+  // Generate shareable text for clipboard
+  const generateShareableText = (): string => {
+    const timeLabel = selectedForecast ? formatHourOption(selectedForecast.time, selectedHourIndex, t) : t('weather.gameDayPrep.now');
+    
+    let text = `🧢 GAME DAY PREP - ${timeLabel}\n`;
+    text += `📍 ${Math.round(activeTemperature ?? 0)}°F • ${activeCondition} • ${Math.round(activeWindSpeed ?? 0)} mph Wind\n\n`;
+    
+    if (precipWarning) {
+      text += `⚠️ PRECIPITATION WARNING\n`;
+      text += `☔ ${activePrecipitationChance}% chance of rain\n`;
+      text += `${precipWarning.message}\n\n`;
+    }
+    
+    if (warmup) {
+      text += `🏃 PRE-GAME WARMUP (${warmup.duration})\n`;
+      warmup.exercises.forEach(ex => {
+        text += `✓ ${ex}\n`;
+      });
+      text += `💡 Tip: ${warmup.tip}\n\n`;
+    }
+    
+    text += `👕 OUTFIT & GEAR\n`;
+    text += `🌡️ Temperature (${Math.round(activeTemperature ?? 0)}°F): ${tempGear.text}\n`;
+    text += `☀️ UV Protection${uvIndex !== undefined ? ` (UV ${uvIndex})` : ''}: ${uvProtection.text}\n`;
+    text += `💨 Wind (${Math.round(activeWindSpeed ?? 0)} mph): ${windGear.text}\n\n`;
+    
+    if (!isNight && sunImpactPositions.length > 0) {
+      text += `☀️ SUN IMPACT ANALYSIS\n`;
+      sunImpactPositions.forEach(pos => {
+        text += `• ${pos}\n`;
+      });
+      text += `\n`;
+    }
+    
+    text += `🧭 Field Direction: ${fieldDirection.charAt(0).toUpperCase() + fieldDirection.slice(1)}`;
+    
+    return text;
+  };
+  
+  const handleCopyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(generateShareableText());
+      toast({
+        title: t('weather.gameDayPrep.copiedToClipboard'),
+        duration: 2000,
+      });
+    } catch (err) {
+      toast({
+        title: t('common.error'),
+        description: "Failed to copy to clipboard",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Card className="overflow-hidden border-0 shadow-lg animate-in fade-in-50 slide-in-from-top-2 duration-300">
       <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white">
-        <h4 className="font-bold text-lg flex items-center gap-2">
-          <Compass className="h-5 w-5" />
-          {t('weather.gameDayPrep.title')}
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="font-bold text-lg flex items-center gap-2">
+            <Compass className="h-5 w-5" />
+            {t('weather.gameDayPrep.title')}
+          </h4>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/20 h-8 px-2"
+            onClick={handleCopyToClipboard}
+          >
+            <Copy className="h-4 w-4 mr-1.5" />
+            {t('weather.gameDayPrep.copyToClipboard')}
+          </Button>
+        </div>
       </div>
       
       <CardContent className="p-4 sm:p-5 space-y-5">
@@ -392,6 +472,30 @@ export function GameDayPrep({ sunrise, sunset, sport = 'baseball', temperature, 
             <div className="flex items-center gap-1">
               <Wind className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">{Math.round(activeWindSpeed ?? 0)} mph</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Precipitation Warning */}
+        {precipWarning && (
+          <div className={`flex items-start gap-3 p-3 rounded-lg border ${precipWarning.color}`}>
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-current/10">
+              {precipWarning.level === 'high' ? (
+                <AlertTriangle className="h-4 w-4" />
+              ) : (
+                <Droplets className="h-4 w-4" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-sm font-semibold">
+                  {t('weather.gameDayPrep.precipitationWarning')}
+                </p>
+                <Badge variant="outline" className="text-xs">
+                  {activePrecipitationChance}% {t('weather.gameDayPrep.rainChance')}
+                </Badge>
+              </div>
+              <p className="text-sm opacity-90">{precipWarning.message}</p>
             </div>
           </div>
         )}
