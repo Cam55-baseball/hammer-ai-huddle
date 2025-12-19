@@ -10,6 +10,7 @@ import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HourlyForecastSection } from "@/components/weather/HourlyForecastSection";
 import { SunTimeline } from "@/components/weather/SunTimeline";
+import { GameDayPrep } from "@/components/weather/GameDayPrep";
 interface SportAnalysis {
   sport: string;
   ballFlight: string;
@@ -83,6 +84,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   const [showForecast, setShowForecast] = useState(false);
   const [showHourlyForecast, setShowHourlyForecast] = useState(false);
   const [showDrills, setShowDrills] = useState(false);
+  const [showGameDayPrep, setShowGameDayPrep] = useState(false);
   const { toast } = useToast();
 
   const fetchWeather = async (searchLocation?: string, sportParam?: 'baseball' | 'softball') => {
@@ -461,39 +463,6 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                 </CardContent>
               </Card>
 
-              {/* Sunrise Card */}
-              {weather.sunrise && (
-                <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-amber-100 text-amber-600 group-hover:scale-110 transition-transform">
-                        <Sunrise className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.sunrise')}</p>
-                        <p className="text-lg font-bold">{weather.sunrise}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Sunset Card */}
-              {weather.sunset && (
-                <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-indigo-100 text-indigo-600 group-hover:scale-110 transition-transform">
-                        <Sunset className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.sunset')}</p>
-                        <p className="text-lg font-bold">{weather.sunset}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           )}
 
@@ -556,6 +525,27 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               <Target className="h-4 w-4 mr-2 group-hover:animate-pulse" />
               {showDrills ? t('weather.hideDrills') : t('weather.toggleDrills')}
             </Button>
+          )}
+
+          {/* Game Day Prep Toggle */}
+          {weather?.sunrise && weather?.sunset && (
+            <Button 
+              variant="outline" 
+              className="w-full group hover:bg-amber-500 hover:text-white transition-all"
+              onClick={() => setShowGameDayPrep(!showGameDayPrep)}
+            >
+              <Sun className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+              {showGameDayPrep ? t('weather.gameDayPrep.hide') : t('weather.gameDayPrep.show')}
+            </Button>
+          )}
+
+          {/* Game Day Prep Content */}
+          {showGameDayPrep && weather?.sunrise && weather?.sunset && (
+            <GameDayPrep 
+              sunrise={weather.sunrise} 
+              sunset={weather.sunset} 
+              sport={sport}
+            />
           )}
 
           {/* Drill Recommendations List */}
