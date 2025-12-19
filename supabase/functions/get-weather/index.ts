@@ -579,6 +579,9 @@ serve(async (req) => {
     const sunrise = daily.sunrise?.[0] ? formatTimeToAMPM(daily.sunrise[0]) : null;
     const sunset = daily.sunset?.[0] ? formatTimeToAMPM(daily.sunset[0]) : null;
 
+    // Extract timezone abbreviation
+    const timezone = data.timezone_abbreviation || data.timezone || null;
+
     const weatherData = {
       location: resolvedLocationName,
       ...weatherMetrics,
@@ -589,7 +592,8 @@ serve(async (req) => {
       hourlyForecast: hourlyForecasts,
       drillRecommendations: generateDrillRecommendations(weatherMetrics, sportType),
       sunrise,
-      sunset
+      sunset,
+      timezone
     };
 
     return new Response(JSON.stringify(weatherData), {
