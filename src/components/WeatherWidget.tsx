@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Cloud, Wind, Droplets, Eye, Thermometer, MapPin, Search, Icon, Calendar, TrendingUp, TrendingDown, CloudRain, Target, Circle, Sun, CloudSun, Snowflake, Zap, Sunrise, Sunset, Clock } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { HourlyForecastSection } from "@/components/weather/HourlyForecastSection";
 interface SportAnalysis {
   sport: string;
   ballFlight: string;
@@ -586,42 +586,9 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             </Button>
           )}
 
-          {/* Hourly Forecast Cards */}
+          {/* Hourly Forecast Cards - Stunning Visual Design */}
           {showHourlyForecast && weather?.hourlyForecast && weather.hourlyForecast.length > 0 && (
-            <div className="space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-300">
-              <h4 className="font-bold text-base flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" />
-                {t('weather.hourlyForecastTitle')}
-              </h4>
-              
-              <div className="overflow-x-auto pb-2 -mx-2 px-2">
-                <div className="flex gap-2" style={{ minWidth: 'max-content' }}>
-                  {weather.hourlyForecast.map((hour, index) => (
-                    <Card key={hour.time} className="flex-shrink-0 w-20 overflow-hidden hover:shadow-md transition-all border-border/50">
-                      <CardContent className="p-2 text-center">
-                        <p className="text-xs font-medium text-muted-foreground mb-1">
-                          {formatHourlyTime(hour.time, index)}
-                        </p>
-                        <div className="flex justify-center mb-1">
-                          {getHourlyWeatherIcon(hour.condition, 'h-6 w-6')}
-                        </div>
-                        <p className="text-lg font-bold">{hour.temperature}°</p>
-                        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-1">
-                          <Wind className="h-3 w-3" />
-                          <span>{hour.windSpeed}</span>
-                        </div>
-                        {hour.precipitationChance > 0 && (
-                          <div className="flex items-center justify-center gap-1 text-xs text-blue-500 mt-0.5">
-                            <CloudRain className="h-3 w-3" />
-                            <span>{hour.precipitationChance}%</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <HourlyForecastSection hourlyForecast={weather.hourlyForecast} />
           )}
 
           {/* 7-Day Forecast Toggle */}

@@ -1097,7 +1097,15 @@
     "toggleHourlyForecast": "Stündliche Vorhersage Anzeigen",
     "hideHourlyForecast": "Stündliche Vorhersage Ausblenden",
     "hourlyForecastTitle": "33-Stunden-Vorhersage",
-    "now": "Jetzt"
+    "now": "Jetzt",
+    "todayMorning": "Heute Morgen",
+    "todayAfternoon": "Heute Nachmittag",
+    "todayEvening": "Heute Abend",
+    "tonight": "Heute Nacht",
+    "tomorrowMorning": "Morgen Früh",
+    "tomorrowAfternoon": "Morgen Nachmittag",
+    "tomorrowEvening": "Morgen Abend",
+    "tomorrowNight": "Morgen Nacht"
   },
   "scout": {
     "dashboard": "Scout-Dashboard",

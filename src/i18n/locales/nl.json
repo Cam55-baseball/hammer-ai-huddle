@@ -1097,7 +1097,15 @@
     "toggleHourlyForecast": "Uurlijkse Voorspelling Tonen",
     "hideHourlyForecast": "Uurlijkse Voorspelling Verbergen",
     "hourlyForecastTitle": "33-Uurs Voorspelling",
-    "now": "Nu"
+    "now": "Nu",
+    "todayMorning": "Vanmorgen",
+    "todayAfternoon": "Vanmiddag",
+    "todayEvening": "Vanavond",
+    "tonight": "Vannacht",
+    "tomorrowMorning": "Morgenochtend",
+    "tomorrowAfternoon": "Morgenmiddag",
+    "tomorrowEvening": "Morgenavond",
+    "tomorrowNight": "Morgennacht"
   },
   "scout": {
     "dashboard": "Scout Dashboard",

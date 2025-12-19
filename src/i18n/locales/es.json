@@ -1272,7 +1272,15 @@
     "toggleHourlyForecast": "Mostrar Pronóstico por Hora",
     "hideHourlyForecast": "Ocultar Pronóstico por Hora",
     "hourlyForecastTitle": "Pronóstico de 33 Horas",
-    "now": "Ahora"
+    "now": "Ahora",
+    "todayMorning": "Esta Mañana",
+    "todayAfternoon": "Esta Tarde",
+    "todayEvening": "Esta Noche Temprano",
+    "tonight": "Esta Noche",
+    "tomorrowMorning": "Mañana por la Mañana",
+    "tomorrowAfternoon": "Mañana por la Tarde",
+    "tomorrowEvening": "Mañana por la Noche",
+    "tomorrowNight": "Mañana en la Noche"
   },
   "scout": {
     "dashboard": "Panel de Scout",

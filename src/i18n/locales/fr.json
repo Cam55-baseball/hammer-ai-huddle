@@ -1097,7 +1097,15 @@
     "toggleHourlyForecast": "Afficher les Prévisions Horaires",
     "hideHourlyForecast": "Masquer les Prévisions Horaires",
     "hourlyForecastTitle": "Prévisions 33 Heures",
-    "now": "Maintenant"
+    "now": "Maintenant",
+    "todayMorning": "Ce Matin",
+    "todayAfternoon": "Cet Après-midi",
+    "todayEvening": "Ce Soir",
+    "tonight": "Cette Nuit",
+    "tomorrowMorning": "Demain Matin",
+    "tomorrowAfternoon": "Demain Après-midi",
+    "tomorrowEvening": "Demain Soir",
+    "tomorrowNight": "Demain Nuit"
   },
   "scout": {
     "dashboard": "Tableau Scout",

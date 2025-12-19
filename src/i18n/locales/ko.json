@@ -1067,7 +1067,15 @@
     "toggleHourlyForecast": "시간별 예보 표시",
     "hideHourlyForecast": "시간별 예보 숨기기",
     "hourlyForecastTitle": "33시간 예보",
-    "now": "지금"
+    "now": "지금",
+    "todayMorning": "오늘 오전",
+    "todayAfternoon": "오늘 오후",
+    "todayEvening": "오늘 저녁",
+    "tonight": "오늘 밤",
+    "tomorrowMorning": "내일 오전",
+    "tomorrowAfternoon": "내일 오후",
+    "tomorrowEvening": "내일 저녁",
+    "tomorrowNight": "내일 밤"
   },
   "scout": {
     "dashboard": "스카우트 대시보드",

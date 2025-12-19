@@ -1068,7 +1068,15 @@
     "toggleHourlyForecast": "時間別予報を表示",
     "hideHourlyForecast": "時間別予報を非表示",
     "hourlyForecastTitle": "33時間予報",
-    "now": "今"
+    "now": "今",
+    "todayMorning": "今日の朝",
+    "todayAfternoon": "今日の午後",
+    "todayEvening": "今日の夕方",
+    "tonight": "今夜",
+    "tomorrowMorning": "明日の朝",
+    "tomorrowAfternoon": "明日の午後",
+    "tomorrowEvening": "明日の夕方",
+    "tomorrowNight": "明日の夜"
   },
   "scout": {
     "dashboard": "スカウトダッシュボード",
