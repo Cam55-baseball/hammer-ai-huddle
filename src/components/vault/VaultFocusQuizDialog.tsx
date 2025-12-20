@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone } from 'lucide-react';
+import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone, Flame, Target, Sword } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VaultFocusQuizDialogProps {
@@ -30,6 +30,9 @@ interface VaultFocusQuizDialogProps {
     reflection_motivation?: string;
     hours_slept?: number;
     sleep_quality?: number;
+    daily_motivation?: string;
+    daily_intentions?: string;
+    discipline_level?: number;
   }) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -108,6 +111,95 @@ function RatingButtonGroup({ value, onChange, label, icon, getLevelLabel }: Rati
   );
 }
 
+// Discipline Rating Component - Elite 0.01% Approach
+interface DisciplineRatingProps {
+  value: number;
+  onChange: (value: number) => void;
+  t: (key: string) => string;
+}
+
+function DisciplineRating({ value, onChange, t }: DisciplineRatingProps) {
+  const levels = [
+    { level: 1, color: 'red', gradient: 'from-red-500 to-red-600' },
+    { level: 2, color: 'orange', gradient: 'from-orange-500 to-orange-600' },
+    { level: 3, color: 'amber', gradient: 'from-amber-500 to-amber-600' },
+    { level: 4, color: 'lime', gradient: 'from-lime-500 to-lime-600' },
+    { level: 5, color: 'emerald', gradient: 'from-emerald-500 to-emerald-600' },
+  ];
+
+  const getDisciplineLabel = (level: number) => {
+    return t(`vault.quiz.morning.disciplineLevel${level}`);
+  };
+
+  const getDisciplineDesc = (level: number) => {
+    return t(`vault.quiz.morning.disciplineDesc${level}`);
+  };
+
+  const handleClick = (level: number) => {
+    if (navigator.vibrate) navigator.vibrate(level === 5 ? [20, 50, 20] : 10);
+    onChange(level);
+  };
+
+  return (
+    <div className="space-y-4 p-4 bg-gradient-to-br from-slate-900/50 to-slate-800/50 rounded-2xl border border-amber-500/30">
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-xl bg-amber-500/20">
+          <Sword className="h-5 w-5 text-amber-500" />
+        </div>
+        <div>
+          <Label className="text-base font-bold text-foreground">
+            {t('vault.quiz.morning.disciplineTitle')}
+          </Label>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {t('vault.quiz.morning.disciplinePrompt')}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-5 gap-2">
+        {levels.map(({ level, gradient }) => {
+          const isSelected = value === level;
+          return (
+            <button
+              key={level}
+              type="button"
+              onClick={() => handleClick(level)}
+              className={cn(
+                "relative flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-300 border-2",
+                isSelected 
+                  ? `bg-gradient-to-br ${gradient} text-white border-transparent shadow-lg scale-105` 
+                  : "bg-background/50 text-muted-foreground border-border/50 hover:border-border opacity-60 hover:opacity-80"
+              )}
+            >
+              <span className="text-xl font-black">{level}</span>
+              {isSelected && level === 5 && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {value > 0 && (
+        <div className={cn(
+          "text-center p-3 rounded-xl transition-all duration-300",
+          value === 5 ? "bg-emerald-500/20 border border-emerald-500/30" : "bg-background/50"
+        )}>
+          <p className={cn(
+            "font-bold text-sm",
+            value <= 2 ? "text-red-500" : value === 3 ? "text-amber-500" : value === 4 ? "text-lime-500" : "text-emerald-500"
+          )}>
+            {getDisciplineLabel(value)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {getDisciplineDesc(value)}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function VaultFocusQuizDialog({
   open,
   onOpenChange,
@@ -130,6 +222,11 @@ export function VaultFocusQuizDialog({
   // Morning quiz sleep tracking
   const [hoursSlept, setHoursSlept] = useState<number | ''>('');
   const [sleepQuality, setSleepQuality] = useState(3);
+
+  // Elite morning check-in fields
+  const [dailyMotivation, setDailyMotivation] = useState('');
+  const [dailyIntentions, setDailyIntentions] = useState('');
+  const [disciplineLevel, setDisciplineLevel] = useState(3);
 
   const getQuizIcon = () => {
     switch (quizType) {
@@ -177,6 +274,10 @@ export function VaultFocusQuizDialog({
     if (quizType === 'morning') {
       data.hours_slept = hoursSlept || undefined;
       data.sleep_quality = sleepQuality;
+      // Elite morning check-in fields
+      data.daily_motivation = dailyMotivation || undefined;
+      data.daily_intentions = dailyIntentions || undefined;
+      data.discipline_level = disciplineLevel;
     }
 
     const result = await onSubmit(data);
@@ -193,6 +294,9 @@ export function VaultFocusQuizDialog({
       setMotivation('');
       setHoursSlept('');
       setSleepQuality(3);
+      setDailyMotivation('');
+      setDailyIntentions('');
+      setDisciplineLevel(3);
       onOpenChange(false);
     }
   };
@@ -208,7 +312,10 @@ export function VaultFocusQuizDialog({
             <div>
               <DialogTitle className="text-xl sm:text-2xl font-bold">{getQuizTitle()}</DialogTitle>
               <DialogDescription className="text-sm mt-1">
-                {t('vault.quiz.description')}
+                {quizType === 'morning' 
+                  ? t('vault.quiz.morning.subtitle')
+                  : t('vault.quiz.description')
+                }
               </DialogDescription>
             </div>
           </div>
@@ -256,6 +363,60 @@ export function VaultFocusQuizDialog({
                 label={t('vault.quiz.sleepQuality')}
                 icon={<Moon className="h-5 w-5 text-indigo-500" />}
                 getLevelLabel={getLevelLabel}
+              />
+            </div>
+          )}
+
+          {/* Morning Quiz - Elite Check-in Section */}
+          {quizType === 'morning' && (
+            <div className="space-y-4 pt-2">
+              {/* Daily Motivation */}
+              <div className="space-y-3 p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl border border-orange-500/20">
+                <div className="flex items-center gap-2">
+                  <Flame className="h-5 w-5 text-orange-500" />
+                  <Label className="text-base font-bold">{t('vault.quiz.morning.motivationTitle')}</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('vault.quiz.morning.motivationPrompt')}
+                </p>
+                <Textarea
+                  value={dailyMotivation}
+                  onChange={(e) => setDailyMotivation(e.target.value)}
+                  placeholder={t('vault.quiz.morning.motivationPlaceholder')}
+                  className="min-h-[80px] resize-none bg-background/50"
+                  maxLength={500}
+                />
+                <div className="text-xs text-muted-foreground text-right">
+                  {dailyMotivation.length}/500
+                </div>
+              </div>
+
+              {/* Daily Intentions */}
+              <div className="space-y-3 p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/20">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-blue-500" />
+                  <Label className="text-base font-bold">{t('vault.quiz.morning.intentionsTitle')}</Label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('vault.quiz.morning.intentionsPrompt')}
+                </p>
+                <Textarea
+                  value={dailyIntentions}
+                  onChange={(e) => setDailyIntentions(e.target.value)}
+                  placeholder={t('vault.quiz.morning.intentionsPlaceholder')}
+                  className="min-h-[100px] resize-none bg-background/50"
+                  maxLength={500}
+                />
+                <div className="text-xs text-muted-foreground text-right">
+                  {dailyIntentions.length}/500
+                </div>
+              </div>
+
+              {/* Draw to Discipline */}
+              <DisciplineRating
+                value={disciplineLevel}
+                onChange={setDisciplineLevel}
+                t={t}
               />
             </div>
           )}

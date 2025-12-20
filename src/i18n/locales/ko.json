@@ -3076,7 +3076,28 @@
         "motivation": "무엇이 동기를 부여하나요?"
       },
       "submit": "체크인 저장",
-      "submitting": "저장 중..."
+      "submitting": "저장 중...",
+      "morning": {
+        "subtitle": "의도를 설정하세요. 마음을 준비하세요. 실행하세요.",
+        "motivationTitle": "오늘의 동기",
+        "motivationPrompt": "오늘 당신을 움직이게 하는 것은 무엇인가요? '왜'에 연결하세요.",
+        "motivationPlaceholder": "나를 동기부여하는 것은... 오늘 노력하는 이유는...",
+        "intentionsTitle": "오늘의 의도",
+        "intentionsPrompt": "오늘 무엇을 성취할 것인가요? 명확하고 실행 가능한 목표를 세우세요.",
+        "intentionsPlaceholder": "오늘 나는...\n1. \n2. \n3. ",
+        "disciplineTitle": "규율 수준",
+        "disciplinePrompt": "무슨 일이 있어도 오늘 실행할 의지가 얼마나 있나요?",
+        "disciplineLevel1": "고군분투",
+        "disciplineLevel2": "흔들림",
+        "disciplineLevel3": "준비됨",
+        "disciplineLevel4": "집중",
+        "disciplineLevel5": "불굴",
+        "disciplineDesc1": "오늘은 동기가 없음",
+        "disciplineDesc2": "약간의 저항",
+        "disciplineDesc3": "나타날 준비됨",
+        "disciplineDesc4": "변명 없음, 방해 없음",
+        "disciplineDesc5": "아무것도 나를 막을 수 없다. 타협 제로."
+      }
     },
     "freeNote": {
       "title": "빠른 메모",

@@ -3883,7 +3883,28 @@
         "motivation": "¿Qué me motiva?"
       },
       "submit": "Guardar Chequeo",
-      "submitting": "Guardando..."
+      "submitting": "Guardando...",
+      "morning": {
+        "subtitle": "Establece tus intenciones. Prepara tu mente. Ejecuta.",
+        "motivationTitle": "Motivación Diaria",
+        "motivationPrompt": "¿Qué te impulsa hoy? Conecta con tu 'por qué'.",
+        "motivationPlaceholder": "Me motiva... Mi razón para esforzarme hoy es...",
+        "intentionsTitle": "Intenciones Diarias",
+        "intentionsPrompt": "¿Qué lograrás hoy? Establece metas claras y accionables.",
+        "intentionsPlaceholder": "Hoy voy a...\n1. \n2. \n3. ",
+        "disciplineTitle": "Nivel de Disciplina",
+        "disciplinePrompt": "¿Qué tan comprometido estás a ejecutar hoy, sin importar qué?",
+        "disciplineLevel1": "Luchando",
+        "disciplineLevel2": "Vacilando",
+        "disciplineLevel3": "Listo",
+        "disciplineLevel4": "Enfocado",
+        "disciplineLevel5": "Inquebrantable",
+        "disciplineDesc1": "No lo siento hoy",
+        "disciplineDesc2": "Algo de resistencia",
+        "disciplineDesc3": "Comprometido a aparecer",
+        "disciplineDesc4": "Sin excusas, sin distracciones",
+        "disciplineDesc5": "Nada me detiene. Cero compromiso."
+      }
     },
     "freeNote": {
       "title": "Nota Rápida",

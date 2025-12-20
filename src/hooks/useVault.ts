@@ -50,6 +50,10 @@ export interface VaultFocusQuiz {
   wake_time?: string;
   hours_slept?: number;
   sleep_quality?: number;
+  // Elite morning check-in fields
+  daily_motivation?: string;
+  daily_intentions?: string;
+  discipline_level?: number;
   created_at: string;
 }
 
@@ -432,6 +436,10 @@ export function useVault() {
       reflection_motivation?: string;
       hours_slept?: number;
       sleep_quality?: number;
+      // Elite morning check-in fields
+      daily_motivation?: string;
+      daily_intentions?: string;
+      discipline_level?: number;
     }
   ) => {
     if (!user) return { success: false, error: 'Not authenticated' };
@@ -470,6 +478,10 @@ export function useVault() {
           sleep_quality: data.sleep_quality,
           sleep_time: sleepTime,
           wake_time: wakeTime,
+          // Elite morning check-in fields
+          daily_motivation: data.daily_motivation,
+          daily_intentions: data.daily_intentions,
+          discipline_level: data.discipline_level,
         }, {
           onConflict: 'user_id,entry_date,quiz_type',
         });
