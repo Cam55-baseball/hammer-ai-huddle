@@ -1667,6 +1667,42 @@ export type Database = {
         }
         Relationships: []
       }
+      vault_wellness_goals: {
+        Row: {
+          created_at: string | null
+          id: string
+          notification_enabled: boolean | null
+          target_discipline_level: number | null
+          target_mood_level: number | null
+          target_stress_level: number | null
+          updated_at: string | null
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notification_enabled?: boolean | null
+          target_discipline_level?: number | null
+          target_mood_level?: number | null
+          target_stress_level?: number | null
+          updated_at?: string | null
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notification_enabled?: boolean | null
+          target_discipline_level?: number | null
+          target_mood_level?: number | null
+          target_stress_level?: number | null
+          updated_at?: string | null
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       vault_workout_notes: {
         Row: {
           created_at: string | null
