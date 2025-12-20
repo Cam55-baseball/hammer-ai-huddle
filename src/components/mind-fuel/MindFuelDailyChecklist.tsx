@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Sparkles, Crown, ChevronRight } from 'lucide-react';
+import { Check, Sparkles, Crown, ChevronRight, GraduationCap, Brain, BookOpen, Moon, Shield } from 'lucide-react';
 import { useMindFuelDailyTasks, DailyTask, TaskId } from '@/hooks/useMindFuelDailyTasks';
+import { useMindFuelEducationProgress, EducationType } from '@/hooks/useMindFuelEducationProgress';
 import { cn } from '@/lib/utils';
 import { WellnessModule } from './wellness-hub/WellnessHubNav';
 import { useEffect, useState } from 'react';
@@ -13,6 +14,20 @@ interface MindFuelDailyChecklistProps {
   onScrollToChallenge?: () => void;
 }
 
+const EDUCATION_ICONS: Record<EducationType, typeof Brain> = {
+  basics: Brain,
+  topics: BookOpen,
+  sleep: Moon,
+  boundaries: Shield,
+};
+
+const EDUCATION_COLORS: Record<EducationType, { bg: string; border: string; text: string }> = {
+  basics: { bg: 'bg-cyan-500/20', border: 'border-cyan-500/50', text: 'text-cyan-400' },
+  topics: { bg: 'bg-indigo-500/20', border: 'border-indigo-500/50', text: 'text-indigo-400' },
+  sleep: { bg: 'bg-purple-500/20', border: 'border-purple-500/50', text: 'text-purple-400' },
+  boundaries: { bg: 'bg-teal-500/20', border: 'border-teal-500/50', text: 'text-teal-400' },
+};
+
 export default function MindFuelDailyChecklist({
   onModuleChange,
   onScrollToLesson,
@@ -20,7 +35,11 @@ export default function MindFuelDailyChecklist({
 }: MindFuelDailyChecklistProps) {
   const { t } = useTranslation();
   const { tasks, loading, toggleTask, completedCount, totalCount, progress, allComplete } = useMindFuelDailyTasks();
+  const { getEducationItems, totalEducationProgress, loading: educationLoading } = useMindFuelEducationProgress();
   const [showConfetti, setShowConfetti] = useState(false);
+
+  const educationItems = getEducationItems();
+  const { completed: eduCompleted, total: eduTotal, allComplete: eduAllComplete } = totalEducationProgress();
 
   useEffect(() => {
     if (allComplete && !loading) {
@@ -43,6 +62,10 @@ export default function MindFuelDailyChecklist({
   const handleToggle = async (e: React.MouseEvent, taskId: TaskId) => {
     e.stopPropagation();
     await toggleTask(taskId);
+  };
+
+  const handleEducationClick = (type: EducationType) => {
+    onModuleChange('education');
   };
 
   const getTaskColorClasses = (task: DailyTask) => {
@@ -247,6 +270,89 @@ export default function MindFuelDailyChecklist({
             <Sparkles className="h-3 w-3 text-violet-400 animate-pulse" />
           </div>
         )}
+
+        {/* Learning Journey Section */}
+        <div className="pt-4 border-t border-violet-500/20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30">
+              <GraduationCap className="h-5 w-5 text-cyan-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-base font-bold text-primary-foreground">
+                {t('mindFuel.dailyChecklist.learningJourney.title', 'Learning Journey')}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {t('mindFuel.dailyChecklist.learningJourney.subtitle', 'Your path to mental wellness mastery')}
+              </p>
+            </div>
+            {eduAllComplete ? (
+              <span className="px-2 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-xs font-bold text-cyan-400">
+                {t('mindFuel.dailyChecklist.learningJourney.allComplete', 'Wellness Scholar!')}
+              </span>
+            ) : (
+              <span className="text-xs text-cyan-400/70 font-medium">
+                {eduCompleted}/{eduTotal}
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            {educationItems.map((item) => {
+              const Icon = EDUCATION_ICONS[item.type];
+              const colors = EDUCATION_COLORS[item.type];
+              const isComplete = item.completedItems >= item.totalItems;
+
+              return (
+                <div
+                  key={item.id}
+                  className={cn(
+                    "group flex items-center gap-3 p-3 rounded-lg transition-all cursor-pointer",
+                    "border",
+                    isComplete
+                      ? "bg-cyan-500/10 border-cyan-500/30"
+                      : `${colors.bg} ${colors.border} hover:scale-[1.005]`
+                  )}
+                  onClick={() => handleEducationClick(item.type)}
+                >
+                  <div className={cn(
+                    "flex-shrink-0 p-2 rounded-lg",
+                    isComplete ? "bg-cyan-500/30" : `${colors.bg}`
+                  )}>
+                    <Icon className={cn("h-4 w-4", isComplete ? "text-cyan-400" : colors.text)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className={cn(
+                      "text-sm font-semibold",
+                      isComplete ? "text-cyan-400" : "text-primary-foreground"
+                    )}>
+                      {t(item.titleKey)}
+                    </h4>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {t(item.descriptionKey)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "text-xs font-medium px-1.5 py-0.5 rounded",
+                      isComplete ? "bg-cyan-500/20 text-cyan-400" : `${colors.bg} ${colors.text}`
+                    )}>
+                      {item.completedItems}/{item.totalItems}
+                    </span>
+                    {isComplete && <Check className="h-4 w-4 text-cyan-400" />}
+                  </div>
+                  <ChevronRight className={cn(
+                    "h-4 w-4 transition-all opacity-0 group-hover:opacity-100",
+                    isComplete ? "text-cyan-400" : colors.text
+                  )} />
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-center text-xs text-muted-foreground/60 mt-3">
+            {t('mindFuel.dailyChecklist.learningJourney.encouragement', 'Keep learning at your own pace')}
+          </p>
+        </div>
       </CardContent>
 
       {/* Animations */}

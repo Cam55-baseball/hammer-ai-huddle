@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Frown, Zap, Flame, ChevronRight, X, BookOpen } from 'lucide-react';
+import { AlertCircle, Frown, Zap, Flame, ChevronRight, X, BookOpen, Check } from 'lucide-react';
+import { useMindFuelEducationProgress } from '@/hooks/useMindFuelEducationProgress';
 
 interface Topic {
   id: string;
@@ -113,6 +114,15 @@ const topics: Topic[] = [
 export default function TopicCards() {
   const { t } = useTranslation();
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const { markAsComplete, isItemComplete } = useMindFuelEducationProgress();
+
+  const handleTopicSelect = async (topic: Topic) => {
+    setSelectedTopic(topic);
+    // Mark as complete when user views a topic
+    if (!isItemComplete('topics', topic.id)) {
+      await markAsComplete('topics', topic.id);
+    }
+  };
 
   if (selectedTopic) {
     const Icon = selectedTopic.icon;
@@ -192,19 +202,23 @@ export default function TopicCards() {
       <div className="grid gap-3 sm:grid-cols-2">
         {topics.map((topic) => {
           const Icon = topic.icon;
+          const completed = isItemComplete('topics', topic.id);
           return (
             <Card
               key={topic.id}
-              className="cursor-pointer hover:shadow-md transition-all"
-              onClick={() => setSelectedTopic(topic)}
+              className={`cursor-pointer hover:shadow-md transition-all ${completed ? 'border-green-500/30' : ''}`}
+              onClick={() => handleTopicSelect(topic)}
             >
               <CardContent className="pt-4">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-${topic.color}/20`}>
-                    <Icon className={`h-5 w-5 text-${topic.color}`} />
+                  <div className={`p-2 rounded-lg ${completed ? 'bg-green-500/20' : `bg-${topic.color}/20`}`}>
+                    <Icon className={`h-5 w-5 ${completed ? 'text-green-500' : `text-${topic.color}`}`} />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-sm">{topic.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-sm">{topic.title}</h3>
+                      {completed && <Check className="h-3 w-3 text-green-500" />}
+                    </div>
                     <p className="text-xs text-muted-foreground line-clamp-1">{topic.summary}</p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />

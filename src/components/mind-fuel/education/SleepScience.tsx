@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Moon, Sun, Clock, Brain, Zap, Check, AlertTriangle } from 'lucide-react';
-
-interface SleepTip {
+import { useMindFuelEducationProgress } from '@/hooks/useMindFuelEducationProgress';
   id: string;
   title: string;
   description: string;
@@ -51,9 +50,24 @@ const sleepFacts = [
   'Poor sleep increases stress hormones and inflammation',
 ];
 
+interface SleepTip {
+  id: string;
+  title: string;
+  description: string;
+  icon: typeof Moon;
+}
+
 export default function SleepScience() {
   const { t } = useTranslation();
   const [activeTip, setActiveTip] = useState<string | null>(null);
+  const { markAsComplete, isItemComplete } = useMindFuelEducationProgress();
+
+  // Mark sleep section as complete when component mounts
+  useEffect(() => {
+    if (!isItemComplete('sleep', 'sleep-science')) {
+      markAsComplete('sleep', 'sleep-science');
+    }
+  }, [markAsComplete, isItemComplete]);
 
   return (
     <div className="space-y-4">
