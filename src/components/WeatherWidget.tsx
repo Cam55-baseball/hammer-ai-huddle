@@ -11,7 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { HourlyForecastSection } from "@/components/weather/HourlyForecastSection";
 import { SunTimeline } from "@/components/weather/SunTimeline";
 import { GameDayPrep } from "@/components/weather/GameDayPrep";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Trash2, Pencil, Check, X } from "lucide-react";
 
 interface SportAnalysis {
   sport: string;
@@ -121,6 +122,9 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
   const [favorites, setFavorites] = useState<FavoriteLocation[]>([]);
   const [expandedAlerts, setExpandedAlerts] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [showFavoritesPanel, setShowFavoritesPanel] = useState(false);
+  const [editingFavoriteId, setEditingFavoriteId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
   const { toast } = useToast();
 
   // Check if current location is already a favorite
@@ -305,6 +309,42 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
     }
   };
 
+  const handleRenameFavorite = async (favId: string, newName: string) => {
+    if (!newName.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('weather_favorite_locations')
+        .update({ location_name: newName.trim() })
+        .eq('id', favId);
+      
+      if (error) throw error;
+      
+      setFavorites(favorites.map(f => 
+        f.id === favId ? { ...f, location_name: newName.trim() } : f
+      ));
+      setEditingFavoriteId(null);
+      setEditingName("");
+      toast({ title: t('weather.favorites.nameUpdated') });
+    } catch (err: any) {
+      toast({
+        title: t('common.error'),
+        description: err.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startEditing = (fav: FavoriteLocation) => {
+    setEditingFavoriteId(fav.id);
+    setEditingName(fav.location_name);
+  };
+
+  const cancelEditing = () => {
+    setEditingFavoriteId(null);
+    setEditingName("");
+  };
+
   const toggleAlertExpanded = (alertEvent: string) => {
     setExpandedAlerts(prev => 
       prev.includes(alertEvent) 
@@ -482,23 +522,123 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             </Button>
           )}
           
-          {/* Favorites Dropdown */}
+          {/* Favorites Management Panel */}
           {favorites.length > 0 && (
-            <Select onValueChange={handleSelectFavorite}>
-              <SelectTrigger className="w-[140px] rounded-lg">
-                <SelectValue placeholder={t('weather.favorites.selectFavorite')} />
-              </SelectTrigger>
-              <SelectContent>
-                {favorites.map((fav) => (
-                  <SelectItem key={fav.id} value={fav.id}>
-                    <div className="flex items-center gap-2">
-                      {fav.is_default && <Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
-                      <span className="truncate max-w-[100px]">{fav.location_name.split(',')[0]}</span>
+            <Popover open={showFavoritesPanel} onOpenChange={setShowFavoritesPanel}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="rounded-lg gap-2">
+                  <Star className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t('weather.favorites.selectFavorite')}</span>
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="p-3 border-b border-border">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Star className="h-4 w-4 text-amber-500" />
+                    {t('weather.favorites.manage')}
+                  </h4>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {favorites.map((fav) => (
+                    <div 
+                      key={fav.id} 
+                      className="p-3 border-b border-border/50 last:border-0 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        {editingFavoriteId === fav.id ? (
+                          <div className="flex items-center gap-2 flex-1">
+                            <input
+                              type="text"
+                              value={editingName}
+                              onChange={(e) => setEditingName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleRenameFavorite(fav.id, editingName);
+                                if (e.key === 'Escape') cancelEditing();
+                              }}
+                              className="flex-1 px-2 py-1 text-sm border border-border rounded bg-background"
+                              autoFocus
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => handleRenameFavorite(fav.id, editingName)}
+                            >
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={cancelEditing}
+                            >
+                              <X className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => {
+                                handleSelectFavorite(fav.id);
+                                setShowFavoritesPanel(false);
+                              }}
+                              className="flex items-center gap-2 flex-1 text-left hover:text-primary transition-colors"
+                            >
+                              {fav.is_default ? (
+                                <Star className="h-4 w-4 fill-amber-400 text-amber-400 shrink-0" />
+                              ) : (
+                                <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">{fav.location_name.split(',')[0]}</p>
+                                {fav.is_default && (
+                                  <p className="text-xs text-muted-foreground">{t('weather.favorites.default')}</p>
+                                )}
+                              </div>
+                            </button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => handleSetDefault(fav.id)}
+                                title={t('weather.favorites.setDefault')}
+                              >
+                                <Star className={`h-3.5 w-3.5 ${fav.is_default ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}`} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => startEditing(fav)}
+                                title={t('weather.favorites.rename')}
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 hover:text-destructive"
+                                onClick={() => handleRemoveFavorite(fav.id)}
+                                title={t('weather.favorites.delete')}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  ))}
+                </div>
+                {favorites.length === 0 && (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    {t('weather.favorites.noFavorites')}
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       </div>
