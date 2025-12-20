@@ -221,6 +221,10 @@ export function VaultFocusQuizDialog({
   const [learned, setLearned] = useState('');
   const [motivation, setMotivation] = useState('');
   
+  // Night quiz mood and stress
+  const [nightMoodLevel, setNightMoodLevel] = useState(3);
+  const [nightStressLevel, setNightStressLevel] = useState(3);
+  
   // Morning quiz sleep tracking
   const [hoursSlept, setHoursSlept] = useState<number | ''>('');
   const [sleepQuality, setSleepQuality] = useState(3);
@@ -273,6 +277,8 @@ export function VaultFocusQuizDialog({
       data.reflection_improve = couldImprove || undefined;
       data.reflection_learned = learned || undefined;
       data.reflection_motivation = motivation || undefined;
+      data.mood_level = nightMoodLevel;
+      data.stress_level = nightStressLevel;
     }
 
     if (quizType === 'morning') {
@@ -298,6 +304,8 @@ export function VaultFocusQuizDialog({
       setCouldImprove('');
       setLearned('');
       setMotivation('');
+      setNightMoodLevel(3);
+      setNightStressLevel(3);
       setHoursSlept('');
       setSleepQuality(3);
       setDailyMotivation('');
@@ -651,10 +659,131 @@ export function VaultFocusQuizDialog({
             getLevelLabel={getLevelLabel}
           />
 
-          {/* Night Quiz Reflections */}
+          {/* Night Quiz Mood & Stress + Reflections */}
           {quizType === 'night' && (
             <div className="space-y-4 pt-6 mt-6 border-t border-border">
-              <h4 className="text-base font-bold flex items-center gap-2">
+              {/* Night Mood Rating */}
+              <div className="space-y-4 p-4 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-xl border border-yellow-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-yellow-500/20">
+                    <Smile className="h-5 w-5 text-yellow-500" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-bold text-foreground">
+                      {t('vault.quiz.night.moodTitle')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('vault.quiz.night.moodPrompt')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map((level) => {
+                    const isSelected = nightMoodLevel === level;
+                    const emojis = ['😔', '😕', '😐', '🙂', '😄'];
+                    const colors = [
+                      'from-red-500 to-red-600',
+                      'from-orange-500 to-orange-600',
+                      'from-amber-500 to-amber-600',
+                      'from-lime-500 to-lime-600',
+                      'from-green-500 to-green-600',
+                    ];
+                    return (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => {
+                          if (navigator.vibrate) navigator.vibrate(10);
+                          setNightMoodLevel(level);
+                        }}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-300 border-2",
+                          isSelected 
+                            ? `bg-gradient-to-br ${colors[level - 1]} text-white border-transparent shadow-lg scale-105` 
+                            : "bg-background/50 text-muted-foreground border-border/50 hover:border-border opacity-60 hover:opacity-80"
+                        )}
+                      >
+                        <span className="text-xl">{emojis[level - 1]}</span>
+                        <span className="text-xs font-bold mt-1">{level}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {nightMoodLevel > 0 && (
+                  <div className="text-center p-2 rounded-lg bg-background/50">
+                    <p className={cn(
+                      "font-bold text-sm",
+                      nightMoodLevel <= 2 ? "text-red-500" : nightMoodLevel === 3 ? "text-amber-500" : "text-green-500"
+                    )}>
+                      {t(`vault.quiz.night.moodLevel${nightMoodLevel}`)}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Night Stress Rating */}
+              <div className="space-y-4 p-4 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-xl border border-purple-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-purple-500/20">
+                    <AlertTriangle className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-bold text-foreground">
+                      {t('vault.quiz.night.stressTitle')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('vault.quiz.night.stressPrompt')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map((level) => {
+                    const isSelected = nightStressLevel === level;
+                    const colors = [
+                      'from-green-500 to-green-600',
+                      'from-lime-500 to-lime-600',
+                      'from-amber-500 to-amber-600',
+                      'from-orange-500 to-orange-600',
+                      'from-red-500 to-red-600',
+                    ];
+                    return (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => {
+                          if (navigator.vibrate) navigator.vibrate(10);
+                          setNightStressLevel(level);
+                        }}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-300 border-2",
+                          isSelected 
+                            ? `bg-gradient-to-br ${colors[level - 1]} text-white border-transparent shadow-lg scale-105` 
+                            : "bg-background/50 text-muted-foreground border-border/50 hover:border-border opacity-60 hover:opacity-80"
+                        )}
+                      >
+                        <span className="text-xl font-black">{level}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {nightStressLevel > 0 && (
+                  <div className="text-center p-2 rounded-lg bg-background/50">
+                    <p className={cn(
+                      "font-bold text-sm",
+                      nightStressLevel <= 2 ? "text-green-500" : nightStressLevel === 3 ? "text-amber-500" : "text-red-500"
+                    )}>
+                      {t(`vault.quiz.night.stressLevel${nightStressLevel}`)}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Reflections Section */}
+              <h4 className="text-base font-bold flex items-center gap-2 pt-4">
                 <Sparkles className="h-5 w-5 text-primary" />
                 {t('vault.quiz.reflectionTitle')}
               </h4>

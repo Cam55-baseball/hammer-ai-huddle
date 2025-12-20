@@ -39,9 +39,14 @@ import { VaultWeeklySummary } from '@/components/vault/VaultWeeklySummary';
 import { VaultNutritionWeeklySummary } from '@/components/vault/VaultNutritionWeeklySummary';
 import { VaultDisciplineTrendCard } from '@/components/vault/VaultDisciplineTrendCard';
 import { VaultMentalWellnessTrendCard } from '@/components/vault/VaultMentalWellnessTrendCard';
+import { VaultCorrelationAnalysisCard } from '@/components/vault/VaultCorrelationAnalysisCard';
+import { VaultWellnessGoalsCard, checkWellnessGoalsAndNotify } from '@/components/vault/VaultWellnessGoalsCard';
+
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Vault() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const {
@@ -239,6 +244,13 @@ export default function Vault() {
     if (result.success) {
       toast.success(t('vault.quiz.saved'));
       
+      // Check wellness goals and notify if off track (only for morning quiz)
+      if (selectedQuizType === 'morning' && user) {
+        setTimeout(() => {
+          checkWellnessGoalsAndNotify(user.id, t);
+        }, 1000);
+      }
+      
       // Check if this completes all 3 quizzes (was 2 before, now 3)
       if (quizzesBeforeSave === 2) {
         setTimeout(() => {
@@ -387,6 +399,12 @@ export default function Vault() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <VaultDisciplineTrendCard isLoading={loading} />
                 <VaultMentalWellnessTrendCard isLoading={loading} />
+              </div>
+
+              {/* Correlation Analysis & Wellness Goals */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <VaultCorrelationAnalysisCard />
+                <VaultWellnessGoalsCard />
               </div>
 
               {/* Daily Check-In Container */}
