@@ -3848,10 +3848,10 @@
       "todayStatus": "Vérifications d'Aujourd'hui",
       "preLift": "Pré-Entraînement",
       "preLiftTitle": "Vérification Pré-Entraînement",
-      "morning": "Matin",
+      "morningLabel": "Matin",
       "morningTitle": "Vérification du Matin",
       "morningTip": "Essayez de compléter dans les 15 minutes après le réveil",
-      "night": "Nuit",
+      "nightLabel": "Nuit",
       "nightTitle": "Réflexion du Soir",
       "completed": "Terminé",
       "notStarted": "Non Commencé",
@@ -3934,6 +3934,22 @@
         "disciplineDesc3": "Engagé à me présenter",
         "disciplineDesc4": "Pas d'excuses, pas de distractions",
         "disciplineDesc5": "Rien ne m'arrête. Zéro compromis."
+      },
+      "nightReflection": {
+        "moodTitle": "Humeur de Fin de Journée",
+        "moodPrompt": "Comment s'est terminée votre humeur aujourd'hui?",
+        "moodLevel1": "Très Basse",
+        "moodLevel2": "Basse",
+        "moodLevel3": "Neutre",
+        "moodLevel4": "Bonne",
+        "moodLevel5": "Excellente",
+        "stressTitle": "Stress de Fin de Journée",
+        "stressPrompt": "À quel point étiez-vous stressé en fin de journée?",
+        "stressLevel1": "Très Faible",
+        "stressLevel2": "Faible",
+        "stressLevel3": "Modéré",
+        "stressLevel4": "Élevé",
+        "stressLevel5": "Très Élevé"
       }
     },
     "disciplineTrend": {
@@ -4001,24 +4017,6 @@
       "stressAlertDesc": "Vos niveaux de stress sont au-dessus de l'objectif",
       "disciplineAlert": "Alerte Discipline",
       "disciplineAlertDesc": "Votre discipline tend en dessous de l'objectif"
-    },
-    "quiz": {
-      "night": {
-        "moodTitle": "Humeur de Fin de Journée",
-        "moodPrompt": "Comment s'est terminée votre humeur aujourd'hui?",
-        "moodLevel1": "Très Basse",
-        "moodLevel2": "Basse",
-        "moodLevel3": "Neutre",
-        "moodLevel4": "Bonne",
-        "moodLevel5": "Excellente",
-        "stressTitle": "Stress de Fin de Journée",
-        "stressPrompt": "À quel point étiez-vous stressé en fin de journée?",
-        "stressLevel1": "Très Faible",
-        "stressLevel2": "Faible",
-        "stressLevel3": "Modéré",
-        "stressLevel4": "Élevé",
-        "stressLevel5": "Très Élevé"
-      }
     },
     "freeNote": {
       "title": "Note Rapide",

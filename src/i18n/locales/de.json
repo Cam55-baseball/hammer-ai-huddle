@@ -3848,10 +3848,10 @@
       "todayStatus": "Heutige Check-ins",
       "preLift": "Vor dem Training",
       "preLiftTitle": "Check-in vor dem Training",
-      "morning": "Morgen",
+      "morningLabel": "Morgen",
       "morningTitle": "Morgen Check-in",
       "morningTip": "Versuche innerhalb von 15 Minuten nach dem Aufwachen abzuschließen",
-      "night": "Nacht",
+      "nightLabel": "Nacht",
       "nightTitle": "Abendreflexion",
       "completed": "Abgeschlossen",
       "notStarted": "Nicht Gestartet",
@@ -3934,6 +3934,22 @@
         "disciplineDesc3": "Verpflichtet zu erscheinen",
         "disciplineDesc4": "Keine Ausreden, keine Ablenkungen",
         "disciplineDesc5": "Nichts hält mich auf. Null Kompromisse."
+      },
+      "nightReflection": {
+        "moodTitle": "Stimmung am Tagesende",
+        "moodPrompt": "Wie war deine Stimmung am Ende des Tages?",
+        "moodLevel1": "Sehr Niedrig",
+        "moodLevel2": "Niedrig",
+        "moodLevel3": "Neutral",
+        "moodLevel4": "Gut",
+        "moodLevel5": "Sehr Gut",
+        "stressTitle": "Stress am Tagesende",
+        "stressPrompt": "Wie gestresst warst du am Ende des Tages?",
+        "stressLevel1": "Sehr Niedrig",
+        "stressLevel2": "Niedrig",
+        "stressLevel3": "Mäßig",
+        "stressLevel4": "Hoch",
+        "stressLevel5": "Sehr Hoch"
       }
     },
     "disciplineTrend": {
@@ -4001,24 +4017,6 @@
       "stressAlertDesc": "Deine Stresslevel liegen über dem Ziel",
       "disciplineAlert": "Disziplin-Warnung",
       "disciplineAlertDesc": "Deine Disziplin tendiert unter dem Ziel"
-    },
-    "quiz": {
-      "night": {
-        "moodTitle": "Stimmung am Tagesende",
-        "moodPrompt": "Wie war deine Stimmung am Ende des Tages?",
-        "moodLevel1": "Sehr Niedrig",
-        "moodLevel2": "Niedrig",
-        "moodLevel3": "Neutral",
-        "moodLevel4": "Gut",
-        "moodLevel5": "Sehr Gut",
-        "stressTitle": "Stress am Tagesende",
-        "stressPrompt": "Wie gestresst warst du am Ende des Tages?",
-        "stressLevel1": "Sehr Niedrig",
-        "stressLevel2": "Niedrig",
-        "stressLevel3": "Mäßig",
-        "stressLevel4": "Hoch",
-        "stressLevel5": "Sehr Hoch"
-      }
     },
     "freeNote": {
       "title": "Schnelle Notiz",
