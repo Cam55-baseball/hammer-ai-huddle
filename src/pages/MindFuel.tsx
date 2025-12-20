@@ -18,6 +18,10 @@ import WellnessDisclaimer from '@/components/mind-fuel/shared/WellnessDisclaimer
 import EmotionalAwarenessHome from '@/components/mind-fuel/emotional-awareness/EmotionalAwarenessHome';
 import StressManagementHome from '@/components/mind-fuel/stress-management/StressManagementHome';
 import MindfulnessHome from '@/components/mind-fuel/mindfulness/MindfulnessHome';
+import CognitiveSkillsHome from '@/components/mind-fuel/cognitive-skills/CognitiveSkillsHome';
+import ResilienceHome from '@/components/mind-fuel/resilience/ResilienceHome';
+import HealingHome from '@/components/mind-fuel/healing/HealingHome';
+import EducationHome from '@/components/mind-fuel/education/EducationHome';
 import { Loader2 } from 'lucide-react';
 
 interface StreakData {
@@ -159,6 +163,14 @@ export default function MindFuel() {
           <StressManagementHome />
         ) : activeWellnessModule === 'mindfulness' ? (
           <MindfulnessHome />
+        ) : activeWellnessModule === 'cognitive-skills' ? (
+          <CognitiveSkillsHome />
+        ) : activeWellnessModule === 'resilience' ? (
+          <ResilienceHome />
+        ) : activeWellnessModule === 'healing' ? (
+          <HealingHome />
+        ) : activeWellnessModule === 'education' ? (
+          <EducationHome />
         ) : (
           <>
             {/* Default Mind Fuel Content */}
