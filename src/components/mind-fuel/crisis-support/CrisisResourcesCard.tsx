@@ -51,15 +51,6 @@ const crisisResources: CrisisResource[] = [
     available: '24/7',
     region: 'us',
   },
-  {
-    id: 'trevor',
-    name: 'The Trevor Project',
-    description: 'Crisis support for LGBTQ+ young people',
-    contact: '1-866-488-7386',
-    contactType: 'phone',
-    available: '24/7',
-    region: 'us',
-  },
   // International Resources
   {
     id: 'befrienders',
@@ -126,6 +117,9 @@ export default function CrisisResourcesCard() {
   const handleContact = (resource: CrisisResource) => {
     if (resource.contactType === 'phone') {
       window.location.href = `tel:${resource.contact.replace(/[^0-9]/g, '')}`;
+    } else if (resource.contactType === 'text') {
+      // Crisis Text Line - opens SMS app with number and pre-filled keyword
+      window.location.href = 'sms:741741?body=MLB';
     } else if (resource.contactType === 'website') {
       window.open(`https://${resource.contact}`, '_blank');
     }
