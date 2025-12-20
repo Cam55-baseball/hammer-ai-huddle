@@ -4513,6 +4513,11 @@
         "title": "Establecer Autocalificaciones de Lanzamiento",
         "description": "Califica tus habilidades de lanzamiento en la escala 20-80",
         "badge": "12 SEM"
+      },
+      "wellnessGoals": {
+        "title": "Establecer Metas de Bienestar Semanal",
+        "description": "Define tus objetivos de ánimo, estrés y disciplina",
+        "badge": "Semanal"
       }
     },
     "recapCountdown": {
@@ -4520,6 +4525,33 @@
       "days": "DÍAS",
       "daysRemaining": "{{days}} días restantes"
     }
+  },
+  "weeklyWellnessQuiz": {
+    "title": "Metas de Bienestar Semanal",
+    "subtitle": "Establece tus objetivos de rendimiento mental para esta semana",
+    "step1Title": "Objetivo de Ánimo",
+    "step1Description": "¿Qué nivel de ánimo quieres mantener esta semana?",
+    "step2Title": "Límite de Estrés",
+    "step2Description": "¿Cuál es tu nivel máximo aceptable de estrés?",
+    "step3Title": "Meta de Disciplina",
+    "step3Description": "Establece tu objetivo de nivel de compromiso",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "complete": "Fijar Metas",
+    "completing": "Guardando...",
+    "successTitle": "¡Metas Establecidas! 🎯",
+    "successMessage": "Tus objetivos de bienestar semanal están fijados. ¡Te ayudaremos a mantenerte en el camino!",
+    "successToast": "¡Metas de bienestar semanal guardadas!",
+    "errorToast": "Error al guardar las metas",
+    "mood": "Ánimo",
+    "stress": "Estrés",
+    "discipline": "Disciplina",
+    "target": "Objetivo",
+    "actual": "Real",
+    "lastWeekResults": "Resultados de la Semana Pasada",
+    "metGoal": "¡Meta Lograda!",
+    "missedGoal": "¡Sigue esforzándote!",
+    "firstWeekMessage": "¡Esta es tu primera semana! Establece metas base para seguir tu progreso."
   },
   "scoutGamePlan": {
     "title": "REVISIÓN DE SCOUTING",
