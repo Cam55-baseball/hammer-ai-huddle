@@ -4083,7 +4083,7 @@
       "morningLabel": "Morning",
       "morningTitle": "Morning Check-in",
       "morningTip": "Try to complete within 15 minutes of waking up",
-      "night": "Night",
+      "nightLabel": "Night",
       "nightTitle": "Night Reflection",
       "completed": "Completed",
       "notStarted": "Not Started",
@@ -4182,6 +4182,22 @@
         "disciplineDesc3": "Committed to show up",
         "disciplineDesc4": "No excuses, no distractions",
         "disciplineDesc5": "Nothing stops me. Zero compromise."
+      },
+      "nightReflection": {
+        "moodTitle": "End-of-Day Mood",
+        "moodPrompt": "How did your mood end up today?",
+        "moodLevel1": "Very Low",
+        "moodLevel2": "Low",
+        "moodLevel3": "Neutral",
+        "moodLevel4": "Good",
+        "moodLevel5": "Great",
+        "stressTitle": "End-of-Day Stress",
+        "stressPrompt": "How stressed were you by the end of the day?",
+        "stressLevel1": "Very Low",
+        "stressLevel2": "Low",
+        "stressLevel3": "Moderate",
+        "stressLevel4": "High",
+        "stressLevel5": "Very High"
       }
     },
     "disciplineTrend": {
@@ -4249,24 +4265,6 @@
       "stressAlertDesc": "Your stress levels are above target",
       "disciplineAlert": "Discipline Alert",
       "disciplineAlertDesc": "Your discipline is trending below goal"
-    },
-    "quiz": {
-      "night": {
-        "moodTitle": "End-of-Day Mood",
-        "moodPrompt": "How did your mood end up today?",
-        "moodLevel1": "Very Low",
-        "moodLevel2": "Low",
-        "moodLevel3": "Neutral",
-        "moodLevel4": "Good",
-        "moodLevel5": "Great",
-        "stressTitle": "End-of-Day Stress",
-        "stressPrompt": "How stressed were you by the end of the day?",
-        "stressLevel1": "Very Low",
-        "stressLevel2": "Low",
-        "stressLevel3": "Moderate",
-        "stressLevel4": "High",
-        "stressLevel5": "Very High"
-      }
     },
     "freeNote": {
       "title": "Quick Note",

@@ -670,10 +670,10 @@ export function VaultFocusQuizDialog({
                   </div>
                   <div>
                     <Label className="text-base font-bold text-foreground">
-                      {t('vault.quiz.night.moodTitle')}
+                      {t('vault.quiz.nightReflection.moodTitle')}
                     </Label>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {t('vault.quiz.night.moodPrompt')}
+                      {t('vault.quiz.nightReflection.moodPrompt')}
                     </p>
                   </div>
                 </div>
@@ -717,7 +717,7 @@ export function VaultFocusQuizDialog({
                       "font-bold text-sm",
                       nightMoodLevel <= 2 ? "text-red-500" : nightMoodLevel === 3 ? "text-amber-500" : "text-green-500"
                     )}>
-                      {t(`vault.quiz.night.moodLevel${nightMoodLevel}`)}
+                      {t(`vault.quiz.nightReflection.moodLevel${nightMoodLevel}`)}
                     </p>
                   </div>
                 )}
@@ -731,10 +731,10 @@ export function VaultFocusQuizDialog({
                   </div>
                   <div>
                     <Label className="text-base font-bold text-foreground">
-                      {t('vault.quiz.night.stressTitle')}
+                      {t('vault.quiz.nightReflection.stressTitle')}
                     </Label>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {t('vault.quiz.night.stressPrompt')}
+                      {t('vault.quiz.nightReflection.stressPrompt')}
                     </p>
                   </div>
                 </div>
@@ -776,7 +776,7 @@ export function VaultFocusQuizDialog({
                       "font-bold text-sm",
                       nightStressLevel <= 2 ? "text-green-500" : nightStressLevel === 3 ? "text-amber-500" : "text-red-500"
                     )}>
-                      {t(`vault.quiz.night.stressLevel${nightStressLevel}`)}
+                      {t(`vault.quiz.nightReflection.stressLevel${nightStressLevel}`)}
                     </p>
                   </div>
                 )}

@@ -3826,10 +3826,10 @@
       "todayStatus": "Chequeos de Hoy",
       "preLift": "Pre-Entrenamiento",
       "preLiftTitle": "Chequeo Pre-Entrenamiento",
-      "morning": "Mañana",
+      "morningLabel": "Mañana",
       "morningTitle": "Chequeo Matutino",
       "morningTip": "Intenta completar dentro de 15 minutos de despertar",
-      "night": "Noche",
+      "nightLabel": "Noche",
       "nightTitle": "Reflexión Nocturna",
       "completed": "Completado",
       "notStarted": "No Iniciado",
@@ -3912,6 +3912,22 @@
         "disciplineDesc3": "Comprometido a aparecer",
         "disciplineDesc4": "Sin excusas, sin distracciones",
         "disciplineDesc5": "Nada me detiene. Cero compromiso."
+      },
+      "nightReflection": {
+        "moodTitle": "Ánimo del Fin del Día",
+        "moodPrompt": "¿Cómo terminó tu ánimo hoy?",
+        "moodLevel1": "Muy Bajo",
+        "moodLevel2": "Bajo",
+        "moodLevel3": "Neutral",
+        "moodLevel4": "Bueno",
+        "moodLevel5": "Excelente",
+        "stressTitle": "Estrés del Fin del Día",
+        "stressPrompt": "¿Qué tan estresado estabas al final del día?",
+        "stressLevel1": "Muy Bajo",
+        "stressLevel2": "Bajo",
+        "stressLevel3": "Moderado",
+        "stressLevel4": "Alto",
+        "stressLevel5": "Muy Alto"
       }
     },
     "disciplineTrend": {
@@ -3979,24 +3995,6 @@
       "stressAlertDesc": "Tus niveles de estrés están por encima del objetivo",
       "disciplineAlert": "Alerta de Disciplina",
       "disciplineAlertDesc": "Tu disciplina está tendiendo por debajo del objetivo"
-    },
-    "quiz": {
-      "night": {
-        "moodTitle": "Ánimo del Fin del Día",
-        "moodPrompt": "¿Cómo terminó tu ánimo hoy?",
-        "moodLevel1": "Muy Bajo",
-        "moodLevel2": "Bajo",
-        "moodLevel3": "Neutral",
-        "moodLevel4": "Bueno",
-        "moodLevel5": "Excelente",
-        "stressTitle": "Estrés del Fin del Día",
-        "stressPrompt": "¿Qué tan estresado estabas al final del día?",
-        "stressLevel1": "Muy Bajo",
-        "stressLevel2": "Bajo",
-        "stressLevel3": "Moderado",
-        "stressLevel4": "Alto",
-        "stressLevel5": "Muy Alto"
-      }
     },
     "freeNote": {
       "title": "Nota Rápida",
