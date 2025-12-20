@@ -54,6 +54,8 @@ export interface VaultFocusQuiz {
   daily_motivation?: string;
   daily_intentions?: string;
   discipline_level?: number;
+  mood_level?: number;
+  stress_level?: number;
   created_at: string;
 }
 
@@ -440,6 +442,8 @@ export function useVault() {
       daily_motivation?: string;
       daily_intentions?: string;
       discipline_level?: number;
+      mood_level?: number;
+      stress_level?: number;
     }
   ) => {
     if (!user) return { success: false, error: 'Not authenticated' };
@@ -482,6 +486,8 @@ export function useVault() {
           daily_motivation: data.daily_motivation,
           daily_intentions: data.daily_intentions,
           discipline_level: data.discipline_level,
+          mood_level: data.mood_level,
+          stress_level: data.stress_level,
         }, {
           onConflict: 'user_id,entry_date,quiz_type',
         });

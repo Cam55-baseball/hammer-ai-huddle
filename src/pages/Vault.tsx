@@ -37,6 +37,7 @@ import { VaultScoutGradesCard } from '@/components/vault/VaultScoutGradesCard';
 import { VaultHistoryTab } from '@/components/vault/VaultHistoryTab';
 import { VaultWeeklySummary } from '@/components/vault/VaultWeeklySummary';
 import { VaultNutritionWeeklySummary } from '@/components/vault/VaultNutritionWeeklySummary';
+import { VaultDisciplineTrendCard } from '@/components/vault/VaultDisciplineTrendCard';
 
 export default function Vault() {
   const { t } = useTranslation();
@@ -381,6 +382,9 @@ export default function Vault() {
                 isLoading={loading} 
               />
 
+              {/* Weekly Discipline Trend Card */}
+              <VaultDisciplineTrendCard isLoading={loading} />
+
               {/* Daily Check-In Container */}
               <div className="rounded-xl border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-background p-4 sm:p-6 space-y-4">
                 {/* Section Header */}
@@ -417,7 +421,7 @@ export default function Vault() {
                         }`}
                       >
                         <Sun className={`h-5 w-5 ${hasCompletedQuiz('morning') ? 'text-amber-500' : 'text-muted-foreground'}`} />
-                        <span className="text-xs mt-1 font-medium">{t('vault.quiz.morning')}</span>
+                        <span className="text-xs mt-1 font-medium">{t('vault.quiz.morningLabel')}</span>
                         {hasCompletedQuiz('morning') ? (
                           <CheckCircle className="h-4 w-4 text-green-500 mt-1" />
                         ) : (

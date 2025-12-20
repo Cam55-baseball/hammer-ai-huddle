@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone, Flame, Target, Sword } from 'lucide-react';
+import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone, Flame, Target, Sword, Smile, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VaultFocusQuizDialogProps {
@@ -33,6 +33,8 @@ interface VaultFocusQuizDialogProps {
     daily_motivation?: string;
     daily_intentions?: string;
     discipline_level?: number;
+    mood_level?: number;
+    stress_level?: number;
   }) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -227,6 +229,8 @@ export function VaultFocusQuizDialog({
   const [dailyMotivation, setDailyMotivation] = useState('');
   const [dailyIntentions, setDailyIntentions] = useState('');
   const [disciplineLevel, setDisciplineLevel] = useState(3);
+  const [moodLevel, setMoodLevel] = useState(3);
+  const [stressLevel, setStressLevel] = useState(3);
 
   const getQuizIcon = () => {
     switch (quizType) {
@@ -278,6 +282,8 @@ export function VaultFocusQuizDialog({
       data.daily_motivation = dailyMotivation || undefined;
       data.daily_intentions = dailyIntentions || undefined;
       data.discipline_level = disciplineLevel;
+      data.mood_level = moodLevel;
+      data.stress_level = stressLevel;
     }
 
     const result = await onSubmit(data);
@@ -297,6 +303,8 @@ export function VaultFocusQuizDialog({
       setDailyMotivation('');
       setDailyIntentions('');
       setDisciplineLevel(3);
+      setMoodLevel(3);
+      setStressLevel(3);
       onOpenChange(false);
     }
   };
@@ -391,25 +399,152 @@ export function VaultFocusQuizDialog({
                 </div>
               </div>
 
-              {/* Daily Intentions */}
-              <div className="space-y-3 p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/20">
+              {/* Mental Wellness Check (renamed from Daily Intentions) */}
+              <div className="space-y-3 p-4 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-xl border border-emerald-500/20">
                 <div className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-blue-500" />
-                  <Label className="text-base font-bold">{t('vault.quiz.morning.intentionsTitle')}</Label>
+                  <Heart className="h-5 w-5 text-emerald-500" />
+                  <Label className="text-base font-bold">{t('vault.quiz.morning.wellnessTitle')}</Label>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {t('vault.quiz.morning.intentionsPrompt')}
+                  {t('vault.quiz.morning.wellnessPrompt')}
                 </p>
                 <Textarea
                   value={dailyIntentions}
                   onChange={(e) => setDailyIntentions(e.target.value)}
-                  placeholder={t('vault.quiz.morning.intentionsPlaceholder')}
+                  placeholder={t('vault.quiz.morning.wellnessPlaceholder')}
                   className="min-h-[100px] resize-none bg-background/50"
                   maxLength={500}
                 />
                 <div className="text-xs text-muted-foreground text-right">
                   {dailyIntentions.length}/500
                 </div>
+              </div>
+
+              {/* Mood Rating */}
+              <div className="space-y-4 p-4 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-xl border border-yellow-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-yellow-500/20">
+                    <Smile className="h-5 w-5 text-yellow-500" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-bold text-foreground">
+                      {t('vault.quiz.morning.moodTitle')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('vault.quiz.morning.moodPrompt')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map((level) => {
+                    const isSelected = moodLevel === level;
+                    const emojis = ['😔', '😕', '😐', '🙂', '😄'];
+                    const colors = [
+                      'from-red-500 to-red-600',
+                      'from-orange-500 to-orange-600',
+                      'from-amber-500 to-amber-600',
+                      'from-lime-500 to-lime-600',
+                      'from-green-500 to-green-600',
+                    ];
+                    return (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => {
+                          if (navigator.vibrate) navigator.vibrate(10);
+                          setMoodLevel(level);
+                        }}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-300 border-2",
+                          isSelected 
+                            ? `bg-gradient-to-br ${colors[level - 1]} text-white border-transparent shadow-lg scale-105` 
+                            : "bg-background/50 text-muted-foreground border-border/50 hover:border-border opacity-60 hover:opacity-80"
+                        )}
+                      >
+                        <span className="text-xl">{emojis[level - 1]}</span>
+                        <span className="text-xs font-bold mt-1">{level}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {moodLevel > 0 && (
+                  <div className="text-center p-2 rounded-lg bg-background/50">
+                    <p className={cn(
+                      "font-bold text-sm",
+                      moodLevel <= 2 ? "text-red-500" : moodLevel === 3 ? "text-amber-500" : "text-green-500"
+                    )}>
+                      {t(`vault.quiz.morning.moodLevel${moodLevel}`)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t(`vault.quiz.morning.moodDesc${moodLevel}`)}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Stress Rating */}
+              <div className="space-y-4 p-4 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-xl border border-purple-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-purple-500/20">
+                    <AlertTriangle className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-bold text-foreground">
+                      {t('vault.quiz.morning.stressTitle')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('vault.quiz.morning.stressPrompt')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map((level) => {
+                    const isSelected = stressLevel === level;
+                    // Stress colors are inverted (green is low stress = good)
+                    const colors = [
+                      'from-green-500 to-green-600',
+                      'from-lime-500 to-lime-600',
+                      'from-amber-500 to-amber-600',
+                      'from-orange-500 to-orange-600',
+                      'from-red-500 to-red-600',
+                    ];
+                    return (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => {
+                          if (navigator.vibrate) navigator.vibrate(10);
+                          setStressLevel(level);
+                        }}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-300 border-2",
+                          isSelected 
+                            ? `bg-gradient-to-br ${colors[level - 1]} text-white border-transparent shadow-lg scale-105` 
+                            : "bg-background/50 text-muted-foreground border-border/50 hover:border-border opacity-60 hover:opacity-80"
+                        )}
+                      >
+                        <span className="text-xl font-black">{level}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {stressLevel > 0 && (
+                  <div className="text-center p-2 rounded-lg bg-background/50">
+                    <p className={cn(
+                      "font-bold text-sm",
+                      stressLevel <= 2 ? "text-green-500" : stressLevel === 3 ? "text-amber-500" : "text-red-500"
+                    )}>
+                      {t(`vault.quiz.morning.stressLevel${stressLevel}`)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t(`vault.quiz.morning.stressDesc${stressLevel}`)}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Draw to Discipline */}
