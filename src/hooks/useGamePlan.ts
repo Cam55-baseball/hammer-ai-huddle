@@ -12,9 +12,10 @@ export interface GamePlanTask {
   icon: LucideIcon;
   link: string;
   module?: 'hitting' | 'pitching' | 'throwing';
-  taskType: 'workout' | 'video' | 'nutrition' | 'quiz' | 'tracking';
+  taskType: 'workout' | 'video' | 'nutrition' | 'quiz' | 'tracking' | 'mental-fuel';
   section: 'checkin' | 'training' | 'tracking';
   badge?: string;
+  specialStyle?: 'mental-fuel-plus';
 }
 
 export interface GamePlanData {
@@ -38,6 +39,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [recapProgress, setRecapProgress] = useState(0);
   const [trackingDue, setTrackingDue] = useState<Record<string, boolean>>({});
   const [isStrengthDay, setIsStrengthDay] = useState(false);
+  const [mentalFuelPlusComplete, setMentalFuelPlusComplete] = useState(false);
 
   // Parse subscribed modules to determine access
   const hasHittingAccess = subscribedModules.some(m => m.includes('hitting'));
@@ -224,6 +226,64 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       
       status['healthtip'] = (healthTipData?.length || 0) > 0;
 
+      // Check Mental Fuel+ completion (all 5 daily tasks)
+      const { data: mentalFuelTasks } = await supabase
+        .from('mind_fuel_daily_tasks')
+        .select('task_id')
+        .eq('user_id', user.id)
+        .eq('task_date', today);
+
+      // Also check auto-completion sources
+      let mentalFuelCompleted = 0;
+      
+      // Check lesson
+      const { data: lessonCheck } = await supabase
+        .from('user_viewed_lessons')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('viewed_at', `${today}T00:00:00`)
+        .limit(1);
+      if (lessonCheck?.length || mentalFuelTasks?.some(t => t.task_id === 'daily_lesson')) mentalFuelCompleted++;
+
+      // Check mindfulness
+      const { data: mindfulnessCheck } = await supabase
+        .from('mindfulness_sessions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('session_date', today)
+        .limit(1);
+      if (mindfulnessCheck?.length || mentalFuelTasks?.some(t => t.task_id === 'mindfulness')) mentalFuelCompleted++;
+
+      // Check journal
+      const { data: journalCheck } = await supabase
+        .from('mental_health_journal')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('created_at', `${today}T00:00:00`)
+        .limit(1);
+      if (journalCheck?.length || mentalFuelTasks?.some(t => t.task_id === 'journal')) mentalFuelCompleted++;
+
+      // Check emotion tracking
+      const { data: emotionCheck } = await supabase
+        .from('emotion_tracking')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('entry_date', today)
+        .limit(1);
+      if (emotionCheck?.length || mentalFuelTasks?.some(t => t.task_id === 'emotion_checkin')) mentalFuelCompleted++;
+
+      // Check weekly challenge
+      const { data: challengeCheck } = await supabase
+        .from('mind_fuel_challenges')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('last_checkin_at', `${today}T00:00:00`)
+        .limit(1);
+      if (challengeCheck?.length || mentalFuelTasks?.some(t => t.task_id === 'weekly_challenge')) mentalFuelCompleted++;
+
+      status['mental-fuel-plus'] = mentalFuelCompleted >= 5;
+      setMentalFuelPlusComplete(mentalFuelCompleted >= 5);
+
       // Check 6-week tracking: Performance Tests
       const { data: perfTestData } = await supabase
         .from('vault_performance_tests')
@@ -397,6 +457,20 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       link: '/nutrition',
       taskType: 'quiz',
       section: 'checkin',
+    });
+
+    // Mental Fuel+ task - comprehensive mental training checklist
+    tasks.push({
+      id: 'mental-fuel-plus',
+      titleKey: 'gamePlan.mentalFuelPlus.title',
+      descriptionKey: 'gamePlan.mentalFuelPlus.description',
+      completed: completionStatus['mental-fuel-plus'] || mentalFuelPlusComplete,
+      icon: Sparkles,
+      link: '/mind-fuel?section=checklist',
+      taskType: 'mental-fuel',
+      section: 'checkin',
+      badge: 'gamePlan.mentalFuelPlus.badge',
+      specialStyle: 'mental-fuel-plus',
     });
   }
 

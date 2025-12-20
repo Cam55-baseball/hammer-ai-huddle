@@ -97,6 +97,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const Icon = task.icon;
     const isIncomplete = !task.completed;
     const isTracking = task.section === 'tracking';
+    const isMentalFuelPlus = task.specialStyle === 'mental-fuel-plus';
     
     return (
       <div
@@ -106,9 +107,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           "border-2",
           task.completed
             ? "bg-green-500/20 border-green-500/50"
-            : isTracking
-              ? "bg-purple-500/10 border-purple-500/60 game-plan-pulse-purple"
-              : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
+            : isMentalFuelPlus
+              ? "bg-gradient-to-r from-violet-500/20 via-purple-500/15 to-fuchsia-500/20 border-violet-500/60 game-plan-pulse-violet"
+              : isTracking
+                ? "bg-purple-500/10 border-purple-500/60 game-plan-pulse-purple"
+                : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
         )}
       >
         {/* Clickable main area */}
@@ -121,13 +124,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
             task.completed 
               ? "bg-green-500" 
-              : isTracking
-                ? "bg-purple-500"
-                : "bg-amber-500"
+              : isMentalFuelPlus
+                ? "bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/30"
+                : isTracking
+                  ? "bg-purple-500"
+                  : "bg-amber-500"
           )}>
             <Icon className={cn(
               "h-5 w-5 sm:h-6 sm:w-6",
-              task.completed ? "text-white" : isTracking ? "text-white" : "text-secondary"
+              task.completed ? "text-white" : isMentalFuelPlus ? "text-white" : isTracking ? "text-white" : "text-secondary"
             )} />
           </div>
           
@@ -138,14 +143,20 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 "text-sm sm:text-base truncate",
                 task.completed 
                   ? "font-semibold text-muted-foreground line-through" 
-                  : "font-black text-primary-foreground"
+                  : isMentalFuelPlus
+                    ? "font-black text-violet-300"
+                    : "font-black text-primary-foreground"
               )}>
                 {t(task.titleKey)}
               </h3>
               {task.badge && !task.completed && (
                 <span className={cn(
                   "flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider",
-                  isTracking ? "bg-purple-500/30 text-purple-300" : "bg-amber-500/30 text-amber-300"
+                  isMentalFuelPlus 
+                    ? "bg-violet-500/30 text-violet-300 border border-violet-400/30"
+                    : isTracking 
+                      ? "bg-purple-500/30 text-purple-300" 
+                      : "bg-amber-500/30 text-amber-300"
                 )}>
                   {t(task.badge)}
                 </span>
@@ -153,7 +164,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             </div>
             <p className={cn(
               "text-xs sm:text-sm truncate",
-              task.completed ? "text-muted-foreground/60" : "text-muted-foreground"
+              task.completed ? "text-muted-foreground/60" : isMentalFuelPlus ? "text-violet-300/70" : "text-muted-foreground"
             )}>
               {t(task.descriptionKey)}
             </p>
@@ -165,16 +176,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           "flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center",
           task.completed
             ? "bg-green-500 text-white"
-            : isTracking
-              ? "border-3 border-dashed border-purple-500/70"
-              : "border-3 border-dashed border-amber-500/70"
+            : isMentalFuelPlus
+              ? "border-3 border-dashed border-violet-500/70"
+              : isTracking
+                ? "border-3 border-dashed border-purple-500/70"
+                : "border-3 border-dashed border-amber-500/70"
         )}>
           {task.completed ? (
             <Check className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
             <Zap className={cn(
               "h-3 w-3 sm:h-4 sm:w-4 animate-pulse",
-              isTracking ? "text-purple-500" : "text-amber-500"
+              isMentalFuelPlus ? "text-violet-400" : isTracking ? "text-purple-500" : "text-amber-500"
             )} />
           )}
         </div>
@@ -183,13 +196,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {isIncomplete && (
           <div className={cn(
             "hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border",
-            isTracking 
-              ? "bg-purple-500/20 border-purple-500/40" 
-              : "bg-amber-500/20 border-amber-500/40"
+            isMentalFuelPlus
+              ? "bg-violet-500/20 border-violet-500/40"
+              : isTracking 
+                ? "bg-purple-500/20 border-purple-500/40" 
+                : "bg-amber-500/20 border-amber-500/40"
           )}>
             <span className={cn(
               "text-[10px] font-black uppercase tracking-wider",
-              isTracking ? "text-purple-400" : "text-amber-400"
+              isMentalFuelPlus ? "text-violet-400" : isTracking ? "text-purple-400" : "text-amber-400"
             )}>
               {t('gamePlan.doIt')}
             </span>
@@ -414,6 +429,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         }
         .game-plan-pulse-purple {
           animation: game-plan-pulse-purple 2s ease-in-out infinite;
+        }
+        @keyframes game-plan-pulse-violet {
+          0%, 100% { 
+            box-shadow: 0 0 0 0 hsl(258 90% 66% / 0.5);
+          }
+          50% { 
+            box-shadow: 0 0 0 6px hsl(258 90% 66% / 0.15);
+          }
+        }
+        .game-plan-pulse-violet {
+          animation: game-plan-pulse-violet 2s ease-in-out infinite;
         }
       `}</style>
     </Card>
