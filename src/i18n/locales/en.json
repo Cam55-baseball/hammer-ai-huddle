@@ -2837,8 +2837,44 @@
       "text": "Mind Fuel provides mental performance education for athletes. This is not therapy or medical advice. Some information may be AI-generated. Consult a licensed professional for mental health concerns."
     },
     "loading": "Loading your mind fuel...",
-    "error": "Failed to load lesson. Please try again."
+    "error": "Failed to load lesson. Please try again.",
+    "dailyChecklist": {
+      "title": "Mental Fuel+",
+      "subtitle": "Your daily mental training checklist",
+      "allComplete": "Champion!",
+      "tasksLabel": "Tasks",
+      "progress": "{{completed}} of {{total}}",
+      "motivation": "Complete all tasks for streak bonus!",
+      "tasks": {
+        "dailyLesson": {
+          "title": "Daily Lesson",
+          "description": "Read today's mental fuel lesson"
+        },
+        "mindfulness": {
+          "title": "Mindfulness Moment",
+          "description": "Complete a breathing or meditation exercise"
+        },
+        "journal": {
+          "title": "Journal Entry",
+          "description": "Write in your mental health journal"
+        },
+        "emotionCheckin": {
+          "title": "Emotion Check-In",
+          "description": "Track your emotional state"
+        },
+        "weeklyChallenge": {
+          "title": "Weekly Challenge",
+          "description": "Check in on your weekly challenge"
+        }
+      }
+    }
   },
+  "gamePlan": {
+    "mentalFuelPlus": {
+      "title": "Complete Mental Fuel+",
+      "description": "Finish your 5 daily mental training tasks",
+      "badge": "5 TASKS"
+    }
   "weeklyChallenge": {
     "title": "Weekly Challenge",
     "completed_short": "completed",

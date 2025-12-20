@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,7 @@ import DailyLessonHero from '@/components/mind-fuel/DailyLessonHero';
 import MindFuelStandards from '@/components/mind-fuel/MindFuelStandards';
 import MindFuelCategories from '@/components/mind-fuel/MindFuelCategories';
 import MindFuelWeeklyChallenge from '@/components/mind-fuel/MindFuelWeeklyChallenge';
+import MindFuelDailyChecklist from '@/components/mind-fuel/MindFuelDailyChecklist';
 import { showBadgeUnlockToast } from '@/components/mind-fuel/MindFuelBadgeUnlockToast';
 import WellnessHubNav, { WellnessModule } from '@/components/mind-fuel/wellness-hub/WellnessHubNav';
 import CrisisResourcesCard from '@/components/mind-fuel/crisis-support/CrisisResourcesCard';
@@ -56,6 +57,7 @@ export default function MindFuel() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [isLoading, setIsLoading] = useState(true);
   const [streakData, setStreakData] = useState<StreakData | null>(null);
@@ -63,6 +65,22 @@ export default function MindFuel() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [currentSport, setCurrentSport] = useState<string>('both');
   const [activeWellnessModule, setActiveWellnessModule] = useState<WellnessModule>('overview');
+
+  // Refs for scrolling
+  const checklistRef = useRef<HTMLDivElement>(null);
+  const lessonRef = useRef<HTMLDivElement>(null);
+  const challengeRef = useRef<HTMLDivElement>(null);
+
+  // Handle URL params for navigation from GamePlan
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section === 'checklist') {
+      setActiveWellnessModule('overview');
+      setTimeout(() => {
+        checklistRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -163,14 +181,28 @@ export default function MindFuel() {
               isLoading={isLoading}
             />
 
-            <DailyLessonHero
-              lesson={currentLesson}
-              stats={stats}
-              isLoading={isLoading}
-              onGetNewLesson={handleGetNewLesson}
-            />
+            {/* Mental Fuel+ Daily Checklist */}
+            <div ref={checklistRef}>
+              <MindFuelDailyChecklist
+                onModuleChange={setActiveWellnessModule}
+                onScrollToLesson={() => lessonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                onScrollToChallenge={() => challengeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+              />
+            </div>
 
-            <MindFuelWeeklyChallenge />
+            <div ref={lessonRef}>
+              <DailyLessonHero
+                lesson={currentLesson}
+                stats={stats}
+                isLoading={isLoading}
+                onGetNewLesson={handleGetNewLesson}
+              />
+            </div>
+
+            <div ref={challengeRef}>
+              <MindFuelWeeklyChallenge />
+            </div>
+            
             <MindFuelStandards />
 
             <MindFuelBadges
