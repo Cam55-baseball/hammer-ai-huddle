@@ -2643,7 +2643,61 @@
       "text": "Carburant Mental fournit une éducation en performance mentale pour les athlètes. Ce n'est pas une thérapie ni un avis médical. Certaines informations peuvent être générées par IA. Consultez un professionnel agréé pour les problèmes de santé mentale."
     },
     "loading": "Chargement de votre carburant mental...",
-    "error": "Échec du chargement de la leçon. Veuillez réessayer."
+    "error": "Échec du chargement de la leçon. Veuillez réessayer.",
+    "dailyChecklist": {
+      "title": "Carburant Mental+",
+      "subtitle": "Votre liste d'entraînement mental quotidien",
+      "allComplete": "Champion!",
+      "tasksLabel": "Tâches",
+      "progress": "{{completed}} sur {{total}}",
+      "motivation": "Complétez toutes les tâches pour un bonus de série!",
+      "tasks": {
+        "dailyLesson": {
+          "title": "Leçon Quotidienne",
+          "description": "Lisez la leçon de carburant mental du jour"
+        },
+        "mindfulness": {
+          "title": "Moment de Pleine Conscience",
+          "description": "Complétez un exercice de respiration ou méditation"
+        },
+        "journal": {
+          "title": "Entrée de Journal",
+          "description": "Écrivez dans votre journal de santé mentale"
+        },
+        "emotionCheckin": {
+          "title": "Check-In Émotionnel",
+          "description": "Suivez votre état émotionnel"
+        },
+        "weeklyChallenge": {
+          "title": "Défi Hebdomadaire",
+          "description": "Enregistrez votre défi hebdomadaire"
+        }
+      },
+      "learningJourney": {
+        "title": "Parcours d'Apprentissage",
+        "subtitle": "Votre chemin vers la maîtrise du bien-être mental",
+        "allComplete": "Érudit du Bien-être!",
+        "encouragement": "Continuez à apprendre à votre rythme",
+        "items": {
+          "basics": {
+            "title": "Bases de la Santé Mentale",
+            "description": "Concepts fondamentaux du bien-être mental"
+          },
+          "topics": {
+            "title": "Comprendre les Sujets",
+            "description": "Anxiété, dépression, TDAH, burnout"
+          },
+          "sleep": {
+            "title": "Science du Sommeil",
+            "description": "Pourquoi le sommeil compte pour la performance"
+          },
+          "boundaries": {
+            "title": "Limites Saines",
+            "description": "Protégez votre énergie mentale"
+          }
+        }
+      }
+    }
   },
   "weeklyChallenge": {
     "title": "Défi Hebdomadaire",

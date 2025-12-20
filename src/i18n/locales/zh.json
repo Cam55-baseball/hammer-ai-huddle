@@ -2049,7 +2049,61 @@
       "text": "心灵燃料为运动员提供心智表现教育。这不是治疗或医疗建议。部分信息可能由AI生成。如有心理健康问题，请咨询持证专业人士。"
     },
     "loading": "正在加载您的心灵燃料...",
-    "error": "加载课程失败。请重试。"
+    "error": "加载课程失败。请重试。",
+    "dailyChecklist": {
+      "title": "心灵燃料+",
+      "subtitle": "每日心理训练清单",
+      "allComplete": "冠军!",
+      "tasksLabel": "任务",
+      "progress": "{{completed}} / {{total}}",
+      "motivation": "完成所有任务获得连续奖励!",
+      "tasks": {
+        "dailyLesson": {
+          "title": "每日课程",
+          "description": "阅读今天的心灵燃料课程"
+        },
+        "mindfulness": {
+          "title": "正念时刻",
+          "description": "完成呼吸或冥想练习"
+        },
+        "journal": {
+          "title": "日记条目",
+          "description": "在心理健康日记中写作"
+        },
+        "emotionCheckin": {
+          "title": "情绪签到",
+          "description": "追踪你的情绪状态"
+        },
+        "weeklyChallenge": {
+          "title": "每周挑战",
+          "description": "签到你的每周挑战"
+        }
+      },
+      "learningJourney": {
+        "title": "学习之旅",
+        "subtitle": "通往心理健康精通的道路",
+        "allComplete": "健康学者!",
+        "encouragement": "按自己的节奏继续学习",
+        "items": {
+          "basics": {
+            "title": "心理健康基础",
+            "description": "心理健康的核心概念"
+          },
+          "topics": {
+            "title": "理解主题",
+            "description": "焦虑、抑郁、多动症、倦怠"
+          },
+          "sleep": {
+            "title": "睡眠科学",
+            "description": "为什么睡眠对表现很重要"
+          },
+          "boundaries": {
+            "title": "健康界限",
+            "description": "保护你的心理能量"
+          }
+        }
+      }
+    }
   },
   "weeklyChallenge": {
     "title": "每周挑战",

@@ -2078,7 +2078,61 @@
       "text": "Geestelijke Brandstof biedt mentale prestatie-educatie voor atleten. Dit is geen therapie of medisch advies. Sommige informatie kan AI-gegenereerd zijn. Raadpleeg een gediplomeerde professional voor zorgen over geestelijke gezondheid."
     },
     "loading": "Je geestelijke brandstof laden...",
-    "error": "Laden van les mislukt. Probeer het opnieuw."
+    "error": "Laden van les mislukt. Probeer het opnieuw.",
+    "dailyChecklist": {
+      "title": "Geestelijke Brandstof+",
+      "subtitle": "Je dagelijkse mentale trainings-checklist",
+      "allComplete": "Kampioen!",
+      "tasksLabel": "Taken",
+      "progress": "{{completed}} van {{total}}",
+      "motivation": "Voltooi alle taken voor streak-bonus!",
+      "tasks": {
+        "dailyLesson": {
+          "title": "Dagelijkse Les",
+          "description": "Lees de geestelijke brandstof les van vandaag"
+        },
+        "mindfulness": {
+          "title": "Mindfulness Moment",
+          "description": "Voltooi een adem- of meditatieoefening"
+        },
+        "journal": {
+          "title": "Dagboek Invoer",
+          "description": "Schrijf in je mentale gezondheidsdagboek"
+        },
+        "emotionCheckin": {
+          "title": "Emotie Check-In",
+          "description": "Volg je emotionele toestand"
+        },
+        "weeklyChallenge": {
+          "title": "Wekelijkse Uitdaging",
+          "description": "Check in op je wekelijkse uitdaging"
+        }
+      },
+      "learningJourney": {
+        "title": "Leerreis",
+        "subtitle": "Je pad naar mentaal welzijn meesterschap",
+        "allComplete": "Welzijns Geleerde!",
+        "encouragement": "Blijf leren op je eigen tempo",
+        "items": {
+          "basics": {
+            "title": "Mentale Gezondheid Basis",
+            "description": "Kernconcepten van mentaal welzijn"
+          },
+          "topics": {
+            "title": "Onderwerpen Begrijpen",
+            "description": "Angst, depressie, ADHD, burn-out"
+          },
+          "sleep": {
+            "title": "Slaapwetenschap",
+            "description": "Waarom slaap belangrijk is voor prestaties"
+          },
+          "boundaries": {
+            "title": "Gezonde Grenzen",
+            "description": "Bescherm je mentale energie"
+          }
+        }
+      }
+    }
   },
   "weeklyChallenge": {
     "title": "Wekelijkse Uitdaging",

@@ -2643,7 +2643,61 @@
       "text": "Geistiger Treibstoff bietet mentale Leistungsbildung für Athleten. Dies ist keine Therapie oder medizinische Beratung. Einige Informationen können KI-generiert sein. Konsultieren Sie einen lizenzierten Fachmann für Fragen zur psychischen Gesundheit."
     },
     "loading": "Laden deines geistigen Treibstoffs...",
-    "error": "Lektion konnte nicht geladen werden. Bitte versuche es erneut."
+    "error": "Lektion konnte nicht geladen werden. Bitte versuche es erneut.",
+    "dailyChecklist": {
+      "title": "Geistiger Treibstoff+",
+      "subtitle": "Deine tägliche mentale Trainings-Checkliste",
+      "allComplete": "Champion!",
+      "tasksLabel": "Aufgaben",
+      "progress": "{{completed}} von {{total}}",
+      "motivation": "Schließe alle Aufgaben für Streak-Bonus ab!",
+      "tasks": {
+        "dailyLesson": {
+          "title": "Tägliche Lektion",
+          "description": "Lies die heutige Geistiger-Treibstoff-Lektion"
+        },
+        "mindfulness": {
+          "title": "Achtsamkeits-Moment",
+          "description": "Führe eine Atem- oder Meditationsübung durch"
+        },
+        "journal": {
+          "title": "Tagebucheintrag",
+          "description": "Schreibe in dein mentales Gesundheitstagebuch"
+        },
+        "emotionCheckin": {
+          "title": "Emotionaler Check-In",
+          "description": "Verfolge deinen emotionalen Zustand"
+        },
+        "weeklyChallenge": {
+          "title": "Wöchentliche Herausforderung",
+          "description": "Melde dich bei deiner wöchentlichen Herausforderung"
+        }
+      },
+      "learningJourney": {
+        "title": "Lernreise",
+        "subtitle": "Dein Weg zur mentalen Wellness-Meisterschaft",
+        "allComplete": "Wellness-Gelehrter!",
+        "encouragement": "Lerne weiter in deinem eigenen Tempo",
+        "items": {
+          "basics": {
+            "title": "Grundlagen der psychischen Gesundheit",
+            "description": "Kernkonzepte des mentalen Wohlbefindens"
+          },
+          "topics": {
+            "title": "Themen Verstehen",
+            "description": "Angst, Depression, ADHS, Burnout"
+          },
+          "sleep": {
+            "title": "Schlafwissenschaft",
+            "description": "Warum Schlaf für Leistung wichtig ist"
+          },
+          "boundaries": {
+            "title": "Gesunde Grenzen",
+            "description": "Schütze deine mentale Energie"
+          }
+        }
+      }
+    }
   },
   "weeklyChallenge": {
     "title": "Wöchentliche Herausforderung",
