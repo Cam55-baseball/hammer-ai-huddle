@@ -3914,6 +3914,28 @@
         "disciplineDesc5": "Nada me detiene. Cero compromiso."
       }
     },
+    "disciplineTrend": {
+      "title": "Tendencia Semanal de Compromiso",
+      "subtitle": "Rastrea tu disciplina durante la semana",
+      "weeklyAvg": "Promedio de Esta Semana",
+      "vsLastWeek": "vs semana pasada",
+      "improving": "Mejorando",
+      "declining": "Declinando",
+      "stable": "Estable",
+      "streak": "días de racha",
+      "noData": "Completa los check-ins matutinos para ver tu tendencia"
+    },
+    "mentalWellnessTrend": {
+      "title": "Bienestar Mental Semanal",
+      "subtitle": "Rastrea tus patrones de ánimo y estrés",
+      "moodAvg": "Promedio de Ánimo",
+      "stressAvg": "Promedio de Estrés",
+      "wellnessScore": "Puntuación de Bienestar",
+      "wellnessHigh": "Buen ánimo, bajo estrés",
+      "wellnessMedium": "Bienestar equilibrado",
+      "wellnessLow": "Necesita atención",
+      "noData": "Completa los check-ins matutinos para ver tu tendencia de bienestar"
+    },
     "freeNote": {
       "title": "Nota Rápida",
       "placeholder": "Escribe un pensamiento o nota rápida para hoy...",

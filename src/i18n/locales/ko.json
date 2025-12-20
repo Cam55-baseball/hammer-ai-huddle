@@ -3107,6 +3107,28 @@
         "disciplineDesc5": "아무것도 나를 막을 수 없다. 타협 제로."
       }
     },
+    "disciplineTrend": {
+      "title": "주간 헌신 동향",
+      "subtitle": "주간 규율 추적",
+      "weeklyAvg": "이번 주 평균",
+      "vsLastWeek": "지난주 대비",
+      "improving": "향상",
+      "declining": "하락",
+      "stable": "안정",
+      "streak": "일 연속",
+      "noData": "트렌드를 보려면 아침 체크인을 완료하세요"
+    },
+    "mentalWellnessTrend": {
+      "title": "주간 정신 건강",
+      "subtitle": "기분과 스트레스 패턴 추적",
+      "moodAvg": "기분 평균",
+      "stressAvg": "스트레스 평균",
+      "wellnessScore": "웰니스 점수",
+      "wellnessHigh": "좋은 기분, 낮은 스트레스",
+      "wellnessMedium": "균형 잡힌 웰니스",
+      "wellnessLow": "주의 필요",
+      "noData": "웰니스 트렌드를 보려면 아침 체크인을 완료하세요"
+    },
     "freeNote": {
       "title": "빠른 메모",
       "placeholder": "오늘의 빠른 생각이나 메모를 작성하세요...",

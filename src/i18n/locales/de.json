@@ -3936,6 +3936,28 @@
         "disciplineDesc5": "Nichts hält mich auf. Null Kompromisse."
       }
     },
+    "disciplineTrend": {
+      "title": "Wöchentlicher Engagement-Trend",
+      "subtitle": "Verfolge deine Disziplin über die Woche",
+      "weeklyAvg": "Wochendurchschnitt",
+      "vsLastWeek": "vs letzte Woche",
+      "improving": "Verbesserung",
+      "declining": "Rückgang",
+      "stable": "Stabil",
+      "streak": "Tage Streak",
+      "noData": "Schließe morgen Check-ins ab, um deinen Trend zu sehen"
+    },
+    "mentalWellnessTrend": {
+      "title": "Wöchentliches Mentales Wohlbefinden",
+      "subtitle": "Verfolge deine Stimmungs- und Stressmuster",
+      "moodAvg": "Stimmungsdurchschnitt",
+      "stressAvg": "Stressdurchschnitt",
+      "wellnessScore": "Wohlbefindens-Score",
+      "wellnessHigh": "Gute Stimmung, niedriger Stress",
+      "wellnessMedium": "Ausgeglichenes Wohlbefinden",
+      "wellnessLow": "Benötigt Aufmerksamkeit",
+      "noData": "Schließe morgen Check-ins ab, um deinen Wohlbefindens-Trend zu sehen"
+    },
     "freeNote": {
       "title": "Schnelle Notiz",
       "placeholder": "Schreibe einen schnellen Gedanken oder eine Notiz für heute...",

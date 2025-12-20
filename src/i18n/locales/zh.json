@@ -3091,6 +3091,28 @@
         "disciplineDesc5": "没有什么能阻止我。零妥协。"
       }
     },
+    "disciplineTrend": {
+      "title": "每周承诺趋势",
+      "subtitle": "追踪您本周的自律表现",
+      "weeklyAvg": "本周平均",
+      "vsLastWeek": "对比上周",
+      "improving": "提升中",
+      "declining": "下降中",
+      "stable": "稳定",
+      "streak": "天连续",
+      "noData": "完成早晨签到以查看您的趋势"
+    },
+    "mentalWellnessTrend": {
+      "title": "每周心理健康",
+      "subtitle": "追踪您的情绪和压力模式",
+      "moodAvg": "情绪平均",
+      "stressAvg": "压力平均",
+      "wellnessScore": "健康分数",
+      "wellnessHigh": "好情绪，低压力",
+      "wellnessMedium": "平衡的健康",
+      "wellnessLow": "需要关注",
+      "noData": "完成早晨签到以查看您的健康趋势"
+    },
     "freeNote": {
       "title": "快速笔记",
       "placeholder": "写下今天的快速想法或笔记...",

@@ -3936,6 +3936,28 @@
         "disciplineDesc5": "Rien ne m'arrête. Zéro compromis."
       }
     },
+    "disciplineTrend": {
+      "title": "Tendance d'Engagement Hebdomadaire",
+      "subtitle": "Suivez votre discipline au cours de la semaine",
+      "weeklyAvg": "Moyenne de la Semaine",
+      "vsLastWeek": "vs semaine dernière",
+      "improving": "En amélioration",
+      "declining": "En déclin",
+      "stable": "Stable",
+      "streak": "jours de série",
+      "noData": "Complétez les check-ins matinaux pour voir votre tendance"
+    },
+    "mentalWellnessTrend": {
+      "title": "Bien-être Mental Hebdomadaire",
+      "subtitle": "Suivez vos schémas d'humeur et de stress",
+      "moodAvg": "Moyenne d'Humeur",
+      "stressAvg": "Moyenne de Stress",
+      "wellnessScore": "Score de Bien-être",
+      "wellnessHigh": "Bonne humeur, faible stress",
+      "wellnessMedium": "Bien-être équilibré",
+      "wellnessLow": "Nécessite attention",
+      "noData": "Complétez les check-ins matinaux pour voir votre tendance de bien-être"
+    },
     "freeNote": {
       "title": "Note Rapide",
       "placeholder": "Écrivez une pensée ou note rapide pour aujourd'hui...",
