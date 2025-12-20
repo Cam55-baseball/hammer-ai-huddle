@@ -3778,5 +3778,20 @@
     "categoryStreak": "연속",
     "categoryActivity": "활동",
     "categoryGrowth": "성장"
+  },
+  "mentalWellness": {
+    "nav": {
+      "overview": "개요",
+      "emotionalAwareness": "감정 인식",
+      "stressManagement": "스트레스 관리",
+      "mindfulness": "마음챙김",
+      "cognitiveSkills": "인지 능력",
+      "resilience": "회복력",
+      "healing": "치유",
+      "education": "교육",
+      "crisis": "위기 지원",
+      "journal": "일기",
+      "insights": "통계"
+    }
   }
 }

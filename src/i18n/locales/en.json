@@ -4772,6 +4772,7 @@
   },
   "mentalWellness": {
     "nav": {
+      "overview": "Overview",
       "emotionalAwareness": "Emotional Awareness",
       "stressManagement": "Stress Management",
       "mindfulness": "Mindfulness",

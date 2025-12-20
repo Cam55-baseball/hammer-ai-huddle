@@ -62,7 +62,7 @@ export default function MindFuel() {
   const [currentLesson, setCurrentLesson] = useState<LessonData | null>(null);
   const [stats, setStats] = useState<StatsData | null>(null);
   const [currentSport, setCurrentSport] = useState<string>('both');
-  const [activeWellnessModule, setActiveWellnessModule] = useState<WellnessModule>('emotional-awareness');
+  const [activeWellnessModule, setActiveWellnessModule] = useState<WellnessModule>('overview');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -154,29 +154,9 @@ export default function MindFuel() {
         />
 
         {/* Wellness Module Content */}
-        {activeWellnessModule === 'crisis' ? (
-          <CrisisResourcesCard />
-        ) : activeWellnessModule === 'journal' ? (
-          <JournalHome />
-        ) : activeWellnessModule === 'emotional-awareness' ? (
-          <EmotionalAwarenessHome />
-        ) : activeWellnessModule === 'stress-management' ? (
-          <StressManagementHome />
-        ) : activeWellnessModule === 'mindfulness' ? (
-          <MindfulnessHome />
-        ) : activeWellnessModule === 'cognitive-skills' ? (
-          <CognitiveSkillsHome />
-        ) : activeWellnessModule === 'resilience' ? (
-          <ResilienceHome />
-        ) : activeWellnessModule === 'healing' ? (
-          <HealingHome />
-        ) : activeWellnessModule === 'education' ? (
-          <EducationHome />
-        ) : activeWellnessModule === 'insights' ? (
-          <InsightsHome />
-        ) : (
+        {activeWellnessModule === 'overview' ? (
           <>
-            {/* Default Mind Fuel Content */}
+            {/* Original Mind Fuel Content */}
             <MindFuelStreakCard
               streak={streakData}
               stats={stats}
@@ -203,7 +183,27 @@ export default function MindFuel() {
               categoriesExplored={streakData?.categoriesExplored || {}}
             />
           </>
-        )}
+        ) : activeWellnessModule === 'crisis' ? (
+          <CrisisResourcesCard />
+        ) : activeWellnessModule === 'journal' ? (
+          <JournalHome />
+        ) : activeWellnessModule === 'emotional-awareness' ? (
+          <EmotionalAwarenessHome />
+        ) : activeWellnessModule === 'stress-management' ? (
+          <StressManagementHome />
+        ) : activeWellnessModule === 'mindfulness' ? (
+          <MindfulnessHome />
+        ) : activeWellnessModule === 'cognitive-skills' ? (
+          <CognitiveSkillsHome />
+        ) : activeWellnessModule === 'resilience' ? (
+          <ResilienceHome />
+        ) : activeWellnessModule === 'healing' ? (
+          <HealingHome />
+        ) : activeWellnessModule === 'education' ? (
+          <EducationHome />
+        ) : activeWellnessModule === 'insights' ? (
+          <InsightsHome />
+        ) : null}
 
         {/* Disclaimer */}
         <WellnessDisclaimer />
