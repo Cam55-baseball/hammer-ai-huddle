@@ -41,6 +41,20 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
+    /* Mental Wellness Calm Colors */
+    --wellness-lavender: 271 80% 76%;
+    --wellness-lavender-foreground: 271 100% 98%;
+    --wellness-sage: 142 55% 73%;
+    --wellness-sage-foreground: 142 40% 20%;
+    --wellness-coral: 32 95% 72%;
+    --wellness-coral-foreground: 32 60% 20%;
+    --wellness-sky: 199 89% 76%;
+    --wellness-sky-foreground: 199 60% 20%;
+    --wellness-cream: 40 33% 96%;
+    --wellness-soft-gray: 220 14% 96%;
+    --wellness-warning: 38 92% 65%;
+    --wellness-warning-foreground: 38 60% 20%;
+
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(0 100% 50%), hsl(0 80% 35%));
     --gradient-athletic: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
@@ -94,6 +108,20 @@ All colors MUST be HSL.
     --border: 0 0% 18%;
     --input: 0 0% 15%;
     --ring: 0 100% 50%;
+
+    /* Mental Wellness Calm Colors - Dark Mode */
+    --wellness-lavender: 271 60% 60%;
+    --wellness-lavender-foreground: 271 100% 98%;
+    --wellness-sage: 142 40% 55%;
+    --wellness-sage-foreground: 142 100% 98%;
+    --wellness-coral: 32 80% 60%;
+    --wellness-coral-foreground: 32 100% 98%;
+    --wellness-sky: 199 70% 60%;
+    --wellness-sky-foreground: 199 100% 98%;
+    --wellness-cream: 40 20% 18%;
+    --wellness-soft-gray: 220 14% 16%;
+    --wellness-warning: 38 80% 55%;
+    --wellness-warning-foreground: 38 100% 98%;
     
     --gradient-hero: linear-gradient(135deg, hsl(0 100% 40%), hsl(0 80% 25%));
     --gradient-athletic: linear-gradient(180deg, hsl(0 0% 8%), hsl(0 0% 10%));

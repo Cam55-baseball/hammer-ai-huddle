@@ -101,6 +101,45 @@ export type Database = {
         }
         Relationships: []
       }
+      emotion_tracking: {
+        Row: {
+          action_taken: string | null
+          created_at: string | null
+          emotion: string
+          entry_date: string | null
+          grounding_technique_used: string | null
+          id: string
+          intensity: number | null
+          trigger_category: string | null
+          trigger_description: string | null
+          user_id: string
+        }
+        Insert: {
+          action_taken?: string | null
+          created_at?: string | null
+          emotion: string
+          entry_date?: string | null
+          grounding_technique_used?: string | null
+          id?: string
+          intensity?: number | null
+          trigger_category?: string | null
+          trigger_description?: string | null
+          user_id: string
+        }
+        Update: {
+          action_taken?: string | null
+          created_at?: string | null
+          emotion?: string
+          entry_date?: string | null
+          grounding_technique_used?: string | null
+          id?: string
+          intensity?: number | null
+          trigger_category?: string | null
+          trigger_description?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       injury_education_content: {
         Row: {
           content_json: Json
@@ -178,6 +217,83 @@ export type Database = {
           sport_relevance?: string[] | null
           symptoms?: string[]
           typical_timeline?: string | null
+        }
+        Relationships: []
+      }
+      mental_health_journal: {
+        Row: {
+          content: string
+          created_at: string | null
+          emotion_tags: string[] | null
+          entry_type: string
+          id: string
+          is_private: boolean | null
+          mood_level: number | null
+          prompt_id: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          emotion_tags?: string[] | null
+          entry_type: string
+          id?: string
+          is_private?: boolean | null
+          mood_level?: number | null
+          prompt_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          emotion_tags?: string[] | null
+          entry_type?: string
+          id?: string
+          is_private?: boolean | null
+          mood_level?: number | null
+          prompt_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mental_health_journal_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "mental_health_prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mental_health_prompts: {
+        Row: {
+          category: string
+          created_at: string | null
+          difficulty_level: string | null
+          id: string
+          is_active: boolean | null
+          prompt_text: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          difficulty_level?: string | null
+          id?: string
+          is_active?: boolean | null
+          prompt_text: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          difficulty_level?: string | null
+          id?: string
+          is_active?: boolean | null
+          prompt_text?: string
         }
         Relationships: []
       }
@@ -306,6 +422,48 @@ export type Database = {
           longest_streak?: number
           total_visits?: number
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mindfulness_sessions: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          duration_seconds: number
+          id: string
+          mood_after: number | null
+          mood_before: number | null
+          notes: string | null
+          session_date: string | null
+          session_type: string
+          technique: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          duration_seconds?: number
+          id?: string
+          mood_after?: number | null
+          mood_before?: number | null
+          notes?: string | null
+          session_date?: string | null
+          session_type: string
+          technique?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          duration_seconds?: number
+          id?: string
+          mood_after?: number | null
+          mood_before?: number | null
+          notes?: string | null
+          session_date?: string | null
+          session_type?: string
+          technique?: string | null
           user_id?: string
         }
         Relationships: []
@@ -715,6 +873,42 @@ export type Database = {
           },
         ]
       }
+      stress_assessments: {
+        Row: {
+          assessment_date: string | null
+          assessment_type: string
+          created_at: string | null
+          id: string
+          recommendations: string[] | null
+          responses: Json | null
+          score: number
+          severity: string | null
+          user_id: string
+        }
+        Insert: {
+          assessment_date?: string | null
+          assessment_type: string
+          created_at?: string | null
+          id?: string
+          recommendations?: string[] | null
+          responses?: Json | null
+          score: number
+          severity?: string | null
+          user_id: string
+        }
+        Update: {
+          assessment_date?: string | null
+          assessment_type?: string
+          created_at?: string | null
+          id?: string
+          recommendations?: string[] | null
+          responses?: Json | null
+          score?: number
+          severity?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       sub_module_progress: {
         Row: {
           created_at: string | null
@@ -840,6 +1034,54 @@ export type Database = {
           stripe_subscription_id?: string | null
           subscribed_modules?: string[] | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      thought_logs: {
+        Row: {
+          automatic_thought: string
+          balanced_thought: string | null
+          cognitive_distortion: string[] | null
+          created_at: string | null
+          emotion_intensity: number | null
+          emotions: string[] | null
+          evidence_against: string | null
+          evidence_for: string | null
+          id: string
+          outcome_emotion: string | null
+          outcome_intensity: number | null
+          situation: string
+          user_id: string
+        }
+        Insert: {
+          automatic_thought: string
+          balanced_thought?: string | null
+          cognitive_distortion?: string[] | null
+          created_at?: string | null
+          emotion_intensity?: number | null
+          emotions?: string[] | null
+          evidence_against?: string | null
+          evidence_for?: string | null
+          id?: string
+          outcome_emotion?: string | null
+          outcome_intensity?: number | null
+          situation: string
+          user_id: string
+        }
+        Update: {
+          automatic_thought?: string
+          balanced_thought?: string | null
+          cognitive_distortion?: string[] | null
+          created_at?: string | null
+          emotion_intensity?: number | null
+          emotions?: string[] | null
+          evidence_against?: string | null
+          evidence_for?: string | null
+          id?: string
+          outcome_emotion?: string | null
+          outcome_intensity?: number | null
+          situation?: string
           user_id?: string
         }
         Relationships: []
@@ -1946,6 +2188,72 @@ export type Database = {
           location_name?: string
           longitude?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      wellness_milestones: {
+        Row: {
+          celebrated: boolean | null
+          id: string
+          milestone_type: string
+          milestone_value: number
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          celebrated?: boolean | null
+          id?: string
+          milestone_type: string
+          milestone_value: number
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          celebrated?: boolean | null
+          id?: string
+          milestone_type?: string
+          milestone_value?: number
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wellness_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          onboarding_completed: boolean | null
+          preferred_intensity: string | null
+          reminder_enabled: boolean | null
+          reminder_time: string | null
+          themes_explored: string[] | null
+          updated_at: string | null
+          user_id: string
+          wellness_goals: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          preferred_intensity?: string | null
+          reminder_enabled?: boolean | null
+          reminder_time?: string | null
+          themes_explored?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          wellness_goals?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          preferred_intensity?: string | null
+          reminder_enabled?: boolean | null
+          reminder_time?: string | null
+          themes_explored?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          wellness_goals?: string[] | null
         }
         Relationships: []
       }
