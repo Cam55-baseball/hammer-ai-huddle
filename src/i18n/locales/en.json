@@ -4783,6 +4783,11 @@
         "title": "Set Pitching Self-Grades",
         "description": "Rate your pitching skills on the 20-80 scale",
         "badge": "12-WEEK"
+      },
+      "wellnessGoals": {
+        "title": "Set Weekly Wellness Goals",
+        "description": "Define your mood, stress & discipline targets",
+        "badge": "WEEKLY"
       }
     },
     "recapCountdown": {
@@ -4790,6 +4795,33 @@
       "days": "DAYS",
       "daysRemaining": "{{days}} days remaining"
     }
+  },
+  "weeklyWellnessQuiz": {
+    "title": "Weekly Wellness Goals",
+    "subtitle": "Set your mental performance targets for this week",
+    "step1Title": "Mood Target",
+    "step1Description": "What mood level do you want to maintain this week?",
+    "step2Title": "Stress Limit",
+    "step2Description": "What's your maximum acceptable stress level?",
+    "step3Title": "Discipline Goal",
+    "step3Description": "Set your commitment level target",
+    "next": "Next",
+    "back": "Back",
+    "complete": "Lock In Goals",
+    "completing": "Saving...",
+    "successTitle": "Goals Set! 🎯",
+    "successMessage": "Your weekly wellness targets are locked in. We'll help you stay on track!",
+    "successToast": "Weekly wellness goals saved!",
+    "errorToast": "Failed to save goals",
+    "mood": "Mood",
+    "stress": "Stress",
+    "discipline": "Discipline",
+    "target": "Target",
+    "actual": "Actual",
+    "lastWeekResults": "Last Week Results",
+    "metGoal": "Goal Met!",
+    "missedGoal": "Keep pushing!",
+    "firstWeekMessage": "This is your first week! Set some baseline goals to track your progress."
   },
   "scoutGamePlan": {
     "title": "SCOUTING REVIEW",

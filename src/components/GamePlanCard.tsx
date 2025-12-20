@@ -8,6 +8,7 @@ import { Check, Target, Clock, Trophy, Zap, Plus } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
+import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizDialog';
 import { useVault } from '@/hooks/useVault';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -23,6 +24,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { saveFocusQuiz } = useVault();
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
+  const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
 
   const today = new Date().toLocaleDateString('en-US', { 
@@ -56,8 +58,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       return;
     }
 
-    // Handle tracking tasks - navigate to vault with section param
+    // Handle tracking tasks - navigate to vault with section param or open dialog
     if (task.taskType === 'tracking') {
+      if (task.id === 'tracking-wellness-goals') {
+        setWellnessQuizOpen(true);
+        return;
+      }
       navigate(task.link);
       return;
     }
@@ -404,6 +410,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onOpenChange={setQuizDialogOpen}
         quizType={activeQuizType}
         onSubmit={handleQuizSubmit}
+      />
+      
+      {/* Weekly Wellness Goals Dialog */}
+      <WeeklyWellnessQuizDialog
+        open={wellnessQuizOpen}
+        onOpenChange={setWellnessQuizOpen}
+        onComplete={refetch}
       />
       
       {/* Pulsing animation for incomplete tasks */}

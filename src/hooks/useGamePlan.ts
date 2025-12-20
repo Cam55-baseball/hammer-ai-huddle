@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon, Lightbulb, Sparkles } from 'lucide-react';
-
+import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon, Lightbulb, Sparkles, Target } from 'lucide-react';
+import { startOfWeek, differenceInDays, format } from 'date-fns';
 export interface GamePlanTask {
   id: string;
   titleKey: string;
@@ -338,6 +338,21 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           !pitchingGradeNextDate || new Date(pitchingGradeNextDate) <= new Date(today);
       }
 
+      // Check weekly wellness goals (show Mon-Wed if not completed this week)
+      const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      const daysSinceWeekStart = differenceInDays(new Date(), weekStart);
+      
+      const { data: wellnessData } = await supabase
+        .from('vault_weekly_wellness_quiz')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('week_start_date', weekStartStr)
+        .maybeSingle();
+      
+      // Show wellness goals task Mon-Wed if not completed
+      tracking['tracking-wellness-goals'] = !wellnessData && daysSinceWeekStart <= 2;
+
       setCompletionStatus(status);
       setTrackingDue(tracking);
 
@@ -601,6 +616,21 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       taskType: 'tracking',
       section: 'tracking',
       badge: 'gamePlan.tracking.pitchingGrades.badge',
+    });
+  }
+
+  // Weekly Wellness Goals (appears Mon-Wed if not completed this week)
+  if (hasAnyModuleAccess && trackingDue['tracking-wellness-goals']) {
+    tasks.push({
+      id: 'tracking-wellness-goals',
+      titleKey: 'gamePlan.tracking.wellnessGoals.title',
+      descriptionKey: 'gamePlan.tracking.wellnessGoals.description',
+      completed: false,
+      icon: Target,
+      link: '/vault?openSection=wellness-goals',
+      taskType: 'tracking',
+      section: 'tracking',
+      badge: 'gamePlan.tracking.wellnessGoals.badge',
     });
   }
 

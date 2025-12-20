@@ -4535,6 +4535,11 @@
         "title": "Pitching-Selbstbewertungen Setzen",
         "description": "Bewerten Sie Ihre Pitching-Fähigkeiten auf der 20-80-Skala",
         "badge": "12 WO"
+      },
+      "wellnessGoals": {
+        "title": "Wöchentliche Wellness-Ziele Setzen",
+        "description": "Definiere deine Stimmungs-, Stress- und Disziplinziele",
+        "badge": "WÖCHENTLICH"
       }
     },
     "recapCountdown": {
@@ -4542,6 +4547,33 @@
       "days": "TAGE",
       "daysRemaining": "{{days}} Tage verbleibend"
     }
+  },
+  "weeklyWellnessQuiz": {
+    "title": "Wöchentliche Wellness-Ziele",
+    "subtitle": "Setze deine mentalen Leistungsziele für diese Woche",
+    "step1Title": "Stimmungsziel",
+    "step1Description": "Welches Stimmungsniveau möchtest du diese Woche halten?",
+    "step2Title": "Stressgrenze",
+    "step2Description": "Was ist dein maximal akzeptables Stressniveau?",
+    "step3Title": "Disziplinziel",
+    "step3Description": "Setze dein Engagement-Level-Ziel",
+    "next": "Weiter",
+    "back": "Zurück",
+    "complete": "Ziele Festlegen",
+    "completing": "Speichern...",
+    "successTitle": "Ziele Gesetzt! 🎯",
+    "successMessage": "Deine wöchentlichen Wellness-Ziele sind festgelegt. Wir helfen dir auf Kurs zu bleiben!",
+    "successToast": "Wöchentliche Wellness-Ziele gespeichert!",
+    "errorToast": "Ziele speichern fehlgeschlagen",
+    "mood": "Stimmung",
+    "stress": "Stress",
+    "discipline": "Disziplin",
+    "target": "Ziel",
+    "actual": "Tatsächlich",
+    "lastWeekResults": "Ergebnisse Letzte Woche",
+    "metGoal": "Ziel Erreicht!",
+    "missedGoal": "Weitermachen!",
+    "firstWeekMessage": "Das ist deine erste Woche! Setze Basisziele um deinen Fortschritt zu verfolgen."
   },
   "scoutGamePlan": {
     "title": "SCOUTING-ÜBERPRÜFUNG",
