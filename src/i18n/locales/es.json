@@ -2621,7 +2621,61 @@
       "text": "Combustible Mental proporciona educación de rendimiento mental para atletas. Esto no es terapia ni consejo médico. Alguna información puede ser generada por IA. Consulte a un profesional licenciado para preocupaciones de salud mental."
     },
     "loading": "Cargando tu combustible mental...",
-    "error": "Error al cargar la lección. Por favor intenta de nuevo."
+    "error": "Error al cargar la lección. Por favor intenta de nuevo.",
+    "dailyChecklist": {
+      "title": "Combustible Mental+",
+      "subtitle": "Tu lista de entrenamiento mental diario",
+      "allComplete": "¡Campeón!",
+      "tasksLabel": "Tareas",
+      "progress": "{{completed}} de {{total}}",
+      "motivation": "¡Completa todas las tareas para bonus de racha!",
+      "tasks": {
+        "dailyLesson": {
+          "title": "Lección Diaria",
+          "description": "Lee la lección de combustible mental de hoy"
+        },
+        "mindfulness": {
+          "title": "Momento de Atención Plena",
+          "description": "Completa un ejercicio de respiración o meditación"
+        },
+        "journal": {
+          "title": "Entrada de Diario",
+          "description": "Escribe en tu diario de salud mental"
+        },
+        "emotionCheckin": {
+          "title": "Check-In Emocional",
+          "description": "Rastrea tu estado emocional"
+        },
+        "weeklyChallenge": {
+          "title": "Desafío Semanal",
+          "description": "Registra tu desafío semanal"
+        }
+      },
+      "learningJourney": {
+        "title": "Viaje de Aprendizaje",
+        "subtitle": "Tu camino hacia el dominio del bienestar mental",
+        "allComplete": "¡Académico del Bienestar!",
+        "encouragement": "Sigue aprendiendo a tu propio ritmo",
+        "items": {
+          "basics": {
+            "title": "Fundamentos de Salud Mental",
+            "description": "Conceptos básicos del bienestar mental"
+          },
+          "topics": {
+            "title": "Entendiendo Temas",
+            "description": "Ansiedad, depresión, TDAH, agotamiento"
+          },
+          "sleep": {
+            "title": "Ciencia del Sueño",
+            "description": "Por qué el sueño importa para el rendimiento"
+          },
+          "boundaries": {
+            "title": "Límites Saludables",
+            "description": "Protege tu energía mental"
+          }
+        }
+      }
+    }
   },
   "weeklyChallenge": {
     "title": "Desafío Semanal",

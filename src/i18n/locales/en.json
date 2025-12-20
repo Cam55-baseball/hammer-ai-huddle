@@ -2866,6 +2866,30 @@
           "title": "Weekly Challenge",
           "description": "Check in on your weekly challenge"
         }
+      },
+      "learningJourney": {
+        "title": "Learning Journey",
+        "subtitle": "Your path to mental wellness mastery",
+        "allComplete": "Wellness Scholar!",
+        "encouragement": "Keep learning at your own pace",
+        "items": {
+          "basics": {
+            "title": "Mental Health Basics",
+            "description": "Core concepts of mental wellness"
+          },
+          "topics": {
+            "title": "Understanding Topics",
+            "description": "Anxiety, depression, ADHD, burnout"
+          },
+          "sleep": {
+            "title": "Sleep Science",
+            "description": "Why sleep matters for performance"
+          },
+          "boundaries": {
+            "title": "Healthy Boundaries",
+            "description": "Protect your mental energy"
+          }
+        }
       }
     }
   },
