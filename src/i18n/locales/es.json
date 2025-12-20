@@ -4430,6 +4430,11 @@
     "tasksCompleted": "{{completed}}/{{total}} completadas",
     "allComplete": "¡LO LOGRASTE!",
     "doIt": "HAZLO",
+    "mentalFuelPlus": {
+      "title": "Completar Mental Fuel+",
+      "description": "Termina tus 5 tareas diarias de entrenamiento mental",
+      "badge": "5 TAREAS"
+    },
     "quickActions": {
       "logMeal": "Registrar Comida"
     },

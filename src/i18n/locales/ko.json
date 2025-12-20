@@ -3020,9 +3020,11 @@
       "preLift": "훈련 전",
       "preLiftTitle": "훈련 전 체크인",
       "morning": "아침",
+      "morningLabel": "아침",
       "morningTitle": "아침 체크인",
       "morningTip": "일어난 후 15분 이내에 완료해 보세요",
       "night": "밤",
+      "nightLabel": "밤",
       "nightTitle": "저녁 반성",
       "completed": "완료됨",
       "notStarted": "시작되지 않음",
@@ -3624,6 +3626,11 @@
     "tasksCompleted": "{{completed}}/{{total}} 완료",
     "allComplete": "해냈어!",
     "doIt": "시작",
+    "mentalFuelPlus": {
+      "title": "Mental Fuel+ 완료",
+      "description": "5개의 일일 정신 훈련 과제 완료하기",
+      "badge": "5 과제"
+    },
     "quickActions": {
       "logMeal": "식사 기록"
     },
