@@ -3189,7 +3189,28 @@
         "motivation": "何がモチベーションですか？"
       },
       "submit": "チェックインを保存",
-      "submitting": "保存中..."
+      "submitting": "保存中...",
+      "morning": {
+        "subtitle": "意図を設定。心を準備。実行。",
+        "motivationTitle": "今日のモチベーション",
+        "motivationPrompt": "今日、あなたを突き動かしているものは何ですか？『なぜ』に繋がりましょう。",
+        "motivationPlaceholder": "私のモチベーションは... 今日頑張る理由は...",
+        "intentionsTitle": "今日の目標",
+        "intentionsPrompt": "今日達成することは何ですか？明確で実行可能な目標を設定しましょう。",
+        "intentionsPlaceholder": "今日私は...\n1. \n2. \n3. ",
+        "disciplineTitle": "規律レベル",
+        "disciplinePrompt": "何があっても今日やり遂げる覚悟はどれくらいありますか？",
+        "disciplineLevel1": "苦戦中",
+        "disciplineLevel2": "迷い中",
+        "disciplineLevel3": "準備完了",
+        "disciplineLevel4": "集中状態",
+        "disciplineLevel5": "不屈",
+        "disciplineDesc1": "今日はやる気が出ない",
+        "disciplineDesc2": "少し抵抗がある",
+        "disciplineDesc3": "参加する覚悟あり",
+        "disciplineDesc4": "言い訳なし、気を散らさない",
+        "disciplineDesc5": "何も私を止められない。妥協ゼロ。"
+      }
     },
     "freeNote": {
       "title": "クイックノート",

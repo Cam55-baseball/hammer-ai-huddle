@@ -4100,7 +4100,28 @@
         "motivation": "What's motivating me?"
       },
       "submit": "Save Check-in",
-      "submitting": "Saving..."
+      "submitting": "Saving...",
+      "morning": {
+        "subtitle": "Set your intentions. Prime your mind. Execute.",
+        "motivationTitle": "Daily Motivation",
+        "motivationPrompt": "What's driving you today? Connect to your 'why'.",
+        "motivationPlaceholder": "I'm motivated by... My reason for pushing today is...",
+        "intentionsTitle": "Daily Intentions",
+        "intentionsPrompt": "What will you accomplish today? Set clear, actionable goals.",
+        "intentionsPlaceholder": "Today I will...\n1. \n2. \n3. ",
+        "disciplineTitle": "Draw to Discipline",
+        "disciplinePrompt": "How committed are you to execute today, no matter what?",
+        "disciplineLevel1": "Struggling",
+        "disciplineLevel2": "Wavering",
+        "disciplineLevel3": "Ready",
+        "disciplineLevel4": "Locked In",
+        "disciplineLevel5": "Unbreakable",
+        "disciplineDesc1": "Not feeling it today",
+        "disciplineDesc2": "Some resistance",
+        "disciplineDesc3": "Committed to show up",
+        "disciplineDesc4": "No excuses, no distractions",
+        "disciplineDesc5": "Nothing stops me. Zero compromise."
+      }
     },
     "freeNote": {
       "title": "Quick Note",

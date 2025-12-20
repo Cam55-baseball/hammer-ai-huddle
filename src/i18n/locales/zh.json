@@ -3060,7 +3060,28 @@
         "motivation": "什么在激励我？"
       },
       "submit": "保存签到",
-      "submitting": "保存中..."
+      "submitting": "保存中...",
+      "morning": {
+        "subtitle": "设定意图。准备心态。执行。",
+        "motivationTitle": "每日动力",
+        "motivationPrompt": "今天是什么驱动着你？连接你的'为什么'。",
+        "motivationPlaceholder": "激励我的是... 我今天努力的原因是...",
+        "intentionsTitle": "每日意图",
+        "intentionsPrompt": "今天你要完成什么？设定清晰、可执行的目标。",
+        "intentionsPlaceholder": "今天我要...\n1. \n2. \n3. ",
+        "disciplineTitle": "纪律等级",
+        "disciplinePrompt": "无论发生什么，你今天执行的决心有多大？",
+        "disciplineLevel1": "挣扎中",
+        "disciplineLevel2": "动摇中",
+        "disciplineLevel3": "已准备",
+        "disciplineLevel4": "全神贯注",
+        "disciplineLevel5": "不可动摇",
+        "disciplineDesc1": "今天没感觉",
+        "disciplineDesc2": "有些阻力",
+        "disciplineDesc3": "承诺出现",
+        "disciplineDesc4": "没有借口，没有分心",
+        "disciplineDesc5": "没有什么能阻止我。零妥协。"
+      }
     },
     "freeNote": {
       "title": "快速笔记",

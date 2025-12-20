@@ -3905,7 +3905,28 @@
         "motivation": "Was motiviert mich?"
       },
       "submit": "Check-in Speichern",
-      "submitting": "Speichern..."
+      "submitting": "Speichern...",
+      "morning": {
+        "subtitle": "Setze deine Absichten. Bereite deinen Geist vor. Führe aus.",
+        "motivationTitle": "Tägliche Motivation",
+        "motivationPrompt": "Was treibt dich heute an? Verbinde dich mit deinem 'Warum'.",
+        "motivationPlaceholder": "Ich bin motiviert durch... Mein Grund, heute durchzuhalten, ist...",
+        "intentionsTitle": "Tägliche Absichten",
+        "intentionsPrompt": "Was wirst du heute erreichen? Setze klare, umsetzbare Ziele.",
+        "intentionsPlaceholder": "Heute werde ich...\n1. \n2. \n3. ",
+        "disciplineTitle": "Disziplin-Level",
+        "disciplinePrompt": "Wie verpflichtet bist du, heute durchzuziehen, egal was passiert?",
+        "disciplineLevel1": "Kämpfend",
+        "disciplineLevel2": "Schwankend",
+        "disciplineLevel3": "Bereit",
+        "disciplineLevel4": "Fokussiert",
+        "disciplineLevel5": "Unerschütterlich",
+        "disciplineDesc1": "Fühle es heute nicht",
+        "disciplineDesc2": "Etwas Widerstand",
+        "disciplineDesc3": "Verpflichtet zu erscheinen",
+        "disciplineDesc4": "Keine Ausreden, keine Ablenkungen",
+        "disciplineDesc5": "Nichts hält mich auf. Null Kompromisse."
+      }
     },
     "freeNote": {
       "title": "Schnelle Notiz",

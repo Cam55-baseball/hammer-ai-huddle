@@ -1148,6 +1148,9 @@ export type Database = {
       vault_focus_quizzes: {
         Row: {
           created_at: string | null
+          daily_intentions: string | null
+          daily_motivation: string | null
+          discipline_level: number | null
           emotional_state: number
           entry_date: string
           hours_slept: number | null
@@ -1166,6 +1169,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          daily_intentions?: string | null
+          daily_motivation?: string | null
+          discipline_level?: number | null
           emotional_state: number
           entry_date?: string
           hours_slept?: number | null
@@ -1184,6 +1190,9 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          daily_intentions?: string | null
+          daily_motivation?: string | null
+          discipline_level?: number | null
           emotional_state?: number
           entry_date?: string
           hours_slept?: number | null

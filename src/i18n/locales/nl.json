@@ -3089,7 +3089,28 @@
         "motivation": "Wat motiveert mij?"
       },
       "submit": "Check-in Opslaan",
-      "submitting": "Opslaan..."
+      "submitting": "Opslaan...",
+      "morning": {
+        "subtitle": "Stel je intenties. Bereid je geest voor. Voer uit.",
+        "motivationTitle": "Dagelijkse Motivatie",
+        "motivationPrompt": "Wat drijft je vandaag? Verbind met je 'waarom'.",
+        "motivationPlaceholder": "Ik word gemotiveerd door... Mijn reden om vandaag door te zetten is...",
+        "intentionsTitle": "Dagelijkse Intenties",
+        "intentionsPrompt": "Wat ga je vandaag bereiken? Stel duidelijke, uitvoerbare doelen.",
+        "intentionsPlaceholder": "Vandaag ga ik...\n1. \n2. \n3. ",
+        "disciplineTitle": "Discipline Niveau",
+        "disciplinePrompt": "Hoe toegewijd ben je om vandaag uit te voeren, wat er ook gebeurt?",
+        "disciplineLevel1": "Worstelend",
+        "disciplineLevel2": "Wankelend",
+        "disciplineLevel3": "Klaar",
+        "disciplineLevel4": "Gefocust",
+        "disciplineLevel5": "Onbreekbaar",
+        "disciplineDesc1": "Voel het niet vandaag",
+        "disciplineDesc2": "Wat weerstand",
+        "disciplineDesc3": "Toegewijd om te verschijnen",
+        "disciplineDesc4": "Geen excuses, geen afleiding",
+        "disciplineDesc5": "Niets stopt mij. Nul compromis."
+      }
     },
     "freeNote": {
       "title": "Snelle Notitie",

@@ -3905,7 +3905,28 @@
         "motivation": "Qu'est-ce qui me motive?"
       },
       "submit": "Sauvegarder la Vérification",
-      "submitting": "Sauvegarde..."
+      "submitting": "Sauvegarde...",
+      "morning": {
+        "subtitle": "Définissez vos intentions. Préparez votre esprit. Exécutez.",
+        "motivationTitle": "Motivation Quotidienne",
+        "motivationPrompt": "Qu'est-ce qui vous motive aujourd'hui? Connectez-vous à votre 'pourquoi'.",
+        "motivationPlaceholder": "Je suis motivé par... Ma raison de me dépasser aujourd'hui est...",
+        "intentionsTitle": "Intentions Quotidiennes",
+        "intentionsPrompt": "Qu'allez-vous accomplir aujourd'hui? Fixez des objectifs clairs et réalisables.",
+        "intentionsPlaceholder": "Aujourd'hui je vais...\n1. \n2. \n3. ",
+        "disciplineTitle": "Niveau de Discipline",
+        "disciplinePrompt": "À quel point êtes-vous engagé à exécuter aujourd'hui, quoi qu'il arrive?",
+        "disciplineLevel1": "En Difficulté",
+        "disciplineLevel2": "Hésitant",
+        "disciplineLevel3": "Prêt",
+        "disciplineLevel4": "Concentré",
+        "disciplineLevel5": "Inébranlable",
+        "disciplineDesc1": "Pas motivé aujourd'hui",
+        "disciplineDesc2": "Quelques résistances",
+        "disciplineDesc3": "Engagé à me présenter",
+        "disciplineDesc4": "Pas d'excuses, pas de distractions",
+        "disciplineDesc5": "Rien ne m'arrête. Zéro compromis."
+      }
     },
     "freeNote": {
       "title": "Note Rapide",
