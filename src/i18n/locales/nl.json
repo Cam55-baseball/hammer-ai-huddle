@@ -3791,5 +3791,20 @@
     "categoryStreak": "Reeks",
     "categoryActivity": "Activiteit",
     "categoryGrowth": "Groei"
+  },
+  "mentalWellness": {
+    "nav": {
+      "overview": "Overzicht",
+      "emotionalAwareness": "Emotioneel Bewustzijn",
+      "stressManagement": "Stressmanagement",
+      "mindfulness": "Mindfulness",
+      "cognitiveSkills": "Cognitieve Vaardigheden",
+      "resilience": "Veerkracht",
+      "healing": "Genezing",
+      "education": "Educatie",
+      "crisis": "Crisisondersteuning",
+      "journal": "Dagboek",
+      "insights": "Statistieken"
+    }
   }
 }

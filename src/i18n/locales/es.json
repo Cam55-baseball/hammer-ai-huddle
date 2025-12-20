@@ -4586,5 +4586,20 @@
     "categoryStreak": "Racha",
     "categoryActivity": "Actividad",
     "categoryGrowth": "Crecimiento"
+  },
+  "mentalWellness": {
+    "nav": {
+      "overview": "Resumen",
+      "emotionalAwareness": "Conciencia Emocional",
+      "stressManagement": "Manejo del Estrés",
+      "mindfulness": "Atención Plena",
+      "cognitiveSkills": "Habilidades Cognitivas",
+      "resilience": "Resiliencia",
+      "healing": "Sanación",
+      "education": "Educación",
+      "crisis": "Apoyo de Crisis",
+      "journal": "Diario",
+      "insights": "Estadísticas"
+    }
   }
 }

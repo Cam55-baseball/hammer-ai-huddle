@@ -3891,5 +3891,20 @@
     "categoryStreak": "連続",
     "categoryActivity": "アクティビティ",
     "categoryGrowth": "成長"
+  },
+  "mentalWellness": {
+    "nav": {
+      "overview": "概要",
+      "emotionalAwareness": "感情認識",
+      "stressManagement": "ストレス管理",
+      "mindfulness": "マインドフルネス",
+      "cognitiveSkills": "認知スキル",
+      "resilience": "レジリエンス",
+      "healing": "癒し",
+      "education": "教育",
+      "crisis": "危機サポート",
+      "journal": "日記",
+      "insights": "統計"
+    }
   }
 }

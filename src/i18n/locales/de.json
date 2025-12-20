@@ -4608,5 +4608,20 @@
     "categoryStreak": "Serie",
     "categoryActivity": "Aktivität",
     "categoryGrowth": "Wachstum"
+  },
+  "mentalWellness": {
+    "nav": {
+      "overview": "Übersicht",
+      "emotionalAwareness": "Emotionale Wahrnehmung",
+      "stressManagement": "Stressbewältigung",
+      "mindfulness": "Achtsamkeit",
+      "cognitiveSkills": "Kognitive Fähigkeiten",
+      "resilience": "Resilienz",
+      "healing": "Heilung",
+      "education": "Bildung",
+      "crisis": "Krisenunterstützung",
+      "journal": "Tagebuch",
+      "insights": "Statistiken"
+    }
   }
 }

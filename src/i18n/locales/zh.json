@@ -3762,5 +3762,20 @@
     "categoryStreak": "连续",
     "categoryActivity": "活动",
     "categoryGrowth": "成长"
+  },
+  "mentalWellness": {
+    "nav": {
+      "overview": "概览",
+      "emotionalAwareness": "情感意识",
+      "stressManagement": "压力管理",
+      "mindfulness": "正念",
+      "cognitiveSkills": "认知技能",
+      "resilience": "韧性",
+      "healing": "愈合",
+      "education": "教育",
+      "crisis": "危机支持",
+      "journal": "日记",
+      "insights": "统计"
+    }
   }
 }

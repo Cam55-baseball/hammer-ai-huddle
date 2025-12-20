@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { 
@@ -11,7 +10,8 @@ import {
   BookOpen, 
   Phone, 
   BookMarked,
-  BarChart3
+  BarChart3,
+  Home
 } from 'lucide-react';
 
 export type WellnessModule = 
@@ -33,6 +33,7 @@ interface WellnessHubNavProps {
 }
 
 const moduleConfig: { id: WellnessModule; icon: React.ElementType; labelKey: string; color: string }[] = [
+  { id: 'overview', icon: Home, labelKey: 'mentalWellness.nav.overview', color: 'primary' },
   { id: 'emotional-awareness', icon: Heart, labelKey: 'mentalWellness.nav.emotionalAwareness', color: 'wellness-coral' },
   { id: 'stress-management', icon: Brain, labelKey: 'mentalWellness.nav.stressManagement', color: 'wellness-lavender' },
   { id: 'mindfulness', icon: Wind, labelKey: 'mentalWellness.nav.mindfulness', color: 'wellness-sky' },

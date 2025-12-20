@@ -4608,5 +4608,20 @@
     "categoryStreak": "Série",
     "categoryActivity": "Activité",
     "categoryGrowth": "Croissance"
+  },
+  "mentalWellness": {
+    "nav": {
+      "overview": "Aperçu",
+      "emotionalAwareness": "Conscience Émotionnelle",
+      "stressManagement": "Gestion du Stress",
+      "mindfulness": "Pleine Conscience",
+      "cognitiveSkills": "Compétences Cognitives",
+      "resilience": "Résilience",
+      "healing": "Guérison",
+      "education": "Éducation",
+      "crisis": "Soutien de Crise",
+      "journal": "Journal",
+      "insights": "Statistiques"
+    }
   }
 }
