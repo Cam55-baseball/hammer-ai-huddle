@@ -4,11 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Shield, Check, X, MessageSquare, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useMindFuelEducationProgress } from '@/hooks/useMindFuelEducationProgress';
-  id: string;
-  title: string;
-  description: string;
-  examples: { healthy: string; unhealthy: string }[];
-}
 
 const boundaryTypes: BoundaryType[] = [
   {

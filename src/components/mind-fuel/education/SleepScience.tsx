@@ -3,11 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Moon, Sun, Clock, Brain, Zap, Check, AlertTriangle } from 'lucide-react';
 import { useMindFuelEducationProgress } from '@/hooks/useMindFuelEducationProgress';
-  id: string;
-  title: string;
-  description: string;
-  icon: typeof Moon;
-}
 
 const sleepTips: SleepTip[] = [
   {
