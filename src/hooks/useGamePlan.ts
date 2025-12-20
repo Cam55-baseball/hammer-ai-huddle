@@ -338,10 +338,9 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           !pitchingGradeNextDate || new Date(pitchingGradeNextDate) <= new Date(today);
       }
 
-      // Check weekly wellness goals (show Mon-Wed if not completed this week)
+      // Check weekly wellness goals (show all week Mon-Sun until completed)
       const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
       const weekStartStr = format(weekStart, 'yyyy-MM-dd');
-      const daysSinceWeekStart = differenceInDays(new Date(), weekStart);
       
       const { data: wellnessData } = await supabase
         .from('vault_weekly_wellness_quiz')
@@ -350,8 +349,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         .eq('week_start_date', weekStartStr)
         .maybeSingle();
       
-      // Show wellness goals task Mon-Wed if not completed
-      tracking['tracking-wellness-goals'] = !wellnessData && daysSinceWeekStart <= 2;
+      // Show wellness goals task all week (Mon-Sun) until completed
+      tracking['tracking-wellness-goals'] = !wellnessData;
 
       setCompletionStatus(status);
       setTrackingDue(tracking);
