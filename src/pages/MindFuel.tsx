@@ -15,6 +15,7 @@ import WellnessHubNav, { WellnessModule } from '@/components/mind-fuel/wellness-
 import CrisisResourcesCard from '@/components/mind-fuel/crisis-support/CrisisResourcesCard';
 import JournalHome from '@/components/mind-fuel/mental-health-journal/JournalHome';
 import WellnessDisclaimer from '@/components/mind-fuel/shared/WellnessDisclaimer';
+import EmotionalAwarenessHome from '@/components/mind-fuel/emotional-awareness/EmotionalAwarenessHome';
 import { Loader2 } from 'lucide-react';
 
 interface StreakData {
@@ -150,6 +151,8 @@ export default function MindFuel() {
           <CrisisResourcesCard />
         ) : activeWellnessModule === 'journal' ? (
           <JournalHome />
+        ) : activeWellnessModule === 'emotional-awareness' ? (
+          <EmotionalAwarenessHome />
         ) : (
           <>
             {/* Default Mind Fuel Content */}
