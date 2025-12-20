@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Shield, Check, X, MessageSquare, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
-
-interface BoundaryType {
+import { useMindFuelEducationProgress } from '@/hooks/useMindFuelEducationProgress';
   id: string;
   title: string;
   description: string;
@@ -57,9 +56,24 @@ const boundaryScripts = [
   { situation: 'When setting a new boundary', response: '"Going forward, I need [specific boundary]. Thank you for understanding."' },
 ];
 
+interface BoundaryType {
+  id: string;
+  title: string;
+  description: string;
+  examples: { healthy: string; unhealthy: string }[];
+}
+
 export default function HealthyBoundaries() {
   const { t } = useTranslation();
   const [expandedType, setExpandedType] = useState<string | null>('physical');
+  const { markAsComplete, isItemComplete } = useMindFuelEducationProgress();
+
+  // Mark boundaries section as complete when component mounts
+  useEffect(() => {
+    if (!isItemComplete('boundaries', 'healthy-boundaries')) {
+      markAsComplete('boundaries', 'healthy-boundaries');
+    }
+  }, [markAsComplete, isItemComplete]);
 
   return (
     <div className="space-y-4">

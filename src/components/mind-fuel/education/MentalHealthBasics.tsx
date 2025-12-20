@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Brain, Heart, Zap, Users, Check, ChevronRight } from 'lucide-react';
+import { useMindFuelEducationProgress } from '@/hooks/useMindFuelEducationProgress';
 
 interface Concept {
   id: string;
@@ -65,6 +66,18 @@ const concepts: Concept[] = [
 export default function MentalHealthBasics() {
   const { t } = useTranslation();
   const [expandedConcept, setExpandedConcept] = useState<string | null>('what-is');
+  const { markAsComplete, isItemComplete } = useMindFuelEducationProgress();
+
+  // Track when user expands a concept
+  const handleConceptClick = async (conceptId: string) => {
+    const isExpanded = expandedConcept === conceptId;
+    setExpandedConcept(isExpanded ? null : conceptId);
+    
+    // Mark as complete when expanded
+    if (!isExpanded && !isItemComplete('basics', conceptId)) {
+      await markAsComplete('basics', conceptId);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -87,23 +100,27 @@ export default function MentalHealthBasics() {
         {concepts.map((concept) => {
           const Icon = concept.icon;
           const isExpanded = expandedConcept === concept.id;
+          const completed = isItemComplete('basics', concept.id);
 
           return (
             <Card
               key={concept.id}
               className={`cursor-pointer transition-all ${
                 isExpanded ? 'ring-2 ring-wellness-sky' : 'hover:shadow-md'
-              }`}
-              onClick={() => setExpandedConcept(isExpanded ? null : concept.id)}
+              } ${completed ? 'border-green-500/30' : ''}`}
+              onClick={() => handleConceptClick(concept.id)}
             >
               <CardContent className="pt-4">
                 <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-lg ${isExpanded ? 'bg-wellness-sky/20' : 'bg-muted'}`}>
-                    <Icon className={`h-5 w-5 ${isExpanded ? 'text-wellness-sky' : 'text-muted-foreground'}`} />
+                  <div className={`p-2 rounded-lg ${isExpanded ? 'bg-wellness-sky/20' : completed ? 'bg-green-500/20' : 'bg-muted'}`}>
+                    <Icon className={`h-5 w-5 ${isExpanded ? 'text-wellness-sky' : completed ? 'text-green-500' : 'text-muted-foreground'}`} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">{concept.title}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">{concept.title}</h3>
+                        {completed && <Check className="h-4 w-4 text-green-500" />}
+                      </div>
                       <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                     </div>
                     
