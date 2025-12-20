@@ -2875,6 +2875,7 @@
       "description": "Finish your 5 daily mental training tasks",
       "badge": "5 TASKS"
     }
+  },
   "weeklyChallenge": {
     "title": "Weekly Challenge",
     "completed_short": "completed",
