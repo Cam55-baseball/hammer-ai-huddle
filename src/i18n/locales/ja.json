@@ -3133,9 +3133,11 @@
       "preLift": "トレーニング前",
       "preLiftTitle": "トレーニング前チェックイン",
       "morning": "朝",
+      "morningLabel": "朝",
       "morningTitle": "朝のチェックイン",
       "morningTip": "起床後15分以内に完了してみてください",
       "night": "夜",
+      "nightLabel": "夜",
       "nightTitle": "夜の振り返り",
       "completed": "完了",
       "notStarted": "未開始",
@@ -3737,6 +3739,11 @@
     "tasksCompleted": "{{completed}}/{{total}} 完了",
     "allComplete": "やり遂げた！",
     "doIt": "実行",
+    "mentalFuelPlus": {
+      "title": "Mental Fuel+を完了",
+      "description": "毎日の5つのメンタルトレーニングタスクを終わらせる",
+      "badge": "5 タスク"
+    },
     "quickActions": {
       "logMeal": "食事を記録"
     },

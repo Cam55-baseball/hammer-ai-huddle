@@ -3033,9 +3033,11 @@
       "preLift": "Voor Training",
       "preLiftTitle": "Check-in Voor Training",
       "morning": "Ochtend",
+      "morningLabel": "Ochtend",
       "morningTitle": "Ochtend Check-in",
       "morningTip": "Probeer binnen 15 minuten na het wakker worden te voltooien",
       "night": "Nacht",
+      "nightLabel": "Nacht",
       "nightTitle": "Avond Reflectie",
       "completed": "Voltooid",
       "notStarted": "Niet Gestart",
@@ -3637,6 +3639,11 @@
     "tasksCompleted": "{{completed}}/{{total}} klaar",
     "allComplete": "GELUKT!",
     "doIt": "DOE HET",
+    "mentalFuelPlus": {
+      "title": "Voltooi Mental Fuel+",
+      "description": "Voltooi je 5 dagelijkse mentale trainingstaken",
+      "badge": "5 TAKEN"
+    },
     "quickActions": {
       "logMeal": "Maaltijd Loggen"
     },

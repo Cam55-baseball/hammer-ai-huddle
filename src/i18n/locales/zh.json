@@ -3004,9 +3004,11 @@
       "preLift": "训练前",
       "preLiftTitle": "训练前签到",
       "morning": "早晨",
+      "morningLabel": "早晨",
       "morningTitle": "早晨签到",
       "morningTip": "尝试在醒来后15分钟内完成",
       "night": "夜晚",
+      "nightLabel": "夜晚",
       "nightTitle": "晚间反思",
       "completed": "已完成",
       "notStarted": "未开始",
@@ -3608,6 +3610,11 @@
     "tasksCompleted": "{{completed}}/{{total}} 已完成",
     "allComplete": "全部完成！",
     "doIt": "开始",
+    "mentalFuelPlus": {
+      "title": "完成 Mental Fuel+",
+      "description": "完成你的5项每日心理训练任务",
+      "badge": "5 任务"
+    },
     "quickActions": {
       "logMeal": "记录餐食"
     },

@@ -4452,6 +4452,11 @@
     "tasksCompleted": "{{completed}}/{{total}} erledigt",
     "allComplete": "GESCHAFFT!",
     "doIt": "LOS",
+    "mentalFuelPlus": {
+      "title": "Mental Fuel+ Abschließen",
+      "description": "Erledige deine 5 täglichen Mentaltraining-Aufgaben",
+      "badge": "5 AUFGABEN"
+    },
     "quickActions": {
       "logMeal": "Mahlzeit Eintragen"
     },

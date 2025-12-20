@@ -477,7 +477,7 @@ export default function Vault() {
                         }`}
                       >
                         <Moon className={`h-5 w-5 ${hasCompletedQuiz('night') ? 'text-indigo-500' : 'text-muted-foreground'}`} />
-                        <span className="text-xs mt-1 font-medium">{t('vault.quiz.night')}</span>
+                        <span className="text-xs mt-1 font-medium">{t('vault.quiz.nightLabel')}</span>
                         {hasCompletedQuiz('night') ? (
                           <CheckCircle className="h-4 w-4 text-green-500 mt-1" />
                         ) : (
@@ -496,7 +496,7 @@ export default function Vault() {
                         disabled={hasCompletedQuiz('morning')}
                       >
                         <Sun className="h-4 w-4 text-amber-500" />
-                        <span className="flex-1 text-left">{t('vault.quiz.morning')}</span>
+                        <span className="flex-1 text-left">{t('vault.quiz.morningLabel')}</span>
                         {hasCompletedQuiz('morning') ? (
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
@@ -528,7 +528,7 @@ export default function Vault() {
                         disabled={hasCompletedQuiz('night')}
                       >
                         <Moon className="h-4 w-4 text-indigo-500" />
-                        <span className="flex-1 text-left">{t('vault.quiz.night')}</span>
+                        <span className="flex-1 text-left">{t('vault.quiz.nightLabel')}</span>
                         {hasCompletedQuiz('night') ? (
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
