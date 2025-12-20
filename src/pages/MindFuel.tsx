@@ -22,6 +22,7 @@ import CognitiveSkillsHome from '@/components/mind-fuel/cognitive-skills/Cogniti
 import ResilienceHome from '@/components/mind-fuel/resilience/ResilienceHome';
 import HealingHome from '@/components/mind-fuel/healing/HealingHome';
 import EducationHome from '@/components/mind-fuel/education/EducationHome';
+import InsightsHome from '@/components/mind-fuel/insights/InsightsHome';
 import { Loader2 } from 'lucide-react';
 
 interface StreakData {
@@ -171,6 +172,8 @@ export default function MindFuel() {
           <HealingHome />
         ) : activeWellnessModule === 'education' ? (
           <EducationHome />
+        ) : activeWellnessModule === 'insights' ? (
+          <InsightsHome />
         ) : (
           <>
             {/* Default Mind Fuel Content */}
