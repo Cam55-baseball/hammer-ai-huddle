@@ -11,6 +11,10 @@ import MindFuelStandards from '@/components/mind-fuel/MindFuelStandards';
 import MindFuelCategories from '@/components/mind-fuel/MindFuelCategories';
 import MindFuelWeeklyChallenge from '@/components/mind-fuel/MindFuelWeeklyChallenge';
 import { showBadgeUnlockToast } from '@/components/mind-fuel/MindFuelBadgeUnlockToast';
+import WellnessHubNav, { WellnessModule } from '@/components/mind-fuel/wellness-hub/WellnessHubNav';
+import CrisisResourcesCard from '@/components/mind-fuel/crisis-support/CrisisResourcesCard';
+import JournalHome from '@/components/mind-fuel/mental-health-journal/JournalHome';
+import WellnessDisclaimer from '@/components/mind-fuel/shared/WellnessDisclaimer';
 import { Loader2 } from 'lucide-react';
 
 interface StreakData {
@@ -50,6 +54,7 @@ export default function MindFuel() {
   const [currentLesson, setCurrentLesson] = useState<LessonData | null>(null);
   const [stats, setStats] = useState<StatsData | null>(null);
   const [currentSport, setCurrentSport] = useState<string>('both');
+  const [activeWellnessModule, setActiveWellnessModule] = useState<WellnessModule>('emotional-awareness');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -134,46 +139,50 @@ export default function MindFuel() {
           </div>
         </div>
 
-        {/* Streak Card */}
-        <MindFuelStreakCard
-          streak={streakData}
-          stats={stats}
-          isLoading={isLoading}
+        {/* Wellness Hub Navigation */}
+        <WellnessHubNav 
+          activeModule={activeWellnessModule} 
+          onModuleChange={setActiveWellnessModule} 
         />
 
-        {/* Daily Lesson Hero */}
-        <DailyLessonHero
-          lesson={currentLesson}
-          stats={stats}
-          isLoading={isLoading}
-          onGetNewLesson={handleGetNewLesson}
-        />
+        {/* Wellness Module Content */}
+        {activeWellnessModule === 'crisis' ? (
+          <CrisisResourcesCard />
+        ) : activeWellnessModule === 'journal' ? (
+          <JournalHome />
+        ) : (
+          <>
+            {/* Default Mind Fuel Content */}
+            <MindFuelStreakCard
+              streak={streakData}
+              stats={stats}
+              isLoading={isLoading}
+            />
 
-        {/* Weekly Challenge Section */}
-        <MindFuelWeeklyChallenge />
+            <DailyLessonHero
+              lesson={currentLesson}
+              stats={stats}
+              isLoading={isLoading}
+              onGetNewLesson={handleGetNewLesson}
+            />
 
-        {/* Create the Standard Section */}
-        <MindFuelStandards />
+            <MindFuelWeeklyChallenge />
+            <MindFuelStandards />
 
-        {/* Badges Section */}
-        <MindFuelBadges
-          earnedBadges={streakData?.badgesEarned || []}
-          currentStreak={streakData?.currentStreak || 0}
-          categoriesExplored={streakData?.categoriesExplored || {}}
-        />
+            <MindFuelBadges
+              earnedBadges={streakData?.badgesEarned || []}
+              currentStreak={streakData?.currentStreak || 0}
+              categoriesExplored={streakData?.categoriesExplored || {}}
+            />
 
-        {/* Categories Section */}
-        <MindFuelCategories
-          categoriesExplored={streakData?.categoriesExplored || {}}
-        />
+            <MindFuelCategories
+              categoriesExplored={streakData?.categoriesExplored || {}}
+            />
+          </>
+        )}
 
         {/* Disclaimer */}
-        <div className="bg-muted/50 rounded-lg p-4 text-xs sm:text-sm text-muted-foreground">
-          <p className="font-medium mb-1">{t('mindFuel.disclaimer.title', 'Mental Training Disclaimer')}</p>
-          <p>
-            {t('mindFuel.disclaimer.text', 'Mind Fuel provides mental performance education and inspiration. It is not a substitute for professional mental health services. If you are experiencing mental health challenges, please consult a licensed professional.')}
-          </p>
-        </div>
+        <WellnessDisclaimer />
       </div>
     </DashboardLayout>
   );
