@@ -1075,7 +1075,37 @@
     "tomorrowMorning": "내일 오전",
     "tomorrowAfternoon": "내일 오후",
     "tomorrowEvening": "내일 저녁",
-    "tomorrowNight": "내일 밤"
+    "tomorrowNight": "내일 밤",
+    "swipe": "스와이프",
+    "poor": "나쁨",
+    "gameDayPrep": {
+      "title": "경기일 준비",
+      "show": "경기일 준비",
+      "hide": "준비 숨기기"
+    },
+    "favorites": {
+      "save": "위치 저장",
+      "saved": "위치 저장됨",
+      "removed": "위치 삭제됨",
+      "selectFavorite": "저장됨",
+      "noFavorites": "저장된 위치 없음",
+      "defaultSet": "기본 위치 설정됨",
+      "manage": "저장된 위치",
+      "setDefault": "기본값으로 설정",
+      "rename": "이름 변경",
+      "delete": "삭제",
+      "nameUpdated": "위치 이름 변경됨",
+      "default": "기본값"
+    },
+    "alerts": {
+      "title": "기상 경보",
+      "expires": "만료",
+      "instructions": "안전 지침"
+    },
+    "airQuality": {
+      "title": "대기질",
+      "unavailable": "N/A"
+    }
   },
   "scout": {
     "dashboard": "스카우트 대시보드",

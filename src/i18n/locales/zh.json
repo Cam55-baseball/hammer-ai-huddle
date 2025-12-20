@@ -1076,7 +1076,37 @@
     "tomorrowMorning": "明天上午",
     "tomorrowAfternoon": "明天下午",
     "tomorrowEvening": "明天傍晚",
-    "tomorrowNight": "明晚"
+    "tomorrowNight": "明晚",
+    "swipe": "滑动",
+    "poor": "差",
+    "gameDayPrep": {
+      "title": "比赛日准备",
+      "show": "比赛日准备",
+      "hide": "隐藏准备"
+    },
+    "favorites": {
+      "save": "保存位置",
+      "saved": "位置已保存",
+      "removed": "位置已删除",
+      "selectFavorite": "已保存",
+      "noFavorites": "没有保存的位置",
+      "defaultSet": "默认位置已设置",
+      "manage": "保存的位置",
+      "setDefault": "设为默认",
+      "rename": "重命名",
+      "delete": "删除",
+      "nameUpdated": "位置已重命名",
+      "default": "默认"
+    },
+    "alerts": {
+      "title": "天气警报",
+      "expires": "过期",
+      "instructions": "安全说明"
+    },
+    "airQuality": {
+      "title": "空气质量",
+      "unavailable": "N/A"
+    }
   },
   "scout": {
     "dashboard": "球探仪表板",

@@ -1506,7 +1506,13 @@
       "removed": "Location Removed",
       "selectFavorite": "Saved",
       "noFavorites": "No saved locations",
-      "defaultSet": "Default location set"
+      "defaultSet": "Default location set",
+      "manage": "Saved Locations",
+      "setDefault": "Set as Default",
+      "rename": "Rename",
+      "delete": "Delete",
+      "nameUpdated": "Location renamed",
+      "default": "Default"
     },
     "alerts": {
       "title": "Weather Alerts",

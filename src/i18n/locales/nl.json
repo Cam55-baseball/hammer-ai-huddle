@@ -1105,7 +1105,37 @@
     "tomorrowMorning": "Morgenochtend",
     "tomorrowAfternoon": "Morgenmiddag",
     "tomorrowEvening": "Morgenavond",
-    "tomorrowNight": "Morgennacht"
+    "tomorrowNight": "Morgennacht",
+    "swipe": "Vegen",
+    "poor": "Slecht",
+    "gameDayPrep": {
+      "title": "Wedstrijddag Voorbereiding",
+      "show": "Wedstrijddag Voorbereiding",
+      "hide": "Voorbereiding Verbergen"
+    },
+    "favorites": {
+      "save": "Locatie Opslaan",
+      "saved": "Locatie Opgeslagen",
+      "removed": "Locatie Verwijderd",
+      "selectFavorite": "Opgeslagen",
+      "noFavorites": "Geen opgeslagen locaties",
+      "defaultSet": "Standaardlocatie ingesteld",
+      "manage": "Opgeslagen Locaties",
+      "setDefault": "Als Standaard Instellen",
+      "rename": "Hernoemen",
+      "delete": "Verwijderen",
+      "nameUpdated": "Locatie hernoemd",
+      "default": "Standaard"
+    },
+    "alerts": {
+      "title": "Weerwaarschuwingen",
+      "expires": "Verloopt",
+      "instructions": "Veiligheidsinstructies"
+    },
+    "airQuality": {
+      "title": "Luchtkwaliteit",
+      "unavailable": "N/B"
+    }
   },
   "scout": {
     "dashboard": "Scout Dashboard",
