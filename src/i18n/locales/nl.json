@@ -3120,6 +3120,28 @@
         "disciplineDesc5": "Niets stopt mij. Nul compromis."
       }
     },
+    "disciplineTrend": {
+      "title": "Wekelijkse Inzet Trend",
+      "subtitle": "Volg je discipline gedurende de week",
+      "weeklyAvg": "Gemiddelde Deze Week",
+      "vsLastWeek": "vs vorige week",
+      "improving": "Verbeterend",
+      "declining": "Afnemend",
+      "stable": "Stabiel",
+      "streak": "dagen streak",
+      "noData": "Voltooi ochtend check-ins om je trend te zien"
+    },
+    "mentalWellnessTrend": {
+      "title": "Wekelijks Mentaal Welzijn",
+      "subtitle": "Volg je stemming en stress patronen",
+      "moodAvg": "Stemming Gemiddelde",
+      "stressAvg": "Stress Gemiddelde",
+      "wellnessScore": "Welzijn Score",
+      "wellnessHigh": "Goede stemming, lage stress",
+      "wellnessMedium": "Gebalanceerd welzijn",
+      "wellnessLow": "Aandacht nodig",
+      "noData": "Voltooi ochtend check-ins om je welzijn trend te zien"
+    },
     "freeNote": {
       "title": "Snelle Notitie",
       "placeholder": "Schrijf een snelle gedachte of notitie voor vandaag...",

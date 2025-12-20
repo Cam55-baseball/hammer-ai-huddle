@@ -38,6 +38,7 @@ import { VaultHistoryTab } from '@/components/vault/VaultHistoryTab';
 import { VaultWeeklySummary } from '@/components/vault/VaultWeeklySummary';
 import { VaultNutritionWeeklySummary } from '@/components/vault/VaultNutritionWeeklySummary';
 import { VaultDisciplineTrendCard } from '@/components/vault/VaultDisciplineTrendCard';
+import { VaultMentalWellnessTrendCard } from '@/components/vault/VaultMentalWellnessTrendCard';
 
 export default function Vault() {
   const { t } = useTranslation();
@@ -382,8 +383,11 @@ export default function Vault() {
                 isLoading={loading} 
               />
 
-              {/* Weekly Discipline Trend Card */}
-              <VaultDisciplineTrendCard isLoading={loading} />
+              {/* Weekly Trend Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <VaultDisciplineTrendCard isLoading={loading} />
+                <VaultMentalWellnessTrendCard isLoading={loading} />
+              </div>
 
               {/* Daily Check-In Container */}
               <div className="rounded-xl border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-background p-4 sm:p-6 space-y-4">

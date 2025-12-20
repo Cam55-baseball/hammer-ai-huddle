@@ -4158,6 +4158,17 @@
       "streak": "day streak",
       "noData": "Complete morning check-ins to see your trend"
     },
+    "mentalWellnessTrend": {
+      "title": "Weekly Mental Wellness",
+      "subtitle": "Track your mood and stress patterns",
+      "moodAvg": "Mood Average",
+      "stressAvg": "Stress Average",
+      "wellnessScore": "Wellness Score",
+      "wellnessHigh": "High mood, low stress",
+      "wellnessMedium": "Balanced wellness",
+      "wellnessLow": "Needs attention",
+      "noData": "Complete morning check-ins to see your wellness trend"
+    },
     "freeNote": {
       "title": "Quick Note",
       "placeholder": "Write a quick thought or note for today...",

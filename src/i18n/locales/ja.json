@@ -3220,6 +3220,28 @@
         "disciplineDesc5": "何も私を止められない。妥協ゼロ。"
       }
     },
+    "disciplineTrend": {
+      "title": "週間コミットメント傾向",
+      "subtitle": "週間の規律を追跡",
+      "weeklyAvg": "今週の平均",
+      "vsLastWeek": "先週比",
+      "improving": "向上",
+      "declining": "下降",
+      "stable": "安定",
+      "streak": "日連続",
+      "noData": "傾向を見るには朝のチェックインを完了してください"
+    },
+    "mentalWellnessTrend": {
+      "title": "週間メンタルウェルネス",
+      "subtitle": "気分とストレスのパターンを追跡",
+      "moodAvg": "気分の平均",
+      "stressAvg": "ストレスの平均",
+      "wellnessScore": "ウェルネススコア",
+      "wellnessHigh": "良い気分、低ストレス",
+      "wellnessMedium": "バランスの取れたウェルネス",
+      "wellnessLow": "注意が必要",
+      "noData": "ウェルネストレンドを見るには朝のチェックインを完了してください"
+    },
     "freeNote": {
       "title": "クイックノート",
       "placeholder": "今日の考えやメモを書いてください...",
