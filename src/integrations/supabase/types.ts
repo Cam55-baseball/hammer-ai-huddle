@@ -1936,6 +1936,42 @@ export type Database = {
         }
         Relationships: []
       }
+      vault_weekly_wellness_quiz: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          notification_enabled: boolean | null
+          target_discipline_level: number | null
+          target_mood_level: number | null
+          target_stress_level: number | null
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          notification_enabled?: boolean | null
+          target_discipline_level?: number | null
+          target_mood_level?: number | null
+          target_stress_level?: number | null
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          notification_enabled?: boolean | null
+          target_discipline_level?: number | null
+          target_mood_level?: number | null
+          target_stress_level?: number | null
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       vault_wellness_goals: {
         Row: {
           created_at: string | null

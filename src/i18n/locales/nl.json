@@ -3720,6 +3720,11 @@
         "title": "Pitching Zelfbeoordelingen Instellen",
         "description": "Beoordeel je pitching-vaardigheden op de 20-80 schaal",
         "badge": "12 WK"
+      },
+      "wellnessGoals": {
+        "title": "Wekelijkse Welzijnsdoelen Instellen",
+        "description": "Bepaal je stemming, stress & discipline doelen",
+        "badge": "WEKELIJKS"
       }
     },
     "recapCountdown": {
@@ -3727,6 +3732,33 @@
       "days": "DAGEN",
       "daysRemaining": "{{days}} dagen resterend"
     }
+  },
+  "weeklyWellnessQuiz": {
+    "title": "Wekelijkse Welzijnsdoelen",
+    "subtitle": "Stel je mentale prestatiedoelen voor deze week in",
+    "step1Title": "Stemmingsdoel",
+    "step1Description": "Welk stemmingsniveau wil je deze week behouden?",
+    "step2Title": "Stresslimiet",
+    "step2Description": "Wat is je maximaal acceptabele stressniveau?",
+    "step3Title": "Discipline Doel",
+    "step3Description": "Stel je inzetniveau doel in",
+    "next": "Volgende",
+    "back": "Terug",
+    "complete": "Doelen Vastleggen",
+    "completing": "Opslaan...",
+    "successTitle": "Doelen Ingesteld! 🎯",
+    "successMessage": "Je wekelijkse welzijnsdoelen zijn vastgelegd. We helpen je op koers te blijven!",
+    "successToast": "Wekelijkse welzijnsdoelen opgeslagen!",
+    "errorToast": "Doelen opslaan mislukt",
+    "mood": "Stemming",
+    "stress": "Stress",
+    "discipline": "Discipline",
+    "target": "Doel",
+    "actual": "Werkelijk",
+    "lastWeekResults": "Resultaten Vorige Week",
+    "metGoal": "Doel Behaald!",
+    "missedGoal": "Blijf pushen!",
+    "firstWeekMessage": "Dit is je eerste week! Stel basisdoelen in om je voortgang te volgen."
   },
   "scoutGamePlan": {
     "title": "SCOUTING REVIEW",

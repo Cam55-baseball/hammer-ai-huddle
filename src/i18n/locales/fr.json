@@ -4535,6 +4535,11 @@
         "title": "Définir Auto-évaluations de Lancer",
         "description": "Évaluez vos compétences de lancer sur l'échelle 20-80",
         "badge": "12 SEM"
+      },
+      "wellnessGoals": {
+        "title": "Définir Objectifs Bien-être Hebdo",
+        "description": "Définissez vos objectifs humeur, stress et discipline",
+        "badge": "HEBDO"
       }
     },
     "recapCountdown": {
@@ -4542,6 +4547,33 @@
       "days": "JOURS",
       "daysRemaining": "{{days}} jours restants"
     }
+  },
+  "weeklyWellnessQuiz": {
+    "title": "Objectifs Bien-être Hebdo",
+    "subtitle": "Définissez vos objectifs de performance mentale pour cette semaine",
+    "step1Title": "Objectif Humeur",
+    "step1Description": "Quel niveau d'humeur voulez-vous maintenir cette semaine?",
+    "step2Title": "Limite de Stress",
+    "step2Description": "Quel est votre niveau de stress maximum acceptable?",
+    "step3Title": "Objectif Discipline",
+    "step3Description": "Définissez votre objectif de niveau d'engagement",
+    "next": "Suivant",
+    "back": "Retour",
+    "complete": "Valider Objectifs",
+    "completing": "Enregistrement...",
+    "successTitle": "Objectifs Définis! 🎯",
+    "successMessage": "Vos objectifs bien-être hebdo sont enregistrés. On vous aide à rester sur la bonne voie!",
+    "successToast": "Objectifs bien-être hebdo enregistrés!",
+    "errorToast": "Échec de l'enregistrement",
+    "mood": "Humeur",
+    "stress": "Stress",
+    "discipline": "Discipline",
+    "target": "Objectif",
+    "actual": "Réel",
+    "lastWeekResults": "Résultats Semaine Dernière",
+    "metGoal": "Objectif Atteint!",
+    "missedGoal": "Continuez!",
+    "firstWeekMessage": "C'est votre première semaine! Définissez des objectifs de base pour suivre vos progrès."
   },
   "scoutGamePlan": {
     "title": "REVUE DE RECRUTEMENT",

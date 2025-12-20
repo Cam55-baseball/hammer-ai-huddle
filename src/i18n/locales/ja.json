@@ -3820,6 +3820,11 @@
         "title": "投球の自己評価を設定",
         "description": "20-80スケールで投球スキルを評価",
         "badge": "12週"
+      },
+      "wellnessGoals": {
+        "title": "週間ウェルネス目標を設定",
+        "description": "気分、ストレス、規律の目標を定義",
+        "badge": "週間"
       }
     },
     "recapCountdown": {
@@ -3827,6 +3832,33 @@
       "days": "日",
       "daysRemaining": "残り{{days}}日"
     }
+  },
+  "weeklyWellnessQuiz": {
+    "title": "週間ウェルネス目標",
+    "subtitle": "今週のメンタルパフォーマンス目標を設定",
+    "step1Title": "気分目標",
+    "step1Description": "今週維持したい気分レベルは？",
+    "step2Title": "ストレス上限",
+    "step2Description": "許容できる最大ストレスレベルは？",
+    "step3Title": "規律目標",
+    "step3Description": "コミットメントレベル目標を設定",
+    "next": "次へ",
+    "back": "戻る",
+    "complete": "目標を確定",
+    "completing": "保存中...",
+    "successTitle": "目標設定完了！🎯",
+    "successMessage": "週間ウェルネス目標が確定されました。軌道に乗るお手伝いをします！",
+    "successToast": "週間ウェルネス目標を保存しました！",
+    "errorToast": "目標の保存に失敗しました",
+    "mood": "気分",
+    "stress": "ストレス",
+    "discipline": "規律",
+    "target": "目標",
+    "actual": "実績",
+    "lastWeekResults": "先週の結果",
+    "metGoal": "目標達成！",
+    "missedGoal": "もっと頑張ろう！",
+    "firstWeekMessage": "最初の週です！進捗を追跡するための基準目標を設定しましょう。"
   },
   "scoutGamePlan": {
     "title": "スカウトレビュー",
