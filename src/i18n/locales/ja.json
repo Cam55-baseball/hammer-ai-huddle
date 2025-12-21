@@ -3922,7 +3922,9 @@
     "lastWeekResults": "先週の結果",
     "metGoal": "目標達成！",
     "missedGoal": "もっと頑張ろう！",
-    "firstWeekMessage": "最初の週です！進捗を追跡するための基準目標を設定しましょう。"
+    "firstWeekTitle": "ようこそ！🌟",
+    "firstWeekMessage": "最初の週です！進捗を追跡するための基準目標を設定しましょう。",
+    "firstWeekEncouragement": "自分に合ったものから始めましょう — 来週いつでも調整できます。"
   },
   "scoutGamePlan": {
     "title": "スカウトレビュー",

@@ -183,10 +183,29 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
       )}
 
       {!lastWeekTarget && (
-        <div className="mt-6 p-4 rounded-xl bg-background/30 border border-border/30">
-          <p className="text-sm text-muted-foreground text-center">
-            {t('weeklyWellnessQuiz.firstWeekMessage')}
-          </p>
+        <div className={cn(
+          "mt-6 p-5 rounded-2xl",
+          "bg-gradient-to-br from-primary/10 via-background/95 to-background",
+          "border border-primary/20",
+          "shadow-lg shadow-primary/5",
+          "animate-fade-in"
+        )}>
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-primary/15 text-primary shrink-0">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-bold text-foreground text-base">
+                {t('weeklyWellnessQuiz.firstWeekTitle')}
+              </h4>
+              <p className="text-sm text-foreground/90">
+                {t('weeklyWellnessQuiz.firstWeekMessage')}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                {t('weeklyWellnessQuiz.firstWeekEncouragement')}
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>
