@@ -4683,7 +4683,298 @@
       "overview": "Resumen",
       "emotionalAwareness": "Conciencia Emocional",
       "stressManagement": "Manejo del Estrés",
-      "mindfulness": "Atención Plena",
+      "mindfulness": "Atención Plena"
+    }
+  },
+  "mindfulness": {
+    "title": "Atención Plena",
+    "subtitle": "Calma tu mente, agudiza tu enfoque, eleva tu rendimiento",
+    "tabs": {
+      "meditation": "Meditar",
+      "bodyScan": "Escaneo Corporal",
+      "breathing": "Respiración"
+    },
+    "meditation": {
+      "title": "Biblioteca de Meditación",
+      "subtitle": "Sesiones de entrenamiento mental élite diseñadas para el máximo rendimiento atlético",
+      "filterAll": "Todos",
+      "completed": "¡Sesión completada!",
+      "moodCheck": "¿Cómo te sientes ahora mismo?",
+      "breathe": "Respira profundamente... deja que cada respiración te ancle a este momento",
+      "paused": "Sesión pausada - tómate tu tiempo",
+      "wellDone": "¡Excelente Trabajo!",
+      "completedSession": "Completaste {{title}}",
+      "chooseAnother": "Elegir Otra Sesión",
+      "bestFor": "Ideal para",
+      "technique": "Técnica",
+      "reflectionPrompt": "Tómate un momento para notar cómo te sientes ahora comparado con cuando empezaste. ¿Qué cambió?",
+      "categories": {
+        "focus": "Enfoque",
+        "calm": "Calma",
+        "sleep": "Sueño",
+        "energy": "Energía"
+      },
+      "levels": {
+        "beginner": "Principiante",
+        "intermediate": "Intermedio",
+        "advanced": "Avanzado"
+      },
+      "techniques": {
+        "breathCounting": "Conteo de Respiración",
+        "attentionAnchoring": "Anclaje de Atención",
+        "visualizationBoxBreathing": "Visualización + Respiración Cuadrada",
+        "flowStateInduction": "Inducción de Estado de Flujo",
+        "mentalRehearsal": "Ensayo Mental",
+        "comprehensiveMentalTraining": "Entrenamiento Mental Integral",
+        "muscleRelease": "Liberación Muscular Progresiva",
+        "fourSevenEight": "Respiración 4-7-8",
+        "rhythmicVisualization": "Visualización Rítmica",
+        "progressiveRelaxation": "Relajación Progresiva",
+        "activatingBreath": "Respiración Activadora",
+        "mentalAwakening": "Despertar Mental",
+        "sustainedActivation": "Activación Sostenida",
+        "sleepTransition": "Transición al Sueño",
+        "windDown": "Protocolo de Relajación",
+        "deepSleepInduction": "Inducción de Sueño Profundo"
+      },
+      "sessions": {
+        "focus-2": {
+          "title": "Enfoque Rápido",
+          "desc": "Reinicio mental rápido para claridad instantánea",
+          "longDesc": "Un poderoso reinicio de 2 minutos que despeja el desorden mental y agudiza tu atención. Perfecto para esos momentos cuando necesitas recentrarte rápidamente entre jugadas o durante descansos.",
+          "benefitFor": "Entre entradas, tiempos fuera, pre-turno al bate",
+          "prompts": {
+            "0": "Deja ir todo lo que sucedió antes de este momento...",
+            "1": "Cada respiración atrae tu atención hacia adentro como un láser...",
+            "2": "Tu mente se está aclarando... volviéndose aguda y quieta...",
+            "3": "Siente las distracciones disolviéndose con cada exhalación...",
+            "4": "Estás presente. Estás listo. Estás enfocado."
+          }
+        },
+        "focus-3": {
+          "title": "Visión de Túnel",
+          "desc": "Bloquea distracciones y enfócate en tu objetivo",
+          "longDesc": "Entrena tu mente para eliminar el ruido externo y mantener una atención inquebrantable en lo que más importa. Esta sesión desarrolla la habilidad mental de atención selectiva que usan los atletas élite en momentos de alta presión.",
+          "benefitFor": "Ambientes ruidosos, momentos de alta presión",
+          "prompts": {
+            "0": "Imagina un túnel formándose alrededor de tu visión...",
+            "1": "Todo fuera del túnel se desvanece en silencio...",
+            "2": "Solo existe tu objetivo. Solo importa este momento...",
+            "3": "Las distracciones rebotan en tu escudo de enfoque...",
+            "4": "Tu concentración es inquebrantable, firme..."
+          }
+        },
+        "focus-5": {
+          "title": "Enfoque Pre-Juego",
+          "desc": "Protocolo de preparación mental para máximo rendimiento",
+          "longDesc": "La preparación mental completa pre-competencia usada por atletas élite. Combina visualización de éxito con respiración controlada para activar el estado óptimo de rendimiento—alerta pero calmado, confiado pero humilde.",
+          "benefitFor": "30 minutos antes de juegos o momentos importantes",
+          "prompts": {
+            "0": "Imagínate entrando a tu arena con completa confianza...",
+            "1": "Siente el poder construyéndose en tu pecho con cada respiración...",
+            "2": "Tu cuerpo sabe exactamente qué hacer. Has entrenado para esto...",
+            "3": "Mírate ejecutando impecablemente, naturalmente, sin esfuerzo...",
+            "4": "Inhala poder. Exhala cualquier duda restante...",
+            "5": "Estás preparado. Eres capaz. Estás listo."
+          }
+        },
+        "focus-7": {
+          "title": "Estado de Zona",
+          "desc": "Entra en el estado de flujo de máximo rendimiento",
+          "longDesc": "Un viaje más profundo hacia el estado de zona—ese lugar mágico donde la acción y la conciencia se fusionan, donde el tiempo parece desacelerarse, y donde tus mejores actuaciones emergen naturalmente.",
+          "benefitFor": "Sesiones de entrenamiento importantes, preparación para competencia",
+          "prompts": {
+            "0": "Siente cómo te acomodas en un estado de conciencia sin esfuerzo...",
+            "1": "Tus pensamientos se están desacelerando... como agua quieta...",
+            "2": "En esta quietud, tus instintos se vuelven cristalinos...",
+            "3": "El tiempo comienza a estirarse... cada momento expandiéndose...",
+            "4": "Estás entrando en la zona donde todo fluye...",
+            "5": "La acción y la conciencia se están volviendo una...",
+            "6": "Este es tu estado óptimo. Recuerda esta sensación."
+          }
+        },
+        "focus-15": {
+          "title": "Visualización",
+          "desc": "Ensayo mental completo de máximo rendimiento",
+          "longDesc": "Un viaje de visualización integral que programa tu sistema nervioso para el éxito. Al ensayar mentalmente la ejecución perfecta con detalle vívido, creas vías neuronales que se traducen directamente en rendimiento físico.",
+          "benefitFor": "Desarrollo de habilidades, construcción de confianza",
+          "prompts": {
+            "0": "Cierra los ojos y entra en tu actuación perfecta...",
+            "1": "Siente la textura de tu equipo en tus manos...",
+            "2": "Escucha los sonidos de tu ambiente con perfecta claridad...",
+            "3": "Ahora ejecuta tu habilidad con precisión absoluta...",
+            "4": "Siente la satisfacción de la técnica perfecta...",
+            "5": "Repite este éxito, cada vez más sin esfuerzo...",
+            "6": "Tu cuerpo está aprendiendo a través del ojo de tu mente...",
+            "7": "Esta práctica mental se convierte en maestría física."
+          }
+        },
+        "focus-20": {
+          "title": "Mente de Campeón",
+          "desc": "Entrenamiento mental integral élite",
+          "longDesc": "La sesión de entrenamiento mental más avanzada de la biblioteca. Este protocolo integral combina visualización, regulación emocional, construcción de confianza y entrenamiento de enfoque—el conjunto completo de herramientas mentales usado por atletas de clase mundial.",
+          "benefitFor": "Preparación para campeonatos, maestría de habilidades mentales",
+          "prompts": {
+            "0": "Estás a punto de entrenar el músculo más importante—tu mente...",
+            "1": "Primero, construimos confianza inquebrantable desde adentro...",
+            "2": "Siente la certeza de que tienes lo que se necesita...",
+            "3": "Ahora, fortalecemos tu control emocional...",
+            "4": "Ninguna situación puede sacudir tu calma interior...",
+            "5": "Siguiente, afinamos tu concentración al filo de una navaja...",
+            "6": "Las distracciones no tienen poder sobre tu enfoque...",
+            "7": "Finalmente, integramos todas estas habilidades en un estado...",
+            "8": "Esta es la mente de campeón—calmada, confiada, enfocada...",
+            "9": "Llevas esta fortaleza mental a cada momento."
+          }
+        },
+        "calm-3": {
+          "title": "Liberación de Presión",
+          "desc": "Libera tensión rápidamente y reinicia tu sistema nervioso",
+          "longDesc": "Una técnica de liberación rápida de tensión que activa tu sistema nervioso parasimpático y derrite el estrés acumulado. Perfecto para esos momentos cuando sientes la presión aumentando.",
+          "benefitFor": "Reinicio post-error, momentos de alta presión",
+          "prompts": {
+            "0": "Localiza dónde vive la tensión en tu cuerpo ahora mismo...",
+            "1": "Respira directamente hacia ese espacio tenso...",
+            "2": "Siente la tensión comenzando a suavizarse y liberarse...",
+            "3": "Con cada exhalación, más tensión se derrite...",
+            "4": "Estás regresando al control calmado."
+          }
+        },
+        "calm-5": {
+          "title": "Respiración Calmante",
+          "desc": "Respiración 4-7-8 para alivio profundo de ansiedad",
+          "longDesc": "El patrón de respiración 4-7-8 científicamente probado que activa la respuesta de relajación natural de tu cuerpo. Esta técnica influye directamente en tu nervio vago, bajando el ritmo cardíaco y reduciendo el cortisol.",
+          "benefitFor": "Nervios pre-juego, manejo de ansiedad",
+          "prompts": {
+            "0": "Inhala por la nariz durante 4 conteos...",
+            "1": "Sostén la respiración suavemente durante 7 conteos...",
+            "2": "Exhala lentamente por la boca durante 8 conteos...",
+            "3": "Siente tu sistema nervioso calmándose con cada ciclo...",
+            "4": "La ansiedad no puede existir en un cuerpo tan relajado...",
+            "5": "Tienes control completo de tu estado interior."
+          }
+        },
+        "calm-7": {
+          "title": "Olas del Océano",
+          "desc": "Relajación rítmica inspirada en la naturaleza",
+          "longDesc": "Deja que el ritmo eterno de las olas del océano te guíe a un estado de paz profunda. Esta técnica de visualización sincroniza tu respiración con el flujo y reflujo de olas imaginarias.",
+          "benefitFor": "Días de recuperación, relajación nocturna",
+          "prompts": {
+            "0": "Imagínate en una playa pacífica al atardecer...",
+            "1": "Escucha el ritmo suave de las olas llegando a la orilla...",
+            "2": "Inhala mientras la ola se acerca...",
+            "3": "Exhala mientras regresa al mar...",
+            "4": "Cada ola se lleva más tensión...",
+            "5": "Eres tan calmado e infinito como el océano...",
+            "6": "La paz fluye a través de ti como la marea."
+          }
+        },
+        "calm-10": {
+          "title": "Relajación Profunda",
+          "desc": "Viaje de relajación muscular progresiva completa",
+          "longDesc": "Un viaje completo de relajación muscular progresiva que libera sistemáticamente la tensión de cada parte de tu cuerpo. Esta práctica profunda crea un estado de relajación física profunda.",
+          "benefitFor": "Optimización de recuperación, alivio del estrés",
+          "prompts": {
+            "0": "Comenzamos en tus pies... siéntelos volviéndose pesados y cálidos...",
+            "1": "La relajación fluye hacia arriba por tus piernas...",
+            "2": "Tus caderas y espalda baja se están suavizando...",
+            "3": "Siente tu estómago y pecho liberando toda la tensión...",
+            "4": "Tus hombros caen... brazos volviéndose pesados...",
+            "5": "La relajación se extiende por tu cuello y mandíbula...",
+            "6": "Toda tu cara está suave y pacífica...",
+            "7": "Todo tu cuerpo está ahora profundamente, completamente relajado."
+          }
+        },
+        "energy-3": {
+          "title": "Ignición",
+          "desc": "Enciende tu fuego interior para activación inmediata",
+          "longDesc": "Una secuencia energizante rápida que despierta tu cuerpo y mente para la acción. Esta técnica usa respiración rápida controlada y visualización energizante.",
+          "benefitFor": "Activación matutina, energía pre-práctica",
+          "prompts": {
+            "0": "Siente una chispa de energía encendiéndose en tu núcleo...",
+            "1": "Con cada respiración, este fuego crece más fuerte...",
+            "2": "La energía se está extendiendo por todo tu cuerpo...",
+            "3": "Estás despertando completamente, poderosamente...",
+            "4": "Estás listo para moverte, para rendir, para sobresalir."
+          }
+        },
+        "energy-5": {
+          "title": "Impulso de Energía",
+          "desc": "Activación mental para alerta sostenida",
+          "longDesc": "Combate la fatiga mental y eleva tu energía sin cafeína. Esta sesión usa patrones de respiración y técnicas mentales que aumentan naturalmente el estado de alerta.",
+          "benefitFor": "Bajones de la tarde, días de doble juego",
+          "prompts": {
+            "0": "Imagina luz dorada brillante entrando con cada inhalación...",
+            "1": "Esta luz es energía pura y limpia...",
+            "2": "Está llenando cada célula de tu cuerpo...",
+            "3": "Tu mente se está volviendo aguda y clara...",
+            "4": "La fatiga se está disolviendo, reemplazada por vitalidad...",
+            "5": "Tienes toda la energía que necesitas dentro de ti."
+          }
+        },
+        "energy-7": {
+          "title": "Potenciación",
+          "desc": "Construye energía sostenida para rendimiento extendido",
+          "longDesc": "Una sesión energizante más larga que construye energía sostenible y controlada en lugar de un pico rápido. Perfecta para días de juego cuando necesitas mantener alto rendimiento durante períodos extendidos.",
+          "benefitFor": "Mañana de día de juego, días de torneo",
+          "prompts": {
+            "0": "Estamos construyendo energía que durará todo el día...",
+            "1": "Siente la fuerza acumulándose en el núcleo de tu cuerpo...",
+            "2": "Este poder es estable, controlado, sostenible...",
+            "3": "Tus reservas de energía se están llenando completamente...",
+            "4": "Tienes un pozo infinito de vitalidad dentro de ti...",
+            "5": "Esta energía te llevará a través de cada momento...",
+            "6": "Estás completamente cargado y listo para todo."
+          }
+        },
+        "sleep-5": {
+          "title": "Deriva",
+          "desc": "Transición suave de vigilia a sueño",
+          "longDesc": "Una transición suave y gradual que guía tu mente desde la actividad del día hacia el estado pacífico que precede al sueño reparador.",
+          "benefitFor": "Relajación post-juego, pensamientos acelerados",
+          "prompts": {
+            "0": "Deja que los eventos del día comiencen a desvanecerse como un atardecer...",
+            "1": "Tus pensamientos se están volviendo suaves y distantes...",
+            "2": "No hay nada que necesites hacer ahora mismo...",
+            "3": "Simplemente permítete derivar... suavemente... pacíficamente...",
+            "4": "El sueño viene naturalmente, fácilmente, acogedoramente..."
+          }
+        },
+        "sleep-10": {
+          "title": "Preparación para Dormir",
+          "desc": "Protocolo completo de relajación para descanso de calidad",
+          "longDesc": "Una rutina integral pre-sueño que prepara sistemáticamente tu cuerpo y mente para un sueño profundo y restaurador.",
+          "benefitFor": "Noche antes del juego, sueño de recuperación",
+          "prompts": {
+            "0": "Es hora de soltar todo de hoy...",
+            "1": "Tu cuerpo ha trabajado duro y merece descanso...",
+            "2": "Siente tus músculos comenzando a liberarse y suavizarse...",
+            "3": "Tu mente se está aquietando... pensamientos espaciándose...",
+            "4": "El mañana cuidará de sí mismo...",
+            "5": "Ahora mismo, solo hay descanso pacífico...",
+            "6": "Estás seguro. Estás cómodo. Estás en paz."
+          }
+        },
+        "sleep-15": {
+          "title": "Viaje al Sueño Profundo",
+          "desc": "Inducción completa de sueño para recuperación máxima",
+          "longDesc": "La preparación más completa para dormir de la biblioteca. Esta sesión extendida usa relajación progresiva, visualización calmante y patrones de respiración inductores de sueño.",
+          "benefitFor": "Noches de recuperación, jet lag, dificultades para dormir",
+          "prompts": {
+            "0": "Comenzamos un viaje suave hacia el descanso más profundo...",
+            "1": "Cada respiración te lleva más profundo en la relajación...",
+            "2": "Tu cuerpo se está volviendo más pesado... más cómodo...",
+            "3": "El mundo exterior se está desvaneciendo completamente...",
+            "4": "Estás descendiendo hacia un sueño pacífico y sanador...",
+            "5": "Cada célula se está preparando para una restauración profunda...",
+            "6": "Este sueño te reconstruirá y fortalecerá...",
+            "7": "Ríndete ahora al descanso perfecto y pacífico..."
+          }
+        }
+      }
+    }
+  },
+  "insights": {
       "cognitiveSkills": "Habilidades Cognitivas",
       "resilience": "Resiliencia",
       "healing": "Sanación",
