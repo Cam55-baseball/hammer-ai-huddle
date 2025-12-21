@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Target, ChevronRight, ChevronLeft, Sparkles, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Target, ChevronRight, ChevronLeft, Sparkles, Trophy, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWeeklyWellnessQuiz } from '@/hooks/useWeeklyWellnessQuiz';
 import { ConfettiEffect } from '@/components/bounce-back-bay/ConfettiEffect';
@@ -265,7 +265,9 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
   if (showSuccess) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent">
+        <DialogContent className="sm:max-w-md p-0 border-0 bg-transparent max-h-[90vh] overflow-y-auto">
+          <DialogTitle className="sr-only">{t('weeklyWellnessQuiz.successTitle')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('weeklyWellnessQuiz.successMessage')}</DialogDescription>
           {showConfetti && <ConfettiEffect particleCount={100} duration={2500} />}
           <div className="relative bg-gradient-to-br from-emerald-500/20 via-teal-500/15 to-cyan-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-8">
             {/* Animated background orbs */}
@@ -314,14 +316,16 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-0 bg-transparent">
+      <DialogContent className="sm:max-w-lg p-0 border-0 bg-transparent max-h-[90vh] overflow-y-auto">
+        <DialogTitle className="sr-only">{t('weeklyWellnessQuiz.title')}</DialogTitle>
+        <DialogDescription className="sr-only">{t('weeklyWellnessQuiz.subtitle')}</DialogDescription>
         <div className={cn(
           "relative bg-gradient-to-br backdrop-blur-xl border rounded-2xl p-6",
           currentStep.bgColor,
           "border-primary/30"
         )}>
           {/* Animated background orbs */}
-          <div className="absolute inset-0 overflow-hidden rounded-2xl">
+          <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl animate-pulse" />
             <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-primary/10 rounded-full blur-3xl animate-pulse delay-700" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-primary/5 rounded-full blur-2xl animate-pulse delay-300" />
