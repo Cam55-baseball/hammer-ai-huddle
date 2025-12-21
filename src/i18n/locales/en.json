@@ -4963,6 +4963,294 @@
       "healingText": "This content is for educational and self-reflection purposes only. It is not a substitute for professional mental health treatment. If you are experiencing significant distress or trauma, please consult a licensed therapist or counselor."
     }
   },
+  "mindfulness": {
+    "title": "Mindfulness",
+    "subtitle": "Calm your mind, sharpen your focus, elevate your performance",
+    "tabs": {
+      "meditation": "Meditate",
+      "bodyScan": "Body Scan",
+      "breathing": "Breathing"
+    },
+    "meditation": {
+      "title": "Meditation Library",
+      "subtitle": "Elite mental training sessions designed for peak athletic performance",
+      "filterAll": "All",
+      "completed": "Session completed!",
+      "moodCheck": "How are you feeling right now?",
+      "breathe": "Breathe deeply... let each breath anchor you to this moment",
+      "paused": "Session paused - take your time",
+      "wellDone": "Excellent Work!",
+      "completedSession": "You completed {{title}}",
+      "chooseAnother": "Choose Another Session",
+      "bestFor": "Best for",
+      "technique": "Technique",
+      "reflectionPrompt": "Take a moment to notice how you feel now compared to when you started. What shifted?",
+      "categories": {
+        "focus": "Focus",
+        "calm": "Calm",
+        "sleep": "Sleep",
+        "energy": "Energy"
+      },
+      "levels": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced"
+      },
+      "techniques": {
+        "breathCounting": "Breath Counting",
+        "attentionAnchoring": "Attention Anchoring",
+        "visualizationBoxBreathing": "Visualization + Box Breathing",
+        "flowStateInduction": "Flow State Induction",
+        "mentalRehearsal": "Mental Rehearsal",
+        "comprehensiveMentalTraining": "Comprehensive Mental Training",
+        "muscleRelease": "Progressive Muscle Release",
+        "fourSevenEight": "4-7-8 Breathing",
+        "rhythmicVisualization": "Rhythmic Visualization",
+        "progressiveRelaxation": "Progressive Relaxation",
+        "activatingBreath": "Activating Breath",
+        "mentalAwakening": "Mental Awakening",
+        "sustainedActivation": "Sustained Activation",
+        "sleepTransition": "Sleep Transition",
+        "windDown": "Wind Down Protocol",
+        "deepSleepInduction": "Deep Sleep Induction"
+      },
+      "sessions": {
+        "focus-2": {
+          "title": "Quick Focus",
+          "desc": "Rapid mental reset for instant clarity",
+          "longDesc": "A powerful 2-minute reset that clears mental clutter and sharpens your attention. Perfect for those moments when you need to quickly recenter between plays or during breaks.",
+          "benefitFor": "Between innings, timeout breaks, pre-at-bat",
+          "prompts": {
+            "0": "Let go of everything that happened before this moment...",
+            "1": "Each breath draws your attention inward like a laser...",
+            "2": "Your mind is clearing... becoming sharp and still...",
+            "3": "Feel the distractions dissolving with each exhale...",
+            "4": "You are present. You are ready. You are focused."
+          }
+        },
+        "focus-3": {
+          "title": "Tunnel Vision",
+          "desc": "Block distractions and lock onto your target",
+          "longDesc": "Train your mind to eliminate external noise and maintain unwavering attention on what matters most. This session builds the mental skill of selective attention that elite athletes use in high-pressure moments.",
+          "benefitFor": "Noisy environments, high-pressure moments",
+          "prompts": {
+            "0": "Imagine a tunnel forming around your vision...",
+            "1": "Everything outside the tunnel fades to silence...",
+            "2": "Only your target exists. Only this moment matters...",
+            "3": "Distractions bounce off your shield of focus...",
+            "4": "Your concentration is unbreakable, unwavering..."
+          }
+        },
+        "focus-5": {
+          "title": "Pre-Game Focus",
+          "desc": "Mental preparation protocol for peak performance",
+          "longDesc": "The complete pre-competition mental preparation used by elite athletes. Combines visualization of success with controlled breathing to activate the optimal performance state—alert yet calm, confident yet humble.",
+          "benefitFor": "30 minutes before games or big moments",
+          "prompts": {
+            "0": "Picture yourself stepping into your arena with complete confidence...",
+            "1": "Feel the power building in your chest with each breath...",
+            "2": "Your body knows exactly what to do. You've trained for this...",
+            "3": "See yourself executing flawlessly, naturally, effortlessly...",
+            "4": "Breathe in power. Breathe out any remaining doubt...",
+            "5": "You are prepared. You are capable. You are ready."
+          }
+        },
+        "focus-7": {
+          "title": "Zone State",
+          "desc": "Enter the flow state of peak performance",
+          "longDesc": "A deeper journey into the zone state—that magical place where action and awareness merge, where time seems to slow, and where your best performances emerge naturally. This is the mental state that creates breakthrough moments.",
+          "benefitFor": "Important training sessions, competition prep",
+          "prompts": {
+            "0": "Feel yourself settling into a state of effortless awareness...",
+            "1": "Your thoughts are slowing... becoming like still water...",
+            "2": "In this stillness, your instincts become crystal clear...",
+            "3": "Time begins to stretch... each moment expanding...",
+            "4": "You are entering the zone where everything flows...",
+            "5": "Action and awareness are becoming one...",
+            "6": "This is your peak state. Remember this feeling."
+          }
+        },
+        "focus-15": {
+          "title": "Visualization",
+          "desc": "Complete mental rehearsal of peak performance",
+          "longDesc": "A comprehensive visualization journey that programs your nervous system for success. By mentally rehearsing perfect execution in vivid detail, you create neural pathways that translate directly into physical performance.",
+          "benefitFor": "Skills development, confidence building",
+          "prompts": {
+            "0": "Close your eyes and step into your perfect performance...",
+            "1": "Feel the texture of your equipment in your hands...",
+            "2": "Hear the sounds of your environment with perfect clarity...",
+            "3": "Now execute your skill with absolute precision...",
+            "4": "Feel the satisfaction of perfect technique...",
+            "5": "Repeat this success, each time more effortlessly...",
+            "6": "Your body is learning through your mind's eye...",
+            "7": "This mental practice becomes physical mastery."
+          }
+        },
+        "focus-20": {
+          "title": "Champion's Mind",
+          "desc": "Elite comprehensive mental training",
+          "longDesc": "The most advanced mental training session in the library. This comprehensive protocol combines visualization, emotional regulation, confidence building, and focus training—the complete mental toolkit used by world-class athletes to maintain peak performance under any circumstances.",
+          "benefitFor": "Championship preparation, mental skill mastery",
+          "prompts": {
+            "0": "You are about to train the most important muscle—your mind...",
+            "1": "First, we build unshakeable confidence from within...",
+            "2": "Feel the certainty that you have what it takes...",
+            "3": "Now, we strengthen your emotional control...",
+            "4": "No situation can shake your inner calm...",
+            "5": "Next, we sharpen your concentration to a razor's edge...",
+            "6": "Distractions have no power over your focus...",
+            "7": "Finally, we integrate all these skills into one state...",
+            "8": "This is the champion's mind—calm, confident, focused...",
+            "9": "You carry this mental strength into every moment."
+          }
+        },
+        "calm-3": {
+          "title": "Pressure Release",
+          "desc": "Quickly release tension and reset your nervous system",
+          "longDesc": "A rapid tension-release technique that activates your parasympathetic nervous system and melts accumulated stress. Perfect for those moments when you feel pressure building and need to quickly return to a calm, controlled state.",
+          "benefitFor": "Post-mistake reset, high-pressure moments",
+          "prompts": {
+            "0": "Locate where tension lives in your body right now...",
+            "1": "Breathe directly into that tight space...",
+            "2": "Feel the tension beginning to soften and release...",
+            "3": "With each exhale, more tension melts away...",
+            "4": "You are returning to calm control."
+          }
+        },
+        "calm-5": {
+          "title": "Calming Breath",
+          "desc": "4-7-8 breathing for deep anxiety relief",
+          "longDesc": "The scientifically-proven 4-7-8 breathing pattern that activates your body's natural relaxation response. This technique directly influences your vagus nerve, lowering heart rate, reducing cortisol, and creating a profound sense of calm that persists long after the session ends.",
+          "benefitFor": "Pre-game nerves, anxiety management",
+          "prompts": {
+            "0": "Inhale through your nose for 4 counts...",
+            "1": "Hold your breath gently for 7 counts...",
+            "2": "Exhale slowly through your mouth for 8 counts...",
+            "3": "Feel your nervous system calming with each cycle...",
+            "4": "Anxiety cannot exist in a body this relaxed...",
+            "5": "You are in complete control of your inner state."
+          }
+        },
+        "calm-7": {
+          "title": "Ocean Waves",
+          "desc": "Rhythmic relaxation inspired by nature",
+          "longDesc": "Let the eternal rhythm of ocean waves guide you to a state of deep peace. This visualization technique synchronizes your breathing with the ebb and flow of imaginary waves, creating a meditative state that deeply relaxes both body and mind.",
+          "benefitFor": "Recovery days, evening relaxation",
+          "prompts": {
+            "0": "Picture yourself on a peaceful beach at sunset...",
+            "1": "Hear the gentle rhythm of waves reaching the shore...",
+            "2": "Breathe in as the wave approaches...",
+            "3": "Breathe out as it recedes back to the sea...",
+            "4": "Each wave carries away more tension...",
+            "5": "You are as calm and endless as the ocean...",
+            "6": "Peace flows through you like the tide."
+          }
+        },
+        "calm-10": {
+          "title": "Deep Relaxation",
+          "desc": "Full-body progressive relaxation journey",
+          "longDesc": "A complete progressive muscle relaxation journey that systematically releases tension from every part of your body. This deep practice creates a state of profound physical relaxation that allows for optimal recovery and mental restoration.",
+          "benefitFor": "Recovery optimization, stress relief",
+          "prompts": {
+            "0": "We begin at your feet... feel them becoming heavy and warm...",
+            "1": "Relaxation is flowing up through your legs...",
+            "2": "Your hips and lower back are softening...",
+            "3": "Feel your stomach and chest releasing all tension...",
+            "4": "Your shoulders are dropping... arms becoming heavy...",
+            "5": "Relaxation spreads through your neck and jaw...",
+            "6": "Your entire face is smooth and peaceful...",
+            "7": "Your whole body is now deeply, completely relaxed."
+          }
+        },
+        "energy-3": {
+          "title": "Ignition",
+          "desc": "Spark your inner fire for immediate activation",
+          "longDesc": "A quick energizing sequence that awakens your body and mind for action. This technique uses controlled rapid breathing and energizing visualization to shift you from sluggish to sharp, ready to perform at your best.",
+          "benefitFor": "Morning activation, pre-practice energy",
+          "prompts": {
+            "0": "Feel a spark of energy igniting in your core...",
+            "1": "With each breath, this fire grows stronger...",
+            "2": "Energy is spreading through your entire body...",
+            "3": "You are waking up fully, completely, powerfully...",
+            "4": "You are ready to move, to perform, to excel."
+          }
+        },
+        "energy-5": {
+          "title": "Energy Boost",
+          "desc": "Mental activation for sustained alertness",
+          "longDesc": "Combat mental fatigue and elevate your energy without caffeine. This session uses breathing patterns and mental techniques that naturally increase alertness, sharpen reaction time, and prepare your mind for intense focus.",
+          "benefitFor": "Afternoon slumps, double-header days",
+          "prompts": {
+            "0": "Imagine bright, golden light entering with each inhale...",
+            "1": "This light is pure, clean energy...",
+            "2": "It's filling every cell of your body...",
+            "3": "Your mind is becoming sharp and clear...",
+            "4": "Fatigue is dissolving, replaced by vitality...",
+            "5": "You have all the energy you need within you."
+          }
+        },
+        "energy-7": {
+          "title": "Power Up",
+          "desc": "Build sustained energy for extended performance",
+          "longDesc": "A longer energizing session that builds sustainable, controlled energy rather than a quick spike. Perfect for game days when you need to maintain high performance over extended periods without burning out.",
+          "benefitFor": "Game day morning, tournament days",
+          "prompts": {
+            "0": "We are building energy that will last all day...",
+            "1": "Feel strength gathering in your body's core...",
+            "2": "This power is stable, controlled, sustainable...",
+            "3": "Your energy reserves are filling completely...",
+            "4": "You have an endless well of vitality within you...",
+            "5": "This energy will carry you through every moment...",
+            "6": "You are fully powered up and ready for anything."
+          }
+        },
+        "sleep-5": {
+          "title": "Drift Off",
+          "desc": "Gentle transition from wakefulness to sleep",
+          "longDesc": "A soft, gradual transition that guides your mind from the activity of the day into the peaceful state that precedes restful sleep. Perfect for athletes who need to quiet an active mind after training or competition.",
+          "benefitFor": "Post-game wind-down, racing thoughts",
+          "prompts": {
+            "0": "Let the day's events begin to fade like a sunset...",
+            "1": "Your thoughts are becoming soft and distant...",
+            "2": "There is nothing you need to do right now...",
+            "3": "Simply allow yourself to drift... gently... peacefully...",
+            "4": "Sleep is coming naturally, easily, welcomingly..."
+          }
+        },
+        "sleep-10": {
+          "title": "Sleep Prep",
+          "desc": "Complete wind-down protocol for quality rest",
+          "longDesc": "A comprehensive pre-sleep routine that systematically prepares your body and mind for deep, restorative sleep. This session releases physical tension, quiets mental chatter, and creates the optimal internal conditions for the quality sleep that drives recovery.",
+          "benefitFor": "Night before game, recovery sleep",
+          "prompts": {
+            "0": "It's time to let go of everything from today...",
+            "1": "Your body has worked hard and deserves rest...",
+            "2": "Feel your muscles beginning to release and soften...",
+            "3": "Your mind is growing quiet... thoughts spacing out...",
+            "4": "Tomorrow will take care of itself...",
+            "5": "Right now, there is only peaceful rest...",
+            "6": "You are safe. You are comfortable. You are at peace."
+          }
+        },
+        "sleep-15": {
+          "title": "Deep Sleep Journey",
+          "desc": "Full sleep induction for ultimate recovery",
+          "longDesc": "The most thorough sleep preparation in the library. This extended session uses progressive relaxation, calming visualization, and sleep-inducing breathing patterns to guide you into the deepest, most restorative sleep—the kind that transforms athletic recovery and performance.",
+          "benefitFor": "Recovery nights, jet lag, sleep difficulties",
+          "prompts": {
+            "0": "We begin a gentle journey into the deepest rest...",
+            "1": "Each breath takes you deeper into relaxation...",
+            "2": "Your body is becoming heavier... more comfortable...",
+            "3": "The outside world is fading away completely...",
+            "4": "You are descending into peaceful, healing sleep...",
+            "5": "Every cell is preparing for deep restoration...",
+            "6": "This sleep will rebuild and strengthen you...",
+            "7": "Surrender now to perfect, peaceful rest..."
+          }
+        }
+      }
+    }
+  },
   "insights": {
     "title": "Wellness Insights",
     "subtitle": "Track your mental wellness journey with data-driven insights",
