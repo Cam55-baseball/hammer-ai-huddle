@@ -4635,7 +4635,9 @@
     "lastWeekResults": "Résultats Semaine Dernière",
     "metGoal": "Objectif Atteint!",
     "missedGoal": "Continuez!",
-    "firstWeekMessage": "C'est votre première semaine! Définissez des objectifs de base pour suivre vos progrès."
+    "firstWeekTitle": "Bienvenue! 🌟",
+    "firstWeekMessage": "C'est votre première semaine! Définissez des objectifs de base pour suivre vos progrès.",
+    "firstWeekEncouragement": "Commencez par ce qui vous semble juste — vous pouvez toujours ajuster la semaine prochaine."
   },
   "scoutGamePlan": {
     "title": "REVUE DE RECRUTEMENT",

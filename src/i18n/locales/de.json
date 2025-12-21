@@ -4635,7 +4635,9 @@
     "lastWeekResults": "Ergebnisse Letzte Woche",
     "metGoal": "Ziel Erreicht!",
     "missedGoal": "Weitermachen!",
-    "firstWeekMessage": "Das ist deine erste Woche! Setze Basisziele um deinen Fortschritt zu verfolgen."
+    "firstWeekTitle": "Willkommen! 🌟",
+    "firstWeekMessage": "Das ist deine erste Woche! Setze Basisziele um deinen Fortschritt zu verfolgen.",
+    "firstWeekEncouragement": "Fang mit dem an, was sich richtig anfühlt — du kannst nächste Woche immer noch anpassen."
   },
   "scoutGamePlan": {
     "title": "SCOUTING-ÜBERPRÜFUNG",

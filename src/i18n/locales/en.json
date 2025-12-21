@@ -4843,7 +4843,9 @@
     "lastWeekResults": "Last Week Results",
     "metGoal": "Goal Met!",
     "missedGoal": "Keep pushing!",
-    "firstWeekMessage": "This is your first week! Set some baseline goals to track your progress."
+    "firstWeekTitle": "Welcome! 🌟",
+    "firstWeekMessage": "This is your first week! Set some baseline goals to track your progress.",
+    "firstWeekEncouragement": "Start with what feels right — you can always adjust next week."
   },
   "scoutGamePlan": {
     "title": "SCOUTING REVIEW",

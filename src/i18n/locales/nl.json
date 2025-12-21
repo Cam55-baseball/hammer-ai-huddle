@@ -3822,7 +3822,9 @@
     "lastWeekResults": "Resultaten Vorige Week",
     "metGoal": "Doel Behaald!",
     "missedGoal": "Blijf pushen!",
-    "firstWeekMessage": "Dit is je eerste week! Stel basisdoelen in om je voortgang te volgen."
+    "firstWeekTitle": "Welkom! 🌟",
+    "firstWeekMessage": "Dit is je eerste week! Stel basisdoelen in om je voortgang te volgen.",
+    "firstWeekEncouragement": "Begin met wat goed voelt — je kunt volgende week altijd aanpassen."
   },
   "scoutGamePlan": {
     "title": "SCOUTING REVIEW",

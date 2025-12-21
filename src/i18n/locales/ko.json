@@ -3809,7 +3809,9 @@
     "lastWeekResults": "지난주 결과",
     "metGoal": "목표 달성!",
     "missedGoal": "계속 노력하세요!",
-    "firstWeekMessage": "첫 주입니다! 진행 상황을 추적할 기준 목표를 설정하세요."
+    "firstWeekTitle": "환영합니다! 🌟",
+    "firstWeekMessage": "첫 주입니다! 진행 상황을 추적할 기준 목표를 설정하세요.",
+    "firstWeekEncouragement": "편하게 느껴지는 것부터 시작하세요 — 다음 주에 언제든 조정할 수 있습니다."
   },
   "scoutGamePlan": {
     "title": "스카우트 리뷰",
