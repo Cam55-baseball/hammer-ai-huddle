@@ -23,7 +23,10 @@
     "allSports": "Alle Sportarten",
     "yes": "Ja",
     "no": "Nein",
-    "ai": "KI"
+    "ai": "KI",
+    "continue": "Weiter",
+    "selected": "Ausgewählt",
+    "select": "Auswählen"
   },
   "auth": {
     "signIn": "Anmelden",
