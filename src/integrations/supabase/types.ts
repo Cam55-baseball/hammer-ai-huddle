@@ -1303,40 +1303,55 @@ export type Database = {
           comparison_vs_prior: Json | null
           completed_at: string | null
           decision_efficiency_score: number | null
+          fatigue_index_score: number | null
           id: string
+          impulse_control_score: number | null
           next_test_date: string | null
           overall_score: number | null
+          peripheral_awareness_score: number | null
           processing_speed_score: number | null
+          processing_under_load_score: number | null
           sport: string
           test_date: string
           user_id: string
           visual_motor_integration_score: number | null
+          visual_tracking_score: number | null
         }
         Insert: {
           comparison_vs_prior?: Json | null
           completed_at?: string | null
           decision_efficiency_score?: number | null
+          fatigue_index_score?: number | null
           id?: string
+          impulse_control_score?: number | null
           next_test_date?: string | null
           overall_score?: number | null
+          peripheral_awareness_score?: number | null
           processing_speed_score?: number | null
+          processing_under_load_score?: number | null
           sport: string
           test_date: string
           user_id: string
           visual_motor_integration_score?: number | null
+          visual_tracking_score?: number | null
         }
         Update: {
           comparison_vs_prior?: Json | null
           completed_at?: string | null
           decision_efficiency_score?: number | null
+          fatigue_index_score?: number | null
           id?: string
+          impulse_control_score?: number | null
           next_test_date?: string | null
           overall_score?: number | null
+          peripheral_awareness_score?: number | null
           processing_speed_score?: number | null
+          processing_under_load_score?: number | null
           sport?: string
           test_date?: string
           user_id?: string
           visual_motor_integration_score?: number | null
+          visual_tracking_score?: number | null
         }
         Relationships: []
       }

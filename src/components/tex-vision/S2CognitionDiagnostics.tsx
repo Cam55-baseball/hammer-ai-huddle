@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -36,6 +35,11 @@ import { format, addDays, differenceInDays } from 'date-fns';
 import { S2ProcessingSpeedTest } from './diagnostics/S2ProcessingSpeedTest';
 import { S2DecisionEfficiencyTest } from './diagnostics/S2DecisionEfficiencyTest';
 import { S2VisualMotorTest } from './diagnostics/S2VisualMotorTest';
+import { S2VisualTrackingTest } from './diagnostics/S2VisualTrackingTest';
+import { S2PeripheralAwarenessTest } from './diagnostics/S2PeripheralAwarenessTest';
+import { S2ProcessingUnderLoadTest } from './diagnostics/S2ProcessingUnderLoadTest';
+import { S2ImpulseControlTest } from './diagnostics/S2ImpulseControlTest';
+import { S2FatigueIndexTest } from './diagnostics/S2FatigueIndexTest';
 
 export interface S2DiagnosticResult {
   id: string;
@@ -45,11 +49,21 @@ export interface S2DiagnosticResult {
   processing_speed_score: number | null;
   decision_efficiency_score: number | null;
   visual_motor_integration_score: number | null;
+  visual_tracking_score: number | null;
+  peripheral_awareness_score: number | null;
+  processing_under_load_score: number | null;
+  impulse_control_score: number | null;
+  fatigue_index_score: number | null;
   overall_score: number | null;
   comparison_vs_prior: {
     processing_speed_change: number | null;
     decision_efficiency_change: number | null;
     visual_motor_change: number | null;
+    visual_tracking_change: number | null;
+    peripheral_awareness_change: number | null;
+    processing_under_load_change: number | null;
+    impulse_control_change: number | null;
+    fatigue_index_change: number | null;
     overall_change: number | null;
   } | null;
   next_test_date: string | null;
@@ -60,7 +74,28 @@ interface S2CognitionDiagnosticsProps {
   sport?: string;
 }
 
-type TestPhase = 'intro' | 'processing_speed' | 'decision_efficiency' | 'visual_motor' | 'results';
+type TestPhase = 
+  | 'intro' 
+  | 'processing_speed' 
+  | 'decision_efficiency' 
+  | 'visual_motor' 
+  | 'visual_tracking'
+  | 'peripheral_awareness'
+  | 'processing_under_load'
+  | 'impulse_control'
+  | 'fatigue_index'
+  | 'results';
+
+const initialScores = {
+  processing_speed: 0,
+  decision_efficiency: 0,
+  visual_motor: 0,
+  visual_tracking: 0,
+  peripheral_awareness: 0,
+  processing_under_load: 0,
+  impulse_control: 0,
+  fatigue_index: 0,
+};
 
 export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagnosticsProps) => {
   const { t } = useTranslation();
@@ -68,21 +103,15 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
   const [latestResult, setLatestResult] = useState<S2DiagnosticResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [testPhase, setTestPhase] = useState<TestPhase>('intro');
-  const [testScores, setTestScores] = useState({
-    processing_speed: 0,
-    decision_efficiency: 0,
-    visual_motor: 0,
-  });
+  const [testScores, setTestScores] = useState(initialScores);
   const [canTakeTest, setCanTakeTest] = useState(true);
   const [daysUntilNextTest, setDaysUntilNextTest] = useState(0);
   const [showStartConfirmation, setShowStartConfirmation] = useState(false);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Fetch latest diagnostic result
   const fetchLatestResult = useCallback(async () => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from('tex_vision_s2_diagnostics')
@@ -102,7 +131,6 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
         } as S2DiagnosticResult;
         setLatestResult(result);
 
-        // Check if can take test (6 weeks lockout)
         if (data.next_test_date) {
           const nextDate = new Date(data.next_test_date);
           const today = new Date();
@@ -122,48 +150,49 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     fetchLatestResult();
   }, [fetchLatestResult]);
 
-  // Handle subtest completion
   const handleSubtestComplete = (subtest: keyof typeof testScores, score: number) => {
     setTestScores(prev => ({ ...prev, [subtest]: score }));
     
-    // Advance to next phase
-    if (subtest === 'processing_speed') {
-      setTestPhase('decision_efficiency');
-    } else if (subtest === 'decision_efficiency') {
-      setTestPhase('visual_motor');
-    } else if (subtest === 'visual_motor') {
-      // Save results and show results phase
-      saveResults();
+    const phaseOrder: TestPhase[] = [
+      'processing_speed',
+      'decision_efficiency',
+      'visual_motor',
+      'visual_tracking',
+      'peripheral_awareness',
+      'processing_under_load',
+      'impulse_control',
+      'fatigue_index',
+    ];
+
+    const currentIndex = phaseOrder.indexOf(subtest as TestPhase);
+    if (currentIndex < phaseOrder.length - 1) {
+      setTestPhase(phaseOrder[currentIndex + 1]);
+    } else {
+      saveResults({ ...testScores, [subtest]: score });
     }
   };
 
-  // Save results to database
-  const saveResults = async () => {
+  const saveResults = async (finalScores: typeof testScores) => {
     if (!user) return;
 
-    const overallScore = Math.round(
-      (testScores.processing_speed + testScores.decision_efficiency + testScores.visual_motor) / 3
-    );
+    const scores = Object.values(finalScores);
+    const overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 
     const today = new Date().toISOString().split('T')[0];
-    const nextTestDate = addDays(new Date(), 112).toISOString().split('T')[0]; // 16 weeks
+    const nextTestDate = addDays(new Date(), 112).toISOString().split('T')[0];
 
-    // Calculate comparison if we have prior results
     let comparison: S2DiagnosticResult['comparison_vs_prior'] = null;
     if (latestResult) {
       comparison = {
-        processing_speed_change: latestResult.processing_speed_score 
-          ? testScores.processing_speed - latestResult.processing_speed_score 
-          : null,
-        decision_efficiency_change: latestResult.decision_efficiency_score
-          ? testScores.decision_efficiency - latestResult.decision_efficiency_score
-          : null,
-        visual_motor_change: latestResult.visual_motor_integration_score
-          ? testScores.visual_motor - latestResult.visual_motor_integration_score
-          : null,
-        overall_change: latestResult.overall_score
-          ? overallScore - latestResult.overall_score
-          : null,
+        processing_speed_change: latestResult.processing_speed_score ? finalScores.processing_speed - latestResult.processing_speed_score : null,
+        decision_efficiency_change: latestResult.decision_efficiency_score ? finalScores.decision_efficiency - latestResult.decision_efficiency_score : null,
+        visual_motor_change: latestResult.visual_motor_integration_score ? finalScores.visual_motor - latestResult.visual_motor_integration_score : null,
+        visual_tracking_change: latestResult.visual_tracking_score ? finalScores.visual_tracking - latestResult.visual_tracking_score : null,
+        peripheral_awareness_change: latestResult.peripheral_awareness_score ? finalScores.peripheral_awareness - latestResult.peripheral_awareness_score : null,
+        processing_under_load_change: latestResult.processing_under_load_score ? finalScores.processing_under_load - latestResult.processing_under_load_score : null,
+        impulse_control_change: latestResult.impulse_control_score ? finalScores.impulse_control - latestResult.impulse_control_score : null,
+        fatigue_index_change: latestResult.fatigue_index_score ? finalScores.fatigue_index - latestResult.fatigue_index_score : null,
+        overall_change: latestResult.overall_score ? overallScore - latestResult.overall_score : null,
       };
     }
 
@@ -174,9 +203,14 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
           user_id: user.id,
           sport,
           test_date: today,
-          processing_speed_score: testScores.processing_speed,
-          decision_efficiency_score: testScores.decision_efficiency,
-          visual_motor_integration_score: testScores.visual_motor,
+          processing_speed_score: finalScores.processing_speed,
+          decision_efficiency_score: finalScores.decision_efficiency,
+          visual_motor_integration_score: finalScores.visual_motor,
+          visual_tracking_score: finalScores.visual_tracking,
+          peripheral_awareness_score: finalScores.peripheral_awareness,
+          processing_under_load_score: finalScores.processing_under_load,
+          impulse_control_score: finalScores.impulse_control,
+          fatigue_index_score: finalScores.fatigue_index,
           overall_score: overallScore,
           comparison_vs_prior: comparison,
           next_test_date: nextTestDate,
@@ -199,29 +233,20 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     }
   };
 
-  // Show confirmation dialog before starting
-  const handleStartClick = () => {
-    setShowStartConfirmation(true);
-  };
+  const handleStartClick = () => setShowStartConfirmation(true);
 
-  // Enter fullscreen and start test
   const confirmAndStartTest = async () => {
     setShowStartConfirmation(false);
-    
-    // Try to enter fullscreen
     try {
       await document.documentElement.requestFullscreen();
       setIsFullscreen(true);
     } catch (err) {
-      // Continue even if fullscreen fails (some browsers/devices may block it)
       console.log('Fullscreen not available:', err);
     }
-    
-    setTestScores({ processing_speed: 0, decision_efficiency: 0, visual_motor: 0 });
+    setTestScores(initialScores);
     setTestPhase('processing_speed');
   };
 
-  // Exit fullscreen
   const exitFullscreen = useCallback(() => {
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
@@ -229,33 +254,24 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     setIsFullscreen(false);
   }, []);
 
-  // Listen for fullscreen changes
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Handle test completion - exit fullscreen
   const handleDone = () => {
     exitFullscreen();
     setTestPhase('intro');
   };
 
-  // Handle cancel button click
-  const handleCancelClick = () => {
-    setShowCancelConfirmation(true);
-  };
+  const handleCancelClick = () => setShowCancelConfirmation(true);
 
-  // Confirm cancel and exit assessment
   const confirmCancel = () => {
     setShowCancelConfirmation(false);
     exitFullscreen();
     setTestPhase('intro');
-    setTestScores({ processing_speed: 0, decision_efficiency: 0, visual_motor: 0 });
+    setTestScores(initialScores);
   };
 
   const getChangeIcon = (change: number | null) => {
@@ -286,29 +302,19 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     );
   }
 
-  // Fullscreen container wrapper for active tests
   const FullscreenWrapper = ({ children, showCancel = true }: { children: React.ReactNode; showCancel?: boolean }) => (
     <div className="fixed inset-0 z-50 bg-black flex flex-col p-4 overflow-auto">
       {showCancel && (
         <div className="flex justify-end mb-4">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleCancelClick}
-            className="flex items-center gap-2"
-          >
+          <Button variant="destructive" size="sm" onClick={handleCancelClick} className="flex items-center gap-2">
             <X className="h-4 w-4" />
             CANCEL ASSESSMENT
           </Button>
         </div>
       )}
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-lg">
-          {children}
-        </div>
+        <div className="w-full max-w-lg">{children}</div>
       </div>
-      
-      {/* Cancel Confirmation Dialog */}
       <AlertDialog open={showCancelConfirmation} onOpenChange={setShowCancelConfirmation}>
         <AlertDialogContent className="border-destructive/50">
           <AlertDialogHeader>
@@ -318,15 +324,11 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <p>Are you sure you want to cancel? <strong>All progress will be lost.</strong></p>
-              <p>You will need to start over from the beginning if you want to complete the assessment.</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Continue Assessment</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmCancel}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={confirmCancel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Yes, Cancel
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -335,262 +337,172 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     </div>
   );
 
-  // Render active test phase
-  if (testPhase === 'processing_speed') {
-    return (
-      <FullscreenWrapper>
-        <S2ProcessingSpeedTest onComplete={(score) => handleSubtestComplete('processing_speed', score)} />
-      </FullscreenWrapper>
-    );
+  // Render active test phases
+  const testComponents: Record<Exclude<TestPhase, 'intro' | 'results'>, JSX.Element> = {
+    processing_speed: <S2ProcessingSpeedTest onComplete={(s) => handleSubtestComplete('processing_speed', s)} />,
+    decision_efficiency: <S2DecisionEfficiencyTest onComplete={(s) => handleSubtestComplete('decision_efficiency', s)} />,
+    visual_motor: <S2VisualMotorTest onComplete={(s) => handleSubtestComplete('visual_motor', s)} />,
+    visual_tracking: <S2VisualTrackingTest onComplete={(s) => handleSubtestComplete('visual_tracking', s)} />,
+    peripheral_awareness: <S2PeripheralAwarenessTest onComplete={(s) => handleSubtestComplete('peripheral_awareness', s)} />,
+    processing_under_load: <S2ProcessingUnderLoadTest onComplete={(s) => handleSubtestComplete('processing_under_load', s)} />,
+    impulse_control: <S2ImpulseControlTest onComplete={(s) => handleSubtestComplete('impulse_control', s)} />,
+    fatigue_index: <S2FatigueIndexTest onComplete={(s) => handleSubtestComplete('fatigue_index', s)} />,
+  };
+
+  if (testPhase !== 'intro' && testPhase !== 'results') {
+    return <FullscreenWrapper>{testComponents[testPhase]}</FullscreenWrapper>;
   }
 
-  if (testPhase === 'decision_efficiency') {
-    return (
-      <FullscreenWrapper>
-        <S2DecisionEfficiencyTest onComplete={(score) => handleSubtestComplete('decision_efficiency', score)} />
-      </FullscreenWrapper>
-    );
-  }
-
-  if (testPhase === 'visual_motor') {
-    return (
-      <FullscreenWrapper>
-        <S2VisualMotorTest onComplete={(score) => handleSubtestComplete('visual_motor', score)} />
-      </FullscreenWrapper>
-    );
-  }
-
-  // Results phase
   if (testPhase === 'results') {
-    const overallScore = Math.round(
-      (testScores.processing_speed + testScores.decision_efficiency + testScores.visual_motor) / 3
-    );
+    const scores = Object.values(testScores);
+    const overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+
+    const scoreLabels = [
+      { key: 'processing_speed', label: 'Processing Speed' },
+      { key: 'decision_efficiency', label: 'Decision Efficiency' },
+      { key: 'visual_motor', label: 'Visual-Motor' },
+      { key: 'visual_tracking', label: 'Visual Tracking' },
+      { key: 'peripheral_awareness', label: 'Peripheral' },
+      { key: 'processing_under_load', label: 'Under Load' },
+      { key: 'impulse_control', label: 'Impulse Control' },
+      { key: 'fatigue_index', label: 'Fatigue Index' },
+    ];
 
     return (
       <FullscreenWrapper showCancel={false}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="space-y-4"
-        >
-        <Card className="border-teal-500/30 bg-gradient-to-br from-teal-500/10 to-background">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-teal-400">
-              <CheckCircle2 className="h-6 w-6" />
-              S2 Cognition Assessment Complete
-            </CardTitle>
-            <CardDescription>Your cognitive performance results</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Overall Score */}
-            <div className="text-center p-6 bg-background/50 rounded-xl border border-teal-500/20">
-              <div className="text-sm text-muted-foreground mb-2">Overall Score</div>
-              <div className={`text-5xl font-black ${getScoreColor(overallScore)}`}>
-                {overallScore}
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
+          <Card className="border-teal-500/30 bg-gradient-to-br from-teal-500/10 to-background">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-teal-400">
+                <CheckCircle2 className="h-6 w-6" />
+                S2 Cognition Assessment Complete
+              </CardTitle>
+              <CardDescription>Your cognitive performance results</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center p-6 bg-background/50 rounded-xl border border-teal-500/20">
+                <div className="text-sm text-muted-foreground mb-2">Overall Score</div>
+                <div className={`text-5xl font-black ${getScoreColor(overallScore)}`}>{overallScore}</div>
+                <div className="text-sm text-muted-foreground mt-1">out of 100</div>
               </div>
-              <div className="text-sm text-muted-foreground mt-1">out of 100</div>
-            </div>
 
-            {/* Individual Scores */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-background/30 rounded-lg">
-                <div className="text-xs text-muted-foreground mb-1">Processing Speed</div>
-                <div className={`text-2xl font-bold ${getScoreColor(testScores.processing_speed)}`}>
-                  {testScores.processing_speed}
-                </div>
+              <div className="grid grid-cols-4 gap-2">
+                {scoreLabels.map(({ key, label }) => (
+                  <div key={key} className="text-center p-2 bg-background/30 rounded-lg">
+                    <div className="text-[10px] text-muted-foreground mb-1 truncate">{label}</div>
+                    <div className={`text-lg font-bold ${getScoreColor(testScores[key as keyof typeof testScores])}`}>
+                      {testScores[key as keyof typeof testScores]}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="text-center p-4 bg-background/30 rounded-lg">
-                <div className="text-xs text-muted-foreground mb-1">Decision Efficiency</div>
-                <div className={`text-2xl font-bold ${getScoreColor(testScores.decision_efficiency)}`}>
-                  {testScores.decision_efficiency}
-                </div>
-              </div>
-              <div className="text-center p-4 bg-background/30 rounded-lg">
-                <div className="text-xs text-muted-foreground mb-1">Visual-Motor</div>
-                <div className={`text-2xl font-bold ${getScoreColor(testScores.visual_motor)}`}>
-                  {testScores.visual_motor}
-                </div>
-              </div>
-            </div>
 
-            <Alert className="bg-teal-500/10 border-teal-500/30">
-              <Clock className="h-4 w-4" />
-              <AlertDescription>
-                Your next S2 assessment will be available in 16 weeks on {format(addDays(new Date(), 112), 'MMM d, yyyy')}.
-              </AlertDescription>
-            </Alert>
+              <Alert className="bg-teal-500/10 border-teal-500/30">
+                <Clock className="h-4 w-4" />
+                <AlertDescription>
+                  Your next S2 assessment will be available in 16 weeks on {format(addDays(new Date(), 112), 'MMM d, yyyy')}.
+                </AlertDescription>
+              </Alert>
 
-            <Button 
-              onClick={handleDone} 
-              className="w-full bg-teal-600 hover:bg-teal-700"
-            >
-              Done
-            </Button>
-          </CardContent>
-        </Card>
+              <Button onClick={handleDone} className="w-full bg-teal-600 hover:bg-teal-700">Done</Button>
+            </CardContent>
+          </Card>
         </motion.div>
       </FullscreenWrapper>
     );
   }
 
-  // Intro phase (default view)
+  // Intro phase
   return (
     <>
-    <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-background">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-teal-500/10">
-            <Brain className="h-5 w-5 text-teal-400" />
-          </div>
-          S2 Cognition Diagnostic
-        </CardTitle>
-        <CardDescription>
-          Comprehensive cognitive assessment for athletic performance
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Test Description */}
-        <div className="p-4 bg-background/50 rounded-lg border border-border/50 space-y-3">
-          <h4 className="font-semibold text-sm">What This Measures:</h4>
-          <div className="grid gap-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <ArrowRight className="h-3 w-3 text-teal-400" />
-              <span><strong>Processing Speed</strong> - How fast you recognize patterns</span>
+      <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-background">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-teal-500/10">
+              <Brain className="h-5 w-5 text-teal-400" />
             </div>
-            <div className="flex items-center gap-2">
-              <ArrowRight className="h-3 w-3 text-teal-400" />
-              <span><strong>Decision Efficiency</strong> - Go/no-go reaction accuracy</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <ArrowRight className="h-3 w-3 text-teal-400" />
-              <span><strong>Visual-Motor Integration</strong> - Hand-eye coordination</span>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Takes approximately 5-7 minutes. Find a quiet space with good lighting.
-          </p>
-        </div>
-
-        {/* Latest Results (if exists) */}
-        {latestResult && (
-          <div className="p-4 bg-teal-500/5 rounded-lg border border-teal-500/20 space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-sm">Your Latest Results</h4>
-              <Badge variant="outline" className="text-xs">
-                {format(new Date(latestResult.test_date), 'MMM d, yyyy')}
-              </Badge>
-            </div>
-            
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-4xl font-black text-teal-400">
-                {latestResult.overall_score}
-              </span>
-              {latestResult.comparison_vs_prior?.overall_change !== null && (
-                <div className="flex items-center gap-1">
-                  {getChangeIcon(latestResult.comparison_vs_prior?.overall_change ?? null)}
-                  <span className={`text-sm ${(latestResult.comparison_vs_prior?.overall_change ?? 0) >= 0 ? 'text-emerald-500' : 'text-amber-500'}`}>
-                    {(latestResult.comparison_vs_prior?.overall_change ?? 0) > 0 ? '+' : ''}
-                    {latestResult.comparison_vs_prior?.overall_change}
-                  </span>
+            S2 Cognition Diagnostic
+          </CardTitle>
+          <CardDescription>Comprehensive cognitive assessment for athletic performance</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="p-4 bg-background/50 rounded-lg border border-border/50 space-y-3">
+            <h4 className="font-semibold text-sm">What This Measures (8 Tests):</h4>
+            <div className="grid gap-1.5 text-xs text-muted-foreground">
+              {[
+                ['Processing Speed', 'Pattern recognition speed'],
+                ['Decision Efficiency', 'Go/no-go accuracy'],
+                ['Visual-Motor', 'Hand-eye coordination'],
+                ['Visual Tracking', 'Track moving objects'],
+                ['Peripheral Awareness', 'Side vision detection'],
+                ['Processing Under Load', 'Mental speed under pressure'],
+                ['Impulse Control', 'Discipline & restraint'],
+                ['Fatigue Index', 'Mental endurance'],
+              ].map(([name, desc]) => (
+                <div key={name} className="flex items-center gap-2">
+                  <ArrowRight className="h-3 w-3 text-teal-400 flex-shrink-0" />
+                  <span><strong>{name}</strong> - {desc}</span>
                 </div>
-              )}
+              ))}
             </div>
-
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div>
-                <div className="text-muted-foreground">Speed</div>
-                <div className="font-semibold">{latestResult.processing_speed_score}</div>
-              </div>
-              <div>
-                <div className="text-muted-foreground">Decision</div>
-                <div className="font-semibold">{latestResult.decision_efficiency_score}</div>
-              </div>
-              <div>
-                <div className="text-muted-foreground">Motor</div>
-                <div className="font-semibold">{latestResult.visual_motor_integration_score}</div>
-              </div>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">Takes approximately 12-15 minutes. Find a quiet space.</p>
           </div>
-        )}
 
-        {/* Start Test Button */}
-        {canTakeTest ? (
-          <Button 
-            onClick={handleStartClick} 
-            className="w-full bg-teal-600 hover:bg-teal-700"
-            size="lg"
-          >
-            <Play className="h-4 w-4 mr-2" />
-            Start Assessment
-          </Button>
-        ) : (
-          <div className="space-y-3">
-            <Button 
-              disabled 
-              className="w-full"
-              size="lg"
-            >
-              <Lock className="h-4 w-4 mr-2" />
-              Locked for {daysUntilNextTest} Days
+          {latestResult && (
+            <div className="p-4 bg-teal-500/5 rounded-lg border border-teal-500/20 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold text-sm">Your Latest Results</h4>
+                <Badge variant="outline" className="text-xs">{format(new Date(latestResult.test_date), 'MMM d, yyyy')}</Badge>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <div className={`text-4xl font-black ${getScoreColor(latestResult.overall_score)}`}>
+                  {latestResult.overall_score}
+                </div>
+                {latestResult.comparison_vs_prior && getChangeIcon(latestResult.comparison_vs_prior.overall_change)}
+              </div>
+            </div>
+          )}
+
+          {canTakeTest ? (
+            <Button onClick={handleStartClick} className="w-full bg-teal-600 hover:bg-teal-700" size="lg">
+              <Play className="h-4 w-4 mr-2" />
+              Start Assessment
             </Button>
-            <p className="text-xs text-center text-muted-foreground">
-              Next assessment available: {latestResult?.next_test_date && format(new Date(latestResult.next_test_date), 'MMMM d, yyyy')}
-            </p>
-          </div>
-        )}
+          ) : (
+            <div className="space-y-3">
+              <Button disabled className="w-full" size="lg">
+                <Lock className="h-4 w-4 mr-2" />
+                Locked for {daysUntilNextTest} Days
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Next assessment available on {latestResult?.next_test_date ? format(new Date(latestResult.next_test_date), 'MMMM d, yyyy') : 'N/A'}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        {!latestResult && (
-          <Alert className="bg-amber-500/10 border-amber-500/30">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-sm">
-              This is a baseline assessment. Future tests will show your improvement over time.
-            </AlertDescription>
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
-
-    {/* Confirmation Dialog */}
-    <AlertDialog open={showStartConfirmation} onOpenChange={setShowStartConfirmation}>
-      <AlertDialogContent className="max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2 text-amber-500">
-            <AlertTriangle className="h-5 w-5" />
-            Before You Begin
-          </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-3 pt-2">
-            <p className="font-medium text-foreground">Once you start this assessment:</p>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start gap-2">
-                <span className="text-amber-500 font-bold">•</span>
-                <span>You <strong>cannot pause or exit</strong> until all 3 tests are complete</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-amber-500 font-bold">•</span>
-                <span>Closing the app will <strong>forfeit your progress</strong></span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-amber-500 font-bold">•</span>
-                <span>The screen will enter <strong>fullscreen mode</strong> for focus</span>
-              </li>
-            </ul>
-            <p className="text-xs text-muted-foreground pt-2 border-t">
-              Make sure you have 5-7 minutes of uninterrupted time in a quiet space.
-            </p>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="gap-2 sm:gap-0">
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={confirmAndStartTest}
-            className="bg-teal-600 hover:bg-teal-700"
-          >
-            <Maximize className="h-4 w-4 mr-2" />
-            I'm Ready, Begin
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      <AlertDialog open={showStartConfirmation} onOpenChange={setShowStartConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Maximize className="h-5 w-5 text-teal-400" />
+              Ready to Begin?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>This assessment includes <strong>8 cognitive tests</strong> and takes about <strong>12-15 minutes</strong>.</p>
+              <p>For best results: quiet environment, full attention, no interruptions.</p>
+              <p className="text-amber-400 font-medium">You can only take this assessment once every 16 weeks.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Not Now</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmAndStartTest} className="bg-teal-600 hover:bg-teal-700">
+              Enter Fullscreen & Start
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
