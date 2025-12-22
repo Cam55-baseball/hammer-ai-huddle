@@ -47,7 +47,7 @@ All colors MUST be HSL.
     --tex-vision-primary-dark: 180 35% 12%;
     --tex-vision-success: 100 35% 50%;
     --tex-vision-text: 40 25% 95%;
-    --tex-vision-text-muted: 40 15% 70%;
+    --tex-vision-text-muted: 40 15% 85%;
     --tex-vision-timing: 40 50% 55%;
     --tex-vision-feedback: 185 45% 55%;
 
@@ -125,7 +125,7 @@ All colors MUST be HSL.
     --tex-vision-primary-dark: 180 40% 15%;
     --tex-vision-success: 100 40% 45%;
     --tex-vision-text: 40 30% 92%;
-    --tex-vision-text-muted: 40 20% 60%;
+    --tex-vision-text-muted: 40 20% 80%;
     --tex-vision-timing: 40 55% 50%;
     --tex-vision-feedback: 185 50% 50%;
 
