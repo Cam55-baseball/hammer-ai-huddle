@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Headphones, Play, Pause, Clock, CheckCircle2, RotateCcw, Sparkles, Brain, Heart, Zap, Moon, Target } from 'lucide-react';
+import { Headphones, Play, Pause, Clock, CheckCircle2, RotateCcw, Sparkles, Brain, Heart, Zap, Moon, Target, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -178,6 +178,17 @@ export default function MeditationLibrary() {
     return (
       <Card className="border-primary/20 bg-gradient-to-br from-background to-muted/30 overflow-hidden">
         <CardContent className="pt-6 relative">
+          {/* Back button - always visible at top */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetSession}
+            className="absolute top-2 left-2 z-20 gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t('common.back')}
+          </Button>
+
           {/* Ambient background */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className={cn("absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-20", config.bgColor)} />
