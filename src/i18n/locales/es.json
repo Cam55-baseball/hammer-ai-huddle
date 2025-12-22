@@ -5093,7 +5093,31 @@
       "detected": "Fatiga Detectada",
       "suggestion": "Toma un descanso corto para un entrenamiento óptimo",
       "endSession": "Terminar Sesión",
-      "continue": "Continuar de Todos Modos"
+      "continue": "Continuar de Todos Modos",
+      "breakTime": "Toma un Descanso",
+      "breakMessage": "Descansa tus ojos por un momento",
+      "skipBreak": "Saltar Descanso",
+      "levels": {
+        "low": "Enfoque Bueno",
+        "medium": "Fatiga Leve",
+        "high": "Fatiga Alta",
+        "critical": "Fatiga Crítica"
+      },
+      "messages": {
+        "low": "Ojos sintiéndose frescos",
+        "medium": "Considera un descanso corto pronto",
+        "high": "Toma un descanso para mantener el rendimiento",
+        "critical": "La sesión debe terminar para evitar tensión"
+      },
+      "actions": {
+        "takeBreak": "Tomar Descanso",
+        "endSession": "Terminar Sesión"
+      }
+    },
+    "difficulty": {
+      "level": "Nivel",
+      "increasing": "Dificultad ↑",
+      "decreasing": "Dificultad ↓"
     },
     "s2Diagnostics": {
       "title": "Diagnósticos S2 Cognition",

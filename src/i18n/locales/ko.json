@@ -4123,7 +4123,31 @@
       "detected": "피로 감지됨",
       "suggestion": "최적의 훈련을 위해 짧은 휴식을 취하세요",
       "endSession": "세션 종료",
-      "continue": "계속하기"
+      "continue": "계속하기",
+      "breakTime": "휴식 취하기",
+      "breakMessage": "잠시 눈을 쉬세요",
+      "skipBreak": "휴식 건너뛰기",
+      "levels": {
+        "low": "좋은 집중력",
+        "medium": "가벼운 피로",
+        "high": "높은 피로",
+        "critical": "심각한 피로"
+      },
+      "messages": {
+        "low": "눈이 상쾌합니다",
+        "medium": "곧 짧은 휴식을 고려하세요",
+        "high": "성능 유지를 위해 휴식을 취하세요",
+        "critical": "긴장을 방지하기 위해 세션을 종료해야 합니다"
+      },
+      "actions": {
+        "takeBreak": "휴식 취하기",
+        "endSession": "세션 종료"
+      }
+    },
+    "difficulty": {
+      "level": "레벨",
+      "increasing": "난이도 ↑",
+      "decreasing": "난이도 ↓"
     },
     "s2Diagnostics": {
       "title": "S2 인지 진단",

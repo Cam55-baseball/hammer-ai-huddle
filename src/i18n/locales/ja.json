@@ -4236,7 +4236,31 @@
       "detected": "疲労が検出されました",
       "suggestion": "最適なトレーニングのために短い休憩を取ってください",
       "endSession": "セッションを終了",
-      "continue": "とにかく続ける"
+      "continue": "とにかく続ける",
+      "breakTime": "休憩を取る",
+      "breakMessage": "しばらく目を休めてください",
+      "skipBreak": "休憩をスキップ",
+      "levels": {
+        "low": "良好な集中力",
+        "medium": "軽い疲労",
+        "high": "高い疲労",
+        "critical": "重大な疲労"
+      },
+      "messages": {
+        "low": "目が新鮮です",
+        "medium": "もうすぐ短い休憩を検討してください",
+        "high": "パフォーマンスを維持するために休憩を取ってください",
+        "critical": "負担を防ぐためにセッションを終了する必要があります"
+      },
+      "actions": {
+        "takeBreak": "休憩を取る",
+        "endSession": "セッションを終了"
+      }
+    },
+    "difficulty": {
+      "level": "レベル",
+      "increasing": "難易度 ↑",
+      "decreasing": "難易度 ↓"
     },
     "s2Diagnostics": {
       "title": "S2認知診断",

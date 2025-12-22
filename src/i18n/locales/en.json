@@ -5459,7 +5459,31 @@
       "detected": "Fatigue Detected",
       "suggestion": "Take a short break for optimal training",
       "endSession": "End Session",
-      "continue": "Continue Anyway"
+      "continue": "Continue Anyway",
+      "breakTime": "Take a Break",
+      "breakMessage": "Rest your eyes for a moment",
+      "skipBreak": "Skip Break",
+      "levels": {
+        "low": "Focus Good",
+        "medium": "Mild Fatigue",
+        "high": "High Fatigue",
+        "critical": "Critical Fatigue"
+      },
+      "messages": {
+        "low": "Eyes feeling fresh",
+        "medium": "Consider a short break soon",
+        "high": "Take a break to maintain performance",
+        "critical": "Session should end to prevent strain"
+      },
+      "actions": {
+        "takeBreak": "Take Break",
+        "endSession": "End Session"
+      }
+    },
+    "difficulty": {
+      "level": "Level",
+      "increasing": "Difficulty ↑",
+      "decreasing": "Difficulty ↓"
     },
     "s2Diagnostics": {
       "title": "S2 Cognition Diagnostics",

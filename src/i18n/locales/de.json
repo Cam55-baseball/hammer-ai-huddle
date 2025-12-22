@@ -4837,7 +4837,31 @@
       "detected": "Ermüdung Erkannt",
       "suggestion": "Machen Sie eine kurze Pause für optimales Training",
       "endSession": "Sitzung Beenden",
-      "continue": "Trotzdem Fortfahren"
+      "continue": "Trotzdem Fortfahren",
+      "breakTime": "Pause Machen",
+      "breakMessage": "Ruhen Sie Ihre Augen einen Moment aus",
+      "skipBreak": "Pause Überspringen",
+      "levels": {
+        "low": "Fokus Gut",
+        "medium": "Leichte Ermüdung",
+        "high": "Hohe Ermüdung",
+        "critical": "Kritische Ermüdung"
+      },
+      "messages": {
+        "low": "Augen fühlen sich frisch an",
+        "medium": "Erwägen Sie bald eine kurze Pause",
+        "high": "Machen Sie eine Pause um Leistung zu erhalten",
+        "critical": "Sitzung sollte enden um Belastung zu vermeiden"
+      },
+      "actions": {
+        "takeBreak": "Pause Machen",
+        "endSession": "Sitzung Beenden"
+      }
+    },
+    "difficulty": {
+      "level": "Stufe",
+      "increasing": "Schwierigkeit ↑",
+      "decreasing": "Schwierigkeit ↓"
     },
     "s2Diagnostics": {
       "title": "S2 Cognition Diagnostik",

@@ -4136,7 +4136,31 @@
       "detected": "Vermoeidheid Gedetecteerd",
       "suggestion": "Neem een korte pauze voor optimale training",
       "endSession": "Sessie Beëindigen",
-      "continue": "Toch Doorgaan"
+      "continue": "Toch Doorgaan",
+      "breakTime": "Neem een Pauze",
+      "breakMessage": "Rust je ogen even uit",
+      "skipBreak": "Pauze Overslaan",
+      "levels": {
+        "low": "Goede Focus",
+        "medium": "Lichte Vermoeidheid",
+        "high": "Hoge Vermoeidheid",
+        "critical": "Kritieke Vermoeidheid"
+      },
+      "messages": {
+        "low": "Ogen voelen fris aan",
+        "medium": "Overweeg binnenkort een korte pauze",
+        "high": "Neem een pauze om prestaties te behouden",
+        "critical": "Sessie moet eindigen om spanning te voorkomen"
+      },
+      "actions": {
+        "takeBreak": "Pauze Nemen",
+        "endSession": "Sessie Beëindigen"
+      }
+    },
+    "difficulty": {
+      "level": "Niveau",
+      "increasing": "Moeilijkheid ↑",
+      "decreasing": "Moeilijkheid ↓"
     },
     "s2Diagnostics": {
       "title": "S2 Cognitie Diagnostiek",

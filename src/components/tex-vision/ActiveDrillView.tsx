@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DrillResult } from '@/hooks/useTexVisionSession';
+import { useAdaptiveDifficulty } from '@/hooks/useAdaptiveDifficulty';
+import { FatigueIndicator } from './shared/FatigueIndicator';
 import { Button } from '@/components/ui/button';
-import { Play, X } from 'lucide-react';
+import { Play, X, Coffee, AlertTriangle } from 'lucide-react';
 
 // Import all drill components
 import SoftFocusGame from './drills/SoftFocusGame';
@@ -21,13 +23,17 @@ interface ActiveDrillViewProps {
   sessionId: string;
   onComplete: (result: DrillResult) => void;
   onExit: () => void;
+  sport?: string;
 }
 
-const DRILL_COMPONENTS: Record<string, React.ComponentType<{
+export interface DrillComponentProps {
   tier: string;
+  difficultyLevel?: number;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
-}>> = {
+}
+
+const DRILL_COMPONENTS: Record<string, React.ComponentType<DrillComponentProps>> = {
   soft_focus: SoftFocusGame,
   pattern_search: PatternSearchGame,
   peripheral_vision: PeripheralVisionDrill,
@@ -51,17 +57,37 @@ const DRILL_NAMES: Record<string, string> = {
   brock_string: 'Brock String',
 };
 
+// Fatigue calculation constants
+const FATIGUE_INCREASE_PER_DRILL = 8; // Base fatigue increase per drill
+const FATIGUE_INCREASE_ON_LOW_ACCURACY = 5; // Extra fatigue when accuracy < 60%
+const FATIGUE_DECAY_PER_SECOND = 0.5; // Fatigue decay during breaks
+
 export default function ActiveDrillView({
   drillId,
   tier,
   sessionId,
   onComplete,
   onExit,
+  sport = 'baseball',
 }: ActiveDrillViewProps) {
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<'countdown' | 'playing'>('countdown');
+  const [phase, setPhase] = useState<'countdown' | 'playing' | 'break'>('countdown');
   const [countdown, setCountdown] = useState(3);
+  const [fatigueLevel, setFatigueLevel] = useState(0);
+  const [drillsCompletedThisSession, setDrillsCompletedThisSession] = useState(0);
+  const [breakTimer, setBreakTimer] = useState(0);
 
+  // Adaptive difficulty hook
+  const { 
+    getCurrentDifficulty, 
+    updateDifficulty,
+    getRecommendedAdjustment 
+  } = useAdaptiveDifficulty(sport);
+
+  const currentDifficultyLevel = getCurrentDifficulty(drillId);
+  const recommendedAdjustment = getRecommendedAdjustment(drillId);
+
+  // Countdown effect
   useEffect(() => {
     if (phase === 'countdown' && countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -71,14 +97,66 @@ export default function ActiveDrillView({
     }
   }, [phase, countdown]);
 
-  const handleDrillComplete = (partialResult: Omit<DrillResult, 'drillType' | 'tier'>) => {
+  // Break timer - fatigue decays during breaks
+  useEffect(() => {
+    if (phase === 'break' && breakTimer > 0) {
+      const timer = setInterval(() => {
+        setBreakTimer(prev => prev - 1);
+        setFatigueLevel(prev => Math.max(0, prev - FATIGUE_DECAY_PER_SECOND));
+      }, 1000);
+      return () => clearInterval(timer);
+    } else if (phase === 'break' && breakTimer <= 0) {
+      // Reset countdown and go back to playing
+      setCountdown(3);
+      setPhase('countdown');
+    }
+  }, [phase, breakTimer]);
+
+  // Handle drill completion with fatigue tracking
+  const handleDrillComplete = useCallback(async (partialResult: Omit<DrillResult, 'drillType' | 'tier'>) => {
+    // Update fatigue based on performance
+    let fatigueIncrease = FATIGUE_INCREASE_PER_DRILL;
+    if (partialResult.accuracyPercent !== undefined && partialResult.accuracyPercent < 60) {
+      fatigueIncrease += FATIGUE_INCREASE_ON_LOW_ACCURACY;
+    }
+    
+    // Higher drills completed = more fatigue accumulation
+    fatigueIncrease += Math.floor(drillsCompletedThisSession / 3) * 2;
+    
+    const newFatigue = Math.min(100, fatigueLevel + fatigueIncrease);
+    setFatigueLevel(newFatigue);
+    setDrillsCompletedThisSession(prev => prev + 1);
+
+    // Update adaptive difficulty based on this drill's results
+    if (partialResult.accuracyPercent !== undefined) {
+      await updateDifficulty(
+        drillId,
+        partialResult.accuracyPercent,
+        partialResult.reactionTimeMs
+      );
+    }
+
+    // Build full result with fatigue score
     const fullResult: DrillResult = {
       ...partialResult,
       drillType: drillId,
       tier,
+      fatigueScore: newFatigue,
     };
+
     onComplete(fullResult);
-  };
+  }, [drillId, tier, fatigueLevel, drillsCompletedThisSession, updateDifficulty, onComplete]);
+
+  // Handle taking a break
+  const handleTakeBreak = useCallback(() => {
+    setPhase('break');
+    setBreakTimer(30); // 30 second break
+  }, []);
+
+  // Handle ending session due to critical fatigue
+  const handleEndSessionFatigue = useCallback(() => {
+    onExit();
+  }, [onExit]);
 
   const DrillComponent = DRILL_COMPONENTS[drillId];
 
@@ -97,6 +175,51 @@ export default function ActiveDrillView({
     );
   }
 
+  // Break phase
+  if (phase === 'break') {
+    return (
+      <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] flex flex-col items-center justify-center">
+        <button
+          onClick={onExit}
+          className="absolute top-4 right-4 p-2 rounded-full bg-[hsl(var(--tex-vision-primary))]/50 text-[hsl(var(--tex-vision-text-muted))] hover:bg-[hsl(var(--tex-vision-primary))]/70 transition-colors"
+        >
+          <X className="h-6 w-6" />
+        </button>
+
+        <Coffee className="h-16 w-16 text-[hsl(var(--tex-vision-timing))] mb-6" />
+        
+        <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
+          {t('texVision.fatigue.breakTime', 'Take a Break')}
+        </h2>
+        
+        <p className="text-[hsl(var(--tex-vision-text-muted))] mb-6">
+          {t('texVision.fatigue.breakMessage', 'Rest your eyes for a moment')}
+        </p>
+
+        <div className="text-4xl font-mono text-[hsl(var(--tex-vision-feedback))] mb-8">
+          {breakTimer}s
+        </div>
+
+        <FatigueIndicator 
+          level={fatigueLevel} 
+          className="w-64"
+          showRecoverySuggestion={false}
+        />
+
+        <Button 
+          onClick={() => {
+            setCountdown(3);
+            setPhase('countdown');
+          }}
+          variant="outline"
+          className="mt-6"
+        >
+          {t('texVision.fatigue.skipBreak', 'Skip Break')}
+        </Button>
+      </div>
+    );
+  }
+
   // Countdown phase
   if (phase === 'countdown') {
     return (
@@ -109,10 +232,42 @@ export default function ActiveDrillView({
           <X className="h-6 w-6" />
         </button>
 
+        {/* Fatigue indicator (if visible) */}
+        {fatigueLevel >= 20 && (
+          <div className="absolute top-4 left-4 w-64">
+            <FatigueIndicator 
+              level={fatigueLevel}
+              onTakeBreak={handleTakeBreak}
+              onEndSession={handleEndSessionFatigue}
+            />
+          </div>
+        )}
+
+        {/* Difficulty adjustment indicator */}
+        {recommendedAdjustment !== 'stable' && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2">
+            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+              recommendedAdjustment === 'increase' 
+                ? 'bg-emerald-500/20 text-emerald-400' 
+                : 'bg-amber-500/20 text-amber-400'
+            }`}>
+              {recommendedAdjustment === 'increase' 
+                ? t('texVision.difficulty.increasing', 'Difficulty ↑')
+                : t('texVision.difficulty.decreasing', 'Difficulty ↓')
+              }
+            </div>
+          </div>
+        )}
+
         {/* Drill name */}
-        <h2 className="text-xl font-semibold text-[hsl(var(--tex-vision-text))] mb-8">
+        <h2 className="text-xl font-semibold text-[hsl(var(--tex-vision-text))] mb-2">
           {DRILL_NAMES[drillId] || drillId}
         </h2>
+
+        {/* Difficulty level badge */}
+        <div className="text-sm text-[hsl(var(--tex-vision-text-muted))] mb-8">
+          {t('texVision.difficulty.level', 'Level')} {currentDifficultyLevel}/10
+        </div>
 
         {/* Countdown circle */}
         <div className="relative w-32 h-32 mb-8">
@@ -151,11 +306,23 @@ export default function ActiveDrillView({
     );
   }
 
-  // Playing phase - render the actual drill
+  // Playing phase - render the actual drill with difficulty level
   return (
     <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] overflow-auto">
+      {/* Fatigue indicator overlay */}
+      {fatigueLevel >= 60 && (
+        <div className="absolute top-4 left-4 z-10 w-64">
+          <FatigueIndicator 
+            level={fatigueLevel}
+            onTakeBreak={handleTakeBreak}
+            onEndSession={handleEndSessionFatigue}
+          />
+        </div>
+      )}
+      
       <DrillComponent
         tier={tier}
+        difficultyLevel={currentDifficultyLevel}
         onComplete={handleDrillComplete}
         onExit={onExit}
       />
