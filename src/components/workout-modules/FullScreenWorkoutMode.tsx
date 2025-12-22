@@ -168,7 +168,7 @@ export function FullScreenWorkoutMode({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-6"
+        className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center p-6"
       >
         {/* Confetti Effect */}
         {showConfetti && (
@@ -253,7 +253,7 @@ export function FullScreenWorkoutMode({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className={cn(
-        "fixed inset-0 z-50 bg-gradient-to-b overflow-y-auto",
+        "fixed inset-0 z-[100] bg-gradient-to-b overflow-y-auto",
         getBackgroundClass()
       )}
     >
