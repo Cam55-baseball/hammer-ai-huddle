@@ -1,0 +1,204 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { DrillContainer } from '../shared/DrillContainer';
+import { DrillTimer } from '../shared/DrillTimer';
+import { DrillMetricsDisplay } from '../shared/DrillMetricsDisplay';
+import { Focus } from 'lucide-react';
+import { DrillResult } from '@/hooks/useTexVisionSession';
+
+interface ConvergenceDivergenceGameProps {
+  tier: string;
+  onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
+  onExit: () => void;
+}
+
+type Phase = 'converge' | 'hold' | 'diverge' | 'rest';
+
+export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: ConvergenceDivergenceGameProps) {
+  const { t } = useTranslation();
+  const [phase, setPhase] = useState<Phase>('converge');
+  const [dotPosition, setDotPosition] = useState(100); // percentage distance apart
+  const [cycleCount, setCycleCount] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+
+  const totalCycles = tier === 'beginner' ? 5 : tier === 'advanced' ? 8 : 12;
+  const phaseDuration = tier === 'beginner' ? 3000 : tier === 'advanced' ? 2500 : 2000;
+
+  useEffect(() => {
+    if (isComplete) return;
+
+    const phaseSequence: Phase[] = ['converge', 'hold', 'diverge', 'rest'];
+    let currentPhaseIndex = phaseSequence.indexOf(phase);
+
+    const interval = setInterval(() => {
+      currentPhaseIndex = (currentPhaseIndex + 1) % phaseSequence.length;
+      const newPhase = phaseSequence[currentPhaseIndex];
+      setPhase(newPhase);
+
+      if (newPhase === 'rest') {
+        setCycleCount(prev => prev + 1);
+      }
+    }, phaseDuration);
+
+    return () => clearInterval(interval);
+  }, [phase, isComplete, phaseDuration]);
+
+  useEffect(() => {
+    if (cycleCount >= totalCycles && !isComplete) {
+      setIsComplete(true);
+      onComplete({
+        accuracyPercent: 100,
+        difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
+        drillMetrics: {
+          cyclesCompleted: cycleCount,
+          phaseDuration,
+        },
+      });
+    }
+  }, [cycleCount, totalCycles, isComplete, tier, phaseDuration, onComplete]);
+
+  useEffect(() => {
+    let targetPosition: number;
+    switch (phase) {
+      case 'converge':
+        targetPosition = 20;
+        break;
+      case 'hold':
+        targetPosition = 20;
+        break;
+      case 'diverge':
+        targetPosition = 100;
+        break;
+      case 'rest':
+        targetPosition = 100;
+        break;
+    }
+
+    const step = (targetPosition - dotPosition) / 10;
+    const animationInterval = setInterval(() => {
+      setDotPosition(prev => {
+        const next = prev + step;
+        if (Math.abs(next - targetPosition) < Math.abs(step)) {
+          clearInterval(animationInterval);
+          return targetPosition;
+        }
+        return next;
+      });
+    }, 50);
+
+    return () => clearInterval(animationInterval);
+  }, [phase]);
+
+  const handleTimerComplete = useCallback(() => {
+    if (!isComplete) {
+      setIsComplete(true);
+      onComplete({
+        accuracyPercent: 100,
+        difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
+        drillMetrics: {
+          cyclesCompleted: cycleCount,
+        },
+      });
+    }
+  }, [isComplete, cycleCount, tier, onComplete]);
+
+  const getPhaseInstruction = () => {
+    switch (phase) {
+      case 'converge':
+        return t('texVision.drills.convergence.converge', 'Focus on the approaching point');
+      case 'hold':
+        return t('texVision.drills.convergence.hold', 'Hold focus on the close point');
+      case 'diverge':
+        return t('texVision.drills.convergence.diverge', 'Relax eyes as points separate');
+      case 'rest':
+        return t('texVision.drills.convergence.rest', 'Rest - look at far point');
+    }
+  };
+
+  return (
+    <DrillContainer
+      title={t('texVision.drills.convergence.title', 'Convergence')}
+      description={t('texVision.drills.convergence.description', 'Eye alignment training')}
+      icon={Focus}
+      onExit={onExit}
+      timer={
+        <DrillTimer
+          initialSeconds={totalCycles * ((phaseDuration * 4) / 1000)}
+          mode="countdown"
+          autoStart={true}
+          onComplete={handleTimerComplete}
+        />
+      }
+      metrics={
+        <DrillMetricsDisplay
+          difficulty={tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8}
+          streak={cycleCount}
+        />
+      }
+    >
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px] relative">
+        {/* Convergence visualization */}
+        <div className="relative w-64 h-64 flex items-center justify-center">
+          {/* Left dot */}
+          <div 
+            className="absolute w-4 h-4 rounded-full bg-[hsl(var(--tex-vision-feedback))] transition-all duration-500"
+            style={{
+              left: `calc(50% - ${dotPosition / 2}px)`,
+              transform: 'translateX(-50%)',
+              boxShadow: phase === 'hold' ? '0 0 15px hsl(var(--tex-vision-feedback) / 0.6)' : undefined,
+            }}
+          />
+          
+          {/* Right dot */}
+          <div 
+            className="absolute w-4 h-4 rounded-full bg-[hsl(var(--tex-vision-feedback))] transition-all duration-500"
+            style={{
+              left: `calc(50% + ${dotPosition / 2}px)`,
+              transform: 'translateX(-50%)',
+              boxShadow: phase === 'hold' ? '0 0 15px hsl(var(--tex-vision-feedback) / 0.6)' : undefined,
+            }}
+          />
+
+          {/* Center guide line */}
+          <div className="absolute w-full h-0.5 bg-[hsl(var(--tex-vision-primary-light))]/20" />
+          
+          {/* Depth indicator */}
+          <div 
+            className="absolute w-1 bg-[hsl(var(--tex-vision-success))]/30 rounded-full transition-all duration-500"
+            style={{
+              height: `${100 - dotPosition}%`,
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+          />
+        </div>
+
+        {/* Phase indicator */}
+        <div className="mt-8 flex gap-2">
+          {(['converge', 'hold', 'diverge', 'rest'] as Phase[]).map((p) => (
+            <div
+              key={p}
+              className={`w-3 h-3 rounded-full transition-all duration-150 ${
+                phase === p
+                  ? 'bg-[hsl(var(--tex-vision-feedback))] scale-125'
+                  : 'bg-[hsl(var(--tex-vision-primary-light))]/30'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Instructions */}
+        <div className="mt-6 text-center">
+          <p className="text-lg font-medium text-[hsl(var(--tex-vision-text))]">
+            {getPhaseInstruction()}
+          </p>
+        </div>
+
+        {/* Cycle progress */}
+        <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
+          {t('texVision.drills.cycle', 'Cycle')} {cycleCount + 1}/{totalCycles}
+        </div>
+      </div>
+    </DrillContainer>
+  );
+}
