@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -170,24 +170,34 @@ export function AppSidebar() {
       title: t('dashboard.modules.hittingAnalysis'), 
       url: `/analyze/hitting?sport=${selectedSport}`, 
       icon: Target,
-      subModule: {
-        title: t('workoutModules.productionLab.title'),
-        url: "/production-lab",
-        icon: Dumbbell,
-        description: t('workoutModules.productionLab.subtitle') || "6-week workout"
-      }
+      subModules: [
+        {
+          title: t('workoutModules.productionLab.title'),
+          url: "/production-lab",
+          icon: Dumbbell,
+          description: t('workoutModules.productionLab.subtitle') || "6-week workout"
+        },
+        {
+          title: t('texVision.title', 'Tex Vision'),
+          url: "/tex-vision",
+          icon: Eye,
+          description: t('texVision.subtitle', 'Neuro-Visual Performance')
+        }
+      ]
     },
-    { 
+    {
       key: 'pitching',
       title: t('dashboard.modules.pitchingAnalysis'), 
       url: `/analyze/pitching?sport=${selectedSport}`, 
       icon: Target,
-      subModule: {
-        title: t('workoutModules.productionStudio.title'),
-        url: "/production-studio",
-        icon: Dumbbell,
-        description: t('workoutModules.productionStudio.subtitle') || "6-week workout"
-      }
+      subModules: [
+        {
+          title: t('workoutModules.productionStudio.title'),
+          url: "/production-studio",
+          icon: Dumbbell,
+          description: t('workoutModules.productionStudio.subtitle') || "6-week workout"
+        }
+      ]
     },
     { key: 'throwing', title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
     { key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked },
@@ -505,7 +515,7 @@ export function AppSidebar() {
             <SidebarMenu className="training-modules-menu">
               {trainingModules.map((item, index) => (
                 <div key={item.key}>
-                  {'subModule' in item && item.subModule ? (
+                  {'subModules' in item && item.subModules && item.subModules.length > 0 ? (
                     <Collapsible 
                       open={expandedModules[item.key]} 
                       onOpenChange={() => toggleModule(item.key)}
@@ -535,22 +545,25 @@ export function AppSidebar() {
                         </div>
                       </SidebarMenuItem>
                       
-                      {/* Sub-Module with animation */}
+                      {/* Sub-Modules with animation */}
                       <CollapsibleContent className="collapsible-content">
-                        <SidebarMenuItem 
-                          className="sidebar-sub-item"
-                        >
-                          <SidebarMenuButton
-                            onClick={() => navigate(item.subModule!.url)}
-                            isActive={isActive(item.subModule!.url)}
-                            tooltip={`${item.subModule!.title} - ${item.subModule!.description}`}
-                            className="group sidebar-item-hover relative py-2"
+                        {item.subModules.map((subModule) => (
+                          <SidebarMenuItem 
+                            key={subModule.url}
+                            className="sidebar-sub-item"
                           >
-                            {isActive(item.subModule!.url) && <span className="sidebar-active-indicator" />}
-                            <item.subModule.icon className="h-4 w-4 flex-shrink-0 sidebar-icon transition-all duration-200 group-hover:scale-110 text-primary/70 group-hover:text-primary" />
-                            <span className="text-sm font-medium truncate transition-colors duration-200">{item.subModule!.title}</span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
+                            <SidebarMenuButton
+                              onClick={() => navigate(subModule.url)}
+                              isActive={isActive(subModule.url)}
+                              tooltip={`${subModule.title} - ${subModule.description}`}
+                              className="group sidebar-item-hover relative py-2"
+                            >
+                              {isActive(subModule.url) && <span className="sidebar-active-indicator" />}
+                              <subModule.icon className="h-4 w-4 flex-shrink-0 sidebar-icon transition-all duration-200 group-hover:scale-110 text-primary/70 group-hover:text-primary" />
+                              <span className="text-sm font-medium truncate transition-colors duration-200">{subModule.title}</span>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
                       </CollapsibleContent>
                     </Collapsible>
                   ) : (

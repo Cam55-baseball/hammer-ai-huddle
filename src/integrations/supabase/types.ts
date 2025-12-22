@@ -1092,6 +1092,317 @@ export type Database = {
         }
         Relationships: []
       }
+      tex_vision_adaptive_difficulty: {
+        Row: {
+          accuracy_history: Json | null
+          current_difficulty: number | null
+          drill_type: string
+          id: string
+          recommended_adjustment: string | null
+          speed_history: Json | null
+          sport: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accuracy_history?: Json | null
+          current_difficulty?: number | null
+          drill_type: string
+          id?: string
+          recommended_adjustment?: string | null
+          speed_history?: Json | null
+          sport: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accuracy_history?: Json | null
+          current_difficulty?: number | null
+          drill_type?: string
+          id?: string
+          recommended_adjustment?: string | null
+          speed_history?: Json | null
+          sport?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tex_vision_daily_checklist: {
+        Row: {
+          all_complete: boolean | null
+          checklist_items: Json
+          completed_at: string | null
+          created_at: string | null
+          entry_date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          all_complete?: boolean | null
+          checklist_items?: Json
+          completed_at?: string | null
+          created_at?: string | null
+          entry_date: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          all_complete?: boolean | null
+          checklist_items?: Json
+          completed_at?: string | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tex_vision_drill_results: {
+        Row: {
+          accuracy_percent: number | null
+          completed_at: string | null
+          difficulty_level: number | null
+          drill_metrics: Json | null
+          drill_type: string
+          false_positives: number | null
+          fatigue_score: number | null
+          id: string
+          reaction_time_ms: number | null
+          session_id: string
+          tier: string
+          user_id: string
+        }
+        Insert: {
+          accuracy_percent?: number | null
+          completed_at?: string | null
+          difficulty_level?: number | null
+          drill_metrics?: Json | null
+          drill_type: string
+          false_positives?: number | null
+          fatigue_score?: number | null
+          id?: string
+          reaction_time_ms?: number | null
+          session_id: string
+          tier: string
+          user_id: string
+        }
+        Update: {
+          accuracy_percent?: number | null
+          completed_at?: string | null
+          difficulty_level?: number | null
+          drill_metrics?: Json | null
+          drill_type?: string
+          false_positives?: number | null
+          fatigue_score?: number | null
+          id?: string
+          reaction_time_ms?: number | null
+          session_id?: string
+          tier?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tex_vision_drill_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "tex_vision_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tex_vision_metrics: {
+        Row: {
+          anticipation_quotient: number | null
+          coordination_efficiency: number | null
+          early_late_bias: number | null
+          id: string
+          left_right_bias: number | null
+          metrics_history: Json | null
+          neuro_reaction_index: number | null
+          plateau_detected_at: string | null
+          sport: string
+          stress_resilience_score: number | null
+          updated_at: string | null
+          user_id: string
+          visual_processing_speed: number | null
+        }
+        Insert: {
+          anticipation_quotient?: number | null
+          coordination_efficiency?: number | null
+          early_late_bias?: number | null
+          id?: string
+          left_right_bias?: number | null
+          metrics_history?: Json | null
+          neuro_reaction_index?: number | null
+          plateau_detected_at?: string | null
+          sport: string
+          stress_resilience_score?: number | null
+          updated_at?: string | null
+          user_id: string
+          visual_processing_speed?: number | null
+        }
+        Update: {
+          anticipation_quotient?: number | null
+          coordination_efficiency?: number | null
+          early_late_bias?: number | null
+          id?: string
+          left_right_bias?: number | null
+          metrics_history?: Json | null
+          neuro_reaction_index?: number | null
+          plateau_detected_at?: string | null
+          sport?: string
+          stress_resilience_score?: number | null
+          updated_at?: string | null
+          user_id?: string
+          visual_processing_speed?: number | null
+        }
+        Relationships: []
+      }
+      tex_vision_progress: {
+        Row: {
+          created_at: string | null
+          current_tier: string | null
+          id: string
+          last_session_date: string | null
+          sport: string
+          streak_current: number | null
+          streak_longest: number | null
+          total_sessions_completed: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_tier?: string | null
+          id?: string
+          last_session_date?: string | null
+          sport: string
+          streak_current?: number | null
+          streak_longest?: number | null
+          total_sessions_completed?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_tier?: string | null
+          id?: string
+          last_session_date?: string | null
+          sport?: string
+          streak_current?: number | null
+          streak_longest?: number | null
+          total_sessions_completed?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tex_vision_s2_diagnostics: {
+        Row: {
+          comparison_vs_prior: Json | null
+          completed_at: string | null
+          decision_efficiency_score: number | null
+          id: string
+          next_test_date: string | null
+          overall_score: number | null
+          processing_speed_score: number | null
+          sport: string
+          test_date: string
+          user_id: string
+          visual_motor_integration_score: number | null
+        }
+        Insert: {
+          comparison_vs_prior?: Json | null
+          completed_at?: string | null
+          decision_efficiency_score?: number | null
+          id?: string
+          next_test_date?: string | null
+          overall_score?: number | null
+          processing_speed_score?: number | null
+          sport: string
+          test_date: string
+          user_id: string
+          visual_motor_integration_score?: number | null
+        }
+        Update: {
+          comparison_vs_prior?: Json | null
+          completed_at?: string | null
+          decision_efficiency_score?: number | null
+          id?: string
+          next_test_date?: string | null
+          overall_score?: number | null
+          processing_speed_score?: number | null
+          sport?: string
+          test_date?: string
+          user_id?: string
+          visual_motor_integration_score?: number | null
+        }
+        Relationships: []
+      }
+      tex_vision_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          drills_completed: number
+          duration_minutes: number
+          fatigue_ended: boolean | null
+          id: string
+          reflection_text: string | null
+          session_date: string
+          sport: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          drills_completed: number
+          duration_minutes: number
+          fatigue_ended?: boolean | null
+          id?: string
+          reflection_text?: string | null
+          session_date: string
+          sport: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          drills_completed?: number
+          duration_minutes?: number
+          fatigue_ended?: boolean | null
+          id?: string
+          reflection_text?: string | null
+          session_date?: string
+          sport?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tex_vision_unlocks: {
+        Row: {
+          id: string
+          sport: string
+          unlock_type: string
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          sport: string
+          unlock_type: string
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          sport?: string
+          unlock_type?: string
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       thought_logs: {
         Row: {
           automatic_thought: string
