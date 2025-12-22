@@ -43,6 +43,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       return;
     }
 
+    // Handle Tex Vision - navigate directly
+    if (task.id === 'texvision') {
+      navigate(task.link);
+      return;
+    }
+
     // Handle quiz tasks - open dialog directly
     if (task.taskType === 'quiz') {
       if (task.id === 'quiz-morning') {
@@ -103,6 +109,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const Icon = task.icon;
     const isIncomplete = !task.completed;
     const isTracking = task.section === 'tracking';
+    const isTexVision = task.specialStyle === 'tex-vision';
     
     return (
       <div
@@ -112,9 +119,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           "border-2",
           task.completed
             ? "bg-green-500/20 border-green-500/50"
-            : isTracking
-              ? "bg-purple-500/10 border-purple-500/60 game-plan-pulse-purple"
-              : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
+            : isTexVision
+              ? "bg-teal-500/10 border-teal-500/60 game-plan-pulse-teal"
+              : isTracking
+                ? "bg-purple-500/10 border-purple-500/60 game-plan-pulse-purple"
+                : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
         )}
       >
         {/* Clickable main area */}
@@ -127,13 +136,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
             task.completed 
               ? "bg-green-500" 
-              : isTracking
-                ? "bg-purple-500"
-                : "bg-amber-500"
+              : isTexVision
+                ? "bg-teal-500"
+                : isTracking
+                  ? "bg-purple-500"
+                  : "bg-amber-500"
           )}>
             <Icon className={cn(
               "h-5 w-5 sm:h-6 sm:w-6",
-              task.completed ? "text-white" : isTracking ? "text-white" : "text-secondary"
+              task.completed ? "text-white" : isTexVision ? "text-white" : isTracking ? "text-white" : "text-secondary"
             )} />
           </div>
           
@@ -151,9 +162,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               {task.badge && !task.completed && (
                 <span className={cn(
                   "flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider",
-                  isTracking 
-                    ? "bg-purple-500/30 text-purple-300" 
-                    : "bg-amber-500/30 text-amber-300"
+                  isTexVision
+                    ? "bg-teal-500/30 text-teal-300"
+                    : isTracking 
+                      ? "bg-purple-500/30 text-purple-300" 
+                      : "bg-amber-500/30 text-amber-300"
                 )}>
                   {t(task.badge)}
                 </span>
@@ -173,16 +186,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           "flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center",
           task.completed
             ? "bg-green-500 text-white"
-            : isTracking
-              ? "border-3 border-dashed border-purple-500/70"
-              : "border-3 border-dashed border-amber-500/70"
+            : isTexVision
+              ? "border-3 border-dashed border-teal-500/70"
+              : isTracking
+                ? "border-3 border-dashed border-purple-500/70"
+                : "border-3 border-dashed border-amber-500/70"
         )}>
           {task.completed ? (
             <Check className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
             <Zap className={cn(
               "h-3 w-3 sm:h-4 sm:w-4 animate-pulse",
-              isTracking ? "text-purple-500" : "text-amber-500"
+              isTexVision ? "text-teal-500" : isTracking ? "text-purple-500" : "text-amber-500"
             )} />
           )}
         </div>
@@ -191,13 +206,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {isIncomplete && (
           <div className={cn(
             "hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border",
-            isTracking 
-              ? "bg-purple-500/20 border-purple-500/40" 
-              : "bg-amber-500/20 border-amber-500/40"
+            isTexVision
+              ? "bg-teal-500/20 border-teal-500/40"
+              : isTracking 
+                ? "bg-purple-500/20 border-purple-500/40" 
+                : "bg-amber-500/20 border-amber-500/40"
           )}>
             <span className={cn(
               "text-[10px] font-black uppercase tracking-wider",
-              isTracking ? "text-purple-400" : "text-amber-400"
+              isTexVision ? "text-teal-400" : isTracking ? "text-purple-400" : "text-amber-400"
             )}>
               {t('gamePlan.doIt')}
             </span>
@@ -429,6 +446,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         }
         .game-plan-pulse-purple {
           animation: game-plan-pulse-purple 2s ease-in-out infinite;
+        }
+        @keyframes game-plan-pulse-teal {
+          0%, 100% { 
+            box-shadow: 0 0 0 0 hsl(175 50% 45% / 0.4);
+          }
+          50% { 
+            box-shadow: 0 0 0 4px hsl(175 50% 45% / 0.1);
+          }
+        }
+        .game-plan-pulse-teal {
+          animation: game-plan-pulse-teal 2s ease-in-out infinite;
         }
       `}</style>
     </Card>
