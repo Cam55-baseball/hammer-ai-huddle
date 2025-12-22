@@ -441,6 +441,7 @@ export default function ProductionLab() {
               setSelectedDay(fullScreenData);
               setFullScreenData(null);
             }}
+            sport={selectedSport}
           />,
           document.body
         )}

@@ -13,7 +13,24 @@ interface WorkoutProgressBarProps {
   exerciseType: 'strength' | 'isometric' | 'skill';
   exerciseName: string;
   onExit: () => void;
+  sport?: 'baseball' | 'softball';
 }
+
+// Sport-aware neon color helper
+const getSportColors = (sport: 'baseball' | 'softball', type: 'strength' | 'isometric' | 'skill') => {
+  if (sport === 'softball') {
+    switch (type) {
+      case 'strength': return { tw: 'pink', hex: '#f472b6', shadow: 'rgba(244,114,182,' };
+      case 'isometric': return { tw: 'green', hex: '#4ade80', shadow: 'rgba(74,222,128,' };
+      case 'skill': return { tw: 'yellow', hex: '#facc15', shadow: 'rgba(250,204,21,' };
+    }
+  }
+  switch (type) {
+    case 'strength': return { tw: 'orange', hex: '#fb923c', shadow: 'rgba(251,146,60,' };
+    case 'isometric': return { tw: 'cyan', hex: '#22d3ee', shadow: 'rgba(34,211,238,' };
+    case 'skill': return { tw: 'lime', hex: '#a3e635', shadow: 'rgba(163,230,53,' };
+  }
+};
 
 export function WorkoutProgressBar({
   currentExerciseIndex,
@@ -23,10 +40,13 @@ export function WorkoutProgressBar({
   exerciseType,
   exerciseName,
   onExit,
+  sport = 'baseball',
 }: WorkoutProgressBarProps) {
   const { t } = useTranslation();
   
   const progressPercent = ((currentExerciseIndex + (currentSet - 1) / totalSets) / totalExercises) * 100;
+  const colors = getSportColors(sport, exerciseType);
+  const isSoftball = sport === 'softball';
 
   const getTypeIcon = () => {
     switch (exerciseType) {
@@ -40,6 +60,16 @@ export function WorkoutProgressBar({
   };
 
   const getTypeBadgeClass = () => {
+    if (isSoftball) {
+      switch (exerciseType) {
+        case 'strength':
+          return 'bg-pink-500/20 text-pink-400 border-pink-500/50 shadow-[0_0_10px_rgba(244,114,182,0.3)]';
+        case 'isometric':
+          return 'bg-green-500/20 text-green-400 border-green-500/50 shadow-[0_0_10px_rgba(74,222,128,0.3)]';
+        case 'skill':
+          return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50 shadow-[0_0_10px_rgba(250,204,21,0.3)]';
+      }
+    }
     switch (exerciseType) {
       case 'strength':
         return 'bg-orange-500/20 text-orange-400 border-orange-500/50 shadow-[0_0_10px_rgba(255,107,53,0.3)]';
@@ -62,6 +92,16 @@ export function WorkoutProgressBar({
   };
 
   const getProgressBarGlow = () => {
+    if (isSoftball) {
+      switch (exerciseType) {
+        case 'strength':
+          return 'shadow-[0_0_15px_rgba(244,114,182,0.5)]';
+        case 'isometric':
+          return 'shadow-[0_0_15px_rgba(74,222,128,0.5)]';
+        case 'skill':
+          return 'shadow-[0_0_15px_rgba(250,204,21,0.5)]';
+      }
+    }
     switch (exerciseType) {
       case 'strength':
         return 'shadow-[0_0_15px_rgba(255,107,53,0.5)]';
@@ -69,6 +109,27 @@ export function WorkoutProgressBar({
         return 'shadow-[0_0_15px_rgba(0,245,255,0.5)]';
       case 'skill':
         return 'shadow-[0_0_15px_rgba(57,255,20,0.5)]';
+    }
+  };
+
+  const getProgressBarGradient = () => {
+    if (isSoftball) {
+      switch (exerciseType) {
+        case 'strength':
+          return "bg-gradient-to-r from-pink-500 to-pink-400";
+        case 'isometric':
+          return "bg-gradient-to-r from-green-500 to-green-400";
+        case 'skill':
+          return "bg-gradient-to-r from-yellow-500 to-yellow-400";
+      }
+    }
+    switch (exerciseType) {
+      case 'strength':
+        return "bg-gradient-to-r from-orange-500 to-orange-400";
+      case 'isometric':
+        return "bg-gradient-to-r from-cyan-500 to-cyan-400";
+      case 'skill':
+        return "bg-gradient-to-r from-lime-500 to-lime-400";
     }
   };
 
@@ -103,9 +164,7 @@ export function WorkoutProgressBar({
         <div
           className={cn(
             "absolute left-0 top-0 h-full rounded-full transition-all duration-500 ease-out",
-            exerciseType === 'strength' && "bg-gradient-to-r from-orange-500 to-orange-400",
-            exerciseType === 'isometric' && "bg-gradient-to-r from-cyan-500 to-cyan-400",
-            exerciseType === 'skill' && "bg-gradient-to-r from-lime-500 to-lime-400",
+            getProgressBarGradient(),
             getProgressBarGlow()
           )}
           style={{ width: `${progressPercent}%` }}

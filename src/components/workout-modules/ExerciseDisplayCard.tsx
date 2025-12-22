@@ -17,7 +17,24 @@ interface ExerciseDisplayCardProps {
   onCompleteSet: () => void;
   onSkipExercise: () => void;
   completedSets: number[];
+  sport?: 'baseball' | 'softball';
 }
+
+// Sport-aware neon color helper
+const getSportColors = (sport: 'baseball' | 'softball', type: 'strength' | 'isometric' | 'skill') => {
+  if (sport === 'softball') {
+    switch (type) {
+      case 'strength': return { tw: 'pink', hex: '#f472b6', shadow: 'rgba(244,114,182,' };
+      case 'isometric': return { tw: 'green', hex: '#4ade80', shadow: 'rgba(74,222,128,' };
+      case 'skill': return { tw: 'yellow', hex: '#facc15', shadow: 'rgba(250,204,21,' };
+    }
+  }
+  switch (type) {
+    case 'strength': return { tw: 'orange', hex: '#fb923c', shadow: 'rgba(251,146,60,' };
+    case 'isometric': return { tw: 'cyan', hex: '#22d3ee', shadow: 'rgba(34,211,238,' };
+    case 'skill': return { tw: 'lime', hex: '#a3e635', shadow: 'rgba(163,230,53,' };
+  }
+};
 
 export function ExerciseDisplayCard({
   exercise,
@@ -29,8 +46,12 @@ export function ExerciseDisplayCard({
   onCompleteSet,
   onSkipExercise,
   completedSets,
+  sport = 'baseball',
 }: ExerciseDisplayCardProps) {
   const { t } = useTranslation();
+
+  const isSoftball = sport === 'softball';
+  const colors = getSportColors(sport, exercise.type || 'skill');
 
   const adjustedPercent = exercise.percentOf1RM
     ? getAdjustedPercent(exercise.percentOf1RM, experienceLevel)
@@ -45,6 +66,11 @@ export function ExerciseDisplayCard({
 
   const getIntensityColor = () => {
     if (!adjustedPercent) return 'bg-gray-800 text-gray-300';
+    if (isSoftball) {
+      if (adjustedPercent >= 80) return 'bg-pink-400/20 text-pink-400 border-pink-400/50 shadow-[0_0_10px_rgba(244,114,182,0.3)]';
+      if (adjustedPercent >= 65) return 'bg-green-400/20 text-green-400 border-green-400/50 shadow-[0_0_10px_rgba(74,222,128,0.3)]';
+      return 'bg-yellow-400/20 text-yellow-400 border-yellow-400/50 shadow-[0_0_10px_rgba(250,204,21,0.3)]';
+    }
     if (adjustedPercent >= 80) return 'bg-orange-400/20 text-orange-400 border-orange-400/50 shadow-[0_0_10px_rgba(251,146,60,0.3)]';
     if (adjustedPercent >= 65) return 'bg-cyan-400/20 text-cyan-400 border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.3)]';
     return 'bg-lime-400/20 text-lime-400 border-lime-400/50 shadow-[0_0_10px_rgba(163,230,53,0.3)]';
@@ -52,25 +78,31 @@ export function ExerciseDisplayCard({
 
   const getExerciseIcon = () => {
     if (exercise.type === 'strength') {
-      return <Dumbbell className="h-10 w-10 text-orange-400 drop-shadow-[0_0_12px_rgba(251,146,60,0.8)]" />;
+      return <Dumbbell className={cn("h-10 w-10", isSoftball ? "text-pink-400 drop-shadow-[0_0_12px_rgba(244,114,182,0.8)]" : "text-orange-400 drop-shadow-[0_0_12px_rgba(251,146,60,0.8)]")} />;
     }
     if (exercise.type === 'isometric') {
-      return <Timer className="h-10 w-10 text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]" />;
+      return <Timer className={cn("h-10 w-10", isSoftball ? "text-green-400 drop-shadow-[0_0_12px_rgba(74,222,128,0.8)]" : "text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]")} />;
     }
-    return <Target className="h-10 w-10 text-lime-400 drop-shadow-[0_0_12px_rgba(163,230,53,0.8)]" />;
+    return <Target className={cn("h-10 w-10", isSoftball ? "text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.8)]" : "text-lime-400 drop-shadow-[0_0_12px_rgba(163,230,53,0.8)]")} />;
   };
 
   const getBackgroundGradient = () => {
-    if (exercise.type === 'strength') {
-      return 'bg-black/60 border-orange-400/40 shadow-[0_0_30px_rgba(251,146,60,0.15)]';
+    if (isSoftball) {
+      if (exercise.type === 'strength') return 'bg-black/60 border-pink-400/40 shadow-[0_0_30px_rgba(244,114,182,0.15)]';
+      if (exercise.type === 'isometric') return 'bg-black/60 border-green-400/40 shadow-[0_0_30px_rgba(74,222,128,0.15)]';
+      return 'bg-black/60 border-yellow-400/40 shadow-[0_0_30px_rgba(250,204,21,0.15)]';
     }
-    if (exercise.type === 'isometric') {
-      return 'bg-black/60 border-cyan-400/40 shadow-[0_0_30px_rgba(34,211,238,0.15)]';
-    }
+    if (exercise.type === 'strength') return 'bg-black/60 border-orange-400/40 shadow-[0_0_30px_rgba(251,146,60,0.15)]';
+    if (exercise.type === 'isometric') return 'bg-black/60 border-cyan-400/40 shadow-[0_0_30px_rgba(34,211,238,0.15)]';
     return 'bg-black/60 border-lime-400/40 shadow-[0_0_30px_rgba(163,230,53,0.15)]';
   };
 
   const getNeonColor = () => {
+    if (isSoftball) {
+      if (exercise.type === 'strength') return 'pink';
+      if (exercise.type === 'isometric') return 'green';
+      return 'yellow';
+    }
     if (exercise.type === 'strength') return 'orange';
     if (exercise.type === 'isometric') return 'cyan';
     return 'lime';
@@ -85,24 +117,30 @@ export function ExerciseDisplayCard({
     )}>
       {/* Set Progress Dots */}
       <div className="flex justify-center gap-2 mb-6">
-        {Array.from({ length: totalSets }).map((_, idx) => (
-          <div
-            key={idx}
-            className={cn(
-              "h-3 w-3 rounded-full transition-all duration-300",
-              completedSets.includes(idx)
-                ? "bg-lime-400 scale-110 shadow-[0_0_8px_rgba(163,230,53,0.8)]"
-                : idx === currentSet - 1
-                ? cn(
-                    "scale-110 ring-2 ring-offset-2 ring-offset-black",
-                    neonColor === 'orange' && "bg-orange-400 ring-orange-400/50 shadow-[0_0_8px_rgba(251,146,60,0.8)]",
-                    neonColor === 'cyan' && "bg-cyan-400 ring-cyan-400/50 shadow-[0_0_8px_rgba(34,211,238,0.8)]",
-                    neonColor === 'lime' && "bg-lime-400 ring-lime-400/50 shadow-[0_0_8px_rgba(163,230,53,0.8)]"
-                  )
-                : "bg-gray-700"
-            )}
-          />
-        ))}
+        {Array.from({ length: totalSets }).map((_, idx) => {
+          const completeColor = isSoftball ? 'bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'bg-lime-400 shadow-[0_0_8px_rgba(163,230,53,0.8)]';
+          return (
+            <div
+              key={idx}
+              className={cn(
+                "h-3 w-3 rounded-full transition-all duration-300",
+                completedSets.includes(idx)
+                  ? `${completeColor} scale-110`
+                  : idx === currentSet - 1
+                  ? cn(
+                      "scale-110 ring-2 ring-offset-2 ring-offset-black",
+                      neonColor === 'orange' && "bg-orange-400 ring-orange-400/50 shadow-[0_0_8px_rgba(251,146,60,0.8)]",
+                      neonColor === 'cyan' && "bg-cyan-400 ring-cyan-400/50 shadow-[0_0_8px_rgba(34,211,238,0.8)]",
+                      neonColor === 'lime' && "bg-lime-400 ring-lime-400/50 shadow-[0_0_8px_rgba(163,230,53,0.8)]",
+                      neonColor === 'pink' && "bg-pink-400 ring-pink-400/50 shadow-[0_0_8px_rgba(244,114,182,0.8)]",
+                      neonColor === 'green' && "bg-green-400 ring-green-400/50 shadow-[0_0_8px_rgba(74,222,128,0.8)]",
+                      neonColor === 'yellow' && "bg-yellow-400 ring-yellow-400/50 shadow-[0_0_8px_rgba(250,204,21,0.8)]"
+                    )
+                  : "bg-gray-700"
+              )}
+            />
+          );
+        })}
       </div>
 
       {/* Exercise Icon & Name */}
@@ -111,7 +149,10 @@ export function ExerciseDisplayCard({
           "inline-flex p-4 rounded-2xl bg-black/50 backdrop-blur-sm border",
           neonColor === 'orange' && "border-orange-400/30",
           neonColor === 'cyan' && "border-cyan-400/30",
-          neonColor === 'lime' && "border-lime-400/30"
+          neonColor === 'lime' && "border-lime-400/30",
+          neonColor === 'pink' && "border-pink-400/30",
+          neonColor === 'green' && "border-green-400/30",
+          neonColor === 'yellow' && "border-yellow-400/30"
         )}>
           {getExerciseIcon()}
         </div>
@@ -136,7 +177,12 @@ export function ExerciseDisplayCard({
           )}
           
           {exercise.type === 'isometric' && exercise.holdTime && (
-            <Badge variant="secondary" className="text-base px-4 py-1.5 bg-cyan-400/20 text-cyan-400 border-cyan-400/30">
+            <Badge variant="secondary" className={cn(
+              "text-base px-4 py-1.5 border",
+              isSoftball 
+                ? "bg-green-400/20 text-green-400 border-green-400/30"
+                : "bg-cyan-400/20 text-cyan-400 border-cyan-400/30"
+            )}>
               <Timer className="h-4 w-4 mr-1.5" />
               {exercise.holdTime}s hold
             </Badge>
@@ -156,7 +202,10 @@ export function ExerciseDisplayCard({
           "text-5xl font-bold",
           neonColor === 'orange' && "text-orange-400 drop-shadow-[0_0_15px_rgba(251,146,60,0.6)]",
           neonColor === 'cyan' && "text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]",
-          neonColor === 'lime' && "text-lime-400 drop-shadow-[0_0_15px_rgba(163,230,53,0.6)]"
+          neonColor === 'lime' && "text-lime-400 drop-shadow-[0_0_15px_rgba(163,230,53,0.6)]",
+          neonColor === 'pink' && "text-pink-400 drop-shadow-[0_0_15px_rgba(244,114,182,0.6)]",
+          neonColor === 'green' && "text-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.6)]",
+          neonColor === 'yellow' && "text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]"
         )}>
           {t('workoutFullScreen.nextSet', { number: currentSet })}
         </span>
@@ -197,7 +246,12 @@ export function ExerciseDisplayCard({
               <Input
                 type="number"
                 placeholder="0"
-                className="h-16 w-32 text-center text-2xl font-bold bg-black/50 border-orange-400/30 text-white placeholder:text-gray-600 focus:border-orange-400 focus:ring-orange-400/30"
+                className={cn(
+                  "h-16 w-32 text-center text-2xl font-bold bg-black/50 text-white placeholder:text-gray-600",
+                  isSoftball 
+                    ? "border-pink-400/30 focus:border-pink-400 focus:ring-pink-400/30"
+                    : "border-orange-400/30 focus:border-orange-400 focus:ring-orange-400/30"
+                )}
                 value={exerciseWeights[currentSet - 1] || ''}
                 onChange={(e) => {
                   const weight = parseFloat(e.target.value) || 0;
@@ -221,7 +275,10 @@ export function ExerciseDisplayCard({
             "h-16 text-xl font-bold gap-3",
             neonColor === 'orange' && "bg-orange-500 hover:bg-orange-400 text-black shadow-[0_0_25px_rgba(251,146,60,0.5)]",
             neonColor === 'cyan' && "bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_25px_rgba(34,211,238,0.5)]",
-            neonColor === 'lime' && "bg-lime-500 hover:bg-lime-400 text-black shadow-[0_0_25px_rgba(163,230,53,0.5)]"
+            neonColor === 'lime' && "bg-lime-500 hover:bg-lime-400 text-black shadow-[0_0_25px_rgba(163,230,53,0.5)]",
+            neonColor === 'pink' && "bg-pink-500 hover:bg-pink-400 text-black shadow-[0_0_25px_rgba(244,114,182,0.5)]",
+            neonColor === 'green' && "bg-green-500 hover:bg-green-400 text-black shadow-[0_0_25px_rgba(74,222,128,0.5)]",
+            neonColor === 'yellow' && "bg-yellow-500 hover:bg-yellow-400 text-black shadow-[0_0_25px_rgba(250,204,21,0.5)]"
           )}
         >
           <CheckCircle2 className="h-6 w-6" />
