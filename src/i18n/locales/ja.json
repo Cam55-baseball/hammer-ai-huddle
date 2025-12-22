@@ -4141,5 +4141,119 @@
     "streakBroken": "ストリークリセット - また積み上げましょう！",
     "fireUnlocked": "5日で炎が解除されます！",
     "glowUnlocked": "25日で炎が輝きます！"
+  },
+  "texVision": {
+    "title": "テックスビジョン",
+    "subtitle": "神経視覚トレーニングシステム",
+    "description": "より速い反応とより良いトラッキングのために目と脳を訓練する",
+    "locked": {
+      "title": "テックスビジョンがロックされています",
+      "description": "テックスビジョン神経視覚トレーニングを解除するには、打撃分析に登録してください。",
+      "cta": "料金を見る"
+    },
+    "streak": {
+      "title": "トレーニングストリーク",
+      "currentStreak": "現在のストリーク",
+      "longestStreak": "最長ストリーク",
+      "totalSessions": "総セッション数",
+      "todayProgress": "今日のドリル",
+      "days": "日",
+      "sessions": "セッション"
+    },
+    "checklist": {
+      "title": "毎日のドリルチェックリスト",
+      "completed": "完了",
+      "remaining": "残り",
+      "allComplete": "すべてのドリルが完了しました！",
+      "markComplete": "完了をマーク"
+    },
+    "drills": {
+      "title": "ドリルライブラリ",
+      "categories": {
+        "focus": "フォーカストレーニング",
+        "tracking": "アイトラッキング",
+        "reaction": "反応時間",
+        "coordination": "調整"
+      },
+      "tiers": {
+        "beginner": "初級",
+        "advanced": "上級",
+        "chaos": "カオスモード"
+      },
+      "softFocus": {
+        "name": "ソフトフォーカス",
+        "description": "固視せずに周辺視野の意識を訓練する"
+      },
+      "patternSearch": {
+        "name": "パターン検索",
+        "description": "複雑な視覚フィールドでターゲットを見つける"
+      },
+      "peripheralVision": {
+        "name": "周辺視野",
+        "description": "視野の端で動きを検出する"
+      },
+      "convergenceDivergence": {
+        "name": "収束/発散",
+        "description": "目の調整と奥行き知覚を訓練する"
+      },
+      "nearFarSight": {
+        "name": "遠近視",
+        "description": "距離間の高速フォーカス切り替え"
+      },
+      "followTheTarget": {
+        "name": "ターゲットを追う",
+        "description": "スムーズな追跡演習"
+      },
+      "whackAMole": {
+        "name": "ゴー/ノーゴー",
+        "description": "反応と意思決定の組み合わせ"
+      },
+      "meterTiming": {
+        "name": "メータータイミング",
+        "description": "可変速度での精密タイミング"
+      },
+      "brockString": {
+        "name": "ブロックストリング",
+        "description": "ガイド付き目の調整演習"
+      },
+      "locked": "解除するには前のティアを完了してください",
+      "start": "ドリルを開始",
+      "continue": "続ける"
+    },
+    "metrics": {
+      "title": "パフォーマンス指標",
+      "neuroReactionIndex": "神経反応指数",
+      "visualProcessingSpeed": "視覚処理",
+      "anticipationQuotient": "予測",
+      "coordinationEfficiency": "調整",
+      "stressResilience": "ストレス耐性",
+      "tierProgress": "ティア進捗",
+      "accuracy": "精度",
+      "reactionTime": "反応時間",
+      "ms": "ms"
+    },
+    "fatigue": {
+      "detected": "疲労が検出されました",
+      "suggestion": "最適なトレーニングのために短い休憩を取ってください",
+      "endSession": "セッションを終了",
+      "continue": "とにかく続ける"
+    },
+    "s2Diagnostics": {
+      "title": "S2認知診断",
+      "description": "包括的な神経視覚評価",
+      "nextTest": "次のテスト可能",
+      "processingSpeed": "処理速度",
+      "decisionEfficiency": "決定効率",
+      "visualMotor": "視覚運動統合",
+      "overallScore": "総合スコア"
+    },
+    "disclaimer": {
+      "title": "トレーニング免責事項",
+      "content": "テックスビジョンはパフォーマンストレーニング専用に設計されています。頭痛、めまい、または視覚的不快感を感じた場合は、すぐにトレーニングを中止してください。視覚トレーニングプログラムを開始する前に、眼科専門家に相談してください。"
+    },
+    "gamePlan": {
+      "title": "テックスビジョントレーニング",
+      "description": "毎日の視覚ドリルを完了する"
+    }
   }
 }

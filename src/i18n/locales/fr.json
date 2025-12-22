@@ -4742,5 +4742,119 @@
       "journal": "Journal",
       "insights": "Statistiques"
     }
+  },
+  "texVision": {
+    "title": "Tex Vision",
+    "subtitle": "Système d'Entraînement Neuro-Visuel",
+    "description": "Entraînez vos yeux et votre cerveau pour des réactions plus rapides et un meilleur suivi",
+    "locked": {
+      "title": "Tex Vision Verrouillé",
+      "description": "Abonnez-vous à l'Analyse de Frappe pour débloquer l'entraînement neuro-visuel Tex Vision.",
+      "cta": "Voir les Tarifs"
+    },
+    "streak": {
+      "title": "Série d'Entraînement",
+      "currentStreak": "Série Actuelle",
+      "longestStreak": "Plus Longue Série",
+      "totalSessions": "Sessions Totales",
+      "todayProgress": "Exercices du Jour",
+      "days": "jours",
+      "sessions": "sessions"
+    },
+    "checklist": {
+      "title": "Liste des Exercices Quotidiens",
+      "completed": "Terminé",
+      "remaining": "Restants",
+      "allComplete": "Tous les exercices terminés!",
+      "markComplete": "Marquer Terminé"
+    },
+    "drills": {
+      "title": "Bibliothèque d'Exercices",
+      "categories": {
+        "focus": "Entraînement de la Concentration",
+        "tracking": "Suivi Oculaire",
+        "reaction": "Temps de Réaction",
+        "coordination": "Coordination"
+      },
+      "tiers": {
+        "beginner": "Débutant",
+        "advanced": "Avancé",
+        "chaos": "Mode Chaos"
+      },
+      "softFocus": {
+        "name": "Focus Doux",
+        "description": "Entraînez la conscience périphérique sans fixer"
+      },
+      "patternSearch": {
+        "name": "Recherche de Motifs",
+        "description": "Trouvez des cibles dans des champs visuels complexes"
+      },
+      "peripheralVision": {
+        "name": "Vision Périphérique",
+        "description": "Détectez les mouvements aux bords de la vision"
+      },
+      "convergenceDivergence": {
+        "name": "Convergence/Divergence",
+        "description": "Entraînez l'alignement des yeux et la perception de la profondeur"
+      },
+      "nearFarSight": {
+        "name": "Vue Proche-Lointaine",
+        "description": "Changement rapide de focus entre les distances"
+      },
+      "followTheTarget": {
+        "name": "Suivre la Cible",
+        "description": "Exercices de poursuite fluide"
+      },
+      "whackAMole": {
+        "name": "Go/No-Go",
+        "description": "Réaction et prise de décision combinées"
+      },
+      "meterTiming": {
+        "name": "Timing au Compteur",
+        "description": "Précision du timing avec vitesses variables"
+      },
+      "brockString": {
+        "name": "Corde de Brock",
+        "description": "Exercice guidé d'alignement oculaire"
+      },
+      "locked": "Complétez le niveau précédent pour débloquer",
+      "start": "Démarrer l'Exercice",
+      "continue": "Continuer"
+    },
+    "metrics": {
+      "title": "Métriques de Performance",
+      "neuroReactionIndex": "Indice Neuro-Réaction",
+      "visualProcessingSpeed": "Traitement Visuel",
+      "anticipationQuotient": "Anticipation",
+      "coordinationEfficiency": "Coordination",
+      "stressResilience": "Résilience au Stress",
+      "tierProgress": "Progression de Niveau",
+      "accuracy": "Précision",
+      "reactionTime": "Temps de Réaction",
+      "ms": "ms"
+    },
+    "fatigue": {
+      "detected": "Fatigue Détectée",
+      "suggestion": "Faites une courte pause pour un entraînement optimal",
+      "endSession": "Terminer la Session",
+      "continue": "Continuer Quand Même"
+    },
+    "s2Diagnostics": {
+      "title": "Diagnostics S2 Cognition",
+      "description": "Évaluation neuro-visuelle complète",
+      "nextTest": "Prochain test disponible",
+      "processingSpeed": "Vitesse de Traitement",
+      "decisionEfficiency": "Efficacité de Décision",
+      "visualMotor": "Intégration Visuo-Motrice",
+      "overallScore": "Score Global"
+    },
+    "disclaimer": {
+      "title": "Avertissement d'Entraînement",
+      "content": "Tex Vision est conçu uniquement pour l'entraînement de performance. Si vous ressentez des maux de tête, des vertiges ou un inconfort visuel, arrêtez immédiatement l'entraînement. Consultez un professionnel de la vue avant de commencer tout programme d'entraînement visuel."
+    },
+    "gamePlan": {
+      "title": "Entraînement Tex Vision",
+      "description": "Complétez vos exercices de vision quotidiens"
+    }
   }
 }

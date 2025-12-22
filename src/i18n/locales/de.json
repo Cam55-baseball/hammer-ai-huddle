@@ -4742,5 +4742,119 @@
       "journal": "Tagebuch",
       "insights": "Statistiken"
     }
+  },
+  "texVision": {
+    "title": "Tex Vision",
+    "subtitle": "Neuro-Visuelles Trainingssystem",
+    "description": "Trainieren Sie Ihre Augen und Ihr Gehirn für schnellere Reaktionen und besseres Tracking",
+    "locked": {
+      "title": "Tex Vision Gesperrt",
+      "description": "Abonnieren Sie die Schlaganalyse, um das neuro-visuelle Training Tex Vision freizuschalten.",
+      "cta": "Preise Ansehen"
+    },
+    "streak": {
+      "title": "Trainingssträhne",
+      "currentStreak": "Aktuelle Strähne",
+      "longestStreak": "Längste Strähne",
+      "totalSessions": "Gesamte Sitzungen",
+      "todayProgress": "Heutige Übungen",
+      "days": "Tage",
+      "sessions": "Sitzungen"
+    },
+    "checklist": {
+      "title": "Tägliche Übungsliste",
+      "completed": "Abgeschlossen",
+      "remaining": "Verbleibend",
+      "allComplete": "Alle Übungen abgeschlossen!",
+      "markComplete": "Als Abgeschlossen Markieren"
+    },
+    "drills": {
+      "title": "Übungsbibliothek",
+      "categories": {
+        "focus": "Fokus-Training",
+        "tracking": "Augen-Tracking",
+        "reaction": "Reaktionszeit",
+        "coordination": "Koordination"
+      },
+      "tiers": {
+        "beginner": "Anfänger",
+        "advanced": "Fortgeschritten",
+        "chaos": "Chaos-Modus"
+      },
+      "softFocus": {
+        "name": "Weicher Fokus",
+        "description": "Trainieren Sie periphere Wahrnehmung ohne Fixierung"
+      },
+      "patternSearch": {
+        "name": "Mustersuche",
+        "description": "Finden Sie Ziele in komplexen visuellen Feldern"
+      },
+      "peripheralVision": {
+        "name": "Peripheres Sehen",
+        "description": "Erkennen Sie Bewegungen am Rand des Sichtfelds"
+      },
+      "convergenceDivergence": {
+        "name": "Konvergenz/Divergenz",
+        "description": "Trainieren Sie Augenausrichtung und Tiefenwahrnehmung"
+      },
+      "nearFarSight": {
+        "name": "Nah-Fern-Sicht",
+        "description": "Schneller Fokuswechsel zwischen Entfernungen"
+      },
+      "followTheTarget": {
+        "name": "Ziel Verfolgen",
+        "description": "Übungen zur gleichmäßigen Verfolgung"
+      },
+      "whackAMole": {
+        "name": "Go/No-Go",
+        "description": "Reaktion und Entscheidungsfindung kombiniert"
+      },
+      "meterTiming": {
+        "name": "Meter-Timing",
+        "description": "Präzisions-Timing mit variablen Geschwindigkeiten"
+      },
+      "brockString": {
+        "name": "Brock-Schnur",
+        "description": "Geführte Augenausrichtungsübung"
+      },
+      "locked": "Schließen Sie die vorherige Stufe ab zum Freischalten",
+      "start": "Übung Starten",
+      "continue": "Fortfahren"
+    },
+    "metrics": {
+      "title": "Leistungsmetriken",
+      "neuroReactionIndex": "Neuro-Reaktions-Index",
+      "visualProcessingSpeed": "Visuelle Verarbeitung",
+      "anticipationQuotient": "Antizipation",
+      "coordinationEfficiency": "Koordination",
+      "stressResilience": "Stressresistenz",
+      "tierProgress": "Stufenfortschritt",
+      "accuracy": "Genauigkeit",
+      "reactionTime": "Reaktionszeit",
+      "ms": "ms"
+    },
+    "fatigue": {
+      "detected": "Ermüdung Erkannt",
+      "suggestion": "Machen Sie eine kurze Pause für optimales Training",
+      "endSession": "Sitzung Beenden",
+      "continue": "Trotzdem Fortfahren"
+    },
+    "s2Diagnostics": {
+      "title": "S2 Cognition Diagnostik",
+      "description": "Umfassende neuro-visuelle Bewertung",
+      "nextTest": "Nächster Test verfügbar",
+      "processingSpeed": "Verarbeitungsgeschwindigkeit",
+      "decisionEfficiency": "Entscheidungseffizienz",
+      "visualMotor": "Visuomotorische Integration",
+      "overallScore": "Gesamtpunktzahl"
+    },
+    "disclaimer": {
+      "title": "Trainingshinweis",
+      "content": "Tex Vision ist nur für Leistungstraining konzipiert. Wenn Sie Kopfschmerzen, Schwindel oder visuelles Unbehagen verspüren, beenden Sie das Training sofort. Konsultieren Sie einen Augenarzt, bevor Sie ein visuelles Trainingsprogramm beginnen."
+    },
+    "gamePlan": {
+      "title": "Tex Vision Training",
+      "description": "Schließen Sie Ihre täglichen Sehübungen ab"
+    }
   }
 }

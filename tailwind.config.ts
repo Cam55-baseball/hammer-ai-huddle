@@ -79,6 +79,16 @@ export default {
           warning: "hsl(var(--wellness-warning))",
           "warning-foreground": "hsl(var(--wellness-warning-foreground))",
         },
+        texVision: {
+          DEFAULT: "hsl(var(--tex-vision-primary))",
+          light: "hsl(var(--tex-vision-primary-light))",
+          dark: "hsl(var(--tex-vision-primary-dark))",
+          success: "hsl(var(--tex-vision-success))",
+          text: "hsl(var(--tex-vision-text))",
+          "text-muted": "hsl(var(--tex-vision-text-muted))",
+          timing: "hsl(var(--tex-vision-timing))",
+          feedback: "hsl(var(--tex-vision-feedback))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
