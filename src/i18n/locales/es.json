@@ -4973,15 +4973,5 @@
         }
       }
     }
-  },
-  "insights": {
-      "cognitiveSkills": "Habilidades Cognitivas",
-      "resilience": "Resiliencia",
-      "healing": "Sanación",
-      "education": "Educación",
-      "crisis": "Apoyo de Crisis",
-      "journal": "Diario",
-      "insights": "Estadísticas"
-    }
   }
 }
