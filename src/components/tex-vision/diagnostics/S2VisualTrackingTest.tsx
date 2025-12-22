@@ -159,8 +159,8 @@ export const S2VisualTrackingTest = ({ onComplete }: S2VisualTrackingTestProps) 
       setPhase('done');
     } else {
       setRound(r => r + 1);
-      setPhase('highlight');
-      initializeDots();
+      setCountdown(3);
+      setPhase('countdown'); // Go through countdown which properly calls initializeDots
     }
   };
 
