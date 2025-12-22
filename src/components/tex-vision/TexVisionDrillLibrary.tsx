@@ -21,7 +21,7 @@ import { TexVisionTier } from '@/hooks/useTexVisionProgress';
 
 interface TexVisionDrillLibraryProps {
   currentTier: TexVisionTier;
-  onDrillComplete: (drillId: string) => void;
+  onDrillStart: (drillId: string, tier: string) => void;
 }
 
 interface Drill {
@@ -140,7 +140,7 @@ const DRILLS: Drill[] = [
 
 const TIER_ORDER: TexVisionTier[] = ['beginner', 'advanced', 'chaos'];
 
-export default function TexVisionDrillLibrary({ currentTier, onDrillComplete }: TexVisionDrillLibraryProps) {
+export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: TexVisionDrillLibraryProps) {
   const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -229,7 +229,7 @@ export default function TexVisionDrillLibrary({ currentTier, onDrillComplete }: 
                     ? 'bg-[hsl(var(--tex-vision-primary-dark))]/50 border-[hsl(var(--tex-vision-primary-light))]/20 hover:border-[hsl(var(--tex-vision-feedback))]/50 cursor-pointer'
                     : 'bg-[hsl(var(--tex-vision-primary-dark))]/30 border-[hsl(var(--tex-vision-primary-light))]/10 opacity-60'
                 }`}
-                onClick={() => unlocked && onDrillComplete(drill.id)}
+                onClick={() => unlocked && onDrillStart(drill.id, drill.tier)}
               >
                 <div className="flex items-start gap-3">
                   <div className={`p-2 rounded-lg ${

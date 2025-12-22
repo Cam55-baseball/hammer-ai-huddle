@@ -1,18 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useTexVisionAccess } from '@/hooks/useTexVisionAccess';
 import { useTexVisionProgress } from '@/hooks/useTexVisionProgress';
+import { useTexVisionSession, DrillResult } from '@/hooks/useTexVisionSession';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import TexVisionStreakCard from '@/components/tex-vision/TexVisionStreakCard';
 import TexVisionDailyChecklist from '@/components/tex-vision/TexVisionDailyChecklist';
 import TexVisionDrillLibrary from '@/components/tex-vision/TexVisionDrillLibrary';
 import TexVisionProgressMetrics from '@/components/tex-vision/TexVisionProgressMetrics';
 import TexVisionDisclaimer from '@/components/tex-vision/TexVisionDisclaimer';
+import ActiveDrillView from '@/components/tex-vision/ActiveDrillView';
 import { Eye, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+interface ActiveDrill {
+  id: string;
+  tier: string;
+}
 
 export default function TexVision() {
   const { t } = useTranslation();
@@ -28,8 +35,13 @@ export default function TexVision() {
     loading: progressLoading,
     initializeProgress,
     updateChecklist,
+    updateStreak,
     refetch,
   } = useTexVisionProgress(currentSport);
+
+  const { getOrCreateTodaySession, saveDrillResult } = useTexVisionSession(currentSport);
+  const [activeDrill, setActiveDrill] = useState<ActiveDrill | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -42,6 +54,28 @@ export default function TexVision() {
     if (savedSport && ['baseball', 'softball'].includes(savedSport)) {
       setCurrentSport(savedSport);
     }
+  }, []);
+
+  const handleDrillStart = useCallback(async (drillId: string, tier: string) => {
+    const session = await getOrCreateTodaySession();
+    if (session) {
+      setSessionId(session);
+      setActiveDrill({ id: drillId, tier });
+    }
+  }, [getOrCreateTodaySession]);
+
+  const handleDrillComplete = useCallback(async (result: DrillResult) => {
+    if (sessionId) {
+      await saveDrillResult(sessionId, result);
+      await updateChecklist(result.drillType, true);
+      await updateStreak();
+      await refetch();
+    }
+    setActiveDrill(null);
+  }, [sessionId, saveDrillResult, updateChecklist, updateStreak, refetch]);
+
+  const handleDrillExit = useCallback(() => {
+    setActiveDrill(null);
   }, []);
 
   // Initialize progress if user has access but no progress record
@@ -115,6 +149,19 @@ export default function TexVision() {
     );
   }
 
+  // Show active drill in fullscreen mode
+  if (activeDrill && sessionId) {
+    return (
+      <ActiveDrillView
+        drillId={activeDrill.id}
+        tier={activeDrill.tier}
+        sessionId={sessionId}
+        onComplete={handleDrillComplete}
+        onExit={handleDrillExit}
+      />
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6 sm:space-y-8 pb-8">
@@ -162,9 +209,7 @@ export default function TexVision() {
         {/* Drill Library */}
         <TexVisionDrillLibrary
           currentTier={progress?.current_tier || 'beginner'}
-          onDrillComplete={(drillId) => {
-            updateChecklist(drillId, true);
-          }}
+          onDrillStart={handleDrillStart}
         />
 
         {/* Progress Metrics */}
