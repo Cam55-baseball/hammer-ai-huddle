@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon, Lightbulb, Sparkles, Target } from 'lucide-react';
+import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon, Lightbulb, Sparkles, Target, Eye } from 'lucide-react';
 import { startOfWeek, differenceInDays, format } from 'date-fns';
 export interface GamePlanTask {
   id: string;
@@ -15,7 +15,7 @@ export interface GamePlanTask {
   taskType: 'workout' | 'video' | 'nutrition' | 'quiz' | 'tracking' | 'mental-fuel';
   section: 'checkin' | 'training' | 'tracking';
   badge?: string;
-  specialStyle?: 'mental-fuel-plus';
+  specialStyle?: 'mental-fuel-plus' | 'tex-vision';
 }
 
 export interface GamePlanData {
@@ -225,6 +225,18 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       
       status['healthtip'] = (healthTipData?.length || 0) > 0;
 
+      // Fetch Tex Vision checklist completion for today (requires hitting access)
+      if (hasHittingAccess) {
+        const { data: texVisionData } = await supabase
+          .from('tex_vision_daily_checklist')
+          .select('all_complete')
+          .eq('user_id', user.id)
+          .eq('entry_date', today)
+          .maybeSingle();
+        
+        status['texvision'] = texVisionData?.all_complete || false;
+      }
+
       // Check 6-week tracking: Performance Tests
       const { data: perfTestData } = await supabase
         .from('vault_performance_tests')
@@ -429,6 +441,20 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       module: 'hitting',
       taskType: 'workout',
       section: 'training',
+    });
+
+    // Tex Vision task
+    tasks.push({
+      id: 'texvision',
+      titleKey: 'texVision.gamePlan.title',
+      descriptionKey: 'texVision.gamePlan.description',
+      completed: completionStatus['texvision'] || false,
+      icon: Eye,
+      link: '/tex-vision',
+      module: 'hitting',
+      taskType: 'workout',
+      section: 'training',
+      specialStyle: 'tex-vision',
     });
   }
 
