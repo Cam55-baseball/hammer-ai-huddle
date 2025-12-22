@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,10 +12,12 @@ import TexVisionDrillLibrary from '@/components/tex-vision/TexVisionDrillLibrary
 import TexVisionProgressMetrics from '@/components/tex-vision/TexVisionProgressMetrics';
 import TexVisionDisclaimer from '@/components/tex-vision/TexVisionDisclaimer';
 import ActiveDrillView from '@/components/tex-vision/ActiveDrillView';
-import { S2CognitionDiagnostics } from '@/components/tex-vision/S2CognitionDiagnostics';
+import { S2CognitionDiagnostics, S2DiagnosticResult } from '@/components/tex-vision/S2CognitionDiagnostics';
 import { Eye, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { differenceInDays } from 'date-fns';
 
 interface ActiveDrill {
   id: string;
@@ -44,6 +46,13 @@ export default function TexVision() {
   const [activeDrill, setActiveDrill] = useState<ActiveDrill | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
+  // S2 Diagnostic state
+  const [s2DiagnosticResult, setS2DiagnosticResult] = useState<S2DiagnosticResult | null>(null);
+  const [s2Loading, setS2Loading] = useState(true);
+  const [canTakeS2Test, setCanTakeS2Test] = useState(true);
+  const [daysUntilNextS2, setDaysUntilNextS2] = useState(0);
+  const s2SectionRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
@@ -56,6 +65,55 @@ export default function TexVision() {
       setCurrentSport(savedSport);
     }
   }, []);
+
+  // Fetch S2 diagnostic data
+  const fetchS2Diagnostic = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('tex_vision_s2_diagnostics')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('sport', currentSport)
+        .order('test_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        const result = {
+          ...data,
+          comparison_vs_prior: data.comparison_vs_prior as S2DiagnosticResult['comparison_vs_prior'],
+        } as S2DiagnosticResult;
+        setS2DiagnosticResult(result);
+
+        // Check if can take test (16 weeks lockout)
+        if (data.next_test_date) {
+          const nextDate = new Date(data.next_test_date);
+          const today = new Date();
+          const daysRemaining = differenceInDays(nextDate, today);
+          setDaysUntilNextS2(Math.max(0, daysRemaining));
+          setCanTakeS2Test(daysRemaining <= 0);
+        }
+      } else {
+        setS2DiagnosticResult(null);
+        setCanTakeS2Test(true);
+        setDaysUntilNextS2(0);
+      }
+    } catch (error) {
+      console.error('Error fetching S2 diagnostic:', error);
+    } finally {
+      setS2Loading(false);
+    }
+  }, [user, currentSport]);
+
+  useEffect(() => {
+    if (hasAccess && user) {
+      fetchS2Diagnostic();
+    }
+  }, [hasAccess, user, fetchS2Diagnostic]);
 
   const handleDrillStart = useCallback(async (drillId: string, tier: string) => {
     const session = await getOrCreateTodaySession();
@@ -77,6 +135,11 @@ export default function TexVision() {
 
   const handleDrillExit = useCallback(() => {
     setActiveDrill(null);
+  }, []);
+
+  // Scroll to S2 section and trigger assessment
+  const handleStartS2Assessment = useCallback(() => {
+    s2SectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   // Initialize progress if user has access but no progress record
@@ -200,11 +263,16 @@ export default function TexVision() {
           loading={progressLoading}
         />
 
-        {/* Daily Checklist */}
+        {/* Daily Checklist with S2 tracking */}
         <TexVisionDailyChecklist
           checklist={dailyChecklist}
           onUpdateChecklist={updateChecklist}
           loading={progressLoading}
+          s2DiagnosticResult={s2DiagnosticResult}
+          s2Loading={s2Loading}
+          canTakeS2Test={canTakeS2Test}
+          daysUntilNextS2={daysUntilNextS2}
+          onStartS2Assessment={handleStartS2Assessment}
         />
 
         {/* Drill Library */}
@@ -221,7 +289,9 @@ export default function TexVision() {
         />
 
         {/* S2 Cognition Diagnostics */}
-        <S2CognitionDiagnostics sport={currentSport} />
+        <div ref={s2SectionRef}>
+          <S2CognitionDiagnostics sport={currentSport} />
+        </div>
 
         {/* Disclaimer */}
         <TexVisionDisclaimer />
