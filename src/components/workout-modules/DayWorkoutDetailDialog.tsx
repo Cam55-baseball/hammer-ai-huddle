@@ -68,6 +68,7 @@ export function DayWorkoutDetailDialog({
   const [showNotesDialog, setShowNotesDialog] = useState(false);
   const [hasVaultAccess, setHasVaultAccess] = useState(false);
   const [showFullScreen, setShowFullScreen] = useState(false);
+  const [restoreDialogOnExit, setRestoreDialogOnExit] = useState(false);
 
   useEffect(() => {
     const checkAccess = async () => {
