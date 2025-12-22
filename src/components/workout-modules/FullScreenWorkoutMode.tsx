@@ -18,7 +18,25 @@ interface FullScreenWorkoutModeProps {
   onWeightUpdate: (exerciseIndex: number, setIndex: number, weight: number) => void;
   onComplete: () => void;
   onExit: () => void;
+  sport?: 'baseball' | 'softball';
 }
+
+// Sport-aware neon color helper
+const getSportColors = (sport: 'baseball' | 'softball', type: 'strength' | 'isometric' | 'skill') => {
+  if (sport === 'softball') {
+    switch (type) {
+      case 'strength': return { tw: 'pink', hex: '#f472b6', rgba: 'rgba(244,114,182,', shadow: 'rgba(244,114,182,' };
+      case 'isometric': return { tw: 'green', hex: '#4ade80', rgba: 'rgba(74,222,128,', shadow: 'rgba(74,222,128,' };
+      case 'skill': return { tw: 'yellow', hex: '#facc15', rgba: 'rgba(250,204,21,', shadow: 'rgba(250,204,21,' };
+    }
+  }
+  // Baseball colors (existing)
+  switch (type) {
+    case 'strength': return { tw: 'orange', hex: '#fb923c', rgba: 'rgba(251,146,60,', shadow: 'rgba(251,146,60,' };
+    case 'isometric': return { tw: 'cyan', hex: '#22d3ee', rgba: 'rgba(34,211,238,', shadow: 'rgba(34,211,238,' };
+    case 'skill': return { tw: 'lime', hex: '#a3e635', rgba: 'rgba(163,230,53,', shadow: 'rgba(163,230,53,' };
+  }
+};
 
 type WorkoutPhase = 'exercise' | 'rest' | 'complete';
 
@@ -76,6 +94,7 @@ export function FullScreenWorkoutMode({
   onWeightUpdate,
   onComplete,
   onExit,
+  sport = 'baseball',
 }: FullScreenWorkoutModeProps) {
   const { t } = useTranslation();
   
@@ -151,24 +170,22 @@ export function FullScreenWorkoutMode({
   // Neon color scheme - Pure black background with neon accents
   const getBackgroundClass = () => 'bg-black';
 
+  // Get sport-specific complete color
+  const getCompleteColors = () => getSportColors(sport, 'skill');
+  const getRestColors = () => getSportColors(sport, 'isometric');
+
   const getNeonAccentClass = () => {
     if (phase === 'complete') {
-      return 'ring-1 ring-lime-400/40 shadow-[0_0_60px_rgba(163,230,53,0.2)]';
+      const colors = getCompleteColors();
+      return `ring-1 ring-${colors.tw}-400/40 shadow-[0_0_60px_${colors.shadow}0.2)]`;
     }
     if (phase === 'rest') {
-      return 'ring-1 ring-cyan-400/30 shadow-[0_0_50px_rgba(34,211,238,0.15)]';
+      const colors = getRestColors();
+      return `ring-1 ring-${colors.tw}-400/30 shadow-[0_0_50px_${colors.shadow}0.15)]`;
     }
     const type = getExerciseType(currentExercise);
-    switch (type) {
-      case 'strength':
-        return 'ring-1 ring-orange-400/40 shadow-[0_0_60px_rgba(251,146,60,0.2)]';
-      case 'isometric':
-        return 'ring-1 ring-cyan-400/40 shadow-[0_0_60px_rgba(34,211,238,0.2)]';
-      case 'skill':
-        return 'ring-1 ring-lime-400/40 shadow-[0_0_60px_rgba(163,230,53,0.2)]';
-      default:
-        return '';
-    }
+    const colors = getSportColors(sport, type);
+    return `ring-1 ring-${colors.tw}-400/40 shadow-[0_0_60px_${colors.shadow}0.2)]`;
   };
 
   if (phase === 'complete') {
@@ -181,36 +198,50 @@ export function FullScreenWorkoutMode({
         {/* Confetti Effect */}
         {showConfetti && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {Array.from({ length: 50 }).map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{
-                  x: '50vw',
-                  y: '50vh',
-                  scale: 0,
-                  rotate: 0
-                }}
-                animate={{
-                  x: `${Math.random() * 100}vw`,
-                  y: `${Math.random() * 100}vh`,
-                  scale: [0, 1, 0.5],
-                  rotate: Math.random() * 360
-                }}
-                transition={{
-                  duration: 2 + Math.random() * 2,
-                  ease: 'easeOut',
-                  delay: Math.random() * 0.5
-                }}
-                className={cn(
-                  "absolute w-3 h-3 rounded-full",
-                  i % 5 === 0 && "bg-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.8)]",
-                  i % 5 === 1 && "bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]",
-                  i % 5 === 2 && "bg-lime-400 shadow-[0_0_10px_rgba(163,230,53,0.8)]",
-                  i % 5 === 3 && "bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.8)]",
-                  i % 5 === 4 && "bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]"
-                )}
-              />
-            ))}
+            {Array.from({ length: 50 }).map((_, i) => {
+              // Sport-specific confetti colors
+              const confettiColors = sport === 'softball' 
+                ? [
+                    "bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.8)]",
+                    "bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.8)]",
+                    "bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]",
+                    "bg-fuchsia-400 shadow-[0_0_10px_rgba(232,121,249,0.8)]",
+                    "bg-lime-300 shadow-[0_0_10px_rgba(190,242,100,0.8)]"
+                  ]
+                : [
+                    "bg-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.8)]",
+                    "bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]",
+                    "bg-lime-400 shadow-[0_0_10px_rgba(163,230,53,0.8)]",
+                    "bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.8)]",
+                    "bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]"
+                  ];
+              return (
+                <motion.div
+                  key={i}
+                  initial={{
+                    x: '50vw',
+                    y: '50vh',
+                    scale: 0,
+                    rotate: 0
+                  }}
+                  animate={{
+                    x: `${Math.random() * 100}vw`,
+                    y: `${Math.random() * 100}vh`,
+                    scale: [0, 1, 0.5],
+                    rotate: Math.random() * 360
+                  }}
+                  transition={{
+                    duration: 2 + Math.random() * 2,
+                    ease: 'easeOut',
+                    delay: Math.random() * 0.5
+                  }}
+                  className={cn(
+                    "absolute w-3 h-3 rounded-full",
+                    confettiColors[i % 5]
+                  )}
+                />
+              );
+            })}
           </div>
         )}
 
@@ -220,36 +251,72 @@ export function FullScreenWorkoutMode({
           transition={{ type: 'spring', delay: 0.3 }}
           className="text-center space-y-6"
         >
-          <div className="inline-flex p-6 rounded-full bg-lime-400/10 border border-lime-400/50 shadow-[0_0_40px_rgba(163,230,53,0.3)]">
-            <Trophy className="h-16 w-16 text-lime-400 drop-shadow-[0_0_15px_rgba(163,230,53,0.8)]" />
-          </div>
-          
-          <h1 className="text-4xl font-bold text-white">
-            {t('workoutFullScreen.workoutFinished')}
-          </h1>
-          
-          <p className="text-xl text-gray-300">
-            {t('workoutFullScreen.greatWork')}
-          </p>
+          {(() => {
+            const completeColors = getCompleteColors();
+            const isSoftball = sport === 'softball';
+            return (
+              <>
+                <div className={cn(
+                  "inline-flex p-6 rounded-full border",
+                  isSoftball 
+                    ? "bg-yellow-400/10 border-yellow-400/50 shadow-[0_0_40px_rgba(250,204,21,0.3)]"
+                    : "bg-lime-400/10 border-lime-400/50 shadow-[0_0_40px_rgba(163,230,53,0.3)]"
+                )}>
+                  <Trophy className={cn(
+                    "h-16 w-16",
+                    isSoftball 
+                      ? "text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]"
+                      : "text-lime-400 drop-shadow-[0_0_15px_rgba(163,230,53,0.8)]"
+                  )} />
+                </div>
+                
+                <h1 className="text-4xl font-bold text-white">
+                  {t('workoutFullScreen.workoutFinished')}
+                </h1>
+                
+                <p className="text-xl text-gray-300">
+                  {t('workoutFullScreen.greatWork')}
+                </p>
 
-          <div className="flex items-center justify-center gap-2 text-lime-400">
-            <Sparkles className="h-5 w-5 drop-shadow-[0_0_8px_rgba(163,230,53,0.8)]" />
-            <span className="font-medium">
-              {exercises.length} {t('workoutFullScreen.exercisesRemaining', { count: 0 }).replace('0', exercises.length.toString())}
-            </span>
-            <Sparkles className="h-5 w-5 drop-shadow-[0_0_8px_rgba(163,230,53,0.8)]" />
-          </div>
+                <div className={cn(
+                  "flex items-center justify-center gap-2",
+                  isSoftball ? "text-yellow-400" : "text-lime-400"
+                )}>
+                  <Sparkles className={cn(
+                    "h-5 w-5",
+                    isSoftball 
+                      ? "drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]"
+                      : "drop-shadow-[0_0_8px_rgba(163,230,53,0.8)]"
+                  )} />
+                  <span className="font-medium">
+                    {exercises.length} {t('workoutFullScreen.exercisesRemaining', { count: 0 }).replace('0', exercises.length.toString())}
+                  </span>
+                  <Sparkles className={cn(
+                    "h-5 w-5",
+                    isSoftball 
+                      ? "drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]"
+                      : "drop-shadow-[0_0_8px_rgba(163,230,53,0.8)]"
+                  )} />
+                </div>
 
-          <Button
-            size="lg"
-            onClick={() => {
-              onComplete();
-              onExit();
-            }}
-            className="h-14 px-10 text-lg mt-6 bg-lime-500 hover:bg-lime-400 text-black font-bold shadow-[0_0_25px_rgba(163,230,53,0.5)]"
-          >
-            {t('workoutFullScreen.exitFullScreen')}
-          </Button>
+                <Button
+                  size="lg"
+                  onClick={() => {
+                    onComplete();
+                    onExit();
+                  }}
+                  className={cn(
+                    "h-14 px-10 text-lg mt-6 text-black font-bold",
+                    isSoftball 
+                      ? "bg-yellow-500 hover:bg-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.5)]"
+                      : "bg-lime-500 hover:bg-lime-400 shadow-[0_0_25px_rgba(163,230,53,0.5)]"
+                  )}
+                >
+                  {t('workoutFullScreen.exitFullScreen')}
+                </Button>
+              </>
+            );
+          })()}
         </motion.div>
       </motion.div>
     );
@@ -285,6 +352,7 @@ export function FullScreenWorkoutMode({
           exerciseType={getExerciseType(currentExercise)}
           exerciseName={getExerciseName(currentExercise)}
           onExit={onExit}
+          sport={sport}
         />
 
         {/* Main Content */}
@@ -309,6 +377,7 @@ export function FullScreenWorkoutMode({
                   onCompleteSet={handleCompleteSet}
                   onSkipExercise={handleSkipExercise}
                   completedSets={completedSets}
+                  sport={sport}
                 />
               </motion.div>
             )}
@@ -322,27 +391,43 @@ export function FullScreenWorkoutMode({
                 transition={{ duration: 0.3 }}
                 className="w-full max-w-lg"
               >
-              <div className="text-center space-y-8 p-8 rounded-3xl border border-lime-400/40 bg-lime-400/5 shadow-[0_0_40px_rgba(163,230,53,0.1)]">
-                  <h2 className="text-3xl font-bold text-white">
-                    {currentExercise}
-                  </h2>
-                  
-                  <Button
-                    size="lg"
-                    onClick={handleCompleteSet}
-                    className="h-16 px-12 text-xl font-semibold bg-lime-500 hover:bg-lime-400 text-black shadow-[0_0_25px_rgba(163,230,53,0.5)]"
-                  >
-                    {t('workoutFullScreen.completeSet')}
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    onClick={handleSkipExercise}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    {t('workoutFullScreen.skipExercise')}
-                  </Button>
-                </div>
+              {(() => {
+                const skillColors = getSportColors(sport, 'skill');
+                const isSoftball = sport === 'softball';
+                return (
+                  <div className={cn(
+                    "text-center space-y-8 p-8 rounded-3xl border",
+                    isSoftball 
+                      ? "border-yellow-400/40 bg-yellow-400/5 shadow-[0_0_40px_rgba(250,204,21,0.1)]"
+                      : "border-lime-400/40 bg-lime-400/5 shadow-[0_0_40px_rgba(163,230,53,0.1)]"
+                  )}>
+                    <h2 className="text-3xl font-bold text-white">
+                      {currentExercise}
+                    </h2>
+                    
+                    <Button
+                      size="lg"
+                      onClick={handleCompleteSet}
+                      className={cn(
+                        "h-16 px-12 text-xl font-semibold text-black",
+                        isSoftball 
+                          ? "bg-yellow-500 hover:bg-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.5)]"
+                          : "bg-lime-500 hover:bg-lime-400 shadow-[0_0_25px_rgba(163,230,53,0.5)]"
+                      )}
+                    >
+                      {t('workoutFullScreen.completeSet')}
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      onClick={handleSkipExercise}
+                      className="text-gray-400 hover:text-white"
+                    >
+                      {t('workoutFullScreen.skipExercise')}
+                    </Button>
+                  </div>
+                );
+              })()}
               </motion.div>
             )}
 
@@ -367,6 +452,7 @@ export function FullScreenWorkoutMode({
                       : undefined
                   }
                   isLastSet={isLastSet}
+                  sport={sport}
                 />
               </motion.div>
             )}

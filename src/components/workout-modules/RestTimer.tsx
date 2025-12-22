@@ -12,7 +12,24 @@ interface RestTimerProps {
   intensity?: 'heavy' | 'moderate' | 'light';
   nextExerciseName?: string;
   isLastSet?: boolean;
+  sport?: 'baseball' | 'softball';
 }
+
+// Sport-aware neon color helper
+const getSportColors = (sport: 'baseball' | 'softball', type: 'strength' | 'isometric' | 'skill') => {
+  if (sport === 'softball') {
+    switch (type) {
+      case 'strength': return { tw: 'pink', hex: '#f472b6', shadow: 'rgba(244,114,182,' };
+      case 'isometric': return { tw: 'green', hex: '#4ade80', shadow: 'rgba(74,222,128,' };
+      case 'skill': return { tw: 'yellow', hex: '#facc15', shadow: 'rgba(250,204,21,' };
+    }
+  }
+  switch (type) {
+    case 'strength': return { tw: 'orange', hex: '#fb923c', shadow: 'rgba(251,146,60,' };
+    case 'isometric': return { tw: 'cyan', hex: '#22d3ee', shadow: 'rgba(34,211,238,' };
+    case 'skill': return { tw: 'lime', hex: '#a3e635', shadow: 'rgba(163,230,53,' };
+  }
+};
 
 export function RestTimer({
   initialSeconds,
@@ -22,6 +39,7 @@ export function RestTimer({
   intensity = 'moderate',
   nextExerciseName,
   isLastSet = false,
+  sport = 'baseball',
 }: RestTimerProps) {
   const { t } = useTranslation();
   const [seconds, setSeconds] = useState(initialSeconds);
@@ -29,6 +47,9 @@ export function RestTimer({
   const [soundEnabled, setSoundEnabled] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+
+  const isSoftball = sport === 'softball';
+  const colors = getSportColors(sport, exerciseType);
 
   const totalSeconds = initialSeconds;
   const progress = ((totalSeconds - seconds) / totalSeconds) * 100;
@@ -104,44 +125,44 @@ export function RestTimer({
   const circumference = radius * 2 * Math.PI;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
-  // Get color based on exercise type
+  // Get color based on exercise type and sport
   const getTypeColor = () => {
-    switch (exerciseType) {
-      case 'strength':
-        return 'text-orange-400';
-      case 'isometric':
-        return 'text-cyan-400';
-      case 'skill':
-        return 'text-lime-400';
-      default:
-        return 'text-white';
-    }
+    return `text-${colors.tw}-400`;
   };
 
   const getStrokeColor = () => {
-    switch (exerciseType) {
-      case 'strength':
-        return '#fb923c'; // orange-400
-      case 'isometric':
-        return '#22d3ee'; // cyan-400
-      case 'skill':
-        return '#a3e635'; // lime-400
-      default:
-        return '#ffffff';
-    }
+    return colors.hex;
   };
 
   const getGlowFilter = () => {
-    switch (exerciseType) {
-      case 'strength':
-        return 'drop-shadow(0 0 12px rgba(251,146,60,0.8))';
-      case 'isometric':
-        return 'drop-shadow(0 0 12px rgba(34,211,238,0.8))';
-      case 'skill':
-        return 'drop-shadow(0 0 12px rgba(163,230,53,0.8))';
-      default:
-        return '';
+    return `drop-shadow(0 0 12px ${colors.shadow}0.8))`;
+  };
+
+  const getTimerTextClass = () => {
+    if (isLastTenSeconds) {
+      return isSoftball 
+        ? "text-pink-400 scale-110 drop-shadow-[0_0_15px_rgba(244,114,182,0.8)]"
+        : "text-orange-400 scale-110 drop-shadow-[0_0_15px_rgba(251,146,60,0.8)]";
     }
+    return isSoftball 
+      ? "text-green-400 drop-shadow-[0_0_12px_rgba(74,222,128,0.6)]"
+      : "text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]";
+  };
+
+  const getSkipButtonClass = () => {
+    return isSoftball 
+      ? "bg-green-500 hover:bg-green-400 text-black font-bold shadow-[0_0_20px_rgba(74,222,128,0.4)]"
+      : "bg-cyan-500 hover:bg-cyan-400 text-black font-bold shadow-[0_0_20px_rgba(34,211,238,0.4)]";
+  };
+
+  const getNextExerciseBoxClass = () => {
+    return isSoftball 
+      ? "bg-black/40 border border-green-400/30 shadow-[0_0_20px_rgba(74,222,128,0.1)]"
+      : "bg-black/40 border border-cyan-400/30 shadow-[0_0_20px_rgba(34,211,238,0.1)]";
+  };
+
+  const getSoundButtonHoverClass = () => {
+    return isSoftball ? "hover:text-green-400" : "hover:text-cyan-400";
   };
 
   return (
@@ -198,9 +219,7 @@ export function RestTimer({
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className={cn(
             "text-6xl font-bold tabular-nums transition-all duration-300",
-            isLastTenSeconds 
-              ? "text-orange-400 scale-110 drop-shadow-[0_0_15px_rgba(251,146,60,0.8)]" 
-              : "text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]"
+            getTimerTextClass()
           )}>
             {formatTime(seconds)}
           </span>
@@ -230,7 +249,7 @@ export function RestTimer({
           variant="ghost"
           size="icon"
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className="h-12 w-12 text-white hover:text-cyan-400 hover:bg-white/10"
+          className={cn("h-12 w-12 text-white hover:bg-white/10", getSoundButtonHoverClass())}
         >
           {soundEnabled ? (
             <Volume2 className="h-6 w-6" />
@@ -255,7 +274,7 @@ export function RestTimer({
         variant="secondary"
         size="lg"
         onClick={onSkip}
-        className="h-14 px-10 text-lg gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-bold shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+        className={cn("h-14 px-10 text-lg gap-2", getSkipButtonClass())}
       >
         <SkipForward className="h-5 w-5" />
         {t('workoutFullScreen.skipRest')}
@@ -263,7 +282,7 @@ export function RestTimer({
 
       {/* Next Exercise Preview */}
       {nextExerciseName && (
-        <div className="text-center mt-4 p-4 rounded-xl bg-black/40 border border-cyan-400/30 shadow-[0_0_20px_rgba(34,211,238,0.1)]">
+        <div className={cn("text-center mt-4 p-4 rounded-xl", getNextExerciseBoxClass())}>
           <p className="text-sm text-gray-400">
             {t('workoutFullScreen.nextExercise', { name: '' })}
           </p>
