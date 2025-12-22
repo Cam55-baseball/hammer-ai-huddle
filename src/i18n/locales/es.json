@@ -2462,6 +2462,31 @@
       "pitchingText": "El entrenamiento de lanzamiento conlleva riesgo inherente de lesión en el brazo. No somos responsables de ninguna lesión que pueda ocurrir. Siempre consulte a un médico deportivo calificado antes de comenzar cualquier programa de lanzamiento. Detenga inmediatamente si experimenta dolor en el brazo, hombro o codo."
     }
   },
+  "workoutFullScreen": {
+    "title": "Modo Enfoque",
+    "enterFullScreen": "Modo Enfoque",
+    "exitFullScreen": "Salir",
+    "restTime": "Tiempo de Descanso",
+    "restBetweenSets": "Descanso entre series",
+    "restBetweenExercises": "Descanso antes del siguiente",
+    "skipRest": "Saltar Descanso",
+    "addTime": "+30s",
+    "subtractTime": "-30s",
+    "nextSet": "Serie {{number}}",
+    "nextExercise": "Siguiente: {{name}}",
+    "completeSet": "Completar Serie",
+    "skipExercise": "Saltar Ejercicio",
+    "workoutFinished": "¡Entrenamiento Completo! 🎉",
+    "greatWork": "¡Gran trabajo! Lo lograste.",
+    "setsRemaining": "{{count}} series restantes",
+    "exercisesRemaining": "{{count}} ejercicios restantes",
+    "adjustRest": "Ajusta el tiempo según necesites",
+    "heavyLift": "Pesado",
+    "moderateLift": "Moderado",
+    "lightWork": "Ligero",
+    "isometricHold": "Isométrico",
+    "skillWork": "Habilidad"
+  },
   "mindFuel": {
     "title": "Combustible Mental",
     "subtitle": "Dominio Mental Diario para Atletas de Élite",

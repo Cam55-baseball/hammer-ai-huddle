@@ -13,11 +13,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, Dumbbell, Timer, Target, AlertTriangle, TrendingUp } from 'lucide-react';
+import { CheckCircle2, Dumbbell, Timer, Target, AlertTriangle, TrendingUp, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Exercise, ExperienceLevel, getAdjustedPercent, isExerciseObject } from '@/types/workout';
 import { VaultWorkoutNotesDialog } from '@/components/vault/VaultWorkoutNotesDialog';
 import { useVault, WeightIncrease } from '@/hooks/useVault';
+import { FullScreenWorkoutMode } from './FullScreenWorkoutMode';
 
 interface DayWorkoutDetailDialogProps {
   open: boolean;
@@ -66,6 +67,7 @@ export function DayWorkoutDetailDialog({
   const { saveWorkoutNote, checkVaultAccess } = useVault();
   const [showNotesDialog, setShowNotesDialog] = useState(false);
   const [hasVaultAccess, setHasVaultAccess] = useState(false);
+  const [showFullScreen, setShowFullScreen] = useState(false);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -377,6 +379,20 @@ export function DayWorkoutDetailDialog({
 
   return (
     <>
+      {/* Full Screen Workout Mode */}
+      {showFullScreen && (
+        <FullScreenWorkoutMode
+          exercises={dayData.exercises}
+          experienceLevel={experienceLevel}
+          exerciseProgress={exerciseProgress}
+          weightLog={weightLog}
+          onExerciseToggle={onExerciseToggle}
+          onWeightUpdate={onWeightUpdate}
+          onComplete={handleWorkoutComplete}
+          onExit={() => setShowFullScreen(false)}
+        />
+      )}
+
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-full sm:max-w-lg p-4 sm:p-6 overflow-y-auto max-h-[85vh]">
           <DialogHeader className="space-y-2">
@@ -403,6 +419,16 @@ export function DayWorkoutDetailDialog({
               <span>{weekFocus}</span>
             </DialogDescription>
           </DialogHeader>
+
+          {/* Enter Focus Mode Button */}
+          <Button
+            variant="outline"
+            onClick={() => setShowFullScreen(true)}
+            className="w-full mt-4 gap-2 border-primary/50 hover:bg-primary/10"
+          >
+            <Maximize2 className="h-4 w-4" />
+            {t('workoutFullScreen.enterFullScreen')}
+          </Button>
 
           <div className="mt-4 space-y-4">
             <div className="space-y-2">

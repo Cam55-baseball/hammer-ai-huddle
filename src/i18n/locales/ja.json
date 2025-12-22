@@ -2022,6 +2022,31 @@
       "pitchingText": "投球トレーニングには腕の怪我のリスクが伴います。発生する可能性のある怪我について責任を負いません。投球プログラムを開始する前に、必ず資格のあるスポーツ医に相談してください。腕、肩、肘に痛みを感じたらすぐに中止してください。"
     }
   },
+  "workoutFullScreen": {
+    "title": "フォーカスモード",
+    "enterFullScreen": "フォーカスモード",
+    "exitFullScreen": "終了",
+    "restTime": "休憩時間",
+    "restBetweenSets": "セット間休憩",
+    "restBetweenExercises": "次の種目まで休憩",
+    "skipRest": "休憩スキップ",
+    "addTime": "+30秒",
+    "subtractTime": "-30秒",
+    "nextSet": "セット {{number}}",
+    "nextExercise": "次: {{name}}",
+    "completeSet": "セット完了",
+    "skipExercise": "種目スキップ",
+    "workoutFinished": "トレーニング完了！🎉",
+    "greatWork": "お疲れ様でした！",
+    "setsRemaining": "残り{{count}}セット",
+    "exercisesRemaining": "残り{{count}}種目",
+    "adjustRest": "必要に応じて調整",
+    "heavyLift": "高重量",
+    "moderateLift": "中重量",
+    "lightWork": "軽量",
+    "isometricHold": "アイソメトリック",
+    "skillWork": "スキル"
+  },
   "mindFuel": {
     "title": "マインドフューエル",
     "subtitle": "エリートアスリートのための毎日のメンタルマスタリー",
