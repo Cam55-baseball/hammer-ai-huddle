@@ -49,7 +49,7 @@ export default function TexVisionDailyChecklist({ checklist, onUpdateChecklist, 
     <Card className="bg-[hsl(var(--tex-vision-primary))]/50 border-[hsl(var(--tex-vision-primary-light))]/30">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg text-[hsl(var(--tex-vision-text))] flex items-center gap-2">
+          <CardTitle className="text-lg text-blue-900 flex items-center gap-2">
             <Zap className="h-5 w-5 text-[hsl(var(--tex-vision-feedback))]" />
             {t('texVision.checklist.title', 'Daily Vision Training')}
           </CardTitle>
@@ -58,13 +58,13 @@ export default function TexVisionDailyChecklist({ checklist, onUpdateChecklist, 
             className={`${
               isComplete 
                 ? 'bg-[hsl(var(--tex-vision-success))]/20 text-[hsl(var(--tex-vision-success))] border-[hsl(var(--tex-vision-success))]/50' 
-                : 'bg-[hsl(var(--tex-vision-primary-light))]/20 text-[hsl(var(--tex-vision-text-muted))] border-[hsl(var(--tex-vision-primary-light))]/30'
+                : 'bg-[hsl(var(--tex-vision-primary-light))]/20 text-blue-900 border-[hsl(var(--tex-vision-primary-light))]/30'
             }`}
           >
             {completedCount}/2+ {t('texVision.checklist.completed', 'completed')}
           </Badge>
         </div>
-        <CardDescription className="text-[hsl(var(--tex-vision-text-muted))]">
+        <CardDescription className="text-blue-900">
           {t('texVision.checklist.description', 'Complete 2-4 drills for optimal neuro-visual development (8-15 min)')}
         </CardDescription>
       </CardHeader>
@@ -92,7 +92,7 @@ export default function TexVisionDailyChecklist({ checklist, onUpdateChecklist, 
                 <span className={`flex-1 text-sm font-medium ${
                   isCompleted 
                     ? 'text-[hsl(var(--tex-vision-success))]' 
-                    : 'text-[hsl(var(--tex-vision-text))]'
+                    : 'text-blue-900'
                 }`}>
                   {t(drill.nameKey, drill.defaultName)}
                 </span>
@@ -107,7 +107,7 @@ export default function TexVisionDailyChecklist({ checklist, onUpdateChecklist, 
         </div>
 
         {/* Session time indicator */}
-        <div className="mt-4 flex items-center gap-2 text-xs text-[hsl(var(--tex-vision-text-muted))]">
+        <div className="mt-4 flex items-center gap-2 text-xs text-blue-900">
           <Clock className="h-3.5 w-3.5" />
           <span>{t('texVision.checklist.sessionTime', 'Recommended: 8-15 minutes per session')}</span>
         </div>

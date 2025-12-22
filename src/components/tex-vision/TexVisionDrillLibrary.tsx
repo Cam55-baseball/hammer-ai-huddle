@@ -176,11 +176,11 @@ export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: Tex
   return (
     <Card className="bg-[hsl(var(--tex-vision-primary))]/50 border-[hsl(var(--tex-vision-primary-light))]/30">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg text-[hsl(var(--tex-vision-text))] flex items-center gap-2">
+        <CardTitle className="text-lg text-blue-900 flex items-center gap-2">
           <Target className="h-5 w-5 text-[hsl(var(--tex-vision-feedback))]" />
           {t('texVision.drillLibrary.title', 'Drill Library')}
         </CardTitle>
-        <CardDescription className="text-[hsl(var(--tex-vision-text-muted))]">
+        <CardDescription className="text-blue-900">
           {t('texVision.drillLibrary.description', 'Select a drill to begin your neuro-visual training')}
         </CardDescription>
       </CardHeader>
