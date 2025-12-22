@@ -57,7 +57,7 @@ export default function TexVisionDailyChecklist({ checklist, onUpdateChecklist, 
             variant="outline"
             className={`${
               isComplete 
-                ? 'bg-[hsl(var(--tex-vision-success))]/20 text-[hsl(var(--tex-vision-success))] border-[hsl(var(--tex-vision-success))]/50' 
+                ? 'bg-[hsl(var(--tex-vision-success))]/20 text-green-700 border-[hsl(var(--tex-vision-success))]/50' 
                 : 'bg-[hsl(var(--tex-vision-primary-light))]/20 text-blue-900 border-[hsl(var(--tex-vision-primary-light))]/30'
             }`}
           >
@@ -84,20 +84,20 @@ export default function TexVisionDailyChecklist({ checklist, onUpdateChecklist, 
                 onClick={() => onUpdateChecklist(drill.id, !isCompleted)}
               >
                 {isCompleted ? (
-                  <CheckCircle2 className="h-5 w-5 text-[hsl(var(--tex-vision-success))] flex-shrink-0" />
+                  <CheckCircle2 className="h-5 w-5 text-green-700 flex-shrink-0" />
                 ) : (
                   <Circle className="h-5 w-5 text-[hsl(var(--tex-vision-text-muted))] flex-shrink-0" />
                 )}
                 <span className="text-lg mr-2">{drill.icon}</span>
                 <span className={`flex-1 text-sm font-medium ${
                   isCompleted 
-                    ? 'text-[hsl(var(--tex-vision-success))]' 
+                    ? 'text-green-700' 
                     : 'text-blue-900'
                 }`}>
                   {t(drill.nameKey, drill.defaultName)}
                 </span>
                 {isCompleted && (
-                  <span className="text-xs text-[hsl(var(--tex-vision-success))]">
+                  <span className="text-xs text-green-700">
                     ✓
                   </span>
                 )}
