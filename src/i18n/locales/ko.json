@@ -1909,6 +1909,31 @@
       "pitchingText": "투구 훈련에는 팔 부상의 위험이 내재되어 있습니다. 발생할 수 있는 부상에 대해 책임지지 않습니다. 투구 프로그램을 시작하기 전에 항상 자격을 갖춘 스포츠 의학 의사와 상담하십시오. 팔, 어깨 또는 팔꿈치에 통증이 느껴지면 즉시 중단하십시오."
     }
   },
+  "workoutFullScreen": {
+    "title": "포커스 모드",
+    "enterFullScreen": "포커스 모드",
+    "exitFullScreen": "종료",
+    "restTime": "휴식 시간",
+    "restBetweenSets": "세트 간 휴식",
+    "restBetweenExercises": "다음 운동 전 휴식",
+    "skipRest": "휴식 건너뛰기",
+    "addTime": "+30초",
+    "subtractTime": "-30초",
+    "nextSet": "세트 {{number}}",
+    "nextExercise": "다음: {{name}}",
+    "completeSet": "세트 완료",
+    "skipExercise": "운동 건너뛰기",
+    "workoutFinished": "운동 완료! 🎉",
+    "greatWork": "수고하셨습니다!",
+    "setsRemaining": "{{count}}세트 남음",
+    "exercisesRemaining": "{{count}}개 운동 남음",
+    "adjustRest": "필요에 따라 조정하세요",
+    "heavyLift": "고중량",
+    "moderateLift": "중량",
+    "lightWork": "경량",
+    "isometricHold": "등척성",
+    "skillWork": "스킬"
+  },
   "mindFuel": {
     "title": "마인드 퓨얼",
     "subtitle": "엘리트 선수를 위한 매일의 정신 마스터리",

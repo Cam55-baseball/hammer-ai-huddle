@@ -2487,6 +2487,31 @@
       "pitchingText": "Wurftraining birgt ein inhärentes Risiko für Armverletzungen. Wir sind nicht verantwortlich für auftretende Verletzungen. Konsultieren Sie immer einen qualifizierten Sportmediziner, bevor Sie ein Wurfprogramm beginnen. Stoppen Sie sofort, wenn Sie Schmerzen im Arm, der Schulter oder dem Ellbogen verspüren."
     }
   },
+  "workoutFullScreen": {
+    "title": "Fokus-Modus",
+    "enterFullScreen": "Fokus-Modus",
+    "exitFullScreen": "Beenden",
+    "restTime": "Pausenzeit",
+    "restBetweenSets": "Pause zwischen Sätzen",
+    "restBetweenExercises": "Pause vor nächster Übung",
+    "skipRest": "Pause Überspringen",
+    "addTime": "+30s",
+    "subtractTime": "-30s",
+    "nextSet": "Satz {{number}}",
+    "nextExercise": "Nächste: {{name}}",
+    "completeSet": "Satz Abschließen",
+    "skipExercise": "Übung Überspringen",
+    "workoutFinished": "Training Abgeschlossen! 🎉",
+    "greatWork": "Großartige Arbeit!",
+    "setsRemaining": "{{count}} Sätze übrig",
+    "exercisesRemaining": "{{count}} Übungen übrig",
+    "adjustRest": "Pausenzeit nach Bedarf anpassen",
+    "heavyLift": "Schwer",
+    "moderateLift": "Mittel",
+    "lightWork": "Leicht",
+    "isometricHold": "Isometrisch",
+    "skillWork": "Technik"
+  },
   "mindFuel": {
     "title": "Geistiger Treibstoff",
     "subtitle": "Tägliche Mentale Meisterschaft für Elite-Athleten",

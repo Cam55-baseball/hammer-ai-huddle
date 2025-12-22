@@ -1922,6 +1922,31 @@
       "pitchingText": "Werptraining brengt inherente risico's op armblessures met zich mee. Wij zijn niet verantwoordelijk voor eventuele blessures die kunnen optreden. Raadpleeg altijd een gekwalificeerde sportarts voordat u een werpprogramma begint. Stop onmiddellijk als u pijn ervaart in uw arm, schouder of elleboog."
     }
   },
+  "workoutFullScreen": {
+    "title": "Focusmodus",
+    "enterFullScreen": "Focusmodus",
+    "exitFullScreen": "Afsluiten",
+    "restTime": "Rusttijd",
+    "restBetweenSets": "Rust tussen sets",
+    "restBetweenExercises": "Rust voor volgende oefening",
+    "skipRest": "Rust Overslaan",
+    "addTime": "+30s",
+    "subtractTime": "-30s",
+    "nextSet": "Set {{number}}",
+    "nextExercise": "Volgende: {{name}}",
+    "completeSet": "Set Voltooien",
+    "skipExercise": "Oefening Overslaan",
+    "workoutFinished": "Training Voltooid! 🎉",
+    "greatWork": "Geweldig gedaan!",
+    "setsRemaining": "{{count}} sets over",
+    "exercisesRemaining": "{{count}} oefeningen over",
+    "adjustRest": "Pas rusttijd aan naar behoefte",
+    "heavyLift": "Zwaar",
+    "moderateLift": "Gemiddeld",
+    "lightWork": "Licht",
+    "isometricHold": "Isometrisch",
+    "skillWork": "Techniek"
+  },
   "mindFuel": {
     "title": "Geestelijke Brandstof",
     "subtitle": "Dagelijkse Mentale Meesterschap voor Elite-Atleten",

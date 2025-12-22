@@ -2487,6 +2487,31 @@
       "pitchingText": "L'entraînement au lancer comporte un risque inhérent de blessure au bras. Nous ne sommes pas responsables des blessures qui peuvent survenir. Consultez toujours un médecin du sport qualifié avant de commencer tout programme de lancer. Arrêtez immédiatement si vous ressentez une douleur au bras, à l'épaule ou au coude."
     }
   },
+  "workoutFullScreen": {
+    "title": "Mode Focus",
+    "enterFullScreen": "Mode Focus",
+    "exitFullScreen": "Quitter",
+    "restTime": "Temps de Repos",
+    "restBetweenSets": "Repos entre les séries",
+    "restBetweenExercises": "Repos avant le suivant",
+    "skipRest": "Passer le Repos",
+    "addTime": "+30s",
+    "subtractTime": "-30s",
+    "nextSet": "Série {{number}}",
+    "nextExercise": "Suivant: {{name}}",
+    "completeSet": "Compléter la Série",
+    "skipExercise": "Passer l'Exercice",
+    "workoutFinished": "Entraînement Terminé! 🎉",
+    "greatWork": "Excellent travail!",
+    "setsRemaining": "{{count}} séries restantes",
+    "exercisesRemaining": "{{count}} exercices restants",
+    "adjustRest": "Ajustez le temps selon vos besoins",
+    "heavyLift": "Lourd",
+    "moderateLift": "Modéré",
+    "lightWork": "Léger",
+    "isometricHold": "Isométrique",
+    "skillWork": "Technique"
+  },
   "mindFuel": {
     "title": "Carburant Mental",
     "subtitle": "Maîtrise Mentale Quotidienne pour Athlètes d'Élite",

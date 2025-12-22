@@ -1893,6 +1893,31 @@
       "pitchingText": "投球训练存在手臂受伤的固有风险。我们不对可能发生的任何伤害负责。在开始任何投球计划之前，请务必咨询合格的运动医学医生。如果您感到手臂、肩膀或肘部疼痛，请立即停止。"
     }
   },
+  "workoutFullScreen": {
+    "title": "专注模式",
+    "enterFullScreen": "专注模式",
+    "exitFullScreen": "退出",
+    "restTime": "休息时间",
+    "restBetweenSets": "组间休息",
+    "restBetweenExercises": "动作间休息",
+    "skipRest": "跳过休息",
+    "addTime": "+30秒",
+    "subtractTime": "-30秒",
+    "nextSet": "第{{number}}组",
+    "nextExercise": "下一个: {{name}}",
+    "completeSet": "完成这组",
+    "skipExercise": "跳过动作",
+    "workoutFinished": "训练完成！🎉",
+    "greatWork": "干得漂亮！",
+    "setsRemaining": "剩余{{count}}组",
+    "exercisesRemaining": "剩余{{count}}个动作",
+    "adjustRest": "根据需要调整休息时间",
+    "heavyLift": "大重量",
+    "moderateLift": "中等重量",
+    "lightWork": "轻重量",
+    "isometricHold": "等长",
+    "skillWork": "技巧"
+  },
   "mindFuel": {
     "title": "心灵燃料",
     "subtitle": "精英运动员的每日心智掌控",
