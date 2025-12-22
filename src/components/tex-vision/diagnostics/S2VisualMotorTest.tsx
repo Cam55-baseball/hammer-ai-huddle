@@ -56,11 +56,15 @@ export const S2VisualMotorTest = ({ onComplete }: S2VisualMotorTestProps) => {
     }, TARGET_DISPLAY_TIME);
   }, [targetIndex]);
 
-  // Start game
+  // Start game / advance to done
   useEffect(() => {
-    if (phase === 'playing' && !showTarget && targetIndex < TOTAL_TARGETS) {
-      const delay = setTimeout(showNextTarget, 500);
-      return () => clearTimeout(delay);
+    if (phase === 'playing' && !showTarget) {
+      if (targetIndex >= TOTAL_TARGETS) {
+        setPhase('done');
+      } else {
+        const delay = setTimeout(showNextTarget, 500);
+        return () => clearTimeout(delay);
+      }
     }
   }, [phase, showTarget, targetIndex, showNextTarget]);
 
