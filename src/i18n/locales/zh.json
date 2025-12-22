@@ -4012,5 +4012,92 @@
     "streakBroken": "连续重置 - 让我们重新开始！",
     "fireUnlocked": "5天解锁火焰！",
     "glowUnlocked": "25天火焰发光！"
+  },
+  "texVision": {
+    "title": "Tex Vision",
+    "subtitle": "神经视觉训练系统",
+    "description": "训练你的眼睛和大脑以获得更快的反应和更好的追踪",
+    "locked": {
+      "title": "Tex Vision 已锁定",
+      "description": "订阅打击分析以解锁 Tex Vision 神经视觉训练。",
+      "cta": "查看价格"
+    },
+    "streak": {
+      "title": "训练连续",
+      "currentStreak": "当前连续",
+      "longestStreak": "最长连续",
+      "totalSessions": "总会话数",
+      "todayProgress": "今日训练",
+      "days": "天",
+      "sessions": "次"
+    },
+    "checklist": {
+      "title": "每日训练清单",
+      "completed": "已完成",
+      "remaining": "剩余",
+      "allComplete": "所有训练已完成！",
+      "markComplete": "标记完成"
+    },
+    "drills": {
+      "title": "训练库",
+      "categories": {
+        "focus": "专注训练",
+        "tracking": "眼动追踪",
+        "reaction": "反应时间",
+        "coordination": "协调性"
+      },
+      "tiers": {
+        "beginner": "初级",
+        "advanced": "高级",
+        "chaos": "混沌模式"
+      },
+      "softFocus": { "name": "软焦点", "description": "不固定视线训练周边意识" },
+      "patternSearch": { "name": "图案搜索", "description": "在复杂视觉场景中找到目标" },
+      "peripheralVision": { "name": "周边视觉", "description": "检测视野边缘的运动" },
+      "convergenceDivergence": { "name": "集散训练", "description": "训练眼睛对齐和深度感知" },
+      "nearFarSight": { "name": "远近视", "description": "快速切换不同距离的焦点" },
+      "followTheTarget": { "name": "跟踪目标", "description": "平滑追踪练习" },
+      "whackAMole": { "name": "反应决策", "description": "反应和决策结合" },
+      "meterTiming": { "name": "计时训练", "description": "可变速度的精确计时" },
+      "brockString": { "name": "布洛克绳", "description": "引导式眼睛对齐练习" },
+      "locked": "完成上一级别以解锁",
+      "start": "开始训练",
+      "continue": "继续"
+    },
+    "metrics": {
+      "title": "性能指标",
+      "neuroReactionIndex": "神经反应指数",
+      "visualProcessingSpeed": "视觉处理",
+      "anticipationQuotient": "预判能力",
+      "coordinationEfficiency": "协调效率",
+      "stressResilience": "抗压能力",
+      "tierProgress": "等级进度",
+      "accuracy": "准确度",
+      "reactionTime": "反应时间",
+      "ms": "毫秒"
+    },
+    "fatigue": {
+      "detected": "检测到疲劳",
+      "suggestion": "短暂休息以获得最佳训练效果",
+      "endSession": "结束训练",
+      "continue": "继续训练"
+    },
+    "s2Diagnostics": {
+      "title": "S2认知诊断",
+      "description": "综合神经视觉评估",
+      "nextTest": "下次测试可用",
+      "processingSpeed": "处理速度",
+      "decisionEfficiency": "决策效率",
+      "visualMotor": "视觉-运动整合",
+      "overallScore": "总分"
+    },
+    "disclaimer": {
+      "title": "训练免责声明",
+      "content": "Tex Vision 仅用于性能训练。如果您出现头痛、头晕或视觉不适，请立即停止训练。在开始任何视觉训练计划之前，请咨询眼科专业人员。"
+    },
+    "gamePlan": {
+      "title": "Tex Vision 训练",
+      "description": "完成每日视觉训练"
+    }
   }
 }

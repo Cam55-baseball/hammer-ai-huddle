@@ -5364,5 +5364,119 @@
     "categoryStreak": "Streak",
     "categoryActivity": "Activity",
     "categoryGrowth": "Growth"
+  },
+  "texVision": {
+    "title": "Tex Vision",
+    "subtitle": "Neuro-Visual Training System",
+    "description": "Train your eyes and brain for faster reactions and better tracking",
+    "locked": {
+      "title": "Tex Vision Locked",
+      "description": "Subscribe to Hitting Analysis to unlock Tex Vision neuro-visual training.",
+      "cta": "View Pricing"
+    },
+    "streak": {
+      "title": "Training Streak",
+      "currentStreak": "Current Streak",
+      "longestStreak": "Longest Streak",
+      "totalSessions": "Total Sessions",
+      "todayProgress": "Today's Drills",
+      "days": "days",
+      "sessions": "sessions"
+    },
+    "checklist": {
+      "title": "Daily Drill Checklist",
+      "completed": "Completed",
+      "remaining": "Remaining",
+      "allComplete": "All drills completed!",
+      "markComplete": "Mark Complete"
+    },
+    "drills": {
+      "title": "Drill Library",
+      "categories": {
+        "focus": "Focus Training",
+        "tracking": "Eye Tracking",
+        "reaction": "Reaction Time",
+        "coordination": "Coordination"
+      },
+      "tiers": {
+        "beginner": "Beginner",
+        "advanced": "Advanced",
+        "chaos": "Chaos Mode"
+      },
+      "softFocus": {
+        "name": "Soft Focus",
+        "description": "Train peripheral awareness without fixating"
+      },
+      "patternSearch": {
+        "name": "Pattern Search",
+        "description": "Find targets in complex visual fields"
+      },
+      "peripheralVision": {
+        "name": "Peripheral Vision",
+        "description": "Detect movement at the edges of vision"
+      },
+      "convergenceDivergence": {
+        "name": "Convergence/Divergence",
+        "description": "Train eye alignment and depth perception"
+      },
+      "nearFarSight": {
+        "name": "Near-Far Sight",
+        "description": "Rapid focus switching between distances"
+      },
+      "followTheTarget": {
+        "name": "Follow The Target",
+        "description": "Smooth pursuit tracking exercises"
+      },
+      "whackAMole": {
+        "name": "Go/No-Go",
+        "description": "Reaction and decision making combined"
+      },
+      "meterTiming": {
+        "name": "Meter Timing",
+        "description": "Precision timing with variable speeds"
+      },
+      "brockString": {
+        "name": "Brock String",
+        "description": "Guided eye alignment exercise"
+      },
+      "locked": "Complete previous tier to unlock",
+      "start": "Start Drill",
+      "continue": "Continue"
+    },
+    "metrics": {
+      "title": "Performance Metrics",
+      "neuroReactionIndex": "Neuro-Reaction Index",
+      "visualProcessingSpeed": "Visual Processing",
+      "anticipationQuotient": "Anticipation",
+      "coordinationEfficiency": "Coordination",
+      "stressResilience": "Stress Resilience",
+      "tierProgress": "Tier Progress",
+      "accuracy": "Accuracy",
+      "reactionTime": "Reaction Time",
+      "ms": "ms"
+    },
+    "fatigue": {
+      "detected": "Fatigue Detected",
+      "suggestion": "Take a short break for optimal training",
+      "endSession": "End Session",
+      "continue": "Continue Anyway"
+    },
+    "s2Diagnostics": {
+      "title": "S2 Cognition Diagnostics",
+      "description": "Comprehensive neuro-visual assessment",
+      "nextTest": "Next test available",
+      "processingSpeed": "Processing Speed",
+      "decisionEfficiency": "Decision Efficiency",
+      "visualMotor": "Visual-Motor Integration",
+      "overallScore": "Overall Score"
+    },
+    "disclaimer": {
+      "title": "Training Disclaimer",
+      "content": "Tex Vision is designed for performance training only. If you experience headaches, dizziness, or visual discomfort, stop training immediately. Consult an eye care professional before starting any visual training program."
+    },
+    "gamePlan": {
+      "title": "Tex Vision Training",
+      "description": "Complete your daily vision drills"
+    }
   }
 }

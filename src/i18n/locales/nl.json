@@ -4041,5 +4041,119 @@
     "streakBroken": "Reeks gereset - laten we het opbouwen!",
     "fireUnlocked": "Vuur ontgrendelt bij 5 dagen!",
     "glowUnlocked": "Vlam gloeit bij 25 dagen!"
+  },
+  "texVision": {
+    "title": "Tex Vision",
+    "subtitle": "Neuro-Visueel Trainingssysteem",
+    "description": "Train je ogen en hersenen voor snellere reacties en betere tracking",
+    "locked": {
+      "title": "Tex Vision Vergrendeld",
+      "description": "Abonneer op Slaganalyse om Tex Vision neuro-visuele training te ontgrendelen.",
+      "cta": "Bekijk Prijzen"
+    },
+    "streak": {
+      "title": "Trainingsreeks",
+      "currentStreak": "Huidige Reeks",
+      "longestStreak": "Langste Reeks",
+      "totalSessions": "Totale Sessies",
+      "todayProgress": "Oefeningen Vandaag",
+      "days": "dagen",
+      "sessions": "sessies"
+    },
+    "checklist": {
+      "title": "Dagelijkse Oefening Checklist",
+      "completed": "Voltooid",
+      "remaining": "Resterend",
+      "allComplete": "Alle oefeningen voltooid!",
+      "markComplete": "Markeer Voltooid"
+    },
+    "drills": {
+      "title": "Oefening Bibliotheek",
+      "categories": {
+        "focus": "Focus Training",
+        "tracking": "Oog Tracking",
+        "reaction": "Reactietijd",
+        "coordination": "Coördinatie"
+      },
+      "tiers": {
+        "beginner": "Beginner",
+        "advanced": "Gevorderd",
+        "chaos": "Chaos Modus"
+      },
+      "softFocus": {
+        "name": "Zachte Focus",
+        "description": "Train perifeer bewustzijn zonder fixatie"
+      },
+      "patternSearch": {
+        "name": "Patroon Zoeken",
+        "description": "Vind doelen in complexe visuele velden"
+      },
+      "peripheralVision": {
+        "name": "Perifeer Zicht",
+        "description": "Detecteer beweging aan de randen van het zicht"
+      },
+      "convergenceDivergence": {
+        "name": "Convergentie/Divergentie",
+        "description": "Train ooguitlijning en dieptewaarneming"
+      },
+      "nearFarSight": {
+        "name": "Dichtbij-Ver Zicht",
+        "description": "Snelle focuswissel tussen afstanden"
+      },
+      "followTheTarget": {
+        "name": "Volg het Doel",
+        "description": "Vloeiende volgbewegingsoefeningen"
+      },
+      "whackAMole": {
+        "name": "Go/No-Go",
+        "description": "Reactie en besluitvorming gecombineerd"
+      },
+      "meterTiming": {
+        "name": "Meter Timing",
+        "description": "Precisie timing met variabele snelheden"
+      },
+      "brockString": {
+        "name": "Brock Koord",
+        "description": "Begeleide ooguitlijningsoefening"
+      },
+      "locked": "Voltooi vorige tier om te ontgrendelen",
+      "start": "Start Oefening",
+      "continue": "Doorgaan"
+    },
+    "metrics": {
+      "title": "Prestatie Metrics",
+      "neuroReactionIndex": "Neuro-Reactie Index",
+      "visualProcessingSpeed": "Visuele Verwerking",
+      "anticipationQuotient": "Anticipatie",
+      "coordinationEfficiency": "Coördinatie",
+      "stressResilience": "Stressbestendigheid",
+      "tierProgress": "Tier Voortgang",
+      "accuracy": "Nauwkeurigheid",
+      "reactionTime": "Reactietijd",
+      "ms": "ms"
+    },
+    "fatigue": {
+      "detected": "Vermoeidheid Gedetecteerd",
+      "suggestion": "Neem een korte pauze voor optimale training",
+      "endSession": "Sessie Beëindigen",
+      "continue": "Toch Doorgaan"
+    },
+    "s2Diagnostics": {
+      "title": "S2 Cognitie Diagnostiek",
+      "description": "Uitgebreide neuro-visuele beoordeling",
+      "nextTest": "Volgende test beschikbaar",
+      "processingSpeed": "Verwerkingssnelheid",
+      "decisionEfficiency": "Beslissingsefficiëntie",
+      "visualMotor": "Visueel-Motorische Integratie",
+      "overallScore": "Totale Score"
+    },
+    "disclaimer": {
+      "title": "Training Disclaimer",
+      "content": "Tex Vision is uitsluitend ontworpen voor prestatietraining. Als je hoofdpijn, duizeligheid of visueel ongemak ervaart, stop dan onmiddellijk met trainen. Raadpleeg een oogzorgprofessional voordat je een visueel trainingsprogramma begint."
+    },
+    "gamePlan": {
+      "title": "Tex Vision Training",
+      "description": "Voltooi je dagelijkse visie-oefeningen"
+    }
   }
 }

@@ -4028,5 +4028,119 @@
     "streakBroken": "연속 초기화 - 다시 쌓아봐요!",
     "fireUnlocked": "5일에 불이 해제됩니다!",
     "glowUnlocked": "25일에 불꽃이 빛납니다!"
+  },
+  "texVision": {
+    "title": "텍스 비전",
+    "subtitle": "신경-시각 훈련 시스템",
+    "description": "더 빠른 반응과 더 나은 추적을 위해 눈과 뇌를 훈련하세요",
+    "locked": {
+      "title": "텍스 비전 잠김",
+      "description": "텍스 비전 신경-시각 훈련을 잠금 해제하려면 타격 분석에 구독하세요.",
+      "cta": "가격 보기"
+    },
+    "streak": {
+      "title": "훈련 연속",
+      "currentStreak": "현재 연속",
+      "longestStreak": "최장 연속",
+      "totalSessions": "총 세션",
+      "todayProgress": "오늘의 드릴",
+      "days": "일",
+      "sessions": "세션"
+    },
+    "checklist": {
+      "title": "일일 드릴 체크리스트",
+      "completed": "완료",
+      "remaining": "남은",
+      "allComplete": "모든 드릴 완료!",
+      "markComplete": "완료 표시"
+    },
+    "drills": {
+      "title": "드릴 라이브러리",
+      "categories": {
+        "focus": "집중 훈련",
+        "tracking": "눈 추적",
+        "reaction": "반응 시간",
+        "coordination": "조정"
+      },
+      "tiers": {
+        "beginner": "초급",
+        "advanced": "고급",
+        "chaos": "카오스 모드"
+      },
+      "softFocus": {
+        "name": "소프트 포커스",
+        "description": "고정하지 않고 주변 인식 훈련"
+      },
+      "patternSearch": {
+        "name": "패턴 검색",
+        "description": "복잡한 시각 필드에서 목표 찾기"
+      },
+      "peripheralVision": {
+        "name": "주변 시야",
+        "description": "시야 가장자리에서 움직임 감지"
+      },
+      "convergenceDivergence": {
+        "name": "수렴/발산",
+        "description": "눈 정렬과 깊이 지각 훈련"
+      },
+      "nearFarSight": {
+        "name": "근거리-원거리 시력",
+        "description": "거리 간 빠른 초점 전환"
+      },
+      "followTheTarget": {
+        "name": "목표 따라가기",
+        "description": "부드러운 추적 연습"
+      },
+      "whackAMole": {
+        "name": "고/노고",
+        "description": "반응과 의사결정 결합"
+      },
+      "meterTiming": {
+        "name": "미터 타이밍",
+        "description": "가변 속도로 정밀 타이밍"
+      },
+      "brockString": {
+        "name": "브록 스트링",
+        "description": "가이드된 눈 정렬 운동"
+      },
+      "locked": "잠금 해제하려면 이전 티어 완료",
+      "start": "드릴 시작",
+      "continue": "계속"
+    },
+    "metrics": {
+      "title": "성과 지표",
+      "neuroReactionIndex": "신경 반응 지수",
+      "visualProcessingSpeed": "시각 처리",
+      "anticipationQuotient": "예측",
+      "coordinationEfficiency": "조정",
+      "stressResilience": "스트레스 회복력",
+      "tierProgress": "티어 진행",
+      "accuracy": "정확도",
+      "reactionTime": "반응 시간",
+      "ms": "ms"
+    },
+    "fatigue": {
+      "detected": "피로 감지됨",
+      "suggestion": "최적의 훈련을 위해 짧은 휴식을 취하세요",
+      "endSession": "세션 종료",
+      "continue": "계속하기"
+    },
+    "s2Diagnostics": {
+      "title": "S2 인지 진단",
+      "description": "종합적인 신경-시각 평가",
+      "nextTest": "다음 테스트 가능",
+      "processingSpeed": "처리 속도",
+      "decisionEfficiency": "결정 효율성",
+      "visualMotor": "시각-운동 통합",
+      "overallScore": "전체 점수"
+    },
+    "disclaimer": {
+      "title": "훈련 면책 조항",
+      "content": "텍스 비전은 성과 훈련 전용으로 설계되었습니다. 두통, 어지러움 또는 시각적 불편함이 발생하면 즉시 훈련을 중단하세요. 시각 훈련 프로그램을 시작하기 전에 안과 전문의와 상담하세요."
+    },
+    "gamePlan": {
+      "title": "텍스 비전 훈련",
+      "description": "일일 비전 드릴 완료"
+    }
   }
 }
