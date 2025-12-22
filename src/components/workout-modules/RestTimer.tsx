@@ -108,34 +108,39 @@ export function RestTimer({
   const getTypeColor = () => {
     switch (exerciseType) {
       case 'strength':
-        return intensity === 'heavy' 
-          ? 'text-orange-500' 
-          : intensity === 'light' 
-          ? 'text-yellow-500' 
-          : 'text-orange-400';
+        return 'text-orange-400';
       case 'isometric':
-        return 'text-blue-500';
+        return 'text-cyan-400';
       case 'skill':
-        return 'text-emerald-500';
+        return 'text-lime-400';
       default:
-        return 'text-primary';
+        return 'text-white';
     }
   };
 
   const getStrokeColor = () => {
     switch (exerciseType) {
       case 'strength':
-        return intensity === 'heavy' 
-          ? '#f97316' 
-          : intensity === 'light' 
-          ? '#eab308' 
-          : '#fb923c';
+        return '#fb923c'; // orange-400
       case 'isometric':
-        return '#3b82f6';
+        return '#22d3ee'; // cyan-400
       case 'skill':
-        return '#10b981';
+        return '#a3e635'; // lime-400
       default:
-        return '#ef4444';
+        return '#ffffff';
+    }
+  };
+
+  const getGlowFilter = () => {
+    switch (exerciseType) {
+      case 'strength':
+        return 'drop-shadow(0 0 12px rgba(251,146,60,0.8))';
+      case 'isometric':
+        return 'drop-shadow(0 0 12px rgba(34,211,238,0.8))';
+      case 'skill':
+        return 'drop-shadow(0 0 12px rgba(163,230,53,0.8))';
+      default:
+        return '';
     }
   };
 
@@ -146,7 +151,7 @@ export function RestTimer({
         <h2 className="text-2xl font-bold text-white">
           {t('workoutFullScreen.restTime')}
         </h2>
-        <p className="text-gray-400">
+        <p className="text-gray-300">
           {t('workoutFullScreen.adjustRest')}
         </p>
       </div>
@@ -169,7 +174,7 @@ export function RestTimer({
             fill="none"
             stroke="currentColor"
             strokeWidth={strokeWidth}
-            className="text-muted/20"
+            className="text-gray-800"
           />
           {/* Progress circle */}
           <circle
@@ -184,7 +189,7 @@ export function RestTimer({
             strokeDashoffset={strokeDashoffset}
             className="transition-all duration-1000 ease-linear"
             style={{
-              filter: isLastTenSeconds ? 'drop-shadow(0 0 10px currentColor)' : 'none'
+              filter: getGlowFilter()
             }}
           />
         </svg>
@@ -193,7 +198,9 @@ export function RestTimer({
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className={cn(
             "text-6xl font-bold tabular-nums transition-all duration-300",
-            isLastTenSeconds ? "text-orange-400 scale-110" : "text-cyan-400"
+            isLastTenSeconds 
+              ? "text-orange-400 scale-110 drop-shadow-[0_0_15px_rgba(251,146,60,0.8)]" 
+              : "text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]"
           )}>
             {formatTime(seconds)}
           </span>
@@ -212,7 +219,7 @@ export function RestTimer({
           variant="outline"
           size="lg"
           onClick={() => adjustTime(-30)}
-          className="h-14 px-6 text-lg gap-2 border-gray-600 text-gray-200 hover:bg-gray-800 hover:text-white"
+          className="h-14 px-6 text-lg gap-2 bg-transparent border-gray-600 text-white hover:bg-white/10 hover:border-gray-500"
           disabled={seconds <= 30}
         >
           <Minus className="h-5 w-5" />
@@ -223,7 +230,7 @@ export function RestTimer({
           variant="ghost"
           size="icon"
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className="h-12 w-12 text-gray-300 hover:text-white hover:bg-gray-800"
+          className="h-12 w-12 text-white hover:text-cyan-400 hover:bg-white/10"
         >
           {soundEnabled ? (
             <Volume2 className="h-6 w-6" />
@@ -236,7 +243,7 @@ export function RestTimer({
           variant="outline"
           size="lg"
           onClick={() => adjustTime(30)}
-          className="h-14 px-6 text-lg gap-2 border-gray-600 text-gray-200 hover:bg-gray-800 hover:text-white"
+          className="h-14 px-6 text-lg gap-2 bg-transparent border-gray-600 text-white hover:bg-white/10 hover:border-gray-500"
         >
           <Plus className="h-5 w-5" />
           {t('workoutFullScreen.addTime')}
@@ -248,7 +255,7 @@ export function RestTimer({
         variant="secondary"
         size="lg"
         onClick={onSkip}
-        className="h-14 px-10 text-lg gap-2 bg-gray-700 text-white hover:bg-gray-600"
+        className="h-14 px-10 text-lg gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-bold shadow-[0_0_20px_rgba(34,211,238,0.4)]"
       >
         <SkipForward className="h-5 w-5" />
         {t('workoutFullScreen.skipRest')}
@@ -256,7 +263,7 @@ export function RestTimer({
 
       {/* Next Exercise Preview */}
       {nextExerciseName && (
-        <div className="text-center mt-4 p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+        <div className="text-center mt-4 p-4 rounded-xl bg-black/40 border border-cyan-400/30 shadow-[0_0_20px_rgba(34,211,238,0.1)]">
           <p className="text-sm text-gray-400">
             {t('workoutFullScreen.nextExercise', { name: '' })}
           </p>

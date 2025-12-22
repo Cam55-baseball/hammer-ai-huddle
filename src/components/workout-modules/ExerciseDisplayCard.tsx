@@ -44,38 +44,43 @@ export function ExerciseDisplayCard({
   };
 
   const getIntensityColor = () => {
-    if (!adjustedPercent) return 'bg-muted';
-    if (adjustedPercent >= 80) return 'bg-orange-500/20 text-orange-500 border-orange-500/30';
-    if (adjustedPercent >= 65) return 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30';
-    return 'bg-green-500/20 text-green-500 border-green-500/30';
+    if (!adjustedPercent) return 'bg-gray-800 text-gray-300';
+    if (adjustedPercent >= 80) return 'bg-orange-400/20 text-orange-400 border-orange-400/50 shadow-[0_0_10px_rgba(251,146,60,0.3)]';
+    if (adjustedPercent >= 65) return 'bg-cyan-400/20 text-cyan-400 border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.3)]';
+    return 'bg-lime-400/20 text-lime-400 border-lime-400/50 shadow-[0_0_10px_rgba(163,230,53,0.3)]';
   };
 
   const getExerciseIcon = () => {
     if (exercise.type === 'strength') {
-      return <Dumbbell className="h-10 w-10 text-orange-500" />;
+      return <Dumbbell className="h-10 w-10 text-orange-400 drop-shadow-[0_0_12px_rgba(251,146,60,0.8)]" />;
     }
     if (exercise.type === 'isometric') {
-      return <Timer className="h-10 w-10 text-blue-500" />;
+      return <Timer className="h-10 w-10 text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.8)]" />;
     }
-    return <Target className="h-10 w-10 text-emerald-500" />;
+    return <Target className="h-10 w-10 text-lime-400 drop-shadow-[0_0_12px_rgba(163,230,53,0.8)]" />;
   };
 
   const getBackgroundGradient = () => {
     if (exercise.type === 'strength') {
-      // Warm burgundy accent for strength - energizing
-      return 'from-red-900/30 via-red-950/10 to-transparent border-red-800/40';
+      return 'bg-black/60 border-orange-400/40 shadow-[0_0_30px_rgba(251,146,60,0.15)]';
     }
     if (exercise.type === 'isometric') {
-      // Cool navy accent for isometric - focused
-      return 'from-blue-900/30 via-blue-950/10 to-transparent border-blue-800/40';
+      return 'bg-black/60 border-cyan-400/40 shadow-[0_0_30px_rgba(34,211,238,0.15)]';
     }
-    // Teal accent for skill - balanced
-    return 'from-teal-900/30 via-teal-950/10 to-transparent border-teal-800/40';
+    return 'bg-black/60 border-lime-400/40 shadow-[0_0_30px_rgba(163,230,53,0.15)]';
   };
+
+  const getNeonColor = () => {
+    if (exercise.type === 'strength') return 'orange';
+    if (exercise.type === 'isometric') return 'cyan';
+    return 'lime';
+  };
+
+  const neonColor = getNeonColor();
 
   return (
     <div className={cn(
-      "relative rounded-3xl border p-8 bg-gradient-to-br",
+      "relative rounded-3xl border p-8",
       getBackgroundGradient()
     )}>
       {/* Set Progress Dots */}
@@ -86,10 +91,15 @@ export function ExerciseDisplayCard({
             className={cn(
               "h-3 w-3 rounded-full transition-all duration-300",
               completedSets.includes(idx)
-                ? "bg-green-500 scale-110"
+                ? "bg-lime-400 scale-110 shadow-[0_0_8px_rgba(163,230,53,0.8)]"
                 : idx === currentSet - 1
-                ? "bg-primary ring-2 ring-primary/50 ring-offset-2 ring-offset-background"
-                : "bg-muted"
+                ? cn(
+                    "scale-110 ring-2 ring-offset-2 ring-offset-black",
+                    neonColor === 'orange' && "bg-orange-400 ring-orange-400/50 shadow-[0_0_8px_rgba(251,146,60,0.8)]",
+                    neonColor === 'cyan' && "bg-cyan-400 ring-cyan-400/50 shadow-[0_0_8px_rgba(34,211,238,0.8)]",
+                    neonColor === 'lime' && "bg-lime-400 ring-lime-400/50 shadow-[0_0_8px_rgba(163,230,53,0.8)]"
+                  )
+                : "bg-gray-700"
             )}
           />
         ))}
@@ -97,7 +107,12 @@ export function ExerciseDisplayCard({
 
       {/* Exercise Icon & Name */}
       <div className="text-center space-y-4 mb-8">
-        <div className="inline-flex p-4 rounded-2xl bg-black/30 backdrop-blur-sm border border-gray-700/50">
+        <div className={cn(
+          "inline-flex p-4 rounded-2xl bg-black/50 backdrop-blur-sm border",
+          neonColor === 'orange' && "border-orange-400/30",
+          neonColor === 'cyan' && "border-cyan-400/30",
+          neonColor === 'lime' && "border-lime-400/30"
+        )}>
           {getExerciseIcon()}
         </div>
         
@@ -108,7 +123,7 @@ export function ExerciseDisplayCard({
         {/* Exercise Details */}
         <div className="flex flex-wrap justify-center gap-3">
           {exercise.type === 'strength' && exercise.sets && exercise.reps && (
-            <Badge variant="secondary" className="text-base px-4 py-1.5">
+            <Badge variant="secondary" className="text-base px-4 py-1.5 bg-gray-800 text-white border-gray-600">
               {exercise.sets} × {exercise.reps}
             </Badge>
           )}
@@ -121,14 +136,14 @@ export function ExerciseDisplayCard({
           )}
           
           {exercise.type === 'isometric' && exercise.holdTime && (
-            <Badge variant="secondary" className="text-base px-4 py-1.5 bg-blue-500/20 text-blue-500">
+            <Badge variant="secondary" className="text-base px-4 py-1.5 bg-cyan-400/20 text-cyan-400 border-cyan-400/30">
               <Timer className="h-4 w-4 mr-1.5" />
               {exercise.holdTime}s hold
             </Badge>
           )}
           
           {getIntensityLabel() && (
-            <Badge variant="outline" className="text-sm px-3 py-1">
+            <Badge variant="outline" className="text-sm px-3 py-1 border-gray-600 text-gray-300">
               {getIntensityLabel()}
             </Badge>
           )}
@@ -137,22 +152,27 @@ export function ExerciseDisplayCard({
 
       {/* Current Set Indicator */}
       <div className="text-center mb-6">
-        <span className="text-5xl font-bold text-primary">
+        <span className={cn(
+          "text-5xl font-bold",
+          neonColor === 'orange' && "text-orange-400 drop-shadow-[0_0_15px_rgba(251,146,60,0.6)]",
+          neonColor === 'cyan' && "text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]",
+          neonColor === 'lime' && "text-lime-400 drop-shadow-[0_0_15px_rgba(163,230,53,0.6)]"
+        )}>
           {t('workoutFullScreen.nextSet', { number: currentSet })}
         </span>
-        <span className="text-2xl text-muted-foreground ml-2">
+        <span className="text-2xl text-gray-400 ml-2">
           / {totalSets}
         </span>
       </div>
 
       {/* Pro Tips */}
       {(exercise.description || exercise.notes) && (
-        <div className="mb-8 p-4 rounded-xl bg-black/20 border border-gray-700/30">
+        <div className="mb-8 p-4 rounded-xl bg-black/40 border border-gray-700/50">
           <div className="flex items-start gap-3">
-            <Lightbulb className="h-5 w-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+            <Lightbulb className="h-5 w-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)] mt-0.5 flex-shrink-0" />
             <div className="space-y-2">
               {exercise.description && (
-                <p className="text-sm text-gray-200">
+                <p className="text-sm text-white">
                   {exercise.description}
                 </p>
               )}
@@ -169,7 +189,7 @@ export function ExerciseDisplayCard({
       {/* Weight Input for Strength Exercises */}
       {exercise.type === 'strength' && exercise.trackWeight && (
         <div className="mb-8">
-          <Label className="text-sm text-gray-400 block text-center mb-3">
+          <Label className="text-sm text-gray-300 block text-center mb-3">
             {t('workoutModules.enterWeight')}
           </Label>
           <div className="flex justify-center">
@@ -177,7 +197,7 @@ export function ExerciseDisplayCard({
               <Input
                 type="number"
                 placeholder="0"
-                className="h-16 w-32 text-center text-2xl font-bold bg-black/30 border-gray-600 text-white placeholder:text-gray-500"
+                className="h-16 w-32 text-center text-2xl font-bold bg-black/50 border-orange-400/30 text-white placeholder:text-gray-600 focus:border-orange-400 focus:ring-orange-400/30"
                 value={exerciseWeights[currentSet - 1] || ''}
                 onChange={(e) => {
                   const weight = parseFloat(e.target.value) || 0;
@@ -197,7 +217,12 @@ export function ExerciseDisplayCard({
         <Button
           size="lg"
           onClick={onCompleteSet}
-          className="h-16 text-xl font-semibold gap-3 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/25"
+          className={cn(
+            "h-16 text-xl font-bold gap-3",
+            neonColor === 'orange' && "bg-orange-500 hover:bg-orange-400 text-black shadow-[0_0_25px_rgba(251,146,60,0.5)]",
+            neonColor === 'cyan' && "bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_25px_rgba(34,211,238,0.5)]",
+            neonColor === 'lime' && "bg-lime-500 hover:bg-lime-400 text-black shadow-[0_0_25px_rgba(163,230,53,0.5)]"
+          )}
         >
           <CheckCircle2 className="h-6 w-6" />
           {t('workoutFullScreen.completeSet')}
@@ -207,7 +232,7 @@ export function ExerciseDisplayCard({
           variant="ghost"
           size="lg"
           onClick={onSkipExercise}
-          className="h-12 text-gray-400 hover:text-white hover:bg-gray-800/50"
+          className="h-12 text-gray-400 hover:text-white hover:bg-white/10"
         >
           {t('workoutFullScreen.skipExercise')}
         </Button>

@@ -148,30 +148,26 @@ export function FullScreenWorkoutMode({
     handleRestComplete();
   }, [handleRestComplete]);
 
-  // Psychology-based color scheme for workout focus
-  // Strength: Deep burgundy (stimulates energy, adrenaline)
-  // Isometric: Deep navy (promotes concentration, steadiness)
-  // Skill: Deep teal-forest (balanced alertness for technique)
-  // Rest: Cool charcoal (calming, reduces anxiety, aids recovery)
-  const getBackgroundClass = () => {
-    // Rest phase gets its own calming color regardless of exercise type
-    if (phase === 'rest') {
-      return 'bg-gradient-to-b from-[#0a0a12] to-[#050508]'; // Cool charcoal - calming transition
+  // Neon color scheme - Pure black background with neon accents
+  const getBackgroundClass = () => 'bg-black';
+
+  const getNeonAccentClass = () => {
+    if (phase === 'complete') {
+      return 'ring-1 ring-lime-400/40 shadow-[0_0_60px_rgba(163,230,53,0.2)]';
     }
-    
+    if (phase === 'rest') {
+      return 'ring-1 ring-cyan-400/30 shadow-[0_0_50px_rgba(34,211,238,0.15)]';
+    }
     const type = getExerciseType(currentExercise);
     switch (type) {
       case 'strength':
-        // Deep burgundy-black: Stimulates energy and perceived effort capability
-        return 'bg-gradient-to-b from-[#1a0808] to-[#0d0404]';
+        return 'ring-1 ring-orange-400/40 shadow-[0_0_60px_rgba(251,146,60,0.2)]';
       case 'isometric':
-        // Deep navy: Promotes concentration, steadiness during holds
-        return 'bg-gradient-to-b from-[#080c18] to-[#04060c]';
+        return 'ring-1 ring-cyan-400/40 shadow-[0_0_60px_rgba(34,211,238,0.2)]';
       case 'skill':
-        // Deep teal-forest: Balanced alertness for technique focus
-        return 'bg-gradient-to-b from-[#081210] to-[#040908]';
+        return 'ring-1 ring-lime-400/40 shadow-[0_0_60px_rgba(163,230,53,0.2)]';
       default:
-        return 'bg-[#0a0a0c]';
+        return '';
     }
   };
 
@@ -180,7 +176,7 @@ export function FullScreenWorkoutMode({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="fixed inset-0 z-[100] bg-gradient-to-b from-[#081208] to-[#040904] flex flex-col items-center justify-center p-6"
+        className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6"
       >
         {/* Confetti Effect */}
         {showConfetti && (
@@ -207,11 +203,11 @@ export function FullScreenWorkoutMode({
                 }}
                 className={cn(
                   "absolute w-3 h-3 rounded-full",
-                  i % 5 === 0 && "bg-primary",
-                  i % 5 === 1 && "bg-orange-500",
-                  i % 5 === 2 && "bg-yellow-500",
-                  i % 5 === 3 && "bg-green-500",
-                  i % 5 === 4 && "bg-blue-500"
+                  i % 5 === 0 && "bg-orange-400 shadow-[0_0_10px_rgba(251,146,60,0.8)]",
+                  i % 5 === 1 && "bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]",
+                  i % 5 === 2 && "bg-lime-400 shadow-[0_0_10px_rgba(163,230,53,0.8)]",
+                  i % 5 === 3 && "bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.8)]",
+                  i % 5 === 4 && "bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)]"
                 )}
               />
             ))}
@@ -224,24 +220,24 @@ export function FullScreenWorkoutMode({
           transition={{ type: 'spring', delay: 0.3 }}
           className="text-center space-y-6"
         >
-          <div className="inline-flex p-6 rounded-full bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30">
-            <Trophy className="h-16 w-16 text-yellow-500" />
+          <div className="inline-flex p-6 rounded-full bg-lime-400/10 border border-lime-400/50 shadow-[0_0_40px_rgba(163,230,53,0.3)]">
+            <Trophy className="h-16 w-16 text-lime-400 drop-shadow-[0_0_15px_rgba(163,230,53,0.8)]" />
           </div>
           
-          <h1 className="text-4xl font-bold text-foreground">
+          <h1 className="text-4xl font-bold text-white">
             {t('workoutFullScreen.workoutFinished')}
           </h1>
           
-          <p className="text-xl text-muted-foreground">
+          <p className="text-xl text-gray-300">
             {t('workoutFullScreen.greatWork')}
           </p>
 
-          <div className="flex items-center justify-center gap-2 text-primary">
-            <Sparkles className="h-5 w-5" />
+          <div className="flex items-center justify-center gap-2 text-lime-400">
+            <Sparkles className="h-5 w-5 drop-shadow-[0_0_8px_rgba(163,230,53,0.8)]" />
             <span className="font-medium">
               {exercises.length} {t('workoutFullScreen.exercisesRemaining', { count: 0 }).replace('0', exercises.length.toString())}
             </span>
-            <Sparkles className="h-5 w-5" />
+            <Sparkles className="h-5 w-5 drop-shadow-[0_0_8px_rgba(163,230,53,0.8)]" />
           </div>
 
           <Button
@@ -250,7 +246,7 @@ export function FullScreenWorkoutMode({
               onComplete();
               onExit();
             }}
-            className="h-14 px-10 text-lg mt-6"
+            className="h-14 px-10 text-lg mt-6 bg-lime-500 hover:bg-lime-400 text-black font-bold shadow-[0_0_25px_rgba(163,230,53,0.5)]"
           >
             {t('workoutFullScreen.exitFullScreen')}
           </Button>
@@ -266,13 +262,14 @@ export function FullScreenWorkoutMode({
       exit={{ opacity: 0 }}
       className={cn(
         "fixed inset-0 z-[100] overflow-y-auto",
-        getBackgroundClass()
+        getBackgroundClass(),
+        getNeonAccentClass()
       )}
     >
       {/* Exit Button - Always Visible */}
       <button
         onClick={onExit}
-        className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+        className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
         aria-label="Exit focus mode"
       >
         <X className="h-6 w-6 text-white" />
@@ -325,7 +322,7 @@ export function FullScreenWorkoutMode({
                 transition={{ duration: 0.3 }}
                 className="w-full max-w-lg"
               >
-                <div className="text-center space-y-8 p-8 rounded-3xl border border-teal-500/30 bg-teal-500/10">
+              <div className="text-center space-y-8 p-8 rounded-3xl border border-lime-400/40 bg-lime-400/5 shadow-[0_0_40px_rgba(163,230,53,0.1)]">
                   <h2 className="text-3xl font-bold text-white">
                     {currentExercise}
                   </h2>
@@ -333,7 +330,7 @@ export function FullScreenWorkoutMode({
                   <Button
                     size="lg"
                     onClick={handleCompleteSet}
-                    className="h-16 px-12 text-xl font-semibold"
+                    className="h-16 px-12 text-xl font-semibold bg-lime-500 hover:bg-lime-400 text-black shadow-[0_0_25px_rgba(163,230,53,0.5)]"
                   >
                     {t('workoutFullScreen.completeSet')}
                   </Button>
@@ -341,7 +338,7 @@ export function FullScreenWorkoutMode({
                   <Button
                     variant="ghost"
                     onClick={handleSkipExercise}
-                    className="text-muted-foreground"
+                    className="text-gray-400 hover:text-white"
                   >
                     {t('workoutFullScreen.skipExercise')}
                   </Button>
