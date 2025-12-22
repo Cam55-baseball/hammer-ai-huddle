@@ -40,6 +40,7 @@ import { S2PeripheralAwarenessTest } from './diagnostics/S2PeripheralAwarenessTe
 import { S2ProcessingUnderLoadTest } from './diagnostics/S2ProcessingUnderLoadTest';
 import { S2ImpulseControlTest } from './diagnostics/S2ImpulseControlTest';
 import { S2FatigueIndexTest } from './diagnostics/S2FatigueIndexTest';
+import { S2ResultsAnalysis } from './diagnostics/S2ResultsAnalysis';
 
 export interface S2DiagnosticResult {
   id: string;
@@ -354,60 +355,41 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
   }
 
   if (testPhase === 'results') {
-    const scores = Object.values(testScores);
-    const overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    // Build previous scores for comparison from latestResult
+    const previousScores = latestResult ? {
+      processing_speed: latestResult.processing_speed_score,
+      decision_efficiency: latestResult.decision_efficiency_score,
+      visual_motor: latestResult.visual_motor_integration_score,
+      visual_tracking: latestResult.visual_tracking_score,
+      peripheral_awareness: latestResult.peripheral_awareness_score,
+      processing_under_load: latestResult.processing_under_load_score,
+      impulse_control: latestResult.impulse_control_score,
+      fatigue_index: latestResult.fatigue_index_score,
+    } : null;
 
-    const scoreLabels = [
-      { key: 'processing_speed', label: 'Processing Speed' },
-      { key: 'decision_efficiency', label: 'Decision Efficiency' },
-      { key: 'visual_motor', label: 'Visual-Motor' },
-      { key: 'visual_tracking', label: 'Visual Tracking' },
-      { key: 'peripheral_awareness', label: 'Peripheral' },
-      { key: 'processing_under_load', label: 'Under Load' },
-      { key: 'impulse_control', label: 'Impulse Control' },
-      { key: 'fatigue_index', label: 'Fatigue Index' },
-    ];
+    // Build comparison data
+    const comparisonData = latestResult ? {
+      processing_speed_change: latestResult.processing_speed_score ? testScores.processing_speed - latestResult.processing_speed_score : null,
+      decision_efficiency_change: latestResult.decision_efficiency_score ? testScores.decision_efficiency - latestResult.decision_efficiency_score : null,
+      visual_motor_change: latestResult.visual_motor_integration_score ? testScores.visual_motor - latestResult.visual_motor_integration_score : null,
+      visual_tracking_change: latestResult.visual_tracking_score ? testScores.visual_tracking - latestResult.visual_tracking_score : null,
+      peripheral_awareness_change: latestResult.peripheral_awareness_score ? testScores.peripheral_awareness - latestResult.peripheral_awareness_score : null,
+      processing_under_load_change: latestResult.processing_under_load_score ? testScores.processing_under_load - latestResult.processing_under_load_score : null,
+      impulse_control_change: latestResult.impulse_control_score ? testScores.impulse_control - latestResult.impulse_control_score : null,
+      fatigue_index_change: latestResult.fatigue_index_score ? testScores.fatigue_index - latestResult.fatigue_index_score : null,
+      overall_change: latestResult.overall_score 
+        ? Math.round(Object.values(testScores).reduce((a, b) => a + b, 0) / 8) - latestResult.overall_score 
+        : null,
+    } : null;
 
     return (
       <FullscreenWrapper showCancel={false}>
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
-          <Card className="border-teal-500/30 bg-gradient-to-br from-teal-500/10 to-background">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-teal-400">
-                <CheckCircle2 className="h-6 w-6" />
-                S2 Cognition Assessment Complete
-              </CardTitle>
-              <CardDescription>Your cognitive performance results</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-center p-6 bg-background/50 rounded-xl border border-teal-500/20">
-                <div className="text-sm text-muted-foreground mb-2">Overall Score</div>
-                <div className={`text-5xl font-black ${getScoreColor(overallScore)}`}>{overallScore}</div>
-                <div className="text-sm text-muted-foreground mt-1">out of 100</div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-2">
-                {scoreLabels.map(({ key, label }) => (
-                  <div key={key} className="text-center p-2 bg-background/30 rounded-lg">
-                    <div className="text-[10px] text-muted-foreground mb-1 truncate">{label}</div>
-                    <div className={`text-lg font-bold ${getScoreColor(testScores[key as keyof typeof testScores])}`}>
-                      {testScores[key as keyof typeof testScores]}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Alert className="bg-teal-500/10 border-teal-500/30">
-                <Clock className="h-4 w-4" />
-                <AlertDescription>
-                  Your next S2 assessment will be available in 16 weeks on {format(addDays(new Date(), 112), 'MMM d, yyyy')}.
-                </AlertDescription>
-              </Alert>
-
-              <Button onClick={handleDone} className="w-full bg-teal-600 hover:bg-teal-700">Done</Button>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <S2ResultsAnalysis
+          scores={testScores}
+          previousScores={previousScores}
+          comparison={comparisonData}
+          onDone={handleDone}
+        />
       </FullscreenWrapper>
     );
   }
