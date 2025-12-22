@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -19,7 +18,6 @@ import { cn } from '@/lib/utils';
 import { Exercise, ExperienceLevel, getAdjustedPercent, isExerciseObject } from '@/types/workout';
 import { VaultWorkoutNotesDialog } from '@/components/vault/VaultWorkoutNotesDialog';
 import { useVault, WeightIncrease } from '@/hooks/useVault';
-import { FullScreenWorkoutMode } from './FullScreenWorkoutMode';
 
 interface DayWorkoutDetailDialogProps {
   open: boolean;
@@ -43,6 +41,7 @@ interface DayWorkoutDetailDialogProps {
   module?: string;
   subModule?: string;
   previousWeightLog?: { [exerciseIndex: number]: number[] };
+  onEnterFullScreen?: () => void;
 }
 
 export function DayWorkoutDetailDialog({
@@ -63,13 +62,12 @@ export function DayWorkoutDetailDialog({
   module = 'hitting',
   subModule = 'iron-bambino',
   previousWeightLog = {},
+  onEnterFullScreen,
 }: DayWorkoutDetailDialogProps) {
   const { t } = useTranslation();
   const { saveWorkoutNote, checkVaultAccess } = useVault();
   const [showNotesDialog, setShowNotesDialog] = useState(false);
   const [hasVaultAccess, setHasVaultAccess] = useState(false);
-  const [showFullScreen, setShowFullScreen] = useState(false);
-  const [restoreDialogOnExit, setRestoreDialogOnExit] = useState(false);
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -381,31 +379,6 @@ export function DayWorkoutDetailDialog({
 
   return (
     <>
-      {/* Full Screen Workout Mode - Rendered via Portal OUTSIDE the dialog */}
-      {showFullScreen && createPortal(
-        <FullScreenWorkoutMode
-          exercises={dayData.exercises}
-          experienceLevel={experienceLevel}
-          exerciseProgress={exerciseProgress}
-          weightLog={weightLog}
-          onExerciseToggle={onExerciseToggle}
-          onWeightUpdate={onWeightUpdate}
-          onComplete={() => {
-            handleWorkoutComplete();
-            setShowFullScreen(false);
-            setRestoreDialogOnExit(false);
-          }}
-          onExit={() => {
-            setShowFullScreen(false);
-            if (restoreDialogOnExit) {
-              onOpenChange(true);
-              setRestoreDialogOnExit(false);
-            }
-          }}
-        />,
-        document.body
-      )}
-
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-full sm:max-w-lg p-4 sm:p-6 overflow-y-auto max-h-[85vh]">
           <DialogHeader className="space-y-2">
@@ -434,18 +407,16 @@ export function DayWorkoutDetailDialog({
           </DialogHeader>
 
           {/* Enter Focus Mode Button */}
-          <Button
-            variant="outline"
-            onClick={() => {
-              setShowFullScreen(true);
-              setRestoreDialogOnExit(true);
-              onOpenChange(false);
-            }}
-            className="w-full mt-4 gap-2 border-primary/50 hover:bg-primary/10"
-          >
-            <Maximize2 className="h-4 w-4" />
-            {t('workoutFullScreen.enterFullScreen')}
-          </Button>
+          {onEnterFullScreen && (
+            <Button
+              variant="outline"
+              onClick={onEnterFullScreen}
+              className="w-full mt-4 gap-2 border-primary/50 hover:bg-primary/10"
+            >
+              <Maximize2 className="h-4 w-4" />
+              {t('workoutFullScreen.enterFullScreen')}
+            </Button>
+          )}
 
           <div className="mt-4 space-y-4">
             <div className="space-y-2">

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { WorkoutProgressStreakCard } from '@/components/workout-modules/WorkoutProgressStreakCard';
 import { EquipmentList } from '@/components/workout-modules/EquipmentList';
 import { WeekGateModal } from '@/components/workout-modules/WeekGateModal';
 import { ExperienceLevelSelector } from '@/components/workout-modules/ExperienceLevelSelector';
 import { DayWorkoutDetailDialog } from '@/components/workout-modules/DayWorkoutDetailDialog';
+import { FullScreenWorkoutMode } from '@/components/workout-modules/FullScreenWorkoutMode';
 import { useSubModuleProgress } from '@/hooks/useSubModuleProgress';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,7 +23,7 @@ import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
 import { NotificationPermissionCard } from '@/components/workout-modules/NotificationPermissionCard';
 import { useWorkoutNotifications } from '@/hooks/useWorkoutNotifications';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
-import { Exercise, DayData, WeekData } from '@/types/workout';
+import { Exercise, DayData, WeekData, ExperienceLevel } from '@/types/workout';
 import { 
   PITCHING_CYCLES, 
   PITCHING_EQUIPMENT,
@@ -141,6 +143,8 @@ export default function ProductionStudio() {
   const [selectedDay, setSelectedDay] = useState<{ week: number; day: DayData; dayIndex: number } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [reachedMilestone, setReachedMilestone] = useState<number | null>(null);
+  const [showFullScreen, setShowFullScreen] = useState(false);
+  const [fullScreenData, setFullScreenData] = useState<{ week: number; day: DayData; dayIndex: number } | null>(null);
 
   const { modules, loading: subLoading } = useSubscription();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
@@ -434,10 +438,38 @@ export default function ProductionStudio() {
               onExerciseToggle={(index, completed) => handleExerciseComplete(selectedDay.week, selectedDay.day.day, index, completed, selectedDay.day.exercises.length)}
               weightLog={getWeightLog(selectedDay.week, selectedDay.day.day)}
               onWeightUpdate={(exerciseIndex, setIndex, weight) => handleWeightUpdate(selectedDay.week, selectedDay.day.day, exerciseIndex, setIndex, weight)}
-              experienceLevel={progress?.experience_level || 'intermediate'}
+              experienceLevel={(progress?.experience_level as ExperienceLevel) || 'intermediate'}
+              onEnterFullScreen={() => {
+                setFullScreenData(selectedDay);
+                setSelectedDay(null);
+                setShowFullScreen(true);
+              }}
             />
           );
         })()}
+
+        {/* Full Screen Workout Mode - Rendered at page level via Portal */}
+        {showFullScreen && fullScreenData && createPortal(
+          <FullScreenWorkoutMode
+            exercises={fullScreenData.day.exercises}
+            experienceLevel={(progress?.experience_level as ExperienceLevel) || 'intermediate'}
+            exerciseProgress={getExerciseProgress(fullScreenData.week, fullScreenData.day.day, fullScreenData.day.exercises.length)}
+            weightLog={getWeightLog(fullScreenData.week, fullScreenData.day.day)}
+            onExerciseToggle={(index, completed) => handleExerciseComplete(fullScreenData.week, fullScreenData.day.day, index, completed, fullScreenData.day.exercises.length)}
+            onWeightUpdate={(exerciseIndex, setIndex, weight) => handleWeightUpdate(fullScreenData.week, fullScreenData.day.day, exerciseIndex, setIndex, weight)}
+            onComplete={() => {
+              handleDayComplete(fullScreenData.week, fullScreenData.day.day, true);
+              setShowFullScreen(false);
+              setFullScreenData(null);
+            }}
+            onExit={() => {
+              setShowFullScreen(false);
+              setSelectedDay(fullScreenData);
+              setFullScreenData(null);
+            }}
+          />,
+          document.body
+        )}
       </div>
     </DashboardLayout>
   );

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Lock, Unlock, ChevronDown, ChevronUp, ChevronRight, CheckCircle2, Dumbbell, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DayWorkoutDetailDialog } from './DayWorkoutDetailDialog';
+import { FullScreenWorkoutMode } from './FullScreenWorkoutMode';
 import { Exercise, ExperienceLevel, isExerciseObject } from '@/types/workout';
 
 interface WeekData {
@@ -48,6 +50,11 @@ export function WeeklyWorkoutPlan({
   const { t } = useTranslation();
   const [expandedWeek, setExpandedWeek] = useState<number | null>(currentWeek);
   const [selectedDay, setSelectedDay] = useState<{
+    weekData: WeekData;
+    day: { day: string; title: string; exercises: (string | Exercise)[] };
+  } | null>(null);
+  const [showFullScreen, setShowFullScreen] = useState(false);
+  const [fullScreenData, setFullScreenData] = useState<{
     weekData: WeekData;
     day: { day: string; title: string; exercises: (string | Exercise)[] };
   } | null>(null);
@@ -282,7 +289,37 @@ export function WeeklyWorkoutPlan({
           }
         }}
         experienceLevel={experienceLevel}
+        onEnterFullScreen={() => {
+          if (selectedDay) {
+            setFullScreenData(selectedDay);
+            setSelectedDay(null);
+            setShowFullScreen(true);
+          }
+        }}
       />
+
+      {/* Full Screen Workout Mode - Rendered at page level via Portal */}
+      {showFullScreen && fullScreenData && createPortal(
+        <FullScreenWorkoutMode
+          exercises={fullScreenData.day.exercises}
+          experienceLevel={experienceLevel}
+          exerciseProgress={getExerciseProgress(fullScreenData.weekData.week, fullScreenData.day.day, fullScreenData.day.exercises.length)}
+          weightLog={getWeightLog(fullScreenData.weekData.week, fullScreenData.day.day)}
+          onExerciseToggle={(index, completed) => onExerciseComplete(fullScreenData.weekData.week, fullScreenData.day.day, index, completed, fullScreenData.day.exercises.length)}
+          onWeightUpdate={(exerciseIndex, setIndex, weight) => onWeightUpdate(fullScreenData.weekData.week, fullScreenData.day.day, exerciseIndex, setIndex, weight)}
+          onComplete={() => {
+            onDayComplete(fullScreenData.weekData.week, fullScreenData.day.day, true);
+            setShowFullScreen(false);
+            setFullScreenData(null);
+          }}
+          onExit={() => {
+            setShowFullScreen(false);
+            setSelectedDay(fullScreenData);
+            setFullScreenData(null);
+          }}
+        />,
+        document.body
+      )}
     </>
   );
 }
