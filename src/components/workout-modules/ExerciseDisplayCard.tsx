@@ -62,17 +62,20 @@ export function ExerciseDisplayCard({
 
   const getBackgroundGradient = () => {
     if (exercise.type === 'strength') {
-      return 'from-orange-500/10 via-transparent to-transparent';
+      // Warm burgundy accent for strength - energizing
+      return 'from-red-900/30 via-red-950/10 to-transparent border-red-800/40';
     }
     if (exercise.type === 'isometric') {
-      return 'from-blue-500/10 via-transparent to-transparent';
+      // Cool navy accent for isometric - focused
+      return 'from-blue-900/30 via-blue-950/10 to-transparent border-blue-800/40';
     }
-    return 'from-emerald-500/10 via-transparent to-transparent';
+    // Teal accent for skill - balanced
+    return 'from-teal-900/30 via-teal-950/10 to-transparent border-teal-800/40';
   };
 
   return (
     <div className={cn(
-      "relative rounded-3xl border border-border/50 p-8 bg-gradient-to-br",
+      "relative rounded-3xl border p-8 bg-gradient-to-br",
       getBackgroundGradient()
     )}>
       {/* Set Progress Dots */}
@@ -94,11 +97,11 @@ export function ExerciseDisplayCard({
 
       {/* Exercise Icon & Name */}
       <div className="text-center space-y-4 mb-8">
-        <div className="inline-flex p-4 rounded-2xl bg-background/50 backdrop-blur-sm border border-border/50">
+        <div className="inline-flex p-4 rounded-2xl bg-black/30 backdrop-blur-sm border border-gray-700/50">
           {getExerciseIcon()}
         </div>
         
-        <h2 className="text-3xl font-bold text-foreground">
+        <h2 className="text-3xl font-bold text-white">
           {exercise.name}
         </h2>
 
@@ -144,17 +147,17 @@ export function ExerciseDisplayCard({
 
       {/* Pro Tips */}
       {(exercise.description || exercise.notes) && (
-        <div className="mb-8 p-4 rounded-xl bg-muted/30 border border-border/30">
+        <div className="mb-8 p-4 rounded-xl bg-black/20 border border-gray-700/30">
           <div className="flex items-start gap-3">
-            <Lightbulb className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+            <Lightbulb className="h-5 w-5 text-yellow-400 mt-0.5 flex-shrink-0" />
             <div className="space-y-2">
               {exercise.description && (
-                <p className="text-sm text-foreground">
+                <p className="text-sm text-gray-200">
                   {exercise.description}
                 </p>
               )}
               {exercise.notes && (
-                <p className="text-sm text-muted-foreground italic">
+                <p className="text-sm text-gray-400 italic">
                   {exercise.notes}
                 </p>
               )}
@@ -166,7 +169,7 @@ export function ExerciseDisplayCard({
       {/* Weight Input for Strength Exercises */}
       {exercise.type === 'strength' && exercise.trackWeight && (
         <div className="mb-8">
-          <Label className="text-sm text-muted-foreground block text-center mb-3">
+          <Label className="text-sm text-gray-400 block text-center mb-3">
             {t('workoutModules.enterWeight')}
           </Label>
           <div className="flex justify-center">
@@ -174,14 +177,14 @@ export function ExerciseDisplayCard({
               <Input
                 type="number"
                 placeholder="0"
-                className="h-16 w-32 text-center text-2xl font-bold"
+                className="h-16 w-32 text-center text-2xl font-bold bg-black/30 border-gray-600 text-white placeholder:text-gray-500"
                 value={exerciseWeights[currentSet - 1] || ''}
                 onChange={(e) => {
                   const weight = parseFloat(e.target.value) || 0;
                   onWeightUpdate(currentSet - 1, weight);
                 }}
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
                 lbs
               </span>
             </div>
@@ -204,7 +207,7 @@ export function ExerciseDisplayCard({
           variant="ghost"
           size="lg"
           onClick={onSkipExercise}
-          className="h-12 text-muted-foreground hover:text-foreground"
+          className="h-12 text-gray-400 hover:text-white hover:bg-gray-800/50"
         >
           {t('workoutFullScreen.skipExercise')}
         </Button>

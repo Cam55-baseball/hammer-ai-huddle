@@ -143,10 +143,10 @@ export function RestTimer({
     <div className="flex flex-col items-center justify-center space-y-8">
       {/* Timer Title */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-foreground">
+        <h2 className="text-2xl font-bold text-white">
           {t('workoutFullScreen.restTime')}
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-gray-400">
           {t('workoutFullScreen.adjustRest')}
         </p>
       </div>
@@ -193,11 +193,11 @@ export function RestTimer({
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className={cn(
             "text-6xl font-bold tabular-nums transition-all duration-300",
-            isLastTenSeconds ? "text-orange-500 scale-110" : getTypeColor()
+            isLastTenSeconds ? "text-orange-400 scale-110" : "text-cyan-400"
           )}>
             {formatTime(seconds)}
           </span>
-          <span className="text-sm text-muted-foreground mt-2">
+          <span className="text-sm text-gray-400 mt-2">
             {isLastSet 
               ? t('workoutFullScreen.restBetweenExercises')
               : t('workoutFullScreen.restBetweenSets')
@@ -212,7 +212,7 @@ export function RestTimer({
           variant="outline"
           size="lg"
           onClick={() => adjustTime(-30)}
-          className="h-14 px-6 text-lg gap-2"
+          className="h-14 px-6 text-lg gap-2 border-gray-600 text-gray-200 hover:bg-gray-800 hover:text-white"
           disabled={seconds <= 30}
         >
           <Minus className="h-5 w-5" />
@@ -223,12 +223,12 @@ export function RestTimer({
           variant="ghost"
           size="icon"
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className="h-12 w-12"
+          className="h-12 w-12 text-gray-300 hover:text-white hover:bg-gray-800"
         >
           {soundEnabled ? (
             <Volume2 className="h-6 w-6" />
           ) : (
-            <VolumeX className="h-6 w-6 text-muted-foreground" />
+            <VolumeX className="h-6 w-6 text-gray-500" />
           )}
         </Button>
 
@@ -236,7 +236,7 @@ export function RestTimer({
           variant="outline"
           size="lg"
           onClick={() => adjustTime(30)}
-          className="h-14 px-6 text-lg gap-2"
+          className="h-14 px-6 text-lg gap-2 border-gray-600 text-gray-200 hover:bg-gray-800 hover:text-white"
         >
           <Plus className="h-5 w-5" />
           {t('workoutFullScreen.addTime')}
@@ -248,7 +248,7 @@ export function RestTimer({
         variant="secondary"
         size="lg"
         onClick={onSkip}
-        className="h-14 px-10 text-lg gap-2"
+        className="h-14 px-10 text-lg gap-2 bg-gray-700 text-white hover:bg-gray-600"
       >
         <SkipForward className="h-5 w-5" />
         {t('workoutFullScreen.skipRest')}
@@ -256,11 +256,11 @@ export function RestTimer({
 
       {/* Next Exercise Preview */}
       {nextExerciseName && (
-        <div className="text-center mt-4 p-4 rounded-xl bg-muted/30 border border-border/50">
-          <p className="text-sm text-muted-foreground">
+        <div className="text-center mt-4 p-4 rounded-xl bg-gray-800/50 border border-gray-700/50">
+          <p className="text-sm text-gray-400">
             {t('workoutFullScreen.nextExercise', { name: '' })}
           </p>
-          <p className="text-lg font-semibold text-foreground mt-1">
+          <p className="text-lg font-semibold text-white mt-1">
             {nextExerciseName}
           </p>
         </div>

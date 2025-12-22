@@ -148,18 +148,30 @@ export function FullScreenWorkoutMode({
     handleRestComplete();
   }, [handleRestComplete]);
 
-  // Get solid opaque background based on exercise type
+  // Psychology-based color scheme for workout focus
+  // Strength: Deep burgundy (stimulates energy, adrenaline)
+  // Isometric: Deep navy (promotes concentration, steadiness)
+  // Skill: Deep teal-forest (balanced alertness for technique)
+  // Rest: Cool charcoal (calming, reduces anxiety, aids recovery)
   const getBackgroundClass = () => {
+    // Rest phase gets its own calming color regardless of exercise type
+    if (phase === 'rest') {
+      return 'bg-gradient-to-b from-[#0a0a12] to-[#050508]'; // Cool charcoal - calming transition
+    }
+    
     const type = getExerciseType(currentExercise);
     switch (type) {
       case 'strength':
-        return 'bg-orange-950';
+        // Deep burgundy-black: Stimulates energy and perceived effort capability
+        return 'bg-gradient-to-b from-[#1a0808] to-[#0d0404]';
       case 'isometric':
-        return 'bg-blue-950';
+        // Deep navy: Promotes concentration, steadiness during holds
+        return 'bg-gradient-to-b from-[#080c18] to-[#04060c]';
       case 'skill':
-        return 'bg-emerald-950';
+        // Deep teal-forest: Balanced alertness for technique focus
+        return 'bg-gradient-to-b from-[#081210] to-[#040908]';
       default:
-        return 'bg-background';
+        return 'bg-[#0a0a0c]';
     }
   };
 
@@ -168,7 +180,7 @@ export function FullScreenWorkoutMode({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center p-6"
+        className="fixed inset-0 z-[100] bg-gradient-to-b from-[#081208] to-[#040904] flex flex-col items-center justify-center p-6"
       >
         {/* Confetti Effect */}
         {showConfetti && (
@@ -313,8 +325,8 @@ export function FullScreenWorkoutMode({
                 transition={{ duration: 0.3 }}
                 className="w-full max-w-lg"
               >
-                <div className="text-center space-y-8 p-8 rounded-3xl border border-border/50 bg-emerald-500/5">
-                  <h2 className="text-3xl font-bold text-foreground">
+                <div className="text-center space-y-8 p-8 rounded-3xl border border-teal-500/30 bg-teal-500/10">
+                  <h2 className="text-3xl font-bold text-white">
                     {currentExercise}
                   </h2>
                   
