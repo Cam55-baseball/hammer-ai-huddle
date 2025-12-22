@@ -148,18 +148,18 @@ export function FullScreenWorkoutMode({
     handleRestComplete();
   }, [handleRestComplete]);
 
-  // Get background gradient based on exercise type
+  // Get solid opaque background based on exercise type
   const getBackgroundClass = () => {
     const type = getExerciseType(currentExercise);
     switch (type) {
       case 'strength':
-        return 'from-orange-950/30 via-background to-background';
+        return 'bg-orange-950';
       case 'isometric':
-        return 'from-blue-950/30 via-background to-background';
+        return 'bg-blue-950';
       case 'skill':
-        return 'from-emerald-950/30 via-background to-background';
+        return 'bg-emerald-950';
       default:
-        return 'from-background via-background to-background';
+        return 'bg-background';
     }
   };
 
@@ -253,10 +253,19 @@ export function FullScreenWorkoutMode({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className={cn(
-        "fixed inset-0 z-[100] bg-gradient-to-b overflow-y-auto",
+        "fixed inset-0 z-[100] overflow-y-auto",
         getBackgroundClass()
       )}
     >
+      {/* Exit Button - Always Visible */}
+      <button
+        onClick={onExit}
+        className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+        aria-label="Exit focus mode"
+      >
+        <X className="h-6 w-6 text-white" />
+      </button>
+
       <div className="min-h-full flex flex-col p-4 sm:p-6 lg:p-8">
         {/* Progress Bar */}
         <WorkoutProgressBar
