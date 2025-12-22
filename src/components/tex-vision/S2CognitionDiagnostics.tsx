@@ -6,6 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   Brain, 
   Play, 
@@ -17,6 +27,7 @@ import {
   Minus,
   AlertTriangle,
   ArrowRight,
+  Maximize,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -63,6 +74,8 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
   });
   const [canTakeTest, setCanTakeTest] = useState(true);
   const [daysUntilNextTest, setDaysUntilNextTest] = useState(0);
+  const [showStartConfirmation, setShowStartConfirmation] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Fetch latest diagnostic result
   const fetchLatestResult = useCallback(async () => {
@@ -184,9 +197,50 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     }
   };
 
-  const startTest = () => {
+  // Show confirmation dialog before starting
+  const handleStartClick = () => {
+    setShowStartConfirmation(true);
+  };
+
+  // Enter fullscreen and start test
+  const confirmAndStartTest = async () => {
+    setShowStartConfirmation(false);
+    
+    // Try to enter fullscreen
+    try {
+      await document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } catch (err) {
+      // Continue even if fullscreen fails (some browsers/devices may block it)
+      console.log('Fullscreen not available:', err);
+    }
+    
     setTestScores({ processing_speed: 0, decision_efficiency: 0, visual_motor: 0 });
     setTestPhase('processing_speed');
+  };
+
+  // Exit fullscreen
+  const exitFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+    setIsFullscreen(false);
+  }, []);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Handle test completion - exit fullscreen
+  const handleDone = () => {
+    exitFullscreen();
+    setTestPhase('intro');
   };
 
   const getChangeIcon = (change: number | null) => {
@@ -217,17 +271,38 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     );
   }
 
+  // Fullscreen container wrapper for active tests
+  const FullscreenWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div className="fixed inset-0 z-50 bg-black flex items-center justify-center p-4 overflow-auto">
+      <div className="w-full max-w-lg">
+        {children}
+      </div>
+    </div>
+  );
+
   // Render active test phase
   if (testPhase === 'processing_speed') {
-    return <S2ProcessingSpeedTest onComplete={(score) => handleSubtestComplete('processing_speed', score)} />;
+    return (
+      <FullscreenWrapper>
+        <S2ProcessingSpeedTest onComplete={(score) => handleSubtestComplete('processing_speed', score)} />
+      </FullscreenWrapper>
+    );
   }
 
   if (testPhase === 'decision_efficiency') {
-    return <S2DecisionEfficiencyTest onComplete={(score) => handleSubtestComplete('decision_efficiency', score)} />;
+    return (
+      <FullscreenWrapper>
+        <S2DecisionEfficiencyTest onComplete={(score) => handleSubtestComplete('decision_efficiency', score)} />
+      </FullscreenWrapper>
+    );
   }
 
   if (testPhase === 'visual_motor') {
-    return <S2VisualMotorTest onComplete={(score) => handleSubtestComplete('visual_motor', score)} />;
+    return (
+      <FullscreenWrapper>
+        <S2VisualMotorTest onComplete={(score) => handleSubtestComplete('visual_motor', score)} />
+      </FullscreenWrapper>
+    );
   }
 
   // Results phase
@@ -237,11 +312,12 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     );
 
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="space-y-4"
-      >
+      <FullscreenWrapper>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="space-y-4"
+        >
         <Card className="border-teal-500/30 bg-gradient-to-br from-teal-500/10 to-background">
           <CardHeader>
             <CardTitle className="flex items-center gap-3 text-teal-400">
@@ -290,19 +366,21 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
             </Alert>
 
             <Button 
-              onClick={() => setTestPhase('intro')} 
+              onClick={handleDone} 
               className="w-full bg-teal-600 hover:bg-teal-700"
             >
               Done
             </Button>
           </CardContent>
         </Card>
-      </motion.div>
+        </motion.div>
+      </FullscreenWrapper>
     );
   }
 
   // Intro phase (default view)
   return (
+    <>
     <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-background">
       <CardHeader>
         <CardTitle className="flex items-center gap-3">
@@ -383,7 +461,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
         {/* Start Test Button */}
         {canTakeTest ? (
           <Button 
-            onClick={startTest} 
+            onClick={handleStartClick} 
             className="w-full bg-teal-600 hover:bg-teal-700"
             size="lg"
           >
@@ -416,5 +494,48 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
         )}
       </CardContent>
     </Card>
+
+    {/* Confirmation Dialog */}
+    <AlertDialog open={showStartConfirmation} onOpenChange={setShowStartConfirmation}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2 text-amber-500">
+            <AlertTriangle className="h-5 w-5" />
+            Before You Begin
+          </AlertDialogTitle>
+          <AlertDialogDescription className="space-y-3 pt-2">
+            <p className="font-medium text-foreground">Once you start this assessment:</p>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="text-amber-500 font-bold">•</span>
+                <span>You <strong>cannot pause or exit</strong> until all 3 tests are complete</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-500 font-bold">•</span>
+                <span>Closing the app will <strong>forfeit your progress</strong></span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-500 font-bold">•</span>
+                <span>The screen will enter <strong>fullscreen mode</strong> for focus</span>
+              </li>
+            </ul>
+            <p className="text-xs text-muted-foreground pt-2 border-t">
+              Make sure you have 5-7 minutes of uninterrupted time in a quiet space.
+            </p>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="gap-2 sm:gap-0">
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={confirmAndStartTest}
+            className="bg-teal-600 hover:bg-teal-700"
+          >
+            <Maximize className="h-4 w-4 mr-2" />
+            I'm Ready, Begin
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
