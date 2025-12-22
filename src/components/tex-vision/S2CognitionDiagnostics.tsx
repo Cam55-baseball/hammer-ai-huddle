@@ -25,7 +25,7 @@ import { S2ProcessingSpeedTest } from './diagnostics/S2ProcessingSpeedTest';
 import { S2DecisionEfficiencyTest } from './diagnostics/S2DecisionEfficiencyTest';
 import { S2VisualMotorTest } from './diagnostics/S2VisualMotorTest';
 
-interface S2DiagnosticResult {
+export interface S2DiagnosticResult {
   id: string;
   user_id: string;
   test_date: string;
@@ -131,7 +131,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     );
 
     const today = new Date().toISOString().split('T')[0];
-    const nextTestDate = addDays(new Date(), 42).toISOString().split('T')[0]; // 6 weeks
+    const nextTestDate = addDays(new Date(), 112).toISOString().split('T')[0]; // 16 weeks
 
     // Calculate comparison if we have prior results
     let comparison: S2DiagnosticResult['comparison_vs_prior'] = null;
@@ -178,7 +178,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
       } as S2DiagnosticResult);
       setTestPhase('results');
       setCanTakeTest(false);
-      setDaysUntilNextTest(42);
+      setDaysUntilNextTest(112);
     } catch (error) {
       console.error('Error saving S2 diagnostic:', error);
     }
@@ -285,7 +285,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
             <Alert className="bg-teal-500/10 border-teal-500/30">
               <Clock className="h-4 w-4" />
               <AlertDescription>
-                Your next S2 assessment will be available in 6 weeks on {format(addDays(new Date(), 42), 'MMM d, yyyy')}.
+                Your next S2 assessment will be available in 16 weeks on {format(addDays(new Date(), 112), 'MMM d, yyyy')}.
               </AlertDescription>
             </Alert>
 
