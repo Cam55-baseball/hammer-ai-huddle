@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -380,8 +381,8 @@ export function DayWorkoutDetailDialog({
 
   return (
     <>
-      {/* Full Screen Workout Mode */}
-      {showFullScreen && (
+      {/* Full Screen Workout Mode - Rendered via Portal OUTSIDE the dialog */}
+      {showFullScreen && createPortal(
         <FullScreenWorkoutMode
           exercises={dayData.exercises}
           experienceLevel={experienceLevel}
@@ -389,9 +390,20 @@ export function DayWorkoutDetailDialog({
           weightLog={weightLog}
           onExerciseToggle={onExerciseToggle}
           onWeightUpdate={onWeightUpdate}
-          onComplete={handleWorkoutComplete}
-          onExit={() => setShowFullScreen(false)}
-        />
+          onComplete={() => {
+            handleWorkoutComplete();
+            setShowFullScreen(false);
+            setRestoreDialogOnExit(false);
+          }}
+          onExit={() => {
+            setShowFullScreen(false);
+            if (restoreDialogOnExit) {
+              onOpenChange(true);
+              setRestoreDialogOnExit(false);
+            }
+          }}
+        />,
+        document.body
       )}
 
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -424,7 +436,11 @@ export function DayWorkoutDetailDialog({
           {/* Enter Focus Mode Button */}
           <Button
             variant="outline"
-            onClick={() => setShowFullScreen(true)}
+            onClick={() => {
+              setShowFullScreen(true);
+              setRestoreDialogOnExit(true);
+              onOpenChange(false);
+            }}
             className="w-full mt-4 gap-2 border-primary/50 hover:bg-primary/10"
           >
             <Maximize2 className="h-4 w-4" />
