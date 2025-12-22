@@ -12,6 +12,7 @@ import TexVisionDrillLibrary from '@/components/tex-vision/TexVisionDrillLibrary
 import TexVisionProgressMetrics from '@/components/tex-vision/TexVisionProgressMetrics';
 import TexVisionDisclaimer from '@/components/tex-vision/TexVisionDisclaimer';
 import ActiveDrillView from '@/components/tex-vision/ActiveDrillView';
+import { S2CognitionDiagnostics } from '@/components/tex-vision/S2CognitionDiagnostics';
 import { Eye, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -218,6 +219,9 @@ export default function TexVision() {
           progress={progress}
           loading={progressLoading}
         />
+
+        {/* S2 Cognition Diagnostics */}
+        <S2CognitionDiagnostics sport={currentSport} />
 
         {/* Disclaimer */}
         <TexVisionDisclaimer />
