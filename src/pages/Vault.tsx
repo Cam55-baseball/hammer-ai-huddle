@@ -41,6 +41,7 @@ import { VaultDisciplineTrendCard } from '@/components/vault/VaultDisciplineTren
 import { VaultMentalWellnessTrendCard } from '@/components/vault/VaultMentalWellnessTrendCard';
 import { VaultCorrelationAnalysisCard } from '@/components/vault/VaultCorrelationAnalysisCard';
 import { VaultWellnessGoalsCard, checkWellnessGoalsAndNotify } from '@/components/vault/VaultWellnessGoalsCard';
+import { VaultTexVisionCard } from '@/components/vault/VaultTexVisionCard';
 
 import { useAuth } from '@/hooks/useAuth';
 
