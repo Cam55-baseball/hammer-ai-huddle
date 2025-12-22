@@ -30,6 +30,8 @@ export const S2ProcessingSpeedTest = ({ onComplete }: S2ProcessingSpeedTestProps
   const [waitingForResponse, setWaitingForResponse] = useState(false);
   const [results, setResults] = useState<{ correct: boolean; responseTime: number }[]>([]);
   const responseStartTime = useRef<number>(0);
+  const waitingForResponseRef = useRef(false);
+  const responseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generate random pattern
   const generatePattern = (): Pattern => ({
@@ -48,8 +50,22 @@ export const S2ProcessingSpeedTest = ({ onComplete }: S2ProcessingSpeedTestProps
     }
   }, [phase, countdown]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (responseTimeoutRef.current) {
+        clearTimeout(responseTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Start a round
   const startRound = useCallback(() => {
+    // Clear any existing timeout
+    if (responseTimeoutRef.current) {
+      clearTimeout(responseTimeoutRef.current);
+    }
+
     const target = generatePattern();
     setTargetPattern(target);
     
@@ -83,11 +99,12 @@ export const S2ProcessingSpeedTest = ({ onComplete }: S2ProcessingSpeedTestProps
     setTimeout(() => {
       setShowPatterns(false);
       setWaitingForResponse(true);
+      waitingForResponseRef.current = true;
       responseStartTime.current = Date.now();
 
-      // Auto-fail after max response time
-      setTimeout(() => {
-        if (waitingForResponse) {
+      // Auto-fail after max response time - use ref to avoid stale closure
+      responseTimeoutRef.current = setTimeout(() => {
+        if (waitingForResponseRef.current) {
           handleResponse(-1); // -1 indicates timeout
         }
       }, MAX_RESPONSE_TIME);
@@ -96,7 +113,13 @@ export const S2ProcessingSpeedTest = ({ onComplete }: S2ProcessingSpeedTestProps
 
   // Handle user response
   const handleResponse = (count: number) => {
-    if (!waitingForResponse && count !== -1) return;
+    if (!waitingForResponseRef.current && count !== -1) return;
+    
+    // Clear timeout to prevent double-firing
+    if (responseTimeoutRef.current) {
+      clearTimeout(responseTimeoutRef.current);
+      responseTimeoutRef.current = null;
+    }
     
     const responseTime = Date.now() - responseStartTime.current;
     const actualCount = displayPatterns.filter(
@@ -107,6 +130,7 @@ export const S2ProcessingSpeedTest = ({ onComplete }: S2ProcessingSpeedTestProps
     
     setResults(prev => [...prev, { correct, responseTime }]);
     setWaitingForResponse(false);
+    waitingForResponseRef.current = false;
 
     if (round + 1 >= TOTAL_ROUNDS) {
       setPhase('done');

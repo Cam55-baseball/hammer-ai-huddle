@@ -28,6 +28,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Maximize,
+  X,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -75,6 +76,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
   const [canTakeTest, setCanTakeTest] = useState(true);
   const [daysUntilNextTest, setDaysUntilNextTest] = useState(0);
   const [showStartConfirmation, setShowStartConfirmation] = useState(false);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Fetch latest diagnostic result
@@ -243,6 +245,19 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     setTestPhase('intro');
   };
 
+  // Handle cancel button click
+  const handleCancelClick = () => {
+    setShowCancelConfirmation(true);
+  };
+
+  // Confirm cancel and exit assessment
+  const confirmCancel = () => {
+    setShowCancelConfirmation(false);
+    exitFullscreen();
+    setTestPhase('intro');
+    setTestScores({ processing_speed: 0, decision_efficiency: 0, visual_motor: 0 });
+  };
+
   const getChangeIcon = (change: number | null) => {
     if (change === null) return <Minus className="h-4 w-4 text-muted-foreground" />;
     if (change > 0) return <TrendingUp className="h-4 w-4 text-emerald-500" />;
@@ -272,11 +287,51 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
   }
 
   // Fullscreen container wrapper for active tests
-  const FullscreenWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className="fixed inset-0 z-50 bg-black flex items-center justify-center p-4 overflow-auto">
-      <div className="w-full max-w-lg">
-        {children}
+  const FullscreenWrapper = ({ children, showCancel = true }: { children: React.ReactNode; showCancel?: boolean }) => (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col p-4 overflow-auto">
+      {showCancel && (
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleCancelClick}
+            className="flex items-center gap-2"
+          >
+            <X className="h-4 w-4" />
+            CANCEL ASSESSMENT
+          </Button>
+        </div>
+      )}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-lg">
+          {children}
+        </div>
       </div>
+      
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={showCancelConfirmation} onOpenChange={setShowCancelConfirmation}>
+        <AlertDialogContent className="border-destructive/50">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Cancel Assessment?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Are you sure you want to cancel? <strong>All progress will be lost.</strong></p>
+              <p>You will need to start over from the beginning if you want to complete the assessment.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continue Assessment</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancel}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Yes, Cancel
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 
@@ -312,7 +367,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     );
 
     return (
-      <FullscreenWrapper>
+      <FullscreenWrapper showCancel={false}>
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
