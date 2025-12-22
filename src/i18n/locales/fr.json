@@ -4837,7 +4837,31 @@
       "detected": "Fatigue Détectée",
       "suggestion": "Faites une courte pause pour un entraînement optimal",
       "endSession": "Terminer la Session",
-      "continue": "Continuer Quand Même"
+      "continue": "Continuer Quand Même",
+      "breakTime": "Prendre une Pause",
+      "breakMessage": "Reposez vos yeux un moment",
+      "skipBreak": "Ignorer la Pause",
+      "levels": {
+        "low": "Bonne Concentration",
+        "medium": "Fatigue Légère",
+        "high": "Fatigue Élevée",
+        "critical": "Fatigue Critique"
+      },
+      "messages": {
+        "low": "Yeux bien reposés",
+        "medium": "Envisagez une courte pause bientôt",
+        "high": "Faites une pause pour maintenir les performances",
+        "critical": "La session devrait se terminer pour éviter la tension"
+      },
+      "actions": {
+        "takeBreak": "Prendre une Pause",
+        "endSession": "Terminer la Session"
+      }
+    },
+    "difficulty": {
+      "level": "Niveau",
+      "increasing": "Difficulté ↑",
+      "decreasing": "Difficulté ↓"
     },
     "s2Diagnostics": {
       "title": "Diagnostics S2 Cognition",

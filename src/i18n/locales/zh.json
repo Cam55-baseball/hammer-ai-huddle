@@ -4080,7 +4080,31 @@
       "detected": "检测到疲劳",
       "suggestion": "短暂休息以获得最佳训练效果",
       "endSession": "结束训练",
-      "continue": "继续训练"
+      "continue": "继续训练",
+      "breakTime": "休息一下",
+      "breakMessage": "让眼睛休息一下",
+      "skipBreak": "跳过休息",
+      "levels": {
+        "low": "良好专注",
+        "medium": "轻度疲劳",
+        "high": "高度疲劳",
+        "critical": "严重疲劳"
+      },
+      "messages": {
+        "low": "眼睛感觉清新",
+        "medium": "考虑很快短暂休息",
+        "high": "休息以保持表现",
+        "critical": "应结束训练以防止劳损"
+      },
+      "actions": {
+        "takeBreak": "休息一下",
+        "endSession": "结束训练"
+      }
+    },
+    "difficulty": {
+      "level": "级别",
+      "increasing": "难度 ↑",
+      "decreasing": "难度 ↓"
     },
     "s2Diagnostics": {
       "title": "S2认知诊断",
