@@ -184,6 +184,77 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     toast.success(t('realTimePlayback.framesCleared', 'Frames cleared'));
   }, [t]);
 
+  // Extract key frames from video for AI analysis
+  const extractKeyFrames = useCallback(async (videoBlob: Blob): Promise<string[]> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      const url = URL.createObjectURL(videoBlob);
+      video.src = url;
+      
+      video.onloadedmetadata = () => {
+        const duration = video.duration;
+        const frameCount = 5; // Extract 5 key frames
+        const timestamps = Array.from({ length: frameCount }, (_, i) => 
+          (i / (frameCount - 1)) * duration
+        );
+        
+        const frames: string[] = [];
+        let currentIndex = 0;
+        
+        const captureFrame = () => {
+          const canvas = document.createElement('canvas');
+          // Resize to reasonable dimensions for API (max 512px)
+          const maxDim = 512;
+          let width = video.videoWidth;
+          let height = video.videoHeight;
+          
+          if (width > height) {
+            if (width > maxDim) {
+              height = (height / width) * maxDim;
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = (width / height) * maxDim;
+              height = maxDim;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, width, height);
+            // Use JPEG for smaller payload
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            frames.push(dataUrl);
+          }
+          
+          currentIndex++;
+          if (currentIndex < timestamps.length) {
+            video.currentTime = timestamps[currentIndex];
+          } else {
+            URL.revokeObjectURL(url);
+            video.remove();
+            resolve(frames);
+          }
+        };
+        
+        video.onseeked = captureFrame;
+        video.currentTime = timestamps[0];
+      };
+      
+      video.onerror = () => {
+        console.error('Failed to load video for frame extraction');
+        URL.revokeObjectURL(url);
+        resolve([]);
+      };
+    });
+  }, []);
+
   // Audio cue helper
   const playBeep = useCallback((frequency = 800, duration = 150, volume = 0.3) => {
     if (!audioCuesEnabled) return;
@@ -513,12 +584,17 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       if (analysisEnabled) {
         setIsAnalyzing(true);
         
+        // Extract key frames for vision analysis
+        const frames = await extractKeyFrames(blob);
+        console.log(`Extracted ${frames.length} key frames for analysis`);
+        
         const { data, error } = await supabase.functions.invoke('analyze-realtime-playback', {
           body: { 
             videoId: videoData.id, 
             module, 
             sport, 
-            language: i18n.language 
+            language: i18n.language,
+            frames // Send frames for vision analysis
           }
         });
         
