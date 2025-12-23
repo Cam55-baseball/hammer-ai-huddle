@@ -4910,6 +4910,7 @@
     "defaultPositive1": "Bon effort sur votre forme",
     "defaultPositive2": "Modèle de mouvement cohérent observé",
     "defaultTip1": "Examinez votre vidéo au ralenti pour une analyse détaillée",
-    "defaultNote": "Continuez à pratiquer ! Utilisez la lecture au ralenti pour identifier les domaines à améliorer."
+    "defaultNote": "Continuez à pratiquer ! Utilisez la lecture au ralenti pour identifier les domaines à améliorer.",
+    "countdownInfo": "Une fois que vous cliquez sur Démarrer l'enregistrement, un compte à rebours de 20 secondes commencera avant le début de l'enregistrement."
   }
 }

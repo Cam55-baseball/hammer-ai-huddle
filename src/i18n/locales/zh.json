@@ -4153,6 +4153,7 @@
     "defaultPositive1": "动作姿势努力到位",
     "defaultPositive2": "观察到一致的运动模式",
     "defaultTip1": "用慢动作回放查看视频以进行详细分析",
-    "defaultNote": "继续练习！使用慢动作回放来识别需要改进的地方。"
+    "defaultNote": "继续练习！使用慢动作回放来识别需要改进的地方。",
+    "countdownInfo": "点击开始录制后，将开始20秒倒计时，然后开始录制。"
   }
 }

@@ -58,7 +58,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   
   // State
   const [phase, setPhase] = useState<Phase>('setup');
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(20);
   const [recordingTimeLeft, setRecordingTimeLeft] = useState(0);
   const [waitingTimeLeft, setWaitingTimeLeft] = useState(0);
   const [playbackTimeLeft, setPlaybackTimeLeft] = useState(0);
@@ -173,7 +173,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     
     // Countdown phase
     setPhase('countdown');
-    for (let i = 5; i > 0; i--) {
+    for (let i = 20; i > 0; i--) {
       setCountdown(i);
       await new Promise(r => setTimeout(r, 1000));
     }
@@ -555,6 +555,11 @@ ${analysis.overallNote}
                         <p className="text-xs text-muted-foreground text-center">{getSpeedLabel(playbackSpeed)}</p>
                       </Card>
                     </div>
+                    
+                    {/* Countdown Info */}
+                    <p className="text-sm text-center text-muted-foreground bg-muted/50 rounded-lg p-3 border border-border">
+                      {t('realTimePlayback.countdownInfo', 'Once you click Start Recording, a 20 second timer will begin before recording starts.')}
+                    </p>
                     
                     {/* Start Button */}
                     <Button 

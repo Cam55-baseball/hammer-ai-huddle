@@ -5532,6 +5532,7 @@
     "defaultPositive1": "Good effort on your form",
     "defaultPositive2": "Consistent motion pattern observed",
     "defaultTip1": "Review your footage in slow motion for detailed analysis",
-    "defaultNote": "Keep practicing! Use slow motion playback to identify areas for improvement."
+    "defaultNote": "Keep practicing! Use slow motion playback to identify areas for improvement.",
+    "countdownInfo": "Once you click Start Recording, a 20 second timer will begin before recording starts."
   }
 }
