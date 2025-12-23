@@ -5176,6 +5176,20 @@
     "analysisDisabled": "El análisis IA está desactivado. Tu video ha sido guardado.",
     "cameraError": "La transmisión de la cámara no está disponible. Por favor intenta de nuevo.",
     "recordingError": "La grabación falló. Por favor intenta de nuevo.",
-    "noDataCaptured": "No se capturaron datos de video. Por favor intenta de nuevo."
+    "noDataCaptured": "No se capturaron datos de video. Por favor intenta de nuevo.",
+    "cancelCountdown": "Cancelar",
+    "gridOverlay": "Cuadrícula",
+    "audioCues": "Señales de Audio",
+    "audioCuesDescription": "Pitidos durante cuenta regresiva y grabación",
+    "retake": "Repetir",
+    "localOnlyMode": "Modo Local",
+    "localOnlyDescription": "Mantener grabaciones en dispositivo hasta guardar",
+    "localOnlyNote": "Modo local - el video se subirá cuando guardes en biblioteca.",
+    "autoRecord": "Grabación Automática",
+    "autoRecordDescription": "Reiniciar grabación automáticamente después de reproducción",
+    "nextRecordingIn": "Próxima grabación en...",
+    "stopAutoRecord": "Detener Auto Grabación",
+    "fullscreen": "Pantalla Completa",
+    "uploadError": "Error al subir video"
   }
 }

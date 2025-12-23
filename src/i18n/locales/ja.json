@@ -4319,6 +4319,20 @@
     "analysisDisabled": "AI分析はオフになっています。動画は保存されました。",
     "cameraError": "カメラストリームが利用できません。もう一度お試しください。",
     "recordingError": "録画に失敗しました。もう一度お試しください。",
-    "noDataCaptured": "ビデオデータがキャプチャされませんでした。もう一度お試しください。"
+    "noDataCaptured": "ビデオデータがキャプチャされませんでした。もう一度お試しください。",
+    "cancelCountdown": "キャンセル",
+    "gridOverlay": "グリッド表示",
+    "audioCues": "音声ガイド",
+    "audioCuesDescription": "カウントダウンと録画中にビープ音",
+    "retake": "撮り直し",
+    "localOnlyMode": "ローカルモード",
+    "localOnlyDescription": "保存するまで端末に録画を保持",
+    "localOnlyNote": "ローカルモード - 保存時にアップロードされます。",
+    "autoRecord": "自動録画",
+    "autoRecordDescription": "再生後に自動的に録画を再開",
+    "nextRecordingIn": "次の録画まで...",
+    "stopAutoRecord": "自動録画を停止",
+    "fullscreen": "全画面",
+    "uploadError": "動画のアップロードに失敗しました"
   }
 }

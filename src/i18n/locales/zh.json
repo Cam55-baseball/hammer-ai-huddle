@@ -4163,6 +4163,20 @@
     "analysisDisabled": "AI分析已关闭。您的视频已保存。",
     "cameraError": "摄像头流不可用。请重试。",
     "recordingError": "录制失败。请重试。",
-    "noDataCaptured": "未捕获视频数据。请重试。"
+    "noDataCaptured": "未捕获视频数据。请重试。",
+    "cancelCountdown": "取消",
+    "gridOverlay": "网格叠加",
+    "audioCues": "音频提示",
+    "audioCuesDescription": "倒计时和录制时发出提示音",
+    "retake": "重拍",
+    "localOnlyMode": "仅本地模式",
+    "localOnlyDescription": "保存前将录制保留在设备上",
+    "localOnlyNote": "本地模式 - 保存时将上传视频。",
+    "autoRecord": "自动录制",
+    "autoRecordDescription": "播放后自动重新开始录制",
+    "nextRecordingIn": "下次录制倒计时...",
+    "stopAutoRecord": "停止自动录制",
+    "fullscreen": "全屏",
+    "uploadError": "视频上传失败"
   }
 }

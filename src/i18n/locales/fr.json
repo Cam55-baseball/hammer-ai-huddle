@@ -4920,6 +4920,20 @@
     "analysisDisabled": "L'analyse IA est désactivée. Votre vidéo a été enregistrée.",
     "cameraError": "Le flux de la caméra n'est pas disponible. Veuillez réessayer.",
     "recordingError": "L'enregistrement a échoué. Veuillez réessayer.",
-    "noDataCaptured": "Aucune donnée vidéo n'a été capturée. Veuillez réessayer."
+    "noDataCaptured": "Aucune donnée vidéo n'a été capturée. Veuillez réessayer.",
+    "cancelCountdown": "Annuler",
+    "gridOverlay": "Grille",
+    "audioCues": "Signaux Audio",
+    "audioCuesDescription": "Bips pendant le compte à rebours et l'enregistrement",
+    "retake": "Reprendre",
+    "localOnlyMode": "Mode Local",
+    "localOnlyDescription": "Garder les enregistrements sur l'appareil jusqu'à la sauvegarde",
+    "localOnlyNote": "Mode local - la vidéo sera téléchargée lors de la sauvegarde.",
+    "autoRecord": "Enregistrement Auto",
+    "autoRecordDescription": "Redémarrer automatiquement après la lecture",
+    "nextRecordingIn": "Prochain enregistrement dans...",
+    "stopAutoRecord": "Arrêter Auto Enregistrement",
+    "fullscreen": "Plein Écran",
+    "uploadError": "Échec du téléchargement vidéo"
   }
 }

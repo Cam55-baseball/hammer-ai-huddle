@@ -13,7 +13,8 @@ import { toast } from "sonner";
 import { 
   X, Video, Play, Pause, RotateCcw, Download, BookMarked, 
   Settings, Timer, Clock, Gauge, Camera, CheckCircle2, AlertCircle,
-  Sparkles, SwitchCamera, Brain
+  Sparkles, SwitchCamera, Brain, Grid3X3, Volume2, VolumeX, 
+  Wifi, WifiOff, RefreshCw, Maximize, Square
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -64,6 +65,18 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [analysisEnabled, setAnalysisEnabled] = useState<boolean>(() => 
     localStorage.getItem('rtPlayback_analysisEnabled') !== 'false'
   );
+  const [gridOverlayEnabled, setGridOverlayEnabled] = useState<boolean>(() => 
+    localStorage.getItem('rtPlayback_gridOverlay') === 'true'
+  );
+  const [audioCuesEnabled, setAudioCuesEnabled] = useState<boolean>(() => 
+    localStorage.getItem('rtPlayback_audioCues') !== 'false'
+  );
+  const [localOnlyMode, setLocalOnlyMode] = useState<boolean>(() => 
+    localStorage.getItem('rtPlayback_localOnly') === 'true'
+  );
+  const [autoRecordEnabled, setAutoRecordEnabled] = useState<boolean>(() => 
+    localStorage.getItem('rtPlayback_autoRecord') === 'true'
+  );
   
   // State
   const [phase, setPhase] = useState<Phase>('setup');
@@ -78,6 +91,8 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
+  const [autoRecordCountdown, setAutoRecordCountdown] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   // Refs
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
@@ -85,6 +100,9 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const streamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const countdownCancelledRef = useRef(false);
+  const cameraContainerRef = useRef<HTMLDivElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   
   // Persist settings
   useEffect(() => {
@@ -94,7 +112,11 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     localStorage.setItem('rtPlayback_playbackSpeed', playbackSpeed);
     localStorage.setItem('rtPlayback_facingMode', facingMode);
     localStorage.setItem('rtPlayback_analysisEnabled', String(analysisEnabled));
-  }, [recordingDuration, playbackDelay, repeatDuration, playbackSpeed, facingMode, analysisEnabled]);
+    localStorage.setItem('rtPlayback_gridOverlay', String(gridOverlayEnabled));
+    localStorage.setItem('rtPlayback_audioCues', String(audioCuesEnabled));
+    localStorage.setItem('rtPlayback_localOnly', String(localOnlyMode));
+    localStorage.setItem('rtPlayback_autoRecord', String(autoRecordEnabled));
+  }, [recordingDuration, playbackDelay, repeatDuration, playbackSpeed, facingMode, analysisEnabled, gridOverlayEnabled, audioCuesEnabled, localOnlyMode, autoRecordEnabled]);
   
   // Speed control during playback
   useEffect(() => {
@@ -102,6 +124,40 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       videoPlaybackRef.current.playbackRate = parseFloat(playbackSpeed);
     }
   }, [playbackSpeed, phase]);
+
+  // Audio cue helper
+  const playBeep = useCallback((frequency = 800, duration = 150, volume = 0.3) => {
+    if (!audioCuesEnabled) return;
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      const ctx = audioContextRef.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(volume, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + duration / 1000);
+    } catch (e) {
+      console.error('Audio playback error:', e);
+    }
+  }, [audioCuesEnabled]);
+
+  // Double beep for recording start
+  const playDoubleBeep = useCallback(() => {
+    playBeep(1000, 100);
+    setTimeout(() => playBeep(1200, 100), 150);
+  }, [playBeep]);
+
+  // Long beep for recording stop
+  const playLongBeep = useCallback(() => {
+    playBeep(600, 400, 0.4);
+  }, [playBeep]);
   
   // Get supported mimeType with fallbacks
   const getSupportedMimeType = useCallback(() => {
@@ -122,6 +178,34 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     }
   }, []);
 
+  // Fullscreen helpers
+  const enterFullscreen = useCallback(async () => {
+    if (cameraContainerRef.current?.requestFullscreen) {
+      try {
+        await cameraContainerRef.current.requestFullscreen();
+        setIsFullscreen(true);
+      } catch (e) {
+        console.error('Fullscreen error:', e);
+      }
+    }
+  }, []);
+
+  const exitFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(console.error);
+    }
+    setIsFullscreen(false);
+  }, []);
+
+  // Listen for fullscreen change
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   // Initialize camera
   const initCamera = useCallback(async (mode: FacingMode = facingMode) => {
     try {
@@ -139,7 +223,6 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       });
       streamRef.current = stream;
       console.log('Stream acquired:', stream.active);
-      console.log('Stream tracks:', stream.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState })));
       
       attachPreviewStream();
       setCameraPermission(true);
@@ -165,6 +248,11 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     setFacingMode(newMode);
     await initCamera(newMode);
   }, [facingMode, initCamera]);
+
+  // Cancel countdown
+  const handleCancelCountdown = useCallback(() => {
+    countdownCancelledRef.current = true;
+  }, []);
   
   // Initialize camera only when dialog opens
   useEffect(() => {
@@ -174,10 +262,11 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     return () => {
       if (!isOpen) {
         stopCamera();
+        exitFullscreen();
         if (recordedUrl) URL.revokeObjectURL(recordedUrl);
       }
     };
-  }, [isOpen, initCamera, stopCamera, recordedUrl]);
+  }, [isOpen, initCamera, stopCamera, exitFullscreen, recordedUrl]);
 
   // Re-attach stream when phase changes (for persistent preview)
   useEffect(() => {
@@ -189,6 +278,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   // Recording flow
   const startRecordingFlow = async () => {
     console.log('Starting recording flow...');
+    countdownCancelledRef.current = false;
     
     // Validate stream before recording
     if (!streamRef.current || !streamRef.current.active) {
@@ -200,9 +290,6 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       }
     }
     
-    console.log('Stream active:', streamRef.current.active);
-    console.log('Stream tracks:', streamRef.current.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState })));
-    
     // Reset state
     setRecordedBlob(null);
     setRecordedUrl(null);
@@ -212,13 +299,30 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     // Countdown phase
     setPhase('countdown');
     for (let i = 20; i > 0; i--) {
+      if (countdownCancelledRef.current) {
+        countdownCancelledRef.current = false;
+        setPhase('setup');
+        return;
+      }
       setCountdown(i);
+      
+      // Audio cues during countdown
+      if (i === 10) {
+        playBeep(600, 200);
+      } else if (i <= 3) {
+        playBeep(800 + (3 - i) * 100, 150);
+      }
+      
       await new Promise(r => setTimeout(r, 1000));
     }
+    
+    // Enter fullscreen when recording starts
+    await enterFullscreen();
     
     // Recording phase
     setPhase('recording');
     setRecordingTimeLeft(recordingDuration);
+    playDoubleBeep(); // Recording start beep
     
     const mimeType = getSupportedMimeType();
     console.log('Using mimeType:', mimeType);
@@ -238,11 +342,15 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       console.error('MediaRecorder error:', event);
       toast.error(t('realTimePlayback.recordingError', 'Recording failed. Please try again.'));
       setPhase('setup');
+      exitFullscreen();
       initCamera();
     };
     
     recorder.onstop = async () => {
       console.log('Recording stopped, chunks:', chunksRef.current.length);
+      playLongBeep(); // Recording stop beep
+      exitFullscreen();
+      
       const totalSize = chunksRef.current.reduce((acc, c) => acc + c.size, 0);
       console.log('Total size:', totalSize, 'bytes');
       
@@ -273,8 +381,10 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       setPhase('playback');
       setPlaybackTimeLeft(repeatDuration);
       
-      // Upload and optionally analyze
-      uploadAndAnalyze(blob);
+      // Upload and optionally analyze (unless local-only mode)
+      if (!localOnlyMode) {
+        uploadAndAnalyze(blob);
+      }
     };
     
     mediaRecorderRef.current = recorder;
@@ -362,6 +472,44 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       setIsAnalyzing(false);
     }
   };
+
+  // Upload for local-only mode when saving to library
+  const uploadLocalRecording = async () => {
+    if (!recordedBlob || !user) return null;
+    
+    try {
+      const fileName = `${user.id}/realtime-${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(fileName, recordedBlob);
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('videos')
+        .getPublicUrl(fileName);
+      
+      const { data: videoData, error: videoError } = await supabase
+        .from('videos')
+        .insert([{
+          user_id: user.id,
+          sport: sport as "baseball" | "softball",
+          module: module as "hitting" | "pitching" | "throwing",
+          video_url: publicUrl,
+          status: "completed",
+        }])
+        .select()
+        .single();
+      
+      if (videoError) throw videoError;
+      setCurrentVideoId(videoData.id);
+      return videoData.id;
+    } catch (error) {
+      console.error('Failed to upload local recording:', error);
+      toast.error(t('realTimePlayback.uploadError', 'Failed to upload video'));
+      return null;
+    }
+  };
   
   // Playback timer
   useEffect(() => {
@@ -379,6 +527,24 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     
     return () => clearInterval(interval);
   }, [phase]);
+
+  // Auto-record effect
+  useEffect(() => {
+    if (phase === 'complete' && autoRecordEnabled) {
+      setAutoRecordCountdown(3);
+      const interval = setInterval(() => {
+        setAutoRecordCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            handleRetake();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [phase, autoRecordEnabled]);
   
   // Auto-play video when playback starts
   useEffect(() => {
@@ -390,7 +556,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     }
   }, [phase, recordedUrl, playbackSpeed]);
   
-  // Restart flow
+  // Restart flow (back to setup)
   const handleRestart = () => {
     if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     setRecordedBlob(null);
@@ -398,7 +564,26 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     setAnalysis(null);
     setPhase('setup');
     setCurrentVideoId(null);
+    setAutoRecordCountdown(0);
     initCamera();
+  };
+
+  // Retake (immediately start countdown again)
+  const handleRetake = async () => {
+    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    setRecordedBlob(null);
+    setRecordedUrl(null);
+    setAnalysis(null);
+    setCurrentVideoId(null);
+    setAutoRecordCountdown(0);
+    await initCamera();
+    startRecordingFlow();
+  };
+
+  // Stop auto record
+  const handleStopAutoRecord = () => {
+    setAutoRecordEnabled(false);
+    setAutoRecordCountdown(0);
   };
   
   // Download video and analysis
@@ -436,15 +621,30 @@ ${analysis.overallNote}
     
     toast.success(t('realTimePlayback.downloadSuccess', 'Video and analysis downloaded'));
   };
+
+  // Handle save to library click
+  const handleSaveToLibrary = async () => {
+    if (localOnlyMode && !currentVideoId) {
+      // Need to upload first
+      const videoId = await uploadLocalRecording();
+      if (videoId) {
+        setShowSaveDialog(true);
+      }
+    } else {
+      setShowSaveDialog(true);
+    }
+  };
   
   // Handle close
   const handleClose = () => {
     stopCamera();
+    exitFullscreen();
     if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     setPhase('setup');
     setRecordedBlob(null);
     setRecordedUrl(null);
     setAnalysis(null);
+    setAutoRecordCountdown(0);
     onClose();
   };
 
@@ -498,7 +698,10 @@ ${analysis.overallNote}
                     className="space-y-4"
                   >
                     {/* Camera Preview - Persistent across setup/countdown/recording */}
-                    <div className="relative rounded-xl overflow-hidden bg-black aspect-[4/3] sm:aspect-video max-h-[40vh] sm:max-h-none">
+                    <div 
+                      ref={cameraContainerRef}
+                      className="relative rounded-xl overflow-hidden bg-black aspect-[4/3] sm:aspect-video max-h-[40vh] sm:max-h-none"
+                    >
                       {cameraPermission === false ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                           <AlertCircle className="h-12 w-12 mb-4 text-destructive" />
@@ -516,17 +719,48 @@ ${analysis.overallNote}
                             muted
                             className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
                           />
+
+                          {/* Grid Overlay */}
+                          {gridOverlayEnabled && (
+                            <div className="absolute inset-0 pointer-events-none">
+                              <div className="absolute top-0 bottom-0 left-1/3 w-px bg-white/50" />
+                              <div className="absolute top-0 bottom-0 left-2/3 w-px bg-white/50" />
+                              <div className="absolute left-0 right-0 top-1/3 h-px bg-white/50" />
+                              <div className="absolute left-0 right-0 top-2/3 h-px bg-white/50" />
+                            </div>
+                          )}
                           
-                          {/* Flip Camera Button */}
+                          {/* Camera Control Buttons - Setup Phase */}
                           {phase === 'setup' && (
-                            <Button
-                              variant="secondary"
-                              size="icon"
-                              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white border-0"
-                              onClick={handleFlipCamera}
-                            >
-                              <SwitchCamera className="h-5 w-5" />
-                            </Button>
+                            <div className="absolute top-4 right-4 flex gap-2">
+                              <Button
+                                variant="secondary"
+                                size="icon"
+                                className="bg-black/50 hover:bg-black/70 text-white border-0"
+                                onClick={() => setGridOverlayEnabled(!gridOverlayEnabled)}
+                                title={t('realTimePlayback.gridOverlay', 'Grid Overlay')}
+                              >
+                                <Grid3X3 className={`h-5 w-5 ${gridOverlayEnabled ? 'text-primary' : ''}`} />
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                size="icon"
+                                className="bg-black/50 hover:bg-black/70 text-white border-0"
+                                onClick={handleFlipCamera}
+                                title={t('realTimePlayback.flipCamera', 'Flip Camera')}
+                              >
+                                <SwitchCamera className="h-5 w-5" />
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                size="icon"
+                                className="bg-black/50 hover:bg-black/70 text-white border-0"
+                                onClick={enterFullscreen}
+                                title={t('realTimePlayback.fullscreen', 'Fullscreen')}
+                              >
+                                <Maximize className="h-5 w-5" />
+                              </Button>
+                            </div>
                           )}
 
                           {/* Countdown Overlay */}
@@ -542,6 +776,13 @@ ${analysis.overallNote}
                               >
                                 {countdown}
                               </motion.div>
+                              <Button
+                                variant="outline"
+                                onClick={handleCancelCountdown}
+                                className="mt-8 bg-white/10 border-white/30 text-white hover:bg-white/20"
+                              >
+                                {t('realTimePlayback.cancelCountdown', 'Cancel')}
+                              </Button>
                             </div>
                           )}
 
@@ -557,6 +798,17 @@ ${analysis.overallNote}
                               <div className="absolute bottom-4 right-4 px-4 py-2 rounded-lg bg-black/70 text-white text-2xl font-mono">
                                 {recordingTimeLeft}s
                               </div>
+                              {/* Exit fullscreen button in recording */}
+                              {isFullscreen && (
+                                <Button
+                                  variant="secondary"
+                                  size="icon"
+                                  className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white border-0"
+                                  onClick={exitFullscreen}
+                                >
+                                  <Square className="h-5 w-5" />
+                                </Button>
+                              )}
                             </>
                           )}
                         </>
@@ -649,27 +901,96 @@ ${analysis.overallNote}
                           </Card>
                         </div>
 
-                        {/* Analysis Toggle */}
-                        <Card className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <Brain className="h-5 w-5 text-primary" />
-                              <div>
-                                <Label htmlFor="analysis-toggle" className="font-medium">
-                                  {t('realTimePlayback.aiAnalysis', 'AI Analysis')}
-                                </Label>
-                                <p className="text-xs text-muted-foreground">
-                                  {t('realTimePlayback.aiAnalysisDescription', 'Get AI-powered feedback on your form')}
-                                </p>
+                        {/* Feature Toggles */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* AI Analysis Toggle */}
+                          <Card className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <Brain className="h-5 w-5 text-primary" />
+                                <div>
+                                  <Label htmlFor="analysis-toggle" className="font-medium">
+                                    {t('realTimePlayback.aiAnalysis', 'AI Analysis')}
+                                  </Label>
+                                  <p className="text-xs text-muted-foreground">
+                                    {t('realTimePlayback.aiAnalysisDescription', 'Get AI-powered feedback on your form')}
+                                  </p>
+                                </div>
                               </div>
+                              <Switch
+                                id="analysis-toggle"
+                                checked={analysisEnabled}
+                                onCheckedChange={setAnalysisEnabled}
+                              />
                             </div>
-                            <Switch
-                              id="analysis-toggle"
-                              checked={analysisEnabled}
-                              onCheckedChange={setAnalysisEnabled}
-                            />
-                          </div>
-                        </Card>
+                          </Card>
+
+                          {/* Audio Cues Toggle */}
+                          <Card className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {audioCuesEnabled ? <Volume2 className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
+                                <div>
+                                  <Label htmlFor="audio-toggle" className="font-medium">
+                                    {t('realTimePlayback.audioCues', 'Audio Cues')}
+                                  </Label>
+                                  <p className="text-xs text-muted-foreground">
+                                    {t('realTimePlayback.audioCuesDescription', 'Beeps during countdown and recording')}
+                                  </p>
+                                </div>
+                              </div>
+                              <Switch
+                                id="audio-toggle"
+                                checked={audioCuesEnabled}
+                                onCheckedChange={setAudioCuesEnabled}
+                              />
+                            </div>
+                          </Card>
+
+                          {/* Local Only Mode Toggle */}
+                          <Card className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {localOnlyMode ? <WifiOff className="h-5 w-5 text-orange-500" /> : <Wifi className="h-5 w-5 text-primary" />}
+                                <div>
+                                  <Label htmlFor="local-toggle" className="font-medium">
+                                    {t('realTimePlayback.localOnlyMode', 'Local Only Mode')}
+                                  </Label>
+                                  <p className="text-xs text-muted-foreground">
+                                    {t('realTimePlayback.localOnlyDescription', 'Keep recordings on device until you save')}
+                                  </p>
+                                </div>
+                              </div>
+                              <Switch
+                                id="local-toggle"
+                                checked={localOnlyMode}
+                                onCheckedChange={setLocalOnlyMode}
+                              />
+                            </div>
+                          </Card>
+
+                          {/* Auto Record Toggle */}
+                          <Card className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <RefreshCw className={`h-5 w-5 ${autoRecordEnabled ? 'text-primary' : 'text-muted-foreground'}`} />
+                                <div>
+                                  <Label htmlFor="auto-record-toggle" className="font-medium">
+                                    {t('realTimePlayback.autoRecord', 'Auto Record')}
+                                  </Label>
+                                  <p className="text-xs text-muted-foreground">
+                                    {t('realTimePlayback.autoRecordDescription', 'Automatically restart recording after playback')}
+                                  </p>
+                                </div>
+                              </div>
+                              <Switch
+                                id="auto-record-toggle"
+                                checked={autoRecordEnabled}
+                                onCheckedChange={setAutoRecordEnabled}
+                              />
+                            </div>
+                          </Card>
+                        </div>
                         
                         {/* Countdown Info */}
                         <p className="text-sm text-center text-muted-foreground bg-muted/50 rounded-lg p-3 border border-border">
@@ -743,6 +1064,21 @@ ${analysis.overallNote}
                       <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/70 text-white text-sm">
                         {playbackSpeed}x
                       </div>
+
+                      {/* Auto-record countdown overlay */}
+                      {phase === 'complete' && autoRecordEnabled && autoRecordCountdown > 0 && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
+                          <p className="text-lg text-white mb-2">{t('realTimePlayback.nextRecordingIn', 'Next recording in...')}</p>
+                          <p className="text-6xl font-bold text-white">{autoRecordCountdown}</p>
+                          <Button
+                            variant="outline"
+                            onClick={handleStopAutoRecord}
+                            className="mt-6 bg-white/10 border-white/30 text-white hover:bg-white/20"
+                          >
+                            {t('realTimePlayback.stopAutoRecord', 'Stop Auto Record')}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Speed Controls */}
@@ -768,7 +1104,7 @@ ${analysis.overallNote}
                     </Card>
                     
                     {/* Analysis Card */}
-                    {analysisEnabled ? (
+                    {analysisEnabled && !localOnlyMode ? (
                       <Card className="p-4 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
                         {isAnalyzing ? (
                           <div className="flex items-center justify-center py-8">
@@ -811,7 +1147,12 @@ ${analysis.overallNote}
                       <Card className="p-4 border-muted bg-muted/30">
                         <div className="flex items-center gap-3 text-muted-foreground">
                           <Brain className="h-5 w-5" />
-                          <p className="text-sm">{t('realTimePlayback.analysisDisabled', 'AI analysis is turned off. Your video has been saved.')}</p>
+                          <p className="text-sm">
+                            {localOnlyMode 
+                              ? t('realTimePlayback.localOnlyNote', 'Local only mode - video will be uploaded when you save to library.')
+                              : t('realTimePlayback.analysisDisabled', 'AI analysis is turned off. Your video has been saved.')
+                            }
+                          </p>
                         </div>
                       </Card>
                     )}
@@ -823,12 +1164,16 @@ ${analysis.overallNote}
                           <RotateCcw className="h-4 w-4" />
                           {t('realTimePlayback.restart', 'Restart')}
                         </Button>
+                        <Button onClick={handleRetake} variant="outline" className="flex-1 gap-2">
+                          <RefreshCw className="h-4 w-4" />
+                          {t('realTimePlayback.retake', 'Retake')}
+                        </Button>
                         <Button onClick={handleDownload} variant="outline" className="flex-1 gap-2">
                           <Download className="h-4 w-4" />
                           {t('realTimePlayback.download', 'Download')}
                         </Button>
                         <Button 
-                          onClick={() => setShowSaveDialog(true)} 
+                          onClick={handleSaveToLibrary} 
                           className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary/80"
                         >
                           <BookMarked className="h-4 w-4" />
