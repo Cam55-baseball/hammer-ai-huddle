@@ -188,33 +188,39 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     }
   }, []);
 
-  // Fullscreen helpers
-  const enterFullscreen = useCallback(async () => {
-    if (cameraContainerRef.current?.requestFullscreen) {
-      try {
-        await cameraContainerRef.current.requestFullscreen();
-        setIsFullscreen(true);
-      } catch (e) {
-        console.error('Fullscreen error:', e);
-      }
+  // Fullscreen helpers - use CSS-based fullscreen for reliable behavior
+  const enterFullscreen = useCallback(() => {
+    setIsFullscreen(true);
+    // Also try native fullscreen for true immersive experience
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {
+        // CSS fallback is already active via isFullscreen state
+        console.log('Native fullscreen denied, using CSS fullscreen');
+      });
     }
   }, []);
 
   const exitFullscreen = useCallback(() => {
+    setIsFullscreen(false);
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(console.error);
     }
-    setIsFullscreen(false);
   }, []);
 
-  // Listen for fullscreen change
+  // Listen for native fullscreen change (e.g., user presses Escape)
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      if (!document.fullscreenElement && isFullscreen) {
+        // User exited native fullscreen, but keep CSS fullscreen active during recording
+        // Only fully exit if we're not in countdown/recording
+        if (phase !== 'countdown' && phase !== 'recording') {
+          setIsFullscreen(false);
+        }
+      }
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+  }, [phase, isFullscreen]);
 
   // Initialize camera
   const initCamera = useCallback(async (mode: FacingMode = facingMode) => {
@@ -569,24 +575,37 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   useEffect(() => {
     if ((phase === 'playback' || phase === 'complete') && recordedUrl && videoPlaybackRef.current) {
       const video = videoPlaybackRef.current;
-      // Force load and play
-      video.src = recordedUrl;
-      video.load();
-      video.playbackRate = parseFloat(playbackSpeed);
-      video.loop = true;
-      video.muted = false;
+      console.log('Initializing playback video:', recordedUrl);
       
-      // Play with a small delay to ensure DOM is ready
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(err => {
-          console.error('Video play failed:', err);
-          // Try again after a short delay
-          setTimeout(() => {
-            video.play().catch(console.error);
-          }, 100);
+      // Set source and prepare video
+      video.src = recordedUrl;
+      video.preload = 'auto';
+      video.loop = true;
+      video.muted = true; // MUST be muted for reliable autoplay
+      video.playbackRate = parseFloat(playbackSpeed);
+      
+      // Load and play
+      video.load();
+      
+      // Wait for video to be ready, then play
+      const handleCanPlay = () => {
+        console.log('Video can play, starting playback');
+        video.currentTime = 0;
+        video.play().catch(err => {
+          console.error('Play failed even with muted:', err);
         });
-      }
+      };
+      
+      video.addEventListener('canplay', handleCanPlay, { once: true });
+      
+      // Also try immediate play in case video is already ready
+      video.play().catch(() => {
+        // Will retry on canplay event
+      });
+      
+      return () => {
+        video.removeEventListener('canplay', handleCanPlay);
+      };
     }
   }, [phase, recordedUrl, playbackSpeed]);
   
@@ -736,12 +755,17 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="space-y-4"
+                    className={`${isFullscreen ? '' : 'space-y-4'}`}
                   >
                     {/* Camera Preview - Persistent across setup/countdown/recording */}
+                    {/* When fullscreen, this fills the entire screen */}
                     <div 
                       ref={cameraContainerRef}
-                      className="relative rounded-xl overflow-hidden bg-black aspect-[4/3] sm:aspect-video max-h-[40vh] sm:max-h-none"
+                      className={`relative overflow-hidden bg-black ${
+                        isFullscreen 
+                          ? 'fixed inset-0 z-[9999] rounded-none' 
+                          : 'rounded-xl aspect-[4/3] sm:aspect-video max-h-[40vh] sm:max-h-none'
+                      }`}
                     >
                       {cameraPermission === false ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
@@ -758,7 +782,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                             autoPlay
                             playsInline
                             muted
-                            className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                            className={`w-full h-full ${isFullscreen ? 'object-contain' : 'object-cover'} ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
                           />
 
                           {/* Grid Overlay */}
@@ -1084,14 +1108,20 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                     <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
                       <video
                         ref={videoPlaybackRef}
+                        src={recordedUrl ?? undefined}
                         autoPlay
                         playsInline
                         loop
-                        muted={false}
-                        className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                        muted
+                        preload="auto"
+                        className={`w-full h-full object-contain ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
                         onLoadedData={() => {
-                          // Ensure video plays when data is loaded
-                          videoPlaybackRef.current?.play().catch(console.error);
+                          console.log('Video loaded data, ensuring playback');
+                          const video = videoPlaybackRef.current;
+                          if (video) {
+                            video.currentTime = 0;
+                            video.play().catch(console.error);
+                          }
                         }}
                       />
                       {/* Status indicator */}
