@@ -100,10 +100,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return result;
   };
 
-  // Group tasks by section
-  const checkinTasks = tasks.filter(t => t.section === 'checkin');
-  const trainingTasks = tasks.filter(t => t.section === 'training');
-  const trackingTasks = tasks.filter(t => t.section === 'tracking');
+  // Sort helper: incomplete tasks first, completed tasks at bottom
+  const sortByCompletion = (tasks: GamePlanTask[]) => 
+    [...tasks].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
+
+  // Group tasks by section and sort by completion
+  const checkinTasks = sortByCompletion(tasks.filter(t => t.section === 'checkin'));
+  const trainingTasks = sortByCompletion(tasks.filter(t => t.section === 'training'));
+  const trackingTasks = sortByCompletion(tasks.filter(t => t.section === 'tracking'));
 
   const renderTask = (task: GamePlanTask) => {
     const Icon = task.icon;

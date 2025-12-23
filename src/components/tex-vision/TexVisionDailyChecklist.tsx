@@ -222,9 +222,13 @@ export default function TexVisionDailyChecklist({
         {/* S2 Cognition Section */}
         {renderS2Section()}
 
-        {/* Daily Drills */}
+        {/* Daily Drills - sorted with incomplete first, completed at bottom */}
         <div className="space-y-2">
-          {DAILY_DRILLS.map((drill) => {
+          {[...DAILY_DRILLS].sort((a, b) => {
+            const aCompleted = checklist?.checklist_items?.[a.id] || false;
+            const bCompleted = checklist?.checklist_items?.[b.id] || false;
+            return aCompleted === bCompleted ? 0 : aCompleted ? 1 : -1;
+          }).map((drill) => {
             const isCompleted = checklist?.checklist_items?.[drill.id] || false;
             
             return (

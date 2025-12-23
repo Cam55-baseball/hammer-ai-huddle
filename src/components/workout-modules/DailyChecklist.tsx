@@ -54,7 +54,11 @@ export function DailyChecklist({
       </CardHeader>
       <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
         <div className="space-y-3">
-          {exercises.map((exercise) => {
+          {[...exercises].sort((a, b) => {
+            const aChecked = completedExercises.includes(a.id);
+            const bChecked = completedExercises.includes(b.id);
+            return aChecked === bChecked ? 0 : aChecked ? 1 : -1;
+          }).map((exercise) => {
             const isChecked = completedExercises.includes(exercise.id);
             return (
               <div
