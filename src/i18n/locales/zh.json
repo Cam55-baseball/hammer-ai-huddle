@@ -4188,6 +4188,14 @@
     "nextRecordingIn": "下次录制倒计时...",
     "stopAutoRecord": "停止自动录制",
     "fullscreen": "全屏",
-    "uploadError": "视频上传失败"
+    "uploadError": "视频上传失败",
+    "pause": "暂停",
+    "play": "播放",
+    "captureKeyFrame": "捕获关键帧",
+    "frameCaptured": "关键帧已捕获！",
+    "capturedFrames": "已捕获的帧",
+    "downloadFrame": "下载帧",
+    "clearFrames": "清除",
+    "framesCleared": "帧已清除"
   }
 }

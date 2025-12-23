@@ -103,6 +103,8 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [autoRecordCountdown, setAutoRecordCountdown] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [capturedFrames, setCapturedFrames] = useState<string[]>([]);
   
   // Refs
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
@@ -134,6 +136,53 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       videoPlaybackRef.current.playbackRate = parseFloat(playbackSpeed);
     }
   }, [playbackSpeed, phase]);
+
+  // Toggle pause/play handler
+  const handleTogglePlayPause = useCallback(() => {
+    const video = videoPlaybackRef.current;
+    if (!video) return;
+    
+    if (video.paused) {
+      video.play();
+      setIsPaused(false);
+    } else {
+      video.pause();
+      setIsPaused(true);
+    }
+  }, []);
+
+  // Capture key frame handler
+  const handleCaptureKeyFrame = useCallback(() => {
+    const video = videoPlaybackRef.current;
+    if (!video) return;
+    
+    // Create canvas and draw current frame
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/png');
+    
+    setCapturedFrames(prev => [...prev, dataUrl]);
+    toast.success(t('realTimePlayback.frameCaptured', 'Key frame captured!'));
+  }, [t]);
+
+  // Download captured frame
+  const handleDownloadFrame = useCallback((dataUrl: string, index: number) => {
+    const link = document.createElement('a');
+    link.download = `keyframe-${index + 1}.png`;
+    link.href = dataUrl;
+    link.click();
+  }, []);
+
+  // Clear all captured frames
+  const handleClearFrames = useCallback(() => {
+    setCapturedFrames([]);
+    toast.success(t('realTimePlayback.framesCleared', 'Frames cleared'));
+  }, [t]);
 
   // Audio cue helper
   const playBeep = useCallback((frequency = 800, duration = 150, volume = 0.3) => {
@@ -1141,6 +1190,27 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                       <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/70 text-white text-sm">
                         {playbackSpeed}x
                       </div>
+                      
+                      {/* Pause/Play and Capture Key Frame buttons */}
+                      <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          onClick={handleTogglePlayPause}
+                          className="h-10 w-10 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
+                        >
+                          {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          onClick={handleCaptureKeyFrame}
+                          className="h-10 w-10 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
+                          title={t('realTimePlayback.captureKeyFrame', 'Capture Key Frame')}
+                        >
+                          <Camera className="h-5 w-5" />
+                        </Button>
+                      </div>
 
                       {/* Auto-record countdown overlay */}
                       {phase === 'complete' && autoRecordEnabled && autoRecordCountdown > 0 && (
@@ -1179,6 +1249,45 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                         </ToggleGroup>
                       </div>
                     </Card>
+                    
+                    {/* Captured Frames */}
+                    {capturedFrames.length > 0 && (
+                      <Card className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Camera className="h-4 w-4 text-primary" />
+                            <span className="font-medium text-sm">{t('realTimePlayback.capturedFrames', 'Captured Frames')} ({capturedFrames.length})</span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={handleClearFrames}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            {t('realTimePlayback.clearFrames', 'Clear')}
+                          </Button>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                          {capturedFrames.map((frame, index) => (
+                            <div 
+                              key={index} 
+                              className="relative flex-shrink-0 cursor-pointer group"
+                              onClick={() => handleDownloadFrame(frame, index)}
+                            >
+                              <img 
+                                src={frame} 
+                                alt={`Frame ${index + 1}`}
+                                className="h-20 w-auto rounded-md border border-border object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
+                                <Download className="h-4 w-4 text-white" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    )}
                     
                     {/* Analysis Card */}
                     {analysisEnabled && !localOnlyMode ? (

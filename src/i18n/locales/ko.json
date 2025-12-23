@@ -4231,6 +4231,14 @@
     "nextRecordingIn": "다음 녹화까지...",
     "stopAutoRecord": "자동 녹화 중지",
     "fullscreen": "전체 화면",
-    "uploadError": "비디오 업로드 실패"
+    "uploadError": "비디오 업로드 실패",
+    "pause": "일시정지",
+    "play": "재생",
+    "captureKeyFrame": "키 프레임 캡처",
+    "frameCaptured": "키 프레임이 캡처되었습니다!",
+    "capturedFrames": "캡처된 프레임",
+    "downloadFrame": "프레임 다운로드",
+    "clearFrames": "지우기",
+    "framesCleared": "프레임이 지워졌습니다"
   }
 }
