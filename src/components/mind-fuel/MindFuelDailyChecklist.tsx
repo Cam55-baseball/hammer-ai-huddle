@@ -192,9 +192,9 @@ export default function MindFuelDailyChecklist({
           </div>
         </div>
 
-        {/* Task List */}
+        {/* Task List - sorted with incomplete first, completed at bottom */}
         <div className="space-y-2.5">
-          {tasks.map((task) => {
+          {[...tasks].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1)).map((task) => {
             const Icon = task.icon;
             const colorClasses = getTaskColorClasses(task);
 
@@ -297,7 +297,11 @@ export default function MindFuelDailyChecklist({
           </div>
 
           <div className="space-y-2">
-            {educationItems.map((item) => {
+            {[...educationItems].sort((a, b) => {
+              const aComplete = a.completedItems >= a.totalItems;
+              const bComplete = b.completedItems >= b.totalItems;
+              return aComplete === bComplete ? 0 : aComplete ? 1 : -1;
+            }).map((item) => {
               const Icon = EDUCATION_ICONS[item.type];
               const colors = EDUCATION_COLORS[item.type];
               const isComplete = item.completedItems >= item.totalItems;
