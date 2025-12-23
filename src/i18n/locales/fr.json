@@ -4911,6 +4911,15 @@
     "defaultPositive2": "Modèle de mouvement cohérent observé",
     "defaultTip1": "Examinez votre vidéo au ralenti pour une analyse détaillée",
     "defaultNote": "Continuez à pratiquer ! Utilisez la lecture au ralenti pour identifier les domaines à améliorer.",
-    "countdownInfo": "Une fois que vous cliquez sur Démarrer l'enregistrement, un compte à rebours de 20 secondes commencera avant le début de l'enregistrement."
+    "countdownInfo": "Une fois que vous cliquez sur Démarrer l'enregistrement, un compte à rebours de 20 secondes commencera avant le début de l'enregistrement.",
+    "flipCamera": "Retourner la Caméra",
+    "frontCamera": "Caméra Frontale",
+    "rearCamera": "Caméra Arrière",
+    "aiAnalysis": "Analyse IA",
+    "aiAnalysisDescription": "Obtenez des commentaires basés sur l'IA sur votre forme",
+    "analysisDisabled": "L'analyse IA est désactivée. Votre vidéo a été enregistrée.",
+    "cameraError": "Le flux de la caméra n'est pas disponible. Veuillez réessayer.",
+    "recordingError": "L'enregistrement a échoué. Veuillez réessayer.",
+    "noDataCaptured": "Aucune donnée vidéo n'a été capturée. Veuillez réessayer."
   }
 }

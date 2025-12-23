@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { 
   X, Video, Play, Pause, RotateCcw, Download, BookMarked, 
   Settings, Timer, Clock, Gauge, Camera, CheckCircle2, AlertCircle,
-  Sparkles
+  Sparkles, SwitchCamera, Brain
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +28,7 @@ interface RealTimePlaybackProps {
 }
 
 type Phase = 'setup' | 'countdown' | 'recording' | 'waiting' | 'playback' | 'complete';
+type FacingMode = 'user' | 'environment';
 
 interface Analysis {
   positives: string[];
@@ -55,6 +58,12 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [playbackSpeed, setPlaybackSpeed] = useState<string>(() => 
     localStorage.getItem('rtPlayback_playbackSpeed') || '0.5'
   );
+  const [facingMode, setFacingMode] = useState<FacingMode>(() => 
+    (localStorage.getItem('rtPlayback_facingMode') as FacingMode) || 'user'
+  );
+  const [analysisEnabled, setAnalysisEnabled] = useState<boolean>(() => 
+    localStorage.getItem('rtPlayback_analysisEnabled') !== 'false'
+  );
   
   // State
   const [phase, setPhase] = useState<Phase>('setup');
@@ -83,7 +92,9 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     localStorage.setItem('rtPlayback_playbackDelay', String(playbackDelay));
     localStorage.setItem('rtPlayback_repeatDuration', String(repeatDuration));
     localStorage.setItem('rtPlayback_playbackSpeed', playbackSpeed);
-  }, [recordingDuration, playbackDelay, repeatDuration, playbackSpeed]);
+    localStorage.setItem('rtPlayback_facingMode', facingMode);
+    localStorage.setItem('rtPlayback_analysisEnabled', String(analysisEnabled));
+  }, [recordingDuration, playbackDelay, repeatDuration, playbackSpeed, facingMode, analysisEnabled]);
   
   // Speed control during playback
   useEffect(() => {
@@ -103,28 +114,41 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     return types.find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
   }, []);
 
+  // Attach stream to video element helper
+  const attachPreviewStream = useCallback(() => {
+    if (videoPreviewRef.current && streamRef.current) {
+      videoPreviewRef.current.srcObject = streamRef.current;
+      videoPreviewRef.current.play().catch(console.error);
+    }
+  }, []);
+
   // Initialize camera
-  const initCamera = useCallback(async () => {
+  const initCamera = useCallback(async (mode: FacingMode = facingMode) => {
     try {
-      console.log('Initializing camera...');
+      console.log('Initializing camera with facingMode:', mode);
+      
+      // Stop existing stream first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: { ideal: mode }, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false
       });
       streamRef.current = stream;
       console.log('Stream acquired:', stream.active);
       console.log('Stream tracks:', stream.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState })));
       
-      if (videoPreviewRef.current) {
-        videoPreviewRef.current.srcObject = stream;
-      }
+      attachPreviewStream();
       setCameraPermission(true);
     } catch (error) {
       console.error('Camera access error:', error);
       setCameraPermission(false);
       toast.error(t('realTimePlayback.cameraPermissionDenied', 'Camera access was denied'));
     }
-  }, [t]);
+  }, [t, facingMode, attachPreviewStream]);
   
   // Cleanup camera
   const stopCamera = useCallback(() => {
@@ -134,8 +158,15 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       streamRef.current = null;
     }
   }, []);
+
+  // Flip camera
+  const handleFlipCamera = useCallback(async () => {
+    const newMode: FacingMode = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(newMode);
+    await initCamera(newMode);
+  }, [facingMode, initCamera]);
   
-  // Initialize camera only when dialog opens - removed phase dependency to prevent re-init
+  // Initialize camera only when dialog opens
   useEffect(() => {
     if (isOpen) {
       initCamera();
@@ -147,6 +178,13 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       }
     };
   }, [isOpen, initCamera, stopCamera, recordedUrl]);
+
+  // Re-attach stream when phase changes (for persistent preview)
+  useEffect(() => {
+    if (isOpen && (phase === 'setup' || phase === 'countdown' || phase === 'recording')) {
+      attachPreviewStream();
+    }
+  }, [isOpen, phase, attachPreviewStream]);
   
   // Recording flow
   const startRecordingFlow = async () => {
@@ -235,8 +273,8 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       setPhase('playback');
       setPlaybackTimeLeft(repeatDuration);
       
-      // Start analysis in background
-      generateAnalysis(blob);
+      // Upload and optionally analyze
+      uploadAndAnalyze(blob);
     };
     
     mediaRecorderRef.current = recorder;
@@ -252,6 +290,77 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     
     console.log('Stopping recorder...');
     recorder.stop();
+  };
+
+  // Upload video and optionally run analysis
+  const uploadAndAnalyze = async (blob: Blob) => {
+    try {
+      if (!user) return;
+      
+      // Upload video first
+      const fileName = `${user.id}/realtime-${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(fileName, blob);
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('videos')
+        .getPublicUrl(fileName);
+      
+      // Create video record
+      const { data: videoData, error: videoError } = await supabase
+        .from('videos')
+        .insert([{
+          user_id: user.id,
+          sport: sport as "baseball" | "softball",
+          module: module as "hitting" | "pitching" | "throwing",
+          video_url: publicUrl,
+          status: "completed",
+        }])
+        .select()
+        .single();
+      
+      if (videoError) throw videoError;
+      setCurrentVideoId(videoData.id);
+
+      // Only run analysis if enabled
+      if (analysisEnabled) {
+        setIsAnalyzing(true);
+        
+        const { data, error } = await supabase.functions.invoke('analyze-realtime-playback', {
+          body: { 
+            videoId: videoData.id, 
+            module, 
+            sport, 
+            language: i18n.language 
+          }
+        });
+        
+        if (error) {
+          console.error('Analysis error:', error);
+          // Provide fallback analysis
+          setAnalysis({
+            positives: [
+              t('realTimePlayback.defaultPositive1', 'Good effort on your form'),
+              t('realTimePlayback.defaultPositive2', 'Consistent motion pattern observed')
+            ],
+            tips: [
+              t('realTimePlayback.defaultTip1', 'Review your footage in slow motion for detailed analysis')
+            ],
+            overallNote: t('realTimePlayback.defaultNote', 'Keep practicing! Use slow motion playback to identify areas for improvement.')
+          });
+        } else if (data) {
+          setAnalysis(data);
+        }
+        
+        setIsAnalyzing(false);
+      }
+    } catch (error) {
+      console.error('Failed to upload/analyze:', error);
+      setIsAnalyzing(false);
+    }
   };
   
   // Playback timer
@@ -280,73 +389,6 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       videoPlaybackRef.current.play().catch(console.error);
     }
   }, [phase, recordedUrl, playbackSpeed]);
-  
-  // Generate AI analysis
-  const generateAnalysis = async (blob: Blob) => {
-    setIsAnalyzing(true);
-    try {
-      // Upload video first
-      if (!user) return;
-      
-      const fileName = `${user.id}/realtime-${Date.now()}.webm`;
-      const { error: uploadError } = await supabase.storage
-        .from('videos')
-        .upload(fileName, blob);
-      
-      if (uploadError) throw uploadError;
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('videos')
-        .getPublicUrl(fileName);
-      
-      // Create video record
-      const { data: videoData, error: videoError } = await supabase
-        .from('videos')
-        .insert([{
-          user_id: user.id,
-          sport: sport as "baseball" | "softball",
-          module: module as "hitting" | "pitching" | "throwing",
-          video_url: publicUrl,
-          status: "completed",
-        }])
-        .select()
-        .single();
-      
-      if (videoError) throw videoError;
-      setCurrentVideoId(videoData.id);
-      
-      // Call analysis edge function
-      const { data, error } = await supabase.functions.invoke('analyze-realtime-playback', {
-        body: { 
-          videoId: videoData.id, 
-          module, 
-          sport, 
-          language: i18n.language 
-        }
-      });
-      
-      if (error) {
-        console.error('Analysis error:', error);
-        // Provide fallback analysis
-        setAnalysis({
-          positives: [
-            t('realTimePlayback.defaultPositive1', 'Good effort on your form'),
-            t('realTimePlayback.defaultPositive2', 'Consistent motion pattern observed')
-          ],
-          tips: [
-            t('realTimePlayback.defaultTip1', 'Review your footage in slow motion for detailed analysis')
-          ],
-          overallNote: t('realTimePlayback.defaultNote', 'Keep practicing! Use slow motion playback to identify areas for improvement.')
-        });
-      } else if (data) {
-        setAnalysis(data);
-      }
-    } catch (error) {
-      console.error('Failed to generate analysis:', error);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
   
   // Restart flow
   const handleRestart = () => {
@@ -416,6 +458,9 @@ ${analysis.overallNote}
     return labels[speed] || speed;
   };
 
+  // Check if we should show live preview (setup, countdown, or recording)
+  const showLivePreview = phase === 'setup' || phase === 'countdown' || phase === 'recording';
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -443,186 +488,206 @@ ${analysis.overallNote}
             {/* Main Content - Scrollable */}
             <div className="flex-1 overflow-y-auto p-4 pb-8">
               <AnimatePresence mode="wait">
-                {/* Setup Phase */}
-                {phase === 'setup' && (
+                {/* Setup, Countdown, and Recording Phases - Persistent Camera Preview */}
+                {showLivePreview && (
                   <motion.div
-                    key="setup"
+                    key="live-preview"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     className="space-y-4"
                   >
-                    {/* Camera Preview */}
+                    {/* Camera Preview - Persistent across setup/countdown/recording */}
                     <div className="relative rounded-xl overflow-hidden bg-black aspect-[4/3] sm:aspect-video max-h-[40vh] sm:max-h-none">
                       {cameraPermission === false ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                           <AlertCircle className="h-12 w-12 mb-4 text-destructive" />
                           <p>{t('realTimePlayback.cameraPermissionRequired', 'Camera permission is required')}</p>
-                          <Button variant="outline" className="mt-4" onClick={initCamera}>
+                          <Button variant="outline" className="mt-4" onClick={() => initCamera()}>
                             {t('common.retry', 'Retry')}
                           </Button>
                         </div>
                       ) : (
-                        <video
-                          ref={videoPreviewRef}
-                          autoPlay
-                          playsInline
-                          muted
-                          className="w-full h-full object-cover scale-x-[-1]"
-                        />
+                        <>
+                          <video
+                            ref={videoPreviewRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                          />
+                          
+                          {/* Flip Camera Button */}
+                          {phase === 'setup' && (
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white border-0"
+                              onClick={handleFlipCamera}
+                            >
+                              <SwitchCamera className="h-5 w-5" />
+                            </Button>
+                          )}
+
+                          {/* Countdown Overlay */}
+                          {phase === 'countdown' && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                              <p className="text-lg text-white mb-4">{t('realTimePlayback.getReady', 'Get Ready!')}</p>
+                              <motion.div
+                                key={countdown}
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 1.5, opacity: 0 }}
+                                className="text-9xl font-bold text-white drop-shadow-lg"
+                              >
+                                {countdown}
+                              </motion.div>
+                            </div>
+                          )}
+
+                          {/* Recording Overlay */}
+                          {phase === 'recording' && (
+                            <>
+                              {/* Recording indicator */}
+                              <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-destructive/90 text-white">
+                                <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+                                <span className="font-medium">{t('realTimePlayback.recording', 'Recording')}</span>
+                              </div>
+                              {/* Timer */}
+                              <div className="absolute bottom-4 right-4 px-4 py-2 rounded-lg bg-black/70 text-white text-2xl font-mono">
+                                {recordingTimeLeft}s
+                              </div>
+                            </>
+                          )}
+                        </>
                       )}
                     </div>
                     
-                    {/* Settings Grid */}
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                      {/* Recording Duration */}
-                      <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Timer className="h-4 w-4 text-primary" />
-                          <span className="font-medium text-sm">{t('realTimePlayback.recordingDuration', 'Recording Duration')}</span>
+                    {/* Settings - Only show in setup phase */}
+                    {phase === 'setup' && (
+                      <>
+                        {/* Settings Grid */}
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                          {/* Recording Duration */}
+                          <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Timer className="h-4 w-4 text-primary" />
+                              <span className="font-medium text-sm">{t('realTimePlayback.recordingDuration', 'Recording Duration')}</span>
+                            </div>
+                            <ToggleGroup 
+                              type="single" 
+                              value={String(recordingDuration)}
+                              onValueChange={(v) => v && setRecordingDuration(parseInt(v))}
+                              className="flex flex-wrap gap-1"
+                            >
+                              {RECORDING_DURATIONS.map(d => (
+                                <ToggleGroupItem key={d} value={String(d)} className="px-3 py-1 text-sm">
+                                  {d}s
+                                </ToggleGroupItem>
+                              ))}
+                            </ToggleGroup>
+                          </Card>
+                          
+                          {/* Playback Delay */}
+                          <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-primary" />
+                              <span className="font-medium text-sm">{t('realTimePlayback.playbackDelay', 'Playback Delay')}</span>
+                            </div>
+                            <div className="space-y-2">
+                              <Slider
+                                value={[playbackDelay]}
+                                onValueChange={([v]) => setPlaybackDelay(v)}
+                                min={5}
+                                max={30}
+                                step={5}
+                                className="w-full"
+                              />
+                              <p className="text-xs text-muted-foreground text-center">{playbackDelay} {t('realTimePlayback.seconds', 'seconds')}</p>
+                            </div>
+                          </Card>
+                          
+                          {/* Repeat Duration */}
+                          <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                            <div className="flex items-center gap-2">
+                              <RotateCcw className="h-4 w-4 text-primary" />
+                              <span className="font-medium text-sm">{t('realTimePlayback.repeatDuration', 'Repeat Duration')}</span>
+                            </div>
+                            <ToggleGroup 
+                              type="single" 
+                              value={String(repeatDuration)}
+                              onValueChange={(v) => v && setRepeatDuration(parseInt(v))}
+                              className="flex flex-wrap gap-1"
+                            >
+                              {REPEAT_DURATIONS.map(d => (
+                                <ToggleGroupItem key={d} value={String(d)} className="px-3 py-1 text-sm">
+                                  {d >= 60 ? `${d/60}m` : `${d}s`}
+                                </ToggleGroupItem>
+                              ))}
+                            </ToggleGroup>
+                          </Card>
+                          
+                          {/* Playback Speed */}
+                          <Card className="p-4 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Gauge className="h-4 w-4 text-primary" />
+                              <span className="font-medium text-sm">{t('realTimePlayback.playbackSpeed', 'Playback Speed')}</span>
+                            </div>
+                            <ToggleGroup 
+                              type="single" 
+                              value={playbackSpeed}
+                              onValueChange={(v) => v && setPlaybackSpeed(v)}
+                              className="flex flex-wrap gap-1"
+                            >
+                              {PLAYBACK_SPEEDS.map(s => (
+                                <ToggleGroupItem key={s} value={s} className="px-3 py-1 text-sm">
+                                  {s}x
+                                </ToggleGroupItem>
+                              ))}
+                            </ToggleGroup>
+                            <p className="text-xs text-muted-foreground text-center">{getSpeedLabel(playbackSpeed)}</p>
+                          </Card>
                         </div>
-                        <ToggleGroup 
-                          type="single" 
-                          value={String(recordingDuration)}
-                          onValueChange={(v) => v && setRecordingDuration(parseInt(v))}
-                          className="flex flex-wrap gap-1"
+
+                        {/* Analysis Toggle */}
+                        <Card className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Brain className="h-5 w-5 text-primary" />
+                              <div>
+                                <Label htmlFor="analysis-toggle" className="font-medium">
+                                  {t('realTimePlayback.aiAnalysis', 'AI Analysis')}
+                                </Label>
+                                <p className="text-xs text-muted-foreground">
+                                  {t('realTimePlayback.aiAnalysisDescription', 'Get AI-powered feedback on your form')}
+                                </p>
+                              </div>
+                            </div>
+                            <Switch
+                              id="analysis-toggle"
+                              checked={analysisEnabled}
+                              onCheckedChange={setAnalysisEnabled}
+                            />
+                          </div>
+                        </Card>
+                        
+                        {/* Countdown Info */}
+                        <p className="text-sm text-center text-muted-foreground bg-muted/50 rounded-lg p-3 border border-border">
+                          {t('realTimePlayback.countdownInfo', 'Once you click Start Recording, a 20 second timer will begin before recording starts.')}
+                        </p>
+                        
+                        {/* Start Button */}
+                        <Button 
+                          onClick={startRecordingFlow}
+                          disabled={!cameraPermission}
+                          size="lg"
+                          className="w-full gap-2 bg-gradient-to-r from-destructive to-destructive/80 hover:from-destructive/90 hover:to-destructive/70 text-white shadow-lg"
                         >
-                          {RECORDING_DURATIONS.map(d => (
-                            <ToggleGroupItem key={d} value={String(d)} className="px-3 py-1 text-sm">
-                              {d}s
-                            </ToggleGroupItem>
-                          ))}
-                        </ToggleGroup>
-                      </Card>
-                      
-                      {/* Playback Delay */}
-                      <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-primary" />
-                          <span className="font-medium text-sm">{t('realTimePlayback.playbackDelay', 'Playback Delay')}</span>
-                        </div>
-                        <div className="space-y-2">
-                          <Slider
-                            value={[playbackDelay]}
-                            onValueChange={([v]) => setPlaybackDelay(v)}
-                            min={5}
-                            max={30}
-                            step={5}
-                            className="w-full"
-                          />
-                          <p className="text-xs text-muted-foreground text-center">{playbackDelay} {t('realTimePlayback.seconds', 'seconds')}</p>
-                        </div>
-                      </Card>
-                      
-                      {/* Repeat Duration */}
-                      <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-                        <div className="flex items-center gap-2">
-                          <RotateCcw className="h-4 w-4 text-primary" />
-                          <span className="font-medium text-sm">{t('realTimePlayback.repeatDuration', 'Repeat Duration')}</span>
-                        </div>
-                        <ToggleGroup 
-                          type="single" 
-                          value={String(repeatDuration)}
-                          onValueChange={(v) => v && setRepeatDuration(parseInt(v))}
-                          className="flex flex-wrap gap-1"
-                        >
-                          {REPEAT_DURATIONS.map(d => (
-                            <ToggleGroupItem key={d} value={String(d)} className="px-3 py-1 text-sm">
-                              {d >= 60 ? `${d/60}m` : `${d}s`}
-                            </ToggleGroupItem>
-                          ))}
-                        </ToggleGroup>
-                      </Card>
-                      
-                      {/* Playback Speed */}
-                      <Card className="p-4 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Gauge className="h-4 w-4 text-primary" />
-                          <span className="font-medium text-sm">{t('realTimePlayback.playbackSpeed', 'Playback Speed')}</span>
-                        </div>
-                        <ToggleGroup 
-                          type="single" 
-                          value={playbackSpeed}
-                          onValueChange={(v) => v && setPlaybackSpeed(v)}
-                          className="flex flex-wrap gap-1"
-                        >
-                          {PLAYBACK_SPEEDS.map(s => (
-                            <ToggleGroupItem key={s} value={s} className="px-3 py-1 text-sm">
-                              {s}x
-                            </ToggleGroupItem>
-                          ))}
-                        </ToggleGroup>
-                        <p className="text-xs text-muted-foreground text-center">{getSpeedLabel(playbackSpeed)}</p>
-                      </Card>
-                    </div>
-                    
-                    {/* Countdown Info */}
-                    <p className="text-sm text-center text-muted-foreground bg-muted/50 rounded-lg p-3 border border-border">
-                      {t('realTimePlayback.countdownInfo', 'Once you click Start Recording, a 20 second timer will begin before recording starts.')}
-                    </p>
-                    
-                    {/* Start Button */}
-                    <Button 
-                      onClick={startRecordingFlow}
-                      disabled={!cameraPermission}
-                      size="lg"
-                      className="w-full gap-2 bg-gradient-to-r from-destructive to-destructive/80 hover:from-destructive/90 hover:to-destructive/70 text-white shadow-lg"
-                    >
-                      <Camera className="h-5 w-5" />
-                      {t('realTimePlayback.startRecording', 'Start Recording')}
-                    </Button>
-                  </motion.div>
-                )}
-                
-                {/* Countdown Phase */}
-                {phase === 'countdown' && (
-                  <motion.div
-                    key="countdown"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="flex flex-col items-center justify-center min-h-[400px]"
-                  >
-                    <p className="text-lg text-muted-foreground mb-4">{t('realTimePlayback.getReady', 'Get Ready!')}</p>
-                    <motion.div
-                      key={countdown}
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 1.5, opacity: 0 }}
-                      className="text-9xl font-bold bg-gradient-to-br from-primary to-accent bg-clip-text text-transparent"
-                    >
-                      {countdown}
-                    </motion.div>
-                  </motion.div>
-                )}
-                
-                {/* Recording Phase */}
-                {phase === 'recording' && (
-                  <motion.div
-                    key="recording"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="space-y-4"
-                  >
-                    <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
-                      <video
-                        ref={videoPreviewRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        className="w-full h-full object-cover scale-x-[-1]"
-                      />
-                      {/* Recording indicator */}
-                      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-destructive/90 text-white">
-                        <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
-                        <span className="font-medium">{t('realTimePlayback.recording', 'Recording')}</span>
-                      </div>
-                      {/* Timer */}
-                      <div className="absolute bottom-4 right-4 px-4 py-2 rounded-lg bg-black/70 text-white text-2xl font-mono">
-                        {recordingTimeLeft}s
-                      </div>
-                    </div>
+                          <Camera className="h-5 w-5" />
+                          {t('realTimePlayback.startRecording', 'Start Recording')}
+                        </Button>
+                      </>
+                    )}
                   </motion.div>
                 )}
                 
@@ -659,7 +724,7 @@ ${analysis.overallNote}
                         ref={videoPlaybackRef}
                         playsInline
                         loop
-                        className="w-full h-full object-cover scale-x-[-1]"
+                        className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
                       />
                       {/* Status indicator */}
                       {phase === 'playback' && (
@@ -703,44 +768,53 @@ ${analysis.overallNote}
                     </Card>
                     
                     {/* Analysis Card */}
-                    <Card className="p-4 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                      {isAnalyzing ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3" />
-                          <span className="text-muted-foreground">{t('common.loading', 'Loading...')}</span>
-                        </div>
-                      ) : analysis ? (
-                        <div className="space-y-4">
-                          {/* Positives */}
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-green-500">
-                              <Sparkles className="h-5 w-5" />
-                              <span className="font-semibold">{t('realTimePlayback.positives', "What You're Doing Great")}</span>
-                            </div>
-                            {analysis.positives.map((positive, i) => (
-                              <div key={i} className="flex items-start gap-2 pl-7">
-                                <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                <span className="text-sm">{positive}</span>
+                    {analysisEnabled ? (
+                      <Card className="p-4 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                        {isAnalyzing ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3" />
+                            <span className="text-muted-foreground">{t('common.loading', 'Loading...')}</span>
+                          </div>
+                        ) : analysis ? (
+                          <div className="space-y-4">
+                            {/* Positives */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-green-500">
+                                <Sparkles className="h-5 w-5" />
+                                <span className="font-semibold">{t('realTimePlayback.positives', "What You're Doing Great")}</span>
                               </div>
-                            ))}
-                          </div>
-                          
-                          {/* Tips */}
-                          <div className="space-y-2 pt-2 border-t">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <Settings className="h-4 w-4" />
-                              <span className="font-medium text-sm">{t('realTimePlayback.tips', 'Quick Tips')}</span>
+                              {analysis.positives.map((positive, i) => (
+                                <div key={i} className="flex items-start gap-2 pl-7">
+                                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                  <span className="text-sm">{positive}</span>
+                                </div>
+                              ))}
                             </div>
-                            {analysis.tips.map((tip, i) => (
-                              <p key={i} className="text-xs text-muted-foreground pl-6">• {tip}</p>
-                            ))}
+                            
+                            {/* Tips */}
+                            <div className="space-y-2 pt-2 border-t">
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Settings className="h-4 w-4" />
+                                <span className="font-medium text-sm">{t('realTimePlayback.tips', 'Quick Tips')}</span>
+                              </div>
+                              {analysis.tips.map((tip, i) => (
+                                <p key={i} className="text-xs text-muted-foreground pl-6">• {tip}</p>
+                              ))}
+                            </div>
+                            
+                            {/* Overall Note */}
+                            <p className="text-sm text-primary font-medium pt-2 border-t">{analysis.overallNote}</p>
                           </div>
-                          
-                          {/* Overall Note */}
-                          <p className="text-sm text-primary font-medium pt-2 border-t">{analysis.overallNote}</p>
+                        ) : null}
+                      </Card>
+                    ) : (
+                      <Card className="p-4 border-muted bg-muted/30">
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                          <Brain className="h-5 w-5" />
+                          <p className="text-sm">{t('realTimePlayback.analysisDisabled', 'AI analysis is turned off. Your video has been saved.')}</p>
                         </div>
-                      ) : null}
-                    </Card>
+                      </Card>
+                    )}
                     
                     {/* Action Buttons */}
                     {phase === 'complete' && (

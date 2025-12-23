@@ -4911,6 +4911,15 @@
     "defaultPositive2": "Konsistentes Bewegungsmuster beobachtet",
     "defaultTip1": "Überprüfe dein Video in Zeitlupe für eine detaillierte Analyse",
     "defaultNote": "Weiter üben! Nutze die Zeitlupenwiedergabe, um Verbesserungsbereiche zu identifizieren.",
-    "countdownInfo": "Sobald Sie auf Aufnahme starten klicken, beginnt ein 20-Sekunden-Timer, bevor die Aufnahme startet."
+    "countdownInfo": "Sobald Sie auf Aufnahme starten klicken, beginnt ein 20-Sekunden-Timer, bevor die Aufnahme startet.",
+    "flipCamera": "Kamera Wechseln",
+    "frontCamera": "Frontkamera",
+    "rearCamera": "Rückkamera",
+    "aiAnalysis": "KI-Analyse",
+    "aiAnalysisDescription": "Erhalten Sie KI-gestütztes Feedback zu Ihrer Form",
+    "analysisDisabled": "KI-Analyse ist deaktiviert. Ihr Video wurde gespeichert.",
+    "cameraError": "Kamerastream ist nicht verfügbar. Bitte versuchen Sie es erneut.",
+    "recordingError": "Aufnahme fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "noDataCaptured": "Keine Videodaten erfasst. Bitte versuchen Sie es erneut."
   }
 }

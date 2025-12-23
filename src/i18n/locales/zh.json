@@ -4154,6 +4154,15 @@
     "defaultPositive2": "观察到一致的运动模式",
     "defaultTip1": "用慢动作回放查看视频以进行详细分析",
     "defaultNote": "继续练习！使用慢动作回放来识别需要改进的地方。",
-    "countdownInfo": "点击开始录制后，将开始20秒倒计时，然后开始录制。"
+    "countdownInfo": "点击开始录制后，将开始20秒倒计时，然后开始录制。",
+    "flipCamera": "切换摄像头",
+    "frontCamera": "前置摄像头",
+    "rearCamera": "后置摄像头",
+    "aiAnalysis": "AI分析",
+    "aiAnalysisDescription": "获取AI驱动的姿势反馈",
+    "analysisDisabled": "AI分析已关闭。您的视频已保存。",
+    "cameraError": "摄像头流不可用。请重试。",
+    "recordingError": "录制失败。请重试。",
+    "noDataCaptured": "未捕获视频数据。请重试。"
   }
 }

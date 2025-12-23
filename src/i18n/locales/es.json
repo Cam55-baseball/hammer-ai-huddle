@@ -5167,6 +5167,15 @@
     "defaultPositive2": "Patrón de movimiento consistente observado",
     "defaultTip1": "Revisa tu video en cámara lenta para un análisis detallado",
     "defaultNote": "¡Sigue practicando! Usa la reproducción en cámara lenta para identificar áreas de mejora.",
-    "countdownInfo": "Una vez que hagas clic en Iniciar Grabación, comenzará un temporizador de 20 segundos antes de que comience la grabación."
+    "countdownInfo": "Una vez que hagas clic en Iniciar Grabación, comenzará un temporizador de 20 segundos antes de que comience la grabación.",
+    "flipCamera": "Voltear Cámara",
+    "frontCamera": "Cámara Frontal",
+    "rearCamera": "Cámara Trasera",
+    "aiAnalysis": "Análisis IA",
+    "aiAnalysisDescription": "Obtén retroalimentación impulsada por IA sobre tu forma",
+    "analysisDisabled": "El análisis IA está desactivado. Tu video ha sido guardado.",
+    "cameraError": "La transmisión de la cámara no está disponible. Por favor intenta de nuevo.",
+    "recordingError": "La grabación falló. Por favor intenta de nuevo.",
+    "noDataCaptured": "No se capturaron datos de video. Por favor intenta de nuevo."
   }
 }

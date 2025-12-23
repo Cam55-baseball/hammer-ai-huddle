@@ -4210,6 +4210,15 @@
     "defaultPositive2": "Consistent bewegingspatroon waargenomen",
     "defaultTip1": "Bekijk je beelden in slow motion voor gedetailleerde analyse",
     "defaultNote": "Blijf oefenen! Gebruik slow motion weergave om verbeterpunten te identificeren.",
-    "countdownInfo": "Zodra u op Opname starten klikt, begint een timer van 20 seconden voordat de opname start."
+    "countdownInfo": "Zodra u op Opname starten klikt, begint een timer van 20 seconden voordat de opname start.",
+    "flipCamera": "Camera Wisselen",
+    "frontCamera": "Frontcamera",
+    "rearCamera": "Achtercamera",
+    "aiAnalysis": "AI-Analyse",
+    "aiAnalysisDescription": "Ontvang AI-gestuurde feedback op je vorm",
+    "analysisDisabled": "AI-analyse is uitgeschakeld. Je video is opgeslagen.",
+    "cameraError": "Camerastream is niet beschikbaar. Probeer het opnieuw.",
+    "recordingError": "Opname mislukt. Probeer het opnieuw.",
+    "noDataCaptured": "Geen videogegevens vastgelegd. Probeer het opnieuw."
   }
 }
