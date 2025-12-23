@@ -116,14 +116,14 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
       className="space-y-4 max-w-2xl mx-auto"
     >
       {/* A. Overall Score Card */}
-      <Card className={`${scoreInfo.borderColor} ${scoreInfo.bgColor}`}>
+      <Card className={`border-2 ${scoreInfo.borderColor} ${scoreInfo.bgColor}`}>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Brain className="h-5 w-5 text-teal-400" />
+            <CardTitle className="flex items-center gap-2 text-lg text-slate-800">
+              <Brain className="h-5 w-5 text-teal-600" />
               S2 Cognition Score
             </CardTitle>
-            <Badge className={`${scoreInfo.bgColor} ${scoreInfo.color} border ${scoreInfo.borderColor}`}>
+            <Badge className={`${scoreInfo.bgColor} ${scoreInfo.color} border ${scoreInfo.borderColor} font-semibold`}>
               {scoreInfo.label}
             </Badge>
           </div>
@@ -132,13 +132,13 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
           <div className="flex items-center gap-6">
             <div className="text-center">
               <div className={`text-5xl font-black ${scoreInfo.color}`}>{overallScore}</div>
-              <div className="text-xs text-muted-foreground">out of 100</div>
+              <div className="text-xs text-slate-600">out of 100</div>
             </div>
             <div className="flex-1 space-y-2">
               <Progress value={overallScore} className="h-3" />
-              <div className="flex justify-between text-[10px] text-muted-foreground">
+              <div className="flex justify-between text-[10px] text-slate-500">
                 {Object.values(scoreLabels).reverse().map(label => (
-                  <span key={label.label} className={overallScore >= label.min && overallScore <= label.max ? label.color : ''}>
+                  <span key={label.label} className={overallScore >= label.min && overallScore <= label.max ? `${label.color} font-semibold` : ''}>
                     {label.label}
                   </span>
                 ))}
@@ -147,7 +147,7 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
           </div>
 
           {comparison?.overall_change !== null && comparison?.overall_change !== undefined && (
-            <div className="flex items-center gap-2 p-2 bg-background/50 rounded-lg">
+            <div className="flex items-center gap-2 p-2 bg-white/70 rounded-lg border border-slate-200">
               {comparison.overall_change > 0 ? (
                 <TrendingUp className="h-4 w-4 text-emerald-500" />
               ) : comparison.overall_change < 0 ? (
@@ -178,16 +178,16 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
 
         {/* B. Overview Tab - Radar Chart */}
         <TabsContent value="overview" className="space-y-4">
-          <Card className="border-border/50">
+          <Card className="border-slate-200 bg-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Eye className="h-4 w-4 text-teal-400" />
+              <CardTitle className="text-sm flex items-center gap-2 text-slate-800">
+                <Eye className="h-4 w-4 text-teal-600" />
                 Cognitive Profile
               </CardTitle>
             </CardHeader>
             <CardContent>
               <S2RadarChart scores={scores} previousScores={previousScores} />
-              <div className="flex items-center justify-center gap-6 mt-2 text-xs text-muted-foreground">
+              <div className="flex items-center justify-center gap-6 mt-2 text-xs text-slate-600">
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-0.5 bg-teal-500 rounded" />
                   <span>Current</span>
@@ -204,18 +204,18 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
 
           {/* D. Strengths vs Limiters */}
           <div className="grid grid-cols-2 gap-3">
-            <Card className="border-emerald-500/30 bg-emerald-500/5">
+            <Card className="border-emerald-400 bg-emerald-50">
               <CardHeader className="pb-2">
-                <CardTitle className="text-xs flex items-center gap-1.5 text-emerald-400">
+                <CardTitle className="text-xs flex items-center gap-1.5 text-emerald-700">
                   <Target className="h-3.5 w-3.5" />
                   Cognitive Strengths
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {strengths.map(({ key, value, translation }) => (
-                  <div key={key} className="flex items-center justify-between text-xs">
+                  <div key={key} className="flex items-center justify-between text-xs text-slate-700">
                     <span className="truncate">{translation?.area || key}</span>
-                    <Badge variant="outline" className="text-emerald-400 border-emerald-500/30 text-[10px]">
+                    <Badge variant="outline" className="text-emerald-700 border-emerald-400 bg-emerald-100 text-[10px] font-semibold">
                       {value}
                     </Badge>
                   </div>
@@ -223,18 +223,18 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
               </CardContent>
             </Card>
 
-            <Card className="border-amber-500/30 bg-amber-500/5">
+            <Card className="border-amber-400 bg-amber-50">
               <CardHeader className="pb-2">
-                <CardTitle className="text-xs flex items-center gap-1.5 text-amber-400">
+                <CardTitle className="text-xs flex items-center gap-1.5 text-amber-700">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   Cognitive Limiters
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {limiters.map(({ key, value, translation }) => (
-                  <div key={key} className="flex items-center justify-between text-xs">
+                  <div key={key} className="flex items-center justify-between text-xs text-slate-700">
                     <span className="truncate">{translation?.area || key}</span>
-                    <Badge variant="outline" className="text-amber-400 border-amber-500/30 text-[10px]">
+                    <Badge variant="outline" className="text-amber-700 border-amber-400 bg-amber-100 text-[10px] font-semibold">
                       {value}
                     </Badge>
                   </div>
@@ -253,13 +253,13 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
             const itemScoreInfo = getScoreLabel(score);
 
             return (
-              <Card key={key} className="border-border/50">
+              <Card key={key} className="border-slate-200 bg-white">
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{label}</span>
-                        <Badge className={`${itemScoreInfo.bgColor} ${itemScoreInfo.color} text-[10px]`}>
+                        <span className="font-medium text-sm text-slate-800">{label}</span>
+                        <Badge className={`${itemScoreInfo.bgColor} ${itemScoreInfo.color} text-[10px] font-semibold`}>
                           {itemScoreInfo.label}
                         </Badge>
                       </div>
@@ -283,9 +283,9 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
 
         {/* C. On Field / Baseball Translation Tab */}
         <TabsContent value="field" className="space-y-3">
-          <Alert className="bg-teal-500/10 border-teal-500/30">
-            <Shield className="h-4 w-4" />
-            <AlertDescription className="text-xs">
+          <Alert className="bg-teal-50 border-teal-400">
+            <Shield className="h-4 w-4 text-teal-700" />
+            <AlertDescription className="text-xs text-teal-800">
               How your cognitive scores translate to on-field performance
             </AlertDescription>
           </Alert>
@@ -298,15 +298,15 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
             const isStrength = score >= 70;
 
             return (
-              <Card key={key} className={`border-border/50 ${isStrength ? 'bg-emerald-500/5' : 'bg-amber-500/5'}`}>
+              <Card key={key} className={`${isStrength ? 'border-emerald-400 bg-emerald-50' : 'border-amber-400 bg-amber-50'}`}>
                 <CardContent className="p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">{translation.area}</span>
-                    <Badge className={isStrength ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}>
+                    <span className="font-medium text-sm text-slate-800">{translation.area}</span>
+                    <Badge className={isStrength ? 'bg-emerald-100 text-emerald-700 border border-emerald-400 font-semibold' : 'bg-amber-100 text-amber-700 border border-amber-400 font-semibold'}>
                       {score} - {getScoreLabel(score).label}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
+                  <p className="text-xs text-slate-700 leading-relaxed">
                     {isStrength ? translation.highScoreMessage : translation.lowScoreMessage}
                   </p>
                 </CardContent>
@@ -317,26 +317,26 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
 
         {/* E. Training Recommendations Tab */}
         <TabsContent value="training" className="space-y-3">
-          <Alert className="bg-teal-500/10 border-teal-500/30">
-            <Zap className="h-4 w-4" />
-            <AlertDescription className="text-xs">
+          <Alert className="bg-teal-50 border-teal-400">
+            <Zap className="h-4 w-4 text-teal-700" />
+            <AlertDescription className="text-xs text-teal-800">
               Recommended drills based on your cognitive limiters
             </AlertDescription>
           </Alert>
 
           {recommendedDrills.map((drill) => (
-            <Card key={drill.drillId} className="border-border/50 hover:border-teal-500/30 transition-colors">
+            <Card key={drill.drillId} className="border-slate-200 bg-white hover:border-teal-400 transition-colors">
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm">{drill.drillName}</span>
-                      <Badge variant="outline" className="text-[10px] capitalize">
+                      <span className="font-medium text-sm text-slate-800">{drill.drillName}</span>
+                      <Badge variant="outline" className="text-[10px] capitalize border-slate-300 text-slate-600">
                         {drill.tier}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">{drill.description}</p>
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                    <p className="text-xs text-slate-600">{drill.description}</p>
+                    <p className="text-[10px] text-slate-500 flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {drill.duration}
                     </p>
@@ -344,7 +344,7 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
                   <Button 
                     size="sm" 
                     variant="outline"
-                    className="text-teal-400 border-teal-500/30 hover:bg-teal-500/10"
+                    className="text-teal-700 border-teal-400 hover:bg-teal-100"
                     onClick={() => handleStartDrill(drill.drillId)}
                   >
                     <Play className="h-3 w-3 mr-1" />
@@ -358,11 +358,11 @@ export const S2ResultsAnalysis = ({ scores, previousScores, comparison, onDone }
       </Tabs>
 
       {/* F. Next Test Date */}
-      <Alert className="bg-background/50 border-border/50">
-        <Clock className="h-4 w-4" />
-        <AlertDescription className="text-xs">
+      <Alert className="bg-slate-50 border-slate-300">
+        <Clock className="h-4 w-4 text-slate-600" />
+        <AlertDescription className="text-xs text-slate-700">
           Your next S2 assessment will be available in 16 weeks on{' '}
-          <strong>{format(addDays(new Date(), 112), 'MMMM d, yyyy')}</strong>
+          <strong className="text-slate-800">{format(addDays(new Date(), 112), 'MMMM d, yyyy')}</strong>
         </AlertDescription>
       </Alert>
 
