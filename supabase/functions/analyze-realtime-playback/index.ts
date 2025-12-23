@@ -83,9 +83,9 @@ serve(async (req) => {
   }
 
   try {
-    const { videoId, module, sport, language = 'en' } = await req.json();
+    const { videoId, module, sport, language = 'en', frames = [] } = await req.json();
     
-    console.log('Analyzing real-time playback:', { videoId, module, sport, language });
+    console.log('Analyzing real-time playback:', { videoId, module, sport, language, frameCount: frames.length });
     
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
@@ -109,19 +109,49 @@ serve(async (req) => {
 
 CRITICAL: You MUST use the analyze_mechanics tool to provide your analysis. Do not respond with plain text.
 
+You are analyzing video frames from the athlete's actual performance. Look carefully at:
+1. Body positions in each frame
+2. Movement patterns between frames
+3. Timing and sequencing of movements
+4. Specific body parts and their alignment
+
 Your analysis must be:
-1. SPECIFIC - Reference exact body parts, positions, and timing
+1. SPECIFIC - Reference exact body parts, positions, and timing YOU CAN SEE in the frames
 2. ENCOURAGING - Lead with what's working before corrections
 3. ACTIONABLE - Every tip must be something they can do immediately
-4. MODULE-ACCURATE - Based on the standards provided, not generic advice
+4. OBSERVATION-BASED - Only comment on what you actually observe in the frames
 
 ${moduleConfig.standards}
 
 Respond in ${languageName}.`;
 
-    const userPrompt = `Analyze this ${module} video for a ${sport} athlete. Provide specific feedback on their mechanics using the standards provided. Be encouraging but identify real issues.
+    // Build message content with frames if available
+    const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];
+    
+    if (frames.length > 0) {
+      userContent.push({
+        type: 'text',
+        text: `Analyze these ${frames.length} key frames from this ${module} video for a ${sport} athlete. These frames are sequential from the beginning to end of the movement. Look at the specific body positions, movements, and mechanics visible in each frame. Provide specific feedback based on what you ACTUALLY SEE.
 
-Use the analyze_mechanics tool to return your structured analysis.`;
+Use the analyze_mechanics tool to return your structured analysis.`
+      });
+      
+      // Add each frame as an image
+      for (const frame of frames) {
+        userContent.push({
+          type: 'image_url',
+          image_url: { url: frame }
+        });
+      }
+    } else {
+      // Fallback if no frames provided
+      userContent.push({
+        type: 'text',
+        text: `Analyze this ${module} video for a ${sport} athlete. Provide specific feedback on their mechanics using the standards provided. Be encouraging but identify real issues.
+
+Use the analyze_mechanics tool to return your structured analysis.`
+      });
+    }
 
     // Use tool calling for guaranteed structured output
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -131,27 +161,27 @@ Use the analyze_mechanics tool to return your structured analysis.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-flash', // Vision-capable model
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: 'user', content: userContent }
         ],
         tools: [
           {
             type: 'function',
             function: {
               name: 'analyze_mechanics',
-              description: 'Provide structured mechanics analysis for the athlete',
+              description: 'Provide structured mechanics analysis for the athlete based on the video frames',
               parameters: {
                 type: 'object',
                 properties: {
                   overallScore: {
                     type: 'number',
-                    description: 'Overall mechanics score from 1-10. 9-10=elite, 7-8=solid, 5-6=developing, 3-4=needs work, 1-2=major issues'
+                    description: 'Overall mechanics score from 1-10 based on what you observe. 9-10=elite, 7-8=solid, 5-6=developing, 3-4=needs work, 1-2=major issues'
                   },
                   quickSummary: {
                     type: 'string',
-                    description: 'One encouraging sentence summarizing their form. Must reference at least one specific mechanic observed.'
+                    description: 'One encouraging sentence summarizing their form. Must reference at least one specific mechanic you observed in the frames.'
                   },
                   mechanicsBreakdown: {
                     type: 'array',
@@ -164,32 +194,32 @@ Use the analyze_mechanics tool to return your structured analysis.`;
                         },
                         score: {
                           type: 'number',
-                          description: 'Score 1-10 for this specific mechanic'
+                          description: 'Score 1-10 for this specific mechanic based on what you see'
                         },
                         observation: {
                           type: 'string',
-                          description: 'Brief specific observation (5-10 words) referencing actual body position or movement'
+                          description: 'Brief specific observation (5-15 words) referencing actual body position or movement YOU CAN SEE in the frames'
                         },
                         tip: {
                           type: 'string',
-                          description: 'One specific actionable tip they can try immediately'
+                          description: 'One specific actionable tip they can try immediately to improve what you observed'
                         }
                       },
                       required: ['category', 'score', 'observation', 'tip']
                     },
-                    description: 'Analysis of 4-5 key mechanics categories'
+                    description: 'Analysis of 4-5 key mechanics categories based on what you observe in the frames'
                   },
                   keyStrength: {
                     type: 'string',
-                    description: 'The ONE thing they are doing best - be specific about what body part or movement looks good'
+                    description: 'The ONE thing they are doing best - be specific about what body part or movement looks good THAT YOU CAN SEE'
                   },
                   priorityFix: {
                     type: 'string',
-                    description: 'The ONE most important thing to fix - reference a specific red flag from the standards if applicable'
+                    description: 'The ONE most important thing to fix based on what you observe - reference a specific issue you can see'
                   },
                   drillRecommendation: {
                     type: 'string',
-                    description: 'One specific named drill with a focus cue (e.g., "Tee work with pause at load to feel weight stay back")'
+                    description: 'One specific named drill with a focus cue to address the priority fix you identified'
                   }
                 },
                 required: ['overallScore', 'quickSummary', 'mechanicsBreakdown', 'keyStrength', 'priorityFix', 'drillRecommendation']
@@ -222,7 +252,7 @@ Use the analyze_mechanics tool to return your structured analysis.`;
     }
 
     const data = await response.json();
-    console.log('AI response:', JSON.stringify(data, null, 2));
+    console.log('AI response received, processing...');
     
     // Extract from tool call
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
@@ -231,7 +261,7 @@ Use the analyze_mechanics tool to return your structured analysis.`;
     if (toolCall?.function?.arguments) {
       try {
         analysis = JSON.parse(toolCall.function.arguments);
-        console.log('Parsed tool call analysis:', analysis);
+        console.log('Parsed tool call analysis successfully');
         
         // Validate required fields
         if (!analysis.overallScore || !analysis.mechanicsBreakdown || !analysis.quickSummary) {
