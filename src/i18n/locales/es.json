@@ -5166,6 +5166,7 @@
     "defaultPositive1": "Buen esfuerzo en tu forma",
     "defaultPositive2": "Patrón de movimiento consistente observado",
     "defaultTip1": "Revisa tu video en cámara lenta para un análisis detallado",
-    "defaultNote": "¡Sigue practicando! Usa la reproducción en cámara lenta para identificar áreas de mejora."
+    "defaultNote": "¡Sigue practicando! Usa la reproducción en cámara lenta para identificar áreas de mejora.",
+    "countdownInfo": "Una vez que hagas clic en Iniciar Grabación, comenzará un temporizador de 20 segundos antes de que comience la grabación."
   }
 }

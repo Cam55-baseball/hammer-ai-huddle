@@ -4209,6 +4209,7 @@
     "defaultPositive1": "Goede inzet voor je vorm",
     "defaultPositive2": "Consistent bewegingspatroon waargenomen",
     "defaultTip1": "Bekijk je beelden in slow motion voor gedetailleerde analyse",
-    "defaultNote": "Blijf oefenen! Gebruik slow motion weergave om verbeterpunten te identificeren."
+    "defaultNote": "Blijf oefenen! Gebruik slow motion weergave om verbeterpunten te identificeren.",
+    "countdownInfo": "Zodra u op Opname starten klikt, begint een timer van 20 seconden voordat de opname start."
   }
 }
