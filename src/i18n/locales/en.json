@@ -5502,5 +5502,36 @@
       "title": "Tex Vision Training",
       "description": "Complete your daily vision drills"
     }
+  },
+  "realTimePlayback": {
+    "title": "Real-Time Playback",
+    "description": "Record yourself and get instant feedback with automatic replay and slow-motion analysis",
+    "startRecording": "Start Recording",
+    "recordingDuration": "Recording Duration",
+    "playbackDelay": "Playback Delay",
+    "repeatDuration": "Repeat Duration",
+    "playbackSpeed": "Playback Speed",
+    "ultraSlow": "Ultra Slow",
+    "slowMotion": "Slow Motion",
+    "moderate": "Moderate",
+    "normalSpeed": "Normal",
+    "seconds": "seconds",
+    "getReady": "Get Ready!",
+    "recording": "Recording",
+    "waitingForPlayback": "Starting playback in...",
+    "playing": "Playing Back",
+    "restart": "Restart",
+    "download": "Download",
+    "saveToLibrary": "Save to Library",
+    "positives": "What You're Doing Great",
+    "tips": "Quick Tips",
+    "speedLabel": "Speed",
+    "cameraPermissionRequired": "Camera permission is required",
+    "cameraPermissionDenied": "Camera access was denied. Please enable camera permissions.",
+    "downloadSuccess": "Video and analysis downloaded",
+    "defaultPositive1": "Good effort on your form",
+    "defaultPositive2": "Consistent motion pattern observed",
+    "defaultTip1": "Review your footage in slow motion for detailed analysis",
+    "defaultNote": "Keep practicing! Use slow motion playback to identify areas for improvement."
   }
 }

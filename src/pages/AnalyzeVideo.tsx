@@ -18,6 +18,7 @@ import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home, Heart } from "lucid
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
+import { RealTimePlaybackCard } from "@/components/RealTimePlaybackCard";
 import { EnhancedVideoPlayer } from "@/components/EnhancedVideoPlayer";
 import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSkeleton";
 import { TheScorecard } from "@/components/TheScorecard";
@@ -450,35 +451,41 @@ export default function AnalyzeVideo() {
 
         {/* Video Upload Section */}
         {!videoPreview && (
-          <Card className="p-4 sm:p-12 text-center border-dashed border-2">
-            <div className="flex flex-col items-center space-y-3 sm:space-y-4">
-              <div className="p-4 sm:p-6 rounded-full bg-primary/10">
-                <Upload className="h-10 w-10 sm:h-16 sm:w-16 text-primary" />
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Upload Card */}
+            <Card className="p-4 sm:p-6 text-center border-dashed border-2">
+              <div className="flex flex-col items-center space-y-3">
+                <div className="p-3 sm:p-4 rounded-full bg-primary/10">
+                  <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold">{t('videoAnalysis.uploadYourVideo')}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
+                  {t('videoAnalysis.uploadDescription', { module })}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t('videoAnalysis.maxFileSize')}
+                </p>
+                <label htmlFor="video-upload">
+                  <Button asChild size="sm">
+                    <span>
+                      <Video className="h-4 w-4 mr-2" />
+                      {t('videoAnalysis.selectVideo')}
+                    </span>
+                  </Button>
+                </label>
+                <input
+                  id="video-upload"
+                  type="file"
+                  accept="video/mp4,video/quicktime,video/x-msvideo,video/webm"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
               </div>
-              <h3 className="text-xl sm:text-2xl font-semibold">{t('videoAnalysis.uploadYourVideo')}</h3>
-              <p className="text-sm sm:text-base text-muted-foreground max-w-md">
-                {t('videoAnalysis.uploadDescription', { module })}
-              </p>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                {t('videoAnalysis.maxFileSize')}
-              </p>
-              <label htmlFor="video-upload">
-                <Button asChild>
-                  <span>
-                    <Video className="h-4 w-4 mr-2" />
-                    {t('videoAnalysis.selectVideo')}
-                  </span>
-                </Button>
-              </label>
-              <input
-                id="video-upload"
-                type="file"
-                accept="video/mp4,video/quicktime,video/x-msvideo,video/webm"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-            </div>
-          </Card>
+            </Card>
+
+            {/* Real-Time Playback Card */}
+            <RealTimePlaybackCard module={module || ''} sport={sport} />
+          </div>
         )}
 
         {/* Video Preview & Analysis */}
