@@ -4953,6 +4953,8 @@
     "capturedFrames": "Images Capturées",
     "downloadFrame": "Télécharger Image",
     "clearFrames": "Effacer",
-    "framesCleared": "Images effacées"
+    "framesCleared": "Images effacées",
+    "orientationWarning": "Évitez de tourner votre appareil pendant l'enregistrement !",
+    "orientationHint": "Cela peut interrompre votre session."
   }
 }

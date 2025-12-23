@@ -4352,6 +4352,8 @@
     "capturedFrames": "キャプチャしたフレーム",
     "downloadFrame": "フレームをダウンロード",
     "clearFrames": "クリア",
-    "framesCleared": "フレームをクリアしました"
+    "framesCleared": "フレームをクリアしました",
+    "orientationWarning": "録画中はデバイスを回転させないでください！",
+    "orientationHint": "セッションが中断される可能性があります。"
   }
 }

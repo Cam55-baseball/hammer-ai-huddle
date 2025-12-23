@@ -4196,6 +4196,8 @@
     "capturedFrames": "已捕获的帧",
     "downloadFrame": "下载帧",
     "clearFrames": "清除",
-    "framesCleared": "帧已清除"
+    "framesCleared": "帧已清除",
+    "orientationWarning": "录制过程中请勿旋转设备！",
+    "orientationHint": "这可能会中断您的会话。"
   }
 }

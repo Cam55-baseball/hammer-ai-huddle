@@ -5575,6 +5575,8 @@
     "capturedFrames": "Captured Frames",
     "downloadFrame": "Download Frame",
     "clearFrames": "Clear",
-    "framesCleared": "Frames cleared"
+    "framesCleared": "Frames cleared",
+    "orientationWarning": "Avoid rotating your device during recording!",
+    "orientationHint": "This may interrupt your session."
   }
 }

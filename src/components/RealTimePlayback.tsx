@@ -105,6 +105,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [capturedFrames, setCapturedFrames] = useState<string[]>([]);
+  const [orientationWarning, setOrientationWarning] = useState(false);
   
   // Refs
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
@@ -341,6 +342,67 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, [phase, isFullscreen]);
+
+  // Lock orientation during recording phases to prevent session reset
+  useEffect(() => {
+    const isActivePhase = phase === 'countdown' || phase === 'recording' || phase === 'waiting';
+    const orientation = screen.orientation as ScreenOrientation & { lock?: (type: string) => Promise<void>; unlock?: () => void };
+    
+    if (isActivePhase && orientation?.lock) {
+      // Try to lock to current orientation
+      const currentType = orientation.type;
+      const lockType = currentType.includes('portrait') ? 'portrait' : 'landscape';
+      
+      orientation.lock(lockType).catch(() => {
+        // Lock not supported on this device/browser - that's okay, we have the warning fallback
+        console.log('Orientation lock not supported');
+      });
+    }
+    
+    return () => {
+      // Unlock orientation when leaving active phases
+      const orientationUnlock = screen.orientation as ScreenOrientation & { unlock?: () => void };
+      if (orientationUnlock?.unlock) {
+        orientationUnlock.unlock();
+      }
+    };
+  }, [phase]);
+
+  // Detect orientation changes during active recording phases
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      const isActivePhase = phase === 'countdown' || phase === 'recording' || phase === 'waiting';
+      
+      if (isActivePhase) {
+        setOrientationWarning(true);
+        // Auto-dismiss warning after 5 seconds
+        setTimeout(() => setOrientationWarning(false), 5000);
+      }
+    };
+    
+    // Listen to both orientationchange and resize for broader compatibility
+    window.addEventListener('orientationchange', handleOrientationChange);
+    
+    // Also listen for resize which fires on orientation change in some browsers
+    let lastWidth = window.innerWidth;
+    const handleResize = () => {
+      const currentWidth = window.innerWidth;
+      const isActivePhase = phase === 'countdown' || phase === 'recording' || phase === 'waiting';
+      
+      // Detect significant width change (orientation flip)
+      if (isActivePhase && Math.abs(currentWidth - lastWidth) > 100) {
+        setOrientationWarning(true);
+        setTimeout(() => setOrientationWarning(false), 5000);
+      }
+      lastWidth = currentWidth;
+    };
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [phase]);
 
   // Initialize camera
   const initCamera = useCallback(async (mode: FacingMode = facingMode) => {
@@ -1001,6 +1063,26 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                               )}
                             </>
                           )}
+
+                          {/* Orientation Warning Overlay */}
+                          <AnimatePresence>
+                            {orientationWarning && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-amber-500/95 text-black px-6 py-4 rounded-xl shadow-lg text-center max-w-xs"
+                              >
+                                <AlertCircle className="h-8 w-8 mx-auto mb-2 text-amber-900" />
+                                <p className="font-semibold text-sm">
+                                  {t('realTimePlayback.orientationWarning', 'Avoid rotating your device during recording!')}
+                                </p>
+                                <p className="text-xs mt-1 text-amber-800">
+                                  {t('realTimePlayback.orientationHint', 'This may interrupt your session.')}
+                                </p>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </>
                       )}
                     </div>
