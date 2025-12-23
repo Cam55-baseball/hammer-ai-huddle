@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format, addDays } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, Circle, Clock, Zap, Brain, ArrowRight, AlertTriangle, CalendarClock } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Zap, Brain, ArrowRight, AlertTriangle, CalendarClock, ArrowUpDown } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TexVisionDailyChecklist as ChecklistType } from '@/hooks/useTexVisionProgress';
 import { Badge } from '@/components/ui/badge';
@@ -73,6 +74,13 @@ export default function TexVisionDailyChecklist({
   onStartS2Assessment,
 }: TexVisionDailyChecklistProps) {
   const { t } = useTranslation();
+  const [autoSort, setAutoSort] = useState(() => localStorage.getItem('texvision-sort') !== 'original');
+
+  const toggleAutoSort = () => {
+    const newValue = !autoSort;
+    setAutoSort(newValue);
+    localStorage.setItem('texvision-sort', newValue ? 'auto' : 'original');
+  };
 
   if (loading) {
     return (
@@ -203,16 +211,27 @@ export default function TexVisionDailyChecklist({
             <Zap className="h-5 w-5 text-[hsl(var(--tex-vision-feedback))]" />
             {t('texVision.checklist.title', 'Daily Vision Training')}
           </CardTitle>
-          <Badge 
-            variant="outline"
-            className={`${
-              isComplete 
-                ? 'bg-[hsl(var(--tex-vision-success))]/20 text-green-700 border-[hsl(var(--tex-vision-success))]/50' 
-                : 'bg-[hsl(var(--tex-vision-primary-light))]/20 text-blue-900 border-[hsl(var(--tex-vision-primary-light))]/30'
-            }`}
-          >
-            {completedCount}/2+ {t('texVision.checklist.completed', 'completed')}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleAutoSort}
+              className="flex items-center gap-1 text-xs font-medium text-blue-900/70 hover:text-blue-900 px-2 py-1 h-auto"
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              {autoSort ? t('texVision.autoSort', 'Auto') : t('texVision.manualSort', 'Manual')}
+            </Button>
+            <Badge 
+              variant="outline"
+              className={`${
+                isComplete 
+                  ? 'bg-[hsl(var(--tex-vision-success))]/20 text-green-700 border-[hsl(var(--tex-vision-success))]/50' 
+                  : 'bg-[hsl(var(--tex-vision-primary-light))]/20 text-blue-900 border-[hsl(var(--tex-vision-primary-light))]/30'
+              }`}
+            >
+              {completedCount}/2+ {t('texVision.checklist.completed', 'completed')}
+            </Badge>
+          </div>
         </div>
         <CardDescription className="text-blue-900">
           {t('texVision.checklist.description', 'Complete 2-4 drills for optimal neuro-visual development (8-15 min)')}
@@ -222,13 +241,16 @@ export default function TexVisionDailyChecklist({
         {/* S2 Cognition Section */}
         {renderS2Section()}
 
-        {/* Daily Drills - sorted with incomplete first, completed at bottom */}
+        {/* Daily Drills - conditionally sorted based on autoSort preference */}
         <div className="space-y-2">
-          {[...DAILY_DRILLS].sort((a, b) => {
-            const aCompleted = checklist?.checklist_items?.[a.id] || false;
-            const bCompleted = checklist?.checklist_items?.[b.id] || false;
-            return aCompleted === bCompleted ? 0 : aCompleted ? 1 : -1;
-          }).map((drill) => {
+          {(autoSort 
+            ? [...DAILY_DRILLS].sort((a, b) => {
+                const aCompleted = checklist?.checklist_items?.[a.id] || false;
+                const bCompleted = checklist?.checklist_items?.[b.id] || false;
+                return aCompleted === bCompleted ? 0 : aCompleted ? 1 : -1;
+              })
+            : DAILY_DRILLS
+          ).map((drill) => {
             const isCompleted = checklist?.checklist_items?.[drill.id] || false;
             
             return (

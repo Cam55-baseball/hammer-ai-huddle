@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Sparkles, Crown, ChevronRight, GraduationCap, Brain, BookOpen, Moon, Shield } from 'lucide-react';
+import { Check, Sparkles, Crown, ChevronRight, GraduationCap, Brain, BookOpen, Moon, Shield, ArrowUpDown } from 'lucide-react';
 import { useMindFuelDailyTasks, DailyTask, TaskId } from '@/hooks/useMindFuelDailyTasks';
 import { useMindFuelEducationProgress, EducationType } from '@/hooks/useMindFuelEducationProgress';
 import { cn } from '@/lib/utils';
@@ -37,6 +37,13 @@ export default function MindFuelDailyChecklist({
   const { tasks, loading, toggleTask, completedCount, totalCount, progress, allComplete } = useMindFuelDailyTasks();
   const { getEducationItems, totalEducationProgress, loading: educationLoading } = useMindFuelEducationProgress();
   const [showConfetti, setShowConfetti] = useState(false);
+  const [autoSort, setAutoSort] = useState(() => localStorage.getItem('mindfuel-sort') !== 'original');
+
+  const toggleAutoSort = () => {
+    const newValue = !autoSort;
+    setAutoSort(newValue);
+    localStorage.setItem('mindfuel-sort', newValue ? 'auto' : 'original');
+  };
 
   const educationItems = getEducationItems();
   const { completed: eduCompleted, total: eduTotal, allComplete: eduAllComplete } = totalEducationProgress();
@@ -139,6 +146,17 @@ export default function MindFuelDailyChecklist({
               </p>
             </div>
           </div>
+          
+          {/* Auto-sort toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleAutoSort}
+            className="flex items-center gap-1.5 text-xs font-medium text-violet-300/70 hover:text-violet-200"
+          >
+            <ArrowUpDown className="h-3.5 w-3.5" />
+            {autoSort ? t('mindFuel.autoSort', 'Auto') : t('mindFuel.manualSort', 'Manual')}
+          </Button>
 
           {/* Progress Ring */}
           <div className="flex items-center gap-3 bg-background/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-violet-500/30">
@@ -192,9 +210,9 @@ export default function MindFuelDailyChecklist({
           </div>
         </div>
 
-        {/* Task List - sorted with incomplete first, completed at bottom */}
+        {/* Task List - conditionally sorted based on autoSort preference */}
         <div className="space-y-2.5">
-          {[...tasks].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1)).map((task) => {
+          {(autoSort ? [...tasks].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1)) : tasks).map((task) => {
             const Icon = task.icon;
             const colorClasses = getTaskColorClasses(task);
 
@@ -297,11 +315,14 @@ export default function MindFuelDailyChecklist({
           </div>
 
           <div className="space-y-2">
-            {[...educationItems].sort((a, b) => {
-              const aComplete = a.completedItems >= a.totalItems;
-              const bComplete = b.completedItems >= b.totalItems;
-              return aComplete === bComplete ? 0 : aComplete ? 1 : -1;
-            }).map((item) => {
+            {(autoSort 
+              ? [...educationItems].sort((a, b) => {
+                  const aComplete = a.completedItems >= a.totalItems;
+                  const bComplete = b.completedItems >= b.totalItems;
+                  return aComplete === bComplete ? 0 : aComplete ? 1 : -1;
+                })
+              : educationItems
+            ).map((item) => {
               const Icon = EDUCATION_ICONS[item.type];
               const colors = EDUCATION_COLORS[item.type];
               const isComplete = item.completedItems >= item.totalItems;
