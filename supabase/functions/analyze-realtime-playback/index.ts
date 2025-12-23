@@ -7,6 +7,20 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
+// Module-specific mechanics categories
+const getMechanicsCategories = (module: string): string[] => {
+  switch (module) {
+    case 'hitting':
+      return ['Stance & Setup', 'Load & Timing', 'Stride & Weight Transfer', 'Hip Rotation', 'Bat Path & Contact', 'Follow-Through'];
+    case 'pitching':
+      return ['Stance & Balance', 'Leg Lift', 'Hip Lead & Stride', 'Arm Action', 'Release Point', 'Follow-Through'];
+    case 'throwing':
+      return ['Grip & Setup', 'Footwork', 'Hip Rotation', 'Arm Path', 'Release', 'Follow-Through'];
+    default:
+      return ['Setup', 'Load', 'Execution', 'Follow-Through'];
+  }
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -33,26 +47,44 @@ serve(async (req) => {
     };
     
     const languageName = languageMap[language] || 'English';
+    const mechanicsCategories = getMechanicsCategories(module);
     
-    const prompt = `You are a ${sport} ${module} coach providing brief, encouraging feedback on a player's form.
+    const prompt = `You are an expert ${sport} ${module} coach providing detailed but concise feedback.
 
-Generate a VERY BRIEF analysis focusing on positives. The player just recorded themselves and wants quick feedback.
+Generate a STRUCTURED mechanics analysis. Be ENCOURAGING but specific.
 
 CRITICAL: Respond in ${languageName} language.
 
-Return a JSON object with this exact structure:
+Return a JSON object with this EXACT structure:
 {
-  "positives": ["2-3 specific things the player is doing well - BE ENCOURAGING"],
-  "tips": ["1-2 short, actionable improvements - keep these brief and constructive"],
-  "overallNote": "One encouraging sentence about their progress"
+  "overallScore": 7.5,
+  "quickSummary": "One sentence summary of their form - be encouraging and specific",
+  "mechanicsBreakdown": [
+    {
+      "category": "${mechanicsCategories[0]}",
+      "score": 8,
+      "observation": "Brief observation (5-10 words)",
+      "tip": "One specific actionable tip"
+    },
+    // Include 4-5 categories from: ${mechanicsCategories.join(', ')}
+  ],
+  "keyStrength": "The ONE thing they're doing best (one sentence)",
+  "priorityFix": "The ONE thing to focus on improving (one sentence)",
+  "drillRecommendation": "One specific drill they should practice"
 }
 
-Focus on:
-- For ${module === 'hitting' ? 'hitting: stance, bat path, hip rotation, balance, follow-through' : ''}
-- For ${module === 'pitching' ? 'pitching: arm slot, leg drive, release point, follow-through' : ''}
-- For ${module === 'throwing' ? 'throwing: arm path, hip rotation, stride, release, accuracy' : ''}
+SCORING GUIDE:
+- 9-10: Elite/professional level
+- 7-8: Solid fundamentals, minor tweaks needed
+- 5-6: Developing, has the right idea but needs work
+- 3-4: Needs significant improvement
+- 1-2: Major issues to address
 
-Be POSITIVE and ENCOURAGING. Emphasize what they're doing RIGHT. Keep tips short and actionable.`;
+For ${module === 'hitting' ? 'HITTING focus on: stance width, hand position, bat angle, hip rotation timing, weight transfer, bat path, extension, follow-through' : ''}
+${module === 'pitching' ? 'PITCHING focus on: balance point, glove side, hip-shoulder separation, arm slot consistency, stride length, release point, deceleration' : ''}
+${module === 'throwing' ? 'THROWING focus on: grip, footwork alignment, hip-shoulder separation, arm slot, elbow position, release timing, follow-through' : ''}
+
+Be POSITIVE first, then constructive. Keep observations SHORT but SPECIFIC. Drills should be practical and specific.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -63,7 +95,7 @@ Be POSITIVE and ENCOURAGING. Emphasize what they're doing RIGHT. Keep tips short
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are an encouraging sports coach. Respond only with valid JSON.' },
+          { role: 'system', content: 'You are an expert sports mechanics coach. Respond only with valid JSON. Be encouraging but specific.' },
           { role: 'user', content: prompt }
         ],
       }),
@@ -102,20 +134,37 @@ Be POSITIVE and ENCOURAGING. Emphasize what they're doing RIGHT. Keep tips short
       // Remove markdown code blocks if present
       const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
       analysis = JSON.parse(cleanContent);
+      
+      // Validate required fields
+      if (!analysis.overallScore || !analysis.mechanicsBreakdown) {
+        throw new Error('Missing required fields');
+      }
     } catch (parseError) {
       console.error('Failed to parse AI response:', content);
-      // Return a default response
+      // Return a structured fallback response
+      const categories = getMechanicsCategories(module);
       analysis = {
-        positives: [
-          language === 'en' ? 'Good effort on your form' : 'Great effort shown',
-          language === 'en' ? 'Solid foundation to build on' : 'Strong base technique'
-        ],
-        tips: [
-          language === 'en' ? 'Continue practicing with slow-motion review' : 'Keep practicing consistently'
-        ],
-        overallNote: language === 'en' 
-          ? 'Keep up the great work! Review the slow-motion playback to fine-tune your mechanics.'
-          : 'Excellent progress! Keep practicing.'
+        overallScore: 7.5,
+        quickSummary: language === 'en' 
+          ? 'Good effort! Your mechanics show solid fundamentals with room for refinement.' 
+          : 'Great work on your form!',
+        mechanicsBreakdown: categories.slice(0, 4).map((cat, i) => ({
+          category: cat,
+          score: 7 + (i % 2),
+          observation: language === 'en' ? 'Solid foundation to build on' : 'Good technique',
+          tip: language === 'en' ? 'Continue focusing on consistency' : 'Keep practicing'
+        })),
+        keyStrength: language === 'en' 
+          ? 'Good overall body control and athletic position' 
+          : 'Strong fundamentals',
+        priorityFix: language === 'en' 
+          ? 'Review slow-motion footage to identify timing improvements' 
+          : 'Focus on timing',
+        drillRecommendation: module === 'hitting' 
+          ? 'Tee work with focus on hip rotation timing'
+          : module === 'pitching'
+          ? 'Towel drill for arm path consistency'
+          : 'Wall throws for arm slot consistency'
       };
     }
 
@@ -128,9 +177,15 @@ Be POSITIVE and ENCOURAGING. Emphasize what they're doing RIGHT. Keep tips short
     console.error('Error in analyze-realtime-playback:', error);
     return new Response(JSON.stringify({ 
       error: error instanceof Error ? error.message : 'Unknown error',
-      positives: ['Good effort on your form', 'Keep practicing'],
-      tips: ['Review your slow-motion footage'],
-      overallNote: 'Keep up the great work!'
+      overallScore: 7.0,
+      quickSummary: 'Keep up the great work on your mechanics!',
+      mechanicsBreakdown: [
+        { category: 'Setup', score: 7, observation: 'Good starting position', tip: 'Stay balanced' },
+        { category: 'Execution', score: 7, observation: 'Solid movement pattern', tip: 'Focus on timing' }
+      ],
+      keyStrength: 'Good effort and consistency',
+      priorityFix: 'Review your slow-motion footage',
+      drillRecommendation: 'Practice with focused repetitions'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

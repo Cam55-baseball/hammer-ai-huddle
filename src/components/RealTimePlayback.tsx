@@ -31,10 +31,20 @@ interface RealTimePlaybackProps {
 type Phase = 'setup' | 'countdown' | 'recording' | 'waiting' | 'playback' | 'complete';
 type FacingMode = 'user' | 'environment';
 
+interface MechanicsBreakdown {
+  category: string;
+  score: number;
+  observation: string;
+  tip: string;
+}
+
 interface Analysis {
-  positives: string[];
-  tips: string[];
-  overallNote: string;
+  overallScore: number;
+  quickSummary: string;
+  mechanicsBreakdown: MechanicsBreakdown[];
+  keyStrength: string;
+  priorityFix: string;
+  drillRecommendation: string;
 }
 
 const RECORDING_DURATIONS = [10, 15, 20, 30, 40];
@@ -296,12 +306,24 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     setAnalysis(null);
     chunksRef.current = [];
     
+    // Enter fullscreen IMMEDIATELY on user click (within user gesture context)
+    try {
+      if (cameraContainerRef.current?.requestFullscreen) {
+        await cameraContainerRef.current.requestFullscreen();
+        setIsFullscreen(true);
+      }
+    } catch (err) {
+      console.warn('Fullscreen request failed (user may have declined):', err);
+      // Continue without fullscreen - don't block recording
+    }
+    
     // Countdown phase
     setPhase('countdown');
     for (let i = 20; i > 0; i--) {
       if (countdownCancelledRef.current) {
         countdownCancelledRef.current = false;
         setPhase('setup');
+        exitFullscreen();
         return;
       }
       setCountdown(i);
@@ -315,9 +337,6 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       
       await new Promise(r => setTimeout(r, 1000));
     }
-    
-    // Enter fullscreen when recording starts
-    await enterFullscreen();
     
     // Recording phase
     setPhase('recording');
@@ -450,16 +469,16 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
         
         if (error) {
           console.error('Analysis error:', error);
-          // Provide fallback analysis
+          // Provide fallback analysis with mechanics breakdown
           setAnalysis({
-            positives: [
-              t('realTimePlayback.defaultPositive1', 'Good effort on your form'),
-              t('realTimePlayback.defaultPositive2', 'Consistent motion pattern observed')
+            overallScore: 7.5,
+            quickSummary: t('realTimePlayback.defaultSummary', 'Good effort! Review your mechanics in slow motion.'),
+            mechanicsBreakdown: [
+              { category: 'Setup', score: 7, observation: t('realTimePlayback.defaultObservation', 'Solid foundation'), tip: t('realTimePlayback.defaultMechanicTip', 'Continue practicing') }
             ],
-            tips: [
-              t('realTimePlayback.defaultTip1', 'Review your footage in slow motion for detailed analysis')
-            ],
-            overallNote: t('realTimePlayback.defaultNote', 'Keep practicing! Use slow motion playback to identify areas for improvement.')
+            keyStrength: t('realTimePlayback.defaultStrength', 'Good effort and consistency'),
+            priorityFix: t('realTimePlayback.defaultPriority', 'Review slow-motion footage'),
+            drillRecommendation: t('realTimePlayback.defaultDrill', 'Tee work for consistency')
           });
         } else if (data) {
           setAnalysis(data);
@@ -546,13 +565,28 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     }
   }, [phase, autoRecordEnabled]);
   
-  // Auto-play video when playback starts
+  // Auto-play video when playback starts - ensure immediate display
   useEffect(() => {
-    if (phase === 'playback' && videoPlaybackRef.current && recordedUrl) {
-      videoPlaybackRef.current.src = recordedUrl;
-      videoPlaybackRef.current.playbackRate = parseFloat(playbackSpeed);
-      videoPlaybackRef.current.loop = true;
-      videoPlaybackRef.current.play().catch(console.error);
+    if ((phase === 'playback' || phase === 'complete') && recordedUrl && videoPlaybackRef.current) {
+      const video = videoPlaybackRef.current;
+      // Force load and play
+      video.src = recordedUrl;
+      video.load();
+      video.playbackRate = parseFloat(playbackSpeed);
+      video.loop = true;
+      video.muted = false;
+      
+      // Play with a small delay to ensure DOM is ready
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.error('Video play failed:', err);
+          // Try again after a short delay
+          setTimeout(() => {
+            video.play().catch(console.error);
+          }, 100);
+        });
+      }
     }
   }, [phase, recordedUrl, playbackSpeed]);
   
@@ -600,14 +634,21 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     
     // Download analysis
     if (analysis) {
+      const mechanicsText = analysis.mechanicsBreakdown
+        .map(m => `${m.category}: ${m.score}/10 - ${m.observation} (${m.tip})`)
+        .join('\n');
+      
       const analysisText = `
-${t('realTimePlayback.positives', "What You're Doing Great")}
-${analysis.positives.map(p => `✓ ${p}`).join('\n')}
+${t('realTimePlayback.quickAnalysis', 'Quick Analysis')} - Score: ${analysis.overallScore}/10
 
-${t('realTimePlayback.tips', 'Quick Tips')}
-${analysis.tips.map(tip => `• ${tip}`).join('\n')}
+"${analysis.quickSummary}"
 
-${analysis.overallNote}
+${t('realTimePlayback.mechanicsBreakdown', 'Mechanics Breakdown')}
+${mechanicsText}
+
+${t('realTimePlayback.keyStrength', 'Key Strength')}: ${analysis.keyStrength}
+${t('realTimePlayback.priorityFix', 'Priority Fix')}: ${analysis.priorityFix}
+${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecommendation}
       `.trim();
       
       const textBlob = new Blob([analysisText], { type: 'text/plain' });
@@ -1043,9 +1084,15 @@ ${analysis.overallNote}
                     <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
                       <video
                         ref={videoPlaybackRef}
+                        autoPlay
                         playsInline
                         loop
+                        muted={false}
                         className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+                        onLoadedData={() => {
+                          // Ensure video plays when data is loaded
+                          videoPlaybackRef.current?.play().catch(console.error);
+                        }}
                       />
                       {/* Status indicator */}
                       {phase === 'playback' && (
@@ -1113,33 +1160,71 @@ ${analysis.overallNote}
                           </div>
                         ) : analysis ? (
                           <div className="space-y-4">
-                            {/* Positives */}
+                            {/* Header with Score */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Sparkles className="h-5 w-5 text-primary" />
+                                <span className="font-semibold">{t('realTimePlayback.quickAnalysis', 'Quick Analysis')}</span>
+                              </div>
+                              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10">
+                                <span className="text-lg font-bold text-primary">{analysis.overallScore}</span>
+                                <span className="text-sm text-muted-foreground">/10</span>
+                              </div>
+                            </div>
+                            
+                            {/* Quick Summary */}
+                            <p className="text-sm text-muted-foreground italic">"{analysis.quickSummary}"</p>
+                            
+                            {/* Mechanics Breakdown */}
                             <div className="space-y-2">
-                              <div className="flex items-center gap-2 text-green-500">
-                                <Sparkles className="h-5 w-5" />
-                                <span className="font-semibold">{t('realTimePlayback.positives', "What You're Doing Great")}</span>
+                              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                {t('realTimePlayback.mechanicsBreakdown', 'Mechanics Breakdown')}
+                              </span>
+                              <div className="grid gap-2">
+                                {analysis.mechanicsBreakdown.map((mechanic, i) => (
+                                  <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+                                      mechanic.score >= 8 ? 'bg-green-500/20 text-green-600' :
+                                      mechanic.score >= 6 ? 'bg-yellow-500/20 text-yellow-600' :
+                                      'bg-red-500/20 text-red-600'
+                                    }`}>
+                                      {mechanic.score}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium">{mechanic.category}</p>
+                                      <p className="text-xs text-muted-foreground truncate">{mechanic.observation}</p>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                              {analysis.positives.map((positive, i) => (
-                                <div key={i} className="flex items-start gap-2 pl-7">
-                                  <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                  <span className="text-sm">{positive}</span>
+                            </div>
+                            
+                            {/* Key Insights */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1 text-green-500">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                  <span className="text-xs font-medium">{t('realTimePlayback.keyStrength', 'Key Strength')}</span>
                                 </div>
-                              ))}
-                            </div>
-                            
-                            {/* Tips */}
-                            <div className="space-y-2 pt-2 border-t">
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <Settings className="h-4 w-4" />
-                                <span className="font-medium text-sm">{t('realTimePlayback.tips', 'Quick Tips')}</span>
+                                <p className="text-sm pl-5">{analysis.keyStrength}</p>
                               </div>
-                              {analysis.tips.map((tip, i) => (
-                                <p key={i} className="text-xs text-muted-foreground pl-6">• {tip}</p>
-                              ))}
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1 text-orange-500">
+                                  <AlertCircle className="h-4 w-4" />
+                                  <span className="text-xs font-medium">{t('realTimePlayback.priorityFix', 'Priority Fix')}</span>
+                                </div>
+                                <p className="text-sm pl-5">{analysis.priorityFix}</p>
+                              </div>
                             </div>
                             
-                            {/* Overall Note */}
-                            <p className="text-sm text-primary font-medium pt-2 border-t">{analysis.overallNote}</p>
+                            {/* Drill Recommendation */}
+                            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                              <Settings className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-xs font-medium text-primary">{t('realTimePlayback.tryThisDrill', 'Try This Drill')}</span>
+                                <p className="text-sm">{analysis.drillRecommendation}</p>
+                              </div>
+                            </div>
                           </div>
                         ) : null}
                       </Card>
