@@ -139,8 +139,10 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
         setLatestResult(result);
 
         if (data.next_test_date) {
-          const nextDate = new Date(data.next_test_date);
-          const today = new Date();
+          const nextDate = parseLocalDate(data.next_test_date);
+          // Create local "today" at midnight for consistent day calculation
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
           const daysRemaining = differenceInDays(nextDate, today);
           setDaysUntilNextTest(Math.max(0, daysRemaining));
           setCanTakeTest(daysRemaining <= 0);
