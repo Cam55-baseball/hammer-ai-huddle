@@ -4945,6 +4945,14 @@
     "nextRecordingIn": "Nächste Aufnahme in...",
     "stopAutoRecord": "Auto-Aufnahme Stoppen",
     "fullscreen": "Vollbild",
-    "uploadError": "Video-Upload fehlgeschlagen"
+    "uploadError": "Video-Upload fehlgeschlagen",
+    "pause": "Pause",
+    "play": "Abspielen",
+    "captureKeyFrame": "Schlüsselbild Aufnehmen",
+    "frameCaptured": "Schlüsselbild aufgenommen!",
+    "capturedFrames": "Aufgenommene Bilder",
+    "downloadFrame": "Bild Herunterladen",
+    "clearFrames": "Löschen",
+    "framesCleared": "Bilder gelöscht"
   }
 }

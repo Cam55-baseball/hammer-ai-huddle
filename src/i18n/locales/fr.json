@@ -4945,6 +4945,14 @@
     "nextRecordingIn": "Prochain enregistrement dans...",
     "stopAutoRecord": "Arrêter Auto Enregistrement",
     "fullscreen": "Plein Écran",
-    "uploadError": "Échec du téléchargement vidéo"
+    "uploadError": "Échec du téléchargement vidéo",
+    "pause": "Pause",
+    "play": "Lecture",
+    "captureKeyFrame": "Capturer Image Clé",
+    "frameCaptured": "Image clé capturée !",
+    "capturedFrames": "Images Capturées",
+    "downloadFrame": "Télécharger Image",
+    "clearFrames": "Effacer",
+    "framesCleared": "Images effacées"
   }
 }

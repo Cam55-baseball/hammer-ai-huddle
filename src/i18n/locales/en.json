@@ -5567,6 +5567,14 @@
     "nextRecordingIn": "Next recording in...",
     "stopAutoRecord": "Stop Auto Record",
     "fullscreen": "Fullscreen",
-    "uploadError": "Failed to upload video"
+    "uploadError": "Failed to upload video",
+    "pause": "Pause",
+    "play": "Play",
+    "captureKeyFrame": "Capture Key Frame",
+    "frameCaptured": "Key frame captured!",
+    "capturedFrames": "Captured Frames",
+    "downloadFrame": "Download Frame",
+    "clearFrames": "Clear",
+    "framesCleared": "Frames cleared"
   }
 }

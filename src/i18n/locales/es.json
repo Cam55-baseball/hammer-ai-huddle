@@ -5201,6 +5201,14 @@
     "nextRecordingIn": "Próxima grabación en...",
     "stopAutoRecord": "Detener Auto Grabación",
     "fullscreen": "Pantalla Completa",
-    "uploadError": "Error al subir video"
+    "uploadError": "Error al subir video",
+    "pause": "Pausar",
+    "play": "Reproducir",
+    "captureKeyFrame": "Capturar Fotograma",
+    "frameCaptured": "¡Fotograma capturado!",
+    "capturedFrames": "Fotogramas Capturados",
+    "downloadFrame": "Descargar Fotograma",
+    "clearFrames": "Limpiar",
+    "framesCleared": "Fotogramas eliminados"
   }
 }

@@ -4344,6 +4344,14 @@
     "nextRecordingIn": "次の録画まで...",
     "stopAutoRecord": "自動録画を停止",
     "fullscreen": "全画面",
-    "uploadError": "動画のアップロードに失敗しました"
+    "uploadError": "動画のアップロードに失敗しました",
+    "pause": "一時停止",
+    "play": "再生",
+    "captureKeyFrame": "キーフレームをキャプチャ",
+    "frameCaptured": "キーフレームをキャプチャしました！",
+    "capturedFrames": "キャプチャしたフレーム",
+    "downloadFrame": "フレームをダウンロード",
+    "clearFrames": "クリア",
+    "framesCleared": "フレームをクリアしました"
   }
 }

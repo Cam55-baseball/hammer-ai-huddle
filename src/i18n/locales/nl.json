@@ -4244,6 +4244,14 @@
     "nextRecordingIn": "Volgende opname over...",
     "stopAutoRecord": "Stop Auto Opname",
     "fullscreen": "Volledig Scherm",
-    "uploadError": "Video uploaden mislukt"
+    "uploadError": "Video uploaden mislukt",
+    "pause": "Pauze",
+    "play": "Afspelen",
+    "captureKeyFrame": "Sleutelframe Vastleggen",
+    "frameCaptured": "Sleutelframe vastgelegd!",
+    "capturedFrames": "Vastgelegde Frames",
+    "downloadFrame": "Frame Downloaden",
+    "clearFrames": "Wissen",
+    "framesCleared": "Frames gewist"
   }
 }
