@@ -4310,6 +4310,15 @@
     "defaultPositive2": "一貫した動作パターンが観察されました",
     "defaultTip1": "詳細な分析のためにスローモーションで映像を確認してください",
     "defaultNote": "練習を続けてください！スローモーション再生を使って改善点を見つけましょう。",
-    "countdownInfo": "録画開始をクリックすると、録画が始まる前に20秒のタイマーが開始されます。"
+    "countdownInfo": "録画開始をクリックすると、録画が始まる前に20秒のタイマーが開始されます。",
+    "flipCamera": "カメラを切り替え",
+    "frontCamera": "フロントカメラ",
+    "rearCamera": "リアカメラ",
+    "aiAnalysis": "AI分析",
+    "aiAnalysisDescription": "AIによるフォームのフィードバックを取得",
+    "analysisDisabled": "AI分析はオフになっています。動画は保存されました。",
+    "cameraError": "カメラストリームが利用できません。もう一度お試しください。",
+    "recordingError": "録画に失敗しました。もう一度お試しください。",
+    "noDataCaptured": "ビデオデータがキャプチャされませんでした。もう一度お試しください。"
   }
 }

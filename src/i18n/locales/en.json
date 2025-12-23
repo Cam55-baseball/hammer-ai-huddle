@@ -5533,6 +5533,15 @@
     "defaultPositive2": "Consistent motion pattern observed",
     "defaultTip1": "Review your footage in slow motion for detailed analysis",
     "defaultNote": "Keep practicing! Use slow motion playback to identify areas for improvement.",
-    "countdownInfo": "Once you click Start Recording, a 20 second timer will begin before recording starts."
+    "countdownInfo": "Once you click Start Recording, a 20 second timer will begin before recording starts.",
+    "flipCamera": "Flip Camera",
+    "frontCamera": "Front Camera",
+    "rearCamera": "Rear Camera",
+    "aiAnalysis": "AI Analysis",
+    "aiAnalysisDescription": "Get AI-powered feedback on your form",
+    "analysisDisabled": "AI analysis is turned off. Your video has been saved.",
+    "cameraError": "Camera stream is not available. Please try again.",
+    "recordingError": "Recording failed. Please try again.",
+    "noDataCaptured": "No video data was captured. Please try again."
   }
 }

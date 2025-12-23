@@ -4197,6 +4197,15 @@
     "defaultPositive2": "일관된 동작 패턴이 관찰되었습니다",
     "defaultTip1": "자세한 분석을 위해 슬로모션으로 영상을 검토하세요",
     "defaultNote": "계속 연습하세요! 슬로모션 재생을 사용하여 개선 영역을 확인하세요.",
-    "countdownInfo": "녹화 시작을 클릭하면 녹화가 시작되기 전에 20초 타이머가 시작됩니다."
+    "countdownInfo": "녹화 시작을 클릭하면 녹화가 시작되기 전에 20초 타이머가 시작됩니다.",
+    "flipCamera": "카메라 전환",
+    "frontCamera": "전면 카메라",
+    "rearCamera": "후면 카메라",
+    "aiAnalysis": "AI 분석",
+    "aiAnalysisDescription": "AI 기반 폼 피드백 받기",
+    "analysisDisabled": "AI 분석이 꺼져 있습니다. 비디오가 저장되었습니다.",
+    "cameraError": "카메라 스트림을 사용할 수 없습니다. 다시 시도해 주세요.",
+    "recordingError": "녹화에 실패했습니다. 다시 시도해 주세요.",
+    "noDataCaptured": "비디오 데이터가 캡처되지 않았습니다. 다시 시도해 주세요."
   }
 }
