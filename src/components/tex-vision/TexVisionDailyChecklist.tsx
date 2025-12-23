@@ -97,18 +97,14 @@ export default function TexVisionDailyChecklist({
     : 0;
   const isComplete = completedCount >= 2;
 
-  // S2 Section rendering
+  // S2 Section rendering - only show when user has an actionable test
   const renderS2Section = () => {
-    // If S2 data is still loading, show skeleton
+    // If S2 data is still loading, don't show anything (countdown is at bottom of page)
     if (s2Loading) {
-      return (
-        <div className="space-y-3 mb-4">
-          <Skeleton className="h-16 bg-[hsl(var(--tex-vision-primary-light))]/50 rounded-lg" />
-        </div>
-      );
+      return null;
     }
 
-    // No baseline exists - prompt user to complete baseline
+    // No baseline exists - prompt user to complete baseline (actionable)
     if (!s2DiagnosticResult) {
       return (
         <div className="mb-4">
@@ -149,62 +145,10 @@ export default function TexVisionDailyChecklist({
       );
     }
 
-    // Baseline exists - show countdown and progress
-    const cycleProgress = calculateCycleProgress(daysUntilNextS2 || 0);
-    const timeRemaining = formatWeeksAndDays(daysUntilNextS2 || 0);
-
-    // When S2 test is completed and locked, show status instead of an action item
+    // Baseline exists but test is locked - don't show in checklist
+    // The countdown is already visible at the bottom of the Tex Vision page
     if (!canTakeS2Test) {
-      // S2 is locked - show status card with next test date
-      const nextDateFormatted = nextS2TestDate 
-        ? format(nextS2TestDate, 'MMMM d, yyyy')
-        : 'in 16 weeks';
-
-      return (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-teal-600" />
-              <span className="font-semibold text-blue-900">S2 Cognition Diagnostic</span>
-            </div>
-            <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/30 text-xs">
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-              Complete
-            </Badge>
-          </div>
-          
-          <div className="p-4 rounded-lg border bg-[hsl(var(--tex-vision-primary-dark))]/50 border-[hsl(var(--tex-vision-primary-light))]/20">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className={`text-2xl font-bold ${getScoreColor(s2DiagnosticResult.overall_score)}`}>
-                  {s2DiagnosticResult.overall_score || '—'}
-                </div>
-                <span className="text-xs text-blue-900/70">Current Score</span>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Progress 
-                value={cycleProgress} 
-                className="h-2 bg-[hsl(var(--tex-vision-primary-light))]/30"
-              />
-              <div className="flex justify-between text-xs text-blue-900/60">
-                <span>{Math.round(cycleProgress)}% through cycle</span>
-                <span>16 weeks</span>
-              </div>
-            </div>
-
-            <div className="mt-3 p-2.5 bg-teal-500/10 border border-teal-500/20 rounded-lg flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 text-teal-700 flex-shrink-0" />
-              <span className="text-xs text-teal-800">
-                <strong>Next assessment:</strong> {nextDateFormatted}
-              </span>
-            </div>
-          </div>
-          
-          <Separator className="my-4 bg-[hsl(var(--tex-vision-primary-light))]/30" />
-        </div>
-      );
+      return null;
     }
 
     // S2 test is available - show action button
