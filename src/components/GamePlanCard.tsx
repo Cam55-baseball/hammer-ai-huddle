@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Check, Target, Clock, Trophy, Zap, Plus } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
@@ -26,6 +26,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
   const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
+  const [autoSort, setAutoSort] = useState(() => localStorage.getItem('gameplan-sort') !== 'original');
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'short', 
@@ -104,10 +105,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const sortByCompletion = (tasks: GamePlanTask[]) => 
     [...tasks].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
 
-  // Group tasks by section and sort by completion
-  const checkinTasks = sortByCompletion(tasks.filter(t => t.section === 'checkin'));
-  const trainingTasks = sortByCompletion(tasks.filter(t => t.section === 'training'));
-  const trackingTasks = sortByCompletion(tasks.filter(t => t.section === 'tracking'));
+  const toggleAutoSort = () => {
+    const newValue = !autoSort;
+    setAutoSort(newValue);
+    localStorage.setItem('gameplan-sort', newValue ? 'auto' : 'original');
+  };
+
+  // Group tasks by section and conditionally sort by completion
+  const checkinTasks = autoSort ? sortByCompletion(tasks.filter(t => t.section === 'checkin')) : tasks.filter(t => t.section === 'checkin');
+  const trainingTasks = autoSort ? sortByCompletion(tasks.filter(t => t.section === 'training')) : tasks.filter(t => t.section === 'training');
+  const trackingTasks = autoSort ? sortByCompletion(tasks.filter(t => t.section === 'tracking')) : tasks.filter(t => t.section === 'tracking');
 
   const renderTask = (task: GamePlanTask) => {
     const Icon = task.icon;
@@ -263,7 +270,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <h2 className="text-xl sm:text-2xl font-black text-primary-foreground tracking-tight uppercase">
                 {t('gamePlan.title')}
               </h2>
-              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm font-bold text-primary tracking-wide">{today}</span>
                 <span className="text-xs text-muted-foreground">•</span>
                 <span className="text-xs sm:text-sm text-muted-foreground font-medium">
@@ -272,6 +279,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               </div>
             </div>
           </div>
+          
+          {/* Auto-sort toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleAutoSort}
+            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary-foreground"
+          >
+            <ArrowUpDown className="h-3.5 w-3.5" />
+            {autoSort ? t('gamePlan.autoSort', 'Auto') : t('gamePlan.manualSort', 'Manual')}
+          </Button>
           
           {/* Progress Ring */}
           <div className="flex items-center gap-3 bg-background/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-primary/30">

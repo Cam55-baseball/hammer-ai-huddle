@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Dumbbell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Clock, Dumbbell, ArrowUpDown } from 'lucide-react';
 
 interface Exercise {
   id: string;
@@ -29,9 +31,16 @@ export function DailyChecklist({
   estimatedTime = '45 min',
 }: DailyChecklistProps) {
   const { t } = useTranslation();
+  const [autoSort, setAutoSort] = useState(() => localStorage.getItem('workout-sort') !== 'original');
   const completedCount = completedExercises.length;
   const totalCount = exercises.length;
   const isCompleted = completedCount === totalCount;
+
+  const toggleAutoSort = () => {
+    const newValue = !autoSort;
+    setAutoSort(newValue);
+    localStorage.setItem('workout-sort', newValue ? 'auto' : 'original');
+  };
 
   return (
     <Card className={isCompleted ? 'border-green-500/50 bg-green-500/5' : ''}>
@@ -42,6 +51,15 @@ export function DailyChecklist({
             {dayTitle}
           </CardTitle>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleAutoSort}
+              className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground px-2 py-1 h-auto"
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              {autoSort ? t('workoutModules.autoSort', 'Auto') : t('workoutModules.manualSort', 'Manual')}
+            </Button>
             <Badge variant="outline" className="flex items-center gap-1 text-xs">
               <Clock className="h-3 w-3" />
               {estimatedTime}
@@ -54,11 +72,14 @@ export function DailyChecklist({
       </CardHeader>
       <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
         <div className="space-y-3">
-          {[...exercises].sort((a, b) => {
-            const aChecked = completedExercises.includes(a.id);
-            const bChecked = completedExercises.includes(b.id);
-            return aChecked === bChecked ? 0 : aChecked ? 1 : -1;
-          }).map((exercise) => {
+          {(autoSort 
+            ? [...exercises].sort((a, b) => {
+                const aChecked = completedExercises.includes(a.id);
+                const bChecked = completedExercises.includes(b.id);
+                return aChecked === bChecked ? 0 : aChecked ? 1 : -1;
+              })
+            : exercises
+          ).map((exercise) => {
             const isChecked = completedExercises.includes(exercise.id);
             return (
               <div
