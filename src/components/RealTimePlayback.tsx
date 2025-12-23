@@ -607,7 +607,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
         video.removeEventListener('canplay', handleCanPlay);
       };
     }
-  }, [phase, recordedUrl, playbackSpeed]);
+  }, [phase, recordedUrl]);
   
   // Restart flow (back to setup)
   const handleRestart = () => {
