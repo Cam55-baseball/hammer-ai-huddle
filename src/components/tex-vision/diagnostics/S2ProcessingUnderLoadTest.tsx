@@ -31,6 +31,7 @@ export const S2ProcessingUnderLoadTest = ({ onComplete }: S2ProcessingUnderLoadT
   const [results, setResults] = useState<{ correct: boolean; responseTime: number }[]>([]);
   const responseStartTime = useRef<number>(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasCompleted = useRef(false);
 
   // Generate a challenge
   const generateChallenge = useCallback((): Challenge => {
@@ -158,7 +159,9 @@ export const S2ProcessingUnderLoadTest = ({ onComplete }: S2ProcessingUnderLoadT
 
   // Calculate final score
   useEffect(() => {
-    if (phase === 'done') {
+    if (phase === 'done' && !hasCompleted.current) {
+      hasCompleted.current = true;
+      
       const correctCount = results.filter(r => r.correct).length;
       const avgTime = results.filter(r => r.correct).reduce((sum, r) => sum + r.responseTime, 0) / (correctCount || 1);
       
@@ -169,7 +172,7 @@ export const S2ProcessingUnderLoadTest = ({ onComplete }: S2ProcessingUnderLoadT
       
       setTimeout(() => onComplete(finalScore), 1500);
     }
-  }, [phase, results, onComplete]);
+  }, [phase, results]);
 
   // Instructions phase
   if (phase === 'instructions') {

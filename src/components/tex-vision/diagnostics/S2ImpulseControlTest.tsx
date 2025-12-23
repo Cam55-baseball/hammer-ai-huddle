@@ -32,6 +32,7 @@ export const S2ImpulseControlTest = ({ onComplete }: S2ImpulseControlTestProps) 
   const [results, setResults] = useState<{ type: TargetType; responded: boolean; responseTime: number }[]>([]);
   const responseStartTime = useRef<number>(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasCompleted = useRef(false);
 
   // Start countdown
   useEffect(() => {
@@ -153,7 +154,9 @@ export const S2ImpulseControlTest = ({ onComplete }: S2ImpulseControlTestProps) 
 
   // Calculate final score
   useEffect(() => {
-    if (phase === 'done') {
+    if (phase === 'done' && !hasCompleted.current) {
+      hasCompleted.current = true;
+      
       // Correct actions:
       // - Tap on 'go' targets
       // - Don't tap on 'nogo' targets
@@ -183,7 +186,7 @@ export const S2ImpulseControlTest = ({ onComplete }: S2ImpulseControlTestProps) 
       const finalScore = Math.round(Math.min(100, score + speedBonus));
       setTimeout(() => onComplete(finalScore), 1500);
     }
-  }, [phase, results, onComplete]);
+  }, [phase, results]);
 
   // Instructions phase
   if (phase === 'instructions') {

@@ -21,6 +21,7 @@ export const S2FatigueIndexTest = ({ onComplete }: S2FatigueIndexTestProps) => {
   const [reactionTimes, setReactionTimes] = useState<number[]>([]);
   const responseStartTime = useRef<number>(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasCompleted = useRef(false);
 
   // Start countdown
   useEffect(() => {
@@ -97,7 +98,9 @@ export const S2FatigueIndexTest = ({ onComplete }: S2FatigueIndexTestProps) => {
 
   // Calculate final score
   useEffect(() => {
-    if (phase === 'done' && reactionTimes.length >= TOTAL_TRIALS) {
+    if (phase === 'done' && reactionTimes.length >= TOTAL_TRIALS && !hasCompleted.current) {
+      hasCompleted.current = true;
+      
       // Split into early and late trials
       const earlyTimes = reactionTimes.slice(0, EARLY_TRIALS);
       const lateTimes = reactionTimes.slice(EARLY_TRIALS);
@@ -130,7 +133,7 @@ export const S2FatigueIndexTest = ({ onComplete }: S2FatigueIndexTestProps) => {
       const finalScore = Math.round(Math.min(100, consistencyScore + fatigueScore + speedScore));
       setTimeout(() => onComplete(finalScore), 1500);
     }
-  }, [phase, reactionTimes, onComplete]);
+  }, [phase, reactionTimes]);
 
   // Instructions phase
   if (phase === 'instructions') {

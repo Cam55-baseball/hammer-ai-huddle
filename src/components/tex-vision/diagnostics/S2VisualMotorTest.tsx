@@ -22,6 +22,7 @@ export const S2VisualMotorTest = ({ onComplete }: S2VisualMotorTestProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const targetTimeRef = useRef<number>(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasCompleted = useRef(false);
 
   // Countdown
   useEffect(() => {
@@ -108,7 +109,9 @@ export const S2VisualMotorTest = ({ onComplete }: S2VisualMotorTestProps) => {
 
   // Calculate score
   useEffect(() => {
-    if (phase === 'done') {
+    if (phase === 'done' && !hasCompleted.current) {
+      hasCompleted.current = true;
+      
       const hits = results.filter(r => r.hit).length;
       const avgDistance = results.reduce((sum, r) => sum + Math.min(r.distance, 50), 0) / results.length;
       const avgResponseTime = results
@@ -124,7 +127,7 @@ export const S2VisualMotorTest = ({ onComplete }: S2VisualMotorTestProps) => {
       
       setTimeout(() => onComplete(finalScore), 1500);
     }
-  }, [phase, results, onComplete]);
+  }, [phase, results]);
 
   // Instructions
   if (phase === 'instructions') {

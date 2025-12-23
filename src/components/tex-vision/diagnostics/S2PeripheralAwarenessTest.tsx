@@ -29,6 +29,7 @@ export const S2PeripheralAwarenessTest = ({ onComplete }: S2PeripheralAwarenessT
   const [userCenterCount, setUserCenterCount] = useState<number | null>(null);
   const flashIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const responseStartTime = useRef<number>(0);
+  const hasCompleted = useRef(false);
 
   // Start countdown
   useEffect(() => {
@@ -116,13 +117,15 @@ export const S2PeripheralAwarenessTest = ({ onComplete }: S2PeripheralAwarenessT
 
   // Calculate final score
   useEffect(() => {
-    if (phase === 'done') {
+    if (phase === 'done' && !hasCompleted.current) {
+      hasCompleted.current = true;
+      
       const centerScore = results.filter(r => r.centerCorrect).length / TOTAL_ROUNDS * 50;
       const peripheralScore = results.filter(r => r.peripheralCorrect).length / TOTAL_ROUNDS * 50;
       const finalScore = Math.round(centerScore + peripheralScore);
       setTimeout(() => onComplete(finalScore), 1500);
     }
-  }, [phase, results, onComplete]);
+  }, [phase, results]);
 
   // Instructions phase
   if (phase === 'instructions') {

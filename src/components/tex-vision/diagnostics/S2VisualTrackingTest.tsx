@@ -33,6 +33,7 @@ export const S2VisualTrackingTest = ({ onComplete }: S2VisualTrackingTestProps) 
   const [results, setResults] = useState<{ correct: number; total: number }[]>([]);
   const animationRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasCompleted = useRef(false);
 
   // Debug: Log mount/unmount to detect unwanted remounts
   useEffect(() => {
@@ -177,13 +178,15 @@ export const S2VisualTrackingTest = ({ onComplete }: S2VisualTrackingTestProps) 
 
   // Calculate final score
   useEffect(() => {
-    if (phase === 'done') {
+    if (phase === 'done' && !hasCompleted.current) {
+      hasCompleted.current = true;
+      
       const totalCorrect = results.reduce((sum, r) => sum + r.correct, 0);
       const totalTargets = results.reduce((sum, r) => sum + r.total, 0);
       const finalScore = Math.round((totalCorrect / totalTargets) * 100);
       setTimeout(() => onComplete(finalScore), 1500);
     }
-  }, [phase, results, onComplete]);
+  }, [phase, results]);
 
   // Instructions phase
   if (phase === 'instructions') {
