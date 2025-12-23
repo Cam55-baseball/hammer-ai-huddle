@@ -1182,7 +1182,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                     
                     {/* Analysis Card */}
                     {analysisEnabled && !localOnlyMode ? (
-                      <Card className="p-4 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                      <Card className="p-4 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
                         {isAnalyzing ? (
                           <div className="flex items-center justify-center py-8">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3" />
@@ -1203,7 +1203,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                             </div>
                             
                             {/* Quick Summary */}
-                            <p className="text-sm text-muted-foreground italic">"{analysis.quickSummary}"</p>
+                            <p className="text-sm text-muted-foreground italic break-words">"{analysis.quickSummary}"</p>
                             
                             {/* Mechanics Breakdown */}
                             <div className="space-y-2">
@@ -1222,7 +1222,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <p className="text-sm font-medium">{mechanic.category}</p>
-                                      <p className="text-xs text-muted-foreground truncate">{mechanic.observation}</p>
+                                      <p className="text-xs text-muted-foreground break-words">{mechanic.observation}</p>
                                     </div>
                                   </div>
                                 ))}
@@ -1236,14 +1236,14 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                                   <CheckCircle2 className="h-4 w-4" />
                                   <span className="text-xs font-medium">{t('realTimePlayback.keyStrength', 'Key Strength')}</span>
                                 </div>
-                                <p className="text-sm pl-5">{analysis.keyStrength}</p>
+                                <p className="text-sm pl-5 break-words">{analysis.keyStrength}</p>
                               </div>
                               <div className="space-y-1">
                                 <div className="flex items-center gap-1 text-orange-500">
                                   <AlertCircle className="h-4 w-4" />
                                   <span className="text-xs font-medium">{t('realTimePlayback.priorityFix', 'Priority Fix')}</span>
                                 </div>
-                                <p className="text-sm pl-5">{analysis.priorityFix}</p>
+                                <p className="text-sm pl-5 break-words">{analysis.priorityFix}</p>
                               </div>
                             </div>
                             
@@ -1252,7 +1252,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                               <Settings className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                               <div>
                                 <span className="text-xs font-medium text-primary">{t('realTimePlayback.tryThisDrill', 'Try This Drill')}</span>
-                                <p className="text-sm">{analysis.drillRecommendation}</p>
+                                <p className="text-sm break-words">{analysis.drillRecommendation}</p>
                               </div>
                             </div>
                           </div>
