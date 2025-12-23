@@ -92,14 +92,29 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     }
   }, [playbackSpeed, phase]);
   
+  // Get supported mimeType with fallbacks
+  const getSupportedMimeType = useCallback(() => {
+    const types = [
+      'video/webm;codecs=vp9',
+      'video/webm;codecs=vp8',
+      'video/webm',
+      'video/mp4'
+    ];
+    return types.find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
+  }, []);
+
   // Initialize camera
   const initCamera = useCallback(async () => {
     try {
+      console.log('Initializing camera...');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false
       });
       streamRef.current = stream;
+      console.log('Stream acquired:', stream.active);
+      console.log('Stream tracks:', stream.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState })));
+      
       if (videoPreviewRef.current) {
         videoPreviewRef.current.srcObject = stream;
       }
@@ -113,14 +128,16 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   
   // Cleanup camera
   const stopCamera = useCallback(() => {
+    console.log('Stopping camera...');
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
   }, []);
   
+  // Initialize camera only when dialog opens - removed phase dependency to prevent re-init
   useEffect(() => {
-    if (isOpen && phase === 'setup') {
+    if (isOpen) {
       initCamera();
     }
     return () => {
@@ -129,11 +146,24 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
         if (recordedUrl) URL.revokeObjectURL(recordedUrl);
       }
     };
-  }, [isOpen, phase, initCamera, stopCamera, recordedUrl]);
+  }, [isOpen, initCamera, stopCamera, recordedUrl]);
   
   // Recording flow
   const startRecordingFlow = async () => {
-    if (!streamRef.current) return;
+    console.log('Starting recording flow...');
+    
+    // Validate stream before recording
+    if (!streamRef.current || !streamRef.current.active) {
+      console.error('Stream is not active, reinitializing camera...');
+      await initCamera();
+      if (!streamRef.current || !streamRef.current.active) {
+        toast.error(t('realTimePlayback.cameraError', 'Camera stream is not available. Please try again.'));
+        return;
+      }
+    }
+    
+    console.log('Stream active:', streamRef.current.active);
+    console.log('Stream tracks:', streamRef.current.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled, readyState: t.readyState })));
     
     // Reset state
     setRecordedBlob(null);
@@ -152,18 +182,44 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     setPhase('recording');
     setRecordingTimeLeft(recordingDuration);
     
-    const recorder = new MediaRecorder(streamRef.current, {
-      mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
-        ? 'video/webm;codecs=vp9' 
-        : 'video/webm'
-    });
+    const mimeType = getSupportedMimeType();
+    console.log('Using mimeType:', mimeType);
+    
+    const recorder = new MediaRecorder(streamRef.current, { mimeType });
+    
+    recorder.onstart = () => {
+      console.log('MediaRecorder started');
+    };
     
     recorder.ondataavailable = (e) => {
+      console.log('Data available:', e.data.size, 'bytes');
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
     
+    recorder.onerror = (event) => {
+      console.error('MediaRecorder error:', event);
+      toast.error(t('realTimePlayback.recordingError', 'Recording failed. Please try again.'));
+      setPhase('setup');
+      initCamera();
+    };
+    
     recorder.onstop = async () => {
-      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      console.log('Recording stopped, chunks:', chunksRef.current.length);
+      const totalSize = chunksRef.current.reduce((acc, c) => acc + c.size, 0);
+      console.log('Total size:', totalSize, 'bytes');
+      
+      const blob = new Blob(chunksRef.current, { type: mimeType });
+      console.log('Recording complete, blob size:', blob.size);
+      
+      // Check if recording actually captured data
+      if (blob.size === 0) {
+        console.error('Recording captured no data!');
+        toast.error(t('realTimePlayback.noDataCaptured', 'No video data was captured. Please try again.'));
+        setPhase('setup');
+        await initCamera();
+        return;
+      }
+      
       const url = URL.createObjectURL(blob);
       setRecordedBlob(blob);
       setRecordedUrl(url);
@@ -184,7 +240,9 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     };
     
     mediaRecorderRef.current = recorder;
-    recorder.start();
+    // Start with timeslice to capture data incrementally (every 1 second)
+    recorder.start(1000);
+    console.log('MediaRecorder.start(1000) called');
     
     // Record for duration
     for (let i = recordingDuration; i > 0; i--) {
@@ -192,6 +250,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       await new Promise(r => setTimeout(r, 1000));
     }
     
+    console.log('Stopping recorder...');
     recorder.stop();
   };
   
