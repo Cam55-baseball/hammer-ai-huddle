@@ -34,6 +34,17 @@ export const S2VisualTrackingTest = ({ onComplete }: S2VisualTrackingTestProps) 
   const animationRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Debug: Log mount/unmount to detect unwanted remounts
+  useEffect(() => {
+    console.log('[S2VisualTrackingTest] MOUNTED');
+    return () => console.log('[S2VisualTrackingTest] UNMOUNTED');
+  }, []);
+
+  // Debug: Log phase and round changes
+  useEffect(() => {
+    console.log(`[S2VisualTrackingTest] phase=${phase}, round=${round}, countdown=${countdown}`);
+  }, [phase, round, countdown]);
+
   // Generate random position within container
   const randomPosition = (max: number) => Math.random() * (max - 40) + 20;
 

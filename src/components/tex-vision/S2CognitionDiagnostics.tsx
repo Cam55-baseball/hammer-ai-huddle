@@ -27,7 +27,6 @@ import {
   AlertTriangle,
   ArrowRight,
   Maximize,
-  X,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,6 +40,7 @@ import { S2ProcessingUnderLoadTest } from './diagnostics/S2ProcessingUnderLoadTe
 import { S2ImpulseControlTest } from './diagnostics/S2ImpulseControlTest';
 import { S2FatigueIndexTest } from './diagnostics/S2FatigueIndexTest';
 import { S2ResultsAnalysis } from './diagnostics/S2ResultsAnalysis';
+import { FullscreenTestWrapper } from './shared/FullscreenTestWrapper';
 
 export interface S2DiagnosticResult {
   id: string;
@@ -303,41 +303,6 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     );
   }
 
-  const FullscreenWrapper = ({ children, showCancel = true }: { children: React.ReactNode; showCancel?: boolean }) => (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col p-4 overflow-auto">
-      {showCancel && (
-        <div className="flex justify-end mb-4">
-          <Button variant="destructive" size="sm" onClick={handleCancelClick} className="flex items-center gap-2">
-            <X className="h-4 w-4" />
-            CANCEL ASSESSMENT
-          </Button>
-        </div>
-      )}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-lg">{children}</div>
-      </div>
-      <AlertDialog open={showCancelConfirmation} onOpenChange={setShowCancelConfirmation}>
-        <AlertDialogContent className="border-destructive/50">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
-              Cancel Assessment?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>Are you sure you want to cancel? <strong>All progress will be lost.</strong></p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Continue Assessment</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmCancel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Yes, Cancel
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-
   // Render active test phases
   const testComponents: Record<Exclude<TestPhase, 'intro' | 'results'>, JSX.Element> = {
     processing_speed: <S2ProcessingSpeedTest onComplete={(s) => handleSubtestComplete('processing_speed', s)} />,
@@ -351,7 +316,17 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
   };
 
   if (testPhase !== 'intro' && testPhase !== 'results') {
-    return <FullscreenWrapper>{testComponents[testPhase]}</FullscreenWrapper>;
+    return (
+      <FullscreenTestWrapper
+        showCancel={true}
+        showCancelConfirmation={showCancelConfirmation}
+        onCancelClick={handleCancelClick}
+        onConfirmCancel={confirmCancel}
+        onCancelConfirmationChange={setShowCancelConfirmation}
+      >
+        {testComponents[testPhase]}
+      </FullscreenTestWrapper>
+    );
   }
 
   if (testPhase === 'results') {
@@ -383,14 +358,20 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     } : null;
 
     return (
-      <FullscreenWrapper showCancel={false}>
+      <FullscreenTestWrapper
+        showCancel={false}
+        showCancelConfirmation={showCancelConfirmation}
+        onCancelClick={handleCancelClick}
+        onConfirmCancel={confirmCancel}
+        onCancelConfirmationChange={setShowCancelConfirmation}
+      >
         <S2ResultsAnalysis
           scores={testScores}
           previousScores={previousScores}
           comparison={comparisonData}
           onDone={handleDone}
         />
-      </FullscreenWrapper>
+      </FullscreenTestWrapper>
     );
   }
 
