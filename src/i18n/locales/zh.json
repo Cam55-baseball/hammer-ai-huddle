@@ -4123,5 +4123,36 @@
       "title": "Tex Vision 训练",
       "description": "完成每日视觉训练"
     }
+  },
+  "realTimePlayback": {
+    "title": "实时回放",
+    "description": "录制自己并通过自动回放和慢动作分析获得即时反馈",
+    "startRecording": "开始录制",
+    "recordingDuration": "录制时长",
+    "playbackDelay": "回放延迟",
+    "repeatDuration": "重复时长",
+    "playbackSpeed": "回放速度",
+    "ultraSlow": "超慢速",
+    "slowMotion": "慢动作",
+    "moderate": "中等",
+    "normalSpeed": "正常",
+    "seconds": "秒",
+    "getReady": "准备好！",
+    "recording": "录制中",
+    "waitingForPlayback": "回放开始倒计时...",
+    "playing": "播放中",
+    "restart": "重新开始",
+    "download": "下载",
+    "saveToLibrary": "保存到库",
+    "positives": "做得好的地方",
+    "tips": "快速提示",
+    "speedLabel": "速度",
+    "cameraPermissionRequired": "需要相机权限",
+    "cameraPermissionDenied": "相机访问被拒绝。请启用相机权限。",
+    "downloadSuccess": "视频和分析已下载",
+    "defaultPositive1": "动作姿势努力到位",
+    "defaultPositive2": "观察到一致的运动模式",
+    "defaultTip1": "用慢动作回放查看视频以进行详细分析",
+    "defaultNote": "继续练习！使用慢动作回放来识别需要改进的地方。"
   }
 }
