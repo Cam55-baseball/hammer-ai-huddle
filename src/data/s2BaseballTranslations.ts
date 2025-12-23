@@ -70,10 +70,10 @@ export const s2BaseballTranslations: Record<string, BaseballTranslation> = {
 
 // Score thresholds for athletic labels
 export const scoreLabels = {
-  elite: { min: 85, max: 100, label: 'Elite', color: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/30' },
-  advanced: { min: 70, max: 84, label: 'Advanced', color: 'text-emerald-400', bgColor: 'bg-emerald-500/10', borderColor: 'border-emerald-500/30' },
-  developing: { min: 55, max: 69, label: 'Developing', color: 'text-teal-400', bgColor: 'bg-teal-500/10', borderColor: 'border-teal-500/30' },
-  foundational: { min: 0, max: 54, label: 'Foundational', color: 'text-slate-400', bgColor: 'bg-slate-500/10', borderColor: 'border-slate-500/30' },
+  elite: { min: 85, max: 100, label: 'Elite', color: 'text-amber-700', bgColor: 'bg-amber-100', borderColor: 'border-amber-400' },
+  advanced: { min: 70, max: 84, label: 'Advanced', color: 'text-emerald-700', bgColor: 'bg-emerald-100', borderColor: 'border-emerald-400' },
+  developing: { min: 55, max: 69, label: 'Developing', color: 'text-teal-700', bgColor: 'bg-teal-100', borderColor: 'border-teal-400' },
+  foundational: { min: 0, max: 54, label: 'Foundational', color: 'text-slate-700', bgColor: 'bg-slate-100', borderColor: 'border-slate-400' },
 };
 
 export const getScoreLabel = (score: number) => {

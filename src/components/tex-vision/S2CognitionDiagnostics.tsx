@@ -179,8 +179,11 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
     const scores = Object.values(finalScores);
     const overallScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 
-    const today = new Date().toISOString().split('T')[0];
-    const nextTestDate = addDays(new Date(), 112).toISOString().split('T')[0];
+    // Use local date components to avoid timezone shifting when saving
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const nextTestDateObj = addDays(new Date(now.getFullYear(), now.getMonth(), now.getDate()), 112);
+    const nextTestDate = `${nextTestDateObj.getFullYear()}-${String(nextTestDateObj.getMonth() + 1).padStart(2, '0')}-${String(nextTestDateObj.getDate()).padStart(2, '0')}`;
 
     let comparison: S2DiagnosticResult['comparison_vs_prior'] = null;
     if (latestResult) {
