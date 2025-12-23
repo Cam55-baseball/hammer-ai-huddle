@@ -4920,6 +4920,20 @@
     "analysisDisabled": "KI-Analyse ist deaktiviert. Ihr Video wurde gespeichert.",
     "cameraError": "Kamerastream ist nicht verfügbar. Bitte versuchen Sie es erneut.",
     "recordingError": "Aufnahme fehlgeschlagen. Bitte versuchen Sie es erneut.",
-    "noDataCaptured": "Keine Videodaten erfasst. Bitte versuchen Sie es erneut."
+    "noDataCaptured": "Keine Videodaten erfasst. Bitte versuchen Sie es erneut.",
+    "cancelCountdown": "Abbrechen",
+    "gridOverlay": "Rasteransicht",
+    "audioCues": "Audio-Signale",
+    "audioCuesDescription": "Pieptöne während Countdown und Aufnahme",
+    "retake": "Neu aufnehmen",
+    "localOnlyMode": "Nur Lokal",
+    "localOnlyDescription": "Aufnahmen auf Gerät behalten bis zum Speichern",
+    "localOnlyNote": "Nur-Lokal-Modus - Video wird beim Speichern hochgeladen.",
+    "autoRecord": "Automatische Aufnahme",
+    "autoRecordDescription": "Aufnahme nach Wiedergabe automatisch neu starten",
+    "nextRecordingIn": "Nächste Aufnahme in...",
+    "stopAutoRecord": "Auto-Aufnahme Stoppen",
+    "fullscreen": "Vollbild",
+    "uploadError": "Video-Upload fehlgeschlagen"
   }
 }

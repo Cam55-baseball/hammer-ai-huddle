@@ -4206,6 +4206,20 @@
     "analysisDisabled": "AI 분석이 꺼져 있습니다. 비디오가 저장되었습니다.",
     "cameraError": "카메라 스트림을 사용할 수 없습니다. 다시 시도해 주세요.",
     "recordingError": "녹화에 실패했습니다. 다시 시도해 주세요.",
-    "noDataCaptured": "비디오 데이터가 캡처되지 않았습니다. 다시 시도해 주세요."
+    "noDataCaptured": "비디오 데이터가 캡처되지 않았습니다. 다시 시도해 주세요.",
+    "cancelCountdown": "취소",
+    "gridOverlay": "그리드 오버레이",
+    "audioCues": "오디오 신호",
+    "audioCuesDescription": "카운트다운 및 녹화 중 비프음",
+    "retake": "다시 찍기",
+    "localOnlyMode": "로컬 전용 모드",
+    "localOnlyDescription": "저장할 때까지 기기에 녹화 보관",
+    "localOnlyNote": "로컬 모드 - 저장 시 업로드됩니다.",
+    "autoRecord": "자동 녹화",
+    "autoRecordDescription": "재생 후 자동으로 녹화 재시작",
+    "nextRecordingIn": "다음 녹화까지...",
+    "stopAutoRecord": "자동 녹화 중지",
+    "fullscreen": "전체 화면",
+    "uploadError": "비디오 업로드 실패"
   }
 }

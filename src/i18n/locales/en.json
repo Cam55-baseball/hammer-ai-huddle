@@ -5542,6 +5542,20 @@
     "analysisDisabled": "AI analysis is turned off. Your video has been saved.",
     "cameraError": "Camera stream is not available. Please try again.",
     "recordingError": "Recording failed. Please try again.",
-    "noDataCaptured": "No video data was captured. Please try again."
+    "noDataCaptured": "No video data was captured. Please try again.",
+    "cancelCountdown": "Cancel",
+    "gridOverlay": "Grid Overlay",
+    "audioCues": "Audio Cues",
+    "audioCuesDescription": "Beeps during countdown and recording",
+    "retake": "Retake",
+    "localOnlyMode": "Local Only Mode",
+    "localOnlyDescription": "Keep recordings on device until you save",
+    "localOnlyNote": "Local only mode - video will be uploaded when you save to library.",
+    "autoRecord": "Auto Record",
+    "autoRecordDescription": "Automatically restart recording after playback",
+    "nextRecordingIn": "Next recording in...",
+    "stopAutoRecord": "Stop Auto Record",
+    "fullscreen": "Fullscreen",
+    "uploadError": "Failed to upload video"
   }
 }
