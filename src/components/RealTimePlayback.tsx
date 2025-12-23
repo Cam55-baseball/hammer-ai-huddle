@@ -360,13 +360,13 @@ ${analysis.overallNote}
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent className="max-w-4xl h-[90vh] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-muted/30">
+        <DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col bg-gradient-to-br from-background via-background to-muted/30">
           <VisuallyHidden.Root>
             <DialogTitle>{t('realTimePlayback.title', 'Real-Time Playback')}</DialogTitle>
           </VisuallyHidden.Root>
-          <div className="relative h-full flex flex-col">
+          <div className="relative h-full flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b bg-background/80 backdrop-blur-sm">
+            <div className="flex-shrink-0 flex items-center justify-between p-4 border-b bg-background/80 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-primary/10">
                   <Video className="h-5 w-5 text-primary" />
@@ -381,8 +381,8 @@ ${analysis.overallNote}
               </Button>
             </div>
             
-            {/* Main Content */}
-            <div className="flex-1 overflow-y-auto p-4">
+            {/* Main Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 pb-8">
               <AnimatePresence mode="wait">
                 {/* Setup Phase */}
                 {phase === 'setup' && (
@@ -394,7 +394,7 @@ ${analysis.overallNote}
                     className="space-y-4"
                   >
                     {/* Camera Preview */}
-                    <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
+                    <div className="relative rounded-xl overflow-hidden bg-black aspect-[4/3] sm:aspect-video max-h-[40vh] sm:max-h-none">
                       {cameraPermission === false ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                           <AlertCircle className="h-12 w-12 mb-4 text-destructive" />
@@ -415,9 +415,9 @@ ${analysis.overallNote}
                     </div>
                     
                     {/* Settings Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                       {/* Recording Duration */}
-                      <Card className="p-4 space-y-3">
+                      <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                         <div className="flex items-center gap-2">
                           <Timer className="h-4 w-4 text-primary" />
                           <span className="font-medium text-sm">{t('realTimePlayback.recordingDuration', 'Recording Duration')}</span>
@@ -437,7 +437,7 @@ ${analysis.overallNote}
                       </Card>
                       
                       {/* Playback Delay */}
-                      <Card className="p-4 space-y-3">
+                      <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-primary" />
                           <span className="font-medium text-sm">{t('realTimePlayback.playbackDelay', 'Playback Delay')}</span>
@@ -456,7 +456,7 @@ ${analysis.overallNote}
                       </Card>
                       
                       {/* Repeat Duration */}
-                      <Card className="p-4 space-y-3">
+                      <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                         <div className="flex items-center gap-2">
                           <RotateCcw className="h-4 w-4 text-primary" />
                           <span className="font-medium text-sm">{t('realTimePlayback.repeatDuration', 'Repeat Duration')}</span>

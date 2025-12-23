@@ -43,11 +43,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const allComplete = completedCount === totalCount && totalCount > 0;
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
+  // Create stable dependency key to prevent infinite loops
+  const tasksKey = JSON.stringify(tasks.map(t => ({ id: t.id, section: t.section, completed: t.completed })));
+
   // Sync ordered tasks with fetched tasks and restore saved order
   useEffect(() => {
-    const checkinTasks = tasks.filter(t => t.section === 'checkin');
-    const trainingTasks = tasks.filter(t => t.section === 'training');
-    const trackingTasks = tasks.filter(t => t.section === 'tracking');
+    const checkinTasksList = tasks.filter(t => t.section === 'checkin');
+    const trainingTasksList = tasks.filter(t => t.section === 'training');
+    const trackingTasksList = tasks.filter(t => t.section === 'tracking');
 
     if (!autoSort) {
       // Restore saved orders
@@ -71,15 +74,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         return sectionTasks;
       };
 
-      setOrderedCheckin(restoreOrder(checkinTasks, 'gameplan-checkin-order'));
-      setOrderedTraining(restoreOrder(trainingTasks, 'gameplan-training-order'));
-      setOrderedTracking(restoreOrder(trackingTasks, 'gameplan-tracking-order'));
+      setOrderedCheckin(restoreOrder(checkinTasksList, 'gameplan-checkin-order'));
+      setOrderedTraining(restoreOrder(trainingTasksList, 'gameplan-training-order'));
+      setOrderedTracking(restoreOrder(trackingTasksList, 'gameplan-tracking-order'));
     } else {
-      setOrderedCheckin(checkinTasks);
-      setOrderedTraining(trainingTasks);
-      setOrderedTracking(trackingTasks);
+      setOrderedCheckin(checkinTasksList);
+      setOrderedTraining(trainingTasksList);
+      setOrderedTracking(trackingTasksList);
     }
-  }, [tasks, autoSort]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasksKey, autoSort]);
 
   const handleTaskClick = (task: GamePlanTask) => {
     // Handle mindfuel and healthtip - navigate directly
