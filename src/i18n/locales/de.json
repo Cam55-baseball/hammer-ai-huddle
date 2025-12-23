@@ -4880,5 +4880,36 @@
       "title": "Tex Vision Training",
       "description": "Schließen Sie Ihre täglichen Sehübungen ab"
     }
+  },
+  "realTimePlayback": {
+    "title": "Echtzeit-Wiedergabe",
+    "description": "Nehmen Sie sich auf und erhalten Sie sofortiges Feedback mit automatischer Wiedergabe und Zeitlupenanalyse",
+    "startRecording": "Aufnahme Starten",
+    "recordingDuration": "Aufnahmedauer",
+    "playbackDelay": "Wiedergabeverzögerung",
+    "repeatDuration": "Wiederholungsdauer",
+    "playbackSpeed": "Wiedergabegeschwindigkeit",
+    "ultraSlow": "Ultralang­sam",
+    "slowMotion": "Zeitlupe",
+    "moderate": "Moderat",
+    "normalSpeed": "Normal",
+    "seconds": "Sekunden",
+    "getReady": "Mach Dich Bereit!",
+    "recording": "Aufnahme",
+    "waitingForPlayback": "Wiedergabe startet in...",
+    "playing": "Wiedergabe",
+    "restart": "Neustart",
+    "download": "Herunterladen",
+    "saveToLibrary": "In Bibliothek Speichern",
+    "positives": "Was Du Gut Machst",
+    "tips": "Schnelle Tipps",
+    "speedLabel": "Geschwindigkeit",
+    "cameraPermissionRequired": "Kameraberechtigung erforderlich",
+    "cameraPermissionDenied": "Kamerazugriff wurde verweigert. Bitte aktivieren Sie die Kameraberechtigungen.",
+    "downloadSuccess": "Video und Analyse heruntergeladen",
+    "defaultPositive1": "Guter Einsatz bei deiner Form",
+    "defaultPositive2": "Konsistentes Bewegungsmuster beobachtet",
+    "defaultTip1": "Überprüfe dein Video in Zeitlupe für eine detaillierte Analyse",
+    "defaultNote": "Weiter üben! Nutze die Zeitlupenwiedergabe, um Verbesserungsbereiche zu identifizieren."
   }
 }

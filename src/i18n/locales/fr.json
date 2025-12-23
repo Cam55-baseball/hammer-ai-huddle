@@ -4880,5 +4880,36 @@
       "title": "Entraînement Tex Vision",
       "description": "Complétez vos exercices de vision quotidiens"
     }
+  },
+  "realTimePlayback": {
+    "title": "Lecture en Temps Réel",
+    "description": "Enregistrez-vous et obtenez un retour instantané avec lecture automatique et analyse au ralenti",
+    "startRecording": "Démarrer l'Enregistrement",
+    "recordingDuration": "Durée d'Enregistrement",
+    "playbackDelay": "Délai de Lecture",
+    "repeatDuration": "Durée de Répétition",
+    "playbackSpeed": "Vitesse de Lecture",
+    "ultraSlow": "Ultra Lent",
+    "slowMotion": "Ralenti",
+    "moderate": "Modéré",
+    "normalSpeed": "Normal",
+    "seconds": "secondes",
+    "getReady": "Préparez-vous !",
+    "recording": "Enregistrement",
+    "waitingForPlayback": "Démarrage de la lecture dans...",
+    "playing": "Lecture en Cours",
+    "restart": "Redémarrer",
+    "download": "Télécharger",
+    "saveToLibrary": "Enregistrer dans la Bibliothèque",
+    "positives": "Ce Que Vous Faites Bien",
+    "tips": "Conseils Rapides",
+    "speedLabel": "Vitesse",
+    "cameraPermissionRequired": "L'autorisation de la caméra est requise",
+    "cameraPermissionDenied": "L'accès à la caméra a été refusé. Veuillez activer les autorisations de la caméra.",
+    "downloadSuccess": "Vidéo et analyse téléchargées",
+    "defaultPositive1": "Bon effort sur votre forme",
+    "defaultPositive2": "Modèle de mouvement cohérent observé",
+    "defaultTip1": "Examinez votre vidéo au ralenti pour une analyse détaillée",
+    "defaultNote": "Continuez à pratiquer ! Utilisez la lecture au ralenti pour identifier les domaines à améliorer."
   }
 }

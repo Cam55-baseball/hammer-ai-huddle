@@ -4166,5 +4166,36 @@
       "title": "텍스 비전 훈련",
       "description": "일일 비전 드릴 완료"
     }
+  },
+  "realTimePlayback": {
+    "title": "실시간 재생",
+    "description": "자신을 녹화하고 자동 재생 및 슬로모션 분석으로 즉각적인 피드백을 받으세요",
+    "startRecording": "녹화 시작",
+    "recordingDuration": "녹화 시간",
+    "playbackDelay": "재생 지연",
+    "repeatDuration": "반복 시간",
+    "playbackSpeed": "재생 속도",
+    "ultraSlow": "초슬로우",
+    "slowMotion": "슬로모션",
+    "moderate": "보통",
+    "normalSpeed": "일반",
+    "seconds": "초",
+    "getReady": "준비하세요!",
+    "recording": "녹화 중",
+    "waitingForPlayback": "재생 시작까지...",
+    "playing": "재생 중",
+    "restart": "다시 시작",
+    "download": "다운로드",
+    "saveToLibrary": "라이브러리에 저장",
+    "positives": "잘하고 있는 것",
+    "tips": "빠른 팁",
+    "speedLabel": "속도",
+    "cameraPermissionRequired": "카메라 권한이 필요합니다",
+    "cameraPermissionDenied": "카메라 액세스가 거부되었습니다. 카메라 권한을 활성화해 주세요.",
+    "downloadSuccess": "비디오 및 분석이 다운로드되었습니다",
+    "defaultPositive1": "폼에 대한 좋은 노력",
+    "defaultPositive2": "일관된 동작 패턴이 관찰되었습니다",
+    "defaultTip1": "자세한 분석을 위해 슬로모션으로 영상을 검토하세요",
+    "defaultNote": "계속 연습하세요! 슬로모션 재생을 사용하여 개선 영역을 확인하세요."
   }
 }

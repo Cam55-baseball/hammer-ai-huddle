@@ -4179,5 +4179,36 @@
       "title": "Tex Vision Training",
       "description": "Voltooi je dagelijkse visie-oefeningen"
     }
+  },
+  "realTimePlayback": {
+    "title": "Realtime Afspelen",
+    "description": "Neem jezelf op en krijg direct feedback met automatische weergave en slow-motion analyse",
+    "startRecording": "Start Opname",
+    "recordingDuration": "Opnameduur",
+    "playbackDelay": "Afspeelvertraging",
+    "repeatDuration": "Herhalingsduur",
+    "playbackSpeed": "Afspeelsnelheid",
+    "ultraSlow": "Ultra Langzaam",
+    "slowMotion": "Slow Motion",
+    "moderate": "Gematigd",
+    "normalSpeed": "Normaal",
+    "seconds": "seconden",
+    "getReady": "Maak Je Klaar!",
+    "recording": "Opnemen",
+    "waitingForPlayback": "Afspelen start over...",
+    "playing": "Afspelen",
+    "restart": "Opnieuw Starten",
+    "download": "Downloaden",
+    "saveToLibrary": "Opslaan in Bibliotheek",
+    "positives": "Wat Je Goed Doet",
+    "tips": "Snelle Tips",
+    "speedLabel": "Snelheid",
+    "cameraPermissionRequired": "Cameratoestemming is vereist",
+    "cameraPermissionDenied": "Cameratoegang is geweigerd. Schakel cameratoestemmingen in.",
+    "downloadSuccess": "Video en analyse gedownload",
+    "defaultPositive1": "Goede inzet voor je vorm",
+    "defaultPositive2": "Consistent bewegingspatroon waargenomen",
+    "defaultTip1": "Bekijk je beelden in slow motion voor gedetailleerde analyse",
+    "defaultNote": "Blijf oefenen! Gebruik slow motion weergave om verbeterpunten te identificeren."
   }
 }

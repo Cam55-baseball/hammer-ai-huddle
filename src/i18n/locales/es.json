@@ -5136,5 +5136,36 @@
       "title": "Entrenamiento Tex Vision",
       "description": "Completa tus ejercicios de visión diarios"
     }
+  },
+  "realTimePlayback": {
+    "title": "Reproducción en Tiempo Real",
+    "description": "Grábate y obtén retroalimentación instantánea con reproducción automática y análisis en cámara lenta",
+    "startRecording": "Iniciar Grabación",
+    "recordingDuration": "Duración de Grabación",
+    "playbackDelay": "Retraso de Reproducción",
+    "repeatDuration": "Duración de Repetición",
+    "playbackSpeed": "Velocidad de Reproducción",
+    "ultraSlow": "Ultra Lento",
+    "slowMotion": "Cámara Lenta",
+    "moderate": "Moderado",
+    "normalSpeed": "Normal",
+    "seconds": "segundos",
+    "getReady": "¡Prepárate!",
+    "recording": "Grabando",
+    "waitingForPlayback": "Iniciando reproducción en...",
+    "playing": "Reproduciendo",
+    "restart": "Reiniciar",
+    "download": "Descargar",
+    "saveToLibrary": "Guardar en Biblioteca",
+    "positives": "Lo Que Estás Haciendo Bien",
+    "tips": "Consejos Rápidos",
+    "speedLabel": "Velocidad",
+    "cameraPermissionRequired": "Se requiere permiso de cámara",
+    "cameraPermissionDenied": "Se denegó el acceso a la cámara. Por favor habilita los permisos de cámara.",
+    "downloadSuccess": "Video y análisis descargados",
+    "defaultPositive1": "Buen esfuerzo en tu forma",
+    "defaultPositive2": "Patrón de movimiento consistente observado",
+    "defaultTip1": "Revisa tu video en cámara lenta para un análisis detallado",
+    "defaultNote": "¡Sigue practicando! Usa la reproducción en cámara lenta para identificar áreas de mejora."
   }
 }

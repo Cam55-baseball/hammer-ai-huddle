@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -360,6 +361,9 @@ ${analysis.overallNote}
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
         <DialogContent className="max-w-4xl h-[90vh] p-0 overflow-hidden bg-gradient-to-br from-background via-background to-muted/30">
+          <VisuallyHidden.Root>
+            <DialogTitle>{t('realTimePlayback.title', 'Real-Time Playback')}</DialogTitle>
+          </VisuallyHidden.Root>
           <div className="relative h-full flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b bg-background/80 backdrop-blur-sm">

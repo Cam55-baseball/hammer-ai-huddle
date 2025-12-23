@@ -4279,5 +4279,36 @@
       "title": "テックスビジョントレーニング",
       "description": "毎日の視覚ドリルを完了する"
     }
+  },
+  "realTimePlayback": {
+    "title": "リアルタイム再生",
+    "description": "自分を録画して、自動再生とスローモーション分析で即座にフィードバックを受け取る",
+    "startRecording": "録画開始",
+    "recordingDuration": "録画時間",
+    "playbackDelay": "再生遅延",
+    "repeatDuration": "繰り返し時間",
+    "playbackSpeed": "再生速度",
+    "ultraSlow": "超スロー",
+    "slowMotion": "スローモーション",
+    "moderate": "やや遅め",
+    "normalSpeed": "通常",
+    "seconds": "秒",
+    "getReady": "準備して！",
+    "recording": "録画中",
+    "waitingForPlayback": "再生開始まで...",
+    "playing": "再生中",
+    "restart": "再スタート",
+    "download": "ダウンロード",
+    "saveToLibrary": "ライブラリに保存",
+    "positives": "うまくできていること",
+    "tips": "クイックヒント",
+    "speedLabel": "速度",
+    "cameraPermissionRequired": "カメラの許可が必要です",
+    "cameraPermissionDenied": "カメラへのアクセスが拒否されました。カメラの許可を有効にしてください。",
+    "downloadSuccess": "動画と分析がダウンロードされました",
+    "defaultPositive1": "フォームへの良い取り組み",
+    "defaultPositive2": "一貫した動作パターンが観察されました",
+    "defaultTip1": "詳細な分析のためにスローモーションで映像を確認してください",
+    "defaultNote": "練習を続けてください！スローモーション再生を使って改善点を見つけましょう。"
   }
 }
