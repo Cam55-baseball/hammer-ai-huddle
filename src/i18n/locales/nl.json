@@ -4252,6 +4252,8 @@
     "capturedFrames": "Vastgelegde Frames",
     "downloadFrame": "Frame Downloaden",
     "clearFrames": "Wissen",
-    "framesCleared": "Frames gewist"
+    "framesCleared": "Frames gewist",
+    "orientationWarning": "Vermijd het draaien van je apparaat tijdens opname!",
+    "orientationHint": "Dit kan je sessie onderbreken."
   }
 }

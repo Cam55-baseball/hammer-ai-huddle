@@ -4953,6 +4953,8 @@
     "capturedFrames": "Aufgenommene Bilder",
     "downloadFrame": "Bild Herunterladen",
     "clearFrames": "Löschen",
-    "framesCleared": "Bilder gelöscht"
+    "framesCleared": "Bilder gelöscht",
+    "orientationWarning": "Vermeiden Sie das Drehen Ihres Geräts während der Aufnahme!",
+    "orientationHint": "Dies kann Ihre Sitzung unterbrechen."
   }
 }
