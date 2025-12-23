@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Reorder } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
@@ -27,6 +28,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
   const [autoSort, setAutoSort] = useState(() => localStorage.getItem('gameplan-sort') !== 'original');
+  
+  // State for ordered tasks per section
+  const [orderedCheckin, setOrderedCheckin] = useState<GamePlanTask[]>([]);
+  const [orderedTraining, setOrderedTraining] = useState<GamePlanTask[]>([]);
+  const [orderedTracking, setOrderedTracking] = useState<GamePlanTask[]>([]);
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'short', 
@@ -36,6 +42,44 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
   const allComplete = completedCount === totalCount && totalCount > 0;
   const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+  // Sync ordered tasks with fetched tasks and restore saved order
+  useEffect(() => {
+    const checkinTasks = tasks.filter(t => t.section === 'checkin');
+    const trainingTasks = tasks.filter(t => t.section === 'training');
+    const trackingTasks = tasks.filter(t => t.section === 'tracking');
+
+    if (!autoSort) {
+      // Restore saved orders
+      const restoreOrder = (sectionTasks: GamePlanTask[], storageKey: string): GamePlanTask[] => {
+        const savedOrder = localStorage.getItem(storageKey);
+        if (savedOrder) {
+          try {
+            const orderIds = JSON.parse(savedOrder) as string[];
+            return [...sectionTasks].sort((a, b) => {
+              const aIdx = orderIds.indexOf(a.id);
+              const bIdx = orderIds.indexOf(b.id);
+              if (aIdx === -1 && bIdx === -1) return 0;
+              if (aIdx === -1) return 1;
+              if (bIdx === -1) return -1;
+              return aIdx - bIdx;
+            });
+          } catch {
+            return sectionTasks;
+          }
+        }
+        return sectionTasks;
+      };
+
+      setOrderedCheckin(restoreOrder(checkinTasks, 'gameplan-checkin-order'));
+      setOrderedTraining(restoreOrder(trainingTasks, 'gameplan-training-order'));
+      setOrderedTracking(restoreOrder(trackingTasks, 'gameplan-tracking-order'));
+    } else {
+      setOrderedCheckin(checkinTasks);
+      setOrderedTraining(trainingTasks);
+      setOrderedTracking(trackingTasks);
+    }
+  }, [tasks, autoSort]);
 
   const handleTaskClick = (task: GamePlanTask) => {
     // Handle mindfuel and healthtip - navigate directly
@@ -102,8 +146,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   };
 
   // Sort helper: incomplete tasks first, completed tasks at bottom
-  const sortByCompletion = (tasks: GamePlanTask[]) => 
-    [...tasks].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
+  const sortByCompletion = (tasksList: GamePlanTask[]) => 
+    [...tasksList].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
 
   const toggleAutoSort = () => {
     const newValue = !autoSort;
@@ -111,10 +155,25 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     localStorage.setItem('gameplan-sort', newValue ? 'auto' : 'original');
   };
 
-  // Group tasks by section and conditionally sort by completion
-  const checkinTasks = autoSort ? sortByCompletion(tasks.filter(t => t.section === 'checkin')) : tasks.filter(t => t.section === 'checkin');
-  const trainingTasks = autoSort ? sortByCompletion(tasks.filter(t => t.section === 'training')) : tasks.filter(t => t.section === 'training');
-  const trackingTasks = autoSort ? sortByCompletion(tasks.filter(t => t.section === 'tracking')) : tasks.filter(t => t.section === 'tracking');
+  const handleReorderCheckin = (newOrder: GamePlanTask[]) => {
+    setOrderedCheckin(newOrder);
+    localStorage.setItem('gameplan-checkin-order', JSON.stringify(newOrder.map(t => t.id)));
+  };
+
+  const handleReorderTraining = (newOrder: GamePlanTask[]) => {
+    setOrderedTraining(newOrder);
+    localStorage.setItem('gameplan-training-order', JSON.stringify(newOrder.map(t => t.id)));
+  };
+
+  const handleReorderTracking = (newOrder: GamePlanTask[]) => {
+    setOrderedTracking(newOrder);
+    localStorage.setItem('gameplan-tracking-order', JSON.stringify(newOrder.map(t => t.id)));
+  };
+
+  // Get display tasks based on sort mode
+  const checkinTasks = autoSort ? sortByCompletion(orderedCheckin) : orderedCheckin;
+  const trainingTasks = autoSort ? sortByCompletion(orderedTraining) : orderedTraining;
+  const trackingTasks = autoSort ? sortByCompletion(orderedTracking) : orderedTracking;
 
   const renderTask = (task: GamePlanTask) => {
     const Icon = task.icon;
@@ -124,7 +183,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     
     return (
       <div
-        key={task.id}
         className={cn(
           "w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
           "border-2",
@@ -137,6 +195,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
         )}
       >
+        {/* Drag handle - only visible in manual mode */}
+        {!autoSort && (
+          <div className="flex-shrink-0 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+            <GripVertical className="h-5 w-5" />
+          </div>
+        )}
+        
         {/* Clickable main area */}
         <button
           onClick={() => handleTaskClick(task)}
@@ -230,6 +295,59 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               {t('gamePlan.doIt')}
             </span>
           </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderTaskSection = (
+    sectionTasks: GamePlanTask[], 
+    orderedTasks: GamePlanTask[],
+    onReorder: (newOrder: GamePlanTask[]) => void,
+    title: string,
+    titleColor: string,
+    lineColor: string,
+    showQuickAction?: boolean
+  ) => {
+    if (sectionTasks.length === 0) return null;
+
+    return (
+      <div className="space-y-2">
+        <h3 className={`text-xs font-black ${titleColor} uppercase tracking-widest flex items-center gap-2`}>
+          <span className={`h-px flex-1 ${lineColor}`} />
+          {title}
+          <span className={`h-px flex-1 ${lineColor}`} />
+        </h3>
+        
+        {showQuickAction && (
+          <div className="flex justify-center pb-1">
+            <Button
+              size="sm"
+              onClick={handleQuickLogClick}
+              className="gap-2 bg-green-600 hover:bg-green-700 text-white font-bold"
+            >
+              <Plus className="h-4 w-4" />
+              {t('gamePlan.quickActions.logMeal')}
+            </Button>
+          </div>
+        )}
+        
+        {autoSort ? (
+          <div className="space-y-2">
+            {sectionTasks.map((task) => (
+              <div key={task.id}>
+                {renderTask(task)}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Reorder.Group axis="y" values={orderedTasks} onReorder={onReorder} className="space-y-2">
+            {orderedTasks.map((task) => (
+              <Reorder.Item key={task.id} value={task}>
+                {renderTask(task)}
+              </Reorder.Item>
+            ))}
+          </Reorder.Group>
         )}
       </div>
     );
@@ -366,58 +484,34 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {/* Task Sections */}
         <div className="space-y-4">
           {/* Daily Check-ins Section */}
-          {checkinTasks.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                <span className="h-px flex-1 bg-primary/30" />
-                {t('gamePlan.sections.dailyCheckins')}
-                <span className="h-px flex-1 bg-primary/30" />
-              </h3>
-              
-              {/* Quick Action Button - Always visible */}
-              <div className="flex justify-center pb-1">
-                <Button
-                  size="sm"
-                  onClick={handleQuickLogClick}
-                  className="gap-2 bg-green-600 hover:bg-green-700 text-white font-bold"
-                >
-                  <Plus className="h-4 w-4" />
-                  {t('gamePlan.quickActions.logMeal')}
-                </Button>
-              </div>
-              
-              <div className="space-y-2">
-                {checkinTasks.map(renderTask)}
-              </div>
-            </div>
+          {renderTaskSection(
+            checkinTasks,
+            orderedCheckin,
+            handleReorderCheckin,
+            t('gamePlan.sections.dailyCheckins'),
+            'text-primary',
+            'bg-primary/30',
+            true
           )}
 
           {/* Training Section */}
-          {trainingTasks.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                <span className="h-px flex-1 bg-primary/30" />
-                {t('gamePlan.sections.training')}
-                <span className="h-px flex-1 bg-primary/30" />
-              </h3>
-              <div className="space-y-2">
-                {trainingTasks.map(renderTask)}
-              </div>
-            </div>
+          {renderTaskSection(
+            trainingTasks,
+            orderedTraining,
+            handleReorderTraining,
+            t('gamePlan.sections.training'),
+            'text-primary',
+            'bg-primary/30'
           )}
 
-          {/* Cycle Tracking Section (only shown when items are due) */}
-          {trackingTasks.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-black text-purple-400 uppercase tracking-widest flex items-center gap-2">
-                <span className="h-px flex-1 bg-purple-500/30" />
-                {t('gamePlan.sections.cycleTracking')}
-                <span className="h-px flex-1 bg-purple-500/30" />
-              </h3>
-              <div className="space-y-2">
-                {trackingTasks.map(renderTask)}
-              </div>
-            </div>
+          {/* Cycle Tracking Section */}
+          {renderTaskSection(
+            trackingTasks,
+            orderedTracking,
+            handleReorderTracking,
+            t('gamePlan.sections.cycleTracking'),
+            'text-purple-400',
+            'bg-purple-500/30'
           )}
         </div>
 
@@ -448,35 +542,40 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       {/* Pulsing animation for incomplete tasks */}
       <style>{`
         @keyframes game-plan-pulse {
-          0%, 100% { 
-            box-shadow: 0 0 0 0 hsl(45 93% 47% / 0.4);
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
           }
-          50% { 
-            box-shadow: 0 0 0 4px hsl(45 93% 47% / 0.1);
+          50% {
+            box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.1);
           }
         }
+        
+        @keyframes game-plan-pulse-purple {
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 0 6px rgba(168, 85, 247, 0.1);
+          }
+        }
+        
+        @keyframes game-plan-pulse-teal {
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 0 6px rgba(20, 184, 166, 0.1);
+          }
+        }
+        
         .game-plan-pulse {
           animation: game-plan-pulse 2s ease-in-out infinite;
         }
-        @keyframes game-plan-pulse-purple {
-          0%, 100% { 
-            box-shadow: 0 0 0 0 hsl(270 70% 50% / 0.4);
-          }
-          50% { 
-            box-shadow: 0 0 0 4px hsl(270 70% 50% / 0.1);
-          }
-        }
+        
         .game-plan-pulse-purple {
           animation: game-plan-pulse-purple 2s ease-in-out infinite;
         }
-        @keyframes game-plan-pulse-teal {
-          0%, 100% { 
-            box-shadow: 0 0 0 0 hsl(175 50% 45% / 0.4);
-          }
-          50% { 
-            box-shadow: 0 0 0 4px hsl(175 50% 45% / 0.1);
-          }
-        }
+        
         .game-plan-pulse-teal {
           animation: game-plan-pulse-teal 2s ease-in-out infinite;
         }

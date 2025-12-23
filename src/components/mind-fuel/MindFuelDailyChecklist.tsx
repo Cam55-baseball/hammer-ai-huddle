@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
+import { Reorder } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, Sparkles, Crown, ChevronRight, GraduationCap, Brain, BookOpen, Moon, Shield, ArrowUpDown } from 'lucide-react';
+import { Check, Sparkles, Crown, ChevronRight, GraduationCap, Brain, BookOpen, Moon, Shield, ArrowUpDown, GripVertical } from 'lucide-react';
 import { useMindFuelDailyTasks, DailyTask, TaskId } from '@/hooks/useMindFuelDailyTasks';
-import { useMindFuelEducationProgress, EducationType } from '@/hooks/useMindFuelEducationProgress';
+import { useMindFuelEducationProgress, EducationType, EducationItem } from '@/hooks/useMindFuelEducationProgress';
 import { cn } from '@/lib/utils';
 import { WellnessModule } from './wellness-hub/WellnessHubNav';
 import { useEffect, useState } from 'react';
@@ -38,6 +39,61 @@ export default function MindFuelDailyChecklist({
   const { getEducationItems, totalEducationProgress, loading: educationLoading } = useMindFuelEducationProgress();
   const [showConfetti, setShowConfetti] = useState(false);
   const [autoSort, setAutoSort] = useState(() => localStorage.getItem('mindfuel-sort') !== 'original');
+  const [orderedTasks, setOrderedTasks] = useState<DailyTask[]>([]);
+  const [orderedEducation, setOrderedEducation] = useState<EducationItem[]>([]);
+
+  const educationItems = getEducationItems();
+  const { completed: eduCompleted, total: eduTotal, allComplete: eduAllComplete } = totalEducationProgress();
+
+  // Sync ordered tasks with fetched tasks and restore saved order
+  useEffect(() => {
+    if (tasks.length > 0) {
+      const savedOrder = localStorage.getItem('mindfuel-tasks-order');
+      if (savedOrder && !autoSort) {
+        try {
+          const orderIds = JSON.parse(savedOrder) as string[];
+          const sorted = [...tasks].sort((a, b) => {
+            const aIdx = orderIds.indexOf(a.id);
+            const bIdx = orderIds.indexOf(b.id);
+            if (aIdx === -1 && bIdx === -1) return 0;
+            if (aIdx === -1) return 1;
+            if (bIdx === -1) return -1;
+            return aIdx - bIdx;
+          });
+          setOrderedTasks(sorted);
+        } catch {
+          setOrderedTasks(tasks);
+        }
+      } else {
+        setOrderedTasks(tasks);
+      }
+    }
+  }, [tasks, autoSort]);
+
+  // Sync ordered education items
+  useEffect(() => {
+    if (educationItems.length > 0) {
+      const savedOrder = localStorage.getItem('mindfuel-education-order');
+      if (savedOrder && !autoSort) {
+        try {
+          const orderIds = JSON.parse(savedOrder) as string[];
+          const sorted = [...educationItems].sort((a, b) => {
+            const aIdx = orderIds.indexOf(a.id);
+            const bIdx = orderIds.indexOf(b.id);
+            if (aIdx === -1 && bIdx === -1) return 0;
+            if (aIdx === -1) return 1;
+            if (bIdx === -1) return -1;
+            return aIdx - bIdx;
+          });
+          setOrderedEducation(sorted);
+        } catch {
+          setOrderedEducation(educationItems);
+        }
+      } else {
+        setOrderedEducation(educationItems);
+      }
+    }
+  }, [educationItems, autoSort]);
 
   const toggleAutoSort = () => {
     const newValue = !autoSort;
@@ -45,8 +101,15 @@ export default function MindFuelDailyChecklist({
     localStorage.setItem('mindfuel-sort', newValue ? 'auto' : 'original');
   };
 
-  const educationItems = getEducationItems();
-  const { completed: eduCompleted, total: eduTotal, allComplete: eduAllComplete } = totalEducationProgress();
+  const handleReorderTasks = (newOrder: DailyTask[]) => {
+    setOrderedTasks(newOrder);
+    localStorage.setItem('mindfuel-tasks-order', JSON.stringify(newOrder.map(t => t.id)));
+  };
+
+  const handleReorderEducation = (newOrder: EducationItem[]) => {
+    setOrderedEducation(newOrder);
+    localStorage.setItem('mindfuel-education-order', JSON.stringify(newOrder.map(e => e.id)));
+  };
 
   useEffect(() => {
     if (allComplete && !loading) {
@@ -84,6 +147,152 @@ export default function MindFuelDailyChecklist({
       emerald: { bg: 'bg-emerald-500/20', border: 'border-emerald-500/50', icon: 'bg-emerald-500', text: 'text-emerald-400' },
     };
     return colors[task.color] || colors.violet;
+  };
+
+  // Get display items based on sort mode
+  const displayTasks = autoSort
+    ? [...orderedTasks].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1))
+    : orderedTasks;
+
+  const displayEducation = autoSort
+    ? [...orderedEducation].sort((a, b) => {
+        const aComplete = a.completedItems >= a.totalItems;
+        const bComplete = b.completedItems >= b.totalItems;
+        return aComplete === bComplete ? 0 : aComplete ? 1 : -1;
+      })
+    : orderedEducation;
+
+  const renderTaskItem = (task: DailyTask) => {
+    const Icon = task.icon;
+    const colorClasses = getTaskColorClasses(task);
+
+    return (
+      <div
+        className={cn(
+          "group relative flex items-center gap-3 p-3.5 rounded-xl transition-all duration-300 cursor-pointer",
+          "border-2",
+          task.completed
+            ? "bg-green-500/15 border-green-500/40"
+            : `${colorClasses.bg} ${colorClasses.border} hover:scale-[1.01] hover:shadow-lg`,
+          !task.completed && "mind-fuel-task-pulse"
+        )}
+        onClick={() => handleTaskClick(task)}
+      >
+        {/* Drag handle - only visible in manual mode */}
+        {!autoSort && (
+          <div 
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-violet-300/50 hover:text-violet-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-5 w-5" />
+          </div>
+        )}
+        {/* Icon */}
+        <div className={cn(
+          "flex-shrink-0 p-2.5 rounded-lg transition-all duration-300",
+          task.completed ? "bg-green-500" : colorClasses.icon
+        )}>
+          <Icon className="h-5 w-5 text-white" />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3 className={cn(
+            "text-sm sm:text-base font-bold transition-all",
+            task.completed ? "text-muted-foreground line-through" : "text-primary-foreground"
+          )}>
+            {t(task.titleKey)}
+          </h3>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">
+            {t(task.descriptionKey)}
+          </p>
+        </div>
+
+        {/* Checkbox */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => handleToggle(e, task.id)}
+          className={cn(
+            "flex-shrink-0 h-8 w-8 p-0 rounded-full border-2 transition-all duration-300",
+            task.completed
+              ? "bg-green-500 border-green-500 text-white"
+              : "border-violet-400/50 hover:border-violet-400 hover:bg-violet-500/20"
+          )}
+        >
+          {task.completed ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <div className="h-2 w-2 rounded-full bg-violet-400/50 group-hover:scale-125 transition-transform" />
+          )}
+        </Button>
+
+        {/* Arrow indicator */}
+        <ChevronRight className={cn(
+          "h-4 w-4 transition-all duration-300 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0",
+          task.completed ? "text-green-400" : colorClasses.text
+        )} />
+      </div>
+    );
+  };
+
+  const renderEducationItem = (item: EducationItem) => {
+    const Icon = EDUCATION_ICONS[item.type];
+    const colors = EDUCATION_COLORS[item.type];
+    const isComplete = item.completedItems >= item.totalItems;
+
+    return (
+      <div
+        className={cn(
+          "group flex items-center gap-3 p-3 rounded-lg transition-all cursor-pointer",
+          "border",
+          isComplete
+            ? "bg-cyan-500/10 border-cyan-500/30"
+            : `${colors.bg} ${colors.border} hover:scale-[1.005]`
+        )}
+        onClick={() => handleEducationClick(item.type)}
+      >
+        {/* Drag handle - only visible in manual mode */}
+        {!autoSort && (
+          <div 
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-cyan-300/50 hover:text-cyan-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-4 w-4" />
+          </div>
+        )}
+        <div className={cn(
+          "flex-shrink-0 p-2 rounded-lg",
+          isComplete ? "bg-cyan-500/30" : `${colors.bg}`
+        )}>
+          <Icon className={cn("h-4 w-4", isComplete ? "text-cyan-400" : colors.text)} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className={cn(
+            "text-sm font-semibold",
+            isComplete ? "text-cyan-400" : "text-primary-foreground"
+          )}>
+            {t(item.titleKey)}
+          </h4>
+          <p className="text-xs text-muted-foreground truncate">
+            {t(item.descriptionKey)}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={cn(
+            "text-xs font-medium px-1.5 py-0.5 rounded",
+            isComplete ? "bg-cyan-500/20 text-cyan-400" : `${colors.bg} ${colors.text}`
+          )}>
+            {item.completedItems}/{item.totalItems}
+          </span>
+          {isComplete && <Check className="h-4 w-4 text-cyan-400" />}
+        </div>
+        <ChevronRight className={cn(
+          "h-4 w-4 transition-all opacity-0 group-hover:opacity-100",
+          isComplete ? "text-cyan-400" : colors.text
+        )} />
+      </div>
+    );
   };
 
   if (loading) {
@@ -210,74 +419,24 @@ export default function MindFuelDailyChecklist({
           </div>
         </div>
 
-        {/* Task List - conditionally sorted based on autoSort preference */}
-        <div className="space-y-2.5">
-          {(autoSort ? [...tasks].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1)) : tasks).map((task) => {
-            const Icon = task.icon;
-            const colorClasses = getTaskColorClasses(task);
-
-            return (
-              <div
-                key={task.id}
-                className={cn(
-                  "group relative flex items-center gap-3 p-3.5 rounded-xl transition-all duration-300 cursor-pointer",
-                  "border-2",
-                  task.completed
-                    ? "bg-green-500/15 border-green-500/40"
-                    : `${colorClasses.bg} ${colorClasses.border} hover:scale-[1.01] hover:shadow-lg`,
-                  !task.completed && "mind-fuel-task-pulse"
-                )}
-                onClick={() => handleTaskClick(task)}
-              >
-                {/* Icon */}
-                <div className={cn(
-                  "flex-shrink-0 p-2.5 rounded-lg transition-all duration-300",
-                  task.completed ? "bg-green-500" : colorClasses.icon
-                )}>
-                  <Icon className="h-5 w-5 text-white" />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <h3 className={cn(
-                    "text-sm sm:text-base font-bold transition-all",
-                    task.completed ? "text-muted-foreground line-through" : "text-primary-foreground"
-                  )}>
-                    {t(task.titleKey)}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                    {t(task.descriptionKey)}
-                  </p>
-                </div>
-
-                {/* Checkbox */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => handleToggle(e, task.id)}
-                  className={cn(
-                    "flex-shrink-0 h-8 w-8 p-0 rounded-full border-2 transition-all duration-300",
-                    task.completed
-                      ? "bg-green-500 border-green-500 text-white"
-                      : "border-violet-400/50 hover:border-violet-400 hover:bg-violet-500/20"
-                  )}
-                >
-                  {task.completed ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <div className="h-2 w-2 rounded-full bg-violet-400/50 group-hover:scale-125 transition-transform" />
-                  )}
-                </Button>
-
-                {/* Arrow indicator */}
-                <ChevronRight className={cn(
-                  "h-4 w-4 transition-all duration-300 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0",
-                  task.completed ? "text-green-400" : colorClasses.text
-                )} />
+        {/* Task List - conditionally sorted or reorderable based on autoSort preference */}
+        {autoSort ? (
+          <div className="space-y-2.5">
+            {displayTasks.map((task) => (
+              <div key={task.id}>
+                {renderTaskItem(task)}
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <Reorder.Group axis="y" values={orderedTasks} onReorder={handleReorderTasks} className="space-y-2.5">
+            {orderedTasks.map((task) => (
+              <Reorder.Item key={task.id} value={task}>
+                {renderTaskItem(task)}
+              </Reorder.Item>
+            ))}
+          </Reorder.Group>
+        )}
 
         {/* Motivational footer */}
         {!allComplete && (
@@ -314,65 +473,23 @@ export default function MindFuelDailyChecklist({
             )}
           </div>
 
-          <div className="space-y-2">
-            {(autoSort 
-              ? [...educationItems].sort((a, b) => {
-                  const aComplete = a.completedItems >= a.totalItems;
-                  const bComplete = b.completedItems >= b.totalItems;
-                  return aComplete === bComplete ? 0 : aComplete ? 1 : -1;
-                })
-              : educationItems
-            ).map((item) => {
-              const Icon = EDUCATION_ICONS[item.type];
-              const colors = EDUCATION_COLORS[item.type];
-              const isComplete = item.completedItems >= item.totalItems;
-
-              return (
-                <div
-                  key={item.id}
-                  className={cn(
-                    "group flex items-center gap-3 p-3 rounded-lg transition-all cursor-pointer",
-                    "border",
-                    isComplete
-                      ? "bg-cyan-500/10 border-cyan-500/30"
-                      : `${colors.bg} ${colors.border} hover:scale-[1.005]`
-                  )}
-                  onClick={() => handleEducationClick(item.type)}
-                >
-                  <div className={cn(
-                    "flex-shrink-0 p-2 rounded-lg",
-                    isComplete ? "bg-cyan-500/30" : `${colors.bg}`
-                  )}>
-                    <Icon className={cn("h-4 w-4", isComplete ? "text-cyan-400" : colors.text)} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className={cn(
-                      "text-sm font-semibold",
-                      isComplete ? "text-cyan-400" : "text-primary-foreground"
-                    )}>
-                      {t(item.titleKey)}
-                    </h4>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {t(item.descriptionKey)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={cn(
-                      "text-xs font-medium px-1.5 py-0.5 rounded",
-                      isComplete ? "bg-cyan-500/20 text-cyan-400" : `${colors.bg} ${colors.text}`
-                    )}>
-                      {item.completedItems}/{item.totalItems}
-                    </span>
-                    {isComplete && <Check className="h-4 w-4 text-cyan-400" />}
-                  </div>
-                  <ChevronRight className={cn(
-                    "h-4 w-4 transition-all opacity-0 group-hover:opacity-100",
-                    isComplete ? "text-cyan-400" : colors.text
-                  )} />
+          {autoSort ? (
+            <div className="space-y-2">
+              {displayEducation.map((item) => (
+                <div key={item.id}>
+                  {renderEducationItem(item)}
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <Reorder.Group axis="y" values={orderedEducation} onReorder={handleReorderEducation} className="space-y-2">
+              {orderedEducation.map((item) => (
+                <Reorder.Item key={item.id} value={item}>
+                  {renderEducationItem(item)}
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+          )}
 
           <p className="text-center text-xs text-muted-foreground/60 mt-3">
             {t('mindFuel.dailyChecklist.learningJourney.encouragement', 'Keep learning at your own pace')}
