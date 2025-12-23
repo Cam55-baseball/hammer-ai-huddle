@@ -13,11 +13,12 @@ import TexVisionProgressMetrics from '@/components/tex-vision/TexVisionProgressM
 import TexVisionDisclaimer from '@/components/tex-vision/TexVisionDisclaimer';
 import ActiveDrillView from '@/components/tex-vision/ActiveDrillView';
 import { S2CognitionDiagnostics, S2DiagnosticResult } from '@/components/tex-vision/S2CognitionDiagnostics';
+import S2PreviousResults from '@/components/tex-vision/S2PreviousResults';
 import { Eye, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, addDays } from 'date-fns';
 
 interface ActiveDrill {
   id: string;
@@ -51,6 +52,7 @@ export default function TexVision() {
   const [s2Loading, setS2Loading] = useState(true);
   const [canTakeS2Test, setCanTakeS2Test] = useState(true);
   const [daysUntilNextS2, setDaysUntilNextS2] = useState(0);
+  const [nextS2TestDate, setNextS2TestDate] = useState<Date | null>(null);
   const s2SectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,11 +98,13 @@ export default function TexVision() {
           const daysRemaining = differenceInDays(nextDate, today);
           setDaysUntilNextS2(Math.max(0, daysRemaining));
           setCanTakeS2Test(daysRemaining <= 0);
+          setNextS2TestDate(nextDate);
         }
       } else {
         setS2DiagnosticResult(null);
         setCanTakeS2Test(true);
         setDaysUntilNextS2(0);
+        setNextS2TestDate(null);
       }
     } catch (error) {
       console.error('Error fetching S2 diagnostic:', error);
@@ -272,6 +276,7 @@ export default function TexVision() {
           s2Loading={s2Loading}
           canTakeS2Test={canTakeS2Test}
           daysUntilNextS2={daysUntilNextS2}
+          nextS2TestDate={nextS2TestDate}
           onStartS2Assessment={handleStartS2Assessment}
         />
 
@@ -292,6 +297,9 @@ export default function TexVision() {
         <div ref={s2SectionRef}>
           <S2CognitionDiagnostics sport={currentSport} />
         </div>
+
+        {/* Previous S2 Results */}
+        <S2PreviousResults sport={currentSport} />
 
         {/* Disclaimer */}
         <TexVisionDisclaimer />
