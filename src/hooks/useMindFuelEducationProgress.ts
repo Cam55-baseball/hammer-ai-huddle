@@ -10,7 +10,7 @@ interface EducationProgress {
   completed_at: string;
 }
 
-interface EducationItem {
+export interface EducationItem {
   id: string;
   type: EducationType;
   titleKey: string;

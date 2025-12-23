@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Reorder } from 'framer-motion';
 import { format, addDays } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, Circle, Clock, Zap, Brain, ArrowRight, AlertTriangle, CalendarClock, ArrowUpDown } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Zap, Brain, ArrowRight, AlertTriangle, CalendarClock, ArrowUpDown, GripVertical } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TexVisionDailyChecklist as ChecklistType } from '@/hooks/useTexVisionProgress';
 import { Badge } from '@/components/ui/badge';
@@ -24,8 +25,15 @@ interface TexVisionDailyChecklistProps {
   onStartS2Assessment?: () => void;
 }
 
+interface DrillItem {
+  id: string;
+  nameKey: string;
+  defaultName: string;
+  icon: string;
+}
+
 // Drill definitions for checklist
-const DAILY_DRILLS = [
+const DAILY_DRILLS: DrillItem[] = [
   { id: 'soft_focus', nameKey: 'texVision.drills.softFocus.title', defaultName: 'Soft Focus', icon: '👁️' },
   { id: 'pattern_search', nameKey: 'texVision.drills.patternSearch.title', defaultName: 'Pattern Search', icon: '🔍' },
   { id: 'peripheral_vision', nameKey: 'texVision.drills.peripheralVision.title', defaultName: 'Peripheral Vision', icon: '↔️' },
@@ -75,11 +83,40 @@ export default function TexVisionDailyChecklist({
 }: TexVisionDailyChecklistProps) {
   const { t } = useTranslation();
   const [autoSort, setAutoSort] = useState(() => localStorage.getItem('texvision-sort') !== 'original');
+  const [orderedDrills, setOrderedDrills] = useState<DrillItem[]>(DAILY_DRILLS);
+
+  // Restore saved order on mount
+  useEffect(() => {
+    const savedOrder = localStorage.getItem('texvision-drills-order');
+    if (savedOrder && !autoSort) {
+      try {
+        const orderIds = JSON.parse(savedOrder) as string[];
+        const sorted = [...DAILY_DRILLS].sort((a, b) => {
+          const aIdx = orderIds.indexOf(a.id);
+          const bIdx = orderIds.indexOf(b.id);
+          if (aIdx === -1 && bIdx === -1) return 0;
+          if (aIdx === -1) return 1;
+          if (bIdx === -1) return -1;
+          return aIdx - bIdx;
+        });
+        setOrderedDrills(sorted);
+      } catch {
+        setOrderedDrills(DAILY_DRILLS);
+      }
+    } else {
+      setOrderedDrills(DAILY_DRILLS);
+    }
+  }, [autoSort]);
 
   const toggleAutoSort = () => {
     const newValue = !autoSort;
     setAutoSort(newValue);
     localStorage.setItem('texvision-sort', newValue ? 'auto' : 'original');
+  };
+
+  const handleReorder = (newOrder: DrillItem[]) => {
+    setOrderedDrills(newOrder);
+    localStorage.setItem('texvision-drills-order', JSON.stringify(newOrder.map(d => d.id)));
   };
 
   if (loading) {
@@ -104,6 +141,15 @@ export default function TexVisionDailyChecklist({
     ? Object.values(checklist.checklist_items).filter(Boolean).length 
     : 0;
   const isComplete = completedCount >= 2;
+
+  // Get display drills based on sort mode
+  const displayDrills = autoSort
+    ? [...orderedDrills].sort((a, b) => {
+        const aCompleted = checklist?.checklist_items?.[a.id] || false;
+        const bCompleted = checklist?.checklist_items?.[b.id] || false;
+        return aCompleted === bCompleted ? 0 : aCompleted ? 1 : -1;
+      })
+    : orderedDrills;
 
   // S2 Section rendering - only show when user has an actionable test
   const renderS2Section = () => {
@@ -203,6 +249,49 @@ export default function TexVisionDailyChecklist({
     );
   };
 
+  const renderDrillItem = (drill: DrillItem) => {
+    const isCompleted = checklist?.checklist_items?.[drill.id] || false;
+    
+    return (
+      <div
+        className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-150 cursor-pointer
+          ${isCompleted 
+            ? 'bg-[hsl(var(--tex-vision-success))]/10 border border-[hsl(var(--tex-vision-success))]/30' 
+            : 'bg-[hsl(var(--tex-vision-primary-dark))]/50 border border-[hsl(var(--tex-vision-primary-light))]/20 hover:border-[hsl(var(--tex-vision-feedback))]/50'
+          }`}
+        onClick={() => onUpdateChecklist(drill.id, !isCompleted)}
+      >
+        {/* Drag handle - only visible in manual mode */}
+        {!autoSort && (
+          <div 
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-blue-900/50 hover:text-blue-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-5 w-5" />
+          </div>
+        )}
+        {isCompleted ? (
+          <CheckCircle2 className="h-5 w-5 text-green-700 flex-shrink-0" />
+        ) : (
+          <Circle className="h-5 w-5 text-[hsl(var(--tex-vision-text-muted))] flex-shrink-0" />
+        )}
+        <span className="text-lg mr-2">{drill.icon}</span>
+        <span className={`flex-1 text-sm font-medium ${
+          isCompleted 
+            ? 'text-green-700' 
+            : 'text-blue-900'
+        }`}>
+          {t(drill.nameKey, drill.defaultName)}
+        </span>
+        {isCompleted && (
+          <span className="text-xs text-green-700">
+            ✓
+          </span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <Card className="bg-[hsl(var(--tex-vision-primary))]/50 border-[hsl(var(--tex-vision-primary-light))]/30">
       <CardHeader className="pb-2">
@@ -241,50 +330,24 @@ export default function TexVisionDailyChecklist({
         {/* S2 Cognition Section */}
         {renderS2Section()}
 
-        {/* Daily Drills - conditionally sorted based on autoSort preference */}
-        <div className="space-y-2">
-          {(autoSort 
-            ? [...DAILY_DRILLS].sort((a, b) => {
-                const aCompleted = checklist?.checklist_items?.[a.id] || false;
-                const bCompleted = checklist?.checklist_items?.[b.id] || false;
-                return aCompleted === bCompleted ? 0 : aCompleted ? 1 : -1;
-              })
-            : DAILY_DRILLS
-          ).map((drill) => {
-            const isCompleted = checklist?.checklist_items?.[drill.id] || false;
-            
-            return (
-              <div
-                key={drill.id}
-                className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-150 cursor-pointer
-                  ${isCompleted 
-                    ? 'bg-[hsl(var(--tex-vision-success))]/10 border border-[hsl(var(--tex-vision-success))]/30' 
-                    : 'bg-[hsl(var(--tex-vision-primary-dark))]/50 border border-[hsl(var(--tex-vision-primary-light))]/20 hover:border-[hsl(var(--tex-vision-feedback))]/50'
-                  }`}
-                onClick={() => onUpdateChecklist(drill.id, !isCompleted)}
-              >
-                {isCompleted ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-700 flex-shrink-0" />
-                ) : (
-                  <Circle className="h-5 w-5 text-[hsl(var(--tex-vision-text-muted))] flex-shrink-0" />
-                )}
-                <span className="text-lg mr-2">{drill.icon}</span>
-                <span className={`flex-1 text-sm font-medium ${
-                  isCompleted 
-                    ? 'text-green-700' 
-                    : 'text-blue-900'
-                }`}>
-                  {t(drill.nameKey, drill.defaultName)}
-                </span>
-                {isCompleted && (
-                  <span className="text-xs text-green-700">
-                    ✓
-                  </span>
-                )}
+        {/* Daily Drills - conditionally sorted or reorderable based on autoSort preference */}
+        {autoSort ? (
+          <div className="space-y-2">
+            {displayDrills.map((drill) => (
+              <div key={drill.id}>
+                {renderDrillItem(drill)}
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <Reorder.Group axis="y" values={orderedDrills} onReorder={handleReorder} className="space-y-2">
+            {orderedDrills.map((drill) => (
+              <Reorder.Item key={drill.id} value={drill}>
+                {renderDrillItem(drill)}
+              </Reorder.Item>
+            ))}
+          </Reorder.Group>
+        )}
 
         {/* Session time indicator */}
         <div className="mt-4 flex items-center gap-2 text-xs text-blue-900">
