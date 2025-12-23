@@ -31,6 +31,12 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, addDays, differenceInDays } from 'date-fns';
+
+// Helper to parse YYYY-MM-DD as local date (prevents UTC timezone shifting)
+const parseLocalDate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
 import { S2ProcessingSpeedTest } from './diagnostics/S2ProcessingSpeedTest';
 import { S2DecisionEfficiencyTest } from './diagnostics/S2DecisionEfficiencyTest';
 import { S2VisualMotorTest } from './diagnostics/S2VisualMotorTest';
@@ -418,7 +424,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
             <div className="p-4 bg-teal-500/5 rounded-lg border border-teal-500/20 space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-semibold text-sm">Your Latest Results</h4>
-                <Badge variant="outline" className="text-xs">{format(new Date(latestResult.test_date), 'MMM d, yyyy')}</Badge>
+                <Badge variant="outline" className="text-xs">{format(parseLocalDate(latestResult.test_date), 'MMM d, yyyy')}</Badge>
               </div>
               <div className="flex items-center justify-center gap-2">
                 <div className={`text-4xl font-black ${getScoreColor(latestResult.overall_score)}`}>
@@ -441,7 +447,7 @@ export const S2CognitionDiagnostics = ({ sport = 'baseball' }: S2CognitionDiagno
                 Locked for {daysUntilNextTest} Days
               </Button>
               <p className="text-xs text-center text-muted-foreground">
-                Next assessment available on {latestResult?.next_test_date ? format(new Date(latestResult.next_test_date), 'MMMM d, yyyy') : 'N/A'}
+                Next assessment available on {latestResult?.next_test_date ? format(parseLocalDate(latestResult.next_test_date), 'MMMM d, yyyy') : 'N/A'}
               </p>
             </div>
           )}
