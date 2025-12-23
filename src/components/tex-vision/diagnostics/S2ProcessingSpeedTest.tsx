@@ -32,6 +32,7 @@ export const S2ProcessingSpeedTest = ({ onComplete }: S2ProcessingSpeedTestProps
   const responseStartTime = useRef<number>(0);
   const waitingForResponseRef = useRef(false);
   const responseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasCompleted = useRef(false);
 
   // Generate random pattern
   const generatePattern = (): Pattern => ({
@@ -142,7 +143,9 @@ export const S2ProcessingSpeedTest = ({ onComplete }: S2ProcessingSpeedTestProps
 
   // Calculate final score
   useEffect(() => {
-    if (phase === 'done') {
+    if (phase === 'done' && !hasCompleted.current) {
+      hasCompleted.current = true;
+      
       const correctCount = results.filter(r => r.correct).length;
       const avgResponseTime = results
         .filter(r => r.correct)
@@ -155,7 +158,7 @@ export const S2ProcessingSpeedTest = ({ onComplete }: S2ProcessingSpeedTestProps
       
       setTimeout(() => onComplete(finalScore), 1500);
     }
-  }, [phase, results, onComplete]);
+  }, [phase, results]);
 
   // Render shape component
   const renderShape = (pattern: Pattern, size: number = 40) => {

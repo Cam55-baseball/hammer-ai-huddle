@@ -44,6 +44,7 @@ export const S2DecisionEfficiencyTest = ({ onComplete }: S2DecisionEfficiencyTes
   const [canRespond, setCanRespond] = useState(false);
   const responseTimeRef = useRef<number>(0);
   const respondedRef = useRef(false);
+  const hasCompleted = useRef(false);
 
   // Generate stimulus sequence
   const generateSequence = (): Stimulus[] => {
@@ -140,7 +141,9 @@ export const S2DecisionEfficiencyTest = ({ onComplete }: S2DecisionEfficiencyTes
 
   // Calculate score when done
   useEffect(() => {
-    if (phase === 'done') {
+    if (phase === 'done' && !hasCompleted.current) {
+      hasCompleted.current = true;
+      
       const correctResponses = results.filter(r => r.correct).length;
       const goTrials = results.filter(r => r.type === 'go');
       const nogoTrials = results.filter(r => r.type === 'nogo' || r.type === 'distractor');
@@ -161,7 +164,7 @@ export const S2DecisionEfficiencyTest = ({ onComplete }: S2DecisionEfficiencyTes
       
       setTimeout(() => onComplete(finalScore), 1500);
     }
-  }, [phase, results, onComplete]);
+  }, [phase, results]);
 
   // Instructions
   if (phase === 'instructions') {
