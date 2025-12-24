@@ -4590,14 +4590,36 @@
       "flexibility": "Flexibiliteit",
       "plyometric": "Plyometrisch",
       "core": "Core",
-      "warmup": "Warming-up"
+      "warmup": "Warming-up",
+      "baseball": "Honkbal/Softbal"
     },
     "exerciseDetails": {
       "sets": "Sets",
       "reps": "Reps",
       "duration": "Duur",
       "rest": "Rust"
+    },
+    "superset": {
+      "createSuperset": "Superset Maken",
+      "selectExercises": "Selecteer 2-3 oefeningen",
+      "ungroup": "Ontgroeperen",
+      "sharedRest": "Gedeelde Rust",
+      "grouped": "Groep"
+    },
+    "warmup": {
+      "title": "AI Warming-up Generator",
+      "generate": "Warming-up Genereren",
+      "generating": "Genereren...",
+      "addToStart": "Aan Begin Toevoegen",
+      "basedOn": "Gebaseerd op je oefeningen"
     }
+  },
+  "workoutTemplates": {
+    "title": "Workout Bibliotheek",
+    "subtitle": "Vooraf gebouwde honkbal trainingsprogramma's",
+    "preview": "Voorbeeld",
+    "useTemplate": "Template Gebruiken",
+    "templateLoaded": "Template geladen!"
   },
   "aiRecommendations": {
     "title": "AI Aanbevelingen",

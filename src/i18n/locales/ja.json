@@ -4690,14 +4690,36 @@
       "flexibility": "柔軟性",
       "plyometric": "プライオメトリック",
       "core": "コア",
-      "warmup": "ウォームアップ"
+      "warmup": "ウォームアップ",
+      "baseball": "野球/ソフトボール"
     },
     "exerciseDetails": {
       "sets": "セット",
       "reps": "回数",
       "duration": "時間",
       "rest": "休憩"
+    },
+    "superset": {
+      "createSuperset": "スーパーセットを作成",
+      "selectExercises": "2-3つのエクササイズを選択",
+      "ungroup": "グループ解除",
+      "sharedRest": "共有休憩",
+      "grouped": "グループ"
+    },
+    "warmup": {
+      "title": "AIウォームアップジェネレーター",
+      "generate": "ウォームアップを生成",
+      "generating": "生成中...",
+      "addToStart": "最初に追加",
+      "basedOn": "あなたのエクササイズに基づく"
     }
+  },
+  "workoutTemplates": {
+    "title": "ワークアウトライブラリ",
+    "subtitle": "野球トレーニングプログラム",
+    "preview": "プレビュー",
+    "useTemplate": "テンプレートを使用",
+    "templateLoaded": "テンプレートが読み込まれました！"
   },
   "aiRecommendations": {
     "title": "AI推奨",

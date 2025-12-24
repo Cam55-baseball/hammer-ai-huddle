@@ -30,6 +30,8 @@ interface Exercise {
   reps?: number;
   durationSeconds?: number;
   restSeconds?: number;
+  supersetGroupId?: string;
+  supersetOrder?: number;
 }
 
 interface WorkoutRecommendation {
@@ -109,13 +111,24 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a fitness coach AI that creates personalized workout recommendations. 
+            content: `You are a fitness coach AI that creates personalized workout recommendations for baseball/softball athletes.
 Analyze the user's workout history and create 2-3 workout recommendations.
 Consider:
 - Muscle group balance (don't overtrain one area)
 - Recovery time between similar exercises
 - Progressive overload principles
 - User's exercise preferences based on frequency
+- Sport-specific needs for baseball/softball players
+
+SUPERSET GUIDANCE:
+When appropriate, group 2-3 complementary exercises into supersets using supersetGroupId and supersetOrder.
+Good superset pairings include:
+- Push/Pull (e.g., Bench Press + Rows)
+- Upper/Lower (e.g., Shoulder Press + Lunges)
+- Strength/Core (e.g., Deadlifts + Planks)
+- Agonist/Antagonist (e.g., Bicep Curls + Tricep Extensions)
+Set supersetGroupId to a unique string (e.g., "superset-1") and supersetOrder to 1, 2, or 3 for exercises in the same superset.
+Not every exercise needs to be in a superset - use them strategically for efficiency.
 
 Always respond using the recommend_workouts function.`
           },
@@ -160,11 +173,13 @@ Please create personalized workout recommendations based on this data. If there'
                             properties: {
                               id: { type: "string" },
                               name: { type: "string" },
-                              type: { type: "string", enum: ["strength", "cardio", "flexibility", "plyometric"] },
+                              type: { type: "string", enum: ["strength", "cardio", "flexibility", "plyometric", "baseball", "core"] },
                               sets: { type: "number" },
                               reps: { type: "number" },
                               durationSeconds: { type: "number" },
-                              restSeconds: { type: "number" }
+                              restSeconds: { type: "number" },
+                              supersetGroupId: { type: "string", description: "Unique ID to group exercises into a superset (e.g., 'superset-1')" },
+                              supersetOrder: { type: "number", description: "Order within the superset (1, 2, or 3)" }
                             },
                             required: ["id", "name", "type"]
                           }

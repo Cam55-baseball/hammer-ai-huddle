@@ -5547,14 +5547,36 @@
       "flexibility": "Flexibilidad",
       "plyometric": "Pliométrico",
       "core": "Core",
-      "warmup": "Calentamiento"
+      "warmup": "Calentamiento",
+      "baseball": "Béisbol/Softbol"
     },
     "exerciseDetails": {
       "sets": "Series",
       "reps": "Reps",
       "duration": "Duración",
       "rest": "Descanso"
+    },
+    "superset": {
+      "createSuperset": "Crear Superserie",
+      "selectExercises": "Selecciona 2-3 ejercicios",
+      "ungroup": "Desagrupar",
+      "sharedRest": "Descanso Compartido",
+      "grouped": "Grupo"
+    },
+    "warmup": {
+      "title": "Generador de Calentamiento IA",
+      "generate": "Generar Calentamiento",
+      "generating": "Generando...",
+      "addToStart": "Añadir al Inicio",
+      "basedOn": "Basado en tus ejercicios"
     }
+  },
+  "workoutTemplates": {
+    "title": "Biblioteca de Entrenamientos",
+    "subtitle": "Programas de entrenamiento de béisbol prediseñados",
+    "preview": "Vista Previa",
+    "useTemplate": "Usar Plantilla",
+    "templateLoaded": "¡Plantilla cargada!"
   },
   "aiRecommendations": {
     "title": "Recomendaciones IA",

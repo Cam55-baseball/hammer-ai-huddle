@@ -4577,14 +4577,36 @@
       "flexibility": "유연성",
       "plyometric": "플라이오메트릭",
       "core": "코어",
-      "warmup": "워밍업"
+      "warmup": "워밍업",
+      "baseball": "야구/소프트볼"
     },
     "exerciseDetails": {
       "sets": "세트",
       "reps": "횟수",
       "duration": "시간",
       "rest": "휴식"
+    },
+    "superset": {
+      "createSuperset": "슈퍼세트 생성",
+      "selectExercises": "2-3개 운동 선택",
+      "ungroup": "그룹 해제",
+      "sharedRest": "공유 휴식",
+      "grouped": "그룹"
+    },
+    "warmup": {
+      "title": "AI 워밍업 생성기",
+      "generate": "워밍업 생성",
+      "generating": "생성 중...",
+      "addToStart": "시작에 추가",
+      "basedOn": "운동 기반"
     }
+  },
+  "workoutTemplates": {
+    "title": "운동 라이브러리",
+    "subtitle": "미리 만들어진 야구 훈련 프로그램",
+    "preview": "미리보기",
+    "useTemplate": "템플릿 사용",
+    "templateLoaded": "템플릿이 로드되었습니다!"
   },
   "aiRecommendations": {
     "title": "AI 추천",

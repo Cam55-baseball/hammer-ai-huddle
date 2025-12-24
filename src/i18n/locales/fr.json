@@ -5291,14 +5291,36 @@
       "flexibility": "Flexibilité",
       "plyometric": "Pliométrie",
       "core": "Core",
-      "warmup": "Échauffement"
+      "warmup": "Échauffement",
+      "baseball": "Baseball/Softball"
     },
     "exerciseDetails": {
       "sets": "Séries",
       "reps": "Reps",
       "duration": "Durée",
       "rest": "Repos"
+    },
+    "superset": {
+      "createSuperset": "Créer Superset",
+      "selectExercises": "Sélectionnez 2-3 exercices",
+      "ungroup": "Dégrouper",
+      "sharedRest": "Repos Partagé",
+      "grouped": "Groupe"
+    },
+    "warmup": {
+      "title": "Générateur d'Échauffement IA",
+      "generate": "Générer Échauffement",
+      "generating": "Génération...",
+      "addToStart": "Ajouter au Début",
+      "basedOn": "Basé sur vos exercices"
     }
+  },
+  "workoutTemplates": {
+    "title": "Bibliothèque d'Entraînements",
+    "subtitle": "Programmes d'entraînement baseball pré-conçus",
+    "preview": "Aperçu",
+    "useTemplate": "Utiliser Modèle",
+    "templateLoaded": "Modèle chargé!"
   },
   "aiRecommendations": {
     "title": "Recommandations IA",

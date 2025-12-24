@@ -4534,14 +4534,36 @@
       "flexibility": "柔韧性",
       "plyometric": "爆发力",
       "core": "核心",
-      "warmup": "热身"
+      "warmup": "热身",
+      "baseball": "棒球/垒球"
     },
     "exerciseDetails": {
       "sets": "组数",
       "reps": "次数",
       "duration": "时长",
       "rest": "休息"
+    },
+    "superset": {
+      "createSuperset": "创建超级组",
+      "selectExercises": "选择2-3个练习",
+      "ungroup": "取消分组",
+      "sharedRest": "共享休息",
+      "grouped": "分组"
+    },
+    "warmup": {
+      "title": "AI热身生成器",
+      "generate": "生成热身",
+      "generating": "生成中...",
+      "addToStart": "添加到开头",
+      "basedOn": "基于您的练习"
     }
+  },
+  "workoutTemplates": {
+    "title": "训练库",
+    "subtitle": "预建的棒球训练计划",
+    "preview": "预览",
+    "useTemplate": "使用模板",
+    "templateLoaded": "模板已加载！"
   },
   "aiRecommendations": {
     "title": "AI推荐",
