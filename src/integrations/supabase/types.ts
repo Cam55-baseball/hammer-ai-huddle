@@ -101,6 +101,128 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_activity_logs: {
+        Row: {
+          actual_duration_minutes: number | null
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          entry_date: string
+          id: string
+          notes: string | null
+          performance_data: Json | null
+          template_id: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_duration_minutes?: number | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          performance_data?: Json | null
+          template_id?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_duration_minutes?: number | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          performance_data?: Json | null
+          template_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_activity_logs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "custom_activity_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_activity_templates: {
+        Row: {
+          activity_type: string
+          color: string
+          created_at: string | null
+          custom_fields: Json | null
+          description: string | null
+          distance_unit: string | null
+          distance_value: number | null
+          duration_minutes: number | null
+          exercises: Json | null
+          icon: string
+          id: string
+          intensity: string | null
+          intervals: Json | null
+          is_favorited: boolean | null
+          meals: Json | null
+          pace_value: string | null
+          recurring_active: boolean | null
+          recurring_days: Json | null
+          sport: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          color?: string
+          created_at?: string | null
+          custom_fields?: Json | null
+          description?: string | null
+          distance_unit?: string | null
+          distance_value?: number | null
+          duration_minutes?: number | null
+          exercises?: Json | null
+          icon?: string
+          id?: string
+          intensity?: string | null
+          intervals?: Json | null
+          is_favorited?: boolean | null
+          meals?: Json | null
+          pace_value?: string | null
+          recurring_active?: boolean | null
+          recurring_days?: Json | null
+          sport?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          color?: string
+          created_at?: string | null
+          custom_fields?: Json | null
+          description?: string | null
+          distance_unit?: string | null
+          distance_value?: number | null
+          duration_minutes?: number | null
+          exercises?: Json | null
+          icon?: string
+          id?: string
+          intensity?: string | null
+          intervals?: Json | null
+          is_favorited?: boolean | null
+          meals?: Json | null
+          pace_value?: string | null
+          recurring_active?: boolean | null
+          recurring_days?: Json | null
+          sport?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       emotion_tracking: {
         Row: {
           action_taken: string | null
