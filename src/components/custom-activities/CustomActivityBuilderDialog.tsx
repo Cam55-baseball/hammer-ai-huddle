@@ -17,6 +17,7 @@ import { IconPicker } from './IconPicker';
 import { ColorPicker } from './ColorPicker';
 import { RecurringDayPicker } from './RecurringDayPicker';
 import { ExerciseBuilder } from './ExerciseBuilder';
+import { DragDropExerciseBuilder } from './DragDropExerciseBuilder';
 import { MealBuilder } from './MealBuilder';
 import { CustomFieldsBuilder } from './CustomFieldsBuilder';
 import { CustomActivityTemplate, ActivityType, IntensityLevel, Exercise, MealData, CustomField, RunningInterval, EmbeddedRunningSession } from '@/types/customActivity';
@@ -555,8 +556,15 @@ export function CustomActivityBuilderDialog({
                     {t('customActivity.universal.additionalOptions')}
                   </h3>
                   
-                  {/* Exercise Builder - Available for ALL types */}
-                  <ExerciseBuilder exercises={exercises} onChange={setExercises} />
+                  {/* Exercise Builder - Drag-and-drop for workout type, standard for others */}
+                  {activityType === 'workout' ? (
+                    <DragDropExerciseBuilder 
+                      exercises={exercises} 
+                      onExercisesChange={setExercises} 
+                    />
+                  ) : (
+                    <ExerciseBuilder exercises={exercises} onChange={setExercises} />
+                  )}
                   
                   {/* Custom Fields Builder - Available for ALL types */}
                   <CustomFieldsBuilder fields={customFields} onChange={setCustomFields} />
