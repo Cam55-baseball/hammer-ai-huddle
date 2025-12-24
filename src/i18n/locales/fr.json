@@ -5130,6 +5130,31 @@
       "drawerDescription": "Appuyez pour ajouter au plan d'aujourd'hui",
       "noFavorites": "Pas encore de favoris",
       "noFavoritesHint": "Marquez des activités pour les ajouter ici"
+    },
+    "running": {
+      "distanceUnit": "Unité de Distance",
+      "timeGoal": "Objectif de Temps",
+      "paceGoal": "Objectif d'Allure",
+      "paceGoalPlaceholder": "ex., 8:30 par mile",
+      "hours": "Heures",
+      "minutes": "Minutes",
+      "seconds": "Secondes",
+      "tenths": "Dixièmes",
+      "addRunningSession": "Ajouter Session de Course",
+      "removeSession": "Supprimer",
+      "sessions": "Sessions de Course",
+      "addAnother": "Ajouter Une Autre",
+      "sessionNumber": "Session de Course {{number}}",
+      "units": {
+        "feet": "Pieds",
+        "yards": "Yards",
+        "meters": "Mètres",
+        "miles": "Miles",
+        "kilometers": "Kilomètres"
+      }
+    },
+    "universal": {
+      "additionalOptions": "Options Supplémentaires"
     }
   }
 }

@@ -4416,6 +4416,31 @@
       "drawerDescription": "오늘 계획에 추가하려면 탭하세요",
       "noFavorites": "즐겨찾기 없음",
       "noFavoritesHint": "활동에 별표를 표시하여 여기에 추가하세요"
+    },
+    "running": {
+      "distanceUnit": "거리 단위",
+      "timeGoal": "시간 목표",
+      "paceGoal": "페이스 목표",
+      "paceGoalPlaceholder": "예: 8:30/마일",
+      "hours": "시간",
+      "minutes": "분",
+      "seconds": "초",
+      "tenths": "10분의 1초",
+      "addRunningSession": "러닝 세션 추가",
+      "removeSession": "삭제",
+      "sessions": "러닝 세션",
+      "addAnother": "다른 세션 추가",
+      "sessionNumber": "러닝 세션 {{number}}",
+      "units": {
+        "feet": "피트",
+        "yards": "야드",
+        "meters": "미터",
+        "miles": "마일",
+        "kilometers": "킬로미터"
+      }
+    },
+    "universal": {
+      "additionalOptions": "추가 옵션"
     }
   }
 }
