@@ -484,7 +484,8 @@
     "vault": "Der Tresor",
     "bounceBackBay": "Erholungsbucht",
     "mindFuel": "Geistiger Treibstoff",
-    "texVision": "Tex Vision"
+    "texVision": "Tex Vision",
+    "myCustomActivities": "Meine Aktivitäten"
   },
   "sidebar": {
     "ownerBio": "Eigentümer-Bio",
@@ -5274,7 +5275,42 @@
     "thisMonth": "Diesen Monat",
     "allTime": "Gesamte Zeit"
   },
-  "navigation": {
-    "myCustomActivities": "Meine Aktivitäten"
+  "workoutBuilder": {
+    "title": "Workout-Builder",
+    "dragExercise": "Ziehe Übungen, um dein Workout zu erstellen",
+    "exerciseLibrary": "Übungsbibliothek",
+    "timeline": "Zeitleiste",
+    "estimatedDuration": "Gesch. Dauer",
+    "addRest": "Pause hinzufügen",
+    "createSuperset": "Supersatz erstellen",
+    "minutes": "Min",
+    "emptyTimeline": "Ziehe Übungen hierher, um zu beginnen",
+    "categories": {
+      "strength": "Kraft",
+      "cardio": "Cardio",
+      "flexibility": "Flexibilität",
+      "plyometric": "Plyometrie",
+      "core": "Core",
+      "warmup": "Aufwärmen"
+    },
+    "exerciseDetails": {
+      "sets": "Sätze",
+      "reps": "Wdh.",
+      "duration": "Dauer",
+      "rest": "Pause"
+    }
+  },
+  "aiRecommendations": {
+    "title": "KI-Empfehlungen",
+    "generate": "KI-Workout generieren",
+    "generating": "Analysiere deine Historie...",
+    "useThis": "Dieses Workout verwenden",
+    "reasoning": "Warum dieses Workout?",
+    "noHistory": "Zeichne zuerst einige Workouts auf für personalisierte Empfehlungen",
+    "error": "Fehler beim Generieren der Empfehlungen",
+    "basedOn": "Basierend auf deiner letzten Aktivität",
+    "muscleGroups": "Zielmuskelgruppen",
+    "estimatedTime": "Geschätzte Zeit",
+    "difficulty": "Schwierigkeit"
   }
 }

@@ -455,7 +455,8 @@
     "vault": "금고",
     "bounceBackBay": "회복 만",
     "mindFuel": "마인드 연료",
-    "texVision": "텍스 비전"
+    "texVision": "텍스 비전",
+    "myCustomActivities": "내 활동"
   },
   "sidebar": {
     "ownerBio": "소유자 소개",
@@ -4560,7 +4561,42 @@
     "thisMonth": "이번 달",
     "allTime": "전체 기간"
   },
-  "navigation": {
-    "myCustomActivities": "내 활동"
+  "workoutBuilder": {
+    "title": "운동 빌더",
+    "dragExercise": "운동을 드래그하여 워크아웃 구성",
+    "exerciseLibrary": "운동 라이브러리",
+    "timeline": "타임라인",
+    "estimatedDuration": "예상 시간",
+    "addRest": "휴식 추가",
+    "createSuperset": "슈퍼세트 생성",
+    "minutes": "분",
+    "emptyTimeline": "여기에 운동을 드래그하여 시작",
+    "categories": {
+      "strength": "근력",
+      "cardio": "유산소",
+      "flexibility": "유연성",
+      "plyometric": "플라이오메트릭",
+      "core": "코어",
+      "warmup": "워밍업"
+    },
+    "exerciseDetails": {
+      "sets": "세트",
+      "reps": "횟수",
+      "duration": "시간",
+      "rest": "휴식"
+    }
+  },
+  "aiRecommendations": {
+    "title": "AI 추천",
+    "generate": "AI 운동 생성",
+    "generating": "기록 분석 중...",
+    "useThis": "이 운동 사용",
+    "reasoning": "왜 이 운동인가요?",
+    "noHistory": "맞춤 추천을 위해 먼저 몇 가지 운동을 기록하세요",
+    "error": "추천 생성 실패",
+    "basedOn": "최근 활동 기반",
+    "muscleGroups": "목표 근육 그룹",
+    "estimatedTime": "예상 시간",
+    "difficulty": "난이도"
   }
 }

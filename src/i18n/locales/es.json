@@ -455,7 +455,8 @@
     "vault": "La Bóveda",
     "bounceBackBay": "Bahía de Recuperación",
     "mindFuel": "Combustible Mental",
-    "texVision": "Tex Vision"
+    "texVision": "Tex Vision",
+    "myCustomActivities": "Mis Actividades"
   },
   "sidebar": {
     "ownerBio": "Bio del Propietario",
@@ -5530,7 +5531,42 @@
     "thisMonth": "Este Mes",
     "allTime": "Todo el Tiempo"
   },
-  "navigation": {
-    "myCustomActivities": "Mis Actividades"
+  "workoutBuilder": {
+    "title": "Constructor de Entrenamiento",
+    "dragExercise": "Arrastra ejercicios para construir tu entrenamiento",
+    "exerciseLibrary": "Biblioteca de Ejercicios",
+    "timeline": "Línea de Tiempo",
+    "estimatedDuration": "Duración Est.",
+    "addRest": "Añadir Descanso",
+    "createSuperset": "Crear Superserie",
+    "minutes": "mins",
+    "emptyTimeline": "Arrastra ejercicios aquí para comenzar",
+    "categories": {
+      "strength": "Fuerza",
+      "cardio": "Cardio",
+      "flexibility": "Flexibilidad",
+      "plyometric": "Pliométrico",
+      "core": "Core",
+      "warmup": "Calentamiento"
+    },
+    "exerciseDetails": {
+      "sets": "Series",
+      "reps": "Reps",
+      "duration": "Duración",
+      "rest": "Descanso"
+    }
+  },
+  "aiRecommendations": {
+    "title": "Recomendaciones IA",
+    "generate": "Generar Entrenamiento IA",
+    "generating": "Analizando tu historial...",
+    "useThis": "Usar Este Entrenamiento",
+    "reasoning": "¿Por qué este entrenamiento?",
+    "noHistory": "Registra algunos entrenamientos primero para recomendaciones personalizadas",
+    "error": "Error al generar recomendaciones",
+    "basedOn": "Basado en tu actividad reciente",
+    "muscleGroups": "Grupos musculares objetivo",
+    "estimatedTime": "Tiempo estimado",
+    "difficulty": "Dificultad"
   }
 }

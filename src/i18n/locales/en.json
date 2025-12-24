@@ -578,9 +578,9 @@
     "adminDashboard": "Admin Dashboard",
     "signOut": "Sign Out",
     "vault": "The Vault",
-    "bounceBackBay": "Bounce Back Bay",
     "mindFuel": "Mind Fuel",
-    "texVision": "Tex Vision"
+    "texVision": "Tex Vision",
+    "myCustomActivities": "My Activities"
   },
   "sidebar": {
     "ownerBio": "Owner Bio",
@@ -5912,7 +5912,42 @@
     "thisMonth": "This Month",
     "allTime": "All Time"
   },
-  "navigation": {
-    "myCustomActivities": "My Activities"
+  "workoutBuilder": {
+    "title": "Workout Builder",
+    "dragExercise": "Drag exercises to build your workout",
+    "exerciseLibrary": "Exercise Library",
+    "timeline": "Workout Timeline",
+    "estimatedDuration": "Est. Duration",
+    "addRest": "Add Rest",
+    "createSuperset": "Create Superset",
+    "minutes": "mins",
+    "emptyTimeline": "Drag exercises here to start building",
+    "categories": {
+      "strength": "Strength",
+      "cardio": "Cardio",
+      "flexibility": "Flexibility",
+      "plyometric": "Plyometric",
+      "core": "Core",
+      "warmup": "Warm-up"
+    },
+    "exerciseDetails": {
+      "sets": "Sets",
+      "reps": "Reps",
+      "duration": "Duration",
+      "rest": "Rest"
+    }
+  },
+  "aiRecommendations": {
+    "title": "AI Recommendations",
+    "generate": "Generate AI Workout",
+    "generating": "Analyzing your history...",
+    "useThis": "Use This Workout",
+    "reasoning": "Why this workout?",
+    "noHistory": "Log a few workouts first for personalized recommendations",
+    "error": "Failed to generate recommendations",
+    "basedOn": "Based on your recent activity",
+    "muscleGroups": "Target muscle groups",
+    "estimatedTime": "Estimated time",
+    "difficulty": "Difficulty"
   }
 }
