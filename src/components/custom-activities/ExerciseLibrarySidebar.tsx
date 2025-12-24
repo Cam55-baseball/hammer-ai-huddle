@@ -191,8 +191,8 @@ export function ExerciseLibrarySidebar({ onExerciseSelect }: ExerciseLibrarySide
   };
 
   return (
-    <div className="flex flex-col h-full border-r bg-muted/30">
-      <div className="p-3 border-b">
+    <div className="flex flex-col h-full border-r bg-muted/30 overflow-hidden">
+      <div className="p-3 border-b shrink-0">
         <h3 className="font-bold text-sm mb-2">{t('workoutBuilder.exerciseLibrary')}</h3>
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -205,7 +205,7 @@ export function ExerciseLibrarySidebar({ onExerciseSelect }: ExerciseLibrarySide
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-2 space-y-1">
           {Object.entries(filteredLibrary).map(([category, exercises]) => (
             <Collapsible 

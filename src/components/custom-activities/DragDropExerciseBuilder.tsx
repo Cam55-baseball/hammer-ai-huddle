@@ -180,7 +180,7 @@ export function DragDropExerciseBuilder({ exercises, onExercisesChange }: DragDr
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border rounded-lg overflow-hidden min-h-[400px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border rounded-lg overflow-hidden h-[320px]">
           {/* Exercise Library */}
           <ExerciseLibrarySidebar />
 
