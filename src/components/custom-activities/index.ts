@@ -7,3 +7,4 @@ export { CustomFieldsBuilder } from './CustomFieldsBuilder';
 export { IconPicker, getActivityIcon } from './IconPicker';
 export { ColorPicker } from './ColorPicker';
 export { RecurringDayPicker } from './RecurringDayPicker';
+export { QuickAddFavoritesDrawer } from './QuickAddFavoritesDrawer';
