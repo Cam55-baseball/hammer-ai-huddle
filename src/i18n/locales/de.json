@@ -5155,6 +5155,89 @@
     },
     "universal": {
       "additionalOptions": "Zusätzliche Optionen"
+    },
+    "cardCustomization": {
+      "title": "Karten-Anpassung",
+      "nickname": "Anzeigename",
+      "nicknamePlaceholder": "Benutzerdefinierter Name...",
+      "logo": "Benutzerdefinierte Logo-URL",
+      "logoPlaceholder": "https://..."
+    },
+    "reminders": {
+      "title": "Aktivitätserinnerung",
+      "time": "Erinnerungszeit",
+      "description": "Erhalten Sie eine Benachrichtigung, wenn diese wiederkehrende Aktivität fällig ist"
+    },
+    "share": {
+      "title": "Vorlage Teilen",
+      "description": "Teilen Sie diese Aktivitätsvorlage mit anderen",
+      "createLink": "Link Erstellen",
+      "copyLink": "Link Kopieren",
+      "copied": "Kopiert!",
+      "publicAccess": "Öffentlicher Zugang",
+      "publicDescription": "Jeder mit dem Link kann sehen",
+      "viewCount": "{{count}} Aufrufe",
+      "deleteLink": "Link Löschen",
+      "preview": "Vorschau"
     }
+  },
+  "myCustomActivities": {
+    "title": "Meine Benutzerdefinierten Aktivitäten",
+    "subtitle": "Vorlagen verwalten, Verlauf anzeigen und Fortschritt verfolgen",
+    "tabs": {
+      "templates": "Vorlagen",
+      "history": "Verlauf",
+      "analytics": "Analytik",
+      "hydration": "Hydration",
+      "presets": "Voreinstellungen"
+    },
+    "templates": {
+      "title": "Aktivitätsvorlagen",
+      "create": "Neu Erstellen",
+      "noTemplates": "Noch keine Vorlagen",
+      "noTemplatesHint": "Erstellen Sie Ihre erste benutzerdefinierte Aktivitätsvorlage"
+    },
+    "history": {
+      "title": "Aktivitätsverlauf",
+      "noHistory": "Kein Aktivitätsverlauf",
+      "completed": "Abgeschlossen",
+      "filter": "Nach Typ filtern"
+    },
+    "analytics": {
+      "title": "Aktivitätsanalyse",
+      "totalActivities": "Gesamtaktivitäten",
+      "completionRate": "Abschlussrate",
+      "streak": "Aktuelle Serie",
+      "byType": "Nach Typ"
+    },
+    "hydration": {
+      "title": "Hydrations-Tracking",
+      "settings": "Hydrations-Einstellungen",
+      "dailyGoal": "Tagesziel",
+      "reminderInterval": "Erinnerungsintervall",
+      "startTime": "Startzeit",
+      "endTime": "Endzeit",
+      "enabled": "Erinnerungen Aktiviert",
+      "tracker": "Schnelles Protokoll",
+      "todayProgress": "Heutiger Fortschritt",
+      "addWater": "Wasser Hinzufügen"
+    },
+    "presets": {
+      "title": "Lauf-Voreinstellungen",
+      "categories": {
+        "intervals": "Intervalle",
+        "tempo": "Tempo",
+        "recovery": "Erholung",
+        "distance": "Distanz",
+        "speed": "Geschwindigkeit"
+      },
+      "usePreset": "Verwenden",
+      "customize": "Anpassen",
+      "system": "System-Voreinstellung",
+      "custom": "Benutzerdefinierte Voreinstellung"
+    }
+  },
+  "navigation": {
+    "myCustomActivities": "Meine Aktivitäten"
   }
 }

@@ -4441,6 +4441,89 @@
     },
     "universal": {
       "additionalOptions": "추가 옵션"
+    },
+    "cardCustomization": {
+      "title": "카드 사용자 정의",
+      "nickname": "표시 닉네임",
+      "nicknamePlaceholder": "사용자 정의 표시 이름...",
+      "logo": "사용자 정의 로고 URL",
+      "logoPlaceholder": "https://..."
+    },
+    "reminders": {
+      "title": "활동 알림",
+      "time": "알림 시간",
+      "description": "이 반복 활동이 예정되면 알림을 받습니다"
+    },
+    "share": {
+      "title": "템플릿 공유",
+      "description": "이 활동 템플릿을 다른 사람과 공유",
+      "createLink": "링크 생성",
+      "copyLink": "링크 복사",
+      "copied": "복사됨!",
+      "publicAccess": "공개 접근",
+      "publicDescription": "링크가 있는 누구나 볼 수 있음",
+      "viewCount": "{{count}}회 조회",
+      "deleteLink": "링크 삭제",
+      "preview": "미리보기"
     }
+  },
+  "myCustomActivities": {
+    "title": "내 맞춤 활동",
+    "subtitle": "템플릿 관리, 기록 확인 및 진행 상황 추적",
+    "tabs": {
+      "templates": "템플릿",
+      "history": "기록",
+      "analytics": "분석",
+      "hydration": "수분",
+      "presets": "프리셋"
+    },
+    "templates": {
+      "title": "활동 템플릿",
+      "create": "새로 만들기",
+      "noTemplates": "템플릿이 없습니다",
+      "noTemplatesHint": "첫 번째 맞춤 활동 템플릿을 만들어 보세요"
+    },
+    "history": {
+      "title": "활동 기록",
+      "noHistory": "활동 기록이 없습니다",
+      "completed": "완료",
+      "filter": "유형별 필터"
+    },
+    "analytics": {
+      "title": "활동 분석",
+      "totalActivities": "총 활동",
+      "completionRate": "완료율",
+      "streak": "현재 연속 일수",
+      "byType": "유형별"
+    },
+    "hydration": {
+      "title": "수분 추적",
+      "settings": "수분 설정",
+      "dailyGoal": "일일 목표",
+      "reminderInterval": "알림 간격",
+      "startTime": "시작 시간",
+      "endTime": "종료 시간",
+      "enabled": "알림 활성화됨",
+      "tracker": "빠른 기록",
+      "todayProgress": "오늘 진행 상황",
+      "addWater": "물 추가"
+    },
+    "presets": {
+      "title": "러닝 프리셋",
+      "categories": {
+        "intervals": "인터벌",
+        "tempo": "템포",
+        "recovery": "회복",
+        "distance": "거리",
+        "speed": "속도"
+      },
+      "usePreset": "사용",
+      "customize": "사용자 정의",
+      "system": "시스템 프리셋",
+      "custom": "사용자 정의 프리셋"
+    }
+  },
+  "navigation": {
+    "myCustomActivities": "내 활동"
   }
 }

@@ -5411,6 +5411,89 @@
     },
     "universal": {
       "additionalOptions": "Opciones Adicionales"
+    },
+    "cardCustomization": {
+      "title": "Personalización de Tarjeta",
+      "nickname": "Apodo de Visualización",
+      "nicknamePlaceholder": "Nombre personalizado...",
+      "logo": "URL del Logo Personalizado",
+      "logoPlaceholder": "https://..."
+    },
+    "reminders": {
+      "title": "Recordatorio de Actividad",
+      "time": "Hora del Recordatorio",
+      "description": "Recibe notificaciones cuando esta actividad recurrente esté pendiente"
+    },
+    "share": {
+      "title": "Compartir Plantilla",
+      "description": "Comparte esta plantilla de actividad con otros",
+      "createLink": "Crear Enlace",
+      "copyLink": "Copiar Enlace",
+      "copied": "¡Copiado!",
+      "publicAccess": "Acceso Público",
+      "publicDescription": "Cualquiera con el enlace puede ver",
+      "viewCount": "{{count}} vistas",
+      "deleteLink": "Eliminar Enlace",
+      "preview": "Vista Previa"
     }
+  },
+  "myCustomActivities": {
+    "title": "Mis Actividades Personalizadas",
+    "subtitle": "Gestiona plantillas, ve historial y sigue tu progreso",
+    "tabs": {
+      "templates": "Plantillas",
+      "history": "Historial",
+      "analytics": "Analíticas",
+      "hydration": "Hidratación",
+      "presets": "Presets"
+    },
+    "templates": {
+      "title": "Plantillas de Actividad",
+      "create": "Crear Nueva",
+      "noTemplates": "Sin plantillas aún",
+      "noTemplatesHint": "Crea tu primera plantilla de actividad personalizada"
+    },
+    "history": {
+      "title": "Historial de Actividades",
+      "noHistory": "Sin historial de actividades",
+      "completed": "Completado",
+      "filter": "Filtrar por tipo"
+    },
+    "analytics": {
+      "title": "Analíticas de Actividades",
+      "totalActivities": "Total de Actividades",
+      "completionRate": "Tasa de Completado",
+      "streak": "Racha Actual",
+      "byType": "Por Tipo"
+    },
+    "hydration": {
+      "title": "Seguimiento de Hidratación",
+      "settings": "Configuración de Hidratación",
+      "dailyGoal": "Meta Diaria",
+      "reminderInterval": "Intervalo de Recordatorio",
+      "startTime": "Hora de Inicio",
+      "endTime": "Hora de Fin",
+      "enabled": "Recordatorios Activados",
+      "tracker": "Registro Rápido",
+      "todayProgress": "Progreso de Hoy",
+      "addWater": "Añadir Agua"
+    },
+    "presets": {
+      "title": "Presets de Carrera",
+      "categories": {
+        "intervals": "Intervalos",
+        "tempo": "Tempo",
+        "recovery": "Recuperación",
+        "distance": "Distancia",
+        "speed": "Velocidad"
+      },
+      "usePreset": "Usar Preset",
+      "customize": "Personalizar",
+      "system": "Preset del Sistema",
+      "custom": "Preset Personalizado"
+    }
+  },
+  "navigation": {
+    "myCustomActivities": "Mis Actividades"
   }
 }
