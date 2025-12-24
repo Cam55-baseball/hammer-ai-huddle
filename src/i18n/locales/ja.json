@@ -4529,6 +4529,31 @@
       "drawerDescription": "タップして今日のプランに追加",
       "noFavorites": "お気に入りがありません",
       "noFavoritesHint": "アクティビティをお気に入りに追加してください"
+    },
+    "running": {
+      "distanceUnit": "距離単位",
+      "timeGoal": "タイム目標",
+      "paceGoal": "ペース目標",
+      "paceGoalPlaceholder": "例：8:30/マイル",
+      "hours": "時間",
+      "minutes": "分",
+      "seconds": "秒",
+      "tenths": "1/10秒",
+      "addRunningSession": "ランニングセッションを追加",
+      "removeSession": "削除",
+      "sessions": "ランニングセッション",
+      "addAnother": "別のセッションを追加",
+      "sessionNumber": "ランニングセッション {{number}}",
+      "units": {
+        "feet": "フィート",
+        "yards": "ヤード",
+        "meters": "メートル",
+        "miles": "マイル",
+        "kilometers": "キロメートル"
+      }
+    },
+    "universal": {
+      "additionalOptions": "追加オプション"
     }
   }
 }

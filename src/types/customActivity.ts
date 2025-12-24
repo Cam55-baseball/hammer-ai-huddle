@@ -84,6 +84,7 @@ export interface CustomField {
 }
 
 export interface EmbeddedRunningSession {
+  id: string;
   distance_value?: number;
   distance_unit?: 'feet' | 'yards' | 'meters' | 'miles' | 'kilometers';
   time_goal?: string; // H:MM:SS.T format
@@ -111,7 +112,8 @@ export interface CustomActivityTemplate {
   recurring_days: number[]; // 0-6 (Sunday-Saturday)
   recurring_active: boolean;
   sport: 'baseball' | 'softball';
-  embedded_running?: EmbeddedRunningSession;
+  embedded_running?: EmbeddedRunningSession; // Deprecated - use embedded_running_sessions
+  embedded_running_sessions?: EmbeddedRunningSession[];
   created_at: string;
   updated_at: string;
 }

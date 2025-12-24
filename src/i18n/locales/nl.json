@@ -4429,6 +4429,31 @@
       "drawerDescription": "Tik om toe te voegen aan het plan van vandaag",
       "noFavorites": "Nog geen favorieten",
       "noFavoritesHint": "Markeer activiteiten om ze hier toe te voegen"
+    },
+    "running": {
+      "distanceUnit": "Afstandseenheid",
+      "timeGoal": "Tijddoel",
+      "paceGoal": "Tempodoel",
+      "paceGoalPlaceholder": "bijv. 8:30 per mijl",
+      "hours": "Uren",
+      "minutes": "Minuten",
+      "seconds": "Seconden",
+      "tenths": "Tienden",
+      "addRunningSession": "Loopsessie Toevoegen",
+      "removeSession": "Verwijderen",
+      "sessions": "Loopsessies",
+      "addAnother": "Nog Een Toevoegen",
+      "sessionNumber": "Loopsessie {{number}}",
+      "units": {
+        "feet": "Voet",
+        "yards": "Yards",
+        "meters": "Meters",
+        "miles": "Mijlen",
+        "kilometers": "Kilometers"
+      }
+    },
+    "universal": {
+      "additionalOptions": "Extra Opties"
     }
   }
 }

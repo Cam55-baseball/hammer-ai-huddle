@@ -4373,6 +4373,31 @@
       "drawerDescription": "点击添加到今日计划",
       "noFavorites": "暂无收藏",
       "noFavoritesHint": "将活动标记为收藏以添加到此处"
+    },
+    "running": {
+      "distanceUnit": "距离单位",
+      "timeGoal": "时间目标",
+      "paceGoal": "配速目标",
+      "paceGoalPlaceholder": "例如：8:30/英里",
+      "hours": "小时",
+      "minutes": "分钟",
+      "seconds": "秒",
+      "tenths": "十分之一秒",
+      "addRunningSession": "添加跑步环节",
+      "removeSession": "删除",
+      "sessions": "跑步环节",
+      "addAnother": "添加另一个",
+      "sessionNumber": "跑步环节 {{number}}",
+      "units": {
+        "feet": "英尺",
+        "yards": "码",
+        "meters": "米",
+        "miles": "英里",
+        "kilometers": "公里"
+      }
+    },
+    "universal": {
+      "additionalOptions": "其他选项"
     }
   }
 }

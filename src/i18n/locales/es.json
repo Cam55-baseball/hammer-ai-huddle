@@ -5386,6 +5386,31 @@
       "drawerDescription": "Toca para añadir al plan de hoy",
       "noFavorites": "Sin favoritos aún",
       "noFavoritesHint": "Marca actividades para añadirlas aquí"
+    },
+    "running": {
+      "distanceUnit": "Unidad de Distancia",
+      "timeGoal": "Objetivo de Tiempo",
+      "paceGoal": "Objetivo de Ritmo",
+      "paceGoalPlaceholder": "ej., 8:30 por milla",
+      "hours": "Horas",
+      "minutes": "Minutos",
+      "seconds": "Segundos",
+      "tenths": "Décimas",
+      "addRunningSession": "Añadir Sesión de Carrera",
+      "removeSession": "Eliminar",
+      "sessions": "Sesiones de Carrera",
+      "addAnother": "Añadir Otra",
+      "sessionNumber": "Sesión de Carrera {{number}}",
+      "units": {
+        "feet": "Pies",
+        "yards": "Yardas",
+        "meters": "Metros",
+        "miles": "Millas",
+        "kilometers": "Kilómetros"
+      }
+    },
+    "universal": {
+      "additionalOptions": "Opciones Adicionales"
     }
   }
 }

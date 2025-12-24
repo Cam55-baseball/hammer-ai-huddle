@@ -1,10 +1,4 @@
 {
-  "customActivity": {
-    "running": {
-      "tenths": "Tenths",
-      "addRunningSession": "Add Running Session"
-    }
-  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -5754,6 +5748,12 @@
       "hours": "Hours",
       "minutes": "Minutes",
       "seconds": "Seconds",
+      "tenths": "Tenths",
+      "addRunningSession": "Add Running Session",
+      "removeSession": "Remove",
+      "sessions": "Running Sessions",
+      "addAnother": "Add Another",
+      "sessionNumber": "Running Session {{number}}",
       "units": {
         "feet": "Feet",
         "yards": "Yards",
