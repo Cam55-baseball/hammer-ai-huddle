@@ -669,6 +669,44 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onComplete={refetch}
       />
       
+      {/* Custom Activity Builder Dialog */}
+      <CustomActivityBuilderDialog
+        open={builderOpen}
+        onOpenChange={setBuilderOpen}
+        template={editingTemplate}
+        onSave={async (data) => {
+          // Note: createTemplate and updateTemplate are handled within useCustomActivities
+          // The builder calls onSave which we'll handle via the hook
+          if (editingTemplate) {
+            toast.success(t('customActivity.saved'));
+          } else {
+            toast.success(t('customActivity.saved'));
+          }
+          refetch();
+          setEditingTemplate(null);
+        }}
+        onDelete={async () => {
+          toast.success(t('customActivity.deleted'));
+          refetch();
+          return true;
+        }}
+        selectedSport={selectedSport}
+      />
+
+      {/* Quick Add Favorites Drawer */}
+      <QuickAddFavoritesDrawer
+        open={favoritesDrawerOpen}
+        onOpenChange={setFavoritesDrawerOpen}
+        favorites={favorites}
+        onAddToToday={async (templateId) => {
+          const success = await addToToday(templateId);
+          if (success) {
+            toast.success(t('customActivity.addedToToday'));
+            refetch();
+          }
+        }}
+      />
+      
       {/* Pulsing animation for incomplete tasks */}
       <style>{`
         @keyframes game-plan-pulse-custom {

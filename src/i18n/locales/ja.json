@@ -3832,7 +3832,8 @@
     "sections": {
       "dailyCheckins": "デイリーチェックイン",
       "training": "トレーニング",
-      "cycleTracking": "サイクルトラッキング"
+      "cycleTracking": "サイクルトラッキング",
+      "customActivities": "カスタムアクティビティ"
     },
     "quiz": {
       "morning": {
@@ -4382,5 +4383,95 @@
     "stepBackward1": "1フレーム戻る",
     "stepForward1": "1フレーム進む",
     "stepForward5": "5フレーム進む"
+  },
+  "customActivity": {
+    "title": "カスタムアクティビティ",
+    "createNew": "新規作成",
+    "quickAdd": "クイック追加",
+    "badge": "CUSTOM",
+    "addedToToday": "今日のプランに追加しました",
+    "markedComplete": "アクティビティ完了！",
+    "unmarkedComplete": "アクティビティを未完了にしました",
+    "saved": "アクティビティを保存しました！",
+    "deleted": "アクティビティを削除しました",
+    "minutes": "分",
+    "types": {
+      "workout": "ワークアウト",
+      "running": "ランニング",
+      "meal": "食事/栄養",
+      "warmup": "ウォームアップ",
+      "recovery": "リカバリールーティン",
+      "practice": "フル練習",
+      "shortPractice": "ショート練習",
+      "freeSession": "フリーセッション"
+    },
+    "fields": {
+      "title": "アクティビティ名",
+      "description": "説明",
+      "duration": "時間（分）",
+      "intensity": "強度",
+      "distance": "距離",
+      "notes": "メモ",
+      "selectType": "アクティビティタイプを選択",
+      "enterTitle": "タイトルを入力..."
+    },
+    "intensity": {
+      "light": "軽い",
+      "moderate": "中程度",
+      "high": "高い",
+      "max": "最大"
+    },
+    "recurring": {
+      "title": "毎週繰り返す",
+      "active": "繰り返し有効",
+      "days": {
+        "sun": "日",
+        "mon": "月",
+        "tue": "火",
+        "wed": "水",
+        "thu": "木",
+        "fri": "金",
+        "sat": "土"
+      }
+    },
+    "favorite": "お気に入りに追加",
+    "isFavorited": "お気に入り",
+    "exercises": {
+      "title": "エクササイズ",
+      "addExercise": "エクササイズを追加",
+      "name": "エクササイズ名",
+      "sets": "セット",
+      "reps": "回数",
+      "duration": "時間（秒）",
+      "rest": "休憩（秒）",
+      "weight": "重量",
+      "notes": "メモ"
+    },
+    "meals": {
+      "title": "食事アイテム",
+      "addItem": "アイテムを追加",
+      "vitamins": "ビタミン",
+      "supplements": "サプリメント",
+      "itemName": "アイテム名",
+      "portion": "分量"
+    },
+    "customFields": {
+      "title": "カスタムフィールド",
+      "addField": "フィールドを追加",
+      "fieldLabel": "フィールドラベル",
+      "fieldValue": "値"
+    },
+    "icon": "アイコン",
+    "color": "色",
+    "delete": "アクティビティを削除",
+    "confirmDelete": "このアクティビティを削除してもよろしいですか？",
+    "selectIcon": "アイコンを選択",
+    "selectColor": "色を選択",
+    "favorites": {
+      "drawerTitle": "お気に入りをクイック追加",
+      "drawerDescription": "タップして今日のプランに追加",
+      "noFavorites": "お気に入りがありません",
+      "noFavoritesHint": "アクティビティをお気に入りに追加してください"
+    }
   }
 }

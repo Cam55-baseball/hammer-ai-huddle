@@ -4792,7 +4792,8 @@
     "sections": {
       "dailyCheckins": "DAILY CHECK-INS",
       "training": "TRAINING",
-      "cycleTracking": "CYCLE TRACKING"
+      "cycleTracking": "CYCLE TRACKING",
+      "customActivities": "CUSTOM ACTIVITIES"
     },
     "quiz": {
       "morning": {
@@ -5605,5 +5606,95 @@
     "stepBackward1": "Back 1 frame",
     "stepForward1": "Forward 1 frame",
     "stepForward5": "Forward 5 frames"
+  },
+  "customActivity": {
+    "title": "Custom Activities",
+    "createNew": "Create Custom",
+    "quickAdd": "Quick Add",
+    "badge": "CUSTOM",
+    "addedToToday": "Added to today's game plan",
+    "markedComplete": "Activity completed!",
+    "unmarkedComplete": "Activity marked incomplete",
+    "saved": "Activity saved!",
+    "deleted": "Activity deleted",
+    "minutes": "min",
+    "types": {
+      "workout": "Workout",
+      "running": "Running Session",
+      "meal": "Meal/Nutrition",
+      "warmup": "Warm-up",
+      "recovery": "Recovery Routine",
+      "practice": "Full Practice",
+      "shortPractice": "Short Practice",
+      "freeSession": "Free Session"
+    },
+    "fields": {
+      "title": "Activity Title",
+      "description": "Description",
+      "duration": "Duration (minutes)",
+      "intensity": "Intensity",
+      "distance": "Distance",
+      "notes": "Notes",
+      "selectType": "Select activity type",
+      "enterTitle": "Enter a title..."
+    },
+    "intensity": {
+      "light": "Light",
+      "moderate": "Moderate",
+      "high": "High",
+      "max": "Maximum"
+    },
+    "recurring": {
+      "title": "Repeat Weekly",
+      "active": "Recurring Active",
+      "days": {
+        "sun": "Sun",
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat"
+      }
+    },
+    "favorite": "Add to Favorites",
+    "isFavorited": "Favorited",
+    "exercises": {
+      "title": "Exercises",
+      "addExercise": "Add Exercise",
+      "name": "Exercise Name",
+      "sets": "Sets",
+      "reps": "Reps",
+      "duration": "Duration (sec)",
+      "rest": "Rest (sec)",
+      "weight": "Weight",
+      "notes": "Notes"
+    },
+    "meals": {
+      "title": "Meal Items",
+      "addItem": "Add Item",
+      "vitamins": "Vitamins",
+      "supplements": "Supplements",
+      "itemName": "Item Name",
+      "portion": "Portion"
+    },
+    "customFields": {
+      "title": "Custom Fields",
+      "addField": "Add Field",
+      "fieldLabel": "Field Label",
+      "fieldValue": "Value"
+    },
+    "icon": "Icon",
+    "color": "Color",
+    "delete": "Delete Activity",
+    "confirmDelete": "Are you sure you want to delete this activity?",
+    "selectIcon": "Select an icon",
+    "selectColor": "Select a color",
+    "favorites": {
+      "drawerTitle": "Quick Add Favorites",
+      "drawerDescription": "Tap to add to today's game plan",
+      "noFavorites": "No favorites yet",
+      "noFavoritesHint": "Star activities to add them here"
+    }
   }
 }

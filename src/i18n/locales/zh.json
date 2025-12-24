@@ -3703,7 +3703,8 @@
     "sections": {
       "dailyCheckins": "每日签到",
       "training": "训练",
-      "cycleTracking": "周期跟踪"
+      "cycleTracking": "周期跟踪",
+      "customActivities": "自定义活动"
     },
     "quiz": {
       "morning": {
@@ -4226,5 +4227,95 @@
     "stepBackward1": "后退1帧",
     "stepForward1": "前进1帧",
     "stepForward5": "前进5帧"
+  },
+  "customActivity": {
+    "title": "自定义活动",
+    "createNew": "创建新活动",
+    "quickAdd": "快速添加",
+    "badge": "自定义",
+    "addedToToday": "已添加到今日计划",
+    "markedComplete": "活动已完成！",
+    "unmarkedComplete": "活动标记为未完成",
+    "saved": "活动已保存！",
+    "deleted": "活动已删除",
+    "minutes": "分钟",
+    "types": {
+      "workout": "训练",
+      "running": "跑步",
+      "meal": "餐食/营养",
+      "warmup": "热身",
+      "recovery": "恢复训练",
+      "practice": "完整练习",
+      "shortPractice": "简短练习",
+      "freeSession": "自由活动"
+    },
+    "fields": {
+      "title": "活动标题",
+      "description": "描述",
+      "duration": "时长（分钟）",
+      "intensity": "强度",
+      "distance": "距离",
+      "notes": "备注",
+      "selectType": "选择活动类型",
+      "enterTitle": "输入标题..."
+    },
+    "intensity": {
+      "light": "轻度",
+      "moderate": "中等",
+      "high": "高强度",
+      "max": "最大强度"
+    },
+    "recurring": {
+      "title": "每周重复",
+      "active": "重复已启用",
+      "days": {
+        "sun": "日",
+        "mon": "一",
+        "tue": "二",
+        "wed": "三",
+        "thu": "四",
+        "fri": "五",
+        "sat": "六"
+      }
+    },
+    "favorite": "添加到收藏",
+    "isFavorited": "已收藏",
+    "exercises": {
+      "title": "练习项目",
+      "addExercise": "添加练习",
+      "name": "练习名称",
+      "sets": "组数",
+      "reps": "次数",
+      "duration": "时长（秒）",
+      "rest": "休息（秒）",
+      "weight": "重量",
+      "notes": "备注"
+    },
+    "meals": {
+      "title": "餐食项目",
+      "addItem": "添加项目",
+      "vitamins": "维生素",
+      "supplements": "补充剂",
+      "itemName": "项目名称",
+      "portion": "份量"
+    },
+    "customFields": {
+      "title": "自定义字段",
+      "addField": "添加字段",
+      "fieldLabel": "字段标签",
+      "fieldValue": "值"
+    },
+    "icon": "图标",
+    "color": "颜色",
+    "delete": "删除活动",
+    "confirmDelete": "确定要删除此活动吗？",
+    "selectIcon": "选择图标",
+    "selectColor": "选择颜色",
+    "favorites": {
+      "drawerTitle": "快速添加收藏",
+      "drawerDescription": "点击添加到今日计划",
+      "noFavorites": "暂无收藏",
+      "noFavoritesHint": "将活动标记为收藏以添加到此处"
+    }
   }
 }

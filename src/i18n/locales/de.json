@@ -4545,7 +4545,8 @@
     "sections": {
       "dailyCheckins": "TÄGLICHE CHECK-INS",
       "training": "TRAINING",
-      "cycleTracking": "ZYKLUS-TRACKING"
+      "cycleTracking": "ZYKLUS-TRACKING",
+      "customActivities": "EIGENE AKTIVITÄTEN"
     },
     "quiz": {
       "morning": {
@@ -4983,5 +4984,95 @@
     "stepBackward1": "1 Bild zurück",
     "stepForward1": "1 Bild vor",
     "stepForward5": "5 Bilder vor"
+  },
+  "customActivity": {
+    "title": "Eigene Aktivitäten",
+    "createNew": "Neu Erstellen",
+    "quickAdd": "Schnell Hinzufügen",
+    "badge": "CUSTOM",
+    "addedToToday": "Zum heutigen Plan hinzugefügt",
+    "markedComplete": "Aktivität abgeschlossen!",
+    "unmarkedComplete": "Aktivität als unvollständig markiert",
+    "saved": "Aktivität gespeichert!",
+    "deleted": "Aktivität gelöscht",
+    "minutes": "Min",
+    "types": {
+      "workout": "Training",
+      "running": "Laufsession",
+      "meal": "Mahlzeit/Ernährung",
+      "warmup": "Aufwärmen",
+      "recovery": "Erholungsroutine",
+      "practice": "Volles Training",
+      "shortPractice": "Kurzes Training",
+      "freeSession": "Freie Session"
+    },
+    "fields": {
+      "title": "Aktivitätstitel",
+      "description": "Beschreibung",
+      "duration": "Dauer (Minuten)",
+      "intensity": "Intensität",
+      "distance": "Distanz",
+      "notes": "Notizen",
+      "selectType": "Aktivitätstyp auswählen",
+      "enterTitle": "Titel eingeben..."
+    },
+    "intensity": {
+      "light": "Leicht",
+      "moderate": "Moderat",
+      "high": "Hoch",
+      "max": "Maximum"
+    },
+    "recurring": {
+      "title": "Wöchentlich Wiederholen",
+      "active": "Wiederholung Aktiv",
+      "days": {
+        "sun": "So",
+        "mon": "Mo",
+        "tue": "Di",
+        "wed": "Mi",
+        "thu": "Do",
+        "fri": "Fr",
+        "sat": "Sa"
+      }
+    },
+    "favorite": "Zu Favoriten Hinzufügen",
+    "isFavorited": "Favorit",
+    "exercises": {
+      "title": "Übungen",
+      "addExercise": "Übung Hinzufügen",
+      "name": "Übungsname",
+      "sets": "Sätze",
+      "reps": "Wiederholungen",
+      "duration": "Dauer (Sek)",
+      "rest": "Pause (Sek)",
+      "weight": "Gewicht",
+      "notes": "Notizen"
+    },
+    "meals": {
+      "title": "Mahlzeitenartikel",
+      "addItem": "Artikel Hinzufügen",
+      "vitamins": "Vitamine",
+      "supplements": "Nahrungsergänzung",
+      "itemName": "Artikelname",
+      "portion": "Portion"
+    },
+    "customFields": {
+      "title": "Eigene Felder",
+      "addField": "Feld Hinzufügen",
+      "fieldLabel": "Feldbezeichnung",
+      "fieldValue": "Wert"
+    },
+    "icon": "Symbol",
+    "color": "Farbe",
+    "delete": "Aktivität Löschen",
+    "confirmDelete": "Sind Sie sicher, dass Sie diese Aktivität löschen möchten?",
+    "selectIcon": "Symbol auswählen",
+    "selectColor": "Farbe auswählen",
+    "favorites": {
+      "drawerTitle": "Schnell Favoriten Hinzufügen",
+      "drawerDescription": "Tippen zum heutigen Plan hinzufügen",
+      "noFavorites": "Noch keine Favoriten",
+      "noFavoritesHint": "Aktivitäten markieren, um sie hier hinzuzufügen"
+    }
   }
 }
