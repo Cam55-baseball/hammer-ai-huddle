@@ -204,7 +204,13 @@ Generate a 5-8 exercise warmup that prepares them specifically for this workout.
     console.log("AI Response:", JSON.stringify(aiResponse, null, 2));
 
     // Extract warmup from tool call
-    let result = { warmupExercises: [], reasoning: '', estimatedDuration: 8 };
+    interface WarmupResult {
+      warmupExercises: WarmupExercise[];
+      reasoning: string;
+      estimatedDuration: number;
+    }
+    
+    let result: WarmupResult = { warmupExercises: [], reasoning: '', estimatedDuration: 8 };
     
     const toolCall = aiResponse.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
@@ -217,15 +223,16 @@ Generate a 5-8 exercise warmup that prepares them specifically for this workout.
 
     // Fallback warmup if AI doesn't return any
     if (!result.warmupExercises || result.warmupExercises.length === 0) {
+      const fallbackExercises: WarmupExercise[] = [
+        { id: 'warmup-1', name: 'Jumping Jacks', type: 'cardio', category: 'general', duration: 60, rest: 0 },
+        { id: 'warmup-2', name: 'High Knees', type: 'cardio', category: 'general', duration: 30, rest: 0 },
+        { id: 'warmup-3', name: 'Hip Circles', type: 'flexibility', category: 'dynamic', duration: 30, rest: 0 },
+        { id: 'warmup-4', name: 'Arm Circles', type: 'flexibility', category: 'dynamic', sets: 2, reps: 15, rest: 0 },
+        { id: 'warmup-5', name: 'Leg Swings', type: 'flexibility', category: 'dynamic', duration: 30, rest: 0 },
+        { id: 'warmup-6', name: 'Band Pull-Aparts', type: 'baseball', category: 'arm-care', sets: 2, reps: 10, rest: 0 },
+      ];
       result = {
-        warmupExercises: [
-          { id: 'warmup-1', name: 'Jumping Jacks', type: 'cardio', category: 'general', duration: 60, rest: 0 } as WarmupExercise,
-          { id: 'warmup-2', name: 'High Knees', type: 'cardio', category: 'general', duration: 30, rest: 0 } as WarmupExercise,
-          { id: 'warmup-3', name: 'Hip Circles', type: 'flexibility', category: 'dynamic', duration: 30, rest: 0 } as WarmupExercise,
-          { id: 'warmup-4', name: 'Arm Circles', type: 'flexibility', category: 'dynamic', sets: 2, reps: 15, rest: 0 } as WarmupExercise,
-          { id: 'warmup-5', name: 'Leg Swings', type: 'flexibility', category: 'dynamic', duration: 30, rest: 0 } as WarmupExercise,
-          { id: 'warmup-6', name: 'Band Pull-Aparts', type: 'baseball', category: 'arm-care', sets: 2, reps: 10, rest: 0 } as WarmupExercise,
-        ],
+        warmupExercises: fallbackExercises,
         reasoning: 'Default warmup routine for baseball/softball athletes covering general activation, dynamic mobility, and arm care.',
         estimatedDuration: 8,
       };
