@@ -8,8 +8,10 @@ import { ActivityAnalytics } from '@/components/custom-activities/ActivityAnalyt
 import { HydrationReminderSettings } from '@/components/custom-activities/HydrationReminderSettings';
 import { HydrationTrackerWidget } from '@/components/custom-activities/HydrationTrackerWidget';
 import { RunningPresetLibrary } from '@/components/custom-activities/RunningPresetLibrary';
+import { WorkoutTemplatesLibrary } from '@/components/custom-activities/WorkoutTemplatesLibrary';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
-import { LayoutGrid, History, BarChart3, Droplets, Footprints } from 'lucide-react';
+import { LayoutGrid, History, BarChart3, Droplets, Footprints, BookOpen } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function MyCustomActivities() {
   const { t } = useTranslation();
@@ -28,6 +30,13 @@ export default function MyCustomActivities() {
     refetch
   } = useCustomActivities(selectedSport);
 
+  const handleUseTemplate = (exercises: any[], templateName: string) => {
+    toast.success(t('workoutTemplates.templateLoaded', `Template "${templateName}" loaded! Create a new activity to use it.`));
+    // Store in session for the activity builder to pick up
+    sessionStorage.setItem('pendingWorkoutExercises', JSON.stringify(exercises));
+    sessionStorage.setItem('pendingWorkoutName', templateName);
+  };
+
   return (
     <DashboardLayout>
       <div className="p-4 sm:p-6 space-y-6">
@@ -44,10 +53,14 @@ export default function MyCustomActivities() {
         </div>
 
         <Tabs defaultValue="templates" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-auto">
+          <TabsList className="grid w-full grid-cols-6 h-auto">
             <TabsTrigger value="templates" className="flex items-center gap-2 py-3">
               <LayoutGrid className="h-4 w-4" />
               <span className="hidden sm:inline">{t('myCustomActivities.tabs.templates', 'Templates')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="library" className="flex items-center gap-2 py-3">
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('myCustomActivities.tabs.library', 'Library')}</span>
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2 py-3">
               <History className="h-4 w-4" />
@@ -77,6 +90,13 @@ export default function MyCustomActivities() {
               onDeleteTemplate={deleteTemplate}
               onToggleFavorite={toggleFavorite}
               onRefetch={refetch}
+            />
+          </TabsContent>
+
+          <TabsContent value="library" className="mt-6">
+            <WorkoutTemplatesLibrary 
+              selectedSport={selectedSport}
+              onUseTemplate={handleUseTemplate}
             />
           </TabsContent>
 
