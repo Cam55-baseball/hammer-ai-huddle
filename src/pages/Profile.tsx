@@ -19,6 +19,7 @@ import { SiTiktok } from "react-icons/si";
 import { UserMenu } from "@/components/UserMenu";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -1613,6 +1614,13 @@ export default function Profile() {
               </div>
             </div>
           </Card>
+        )}
+
+        {/* Color Customization Card - Only show on own profile */}
+        {!viewingOtherProfile && (
+          <div className="mb-6">
+            <ColorCustomizationCard selectedSport={playerSport} />
+          </div>
         )}
 
         {/* Account Info Card */}
