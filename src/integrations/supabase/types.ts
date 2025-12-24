@@ -154,10 +154,13 @@ export type Database = {
           color: string
           created_at: string | null
           custom_fields: Json | null
+          custom_logo_url: string | null
           description: string | null
+          display_nickname: string | null
           distance_unit: string | null
           distance_value: number | null
           duration_minutes: number | null
+          embedded_running_sessions: Json | null
           exercises: Json | null
           icon: string
           id: string
@@ -168,6 +171,8 @@ export type Database = {
           pace_value: string | null
           recurring_active: boolean | null
           recurring_days: Json | null
+          reminder_enabled: boolean | null
+          reminder_time: string | null
           sport: string
           title: string
           updated_at: string | null
@@ -178,10 +183,13 @@ export type Database = {
           color?: string
           created_at?: string | null
           custom_fields?: Json | null
+          custom_logo_url?: string | null
           description?: string | null
+          display_nickname?: string | null
           distance_unit?: string | null
           distance_value?: number | null
           duration_minutes?: number | null
+          embedded_running_sessions?: Json | null
           exercises?: Json | null
           icon?: string
           id?: string
@@ -192,6 +200,8 @@ export type Database = {
           pace_value?: string | null
           recurring_active?: boolean | null
           recurring_days?: Json | null
+          reminder_enabled?: boolean | null
+          reminder_time?: string | null
           sport?: string
           title: string
           updated_at?: string | null
@@ -202,10 +212,13 @@ export type Database = {
           color?: string
           created_at?: string | null
           custom_fields?: Json | null
+          custom_logo_url?: string | null
           description?: string | null
+          display_nickname?: string | null
           distance_unit?: string | null
           distance_value?: number | null
           duration_minutes?: number | null
+          embedded_running_sessions?: Json | null
           exercises?: Json | null
           icon?: string
           id?: string
@@ -216,6 +229,8 @@ export type Database = {
           pace_value?: string | null
           recurring_active?: boolean | null
           recurring_days?: Json | null
+          reminder_enabled?: boolean | null
+          reminder_time?: string | null
           sport?: string
           title?: string
           updated_at?: string | null
@@ -258,6 +273,66 @@ export type Database = {
           intensity?: number | null
           trigger_category?: string | null
           trigger_description?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hydration_logs: {
+        Row: {
+          amount_oz: number
+          id: string
+          log_date: string | null
+          logged_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_oz: number
+          id?: string
+          log_date?: string | null
+          logged_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_oz?: number
+          id?: string
+          log_date?: string | null
+          logged_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hydration_settings: {
+        Row: {
+          created_at: string | null
+          daily_goal_oz: number | null
+          enabled: boolean | null
+          end_time: string | null
+          id: string
+          reminder_interval_minutes: number | null
+          start_time: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          daily_goal_oz?: number | null
+          enabled?: boolean | null
+          end_time?: string | null
+          id?: string
+          reminder_interval_minutes?: number | null
+          start_time?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          daily_goal_oz?: number | null
+          enabled?: boolean | null
+          end_time?: string | null
+          id?: string
+          reminder_interval_minutes?: number | null
+          start_time?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -923,6 +998,48 @@ export type Database = {
         }
         Relationships: []
       }
+      running_presets: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          difficulty: string | null
+          estimated_duration_minutes: number | null
+          id: string
+          is_system: boolean | null
+          name: string
+          preset_data: Json
+          sport: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_system?: boolean | null
+          name: string
+          preset_data?: Json
+          sport?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_system?: boolean | null
+          name?: string
+          preset_data?: Json
+          sport?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       scout_applications: {
         Row: {
           created_at: string | null
@@ -1048,6 +1165,47 @@ export type Database = {
             columns: ["video_id"]
             isOneToOne: false
             referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_activity_templates: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_public: boolean | null
+          share_code: string
+          template_id: string | null
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          share_code: string
+          template_id?: string | null
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          share_code?: string
+          template_id?: string | null
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_activity_templates_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "custom_activity_templates"
             referencedColumns: ["id"]
           },
         ]

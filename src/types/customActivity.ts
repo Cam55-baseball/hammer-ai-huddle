@@ -114,6 +114,12 @@ export interface CustomActivityTemplate {
   sport: 'baseball' | 'softball';
   embedded_running?: EmbeddedRunningSession; // Deprecated - use embedded_running_sessions
   embedded_running_sessions?: EmbeddedRunningSession[];
+  // Card customization
+  display_nickname?: string;
+  custom_logo_url?: string;
+  // Reminder settings
+  reminder_enabled?: boolean;
+  reminder_time?: string;
   created_at: string;
   updated_at: string;
 }

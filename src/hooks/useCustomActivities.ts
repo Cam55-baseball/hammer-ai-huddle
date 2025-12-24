@@ -42,7 +42,8 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         custom_fields: (item.custom_fields as unknown as CustomField[]) || [],
         intervals: (item.intervals as unknown as RunningInterval[]) || [],
         recurring_days: (item.recurring_days as unknown as number[]) || [],
-      })) as CustomActivityTemplate[];
+        embedded_running_sessions: (item.embedded_running_sessions as unknown as any[]) || [],
+      })) as unknown as CustomActivityTemplate[];
 
       setTemplates(parsed);
     } catch (error) {
