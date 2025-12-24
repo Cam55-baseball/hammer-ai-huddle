@@ -455,7 +455,8 @@
     "vault": "保险库",
     "bounceBackBay": "恢复湾",
     "mindFuel": "心灵燃料",
-    "texVision": "视觉训练"
+    "texVision": "视觉训练",
+    "myCustomActivities": "我的活动"
   },
   "sidebar": {
     "ownerBio": "所有者简介",
@@ -4517,7 +4518,42 @@
     "thisMonth": "本月",
     "allTime": "全部时间"
   },
-  "navigation": {
-    "myCustomActivities": "我的活动"
+  "workoutBuilder": {
+    "title": "训练构建器",
+    "dragExercise": "拖动练习来构建您的训练",
+    "exerciseLibrary": "练习库",
+    "timeline": "时间线",
+    "estimatedDuration": "预计时长",
+    "addRest": "添加休息",
+    "createSuperset": "创建超级组",
+    "minutes": "分钟",
+    "emptyTimeline": "拖动练习到这里开始构建",
+    "categories": {
+      "strength": "力量",
+      "cardio": "有氧",
+      "flexibility": "柔韧性",
+      "plyometric": "爆发力",
+      "core": "核心",
+      "warmup": "热身"
+    },
+    "exerciseDetails": {
+      "sets": "组数",
+      "reps": "次数",
+      "duration": "时长",
+      "rest": "休息"
+    }
+  },
+  "aiRecommendations": {
+    "title": "AI推荐",
+    "generate": "生成AI训练",
+    "generating": "分析您的历史记录...",
+    "useThis": "使用此训练",
+    "reasoning": "为什么推荐这个训练？",
+    "noHistory": "请先记录一些训练以获得个性化推荐",
+    "error": "生成推荐失败",
+    "basedOn": "基于您最近的活动",
+    "muscleGroups": "目标肌群",
+    "estimatedTime": "预计时间",
+    "difficulty": "难度"
   }
 }

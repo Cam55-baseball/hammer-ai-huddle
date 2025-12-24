@@ -484,7 +484,8 @@
     "vault": "Le Coffre-Fort",
     "bounceBackBay": "Baie de Récupération",
     "mindFuel": "Carburant Mental",
-    "texVision": "Tex Vision"
+    "texVision": "Tex Vision",
+    "myCustomActivities": "Mes Activités"
   },
   "sidebar": {
     "ownerBio": "Bio du Propriétaire",
@@ -5274,7 +5275,42 @@
     "thisMonth": "Ce Mois",
     "allTime": "Tout le Temps"
   },
-  "navigation": {
-    "myCustomActivities": "Mes Activités"
+  "workoutBuilder": {
+    "title": "Créateur d'Entraînement",
+    "dragExercise": "Glissez les exercices pour construire votre entraînement",
+    "exerciseLibrary": "Bibliothèque d'Exercices",
+    "timeline": "Chronologie",
+    "estimatedDuration": "Durée Est.",
+    "addRest": "Ajouter Repos",
+    "createSuperset": "Créer Superset",
+    "minutes": "mins",
+    "emptyTimeline": "Glissez les exercices ici pour commencer",
+    "categories": {
+      "strength": "Force",
+      "cardio": "Cardio",
+      "flexibility": "Flexibilité",
+      "plyometric": "Pliométrie",
+      "core": "Core",
+      "warmup": "Échauffement"
+    },
+    "exerciseDetails": {
+      "sets": "Séries",
+      "reps": "Reps",
+      "duration": "Durée",
+      "rest": "Repos"
+    }
+  },
+  "aiRecommendations": {
+    "title": "Recommandations IA",
+    "generate": "Générer Entraînement IA",
+    "generating": "Analyse de votre historique...",
+    "useThis": "Utiliser Cet Entraînement",
+    "reasoning": "Pourquoi cet entraînement?",
+    "noHistory": "Enregistrez quelques entraînements d'abord pour des recommandations personnalisées",
+    "error": "Échec de génération des recommandations",
+    "basedOn": "Basé sur votre activité récente",
+    "muscleGroups": "Groupes musculaires ciblés",
+    "estimatedTime": "Temps estimé",
+    "difficulty": "Difficulté"
   }
 }

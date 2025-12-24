@@ -484,7 +484,8 @@
     "vault": "De Kluis",
     "bounceBackBay": "Herstel Baai",
     "mindFuel": "Mentale Brandstof",
-    "texVision": "Tex Vision"
+    "texVision": "Tex Vision",
+    "myCustomActivities": "Mijn Activiteiten"
   },
   "sidebar": {
     "ownerBio": "Eigenaar Bio",
@@ -4573,7 +4574,42 @@
     "thisMonth": "Deze Maand",
     "allTime": "Alle Tijd"
   },
-  "navigation": {
-    "myCustomActivities": "Mijn Activiteiten"
+  "workoutBuilder": {
+    "title": "Workout Builder",
+    "dragExercise": "Sleep oefeningen om je workout te bouwen",
+    "exerciseLibrary": "Oefeningenbibliotheek",
+    "timeline": "Tijdlijn",
+    "estimatedDuration": "Gesch. Duur",
+    "addRest": "Rust Toevoegen",
+    "createSuperset": "Superset Maken",
+    "minutes": "min",
+    "emptyTimeline": "Sleep oefeningen hier om te beginnen",
+    "categories": {
+      "strength": "Kracht",
+      "cardio": "Cardio",
+      "flexibility": "Flexibiliteit",
+      "plyometric": "Plyometrisch",
+      "core": "Core",
+      "warmup": "Warming-up"
+    },
+    "exerciseDetails": {
+      "sets": "Sets",
+      "reps": "Reps",
+      "duration": "Duur",
+      "rest": "Rust"
+    }
+  },
+  "aiRecommendations": {
+    "title": "AI Aanbevelingen",
+    "generate": "AI Workout Genereren",
+    "generating": "Je geschiedenis analyseren...",
+    "useThis": "Deze Workout Gebruiken",
+    "reasoning": "Waarom deze workout?",
+    "noHistory": "Log eerst enkele workouts voor gepersonaliseerde aanbevelingen",
+    "error": "Kon aanbevelingen niet genereren",
+    "basedOn": "Gebaseerd op je recente activiteit",
+    "muscleGroups": "Doelspiergroepen",
+    "estimatedTime": "Geschatte tijd",
+    "difficulty": "Moeilijkheid"
   }
 }
