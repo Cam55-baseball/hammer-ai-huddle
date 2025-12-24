@@ -5305,8 +5305,11 @@
       "selectExercises": "Sélectionnez 2-3 exercices",
       "ungroup": "Dégrouper",
       "sharedRest": "Repos Partagé",
-      "grouped": "Groupe"
+      "grouped": "Groupe",
+      "superset": "Superset"
     },
+    "browseLibrary": "Bibliothèque",
+    "tapToAddMobile": "Appuyez sur Bibliothèque pour ajouter des exercices",
     "warmup": {
       "title": "Générateur d'Échauffement IA",
       "generate": "Générer Échauffement",

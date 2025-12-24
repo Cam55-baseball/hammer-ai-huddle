@@ -4548,8 +4548,11 @@
       "selectExercises": "选择2-3个练习",
       "ungroup": "取消分组",
       "sharedRest": "共享休息",
-      "grouped": "分组"
+      "grouped": "分组",
+      "superset": "超级组"
     },
+    "browseLibrary": "练习库",
+    "tapToAddMobile": "点击练习库添加练习",
     "warmup": {
       "title": "AI热身生成器",
       "generate": "生成热身",

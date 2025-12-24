@@ -4704,8 +4704,11 @@
       "selectExercises": "2-3つのエクササイズを選択",
       "ungroup": "グループ解除",
       "sharedRest": "共有休憩",
-      "grouped": "グループ"
+      "grouped": "グループ",
+      "superset": "スーパーセット"
     },
+    "browseLibrary": "ライブラリ",
+    "tapToAddMobile": "ライブラリをタップしてエクササイズを追加",
     "warmup": {
       "title": "AIウォームアップジェネレーター",
       "generate": "ウォームアップを生成",

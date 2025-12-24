@@ -5305,8 +5305,11 @@
       "selectExercises": "2-3 Übungen auswählen",
       "ungroup": "Gruppierung aufheben",
       "sharedRest": "Gemeinsame Pause",
-      "grouped": "Gruppe"
+      "grouped": "Gruppe",
+      "superset": "Supersatz"
     },
+    "browseLibrary": "Bibliothek",
+    "tapToAddMobile": "Tippe auf Bibliothek um Übungen hinzuzufügen",
     "warmup": {
       "title": "KI-Aufwärm-Generator",
       "generate": "Aufwärmen generieren",
