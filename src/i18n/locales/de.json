@@ -16,6 +16,7 @@
     "search": "Suchen",
     "filter": "Filtern",
     "noData": "Keine Daten verfügbar",
+    "noResults": "Keine Ergebnisse gefunden",
     "required": "Erforderlich",
     "optional": "Optional",
     "retry": "Erneut versuchen",
@@ -26,7 +27,8 @@
     "ai": "KI",
     "continue": "Weiter",
     "selected": "Ausgewählt",
-    "select": "Auswählen"
+    "select": "Auswählen",
+    "add": "Hinzufügen"
   },
   "auth": {
     "signIn": "Anmelden",

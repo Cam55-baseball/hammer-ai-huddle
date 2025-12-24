@@ -16,6 +16,7 @@
     "search": "Rechercher",
     "filter": "Filtrer",
     "noData": "Aucune donnée disponible",
+    "noResults": "Aucun résultat trouvé",
     "required": "Requis",
     "optional": "Optionnel",
     "retry": "Réessayer",
@@ -26,7 +27,8 @@
     "ai": "IA",
     "continue": "Continuer",
     "selected": "Sélectionné",
-    "select": "Sélectionner"
+    "select": "Sélectionner",
+    "add": "Ajouter"
   },
   "auth": {
     "signIn": "Se Connecter",
