@@ -13,7 +13,7 @@ export type IntensityLevel = 'light' | 'moderate' | 'high' | 'max';
 export interface Exercise {
   id: string;
   name: string;
-  type: 'strength' | 'cardio' | 'flexibility' | 'plyometric' | 'other';
+  type: 'strength' | 'cardio' | 'flexibility' | 'plyometric' | 'baseball' | 'core' | 'other';
   sets?: number;
   reps?: number | string; // can be "10-12" or number
   duration?: number; // in seconds
@@ -22,6 +22,9 @@ export interface Exercise {
   weight?: number;
   weightUnit?: 'lbs' | 'kg';
   notes?: string;
+  // Superset support
+  supersetGroupId?: string; // Groups exercises into supersets
+  supersetOrder?: number;   // Order within superset (1, 2, 3)
 }
 
 export interface MealItem {

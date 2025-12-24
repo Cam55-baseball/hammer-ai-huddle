@@ -19,6 +19,7 @@ import { Exercise } from '@/types/customActivity';
 import { ExerciseLibrarySidebar, CATEGORY_COLORS } from './ExerciseLibrarySidebar';
 import { WorkoutTimeline } from './WorkoutTimeline';
 import { AIWorkoutRecommendations } from './AIWorkoutRecommendations';
+import { WarmupGeneratorCard } from './WarmupGeneratorCard';
 import { cn } from '@/lib/utils';
 
 interface DragDropExerciseBuilderProps {
@@ -110,11 +111,22 @@ export function DragDropExerciseBuilder({ exercises, onExercisesChange }: DragDr
     setShowAIRecommendations(false);
   };
 
+  const handleAddWarmup = (warmupExercises: Exercise[]) => {
+    // Prepend warmup exercises to the beginning
+    onExercisesChange([...warmupExercises, ...exercises]);
+  };
+
   const exerciseType = activeExercise?.type || 'strength';
   const colorClass = CATEGORY_COLORS[exerciseType] || CATEGORY_COLORS.strength;
 
   return (
     <div className="space-y-4">
+      {/* Warmup Generator */}
+      <WarmupGeneratorCard 
+        exercises={exercises} 
+        onAddWarmup={handleAddWarmup}
+      />
+
       {/* AI Recommendations Toggle */}
       <div className="flex items-center justify-between">
         <Button

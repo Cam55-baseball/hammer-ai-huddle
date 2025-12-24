@@ -113,3 +113,6 @@ verify_jwt = true
 
 [functions.recommend-workout]
 verify_jwt = true
+
+[functions.generate-warmup]
+verify_jwt = true
