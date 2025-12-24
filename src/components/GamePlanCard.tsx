@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Reorder } from 'framer-motion';
@@ -11,6 +11,7 @@ import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizDialog';
 import { useVault } from '@/hooks/useVault';
+import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -22,6 +23,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { tasks, completedCount, totalCount, daysUntilRecap, recapProgress, loading, refetch } = useGamePlan(selectedSport);
+  const { getEffectiveColors } = useUserColors(selectedSport);
+  const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
   const { saveFocusQuiz } = useVault();
   const [quickLogOpen, setQuickLogOpen] = useState(false);
@@ -186,21 +189,26 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const isTracking = task.section === 'tracking';
     const isTexVision = task.specialStyle === 'tex-vision';
     
+    // Get dynamic colors based on task type
+    const pendingColors = colors.gamePlan.pending;
+    const trackingColors = colors.gamePlan.tracking;
+    const texVisionColors = colors.gamePlan.texVision;
+    
+    // Determine which color set to use for pending tasks
+    const activeColors = isTexVision ? texVisionColors : isTracking ? trackingColors : pendingColors;
+    
     return (
       <div
         className={cn(
           "w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
           "border-2",
-          task.completed
-            ? "bg-green-500/20 border-green-500/50"
-            : isTexVision
-              ? "bg-teal-500/10 border-teal-500/60 game-plan-pulse-teal"
-              : isTracking
-                ? "bg-purple-500/10 border-purple-500/60 game-plan-pulse-purple"
-                : isSoftball
-                  ? "bg-yellow-100/20 border-yellow-200/60 game-plan-pulse-softball"
-                  : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
+          task.completed && "bg-green-500/20 border-green-500/50"
         )}
+        style={!task.completed ? {
+          backgroundColor: activeColors.background,
+          borderColor: activeColors.border,
+          animation: 'game-plan-pulse-custom 2s ease-in-out infinite',
+        } : undefined}
       >
         {/* Drag handle - only visible in manual mode */}
         {!autoSort && (
@@ -215,21 +223,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
         >
           {/* Icon */}
-          <div className={cn(
-            "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
-            task.completed 
-              ? "bg-green-500" 
-              : isTexVision
-                ? "bg-teal-500"
-                : isTracking
-                  ? "bg-purple-500"
-                  : isSoftball
-                    ? "bg-yellow-200"
-                    : "bg-amber-500"
-          )}>
+          <div 
+            className={cn(
+              "flex-shrink-0 p-2 sm:p-2.5 rounded-lg",
+              task.completed && "bg-green-500"
+            )}
+            style={!task.completed ? { backgroundColor: activeColors.icon } : undefined}
+          >
             <Icon className={cn(
               "h-5 w-5 sm:h-6 sm:w-6",
-              task.completed ? "text-white" : isTexVision ? "text-white" : isTracking ? "text-white" : isSoftball ? "text-gray-800" : "text-secondary"
+              task.completed ? "text-white" : "text-white"
             )} />
           </div>
           
@@ -245,16 +248,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 {t(task.titleKey)}
               </h3>
               {task.badge && !task.completed && (
-                <span className={cn(
-                  "flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider",
-                  isTexVision
-                    ? "bg-teal-500/30 text-teal-300"
-                    : isTracking 
-                      ? "bg-purple-500/30 text-purple-300" 
-                      : isSoftball
-                        ? "bg-yellow-200/30 text-yellow-100"
-                        : "bg-amber-500/30 text-amber-300"
-                )}>
+                <span 
+                  className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider"
+                  style={{
+                    backgroundColor: hexToRgba(activeColors.icon, 0.3),
+                    color: activeColors.text,
+                  }}
+                >
                   {t(task.badge)}
                 </span>
               )}
@@ -269,44 +269,38 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         </button>
         
         {/* Status indicator */}
-        <div className={cn(
-          "flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center",
-          task.completed
-            ? "bg-green-500 text-white"
-            : isTexVision
-              ? "border-3 border-dashed border-teal-500/70"
-              : isTracking
-                ? "border-3 border-dashed border-purple-500/70"
-                : isSoftball
-                  ? "border-3 border-dashed border-yellow-200/70"
-                  : "border-3 border-dashed border-amber-500/70"
-        )}>
+        <div 
+          className={cn(
+            "flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center",
+            task.completed && "bg-green-500 text-white"
+          )}
+          style={!task.completed ? { 
+            border: `3px dashed ${activeColors.border}`,
+          } : undefined}
+        >
           {task.completed ? (
             <Check className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
-            <Zap className={cn(
-              "h-3 w-3 sm:h-4 sm:w-4 animate-pulse",
-              isTexVision ? "text-teal-500" : isTracking ? "text-purple-500" : isSoftball ? "text-yellow-200" : "text-amber-500"
-            )} />
+            <Zap 
+              className="h-3 w-3 sm:h-4 sm:w-4 animate-pulse"
+              style={{ color: activeColors.icon }}
+            />
           )}
         </div>
 
         {/* Urgency indicator for incomplete tasks */}
         {isIncomplete && (
-          <div className={cn(
-            "hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border",
-            isTexVision
-              ? "bg-teal-500/20 border-teal-500/40"
-              : isTracking 
-                ? "bg-purple-500/20 border-purple-500/40" 
-                : isSoftball
-                  ? "bg-yellow-200/20 border-yellow-200/40"
-                  : "bg-amber-500/20 border-amber-500/40"
-          )}>
-            <span className={cn(
-              "text-[10px] font-black uppercase tracking-wider",
-              isTexVision ? "text-teal-400" : isTracking ? "text-purple-400" : isSoftball ? "text-yellow-100" : "text-amber-400"
-            )}>
+          <div 
+            className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border"
+            style={{
+              backgroundColor: hexToRgba(activeColors.icon, 0.2),
+              borderColor: hexToRgba(activeColors.icon, 0.4),
+            }}
+          >
+            <span 
+              className="text-[10px] font-black uppercase tracking-wider"
+              style={{ color: activeColors.text }}
+            >
               {t('gamePlan.doIt')}
             </span>
           </div>
@@ -556,56 +550,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       
       {/* Pulsing animation for incomplete tasks */}
       <style>{`
-        @keyframes game-plan-pulse {
+        @keyframes game-plan-pulse-custom {
           0%, 100% {
-            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 0 0 ${hexToRgba(colors.gamePlan.pending.icon, 0.4)};
           }
           50% {
-            box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.1);
+            box-shadow: 0 0 0 6px ${hexToRgba(colors.gamePlan.pending.icon, 0.1)};
           }
-        }
-        
-        @keyframes game-plan-pulse-softball {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(254, 240, 138, 0.4);
-          }
-          50% {
-            box-shadow: 0 0 0 6px rgba(254, 240, 138, 0.1);
-          }
-        }
-        
-        @keyframes game-plan-pulse-purple {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4);
-          }
-          50% {
-            box-shadow: 0 0 0 6px rgba(168, 85, 247, 0.1);
-          }
-        }
-        
-        @keyframes game-plan-pulse-teal {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.4);
-          }
-          50% {
-            box-shadow: 0 0 0 6px rgba(20, 184, 166, 0.1);
-          }
-        }
-        
-        .game-plan-pulse {
-          animation: game-plan-pulse 2s ease-in-out infinite;
-        }
-        
-        .game-plan-pulse-softball {
-          animation: game-plan-pulse-softball 2s ease-in-out infinite;
-        }
-        
-        .game-plan-pulse-purple {
-          animation: game-plan-pulse-purple 2s ease-in-out infinite;
-        }
-        
-        .game-plan-pulse-teal {
-          animation: game-plan-pulse-teal 2s ease-in-out infinite;
         }
       `}</style>
     </Card>

@@ -663,6 +663,7 @@ export type Database = {
           batting_side: Database["public"]["Enums"]["batting_side"] | null
           bio: string | null
           college_grad_year: number | null
+          color_preferences: Json | null
           commitment_status:
             | Database["public"]["Enums"]["commitment_status"]
             | null
@@ -709,6 +710,7 @@ export type Database = {
           batting_side?: Database["public"]["Enums"]["batting_side"] | null
           bio?: string | null
           college_grad_year?: number | null
+          color_preferences?: Json | null
           commitment_status?:
             | Database["public"]["Enums"]["commitment_status"]
             | null
@@ -755,6 +757,7 @@ export type Database = {
           batting_side?: Database["public"]["Enums"]["batting_side"] | null
           bio?: string | null
           college_grad_year?: number | null
+          color_preferences?: Json | null
           commitment_status?:
             | Database["public"]["Enums"]["commitment_status"]
             | null
