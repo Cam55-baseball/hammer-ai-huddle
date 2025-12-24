@@ -17,3 +17,7 @@ export { HydrationTrackerWidget } from './HydrationTrackerWidget';
 export { RunningPresetLibrary } from './RunningPresetLibrary';
 export { RunningProgressSummary } from './RunningProgressSummary';
 export { LogoUploadButton } from './LogoUploadButton';
+export { DragDropExerciseBuilder } from './DragDropExerciseBuilder';
+export { ExerciseLibrarySidebar } from './ExerciseLibrarySidebar';
+export { WorkoutTimeline } from './WorkoutTimeline';
+export { AIWorkoutRecommendations } from './AIWorkoutRecommendations';
