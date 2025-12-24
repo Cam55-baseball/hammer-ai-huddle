@@ -4545,7 +4545,8 @@
     "sections": {
       "dailyCheckins": "CHECK-INS QUOTIDIENS",
       "training": "ENTRAÎNEMENT",
-      "cycleTracking": "SUIVI DE CYCLE"
+      "cycleTracking": "SUIVI DE CYCLE",
+      "customActivities": "ACTIVITÉS PERSONNALISÉES"
     },
     "quiz": {
       "morning": {
@@ -4983,5 +4984,95 @@
     "stepBackward1": "Reculer d'1 image",
     "stepForward1": "Avancer d'1 image",
     "stepForward5": "Avancer de 5 images"
+  },
+  "customActivity": {
+    "title": "Activités Personnalisées",
+    "createNew": "Créer Nouvelle",
+    "quickAdd": "Ajout Rapide",
+    "badge": "CUSTOM",
+    "addedToToday": "Ajouté au plan d'aujourd'hui",
+    "markedComplete": "Activité terminée !",
+    "unmarkedComplete": "Activité marquée incomplète",
+    "saved": "Activité enregistrée !",
+    "deleted": "Activité supprimée",
+    "minutes": "min",
+    "types": {
+      "workout": "Entraînement",
+      "running": "Session de Course",
+      "meal": "Repas/Nutrition",
+      "warmup": "Échauffement",
+      "recovery": "Routine de Récupération",
+      "practice": "Entraînement Complet",
+      "shortPractice": "Entraînement Court",
+      "freeSession": "Session Libre"
+    },
+    "fields": {
+      "title": "Titre de l'Activité",
+      "description": "Description",
+      "duration": "Durée (minutes)",
+      "intensity": "Intensité",
+      "distance": "Distance",
+      "notes": "Notes",
+      "selectType": "Sélectionner le type d'activité",
+      "enterTitle": "Entrez un titre..."
+    },
+    "intensity": {
+      "light": "Légère",
+      "moderate": "Modérée",
+      "high": "Élevée",
+      "max": "Maximale"
+    },
+    "recurring": {
+      "title": "Répéter Chaque Semaine",
+      "active": "Récurrence Active",
+      "days": {
+        "sun": "Dim",
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mer",
+        "thu": "Jeu",
+        "fri": "Ven",
+        "sat": "Sam"
+      }
+    },
+    "favorite": "Ajouter aux Favoris",
+    "isFavorited": "Favori",
+    "exercises": {
+      "title": "Exercices",
+      "addExercise": "Ajouter Exercice",
+      "name": "Nom de l'Exercice",
+      "sets": "Séries",
+      "reps": "Répétitions",
+      "duration": "Durée (sec)",
+      "rest": "Repos (sec)",
+      "weight": "Poids",
+      "notes": "Notes"
+    },
+    "meals": {
+      "title": "Aliments",
+      "addItem": "Ajouter Article",
+      "vitamins": "Vitamines",
+      "supplements": "Suppléments",
+      "itemName": "Nom de l'Article",
+      "portion": "Portion"
+    },
+    "customFields": {
+      "title": "Champs Personnalisés",
+      "addField": "Ajouter Champ",
+      "fieldLabel": "Libellé du Champ",
+      "fieldValue": "Valeur"
+    },
+    "icon": "Icône",
+    "color": "Couleur",
+    "delete": "Supprimer l'Activité",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette activité ?",
+    "selectIcon": "Sélectionner une icône",
+    "selectColor": "Sélectionner une couleur",
+    "favorites": {
+      "drawerTitle": "Ajout Rapide Favoris",
+      "drawerDescription": "Appuyez pour ajouter au plan d'aujourd'hui",
+      "noFavorites": "Pas encore de favoris",
+      "noFavoritesHint": "Marquez des activités pour les ajouter ici"
+    }
   }
 }

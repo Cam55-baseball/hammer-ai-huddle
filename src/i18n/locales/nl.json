@@ -3732,7 +3732,8 @@
     "sections": {
       "dailyCheckins": "DAGELIJKSE CHECK-INS",
       "training": "TRAINING",
-      "cycleTracking": "CYCLUS TRACKING"
+      "cycleTracking": "CYCLUS TRACKING",
+      "customActivities": "AANGEPASTE ACTIVITEITEN"
     },
     "quiz": {
       "morning": {
@@ -4282,5 +4283,95 @@
     "stepBackward1": "1 frame terug",
     "stepForward1": "1 frame vooruit",
     "stepForward5": "5 frames vooruit"
+  },
+  "customActivity": {
+    "title": "Aangepaste Activiteiten",
+    "createNew": "Nieuw Aanmaken",
+    "quickAdd": "Snel Toevoegen",
+    "badge": "CUSTOM",
+    "addedToToday": "Toegevoegd aan plan van vandaag",
+    "markedComplete": "Activiteit voltooid!",
+    "unmarkedComplete": "Activiteit gemarkeerd als onvolledig",
+    "saved": "Activiteit opgeslagen!",
+    "deleted": "Activiteit verwijderd",
+    "minutes": "min",
+    "types": {
+      "workout": "Training",
+      "running": "Hardloopsessie",
+      "meal": "Maaltijd/Voeding",
+      "warmup": "Warming-up",
+      "recovery": "Herstelroutine",
+      "practice": "Volledige Training",
+      "shortPractice": "Korte Training",
+      "freeSession": "Vrije Sessie"
+    },
+    "fields": {
+      "title": "Activiteitstitel",
+      "description": "Beschrijving",
+      "duration": "Duur (minuten)",
+      "intensity": "Intensiteit",
+      "distance": "Afstand",
+      "notes": "Notities",
+      "selectType": "Selecteer activiteitstype",
+      "enterTitle": "Voer een titel in..."
+    },
+    "intensity": {
+      "light": "Licht",
+      "moderate": "Matig",
+      "high": "Hoog",
+      "max": "Maximaal"
+    },
+    "recurring": {
+      "title": "Wekelijks Herhalen",
+      "active": "Herhaling Actief",
+      "days": {
+        "sun": "Zo",
+        "mon": "Ma",
+        "tue": "Di",
+        "wed": "Wo",
+        "thu": "Do",
+        "fri": "Vr",
+        "sat": "Za"
+      }
+    },
+    "favorite": "Toevoegen aan Favorieten",
+    "isFavorited": "Favoriet",
+    "exercises": {
+      "title": "Oefeningen",
+      "addExercise": "Oefening Toevoegen",
+      "name": "Oefeningnaam",
+      "sets": "Sets",
+      "reps": "Herhalingen",
+      "duration": "Duur (sec)",
+      "rest": "Rust (sec)",
+      "weight": "Gewicht",
+      "notes": "Notities"
+    },
+    "meals": {
+      "title": "Maaltijditems",
+      "addItem": "Item Toevoegen",
+      "vitamins": "Vitamines",
+      "supplements": "Supplementen",
+      "itemName": "Itemnaam",
+      "portion": "Portie"
+    },
+    "customFields": {
+      "title": "Aangepaste Velden",
+      "addField": "Veld Toevoegen",
+      "fieldLabel": "Veldlabel",
+      "fieldValue": "Waarde"
+    },
+    "icon": "Icoon",
+    "color": "Kleur",
+    "delete": "Activiteit Verwijderen",
+    "confirmDelete": "Weet u zeker dat u deze activiteit wilt verwijderen?",
+    "selectIcon": "Selecteer een icoon",
+    "selectColor": "Selecteer een kleur",
+    "favorites": {
+      "drawerTitle": "Snel Favorieten Toevoegen",
+      "drawerDescription": "Tik om toe te voegen aan het plan van vandaag",
+      "noFavorites": "Nog geen favorieten",
+      "noFavoritesHint": "Markeer activiteiten om ze hier toe te voegen"
+    }
   }
 }

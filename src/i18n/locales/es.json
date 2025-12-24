@@ -4520,7 +4520,8 @@
     "sections": {
       "dailyCheckins": "CHECK-INS DIARIOS",
       "training": "ENTRENAMIENTO",
-      "cycleTracking": "SEGUIMIENTO DE CICLO"
+      "cycleTracking": "SEGUIMIENTO DE CICLO",
+      "customActivities": "ACTIVIDADES PERSONALIZADAS"
     },
     "quiz": {
       "morning": {
@@ -5239,5 +5240,95 @@
     "stepBackward1": "Retroceder 1 fotograma",
     "stepForward1": "Avanzar 1 fotograma",
     "stepForward5": "Avanzar 5 fotogramas"
+  },
+  "customActivity": {
+    "title": "Actividades Personalizadas",
+    "createNew": "Crear Nueva",
+    "quickAdd": "Añadir Rápido",
+    "badge": "CUSTOM",
+    "addedToToday": "Añadido al plan de hoy",
+    "markedComplete": "¡Actividad completada!",
+    "unmarkedComplete": "Actividad marcada como incompleta",
+    "saved": "¡Actividad guardada!",
+    "deleted": "Actividad eliminada",
+    "minutes": "min",
+    "types": {
+      "workout": "Entrenamiento",
+      "running": "Sesión de Carrera",
+      "meal": "Comida/Nutrición",
+      "warmup": "Calentamiento",
+      "recovery": "Rutina de Recuperación",
+      "practice": "Práctica Completa",
+      "shortPractice": "Práctica Corta",
+      "freeSession": "Sesión Libre"
+    },
+    "fields": {
+      "title": "Título de Actividad",
+      "description": "Descripción",
+      "duration": "Duración (minutos)",
+      "intensity": "Intensidad",
+      "distance": "Distancia",
+      "notes": "Notas",
+      "selectType": "Seleccionar tipo de actividad",
+      "enterTitle": "Ingresa un título..."
+    },
+    "intensity": {
+      "light": "Ligera",
+      "moderate": "Moderada",
+      "high": "Alta",
+      "max": "Máxima"
+    },
+    "recurring": {
+      "title": "Repetir Semanalmente",
+      "active": "Recurrencia Activa",
+      "days": {
+        "sun": "Dom",
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mié",
+        "thu": "Jue",
+        "fri": "Vie",
+        "sat": "Sáb"
+      }
+    },
+    "favorite": "Añadir a Favoritos",
+    "isFavorited": "Favorito",
+    "exercises": {
+      "title": "Ejercicios",
+      "addExercise": "Añadir Ejercicio",
+      "name": "Nombre del Ejercicio",
+      "sets": "Series",
+      "reps": "Repeticiones",
+      "duration": "Duración (seg)",
+      "rest": "Descanso (seg)",
+      "weight": "Peso",
+      "notes": "Notas"
+    },
+    "meals": {
+      "title": "Items de Comida",
+      "addItem": "Añadir Item",
+      "vitamins": "Vitaminas",
+      "supplements": "Suplementos",
+      "itemName": "Nombre del Item",
+      "portion": "Porción"
+    },
+    "customFields": {
+      "title": "Campos Personalizados",
+      "addField": "Añadir Campo",
+      "fieldLabel": "Etiqueta del Campo",
+      "fieldValue": "Valor"
+    },
+    "icon": "Icono",
+    "color": "Color",
+    "delete": "Eliminar Actividad",
+    "confirmDelete": "¿Seguro que quieres eliminar esta actividad?",
+    "selectIcon": "Seleccionar un icono",
+    "selectColor": "Seleccionar un color",
+    "favorites": {
+      "drawerTitle": "Añadir Favoritos Rápido",
+      "drawerDescription": "Toca para añadir al plan de hoy",
+      "noFavorites": "Sin favoritos aún",
+      "noFavoritesHint": "Marca actividades para añadirlas aquí"
+    }
   }
 }
