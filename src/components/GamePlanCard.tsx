@@ -196,12 +196,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               ? "bg-teal-500/10 border-teal-500/60 game-plan-pulse-teal"
               : isTracking
                 ? "bg-purple-500/10 border-purple-500/60 game-plan-pulse-purple"
-                : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
+                : "bg-yellow-100/20 border-yellow-200/60 game-plan-pulse"
         )}
       >
         {/* Drag handle - only visible in manual mode */}
         {!autoSort && (
-          <div className="flex-shrink-0 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+          <div className="flex-shrink-0 cursor-grab active:cursor-grabbing text-white/60 hover:text-white">
             <GripVertical className="h-5 w-5" />
           </div>
         )}
@@ -220,11 +220,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 ? "bg-teal-500"
                 : isTracking
                   ? "bg-purple-500"
-                  : "bg-amber-500"
+                  : "bg-yellow-200"
           )}>
             <Icon className={cn(
               "h-5 w-5 sm:h-6 sm:w-6",
-              task.completed ? "text-white" : isTexVision ? "text-white" : isTracking ? "text-white" : "text-secondary"
+              task.completed ? "text-white" : isTexVision ? "text-white" : isTracking ? "text-white" : "text-gray-800"
             )} />
           </div>
           
@@ -234,8 +234,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <h3 className={cn(
                 "text-sm sm:text-base truncate",
                 task.completed 
-                  ? "font-semibold text-muted-foreground line-through" 
-                  : "font-black text-primary-foreground"
+                  ? "font-semibold text-white/50 line-through" 
+                  : "font-black text-white"
               )}>
                 {t(task.titleKey)}
               </h3>
@@ -246,7 +246,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                     ? "bg-teal-500/30 text-teal-300"
                     : isTracking 
                       ? "bg-purple-500/30 text-purple-300" 
-                      : "bg-amber-500/30 text-amber-300"
+                      : "bg-yellow-200/30 text-yellow-100"
                 )}>
                   {t(task.badge)}
                 </span>
@@ -254,7 +254,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             </div>
             <p className={cn(
               "text-xs sm:text-sm truncate",
-              task.completed ? "text-muted-foreground/60" : "text-muted-foreground"
+              task.completed ? "text-white/40" : "text-white/70"
             )}>
               {t(task.descriptionKey)}
             </p>
@@ -270,14 +270,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               ? "border-3 border-dashed border-teal-500/70"
               : isTracking
                 ? "border-3 border-dashed border-purple-500/70"
-                : "border-3 border-dashed border-amber-500/70"
+                : "border-3 border-dashed border-yellow-200/70"
         )}>
           {task.completed ? (
             <Check className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
             <Zap className={cn(
               "h-3 w-3 sm:h-4 sm:w-4 animate-pulse",
-              isTexVision ? "text-teal-500" : isTracking ? "text-purple-500" : "text-amber-500"
+              isTexVision ? "text-teal-500" : isTracking ? "text-purple-500" : "text-yellow-200"
             )} />
           )}
         </div>
@@ -290,11 +290,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               ? "bg-teal-500/20 border-teal-500/40"
               : isTracking 
                 ? "bg-purple-500/20 border-purple-500/40" 
-                : "bg-amber-500/20 border-amber-500/40"
+                : "bg-yellow-200/20 border-yellow-200/40"
           )}>
             <span className={cn(
               "text-[10px] font-black uppercase tracking-wider",
-              isTexVision ? "text-teal-400" : isTracking ? "text-purple-400" : "text-amber-400"
+              isTexVision ? "text-teal-400" : isTracking ? "text-purple-400" : "text-yellow-100"
             )}>
               {t('gamePlan.doIt')}
             </span>
@@ -389,7 +389,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <Target className="h-6 w-6 sm:h-7 sm:w-7 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-primary-foreground tracking-tight uppercase">
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
                 {t('gamePlan.title')}
               </h2>
                 <div className="flex items-center gap-2">
@@ -407,7 +407,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             variant="ghost"
             size="sm"
             onClick={toggleAutoSort}
-            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary-foreground"
+            className="flex items-center gap-1.5 text-xs font-medium text-white/70 hover:text-white"
           >
             <ArrowUpDown className="h-3.5 w-3.5" />
             {autoSort ? t('gamePlan.autoSort', 'Auto') : t('gamePlan.manualSort', 'Manual')}
@@ -447,15 +447,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                       strokeLinecap="round"
                     />
                   </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-primary-foreground">
+                  <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-white">
                     {completedCount}/{totalCount}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <span className="text-xs font-bold text-white/70 uppercase tracking-wider">
                     {t('gamePlan.tasksLabel')}
                   </span>
-                  <span className="text-sm font-black text-primary-foreground">
+                  <span className="text-sm font-black text-white">
                     {t('gamePlan.tasksCompleted', { completed: completedCount, total: totalCount })}
                   </span>
                 </div>
@@ -469,7 +469,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           <Clock className="h-4 w-4 text-primary flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+              <span className="text-xs font-bold text-white/70 uppercase tracking-wide">
                 {t('gamePlan.recapCountdown.title')}
               </span>
               <Progress value={recapProgress} className="h-1.5 flex-1 bg-muted/20 max-w-24" />
@@ -479,7 +479,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             <span className="text-sm font-black text-primary">
               {daysUntilRecap}
             </span>
-            <span className="text-[10px] font-bold text-muted-foreground uppercase">
+            <span className="text-[10px] font-bold text-white/70 uppercase">
               {t('gamePlan.recapCountdown.days')}
             </span>
           </div>
@@ -547,10 +547,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       <style>{`
         @keyframes game-plan-pulse {
           0%, 100% {
-            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 0 0 rgba(254, 240, 138, 0.4);
           }
           50% {
-            box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.1);
+            box-shadow: 0 0 0 6px rgba(254, 240, 138, 0.1);
           }
         }
         
