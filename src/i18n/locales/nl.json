@@ -4461,8 +4461,13 @@
       "title": "Kaart Aanpassing",
       "nickname": "Weergavenaam",
       "nicknamePlaceholder": "Aangepaste naam...",
-      "logo": "Aangepaste Logo URL",
-      "logoPlaceholder": "https://..."
+      "logo": "Aangepast Logo",
+      "uploadLogo": "Logo Uploaden",
+      "removeLogo": "Logo Verwijderen",
+      "dragDropLogo": "Sleep en laat los of klik om te uploaden",
+      "logoFormats": "JPG, PNG, WebP, of SVG (max 2MB)",
+      "uploadingLogo": "Uploaden...",
+      "logoUploaded": "Logo geüpload!"
     },
     "reminders": {
       "title": "Activiteit Herinnering",
