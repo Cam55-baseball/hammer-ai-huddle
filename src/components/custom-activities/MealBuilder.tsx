@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, Apple, Pill, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Apple, Pill, Sparkles, Droplets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MealData, MealItem, Vitamin, Supplement } from '@/types/customActivity';
+import { MealData, MealItem, Vitamin, Supplement, HydrationData } from '@/types/customActivity';
 import { cn } from '@/lib/utils';
 
 interface MealBuilderProps {
@@ -14,9 +14,14 @@ interface MealBuilderProps {
   onChange: (meals: MealData) => void;
 }
 
+const HYDRATION_UNITS = ['oz', 'ml', 'cups', 'liters'] as const;
+
 export function MealBuilder({ meals, onChange }: MealBuilderProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('items');
+
+  // Ensure hydration exists
+  const hydration = meals.hydration || { amount: 0, unit: 'oz' as const, goal: 64 };
 
   const addItem = () => {
     const newItem: MealItem = {
@@ -77,21 +82,54 @@ export function MealBuilder({ meals, onChange }: MealBuilderProps) {
     onChange({ ...meals, supplements: meals.supplements.filter(s => s.id !== id) });
   };
 
+  const updateHydration = (updates: Partial<HydrationData>) => {
+    onChange({
+      ...meals,
+      hydration: { ...hydration, ...updates },
+    });
+  };
+
+  const addHydrationEntry = () => {
+    const entries = hydration.entries || [];
+    const newEntry = {
+      id: crypto.randomUUID(),
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      amount: 8,
+    };
+    updateHydration({ entries: [...entries, newEntry] });
+  };
+
+  const updateHydrationEntry = (id: string, updates: Partial<{ time: string; amount: number }>) => {
+    const entries = hydration.entries || [];
+    updateHydration({
+      entries: entries.map(e => e.id === id ? { ...e, ...updates } : e),
+    });
+  };
+
+  const removeHydrationEntry = (id: string) => {
+    const entries = hydration.entries || [];
+    updateHydration({ entries: entries.filter(e => e.id !== id) });
+  };
+
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="items" className="gap-1.5">
-            <Apple className="h-4 w-4" />
-            {t('customActivity.meals.food')} ({meals.items.length})
+        <TabsList className="w-full grid grid-cols-4">
+          <TabsTrigger value="items" className="gap-1.5 text-xs">
+            <Apple className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('customActivity.meals.food')}</span> ({meals.items.length})
           </TabsTrigger>
-          <TabsTrigger value="vitamins" className="gap-1.5">
-            <Pill className="h-4 w-4" />
-            {t('customActivity.meals.vitamins')} ({meals.vitamins.length})
+          <TabsTrigger value="vitamins" className="gap-1.5 text-xs">
+            <Pill className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('customActivity.meals.vitamins')}</span> ({meals.vitamins.length})
           </TabsTrigger>
-          <TabsTrigger value="supplements" className="gap-1.5">
-            <Sparkles className="h-4 w-4" />
-            {t('customActivity.meals.supplements')} ({meals.supplements.length})
+          <TabsTrigger value="supplements" className="gap-1.5 text-xs">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('customActivity.meals.supplements')}</span> ({meals.supplements.length})
+          </TabsTrigger>
+          <TabsTrigger value="hydration" className="gap-1.5 text-xs">
+            <Droplets className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('customActivity.meals.hydration.title')}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -272,6 +310,118 @@ export function MealBuilder({ meals, onChange }: MealBuilderProps) {
               {t('customActivity.meals.emptySupplements')}
             </p>
           )}
+        </TabsContent>
+
+        <TabsContent value="hydration" className="space-y-4 mt-4">
+          {/* Daily Goal and Current Amount */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('customActivity.meals.hydration.dailyGoal')}</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  value={hydration.goal || ''}
+                  onChange={(e) => updateHydration({ goal: parseInt(e.target.value) || undefined })}
+                  placeholder="64"
+                  className="h-9"
+                  min={0}
+                />
+                <Select
+                  value={hydration.unit}
+                  onValueChange={(value) => updateHydration({ unit: value as HydrationData['unit'] })}
+                >
+                  <SelectTrigger className="h-9 w-24">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {HYDRATION_UNITS.map(unit => (
+                      <SelectItem key={unit} value={unit}>
+                        {t(`customActivity.meals.hydration.units.${unit}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">{t('customActivity.meals.hydration.currentAmount')}</Label>
+              <Input
+                type="number"
+                value={hydration.amount || ''}
+                onChange={(e) => updateHydration({ amount: parseInt(e.target.value) || 0 })}
+                placeholder="0"
+                className="h-9"
+                min={0}
+              />
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          {hydration.goal && hydration.goal > 0 && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{t('customActivity.meals.hydration.progress')}</span>
+                <span>{Math.round((hydration.amount / hydration.goal) * 100)}%</span>
+              </div>
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-blue-500 transition-all duration-300"
+                  style={{ width: `${Math.min((hydration.amount / hydration.goal) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Hydration entries */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">{t('customActivity.meals.hydration.entries')}</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addHydrationEntry}
+                className="gap-1"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t('customActivity.meals.hydration.addEntry')}
+              </Button>
+            </div>
+
+            {(hydration.entries || []).map(entry => (
+              <div key={entry.id} className="flex items-center gap-2 p-2 rounded-lg border bg-background/50">
+                <Input
+                  type="time"
+                  value={entry.time}
+                  onChange={(e) => updateHydrationEntry(entry.id, { time: e.target.value })}
+                  className="h-8 w-28"
+                />
+                <Input
+                  type="number"
+                  value={entry.amount}
+                  onChange={(e) => updateHydrationEntry(entry.id, { amount: parseInt(e.target.value) || 0 })}
+                  className="h-8 w-20"
+                  min={0}
+                />
+                <span className="text-xs text-muted-foreground">{hydration.unit}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive ml-auto"
+                  onClick={() => removeHydrationEntry(entry.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+
+            {(!hydration.entries || hydration.entries.length === 0) && (
+              <p className="text-center py-4 text-muted-foreground text-sm">
+                {t('customActivity.meals.hydration.empty')}
+              </p>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

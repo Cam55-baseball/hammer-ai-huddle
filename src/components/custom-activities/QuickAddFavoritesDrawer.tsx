@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { Star, Plus, Clock, Dumbbell, Flame, Apple, Heart, Zap, Target, Trophy, Timer, Activity, Utensils, Moon, Sun, Coffee, Salad, Bike, Users, Clipboard, Pencil, Sparkles } from 'lucide-react';
+import { Star, Plus, Clock, Dumbbell, Flame, Apple, Heart, Zap, Target, Trophy, Timer, Activity, Utensils, Moon, Sun, Coffee, Salad, Bike, Users, Clipboard, Pencil, Sparkles, Footprints } from 'lucide-react';
 import { CustomActivityTemplate } from '@/types/customActivity';
 
 interface QuickAddFavoritesDrawerProps {
@@ -9,6 +9,7 @@ interface QuickAddFavoritesDrawerProps {
   onOpenChange: (open: boolean) => void;
   favorites: CustomActivityTemplate[];
   onAddToToday: (templateId: string) => void;
+  onEdit?: (template: CustomActivityTemplate) => void;
   loading?: boolean;
 }
 
@@ -33,6 +34,7 @@ const iconMap: Record<string, React.ElementType> = {
   pencil: Pencil,
   star: Star,
   sparkles: Sparkles,
+  footprints: Footprints,
 };
 
 export function QuickAddFavoritesDrawer({ 
@@ -40,6 +42,7 @@ export function QuickAddFavoritesDrawer({
   onOpenChange, 
   favorites, 
   onAddToToday,
+  onEdit,
   loading 
 }: QuickAddFavoritesDrawerProps) {
   const { t } = useTranslation();
@@ -47,6 +50,14 @@ export function QuickAddFavoritesDrawer({
   const handleAdd = async (templateId: string) => {
     await onAddToToday(templateId);
     onOpenChange(false);
+  };
+
+  const handleEdit = (e: React.MouseEvent, template: CustomActivityTemplate) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit(template);
+      onOpenChange(false);
+    }
   };
 
   return (
@@ -73,15 +84,12 @@ export function QuickAddFavoritesDrawer({
             favorites.map((template) => {
               const IconComponent = iconMap[template.icon] || Activity;
               return (
-                <Button
+                <div
                   key={template.id}
-                  variant="outline"
-                  className="w-full justify-start gap-3 h-auto py-3 px-4"
-                  onClick={() => handleAdd(template.id)}
-                  disabled={loading}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border bg-background/50 hover:bg-background/80 transition-colors"
                 >
                   <div 
-                    className="p-2 rounded-lg"
+                    className="p-2 rounded-lg flex-shrink-0"
                     style={{ backgroundColor: template.color + '30' }}
                   >
                     <IconComponent 
@@ -89,8 +97,8 @@ export function QuickAddFavoritesDrawer({
                       style={{ color: template.color }}
                     />
                   </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-semibold text-foreground">{template.title}</p>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="font-semibold text-foreground truncate">{template.title}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="capitalize">{t(`customActivity.types.${template.activity_type}`)}</span>
                       {template.duration_minutes && (
@@ -102,8 +110,29 @@ export function QuickAddFavoritesDrawer({
                       )}
                     </div>
                   </div>
-                  <Plus className="h-5 w-5 text-primary" />
-                </Button>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {onEdit && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                        onClick={(e) => handleEdit(e, template)}
+                        disabled={loading}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-primary hover:text-primary"
+                      onClick={() => handleAdd(template.id)}
+                      disabled={loading}
+                    >
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
               );
             })
           )}

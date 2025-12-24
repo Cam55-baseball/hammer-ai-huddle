@@ -49,10 +49,18 @@ export interface Supplement {
   timing?: string;
 }
 
+export interface HydrationData {
+  amount: number;
+  unit: 'oz' | 'ml' | 'cups' | 'liters';
+  goal?: number;
+  entries?: Array<{ id: string; time: string; amount: number }>;
+}
+
 export interface MealData {
   items: MealItem[];
   vitamins: Vitamin[];
   supplements: Supplement[];
+  hydration?: HydrationData;
   totalCalories?: number;
   totalProtein?: number;
   totalCarbs?: number;

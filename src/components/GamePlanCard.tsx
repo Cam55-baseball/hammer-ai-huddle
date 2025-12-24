@@ -5,7 +5,7 @@ import { Reorder } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
@@ -41,6 +41,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [builderOpen, setBuilderOpen] = useState(false);
   const [favoritesDrawerOpen, setFavoritesDrawerOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<CustomActivityTemplate | null>(null);
+  const [presetActivityType, setPresetActivityType] = useState<'meal' | null>(null);
   
   // State for ordered tasks per section
   const [orderedCheckin, setOrderedCheckin] = useState<GamePlanTask[]>([]);
@@ -610,14 +611,22 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <span className="h-px flex-1 bg-emerald-500/30" />
             </h3>
             
-            <div className="flex gap-2 justify-center pb-2">
+            <div className="flex flex-wrap gap-2 justify-center pb-2">
               <Button
                 size="sm"
-                onClick={() => { setEditingTemplate(null); setBuilderOpen(true); }}
+                onClick={() => { setEditingTemplate(null); setPresetActivityType(null); setBuilderOpen(true); }}
                 className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
               >
                 <Plus className="h-4 w-4" />
                 {t('customActivity.createNew')}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => { setEditingTemplate(null); setPresetActivityType('meal'); setBuilderOpen(true); }}
+                className="gap-2 bg-green-600 hover:bg-green-700 text-white font-bold"
+              >
+                <Utensils className="h-4 w-4" />
+                {t('customActivity.logMeal')}
               </Button>
               {favorites.length > 0 && (
                 <Button
@@ -670,8 +679,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       {/* Custom Activity Builder Dialog */}
       <CustomActivityBuilderDialog
         open={builderOpen}
-        onOpenChange={setBuilderOpen}
+        onOpenChange={(open) => {
+          setBuilderOpen(open);
+          if (!open) setPresetActivityType(null);
+        }}
         template={editingTemplate}
+        presetActivityType={presetActivityType}
         onSave={async (data) => {
           // Note: createTemplate and updateTemplate are handled within useCustomActivities
           // The builder calls onSave which we'll handle via the hook
@@ -702,6 +715,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             toast.success(t('customActivity.addedToToday'));
             refetch();
           }
+        }}
+        onEdit={(template) => {
+          setEditingTemplate(template);
+          setBuilderOpen(true);
         }}
       />
       
