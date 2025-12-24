@@ -5591,6 +5591,19 @@
     "saveFailed": "Failed to save video record",
     "analysisFailed": "AI analysis failed",
     "frameExtractionFailed": "Failed to extract video frames",
-    "unexpectedError": "An unexpected error occurred"
+    "unexpectedError": "An unexpected error occurred",
+    "frameCount": "Frames for AI Analysis",
+    "selectedForAnalysis": "selected",
+    "annotateFrame": "Annotate",
+    "annotateCurrentFrame": "Annotate Current Frame",
+    "frameAnnotated": "Frame annotated!",
+    "enterPiP": "Picture-in-Picture",
+    "exitPiP": "Exit PiP",
+    "pipActivated": "Video is now in floating window",
+    "pipNotSupported": "Picture-in-Picture not supported",
+    "stepBackward5": "Back 5 frames",
+    "stepBackward1": "Back 1 frame",
+    "stepForward1": "Forward 1 frame",
+    "stepForward5": "Forward 5 frames"
   }
 }

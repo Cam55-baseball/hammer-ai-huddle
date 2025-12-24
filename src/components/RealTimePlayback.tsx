@@ -9,16 +9,19 @@ import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { 
   X, Video, Play, Pause, RotateCcw, Download, BookMarked, 
   Settings, Timer, Clock, Gauge, Camera, CheckCircle2, AlertCircle,
   Sparkles, SwitchCamera, Brain, Grid3X3, Volume2, VolumeX, 
-  Wifi, WifiOff, RefreshCw, Maximize, Square
+  Wifi, WifiOff, RefreshCw, Maximize, Square, PictureInPicture2,
+  SkipBack, SkipForward, ChevronLeft, ChevronRight, Pencil
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SaveToLibraryDialog } from "./SaveToLibraryDialog";
+import { FrameAnnotationDialog } from "./FrameAnnotationDialog";
 import i18n from "@/i18n";
 
 interface RealTimePlaybackProps {
@@ -60,6 +63,14 @@ const RECORDING_DURATIONS = [10, 15, 20, 30, 40];
 const PLAYBACK_DELAYS = [5, 10, 15, 20, 25, 30];
 const REPEAT_DURATIONS = [30, 45, 60, 90, 120];
 const PLAYBACK_SPEEDS = ['0.25', '0.5', '0.75', '1'];
+const FRAME_COUNT_OPTIONS = [3, 5, 7, 10];
+
+interface CapturedFrame {
+  dataUrl: string;
+  timestamp: number;
+  selectedForAnalysis: boolean;
+  annotated?: boolean;
+}
 
 export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePlaybackProps) => {
   const { t } = useTranslation();
@@ -115,8 +126,20 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [autoRecordCountdown, setAutoRecordCountdown] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [capturedFrames, setCapturedFrames] = useState<string[]>([]);
+  const [capturedFrames, setCapturedFrames] = useState<CapturedFrame[]>([]);
   const [orientationWarning, setOrientationWarning] = useState(false);
+  
+  // Enhanced frame controls
+  const [frameCountForAnalysis, setFrameCountForAnalysis] = useState<number>(() => 
+    parseInt(localStorage.getItem('rtPlayback_frameCount') || '5')
+  );
+  const [isPiPActive, setIsPiPActive] = useState(false);
+  const [currentVideoTime, setCurrentVideoTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  
+  // Annotation state
+  const [annotationDialogOpen, setAnnotationDialogOpen] = useState(false);
+  const [frameToAnnotate, setFrameToAnnotate] = useState<{dataUrl: string; index: number} | null>(null);
   
   // Refs
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
@@ -140,7 +163,8 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     localStorage.setItem('rtPlayback_audioCues', String(audioCuesEnabled));
     localStorage.setItem('rtPlayback_localOnly', String(localOnlyMode));
     localStorage.setItem('rtPlayback_autoRecord', String(autoRecordEnabled));
-  }, [recordingDuration, playbackDelay, repeatDuration, playbackSpeed, facingMode, analysisEnabled, gridOverlayEnabled, audioCuesEnabled, localOnlyMode, autoRecordEnabled]);
+    localStorage.setItem('rtPlayback_frameCount', String(frameCountForAnalysis));
+  }, [recordingDuration, playbackDelay, repeatDuration, playbackSpeed, facingMode, analysisEnabled, gridOverlayEnabled, audioCuesEnabled, localOnlyMode, autoRecordEnabled, frameCountForAnalysis]);
   
   // Speed control during playback
   useEffect(() => {
@@ -178,7 +202,14 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/png');
     
-    setCapturedFrames(prev => [...prev, dataUrl]);
+    const newFrame: CapturedFrame = {
+      dataUrl,
+      timestamp: video.currentTime,
+      selectedForAnalysis: true,
+      annotated: false
+    };
+    
+    setCapturedFrames(prev => [...prev, newFrame]);
     toast.success(t('realTimePlayback.frameCaptured', 'Key frame captured!'));
   }, [t]);
 
@@ -196,6 +227,144 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     toast.success(t('realTimePlayback.framesCleared', 'Frames cleared'));
   }, [t]);
 
+  // Toggle frame selection for analysis
+  const handleToggleFrameSelection = useCallback((index: number) => {
+    setCapturedFrames(prev => prev.map((frame, i) => 
+      i === index ? { ...frame, selectedForAnalysis: !frame.selectedForAnalysis } : frame
+    ));
+  }, []);
+
+  // Open annotation dialog for a frame
+  const handleAnnotateFrame = useCallback((frame: CapturedFrame, index: number) => {
+    setFrameToAnnotate({ dataUrl: frame.dataUrl, index });
+    setAnnotationDialogOpen(true);
+  }, []);
+
+  // Save annotated frame
+  const handleSaveAnnotatedFrame = useCallback((annotatedDataUrl: string) => {
+    if (frameToAnnotate === null) return;
+    
+    setCapturedFrames(prev => prev.map((frame, i) => 
+      i === frameToAnnotate.index 
+        ? { ...frame, dataUrl: annotatedDataUrl, annotated: true } 
+        : frame
+    ));
+    setAnnotationDialogOpen(false);
+    setFrameToAnnotate(null);
+    toast.success(t('realTimePlayback.frameAnnotated', 'Frame annotated!'));
+  }, [frameToAnnotate, t]);
+
+  // Annotate current frame during playback
+  const handleAnnotateCurrentFrame = useCallback(() => {
+    const video = videoPlaybackRef.current;
+    if (!video) return;
+    
+    // Pause video first
+    video.pause();
+    setIsPaused(true);
+    
+    // Capture current frame
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/png');
+    
+    // Open annotation dialog directly with current frame
+    setFrameToAnnotate({ dataUrl, index: -1 }); // -1 means new frame
+    setAnnotationDialogOpen(true);
+  }, []);
+
+  // Frame-by-frame navigation
+  const handleStepFrame = useCallback((direction: 'forward' | 'backward', frameCount: number = 1) => {
+    const video = videoPlaybackRef.current;
+    if (!video) return;
+    
+    // Approximate frame duration (assuming 30fps)
+    const frameDuration = 1 / 30;
+    const timeChange = frameDuration * frameCount * (direction === 'forward' ? 1 : -1);
+    
+    video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + timeChange));
+    
+    // Pause if not already paused
+    if (!video.paused) {
+      video.pause();
+      setIsPaused(true);
+    }
+  }, []);
+
+  // Jump to specific time on timeline
+  const handleSeekToTime = useCallback((time: number) => {
+    const video = videoPlaybackRef.current;
+    if (!video) return;
+    
+    video.currentTime = time;
+  }, []);
+
+  // Picture-in-Picture handlers
+  const handleTogglePiP = useCallback(async () => {
+    const video = videoPlaybackRef.current;
+    if (!video) return;
+    
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        setIsPiPActive(false);
+      } else if (document.pictureInPictureEnabled) {
+        await video.requestPictureInPicture();
+        setIsPiPActive(true);
+        toast.success(t('realTimePlayback.pipActivated', 'Video is now in floating window'));
+      } else {
+        toast.error(t('realTimePlayback.pipNotSupported', 'Picture-in-Picture not supported'));
+      }
+    } catch (error) {
+      console.error('PiP error:', error);
+      toast.error(t('realTimePlayback.pipNotSupported', 'Picture-in-Picture not supported'));
+    }
+  }, [t]);
+
+  // PiP event listeners
+  useEffect(() => {
+    const video = videoPlaybackRef.current;
+    if (!video) return;
+    
+    const handleEnterPiP = () => setIsPiPActive(true);
+    const handleLeavePiP = () => setIsPiPActive(false);
+    
+    video.addEventListener('enterpictureinpicture', handleEnterPiP);
+    video.addEventListener('leavepictureinpicture', handleLeavePiP);
+    
+    return () => {
+      video.removeEventListener('enterpictureinpicture', handleEnterPiP);
+      video.removeEventListener('leavepictureinpicture', handleLeavePiP);
+    };
+  }, [phase]);
+
+  // Video time tracking
+  useEffect(() => {
+    const video = videoPlaybackRef.current;
+    if (!video || (phase !== 'playback' && phase !== 'complete')) return;
+    
+    const handleTimeUpdate = () => {
+      setCurrentVideoTime(video.currentTime);
+    };
+    
+    const handleLoadedMetadata = () => {
+      setVideoDuration(video.duration);
+    };
+    
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, [phase]);
+
   // Extract key frames from video for AI analysis
   const extractKeyFrames = useCallback(async (videoBlob: Blob): Promise<string[]> => {
     return new Promise((resolve) => {
@@ -207,7 +376,8 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       
       video.onloadedmetadata = () => {
         const duration = video.duration;
-        const frameCount = 5; // Extract 5 key frames
+        // Use configurable frame count
+        const frameCount = frameCountForAnalysis;
         const timestamps = Array.from({ length: frameCount }, (_, i) => 
           (i / (frameCount - 1)) * duration
         );
@@ -1503,26 +1673,130 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                         </div>
                       )}
                       
-                      {/* Pause/Play and Capture Key Frame buttons */}
-                      <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          onClick={handleTogglePlayPause}
-                          className="h-10 w-10 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
-                        >
-                          {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          onClick={handleCaptureKeyFrame}
-                          className="h-10 w-10 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
-                          title={t('realTimePlayback.captureKeyFrame', 'Capture Key Frame')}
-                        >
-                          <Camera className="h-5 w-5" />
-                        </Button>
+                      {/* Video Controls */}
+                      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                        {/* Left side controls: Play/Pause, Frame navigation, Capture, Annotate */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            onClick={handleTogglePlayPause}
+                            className="h-9 w-9 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
+                          >
+                            {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                          </Button>
+                          
+                          {/* Frame-by-frame navigation */}
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            onClick={() => handleStepFrame('backward', 5)}
+                            className="h-8 w-8 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
+                            title={t('realTimePlayback.stepBackward5', 'Back 5 frames')}
+                          >
+                            <SkipBack className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            onClick={() => handleStepFrame('backward', 1)}
+                            className="h-8 w-8 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
+                            title={t('realTimePlayback.stepBackward1', 'Back 1 frame')}
+                          >
+                            <ChevronLeft className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            onClick={() => handleStepFrame('forward', 1)}
+                            className="h-8 w-8 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
+                            title={t('realTimePlayback.stepForward1', 'Forward 1 frame')}
+                          >
+                            <ChevronRight className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            onClick={() => handleStepFrame('forward', 5)}
+                            className="h-8 w-8 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
+                            title={t('realTimePlayback.stepForward5', 'Forward 5 frames')}
+                          >
+                            <SkipForward className="h-3 w-3" />
+                          </Button>
+                          
+                          <div className="w-px h-6 bg-white/30 mx-1" />
+                          
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            onClick={handleCaptureKeyFrame}
+                            className="h-9 w-9 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
+                            title={t('realTimePlayback.captureKeyFrame', 'Capture Key Frame')}
+                          >
+                            <Camera className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            onClick={handleAnnotateCurrentFrame}
+                            className="h-9 w-9 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
+                            title={t('realTimePlayback.annotateCurrentFrame', 'Annotate Current Frame')}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        {/* Right side: PiP toggle */}
+                        <div className="flex items-center gap-1">
+                          {document.pictureInPictureEnabled && (
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              onClick={handleTogglePiP}
+                              className={`h-9 w-9 rounded-full bg-black/70 hover:bg-black/90 text-white border-0 ${isPiPActive ? 'ring-2 ring-primary' : ''}`}
+                              title={isPiPActive ? t('realTimePlayback.exitPiP', 'Exit PiP') : t('realTimePlayback.enterPiP', 'Picture-in-Picture')}
+                            >
+                              <PictureInPicture2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
+                      
+                      {/* Timeline scrubber */}
+                      {videoDuration > 0 && (
+                        <div className="absolute bottom-16 left-4 right-4">
+                          <div className="relative h-1 bg-white/30 rounded-full cursor-pointer"
+                            onClick={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const x = e.clientX - rect.left;
+                              const percent = x / rect.width;
+                              handleSeekToTime(percent * videoDuration);
+                            }}
+                          >
+                            <div 
+                              className="absolute h-full bg-primary rounded-full"
+                              style={{ width: `${(currentVideoTime / videoDuration) * 100}%` }}
+                            />
+                            {/* Captured frame markers */}
+                            {capturedFrames.map((frame, i) => (
+                              <div
+                                key={i}
+                                className="absolute w-2 h-2 bg-yellow-400 rounded-full -top-0.5 transform -translate-x-1/2 cursor-pointer hover:scale-150 transition-transform"
+                                style={{ left: `${(frame.timestamp / videoDuration) * 100}%` }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSeekToTime(frame.timestamp);
+                                }}
+                                title={`Frame ${i + 1} - ${frame.timestamp.toFixed(2)}s`}
+                              />
+                            ))}
+                          </div>
+                          <div className="flex justify-between mt-1 text-[10px] text-white/70">
+                            <span>{currentVideoTime.toFixed(1)}s</span>
+                            <span>{videoDuration.toFixed(1)}s</span>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Auto-record countdown overlay */}
                       {phase === 'complete' && autoRecordEnabled && autoRecordCountdown > 0 && (
@@ -1540,7 +1814,27 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                       )}
                     </div>
                     
-                    {/* Speed Controls */}
+                    {/* Frame Count Setting */}
+                    <Card className="p-4">
+                      <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div className="flex items-center gap-2">
+                          <Grid3X3 className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-sm">{t('realTimePlayback.frameCount', 'Frames for AI Analysis')}</span>
+                        </div>
+                        <ToggleGroup 
+                          type="single" 
+                          value={String(frameCountForAnalysis)}
+                          onValueChange={(v) => v && setFrameCountForAnalysis(parseInt(v))}
+                          className="flex gap-1"
+                        >
+                          {FRAME_COUNT_OPTIONS.map(n => (
+                            <ToggleGroupItem key={n} value={String(n)} className="px-4 py-2">
+                              {n}
+                            </ToggleGroupItem>
+                          ))}
+                        </ToggleGroup>
+                      </div>
+                    </Card>
                     <Card className="p-4">
                       <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-2">
@@ -1562,13 +1856,18 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                       </div>
                     </Card>
                     
-                    {/* Captured Frames */}
+                    {/* Captured Frames with Selection and Annotation */}
                     {capturedFrames.length > 0 && (
                       <Card className="p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <Camera className="h-4 w-4 text-primary" />
-                            <span className="font-medium text-sm">{t('realTimePlayback.capturedFrames', 'Captured Frames')} ({capturedFrames.length})</span>
+                            <span className="font-medium text-sm">
+                              {t('realTimePlayback.capturedFrames', 'Captured Frames')} ({capturedFrames.length})
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              • {capturedFrames.filter(f => f.selectedForAnalysis).length} {t('realTimePlayback.selectedForAnalysis', 'selected')}
+                            </span>
                           </div>
                           <Button 
                             variant="ghost" 
@@ -1580,20 +1879,62 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                             {t('realTimePlayback.clearFrames', 'Clear')}
                           </Button>
                         </div>
-                        <div className="flex gap-2 overflow-x-auto pb-2">
+                        <div className="flex gap-3 overflow-x-auto pb-2">
                           {capturedFrames.map((frame, index) => (
                             <div 
                               key={index} 
-                              className="relative flex-shrink-0 cursor-pointer group"
-                              onClick={() => handleDownloadFrame(frame, index)}
+                              className="relative flex-shrink-0 group"
                             >
+                              {/* Selection checkbox */}
+                              <div className="absolute -top-1 -left-1 z-10">
+                                <Checkbox
+                                  checked={frame.selectedForAnalysis}
+                                  onCheckedChange={() => handleToggleFrameSelection(index)}
+                                  className="bg-background"
+                                />
+                              </div>
+                              
+                              {/* Annotated badge */}
+                              {frame.annotated && (
+                                <div className="absolute -top-1 -right-1 z-10 bg-primary text-primary-foreground rounded-full p-0.5">
+                                  <Pencil className="h-3 w-3" />
+                                </div>
+                              )}
+                              
                               <img 
-                                src={frame} 
+                                src={frame.dataUrl} 
                                 alt={`Frame ${index + 1}`}
-                                className="h-20 w-auto rounded-md border border-border object-cover"
+                                className={`h-20 w-auto rounded-md border-2 object-cover cursor-pointer ${
+                                  frame.selectedForAnalysis ? 'border-primary' : 'border-border'
+                                }`}
+                                onClick={() => handleDownloadFrame(frame.dataUrl, index)}
                               />
-                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
-                                <Download className="h-4 w-4 text-white" />
+                              
+                              {/* Timestamp */}
+                              <div className="absolute bottom-1 left-1 px-1 py-0.5 rounded bg-black/70 text-white text-[10px]">
+                                {frame.timestamp.toFixed(2)}s
+                              </div>
+                              
+                              {/* Hover overlay with actions */}
+                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-white hover:bg-white/20"
+                                  onClick={(e) => { e.stopPropagation(); handleAnnotateFrame(frame, index); }}
+                                  title={t('realTimePlayback.annotateFrame', 'Annotate')}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-white hover:bg-white/20"
+                                  onClick={(e) => { e.stopPropagation(); handleDownloadFrame(frame.dataUrl, index); }}
+                                  title={t('realTimePlayback.downloadFrame', 'Download')}
+                                >
+                                  <Download className="h-3 w-3" />
+                                </Button>
                               </div>
                             </div>
                           ))}
@@ -1761,6 +2102,35 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
           videoId={currentVideoId}
           sport={sport}
           module={module}
+        />
+      )}
+      
+      {/* Frame Annotation Dialog */}
+      {frameToAnnotate && (
+        <FrameAnnotationDialog
+          open={annotationDialogOpen}
+          onOpenChange={(open) => {
+            setAnnotationDialogOpen(open);
+            if (!open) setFrameToAnnotate(null);
+          }}
+          frameDataUrl={frameToAnnotate.dataUrl}
+          onSave={(annotatedDataUrl) => {
+            if (frameToAnnotate.index === -1) {
+              // New frame from current playback position
+              const newFrame: CapturedFrame = {
+                dataUrl: annotatedDataUrl,
+                timestamp: currentVideoTime,
+                selectedForAnalysis: true,
+                annotated: true
+              };
+              setCapturedFrames(prev => [...prev, newFrame]);
+              setAnnotationDialogOpen(false);
+              setFrameToAnnotate(null);
+              toast.success(t('realTimePlayback.frameAnnotated', 'Frame annotated and saved!'));
+            } else {
+              handleSaveAnnotatedFrame(annotatedDataUrl);
+            }
+          }}
         />
       )}
     </>
