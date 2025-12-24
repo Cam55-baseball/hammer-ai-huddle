@@ -579,8 +579,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             handleReorderCheckin,
             t('gamePlan.sections.dailyCheckins'),
             'text-primary',
-            'bg-primary/30',
-            true
+            'bg-primary/30'
           )}
 
           {/* Training Section */}

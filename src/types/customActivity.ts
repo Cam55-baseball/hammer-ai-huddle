@@ -83,6 +83,13 @@ export interface CustomField {
   type: 'text' | 'number' | 'time' | 'checkbox';
 }
 
+export interface EmbeddedRunningSession {
+  distance_value?: number;
+  distance_unit?: 'feet' | 'yards' | 'meters' | 'miles' | 'kilometers';
+  time_goal?: string; // H:MM:SS.T format
+  pace_goal?: string;
+}
+
 export interface CustomActivityTemplate {
   id: string;
   user_id: string;
@@ -97,13 +104,14 @@ export interface CustomActivityTemplate {
   duration_minutes?: number;
   intensity?: IntensityLevel;
   distance_value?: number;
-  distance_unit?: 'miles' | 'km';
-  pace_value?: string;
+  distance_unit?: 'feet' | 'yards' | 'meters' | 'miles' | 'kilometers';
+  pace_value?: string; // H:MM:SS.T format for time goals
   intervals: RunningInterval[];
   is_favorited: boolean;
   recurring_days: number[]; // 0-6 (Sunday-Saturday)
   recurring_active: boolean;
   sport: 'baseball' | 'softball';
+  embedded_running?: EmbeddedRunningSession;
   created_at: string;
   updated_at: string;
 }
