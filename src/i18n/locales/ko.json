@@ -454,7 +454,8 @@
     "signOut": "로그아웃",
     "vault": "금고",
     "bounceBackBay": "회복 만",
-    "mindFuel": "마인드 연료"
+    "mindFuel": "마인드 연료",
+    "texVision": "텍스 비전"
   },
   "sidebar": {
     "ownerBio": "소유자 소개",
@@ -463,7 +464,8 @@
     "about": "소개",
     "experienceAndCredentials": "경력 및 자격",
     "socialMedia": "소셜 미디어",
-    "websites": "웹사이트"
+    "websites": "웹사이트",
+    "merch": "상품"
   },
   "dashboard": {
     "title": "훈련 대시보드",
@@ -4446,8 +4448,13 @@
       "title": "카드 사용자 정의",
       "nickname": "표시 닉네임",
       "nicknamePlaceholder": "사용자 정의 표시 이름...",
-      "logo": "사용자 정의 로고 URL",
-      "logoPlaceholder": "https://..."
+      "logo": "사용자 정의 로고",
+      "uploadLogo": "로고 업로드",
+      "removeLogo": "로고 삭제",
+      "dragDropLogo": "드래그 앤 드롭 또는 클릭하여 업로드",
+      "logoFormats": "JPG, PNG, WebP 또는 SVG (최대 2MB)",
+      "uploadingLogo": "업로드 중...",
+      "logoUploaded": "로고 업로드됨!"
     },
     "reminders": {
       "title": "활동 알림",

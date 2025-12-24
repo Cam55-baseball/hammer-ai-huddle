@@ -483,7 +483,8 @@
     "signOut": "Uitloggen",
     "vault": "De Kluis",
     "bounceBackBay": "Herstel Baai",
-    "mindFuel": "Mentale Brandstof"
+    "mindFuel": "Mentale Brandstof",
+    "texVision": "Tex Vision"
   },
   "sidebar": {
     "ownerBio": "Eigenaar Bio",
@@ -492,7 +493,8 @@
     "about": "Over",
     "experienceAndCredentials": "Ervaring & Referenties",
     "socialMedia": "Sociale Media",
-    "websites": "Websites"
+    "websites": "Websites",
+    "merch": "Merch"
   },
   "dashboard": {
     "title": "Trainingsdashboard",

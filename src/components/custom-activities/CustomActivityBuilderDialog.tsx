@@ -10,7 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Upload, Image } from 'lucide-react';
+import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image } from 'lucide-react';
+import { LogoUploadButton } from './LogoUploadButton';
 import { ActivityTypeSelector } from './ActivityTypeSelector';
 import { IconPicker } from './IconPicker';
 import { ColorPicker } from './ColorPicker';
@@ -388,23 +389,23 @@ export function CustomActivityBuilderDialog({
                 <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
                   <h3 className="text-sm font-bold flex items-center gap-2">
                     <Image className="h-4 w-4" />
-                    {t('customActivity.cardCustomization.title', 'Card Customization')}
+                    {t('customActivity.cardCustomization.title')}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium">{t('customActivity.cardCustomization.nickname', 'Display Nickname')}</Label>
+                      <Label className="text-sm font-medium">{t('customActivity.cardCustomization.nickname')}</Label>
                       <Input 
                         value={displayNickname} 
                         onChange={(e) => setDisplayNickname(e.target.value)} 
-                        placeholder={t('customActivity.cardCustomization.nicknamePlaceholder', 'Custom display name...')} 
+                        placeholder={t('customActivity.cardCustomization.nicknamePlaceholder')} 
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium">{t('customActivity.cardCustomization.logo', 'Custom Logo URL')}</Label>
-                      <Input 
-                        value={customLogoUrl} 
-                        onChange={(e) => setCustomLogoUrl(e.target.value)} 
-                        placeholder={t('customActivity.cardCustomization.logoPlaceholder', 'https://...')} 
+                      <Label className="text-sm font-medium">{t('customActivity.cardCustomization.logo')}</Label>
+                      <LogoUploadButton
+                        currentUrl={customLogoUrl}
+                        onUpload={(url) => setCustomLogoUrl(url)}
+                        onRemove={() => setCustomLogoUrl('')}
                       />
                     </div>
                   </div>

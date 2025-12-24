@@ -483,7 +483,8 @@
     "signOut": "Se Déconnecter",
     "vault": "Le Coffre-Fort",
     "bounceBackBay": "Baie de Récupération",
-    "mindFuel": "Carburant Mental"
+    "mindFuel": "Carburant Mental",
+    "texVision": "Tex Vision"
   },
   "sidebar": {
     "ownerBio": "Bio du Propriétaire",
@@ -492,7 +493,8 @@
     "about": "À propos",
     "experienceAndCredentials": "Expérience et Qualifications",
     "socialMedia": "Réseaux Sociaux",
-    "websites": "Sites Web"
+    "websites": "Sites Web",
+    "merch": "Boutique"
   },
   "dashboard": {
     "title": "Tableau d'Entraînement",
@@ -5160,8 +5162,13 @@
       "title": "Personnalisation de la Carte",
       "nickname": "Surnom d'Affichage",
       "nicknamePlaceholder": "Nom personnalisé...",
-      "logo": "URL du Logo Personnalisé",
-      "logoPlaceholder": "https://..."
+      "logo": "Logo Personnalisé",
+      "uploadLogo": "Télécharger Logo",
+      "removeLogo": "Supprimer Logo",
+      "dragDropLogo": "Glisser-déposer ou cliquer pour télécharger",
+      "logoFormats": "JPG, PNG, WebP ou SVG (max 2Mo)",
+      "uploadingLogo": "Téléchargement...",
+      "logoUploaded": "Logo téléchargé!"
     },
     "reminders": {
       "title": "Rappel d'Activité",

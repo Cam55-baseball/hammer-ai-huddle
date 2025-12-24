@@ -483,7 +483,8 @@
     "signOut": "Abmelden",
     "vault": "Der Tresor",
     "bounceBackBay": "Erholungsbucht",
-    "mindFuel": "Geistiger Treibstoff"
+    "mindFuel": "Geistiger Treibstoff",
+    "texVision": "Tex Vision"
   },
   "sidebar": {
     "ownerBio": "Eigentümer-Bio",
@@ -492,7 +493,8 @@
     "about": "Über",
     "experienceAndCredentials": "Erfahrung & Qualifikationen",
     "socialMedia": "Soziale Medien",
-    "websites": "Webseiten"
+    "websites": "Webseiten",
+    "merch": "Merch"
   },
   "dashboard": {
     "title": "Trainings-Dashboard",
@@ -5160,8 +5162,13 @@
       "title": "Karten-Anpassung",
       "nickname": "Anzeigename",
       "nicknamePlaceholder": "Benutzerdefinierter Name...",
-      "logo": "Benutzerdefinierte Logo-URL",
-      "logoPlaceholder": "https://..."
+      "logo": "Benutzerdefiniertes Logo",
+      "uploadLogo": "Logo Hochladen",
+      "removeLogo": "Logo Entfernen",
+      "dragDropLogo": "Ziehen & Ablegen oder Klicken zum Hochladen",
+      "logoFormats": "JPG, PNG, WebP oder SVG (max 2MB)",
+      "uploadingLogo": "Hochladen...",
+      "logoUploaded": "Logo hochgeladen!"
     },
     "reminders": {
       "title": "Aktivitätserinnerung",

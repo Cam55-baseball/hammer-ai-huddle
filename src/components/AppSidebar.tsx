@@ -160,7 +160,7 @@ export function AppSidebar() {
     ...(!isScout ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     { title: t('navigation.rankings'), url: "/rankings", icon: Trophy },
     { title: t('navigation.nutrition'), url: "/nutrition", icon: Apple },
-    { title: t('navigation.mindFuel', 'Mind Fuel'), url: "/mind-fuel", icon: Brain },
+    { title: t('navigation.mindFuel'), url: "/mind-fuel", icon: Brain },
     { title: t('navigation.bounceBackBay'), url: "/bounce-back-bay", icon: HeartPulse },
     { title: t('navigation.weather'), url: "/weather", icon: Cloud },
     ...(isScout ? [{ title: t('navigation.scoutDashboard'), url: "/scout-dashboard", icon: UserPlus }] : []),
@@ -180,10 +180,10 @@ export function AppSidebar() {
           description: t('workoutModules.productionLab.subtitle') || "6-week workout"
         },
         {
-          title: t('texVision.title', 'Tex Vision'),
+          title: t('navigation.texVision'),
           url: "/tex-vision",
           icon: Eye,
-          description: t('texVision.subtitle', 'Neuro-Visual Performance')
+          description: t('texVision.subtitle')
         }
       ]
     },
@@ -207,7 +207,7 @@ export function AppSidebar() {
 
   const accountItems = [
     { title: t('navigation.profile'), url: "/profile", icon: Settings },
-    { title: t('navigation.myCustomActivities', 'My Activities'), url: "/my-custom-activities", icon: LayoutGrid },
+    { title: t('navigation.myCustomActivities'), url: "/my-custom-activities", icon: LayoutGrid },
     ...(isOwner ? [
       { title: t('navigation.ownerDashboard'), url: "/owner", icon: Shield },
       { title: t('navigation.scoutApplications'), url: "/owner?tab=scout-applications", icon: UserPlus },
@@ -252,7 +252,7 @@ export function AppSidebar() {
                   onClick={(e) => e.stopPropagation()}
                 >
                   <ShoppingBag className="h-3 w-3" />
-                  Merch
+                  {t('sidebar.merch')}
                 </a>
               </SidebarGroupLabel>
               <button
