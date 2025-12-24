@@ -5243,8 +5243,11 @@
   },
   "customActivity": {
     "title": "Actividades Personalizadas",
+    "create": "Crear Actividad",
+    "edit": "Editar Actividad",
     "createNew": "Crear Nueva",
     "quickAdd": "Añadir Rápido",
+    "selectType": "Seleccionar Tipo de Actividad",
     "badge": "CUSTOM",
     "addedToToday": "Añadido al plan de hoy",
     "markedComplete": "¡Actividad completada!",
@@ -5260,17 +5263,29 @@
       "recovery": "Rutina de Recuperación",
       "practice": "Práctica Completa",
       "shortPractice": "Práctica Corta",
-      "freeSession": "Sesión Libre"
+      "freeSession": "Sesión Libre",
+      "short_practice": "Práctica Corta",
+      "free_session": "Sesión Libre"
     },
     "fields": {
       "title": "Título de Actividad",
+      "name": "Nombre de Actividad",
+      "namePlaceholder": "Ingresa nombre de actividad...",
       "description": "Descripción",
+      "descriptionPlaceholder": "Descripción opcional...",
       "duration": "Duración (minutos)",
       "intensity": "Intensidad",
+      "selectIntensity": "Seleccionar nivel de intensidad",
       "distance": "Distancia",
+      "distanceUnit": "Unidad",
       "notes": "Notas",
       "selectType": "Seleccionar tipo de actividad",
-      "enterTitle": "Ingresa un título..."
+      "enterTitle": "Ingresa un título...",
+      "icon": "Icono",
+      "color": "Color",
+      "sets": "Series",
+      "reps": "Repeticiones",
+      "rest": "Descanso"
     },
     "intensity": {
       "light": "Ligera",
@@ -5281,6 +5296,8 @@
     "recurring": {
       "title": "Repetir Semanalmente",
       "active": "Recurrencia Activa",
+      "label": "Recurrente",
+      "everyWeek": "Se repite cada semana el {{days}}",
       "days": {
         "sun": "Dom",
         "mon": "Lun",
@@ -5295,28 +5312,68 @@
     "isFavorited": "Favorito",
     "exercises": {
       "title": "Ejercicios",
+      "add": "Añadir Ejercicio",
       "addExercise": "Añadir Ejercicio",
       "name": "Nombre del Ejercicio",
+      "namePlaceholder": "Nombre del ejercicio...",
+      "type": "Tipo",
       "sets": "Series",
       "reps": "Repeticiones",
       "duration": "Duración (seg)",
       "rest": "Descanso (seg)",
       "weight": "Peso",
-      "notes": "Notas"
+      "weightUnit": "Unidad",
+      "notes": "Notas",
+      "notesPlaceholder": "Notas opcionales...",
+      "empty": "Sin ejercicios aún. Añade uno arriba.",
+      "types": {
+        "strength": "Fuerza",
+        "cardio": "Cardio",
+        "flexibility": "Flexibilidad",
+        "plyometric": "Pliométrico",
+        "other": "Otro"
+      }
     },
     "meals": {
       "title": "Items de Comida",
+      "food": "Comida",
+      "addFood": "Añadir Alimento",
+      "foodName": "Nombre del alimento...",
+      "emptyFood": "Sin alimentos aún",
       "addItem": "Añadir Item",
       "vitamins": "Vitaminas",
+      "addVitamin": "Añadir Vitamina",
+      "vitaminName": "Nombre de vitamina...",
+      "emptyVitamins": "Sin vitaminas añadidas",
       "supplements": "Suplementos",
+      "addSupplement": "Añadir Suplemento",
+      "supplementName": "Nombre del suplemento...",
+      "dosage": "Dosis",
+      "emptySupplements": "Sin suplementos añadidos",
       "itemName": "Nombre del Item",
-      "portion": "Porción"
+      "portion": "Porción",
+      "timing": {
+        "morning": "Mañana",
+        "afternoon": "Tarde",
+        "evening": "Noche",
+        "withMeal": "Con Comida"
+      }
     },
     "customFields": {
       "title": "Campos Personalizados",
+      "add": "Añadir Campo",
       "addField": "Añadir Campo",
       "fieldLabel": "Etiqueta del Campo",
-      "fieldValue": "Valor"
+      "labelPlaceholder": "Etiqueta del campo...",
+      "fieldValue": "Valor",
+      "valuePlaceholder": "Valor...",
+      "empty": "Sin campos personalizados aún",
+      "types": {
+        "text": "Texto",
+        "number": "Número",
+        "time": "Tiempo",
+        "checkbox": "Casilla"
+      }
     },
     "icon": "Icono",
     "color": "Color",

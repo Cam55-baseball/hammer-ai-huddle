@@ -4987,8 +4987,11 @@
   },
   "customActivity": {
     "title": "Eigene Aktivitäten",
+    "create": "Aktivität Erstellen",
+    "edit": "Aktivität Bearbeiten",
     "createNew": "Neu Erstellen",
     "quickAdd": "Schnell Hinzufügen",
+    "selectType": "Aktivitätstyp Auswählen",
     "badge": "CUSTOM",
     "addedToToday": "Zum heutigen Plan hinzugefügt",
     "markedComplete": "Aktivität abgeschlossen!",
@@ -5004,17 +5007,29 @@
       "recovery": "Erholungsroutine",
       "practice": "Volles Training",
       "shortPractice": "Kurzes Training",
-      "freeSession": "Freie Session"
+      "freeSession": "Freie Session",
+      "short_practice": "Kurzes Training",
+      "free_session": "Freie Session"
     },
     "fields": {
       "title": "Aktivitätstitel",
+      "name": "Aktivitätsname",
+      "namePlaceholder": "Aktivitätsname eingeben...",
       "description": "Beschreibung",
+      "descriptionPlaceholder": "Optionale Beschreibung...",
       "duration": "Dauer (Minuten)",
       "intensity": "Intensität",
+      "selectIntensity": "Intensitätsstufe auswählen",
       "distance": "Distanz",
+      "distanceUnit": "Einheit",
       "notes": "Notizen",
       "selectType": "Aktivitätstyp auswählen",
-      "enterTitle": "Titel eingeben..."
+      "enterTitle": "Titel eingeben...",
+      "icon": "Symbol",
+      "color": "Farbe",
+      "sets": "Sätze",
+      "reps": "Wiederholungen",
+      "rest": "Pause"
     },
     "intensity": {
       "light": "Leicht",
@@ -5025,6 +5040,8 @@
     "recurring": {
       "title": "Wöchentlich Wiederholen",
       "active": "Wiederholung Aktiv",
+      "label": "Wiederkehrend",
+      "everyWeek": "Wiederholt sich jede Woche am {{days}}",
       "days": {
         "sun": "So",
         "mon": "Mo",
@@ -5039,28 +5056,68 @@
     "isFavorited": "Favorit",
     "exercises": {
       "title": "Übungen",
+      "add": "Übung Hinzufügen",
       "addExercise": "Übung Hinzufügen",
       "name": "Übungsname",
+      "namePlaceholder": "Übungsname...",
+      "type": "Typ",
       "sets": "Sätze",
       "reps": "Wiederholungen",
       "duration": "Dauer (Sek)",
       "rest": "Pause (Sek)",
       "weight": "Gewicht",
-      "notes": "Notizen"
+      "weightUnit": "Einheit",
+      "notes": "Notizen",
+      "notesPlaceholder": "Optionale Notizen...",
+      "empty": "Noch keine Übungen. Fügen Sie oben eine hinzu.",
+      "types": {
+        "strength": "Kraft",
+        "cardio": "Cardio",
+        "flexibility": "Flexibilität",
+        "plyometric": "Plyometrisch",
+        "other": "Andere"
+      }
     },
     "meals": {
       "title": "Mahlzeitenartikel",
+      "food": "Essen",
+      "addFood": "Nahrungsmittel Hinzufügen",
+      "foodName": "Nahrungsmittelname...",
+      "emptyFood": "Noch keine Nahrungsmittel",
       "addItem": "Artikel Hinzufügen",
       "vitamins": "Vitamine",
+      "addVitamin": "Vitamin Hinzufügen",
+      "vitaminName": "Vitaminname...",
+      "emptyVitamins": "Keine Vitamine hinzugefügt",
       "supplements": "Nahrungsergänzung",
+      "addSupplement": "Supplement Hinzufügen",
+      "supplementName": "Supplementname...",
+      "dosage": "Dosierung",
+      "emptySupplements": "Keine Supplements hinzugefügt",
       "itemName": "Artikelname",
-      "portion": "Portion"
+      "portion": "Portion",
+      "timing": {
+        "morning": "Morgens",
+        "afternoon": "Nachmittags",
+        "evening": "Abends",
+        "withMeal": "Mit Mahlzeit"
+      }
     },
     "customFields": {
       "title": "Eigene Felder",
+      "add": "Feld Hinzufügen",
       "addField": "Feld Hinzufügen",
       "fieldLabel": "Feldbezeichnung",
-      "fieldValue": "Wert"
+      "labelPlaceholder": "Feldbezeichnung...",
+      "fieldValue": "Wert",
+      "valuePlaceholder": "Wert...",
+      "empty": "Noch keine eigenen Felder",
+      "types": {
+        "text": "Text",
+        "number": "Zahl",
+        "time": "Zeit",
+        "checkbox": "Kontrollkästchen"
+      }
     },
     "icon": "Symbol",
     "color": "Farbe",
