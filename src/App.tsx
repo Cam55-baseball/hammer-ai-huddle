@@ -72,6 +72,8 @@ const Vault = lazyWithRetry(() => import("./pages/Vault"));
 const TexVision = lazyWithRetry(() => import("./pages/TexVision"));
 const ComingSoon = lazyWithRetry(() => import("./pages/ComingSoon"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const MyCustomActivities = lazyWithRetry(() => import("./pages/MyCustomActivities"));
+const SharedActivity = lazyWithRetry(() => import("./pages/SharedActivity"));
 
 const queryClient = new QueryClient();
 
@@ -123,6 +125,8 @@ const App = () => {
               <Route path="/vault" element={<Vault />} />
               <Route path="/tex-vision" element={<TexVision />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
+              <Route path="/my-custom-activities" element={<MyCustomActivities />} />
+              <Route path="/shared-activity/:shareCode" element={<SharedActivity />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

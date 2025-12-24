@@ -4454,6 +4454,89 @@
     },
     "universal": {
       "additionalOptions": "Extra Opties"
+    },
+    "cardCustomization": {
+      "title": "Kaart Aanpassing",
+      "nickname": "Weergavenaam",
+      "nicknamePlaceholder": "Aangepaste naam...",
+      "logo": "Aangepaste Logo URL",
+      "logoPlaceholder": "https://..."
+    },
+    "reminders": {
+      "title": "Activiteit Herinnering",
+      "time": "Herinneringstijd",
+      "description": "Ontvang een melding wanneer deze terugkerende activiteit gepland is"
+    },
+    "share": {
+      "title": "Sjabloon Delen",
+      "description": "Deel dit activiteitensjabloon met anderen",
+      "createLink": "Link Maken",
+      "copyLink": "Link Kopiëren",
+      "copied": "Gekopieerd!",
+      "publicAccess": "Openbare Toegang",
+      "publicDescription": "Iedereen met de link kan bekijken",
+      "viewCount": "{{count}} weergaven",
+      "deleteLink": "Link Verwijderen",
+      "preview": "Voorbeeld"
     }
+  },
+  "myCustomActivities": {
+    "title": "Mijn Aangepaste Activiteiten",
+    "subtitle": "Beheer sjablonen, bekijk geschiedenis en volg je voortgang",
+    "tabs": {
+      "templates": "Sjablonen",
+      "history": "Geschiedenis",
+      "analytics": "Analyse",
+      "hydration": "Hydratatie",
+      "presets": "Voorinstellingen"
+    },
+    "templates": {
+      "title": "Activiteit Sjablonen",
+      "create": "Nieuw Maken",
+      "noTemplates": "Nog geen sjablonen",
+      "noTemplatesHint": "Maak je eerste aangepaste activiteitensjabloon"
+    },
+    "history": {
+      "title": "Activiteit Geschiedenis",
+      "noHistory": "Geen activiteit geschiedenis",
+      "completed": "Voltooid",
+      "filter": "Filteren op type"
+    },
+    "analytics": {
+      "title": "Activiteit Analyse",
+      "totalActivities": "Totaal Activiteiten",
+      "completionRate": "Voltooiingspercentage",
+      "streak": "Huidige Reeks",
+      "byType": "Per Type"
+    },
+    "hydration": {
+      "title": "Hydratatie Tracking",
+      "settings": "Hydratatie Instellingen",
+      "dailyGoal": "Dagelijks Doel",
+      "reminderInterval": "Herinnering Interval",
+      "startTime": "Starttijd",
+      "endTime": "Eindtijd",
+      "enabled": "Herinneringen Ingeschakeld",
+      "tracker": "Snel Loggen",
+      "todayProgress": "Voortgang Vandaag",
+      "addWater": "Water Toevoegen"
+    },
+    "presets": {
+      "title": "Hardloop Voorinstellingen",
+      "categories": {
+        "intervals": "Intervallen",
+        "tempo": "Tempo",
+        "recovery": "Herstel",
+        "distance": "Afstand",
+        "speed": "Snelheid"
+      },
+      "usePreset": "Gebruiken",
+      "customize": "Aanpassen",
+      "system": "Systeem Voorinstelling",
+      "custom": "Aangepaste Voorinstelling"
+    }
+  },
+  "navigation": {
+    "myCustomActivities": "Mijn Activiteiten"
   }
 }

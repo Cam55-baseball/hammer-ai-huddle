@@ -5793,6 +5793,89 @@
       "drawerDescription": "Tap to add to today's game plan",
       "noFavorites": "No favorites yet",
       "noFavoritesHint": "Star activities to add them here"
+    },
+    "cardCustomization": {
+      "title": "Card Customization",
+      "nickname": "Display Nickname",
+      "nicknamePlaceholder": "Custom display name...",
+      "logo": "Custom Logo URL",
+      "logoPlaceholder": "https://..."
+    },
+    "reminders": {
+      "title": "Activity Reminder",
+      "time": "Reminder Time",
+      "description": "Get notified when this recurring activity is due"
+    },
+    "share": {
+      "title": "Share Template",
+      "description": "Share this activity template with others",
+      "createLink": "Create Share Link",
+      "copyLink": "Copy Link",
+      "copied": "Copied!",
+      "publicAccess": "Public Access",
+      "publicDescription": "Anyone with the link can view",
+      "viewCount": "{{count}} views",
+      "deleteLink": "Delete Link",
+      "preview": "Preview"
     }
+  },
+  "myCustomActivities": {
+    "title": "My Custom Activities",
+    "subtitle": "Manage templates, view history, and track your progress",
+    "tabs": {
+      "templates": "Templates",
+      "history": "History",
+      "analytics": "Analytics",
+      "hydration": "Hydration",
+      "presets": "Presets"
+    },
+    "templates": {
+      "title": "Activity Templates",
+      "create": "Create New",
+      "noTemplates": "No templates yet",
+      "noTemplatesHint": "Create your first custom activity template"
+    },
+    "history": {
+      "title": "Activity History",
+      "noHistory": "No activity history",
+      "completed": "Completed",
+      "filter": "Filter by type"
+    },
+    "analytics": {
+      "title": "Activity Analytics",
+      "totalActivities": "Total Activities",
+      "completionRate": "Completion Rate",
+      "streak": "Current Streak",
+      "byType": "By Type"
+    },
+    "hydration": {
+      "title": "Hydration Tracking",
+      "settings": "Hydration Settings",
+      "dailyGoal": "Daily Goal",
+      "reminderInterval": "Reminder Interval",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "enabled": "Reminders Enabled",
+      "tracker": "Quick Log",
+      "todayProgress": "Today's Progress",
+      "addWater": "Add Water"
+    },
+    "presets": {
+      "title": "Running Presets",
+      "categories": {
+        "intervals": "Intervals",
+        "tempo": "Tempo",
+        "recovery": "Recovery",
+        "distance": "Distance",
+        "speed": "Speed"
+      },
+      "usePreset": "Use Preset",
+      "customize": "Customize",
+      "system": "System Preset",
+      "custom": "Custom Preset"
+    }
+  },
+  "navigation": {
+    "myCustomActivities": "My Activities"
   }
 }

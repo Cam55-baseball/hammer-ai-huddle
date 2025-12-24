@@ -4398,6 +4398,89 @@
     },
     "universal": {
       "additionalOptions": "其他选项"
+    },
+    "cardCustomization": {
+      "title": "卡片自定义",
+      "nickname": "显示昵称",
+      "nicknamePlaceholder": "自定义显示名称...",
+      "logo": "自定义Logo URL",
+      "logoPlaceholder": "https://..."
+    },
+    "reminders": {
+      "title": "活动提醒",
+      "time": "提醒时间",
+      "description": "当此重复活动到期时收到通知"
+    },
+    "share": {
+      "title": "分享模板",
+      "description": "与他人分享此活动模板",
+      "createLink": "创建链接",
+      "copyLink": "复制链接",
+      "copied": "已复制！",
+      "publicAccess": "公开访问",
+      "publicDescription": "任何拥有链接的人都可以查看",
+      "viewCount": "{{count}}次浏览",
+      "deleteLink": "删除链接",
+      "preview": "预览"
     }
+  },
+  "myCustomActivities": {
+    "title": "我的自定义活动",
+    "subtitle": "管理模板、查看历史记录并跟踪进度",
+    "tabs": {
+      "templates": "模板",
+      "history": "历史",
+      "analytics": "分析",
+      "hydration": "水分",
+      "presets": "预设"
+    },
+    "templates": {
+      "title": "活动模板",
+      "create": "创建新的",
+      "noTemplates": "暂无模板",
+      "noTemplatesHint": "创建您的第一个自定义活动模板"
+    },
+    "history": {
+      "title": "活动历史",
+      "noHistory": "暂无活动历史",
+      "completed": "已完成",
+      "filter": "按类型筛选"
+    },
+    "analytics": {
+      "title": "活动分析",
+      "totalActivities": "总活动数",
+      "completionRate": "完成率",
+      "streak": "当前连续天数",
+      "byType": "按类型"
+    },
+    "hydration": {
+      "title": "水分追踪",
+      "settings": "水分设置",
+      "dailyGoal": "每日目标",
+      "reminderInterval": "提醒间隔",
+      "startTime": "开始时间",
+      "endTime": "结束时间",
+      "enabled": "已启用提醒",
+      "tracker": "快速记录",
+      "todayProgress": "今日进度",
+      "addWater": "添加水量"
+    },
+    "presets": {
+      "title": "跑步预设",
+      "categories": {
+        "intervals": "间歇",
+        "tempo": "节奏",
+        "recovery": "恢复",
+        "distance": "距离",
+        "speed": "速度"
+      },
+      "usePreset": "使用",
+      "customize": "自定义",
+      "system": "系统预设",
+      "custom": "自定义预设"
+    }
+  },
+  "navigation": {
+    "myCustomActivities": "我的活动"
   }
 }

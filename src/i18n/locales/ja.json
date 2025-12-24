@@ -4554,6 +4554,89 @@
     },
     "universal": {
       "additionalOptions": "追加オプション"
+    },
+    "cardCustomization": {
+      "title": "カードのカスタマイズ",
+      "nickname": "表示ニックネーム",
+      "nicknamePlaceholder": "カスタム表示名...",
+      "logo": "カスタムロゴURL",
+      "logoPlaceholder": "https://..."
+    },
+    "reminders": {
+      "title": "アクティビティリマインダー",
+      "time": "リマインダー時間",
+      "description": "この繰り返しアクティビティの期限が来たら通知を受け取る"
+    },
+    "share": {
+      "title": "テンプレートを共有",
+      "description": "このアクティビティテンプレートを他の人と共有",
+      "createLink": "リンクを作成",
+      "copyLink": "リンクをコピー",
+      "copied": "コピーしました！",
+      "publicAccess": "公開アクセス",
+      "publicDescription": "リンクを持つ誰でも閲覧可能",
+      "viewCount": "{{count}}回閲覧",
+      "deleteLink": "リンクを削除",
+      "preview": "プレビュー"
     }
+  },
+  "myCustomActivities": {
+    "title": "マイカスタムアクティビティ",
+    "subtitle": "テンプレートを管理し、履歴を確認し、進捗を追跡",
+    "tabs": {
+      "templates": "テンプレート",
+      "history": "履歴",
+      "analytics": "分析",
+      "hydration": "水分補給",
+      "presets": "プリセット"
+    },
+    "templates": {
+      "title": "アクティビティテンプレート",
+      "create": "新規作成",
+      "noTemplates": "テンプレートがありません",
+      "noTemplatesHint": "最初のカスタムアクティビティテンプレートを作成してください"
+    },
+    "history": {
+      "title": "アクティビティ履歴",
+      "noHistory": "アクティビティ履歴がありません",
+      "completed": "完了",
+      "filter": "タイプでフィルター"
+    },
+    "analytics": {
+      "title": "アクティビティ分析",
+      "totalActivities": "総アクティビティ",
+      "completionRate": "完了率",
+      "streak": "現在の連続日数",
+      "byType": "タイプ別"
+    },
+    "hydration": {
+      "title": "水分補給トラッキング",
+      "settings": "水分補給設定",
+      "dailyGoal": "1日の目標",
+      "reminderInterval": "リマインダー間隔",
+      "startTime": "開始時間",
+      "endTime": "終了時間",
+      "enabled": "リマインダー有効",
+      "tracker": "クイックログ",
+      "todayProgress": "今日の進捗",
+      "addWater": "水を追加"
+    },
+    "presets": {
+      "title": "ランニングプリセット",
+      "categories": {
+        "intervals": "インターバル",
+        "tempo": "テンポ",
+        "recovery": "リカバリー",
+        "distance": "距離",
+        "speed": "スピード"
+      },
+      "usePreset": "使用",
+      "customize": "カスタマイズ",
+      "system": "システムプリセット",
+      "custom": "カスタムプリセット"
+    }
+  },
+  "navigation": {
+    "myCustomActivities": "マイアクティビティ"
   }
 }

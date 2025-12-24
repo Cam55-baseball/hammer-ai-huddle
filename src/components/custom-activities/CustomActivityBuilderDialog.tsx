@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X } from 'lucide-react';
+import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Upload, Image } from 'lucide-react';
 import { ActivityTypeSelector } from './ActivityTypeSelector';
 import { IconPicker } from './IconPicker';
 import { ColorPicker } from './ColorPicker';
@@ -71,6 +71,14 @@ export function CustomActivityBuilderDialog({
   const [recurringActive, setRecurringActive] = useState(template?.recurring_active || false);
   const [saving, setSaving] = useState(false);
   
+  // Card customization fields
+  const [displayNickname, setDisplayNickname] = useState(template?.display_nickname || '');
+  const [customLogoUrl, setCustomLogoUrl] = useState(template?.custom_logo_url || '');
+  
+  // Reminder fields
+  const [reminderEnabled, setReminderEnabled] = useState(template?.reminder_enabled || false);
+  const [reminderTime, setReminderTime] = useState(template?.reminder_time || '08:00');
+  
   // Running-specific fields
   const [timeGoalHours, setTimeGoalHours] = useState<number | undefined>();
   const [timeGoalMinutes, setTimeGoalMinutes] = useState<number | undefined>();
@@ -99,6 +107,10 @@ export function CustomActivityBuilderDialog({
       setIsFavorited(template.is_favorited);
       setRecurringDays(template.recurring_days || []);
       setRecurringActive(template.recurring_active);
+      setDisplayNickname(template.display_nickname || '');
+      setCustomLogoUrl(template.custom_logo_url || '');
+      setReminderEnabled(template.reminder_enabled || false);
+      setReminderTime(template.reminder_time || '08:00');
       // Parse time goal if stored in pace_value (format: H:MM:SS.T)
       if (template.pace_value && template.pace_value.includes(':')) {
         const [timePart, tenthsPart] = template.pace_value.split('.');
@@ -144,6 +156,10 @@ export function CustomActivityBuilderDialog({
       setIsFavorited(false);
       setRecurringDays([]);
       setRecurringActive(false);
+      setDisplayNickname('');
+      setCustomLogoUrl('');
+      setReminderEnabled(false);
+      setReminderTime('08:00');
       setTimeGoalHours(undefined);
       setTimeGoalMinutes(undefined);
       setTimeGoalSeconds(undefined);
@@ -167,6 +183,10 @@ export function CustomActivityBuilderDialog({
       setIsFavorited(false);
       setRecurringDays([]);
       setRecurringActive(false);
+      setDisplayNickname('');
+      setCustomLogoUrl('');
+      setReminderEnabled(false);
+      setReminderTime('08:00');
       setTimeGoalHours(undefined);
       setTimeGoalMinutes(undefined);
       setTimeGoalSeconds(undefined);
@@ -227,6 +247,10 @@ export function CustomActivityBuilderDialog({
         recurring_active: recurringActive,
         sport: selectedSport,
         embedded_running_sessions: runningSessions,
+        display_nickname: displayNickname.trim() || undefined,
+        custom_logo_url: customLogoUrl.trim() || undefined,
+        reminder_enabled: reminderEnabled,
+        reminder_time: reminderEnabled ? reminderTime : undefined,
       });
       onOpenChange(false);
     } finally {
@@ -359,6 +383,32 @@ export function CustomActivityBuilderDialog({
                 </div>
 
                 <ColorPicker selected={color} onSelect={setColor} />
+
+                {/* Card Customization Section */}
+                <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
+                  <h3 className="text-sm font-bold flex items-center gap-2">
+                    <Image className="h-4 w-4" />
+                    {t('customActivity.cardCustomization.title', 'Card Customization')}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">{t('customActivity.cardCustomization.nickname', 'Display Nickname')}</Label>
+                      <Input 
+                        value={displayNickname} 
+                        onChange={(e) => setDisplayNickname(e.target.value)} 
+                        placeholder={t('customActivity.cardCustomization.nicknamePlaceholder', 'Custom display name...')} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">{t('customActivity.cardCustomization.logo', 'Custom Logo URL')}</Label>
+                      <Input 
+                        value={customLogoUrl} 
+                        onChange={(e) => setCustomLogoUrl(e.target.value)} 
+                        placeholder={t('customActivity.cardCustomization.logoPlaceholder', 'https://...')} 
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 {/* Type-specific builders */}
                 {showMealBuilder && <MealBuilder meals={meals} onChange={setMeals} />}
@@ -512,6 +562,32 @@ export function CustomActivityBuilderDialog({
                 </div>
 
                 <RecurringDayPicker selectedDays={recurringDays} onDaysChange={setRecurringDays} isActive={recurringActive} onActiveChange={setRecurringActive} />
+
+                {/* Reminder Settings - Only show when recurring is active */}
+                {recurringActive && (
+                  <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-bold flex items-center gap-2">
+                        <Bell className="h-4 w-4" />
+                        {t('customActivity.reminders.title', 'Activity Reminder')}
+                      </Label>
+                      <Switch checked={reminderEnabled} onCheckedChange={setReminderEnabled} />
+                    </div>
+                    {reminderEnabled && (
+                      <div className="space-y-2">
+                        <Label className="text-sm">{t('customActivity.reminders.time', 'Reminder Time')}</Label>
+                        <Input 
+                          type="time" 
+                          value={reminderTime} 
+                          onChange={(e) => setReminderTime(e.target.value)} 
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {t('customActivity.reminders.description', 'Get notified when this recurring activity is due')}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>

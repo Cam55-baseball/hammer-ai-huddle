@@ -5155,6 +5155,89 @@
     },
     "universal": {
       "additionalOptions": "Options Supplémentaires"
+    },
+    "cardCustomization": {
+      "title": "Personnalisation de la Carte",
+      "nickname": "Surnom d'Affichage",
+      "nicknamePlaceholder": "Nom personnalisé...",
+      "logo": "URL du Logo Personnalisé",
+      "logoPlaceholder": "https://..."
+    },
+    "reminders": {
+      "title": "Rappel d'Activité",
+      "time": "Heure du Rappel",
+      "description": "Recevez une notification lorsque cette activité récurrente est due"
+    },
+    "share": {
+      "title": "Partager le Modèle",
+      "description": "Partagez ce modèle d'activité avec d'autres",
+      "createLink": "Créer un Lien",
+      "copyLink": "Copier le Lien",
+      "copied": "Copié!",
+      "publicAccess": "Accès Public",
+      "publicDescription": "Tout le monde avec le lien peut voir",
+      "viewCount": "{{count}} vues",
+      "deleteLink": "Supprimer le Lien",
+      "preview": "Aperçu"
     }
+  },
+  "myCustomActivities": {
+    "title": "Mes Activités Personnalisées",
+    "subtitle": "Gérez les modèles, consultez l'historique et suivez vos progrès",
+    "tabs": {
+      "templates": "Modèles",
+      "history": "Historique",
+      "analytics": "Analytiques",
+      "hydration": "Hydratation",
+      "presets": "Préréglages"
+    },
+    "templates": {
+      "title": "Modèles d'Activité",
+      "create": "Créer Nouveau",
+      "noTemplates": "Pas encore de modèles",
+      "noTemplatesHint": "Créez votre premier modèle d'activité personnalisé"
+    },
+    "history": {
+      "title": "Historique des Activités",
+      "noHistory": "Pas d'historique d'activités",
+      "completed": "Terminé",
+      "filter": "Filtrer par type"
+    },
+    "analytics": {
+      "title": "Analytiques des Activités",
+      "totalActivities": "Total des Activités",
+      "completionRate": "Taux de Complétion",
+      "streak": "Série Actuelle",
+      "byType": "Par Type"
+    },
+    "hydration": {
+      "title": "Suivi d'Hydratation",
+      "settings": "Paramètres d'Hydratation",
+      "dailyGoal": "Objectif Quotidien",
+      "reminderInterval": "Intervalle de Rappel",
+      "startTime": "Heure de Début",
+      "endTime": "Heure de Fin",
+      "enabled": "Rappels Activés",
+      "tracker": "Journal Rapide",
+      "todayProgress": "Progrès d'Aujourd'hui",
+      "addWater": "Ajouter de l'Eau"
+    },
+    "presets": {
+      "title": "Préréglages de Course",
+      "categories": {
+        "intervals": "Intervalles",
+        "tempo": "Tempo",
+        "recovery": "Récupération",
+        "distance": "Distance",
+        "speed": "Vitesse"
+      },
+      "usePreset": "Utiliser",
+      "customize": "Personnaliser",
+      "system": "Préréglage Système",
+      "custom": "Préréglage Personnalisé"
+    }
+  },
+  "navigation": {
+    "myCustomActivities": "Mes Activités"
   }
 }
