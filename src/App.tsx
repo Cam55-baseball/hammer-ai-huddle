@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
+import { SportThemeProvider } from "./contexts/SportThemeContext";
 
 // Clean up cache-busting param after successful load
 const cleanupCacheBustParam = () => {
@@ -82,13 +83,14 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ErrorBoundary>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Suspense fallback={<PageLoadingSkeleton />}>
-            <Routes>
+    <SportThemeProvider>
+      <TooltipProvider>
+        <ErrorBoundary>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Suspense fallback={<PageLoadingSkeleton />}>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -122,11 +124,12 @@ const App = () => {
               <Route path="/tex-vision" element={<TexVision />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </ErrorBoundary>
-    </TooltipProvider>
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </ErrorBoundary>
+      </TooltipProvider>
+    </SportThemeProvider>
   </QueryClientProvider>
   );
 };

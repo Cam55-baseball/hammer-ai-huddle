@@ -157,6 +157,57 @@ All colors MUST be HSL.
     --sidebar-border: 0 0% 18%;
     --sidebar-ring: 0 100% 50%;
   }
+
+  /* ============================================
+     SOFTBALL THEME - Sport-Specific Colors
+     Red → Light Pink, Amber → Light Yellow
+     Only applies when data-sport="softball"
+     ============================================ */
+  
+  [data-sport="softball"] {
+    /* Primary: Light Pink instead of Athletic Red */
+    --primary: 330 65% 75%;
+    --primary-foreground: 0 0% 10%;
+    --primary-glow: 330 70% 80%;
+    
+    /* Accent: Light Pink to match */
+    --accent: 330 65% 75%;
+    --accent-foreground: 0 0% 10%;
+    
+    /* Ring: Light Pink */
+    --ring: 330 65% 75%;
+    
+    /* Gradients with pink tones */
+    --gradient-hero: linear-gradient(135deg, hsl(330 65% 75%), hsl(330 50% 60%));
+    --shadow-athletic: 0 20px 40px -15px hsl(330 65% 75% / 0.3);
+    --shadow-glow: 0 0 40px hsl(330 65% 75% / 0.4);
+    
+    /* Sidebar: Light Pink */
+    --sidebar-primary: 330 65% 75%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-ring: 330 65% 75%;
+  }
+
+  /* Softball Dark Mode */
+  .dark[data-sport="softball"],
+  [data-sport="softball"].dark {
+    --primary: 330 60% 70%;
+    --primary-foreground: 0 0% 10%;
+    --primary-glow: 330 65% 75%;
+    
+    --accent: 330 60% 70%;
+    --accent-foreground: 0 0% 10%;
+    
+    --ring: 330 60% 70%;
+    
+    --gradient-hero: linear-gradient(135deg, hsl(330 60% 65%), hsl(330 45% 50%));
+    --shadow-athletic: 0 20px 40px -15px hsl(330 60% 70% / 0.4);
+    --shadow-glow: 0 0 40px hsl(330 60% 70% / 0.5);
+    
+    --sidebar-primary: 330 60% 70%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-ring: 330 60% 70%;
+  }
 }
 
 @layer base {

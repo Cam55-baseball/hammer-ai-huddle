@@ -10,6 +10,7 @@ import { useScoutAccess } from "@/hooks/useScoutAccess";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useVaultPendingStatus } from "@/hooks/useVaultPendingStatus";
+import { useSportTheme } from "@/contexts/SportThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { branding } from "@/branding";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -91,6 +92,7 @@ export function AppSidebar() {
   const { isScout } = useScoutAccess();
   const { modules } = useSubscription();
   const { hasPendingItems, pendingCount } = useVaultPendingStatus();
+  const { isSoftball } = useSportTheme();
   const [ownerProfile, setOwnerProfile] = useState<OwnerProfile | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [ownerBioOpen, setOwnerBioOpen] = useState(false);
@@ -457,19 +459,25 @@ export function AppSidebar() {
                   onClick={() => navigate("/vault")}
                   isActive={isActive("/vault")}
                   tooltip={t('navigation.vault', 'The Vault')}
-                  className={`group sidebar-item-hover relative bg-gradient-to-r from-amber-500/10 to-yellow-500/10 hover:from-amber-500/20 hover:to-yellow-500/20 ${
-                    hasVaultAccess && hasPendingItems ? 'animate-vault-pulse' : ''
-                  }`}
+                  className={`group sidebar-item-hover relative ${
+                    isSoftball 
+                      ? 'bg-gradient-to-r from-yellow-200/10 to-yellow-100/10 hover:from-yellow-200/20 hover:to-yellow-100/20'
+                      : 'bg-gradient-to-r from-amber-500/10 to-yellow-500/10 hover:from-amber-500/20 hover:to-yellow-500/20'
+                  } ${hasVaultAccess && hasPendingItems ? 'animate-vault-pulse' : ''}`}
                 >
                   {isActive("/vault") && <span className="sidebar-active-indicator" />}
                   {hasVaultAccess ? (
-                    <Star className="h-4 w-4 text-amber-500 sidebar-icon transition-all duration-200 group-hover:scale-110" />
+                    <Star className={`h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 ${
+                      isSoftball ? 'text-yellow-300' : 'text-amber-500'
+                    }`} />
                   ) : (
                     <Lock className="h-4 w-4 text-muted-foreground sidebar-icon transition-all duration-200 group-hover:scale-110" />
                   )}
                   <span className="font-medium transition-colors duration-200">{t('navigation.vault', 'The Vault')}</span>
                   {hasVaultAccess && hasPendingItems && pendingCount > 0 && (
-                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
+                    <span className={`ml-auto flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                      isSoftball ? 'bg-yellow-300 text-black' : 'bg-amber-500 text-white'
+                    }`}>
                       {pendingCount > 9 ? '9+' : pendingCount}
                     </span>
                   )}
