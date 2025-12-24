@@ -4254,6 +4254,20 @@
     "clearFrames": "Wissen",
     "framesCleared": "Frames gewist",
     "orientationWarning": "Vermijd het draaien van je apparaat tijdens opname!",
-    "orientationHint": "Dit kan je sessie onderbreken."
+    "orientationHint": "Dit kan je sessie onderbreken.",
+    "statusUploading": "Uploaden...",
+    "statusExtracting": "Frames extraheren...",
+    "statusAnalyzing": "AI analyseert...",
+    "statusComplete": "Analyse gereed",
+    "statusFailed": "Analyse mislukt",
+    "statusLocalOnly": "Lokale modus",
+    "statusDisabled": "Analyse uit",
+    "retryAnalysis": "Analyse opnieuw proberen",
+    "analysisHint": "Dit kan enkele seconden duren",
+    "uploadFailed": "Video uploaden mislukt",
+    "saveFailed": "Video record opslaan mislukt",
+    "analysisFailed": "AI-analyse mislukt",
+    "frameExtractionFailed": "Video frames extraheren mislukt",
+    "unexpectedError": "Er is een onverwachte fout opgetreden"
   }
 }

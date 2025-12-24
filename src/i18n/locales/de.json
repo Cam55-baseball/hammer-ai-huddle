@@ -4955,6 +4955,20 @@
     "clearFrames": "Löschen",
     "framesCleared": "Bilder gelöscht",
     "orientationWarning": "Vermeiden Sie das Drehen Ihres Geräts während der Aufnahme!",
-    "orientationHint": "Dies kann Ihre Sitzung unterbrechen."
+    "orientationHint": "Dies kann Ihre Sitzung unterbrechen.",
+    "statusUploading": "Hochladen...",
+    "statusExtracting": "Frames extrahieren...",
+    "statusAnalyzing": "KI analysiert...",
+    "statusComplete": "Analyse bereit",
+    "statusFailed": "Analyse fehlgeschlagen",
+    "statusLocalOnly": "Lokaler Modus",
+    "statusDisabled": "Analyse aus",
+    "retryAnalysis": "Analyse wiederholen",
+    "analysisHint": "Dies kann einige Sekunden dauern",
+    "uploadFailed": "Video-Upload fehlgeschlagen",
+    "saveFailed": "Speichern des Videodatensatzes fehlgeschlagen",
+    "analysisFailed": "KI-Analyse fehlgeschlagen",
+    "frameExtractionFailed": "Extraktion der Videoframes fehlgeschlagen",
+    "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten"
   }
 }

@@ -4354,6 +4354,20 @@
     "clearFrames": "クリア",
     "framesCleared": "フレームをクリアしました",
     "orientationWarning": "録画中はデバイスを回転させないでください！",
-    "orientationHint": "セッションが中断される可能性があります。"
+    "orientationHint": "セッションが中断される可能性があります。",
+    "statusUploading": "アップロード中...",
+    "statusExtracting": "フレーム抽出中...",
+    "statusAnalyzing": "AI分析中...",
+    "statusComplete": "分析完了",
+    "statusFailed": "分析失敗",
+    "statusLocalOnly": "ローカルモード",
+    "statusDisabled": "分析オフ",
+    "retryAnalysis": "分析を再試行",
+    "analysisHint": "数秒かかる場合があります",
+    "uploadFailed": "動画のアップロードに失敗しました",
+    "saveFailed": "動画レコードの保存に失敗しました",
+    "analysisFailed": "AI分析に失敗しました",
+    "frameExtractionFailed": "動画フレームの抽出に失敗しました",
+    "unexpectedError": "予期しないエラーが発生しました"
   }
 }

@@ -4198,6 +4198,20 @@
     "clearFrames": "清除",
     "framesCleared": "帧已清除",
     "orientationWarning": "录制过程中请勿旋转设备！",
-    "orientationHint": "这可能会中断您的会话。"
+    "orientationHint": "这可能会中断您的会话。",
+    "statusUploading": "上传中...",
+    "statusExtracting": "提取帧...",
+    "statusAnalyzing": "AI分析中...",
+    "statusComplete": "分析完成",
+    "statusFailed": "分析失败",
+    "statusLocalOnly": "本地模式",
+    "statusDisabled": "分析已关闭",
+    "retryAnalysis": "重试分析",
+    "analysisHint": "这可能需要几秒钟",
+    "uploadFailed": "视频上传失败",
+    "saveFailed": "保存视频记录失败",
+    "analysisFailed": "AI分析失败",
+    "frameExtractionFailed": "提取视频帧失败",
+    "unexpectedError": "发生意外错误"
   }
 }

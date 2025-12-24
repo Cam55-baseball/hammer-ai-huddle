@@ -4241,6 +4241,20 @@
     "clearFrames": "지우기",
     "framesCleared": "프레임이 지워졌습니다",
     "orientationWarning": "녹화 중에는 기기를 회전하지 마세요!",
-    "orientationHint": "세션이 중단될 수 있습니다."
+    "orientationHint": "세션이 중단될 수 있습니다.",
+    "statusUploading": "업로드 중...",
+    "statusExtracting": "프레임 추출 중...",
+    "statusAnalyzing": "AI 분석 중...",
+    "statusComplete": "분석 완료",
+    "statusFailed": "분석 실패",
+    "statusLocalOnly": "로컬 모드",
+    "statusDisabled": "분석 꺼짐",
+    "retryAnalysis": "분석 재시도",
+    "analysisHint": "몇 초 정도 걸릴 수 있습니다",
+    "uploadFailed": "동영상 업로드 실패",
+    "saveFailed": "동영상 기록 저장 실패",
+    "analysisFailed": "AI 분석 실패",
+    "frameExtractionFailed": "동영상 프레임 추출 실패",
+    "unexpectedError": "예상치 못한 오류가 발생했습니다"
   }
 }

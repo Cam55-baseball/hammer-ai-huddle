@@ -4955,6 +4955,20 @@
     "clearFrames": "Effacer",
     "framesCleared": "Images effacées",
     "orientationWarning": "Évitez de tourner votre appareil pendant l'enregistrement !",
-    "orientationHint": "Cela peut interrompre votre session."
+    "orientationHint": "Cela peut interrompre votre session.",
+    "statusUploading": "Téléchargement...",
+    "statusExtracting": "Extraction des images...",
+    "statusAnalyzing": "Analyse IA...",
+    "statusComplete": "Analyse prête",
+    "statusFailed": "Échec de l'analyse",
+    "statusLocalOnly": "Mode local",
+    "statusDisabled": "Analyse désactivée",
+    "retryAnalysis": "Réessayer l'analyse",
+    "analysisHint": "Cela peut prendre quelques secondes",
+    "uploadFailed": "Échec du téléchargement de la vidéo",
+    "saveFailed": "Échec de l'enregistrement de la vidéo",
+    "analysisFailed": "L'analyse IA a échoué",
+    "frameExtractionFailed": "Échec de l'extraction des images vidéo",
+    "unexpectedError": "Une erreur inattendue s'est produite"
   }
 }
