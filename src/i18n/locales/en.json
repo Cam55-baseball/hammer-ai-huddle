@@ -5928,14 +5928,36 @@
       "flexibility": "Flexibility",
       "plyometric": "Plyometric",
       "core": "Core",
-      "warmup": "Warm-up"
+      "warmup": "Warm-up",
+      "baseball": "Baseball/Softball"
     },
     "exerciseDetails": {
       "sets": "Sets",
       "reps": "Reps",
       "duration": "Duration",
       "rest": "Rest"
+    },
+    "superset": {
+      "createSuperset": "Create Superset",
+      "selectExercises": "Select 2-3 exercises",
+      "ungroup": "Ungroup",
+      "sharedRest": "Shared Rest",
+      "grouped": "Group"
+    },
+    "warmup": {
+      "title": "AI Warmup Generator",
+      "generate": "Generate Warmup",
+      "generating": "Generating...",
+      "addToStart": "Add to Start",
+      "basedOn": "Based on your workout exercises"
     }
+  },
+  "workoutTemplates": {
+    "title": "Workout Library",
+    "subtitle": "Pre-built baseball training programs",
+    "preview": "Preview",
+    "useTemplate": "Use Template",
+    "templateLoaded": "Template loaded!"
   },
   "aiRecommendations": {
     "title": "AI Recommendations",

@@ -5291,14 +5291,36 @@
       "flexibility": "Flexibilität",
       "plyometric": "Plyometrie",
       "core": "Core",
-      "warmup": "Aufwärmen"
+      "warmup": "Aufwärmen",
+      "baseball": "Baseball/Softball"
     },
     "exerciseDetails": {
       "sets": "Sätze",
       "reps": "Wdh.",
       "duration": "Dauer",
       "rest": "Pause"
+    },
+    "superset": {
+      "createSuperset": "Supersatz erstellen",
+      "selectExercises": "2-3 Übungen auswählen",
+      "ungroup": "Gruppierung aufheben",
+      "sharedRest": "Gemeinsame Pause",
+      "grouped": "Gruppe"
+    },
+    "warmup": {
+      "title": "KI-Aufwärm-Generator",
+      "generate": "Aufwärmen generieren",
+      "generating": "Generiere...",
+      "addToStart": "Am Anfang hinzufügen",
+      "basedOn": "Basierend auf deinen Übungen"
     }
+  },
+  "workoutTemplates": {
+    "title": "Workout-Bibliothek",
+    "subtitle": "Vorgefertigte Baseball-Trainingsprogramme",
+    "preview": "Vorschau",
+    "useTemplate": "Vorlage verwenden",
+    "templateLoaded": "Vorlage geladen!"
   },
   "aiRecommendations": {
     "title": "KI-Empfehlungen",
