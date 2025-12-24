@@ -269,8 +269,10 @@ export const useUserColors = (selectedSport?: string) => {
         return {
           ...defaults,
           gamePlan: {
-            ...defaults.gamePlan,
             pending: generateColorScheme('#0ea5e9'),
+            completed: generateColorScheme('#10b981'),
+            texVision: generateColorScheme('#06b6d4'),
+            tracking: generateColorScheme('#3b82f6'),
           },
           modules: {
             hitting: '#0ea5e9',
@@ -286,8 +288,10 @@ export const useUserColors = (selectedSport?: string) => {
         return {
           ...defaults,
           gamePlan: {
-            ...defaults.gamePlan,
             pending: generateColorScheme('#f97316'),
+            completed: generateColorScheme('#22c55e'),
+            texVision: generateColorScheme('#ec4899'),
+            tracking: generateColorScheme('#f43f5e'),
           },
           modules: {
             hitting: '#f97316',
@@ -303,8 +307,10 @@ export const useUserColors = (selectedSport?: string) => {
         return {
           ...defaults,
           gamePlan: {
-            ...defaults.gamePlan,
             pending: generateColorScheme('#22c55e'),
+            completed: generateColorScheme('#14b8a6'),
+            texVision: generateColorScheme('#10b981'),
+            tracking: generateColorScheme('#84cc16'),
           },
           modules: {
             hitting: '#22c55e',
@@ -320,8 +326,10 @@ export const useUserColors = (selectedSport?: string) => {
         return {
           ...defaults,
           gamePlan: {
-            ...defaults.gamePlan,
             pending: generateColorScheme('#8b5cf6'),
+            completed: generateColorScheme('#10b981'),
+            texVision: generateColorScheme('#6366f1'),
+            tracking: generateColorScheme('#a855f7'),
           },
           modules: {
             hitting: '#8b5cf6',
