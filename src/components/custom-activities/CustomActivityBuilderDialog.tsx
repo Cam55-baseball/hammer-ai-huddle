@@ -274,10 +274,7 @@ export function CustomActivityBuilderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(
-        "max-h-[90vh] p-0",
-        activityType === 'workout' ? "max-w-4xl" : "max-w-2xl"
-      )}>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-black">
             {isEditing ? t('customActivity.edit') : t('customActivity.create')}
@@ -561,12 +558,10 @@ export function CustomActivityBuilderDialog({
                   
                   {/* Exercise Builder - Drag-and-drop for workout type, standard for others */}
                   {activityType === 'workout' ? (
-                    <div className="h-[400px]">
-                      <DragDropExerciseBuilder 
-                        exercises={exercises} 
-                        onExercisesChange={setExercises} 
-                      />
-                    </div>
+                    <DragDropExerciseBuilder 
+                      exercises={exercises} 
+                      onExercisesChange={setExercises} 
+                    />
                   ) : (
                     <ExerciseBuilder exercises={exercises} onChange={setExercises} />
                   )}

@@ -330,8 +330,8 @@ export function WorkoutTimeline({ exercises, onExercisesChange, onRemoveExercise
   }, 0) / 60;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="p-3 border-b space-y-2 shrink-0">
+    <div className="flex flex-col h-full">
+      <div className="p-3 border-b space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-sm">{t('workoutBuilder.timeline')}</h3>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -382,17 +382,17 @@ export function WorkoutTimeline({ exercises, onExercisesChange, onRemoveExercise
         </div>
       </div>
 
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea className="flex-1">
         <div
           ref={setNodeRef}
           className={cn(
-            "p-3 min-h-[200px] transition-colors",
+            "p-3 min-h-[300px] transition-colors",
             isOver && "bg-primary/5 ring-2 ring-primary/20 ring-inset rounded-lg"
           )}
         >
           {exercises.length === 0 ? (
             <div className={cn(
-              "flex flex-col items-center justify-center h-[180px] border-2 border-dashed rounded-lg",
+              "flex flex-col items-center justify-center h-[280px] border-2 border-dashed rounded-lg",
               "text-muted-foreground",
               isOver ? "border-primary bg-primary/5" : "border-muted-foreground/20"
             )}>
