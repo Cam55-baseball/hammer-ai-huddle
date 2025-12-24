@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Star, Save, Trash2 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Star, Save, Trash2, ChevronDown, Footprints } from 'lucide-react';
 import { ActivityTypeSelector } from './ActivityTypeSelector';
 import { IconPicker } from './IconPicker';
 import { ColorPicker } from './ColorPicker';
@@ -66,7 +67,18 @@ export function CustomActivityBuilderDialog({
   const [timeGoalHours, setTimeGoalHours] = useState<number | undefined>();
   const [timeGoalMinutes, setTimeGoalMinutes] = useState<number | undefined>();
   const [timeGoalSeconds, setTimeGoalSeconds] = useState<number | undefined>();
+  const [timeGoalTenths, setTimeGoalTenths] = useState<number | undefined>();
   const [paceGoal, setPaceGoal] = useState<string>('');
+  
+  // Embedded running session for non-running activity types
+  const [includeRunning, setIncludeRunning] = useState(false);
+  const [embeddedRunningDistance, setEmbeddedRunningDistance] = useState<number | undefined>();
+  const [embeddedRunningDistanceUnit, setEmbeddedRunningDistanceUnit] = useState<string>('miles');
+  const [embeddedTimeGoalHours, setEmbeddedTimeGoalHours] = useState<number | undefined>();
+  const [embeddedTimeGoalMinutes, setEmbeddedTimeGoalMinutes] = useState<number | undefined>();
+  const [embeddedTimeGoalSeconds, setEmbeddedTimeGoalSeconds] = useState<number | undefined>();
+  const [embeddedTimeGoalTenths, setEmbeddedTimeGoalTenths] = useState<number | undefined>();
+  const [embeddedPaceGoal, setEmbeddedPaceGoal] = useState<string>('');
 
   useEffect(() => {
     if (template) {
@@ -85,14 +97,33 @@ export function CustomActivityBuilderDialog({
       setIsFavorited(template.is_favorited);
       setRecurringDays(template.recurring_days || []);
       setRecurringActive(template.recurring_active);
-      // Parse time goal if stored in pace_value
-      if (template.pace_value) {
-        const parts = template.pace_value.split(':');
+      // Parse time goal if stored in pace_value (format: H:MM:SS.T)
+      if (template.pace_value && template.pace_value.includes(':')) {
+        const [timePart, tenthsPart] = template.pace_value.split('.');
+        const parts = timePart.split(':');
         if (parts.length === 3) {
           setTimeGoalHours(parseInt(parts[0]) || undefined);
           setTimeGoalMinutes(parseInt(parts[1]) || undefined);
           setTimeGoalSeconds(parseInt(parts[2]) || undefined);
+          setTimeGoalTenths(parseInt(tenthsPart) || undefined);
         }
+      }
+      // Parse embedded running data
+      if (template.embedded_running) {
+        setIncludeRunning(true);
+        setEmbeddedRunningDistance(template.embedded_running.distance_value);
+        setEmbeddedRunningDistanceUnit(template.embedded_running.distance_unit || 'miles');
+        if (template.embedded_running.time_goal) {
+          const [timePart, tenthsPart] = template.embedded_running.time_goal.split('.');
+          const parts = timePart.split(':');
+          if (parts.length === 3) {
+            setEmbeddedTimeGoalHours(parseInt(parts[0]) || undefined);
+            setEmbeddedTimeGoalMinutes(parseInt(parts[1]) || undefined);
+            setEmbeddedTimeGoalSeconds(parseInt(parts[2]) || undefined);
+            setEmbeddedTimeGoalTenths(parseInt(tenthsPart) || undefined);
+          }
+        }
+        setEmbeddedPaceGoal(template.embedded_running.pace_goal || '');
       }
     } else if (presetActivityType) {
       setActivityType(presetActivityType);
@@ -113,7 +144,16 @@ export function CustomActivityBuilderDialog({
       setTimeGoalHours(undefined);
       setTimeGoalMinutes(undefined);
       setTimeGoalSeconds(undefined);
+      setTimeGoalTenths(undefined);
       setPaceGoal('');
+      setIncludeRunning(false);
+      setEmbeddedRunningDistance(undefined);
+      setEmbeddedRunningDistanceUnit('miles');
+      setEmbeddedTimeGoalHours(undefined);
+      setEmbeddedTimeGoalMinutes(undefined);
+      setEmbeddedTimeGoalSeconds(undefined);
+      setEmbeddedTimeGoalTenths(undefined);
+      setEmbeddedPaceGoal('');
     } else {
       setActivityType(null);
       setTitle('');
@@ -133,7 +173,16 @@ export function CustomActivityBuilderDialog({
       setTimeGoalHours(undefined);
       setTimeGoalMinutes(undefined);
       setTimeGoalSeconds(undefined);
+      setTimeGoalTenths(undefined);
       setPaceGoal('');
+      setIncludeRunning(false);
+      setEmbeddedRunningDistance(undefined);
+      setEmbeddedRunningDistanceUnit('miles');
+      setEmbeddedTimeGoalHours(undefined);
+      setEmbeddedTimeGoalMinutes(undefined);
+      setEmbeddedTimeGoalSeconds(undefined);
+      setEmbeddedTimeGoalTenths(undefined);
+      setEmbeddedPaceGoal('');
     }
   }, [template, presetActivityType, open]);
 
@@ -141,10 +190,27 @@ export function CustomActivityBuilderDialog({
     if (!activityType || !title.trim()) return;
     setSaving(true);
     
-    // Combine time goal into pace_value
+    // Combine time goal into pace_value (format: H:MM:SS.T)
     let paceValue: string | undefined;
-    if (timeGoalHours || timeGoalMinutes || timeGoalSeconds) {
-      paceValue = `${timeGoalHours || 0}:${timeGoalMinutes || 0}:${timeGoalSeconds || 0}`;
+    if (timeGoalHours || timeGoalMinutes || timeGoalSeconds || timeGoalTenths) {
+      const timeStr = `${timeGoalHours || 0}:${String(timeGoalMinutes || 0).padStart(2, '0')}:${String(timeGoalSeconds || 0).padStart(2, '0')}`;
+      paceValue = timeGoalTenths ? `${timeStr}.${timeGoalTenths}` : timeStr;
+    }
+    
+    // Build embedded running data if enabled
+    let embeddedRunning: any = undefined;
+    if (includeRunning && activityType !== 'running') {
+      let embeddedTimeGoal: string | undefined;
+      if (embeddedTimeGoalHours || embeddedTimeGoalMinutes || embeddedTimeGoalSeconds || embeddedTimeGoalTenths) {
+        const timeStr = `${embeddedTimeGoalHours || 0}:${String(embeddedTimeGoalMinutes || 0).padStart(2, '0')}:${String(embeddedTimeGoalSeconds || 0).padStart(2, '0')}`;
+        embeddedTimeGoal = embeddedTimeGoalTenths ? `${timeStr}.${embeddedTimeGoalTenths}` : timeStr;
+      }
+      embeddedRunning = {
+        distance_value: embeddedRunningDistance,
+        distance_unit: embeddedRunningDistanceUnit,
+        time_goal: embeddedTimeGoal,
+        pace_goal: embeddedPaceGoal || undefined,
+      };
     }
     
     try {
@@ -160,13 +226,14 @@ export function CustomActivityBuilderDialog({
         duration_minutes: durationMinutes,
         intensity,
         distance_value: distanceValue,
-        distance_unit: distanceUnit as 'miles' | 'km',
+        distance_unit: distanceUnit as 'feet' | 'yards' | 'meters' | 'miles' | 'kilometers',
         pace_value: paceValue || paceGoal || undefined,
         intervals: [] as RunningInterval[],
         is_favorited: isFavorited,
         recurring_days: recurringDays,
         recurring_active: recurringActive,
         sport: selectedSport,
+        embedded_running: embeddedRunning,
       });
       onOpenChange(false);
     } finally {
@@ -184,6 +251,7 @@ export function CustomActivityBuilderDialog({
   // Type-specific content
   const showMealBuilder = activityType === 'meal';
   const showRunningFields = activityType === 'running';
+  const showEmbeddedRunningOption = activityType && !showRunningFields && activityType !== 'meal';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -265,7 +333,7 @@ export function CustomActivityBuilderDialog({
                     
                     <div className="space-y-2">
                       <Label className="text-sm font-bold">{t('customActivity.running.timeGoal')}</Label>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-4 gap-2">
                         <div className="space-y-1">
                           <Label className="text-xs text-muted-foreground">{t('customActivity.running.hours')}</Label>
                           <Input type="number" value={timeGoalHours || ''} onChange={(e) => setTimeGoalHours(parseInt(e.target.value) || undefined)} placeholder="0" min={0} />
@@ -277,6 +345,10 @@ export function CustomActivityBuilderDialog({
                         <div className="space-y-1">
                           <Label className="text-xs text-muted-foreground">{t('customActivity.running.seconds')}</Label>
                           <Input type="number" value={timeGoalSeconds || ''} onChange={(e) => setTimeGoalSeconds(parseInt(e.target.value) || undefined)} placeholder="0" min={0} max={59} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs text-muted-foreground">{t('customActivity.running.tenths')}</Label>
+                          <Input type="number" value={timeGoalTenths || ''} onChange={(e) => setTimeGoalTenths(parseInt(e.target.value) || undefined)} placeholder="0" min={0} max={9} />
                         </div>
                       </div>
                     </div>
@@ -297,6 +369,69 @@ export function CustomActivityBuilderDialog({
 
                 {/* Type-specific builders */}
                 {showMealBuilder && <MealBuilder meals={meals} onChange={setMeals} />}
+                
+                {/* Embedded Running Session - for workout, recovery, practice, warmup, etc. */}
+                {showEmbeddedRunningOption && (
+                  <Collapsible open={includeRunning} onOpenChange={setIncludeRunning}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Footprints className="h-4 w-4" />
+                          {t('customActivity.running.addRunningSession')}
+                        </div>
+                        <ChevronDown className={cn("h-4 w-4 transition-transform", includeRunning && "rotate-180")} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-4 space-y-4">
+                      <div className="p-4 rounded-lg border bg-muted/30 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm font-bold">{t('customActivity.fields.distance')}</Label>
+                            <Input type="number" value={embeddedRunningDistance || ''} onChange={(e) => setEmbeddedRunningDistance(parseFloat(e.target.value) || undefined)} placeholder="3.0" step={0.1} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-sm font-bold">{t('customActivity.running.distanceUnit')}</Label>
+                            <Select value={embeddedRunningDistanceUnit} onValueChange={setEmbeddedRunningDistanceUnit}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {DISTANCE_UNITS.map(unit => (
+                                  <SelectItem key={unit} value={unit}>{t(`customActivity.running.units.${unit}`)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-sm font-bold">{t('customActivity.running.timeGoal')}</Label>
+                          <div className="grid grid-cols-4 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">{t('customActivity.running.hours')}</Label>
+                              <Input type="number" value={embeddedTimeGoalHours || ''} onChange={(e) => setEmbeddedTimeGoalHours(parseInt(e.target.value) || undefined)} placeholder="0" min={0} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">{t('customActivity.running.minutes')}</Label>
+                              <Input type="number" value={embeddedTimeGoalMinutes || ''} onChange={(e) => setEmbeddedTimeGoalMinutes(parseInt(e.target.value) || undefined)} placeholder="30" min={0} max={59} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">{t('customActivity.running.seconds')}</Label>
+                              <Input type="number" value={embeddedTimeGoalSeconds || ''} onChange={(e) => setEmbeddedTimeGoalSeconds(parseInt(e.target.value) || undefined)} placeholder="0" min={0} max={59} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">{t('customActivity.running.tenths')}</Label>
+                              <Input type="number" value={embeddedTimeGoalTenths || ''} onChange={(e) => setEmbeddedTimeGoalTenths(parseInt(e.target.value) || undefined)} placeholder="0" min={0} max={9} />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-sm font-bold">{t('customActivity.running.paceGoal')}</Label>
+                          <Input value={embeddedPaceGoal} onChange={(e) => setEmbeddedPaceGoal(e.target.value)} placeholder={t('customActivity.running.paceGoalPlaceholder')} />
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
 
                 <Separator className="my-4" />
                 

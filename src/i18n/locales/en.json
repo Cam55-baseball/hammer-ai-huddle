@@ -1,4 +1,10 @@
 {
+  "customActivity": {
+    "running": {
+      "tenths": "Tenths",
+      "addRunningSession": "Add Running Session"
+    }
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
