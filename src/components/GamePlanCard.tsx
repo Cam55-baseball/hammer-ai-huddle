@@ -602,47 +602,45 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             'bg-purple-500/30'
           )}
 
-          {/* Custom Activities Section */}
-          {(customTasks.length > 0 || favorites.length > 0) && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
-                <span className="h-px flex-1 bg-emerald-500/30" />
-                {t('gamePlan.sections.customActivities')}
-                <span className="h-px flex-1 bg-emerald-500/30" />
-              </h3>
-              
-              <div className="flex gap-2 justify-center pb-2">
+          {/* Custom Activities Section - Always visible */}
+          <div className="space-y-2">
+            <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+              <span className="h-px flex-1 bg-emerald-500/30" />
+              {t('gamePlan.sections.customActivities')}
+              <span className="h-px flex-1 bg-emerald-500/30" />
+            </h3>
+            
+            <div className="flex gap-2 justify-center pb-2">
+              <Button
+                size="sm"
+                onClick={() => { setEditingTemplate(null); setBuilderOpen(true); }}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+              >
+                <Plus className="h-4 w-4" />
+                {t('customActivity.createNew')}
+              </Button>
+              {favorites.length > 0 && (
                 <Button
                   size="sm"
-                  onClick={() => { setEditingTemplate(null); setBuilderOpen(true); }}
-                  className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                  variant="outline"
+                  onClick={() => setFavoritesDrawerOpen(true)}
+                  className="gap-2 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
                 >
-                  <Plus className="h-4 w-4" />
-                  {t('customActivity.createNew')}
+                  <Star className="h-4 w-4 fill-yellow-500" />
+                  {t('customActivity.quickAdd')}
                 </Button>
-                {favorites.length > 0 && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setFavoritesDrawerOpen(true)}
-                    className="gap-2 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
-                  >
-                    <Star className="h-4 w-4 fill-yellow-500" />
-                    {t('customActivity.quickAdd')}
-                  </Button>
-                )}
-              </div>
-              
-              {renderTaskSection(
-                customTasks,
-                orderedCustom,
-                handleReorderCustom,
-                '',
-                'text-emerald-400',
-                'bg-emerald-500/30'
               )}
             </div>
-          )}
+            
+            {customTasks.length > 0 && renderTaskSection(
+              customTasks,
+              orderedCustom,
+              handleReorderCustom,
+              '',
+              'text-emerald-400',
+              'bg-emerald-500/30'
+            )}
+          </div>
         </div>
 
       </CardContent>
