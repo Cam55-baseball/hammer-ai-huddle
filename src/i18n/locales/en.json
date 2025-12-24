@@ -5609,8 +5609,11 @@
   },
   "customActivity": {
     "title": "Custom Activities",
+    "create": "Create Activity",
+    "edit": "Edit Activity",
     "createNew": "Create Custom",
     "quickAdd": "Quick Add",
+    "selectType": "Select Activity Type",
     "badge": "CUSTOM",
     "addedToToday": "Added to today's game plan",
     "markedComplete": "Activity completed!",
@@ -5626,17 +5629,29 @@
       "recovery": "Recovery Routine",
       "practice": "Full Practice",
       "shortPractice": "Short Practice",
-      "freeSession": "Free Session"
+      "freeSession": "Free Session",
+      "short_practice": "Short Practice",
+      "free_session": "Free Session"
     },
     "fields": {
       "title": "Activity Title",
+      "name": "Activity Name",
+      "namePlaceholder": "Enter activity name...",
       "description": "Description",
+      "descriptionPlaceholder": "Optional description...",
       "duration": "Duration (minutes)",
       "intensity": "Intensity",
+      "selectIntensity": "Select intensity level",
       "distance": "Distance",
+      "distanceUnit": "Unit",
       "notes": "Notes",
       "selectType": "Select activity type",
-      "enterTitle": "Enter a title..."
+      "enterTitle": "Enter a title...",
+      "icon": "Icon",
+      "color": "Color",
+      "sets": "Sets",
+      "reps": "Reps",
+      "rest": "Rest"
     },
     "intensity": {
       "light": "Light",
@@ -5647,6 +5662,8 @@
     "recurring": {
       "title": "Repeat Weekly",
       "active": "Recurring Active",
+      "label": "Recurring",
+      "everyWeek": "Repeats every week on {{days}}",
       "days": {
         "sun": "Sun",
         "mon": "Mon",
@@ -5661,28 +5678,68 @@
     "isFavorited": "Favorited",
     "exercises": {
       "title": "Exercises",
+      "add": "Add Exercise",
       "addExercise": "Add Exercise",
       "name": "Exercise Name",
+      "namePlaceholder": "Exercise name...",
+      "type": "Type",
       "sets": "Sets",
       "reps": "Reps",
       "duration": "Duration (sec)",
       "rest": "Rest (sec)",
       "weight": "Weight",
-      "notes": "Notes"
+      "weightUnit": "Unit",
+      "notes": "Notes",
+      "notesPlaceholder": "Optional notes...",
+      "empty": "No exercises yet. Add one above.",
+      "types": {
+        "strength": "Strength",
+        "cardio": "Cardio",
+        "flexibility": "Flexibility",
+        "plyometric": "Plyometric",
+        "other": "Other"
+      }
     },
     "meals": {
       "title": "Meal Items",
+      "food": "Food",
+      "addFood": "Add Food Item",
+      "foodName": "Food name...",
+      "emptyFood": "No food items yet",
       "addItem": "Add Item",
       "vitamins": "Vitamins",
+      "addVitamin": "Add Vitamin",
+      "vitaminName": "Vitamin name...",
+      "emptyVitamins": "No vitamins added",
       "supplements": "Supplements",
+      "addSupplement": "Add Supplement",
+      "supplementName": "Supplement name...",
+      "dosage": "Dosage",
+      "emptySupplements": "No supplements added",
       "itemName": "Item Name",
-      "portion": "Portion"
+      "portion": "Portion",
+      "timing": {
+        "morning": "Morning",
+        "afternoon": "Afternoon",
+        "evening": "Evening",
+        "withMeal": "With Meal"
+      }
     },
     "customFields": {
       "title": "Custom Fields",
+      "add": "Add Field",
       "addField": "Add Field",
       "fieldLabel": "Field Label",
-      "fieldValue": "Value"
+      "labelPlaceholder": "Field label...",
+      "fieldValue": "Value",
+      "valuePlaceholder": "Value...",
+      "empty": "No custom fields yet",
+      "types": {
+        "text": "Text",
+        "number": "Number",
+        "time": "Time",
+        "checkbox": "Checkbox"
+      }
     },
     "icon": "Icon",
     "color": "Color",

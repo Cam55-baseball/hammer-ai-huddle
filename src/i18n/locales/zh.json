@@ -4230,8 +4230,11 @@
   },
   "customActivity": {
     "title": "自定义活动",
+    "create": "创建活动",
+    "edit": "编辑活动",
     "createNew": "创建新活动",
     "quickAdd": "快速添加",
+    "selectType": "选择活动类型",
     "badge": "自定义",
     "addedToToday": "已添加到今日计划",
     "markedComplete": "活动已完成！",
@@ -4247,17 +4250,29 @@
       "recovery": "恢复训练",
       "practice": "完整练习",
       "shortPractice": "简短练习",
-      "freeSession": "自由活动"
+      "freeSession": "自由活动",
+      "short_practice": "简短练习",
+      "free_session": "自由活动"
     },
     "fields": {
       "title": "活动标题",
+      "name": "活动名称",
+      "namePlaceholder": "输入活动名称...",
       "description": "描述",
+      "descriptionPlaceholder": "可选描述...",
       "duration": "时长（分钟）",
       "intensity": "强度",
+      "selectIntensity": "选择强度级别",
       "distance": "距离",
+      "distanceUnit": "单位",
       "notes": "备注",
       "selectType": "选择活动类型",
-      "enterTitle": "输入标题..."
+      "enterTitle": "输入标题...",
+      "icon": "图标",
+      "color": "颜色",
+      "sets": "组数",
+      "reps": "次数",
+      "rest": "休息"
     },
     "intensity": {
       "light": "轻度",
@@ -4268,6 +4283,8 @@
     "recurring": {
       "title": "每周重复",
       "active": "重复已启用",
+      "label": "重复",
+      "everyWeek": "每周{{days}}重复",
       "days": {
         "sun": "日",
         "mon": "一",
@@ -4282,28 +4299,68 @@
     "isFavorited": "已收藏",
     "exercises": {
       "title": "练习项目",
+      "add": "添加练习",
       "addExercise": "添加练习",
       "name": "练习名称",
+      "namePlaceholder": "练习名称...",
+      "type": "类型",
       "sets": "组数",
       "reps": "次数",
       "duration": "时长（秒）",
       "rest": "休息（秒）",
       "weight": "重量",
-      "notes": "备注"
+      "weightUnit": "单位",
+      "notes": "备注",
+      "notesPlaceholder": "可选备注...",
+      "empty": "暂无练习。请在上方添加。",
+      "types": {
+        "strength": "力量",
+        "cardio": "有氧",
+        "flexibility": "柔韧性",
+        "plyometric": "爆发力",
+        "other": "其他"
+      }
     },
     "meals": {
       "title": "餐食项目",
+      "food": "食物",
+      "addFood": "添加食物",
+      "foodName": "食物名称...",
+      "emptyFood": "暂无食物",
       "addItem": "添加项目",
       "vitamins": "维生素",
+      "addVitamin": "添加维生素",
+      "vitaminName": "维生素名称...",
+      "emptyVitamins": "未添加维生素",
       "supplements": "补充剂",
+      "addSupplement": "添加补充剂",
+      "supplementName": "补充剂名称...",
+      "dosage": "剂量",
+      "emptySupplements": "未添加补充剂",
       "itemName": "项目名称",
-      "portion": "份量"
+      "portion": "份量",
+      "timing": {
+        "morning": "早晨",
+        "afternoon": "下午",
+        "evening": "晚上",
+        "withMeal": "随餐"
+      }
     },
     "customFields": {
       "title": "自定义字段",
+      "add": "添加字段",
       "addField": "添加字段",
       "fieldLabel": "字段标签",
-      "fieldValue": "值"
+      "labelPlaceholder": "字段标签...",
+      "fieldValue": "值",
+      "valuePlaceholder": "值...",
+      "empty": "暂无自定义字段",
+      "types": {
+        "text": "文本",
+        "number": "数字",
+        "time": "时间",
+        "checkbox": "复选框"
+      }
     },
     "icon": "图标",
     "color": "颜色",

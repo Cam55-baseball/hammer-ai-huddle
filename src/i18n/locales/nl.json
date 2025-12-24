@@ -4286,8 +4286,11 @@
   },
   "customActivity": {
     "title": "Aangepaste Activiteiten",
+    "create": "Activiteit Aanmaken",
+    "edit": "Activiteit Bewerken",
     "createNew": "Nieuw Aanmaken",
     "quickAdd": "Snel Toevoegen",
+    "selectType": "Selecteer Activiteitstype",
     "badge": "CUSTOM",
     "addedToToday": "Toegevoegd aan plan van vandaag",
     "markedComplete": "Activiteit voltooid!",
@@ -4303,17 +4306,29 @@
       "recovery": "Herstelroutine",
       "practice": "Volledige Training",
       "shortPractice": "Korte Training",
-      "freeSession": "Vrije Sessie"
+      "freeSession": "Vrije Sessie",
+      "short_practice": "Korte Training",
+      "free_session": "Vrije Sessie"
     },
     "fields": {
       "title": "Activiteitstitel",
+      "name": "Activiteitsnaam",
+      "namePlaceholder": "Voer activiteitsnaam in...",
       "description": "Beschrijving",
+      "descriptionPlaceholder": "Optionele beschrijving...",
       "duration": "Duur (minuten)",
       "intensity": "Intensiteit",
+      "selectIntensity": "Selecteer intensiteitsniveau",
       "distance": "Afstand",
+      "distanceUnit": "Eenheid",
       "notes": "Notities",
       "selectType": "Selecteer activiteitstype",
-      "enterTitle": "Voer een titel in..."
+      "enterTitle": "Voer een titel in...",
+      "icon": "Icoon",
+      "color": "Kleur",
+      "sets": "Sets",
+      "reps": "Herhalingen",
+      "rest": "Rust"
     },
     "intensity": {
       "light": "Licht",
@@ -4324,6 +4339,8 @@
     "recurring": {
       "title": "Wekelijks Herhalen",
       "active": "Herhaling Actief",
+      "label": "Herhalend",
+      "everyWeek": "Herhaalt elke week op {{days}}",
       "days": {
         "sun": "Zo",
         "mon": "Ma",
@@ -4338,28 +4355,68 @@
     "isFavorited": "Favoriet",
     "exercises": {
       "title": "Oefeningen",
+      "add": "Oefening Toevoegen",
       "addExercise": "Oefening Toevoegen",
       "name": "Oefeningnaam",
+      "namePlaceholder": "Oefeningnaam...",
+      "type": "Type",
       "sets": "Sets",
       "reps": "Herhalingen",
       "duration": "Duur (sec)",
       "rest": "Rust (sec)",
       "weight": "Gewicht",
-      "notes": "Notities"
+      "weightUnit": "Eenheid",
+      "notes": "Notities",
+      "notesPlaceholder": "Optionele notities...",
+      "empty": "Nog geen oefeningen. Voeg er hierboven een toe.",
+      "types": {
+        "strength": "Kracht",
+        "cardio": "Cardio",
+        "flexibility": "Flexibiliteit",
+        "plyometric": "Plyometrisch",
+        "other": "Overig"
+      }
     },
     "meals": {
       "title": "Maaltijditems",
+      "food": "Voedsel",
+      "addFood": "Voedsel Toevoegen",
+      "foodName": "Voedselnaam...",
+      "emptyFood": "Nog geen voedsel",
       "addItem": "Item Toevoegen",
       "vitamins": "Vitamines",
+      "addVitamin": "Vitamine Toevoegen",
+      "vitaminName": "Vitaminenaam...",
+      "emptyVitamins": "Geen vitamines toegevoegd",
       "supplements": "Supplementen",
+      "addSupplement": "Supplement Toevoegen",
+      "supplementName": "Supplementnaam...",
+      "dosage": "Dosering",
+      "emptySupplements": "Geen supplementen toegevoegd",
       "itemName": "Itemnaam",
-      "portion": "Portie"
+      "portion": "Portie",
+      "timing": {
+        "morning": "Ochtend",
+        "afternoon": "Middag",
+        "evening": "Avond",
+        "withMeal": "Bij Maaltijd"
+      }
     },
     "customFields": {
       "title": "Aangepaste Velden",
+      "add": "Veld Toevoegen",
       "addField": "Veld Toevoegen",
       "fieldLabel": "Veldlabel",
-      "fieldValue": "Waarde"
+      "labelPlaceholder": "Veldlabel...",
+      "fieldValue": "Waarde",
+      "valuePlaceholder": "Waarde...",
+      "empty": "Nog geen aangepaste velden",
+      "types": {
+        "text": "Tekst",
+        "number": "Nummer",
+        "time": "Tijd",
+        "checkbox": "Selectievakje"
+      }
     },
     "icon": "Icoon",
     "color": "Kleur",

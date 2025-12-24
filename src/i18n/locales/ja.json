@@ -4386,8 +4386,11 @@
   },
   "customActivity": {
     "title": "カスタムアクティビティ",
+    "create": "アクティビティを作成",
+    "edit": "アクティビティを編集",
     "createNew": "新規作成",
     "quickAdd": "クイック追加",
+    "selectType": "アクティビティタイプを選択",
     "badge": "CUSTOM",
     "addedToToday": "今日のプランに追加しました",
     "markedComplete": "アクティビティ完了！",
@@ -4403,17 +4406,29 @@
       "recovery": "リカバリールーティン",
       "practice": "フル練習",
       "shortPractice": "ショート練習",
-      "freeSession": "フリーセッション"
+      "freeSession": "フリーセッション",
+      "short_practice": "ショート練習",
+      "free_session": "フリーセッション"
     },
     "fields": {
       "title": "アクティビティ名",
+      "name": "アクティビティ名",
+      "namePlaceholder": "アクティビティ名を入力...",
       "description": "説明",
+      "descriptionPlaceholder": "任意の説明...",
       "duration": "時間（分）",
       "intensity": "強度",
+      "selectIntensity": "強度レベルを選択",
       "distance": "距離",
+      "distanceUnit": "単位",
       "notes": "メモ",
       "selectType": "アクティビティタイプを選択",
-      "enterTitle": "タイトルを入力..."
+      "enterTitle": "タイトルを入力...",
+      "icon": "アイコン",
+      "color": "色",
+      "sets": "セット",
+      "reps": "回数",
+      "rest": "休憩"
     },
     "intensity": {
       "light": "軽い",
@@ -4424,6 +4439,8 @@
     "recurring": {
       "title": "毎週繰り返す",
       "active": "繰り返し有効",
+      "label": "繰り返し",
+      "everyWeek": "毎週{{days}}に繰り返し",
       "days": {
         "sun": "日",
         "mon": "月",
@@ -4438,28 +4455,68 @@
     "isFavorited": "お気に入り",
     "exercises": {
       "title": "エクササイズ",
+      "add": "エクササイズを追加",
       "addExercise": "エクササイズを追加",
       "name": "エクササイズ名",
+      "namePlaceholder": "エクササイズ名...",
+      "type": "タイプ",
       "sets": "セット",
       "reps": "回数",
       "duration": "時間（秒）",
       "rest": "休憩（秒）",
       "weight": "重量",
-      "notes": "メモ"
+      "weightUnit": "単位",
+      "notes": "メモ",
+      "notesPlaceholder": "任意のメモ...",
+      "empty": "エクササイズがありません。上から追加してください。",
+      "types": {
+        "strength": "筋トレ",
+        "cardio": "有酸素",
+        "flexibility": "柔軟性",
+        "plyometric": "プライオメトリック",
+        "other": "その他"
+      }
     },
     "meals": {
       "title": "食事アイテム",
+      "food": "食べ物",
+      "addFood": "食品を追加",
+      "foodName": "食品名...",
+      "emptyFood": "食品がありません",
       "addItem": "アイテムを追加",
       "vitamins": "ビタミン",
+      "addVitamin": "ビタミンを追加",
+      "vitaminName": "ビタミン名...",
+      "emptyVitamins": "ビタミンが追加されていません",
       "supplements": "サプリメント",
+      "addSupplement": "サプリメントを追加",
+      "supplementName": "サプリメント名...",
+      "dosage": "用量",
+      "emptySupplements": "サプリメントが追加されていません",
       "itemName": "アイテム名",
-      "portion": "分量"
+      "portion": "分量",
+      "timing": {
+        "morning": "朝",
+        "afternoon": "午後",
+        "evening": "夕方",
+        "withMeal": "食事と一緒に"
+      }
     },
     "customFields": {
       "title": "カスタムフィールド",
+      "add": "フィールドを追加",
       "addField": "フィールドを追加",
       "fieldLabel": "フィールドラベル",
-      "fieldValue": "値"
+      "labelPlaceholder": "フィールドラベル...",
+      "fieldValue": "値",
+      "valuePlaceholder": "値...",
+      "empty": "カスタムフィールドがありません",
+      "types": {
+        "text": "テキスト",
+        "number": "数字",
+        "time": "時間",
+        "checkbox": "チェックボックス"
+      }
     },
     "icon": "アイコン",
     "color": "色",
