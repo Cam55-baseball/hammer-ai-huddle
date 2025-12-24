@@ -5697,7 +5697,7 @@
         "cardio": "Cardio",
         "flexibility": "Flexibility",
         "plyometric": "Plyometric",
-        "other": "Other"
+      "other": "Other"
       }
     },
     "meals": {
@@ -5723,8 +5723,43 @@
         "afternoon": "Afternoon",
         "evening": "Evening",
         "withMeal": "With Meal"
+      },
+      "hydration": {
+        "title": "Hydration",
+        "dailyGoal": "Daily Goal",
+        "currentAmount": "Current Amount",
+        "progress": "Progress",
+        "entries": "Log Entries",
+        "addEntry": "Add Entry",
+        "empty": "No hydration entries yet",
+        "units": {
+          "oz": "oz",
+          "ml": "ml",
+          "cups": "cups",
+          "liters": "L"
+        }
       }
     },
+    "running": {
+      "distanceUnit": "Distance Unit",
+      "timeGoal": "Time Goal",
+      "paceGoal": "Pace Goal",
+      "paceGoalPlaceholder": "e.g., 8:30 per mile",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "seconds": "Seconds",
+      "units": {
+        "feet": "Feet",
+        "yards": "Yards",
+        "meters": "Meters",
+        "miles": "Miles",
+        "kilometers": "Kilometers"
+      }
+    },
+    "universal": {
+      "additionalOptions": "Additional Options"
+    },
+    "logMeal": "Log Meal",
     "customFields": {
       "title": "Custom Fields",
       "add": "Add Field",
