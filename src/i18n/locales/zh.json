@@ -4212,6 +4212,19 @@
     "saveFailed": "保存视频记录失败",
     "analysisFailed": "AI分析失败",
     "frameExtractionFailed": "提取视频帧失败",
-    "unexpectedError": "发生意外错误"
+    "unexpectedError": "发生意外错误",
+    "frameCount": "AI分析帧数",
+    "selectedForAnalysis": "已选择",
+    "annotateFrame": "标注",
+    "annotateCurrentFrame": "标注当前帧",
+    "frameAnnotated": "帧已标注！",
+    "enterPiP": "画中画",
+    "exitPiP": "退出画中画",
+    "pipActivated": "视频现在在浮动窗口中",
+    "pipNotSupported": "此设备不支持画中画",
+    "stepBackward5": "后退5帧",
+    "stepBackward1": "后退1帧",
+    "stepForward1": "前进1帧",
+    "stepForward5": "前进5帧"
   }
 }

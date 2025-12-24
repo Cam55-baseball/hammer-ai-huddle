@@ -4969,6 +4969,19 @@
     "saveFailed": "Speichern des Videodatensatzes fehlgeschlagen",
     "analysisFailed": "KI-Analyse fehlgeschlagen",
     "frameExtractionFailed": "Extraktion der Videoframes fehlgeschlagen",
-    "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten"
+    "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten",
+    "frameCount": "Bilder für KI-Analyse",
+    "selectedForAnalysis": "ausgewählt",
+    "annotateFrame": "Annotieren",
+    "annotateCurrentFrame": "Aktuelles Bild annotieren",
+    "frameAnnotated": "Bild annotiert!",
+    "enterPiP": "Bild-in-Bild",
+    "exitPiP": "PiP beenden",
+    "pipActivated": "Video im schwebenden Fenster",
+    "pipNotSupported": "PiP auf diesem Gerät nicht unterstützt",
+    "stepBackward5": "5 Bilder zurück",
+    "stepBackward1": "1 Bild zurück",
+    "stepForward1": "1 Bild vor",
+    "stepForward5": "5 Bilder vor"
   }
 }

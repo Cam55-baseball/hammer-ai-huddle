@@ -4268,6 +4268,19 @@
     "saveFailed": "Video record opslaan mislukt",
     "analysisFailed": "AI-analyse mislukt",
     "frameExtractionFailed": "Video frames extraheren mislukt",
-    "unexpectedError": "Er is een onverwachte fout opgetreden"
+    "unexpectedError": "Er is een onverwachte fout opgetreden",
+    "frameCount": "Frames voor AI-analyse",
+    "selectedForAnalysis": "geselecteerd",
+    "annotateFrame": "Annoteer",
+    "annotateCurrentFrame": "Huidig frame annoteren",
+    "frameAnnotated": "Frame geannoteerd!",
+    "enterPiP": "Beeld-in-beeld",
+    "exitPiP": "PiP afsluiten",
+    "pipActivated": "Video in zwevend venster",
+    "pipNotSupported": "PiP niet ondersteund op dit apparaat",
+    "stepBackward5": "5 frames terug",
+    "stepBackward1": "1 frame terug",
+    "stepForward1": "1 frame vooruit",
+    "stepForward5": "5 frames vooruit"
   }
 }

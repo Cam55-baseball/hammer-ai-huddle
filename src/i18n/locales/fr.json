@@ -4969,6 +4969,19 @@
     "saveFailed": "Échec de l'enregistrement de la vidéo",
     "analysisFailed": "L'analyse IA a échoué",
     "frameExtractionFailed": "Échec de l'extraction des images vidéo",
-    "unexpectedError": "Une erreur inattendue s'est produite"
+    "unexpectedError": "Une erreur inattendue s'est produite",
+    "frameCount": "Images pour l'analyse IA",
+    "selectedForAnalysis": "sélectionnés",
+    "annotateFrame": "Annoter",
+    "annotateCurrentFrame": "Annoter l'image actuelle",
+    "frameAnnotated": "Image annotée !",
+    "enterPiP": "Image dans l'image",
+    "exitPiP": "Quitter PiP",
+    "pipActivated": "Vidéo en fenêtre flottante",
+    "pipNotSupported": "PiP non supporté sur cet appareil",
+    "stepBackward5": "Reculer de 5 images",
+    "stepBackward1": "Reculer d'1 image",
+    "stepForward1": "Avancer d'1 image",
+    "stepForward5": "Avancer de 5 images"
   }
 }
