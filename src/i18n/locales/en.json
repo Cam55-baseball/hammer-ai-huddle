@@ -5880,7 +5880,37 @@
       "customize": "Customize",
       "system": "System Preset",
       "custom": "Custom Preset"
+    },
+    "share": {
+      "title": "Share Template",
+      "noLink": "Create a shareable link for this template",
+      "creating": "Creating...",
+      "createLink": "Create Share Link",
+      "link": "Share Link",
+      "public": "Public Access",
+      "publicDesc": "Anyone with the link can view and import",
+      "privateDesc": "Link is currently disabled",
+      "views": "Views",
+      "delete": "Delete Link",
+      "preview": "Preview",
+      "created": "Share link created!",
+      "error": "Failed to create share link",
+      "deleted": "Share link deleted",
+      "deleteError": "Failed to delete share link",
+      "copied": "Link copied to clipboard!",
+      "copyError": "Failed to copy link"
     }
+  },
+  "runningProgress": {
+    "title": "Running Progress",
+    "subtitle": "Track your running performance over time",
+    "noData": "No running data for this period",
+    "totalTime": "Total Time",
+    "sessions": "Sessions",
+    "avgPace": "Avg Pace",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "allTime": "All Time"
   },
   "navigation": {
     "myCustomActivities": "My Activities"

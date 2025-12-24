@@ -7,6 +7,7 @@ import { TutorialModal } from "./TutorialModal";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useHydrationReminders } from "@/hooks/useHydrationReminders";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -17,6 +18,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialCompleted, setTutorialCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // Initialize hydration reminders globally so they work across all pages
+  useHydrationReminders();
 
   useEffect(() => {
     const fetchTutorialStatus = async () => {

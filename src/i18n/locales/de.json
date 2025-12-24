@@ -5242,7 +5242,37 @@
       "customize": "Anpassen",
       "system": "System-Voreinstellung",
       "custom": "Benutzerdefinierte Voreinstellung"
+    },
+    "share": {
+      "title": "Vorlage Teilen",
+      "noLink": "Erstellen Sie einen teilbaren Link für diese Vorlage",
+      "creating": "Erstelle...",
+      "createLink": "Link Erstellen",
+      "link": "Freigabelink",
+      "public": "Öffentlicher Zugang",
+      "publicDesc": "Jeder mit dem Link kann ansehen und importieren",
+      "privateDesc": "Link ist derzeit deaktiviert",
+      "views": "Aufrufe",
+      "delete": "Link Löschen",
+      "preview": "Vorschau",
+      "created": "Link erstellt!",
+      "error": "Fehler beim Erstellen des Links",
+      "deleted": "Link gelöscht",
+      "deleteError": "Fehler beim Löschen des Links",
+      "copied": "Link kopiert!",
+      "copyError": "Fehler beim Kopieren des Links"
     }
+  },
+  "runningProgress": {
+    "title": "Lauffortschritt",
+    "subtitle": "Verfolgen Sie Ihre Laufleistung im Zeitverlauf",
+    "noData": "Keine Laufdaten für diesen Zeitraum",
+    "totalTime": "Gesamtzeit",
+    "sessions": "Einheiten",
+    "avgPace": "Durchsch. Tempo",
+    "thisWeek": "Diese Woche",
+    "thisMonth": "Diesen Monat",
+    "allTime": "Gesamte Zeit"
   },
   "navigation": {
     "myCustomActivities": "Meine Aktivitäten"

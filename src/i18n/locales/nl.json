@@ -4541,7 +4541,37 @@
       "customize": "Aanpassen",
       "system": "Systeem Voorinstelling",
       "custom": "Aangepaste Voorinstelling"
+    },
+    "share": {
+      "title": "Sjabloon Delen",
+      "noLink": "Maak een deelbare link voor dit sjabloon",
+      "creating": "Aanmaken...",
+      "createLink": "Link Maken",
+      "link": "Deellink",
+      "public": "Openbare Toegang",
+      "publicDesc": "Iedereen met de link kan bekijken en importeren",
+      "privateDesc": "Link is momenteel uitgeschakeld",
+      "views": "Weergaven",
+      "delete": "Link Verwijderen",
+      "preview": "Voorbeeld",
+      "created": "Link aangemaakt!",
+      "error": "Kon link niet aanmaken",
+      "deleted": "Link verwijderd",
+      "deleteError": "Kon link niet verwijderen",
+      "copied": "Link gekopieerd!",
+      "copyError": "Kon link niet kopiëren"
     }
+  },
+  "runningProgress": {
+    "title": "Hardloop Voortgang",
+    "subtitle": "Volg je hardloopprestaties in de tijd",
+    "noData": "Geen hardloopgegevens voor deze periode",
+    "totalTime": "Totale Tijd",
+    "sessions": "Sessies",
+    "avgPace": "Gem. Tempo",
+    "thisWeek": "Deze Week",
+    "thisMonth": "Deze Maand",
+    "allTime": "Alle Tijd"
   },
   "navigation": {
     "myCustomActivities": "Mijn Activiteiten"

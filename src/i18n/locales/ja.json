@@ -4641,7 +4641,37 @@
       "customize": "カスタマイズ",
       "system": "システムプリセット",
       "custom": "カスタムプリセット"
+    },
+    "share": {
+      "title": "テンプレートを共有",
+      "noLink": "このテンプレートの共有リンクを作成",
+      "creating": "作成中...",
+      "createLink": "リンクを作成",
+      "link": "共有リンク",
+      "public": "公開アクセス",
+      "publicDesc": "リンクを持つ人は誰でも閲覧・インポート可能",
+      "privateDesc": "リンクは現在無効です",
+      "views": "閲覧数",
+      "delete": "リンクを削除",
+      "preview": "プレビュー",
+      "created": "リンクが作成されました！",
+      "error": "リンクの作成に失敗しました",
+      "deleted": "リンクが削除されました",
+      "deleteError": "リンクの削除に失敗しました",
+      "copied": "リンクがコピーされました！",
+      "copyError": "リンクのコピーに失敗しました"
     }
+  },
+  "runningProgress": {
+    "title": "ランニング進捗",
+    "subtitle": "ランニングパフォーマンスを経時的に追跡",
+    "noData": "この期間のランニングデータがありません",
+    "totalTime": "合計時間",
+    "sessions": "セッション",
+    "avgPace": "平均ペース",
+    "thisWeek": "今週",
+    "thisMonth": "今月",
+    "allTime": "全期間"
   },
   "navigation": {
     "myCustomActivities": "マイアクティビティ"

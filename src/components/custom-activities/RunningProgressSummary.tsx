@@ -146,7 +146,7 @@ export function RunningProgressSummary({ selectedSport }: RunningProgressSummary
     if (!stats || stats.totalSessions === 0) {
       return (
         <div className="text-center py-6 text-muted-foreground">
-          {t('runningProgress.noData', 'No running data for this period')}
+          {t('runningProgress.noData')}
         </div>
       );
     }
@@ -161,17 +161,17 @@ export function RunningProgressSummary({ selectedSport }: RunningProgressSummary
         <div className="text-center p-4 rounded-lg bg-green-500/10">
           <Clock className="h-6 w-6 mx-auto mb-2 text-green-500" />
           <p className="text-2xl font-bold">{Math.floor(stats.totalDuration / 60)}h {stats.totalDuration % 60}m</p>
-          <p className="text-xs text-muted-foreground">{t('runningProgress.totalTime', 'Total Time')}</p>
+          <p className="text-xs text-muted-foreground">{t('runningProgress.totalTime')}</p>
         </div>
         <div className="text-center p-4 rounded-lg bg-orange-500/10">
           <Flame className="h-6 w-6 mx-auto mb-2 text-orange-500" />
           <p className="text-2xl font-bold">{stats.totalSessions}</p>
-          <p className="text-xs text-muted-foreground">{t('runningProgress.sessions', 'Sessions')}</p>
+          <p className="text-xs text-muted-foreground">{t('runningProgress.sessions')}</p>
         </div>
         <div className="text-center p-4 rounded-lg bg-blue-500/10">
           <TrendingUp className="h-6 w-6 mx-auto mb-2 text-blue-500" />
           <p className="text-2xl font-bold">{stats.avgPace}</p>
-          <p className="text-xs text-muted-foreground">{t('runningProgress.avgPace', 'Avg Pace')}</p>
+          <p className="text-xs text-muted-foreground">{t('runningProgress.avgPace')}</p>
         </div>
       </div>
     );
@@ -182,18 +182,18 @@ export function RunningProgressSummary({ selectedSport }: RunningProgressSummary
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Footprints className="h-5 w-5" />
-          {t('runningProgress.title', 'Running Progress')}
+          {t('runningProgress.title')}
         </CardTitle>
         <CardDescription>
-          {t('runningProgress.subtitle', 'Track your running performance over time')}
+          {t('runningProgress.subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="weekly">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="weekly">{t('runningProgress.thisWeek', 'This Week')}</TabsTrigger>
-            <TabsTrigger value="monthly">{t('runningProgress.thisMonth', 'This Month')}</TabsTrigger>
-            <TabsTrigger value="allTime">{t('runningProgress.allTime', 'All Time')}</TabsTrigger>
+            <TabsTrigger value="weekly">{t('runningProgress.thisWeek')}</TabsTrigger>
+            <TabsTrigger value="monthly">{t('runningProgress.thisMonth')}</TabsTrigger>
+            <TabsTrigger value="allTime">{t('runningProgress.allTime')}</TabsTrigger>
           </TabsList>
           <TabsContent value="weekly" className="mt-4">
             {renderStats(weeklyStats, 'This Week')}

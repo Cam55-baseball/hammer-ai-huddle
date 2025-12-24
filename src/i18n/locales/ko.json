@@ -4528,7 +4528,37 @@
       "customize": "사용자 정의",
       "system": "시스템 프리셋",
       "custom": "사용자 정의 프리셋"
+    },
+    "share": {
+      "title": "템플릿 공유",
+      "noLink": "이 템플릿의 공유 링크를 만드세요",
+      "creating": "생성 중...",
+      "createLink": "링크 만들기",
+      "link": "공유 링크",
+      "public": "공개 접근",
+      "publicDesc": "링크가 있는 누구나 보고 가져올 수 있습니다",
+      "privateDesc": "링크가 현재 비활성화되어 있습니다",
+      "views": "조회수",
+      "delete": "링크 삭제",
+      "preview": "미리보기",
+      "created": "링크가 생성되었습니다!",
+      "error": "링크 생성에 실패했습니다",
+      "deleted": "링크가 삭제되었습니다",
+      "deleteError": "링크 삭제에 실패했습니다",
+      "copied": "링크가 복사되었습니다!",
+      "copyError": "링크 복사에 실패했습니다"
     }
+  },
+  "runningProgress": {
+    "title": "러닝 진행 상황",
+    "subtitle": "시간 경과에 따른 러닝 성과 추적",
+    "noData": "이 기간의 러닝 데이터가 없습니다",
+    "totalTime": "총 시간",
+    "sessions": "세션",
+    "avgPace": "평균 페이스",
+    "thisWeek": "이번 주",
+    "thisMonth": "이번 달",
+    "allTime": "전체 기간"
   },
   "navigation": {
     "myCustomActivities": "내 활동"

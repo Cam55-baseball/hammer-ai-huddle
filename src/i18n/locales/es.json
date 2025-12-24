@@ -5498,7 +5498,37 @@
       "customize": "Personalizar",
       "system": "Preset del Sistema",
       "custom": "Preset Personalizado"
+    },
+    "share": {
+      "title": "Compartir Plantilla",
+      "noLink": "Crea un enlace para compartir esta plantilla",
+      "creating": "Creando...",
+      "createLink": "Crear Enlace",
+      "link": "Enlace para Compartir",
+      "public": "Acceso Público",
+      "publicDesc": "Cualquiera con el enlace puede ver e importar",
+      "privateDesc": "El enlace está actualmente deshabilitado",
+      "views": "Vistas",
+      "delete": "Eliminar Enlace",
+      "preview": "Vista Previa",
+      "created": "¡Enlace creado!",
+      "error": "Error al crear enlace",
+      "deleted": "Enlace eliminado",
+      "deleteError": "Error al eliminar enlace",
+      "copied": "¡Enlace copiado!",
+      "copyError": "Error al copiar enlace"
     }
+  },
+  "runningProgress": {
+    "title": "Progreso de Carrera",
+    "subtitle": "Sigue tu rendimiento de carrera a lo largo del tiempo",
+    "noData": "Sin datos de carrera para este período",
+    "totalTime": "Tiempo Total",
+    "sessions": "Sesiones",
+    "avgPace": "Ritmo Promedio",
+    "thisWeek": "Esta Semana",
+    "thisMonth": "Este Mes",
+    "allTime": "Todo el Tiempo"
   },
   "navigation": {
     "myCustomActivities": "Mis Actividades"
