@@ -4368,6 +4368,19 @@
     "saveFailed": "動画レコードの保存に失敗しました",
     "analysisFailed": "AI分析に失敗しました",
     "frameExtractionFailed": "動画フレームの抽出に失敗しました",
-    "unexpectedError": "予期しないエラーが発生しました"
+    "unexpectedError": "予期しないエラーが発生しました",
+    "frameCount": "AI分析用フレーム数",
+    "selectedForAnalysis": "選択済み",
+    "annotateFrame": "注釈を追加",
+    "annotateCurrentFrame": "現在のフレームに注釈",
+    "frameAnnotated": "フレームに注釈を追加しました！",
+    "enterPiP": "ピクチャーインピクチャー",
+    "exitPiP": "PiPを終了",
+    "pipActivated": "フローティングウィンドウで再生中",
+    "pipNotSupported": "このデバイスではPiPはサポートされていません",
+    "stepBackward5": "5フレーム戻る",
+    "stepBackward1": "1フレーム戻る",
+    "stepForward1": "1フレーム進む",
+    "stepForward5": "5フレーム進む"
   }
 }

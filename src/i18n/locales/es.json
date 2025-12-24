@@ -5225,6 +5225,19 @@
     "saveFailed": "Error al guardar el registro de video",
     "analysisFailed": "El análisis de IA falló",
     "frameExtractionFailed": "Error al extraer fotogramas del video",
-    "unexpectedError": "Ocurrió un error inesperado"
+    "unexpectedError": "Ocurrió un error inesperado",
+    "frameCount": "Fotogramas para Análisis IA",
+    "selectedForAnalysis": "seleccionados",
+    "annotateFrame": "Anotar",
+    "annotateCurrentFrame": "Anotar Fotograma Actual",
+    "frameAnnotated": "¡Fotograma anotado!",
+    "enterPiP": "Imagen en Imagen",
+    "exitPiP": "Salir PiP",
+    "pipActivated": "Video en ventana flotante",
+    "pipNotSupported": "PiP no soportado en este dispositivo",
+    "stepBackward5": "Retroceder 5 fotogramas",
+    "stepBackward1": "Retroceder 1 fotograma",
+    "stepForward1": "Avanzar 1 fotograma",
+    "stepForward5": "Avanzar 5 fotogramas"
   }
 }

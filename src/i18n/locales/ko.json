@@ -4255,6 +4255,19 @@
     "saveFailed": "동영상 기록 저장 실패",
     "analysisFailed": "AI 분석 실패",
     "frameExtractionFailed": "동영상 프레임 추출 실패",
-    "unexpectedError": "예상치 못한 오류가 발생했습니다"
+    "unexpectedError": "예상치 못한 오류가 발생했습니다",
+    "frameCount": "AI 분석용 프레임",
+    "selectedForAnalysis": "선택됨",
+    "annotateFrame": "주석 추가",
+    "annotateCurrentFrame": "현재 프레임 주석",
+    "frameAnnotated": "프레임에 주석이 추가되었습니다!",
+    "enterPiP": "PIP 모드",
+    "exitPiP": "PIP 종료",
+    "pipActivated": "플로팅 창에서 재생 중",
+    "pipNotSupported": "이 장치에서 PIP가 지원되지 않습니다",
+    "stepBackward5": "5프레임 뒤로",
+    "stepBackward1": "1프레임 뒤로",
+    "stepForward1": "1프레임 앞으로",
+    "stepForward5": "5프레임 앞으로"
   }
 }
