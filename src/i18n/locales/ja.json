@@ -16,6 +16,7 @@
     "search": "検索",
     "filter": "フィルター",
     "noData": "データがありません",
+    "noResults": "結果が見つかりません",
     "required": "必須",
     "optional": "任意",
     "retry": "再試行",
@@ -26,7 +27,8 @@
     "ai": "AI",
     "continue": "続行",
     "selected": "選択済み",
-    "select": "選択"
+    "select": "選択",
+    "add": "追加"
   },
   "auth": {
     "signIn": "ログイン",

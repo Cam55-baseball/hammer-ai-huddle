@@ -16,6 +16,7 @@
     "search": "Zoeken",
     "filter": "Filteren",
     "noData": "Geen gegevens beschikbaar",
+    "noResults": "Geen resultaten gevonden",
     "required": "Verplicht",
     "optional": "Optioneel",
     "retry": "Opnieuw proberen",
@@ -26,7 +27,8 @@
     "ai": "AI",
     "continue": "Doorgaan",
     "selected": "Geselecteerd",
-    "select": "Selecteren"
+    "select": "Selecteren",
+    "add": "Toevoegen"
   },
   "auth": {
     "signIn": "Inloggen",
