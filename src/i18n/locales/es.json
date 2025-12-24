@@ -454,7 +454,8 @@
     "signOut": "Cerrar Sesión",
     "vault": "La Bóveda",
     "bounceBackBay": "Bahía de Recuperación",
-    "mindFuel": "Combustible Mental"
+    "mindFuel": "Combustible Mental",
+    "texVision": "Tex Vision"
   },
   "sidebar": {
     "ownerBio": "Bio del Propietario",
@@ -463,7 +464,8 @@
     "about": "Acerca de",
     "experienceAndCredentials": "Experiencia y Credenciales",
     "socialMedia": "Redes Sociales",
-    "websites": "Sitios Web"
+    "websites": "Sitios Web",
+    "merch": "Tienda"
   },
   "dashboard": {
     "title": "Panel de Entrenamiento",
@@ -5416,8 +5418,13 @@
       "title": "Personalización de Tarjeta",
       "nickname": "Apodo de Visualización",
       "nicknamePlaceholder": "Nombre personalizado...",
-      "logo": "URL del Logo Personalizado",
-      "logoPlaceholder": "https://..."
+      "logo": "Logo Personalizado",
+      "uploadLogo": "Subir Logo",
+      "removeLogo": "Eliminar Logo",
+      "dragDropLogo": "Arrastra o haz clic para subir",
+      "logoFormats": "JPG, PNG, WebP o SVG (máx 2MB)",
+      "uploadingLogo": "Subiendo...",
+      "logoUploaded": "¡Logo subido!"
     },
     "reminders": {
       "title": "Recordatorio de Actividad",

@@ -148,3 +148,42 @@ export const uploadThumbnailSizes = async (
   
   return { small, medium, large };
 };
+
+/**
+ * Upload custom logo to Supabase storage
+ */
+export const uploadCustomLogo = async (
+  file: File,
+  userId: string,
+  logoType: 'activity' | 'profile' | 'branding' = 'activity'
+): Promise<string> => {
+  // Validate file type
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'];
+  if (!validTypes.includes(file.type)) {
+    throw new Error('Invalid file type. Please upload a JPG, PNG, WebP, or SVG image.');
+  }
+
+  // Validate file size (max 2MB)
+  const maxSize = 2 * 1024 * 1024;
+  if (file.size > maxSize) {
+    throw new Error('File too large. Maximum size is 2MB.');
+  }
+
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${userId}/${logoType}_${Date.now()}.${fileExt}`;
+  
+  const { error } = await supabase.storage
+    .from('custom-logos')
+    .upload(fileName, file, {
+      cacheControl: '31536000',
+      upsert: true
+    });
+  
+  if (error) throw error;
+  
+  const { data: { publicUrl } } = supabase.storage
+    .from('custom-logos')
+    .getPublicUrl(fileName);
+  
+  return publicUrl;
+};

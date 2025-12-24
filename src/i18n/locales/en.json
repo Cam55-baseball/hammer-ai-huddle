@@ -579,7 +579,8 @@
     "signOut": "Sign Out",
     "vault": "The Vault",
     "bounceBackBay": "Bounce Back Bay",
-    "mindFuel": "Mind Fuel"
+    "mindFuel": "Mind Fuel",
+    "texVision": "Tex Vision"
   },
   "sidebar": {
     "ownerBio": "Owner Bio",
@@ -588,7 +589,8 @@
     "about": "About",
     "experienceAndCredentials": "Experience & Credentials",
     "socialMedia": "Social Media",
-    "websites": "Websites"
+    "websites": "Websites",
+    "merch": "Merch"
   },
   "dashboard": {
     "title": "Training Dashboard",
@@ -5798,8 +5800,13 @@
       "title": "Card Customization",
       "nickname": "Display Nickname",
       "nicknamePlaceholder": "Custom display name...",
-      "logo": "Custom Logo URL",
-      "logoPlaceholder": "https://..."
+      "logo": "Custom Logo",
+      "uploadLogo": "Upload Logo",
+      "removeLogo": "Remove Logo",
+      "dragDropLogo": "Drag & drop or click to upload",
+      "logoFormats": "JPG, PNG, WebP, or SVG (max 2MB)",
+      "uploadingLogo": "Uploading...",
+      "logoUploaded": "Logo uploaded!"
     },
     "reminders": {
       "title": "Activity Reminder",

@@ -454,7 +454,8 @@
     "signOut": "ログアウト",
     "vault": "ザ・ボールト",
     "bounceBackBay": "バウンスバックベイ",
-    "mindFuel": "マインドフュール"
+    "mindFuel": "マインドフュール",
+    "texVision": "テックスビジョン"
   },
   "sidebar": {
     "ownerBio": "オーナー紹介",
@@ -463,7 +464,8 @@
     "about": "概要",
     "experienceAndCredentials": "経験と資格",
     "socialMedia": "ソーシャルメディア",
-    "websites": "ウェブサイト"
+    "websites": "ウェブサイト",
+    "merch": "グッズ"
   },
   "dashboard": {
     "title": "トレーニングダッシュボード",
@@ -4559,8 +4561,13 @@
       "title": "カードのカスタマイズ",
       "nickname": "表示ニックネーム",
       "nicknamePlaceholder": "カスタム表示名...",
-      "logo": "カスタムロゴURL",
-      "logoPlaceholder": "https://..."
+      "logo": "カスタムロゴ",
+      "uploadLogo": "ロゴをアップロード",
+      "removeLogo": "ロゴを削除",
+      "dragDropLogo": "ドラッグ＆ドロップまたはクリックでアップロード",
+      "logoFormats": "JPG, PNG, WebP, SVG（最大2MB）",
+      "uploadingLogo": "アップロード中...",
+      "logoUploaded": "ロゴがアップロードされました！"
     },
     "reminders": {
       "title": "アクティビティリマインダー",

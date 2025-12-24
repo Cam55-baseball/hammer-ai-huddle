@@ -16,3 +16,4 @@ export { HydrationReminderSettings } from './HydrationReminderSettings';
 export { HydrationTrackerWidget } from './HydrationTrackerWidget';
 export { RunningPresetLibrary } from './RunningPresetLibrary';
 export { RunningProgressSummary } from './RunningProgressSummary';
+export { LogoUploadButton } from './LogoUploadButton';
