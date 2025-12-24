@@ -5,15 +5,18 @@ import { Reorder } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
+import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizDialog';
+import { CustomActivityBuilderDialog, QuickAddFavoritesDrawer, getActivityIcon } from '@/components/custom-activities';
 import { useVault } from '@/hooks/useVault';
 import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { CustomActivityTemplate } from '@/types/customActivity';
 
 interface GamePlanCardProps {
   selectedSport: 'baseball' | 'softball';
@@ -22,7 +25,8 @@ interface GamePlanCardProps {
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { tasks, completedCount, totalCount, daysUntilRecap, recapProgress, loading, refetch } = useGamePlan(selectedSport);
+  const { tasks, customActivities, completedCount, totalCount, daysUntilRecap, recapProgress, loading, refetch } = useGamePlan(selectedSport);
+  const { getFavorites, toggleComplete, addToToday, templates } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
@@ -33,10 +37,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
   const [autoSort, setAutoSort] = useState(() => localStorage.getItem('gameplan-sort') !== 'original');
   
+  // Custom activity state
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [favoritesDrawerOpen, setFavoritesDrawerOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<CustomActivityTemplate | null>(null);
+  
   // State for ordered tasks per section
   const [orderedCheckin, setOrderedCheckin] = useState<GamePlanTask[]>([]);
   const [orderedTraining, setOrderedTraining] = useState<GamePlanTask[]>([]);
   const [orderedTracking, setOrderedTracking] = useState<GamePlanTask[]>([]);
+  const [orderedCustom, setOrderedCustom] = useState<GamePlanTask[]>([]);
+  
+  const favorites = useMemo(() => getFavorites(), [getFavorites, templates]);
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'short', 
@@ -55,6 +67,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const checkinTasksList = tasks.filter(t => t.section === 'checkin');
     const trainingTasksList = tasks.filter(t => t.section === 'training');
     const trackingTasksList = tasks.filter(t => t.section === 'tracking');
+    const customTasksList = tasks.filter(t => t.section === 'custom');
 
     if (!autoSort) {
       // Restore saved orders
@@ -81,10 +94,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       setOrderedCheckin(restoreOrder(checkinTasksList, 'gameplan-checkin-order'));
       setOrderedTraining(restoreOrder(trainingTasksList, 'gameplan-training-order'));
       setOrderedTracking(restoreOrder(trackingTasksList, 'gameplan-tracking-order'));
+      setOrderedCustom(restoreOrder(customTasksList, 'gameplan-custom-order'));
     } else {
       setOrderedCheckin(checkinTasksList);
       setOrderedTraining(trainingTasksList);
       setOrderedTracking(trackingTasksList);
+      setOrderedCustom(customTasksList);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasksKey, autoSort]);
@@ -178,24 +193,66 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     localStorage.setItem('gameplan-tracking-order', JSON.stringify(newOrder.map(t => t.id)));
   };
 
+  const handleReorderCustom = (newOrder: GamePlanTask[]) => {
+    setOrderedCustom(newOrder);
+    localStorage.setItem('gameplan-custom-order', JSON.stringify(newOrder.map(t => t.id)));
+  };
+
+  // Custom activity handlers
+  const handleCustomActivityToggle = async (task: GamePlanTask) => {
+    if (task.customActivityData) {
+      const success = await toggleComplete(task.customActivityData.template.id);
+      if (success) {
+        refetch();
+        toast.success(task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
+      }
+    }
+  };
+
+  const handleCustomActivityEdit = (task: GamePlanTask) => {
+    if (task.customActivityData) {
+      setEditingTemplate(task.customActivityData.template);
+      setBuilderOpen(true);
+    }
+  };
+
+  const handleAddFavoriteToToday = async (templateId: string) => {
+    const success = await addToToday(templateId);
+    if (success) {
+      refetch();
+      toast.success(t('customActivity.addedToToday'));
+    }
+  };
+
   // Get display tasks based on sort mode
   const checkinTasks = autoSort ? sortByCompletion(orderedCheckin) : orderedCheckin;
   const trainingTasks = autoSort ? sortByCompletion(orderedTraining) : orderedTraining;
   const trackingTasks = autoSort ? sortByCompletion(orderedTracking) : orderedTracking;
+  const customTasks = autoSort ? sortByCompletion(orderedCustom) : orderedCustom;
 
   const renderTask = (task: GamePlanTask) => {
     const Icon = task.icon;
     const isIncomplete = !task.completed;
     const isTracking = task.section === 'tracking';
     const isTexVision = task.specialStyle === 'tex-vision';
+    const isCustom = task.specialStyle === 'custom';
     
     // Get dynamic colors based on task type
     const pendingColors = colors.gamePlan.pending;
     const trackingColors = colors.gamePlan.tracking;
     const texVisionColors = colors.gamePlan.texVision;
     
+    // Custom activity uses its own color
+    const customColor = task.customActivityData?.template.color || '#10b981';
+    const customColors = {
+      background: hexToRgba(customColor, 0.15),
+      border: hexToRgba(customColor, 0.5),
+      icon: customColor,
+      text: '#fff',
+    };
+    
     // Determine which color set to use for pending tasks
-    const activeColors = isTexVision ? texVisionColors : isTracking ? trackingColors : pendingColors;
+    const activeColors = isCustom ? customColors : isTexVision ? texVisionColors : isTracking ? trackingColors : pendingColors;
     
     return (
       <div
@@ -245,8 +302,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   ? "font-semibold text-white/50 line-through" 
                   : "font-black text-white"
               )}>
-                {t(task.titleKey)}
+                {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
               </h3>
+              {isCustom && !task.completed && (
+                <span 
+                  className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500/30 to-teal-500/30 text-white animate-pulse"
+                >
+                  {t('customActivity.badge')}
+                </span>
+              )}
               {task.badge && !task.completed && (
                 <span 
                   className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider"
@@ -263,16 +327,31 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               "text-xs sm:text-sm truncate",
               task.completed ? "text-white/40" : "text-white/70"
             )}>
-              {t(task.descriptionKey)}
+              {task.taskType === 'custom' ? (task.descriptionKey || t(`customActivity.types.${task.customActivityData?.template.activity_type}`)) : t(task.descriptionKey)}
             </p>
           </div>
         </button>
         
-        {/* Status indicator */}
-        <div 
+        {/* Edit button for custom activities */}
+        {isCustom && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="flex-shrink-0 h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
+            onClick={(e) => { e.stopPropagation(); handleCustomActivityEdit(task); }}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        )}
+        
+        {/* Status indicator - clickable for custom activities */}
+        <button
+          onClick={(e) => { e.stopPropagation(); if (isCustom) handleCustomActivityToggle(task); }}
+          disabled={!isCustom}
           className={cn(
-            "flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center",
-            task.completed && "bg-green-500 text-white"
+            "flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center transition-all",
+            task.completed && "bg-green-500 text-white",
+            isCustom && !task.completed && "hover:scale-110 cursor-pointer"
           )}
           style={!task.completed ? { 
             border: `3px dashed ${activeColors.border}`,
@@ -286,7 +365,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               style={{ color: activeColors.icon }}
             />
           )}
-        </div>
+        </button>
 
         {/* Urgency indicator for incomplete tasks */}
         {isIncomplete && (
@@ -521,6 +600,48 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             t('gamePlan.sections.cycleTracking'),
             'text-purple-400',
             'bg-purple-500/30'
+          )}
+
+          {/* Custom Activities Section */}
+          {(customTasks.length > 0 || favorites.length > 0) && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                <span className="h-px flex-1 bg-emerald-500/30" />
+                {t('gamePlan.sections.customActivities')}
+                <span className="h-px flex-1 bg-emerald-500/30" />
+              </h3>
+              
+              <div className="flex gap-2 justify-center pb-2">
+                <Button
+                  size="sm"
+                  onClick={() => { setEditingTemplate(null); setBuilderOpen(true); }}
+                  className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('customActivity.createNew')}
+                </Button>
+                {favorites.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setFavoritesDrawerOpen(true)}
+                    className="gap-2 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
+                  >
+                    <Star className="h-4 w-4 fill-yellow-500" />
+                    {t('customActivity.quickAdd')}
+                  </Button>
+                )}
+              </div>
+              
+              {renderTaskSection(
+                customTasks,
+                orderedCustom,
+                handleReorderCustom,
+                '',
+                'text-emerald-400',
+                'bg-emerald-500/30'
+              )}
+            </div>
           )}
         </div>
 

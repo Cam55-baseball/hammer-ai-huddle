@@ -2,8 +2,34 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon, Lightbulb, Sparkles, Target, Eye } from 'lucide-react';
-import { startOfWeek, differenceInDays, format } from 'date-fns';
+import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon, Lightbulb, Sparkles, Target, Eye, Heart, Zap, Trophy, Timer, Utensils, Coffee, Salad, Bike, Users, Clipboard, Pencil } from 'lucide-react';
+import { startOfWeek, differenceInDays, format, getDay } from 'date-fns';
+import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from '@/types/customActivity';
+
+// Icon mapping for custom activities
+const customActivityIconMap: Record<string, LucideIcon> = {
+  dumbbell: Dumbbell,
+  flame: Flame,
+  heart: Heart,
+  zap: Zap,
+  target: Target,
+  trophy: Trophy,
+  timer: Timer,
+  activity: Activity,
+  utensils: Utensils,
+  moon: Moon,
+  sun: Sun,
+  coffee: Coffee,
+  apple: Apple,
+  salad: Salad,
+  bike: Bike,
+  users: Users,
+  clipboard: Clipboard,
+  pencil: Pencil,
+  star: Star,
+  sparkles: Sparkles,
+};
+
 export interface GamePlanTask {
   id: string;
   titleKey: string;
@@ -12,14 +38,16 @@ export interface GamePlanTask {
   icon: LucideIcon;
   link: string;
   module?: 'hitting' | 'pitching' | 'throwing';
-  taskType: 'workout' | 'video' | 'nutrition' | 'quiz' | 'tracking' | 'mental-fuel';
-  section: 'checkin' | 'training' | 'tracking';
+  taskType: 'workout' | 'video' | 'nutrition' | 'quiz' | 'tracking' | 'mental-fuel' | 'custom';
+  section: 'checkin' | 'training' | 'tracking' | 'custom';
   badge?: string;
-  specialStyle?: 'mental-fuel-plus' | 'tex-vision';
+  specialStyle?: 'mental-fuel-plus' | 'tex-vision' | 'custom';
+  customActivityData?: CustomActivityWithLog;
 }
 
 export interface GamePlanData {
   tasks: GamePlanTask[];
+  customActivities: CustomActivityWithLog[];
   completedCount: number;
   totalCount: number;
   daysUntilRecap: number;
@@ -39,6 +67,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [recapProgress, setRecapProgress] = useState(0);
   const [trackingDue, setTrackingDue] = useState<Record<string, boolean>>({});
   const [isStrengthDay, setIsStrengthDay] = useState(false);
+  const [customActivities, setCustomActivities] = useState<CustomActivityWithLog[]>([]);
 
   // Parse subscribed modules to determine access
   const hasHittingAccess = subscribedModules.some(m => m.includes('hitting'));
@@ -307,6 +336,47 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
 
       setCompletionStatus(status);
       setTrackingDue(tracking);
+
+      // Fetch custom activities for today
+      const todayDayOfWeek = getDay(new Date()); // 0 = Sunday, 6 = Saturday
+      
+      // Fetch all templates for this sport
+      const { data: templatesData } = await supabase
+        .from('custom_activity_templates')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('sport', selectedSport);
+
+      // Fetch today's logs
+      const { data: logsData } = await supabase
+        .from('custom_activity_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('entry_date', today);
+
+      const templates = (templatesData || []) as unknown as CustomActivityTemplate[];
+      const logs = (logsData || []) as unknown as CustomActivityLog[];
+
+      // Build custom activities list
+      const customActivitiesForToday: CustomActivityWithLog[] = [];
+
+      templates.forEach(template => {
+        const recurringDays = (template.recurring_days || []) as number[];
+        const isRecurringToday = template.recurring_active && recurringDays.includes(todayDayOfWeek);
+        const todayLog = logs.find(l => l.template_id === template.id);
+        
+        // Include if recurring today OR has a log for today
+        if (isRecurringToday || todayLog) {
+          customActivitiesForToday.push({
+            template,
+            log: todayLog,
+            isRecurring: isRecurringToday,
+            isScheduledForToday: isRecurringToday || !!todayLog,
+          });
+        }
+      });
+
+      setCustomActivities(customActivitiesForToday);
 
       // Fetch recap countdown
       const { data: streakData } = await supabase
@@ -587,10 +657,30 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }
 
+  // Add custom activities as tasks
+  customActivities.forEach(activity => {
+    const iconKey = activity.template.icon || 'activity';
+    const IconComponent = customActivityIconMap[iconKey] || Activity;
+    
+    tasks.push({
+      id: `custom-${activity.template.id}`,
+      titleKey: activity.template.title, // Use raw title, not translation key
+      descriptionKey: activity.template.description || '',
+      completed: activity.log?.completed || false,
+      icon: IconComponent,
+      link: '', // Custom activities don't navigate
+      taskType: 'custom',
+      section: 'custom',
+      specialStyle: 'custom',
+      customActivityData: activity,
+    });
+  });
+
   const completedCount = tasks.filter(t => t.completed).length;
 
   return {
     tasks,
+    customActivities,
     completedCount,
     totalCount: tasks.length,
     daysUntilRecap,
