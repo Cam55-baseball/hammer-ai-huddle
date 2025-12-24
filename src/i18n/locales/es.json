@@ -5561,8 +5561,11 @@
       "selectExercises": "Selecciona 2-3 ejercicios",
       "ungroup": "Desagrupar",
       "sharedRest": "Descanso Compartido",
-      "grouped": "Grupo"
+      "grouped": "Grupo",
+      "superset": "Superserie"
     },
+    "browseLibrary": "Biblioteca",
+    "tapToAddMobile": "Toca Biblioteca para agregar ejercicios",
     "warmup": {
       "title": "Generador de Calentamiento IA",
       "generate": "Generar Calentamiento",

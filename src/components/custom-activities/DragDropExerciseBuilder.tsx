@@ -14,12 +14,14 @@ import {
 import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { GripVertical, Sparkles, Plus } from 'lucide-react';
+import { GripVertical, Sparkles, Plus, Library } from 'lucide-react';
 import { Exercise } from '@/types/customActivity';
 import { ExerciseLibrarySidebar, CATEGORY_COLORS } from './ExerciseLibrarySidebar';
 import { WorkoutTimeline } from './WorkoutTimeline';
 import { AIWorkoutRecommendations } from './AIWorkoutRecommendations';
 import { WarmupGeneratorCard } from './WarmupGeneratorCard';
+import { MobileExerciseLibraryDrawer } from './MobileExerciseLibraryDrawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 interface DragDropExerciseBuilderProps {
@@ -29,6 +31,7 @@ interface DragDropExerciseBuilderProps {
 
 export function DragDropExerciseBuilder({ exercises, onExercisesChange }: DragDropExerciseBuilderProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
   const [showAIRecommendations, setShowAIRecommendations] = useState(false);
 
@@ -128,6 +131,14 @@ export function DragDropExerciseBuilder({ exercises, onExercisesChange }: DragDr
     onExercisesChange([...exercises, newExercise]);
   };
 
+  const handleAddFromLibrary = (exercise: Exercise) => {
+    const newExercise: Exercise = {
+      ...exercise,
+      id: `${exercise.id}-${Date.now()}`,
+    };
+    onExercisesChange([...exercises, newExercise]);
+  };
+
   const exerciseType = activeExercise?.type || 'strength';
   const colorClass = CATEGORY_COLORS[exerciseType] || CATEGORY_COLORS.strength;
 
@@ -140,26 +151,41 @@ export function DragDropExerciseBuilder({ exercises, onExercisesChange }: DragDr
       />
 
       {/* AI Recommendations Toggle and Add Exercise Button */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant={showAIRecommendations ? "secondary" : "outline"}
             size="sm"
             onClick={() => setShowAIRecommendations(!showAIRecommendations)}
-            className="gap-2"
+            className="gap-1.5 text-xs sm:text-sm"
           >
-            <Sparkles className="h-4 w-4" />
-            {t('aiRecommendations.title')}
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline">{t('aiRecommendations.title')}</span>
+            <span className="xs:hidden">AI</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={handleAddExercise}
-            className="gap-2"
+            className="gap-1.5 text-xs sm:text-sm"
           >
-            <Plus className="h-4 w-4" />
-            {t('customActivity.exercises.addExercise', 'Add Exercise')}
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">{t('customActivity.exercises.addExercise', 'Add Exercise')}</span>
+            <span className="sm:hidden">{t('common.add', 'Add')}</span>
           </Button>
+          {/* Mobile: Browse Library Button */}
+          {isMobile && (
+            <MobileExerciseLibraryDrawer onExerciseSelect={handleAddFromLibrary}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs sm:text-sm"
+              >
+                <Library className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                {t('workoutBuilder.browseLibrary', 'Library')}
+              </Button>
+            </MobileExerciseLibraryDrawer>
+          )}
         </div>
         {exercises.length > 0 && (
           <span className="text-xs text-muted-foreground">
@@ -180,33 +206,47 @@ export function DragDropExerciseBuilder({ exercises, onExercisesChange }: DragDr
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border rounded-lg overflow-hidden min-h-[400px]">
-          {/* Exercise Library */}
-          <ExerciseLibrarySidebar />
+        {isMobile ? (
+          /* Mobile: Timeline only, library accessed via drawer */
+          <div className="border rounded-lg overflow-hidden">
+            <WorkoutTimeline
+              exercises={exercises}
+              onExercisesChange={onExercisesChange}
+              onRemoveExercise={handleRemoveExercise}
+            />
+          </div>
+        ) : (
+          /* Desktop: Side-by-side layout */
+          <div className="grid grid-cols-2 gap-0 border rounded-lg overflow-hidden min-h-[400px]">
+            {/* Exercise Library */}
+            <ExerciseLibrarySidebar />
 
-          {/* Workout Timeline */}
-          <WorkoutTimeline
-            exercises={exercises}
-            onExercisesChange={onExercisesChange}
-            onRemoveExercise={handleRemoveExercise}
-          />
-        </div>
+            {/* Workout Timeline */}
+            <WorkoutTimeline
+              exercises={exercises}
+              onExercisesChange={onExercisesChange}
+              onRemoveExercise={handleRemoveExercise}
+            />
+          </div>
+        )}
 
-        {/* Drag Overlay */}
-        <DragOverlay>
-          {activeExercise && (
-            <div className={cn(
-              "flex items-center gap-2 p-3 rounded-lg border-2 bg-card shadow-2xl",
-              "ring-2 ring-primary"
-            )}>
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
-              <Badge variant="outline" className={cn("text-xs", colorClass)}>
-                {exerciseType}
-              </Badge>
-              <span className="font-medium text-sm">{activeExercise.name}</span>
-            </div>
-          )}
-        </DragOverlay>
+        {/* Drag Overlay - Only shown on desktop */}
+        {!isMobile && (
+          <DragOverlay>
+            {activeExercise && (
+              <div className={cn(
+                "flex items-center gap-2 p-3 rounded-lg border-2 bg-card shadow-2xl",
+                "ring-2 ring-primary"
+              )}>
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <Badge variant="outline" className={cn("text-xs", colorClass)}>
+                  {exerciseType}
+                </Badge>
+                <span className="font-medium text-sm">{activeExercise.name}</span>
+              </div>
+            )}
+          </DragOverlay>
+        )}
       </DndContext>
     </div>
   );

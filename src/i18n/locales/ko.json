@@ -4591,8 +4591,11 @@
       "selectExercises": "2-3개 운동 선택",
       "ungroup": "그룹 해제",
       "sharedRest": "공유 휴식",
-      "grouped": "그룹"
+      "grouped": "그룹",
+      "superset": "슈퍼세트"
     },
+    "browseLibrary": "라이브러리",
+    "tapToAddMobile": "라이브러리를 탭하여 운동 추가",
     "warmup": {
       "title": "AI 워밍업 생성기",
       "generate": "워밍업 생성",

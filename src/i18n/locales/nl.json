@@ -4604,8 +4604,11 @@
       "selectExercises": "Selecteer 2-3 oefeningen",
       "ungroup": "Ontgroeperen",
       "sharedRest": "Gedeelde Rust",
-      "grouped": "Groep"
+      "grouped": "Groep",
+      "superset": "Superset"
     },
+    "browseLibrary": "Bibliotheek",
+    "tapToAddMobile": "Tik op Bibliotheek om oefeningen toe te voegen",
     "warmup": {
       "title": "AI Warming-up Generator",
       "generate": "Warming-up Genereren",
