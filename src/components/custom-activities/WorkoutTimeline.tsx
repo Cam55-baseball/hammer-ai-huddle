@@ -162,7 +162,7 @@ function SortableExerciseCard({
             {exercise.sets !== undefined && (
               <>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">{t('customActivity.exercise.sets')}</label>
+                  <label className="text-xs text-muted-foreground">{t('customActivity.exercises.sets')}</label>
                   <Input
                     type="number"
                     value={editValues.sets}
@@ -172,7 +172,7 @@ function SortableExerciseCard({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">{t('customActivity.exercise.reps')}</label>
+                  <label className="text-xs text-muted-foreground">{t('customActivity.exercises.reps')}</label>
                   <Input
                     type="number"
                     value={editValues.reps as number}
@@ -185,7 +185,7 @@ function SortableExerciseCard({
             )}
             {exercise.duration !== undefined && (
               <div className="space-y-1 col-span-2">
-                <label className="text-xs text-muted-foreground">{t('customActivity.exercise.duration')} (s)</label>
+                <label className="text-xs text-muted-foreground">{t('customActivity.exercises.duration')} (s)</label>
                 <Input
                   type="number"
                   value={editValues.duration}
@@ -196,7 +196,7 @@ function SortableExerciseCard({
               </div>
             )}
             <div className="space-y-1 col-span-2">
-              <label className="text-xs text-muted-foreground">{t('customActivity.exercise.rest')} (s)</label>
+              <label className="text-xs text-muted-foreground">{t('customActivity.exercises.rest')} (s)</label>
               <Input
                 type="number"
                 value={editValues.rest}

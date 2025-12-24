@@ -14,7 +14,7 @@ import {
 import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { GripVertical, Sparkles } from 'lucide-react';
+import { GripVertical, Sparkles, Plus } from 'lucide-react';
 import { Exercise } from '@/types/customActivity';
 import { ExerciseLibrarySidebar, CATEGORY_COLORS } from './ExerciseLibrarySidebar';
 import { WorkoutTimeline } from './WorkoutTimeline';
@@ -116,6 +116,18 @@ export function DragDropExerciseBuilder({ exercises, onExercisesChange }: DragDr
     onExercisesChange([...warmupExercises, ...exercises]);
   };
 
+  const handleAddExercise = () => {
+    const newExercise: Exercise = {
+      id: `custom-exercise-${Date.now()}`,
+      name: t('customActivity.exercises.newExercise', 'New Exercise'),
+      type: 'strength',
+      sets: 3,
+      reps: 10,
+      rest: 60,
+    };
+    onExercisesChange([...exercises, newExercise]);
+  };
+
   const exerciseType = activeExercise?.type || 'strength';
   const colorClass = CATEGORY_COLORS[exerciseType] || CATEGORY_COLORS.strength;
 
@@ -127,17 +139,28 @@ export function DragDropExerciseBuilder({ exercises, onExercisesChange }: DragDr
         onAddWarmup={handleAddWarmup}
       />
 
-      {/* AI Recommendations Toggle */}
+      {/* AI Recommendations Toggle and Add Exercise Button */}
       <div className="flex items-center justify-between">
-        <Button
-          variant={showAIRecommendations ? "secondary" : "outline"}
-          size="sm"
-          onClick={() => setShowAIRecommendations(!showAIRecommendations)}
-          className="gap-2"
-        >
-          <Sparkles className="h-4 w-4" />
-          {t('aiRecommendations.title')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={showAIRecommendations ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setShowAIRecommendations(!showAIRecommendations)}
+            className="gap-2"
+          >
+            <Sparkles className="h-4 w-4" />
+            {t('aiRecommendations.title')}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddExercise}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            {t('customActivity.exercises.addExercise', 'Add Exercise')}
+          </Button>
+        </div>
         {exercises.length > 0 && (
           <span className="text-xs text-muted-foreground">
             {exercises.length} {exercises.length === 1 ? 'exercise' : 'exercises'}
