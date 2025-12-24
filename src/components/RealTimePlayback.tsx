@@ -30,6 +30,15 @@ interface RealTimePlaybackProps {
 
 type Phase = 'setup' | 'countdown' | 'recording' | 'waiting' | 'playback' | 'complete';
 type FacingMode = 'user' | 'environment';
+type AnalysisStatus = 
+  | 'idle'
+  | 'uploading'
+  | 'extracting'
+  | 'analyzing'
+  | 'complete'
+  | 'failed'
+  | 'skipped-local'
+  | 'skipped-disabled';
 
 interface MechanicsBreakdown {
   category: string;
@@ -98,6 +107,8 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStatus, setAnalysisStatus] = useState<AnalysisStatus>('idle');
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
@@ -492,7 +503,17 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     setRecordedBlob(null);
     setRecordedUrl(null);
     setAnalysis(null);
+    setAnalysisError(null);
     chunksRef.current = [];
+    
+    // Set analysis status based on settings
+    if (localOnlyMode) {
+      setAnalysisStatus('skipped-local');
+    } else if (!analysisEnabled) {
+      setAnalysisStatus('skipped-disabled');
+    } else {
+      setAnalysisStatus('idle');
+    }
     
     // Enter fullscreen IMMEDIATELY on user click (within user gesture context)
     try {
@@ -614,13 +635,20 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     try {
       if (!user) return;
       
+      setAnalysisStatus('uploading');
+      setAnalysisError(null);
+      
       // Upload video first
       const fileName = `${user.id}/realtime-${Date.now()}.webm`;
       const { error: uploadError } = await supabase.storage
         .from('videos')
         .upload(fileName, blob);
       
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        setAnalysisStatus('failed');
+        setAnalysisError(t('realTimePlayback.uploadFailed', 'Failed to upload video'));
+        throw uploadError;
+      }
       
       const { data: { publicUrl } } = supabase.storage
         .from('videos')
@@ -639,16 +667,30 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
         .select()
         .single();
       
-      if (videoError) throw videoError;
+      if (videoError) {
+        setAnalysisStatus('failed');
+        setAnalysisError(t('realTimePlayback.saveFailed', 'Failed to save video record'));
+        throw videoError;
+      }
       setCurrentVideoId(videoData.id);
 
       // Only run analysis if enabled
       if (analysisEnabled) {
+        setAnalysisStatus('extracting');
         setIsAnalyzing(true);
         
         // Extract key frames for vision analysis
         const frames = await extractKeyFrames(blob);
         console.log(`Extracted ${frames.length} key frames for analysis`);
+        
+        if (frames.length === 0) {
+          setAnalysisStatus('failed');
+          setAnalysisError(t('realTimePlayback.frameExtractionFailed', 'Failed to extract video frames'));
+          setIsAnalyzing(false);
+          return;
+        }
+        
+        setAnalysisStatus('analyzing');
         
         const { data, error } = await supabase.functions.invoke('analyze-realtime-playback', {
           body: { 
@@ -662,6 +704,8 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
         
         if (error) {
           console.error('Analysis error:', error);
+          setAnalysisStatus('failed');
+          setAnalysisError(t('realTimePlayback.analysisFailed', 'AI analysis failed'));
           // Provide fallback analysis with mechanics breakdown
           setAnalysis({
             overallScore: 7.5,
@@ -675,14 +719,68 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
           });
         } else if (data) {
           setAnalysis(data);
+          setAnalysisStatus('complete');
         }
         
         setIsAnalyzing(false);
+      } else {
+        setAnalysisStatus('skipped-disabled');
       }
     } catch (error) {
       console.error('Failed to upload/analyze:', error);
+      setAnalysisStatus('failed');
+      if (!analysisError) {
+        setAnalysisError(t('realTimePlayback.unexpectedError', 'An unexpected error occurred'));
+      }
       setIsAnalyzing(false);
     }
+  };
+
+  // Retry analysis
+  const handleRetryAnalysis = async () => {
+    if (!recordedBlob || !currentVideoId) return;
+    
+    setAnalysisStatus('extracting');
+    setAnalysisError(null);
+    setIsAnalyzing(true);
+    
+    try {
+      const frames = await extractKeyFrames(recordedBlob);
+      
+      if (frames.length === 0) {
+        setAnalysisStatus('failed');
+        setAnalysisError(t('realTimePlayback.frameExtractionFailed', 'Failed to extract video frames'));
+        setIsAnalyzing(false);
+        return;
+      }
+      
+      setAnalysisStatus('analyzing');
+      
+      const { data, error } = await supabase.functions.invoke('analyze-realtime-playback', {
+        body: { 
+          videoId: currentVideoId, 
+          module, 
+          sport, 
+          language: i18n.language,
+          frames
+        }
+      });
+      
+      if (error) {
+        console.error('Retry analysis error:', error);
+        setAnalysisStatus('failed');
+        setAnalysisError(t('realTimePlayback.analysisFailed', 'AI analysis failed'));
+      } else if (data) {
+        setAnalysis(data);
+        setAnalysisStatus('complete');
+      }
+    } catch (error) {
+      console.error('Retry analysis failed:', error);
+      setAnalysisStatus('failed');
+      setAnalysisError(t('realTimePlayback.unexpectedError', 'An unexpected error occurred'));
+    }
+    
+    setIsAnalyzing(false);
   };
 
   // Upload for local-only mode when saving to library
@@ -1349,6 +1447,62 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                         {playbackSpeed}x
                       </div>
                       
+                      {/* Analysis Status Badge */}
+                      {analysisStatus !== 'idle' && analysisStatus !== 'complete' && (
+                        <div className={`absolute bottom-16 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+                          analysisStatus === 'uploading' || analysisStatus === 'extracting' || analysisStatus === 'analyzing'
+                            ? 'bg-blue-500/90 text-white'
+                            : analysisStatus === 'failed'
+                            ? 'bg-red-500/90 text-white'
+                            : 'bg-gray-500/90 text-white'
+                        }`}>
+                          {analysisStatus === 'uploading' && (
+                            <>
+                              <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
+                              <span>{t('realTimePlayback.statusUploading', 'Uploading...')}</span>
+                            </>
+                          )}
+                          {analysisStatus === 'extracting' && (
+                            <>
+                              <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
+                              <span>{t('realTimePlayback.statusExtracting', 'Extracting frames...')}</span>
+                            </>
+                          )}
+                          {analysisStatus === 'analyzing' && (
+                            <>
+                              <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
+                              <span>{t('realTimePlayback.statusAnalyzing', 'AI analyzing...')}</span>
+                            </>
+                          )}
+                          {analysisStatus === 'failed' && (
+                            <>
+                              <AlertCircle className="h-3 w-3" />
+                              <span>{t('realTimePlayback.statusFailed', 'Analysis failed')}</span>
+                            </>
+                          )}
+                          {analysisStatus === 'skipped-local' && (
+                            <>
+                              <WifiOff className="h-3 w-3" />
+                              <span>{t('realTimePlayback.statusLocalOnly', 'Local mode')}</span>
+                            </>
+                          )}
+                          {analysisStatus === 'skipped-disabled' && (
+                            <>
+                              <Brain className="h-3 w-3" />
+                              <span>{t('realTimePlayback.statusDisabled', 'Analysis off')}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Analysis Complete Badge */}
+                      {analysisStatus === 'complete' && (
+                        <div className="absolute bottom-16 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-sm font-medium">
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span>{t('realTimePlayback.statusComplete', 'Analysis ready')}</span>
+                        </div>
+                      )}
+                      
                       {/* Pause/Play and Capture Key Frame buttons */}
                       <div className="absolute bottom-4 left-4 flex items-center gap-2">
                         <Button
@@ -1451,9 +1605,37 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                     {analysisEnabled && !localOnlyMode ? (
                       <Card className="p-4 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
                         {isAnalyzing ? (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3" />
-                            <span className="text-muted-foreground">{t('common.loading', 'Loading...')}</span>
+                          <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                            <span className="text-muted-foreground">
+                              {analysisStatus === 'uploading' && t('realTimePlayback.statusUploading', 'Uploading...')}
+                              {analysisStatus === 'extracting' && t('realTimePlayback.statusExtracting', 'Extracting frames...')}
+                              {analysisStatus === 'analyzing' && t('realTimePlayback.statusAnalyzing', 'AI analyzing...')}
+                            </span>
+                            <p className="text-xs text-muted-foreground/70 text-center max-w-xs">
+                              {t('realTimePlayback.analysisHint', 'This may take a few seconds')}
+                            </p>
+                          </div>
+                        ) : analysisStatus === 'failed' ? (
+                          <div className="flex flex-col items-center justify-center py-6 space-y-3">
+                            <div className="p-3 rounded-full bg-red-500/10">
+                              <AlertCircle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <div className="text-center">
+                              <p className="font-medium text-red-600">{t('realTimePlayback.statusFailed', 'Analysis failed')}</p>
+                              {analysisError && (
+                                <p className="text-sm text-muted-foreground mt-1">{analysisError}</p>
+                              )}
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={handleRetryAnalysis}
+                              className="gap-2"
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                              {t('realTimePlayback.retryAnalysis', 'Retry Analysis')}
+                            </Button>
                           </div>
                         ) : analysis ? (
                           <div className="space-y-4">

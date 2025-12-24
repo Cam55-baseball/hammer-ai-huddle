@@ -5211,6 +5211,20 @@
     "clearFrames": "Limpiar",
     "framesCleared": "Fotogramas eliminados",
     "orientationWarning": "¡Evita rotar tu dispositivo durante la grabación!",
-    "orientationHint": "Esto puede interrumpir tu sesión."
+    "orientationHint": "Esto puede interrumpir tu sesión.",
+    "statusUploading": "Subiendo...",
+    "statusExtracting": "Extrayendo fotogramas...",
+    "statusAnalyzing": "IA analizando...",
+    "statusComplete": "Análisis listo",
+    "statusFailed": "Análisis fallido",
+    "statusLocalOnly": "Modo local",
+    "statusDisabled": "Análisis desactivado",
+    "retryAnalysis": "Reintentar análisis",
+    "analysisHint": "Esto puede tardar unos segundos",
+    "uploadFailed": "Error al subir el video",
+    "saveFailed": "Error al guardar el registro de video",
+    "analysisFailed": "El análisis de IA falló",
+    "frameExtractionFailed": "Error al extraer fotogramas del video",
+    "unexpectedError": "Ocurrió un error inesperado"
   }
 }

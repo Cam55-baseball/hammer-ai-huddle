@@ -5577,6 +5577,20 @@
     "clearFrames": "Clear",
     "framesCleared": "Frames cleared",
     "orientationWarning": "Avoid rotating your device during recording!",
-    "orientationHint": "This may interrupt your session."
+    "orientationHint": "This may interrupt your session.",
+    "statusUploading": "Uploading...",
+    "statusExtracting": "Extracting frames...",
+    "statusAnalyzing": "AI analyzing...",
+    "statusComplete": "Analysis ready",
+    "statusFailed": "Analysis failed",
+    "statusLocalOnly": "Local mode",
+    "statusDisabled": "Analysis off",
+    "retryAnalysis": "Retry Analysis",
+    "analysisHint": "This may take a few seconds",
+    "uploadFailed": "Failed to upload video",
+    "saveFailed": "Failed to save video record",
+    "analysisFailed": "AI analysis failed",
+    "frameExtractionFailed": "Failed to extract video frames",
+    "unexpectedError": "An unexpected error occurred"
   }
 }
