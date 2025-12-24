@@ -22,6 +22,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { tasks, completedCount, totalCount, daysUntilRecap, recapProgress, loading, refetch } = useGamePlan(selectedSport);
+  const isSoftball = selectedSport === 'softball';
   const { saveFocusQuiz } = useVault();
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
@@ -196,7 +197,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               ? "bg-teal-500/10 border-teal-500/60 game-plan-pulse-teal"
               : isTracking
                 ? "bg-purple-500/10 border-purple-500/60 game-plan-pulse-purple"
-                : "bg-yellow-100/20 border-yellow-200/60 game-plan-pulse"
+                : isSoftball
+                  ? "bg-yellow-100/20 border-yellow-200/60 game-plan-pulse-softball"
+                  : "bg-amber-500/10 border-amber-500/60 game-plan-pulse"
         )}
       >
         {/* Drag handle - only visible in manual mode */}
@@ -220,11 +223,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 ? "bg-teal-500"
                 : isTracking
                   ? "bg-purple-500"
-                  : "bg-yellow-200"
+                  : isSoftball
+                    ? "bg-yellow-200"
+                    : "bg-amber-500"
           )}>
             <Icon className={cn(
               "h-5 w-5 sm:h-6 sm:w-6",
-              task.completed ? "text-white" : isTexVision ? "text-white" : isTracking ? "text-white" : "text-gray-800"
+              task.completed ? "text-white" : isTexVision ? "text-white" : isTracking ? "text-white" : isSoftball ? "text-gray-800" : "text-secondary"
             )} />
           </div>
           
@@ -246,7 +251,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                     ? "bg-teal-500/30 text-teal-300"
                     : isTracking 
                       ? "bg-purple-500/30 text-purple-300" 
-                      : "bg-yellow-200/30 text-yellow-100"
+                      : isSoftball
+                        ? "bg-yellow-200/30 text-yellow-100"
+                        : "bg-amber-500/30 text-amber-300"
                 )}>
                   {t(task.badge)}
                 </span>
@@ -270,14 +277,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               ? "border-3 border-dashed border-teal-500/70"
               : isTracking
                 ? "border-3 border-dashed border-purple-500/70"
-                : "border-3 border-dashed border-yellow-200/70"
+                : isSoftball
+                  ? "border-3 border-dashed border-yellow-200/70"
+                  : "border-3 border-dashed border-amber-500/70"
         )}>
           {task.completed ? (
             <Check className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
             <Zap className={cn(
               "h-3 w-3 sm:h-4 sm:w-4 animate-pulse",
-              isTexVision ? "text-teal-500" : isTracking ? "text-purple-500" : "text-yellow-200"
+              isTexVision ? "text-teal-500" : isTracking ? "text-purple-500" : isSoftball ? "text-yellow-200" : "text-amber-500"
             )} />
           )}
         </div>
@@ -290,11 +299,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               ? "bg-teal-500/20 border-teal-500/40"
               : isTracking 
                 ? "bg-purple-500/20 border-purple-500/40" 
-                : "bg-yellow-200/20 border-yellow-200/40"
+                : isSoftball
+                  ? "bg-yellow-200/20 border-yellow-200/40"
+                  : "bg-amber-500/20 border-amber-500/40"
           )}>
             <span className={cn(
               "text-[10px] font-black uppercase tracking-wider",
-              isTexVision ? "text-teal-400" : isTracking ? "text-purple-400" : "text-yellow-100"
+              isTexVision ? "text-teal-400" : isTracking ? "text-purple-400" : isSoftball ? "text-yellow-100" : "text-amber-400"
             )}>
               {t('gamePlan.doIt')}
             </span>
@@ -547,6 +558,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       <style>{`
         @keyframes game-plan-pulse {
           0%, 100% {
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.1);
+          }
+        }
+        
+        @keyframes game-plan-pulse-softball {
+          0%, 100% {
             box-shadow: 0 0 0 0 rgba(254, 240, 138, 0.4);
           }
           50% {
@@ -574,6 +594,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         
         .game-plan-pulse {
           animation: game-plan-pulse 2s ease-in-out infinite;
+        }
+        
+        .game-plan-pulse-softball {
+          animation: game-plan-pulse-softball 2s ease-in-out infinite;
         }
         
         .game-plan-pulse-purple {
