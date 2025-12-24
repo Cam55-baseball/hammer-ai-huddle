@@ -5242,7 +5242,37 @@
       "customize": "Personnaliser",
       "system": "Préréglage Système",
       "custom": "Préréglage Personnalisé"
+    },
+    "share": {
+      "title": "Partager le Modèle",
+      "noLink": "Créez un lien partageable pour ce modèle",
+      "creating": "Création...",
+      "createLink": "Créer un Lien",
+      "link": "Lien de Partage",
+      "public": "Accès Public",
+      "publicDesc": "Toute personne avec le lien peut voir et importer",
+      "privateDesc": "Le lien est actuellement désactivé",
+      "views": "Vues",
+      "delete": "Supprimer le Lien",
+      "preview": "Aperçu",
+      "created": "Lien créé !",
+      "error": "Échec de la création du lien",
+      "deleted": "Lien supprimé",
+      "deleteError": "Échec de la suppression du lien",
+      "copied": "Lien copié !",
+      "copyError": "Échec de la copie du lien"
     }
+  },
+  "runningProgress": {
+    "title": "Progrès de Course",
+    "subtitle": "Suivez vos performances de course au fil du temps",
+    "noData": "Pas de données de course pour cette période",
+    "totalTime": "Temps Total",
+    "sessions": "Séances",
+    "avgPace": "Allure Moy.",
+    "thisWeek": "Cette Semaine",
+    "thisMonth": "Ce Mois",
+    "allTime": "Tout le Temps"
   },
   "navigation": {
     "myCustomActivities": "Mes Activités"

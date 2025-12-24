@@ -84,10 +84,10 @@ export function ShareTemplateDialog({ open, onOpenChange, template }: ShareTempl
 
       if (error) throw error;
       setShareData(data as ShareData);
-      toast.success(t('share.created', 'Share link created!'));
+      toast.success(t('myCustomActivities.share.created'));
     } catch (error) {
       console.error('Error creating share:', error);
-      toast.error(t('share.error', 'Failed to create share link'));
+      toast.error(t('myCustomActivities.share.error'));
     } finally {
       setLoading(false);
     }
@@ -105,10 +105,10 @@ export function ShareTemplateDialog({ open, onOpenChange, template }: ShareTempl
 
       if (error) throw error;
       setShareData(null);
-      toast.success(t('share.deleted', 'Share link deleted'));
+      toast.success(t('myCustomActivities.share.deleted'));
     } catch (error) {
       console.error('Error deleting share:', error);
-      toast.error(t('share.deleteError', 'Failed to delete share link'));
+      toast.error(t('myCustomActivities.share.deleteError'));
     } finally {
       setLoading(false);
     }
@@ -138,10 +138,10 @@ export function ShareTemplateDialog({ open, onOpenChange, template }: ShareTempl
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      toast.success(t('share.copied', 'Link copied to clipboard!'));
+      toast.success(t('myCustomActivities.share.copied'));
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast.error(t('share.copyError', 'Failed to copy link'));
+      toast.error(t('myCustomActivities.share.copyError'));
     }
   };
 
@@ -151,7 +151,7 @@ export function ShareTemplateDialog({ open, onOpenChange, template }: ShareTempl
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5" />
-            {t('share.title', 'Share Template')}
+            {t('myCustomActivities.share.title')}
           </DialogTitle>
           <DialogDescription>
             {template?.title}
@@ -163,17 +163,17 @@ export function ShareTemplateDialog({ open, onOpenChange, template }: ShareTempl
             <div className="text-center py-6">
               <Link2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">
-                {t('share.noLink', 'Create a shareable link for this template')}
+                {t('myCustomActivities.share.noLink')}
               </p>
               <Button onClick={createShare} disabled={loading} className="gap-2">
                 <Share2 className="h-4 w-4" />
-                {loading ? t('share.creating', 'Creating...') : t('share.createLink', 'Create Share Link')}
+                {loading ? t('myCustomActivities.share.creating') : t('myCustomActivities.share.createLink')}
               </Button>
             </div>
           ) : (
             <>
               <div className="space-y-2">
-                <Label>{t('share.link', 'Share Link')}</Label>
+                <Label>{t('myCustomActivities.share.link')}</Label>
                 <div className="flex items-center gap-2">
                   <Input value={shareUrl} readOnly className="font-mono text-sm" />
                   <Button size="icon" variant="outline" onClick={copyToClipboard}>
@@ -184,21 +184,21 @@ export function ShareTemplateDialog({ open, onOpenChange, template }: ShareTempl
 
               <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                 <div>
-                  <Label className="font-medium">{t('share.public', 'Public Access')}</Label>
+                  <Label className="font-medium">{t('myCustomActivities.share.public')}</Label>
                   <p className="text-xs text-muted-foreground">
                     {shareData.is_public 
-                      ? t('share.publicDesc', 'Anyone with the link can view and import')
-                      : t('share.privateDesc', 'Link is currently disabled')}
+                      ? t('myCustomActivities.share.publicDesc')
+                      : t('myCustomActivities.share.privateDesc')}
                   </p>
                 </div>
                 <Switch checked={shareData.is_public} onCheckedChange={togglePublic} />
               </div>
 
               <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>{t('share.views', 'Views')}: {shareData.view_count}</span>
+                <span>{t('myCustomActivities.share.views')}: {shareData.view_count}</span>
                 <Button variant="ghost" size="sm" className="text-destructive gap-1" onClick={deleteShare}>
                   <Trash2 className="h-3 w-3" />
-                  {t('share.delete', 'Delete Link')}
+                  {t('myCustomActivities.share.delete')}
                 </Button>
               </div>
 
@@ -206,7 +206,7 @@ export function ShareTemplateDialog({ open, onOpenChange, template }: ShareTempl
                 <Button variant="outline" className="flex-1 gap-2" asChild>
                   <a href={shareUrl} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" />
-                    {t('share.preview', 'Preview')}
+                    {t('myCustomActivities.share.preview')}
                   </a>
                 </Button>
               </div>
