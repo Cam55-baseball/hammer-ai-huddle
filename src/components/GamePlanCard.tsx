@@ -9,12 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2 } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
+import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizDialog';
@@ -28,7 +31,7 @@ import { useDailySummaryNotification } from '@/hooks/useDailySummaryNotification
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { CustomActivityTemplate } from '@/types/customActivity';
-import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
+import { format, addDays, startOfWeek, isSameDay, getDay } from 'date-fns';
 
 interface GamePlanCardProps {
   selectedSport: 'baseball' | 'softball';
@@ -37,7 +40,8 @@ interface GamePlanCardProps {
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { tasks, customActivities, completedCount, totalCount, daysUntilRecap, recapProgress, loading, refetch } = useGamePlan(selectedSport);
+  const { tasks, customActivities, completedCount, totalCount, loading, refetch } = useGamePlan(selectedSport);
+  const { daysUntilRecap, recapProgress } = useRecapCountdown();
   const { getFavorites, toggleComplete, addToToday, templates } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
@@ -87,19 +91,39 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     } catch { return {}; }
   });
   
-  // Lock order state
+  // Lock order state with day selection for "this week"
   const [orderLocked, setOrderLocked] = useState<'day' | 'week' | null>(() => {
     try {
       const stored = localStorage.getItem('gameplan-order-lock');
       if (!stored) return null;
-      const { type, expires } = JSON.parse(stored);
+      const { type, expires, days } = JSON.parse(stored);
       if (new Date(expires) < new Date()) {
         localStorage.removeItem('gameplan-order-lock');
         return null;
       }
+      // For week lock, check if today is in the selected days
+      if (type === 'week' && days) {
+        const todayDayOfWeek = getDay(new Date());
+        if (!days.includes(todayDayOfWeek)) {
+          return null; // Lock doesn't apply today
+        }
+      }
       return type;
     } catch { return null; }
   });
+  
+  // Selected days for week lock (0=Sunday, 1=Monday, ... 6=Saturday)
+  const [lockDays, setLockDays] = useState<number[]>(() => {
+    try {
+      const stored = localStorage.getItem('gameplan-order-lock');
+      if (!stored) return [1, 2, 3, 4, 5]; // Default to weekdays
+      const { days } = JSON.parse(stored);
+      return days || [1, 2, 3, 4, 5];
+    } catch { return [1, 2, 3, 4, 5]; }
+  });
+  
+  // Day picker dialog for "Lock for This Week"
+  const [dayPickerOpen, setDayPickerOpen] = useState(false);
   
   // Template dialogs
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
@@ -392,19 +416,46 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   
   // Lock order handlers
   const handleLockOrder = (type: 'day' | 'week') => {
-    const expires = type === 'day' 
-      ? new Date(new Date().setHours(23, 59, 59, 999))
-      : addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 7);
+    if (type === 'week') {
+      // Open day picker dialog for week lock
+      setDayPickerOpen(true);
+      return;
+    }
     
+    const expires = new Date(new Date().setHours(23, 59, 59, 999));
     localStorage.setItem('gameplan-order-lock', JSON.stringify({ type, expires: expires.toISOString() }));
     setOrderLocked(type);
     toast.success(t('gamePlan.lockOrder.locked'));
+  };
+  
+  const handleConfirmWeekLock = () => {
+    if (lockDays.length === 0) {
+      toast.error(t('gamePlan.lockOrder.selectAtLeastOne'));
+      return;
+    }
+    
+    const expires = addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 7);
+    localStorage.setItem('gameplan-order-lock', JSON.stringify({ 
+      type: 'week', 
+      expires: expires.toISOString(),
+      days: lockDays 
+    }));
+    setOrderLocked('week');
+    setDayPickerOpen(false);
+    toast.success(t('gamePlan.lockOrder.locked'));
+  };
+  
+  const toggleLockDay = (day: number) => {
+    setLockDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
   };
   
   const handleUnlockOrder = () => {
     localStorage.removeItem('gameplan-order-lock');
     setOrderLocked(null);
     toast.success(t('gamePlan.lockOrder.unlocked'));
+  };
   };
   
   // Template handlers
@@ -774,16 +825,37 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   if (showCalendarView) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowCalendarView(false)}
-            className="text-white/70 hover:text-white"
-          >
-            ← {t('gamePlan.calendarView.viewToday')}
-          </Button>
-        </div>
+        <Card className="p-4 bg-secondary border-primary/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary">
+                <CalendarDays className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <h2 className="text-lg font-black text-white uppercase">{t('gamePlan.calendarView.title')}</h2>
+            </div>
+            <ToggleGroup 
+              type="single" 
+              value="week" 
+              onValueChange={(value) => {
+                if (value === 'today') setShowCalendarView(false);
+              }}
+              className="bg-background/10 rounded-lg p-0.5"
+            >
+              <ToggleGroupItem 
+                value="today" 
+                className="h-7 px-3 text-xs font-bold data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              >
+                {t('gamePlan.calendarView.today')}
+              </ToggleGroupItem>
+              <ToggleGroupItem 
+                value="week" 
+                className="h-7 px-3 text-xs font-bold data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              >
+                {t('gamePlan.calendarView.viewWeek')}
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        </Card>
         <GamePlanCalendarView
           tasks={tasks}
           taskTimes={taskTimes}
@@ -823,15 +895,29 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           
           {/* Action buttons row */}
           <div className="flex items-center gap-1 flex-wrap">
-            {/* Calendar view toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowCalendarView(true)}
-              className="text-white/70 hover:text-white h-8 px-2"
+            {/* Today/Week View Toggle */}
+            <ToggleGroup 
+              type="single" 
+              value={showCalendarView ? 'week' : 'today'} 
+              onValueChange={(value) => {
+                if (value === 'week') setShowCalendarView(true);
+                else if (value === 'today') setShowCalendarView(false);
+              }}
+              className="bg-background/10 rounded-lg p-0.5"
             >
-              <CalendarDays className="h-4 w-4" />
-            </Button>
+              <ToggleGroupItem 
+                value="today" 
+                className="h-7 px-3 text-xs font-bold data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              >
+                {t('gamePlan.calendarView.today')}
+              </ToggleGroupItem>
+              <ToggleGroupItem 
+                value="week" 
+                className="h-7 px-3 text-xs font-bold data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              >
+                {t('gamePlan.calendarView.viewWeek')}
+              </ToggleGroupItem>
+            </ToggleGroup>
             
             {/* Sort mode toggle */}
             <Button
@@ -1314,6 +1400,58 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </ScrollArea>
         </DrawerContent>
       </Drawer>
+      
+      {/* Day Picker Dialog for Week Lock */}
+      <Dialog open={dayPickerOpen} onOpenChange={setDayPickerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('gamePlan.lockOrder.selectDays')}</DialogTitle>
+            <DialogDescription>
+              {t('gamePlan.lockOrder.selectDaysDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { day: 0, label: t('gamePlan.lockOrder.days.sun') },
+                { day: 1, label: t('gamePlan.lockOrder.days.mon') },
+                { day: 2, label: t('gamePlan.lockOrder.days.tue') },
+                { day: 3, label: t('gamePlan.lockOrder.days.wed') },
+                { day: 4, label: t('gamePlan.lockOrder.days.thu') },
+                { day: 5, label: t('gamePlan.lockOrder.days.fri') },
+                { day: 6, label: t('gamePlan.lockOrder.days.sat') },
+              ].map(({ day, label }) => (
+                <div 
+                  key={day}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
+                    lockDays.includes(day) 
+                      ? "border-primary bg-primary/10" 
+                      : "border-border hover:border-primary/50"
+                  )}
+                  onClick={() => toggleLockDay(day)}
+                >
+                  <Checkbox 
+                    checked={lockDays.includes(day)}
+                    onCheckedChange={() => toggleLockDay(day)}
+                  />
+                  <span className="font-medium">{label}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-4 text-center">
+              {t('gamePlan.lockOrder.daysSelected', { count: lockDays.length })}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDayPickerOpen(false)}>{t('common.cancel')}</Button>
+            <Button onClick={handleConfirmWeekLock} disabled={lockDays.length === 0}>
+              <Lock className="h-4 w-4 mr-2" />
+              {t('gamePlan.lockOrder.lock')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {/* Pulsing animation for incomplete tasks */}
       <style>{`
