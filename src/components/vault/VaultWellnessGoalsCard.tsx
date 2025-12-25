@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Target, Smile, AlertTriangle, Sword, Bell, Check, AlertCircle, TrendingUp } from 'lucide-react';
+import { Target, Smile, AlertTriangle, Sword, Bell, Check, AlertCircle, TrendingUp, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { startOfWeek, format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useWeeklyWellnessQuiz } from '@/hooks/useWeeklyWellnessQuiz';
 
 interface WeeklyGoals {
   id?: string;
@@ -26,9 +27,14 @@ interface WeeklyAverages {
   discipline: number | null;
 }
 
+const MOOD_EMOJIS = ['😔', '😕', '😐', '🙂', '😄'];
+const STRESS_EMOJIS = ['😌', '🙂', '😐', '😰', '😫'];
+const DISCIPLINE_EMOJIS = ['💤', '🚶', '🏃', '💪', '🔥'];
+
 export function VaultWellnessGoalsCard() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { isCompletedThisWeek, currentGoals: weeklyQuizGoals, nextOpenDate } = useWeeklyWellnessQuiz();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [goals, setGoals] = useState<WeeklyGoals>({
@@ -179,6 +185,83 @@ export function VaultWellnessGoalsCard() {
       <Card className="bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border-emerald-500/20">
         <CardContent className="flex items-center justify-center h-48">
           <div className="animate-pulse text-muted-foreground">{t('common.loading')}</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If weekly goals are completed, show locked read-only state
+  if (isCompletedThisWeek && weeklyQuizGoals) {
+    return (
+      <Card className="bg-gradient-to-br from-emerald-500/5 to-teal-500/5 border-emerald-500/20">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Target className="h-5 w-5 text-emerald-500" />
+            {t('vault.wellnessGoals.title')}
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">{t('vault.wellnessGoals.subtitle')}</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Locked Banner */}
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+            <div className="p-2 rounded-full bg-emerald-500/20">
+              <Lock className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-emerald-400">{t('vault.wellnessGoals.goalsSet')}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('vault.wellnessGoals.lockedUntil')} {nextOpenDate}
+              </p>
+            </div>
+          </div>
+
+          {/* Current Goals Display - Read Only */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-background/30 border border-border/30">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{MOOD_EMOJIS[(weeklyQuizGoals.target_mood_level || 4) - 1]}</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">{t('vault.wellnessGoals.targetMood')}</p>
+                  <p className="text-sm font-bold text-yellow-500">Level {weeklyQuizGoals.target_mood_level}</p>
+                </div>
+              </div>
+              {averages.mood !== null && (
+                <div className={cn("text-xs font-medium", getStatusColor(averages.mood, weeklyQuizGoals.target_mood_level))}>
+                  {t('vault.wellnessGoals.currentAvg')}: {averages.mood}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg bg-background/30 border border-border/30">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{STRESS_EMOJIS[(weeklyQuizGoals.target_stress_level || 2) - 1]}</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">{t('vault.wellnessGoals.maxStress')}</p>
+                  <p className="text-sm font-bold text-orange-500">Level {weeklyQuizGoals.target_stress_level}</p>
+                </div>
+              </div>
+              {averages.stress !== null && (
+                <div className={cn("text-xs font-medium", getStatusColor(averages.stress, weeklyQuizGoals.target_stress_level, true))}>
+                  {t('vault.wellnessGoals.currentAvg')}: {averages.stress}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg bg-background/30 border border-border/30">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{DISCIPLINE_EMOJIS[(weeklyQuizGoals.target_discipline_level || 4) - 1]}</span>
+                <div>
+                  <p className="text-xs text-muted-foreground">{t('vault.wellnessGoals.targetDiscipline')}</p>
+                  <p className="text-sm font-bold text-blue-500">Level {weeklyQuizGoals.target_discipline_level}</p>
+                </div>
+              </div>
+              {averages.discipline !== null && (
+                <div className={cn("text-xs font-medium", getStatusColor(averages.discipline, weeklyQuizGoals.target_discipline_level))}>
+                  {t('vault.wellnessGoals.currentAvg')}: {averages.discipline}
+                </div>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
