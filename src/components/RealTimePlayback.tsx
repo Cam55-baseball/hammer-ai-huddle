@@ -77,7 +77,7 @@ const RECORDING_DURATIONS = [10, 15, 20, 30, 40];
 const PLAYBACK_DELAYS = [5, 10, 15, 20, 25, 30];
 const REPEAT_DURATIONS = [30, 45, 60, 90, 120];
 const PLAYBACK_SPEEDS = ['0.25', '0.5', '0.75', '1'];
-const FRAME_COUNT_OPTIONS = [3, 5, 7, 10];
+const FRAME_COUNT_OPTIONS = [5, 7, 10, 15];
 
 interface CapturedFrame {
   dataUrl: string;
@@ -142,10 +142,11 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [isPaused, setIsPaused] = useState(false);
   const [capturedFrames, setCapturedFrames] = useState<CapturedFrame[]>([]);
   const [orientationWarning, setOrientationWarning] = useState(false);
+  const [orientationCrashRecovery, setOrientationCrashRecovery] = useState(false);
   
-  // Enhanced frame controls
+  // Enhanced frame controls - default to 7 for better coverage
   const [frameCountForAnalysis, setFrameCountForAnalysis] = useState<number>(() => 
-    parseInt(localStorage.getItem('rtPlayback_frameCount') || '5')
+    parseInt(localStorage.getItem('rtPlayback_frameCount') || '7')
   );
   const [isPiPActive, setIsPiPActive] = useState(false);
   const [currentVideoTime, setCurrentVideoTime] = useState(0);
@@ -635,40 +636,17 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     };
   }, [phase]);
 
-  // Detect orientation changes during active recording phases
+  // Show orientation warning for setup phase (educational, not crash prevention)
   useEffect(() => {
-    const handleOrientationChange = () => {
-      const isActivePhase = phase === 'countdown' || phase === 'recording' || phase === 'waiting';
-      
-      if (isActivePhase) {
+    const handleOrientationWarning = () => {
+      if (phase === 'setup') {
         setOrientationWarning(true);
-        // Auto-dismiss warning after 5 seconds
-        setTimeout(() => setOrientationWarning(false), 5000);
+        setTimeout(() => setOrientationWarning(false), 3000);
       }
     };
     
-    // Listen to both orientationchange and resize for broader compatibility
-    window.addEventListener('orientationchange', handleOrientationChange);
-    
-    // Also listen for resize which fires on orientation change in some browsers
-    let lastWidth = window.innerWidth;
-    const handleResize = () => {
-      const currentWidth = window.innerWidth;
-      const isActivePhase = phase === 'countdown' || phase === 'recording' || phase === 'waiting';
-      
-      // Detect significant width change (orientation flip)
-      if (isActivePhase && Math.abs(currentWidth - lastWidth) > 100) {
-        setOrientationWarning(true);
-        setTimeout(() => setOrientationWarning(false), 5000);
-      }
-      lastWidth = currentWidth;
-    };
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('orientationchange', handleOrientationChange);
-      window.removeEventListener('resize', handleResize);
-    };
+    window.addEventListener('orientationchange', handleOrientationWarning);
+    return () => window.removeEventListener('orientationchange', handleOrientationWarning);
   }, [phase]);
 
   // Initialize camera
@@ -739,7 +717,66 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       attachPreviewStream();
     }
   }, [isOpen, phase, attachPreviewStream]);
-  
+
+  // CRITICAL: Detect orientation changes during active recording and GRACEFULLY STOP recording
+  useEffect(() => {
+    let lastOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+    
+    const handleOrientationCrashPrevention = () => {
+      const isActivePhase = phase === 'countdown' || phase === 'recording' || phase === 'waiting';
+      const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+      
+      if (isActivePhase && currentOrientation !== lastOrientation) {
+        console.warn('Orientation changed during active recording phase - stopping gracefully');
+        
+        // CRITICAL: Stop recording GRACEFULLY before crash
+        if (mediaRecorderRef.current?.state === 'recording') {
+          try {
+            mediaRecorderRef.current.stop();
+          } catch (e) {
+            console.error('Failed to stop recorder:', e);
+          }
+        }
+        
+        // Exit fullscreen
+        exitFullscreen();
+        
+        // Show recovery message and reset to setup
+        setOrientationCrashRecovery(true);
+        setPhase('setup');
+        
+        toast.warning(t('realTimePlayback.orientationInterrupted', 'Recording interrupted by orientation change. Please lock your screen orientation and try again.'));
+        
+        // Reinitialize camera after brief delay
+        setTimeout(() => {
+          initCamera();
+          setOrientationCrashRecovery(false);
+        }, 500);
+      }
+      
+      lastOrientation = currentOrientation;
+    };
+    
+    // Use multiple listeners for broader compatibility
+    window.addEventListener('orientationchange', handleOrientationCrashPrevention);
+    
+    // Also listen for resize which catches orientation changes on some devices
+    const handleResize = () => {
+      // Debounce to avoid multiple triggers
+      setTimeout(handleOrientationCrashPrevention, 100);
+    };
+    window.addEventListener('resize', handleResize);
+    
+    // Visual viewport API for modern mobile browsers
+    window.visualViewport?.addEventListener('resize', handleOrientationCrashPrevention);
+    
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationCrashPrevention);
+      window.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('resize', handleOrientationCrashPrevention);
+    };
+  }, [phase, exitFullscreen, initCamera, t]);
+
   // Recording flow
   const startRecordingFlow = async () => {
     console.log('Starting recording flow...');
@@ -1298,14 +1335,16 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                     exit={{ opacity: 0, y: -20 }}
                     className={`${isFullscreen ? '' : 'space-y-4'}`}
                   >
-                    {/* Camera Preview - Persistent across setup/countdown/recording */}
+                    {/* Camera Preview - LARGER in setup phase to show what will be recorded */}
                     {/* When fullscreen, this fills the entire screen */}
                     <div 
                       ref={cameraContainerRef}
                       className={`relative overflow-hidden bg-black ${
                         isFullscreen 
                           ? 'fixed inset-0 z-[9999] rounded-none' 
-                          : 'rounded-xl aspect-[4/3] sm:aspect-video max-h-[40vh] sm:max-h-none'
+                          : phase === 'setup'
+                            ? 'rounded-xl min-h-[55vh] sm:min-h-[60vh] aspect-auto'
+                            : 'rounded-xl aspect-[4/3] sm:aspect-video max-h-[40vh] sm:max-h-none'
                       }`}
                     >
                       {cameraPermission === false ? (
@@ -1334,6 +1373,31 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                               <div className="absolute left-0 right-0 top-1/3 h-px bg-white/50" />
                               <div className="absolute left-0 right-0 top-2/3 h-px bg-white/50" />
                             </div>
+                          )}
+                          
+                          {/* Recording Area Indicator - Setup Phase */}
+                          {phase === 'setup' && (
+                            <>
+                              {/* Corner brackets to show recording area */}
+                              <div className="absolute inset-4 pointer-events-none">
+                                <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-white/70 rounded-tl" />
+                                <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-white/70 rounded-tr" />
+                                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-white/70 rounded-bl" />
+                                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-white/70 rounded-br" />
+                              </div>
+                              
+                              {/* "This will be recorded" indicator */}
+                              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/70 text-white text-sm flex items-center gap-2">
+                                <Video className="h-4 w-4 text-red-400" />
+                                <span>{t('realTimePlayback.thisWillBeRecorded', 'This is what will be recorded')}</span>
+                              </div>
+                              
+                              {/* Orientation tip */}
+                              <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-black/70 text-white text-xs flex items-center gap-2">
+                                <span>📱</span>
+                                <span>{t('realTimePlayback.lockOrientation', 'Lock orientation before recording')}</span>
+                              </div>
+                            </>
                           )}
                           
                           {/* Camera Control Buttons - Setup Phase */}
@@ -1713,87 +1777,75 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                         </div>
                       )}
                       
-                      {/* Status indicator */}
-                      {phase === 'playback' && !isPiPActive && (
-                        <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/90 text-white">
-                          <Play className="h-4 w-4" />
-                          <span className="font-medium">{t('realTimePlayback.playing', 'Playing Back')}</span>
-                        </div>
-                      )}
-                      {/* Timer */}
-                      {phase === 'playback' && !isPiPActive && (
-                        <div className="absolute bottom-4 right-4 px-4 py-2 rounded-lg bg-black/70 text-white text-xl font-mono">
-                          {Math.floor(playbackTimeLeft / 60)}:{String(playbackTimeLeft % 60).padStart(2, '0')}
-                        </div>
-                      )}
-                      {/* Speed indicator */}
+                      {/* Status indicators - STACKED VERTICALLY to prevent overlap */}
                       {!isPiPActive && (
-                        <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/70 text-white text-sm">
-                          {playbackSpeed}x
-                        </div>
-                      )}
-                      
-                      {/* Auto-capture indicator */}
-                      {autoCaptureSetting === 'interval' && phase === 'playback' && !isPaused && !isPiPActive && (
-                        <div className="absolute top-12 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/90 text-black text-sm font-medium">
-                          <TimerReset className="h-3 w-3" />
-                          <span>{t('realTimePlayback.autoCapturing', 'Auto-capturing every {{seconds}}s', { seconds: autoCaptureInterval })}</span>
-                        </div>
-                      )}
-                      
-                      {/* Analysis Status Badge */}
-                      {analysisStatus !== 'idle' && analysisStatus !== 'complete' && !isPiPActive && (
-                        <div className={`absolute bottom-16 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
-                          analysisStatus === 'uploading' || analysisStatus === 'extracting' || analysisStatus === 'analyzing'
-                            ? 'bg-blue-500/90 text-white'
-                            : analysisStatus === 'failed'
-                            ? 'bg-red-500/90 text-white'
-                            : 'bg-gray-500/90 text-white'
-                        }`}>
-                          {analysisStatus === 'uploading' && (
-                            <>
-                              <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
-                              <span>{t('realTimePlayback.statusUploading', 'Uploading...')}</span>
-                            </>
-                          )}
-                          {analysisStatus === 'extracting' && (
-                            <>
-                              <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
-                              <span>{t('realTimePlayback.statusExtracting', 'Extracting frames...')}</span>
-                            </>
-                          )}
-                          {analysisStatus === 'analyzing' && (
-                            <>
-                              <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
-                              <span>{t('realTimePlayback.statusAnalyzing', 'AI analyzing...')}</span>
-                            </>
-                          )}
-                          {analysisStatus === 'failed' && (
-                            <>
-                              <AlertCircle className="h-3 w-3" />
-                              <span>{t('realTimePlayback.statusFailed', 'Analysis failed')}</span>
-                            </>
-                          )}
-                          {analysisStatus === 'skipped-local' && (
-                            <>
-                              <WifiOff className="h-3 w-3" />
-                              <span>{t('realTimePlayback.statusLocalOnly', 'Local mode')}</span>
-                            </>
-                          )}
-                          {analysisStatus === 'skipped-disabled' && (
-                            <>
-                              <Brain className="h-3 w-3" />
-                              <span>{t('realTimePlayback.statusDisabled', 'Analysis off')}</span>
-                            </>
+                        <div className="absolute top-4 left-4 flex flex-col gap-2 items-start pointer-events-none">
+                          {/* Playing status */}
+                          {phase === 'playback' && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/90 text-white">
+                              <Play className="h-4 w-4" />
+                              <span className="font-medium text-sm">{t('realTimePlayback.playing', 'Playing Back')}</span>
+                            </div>
                           )}
                         </div>
                       )}
                       
-                      {/* Analysis Complete Badge */}
-                      {analysisStatus === 'complete' && !isPiPActive && (
-                        <div className="absolute bottom-16 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-sm font-medium">
-                          <CheckCircle2 className="h-3 w-3" />
-                          <span>{t('realTimePlayback.statusComplete', 'Analysis ready')}</span>
+                      {/* Right side indicators - STACKED VERTICALLY */}
+                      {!isPiPActive && (
+                        <div className="absolute top-4 right-4 flex flex-col gap-2 items-end pointer-events-none">
+                          {/* Speed indicator */}
+                          <div className="px-3 py-1.5 rounded-full bg-black/70 text-white text-sm font-medium">
+                            {playbackSpeed}x
+                          </div>
+                          
+                          {/* Auto-capture indicator */}
+                          {autoCaptureSetting === 'interval' && phase === 'playback' && !isPaused && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/90 text-black text-xs font-medium">
+                              <TimerReset className="h-3 w-3" />
+                              <span>{autoCaptureInterval}s</span>
+                            </div>
+                          )}
+                          
+                          {/* Analysis Status Badge */}
+                          {analysisStatus !== 'idle' && analysisStatus !== 'complete' && (
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                              analysisStatus === 'uploading' || analysisStatus === 'extracting' || analysisStatus === 'analyzing'
+                                ? 'bg-blue-500/90 text-white'
+                                : analysisStatus === 'failed'
+                                ? 'bg-red-500/90 text-white'
+                                : 'bg-gray-500/90 text-white'
+                            }`}>
+                              {(analysisStatus === 'uploading' || analysisStatus === 'extracting' || analysisStatus === 'analyzing') && (
+                                <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
+                              )}
+                              {analysisStatus === 'failed' && <AlertCircle className="h-3 w-3" />}
+                              {analysisStatus === 'skipped-local' && <WifiOff className="h-3 w-3" />}
+                              {analysisStatus === 'skipped-disabled' && <Brain className="h-3 w-3" />}
+                              <span className="truncate max-w-[80px]">
+                                {analysisStatus === 'uploading' && t('realTimePlayback.uploading', 'Uploading')}
+                                {analysisStatus === 'extracting' && t('realTimePlayback.extracting', 'Extracting')}
+                                {analysisStatus === 'analyzing' && t('realTimePlayback.analyzing', 'Analyzing')}
+                                {analysisStatus === 'failed' && t('realTimePlayback.failed', 'Failed')}
+                                {analysisStatus === 'skipped-local' && t('realTimePlayback.local', 'Local')}
+                                {analysisStatus === 'skipped-disabled' && t('realTimePlayback.off', 'Off')}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Analysis Complete Badge */}
+                          {analysisStatus === 'complete' && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-xs font-medium">
+                              <CheckCircle2 className="h-3 w-3" />
+                              <span>{t('realTimePlayback.ready', 'Ready')}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Timer - Bottom right, separate from other badges */}
+                      {phase === 'playback' && !isPiPActive && (
+                        <div className="absolute bottom-16 right-4 px-4 py-2 rounded-lg bg-black/70 text-white text-xl font-mono pointer-events-none">
+                          {Math.floor(playbackTimeLeft / 60)}:{String(playbackTimeLeft % 60).padStart(2, '0')}
                         </div>
                       )}
                       
@@ -2321,8 +2373,8 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                       </Card>
                     )}
                     
-                    {/* Action Buttons */}
-                    {phase === 'complete' && (
+                    {/* Action Buttons - SHOW DURING PLAYBACK TOO so user can proceed while analysis runs */}
+                    {(phase === 'playback' || phase === 'complete') && (
                       <div className="flex flex-wrap gap-3">
                         <Button onClick={handleRestart} variant="outline" className="flex-1 gap-2">
                           <RotateCcw className="h-4 w-4" />
@@ -2342,6 +2394,23 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                         >
                           <BookMarked className="h-4 w-4" />
                           {t('realTimePlayback.saveToLibrary', 'Save to Library')}
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Skip Analysis Option when analyzing */}
+                    {isAnalyzing && (
+                      <div className="flex justify-center">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => {
+                            setIsAnalyzing(false);
+                            setAnalysisStatus('skipped-disabled');
+                          }}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          {t('realTimePlayback.skipAnalysis', 'Skip Analysis & Continue')}
                         </Button>
                       </div>
                     )}

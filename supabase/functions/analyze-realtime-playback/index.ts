@@ -303,18 +303,39 @@ serve(async (req) => {
     const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];
     
     if (frames.length > 0) {
+      // Calculate approximate timing for each frame to provide temporal context
+      const totalFrames = frames.length;
+      
       userContent.push({
         type: 'text',
-        text: `Analyze these ${frames.length} key frames from this ${module} video for a ${sport} athlete. These frames are sequential from the beginning to end of the movement. Look at the specific body positions, movements, and mechanics visible in each frame. Provide specific feedback based on what you ACTUALLY SEE.
+        text: `IMPORTANT: You are analyzing the COMPLETE ${module} motion sequence for a ${sport} athlete.
+
+These ${totalFrames} frames represent the ENTIRE movement from start to finish - NOT just isolated moments.
+
+FRAME SEQUENCE CONTEXT:
+${frames.map((_: string, i: number) => `• Frame ${i + 1}/${totalFrames}: ${Math.round((i / Math.max(totalFrames - 1, 1)) * 100)}% through the motion`).join('\n')}
+
+CRITICAL ANALYSIS APPROACH:
+1. View ALL frames together to understand the FULL motion pattern
+2. Track how body position CHANGES between frames (not just individual positions)
+3. Evaluate the TIMING and RHYTHM of the complete movement
+4. Consider the KINETIC CHAIN from initiation to follow-through
+5. Look for SEQUENCE VIOLATIONS that occur across multiple frames
+
+Analyze the complete movement pattern, not individual frames in isolation. Provide specific feedback based on what you ACTUALLY SEE across the entire sequence.
 
 Use the analyze_mechanics tool to return your structured analysis.`
       });
       
-      // Add each frame as an image
-      for (const frame of frames) {
+      // Add each frame as an image with temporal context
+      for (let i = 0; i < frames.length; i++) {
+        userContent.push({
+          type: 'text',
+          text: `[Frame ${i + 1}/${totalFrames} - ${Math.round((i / Math.max(totalFrames - 1, 1)) * 100)}% through motion]`
+        });
         userContent.push({
           type: 'image_url',
-          image_url: { url: frame }
+          image_url: { url: frames[i] }
         });
       }
     } else {
