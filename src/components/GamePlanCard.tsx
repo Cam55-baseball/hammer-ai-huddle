@@ -456,7 +456,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     setOrderLocked(null);
     toast.success(t('gamePlan.lockOrder.unlocked'));
   };
-  };
   
   // Template handlers
   const handleSaveTemplate = async () => {
