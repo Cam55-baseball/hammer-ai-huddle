@@ -543,7 +543,13 @@
       "throwingAnalysis": "Wurfanalyse",
       "hittingDescription": "Analysieren Sie Schwungmechanik, kinetische Sequenz und Schlägergeschwindigkeit",
       "pitchingDescription": "Analysieren Sie Abgabemechanik, Armaktion und Sequenzierung",
-      "throwingDescription": "Analysieren Sie Armaktion, Beinarbeit und Energieübertragung"
+      "throwingDescription": "Analysieren Sie Armaktion, Beinarbeit und Energieübertragung",
+      "merch": "Offizieller Merch",
+      "merchNew": "NEU",
+      "merchDescription": "Repräsentieren Sie die Marke mit offizieller Hammers Modality Ausrüstung, Kleidung und Zubehör",
+      "merchTagline": "⚡ Exklusive Designs für engagierte Athleten",
+      "shopNow": "Jetzt Einkaufen",
+      "shop": "Shop"
     },
     "analyzeVideo": "Video analysieren",
     "viewLibrary": "Bibliothek ansehen",

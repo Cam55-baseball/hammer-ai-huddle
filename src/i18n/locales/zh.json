@@ -514,7 +514,13 @@
       "throwingAnalysis": "传球分析",
       "hittingDescription": "分析挥棒机制、运动链和球棒速度",
       "pitchingDescription": "分析投球机制、手臂动作和时序",
-      "throwingDescription": "分析手臂动作、步法和能量传递"
+      "throwingDescription": "分析手臂动作、步法和能量传递",
+      "merch": "官方商城",
+      "merchNew": "新品",
+      "merchDescription": "穿戴Hammers Modality官方装备、服装和配饰，代表品牌",
+      "merchTagline": "⚡ 为专注运动员打造的独家设计",
+      "shopNow": "立即购买",
+      "shop": "商城"
     },
     "analyzeVideo": "分析视频",
     "viewLibrary": "查看库",

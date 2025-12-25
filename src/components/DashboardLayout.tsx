@@ -56,18 +56,6 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
   );
 }
 
-function MobileFloatingMenuButton() {
-  const { toggleSidebar } = useSidebar();
-
-  return (
-    <Button
-      onClick={toggleSidebar}
-      className="fixed bottom-20 left-4 z-50 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl hover:bg-primary/90 animate-bounce-subtle border-2 border-primary-foreground/20"
-    >
-      <Menu className="h-7 w-7" />
-    </Button>
-  );
-}
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
@@ -118,8 +106,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </main>
         </SidebarInset>
       </div>
-      {/* Mobile Floating Menu Button - Impossible to miss */}
-      <MobileFloatingMenuButton />
       <FloatingChatButton />
       {user && (
         <TutorialModal

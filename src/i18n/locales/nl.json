@@ -543,7 +543,13 @@
       "throwingAnalysis": "Gooi-analyse",
       "hittingDescription": "Analyseer swingmechanica, kinetische sequentie en knuppelsnelheid",
       "pitchingDescription": "Analyseer leveringsmechanica, armactie en sequentiëring",
-      "throwingDescription": "Analyseer armactie, voetenwerk en energieoverdracht"
+      "throwingDescription": "Analyseer armactie, voetenwerk en energieoverdracht",
+      "merch": "Officiële Merch",
+      "merchNew": "NIEUW",
+      "merchDescription": "Vertegenwoordig het merk met officiële Hammers Modality uitrusting, kleding en accessoires",
+      "merchTagline": "⚡ Exclusieve ontwerpen voor toegewijde atleten",
+      "shopNow": "Nu Winkelen",
+      "shop": "Winkel"
     },
     "analyzeVideo": "Video Analyseren",
     "viewLibrary": "Bibliotheek Bekijken",
