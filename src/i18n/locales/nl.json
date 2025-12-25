@@ -3855,7 +3855,10 @@
     "missedGoal": "Blijf pushen!",
     "firstWeekTitle": "Welkom! 🌟",
     "firstWeekMessage": "Dit is je eerste week! Stel basisdoelen in om je voortgang te volgen.",
-    "firstWeekEncouragement": "Begin met wat goed voelt — je kunt volgende week altijd aanpassen."
+    "firstWeekEncouragement": "Begin met wat goed voelt — je kunt volgende week altijd aanpassen.",
+    "alreadyCompleted": "Doelen Al Ingesteld",
+    "comeBackNext": "Kom volgende maandag terug om nieuwe doelen te stellen",
+    "viewCurrentGoals": "Je Doelen voor Deze Week"
   },
   "scoutGamePlan": {
     "title": "SCOUTING REVIEW",

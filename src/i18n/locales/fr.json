@@ -4668,7 +4668,10 @@
     "missedGoal": "Continuez!",
     "firstWeekTitle": "Bienvenue! 🌟",
     "firstWeekMessage": "C'est votre première semaine! Définissez des objectifs de base pour suivre vos progrès.",
-    "firstWeekEncouragement": "Commencez par ce qui vous semble juste — vous pouvez toujours ajuster la semaine prochaine."
+    "firstWeekEncouragement": "Commencez par ce qui vous semble juste — vous pouvez toujours ajuster la semaine prochaine.",
+    "alreadyCompleted": "Objectifs Déjà Définis",
+    "comeBackNext": "Revenez lundi prochain pour définir de nouveaux objectifs",
+    "viewCurrentGoals": "Vos Objectifs pour Cette Semaine"
   },
   "scoutGamePlan": {
     "title": "REVUE DE RECRUTEMENT",

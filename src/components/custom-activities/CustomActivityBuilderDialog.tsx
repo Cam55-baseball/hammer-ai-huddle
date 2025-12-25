@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image } from 'lucide-react';
+import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image, CalendarPlus } from 'lucide-react';
 import { LogoUploadButton } from './LogoUploadButton';
 import { ActivityTypeSelector } from './ActivityTypeSelector';
 import { IconPicker } from './IconPicker';
@@ -28,7 +28,7 @@ interface CustomActivityBuilderDialogProps {
   onOpenChange: (open: boolean) => void;
   template?: CustomActivityTemplate | null;
   presetActivityType?: ActivityType | null;
-  onSave: (data: Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<any>;
+  onSave: (data: Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>, scheduleForToday?: boolean) => Promise<any>;
   onDelete?: (id: string) => Promise<boolean>;
   selectedSport: 'baseball' | 'softball';
 }
@@ -91,6 +91,9 @@ export function CustomActivityBuilderDialog({
   // Multiple embedded running sessions for non-running activity types
   const [showRunningSessions, setShowRunningSessions] = useState(false);
   const [embeddedRunningSessions, setEmbeddedRunningSessions] = useState<EmbeddedRunningSession[]>([]);
+  
+  // Schedule for today toggle (only for new activities)
+  const [scheduleForToday, setScheduleForToday] = useState(false);
 
   useEffect(() => {
     if (template) {
@@ -169,6 +172,7 @@ export function CustomActivityBuilderDialog({
       setPaceGoal('');
       setShowRunningSessions(false);
       setEmbeddedRunningSessions([]);
+      setScheduleForToday(false);
     } else {
       setActivityType(null);
       setTitle('');
@@ -196,6 +200,7 @@ export function CustomActivityBuilderDialog({
       setPaceGoal('');
       setShowRunningSessions(false);
       setEmbeddedRunningSessions([]);
+      setScheduleForToday(false);
     }
   }, [template, presetActivityType, open]);
 
@@ -229,7 +234,7 @@ export function CustomActivityBuilderDialog({
       : undefined;
     
     try {
-      await onSave({
+      const result = await onSave({
         activity_type: activityType,
         title: title.trim(),
         description: description.trim() || undefined,
@@ -253,8 +258,12 @@ export function CustomActivityBuilderDialog({
         custom_logo_url: customLogoUrl.trim() || undefined,
         reminder_enabled: reminderEnabled,
         reminder_time: reminderEnabled ? reminderTime : undefined,
-      });
-      onOpenChange(false);
+      }, !isEditing ? scheduleForToday : undefined);
+      
+      // Only close dialog if save was successful
+      if (result) {
+        onOpenChange(false);
+      }
     } finally {
       setSaving(false);
     }
@@ -320,7 +329,7 @@ export function CustomActivityBuilderDialog({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center gap-3 pt-6">
+                <div className="flex items-center gap-3 pt-6">
                     <Switch id="favorite" checked={isFavorited} onCheckedChange={setIsFavorited} />
                     <Label htmlFor="favorite" className="flex items-center gap-2 cursor-pointer">
                       <Star className={cn("h-4 w-4", isFavorited && "fill-yellow-500 text-yellow-500")} />
@@ -328,6 +337,28 @@ export function CustomActivityBuilderDialog({
                     </Label>
                   </div>
                 </div>
+
+                {/* Schedule for Today Toggle - Only show for new activities */}
+                {!isEditing && (
+                  <div className="p-4 rounded-lg border bg-primary/5 border-primary/20">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="scheduleForToday" className="flex items-center gap-2 cursor-pointer">
+                        <CalendarPlus className="h-4 w-4 text-primary" />
+                        <div>
+                          <span className="font-bold">{t('customActivity.scheduleForToday')}</span>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {t('customActivity.scheduleForTodayDesc')}
+                          </p>
+                        </div>
+                      </Label>
+                      <Switch 
+                        id="scheduleForToday" 
+                        checked={scheduleForToday} 
+                        onCheckedChange={setScheduleForToday} 
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Running-specific fields */}
                 {showRunningFields && (

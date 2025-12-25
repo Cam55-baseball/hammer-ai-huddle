@@ -101,19 +101,20 @@ function TemplateCard({
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex-1"
+            className="flex-1 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
             onClick={onPreview}
           >
-            <Eye className="h-4 w-4 mr-1" />
-            {t('workoutTemplates.preview', 'Preview')}
+            <Eye className="h-3.5 w-3.5 sm:mr-1 shrink-0" />
+            <span className="hidden sm:inline">{t('workoutTemplates.preview', 'Preview')}</span>
           </Button>
           <Button 
             size="sm" 
-            className="flex-1"
+            className="flex-1 text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
             onClick={onUse}
           >
-            {t('workoutTemplates.useTemplate', 'Use Template')}
-            <ArrowRight className="h-4 w-4 ml-1" />
+            <span className="hidden sm:inline">{t('workoutTemplates.useTemplate', 'Use')}</span>
+            <span className="sm:hidden">{t('workoutTemplates.use', 'Use')}</span>
+            <ArrowRight className="h-3.5 w-3.5 sm:ml-1 shrink-0" />
           </Button>
         </div>
       </CardContent>

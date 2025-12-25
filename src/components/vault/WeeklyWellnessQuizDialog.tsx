@@ -25,7 +25,7 @@ const DISCIPLINE_LABELS = ['Minimal', 'Light', 'Moderate', 'Strong', 'Elite'];
 
 export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: WeeklyWellnessQuizDialogProps) {
   const { t } = useTranslation();
-  const { lastWeekGoals, lastWeekAverages, saveGoals } = useWeeklyWellnessQuiz();
+  const { lastWeekGoals, lastWeekAverages, saveGoals, isCompletedThisWeek, currentGoals } = useWeeklyWellnessQuiz();
   
   const [step, setStep] = useState(0);
   const [moodTarget, setMoodTarget] = useState(4);
@@ -261,6 +261,71 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
   ];
 
   const currentStep = steps[step];
+
+  // Show "already completed" state if goals were set this week
+  if (isCompletedThisWeek && currentGoals && !showSuccess) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md p-0 border-0 bg-transparent max-h-[90vh] overflow-y-auto">
+          <DialogTitle className="sr-only">{t('weeklyWellnessQuiz.alreadyCompleted')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('weeklyWellnessQuiz.comeBackNext')}</DialogDescription>
+          <div className="relative bg-gradient-to-br from-emerald-500/20 via-teal-500/15 to-cyan-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-8">
+            {/* Animated background orbs */}
+            <div className="absolute inset-0 overflow-hidden rounded-2xl">
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl animate-pulse" />
+              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-cyan-500/20 rounded-full blur-2xl animate-pulse delay-500" />
+            </div>
+
+            <div className="relative flex flex-col items-center gap-6 text-center">
+              <div className="p-4 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30">
+                <Trophy className="h-10 w-10 text-white" />
+              </div>
+              
+              <div>
+                <h2 className="text-2xl font-black text-foreground mb-2">
+                  {t('weeklyWellnessQuiz.alreadyCompleted')}
+                </h2>
+                <p className="text-muted-foreground">
+                  {t('weeklyWellnessQuiz.comeBackNext')}
+                </p>
+              </div>
+
+              {/* Current goals summary */}
+              <div className="space-y-2 w-full">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {t('weeklyWellnessQuiz.viewCurrentGoals')}
+                </span>
+                <div className="flex items-center justify-center gap-4 p-4 rounded-xl bg-background/30 border border-border/30">
+                  <div className="text-center">
+                    <div className="text-2xl">{MOOD_EMOJIS[(currentGoals.target_mood_level || 4) - 1]}</div>
+                    <span className="text-xs text-emerald-400 font-bold">{t('weeklyWellnessQuiz.mood')}</span>
+                  </div>
+                  <div className="w-px h-8 bg-border/50" />
+                  <div className="text-center">
+                    <div className="text-2xl">{STRESS_EMOJIS[(currentGoals.target_stress_level || 2) - 1]}</div>
+                    <span className="text-xs text-purple-400 font-bold">{t('weeklyWellnessQuiz.stress')}</span>
+                  </div>
+                  <div className="w-px h-8 bg-border/50" />
+                  <div className="text-center">
+                    <div className="text-2xl">{DISCIPLINE_EMOJIS[(currentGoals.target_discipline_level || 4) - 1]}</div>
+                    <span className="text-xs text-amber-400 font-bold">{t('weeklyWellnessQuiz.discipline')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <Button 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                className="mt-2"
+              >
+                {t('common.close')}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   if (showSuccess) {
     return (
