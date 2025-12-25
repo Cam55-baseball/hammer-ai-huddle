@@ -50,13 +50,24 @@ interface MechanicsBreakdown {
   tip: string;
 }
 
+interface DrillRecommendation {
+  title: string;
+  purpose: string;
+  steps: string[];
+  reps_sets: string;
+  cues: string[];
+}
+
 interface Analysis {
   overallScore: number;
   quickSummary: string;
   mechanicsBreakdown: MechanicsBreakdown[];
+  redFlags?: string[];
+  positives?: string[];
   keyStrength: string;
   priorityFix: string;
-  drillRecommendation: string;
+  drills?: DrillRecommendation[];
+  drillRecommendation?: string; // Legacy field for backward compatibility
 }
 
 const RECORDING_DURATIONS = [10, 15, 20, 30, 40];
@@ -1995,6 +2006,46 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                             {/* Quick Summary */}
                             <p className="text-sm text-muted-foreground italic break-words">"{analysis.quickSummary}"</p>
                             
+                            {/* Red Flags - Priority Warning Section */}
+                            {analysis.redFlags && analysis.redFlags.length > 0 && (
+                              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 space-y-2">
+                                <div className="flex items-center gap-2 text-red-600">
+                                  <AlertCircle className="h-4 w-4" />
+                                  <span className="text-xs font-semibold uppercase tracking-wider">
+                                    {t('realTimePlayback.redFlags', 'Red Flags')}
+                                  </span>
+                                </div>
+                                <ul className="space-y-1">
+                                  {analysis.redFlags.map((flag, i) => (
+                                    <li key={i} className="text-sm text-red-700 dark:text-red-400 flex items-start gap-2 break-words">
+                                      <span className="flex-shrink-0 mt-0.5">⚠️</span>
+                                      <span>{flag.replace(/^⚠️\s*/, '')}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            
+                            {/* Positives Section */}
+                            {analysis.positives && analysis.positives.length > 0 && (
+                              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 space-y-2">
+                                <div className="flex items-center gap-2 text-green-600">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                  <span className="text-xs font-semibold uppercase tracking-wider">
+                                    {t('realTimePlayback.positives', 'What\'s Working')}
+                                  </span>
+                                </div>
+                                <ul className="space-y-1">
+                                  {analysis.positives.map((positive, i) => (
+                                    <li key={i} className="text-sm text-green-700 dark:text-green-400 flex items-start gap-2 break-words">
+                                      <span className="flex-shrink-0 mt-0.5">✓</span>
+                                      <span>{positive}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            
                             {/* Mechanics Breakdown */}
                             <div className="space-y-2">
                               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -2037,14 +2088,45 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                               </div>
                             </div>
                             
-                            {/* Drill Recommendation */}
-                            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                              <Settings className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                              <div>
-                                <span className="text-xs font-medium text-primary">{t('realTimePlayback.tryThisDrill', 'Try This Drill')}</span>
-                                <p className="text-sm break-words">{analysis.drillRecommendation}</p>
+                            {/* Structured Drills */}
+                            {analysis.drills && analysis.drills.length > 0 ? (
+                              <div className="space-y-3 pt-2 border-t">
+                                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                  {t('realTimePlayback.recommendedDrills', 'Recommended Drills')}
+                                </span>
+                                {analysis.drills.map((drill, i) => (
+                                  <div key={i} className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <Settings className="h-4 w-4 text-primary flex-shrink-0" />
+                                      <span className="font-medium text-sm">{drill.title}</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground italic break-words">{drill.purpose}</p>
+                                    <ol className="text-sm space-y-1 pl-4">
+                                      {drill.steps.map((step, stepIdx) => (
+                                        <li key={stepIdx} className="list-decimal text-xs break-words">{step}</li>
+                                      ))}
+                                    </ol>
+                                    <div className="flex flex-wrap gap-2 pt-1">
+                                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{drill.reps_sets}</span>
+                                      {drill.cues.map((cue, cueIdx) => (
+                                        <span key={cueIdx} className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                          "{cue}"
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            </div>
+                            ) : analysis.drillRecommendation ? (
+                              /* Legacy Drill Recommendation fallback */
+                              <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                                <Settings className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-xs font-medium text-primary">{t('realTimePlayback.tryThisDrill', 'Try This Drill')}</span>
+                                  <p className="text-sm break-words">{analysis.drillRecommendation}</p>
+                                </div>
+                              </div>
+                            ) : null}
                           </div>
                         ) : null}
                       </Card>
