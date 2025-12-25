@@ -177,15 +177,6 @@
     "progressProfile": "Profil",
     "exploreModulesLater": "Vous pouvez ajouter des modules à tout moment depuis le tableau de bord"
   },
-  "navigation": {
-    "menu": "Menu",
-    "openMenu": "Ouvrir le Menu",
-    "exploreApp": "Explorer l'App"
-  },
-  "sidebar": {
-    "tapToOpenMenu": "Appuyez ici pour ouvrir le menu",
-    "discoverFeatures": "Découvrez toutes les fonctionnalités"
-  },
   "language": {
     "chooseLanguage": "Choisir la Langue",
     "selectYourLanguage": "Sélectionnez votre langue préférée"

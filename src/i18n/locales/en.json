@@ -177,15 +177,6 @@
     "progressProfile": "Profile",
     "exploreModulesLater": "You can add training modules anytime from the dashboard"
   },
-  "navigation": {
-    "menu": "Menu",
-    "openMenu": "Open Menu",
-    "exploreApp": "Explore the App"
-  },
-  "sidebar": {
-    "tapToOpenMenu": "Tap here to open menu",
-    "discoverFeatures": "Discover all features"
-  },
   "language": {
     "chooseLanguage": "Choose Language",
     "selectYourLanguage": "Select your preferred language"

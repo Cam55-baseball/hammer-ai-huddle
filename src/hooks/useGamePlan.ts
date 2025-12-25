@@ -234,15 +234,56 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       
       status['nutrition'] = (nutritionData?.length || 0) > 0;
 
-      // Fetch mind fuel lesson completion for today
-      const { data: mindFuelData } = await supabase
+      // Check if ALL Mind Fuel daily tasks are complete (5 total tasks)
+      // Tasks: daily_lesson, mindfulness, journal, emotion_checkin, weekly_challenge
+
+      // 1. Check daily lesson (user_viewed_lessons)
+      const { data: lessonData } = await supabase
         .from('user_viewed_lessons')
         .select('id')
         .eq('user_id', user.id)
         .gte('viewed_at', `${today}T00:00:00`)
         .limit(1);
-      
-      status['mindfuel'] = (mindFuelData?.length || 0) > 0;
+      const hasLesson = (lessonData?.length || 0) > 0;
+
+      // 2. Check mindfulness (mindfulness_sessions)
+      const { data: mindfulnessData } = await supabase
+        .from('mindfulness_sessions')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('session_date', today)
+        .limit(1);
+      const hasMindfulness = (mindfulnessData?.length || 0) > 0;
+
+      // 3. Check journal (mental_health_journal)
+      const { data: journalData } = await supabase
+        .from('mental_health_journal')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('created_at', `${today}T00:00:00`)
+        .limit(1);
+      const hasJournal = (journalData?.length || 0) > 0;
+
+      // 4. Check emotion check-in (emotion_tracking)
+      const { data: emotionData } = await supabase
+        .from('emotion_tracking')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('entry_date', today)
+        .limit(1);
+      const hasEmotionCheckin = (emotionData?.length || 0) > 0;
+
+      // 5. Check weekly challenge (mind_fuel_challenges)
+      const { data: challengeData } = await supabase
+        .from('mind_fuel_challenges')
+        .select('id')
+        .eq('user_id', user.id)
+        .gte('last_checkin_at', `${today}T00:00:00`)
+        .limit(1);
+      const hasChallenge = (challengeData?.length || 0) > 0;
+
+      // Mind Fuel is only complete when ALL 5 tasks are done
+      status['mindfuel'] = hasLesson && hasMindfulness && hasJournal && hasEmotionCheckin && hasChallenge;
 
       // Fetch health tip completion for today
       const { data: healthTipData } = await supabase
