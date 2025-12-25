@@ -3476,7 +3476,15 @@
         "arm_health": "手臂健康",
         "accuracy_score": "精准度分数",
         "pop_time": "反应时间",
-        "arm_speed": "手臂速度"
+        "arm_speed": "手臂速度",
+        "long_toss_distance": "远投距离",
+        "ten_yard_dash": "10码冲刺",
+        "sl_broad_jump": "单腿立定跳远",
+        "sl_lateral_broad_jump": "单腿侧跳远",
+        "sl_vert_jump": "单腿垂直跳",
+        "mb_situp_throw": "药球仰卧起坐抛",
+        "seated_chest_pass": "坐姿胸前传球",
+        "max_tee_distance": "最大座架距离"
       }
     },
     "progressPhotos": {

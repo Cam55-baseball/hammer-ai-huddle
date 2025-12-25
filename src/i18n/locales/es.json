@@ -4302,7 +4302,15 @@
         "arm_health": "Salud del Brazo",
         "accuracy_score": "Puntuación de Precisión",
         "pop_time": "Tiempo de Reacción",
-        "arm_speed": "Velocidad del Brazo"
+        "arm_speed": "Velocidad del Brazo",
+        "long_toss_distance": "Distancia de Lanzamiento Largo",
+        "ten_yard_dash": "Sprint 10 Yardas",
+        "sl_broad_jump": "Salto Largo SL",
+        "sl_lateral_broad_jump": "Salto Lateral Largo SL",
+        "sl_vert_jump": "Salto Vertical SL",
+        "mb_situp_throw": "Lanzamiento MB Abdominal",
+        "seated_chest_pass": "Pase de Pecho Sentado",
+        "max_tee_distance": "Distancia Máxima de Tee"
       }
     },
     "progressPhotos": {

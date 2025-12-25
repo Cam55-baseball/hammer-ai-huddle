@@ -4327,7 +4327,15 @@
         "arm_health": "Santé du Bras",
         "accuracy_score": "Score de Précision",
         "pop_time": "Temps de Réaction",
-        "arm_speed": "Vitesse du Bras"
+        "arm_speed": "Vitesse du Bras",
+        "long_toss_distance": "Distance de Lancer Long",
+        "ten_yard_dash": "Sprint 10 Yards",
+        "sl_broad_jump": "Saut en Longueur SL",
+        "sl_lateral_broad_jump": "Saut Latéral en Longueur SL",
+        "sl_vert_jump": "Saut Vertical SL",
+        "mb_situp_throw": "Lancer Abdominal MB",
+        "seated_chest_pass": "Passe Poitrine Assise",
+        "max_tee_distance": "Distance Max au Tee"
       }
     },
     "progressPhotos": {

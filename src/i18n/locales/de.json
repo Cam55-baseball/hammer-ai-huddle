@@ -4327,7 +4327,15 @@
         "arm_health": "Armgesundheit",
         "accuracy_score": "Genauigkeitswert",
         "pop_time": "Reaktionszeit",
-        "arm_speed": "Armgeschwindigkeit"
+        "arm_speed": "Armgeschwindigkeit",
+        "long_toss_distance": "Langwurf-Distanz",
+        "ten_yard_dash": "10-Yard Sprint",
+        "sl_broad_jump": "SL Weitsprung",
+        "sl_lateral_broad_jump": "SL Seitwärts-Weitsprung",
+        "sl_vert_jump": "SL Vertikalsprung",
+        "mb_situp_throw": "MB Sit-Up Wurf",
+        "seated_chest_pass": "Brustpass Sitzend",
+        "max_tee_distance": "Max Tee-Distanz"
       }
     },
     "progressPhotos": {

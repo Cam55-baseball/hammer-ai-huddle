@@ -123,6 +123,9 @@ export default function Vault() {
   const showHittingThrowingGrader = hasHittingModule || hasThrowingModule;
   const showPitchingGrader = hasPitchingModule;
 
+  // State for auto-opening performance tests from URL
+  const [autoOpenPerformance, setAutoOpenPerformance] = useState(false);
+
   // Handle URL params for direct navigation
   useEffect(() => {
     const openQuiz = searchParams.get('openQuiz');
@@ -149,6 +152,11 @@ export default function Vault() {
       // Ensure "Today" tab is active for sections that live there
       if (['scout-grades', 'pitching-grades', 'performance-tests', 'progress-photos', 'nutrition'].includes(openSection)) {
         setActiveTab('today');
+      }
+      
+      // Auto-open performance tests dropdown
+      if (openSection === 'performance-tests') {
+        setAutoOpenPerformance(true);
       }
       
       // Scroll to section after longer delay for full rendering
@@ -657,6 +665,9 @@ export default function Vault() {
                       <VaultPerformanceTestCard
                         tests={performanceTests}
                         onSave={handleSavePerformanceTest}
+                        sport={userSport}
+                        subscribedModules={subscribedModules}
+                        autoOpen={autoOpenPerformance}
                       />
                     </div>
 

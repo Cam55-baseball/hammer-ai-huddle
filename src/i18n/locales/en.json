@@ -4573,7 +4573,15 @@
         "arm_health": "Arm Health",
         "accuracy_score": "Accuracy Score",
         "pop_time": "Pop Time",
-        "arm_speed": "Arm Speed"
+        "arm_speed": "Arm Speed",
+        "long_toss_distance": "Long Toss Distance",
+        "ten_yard_dash": "10-Yard Dash",
+        "sl_broad_jump": "SL Broad Jump",
+        "sl_lateral_broad_jump": "SL Lateral Broad Jump",
+        "sl_vert_jump": "SL Vertical Jump",
+        "mb_situp_throw": "MB Sit-Up Throw",
+        "seated_chest_pass": "Seated Chest Pass",
+        "max_tee_distance": "Max Tee Distance"
       }
     },
     "progressPhotos": {

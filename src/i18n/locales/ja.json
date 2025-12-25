@@ -3605,7 +3605,15 @@
         "arm_health": "腕の健康",
         "accuracy_score": "精度スコア",
         "pop_time": "ポップタイム",
-        "arm_speed": "腕の速度"
+        "arm_speed": "腕の速度",
+        "long_toss_distance": "遠投距離",
+        "ten_yard_dash": "10ヤードダッシュ",
+        "sl_broad_jump": "SL立ち幅跳び",
+        "sl_lateral_broad_jump": "SL横立ち幅跳び",
+        "sl_vert_jump": "SL垂直跳び",
+        "mb_situp_throw": "MBシットアップスロー",
+        "seated_chest_pass": "シーテッドチェストパス",
+        "max_tee_distance": "最大ティー距離"
       }
     },
     "progressPhotos": {
