@@ -173,7 +173,22 @@
     "backToSignIn": "Volver a Iniciar Sesión",
     "progressRole": "Rol",
     "progressSport": "Deporte",
-    "progressModule": "Módulo"
+    "progressModule": "Módulo",
+    "progressProfile": "Perfil",
+    "exploreModulesLater": "Puedes agregar módulos de entrenamiento en cualquier momento desde el panel"
+  },
+  "navigation": {
+    "menu": "Menú",
+    "openMenu": "Abrir Menú",
+    "exploreApp": "Explorar la App"
+  },
+  "sidebar": {
+    "tapToOpenMenu": "Toca aquí para abrir el menú",
+    "discoverFeatures": "Descubre todas las funciones"
+  },
+  "language": {
+    "chooseLanguage": "Elige Idioma",
+    "selectYourLanguage": "Selecciona tu idioma preferido"
   },
   "profileSetup": {
     "title": "Crea Tu Perfil",

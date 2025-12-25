@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 import { branding } from "@/branding";
+import { AuthLanguageSelector } from "@/components/AuthLanguageSelector";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -29,6 +31,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { user, signIn, signUp, resetPassword } = useAuth();
 
   const state = location.state as { 
@@ -59,14 +62,14 @@ const Auth = () => {
 
         if (error) {
           toast({
-            title: "Error",
+            title: t('auth.loginFailed'),
             description: error.message,
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Check Your Email",
-            description: "We've sent you a password reset link.",
+            title: t('auth.checkYourEmail'),
+            description: t('auth.passwordResetSent'),
           });
           setIsForgotPassword(false);
           setIsLogin(true);
@@ -77,7 +80,7 @@ const Auth = () => {
 
         if (error) {
           toast({
-            title: "Login Failed",
+            title: t('auth.loginFailed'),
             description: error.message,
             variant: "destructive",
           });
@@ -137,8 +140,8 @@ const Auth = () => {
         });
 
           toast({
-            title: "Welcome Back!",
-            description: "Successfully logged in.",
+            title: t('auth.welcomeBack'),
+            description: t('auth.signInToContinue'),
           });
           
           // Route based on onboarding status and role
@@ -181,14 +184,14 @@ const Auth = () => {
 
         if (error) {
           toast({
-            title: "Signup Failed",
+            title: t('auth.signupFailed'),
             description: error.message,
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Account Created!",
-            description: "Let's set up your profile.",
+            title: t('auth.accountCreated'),
+            description: t('auth.letsSetupProfile'),
           });
           
           // Navigate to role selection for new signups
@@ -198,7 +201,7 @@ const Auth = () => {
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
-          title: "Validation Error",
+          title: t('auth.validationError'),
           description: error.errors[0].message,
           variant: "destructive",
         });
@@ -216,15 +219,23 @@ const Auth = () => {
             <div className="h-16 w-16 mx-auto mb-4">
               <img src={branding.logo} alt={branding.appName} className="h-full w-full object-contain" />
             </div>
+          </div>
+
+          {/* Prominent Language Selector */}
+          <div className="mb-6 pb-4 border-b border-border">
+            <AuthLanguageSelector />
+          </div>
+
+          <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-2">
-              {isForgotPassword ? "Reset Password" : isLogin ? "Welcome Back" : "Create Account"}
+              {isForgotPassword ? t('auth.resetPasswordTitle') : isLogin ? t('auth.welcomeBackTitle') : t('auth.createAccountTitle')}
             </h1>
             <p className="text-muted-foreground">
               {isForgotPassword 
-                ? "Enter your email to receive a password reset link" 
+                ? t('auth.resetPasswordDescription') 
                 : isLogin 
-                ? "Sign in to continue to Hammers Modality" 
-                : "Join Hammers Modality today"}
+                ? t('auth.signInDescription') 
+                : t('auth.signUpDescription')}
             </p>
           </div>
 
@@ -240,11 +251,11 @@ const Auth = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && !isForgotPassword && (
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">{t('auth.fullName')}</Label>
                 <Input
                   id="fullName"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder={t('auth.namePlaceholder')}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required={!isLogin}
@@ -253,11 +264,11 @@ const Auth = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('auth.emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -266,11 +277,11 @@ const Auth = () => {
 
             {!isForgotPassword && (
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t('auth.passwordPlaceholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -281,7 +292,7 @@ const Auth = () => {
                     onClick={() => setIsForgotPassword(true)}
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Forgot password?
+                    {t('auth.forgotPassword')}
                   </button>
                 )}
               </div>
@@ -292,14 +303,20 @@ const Auth = () => {
                 <div className="flex items-start gap-2">
                   <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Your data is never shared without your consent, and we employ robust security measures to protect it.
+                    {t('auth.dataPrivacyNote')}
                   </p>
                 </div>
               </div>
             )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Loading..." : isForgotPassword ? "Send Reset Link" : isLogin ? "Sign In" : "Sign Up"}
+              {isLoading 
+                ? t('common.loading') 
+                : isForgotPassword 
+                ? t('auth.sendResetLink') 
+                : isLogin 
+                ? t('auth.signIn') 
+                : t('auth.signUp')}
             </Button>
           </form>
 
@@ -313,10 +330,10 @@ const Auth = () => {
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               {isForgotPassword 
-                ? "Back to sign in" 
+                ? t('auth.backToSignIn') 
                 : isLogin 
-                ? "Don't have an account? Sign up" 
-                : "Already have an account? Sign in"}
+                ? t('auth.dontHaveAccount') 
+                : t('auth.alreadyHaveAccount')}
             </button>
           </div>
         </div>
