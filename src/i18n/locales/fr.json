@@ -515,6 +515,9 @@
     "merch": "Boutique"
   },
   "dashboard": {
+    "header": {
+      "merch": "Boutique"
+    },
     "title": "Tableau d'Entraînement",
     "welcome": "Bienvenue",
     "welcomeBack": "Bienvenue,",

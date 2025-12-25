@@ -486,6 +486,9 @@
     "merch": "상품"
   },
   "dashboard": {
+    "header": {
+      "merch": "상품"
+    },
     "title": "훈련 대시보드",
     "welcome": "다시 오신 것을 환영합니다",
     "welcomeBack": "환영합니다,",

@@ -456,7 +456,43 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   // Build dynamic task list based on user's module access
   const tasks: GamePlanTask[] = [];
 
-  // === DAILY CHECK-INS SECTION ===
+  // === FREE ACCESS TASKS (Available to all users with a profile) ===
+  // These are accessible without module purchase to drive engagement
+  
+  tasks.push({
+    id: 'nutrition',
+    titleKey: 'gamePlan.nutrition.title',
+    descriptionKey: 'gamePlan.nutrition.description',
+    completed: completionStatus['nutrition'] || false,
+    icon: Apple,
+    link: '/nutrition',
+    taskType: 'nutrition',
+    section: 'checkin',
+  });
+
+  tasks.push({
+    id: 'mindfuel',
+    titleKey: 'gamePlan.mindfuel.title',
+    descriptionKey: 'gamePlan.mindfuel.description',
+    completed: completionStatus['mindfuel'] || false,
+    icon: Sparkles,
+    link: '/mind-fuel',
+    taskType: 'quiz',
+    section: 'checkin',
+  });
+
+  tasks.push({
+    id: 'healthtip',
+    titleKey: 'gamePlan.healthtip.title',
+    descriptionKey: 'gamePlan.healthtip.description',
+    completed: completionStatus['healthtip'] || false,
+    icon: Lightbulb,
+    link: '/bounce-back-bay',
+    taskType: 'quiz',
+    section: 'checkin',
+  });
+
+  // === MODULE-GATED DAILY CHECK-INS ===
   if (hasAnyModuleAccess) {
     tasks.push({
       id: 'quiz-morning',
@@ -493,40 +529,6 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       taskType: 'quiz',
       section: 'checkin',
     });
-
-    tasks.push({
-      id: 'nutrition',
-      titleKey: 'gamePlan.nutrition.title',
-      descriptionKey: 'gamePlan.nutrition.description',
-      completed: completionStatus['nutrition'] || false,
-      icon: Apple,
-      link: '/vault',
-      taskType: 'nutrition',
-      section: 'checkin',
-    });
-
-    tasks.push({
-      id: 'mindfuel',
-      titleKey: 'gamePlan.mindfuel.title',
-      descriptionKey: 'gamePlan.mindfuel.description',
-      completed: completionStatus['mindfuel'] || false,
-      icon: Sparkles,
-      link: '/mind-fuel',
-      taskType: 'quiz',
-      section: 'checkin',
-    });
-
-    tasks.push({
-      id: 'healthtip',
-      titleKey: 'gamePlan.healthtip.title',
-      descriptionKey: 'gamePlan.healthtip.description',
-      completed: completionStatus['healthtip'] || false,
-      icon: Lightbulb,
-      link: '/nutrition',
-      taskType: 'quiz',
-      section: 'checkin',
-    });
-
   }
 
   // === TRAINING SECTION ===

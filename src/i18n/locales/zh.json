@@ -486,6 +486,9 @@
     "merch": "商店"
   },
   "dashboard": {
+    "header": {
+      "merch": "商城"
+    },
     "title": "训练仪表板",
     "welcome": "欢迎回来",
     "welcomeBack": "欢迎回来，",
