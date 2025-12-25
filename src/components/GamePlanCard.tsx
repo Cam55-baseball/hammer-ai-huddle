@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Reorder } from 'framer-motion';
+import { Reorder, motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2 } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { CustomActivityDetailDialog } from '@/components/CustomActivityDetailDialog';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
@@ -145,6 +146,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [editingTemplate, setEditingTemplate] = useState<CustomActivityTemplate | null>(null);
   const [presetActivityType, setPresetActivityType] = useState<'meal' | null>(null);
   
+  // Custom activity detail dialog state
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedCustomTask, setSelectedCustomTask] = useState<GamePlanTask | null>(null);
+  
+  // Inline time picker state (for non-timeline modes)
+  const [expandedTimeTaskId, setExpandedTimeTaskId] = useState<string | null>(null);
+  
   // State for ordered tasks per section
   const [orderedCheckin, setOrderedCheckin] = useState<GamePlanTask[]>([]);
   const [orderedTraining, setOrderedTraining] = useState<GamePlanTask[]>([]);
@@ -258,6 +266,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   }, [tasksKey, sortMode]);
 
   const handleTaskClick = (task: GamePlanTask) => {
+    // Handle custom activities - open detail dialog
+    if (task.taskType === 'custom' && task.customActivityData) {
+      setSelectedCustomTask(task);
+      setDetailDialogOpen(true);
+      return;
+    }
+
     // Handle mindfuel and healthtip - navigate directly
     if (task.id === 'mindfuel' || task.id === 'healthtip') {
       navigate(task.link);
@@ -705,21 +720,32 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </Button>
         )}
         
-        {/* Status indicator - clickable for custom activities */}
+        {/* Status indicator - clickable for custom activities with prominent styling */}
         <button
           onClick={(e) => { e.stopPropagation(); if (isCustom) handleCustomActivityToggle(task); }}
           disabled={!isCustom}
           className={cn(
-            "flex-shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center transition-all",
+            "flex-shrink-0 rounded-full flex items-center justify-center transition-all",
             task.completed && "bg-green-500 text-white",
-            isCustom && !task.completed && "hover:scale-110 cursor-pointer"
+            isCustom && !task.completed && "hover:scale-110 cursor-pointer",
+            // Larger touch target for custom activities
+            isCustom ? "h-10 w-10 sm:h-11 sm:w-11" : "h-7 w-7 sm:h-8 sm:w-8"
           )}
           style={!task.completed ? { 
-            border: `3px dashed ${activeColors.border}`,
+            border: `3px ${isCustom ? 'solid' : 'dashed'} ${activeColors.border}`,
+            backgroundColor: isCustom ? hexToRgba(customColor, 0.2) : undefined,
           } : undefined}
+          title={isCustom ? (task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.detail.markComplete')) : undefined}
         >
           {task.completed ? (
-            <Check className="h-4 w-4 sm:h-5 sm:w-5" />
+            <Check className={cn(
+              isCustom ? "h-5 w-5 sm:h-6 sm:w-6" : "h-4 w-4 sm:h-5 sm:w-5"
+            )} />
+          ) : isCustom ? (
+            <Check 
+              className="h-5 w-5 sm:h-6 sm:w-6"
+              style={{ color: activeColors.icon }}
+            />
           ) : (
             <Zap 
               className="h-3 w-3 sm:h-4 sm:w-4 animate-pulse"
@@ -1319,6 +1345,31 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         selectedSport={selectedSport}
       />
 
+      {/* Custom Activity Detail Dialog */}
+      <CustomActivityDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        task={selectedCustomTask}
+        taskTime={selectedCustomTask ? taskTimes[selectedCustomTask.id] || null : null}
+        taskReminder={selectedCustomTask ? taskReminders[selectedCustomTask.id] || null : null}
+        onComplete={() => {
+          if (selectedCustomTask) {
+            handleCustomActivityToggle(selectedCustomTask);
+          }
+        }}
+        onEdit={() => {
+          if (selectedCustomTask) {
+            handleCustomActivityEdit(selectedCustomTask);
+            setDetailDialogOpen(false);
+          }
+        }}
+        onSaveTime={(time, reminder) => {
+          if (selectedCustomTask) {
+            setTaskTimes(prev => ({ ...prev, [selectedCustomTask.id]: time }));
+            setTaskReminders(prev => ({ ...prev, [selectedCustomTask.id]: reminder }));
+          }
+        }}
+      />
       {/* Quick Add Favorites Drawer */}
       <QuickAddFavoritesDrawer
         open={favoritesDrawerOpen}

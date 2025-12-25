@@ -4541,6 +4541,15 @@
       "viewCount": "{{count}}회 조회",
       "deleteLink": "링크 삭제",
       "preview": "미리보기"
+    },
+    "detail": {
+      "title": "활동 세부 정보",
+      "markComplete": "완료로 표시",
+      "markedComplete": "완료됨!",
+      "editActivity": "활동 편집",
+      "scheduledFor": "예정 시간",
+      "noTimeSet": "시간이 설정되지 않았습니다. 탭하여 예약.",
+      "viewHistory": "기록 보기"
     }
   },
   "myCustomActivities": {

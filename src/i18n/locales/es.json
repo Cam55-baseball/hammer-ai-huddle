@@ -5450,6 +5450,15 @@
       "viewCount": "{{count}} vistas",
       "deleteLink": "Eliminar Enlace",
       "preview": "Vista Previa"
+    },
+    "detail": {
+      "title": "Detalles de Actividad",
+      "markComplete": "Marcar Completo",
+      "markedComplete": "¡Completado!",
+      "editActivity": "Editar Actividad",
+      "scheduledFor": "Hora Programada",
+      "noTimeSet": "Sin hora establecida. Toca para programar.",
+      "viewHistory": "Ver Historial"
     }
   },
   "myCustomActivities": {

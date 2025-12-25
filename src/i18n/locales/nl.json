@@ -4554,6 +4554,15 @@
       "viewCount": "{{count}} weergaven",
       "deleteLink": "Link Verwijderen",
       "preview": "Voorbeeld"
+    },
+    "detail": {
+      "title": "Activiteit Details",
+      "markComplete": "Markeer als Voltooid",
+      "markedComplete": "Voltooid!",
+      "editActivity": "Activiteit Bewerken",
+      "scheduledFor": "Geplande Tijd",
+      "noTimeSet": "Geen tijd ingesteld. Tik om te plannen.",
+      "viewHistory": "Bekijk Geschiedenis"
     }
   },
   "myCustomActivities": {
