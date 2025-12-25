@@ -66,12 +66,12 @@ export function MobileExerciseLibraryDrawer({ onExerciseSelect, children }: Mobi
       <DrawerTrigger asChild>
         {children}
       </DrawerTrigger>
-      <DrawerContent className="max-h-[75vh]">
-        <DrawerHeader className="pb-2">
+      <DrawerContent className="max-h-[85vh] flex flex-col">
+        <DrawerHeader className="pb-2 flex-shrink-0">
           <DrawerTitle>{t('workoutBuilder.exerciseLibrary')}</DrawerTitle>
         </DrawerHeader>
 
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-2 flex-shrink-0">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -83,58 +83,60 @@ export function MobileExerciseLibraryDrawer({ onExerciseSelect, children }: Mobi
           </div>
         </div>
 
-        <ScrollArea className="flex-1 px-2 pb-6" style={{ maxHeight: 'calc(75vh - 140px)' }}>
-          <div className="space-y-1 p-2">
-            {Object.entries(filteredLibrary).map(([category, exercises]) => (
-              <Collapsible
-                key={category}
-                open={openCategories.includes(category)}
-                onOpenChange={() => toggleCategory(category)}
-              >
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-2.5 rounded-lg hover:bg-accent/50 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={cn("h-6 px-2", CATEGORY_COLORS[category])}>
-                      {CATEGORY_ICONS[category]}
-                      <span className="ml-1.5 capitalize">{t(`workoutBuilder.categories.${category}`, category)}</span>
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">({exercises.length})</span>
-                  </div>
-                  <ChevronDown className={cn(
-                    "h-4 w-4 text-muted-foreground transition-transform",
-                    openCategories.includes(category) && "rotate-180"
-                  )} />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-1 mt-1 ml-1">
-                  {exercises.map(exercise => (
-                    <button
-                      key={exercise.id}
-                      onClick={() => handleSelectExercise(exercise)}
-                      className={cn(
-                        "flex items-center justify-between w-full p-3 rounded-lg border bg-card/50",
-                        "hover:bg-accent/50 active:bg-accent transition-colors text-left"
-                      )}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{exercise.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {exercise.sets && exercise.reps && `${exercise.sets}×${exercise.reps}`}
-                          {exercise.duration && `${exercise.duration}s`}
-                        </p>
-                      </div>
-                      <Plus className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
-                    </button>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
+        <div className="flex-1 overflow-hidden px-2 pb-6">
+          <ScrollArea className="h-full">
+            <div className="space-y-1 p-2 pr-4">
+              {Object.entries(filteredLibrary).map(([category, exercises]) => (
+                <Collapsible
+                  key={category}
+                  open={openCategories.includes(category)}
+                  onOpenChange={() => toggleCategory(category)}
+                >
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2.5 rounded-lg hover:bg-accent/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={cn("h-6 px-2", CATEGORY_COLORS[category])}>
+                        {CATEGORY_ICONS[category]}
+                        <span className="ml-1.5 capitalize">{t(`workoutBuilder.categories.${category}`, category)}</span>
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">({exercises.length})</span>
+                    </div>
+                    <ChevronDown className={cn(
+                      "h-4 w-4 text-muted-foreground transition-transform",
+                      openCategories.includes(category) && "rotate-180"
+                    )} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-1 mt-1 ml-1">
+                    {exercises.map(exercise => (
+                      <button
+                        key={exercise.id}
+                        onClick={() => handleSelectExercise(exercise)}
+                        className={cn(
+                          "flex items-center justify-between w-full p-3 rounded-lg border bg-card/50",
+                          "hover:bg-accent/50 active:bg-accent transition-colors text-left"
+                        )}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{exercise.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {exercise.sets && exercise.reps && `${exercise.sets}×${exercise.reps}`}
+                            {exercise.duration && `${exercise.duration}s`}
+                          </p>
+                        </div>
+                        <Plus className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+                      </button>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
 
-            {Object.keys(filteredLibrary).length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-8">
-                {t('common.noResults')}
-              </p>
-            )}
-          </div>
-        </ScrollArea>
+              {Object.keys(filteredLibrary).length === 0 && (
+                <p className="text-center text-sm text-muted-foreground py-8">
+                  {t('common.noResults')}
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
       </DrawerContent>
     </Drawer>
   );

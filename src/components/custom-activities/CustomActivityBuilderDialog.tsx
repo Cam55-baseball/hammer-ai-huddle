@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image, CalendarPlus } from 'lucide-react';
+import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image, CalendarPlus, Loader2 } from 'lucide-react';
 import { LogoUploadButton } from './LogoUploadButton';
 import { ActivityTypeSelector } from './ActivityTypeSelector';
 import { IconPicker } from './IconPicker';
@@ -218,7 +219,15 @@ export function CustomActivityBuilderDialog({
   };
 
   const handleSave = async () => {
-    if (!activityType || !title.trim()) return;
+    if (!activityType) {
+      toast.error(t('customActivity.selectTypeRequired', 'Please select an activity type'));
+      return;
+    }
+    if (!title.trim()) {
+      toast.error(t('customActivity.titleRequired', 'Please enter a title'));
+      return;
+    }
+    
     setSaving(true);
     
     // Combine time goal into pace_value (format: H:MM:SS.T)
@@ -234,6 +243,8 @@ export function CustomActivityBuilderDialog({
       : undefined;
     
     try {
+      console.log('[CustomActivityBuilderDialog] Saving activity...', { activityType, title, scheduleForToday });
+      
       const result = await onSave({
         activity_type: activityType,
         title: title.trim(),
@@ -260,10 +271,18 @@ export function CustomActivityBuilderDialog({
         reminder_time: reminderEnabled ? reminderTime : undefined,
       }, !isEditing ? scheduleForToday : undefined);
       
-      // Only close dialog if save was successful
+      console.log('[CustomActivityBuilderDialog] Save result:', result);
+      
+      // Only close dialog if save was successful (result is truthy)
       if (result) {
         onOpenChange(false);
+      } else {
+        // Save failed - error toast already shown by useCustomActivities
+        console.error('[CustomActivityBuilderDialog] Save returned null/false');
       }
+    } catch (error) {
+      console.error('[CustomActivityBuilderDialog] Save error:', error);
+      toast.error(t('customActivity.createError', 'Failed to save activity'));
     } finally {
       setSaving(false);
     }
@@ -642,7 +661,8 @@ export function CustomActivityBuilderDialog({
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
             <Button onClick={handleSave} disabled={!activityType || !title.trim() || saving} className="gap-2">
-              <Save className="h-4 w-4" /> {saving ? t('common.saving') : t('common.save')}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {saving ? t('common.saving') : t('common.save')}
             </Button>
           </div>
         </div>

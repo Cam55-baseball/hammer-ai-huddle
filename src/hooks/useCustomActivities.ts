@@ -121,7 +121,11 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     data: Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
     scheduleForToday: boolean = false
   ): Promise<CustomActivityTemplate | null> => {
-    if (!user) return null;
+    if (!user) {
+      console.error('[useCustomActivities] No user found, cannot create template');
+      toast.error(t('customActivity.createError'));
+      return null;
+    }
 
     try {
       const insertData = {
@@ -144,7 +148,6 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         recurring_days: data.recurring_days as unknown as number[],
         recurring_active: data.recurring_active,
         sport: data.sport,
-        // Add missing fields
         embedded_running_sessions: data.embedded_running_sessions as unknown as Record<string, unknown>[] | null,
         display_nickname: data.display_nickname,
         custom_logo_url: data.custom_logo_url,
@@ -152,7 +155,12 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         reminder_time: data.reminder_time,
       };
 
-      console.log('[useCustomActivities] Inserting template:', insertData);
+      console.log('[useCustomActivities] Creating template with data:', {
+        title: insertData.title,
+        activity_type: insertData.activity_type,
+        sport: insertData.sport,
+        scheduleForToday
+      });
       
       const { data: result, error } = await supabase
         .from('custom_activity_templates')
@@ -161,25 +169,51 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         .single();
 
       if (error) {
-        console.error('[useCustomActivities] Insert error:', error);
+        console.error('[useCustomActivities] Supabase insert error:', error);
         toast.error(`${t('customActivity.createError')}: ${error.message}`);
         return null;
       }
 
-      const createdTemplate = result as unknown as CustomActivityTemplate;
-      console.log('[useCustomActivities] Template created:', createdTemplate);
+      if (!result) {
+        console.error('[useCustomActivities] No result returned from insert');
+        toast.error(t('customActivity.createError'));
+        return null;
+      }
 
-      // If scheduleForToday is true, add to today's game plan
-      if (scheduleForToday && createdTemplate) {
-        await addToToday(createdTemplate.id);
-        await fetchTodayLogs();
+      const createdTemplate = result as unknown as CustomActivityTemplate;
+      console.log('[useCustomActivities] Template created successfully:', createdTemplate.id);
+
+      // If scheduleForToday is true, add to today's game plan BEFORE returning
+      if (scheduleForToday) {
+        console.log('[useCustomActivities] Adding to today\'s game plan...');
+        const today = getTodayDate();
+        
+        const { error: logError } = await supabase
+          .from('custom_activity_logs')
+          .insert({
+            user_id: user.id,
+            template_id: createdTemplate.id,
+            entry_date: today,
+            completed: false,
+          });
+          
+        if (logError) {
+          console.error('[useCustomActivities] Error adding to today:', logError);
+          // Don't fail the whole operation, just warn
+          toast.warning(t('customActivity.addedButNotScheduled', 'Activity created but could not be added to today'));
+        } else {
+          console.log('[useCustomActivities] Added to today\'s game plan');
+        }
       }
 
       toast.success(t('customActivity.created'));
-      await fetchTemplates();
+      
+      // Refresh both templates and today logs
+      await Promise.all([fetchTemplates(), fetchTodayLogs()]);
+      
       return createdTemplate;
     } catch (error: any) {
-      console.error('[useCustomActivities] Error creating template:', error);
+      console.error('[useCustomActivities] Unexpected error creating template:', error);
       toast.error(`${t('customActivity.createError')}: ${error?.message || 'Unknown error'}`);
       return null;
     }
