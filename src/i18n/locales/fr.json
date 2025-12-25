@@ -469,6 +469,7 @@
     "select": "Sélectionner"
   },
   "navigation": {
+    "menu": "Menu",
     "dashboard": "Tableau de Bord",
     "playersClub": "Club des Joueurs",
     "rankings": "Classements",

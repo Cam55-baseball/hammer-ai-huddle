@@ -440,6 +440,7 @@
     "failedToResume": "恢复模块失败"
   },
   "navigation": {
+    "menu": "菜单",
     "dashboard": "仪表板",
     "playersClub": "球员俱乐部",
     "rankings": "排名",
