@@ -25,7 +25,7 @@ const DISCIPLINE_LABELS = ['Minimal', 'Light', 'Moderate', 'Strong', 'Elite'];
 
 export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: WeeklyWellnessQuizDialogProps) {
   const { t } = useTranslation();
-  const { lastWeekGoals, lastWeekAverages, saveGoals, isCompletedThisWeek, currentGoals } = useWeeklyWellnessQuiz();
+  const { lastWeekGoals, lastWeekAverages, saveGoals, isCompletedThisWeek, currentGoals, nextOpenDate } = useWeeklyWellnessQuiz();
   
   const [step, setStep] = useState(0);
   const [moodTarget, setMoodTarget] = useState(4);
@@ -286,7 +286,7 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
                   {t('weeklyWellnessQuiz.alreadyCompleted')}
                 </h2>
                 <p className="text-muted-foreground">
-                  {t('weeklyWellnessQuiz.comeBackNext')}
+                  {t('weeklyWellnessQuiz.comeBackNext')} <span className="font-bold text-primary">{nextOpenDate}</span>
                 </p>
               </div>
 

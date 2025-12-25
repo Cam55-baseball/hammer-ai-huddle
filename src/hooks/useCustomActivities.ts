@@ -152,27 +152,35 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         reminder_time: data.reminder_time,
       };
 
+      console.log('[useCustomActivities] Inserting template:', insertData);
+      
       const { data: result, error } = await supabase
         .from('custom_activity_templates')
         .insert(insertData as any)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useCustomActivities] Insert error:', error);
+        toast.error(`${t('customActivity.createError')}: ${error.message}`);
+        return null;
+      }
 
       const createdTemplate = result as unknown as CustomActivityTemplate;
+      console.log('[useCustomActivities] Template created:', createdTemplate);
 
       // If scheduleForToday is true, add to today's game plan
       if (scheduleForToday && createdTemplate) {
         await addToToday(createdTemplate.id);
+        await fetchTodayLogs();
       }
 
       toast.success(t('customActivity.created'));
       await fetchTemplates();
       return createdTemplate;
-    } catch (error) {
-      console.error('Error creating template:', error);
-      toast.error(t('customActivity.createError'));
+    } catch (error: any) {
+      console.error('[useCustomActivities] Error creating template:', error);
+      toast.error(`${t('customActivity.createError')}: ${error?.message || 'Unknown error'}`);
       return null;
     }
   };
@@ -211,20 +219,26 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       if (data.reminder_enabled !== undefined) updateData.reminder_enabled = data.reminder_enabled;
       if (data.reminder_time !== undefined) updateData.reminder_time = data.reminder_time;
 
+      console.log('[useCustomActivities] Updating template:', id, updateData);
+      
       const { error } = await supabase
         .from('custom_activity_templates')
         .update(updateData)
         .eq('id', id)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useCustomActivities] Update error:', error);
+        toast.error(`${t('customActivity.updateError')}: ${error.message}`);
+        return false;
+      }
 
       toast.success(t('customActivity.updated'));
       await fetchTemplates();
       return true;
-    } catch (error) {
-      console.error('Error updating template:', error);
-      toast.error(t('customActivity.updateError'));
+    } catch (error: any) {
+      console.error('[useCustomActivities] Error updating template:', error);
+      toast.error(`${t('customActivity.updateError')}: ${error?.message || 'Unknown error'}`);
       return false;
     }
   };
