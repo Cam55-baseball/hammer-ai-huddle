@@ -163,8 +163,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         .map(task => ({
           id: task.id,
           title: task.taskType === 'custom' ? task.titleKey : t(task.titleKey),
-          startTime: taskTimes[t.id] || null,
-          reminderMinutes: taskReminders[t.id] || null,
+          startTime: taskTimes[task.id] || null,
+          reminderMinutes: taskReminders[task.id] || null,
         }));
       scheduleDailySummary(scheduledActivities);
     }
