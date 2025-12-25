@@ -486,6 +486,9 @@
     "merch": "グッズ"
   },
   "dashboard": {
+    "header": {
+      "merch": "グッズ"
+    },
     "title": "トレーニングダッシュボード",
     "welcome": "おかえりなさい",
     "welcomeBack": "おかえりなさい、",

@@ -486,6 +486,9 @@
     "merch": "Tienda"
   },
   "dashboard": {
+    "header": {
+      "merch": "Tienda"
+    },
     "title": "Panel de Entrenamiento",
     "welcome": "Bienvenido de nuevo",
     "welcomeBack": "Bienvenido de nuevo,",

@@ -515,6 +515,9 @@
     "merch": "Merch"
   },
   "dashboard": {
+    "header": {
+      "merch": "Merch"
+    },
     "title": "Trainingsdashboard",
     "welcome": "Welkom terug",
     "welcomeBack": "Welkom terug,",
