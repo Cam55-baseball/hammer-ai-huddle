@@ -16,12 +16,15 @@ import {
   Settings, Timer, Clock, Gauge, Camera, CheckCircle2, AlertCircle,
   Sparkles, SwitchCamera, Brain, Grid3X3, Volume2, VolumeX, 
   Wifi, WifiOff, RefreshCw, Maximize, Square, PictureInPicture2,
-  SkipBack, SkipForward, ChevronLeft, ChevronRight, Pencil
+  SkipBack, SkipForward, ChevronLeft, ChevronRight, Pencil, Layers,
+  TimerReset, Copy, Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { SaveToLibraryDialog } from "./SaveToLibraryDialog";
 import { FrameAnnotationDialog } from "./FrameAnnotationDialog";
+import { FrameComparisonDialog } from "./FrameComparisonDialog";
+import { VideoAnnotationOverlay, VideoAnnotation } from "./VideoAnnotationOverlay";
 import i18n from "@/i18n";
 
 interface RealTimePlaybackProps {
@@ -152,6 +155,17 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [annotationDialogOpen, setAnnotationDialogOpen] = useState(false);
   const [frameToAnnotate, setFrameToAnnotate] = useState<{dataUrl: string; index: number} | null>(null);
   
+  // Enhanced features state
+  const [frameCompareMode, setFrameCompareMode] = useState(false);
+  const [videoAnnotationActive, setVideoAnnotationActive] = useState(false);
+  const [videoAnnotations, setVideoAnnotations] = useState<VideoAnnotation[]>([]);
+  const [autoCaptureSetting, setAutoCaptureSetting] = useState<'off' | 'interval'>(() => 
+    (localStorage.getItem('rtPlayback_autoCapture') as 'off' | 'interval') || 'off'
+  );
+  const [autoCaptureInterval, setAutoCaptureInterval] = useState<number>(() => 
+    parseInt(localStorage.getItem('rtPlayback_autoCaptureInterval') || '3')
+  );
+  
   // Refs
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
   const videoPlaybackRef = useRef<HTMLVideoElement>(null);
@@ -175,7 +189,9 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     localStorage.setItem('rtPlayback_localOnly', String(localOnlyMode));
     localStorage.setItem('rtPlayback_autoRecord', String(autoRecordEnabled));
     localStorage.setItem('rtPlayback_frameCount', String(frameCountForAnalysis));
-  }, [recordingDuration, playbackDelay, repeatDuration, playbackSpeed, facingMode, analysisEnabled, gridOverlayEnabled, audioCuesEnabled, localOnlyMode, autoRecordEnabled, frameCountForAnalysis]);
+    localStorage.setItem('rtPlayback_autoCapture', autoCaptureSetting);
+    localStorage.setItem('rtPlayback_autoCaptureInterval', String(autoCaptureInterval));
+  }, [recordingDuration, playbackDelay, repeatDuration, playbackSpeed, facingMode, analysisEnabled, gridOverlayEnabled, audioCuesEnabled, localOnlyMode, autoRecordEnabled, frameCountForAnalysis, autoCaptureSetting, autoCaptureInterval]);
   
   // Speed control during playback
   useEffect(() => {
@@ -327,15 +343,74 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       } else if (document.pictureInPictureEnabled) {
         await video.requestPictureInPicture();
         setIsPiPActive(true);
-        toast.success(t('realTimePlayback.pipActivated', 'Video is now in floating window'));
+        toast.success(t('realTimePlayback.pipActivated', 'Video is now in a floating window. You can use other apps while watching!'), {
+          duration: 4000,
+        });
       } else {
-        toast.error(t('realTimePlayback.pipNotSupported', 'Picture-in-Picture not supported'));
+        toast.error(t('realTimePlayback.pipNotSupported', 'Picture-in-Picture not supported on this browser'));
       }
     } catch (error) {
       console.error('PiP error:', error);
-      toast.error(t('realTimePlayback.pipNotSupported', 'Picture-in-Picture not supported'));
+      toast.error(t('realTimePlayback.pipNotSupported', 'Picture-in-Picture not supported on this browser'));
     }
   }, [t]);
+
+  // Exit PiP when dialog closes
+  useEffect(() => {
+    if (!isOpen && document.pictureInPictureElement) {
+      document.exitPictureInPicture().catch(console.error);
+      setIsPiPActive(false);
+    }
+  }, [isOpen]);
+
+  // Auto-capture frames during playback
+  useEffect(() => {
+    if (autoCaptureSetting !== 'interval' || phase !== 'playback' || isPaused) return;
+    
+    const interval = setInterval(() => {
+      handleCaptureKeyFrame();
+    }, autoCaptureInterval * 1000);
+    
+    return () => clearInterval(interval);
+  }, [autoCaptureSetting, autoCaptureInterval, phase, isPaused, handleCaptureKeyFrame]);
+
+  // Handle opening video annotation overlay
+  const handleOpenVideoAnnotation = useCallback(() => {
+    const video = videoPlaybackRef.current;
+    if (!video) return;
+    
+    video.pause();
+    setIsPaused(true);
+    setVideoAnnotationActive(true);
+  }, []);
+
+  // Handle saving annotated frame from overlay
+  const handleSaveAnnotatedFrameFromOverlay = useCallback((dataUrl: string) => {
+    const video = videoPlaybackRef.current;
+    if (!video) return;
+    
+    const newFrame: CapturedFrame = {
+      dataUrl,
+      timestamp: video.currentTime,
+      selectedForAnalysis: true,
+      annotated: true
+    };
+    setCapturedFrames(prev => [...prev, newFrame]);
+    toast.success(t('realTimePlayback.frameWithAnnotationsSaved', 'Frame with annotations saved!'));
+  }, [t]);
+
+  // Get selected frames for comparison
+  const selectedFramesForCompare = capturedFrames.filter(f => f.selectedForAnalysis);
+
+  // Select all frames
+  const handleSelectAllFrames = useCallback(() => {
+    setCapturedFrames(prev => prev.map(frame => ({ ...frame, selectedForAnalysis: true })));
+  }, []);
+
+  // Deselect all frames
+  const handleDeselectAllFrames = useCallback(() => {
+    setCapturedFrames(prev => prev.map(frame => ({ ...frame, selectedForAnalysis: false })));
+  }, []);
 
   // PiP event listeners
   useEffect(() => {
@@ -1610,26 +1685,64 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                           }
                         }}
                       />
+                      
+                      {/* Video Annotation Overlay */}
+                      <VideoAnnotationOverlay
+                        videoRef={videoPlaybackRef}
+                        isActive={videoAnnotationActive}
+                        onClose={() => setVideoAnnotationActive(false)}
+                        annotations={videoAnnotations}
+                        onAnnotationsChange={setVideoAnnotations}
+                        currentTime={currentVideoTime}
+                        onSaveFrame={handleSaveAnnotatedFrameFromOverlay}
+                      />
+                      
+                      {/* PiP Active Overlay */}
+                      {isPiPActive && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-40">
+                          <PictureInPicture2 className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                          <p className="text-white text-lg font-medium mb-2">
+                            {t('realTimePlayback.pipActiveTitle', 'Video in Floating Window')}
+                          </p>
+                          <p className="text-muted-foreground text-sm mb-4 text-center px-8">
+                            {t('realTimePlayback.pipActiveDescription', 'You can now use other apps while watching your recording')}
+                          </p>
+                          <Button onClick={handleTogglePiP} variant="secondary">
+                            {t('realTimePlayback.returnToFullView', 'Return to Full View')}
+                          </Button>
+                        </div>
+                      )}
+                      
                       {/* Status indicator */}
-                      {phase === 'playback' && (
+                      {phase === 'playback' && !isPiPActive && (
                         <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/90 text-white">
                           <Play className="h-4 w-4" />
                           <span className="font-medium">{t('realTimePlayback.playing', 'Playing Back')}</span>
                         </div>
                       )}
                       {/* Timer */}
-                      {phase === 'playback' && (
+                      {phase === 'playback' && !isPiPActive && (
                         <div className="absolute bottom-4 right-4 px-4 py-2 rounded-lg bg-black/70 text-white text-xl font-mono">
                           {Math.floor(playbackTimeLeft / 60)}:{String(playbackTimeLeft % 60).padStart(2, '0')}
                         </div>
                       )}
                       {/* Speed indicator */}
-                      <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/70 text-white text-sm">
-                        {playbackSpeed}x
-                      </div>
+                      {!isPiPActive && (
+                        <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/70 text-white text-sm">
+                          {playbackSpeed}x
+                        </div>
+                      )}
+                      
+                      {/* Auto-capture indicator */}
+                      {autoCaptureSetting === 'interval' && phase === 'playback' && !isPaused && !isPiPActive && (
+                        <div className="absolute top-12 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-yellow-500/90 text-black text-sm font-medium">
+                          <TimerReset className="h-3 w-3" />
+                          <span>{t('realTimePlayback.autoCapturing', 'Auto-capturing every {{seconds}}s', { seconds: autoCaptureInterval })}</span>
+                        </div>
+                      )}
                       
                       {/* Analysis Status Badge */}
-                      {analysisStatus !== 'idle' && analysisStatus !== 'complete' && (
+                      {analysisStatus !== 'idle' && analysisStatus !== 'complete' && !isPiPActive && (
                         <div className={`absolute bottom-16 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
                           analysisStatus === 'uploading' || analysisStatus === 'extracting' || analysisStatus === 'analyzing'
                             ? 'bg-blue-500/90 text-white'
@@ -1677,7 +1790,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                       )}
                       
                       {/* Analysis Complete Badge */}
-                      {analysisStatus === 'complete' && (
+                      {analysisStatus === 'complete' && !isPiPActive && (
                         <div className="absolute bottom-16 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/90 text-white text-sm font-medium">
                           <CheckCircle2 className="h-3 w-3" />
                           <span>{t('realTimePlayback.statusComplete', 'Analysis ready')}</span>
@@ -1755,6 +1868,15 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            onClick={handleOpenVideoAnnotation}
+                            className="h-9 w-9 rounded-full bg-black/70 hover:bg-black/90 text-white border-0"
+                            title={t('realTimePlayback.drawOnVideo', 'Draw on Video')}
+                          >
+                            <Layers className="h-4 w-4" />
+                          </Button>
                         </div>
                         
                         {/* Right side: PiP toggle */}
@@ -1764,7 +1886,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                               variant="secondary"
                               size="icon"
                               onClick={handleTogglePiP}
-                              className={`h-9 w-9 rounded-full bg-black/70 hover:bg-black/90 text-white border-0 ${isPiPActive ? 'ring-2 ring-primary' : ''}`}
+                              className={`h-9 w-9 rounded-full bg-black/70 hover:bg-black/90 text-white border-0 ${isPiPActive ? 'ring-2 ring-primary bg-primary/50' : ''}`}
                               title={isPiPActive ? t('realTimePlayback.exitPiP', 'Exit PiP') : t('realTimePlayback.enterPiP', 'Picture-in-Picture')}
                             >
                               <PictureInPicture2 className="h-4 w-4" />
@@ -1867,28 +1989,83 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                       </div>
                     </Card>
                     
+                    {/* Auto-Capture Setting */}
+                    <Card className="p-4">
+                      <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div className="flex items-center gap-2">
+                          <TimerReset className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-sm">{t('realTimePlayback.autoCapture', 'Auto-Capture Frames')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <ToggleGroup 
+                            type="single" 
+                            value={autoCaptureSetting}
+                            onValueChange={(v) => v && setAutoCaptureSetting(v as 'off' | 'interval')}
+                            className="flex gap-1"
+                          >
+                            <ToggleGroupItem value="off" className="px-3 py-1 text-sm">
+                              {t('common.off', 'Off')}
+                            </ToggleGroupItem>
+                            <ToggleGroupItem value="interval" className="px-3 py-1 text-sm">
+                              {autoCaptureInterval}s
+                            </ToggleGroupItem>
+                          </ToggleGroup>
+                          {autoCaptureSetting === 'interval' && (
+                            <Slider
+                              value={[autoCaptureInterval]}
+                              onValueChange={([v]) => setAutoCaptureInterval(v)}
+                              min={1}
+                              max={10}
+                              step={1}
+                              className="w-20"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                    
                     {/* Captured Frames with Selection and Annotation */}
                     {capturedFrames.length > 0 && (
                       <Card className="p-4">
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                           <div className="flex items-center gap-2">
                             <Camera className="h-4 w-4 text-primary" />
                             <span className="font-medium text-sm">
                               {t('realTimePlayback.capturedFrames', 'Captured Frames')} ({capturedFrames.length})
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              • {capturedFrames.filter(f => f.selectedForAnalysis).length} {t('realTimePlayback.selectedForAnalysis', 'selected')}
+                              • {selectedFramesForCompare.length} {t('realTimePlayback.selectedForAnalysis', 'selected')}
                             </span>
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={handleClearFrames}
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            {t('realTimePlayback.clearFrames', 'Clear')}
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            {selectedFramesForCompare.length >= 2 && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setFrameCompareMode(true)}
+                                className="gap-1"
+                              >
+                                <Copy className="h-3 w-3" />
+                                {t('realTimePlayback.compare', 'Compare')}
+                              </Button>
+                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={handleSelectAllFrames}
+                              className="text-xs"
+                            >
+                              {t('realTimePlayback.selectAll', 'Select All')}
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={handleClearFrames}
+                              className="text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                         <div className="flex gap-3 overflow-x-auto pb-2">
                           {capturedFrames.map((frame, index) => (
@@ -2215,6 +2392,14 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
           }}
         />
       )}
+      
+      {/* Frame Comparison Dialog */}
+      <FrameComparisonDialog
+        open={frameCompareMode}
+        onOpenChange={setFrameCompareMode}
+        frames={selectedFramesForCompare}
+        onDownload={handleDownloadFrame}
+      />
     </>
   );
 };
