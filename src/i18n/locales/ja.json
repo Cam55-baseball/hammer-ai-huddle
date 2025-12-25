@@ -3373,7 +3373,9 @@
       "stressAlert": "ストレスアラート",
       "stressAlertDesc": "ストレスレベルが目標を上回っています",
       "disciplineAlert": "規律アラート",
-      "disciplineAlertDesc": "規律が目標を下回る傾向です"
+      "disciplineAlertDesc": "規律が目標を下回る傾向です",
+      "goalsSet": "今週の目標設定済み",
+      "lockedUntil": "ロック解除日"
     },
     "quiz": {
       "night": {
@@ -3834,11 +3836,72 @@
     "quickActions": {
       "logMeal": "食事を記録"
     },
+    "autoSort": "自動",
+    "manualSort": "手動",
+    "timelineSort": "タイムライン",
+    "timelineHint": "ドラッグして一日を並べ替え。制限なし。",
     "sections": {
       "dailyCheckins": "デイリーチェックイン",
       "training": "トレーニング",
       "cycleTracking": "サイクルトラッキング",
-      "customActivities": "カスタムアクティビティ"
+      "customActivities": "カスタムアクティビティ",
+      "timeline": "あなたのタイムライン"
+    },
+    "calendarView": {
+      "title": "週間概要",
+      "today": "今日",
+      "noActivities": "時間指定のアクティビティなし",
+      "scheduledActivities": "予定されたアクティビティ",
+      "prevWeek": "前の週",
+      "nextWeek": "次の週",
+      "viewToday": "今日を表示",
+      "viewWeek": "週を表示"
+    },
+    "scheduleTemplate": {
+      "saveAsTemplate": "テンプレートとして保存",
+      "applyTemplate": "テンプレートを適用",
+      "templateName": "テンプレート名",
+      "namePlaceholder": "マイデイリースケジュール",
+      "setAsDefault": "デフォルトに設定",
+      "savedSuccess": "スケジュールテンプレートを保存しました！",
+      "applySuccess": "今日のスケジュールにテンプレートを適用しました",
+      "applyToWeek": "今週に適用",
+      "noTemplates": "保存されたテンプレートはありません",
+      "deleteTemplate": "テンプレートを削除",
+      "deleteSuccess": "テンプレートを削除しました",
+      "myTemplates": "マイテンプレート",
+      "default": "デフォルト"
+    },
+    "dailySummary": {
+      "title": "デイリーサマリー通知",
+      "enable": "デイリーサマリーを有効化",
+      "sendAt": "送信時刻",
+      "notificationTitle": "今日のゲームプラン",
+      "activitiesScheduled": "{{count}}件のアクティビティが予定されています",
+      "noActivitiesScheduled": "今日は時間指定のアクティビティがありません。",
+      "letsGo": "さあ、やろう！💪"
+    },
+    "startTime": {
+      "setTime": "開始時刻を設定",
+      "removeTime": "時刻を削除",
+      "startsAt": "開始",
+      "time": "時刻",
+      "tapToSet": "タップして時刻を設定"
+    },
+    "reminder": {
+      "remindMe": "リマインダー",
+      "minutesBefore": "{{minutes}}分前",
+      "reminderSet": "リマインダー設定済み",
+      "noReminder": "リマインダーなし"
+    },
+    "lockOrder": {
+      "lock": "順序をロック",
+      "unlock": "順序をロック解除",
+      "forToday": "今日のみ",
+      "forWeek": "今週中",
+      "locked": "順序ロック中",
+      "lockedUntil": "{{date}}まで",
+      "unlocked": "順序ロック解除"
     },
     "quiz": {
       "morning": {

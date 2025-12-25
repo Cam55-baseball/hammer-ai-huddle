@@ -3244,7 +3244,9 @@
       "stressAlert": "压力提醒",
       "stressAlertDesc": "您的压力水平高于目标",
       "disciplineAlert": "自律提醒",
-      "disciplineAlertDesc": "您的自律正趋向低于目标"
+      "disciplineAlertDesc": "您的自律正趋向低于目标",
+      "goalsSet": "本周目标已设定",
+      "lockedUntil": "锁定至"
     },
     "quiz": {
       "night": {
@@ -3705,11 +3707,72 @@
     "quickActions": {
       "logMeal": "记录餐食"
     },
+    "autoSort": "自动",
+    "manualSort": "手动",
+    "timelineSort": "时间线",
+    "timelineHint": "拖动以重新排序您的一天。无限制。",
     "sections": {
       "dailyCheckins": "每日签到",
       "training": "训练",
       "cycleTracking": "周期跟踪",
-      "customActivities": "自定义活动"
+      "customActivities": "自定义活动",
+      "timeline": "您的时间线"
+    },
+    "calendarView": {
+      "title": "周概览",
+      "today": "今天",
+      "noActivities": "没有安排时间的活动",
+      "scheduledActivities": "已安排的活动",
+      "prevWeek": "上一周",
+      "nextWeek": "下一周",
+      "viewToday": "查看今天",
+      "viewWeek": "查看本周"
+    },
+    "scheduleTemplate": {
+      "saveAsTemplate": "保存为模板",
+      "applyTemplate": "应用模板",
+      "templateName": "模板名称",
+      "namePlaceholder": "我的日程安排",
+      "setAsDefault": "设为默认",
+      "savedSuccess": "日程模板已保存！",
+      "applySuccess": "模板已应用到今日日程",
+      "applyToWeek": "应用到本周",
+      "noTemplates": "暂无保存的模板",
+      "deleteTemplate": "删除模板",
+      "deleteSuccess": "模板已删除",
+      "myTemplates": "我的模板",
+      "default": "默认"
+    },
+    "dailySummary": {
+      "title": "每日摘要通知",
+      "enable": "启用每日摘要",
+      "sendAt": "发送时间",
+      "notificationTitle": "您今天的计划",
+      "activitiesScheduled": "{{count}}个活动已安排",
+      "noActivitiesScheduled": "今天没有安排时间的活动。",
+      "letsGo": "加油！💪"
+    },
+    "startTime": {
+      "setTime": "设置开始时间",
+      "removeTime": "移除时间",
+      "startsAt": "开始于",
+      "time": "时间",
+      "tapToSet": "点击设置时间"
+    },
+    "reminder": {
+      "remindMe": "提醒我",
+      "minutesBefore": "{{minutes}}分钟前",
+      "reminderSet": "已设置提醒",
+      "noReminder": "无提醒"
+    },
+    "lockOrder": {
+      "lock": "锁定顺序",
+      "unlock": "解锁顺序",
+      "forToday": "仅限今天",
+      "forWeek": "本周",
+      "locked": "顺序已锁定",
+      "lockedUntil": "直到{{date}}",
+      "unlocked": "顺序已解锁"
     },
     "quiz": {
       "morning": {

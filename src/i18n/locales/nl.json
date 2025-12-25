@@ -3273,7 +3273,9 @@
       "stressAlert": "Stress Waarschuwing",
       "stressAlertDesc": "Je stressniveaus liggen boven het doel",
       "disciplineAlert": "Discipline Waarschuwing",
-      "disciplineAlertDesc": "Je discipline neigt onder het doel"
+      "disciplineAlertDesc": "Je discipline neigt onder het doel",
+      "goalsSet": "Doelen ingesteld voor deze week",
+      "lockedUntil": "Vergrendeld tot"
     },
     "quiz": {
       "night": {
@@ -3734,11 +3736,72 @@
     "quickActions": {
       "logMeal": "Maaltijd Loggen"
     },
+    "autoSort": "Auto",
+    "manualSort": "Handmatig",
+    "timelineSort": "Tijdlijn",
+    "timelineHint": "Versleep om je dag te herschikken. Geen beperkingen.",
     "sections": {
       "dailyCheckins": "DAGELIJKSE CHECK-INS",
       "training": "TRAINING",
       "cycleTracking": "CYCLUS TRACKING",
-      "customActivities": "AANGEPASTE ACTIVITEITEN"
+      "customActivities": "AANGEPASTE ACTIVITEITEN",
+      "timeline": "JOUW TIJDLIJN"
+    },
+    "calendarView": {
+      "title": "Weekoverzicht",
+      "today": "Vandaag",
+      "noActivities": "Geen activiteiten gepland met tijden",
+      "scheduledActivities": "Geplande activiteiten",
+      "prevWeek": "Vorige week",
+      "nextWeek": "Volgende week",
+      "viewToday": "Vandaag bekijken",
+      "viewWeek": "Week bekijken"
+    },
+    "scheduleTemplate": {
+      "saveAsTemplate": "Opslaan als sjabloon",
+      "applyTemplate": "Sjabloon toepassen",
+      "templateName": "Sjabloonnaam",
+      "namePlaceholder": "Mijn dagschema",
+      "setAsDefault": "Als standaard instellen",
+      "savedSuccess": "Schema sjabloon opgeslagen!",
+      "applySuccess": "Sjabloon toegepast op schema van vandaag",
+      "applyToWeek": "Op deze week toepassen",
+      "noTemplates": "Nog geen opgeslagen sjablonen",
+      "deleteTemplate": "Sjabloon verwijderen",
+      "deleteSuccess": "Sjabloon verwijderd",
+      "myTemplates": "Mijn sjablonen",
+      "default": "Standaard"
+    },
+    "dailySummary": {
+      "title": "Dagelijkse samenvatting melding",
+      "enable": "Dagelijkse samenvatting inschakelen",
+      "sendAt": "Verzenden om",
+      "notificationTitle": "Je speelplan voor vandaag",
+      "activitiesScheduled": "{{count}} activiteiten gepland",
+      "noActivitiesScheduled": "Vandaag geen activiteiten met tijden gepland.",
+      "letsGo": "Laten we gaan! 💪"
+    },
+    "startTime": {
+      "setTime": "Starttijd instellen",
+      "removeTime": "Tijd verwijderen",
+      "startsAt": "Begint om",
+      "time": "Tijd",
+      "tapToSet": "Tik om tijd in te stellen"
+    },
+    "reminder": {
+      "remindMe": "Herinner mij",
+      "minutesBefore": "{{minutes}} min van tevoren",
+      "reminderSet": "Herinnering ingesteld",
+      "noReminder": "Geen herinnering"
+    },
+    "lockOrder": {
+      "lock": "Volgorde vergrendelen",
+      "unlock": "Volgorde ontgrendelen",
+      "forToday": "Alleen voor vandaag",
+      "forWeek": "Voor deze week",
+      "locked": "Volgorde vergrendeld",
+      "lockedUntil": "Tot {{date}}",
+      "unlocked": "Volgorde ontgrendeld"
     },
     "quiz": {
       "morning": {

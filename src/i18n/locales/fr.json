@@ -4103,7 +4103,9 @@
       "stressAlert": "Alerte Stress",
       "stressAlertDesc": "Vos niveaux de stress sont au-dessus de l'objectif",
       "disciplineAlert": "Alerte Discipline",
-      "disciplineAlertDesc": "Votre discipline tend en dessous de l'objectif"
+      "disciplineAlertDesc": "Votre discipline tend en dessous de l'objectif",
+      "goalsSet": "Objectifs définis pour cette semaine",
+      "lockedUntil": "Verrouillé jusqu'à"
     },
     "freeNote": {
       "title": "Note Rapide",
@@ -4547,11 +4549,72 @@
     "quickActions": {
       "logMeal": "Enregistrer Repas"
     },
+    "autoSort": "Auto",
+    "manualSort": "Manuel",
+    "timelineSort": "Chronologie",
+    "timelineHint": "Glissez pour réorganiser votre journée. Sans restrictions.",
     "sections": {
       "dailyCheckins": "CHECK-INS QUOTIDIENS",
       "training": "ENTRAÎNEMENT",
       "cycleTracking": "SUIVI DE CYCLE",
-      "customActivities": "ACTIVITÉS PERSONNALISÉES"
+      "customActivities": "ACTIVITÉS PERSONNALISÉES",
+      "timeline": "VOTRE CHRONOLOGIE"
+    },
+    "calendarView": {
+      "title": "Aperçu de la semaine",
+      "today": "Aujourd'hui",
+      "noActivities": "Aucune activité programmée avec horaires",
+      "scheduledActivities": "Activités programmées",
+      "prevWeek": "Semaine précédente",
+      "nextWeek": "Semaine suivante",
+      "viewToday": "Voir aujourd'hui",
+      "viewWeek": "Voir la semaine"
+    },
+    "scheduleTemplate": {
+      "saveAsTemplate": "Enregistrer comme modèle",
+      "applyTemplate": "Appliquer le modèle",
+      "templateName": "Nom du modèle",
+      "namePlaceholder": "Mon emploi du temps quotidien",
+      "setAsDefault": "Définir par défaut",
+      "savedSuccess": "Modèle d'horaire enregistré!",
+      "applySuccess": "Modèle appliqué à l'horaire d'aujourd'hui",
+      "applyToWeek": "Appliquer à cette semaine",
+      "noTemplates": "Aucun modèle enregistré",
+      "deleteTemplate": "Supprimer le modèle",
+      "deleteSuccess": "Modèle supprimé",
+      "myTemplates": "Mes modèles",
+      "default": "Par défaut"
+    },
+    "dailySummary": {
+      "title": "Notification de résumé quotidien",
+      "enable": "Activer le résumé quotidien",
+      "sendAt": "Envoyer à",
+      "notificationTitle": "Votre plan de jeu pour aujourd'hui",
+      "activitiesScheduled": "{{count}} activités programmées",
+      "noActivitiesScheduled": "Aucune activité avec horaires aujourd'hui.",
+      "letsGo": "C'est parti! 💪"
+    },
+    "startTime": {
+      "setTime": "Définir l'heure de début",
+      "removeTime": "Supprimer l'heure",
+      "startsAt": "Commence à",
+      "time": "Heure",
+      "tapToSet": "Appuyez pour définir l'heure"
+    },
+    "reminder": {
+      "remindMe": "Me rappeler",
+      "minutesBefore": "{{minutes}} min avant",
+      "reminderSet": "Rappel défini",
+      "noReminder": "Pas de rappel"
+    },
+    "lockOrder": {
+      "lock": "Verrouiller l'ordre",
+      "unlock": "Déverrouiller l'ordre",
+      "forToday": "Pour aujourd'hui seulement",
+      "forWeek": "Pour cette semaine",
+      "locked": "Ordre verrouillé",
+      "lockedUntil": "Jusqu'au {{date}}",
+      "unlocked": "Ordre déverrouillé"
     },
     "quiz": {
       "morning": {

@@ -1,23 +1,34 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Reorder } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2 } from 'lucide-react';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizDialog';
 import { CustomActivityBuilderDialog, QuickAddFavoritesDrawer, getActivityIcon } from '@/components/custom-activities';
+import { GamePlanCalendarView } from '@/components/GamePlanCalendarView';
 import { useVault } from '@/hooks/useVault';
 import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
+import { useScheduleTemplates, ScheduleItem } from '@/hooks/useScheduleTemplates';
+import { useDailySummaryNotification } from '@/hooks/useDailySummaryNotification';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { CustomActivityTemplate } from '@/types/customActivity';
+import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 
 interface GamePlanCardProps {
   selectedSport: 'baseball' | 'softball';
@@ -32,6 +43,21 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
   const { saveFocusQuiz } = useVault();
+  
+  // Schedule templates hook
+  const { templates: scheduleTemplates, saveTemplate, deleteTemplate, getDefaultTemplate } = useScheduleTemplates();
+  
+  // Daily summary notification hook
+  const { 
+    enabled: dailySummaryEnabled, 
+    summaryTime: dailySummaryTime, 
+    setEnabled: setDailySummaryEnabled, 
+    setSummaryTime: setDailySummaryTime,
+    scheduleDailySummary,
+    requestPermission: requestNotificationPermission,
+    isSupported: notificationsSupported
+  } = useDailySummaryNotification();
+  
   const [quickLogOpen, setQuickLogOpen] = useState(false);
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
   const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
@@ -42,6 +68,52 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return 'auto';
   });
   const autoSort = sortMode === 'auto';
+  
+  // View mode: today or calendar
+  const [showCalendarView, setShowCalendarView] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  
+  // Task times and reminders (stored in localStorage)
+  const [taskTimes, setTaskTimes] = useState<Record<string, string | null>>(() => {
+    try {
+      const stored = localStorage.getItem('gameplan-task-times');
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
+  });
+  const [taskReminders, setTaskReminders] = useState<Record<string, number | null>>(() => {
+    try {
+      const stored = localStorage.getItem('gameplan-task-reminders');
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
+  });
+  
+  // Lock order state
+  const [orderLocked, setOrderLocked] = useState<'day' | 'week' | null>(() => {
+    try {
+      const stored = localStorage.getItem('gameplan-order-lock');
+      if (!stored) return null;
+      const { type, expires } = JSON.parse(stored);
+      if (new Date(expires) < new Date()) {
+        localStorage.removeItem('gameplan-order-lock');
+        return null;
+      }
+      return type;
+    } catch { return null; }
+  });
+  
+  // Template dialogs
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [applyTemplateOpen, setApplyTemplateOpen] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [setAsDefault, setSetAsDefault] = useState(false);
+  
+  // Daily summary settings popover
+  const [dailySummaryPopoverOpen, setDailySummaryPopoverOpen] = useState(false);
+  
+  // Time picker popover state
+  const [activeTimePickerTaskId, setActiveTimePickerTaskId] = useState<string | null>(null);
+  const [tempTime, setTempTime] = useState('');
+  const [tempReminder, setTempReminder] = useState<number | null>(null);
   
   // Custom activity state
   const [builderOpen, setBuilderOpen] = useState(false);
@@ -73,6 +145,30 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
   // Create stable dependency key to prevent infinite loops
   const tasksKey = JSON.stringify(tasks.map(t => ({ id: t.id, section: t.section, completed: t.completed })));
+
+  // Save task times and reminders to localStorage
+  useEffect(() => {
+    localStorage.setItem('gameplan-task-times', JSON.stringify(taskTimes));
+  }, [taskTimes]);
+  
+  useEffect(() => {
+    localStorage.setItem('gameplan-task-reminders', JSON.stringify(taskReminders));
+  }, [taskReminders]);
+  
+  // Schedule daily summary notification when enabled
+  useEffect(() => {
+    if (dailySummaryEnabled && tasks.length > 0) {
+      const scheduledActivities = tasks
+        .filter(task => taskTimes[task.id])
+        .map(task => ({
+          id: task.id,
+          title: task.taskType === 'custom' ? task.titleKey : t(task.titleKey),
+          startTime: taskTimes[t.id] || null,
+          reminderMinutes: taskReminders[t.id] || null,
+        }));
+      scheduleDailySummary(scheduledActivities);
+    }
+  }, [dailySummaryEnabled, tasks, taskTimes, taskReminders, scheduleDailySummary]);
 
   // Sync ordered tasks with fetched tasks and restore saved order
   useEffect(() => {
@@ -206,6 +302,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     [...tasksList].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
 
   const cycleSortMode = () => {
+    if (orderLocked) {
+      toast.error(t('gamePlan.lockOrder.locked'));
+      return;
+    }
     const modes: ('auto' | 'manual' | 'timeline')[] = ['auto', 'manual', 'timeline'];
     const currentIdx = modes.indexOf(sortMode);
     const nextMode = modes[(currentIdx + 1) % modes.length];
@@ -214,26 +314,31 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   };
 
   const handleReorderTimeline = (newOrder: GamePlanTask[]) => {
+    if (orderLocked) return;
     setTimelineTasks(newOrder);
     localStorage.setItem('gameplan-timeline-order', JSON.stringify(newOrder.map(t => t.id)));
   };
 
   const handleReorderCheckin = (newOrder: GamePlanTask[]) => {
+    if (orderLocked) return;
     setOrderedCheckin(newOrder);
     localStorage.setItem('gameplan-checkin-order', JSON.stringify(newOrder.map(t => t.id)));
   };
 
   const handleReorderTraining = (newOrder: GamePlanTask[]) => {
+    if (orderLocked) return;
     setOrderedTraining(newOrder);
     localStorage.setItem('gameplan-training-order', JSON.stringify(newOrder.map(t => t.id)));
   };
 
   const handleReorderTracking = (newOrder: GamePlanTask[]) => {
+    if (orderLocked) return;
     setOrderedTracking(newOrder);
     localStorage.setItem('gameplan-tracking-order', JSON.stringify(newOrder.map(t => t.id)));
   };
 
   const handleReorderCustom = (newOrder: GamePlanTask[]) => {
+    if (orderLocked) return;
     setOrderedCustom(newOrder);
     localStorage.setItem('gameplan-custom-order', JSON.stringify(newOrder.map(t => t.id)));
   };
@@ -263,6 +368,100 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       toast.success(t('customActivity.addedToToday'));
     }
   };
+  
+  // Time picker handlers
+  const openTimePicker = (taskId: string) => {
+    setActiveTimePickerTaskId(taskId);
+    setTempTime(taskTimes[taskId] || '');
+    setTempReminder(taskReminders[taskId] || null);
+  };
+  
+  const saveTime = () => {
+    if (activeTimePickerTaskId) {
+      setTaskTimes(prev => ({ ...prev, [activeTimePickerTaskId]: tempTime || null }));
+      setTaskReminders(prev => ({ ...prev, [activeTimePickerTaskId]: tempReminder }));
+      setActiveTimePickerTaskId(null);
+    }
+  };
+  
+  const removeTime = (taskId: string) => {
+    setTaskTimes(prev => ({ ...prev, [taskId]: null }));
+    setTaskReminders(prev => ({ ...prev, [taskId]: null }));
+    setActiveTimePickerTaskId(null);
+  };
+  
+  // Lock order handlers
+  const handleLockOrder = (type: 'day' | 'week') => {
+    const expires = type === 'day' 
+      ? new Date(new Date().setHours(23, 59, 59, 999))
+      : addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 7);
+    
+    localStorage.setItem('gameplan-order-lock', JSON.stringify({ type, expires: expires.toISOString() }));
+    setOrderLocked(type);
+    toast.success(t('gamePlan.lockOrder.locked'));
+  };
+  
+  const handleUnlockOrder = () => {
+    localStorage.removeItem('gameplan-order-lock');
+    setOrderLocked(null);
+    toast.success(t('gamePlan.lockOrder.unlocked'));
+  };
+  
+  // Template handlers
+  const handleSaveTemplate = async () => {
+    if (!newTemplateName.trim()) return;
+    
+    const schedule: ScheduleItem[] = timelineTasks.map(t => ({
+      taskId: t.id,
+      startTime: taskTimes[t.id] || null,
+      reminderMinutes: taskReminders[t.id] || null,
+    }));
+    
+    const success = await saveTemplate(newTemplateName, schedule, setAsDefault);
+    if (success) {
+      setSaveTemplateOpen(false);
+      setNewTemplateName('');
+      setSetAsDefault(false);
+    }
+  };
+  
+  const handleApplyTemplate = (template: { schedule: ScheduleItem[] }) => {
+    // Apply order
+    const orderedIds = template.schedule.map(s => s.taskId);
+    const newOrderedTasks = [...tasks].sort((a, b) => {
+      const aIdx = orderedIds.indexOf(a.id);
+      const bIdx = orderedIds.indexOf(b.id);
+      if (aIdx === -1 && bIdx === -1) return 0;
+      if (aIdx === -1) return 1;
+      if (bIdx === -1) return -1;
+      return aIdx - bIdx;
+    });
+    setTimelineTasks(newOrderedTasks);
+    localStorage.setItem('gameplan-timeline-order', JSON.stringify(orderedIds));
+    
+    // Apply times and reminders
+    const newTimes: Record<string, string | null> = {};
+    const newReminders: Record<string, number | null> = {};
+    template.schedule.forEach(s => {
+      newTimes[s.taskId] = s.startTime;
+      newReminders[s.taskId] = s.reminderMinutes;
+    });
+    setTaskTimes(newTimes);
+    setTaskReminders(newReminders);
+    
+    setApplyTemplateOpen(false);
+    toast.success(t('gamePlan.scheduleTemplate.applySuccess'));
+  };
+  
+  // Format time for display
+  const formatTimeDisplay = (time: string | null) => {
+    if (!time) return null;
+    const [hours, minutes] = time.split(':');
+    const h = parseInt(hours);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${minutes} ${ampm}`;
+  };
 
   // Get display tasks based on sort mode
   const checkinTasks = autoSort ? sortByCompletion(orderedCheckin) : orderedCheckin;
@@ -277,6 +476,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const isTexVision = task.specialStyle === 'tex-vision';
     const isCustom = task.specialStyle === 'custom';
     const showTimelineNumber = sortMode === 'timeline' && typeof index === 'number';
+    const taskTime = taskTimes[task.id];
+    const hasReminder = taskReminders[task.id];
     
     // Get dynamic colors based on task type
     const pendingColors = colors.gamePlan.pending;
@@ -315,9 +516,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         )}
         
-        {/* Drag handle - visible in manual and timeline modes */}
+        {/* Drag handle - visible in manual and timeline modes (disabled when locked) */}
         {(sortMode === 'manual' || sortMode === 'timeline') && (
-          <div className="flex-shrink-0 cursor-grab active:cursor-grabbing text-white/60 hover:text-white">
+          <div className={cn(
+            "flex-shrink-0 text-white/60",
+            orderLocked ? "opacity-30" : "cursor-grab active:cursor-grabbing hover:text-white"
+          )}>
             <GripVertical className="h-5 w-5" />
           </div>
         )}
@@ -343,7 +547,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           
           {/* Content */}
           <div className="flex-1 text-left min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className={cn(
                 "text-sm sm:text-base truncate",
                 task.completed 
@@ -371,14 +575,73 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 </span>
               )}
             </div>
-            <p className={cn(
-              "text-xs sm:text-sm truncate",
-              task.completed ? "text-white/40" : "text-white/70"
-            )}>
-              {task.taskType === 'custom' ? (task.descriptionKey || t(`customActivity.types.${task.customActivityData?.template.activity_type}`)) : t(task.descriptionKey)}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className={cn(
+                "text-xs sm:text-sm truncate",
+                task.completed ? "text-white/40" : "text-white/70"
+              )}>
+                {task.taskType === 'custom' ? (task.descriptionKey || t(`customActivity.types.${task.customActivityData?.template.activity_type}`)) : t(task.descriptionKey)}
+              </p>
+            </div>
           </div>
         </button>
+        
+        {/* Time badge in timeline mode */}
+        {sortMode === 'timeline' && (
+          <Popover open={activeTimePickerTaskId === task.id} onOpenChange={(open) => { if (!open) setActiveTimePickerTaskId(null); }}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "flex-shrink-0 gap-1 text-xs h-7 px-2",
+                  taskTime ? "text-primary bg-primary/10 hover:bg-primary/20" : "text-white/50 hover:text-white hover:bg-white/10"
+                )}
+                onClick={(e) => { e.stopPropagation(); openTimePicker(task.id); }}
+              >
+                <Clock className="h-3 w-3" />
+                {taskTime ? formatTimeDisplay(taskTime) : t('gamePlan.startTime.tapToSet')}
+                {hasReminder && <Bell className="h-3 w-3 ml-1 text-yellow-400" />}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3 space-y-3" align="end">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-foreground">{t('gamePlan.startTime.time')}</label>
+                <Input 
+                  type="time" 
+                  value={tempTime}
+                  onChange={(e) => setTempTime(e.target.value)}
+                  className="h-9"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-foreground">{t('gamePlan.reminder.remindMe')}</label>
+                <Select value={tempReminder?.toString() || ''} onValueChange={(v) => setTempReminder(v ? parseInt(v) : null)}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder={t('gamePlan.reminder.noReminder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">{t('gamePlan.reminder.noReminder')}</SelectItem>
+                    <SelectItem value="5">{t('gamePlan.reminder.minutesBefore', { minutes: 5 })}</SelectItem>
+                    <SelectItem value="10">{t('gamePlan.reminder.minutesBefore', { minutes: 10 })}</SelectItem>
+                    <SelectItem value="15">{t('gamePlan.reminder.minutesBefore', { minutes: 15 })}</SelectItem>
+                    <SelectItem value="20">{t('gamePlan.reminder.minutesBefore', { minutes: 20 })}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                {taskTime && (
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => removeTime(task.id)}>
+                    {t('gamePlan.startTime.removeTime')}
+                  </Button>
+                )}
+                <Button size="sm" className="flex-1" onClick={saveTime}>
+                  {t('common.save')}
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
         
         {/* Edit button for custom activities */}
         {isCustom && (
@@ -479,7 +742,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         ) : sortMode === 'manual' ? (
           <Reorder.Group axis="y" values={orderedTasks} onReorder={onReorder} className="space-y-2">
             {orderedTasks.map((task) => (
-              <Reorder.Item key={task.id} value={task}>
+              <Reorder.Item key={task.id} value={task} drag={!orderLocked}>
                 {renderTask(task)}
               </Reorder.Item>
             ))}
@@ -504,6 +767,30 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         </CardContent>
       </Card>
+    );
+  }
+
+  // If calendar view is active, show it instead
+  if (showCalendarView) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowCalendarView(false)}
+            className="text-white/70 hover:text-white"
+          >
+            ← {t('gamePlan.calendarView.viewToday')}
+          </Button>
+        </div>
+        <GamePlanCalendarView
+          tasks={tasks}
+          taskTimes={taskTimes}
+          onDaySelect={setSelectedDate}
+          selectedDate={selectedDate}
+        />
+      </div>
     );
   }
 
@@ -534,16 +821,154 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             </div>
           </div>
           
-          {/* Sort mode toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={cycleSortMode}
-            className="flex items-center gap-1.5 text-xs font-medium text-white/70 hover:text-white"
-          >
-            <ArrowUpDown className="h-3.5 w-3.5" />
-            {sortMode === 'auto' ? t('gamePlan.autoSort', 'Auto') : sortMode === 'manual' ? t('gamePlan.manualSort', 'Manual') : t('gamePlan.timelineSort', 'Timeline')}
-          </Button>
+          {/* Action buttons row */}
+          <div className="flex items-center gap-1 flex-wrap">
+            {/* Calendar view toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCalendarView(true)}
+              className="text-white/70 hover:text-white h-8 px-2"
+            >
+              <CalendarDays className="h-4 w-4" />
+            </Button>
+            
+            {/* Sort mode toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={cycleSortMode}
+              className="flex items-center gap-1.5 text-xs font-medium text-white/70 hover:text-white h-8"
+            >
+              <ArrowUpDown className="h-3.5 w-3.5" />
+              {sortMode === 'auto' ? t('gamePlan.autoSort') : sortMode === 'manual' ? t('gamePlan.manualSort') : t('gamePlan.timelineSort')}
+            </Button>
+            
+            {/* Lock Order dropdown (timeline mode only) */}
+            {sortMode === 'timeline' && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "h-8 px-2",
+                      orderLocked ? "text-yellow-400" : "text-white/70 hover:text-white"
+                    )}
+                  >
+                    {orderLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2" align="end">
+                  {orderLocked ? (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={handleUnlockOrder}
+                    >
+                      <Unlock className="h-4 w-4 mr-2" />
+                      {t('gamePlan.lockOrder.unlock')}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-start"
+                        onClick={() => handleLockOrder('day')}
+                      >
+                        <Lock className="h-4 w-4 mr-2" />
+                        {t('gamePlan.lockOrder.forToday')}
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-start"
+                        onClick={() => handleLockOrder('week')}
+                      >
+                        <Lock className="h-4 w-4 mr-2" />
+                        {t('gamePlan.lockOrder.forWeek')}
+                      </Button>
+                    </>
+                  )}
+                </PopoverContent>
+              </Popover>
+            )}
+            
+            {/* Save/Apply template buttons (timeline mode only) */}
+            {sortMode === 'timeline' && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSaveTemplateOpen(true)}
+                  className="text-white/70 hover:text-white h-8 px-2"
+                >
+                  <Save className="h-4 w-4" />
+                </Button>
+                {scheduleTemplates.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setApplyTemplateOpen(true)}
+                    className="text-white/70 hover:text-white h-8 px-2 text-xs"
+                  >
+                    {t('gamePlan.scheduleTemplate.applyTemplate')}
+                  </Button>
+                )}
+              </>
+            )}
+            
+            {/* Daily Summary Settings */}
+            {notificationsSupported && (
+              <Popover open={dailySummaryPopoverOpen} onOpenChange={setDailySummaryPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "h-8 px-2",
+                      dailySummaryEnabled ? "text-primary" : "text-white/70 hover:text-white"
+                    )}
+                  >
+                    {dailySummaryEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-3 space-y-3" align="end">
+                  <h4 className="text-sm font-bold">{t('gamePlan.dailySummary.title')}</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">{t('gamePlan.dailySummary.enable')}</span>
+                    <Switch 
+                      checked={dailySummaryEnabled} 
+                      onCheckedChange={async (checked) => {
+                        if (checked) {
+                          await requestNotificationPermission();
+                        }
+                        setDailySummaryEnabled(checked);
+                      }} 
+                    />
+                  </div>
+                  {dailySummaryEnabled && (
+                    <div className="space-y-2">
+                      <label className="text-xs text-muted-foreground">{t('gamePlan.dailySummary.sendAt')}</label>
+                      <Select value={dailySummaryTime} onValueChange={setDailySummaryTime}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="05:00">5:00 AM</SelectItem>
+                          <SelectItem value="06:00">6:00 AM</SelectItem>
+                          <SelectItem value="07:00">7:00 AM</SelectItem>
+                          <SelectItem value="08:00">8:00 AM</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
           
           {/* Progress Ring */}
           <div className="flex items-center gap-3 bg-background/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-primary/30">
@@ -624,17 +1049,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             <div className="space-y-2">
               <h3 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
                 <span className="h-px flex-1 bg-primary/30" />
-                {t('gamePlan.sections.timeline', 'Your Timeline')}
+                {t('gamePlan.sections.timeline')}
                 <span className="h-px flex-1 bg-primary/30" />
               </h3>
               <p className="text-xs text-muted-foreground text-center mb-2">
-                {t('gamePlan.timelineHint', 'Drag to reorder your day. No restrictions.')}
+                {t('gamePlan.timelineHint')}
               </p>
               <Reorder.Group axis="y" values={timelineTasks} onReorder={handleReorderTimeline} className="space-y-2">
                 {timelineTasks.map((task, index) => (
                   <Reorder.Item 
                     key={task.id} 
                     value={task}
+                    drag={!orderLocked}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
                     onDrag={(e) => handleDrag(e as any)}
@@ -792,8 +1218,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         template={editingTemplate}
         presetActivityType={presetActivityType}
         onSave={async (data) => {
-          // Note: createTemplate and updateTemplate are handled within useCustomActivities
-          // The builder calls onSave which we'll handle via the hook
           if (editingTemplate) {
             toast.success(t('customActivity.saved'));
           } else {
@@ -827,6 +1251,69 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           setBuilderOpen(true);
         }}
       />
+      
+      {/* Save Template Dialog */}
+      <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('gamePlan.scheduleTemplate.saveAsTemplate')}</DialogTitle>
+            <DialogDescription>
+              {t('gamePlan.scheduleTemplate.templateName')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              placeholder={t('gamePlan.scheduleTemplate.namePlaceholder')}
+              value={newTemplateName}
+              onChange={(e) => setNewTemplateName(e.target.value)}
+            />
+            <div className="flex items-center gap-2">
+              <Switch checked={setAsDefault} onCheckedChange={setSetAsDefault} id="default-switch" />
+              <label htmlFor="default-switch" className="text-sm">{t('gamePlan.scheduleTemplate.setAsDefault')}</label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaveTemplateOpen(false)}>{t('common.cancel')}</Button>
+            <Button onClick={handleSaveTemplate} disabled={!newTemplateName.trim()}>{t('common.save')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Apply Template Drawer */}
+      <Drawer open={applyTemplateOpen} onOpenChange={setApplyTemplateOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>{t('gamePlan.scheduleTemplate.myTemplates')}</DrawerTitle>
+            <DrawerDescription>{t('gamePlan.scheduleTemplate.applyTemplate')}</DrawerDescription>
+          </DrawerHeader>
+          <ScrollArea className="h-[300px] px-4 pb-4">
+            {scheduleTemplates.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">{t('gamePlan.scheduleTemplate.noTemplates')}</p>
+            ) : (
+              <div className="space-y-2">
+                {scheduleTemplates.map((template) => (
+                  <div key={template.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{template.name}</span>
+                      {template.is_default && (
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">{t('gamePlan.scheduleTemplate.default')}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={() => handleApplyTemplate(template)}>
+                        {t('gamePlan.scheduleTemplate.applyTemplate')}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => deleteTemplate(template.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
       
       {/* Pulsing animation for incomplete tasks */}
       <style>{`
