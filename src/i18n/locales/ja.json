@@ -4654,6 +4654,15 @@
       "viewCount": "{{count}}回閲覧",
       "deleteLink": "リンクを削除",
       "preview": "プレビュー"
+    },
+    "detail": {
+      "title": "アクティビティ詳細",
+      "markComplete": "完了としてマーク",
+      "markedComplete": "完了しました！",
+      "editActivity": "アクティビティを編集",
+      "scheduledFor": "予定時刻",
+      "noTimeSet": "時間が設定されていません。タップして設定。",
+      "viewHistory": "履歴を見る"
     }
   },
   "myCustomActivities": {

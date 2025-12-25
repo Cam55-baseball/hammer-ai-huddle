@@ -5255,6 +5255,15 @@
       "viewCount": "{{count}} vues",
       "deleteLink": "Supprimer le Lien",
       "preview": "Aperçu"
+    },
+    "detail": {
+      "title": "Détails de l'Activité",
+      "markComplete": "Marquer Terminé",
+      "markedComplete": "Terminé!",
+      "editActivity": "Modifier l'Activité",
+      "scheduledFor": "Heure Prévue",
+      "noTimeSet": "Aucune heure définie. Appuyez pour planifier.",
+      "viewHistory": "Voir l'Historique"
     }
   },
   "myCustomActivities": {

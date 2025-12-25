@@ -5255,6 +5255,15 @@
       "viewCount": "{{count}} Aufrufe",
       "deleteLink": "Link Löschen",
       "preview": "Vorschau"
+    },
+    "detail": {
+      "title": "Aktivitätsdetails",
+      "markComplete": "Als erledigt markieren",
+      "markedComplete": "Erledigt!",
+      "editActivity": "Aktivität bearbeiten",
+      "scheduledFor": "Geplante Zeit",
+      "noTimeSet": "Keine Zeit festgelegt. Tippen zum planen.",
+      "viewHistory": "Verlauf anzeigen"
     }
   },
   "myCustomActivities": {

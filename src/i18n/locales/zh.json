@@ -4498,6 +4498,15 @@
       "viewCount": "{{count}}次浏览",
       "deleteLink": "删除链接",
       "preview": "预览"
+    },
+    "detail": {
+      "title": "活动详情",
+      "markComplete": "标记完成",
+      "markedComplete": "已完成！",
+      "editActivity": "编辑活动",
+      "scheduledFor": "计划时间",
+      "noTimeSet": "未设置时间。点击安排。",
+      "viewHistory": "查看历史"
     }
   },
   "myCustomActivities": {

@@ -5911,7 +5911,16 @@
     "created": "Activity created!",
     "createError": "Failed to create activity",
     "updated": "Activity updated!",
-    "updateError": "Failed to update activity"
+    "updateError": "Failed to update activity",
+    "detail": {
+      "title": "Activity Details",
+      "markComplete": "Mark Complete",
+      "markedComplete": "Completed!",
+      "editActivity": "Edit Activity",
+      "scheduledFor": "Scheduled Time",
+      "noTimeSet": "No time set. Tap to schedule.",
+      "viewHistory": "View History"
+    }
   },
   "myCustomActivities": {
     "title": "My Custom Activities",
