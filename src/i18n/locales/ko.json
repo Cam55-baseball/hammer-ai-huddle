@@ -440,6 +440,7 @@
     "failedToResume": "모듈 재개 실패"
   },
   "navigation": {
+    "menu": "메뉴",
     "dashboard": "대시보드",
     "playersClub": "플레이어스 클럽",
     "rankings": "랭킹",

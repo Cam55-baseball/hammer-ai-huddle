@@ -440,6 +440,7 @@
     "failedToResume": "モジュールの再開に失敗しました"
   },
   "navigation": {
+    "menu": "メニュー",
     "dashboard": "ダッシュボード",
     "playersClub": "プレイヤーズクラブ",
     "rankings": "ランキング",

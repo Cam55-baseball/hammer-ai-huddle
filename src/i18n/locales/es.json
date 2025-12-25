@@ -440,6 +440,7 @@
     "failedToResume": "Error al reanudar módulo"
   },
   "navigation": {
+    "menu": "Menú",
     "dashboard": "Panel Principal",
     "playersClub": "Club de Jugadores",
     "rankings": "Clasificaciones",
