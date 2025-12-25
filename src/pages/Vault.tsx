@@ -351,7 +351,15 @@ export default function Vault() {
                 <p className="text-muted-foreground max-w-md mx-auto">
                   {t('vault.locked.description')}
                 </p>
-                <Button onClick={() => navigate('/pricing')} size="lg" className="mt-4">
+                <Button 
+                  onClick={() => {
+                    const sport = localStorage.getItem('selectedSport') || 'baseball';
+                    const role = localStorage.getItem('selectedRole') || localStorage.getItem('userRole') || 'player';
+                    navigate('/select-modules', { state: { sport, role } });
+                  }} 
+                  size="lg" 
+                  className="mt-4"
+                >
                   {t('vault.locked.unlockButton')}
                 </Button>
               </div>

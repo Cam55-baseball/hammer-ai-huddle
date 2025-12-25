@@ -7,7 +7,7 @@ import { TutorialButton } from "./TutorialButton";
 import { TutorialModal } from "./TutorialModal";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingBag, ExternalLink } from "lucide-react";
+import { Menu, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHydrationReminders } from "@/hooks/useHydrationReminders";
@@ -51,21 +51,20 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
         {/* Small but mighty Merch button */}
         <Button
           variant="outline"
-          size="sm"
+          size="icon"
           onClick={() => window.open('https://hammers-modality-shop.fourthwall.com', '_blank')}
-          className="h-8 px-2.5 gap-1.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 
+          className="h-8 w-8 bg-gradient-to-r from-amber-500/10 to-orange-500/10 
                      hover:from-amber-500/20 hover:to-orange-500/20
                      border-amber-500/40 hover:border-amber-500/60
                      text-amber-700 dark:text-amber-400
                      shadow-sm hover:shadow-md transition-all
                      group relative overflow-hidden"
+          title={t('dashboard.header.merch')}
         >
           {/* Shimmer effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
                           translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-          <ShoppingBag className="h-3.5 w-3.5 relative z-10" />
-          <span className="text-xs font-bold relative z-10 hidden xs:inline">{t('dashboard.header.merch')}</span>
-          <ExternalLink className="h-2.5 w-2.5 relative z-10 hidden sm:inline" />
+          <ShoppingBag className="h-4 w-4 relative z-10" />
         </Button>
         
         {user && (
