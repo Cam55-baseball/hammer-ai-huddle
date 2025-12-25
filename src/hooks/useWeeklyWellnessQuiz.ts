@@ -26,7 +26,8 @@ interface UseWeeklyWellnessQuizReturn {
   lastWeekAverages: WeeklyAverages;
   isLoading: boolean;
   isDueThisWeek: boolean;
-  saveGoals: (goals: { mood: number; stress: number; discipline: number }) => Promise<{ success: boolean }>;
+  nextOpenDate: string;
+  saveGoals: (goals: { mood: number; stress: number; discipline: number }) => Promise<{ success: boolean; reason?: string }>;
   refetch: () => void;
 }
 
@@ -123,21 +124,34 @@ export function useWeeklyWellnessQuiz(): UseWeeklyWellnessQuizReturn {
 
     const currentWeekStart = getCurrentWeekStart();
 
+    // Check if already completed this week - hard lock
+    if (currentGoals) {
+      console.log('[useWeeklyWellnessQuiz] Goals already set for this week, blocking save');
+      return { success: false, reason: 'already_completed' };
+    }
+
     try {
+      // Use INSERT only (not upsert) to prevent overwrites
       const { error } = await supabase
         .from('vault_weekly_wellness_quiz')
-        .upsert({
+        .insert({
           user_id: user.id,
           week_start_date: currentWeekStart,
           target_mood_level: goals.mood,
           target_stress_level: goals.stress,
           target_discipline_level: goals.discipline,
           completed_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id,week_start_date',
         });
 
-      if (error) throw error;
+      if (error) {
+        // If duplicate key error, goals were already set
+        if (error.code === '23505') {
+          console.log('[useWeeklyWellnessQuiz] Duplicate key - already completed');
+          await fetchData();
+          return { success: false, reason: 'already_completed' };
+        }
+        throw error;
+      }
 
       await fetchData();
       return { success: true };
@@ -150,11 +164,19 @@ export function useWeeklyWellnessQuiz(): UseWeeklyWellnessQuizReturn {
   // Check if it's due (not completed this week)
   const isCompletedThisWeek = !!currentGoals;
   
-  // Show as due on Monday or if not completed this week
+  // Calculate next Monday 12:00am for display
   const today = new Date();
   const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+  const nextMonday = new Date(weekStart);
+  nextMonday.setDate(nextMonday.getDate() + 7);
+  nextMonday.setHours(0, 0, 0, 0);
+  
+  // Show as due on Monday or if not completed this week (only show Mon-Wed)
   const daysSinceWeekStart = differenceInDays(today, weekStart);
   const isDueThisWeek = !isCompletedThisWeek && daysSinceWeekStart <= 2; // Show Mon-Wed
+  
+  // Format next Monday for display
+  const nextOpenDate = format(nextMonday, 'EEEE, MMM d');
 
   return {
     isCompletedThisWeek,
@@ -163,6 +185,7 @@ export function useWeeklyWellnessQuiz(): UseWeeklyWellnessQuizReturn {
     lastWeekAverages,
     isLoading,
     isDueThisWeek,
+    nextOpenDate,
     saveGoals,
     refetch: fetchData,
   };

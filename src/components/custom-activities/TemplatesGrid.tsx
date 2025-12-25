@@ -17,7 +17,7 @@ interface TemplatesGridProps {
   templates: CustomActivityTemplate[];
   loading: boolean;
   selectedSport: 'baseball' | 'softball';
-  onCreateTemplate: (data: Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<CustomActivityTemplate | null>;
+  onCreateTemplate: (data: Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>, scheduleForToday?: boolean) => Promise<CustomActivityTemplate | null>;
   onUpdateTemplate: (id: string, data: Partial<CustomActivityTemplate>) => Promise<boolean>;
   onDeleteTemplate: (id: string) => Promise<boolean>;
   onToggleFavorite: (id: string) => Promise<boolean>;
@@ -50,12 +50,18 @@ export function TemplatesGrid({
     return matchesSearch && matchesType;
   });
 
-  const handleSave = async (data: Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const handleSave = async (
+    data: Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
+    scheduleForToday?: boolean
+  ) => {
+    let success = false;
     if (editingTemplate) {
-      await onUpdateTemplate(editingTemplate.id, data);
+      success = await onUpdateTemplate(editingTemplate.id, data);
     } else {
-      await onCreateTemplate(data);
+      const result = await onCreateTemplate(data, scheduleForToday);
+      success = !!result;
     }
+    return success;
   };
 
   return (
@@ -164,7 +170,7 @@ export function TemplatesGrid({
                       {template.description}
                     </p>
                   )}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <Button size="sm" variant="ghost" onClick={() => setEditingTemplate(template)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
