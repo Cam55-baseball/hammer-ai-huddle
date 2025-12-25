@@ -173,7 +173,22 @@
     "backToSignIn": "ログインに戻る",
     "progressRole": "役割",
     "progressSport": "スポーツ",
-    "progressModule": "モジュール"
+    "progressModule": "モジュール",
+    "progressProfile": "プロフィール",
+    "exploreModulesLater": "ダッシュボードからいつでもトレーニングモジュールを追加できます"
+  },
+  "navigation": {
+    "menu": "メニュー",
+    "openMenu": "メニューを開く",
+    "exploreApp": "アプリを探索"
+  },
+  "sidebar": {
+    "tapToOpenMenu": "ここをタップしてメニューを開く",
+    "discoverFeatures": "すべての機能を発見"
+  },
+  "language": {
+    "chooseLanguage": "言語を選択",
+    "selectYourLanguage": "ご希望の言語を選択してください"
   },
   "profileSetup": {
     "title": "プロフィールを作成",

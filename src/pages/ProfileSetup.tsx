@@ -292,22 +292,19 @@ const ProfileSetup = () => {
 
           {/* Selection Summary */}
           <div className="bg-muted/30 p-4 rounded-lg mb-6">
-            <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">{t('profileSetup.role')}</p>
                 <p className="font-semibold">{selectedRole}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">{t('profileSetup.sport')}</p>
-                <p className="font-semibold">{selectedSport}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">{t('profileSetup.module')}</p>
-                <p className="font-semibold">
-                  {selectedModule ? selectedModule.charAt(0).toUpperCase() + selectedModule.slice(1) : t('profileSetup.none')}
-                </p>
+                <p className="font-semibold capitalize">{selectedSport}</p>
               </div>
             </div>
+            <p className="text-xs text-muted-foreground mt-3 text-center">
+              {t('onboarding.exploreModulesLater')}
+            </p>
           </div>
 
           {/* Bio Form */}

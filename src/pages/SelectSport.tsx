@@ -1,10 +1,12 @@
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 const SelectSport = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const userRole = localStorage.getItem('userRole') || localStorage.getItem('selectedRole');
 
   useEffect(() => {
@@ -19,8 +21,8 @@ const SelectSport = () => {
 
   const handleSportSelect = (sport: 'baseball' | 'softball') => {
     localStorage.setItem('selectedSport', sport);
-    // Players continue to module selection
-    navigate("/select-modules", { state: { sport } });
+    // Skip module selection - users explore and purchase later from dashboard
+    navigate("/profile-setup", { state: { sport } });
   };
 
   return (
@@ -30,16 +32,16 @@ const SelectSport = () => {
           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold text-2xl">H</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2">Select Your Sport</h1>
+          <h1 className="text-4xl font-bold mb-2">{t('onboarding.selectYourSport')}</h1>
           <p className="text-muted-foreground">
-            Choose the sport you want to analyze and improve
+            {t('onboarding.chooseToAnalyze')}
           </p>
           <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-            <span className="bg-muted px-3 py-1 rounded-full">Role</span>
+            <span className="bg-muted px-3 py-1 rounded-full">{t('onboarding.progressRole')}</span>
             <span>→</span>
-            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Sport</span>
+            <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">{t('onboarding.progressSport')}</span>
             <span>→</span>
-            <span>Module</span>
+            <span>{t('onboarding.progressProfile')}</span>
           </div>
         </div>
 
@@ -50,12 +52,12 @@ const SelectSport = () => {
           >
             <div className="text-center">
               <div className="text-6xl mb-4">⚾</div>
-              <h2 className="text-2xl font-bold mb-2">Baseball</h2>
+              <h2 className="text-2xl font-bold mb-2">{t('onboarding.baseball')}</h2>
               <p className="text-muted-foreground mb-6">
-                Advanced motion capture analysis for baseball players
+                {t('onboarding.advancedMotionCapture', { sport: t('onboarding.baseball').toLowerCase() })}
               </p>
               <Button size="lg" className="w-full">
-                Select Baseball
+                {t('onboarding.selectBaseball')}
               </Button>
             </div>
           </Card>
@@ -66,12 +68,12 @@ const SelectSport = () => {
           >
             <div className="text-center">
               <div className="text-6xl mb-4">🥎</div>
-              <h2 className="text-2xl font-bold mb-2">Softball</h2>
+              <h2 className="text-2xl font-bold mb-2">{t('onboarding.softball')}</h2>
               <p className="text-muted-foreground mb-6">
-                Advanced motion capture analysis for softball players
+                {t('onboarding.advancedMotionCapture', { sport: t('onboarding.softball').toLowerCase() })}
               </p>
               <Button size="lg" className="w-full">
-                Select Softball
+                {t('onboarding.selectSoftball')}
               </Button>
             </div>
           </Card>
@@ -79,7 +81,7 @@ const SelectSport = () => {
 
         <div className="text-center mt-6">
           <Button variant="ghost" onClick={() => navigate("/select-user-role")}>
-            ← Back
+            ← {t('common.back')}
           </Button>
         </div>
       </div>

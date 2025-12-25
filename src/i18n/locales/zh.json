@@ -173,7 +173,22 @@
     "backToSignIn": "返回登录",
     "progressRole": "角色",
     "progressSport": "运动",
-    "progressModule": "模块"
+    "progressModule": "模块",
+    "progressProfile": "个人资料",
+    "exploreModulesLater": "您可以随时从仪表板添加训练模块"
+  },
+  "navigation": {
+    "menu": "菜单",
+    "openMenu": "打开菜单",
+    "exploreApp": "探索应用"
+  },
+  "sidebar": {
+    "tapToOpenMenu": "点击这里打开菜单",
+    "discoverFeatures": "发现所有功能"
+  },
+  "language": {
+    "chooseLanguage": "选择语言",
+    "selectYourLanguage": "选择您偏好的语言"
   },
   "profileSetup": {
     "title": "创建您的个人资料",
