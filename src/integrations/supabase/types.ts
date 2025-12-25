@@ -111,6 +111,9 @@ export type Database = {
           id: string
           notes: string | null
           performance_data: Json | null
+          reminder_minutes: number | null
+          sort_order: number | null
+          start_time: string | null
           template_id: string | null
           user_id: string
         }
@@ -123,6 +126,9 @@ export type Database = {
           id?: string
           notes?: string | null
           performance_data?: Json | null
+          reminder_minutes?: number | null
+          sort_order?: number | null
+          start_time?: string | null
           template_id?: string | null
           user_id: string
         }
@@ -135,6 +141,9 @@ export type Database = {
           id?: string
           notes?: string | null
           performance_data?: Json | null
+          reminder_minutes?: number | null
+          sort_order?: number | null
+          start_time?: string | null
           template_id?: string | null
           user_id?: string
         }
@@ -1745,6 +1754,36 @@ export type Database = {
           outcome_emotion?: string | null
           outcome_intensity?: number | null
           situation?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      timeline_schedule_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          schedule: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          schedule?: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          schedule?: Json
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []

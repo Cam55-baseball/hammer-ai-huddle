@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Reorder } from 'framer-motion';
@@ -14,6 +14,7 @@ import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizD
 import { CustomActivityBuilderDialog, QuickAddFavoritesDrawer, getActivityIcon } from '@/components/custom-activities';
 import { useVault } from '@/hooks/useVault';
 import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
+import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { CustomActivityTemplate } from '@/types/customActivity';
@@ -58,7 +59,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [timelineTasks, setTimelineTasks] = useState<GamePlanTask[]>([]);
   
   const favorites = useMemo(() => getFavorites(), [getFavorites, templates]);
-
+  
+  // Auto-scroll for drag and drop
+  const { onDragStart, onDragEnd, handleDrag } = useAutoScrollOnDrag();
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'short', 
     month: 'short', 
@@ -629,7 +632,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               </p>
               <Reorder.Group axis="y" values={timelineTasks} onReorder={handleReorderTimeline} className="space-y-2">
                 {timelineTasks.map((task, index) => (
-                  <Reorder.Item key={task.id} value={task}>
+                  <Reorder.Item 
+                    key={task.id} 
+                    value={task}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
+                    onDrag={(e) => handleDrag(e as any)}
+                  >
                     {renderTask(task, index)}
                   </Reorder.Item>
                 ))}
@@ -644,6 +653,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 >
                   <Plus className="h-4 w-4" />
                   {t('customActivity.createNew')}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => { setEditingTemplate(null); setPresetActivityType('meal'); setBuilderOpen(true); }}
+                  className="gap-2 bg-green-600 hover:bg-green-700 text-white font-bold"
+                >
+                  <Utensils className="h-4 w-4" />
+                  {t('customActivity.logMeal')}
                 </Button>
                 {favorites.length > 0 && (
                   <Button

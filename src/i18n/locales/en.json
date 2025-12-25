@@ -4349,7 +4349,9 @@
       "stressAlert": "Stress Alert",
       "stressAlertDesc": "Your stress levels are above target",
       "disciplineAlert": "Discipline Alert",
-      "disciplineAlertDesc": "Your discipline is trending below goal"
+      "disciplineAlertDesc": "Your discipline is trending below goal",
+      "goalsSet": "Goals Set for This Week",
+      "lockedUntil": "Locked until"
     },
     "freeNote": {
       "title": "Quick Note",
@@ -4790,6 +4792,10 @@
     "tasksCompleted": "{{completed}}/{{total}} done",
     "allComplete": "CRUSHED IT!",
     "doIt": "DO IT",
+    "autoSort": "Auto",
+    "manualSort": "Manual",
+    "timelineSort": "Timeline",
+    "timelineHint": "Drag to reorder your day. No restrictions.",
     "quickActions": {
       "logMeal": "Log Meal"
     },
@@ -4797,7 +4803,64 @@
       "dailyCheckins": "DAILY CHECK-INS",
       "training": "TRAINING",
       "cycleTracking": "CYCLE TRACKING",
-      "customActivities": "CUSTOM ACTIVITIES"
+      "customActivities": "CUSTOM ACTIVITIES",
+      "timeline": "YOUR TIMELINE"
+    },
+    "calendarView": {
+      "title": "Week Overview",
+      "today": "Today",
+      "noActivities": "No activities scheduled with times",
+      "scheduledActivities": "Scheduled Activities",
+      "prevWeek": "Previous Week",
+      "nextWeek": "Next Week",
+      "viewToday": "View Today",
+      "viewWeek": "View Week"
+    },
+    "scheduleTemplate": {
+      "saveAsTemplate": "Save as Template",
+      "applyTemplate": "Apply Template",
+      "templateName": "Template Name",
+      "namePlaceholder": "My Daily Schedule",
+      "setAsDefault": "Set as default schedule",
+      "savedSuccess": "Schedule template saved!",
+      "applySuccess": "Template applied to today's schedule",
+      "applyToWeek": "Apply to This Week",
+      "noTemplates": "No saved templates yet",
+      "deleteTemplate": "Delete Template",
+      "deleteSuccess": "Template deleted",
+      "myTemplates": "My Templates",
+      "default": "Default"
+    },
+    "dailySummary": {
+      "title": "Daily Summary Notification",
+      "enable": "Enable Daily Summary",
+      "sendAt": "Send at",
+      "notificationTitle": "Your Game Plan for Today",
+      "activitiesScheduled": "{{count}} activities scheduled",
+      "noActivitiesScheduled": "No activities scheduled with times today.",
+      "letsGo": "Let's crush it! 💪"
+    },
+    "startTime": {
+      "setTime": "Set Start Time",
+      "removeTime": "Remove Time",
+      "startsAt": "Starts at",
+      "time": "Time",
+      "tapToSet": "Tap to set time"
+    },
+    "reminder": {
+      "remindMe": "Remind me",
+      "minutesBefore": "{{minutes}} min before",
+      "reminderSet": "Reminder set",
+      "noReminder": "No reminder"
+    },
+    "lockOrder": {
+      "lock": "Lock Order",
+      "unlock": "Unlock Order",
+      "forToday": "For Today Only",
+      "forWeek": "For This Week",
+      "locked": "Order Locked",
+      "lockedUntil": "Until {{date}}",
+      "unlocked": "Order Unlocked"
     },
     "quiz": {
       "morning": {
