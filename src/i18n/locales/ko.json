@@ -3260,7 +3260,9 @@
       "stressAlert": "스트레스 알림",
       "stressAlertDesc": "스트레스 수준이 목표 이상입니다",
       "disciplineAlert": "규율 알림",
-      "disciplineAlertDesc": "규율이 목표 이하로 향하고 있습니다"
+      "disciplineAlertDesc": "규율이 목표 이하로 향하고 있습니다",
+      "goalsSet": "이번 주 목표 설정 완료",
+      "lockedUntil": "잠금 해제 날짜"
     },
     "quiz": {
       "night": {
@@ -3721,11 +3723,72 @@
     "quickActions": {
       "logMeal": "식사 기록"
     },
+    "autoSort": "자동",
+    "manualSort": "수동",
+    "timelineSort": "타임라인",
+    "timelineHint": "드래그하여 하루를 재정렬하세요. 제한 없음.",
     "sections": {
       "dailyCheckins": "일일 체크인",
       "training": "훈련",
       "cycleTracking": "주기 추적",
-      "customActivities": "사용자 정의 활동"
+      "customActivities": "사용자 정의 활동",
+      "timeline": "내 타임라인"
+    },
+    "calendarView": {
+      "title": "주간 개요",
+      "today": "오늘",
+      "noActivities": "시간이 지정된 활동 없음",
+      "scheduledActivities": "예정된 활동",
+      "prevWeek": "이전 주",
+      "nextWeek": "다음 주",
+      "viewToday": "오늘 보기",
+      "viewWeek": "주간 보기"
+    },
+    "scheduleTemplate": {
+      "saveAsTemplate": "템플릿으로 저장",
+      "applyTemplate": "템플릿 적용",
+      "templateName": "템플릿 이름",
+      "namePlaceholder": "내 일일 일정",
+      "setAsDefault": "기본값으로 설정",
+      "savedSuccess": "일정 템플릿 저장됨!",
+      "applySuccess": "오늘 일정에 템플릿 적용됨",
+      "applyToWeek": "이번 주에 적용",
+      "noTemplates": "저장된 템플릿 없음",
+      "deleteTemplate": "템플릿 삭제",
+      "deleteSuccess": "템플릿 삭제됨",
+      "myTemplates": "내 템플릿",
+      "default": "기본"
+    },
+    "dailySummary": {
+      "title": "일일 요약 알림",
+      "enable": "일일 요약 활성화",
+      "sendAt": "발송 시간",
+      "notificationTitle": "오늘의 게임 플랜",
+      "activitiesScheduled": "{{count}}개 활동 예정",
+      "noActivitiesScheduled": "오늘 시간이 지정된 활동이 없습니다.",
+      "letsGo": "해봅시다! 💪"
+    },
+    "startTime": {
+      "setTime": "시작 시간 설정",
+      "removeTime": "시간 제거",
+      "startsAt": "시작",
+      "time": "시간",
+      "tapToSet": "탭하여 시간 설정"
+    },
+    "reminder": {
+      "remindMe": "알림 설정",
+      "minutesBefore": "{{minutes}}분 전",
+      "reminderSet": "알림 설정됨",
+      "noReminder": "알림 없음"
+    },
+    "lockOrder": {
+      "lock": "순서 잠금",
+      "unlock": "순서 잠금 해제",
+      "forToday": "오늘만",
+      "forWeek": "이번 주",
+      "locked": "순서 잠김",
+      "lockedUntil": "{{date}}까지",
+      "unlocked": "순서 잠금 해제됨"
     },
     "quiz": {
       "morning": {

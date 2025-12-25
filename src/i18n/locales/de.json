@@ -4103,7 +4103,9 @@
       "stressAlert": "Stress-Warnung",
       "stressAlertDesc": "Deine Stresslevel liegen über dem Ziel",
       "disciplineAlert": "Disziplin-Warnung",
-      "disciplineAlertDesc": "Deine Disziplin tendiert unter dem Ziel"
+      "disciplineAlertDesc": "Deine Disziplin tendiert unter dem Ziel",
+      "goalsSet": "Ziele für diese Woche gesetzt",
+      "lockedUntil": "Gesperrt bis"
     },
     "freeNote": {
       "title": "Schnelle Notiz",
@@ -4547,11 +4549,72 @@
     "quickActions": {
       "logMeal": "Mahlzeit Eintragen"
     },
+    "autoSort": "Auto",
+    "manualSort": "Manuell",
+    "timelineSort": "Zeitplan",
+    "timelineHint": "Ziehen um den Tag neu zu ordnen. Keine Einschränkungen.",
     "sections": {
       "dailyCheckins": "TÄGLICHE CHECK-INS",
       "training": "TRAINING",
       "cycleTracking": "ZYKLUS-TRACKING",
-      "customActivities": "EIGENE AKTIVITÄTEN"
+      "customActivities": "EIGENE AKTIVITÄTEN",
+      "timeline": "DEIN ZEITPLAN"
+    },
+    "calendarView": {
+      "title": "Wochenübersicht",
+      "today": "Heute",
+      "noActivities": "Keine Aktivitäten mit Zeiten geplant",
+      "scheduledActivities": "Geplante Aktivitäten",
+      "prevWeek": "Vorherige Woche",
+      "nextWeek": "Nächste Woche",
+      "viewToday": "Heute anzeigen",
+      "viewWeek": "Woche anzeigen"
+    },
+    "scheduleTemplate": {
+      "saveAsTemplate": "Als Vorlage speichern",
+      "applyTemplate": "Vorlage anwenden",
+      "templateName": "Vorlagenname",
+      "namePlaceholder": "Mein Tagesplan",
+      "setAsDefault": "Als Standard festlegen",
+      "savedSuccess": "Zeitplanvorlage gespeichert!",
+      "applySuccess": "Vorlage auf heutigen Zeitplan angewendet",
+      "applyToWeek": "Auf diese Woche anwenden",
+      "noTemplates": "Noch keine gespeicherten Vorlagen",
+      "deleteTemplate": "Vorlage löschen",
+      "deleteSuccess": "Vorlage gelöscht",
+      "myTemplates": "Meine Vorlagen",
+      "default": "Standard"
+    },
+    "dailySummary": {
+      "title": "Tägliche Zusammenfassungsbenachrichtigung",
+      "enable": "Tägliche Zusammenfassung aktivieren",
+      "sendAt": "Senden um",
+      "notificationTitle": "Dein Spielplan für heute",
+      "activitiesScheduled": "{{count}} Aktivitäten geplant",
+      "noActivitiesScheduled": "Heute keine Aktivitäten mit Zeiten geplant.",
+      "letsGo": "Los geht's! 💪"
+    },
+    "startTime": {
+      "setTime": "Startzeit festlegen",
+      "removeTime": "Zeit entfernen",
+      "startsAt": "Beginnt um",
+      "time": "Zeit",
+      "tapToSet": "Tippen um Zeit festzulegen"
+    },
+    "reminder": {
+      "remindMe": "Erinnere mich",
+      "minutesBefore": "{{minutes}} Min. vorher",
+      "reminderSet": "Erinnerung gesetzt",
+      "noReminder": "Keine Erinnerung"
+    },
+    "lockOrder": {
+      "lock": "Reihenfolge sperren",
+      "unlock": "Reihenfolge entsperren",
+      "forToday": "Nur für heute",
+      "forWeek": "Für diese Woche",
+      "locked": "Reihenfolge gesperrt",
+      "lockedUntil": "Bis {{date}}",
+      "unlocked": "Reihenfolge entsperrt"
     },
     "quiz": {
       "morning": {
