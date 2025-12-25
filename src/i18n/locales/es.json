@@ -514,7 +514,13 @@
       "throwingAnalysis": "Análisis de Tiro",
       "hittingDescription": "Analiza mecánica de swing, secuencia cinética y velocidad del bate",
       "pitchingDescription": "Analiza mecánica de entrega, acción del brazo y secuenciación",
-      "throwingDescription": "Analiza acción del brazo, juego de pies y transferencia de energía"
+      "throwingDescription": "Analiza acción del brazo, juego de pies y transferencia de energía",
+      "merch": "Tienda Oficial",
+      "merchNew": "NUEVO",
+      "merchDescription": "Representa la marca con equipamiento, ropa y accesorios oficiales de Hammers Modality",
+      "merchTagline": "⚡ Diseños exclusivos para atletas dedicados",
+      "shopNow": "Comprar Ahora",
+      "shop": "Tienda"
     },
     "analyzeVideo": "Analizar Video",
     "viewLibrary": "Ver Biblioteca",

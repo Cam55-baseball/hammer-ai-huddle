@@ -638,7 +638,13 @@
       "throwingAnalysis": "Throwing Analysis",
       "hittingDescription": "Analyze swing mechanics, kinetic sequence, and bat speed",
       "pitchingDescription": "Analyze delivery mechanics, arm action, and sequencing",
-      "throwingDescription": "Analyze arm action, footwork, and energy transfer"
+      "throwingDescription": "Analyze arm action, footwork, and energy transfer",
+      "merch": "Official Merch",
+      "merchNew": "NEW",
+      "merchDescription": "Rep the brand with official Hammers Modality gear, apparel, and accessories",
+      "merchTagline": "⚡ Exclusive designs for dedicated athletes",
+      "shopNow": "Shop Now",
+      "shop": "Shop"
     },
     "analyzeVideo": "Analyze Video",
     "viewLibrary": "View Library",

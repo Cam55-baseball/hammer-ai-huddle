@@ -514,7 +514,13 @@
       "throwingAnalysis": "송구 분석",
       "hittingDescription": "스윙 메커니즘, 운동 사슬, 배트 스피드 분석",
       "pitchingDescription": "딜리버리 메커니즘, 팔 동작, 시퀀싱 분석",
-      "throwingDescription": "팔 동작, 풋워크, 에너지 전달 분석"
+      "throwingDescription": "팔 동작, 풋워크, 에너지 전달 분석",
+      "merch": "공식 상품",
+      "merchNew": "신상",
+      "merchDescription": "Hammers Modality 공식 장비, 의류 및 액세서리로 브랜드를 대표하세요",
+      "merchTagline": "⚡ 열정적인 선수를 위한 독점 디자인",
+      "shopNow": "지금 쇼핑",
+      "shop": "쇼핑"
     },
     "analyzeVideo": "비디오 분석",
     "viewLibrary": "라이브러리 보기",

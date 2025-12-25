@@ -514,7 +514,13 @@
       "throwingAnalysis": "スローイング分析",
       "hittingDescription": "スイングメカニクス、運動連鎖、バットスピードを分析",
       "pitchingDescription": "デリバリーメカニクス、腕の動き、シーケンスを分析",
-      "throwingDescription": "腕の動き、フットワーク、エネルギー伝達を分析"
+      "throwingDescription": "腕の動き、フットワーク、エネルギー伝達を分析",
+      "merch": "公式グッズ",
+      "merchNew": "新着",
+      "merchDescription": "Hammers Modality公式のギア、アパレル、アクセサリーでブランドを代表しよう",
+      "merchTagline": "⚡ 熱心なアスリートのための限定デザイン",
+      "shopNow": "今すぐ購入",
+      "shop": "ショップ"
     },
     "analyzeVideo": "ビデオ分析",
     "viewLibrary": "ライブラリを表示",
