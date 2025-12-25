@@ -35,7 +35,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
   const [wellnessQuizOpen, setWellnessQuizOpen] = useState(false);
   const [activeQuizType, setActiveQuizType] = useState<'pre_lift' | 'night' | 'morning'>('morning');
-  const [autoSort, setAutoSort] = useState(() => localStorage.getItem('gameplan-sort') !== 'original');
+  const [sortMode, setSortMode] = useState<'auto' | 'manual' | 'timeline'>(() => {
+    const stored = localStorage.getItem('gameplan-sort-mode');
+    if (stored === 'manual' || stored === 'timeline') return stored;
+    return 'auto';
+  });
+  const autoSort = sortMode === 'auto';
   
   // Custom activity state
   const [builderOpen, setBuilderOpen] = useState(false);
@@ -48,6 +53,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [orderedTraining, setOrderedTraining] = useState<GamePlanTask[]>([]);
   const [orderedTracking, setOrderedTracking] = useState<GamePlanTask[]>([]);
   const [orderedCustom, setOrderedCustom] = useState<GamePlanTask[]>([]);
+  
+  // Timeline mode: single unified list for complete control
+  const [timelineTasks, setTimelineTasks] = useState<GamePlanTask[]>([]);
   
   const favorites = useMemo(() => getFavorites(), [getFavorites, templates]);
 
@@ -70,28 +78,49 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const trackingTasksList = tasks.filter(t => t.section === 'tracking');
     const customTasksList = tasks.filter(t => t.section === 'custom');
 
-    if (!autoSort) {
-      // Restore saved orders
-      const restoreOrder = (sectionTasks: GamePlanTask[], storageKey: string): GamePlanTask[] => {
-        const savedOrder = localStorage.getItem(storageKey);
-        if (savedOrder) {
-          try {
-            const orderIds = JSON.parse(savedOrder) as string[];
-            return [...sectionTasks].sort((a, b) => {
-              const aIdx = orderIds.indexOf(a.id);
-              const bIdx = orderIds.indexOf(b.id);
-              if (aIdx === -1 && bIdx === -1) return 0;
-              if (aIdx === -1) return 1;
-              if (bIdx === -1) return -1;
-              return aIdx - bIdx;
-            });
-          } catch {
-            return sectionTasks;
-          }
+    // Restore saved orders helper
+    const restoreOrder = (sectionTasks: GamePlanTask[], storageKey: string): GamePlanTask[] => {
+      const savedOrder = localStorage.getItem(storageKey);
+      if (savedOrder) {
+        try {
+          const orderIds = JSON.parse(savedOrder) as string[];
+          return [...sectionTasks].sort((a, b) => {
+            const aIdx = orderIds.indexOf(a.id);
+            const bIdx = orderIds.indexOf(b.id);
+            if (aIdx === -1 && bIdx === -1) return 0;
+            if (aIdx === -1) return 1;
+            if (bIdx === -1) return -1;
+            return aIdx - bIdx;
+          });
+        } catch {
+          return sectionTasks;
         }
-        return sectionTasks;
-      };
+      }
+      return sectionTasks;
+    };
 
+    if (sortMode === 'timeline') {
+      // Timeline mode: single unified list
+      const savedTimelineOrder = localStorage.getItem('gameplan-timeline-order');
+      if (savedTimelineOrder) {
+        try {
+          const orderIds = JSON.parse(savedTimelineOrder) as string[];
+          const allTasks = [...tasks].sort((a, b) => {
+            const aIdx = orderIds.indexOf(a.id);
+            const bIdx = orderIds.indexOf(b.id);
+            if (aIdx === -1 && bIdx === -1) return 0;
+            if (aIdx === -1) return 1;
+            if (bIdx === -1) return -1;
+            return aIdx - bIdx;
+          });
+          setTimelineTasks(allTasks);
+        } catch {
+          setTimelineTasks([...tasks]);
+        }
+      } else {
+        setTimelineTasks([...tasks]);
+      }
+    } else if (sortMode === 'manual') {
       setOrderedCheckin(restoreOrder(checkinTasksList, 'gameplan-checkin-order'));
       setOrderedTraining(restoreOrder(trainingTasksList, 'gameplan-training-order'));
       setOrderedTracking(restoreOrder(trackingTasksList, 'gameplan-tracking-order'));
@@ -103,7 +132,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       setOrderedCustom(customTasksList);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasksKey, autoSort]);
+  }, [tasksKey, sortMode]);
 
   const handleTaskClick = (task: GamePlanTask) => {
     // Handle mindfuel and healthtip - navigate directly
@@ -173,10 +202,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const sortByCompletion = (tasksList: GamePlanTask[]) => 
     [...tasksList].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
 
-  const toggleAutoSort = () => {
-    const newValue = !autoSort;
-    setAutoSort(newValue);
-    localStorage.setItem('gameplan-sort', newValue ? 'auto' : 'original');
+  const cycleSortMode = () => {
+    const modes: ('auto' | 'manual' | 'timeline')[] = ['auto', 'manual', 'timeline'];
+    const currentIdx = modes.indexOf(sortMode);
+    const nextMode = modes[(currentIdx + 1) % modes.length];
+    setSortMode(nextMode);
+    localStorage.setItem('gameplan-sort-mode', nextMode);
+  };
+
+  const handleReorderTimeline = (newOrder: GamePlanTask[]) => {
+    setTimelineTasks(newOrder);
+    localStorage.setItem('gameplan-timeline-order', JSON.stringify(newOrder.map(t => t.id)));
   };
 
   const handleReorderCheckin = (newOrder: GamePlanTask[]) => {
@@ -231,12 +267,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const trackingTasks = autoSort ? sortByCompletion(orderedTracking) : orderedTracking;
   const customTasks = autoSort ? sortByCompletion(orderedCustom) : orderedCustom;
 
-  const renderTask = (task: GamePlanTask) => {
+  const renderTask = (task: GamePlanTask, index?: number) => {
     const Icon = task.icon;
     const isIncomplete = !task.completed;
     const isTracking = task.section === 'tracking';
     const isTexVision = task.specialStyle === 'tex-vision';
     const isCustom = task.specialStyle === 'custom';
+    const showTimelineNumber = sortMode === 'timeline' && typeof index === 'number';
     
     // Get dynamic colors based on task type
     const pendingColors = colors.gamePlan.pending;
@@ -268,8 +305,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           animation: 'game-plan-pulse-custom 2s ease-in-out infinite',
         } : undefined}
       >
-        {/* Drag handle - only visible in manual mode */}
-        {!autoSort && (
+        {/* Timeline number badge */}
+        {showTimelineNumber && (
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+            <span className="text-sm font-black text-primary-foreground">{index + 1}</span>
+          </div>
+        )}
+        
+        {/* Drag handle - visible in manual and timeline modes */}
+        {(sortMode === 'manual' || sortMode === 'timeline') && (
           <div className="flex-shrink-0 cursor-grab active:cursor-grabbing text-white/60 hover:text-white">
             <GripVertical className="h-5 w-5" />
           </div>
@@ -421,7 +465,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         )}
         
-        {autoSort ? (
+        {sortMode === 'auto' ? (
           <div className="space-y-2">
             {sectionTasks.map((task) => (
               <div key={task.id}>
@@ -429,7 +473,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               </div>
             ))}
           </div>
-        ) : (
+        ) : sortMode === 'manual' ? (
           <Reorder.Group axis="y" values={orderedTasks} onReorder={onReorder} className="space-y-2">
             {orderedTasks.map((task) => (
               <Reorder.Item key={task.id} value={task}>
@@ -437,7 +481,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               </Reorder.Item>
             ))}
           </Reorder.Group>
-        )}
+        ) : null}
       </div>
     );
   };
@@ -487,15 +531,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             </div>
           </div>
           
-          {/* Auto-sort toggle */}
+          {/* Sort mode toggle */}
           <Button
             variant="ghost"
             size="sm"
-            onClick={toggleAutoSort}
+            onClick={cycleSortMode}
             className="flex items-center gap-1.5 text-xs font-medium text-white/70 hover:text-white"
           >
             <ArrowUpDown className="h-3.5 w-3.5" />
-            {autoSort ? t('gamePlan.autoSort', 'Auto') : t('gamePlan.manualSort', 'Manual')}
+            {sortMode === 'auto' ? t('gamePlan.autoSort', 'Auto') : sortMode === 'manual' ? t('gamePlan.manualSort', 'Manual') : t('gamePlan.timelineSort', 'Timeline')}
           </Button>
           
           {/* Progress Ring */}
@@ -572,83 +616,129 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
 
         {/* Task Sections */}
         <div className="space-y-4">
-          {/* Daily Check-ins Section */}
-          {renderTaskSection(
-            checkinTasks,
-            orderedCheckin,
-            handleReorderCheckin,
-            t('gamePlan.sections.dailyCheckins'),
-            'text-primary',
-            'bg-primary/30'
-          )}
-
-          {/* Training Section */}
-          {renderTaskSection(
-            trainingTasks,
-            orderedTraining,
-            handleReorderTraining,
-            t('gamePlan.sections.training'),
-            'text-primary',
-            'bg-primary/30'
-          )}
-
-          {/* Cycle Tracking Section */}
-          {renderTaskSection(
-            trackingTasks,
-            orderedTracking,
-            handleReorderTracking,
-            t('gamePlan.sections.cycleTracking'),
-            'text-purple-400',
-            'bg-purple-500/30'
-          )}
-
-          {/* Custom Activities Section - Always visible */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
-              <span className="h-px flex-1 bg-emerald-500/30" />
-              {t('gamePlan.sections.customActivities')}
-              <span className="h-px flex-1 bg-emerald-500/30" />
-            </h3>
-            
-            <div className="flex flex-wrap gap-2 justify-center pb-2">
-              <Button
-                size="sm"
-                onClick={() => { setEditingTemplate(null); setPresetActivityType(null); setBuilderOpen(true); }}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-              >
-                <Plus className="h-4 w-4" />
-                {t('customActivity.createNew')}
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => { setEditingTemplate(null); setPresetActivityType('meal'); setBuilderOpen(true); }}
-                className="gap-2 bg-green-600 hover:bg-green-700 text-white font-bold"
-              >
-                <Utensils className="h-4 w-4" />
-                {t('customActivity.logMeal')}
-              </Button>
-              {favorites.length > 0 && (
+          {/* Timeline Mode - Unified list with full control */}
+          {sortMode === 'timeline' ? (
+            <div className="space-y-2">
+              <h3 className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                <span className="h-px flex-1 bg-primary/30" />
+                {t('gamePlan.sections.timeline', 'Your Timeline')}
+                <span className="h-px flex-1 bg-primary/30" />
+              </h3>
+              <p className="text-xs text-muted-foreground text-center mb-2">
+                {t('gamePlan.timelineHint', 'Drag to reorder your day. No restrictions.')}
+              </p>
+              <Reorder.Group axis="y" values={timelineTasks} onReorder={handleReorderTimeline} className="space-y-2">
+                {timelineTasks.map((task, index) => (
+                  <Reorder.Item key={task.id} value={task}>
+                    {renderTask(task, index)}
+                  </Reorder.Item>
+                ))}
+              </Reorder.Group>
+              
+              {/* Quick add buttons for timeline mode */}
+              <div className="flex flex-wrap gap-2 justify-center pt-4">
                 <Button
                   size="sm"
-                  variant="outline"
-                  onClick={() => setFavoritesDrawerOpen(true)}
-                  className="gap-2 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
+                  onClick={() => { setEditingTemplate(null); setPresetActivityType(null); setBuilderOpen(true); }}
+                  className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                 >
-                  <Star className="h-4 w-4 fill-yellow-500" />
-                  {t('customActivity.quickAdd')}
+                  <Plus className="h-4 w-4" />
+                  {t('customActivity.createNew')}
                 </Button>
-              )}
+                {favorites.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setFavoritesDrawerOpen(true)}
+                    className="gap-2 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
+                  >
+                    <Star className="h-4 w-4 fill-yellow-500" />
+                    {t('customActivity.quickAdd')}
+                  </Button>
+                )}
+              </div>
             </div>
-            
-            {customTasks.length > 0 && renderTaskSection(
-              customTasks,
-              orderedCustom,
-              handleReorderCustom,
-              '',
-              'text-emerald-400',
-              'bg-emerald-500/30'
-            )}
-          </div>
+          ) : (
+            <>
+              {/* Daily Check-ins Section */}
+              {renderTaskSection(
+                checkinTasks,
+                orderedCheckin,
+                handleReorderCheckin,
+                t('gamePlan.sections.dailyCheckins'),
+                'text-primary',
+                'bg-primary/30'
+              )}
+
+              {/* Training Section */}
+              {renderTaskSection(
+                trainingTasks,
+                orderedTraining,
+                handleReorderTraining,
+                t('gamePlan.sections.training'),
+                'text-primary',
+                'bg-primary/30'
+              )}
+
+              {/* Cycle Tracking Section */}
+              {renderTaskSection(
+                trackingTasks,
+                orderedTracking,
+                handleReorderTracking,
+                t('gamePlan.sections.cycleTracking'),
+                'text-purple-400',
+                'bg-purple-500/30'
+              )}
+
+              {/* Custom Activities Section - Always visible */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                  <span className="h-px flex-1 bg-emerald-500/30" />
+                  {t('gamePlan.sections.customActivities')}
+                  <span className="h-px flex-1 bg-emerald-500/30" />
+                </h3>
+                
+                <div className="flex flex-wrap gap-2 justify-center pb-2">
+                  <Button
+                    size="sm"
+                    onClick={() => { setEditingTemplate(null); setPresetActivityType(null); setBuilderOpen(true); }}
+                    className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t('customActivity.createNew')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => { setEditingTemplate(null); setPresetActivityType('meal'); setBuilderOpen(true); }}
+                    className="gap-2 bg-green-600 hover:bg-green-700 text-white font-bold"
+                  >
+                    <Utensils className="h-4 w-4" />
+                    {t('customActivity.logMeal')}
+                  </Button>
+                  {favorites.length > 0 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setFavoritesDrawerOpen(true)}
+                      className="gap-2 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
+                    >
+                      <Star className="h-4 w-4 fill-yellow-500" />
+                      {t('customActivity.quickAdd')}
+                    </Button>
+                  )}
+                </div>
+                
+                {customTasks.length > 0 && renderTaskSection(
+                  customTasks,
+                  orderedCustom,
+                  handleReorderCustom,
+                  '',
+                  'text-emerald-400',
+                  'bg-emerald-500/30'
+                )}
+              </div>
+            </>
+          )}
         </div>
 
       </CardContent>

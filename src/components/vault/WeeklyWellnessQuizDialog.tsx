@@ -160,19 +160,19 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
       {/* Last week comparison */}
       {lastWeekTarget && (
         <div className="mt-6 p-4 rounded-xl bg-background/30 border border-border/30 space-y-2">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          <span className="text-xs font-bold text-black uppercase tracking-wider">
             {t('weeklyWellnessQuiz.lastWeekResults')}
           </span>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-lg">{emojis[lastWeekTarget - 1]}</span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-black">
                 {t('weeklyWellnessQuiz.target')}: {labels[lastWeekTarget - 1]}
               </span>
             </div>
             {lastWeekActual !== null && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-foreground font-medium">
+                <span className="text-sm text-black font-medium">
                   {t('weeklyWellnessQuiz.actual')}: {lastWeekActual.toFixed(1)}
                 </span>
                 {getComparisonIndicator(lastWeekActual, lastWeekTarget, isStress)}
