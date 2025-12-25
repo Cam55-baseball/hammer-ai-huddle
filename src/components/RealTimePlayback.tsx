@@ -2398,7 +2398,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
         open={frameCompareMode}
         onOpenChange={setFrameCompareMode}
         frames={selectedFramesForCompare}
-        onDownload={handleDownloadFrame}
+        onDownload={(frame, index) => handleDownloadFrame(frame.dataUrl, index)}
       />
     </>
   );
