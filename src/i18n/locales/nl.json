@@ -3505,7 +3505,15 @@
         "arm_health": "Armgezondheid",
         "accuracy_score": "Nauwkeurigheidsscore",
         "pop_time": "Reactietijd",
-        "arm_speed": "Armsnelheid"
+        "arm_speed": "Armsnelheid",
+        "long_toss_distance": "Lange Worp Afstand",
+        "ten_yard_dash": "10-Yard Sprint",
+        "sl_broad_jump": "SL Verspringen",
+        "sl_lateral_broad_jump": "SL Zijwaarts Verspringen",
+        "sl_vert_jump": "SL Verticale Sprong",
+        "mb_situp_throw": "MB Sit-Up Worp",
+        "seated_chest_pass": "Zittende Borstpass",
+        "max_tee_distance": "Max Tee Afstand"
       }
     },
     "progressPhotos": {

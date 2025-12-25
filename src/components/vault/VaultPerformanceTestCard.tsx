@@ -25,39 +25,133 @@ interface PerformanceTest {
 interface VaultPerformanceTestCardProps {
   tests: PerformanceTest[];
   onSave: (testType: string, results: Record<string, number>) => Promise<{ success: boolean }>;
+  sport?: 'baseball' | 'softball';
+  subscribedModules?: string[];
+  autoOpen?: boolean;
 }
 
 const LOCK_PERIOD_WEEKS = 6;
 
-const TEST_TYPES = {
-  hitting: ['bat_speed', 'exit_velocity', 'launch_angle', 'sprint_60', 'vertical_jump'],
-  pitching: ['velocity', 'spin_rate', 'command_score', 'arm_health', 'sprint_60'],
-  throwing: ['velocity', 'accuracy_score', 'pop_time', 'arm_speed', 'sprint_60'],
+// Sport-specific test types by module
+const TEST_TYPES_BY_SPORT = {
+  baseball: {
+    hitting: [
+      'ten_yard_dash',
+      'exit_velocity',
+      'max_tee_distance',
+      'sl_broad_jump',
+      'sl_lateral_broad_jump',
+      'mb_situp_throw',
+      'seated_chest_pass'
+    ],
+    pitching: [
+      'long_toss_distance',
+      'velocity',
+      'ten_yard_dash',
+      'sl_broad_jump',
+      'sl_vert_jump',
+      'mb_situp_throw',
+      'seated_chest_pass'
+    ],
+    throwing: [
+      'long_toss_distance',
+      'ten_yard_dash',
+      'sl_broad_jump',
+      'sl_lateral_broad_jump',
+      'sl_vert_jump',
+      'mb_situp_throw',
+      'seated_chest_pass'
+    ]
+  },
+  softball: {
+    hitting: [
+      'ten_yard_dash',
+      'exit_velocity',
+      'max_tee_distance',
+      'sl_broad_jump',
+      'sl_lateral_broad_jump',
+      'sl_vert_jump',
+      'mb_situp_throw',
+      'seated_chest_pass'
+    ],
+    pitching: [
+      'long_toss_distance',
+      'velocity',
+      'ten_yard_dash',
+      'sl_broad_jump',
+      'sl_vert_jump',
+      'mb_situp_throw',
+      'seated_chest_pass'
+    ],
+    throwing: [
+      'long_toss_distance',
+      'ten_yard_dash',
+      'sl_broad_jump',
+      'sl_lateral_broad_jump',
+      'sl_vert_jump',
+      'mb_situp_throw',
+      'seated_chest_pass'
+    ]
+  }
 };
 
+// Metric configuration with units and trend direction
 const TEST_METRICS: Record<string, { unit: string; higher_better: boolean }> = {
-  bat_speed: { unit: 'mph', higher_better: true },
-  exit_velocity: { unit: 'mph', higher_better: true },
-  launch_angle: { unit: '°', higher_better: false },
+  // Distance metrics (feet)
+  long_toss_distance: { unit: 'ft', higher_better: true },
+  max_tee_distance: { unit: 'ft', higher_better: true },
+  mb_situp_throw: { unit: 'ft', higher_better: true },
+  seated_chest_pass: { unit: 'ft', higher_better: true },
+  
+  // Distance metrics (inches)
+  sl_broad_jump: { unit: 'in', higher_better: true },
+  sl_lateral_broad_jump: { unit: 'in', higher_better: true },
+  sl_vert_jump: { unit: 'in', higher_better: true },
+  
+  // Speed metrics (lower is better)
+  ten_yard_dash: { unit: 's', higher_better: false },
+  
+  // Velocity metrics (mph)
   velocity: { unit: 'mph', higher_better: true },
-  spin_rate: { unit: 'rpm', higher_better: true },
-  command_score: { unit: '/10', higher_better: true },
-  arm_health: { unit: '/10', higher_better: true },
-  accuracy_score: { unit: '/10', higher_better: true },
-  pop_time: { unit: 's', higher_better: false },
-  arm_speed: { unit: 'mph', higher_better: true },
-  sprint_60: { unit: 's', higher_better: false },
-  vertical_jump: { unit: 'in', higher_better: true },
+  exit_velocity: { unit: 'mph', higher_better: true },
 };
 
-export function VaultPerformanceTestCard({ tests, onSave }: VaultPerformanceTestCardProps) {
+export function VaultPerformanceTestCard({ 
+  tests, 
+  onSave, 
+  sport = 'baseball',
+  subscribedModules = [],
+  autoOpen = false 
+}: VaultPerformanceTestCardProps) {
   const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(autoOpen);
   const [saving, setSaving] = useState(false);
-  const [selectedModule, setSelectedModule] = useState<string>('hitting');
+  const [selectedModule, setSelectedModule] = useState<string>('');
   const [testResults, setTestResults] = useState<Record<string, string>>({});
 
-  const metrics = TEST_TYPES[selectedModule as keyof typeof TEST_TYPES] || TEST_TYPES.hitting;
+  // Filter modules to only show those the user has access to
+  const availableModules = ['hitting', 'pitching', 'throwing'].filter(module => {
+    if (subscribedModules.length === 0) return true; // Show all if no modules passed
+    return subscribedModules.some(sub => sub.toLowerCase().includes(module));
+  });
+
+  // Set default module when available modules change
+  useEffect(() => {
+    if (availableModules.length > 0 && !availableModules.includes(selectedModule)) {
+      setSelectedModule(availableModules[0]);
+    }
+  }, [availableModules, selectedModule]);
+
+  // Handle autoOpen changes
+  useEffect(() => {
+    if (autoOpen) {
+      setIsOpen(true);
+    }
+  }, [autoOpen]);
+
+  // Get metrics for selected module and sport
+  const testTypes = TEST_TYPES_BY_SPORT[sport] || TEST_TYPES_BY_SPORT.baseball;
+  const metrics = selectedModule ? (testTypes[selectedModule as keyof typeof testTypes] || []) : [];
 
   // Check if entry is locked
   const latestTest = tests[0];
@@ -91,6 +185,11 @@ export function VaultPerformanceTestCard({ tests, onSave }: VaultPerformanceTest
   };
 
   const recentTests = tests.slice(0, 5);
+
+  // Show nothing if user has no module access
+  if (availableModules.length === 0) {
+    return null;
+  }
 
   return (
     <Card>
@@ -155,34 +254,42 @@ export function VaultPerformanceTestCard({ tests, onSave }: VaultPerformanceTest
                 
                 <Select value={selectedModule} onValueChange={setSelectedModule}>
                   <SelectTrigger className="h-9">
-                    <SelectValue />
+                    <SelectValue placeholder={t('vault.performance.selectModule')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="hitting">{t('onboarding.hitting')}</SelectItem>
-                    <SelectItem value="pitching">{t('onboarding.pitching')}</SelectItem>
-                    <SelectItem value="throwing">{t('onboarding.throwing')}</SelectItem>
+                    {availableModules.includes('hitting') && (
+                      <SelectItem value="hitting">{t('onboarding.hitting')}</SelectItem>
+                    )}
+                    {availableModules.includes('pitching') && (
+                      <SelectItem value="pitching">{t('onboarding.pitching')}</SelectItem>
+                    )}
+                    {availableModules.includes('throwing') && (
+                      <SelectItem value="throwing">{t('onboarding.throwing')}</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
 
-                <div className="grid grid-cols-2 gap-2">
-                  {metrics.map((metric) => (
-                    <div key={metric} className="space-y-1">
-                      <Label className="text-xs">
-                        {t(`vault.performance.metrics.${metric}`)} ({TEST_METRICS[metric]?.unit})
-                      </Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        value={testResults[metric] || ''}
-                        onChange={(e) => setTestResults({ ...testResults, [metric]: e.target.value })}
-                        placeholder="0"
-                        className="h-8"
-                      />
-                    </div>
-                  ))}
-                </div>
+                {selectedModule && metrics.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {metrics.map((metric) => (
+                      <div key={metric} className="space-y-1">
+                        <Label className="text-xs">
+                          {t(`vault.performance.metrics.${metric}`)} ({TEST_METRICS[metric]?.unit})
+                        </Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={testResults[metric] || ''}
+                          onChange={(e) => setTestResults({ ...testResults, [metric]: e.target.value })}
+                          placeholder="0"
+                          className="h-8"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-                <Button onClick={handleSave} disabled={saving} size="sm" className="w-full">
+                <Button onClick={handleSave} disabled={saving || !selectedModule} size="sm" className="w-full">
                   {saving ? t('common.loading') : t('vault.performance.save')}
                 </Button>
               </div>

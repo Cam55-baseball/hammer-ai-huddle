@@ -3492,7 +3492,15 @@
         "arm_health": "팔 건강",
         "accuracy_score": "정확도 점수",
         "pop_time": "팝 타임",
-        "arm_speed": "팔 속도"
+        "arm_speed": "팔 속도",
+        "long_toss_distance": "롱 토스 거리",
+        "ten_yard_dash": "10야드 대시",
+        "sl_broad_jump": "SL 멀리뛰기",
+        "sl_lateral_broad_jump": "SL 측면 멀리뛰기",
+        "sl_vert_jump": "SL 수직 점프",
+        "mb_situp_throw": "MB 윗몸일으키기 던지기",
+        "seated_chest_pass": "앉아서 가슴 패스",
+        "max_tee_distance": "최대 티 거리"
       }
     },
     "progressPhotos": {

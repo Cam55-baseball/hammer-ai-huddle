@@ -624,7 +624,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       descriptionKey: 'gamePlan.tracking.performance.description',
       completed: false,
       icon: Activity,
-      link: '/vault',
+      link: '/vault?openSection=performance-tests',
       taskType: 'tracking',
       section: 'tracking',
       badge: 'gamePlan.tracking.performance.badge',
