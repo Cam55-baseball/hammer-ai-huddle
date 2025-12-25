@@ -38,14 +38,6 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
           <span className="font-semibold hidden sm:inline">{t('navigation.menu')}</span>
         </Button>
         
-        {/* First-time user tooltip */}
-        {!tutorialCompleted && (
-          <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-3 py-2 rounded-lg shadow-lg animate-fade-in whitespace-nowrap z-50 hidden md:flex items-center gap-2">
-            <span className="animate-bounce">←</span>
-            <span className="text-sm font-medium">{t('sidebar.tapToOpenMenu')}</span>
-            <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-r-[8px] border-r-primary" />
-          </div>
-        )}
       </div>
       <div className="ml-auto flex items-center gap-2">
         {/* Small but mighty Merch button */}

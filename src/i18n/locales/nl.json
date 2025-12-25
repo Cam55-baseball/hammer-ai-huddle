@@ -177,15 +177,6 @@
     "progressProfile": "Profiel",
     "exploreModulesLater": "Je kunt op elk moment trainingsmodules toevoegen via het dashboard"
   },
-  "navigation": {
-    "menu": "Menu",
-    "openMenu": "Menu Openen",
-    "exploreApp": "App Verkennen"
-  },
-  "sidebar": {
-    "tapToOpenMenu": "Tik hier om het menu te openen",
-    "discoverFeatures": "Ontdek alle functies"
-  },
   "language": {
     "chooseLanguage": "Kies Taal",
     "selectYourLanguage": "Selecteer je voorkeurstaal"
