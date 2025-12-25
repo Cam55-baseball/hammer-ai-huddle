@@ -337,9 +337,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return result;
   };
 
-  // Sort helper: incomplete tasks first, completed tasks at bottom
+  // Sort helper: incomplete tasks first, completed tasks at bottom (preserves relative order)
   const sortByCompletion = (tasksList: GamePlanTask[]) => 
     [...tasksList].sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
+  
+  // Sort timeline tasks with completed at bottom (preserves relative order within each group)
+  const sortTimelineByCompletion = useCallback((tasksList: GamePlanTask[]) => {
+    const incomplete = tasksList.filter(t => !t.completed);
+    const completed = tasksList.filter(t => t.completed);
+    return [...incomplete, ...completed];
+  }, []);
 
   const cycleSortMode = () => {
     if (orderLocked) {
@@ -388,6 +395,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     if (task.customActivityData) {
       const success = await toggleComplete(task.customActivityData.template.id);
       if (success) {
+        // In timeline mode, re-sort to move completed to bottom
+        if (sortMode === 'timeline') {
+          const updatedTasks = timelineTasks.map(t => 
+            t.id === task.id ? { ...t, completed: !t.completed } : t
+          );
+          const sorted = sortTimelineByCompletion(updatedTasks);
+          setTimelineTasks(sorted);
+          localStorage.setItem('gameplan-timeline-order', JSON.stringify(sorted.map(t => t.id)));
+        }
         refetch();
         toast.success(task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
       }
@@ -652,30 +668,34 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         </button>
         
-        {/* Time badge in timeline mode - opens drawer on tap */}
-        {sortMode === 'timeline' && (
+        {/* Time badge in timeline mode - only show if time is set */}
+        {sortMode === 'timeline' && taskTime && (
           <Button
             variant="ghost"
             size="sm"
-            className={cn(
-              "flex-shrink-0 gap-1 text-xs h-7 px-2",
-              taskTime ? "text-primary bg-primary/10 hover:bg-primary/20" : "text-white/50 hover:text-white hover:bg-white/10"
-            )}
+            className="flex-shrink-0 gap-1 text-xs h-7 px-2 text-primary bg-primary/10 hover:bg-primary/20"
             onClick={(e) => { e.stopPropagation(); openTimePicker(task.id); }}
           >
             <Clock className="h-3 w-3" />
-            {taskTime ? formatTimeDisplay(taskTime) : t('gamePlan.startTime.tapToSet')}
+            {formatTimeDisplay(taskTime)}
             {hasReminder && <Bell className="h-3 w-3 ml-1 text-yellow-400" />}
           </Button>
         )}
         
-        {/* Edit button for custom activities */}
-        {isCustom && (
+        {/* Edit button - opens time settings drawer in timeline mode, activity editor for custom */}
+        {(sortMode === 'timeline' || isCustom) && (
           <Button
             variant="ghost"
             size="icon"
             className="flex-shrink-0 h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
-            onClick={(e) => { e.stopPropagation(); handleCustomActivityEdit(task); }}
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (sortMode === 'timeline') {
+                openTimePicker(task.id);
+              } else if (isCustom) {
+                handleCustomActivityEdit(task);
+              }
+            }}
           >
             <Pencil className="h-4 w-4" />
           </Button>
