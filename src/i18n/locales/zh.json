@@ -3826,7 +3826,10 @@
     "missedGoal": "继续加油！",
     "firstWeekTitle": "欢迎！🌟",
     "firstWeekMessage": "这是你的第一周！设置一些基准目标来追踪你的进展。",
-    "firstWeekEncouragement": "从感觉合适的开始 — 下周随时可以调整。"
+    "firstWeekEncouragement": "从感觉合适的开始 — 下周随时可以调整。",
+    "alreadyCompleted": "目标已设置",
+    "comeBackNext": "下周一回来设置新目标",
+    "viewCurrentGoals": "本周目标"
   },
   "scoutGamePlan": {
     "title": "球探审核",

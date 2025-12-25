@@ -4914,7 +4914,10 @@
     "missedGoal": "Keep pushing!",
     "firstWeekTitle": "Welcome! 🌟",
     "firstWeekMessage": "This is your first week! Set some baseline goals to track your progress.",
-    "firstWeekEncouragement": "Start with what feels right — you can always adjust next week."
+    "firstWeekEncouragement": "Start with what feels right — you can always adjust next week.",
+    "alreadyCompleted": "Goals Already Set",
+    "comeBackNext": "Come back next Monday to set new goals",
+    "viewCurrentGoals": "Your Goals for This Week"
   },
   "scoutGamePlan": {
     "title": "SCOUTING REVIEW",
@@ -5826,7 +5829,13 @@
       "viewCount": "{{count}} views",
       "deleteLink": "Delete Link",
       "preview": "Preview"
-    }
+    },
+    "scheduleForToday": "Add to Today's Game Plan",
+    "scheduleForTodayDesc": "Activity will appear on your Game Plan immediately",
+    "created": "Activity created!",
+    "createError": "Failed to create activity",
+    "updated": "Activity updated!",
+    "updateError": "Failed to update activity"
   },
   "myCustomActivities": {
     "title": "My Custom Activities",

@@ -4643,7 +4643,10 @@
     "missedGoal": "¡Sigue esforzándote!",
     "firstWeekTitle": "¡Bienvenido! 🌟",
     "firstWeekMessage": "¡Esta es tu primera semana! Establece metas base para seguir tu progreso.",
-    "firstWeekEncouragement": "Empieza con lo que te parezca bien — siempre puedes ajustar la próxima semana."
+    "firstWeekEncouragement": "Empieza con lo que te parezca bien — siempre puedes ajustar la próxima semana.",
+    "alreadyCompleted": "Metas Ya Establecidas",
+    "comeBackNext": "Vuelve el próximo lunes para establecer nuevas metas",
+    "viewCurrentGoals": "Tus Metas para Esta Semana"
   },
   "scoutGamePlan": {
     "title": "REVISIÓN DE SCOUTING",

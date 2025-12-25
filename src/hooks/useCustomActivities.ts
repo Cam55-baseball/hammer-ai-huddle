@@ -118,7 +118,8 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
 
   // Create a new template
   const createTemplate = async (
-    data: Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+    data: Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
+    scheduleForToday: boolean = false
   ): Promise<CustomActivityTemplate | null> => {
     if (!user) return null;
 
@@ -143,6 +144,12 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         recurring_days: data.recurring_days as unknown as number[],
         recurring_active: data.recurring_active,
         sport: data.sport,
+        // Add missing fields
+        embedded_running_sessions: data.embedded_running_sessions as unknown as Record<string, unknown>[] | null,
+        display_nickname: data.display_nickname,
+        custom_logo_url: data.custom_logo_url,
+        reminder_enabled: data.reminder_enabled,
+        reminder_time: data.reminder_time,
       };
 
       const { data: result, error } = await supabase
@@ -153,9 +160,16 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
 
       if (error) throw error;
 
+      const createdTemplate = result as unknown as CustomActivityTemplate;
+
+      // If scheduleForToday is true, add to today's game plan
+      if (scheduleForToday && createdTemplate) {
+        await addToToday(createdTemplate.id);
+      }
+
       toast.success(t('customActivity.created'));
       await fetchTemplates();
-      return result as unknown as CustomActivityTemplate;
+      return createdTemplate;
     } catch (error) {
       console.error('Error creating template:', error);
       toast.error(t('customActivity.createError'));
@@ -190,6 +204,12 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       if (data.recurring_days !== undefined) updateData.recurring_days = data.recurring_days;
       if (data.recurring_active !== undefined) updateData.recurring_active = data.recurring_active;
       if (data.activity_type !== undefined) updateData.activity_type = data.activity_type;
+      // Add missing fields
+      if (data.embedded_running_sessions !== undefined) updateData.embedded_running_sessions = data.embedded_running_sessions;
+      if (data.display_nickname !== undefined) updateData.display_nickname = data.display_nickname;
+      if (data.custom_logo_url !== undefined) updateData.custom_logo_url = data.custom_logo_url;
+      if (data.reminder_enabled !== undefined) updateData.reminder_enabled = data.reminder_enabled;
+      if (data.reminder_time !== undefined) updateData.reminder_time = data.reminder_time;
 
       const { error } = await supabase
         .from('custom_activity_templates')

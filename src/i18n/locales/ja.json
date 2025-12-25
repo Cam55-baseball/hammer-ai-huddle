@@ -3955,7 +3955,10 @@
     "missedGoal": "もっと頑張ろう！",
     "firstWeekTitle": "ようこそ！🌟",
     "firstWeekMessage": "最初の週です！進捗を追跡するための基準目標を設定しましょう。",
-    "firstWeekEncouragement": "自分に合ったものから始めましょう — 来週いつでも調整できます。"
+    "firstWeekEncouragement": "自分に合ったものから始めましょう — 来週いつでも調整できます。",
+    "alreadyCompleted": "目標設定済み",
+    "comeBackNext": "来週月曜日に新しい目標を設定してください",
+    "viewCurrentGoals": "今週の目標"
   },
   "scoutGamePlan": {
     "title": "スカウトレビュー",
