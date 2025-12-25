@@ -16,6 +16,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { CustomActivityDetailDialog } from '@/components/CustomActivityDetailDialog';
+import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
@@ -651,61 +652,21 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         </button>
         
-        {/* Time badge in timeline mode */}
+        {/* Time badge in timeline mode - opens drawer on tap */}
         {sortMode === 'timeline' && (
-          <Popover open={activeTimePickerTaskId === task.id} onOpenChange={(open) => { if (!open) setActiveTimePickerTaskId(null); }}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "flex-shrink-0 gap-1 text-xs h-7 px-2",
-                  taskTime ? "text-primary bg-primary/10 hover:bg-primary/20" : "text-white/50 hover:text-white hover:bg-white/10"
-                )}
-                onClick={(e) => { e.stopPropagation(); openTimePicker(task.id); }}
-              >
-                <Clock className="h-3 w-3" />
-                {taskTime ? formatTimeDisplay(taskTime) : t('gamePlan.startTime.tapToSet')}
-                {hasReminder && <Bell className="h-3 w-3 ml-1 text-yellow-400" />}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-3 space-y-3" align="end">
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-foreground">{t('gamePlan.startTime.time')}</label>
-                <Input 
-                  type="time" 
-                  value={tempTime}
-                  onChange={(e) => setTempTime(e.target.value)}
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium text-foreground">{t('gamePlan.reminder.remindMe')}</label>
-                <Select value={tempReminder?.toString() || ''} onValueChange={(v) => setTempReminder(v ? parseInt(v) : null)}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder={t('gamePlan.reminder.noReminder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">{t('gamePlan.reminder.noReminder')}</SelectItem>
-                    <SelectItem value="5">{t('gamePlan.reminder.minutesBefore', { minutes: 5 })}</SelectItem>
-                    <SelectItem value="10">{t('gamePlan.reminder.minutesBefore', { minutes: 10 })}</SelectItem>
-                    <SelectItem value="15">{t('gamePlan.reminder.minutesBefore', { minutes: 15 })}</SelectItem>
-                    <SelectItem value="20">{t('gamePlan.reminder.minutesBefore', { minutes: 20 })}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2">
-                {taskTime && (
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => removeTime(task.id)}>
-                    {t('gamePlan.startTime.removeTime')}
-                  </Button>
-                )}
-                <Button size="sm" className="flex-1" onClick={saveTime}>
-                  {t('common.save')}
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "flex-shrink-0 gap-1 text-xs h-7 px-2",
+              taskTime ? "text-primary bg-primary/10 hover:bg-primary/20" : "text-white/50 hover:text-white hover:bg-white/10"
+            )}
+            onClick={(e) => { e.stopPropagation(); openTimePicker(task.id); }}
+          >
+            <Clock className="h-3 w-3" />
+            {taskTime ? formatTimeDisplay(taskTime) : t('gamePlan.startTime.tapToSet')}
+            {hasReminder && <Bell className="h-3 w-3 ml-1 text-yellow-400" />}
+          </Button>
         )}
         
         {/* Edit button for custom activities */}
@@ -1502,6 +1463,33 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Time Settings Drawer - mobile friendly */}
+      <TimeSettingsDrawer
+        open={activeTimePickerTaskId !== null}
+        onOpenChange={(open) => { if (!open) setActiveTimePickerTaskId(null); }}
+        taskTitle={(() => {
+          if (!activeTimePickerTaskId) return '';
+          const allTasks = [...orderedCheckin, ...orderedTraining, ...orderedTracking, ...orderedCustom, ...timelineTasks];
+          const task = allTasks.find(t => t.id === activeTimePickerTaskId);
+          if (!task) return '';
+          return task.taskType === 'custom' ? task.titleKey : t(task.titleKey);
+        })()}
+        currentTime={activeTimePickerTaskId ? taskTimes[activeTimePickerTaskId] || null : null}
+        currentReminder={activeTimePickerTaskId ? taskReminders[activeTimePickerTaskId] || null : null}
+        onSave={(time, reminder) => {
+          if (activeTimePickerTaskId) {
+            setTaskTimes(prev => ({ ...prev, [activeTimePickerTaskId]: time }));
+            setTaskReminders(prev => ({ ...prev, [activeTimePickerTaskId]: reminder }));
+          }
+        }}
+        onRemove={() => {
+          if (activeTimePickerTaskId) {
+            setTaskTimes(prev => ({ ...prev, [activeTimePickerTaskId]: null }));
+            setTaskReminders(prev => ({ ...prev, [activeTimePickerTaskId]: null }));
+          }
+        }}
+      />
       
       {/* Pulsing animation for incomplete tasks */}
       <style>{`

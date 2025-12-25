@@ -186,14 +186,14 @@ export function CustomActivityDetailDialog({
                         {t('gamePlan.reminder.remindMe')}
                       </label>
                       <Select 
-                        value={tempReminder?.toString() || ''} 
-                        onValueChange={(v) => setTempReminder(v ? parseInt(v) : null)}
+                        value={tempReminder?.toString() || 'none'} 
+                        onValueChange={(v) => setTempReminder(v === 'none' ? null : parseInt(v))}
                       >
                         <SelectTrigger className="h-10">
                           <SelectValue placeholder={t('gamePlan.reminder.noReminder')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">{t('gamePlan.reminder.noReminder')}</SelectItem>
+                          <SelectItem value="none">{t('gamePlan.reminder.noReminder')}</SelectItem>
                           <SelectItem value="5">{t('gamePlan.reminder.minutesBefore', { minutes: 5 })}</SelectItem>
                           <SelectItem value="10">{t('gamePlan.reminder.minutesBefore', { minutes: 10 })}</SelectItem>
                           <SelectItem value="15">{t('gamePlan.reminder.minutesBefore', { minutes: 15 })}</SelectItem>
