@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { VaultStreakRecapCard } from '@/components/vault/VaultStreakRecapCard';
 
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
@@ -104,6 +105,9 @@ export default function Vault() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [userSport, setUserSport] = useState<'baseball' | 'softball'>('baseball');
   const { modules: subscribedModules } = useSubscription();
+  
+  // Use shared recap countdown hook
+  const { daysUntilRecap, recapProgress, canGenerateRecap: canGenRecap } = useRecapCountdown();
   
   // Refs for scrolling to sections
   const performanceTestsRef = useRef<HTMLDivElement>(null);
@@ -193,29 +197,7 @@ export default function Vault() {
   }, [checkVaultAccess]);
 
 
-  // Calculate days until 6-week recap
-  const getDaysUntilRecap = () => {
-    if (!streak?.last_entry_date) return 42;
-    const lastEntry = new Date(streak.last_entry_date);
-    const startOfCycle = new Date(lastEntry);
-    startOfCycle.setDate(startOfCycle.getDate() - (streak.total_entries % 42));
-    const endOfCycle = new Date(startOfCycle);
-    endOfCycle.setDate(endOfCycle.getDate() + 42);
-    const today = new Date();
-    const daysRemaining = Math.ceil((endOfCycle.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, Math.min(42, daysRemaining));
-  };
-
-  const getRecapProgress = () => {
-    if (!streak?.total_entries) return 0;
-    const daysInCycle = streak.total_entries % 42;
-    return (daysInCycle / 42) * 100;
-  };
-
-  const canGenerateRecap = () => {
-    if (!streak?.total_entries) return false;
-    return streak.total_entries >= 42 && getDaysUntilRecap() === 0;
-  };
+  // Legacy functions removed - using shared useRecapCountdown hook instead
 
   const hasCompletedQuiz = (type: string) => {
     return todaysQuizzes.some(q => q.quiz_type === type);
@@ -389,11 +371,11 @@ export default function Vault() {
               <VaultStreakRecapCard 
                 streak={streak} 
                 recaps={recaps}
-                canGenerateRecap={canGenerateRecap()}
-                daysUntilNextRecap={getDaysUntilRecap()}
-                recapProgress={getRecapProgress()}
+                canGenerateRecap={canGenRecap}
+                daysUntilNextRecap={daysUntilRecap}
+                recapProgress={recapProgress}
                 onGenerateRecap={handleGenerateRecap}
-                isLoading={loading} 
+                isLoading={loading}
               />
 
               {/* Weekly Trend Cards */}

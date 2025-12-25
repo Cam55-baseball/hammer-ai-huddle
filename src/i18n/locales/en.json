@@ -4860,7 +4860,20 @@
       "forWeek": "For This Week",
       "locked": "Order Locked",
       "lockedUntil": "Until {{date}}",
-      "unlocked": "Order Unlocked"
+      "unlocked": "Order Unlocked",
+      "selectDays": "Select Days to Lock",
+      "selectDaysDescription": "Choose which days of the week to apply this locked schedule",
+      "selectAtLeastOne": "Please select at least one day",
+      "daysSelected": "{{count}} days selected",
+      "days": {
+        "sun": "Sunday",
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday"
+      }
     },
     "quiz": {
       "morning": {
