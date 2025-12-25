@@ -142,10 +142,11 @@ export function VaultPerformanceTestCard({
     }
   }, [availableModules, selectedModule]);
 
-  // Handle autoOpen changes
+  // Handle autoOpen changes with delay for smooth animation
   useEffect(() => {
     if (autoOpen) {
-      setIsOpen(true);
+      const timer = setTimeout(() => setIsOpen(true), 150);
+      return () => clearTimeout(timer);
     }
   }, [autoOpen]);
 

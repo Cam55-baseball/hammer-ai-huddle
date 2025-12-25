@@ -159,7 +159,7 @@ export default function Vault() {
         setAutoOpenPerformance(true);
       }
       
-      // Scroll to section after longer delay for full rendering
+      // Scroll to section with retry mechanism for reliable rendering
       const scrollToSection = () => {
         let targetRef: React.RefObject<HTMLDivElement> | null = null;
         
@@ -174,11 +174,20 @@ export default function Vault() {
           // Clear params after successful scroll
           searchParams.delete('openSection');
           setSearchParams(searchParams, { replace: true });
+          return true;
         }
+        return false;
       };
       
-      // Initial attempt after 500ms for component mount
-      setTimeout(scrollToSection, 500);
+      // Wait for tab switch to complete, then try scrolling with retries
+      requestAnimationFrame(() => {
+        const attempts = [100, 300, 600, 1000];
+        attempts.forEach(delay => {
+          setTimeout(() => {
+            scrollToSection();
+          }, delay);
+        });
+      });
     }
   }, [searchParams, setSearchParams]);
 
