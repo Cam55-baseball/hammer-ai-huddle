@@ -4078,7 +4078,9 @@
       "stressAlert": "Alerta de Estrés",
       "stressAlertDesc": "Tus niveles de estrés están por encima del objetivo",
       "disciplineAlert": "Alerta de Disciplina",
-      "disciplineAlertDesc": "Tu disciplina está tendiendo por debajo del objetivo"
+      "disciplineAlertDesc": "Tu disciplina está tendiendo por debajo del objetivo",
+      "goalsSet": "Metas Establecidas para Esta Semana",
+      "lockedUntil": "Bloqueado hasta"
     },
     "freeNote": {
       "title": "Nota Rápida",
