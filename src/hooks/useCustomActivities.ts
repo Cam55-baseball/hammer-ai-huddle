@@ -208,6 +208,9 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
 
       toast.success(t('customActivity.created'));
       
+      // Set flag to notify Game Plan to refresh
+      localStorage.setItem('customActivityCreated', Date.now().toString());
+      
       // Refresh both templates and today logs
       await Promise.all([fetchTemplates(), fetchTodayLogs()]);
       

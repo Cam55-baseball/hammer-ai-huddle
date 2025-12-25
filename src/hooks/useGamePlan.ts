@@ -422,6 +422,37 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     fetchTaskStatus();
   }, [fetchTaskStatus]);
 
+  // Listen for custom activity creation from other components
+  useEffect(() => {
+    const checkForNewActivity = () => {
+      const created = localStorage.getItem('customActivityCreated');
+      if (created) {
+        localStorage.removeItem('customActivityCreated');
+        fetchTaskStatus();
+      }
+    };
+
+    // Check on mount
+    checkForNewActivity();
+
+    // Listen for storage changes (from other tabs/components)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'customActivityCreated') {
+        checkForNewActivity();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also poll periodically in case same-tab changes don't trigger storage event
+    const interval = setInterval(checkForNewActivity, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [fetchTaskStatus]);
+
   // Build dynamic task list based on user's module access
   const tasks: GamePlanTask[] = [];
 
