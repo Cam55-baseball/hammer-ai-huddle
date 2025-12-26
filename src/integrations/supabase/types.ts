@@ -1211,6 +1211,63 @@ export type Database = {
           },
         ]
       }
+      sent_activity_templates: {
+        Row: {
+          accepted_template_id: string | null
+          id: string
+          locked_fields: string[] | null
+          message: string | null
+          recipient_id: string
+          responded_at: string | null
+          sender_id: string
+          sent_at: string | null
+          status: string
+          template_id: string
+          template_snapshot: Json
+        }
+        Insert: {
+          accepted_template_id?: string | null
+          id?: string
+          locked_fields?: string[] | null
+          message?: string | null
+          recipient_id: string
+          responded_at?: string | null
+          sender_id: string
+          sent_at?: string | null
+          status?: string
+          template_id: string
+          template_snapshot: Json
+        }
+        Update: {
+          accepted_template_id?: string | null
+          id?: string
+          locked_fields?: string[] | null
+          message?: string | null
+          recipient_id?: string
+          responded_at?: string | null
+          sender_id?: string
+          sent_at?: string | null
+          status?: string
+          template_id?: string
+          template_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sent_activity_templates_accepted_template_id_fkey"
+            columns: ["accepted_template_id"]
+            isOneToOne: false
+            referencedRelation: "custom_activity_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sent_activity_templates_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "custom_activity_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shared_activity_templates: {
         Row: {
           created_at: string | null
