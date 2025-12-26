@@ -75,9 +75,20 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const hasThrowingAccess = subscribedModules.some(m => m.includes('throwing'));
   const hasAnyModuleAccess = subscribedModules.length > 0;
 
+  // Get today's date in local timezone (YYYY-MM-DD)
   const getTodayDate = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Get user's local midnight as UTC timestamp for database queries
+  const getLocalMidnightUTC = () => {
+    const now = new Date();
+    const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return localMidnight.toISOString();
   };
 
   const fetchTaskStatus = useCallback(async () => {
@@ -182,6 +193,9 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         status['workout-pitching'] = pitchingWorkout?.some(w => w.last_workout_date === today) || false;
       }
 
+      // Use local midnight for video queries to ensure proper daily reset
+      const localMidnight = getLocalMidnightUTC();
+
       // Fetch video analysis for hitting
       if (hasHittingAccess) {
         const { data: hittingVideos } = await supabase
@@ -190,7 +204,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           .eq('user_id', user.id)
           .eq('sport', selectedSport)
           .eq('module', 'hitting')
-          .gte('created_at', `${today}T00:00:00`)
+          .gte('created_at', localMidnight)
           .limit(1);
         
         status['video-hitting'] = (hittingVideos?.length || 0) > 0;
@@ -204,7 +218,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           .eq('user_id', user.id)
           .eq('sport', selectedSport)
           .eq('module', 'pitching')
-          .gte('created_at', `${today}T00:00:00`)
+          .gte('created_at', localMidnight)
           .limit(1);
         
         status['video-pitching'] = (pitchingVideos?.length || 0) > 0;
@@ -218,7 +232,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
           .eq('user_id', user.id)
           .eq('sport', selectedSport)
           .eq('module', 'throwing')
-          .gte('created_at', `${today}T00:00:00`)
+          .gte('created_at', localMidnight)
           .limit(1);
         
         status['video-throwing'] = (throwingVideos?.length || 0) > 0;

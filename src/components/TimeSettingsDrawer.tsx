@@ -4,7 +4,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, Bell, Trash2 } from 'lucide-react';
+import { Clock, Bell, Trash2, X } from 'lucide-react';
 
 interface TimeSettingsDrawerProps {
   open: boolean;
@@ -14,6 +14,8 @@ interface TimeSettingsDrawerProps {
   currentReminder: number | null;
   onSave: (time: string | null, reminder: number | null) => void;
   onRemove: () => void;
+  onSkipTask?: () => void;
+  showSkipOption?: boolean;
 }
 
 export function TimeSettingsDrawer({
@@ -24,6 +26,8 @@ export function TimeSettingsDrawer({
   currentReminder,
   onSave,
   onRemove,
+  onSkipTask,
+  showSkipOption = true,
 }: TimeSettingsDrawerProps) {
   const { t } = useTranslation();
   const [tempTime, setTempTime] = useState(currentTime || '');
@@ -117,6 +121,23 @@ export function TimeSettingsDrawer({
               {t('common.save')}
             </Button>
           </div>
+
+          {/* Skip for Today Option */}
+          {showSkipOption && onSkipTask && (
+            <div className="border-t border-white/10 pt-4 mt-4">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  onSkipTask();
+                  onOpenChange(false);
+                }}
+                className="w-full justify-start gap-3 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 h-12"
+              >
+                <X className="h-5 w-5" />
+                <span>{t('gamePlan.skipTask', 'Skip for today')}</span>
+              </Button>
+            </div>
+          )}
         </div>
       </DrawerContent>
     </Drawer>

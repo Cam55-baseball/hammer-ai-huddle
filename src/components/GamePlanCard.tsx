@@ -677,8 +677,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const trackingTasks = filterSkipped(autoSort ? sortByCompletion(orderedTracking) : orderedTracking);
   const customTasks = filterSkipped(autoSort ? sortByCompletion(orderedCustom) : orderedCustom);
   
-  // Get all tasks for skipped section
-  const allTasks = [...orderedCheckin, ...orderedTraining, ...orderedTracking, ...orderedCustom];
+  // Get all tasks for skipped section - include timeline tasks when in that mode
+  const allTasks = sortMode === 'timeline' 
+    ? timelineTasks 
+    : [...orderedCheckin, ...orderedTraining, ...orderedTracking, ...orderedCustom];
   const skippedTasksList = allTasks.filter(t => skippedTasks.has(t.id));
 
   const renderTask = (task: GamePlanTask, index?: number) => {
@@ -811,37 +813,23 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         </button>
         
-        {/* Edit button - opens time settings drawer in timeline mode, activity editor for custom */}
-        {(sortMode === 'timeline' || isCustom) && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-shrink-0 h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              if (sortMode === 'timeline') {
-                openTimePicker(task.id);
-              } else if (isCustom) {
-                handleCustomActivityEdit(task);
-              }
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-        )}
-        
-        {/* Skip button - visible on mobile always, hover on desktop */}
+        {/* Edit button - opens time settings drawer (with skip option) in timeline mode, or drawer in other modes for skip */}
         <Button
           variant="ghost"
           size="icon"
-          className="flex-shrink-0 h-10 w-10 sm:h-8 sm:w-8 text-white/40 hover:text-red-400 hover:bg-red-500/10 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+          className="flex-shrink-0 h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
           onClick={(e) => { 
             e.stopPropagation(); 
-            handleSkipTask(task.id);
+            if (isCustom && sortMode !== 'timeline') {
+              // For custom activities outside timeline mode, open the activity editor
+              handleCustomActivityEdit(task);
+            } else {
+              // For timeline mode or non-custom tasks, open time picker (which now has skip option)
+              openTimePicker(task.id);
+            }
           }}
-          title={t('gamePlan.skipTask', 'Skip for today')}
         >
-          <X className="h-5 w-5 sm:h-4 sm:w-4" />
+          <Pencil className="h-4 w-4" />
         </Button>
         
         {/* Status indicator - clickable for custom activities with prominent styling */}
@@ -1803,6 +1791,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             setTaskReminders(prev => ({ ...prev, [activeTimePickerTaskId]: null }));
           }
         }}
+        onSkipTask={() => {
+          if (activeTimePickerTaskId) {
+            handleSkipTask(activeTimePickerTaskId);
+          }
+        }}
+        showSkipOption={true}
       />
       
       {/* Pulsing animation for incomplete tasks */}
