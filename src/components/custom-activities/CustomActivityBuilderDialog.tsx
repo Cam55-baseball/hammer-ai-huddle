@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image, CalendarPlus, Loader2 } from 'lucide-react';
+import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image, CalendarPlus, Loader2, Lock } from 'lucide-react';
 import { LogoUploadButton } from './LogoUploadButton';
 import { ActivityTypeSelector } from './ActivityTypeSelector';
 import { IconPicker } from './IconPicker';
@@ -24,6 +24,18 @@ import { CustomFieldsBuilder } from './CustomFieldsBuilder';
 import { CustomActivityTemplate, ActivityType, IntensityLevel, Exercise, MealData, CustomField, RunningInterval, EmbeddedRunningSession } from '@/types/customActivity';
 import { cn } from '@/lib/utils';
 
+type LockableField = 
+  | 'title' 
+  | 'description' 
+  | 'type' 
+  | 'timing' 
+  | 'exercises' 
+  | 'meals' 
+  | 'running' 
+  | 'custom_fields' 
+  | 'schedule' 
+  | 'appearance';
+
 interface CustomActivityBuilderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -32,6 +44,10 @@ interface CustomActivityBuilderDialogProps {
   onSave: (data: Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>, scheduleForToday?: boolean) => Promise<any>;
   onDelete?: (id: string) => Promise<boolean>;
   selectedSport: 'baseball' | 'softball';
+  // Coach-sent activity props
+  lockedFields?: LockableField[];
+  isFromCoach?: boolean;
+  coachName?: string;
 }
 
 const INTENSITY_OPTIONS: IntensityLevel[] = ['light', 'moderate', 'high', 'max'];
@@ -53,9 +69,15 @@ export function CustomActivityBuilderDialog({
   onSave,
   onDelete,
   selectedSport,
+  lockedFields = [],
+  isFromCoach = false,
+  coachName,
 }: CustomActivityBuilderDialogProps) {
   const { t } = useTranslation();
   const isEditing = !!template;
+
+  // Helper to check if a field is locked
+  const isFieldLocked = (field: LockableField): boolean => lockedFields.includes(field);
 
   const [activityType, setActivityType] = useState<ActivityType | null>(template?.activity_type || presetActivityType || null);
   const [title, setTitle] = useState(template?.title || '');
@@ -305,13 +327,28 @@ export function CustomActivityBuilderDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-black">
-            {isEditing ? t('customActivity.edit') : t('customActivity.create')}
+            {isFromCoach 
+              ? t('customActivity.editFromCoach', 'Customize Activity') 
+              : isEditing 
+                ? t('customActivity.edit') 
+                : t('customActivity.create')
+            }
           </DialogTitle>
+          {isFromCoach && coachName && (
+            <p className="text-sm text-muted-foreground">
+              {t('sentActivity.fromCoach', `Sent by ${coachName}`)}
+              {lockedFields.length > 0 && (
+                <span className="ml-2 text-xs">
+                  • {t('sentActivity.lockedFieldsCount', { count: lockedFields.length })} {t('sentActivity.locked', 'locked')}
+                </span>
+              )}
+            </p>
+          )}
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(90vh-140px)] px-6">
           <div className="space-y-6 py-4">
-            {!isEditing && !presetActivityType && (
+            {!isEditing && !presetActivityType && !isFieldLocked('type') && (
               <div className="space-y-2">
                 <Label className="text-sm font-bold">{t('customActivity.selectType')}</Label>
                 <ActivityTypeSelector selected={activityType} onSelect={setActivityType} />
@@ -321,19 +358,49 @@ export function CustomActivityBuilderDialog({
             {activityType && (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-bold">{t('customActivity.fields.name')} *</Label>
-                    <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('customActivity.fields.namePlaceholder')} />
+                  <div className="space-y-2 relative">
+                    <Label className="text-sm font-bold flex items-center gap-2">
+                      {t('customActivity.fields.name')} *
+                      {isFieldLocked('title') && <Lock className="h-3 w-3 text-muted-foreground" />}
+                    </Label>
+                    <Input 
+                      value={title} 
+                      onChange={(e) => setTitle(e.target.value)} 
+                      placeholder={t('customActivity.fields.namePlaceholder')}
+                      disabled={isFieldLocked('title')}
+                      className={isFieldLocked('title') ? 'opacity-60' : ''}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-bold">{t('customActivity.fields.duration')}</Label>
-                    <Input type="number" value={durationMinutes || ''} onChange={(e) => setDurationMinutes(parseInt(e.target.value) || undefined)} placeholder="45" min={1} />
+                    <Label className="text-sm font-bold flex items-center gap-2">
+                      {t('customActivity.fields.duration')}
+                      {isFieldLocked('timing') && <Lock className="h-3 w-3 text-muted-foreground" />}
+                    </Label>
+                    <Input 
+                      type="number" 
+                      value={durationMinutes || ''} 
+                      onChange={(e) => setDurationMinutes(parseInt(e.target.value) || undefined)} 
+                      placeholder="45" 
+                      min={1}
+                      disabled={isFieldLocked('timing')}
+                      className={isFieldLocked('timing') ? 'opacity-60' : ''}
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-bold">{t('customActivity.fields.description')}</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('customActivity.fields.descriptionPlaceholder')} rows={2} />
+                  <Label className="text-sm font-bold flex items-center gap-2">
+                    {t('customActivity.fields.description')}
+                    {isFieldLocked('description') && <Lock className="h-3 w-3 text-muted-foreground" />}
+                  </Label>
+                  <Textarea 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)} 
+                    placeholder={t('customActivity.fields.descriptionPlaceholder')} 
+                    rows={2}
+                    disabled={isFieldLocked('description')}
+                    className={isFieldLocked('description') ? 'opacity-60' : ''}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

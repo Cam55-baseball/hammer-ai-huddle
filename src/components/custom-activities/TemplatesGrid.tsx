@@ -5,14 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Star, Share2, Trash2, Pencil, RefreshCw, Calendar } from 'lucide-react';
+import { Plus, Search, Star, Share2, Trash2, Pencil, RefreshCw, Calendar, Send } from 'lucide-react';
 import { CustomActivityTemplate, ActivityType } from '@/types/customActivity';
 import { CustomActivityBuilderDialog } from './CustomActivityBuilderDialog';
 import { ShareTemplateDialog } from './ShareTemplateDialog';
+import { SendToPlayerDialog } from './SendToPlayerDialog';
 import { TemplateScheduleSettingsDrawer, ScheduleSettings } from './TemplateScheduleSettingsDrawer';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
 import { cn } from '@/lib/utils';
+import { useScoutAccess } from '@/hooks/useScoutAccess';
 
 interface TemplatesGridProps {
   templates: CustomActivityTemplate[];
@@ -43,7 +45,9 @@ export function TemplatesGrid({
   const [editingTemplate, setEditingTemplate] = useState<CustomActivityTemplate | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [sharingTemplate, setSharingTemplate] = useState<CustomActivityTemplate | null>(null);
+  const [sendingTemplate, setSendingTemplate] = useState<CustomActivityTemplate | null>(null);
   const [scheduleSettingsTemplate, setScheduleSettingsTemplate] = useState<CustomActivityTemplate | null>(null);
+  const { isScout } = useScoutAccess();
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -200,6 +204,11 @@ export function TemplatesGrid({
                     <Button size="sm" variant="ghost" onClick={() => setSharingTemplate(template)}>
                       <Share2 className="h-4 w-4" />
                     </Button>
+                    {isScout && (
+                      <Button size="sm" variant="ghost" onClick={() => setSendingTemplate(template)} title={t('sentActivity.sendToPlayer', 'Send to Player')}>
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDeleteTemplate(template.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -236,6 +245,12 @@ export function TemplatesGrid({
         open={!!scheduleSettingsTemplate}
         onOpenChange={(open) => !open && setScheduleSettingsTemplate(null)}
         onSave={handleSaveScheduleSettings}
+      />
+
+      <SendToPlayerDialog
+        open={!!sendingTemplate}
+        onOpenChange={(open) => !open && setSendingTemplate(null)}
+        template={sendingTemplate}
       />
     </div>
   );

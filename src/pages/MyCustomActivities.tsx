@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { TemplatesGrid } from '@/components/custom-activities/TemplatesGrid';
 import { ActivityHistoryList } from '@/components/custom-activities/ActivityHistoryList';
@@ -9,8 +10,10 @@ import { HydrationReminderSettings } from '@/components/custom-activities/Hydrat
 import { HydrationTrackerWidget } from '@/components/custom-activities/HydrationTrackerWidget';
 import { RunningPresetLibrary } from '@/components/custom-activities/RunningPresetLibrary';
 import { WorkoutTemplatesLibrary } from '@/components/custom-activities/WorkoutTemplatesLibrary';
+import { ReceivedActivitiesList } from '@/components/custom-activities/ReceivedActivitiesList';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
-import { LayoutGrid, History, BarChart3, Droplets, Footprints, BookOpen } from 'lucide-react';
+import { useReceivedActivities } from '@/hooks/useReceivedActivities';
+import { LayoutGrid, History, BarChart3, Droplets, Footprints, BookOpen, Inbox } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function MyCustomActivities() {
@@ -29,6 +32,8 @@ export default function MyCustomActivities() {
     toggleFavorite,
     refetch
   } = useCustomActivities(selectedSport);
+
+  const { pendingCount } = useReceivedActivities();
 
   const handleUseTemplate = (exercises: any[], templateName: string) => {
     toast.success(t('workoutTemplates.templateLoaded', `Template "${templateName}" loaded! Create a new activity to use it.`));
@@ -53,10 +58,19 @@ export default function MyCustomActivities() {
         </div>
 
         <Tabs defaultValue="templates" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 h-auto">
+          <TabsList className="grid w-full grid-cols-7 h-auto">
             <TabsTrigger value="templates" className="flex items-center gap-2 py-3">
               <LayoutGrid className="h-4 w-4" />
               <span className="hidden sm:inline">{t('myCustomActivities.tabs.templates', 'Templates')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="received" className="flex items-center gap-2 py-3">
+              <Inbox className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('myCustomActivities.tabs.received', 'Received')}</span>
+              {pendingCount > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                  {pendingCount}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="library" className="flex items-center gap-2 py-3">
               <BookOpen className="h-4 w-4" />
@@ -91,6 +105,10 @@ export default function MyCustomActivities() {
               onToggleFavorite={toggleFavorite}
               onRefetch={refetch}
             />
+          </TabsContent>
+
+          <TabsContent value="received" className="mt-6">
+            <ReceivedActivitiesList selectedSport={selectedSport} />
           </TabsContent>
 
           <TabsContent value="library" className="mt-6">
