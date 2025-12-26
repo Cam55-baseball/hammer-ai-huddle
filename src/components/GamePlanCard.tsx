@@ -44,7 +44,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const navigate = useNavigate();
   const { tasks, customActivities, completedCount, totalCount, loading, refetch } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress } = useRecapCountdown();
-  const { getFavorites, toggleComplete, addToToday, templates } = useCustomActivities(selectedSport);
+  const { getFavorites, toggleComplete, addToToday, templates, createTemplate, updateTemplate, deleteTemplate: deleteActivityTemplate } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
@@ -1305,23 +1305,43 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         open={builderOpen}
         onOpenChange={(open) => {
           setBuilderOpen(open);
-          if (!open) setPresetActivityType(null);
+          if (!open) {
+            setPresetActivityType(null);
+            setEditingTemplate(null);
+          }
         }}
         template={editingTemplate}
         presetActivityType={presetActivityType}
-        onSave={async (data) => {
+        onSave={async (data, scheduleForToday) => {
+          let result;
           if (editingTemplate) {
-            toast.success(t('customActivity.saved'));
+            // Update existing template
+            result = await updateTemplate(editingTemplate.id, data);
+            if (result) {
+              toast.success(t('customActivity.saved'));
+            }
           } else {
-            toast.success(t('customActivity.saved'));
+            // Create new template
+            result = await createTemplate(data as Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>, scheduleForToday);
+            if (result) {
+              toast.success(t('customActivity.saved'));
+            }
           }
-          refetch();
-          setEditingTemplate(null);
+          
+          if (result) {
+            refetch();
+            setEditingTemplate(null);
+          }
+          return result;
         }}
-        onDelete={async () => {
-          toast.success(t('customActivity.deleted'));
-          refetch();
-          return true;
+        onDelete={async (id) => {
+          const success = await deleteActivityTemplate(id || editingTemplate?.id || '');
+          if (success) {
+            toast.success(t('customActivity.deleted'));
+            refetch();
+            setEditingTemplate(null);
+          }
+          return success;
         }}
         selectedSport={selectedSport}
       />
