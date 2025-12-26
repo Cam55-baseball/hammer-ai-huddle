@@ -117,6 +117,27 @@ export function CustomActivityCard({ activity, onToggleComplete, onEdit }: Custo
             <p className="text-xs text-white/40 truncate mt-0.5">{exercisePreview}</p>
           )}
 
+          {/* Custom Fields Preview */}
+          {template.custom_fields && Array.isArray(template.custom_fields) && template.custom_fields.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {(template.custom_fields as Array<{id: string; label: string; type: string; value?: string}>).slice(0, 3).map((field) => (
+                <span key={field.id} className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/60">
+                  {field.type === 'checkbox' ? (
+                    <span className="flex items-center gap-1">
+                      {field.value === 'true' && <Check className="h-2.5 w-2.5" />}
+                      {field.label}
+                    </span>
+                  ) : (
+                    `${field.label}${field.value ? `: ${field.value}` : ''}`
+                  )}
+                </span>
+              ))}
+              {template.custom_fields.length > 3 && (
+                <span className="text-[10px] text-white/40">+{template.custom_fields.length - 3}</span>
+              )}
+            </div>
+          )}
+
           {isRecurring && (
             <div className="flex items-center gap-1 mt-1 text-[10px] text-white/50">
               <RefreshCw className="h-3 w-3" />
