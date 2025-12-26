@@ -46,7 +46,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const navigate = useNavigate();
   const { tasks, customActivities, completedCount, totalCount, loading, refetch } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress } = useRecapCountdown();
-  const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, refetch: refetchActivities } = useCustomActivities(selectedSport);
+  const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
@@ -1414,51 +1414,36 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             const template = selectedCustomTask.customActivityData.template;
             let log = selectedCustomTask.customActivityData.log;
             
-            // OPTIMISTIC UI UPDATE: Immediately update the checkbox state in memory
+            // Build new checkbox states
             const currentData = (log?.performance_data as Record<string, any>) || {};
             const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
             const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
             const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
             
-            // Update selected task immediately (optimistic)
+            // OPTIMISTIC UI UPDATE: Immediately update the checkbox state
             setSelectedCustomTask(prev => {
               if (!prev?.customActivityData) return prev;
               return {
                 ...prev,
                 customActivityData: {
                   ...prev.customActivityData,
-                  log: prev.customActivityData.log ? {
-                    ...prev.customActivityData.log,
-                    performance_data: newPerformanceData
-                  } : undefined
+                  log: prev.customActivityData.log 
+                    ? { ...prev.customActivityData.log, performance_data: newPerformanceData }
+                    : { id: 'pending', template_id: template.id, completed: false, performance_data: newPerformanceData } as any
                 }
               };
             });
             
-            // If no log exists, create one first (for recurring activities without a log yet)
+            // ENSURE LOG EXISTS: Get log directly (avoids stale closure!)
             if (!log) {
-              const success = await addToToday(template.id);
-              if (!success) {
+              const newLog = await ensureLogExists(template.id);
+              if (!newLog) {
                 toast.error(t('customActivity.addError'));
                 return;
               }
-              // Refetch activities to get the new log
-              await refetchActivities();
-              // Find the newly created log
-              const newLog = todayLogs.find(l => l.template_id === template.id);
-              if (!newLog) {
-                // If still not found, fetch fresh
-                await refetchActivities();
-                const freshLog = todayLogs.find(l => l.template_id === template.id);
-                if (!freshLog) {
-                  toast.error(t('customActivity.addError'));
-                  return;
-                }
-                log = freshLog;
-              } else {
-                log = newLog;
-              }
-              // Update selected task with the new log
+              log = newLog;
+              
+              // Update selected task with real log
               setSelectedCustomTask(prev => prev ? {
                 ...prev,
                 customActivityData: prev.customActivityData ? {
@@ -1468,10 +1453,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               } : null);
             }
             
-            // Persist checkbox states to database
+            // PERSIST: Save checkbox states to database
             await updateLogPerformanceData(log.id, newPerformanceData);
             
-            // Check if all checkboxes are now checked for auto-complete
+            // AUTO-COMPLETE LOGIC: Check if all checkboxes are now checked
             const customFields = (template.custom_fields as CustomField[]) || [];
             const checkboxFields = customFields.filter(f => f.type === 'checkbox');
             
@@ -1480,19 +1465,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               const wasCompleted = log.completed;
               
               if (allChecked && !wasCompleted) {
-                // Auto-complete the activity with celebration!
+                // Auto-complete with celebration!
                 await toggleComplete(template.id);
-                // Update UI optimistically
                 setSelectedCustomTask(prev => prev ? {
                   ...prev,
                   completed: true,
                   customActivityData: prev.customActivityData ? {
                     ...prev.customActivityData,
-                    log: prev.customActivityData.log ? {
-                      ...prev.customActivityData.log,
-                      completed: true,
-                      performance_data: newPerformanceData
-                    } : undefined
+                    log: { ...prev.customActivityData.log!, completed: true }
                   } : undefined
                 } : null);
                 triggerCelebration();
@@ -1502,23 +1482,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               } else if (!allChecked && wasCompleted) {
                 // Un-complete if a checkbox is unchecked
                 await toggleComplete(template.id);
-                // Update UI optimistically
                 setSelectedCustomTask(prev => prev ? {
                   ...prev,
                   completed: false,
                   customActivityData: prev.customActivityData ? {
                     ...prev.customActivityData,
-                    log: prev.customActivityData.log ? {
-                      ...prev.customActivityData.log,
-                      completed: false,
-                      performance_data: newPerformanceData
-                    } : undefined
+                    log: { ...prev.customActivityData.log!, completed: false }
                   } : undefined
                 } : null);
               }
             }
             
-            // Background refresh - won't unmount dialog now since we check tasks.length
+            // Background refresh (safe - dialog won't unmount)
             refetch();
           } catch (error) {
             console.error('Error toggling checkbox:', error);
