@@ -1133,11 +1133,13 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   }, [phase]);
 
   // Auto-record effect - with pause support and wait-for-analysis
+  // Now works during both playback AND complete phases
   useEffect(() => {
-    if (phase === 'complete' && autoRecordEnabled) {
-      // Reset pause state when entering complete phase
-      setAutoRecordPaused(false);
-      setAutoRecordCountdown(5); // Slightly longer countdown for better UX
+    if ((phase === 'playback' || phase === 'complete') && autoRecordEnabled) {
+      // Initialize countdown when entering playback phase (only once)
+      if (phase === 'playback' && autoRecordCountdown === 0) {
+        setAutoRecordCountdown(5); // Start countdown during playback
+      }
       
       const interval = setInterval(() => {
         setAutoRecordCountdown(prev => {
@@ -1160,6 +1162,9 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
         });
       }, 1000);
       return () => clearInterval(interval);
+    } else if (!autoRecordEnabled) {
+      // Reset countdown when auto-record is disabled
+      setAutoRecordCountdown(0);
     }
   }, [phase, autoRecordEnabled, autoRecordPaused, analysisEnabled, isAnalyzing]);
   
@@ -2115,6 +2120,79 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
 
                       {/* Auto-record countdown overlay - REMOVED, now shows in camera preview section */}
                     </div>
+                    
+                    {/* Auto-Record Controls - Below video during playback/complete when auto-record is enabled */}
+                    {autoRecordEnabled && (phase === 'playback' || phase === 'complete') && (
+                      <Card className="p-4 border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                          {/* Status Section */}
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-full ${autoRecordPaused ? 'bg-muted' : analysisEnabled && isAnalyzing ? 'bg-blue-500/10' : 'bg-primary/10'}`}>
+                              <Timer className={`h-5 w-5 ${autoRecordPaused ? 'text-muted-foreground' : analysisEnabled && isAnalyzing ? 'text-blue-500' : 'text-primary'}`} />
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">
+                                {autoRecordPaused 
+                                  ? t('realTimePlayback.autoRecordPaused', 'Auto-Record Paused')
+                                  : analysisEnabled && isAnalyzing
+                                    ? t('realTimePlayback.waitingForAnalysis', 'Waiting for Analysis...')
+                                    : t('realTimePlayback.nextRecordingIn', 'Next recording in {{seconds}}s').replace('{{seconds}}', String(autoRecordCountdown))
+                                }
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {autoRecordPaused 
+                                  ? t('realTimePlayback.tapToResume', 'Tap Resume to continue')
+                                  : analysisEnabled && isAnalyzing
+                                    ? t('realTimePlayback.willContinueAfterAnalysis', 'Will continue when analysis completes')
+                                    : t('realTimePlayback.recordingStartsAuto', 'Recording will start automatically')
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Control Buttons */}
+                          <div className="flex gap-2 flex-wrap justify-center">
+                            {/* Pause/Resume button */}
+                            <Button 
+                              onClick={handleToggleAutoRecordPause} 
+                              variant="outline" 
+                              size="sm"
+                              className="gap-2"
+                            >
+                              {autoRecordPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                              {autoRecordPaused 
+                                ? t('realTimePlayback.resumeAutoRecord', 'Resume')
+                                : t('realTimePlayback.pauseAutoRecord', 'Pause')
+                              }
+                            </Button>
+                            
+                            {/* Continue without analysis - only when analyzing */}
+                            {analysisEnabled && isAnalyzing && (
+                              <Button 
+                                onClick={handleContinueWithoutAnalysis} 
+                                variant="outline" 
+                                size="sm"
+                                className="gap-2"
+                              >
+                                <SkipForward className="h-4 w-4" />
+                                {t('realTimePlayback.continueWithoutAnalysis', 'Continue Anyway')}
+                              </Button>
+                            )}
+                            
+                            {/* Stop auto-record */}
+                            <Button 
+                              onClick={handleStopAutoRecord} 
+                              variant="outline" 
+                              size="sm"
+                              className="gap-2 text-destructive hover:text-destructive"
+                            >
+                              <Square className="h-4 w-4" />
+                              {t('realTimePlayback.stopAutoRecord', 'Stop')}
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    )}
                     
                     {/* Frame Count Setting */}
                     <Card className="p-4">
