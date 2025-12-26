@@ -7,12 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Check, Clock, Bell, Pencil, Dumbbell, X, Info } from 'lucide-react';
+import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
-import { CustomField, CustomActivityLog } from '@/types/customActivity';
+import { CustomField, Exercise, MealData, RunningInterval, EmbeddedRunningSession } from '@/types/customActivity';
 
 interface CustomActivityDetailDialogProps {
   open: boolean;
@@ -141,6 +140,155 @@ export function CustomActivityDetailDialog({
                 </div>
               )}
             </div>
+
+            {/* Exercises Section */}
+            {template.exercises && Array.isArray(template.exercises) && (template.exercises as Exercise[]).length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Dumbbell className="h-4 w-4" />
+                  {t('customActivity.exercises.title', 'Exercises')} ({(template.exercises as Exercise[]).length})
+                </h4>
+                <div className="space-y-2">
+                  {(template.exercises as Exercise[]).map((exercise) => (
+                    <div key={exercise.id} className="rounded-lg bg-muted p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{exercise.name}</span>
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {exercise.type}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground">
+                        {exercise.sets && <span>{exercise.sets} sets</span>}
+                        {exercise.reps && <span>× {exercise.reps} reps</span>}
+                        {exercise.weight && <span>@ {exercise.weight} {exercise.weightUnit || 'lbs'}</span>}
+                        {exercise.rest && <span>• {exercise.rest}s rest</span>}
+                        {exercise.duration && <span>• {exercise.duration}s</span>}
+                      </div>
+                      {exercise.notes && (
+                        <p className="text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5">
+                          <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                          <span>{exercise.notes}</span>
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Meal Items Section */}
+            {template.meals && (template.meals as MealData).items && (template.meals as MealData).items.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Utensils className="h-4 w-4" />
+                  {t('customActivity.meals.items', 'Meal Items')}
+                </h4>
+                <div className="space-y-2">
+                  {(template.meals as MealData).items.map((item) => (
+                    <div key={item.id} className="rounded-lg bg-muted p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{item.name}</span>
+                        {item.quantity && item.unit && (
+                          <span className="text-xs text-muted-foreground">{item.quantity} {item.unit}</span>
+                        )}
+                      </div>
+                      {(item.calories || item.protein || item.carbs || item.fats) && (
+                        <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground">
+                          {item.calories && <span>{item.calories} cal</span>}
+                          {item.protein && <span>• {item.protein}g protein</span>}
+                          {item.carbs && <span>• {item.carbs}g carbs</span>}
+                          {item.fats && <span>• {item.fats}g fats</span>}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Vitamins Section */}
+            {template.meals && (template.meals as MealData).vitamins && (template.meals as MealData).vitamins.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Pill className="h-4 w-4" />
+                  {t('customActivity.meals.vitamins', 'Vitamins')}
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {(template.meals as MealData).vitamins.map((vitamin) => (
+                    <Badge key={vitamin.id} variant="secondary" className="text-xs">
+                      {vitamin.name} {vitamin.dosage && `(${vitamin.dosage})`}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Supplements Section */}
+            {template.meals && (template.meals as MealData).supplements && (template.meals as MealData).supplements.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Pill className="h-4 w-4" />
+                  {t('customActivity.meals.supplements', 'Supplements')}
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {(template.meals as MealData).supplements.map((supplement) => (
+                    <Badge key={supplement.id} variant="secondary" className="text-xs">
+                      {supplement.name} {supplement.dosage && `(${supplement.dosage})`}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Running Intervals Section */}
+            {template.intervals && Array.isArray(template.intervals) && (template.intervals as RunningInterval[]).length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Footprints className="h-4 w-4" />
+                  {t('customActivity.running.intervals', 'Intervals')}
+                </h4>
+                <div className="space-y-2">
+                  {(template.intervals as RunningInterval[]).map((interval) => (
+                    <div key={interval.id} className="rounded-lg bg-muted p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm capitalize">{interval.type}</span>
+                        <div className="flex gap-2 text-xs text-muted-foreground">
+                          {interval.duration && <span>{Math.floor(interval.duration / 60)}:{String(interval.duration % 60).padStart(2, '0')}</span>}
+                          {interval.distance && <span>{interval.distance} {interval.distanceUnit}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Embedded Running Sessions Section */}
+            {template.embedded_running_sessions && Array.isArray(template.embedded_running_sessions) && (template.embedded_running_sessions as EmbeddedRunningSession[]).length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  {t('customActivity.running.goals', 'Running Goals')}
+                </h4>
+                <div className="space-y-2">
+                  {(template.embedded_running_sessions as EmbeddedRunningSession[]).map((session) => (
+                    <div key={session.id} className="rounded-lg bg-muted p-3">
+                      <div className="flex flex-wrap gap-3 text-sm">
+                        {session.distance_value && (
+                          <span className="font-medium">{session.distance_value} {session.distance_unit}</span>
+                        )}
+                        {session.time_goal && (
+                          <span className="text-muted-foreground">Goal: {session.time_goal}</span>
+                        )}
+                        {session.pace_goal && (
+                          <span className="text-muted-foreground">Pace: {session.pace_goal}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Custom Fields - Always visible, no accordion */}
             {template.custom_fields && Array.isArray(template.custom_fields) && template.custom_fields.length > 0 && (
