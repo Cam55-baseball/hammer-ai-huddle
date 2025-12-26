@@ -118,6 +118,27 @@ export function CustomActivityDetailDialog({
             )}
           </div>
 
+          {/* Custom Fields */}
+          {template.custom_fields && Array.isArray(template.custom_fields) && template.custom_fields.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-bold text-foreground">{t('customActivity.customFields.title', 'Custom Fields')}</h4>
+              <div className="space-y-2">
+                {(template.custom_fields as Array<{id: string; label: string; type: string; value?: string}>).map((field) => (
+                  <div key={field.id} className="flex items-center justify-between p-2 rounded-lg bg-muted">
+                    <span className="text-sm font-medium">{field.label}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {field.type === 'checkbox' ? (
+                        field.value === 'true' ? <Check className="h-4 w-4 text-green-500" /> : <span className="text-muted-foreground">—</span>
+                      ) : (
+                        field.value || '—'
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Scheduled Time Section */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">

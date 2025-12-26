@@ -187,6 +187,40 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   useEffect(() => {
     localStorage.setItem('gameplan-task-reminders', JSON.stringify(taskReminders));
   }, [taskReminders]);
+
+  // Auto-populate task times from template reminder settings for custom activities
+  useEffect(() => {
+    const allTasks = [...tasks];
+    const customTasks = allTasks.filter(
+      t => t.taskType === 'custom' && t.customActivityData?.template
+    );
+    
+    if (customTasks.length === 0) return;
+    
+    let updated = false;
+    const newTimes = { ...taskTimes };
+    const newReminders = { ...taskReminders };
+    
+    customTasks.forEach(task => {
+      const template = task.customActivityData?.template;
+      if (template?.reminder_enabled && template?.reminder_time && !taskTimes[task.id]) {
+        // Format reminder_time (HH:MM:SS) to HH:MM for the time picker
+        const timeValue = template.reminder_time.split(':').slice(0, 2).join(':');
+        newTimes[task.id] = timeValue;
+        // Default to 10 minutes before if reminder is enabled
+        if (!taskReminders[task.id]) {
+          newReminders[task.id] = 10;
+        }
+        updated = true;
+      }
+    });
+    
+    if (updated) {
+      setTaskTimes(newTimes);
+      setTaskReminders(newReminders);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks]);
   
   // Schedule daily summary notification when enabled
   useEffect(() => {
