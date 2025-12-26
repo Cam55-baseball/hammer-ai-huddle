@@ -402,6 +402,13 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       const customActivitiesForToday: CustomActivityWithLog[] = [];
 
       templates.forEach(template => {
+        // Check display settings first
+        if (template.display_on_game_plan === false) return;
+        
+        // Check if today is in display_days (default to all days if not set)
+        const displayDays = (template.display_days as number[] | null) || [0, 1, 2, 3, 4, 5, 6];
+        if (!displayDays.includes(todayDayOfWeek)) return;
+        
         const recurringDays = (template.recurring_days || []) as number[];
         const isRecurringToday = template.recurring_active && recurringDays.includes(todayDayOfWeek);
         const todayLog = logs.find(l => l.template_id === template.id);

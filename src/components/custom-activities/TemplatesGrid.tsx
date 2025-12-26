@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Star, Share2, Trash2, Pencil, RefreshCw } from 'lucide-react';
+import { Plus, Search, Star, Share2, Trash2, Pencil, RefreshCw, Calendar } from 'lucide-react';
 import { CustomActivityTemplate, ActivityType } from '@/types/customActivity';
 import { CustomActivityBuilderDialog } from './CustomActivityBuilderDialog';
 import { ShareTemplateDialog } from './ShareTemplateDialog';
+import { TemplateScheduleSettingsDrawer, ScheduleSettings } from './TemplateScheduleSettingsDrawer';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
 import { cn } from '@/lib/utils';
@@ -42,6 +43,7 @@ export function TemplatesGrid({
   const [editingTemplate, setEditingTemplate] = useState<CustomActivityTemplate | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [sharingTemplate, setSharingTemplate] = useState<CustomActivityTemplate | null>(null);
+  const [scheduleSettingsTemplate, setScheduleSettingsTemplate] = useState<CustomActivityTemplate | null>(null);
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -62,6 +64,16 @@ export function TemplatesGrid({
       success = !!result;
     }
     return success;
+  };
+
+  const handleSaveScheduleSettings = async (templateId: string, settings: ScheduleSettings): Promise<boolean> => {
+    return await onUpdateTemplate(templateId, {
+      display_on_game_plan: settings.display_on_game_plan,
+      display_days: settings.display_days,
+      display_time: settings.display_time || undefined,
+      reminder_enabled: settings.reminder_enabled,
+      reminder_time: settings.reminder_time || undefined,
+    });
   };
 
   return (
@@ -171,6 +183,14 @@ export function TemplatesGrid({
                     </p>
                   )}
                   <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => setScheduleSettingsTemplate(template)}
+                      title={t('customActivity.scheduleSettings', 'Schedule Settings')}
+                    >
+                      <Calendar className="h-4 w-4" />
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => setEditingTemplate(template)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -209,6 +229,13 @@ export function TemplatesGrid({
         open={!!sharingTemplate}
         onOpenChange={(open) => !open && setSharingTemplate(null)}
         template={sharingTemplate}
+      />
+
+      <TemplateScheduleSettingsDrawer
+        template={scheduleSettingsTemplate}
+        open={!!scheduleSettingsTemplate}
+        onOpenChange={(open) => !open && setScheduleSettingsTemplate(null)}
+        onSave={handleSaveScheduleSettings}
       />
     </div>
   );
