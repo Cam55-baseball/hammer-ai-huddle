@@ -433,6 +433,40 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     }
   };
 
+  // Ensure a log exists for a template and return it directly (avoids stale closure)
+  const ensureLogExists = async (templateId: string): Promise<CustomActivityLog | null> => {
+    if (!user) return null;
+    
+    const today = getTodayDate();
+    
+    try {
+      // Upsert the log and return it directly
+      const { data, error } = await supabase
+        .from('custom_activity_logs')
+        .upsert({
+          user_id: user.id,
+          template_id: templateId,
+          entry_date: today,
+          completed: false,
+        }, { onConflict: 'user_id,template_id,entry_date' })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('[useCustomActivities] Error ensuring log exists:', error);
+        return null;
+      }
+
+      // Refresh state in background (non-blocking)
+      fetchTodayLogs();
+
+      return data as CustomActivityLog;
+    } catch (error) {
+      console.error('[useCustomActivities] Error ensuring log exists:', error);
+      return null;
+    }
+  };
+
   return {
     templates,
     todayLogs,
@@ -447,6 +481,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     toggleComplete,
     removeFromToday,
     updateLogPerformanceData,
+    ensureLogExists,
     refetch: fetchAll,
   };
 }

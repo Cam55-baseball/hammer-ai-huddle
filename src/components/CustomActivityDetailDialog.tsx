@@ -40,6 +40,7 @@ export function CustomActivityDetailDialog({
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempTime, setTempTime] = useState(taskTime || '');
   const [tempReminder, setTempReminder] = useState<number | null>(taskReminder);
+  const [savingFieldIds, setSavingFieldIds] = useState<Set<string>>(new Set());
 
   if (!task || !task.customActivityData) return null;
 
@@ -79,9 +80,18 @@ export function CustomActivityDetailDialog({
     setShowTimePicker(false);
   };
 
-  const handleToggleCheckbox = (fieldId: string, checked: boolean) => {
-    if (onToggleCheckbox) {
-      onToggleCheckbox(fieldId, checked);
+  const handleToggleCheckbox = async (fieldId: string, checked: boolean) => {
+    if (!onToggleCheckbox) return;
+    
+    setSavingFieldIds(prev => new Set(prev).add(fieldId));
+    try {
+      await onToggleCheckbox(fieldId, checked);
+    } finally {
+      setSavingFieldIds(prev => {
+        const next = new Set(prev);
+        next.delete(fieldId);
+        return next;
+      });
     }
   };
 
@@ -308,7 +318,11 @@ export function CustomActivityDetailDialog({
                           <Checkbox
                             checked={getCheckboxState(field.id, field.value)}
                             onCheckedChange={(checked) => handleToggleCheckbox(field.id, !!checked)}
-                            className="mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                            disabled={savingFieldIds.has(field.id)}
+                            className={cn(
+                              "mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
+                              savingFieldIds.has(field.id) && "opacity-50"
+                            )}
                           />
                         ) : null}
                         <div className="flex-1 min-w-0">
