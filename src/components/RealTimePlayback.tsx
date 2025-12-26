@@ -138,6 +138,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const [autoRecordCountdown, setAutoRecordCountdown] = useState(0);
+  const [autoRecordPaused, setAutoRecordPaused] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [capturedFrames, setCapturedFrames] = useState<CapturedFrame[]>([]);
@@ -1131,12 +1132,25 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     return () => clearInterval(interval);
   }, [phase]);
 
-  // Auto-record effect
+  // Auto-record effect - with pause support and wait-for-analysis
   useEffect(() => {
     if (phase === 'complete' && autoRecordEnabled) {
-      setAutoRecordCountdown(3);
+      // Reset pause state when entering complete phase
+      setAutoRecordPaused(false);
+      setAutoRecordCountdown(5); // Slightly longer countdown for better UX
+      
       const interval = setInterval(() => {
         setAutoRecordCountdown(prev => {
+          // If paused, don't decrement
+          if (autoRecordPaused) {
+            return prev;
+          }
+          
+          // If analysis is enabled and still running, wait for it
+          if (analysisEnabled && isAnalyzing) {
+            return prev; // Keep the countdown paused while analyzing
+          }
+          
           if (prev <= 1) {
             clearInterval(interval);
             handleRetake();
@@ -1147,7 +1161,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [phase, autoRecordEnabled]);
+  }, [phase, autoRecordEnabled, autoRecordPaused, analysisEnabled, isAnalyzing]);
   
   // Auto-play video when playback starts - ensure immediate display
   useEffect(() => {
@@ -1215,6 +1229,17 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const handleStopAutoRecord = () => {
     setAutoRecordEnabled(false);
     setAutoRecordCountdown(0);
+    setAutoRecordPaused(false);
+  };
+
+  // Pause/resume auto record
+  const handleToggleAutoRecordPause = () => {
+    setAutoRecordPaused(prev => !prev);
+  };
+
+  // Continue without waiting for analysis
+  const handleContinueWithoutAnalysis = () => {
+    setAutoRecordPaused(false);
   };
   
   // Download video and analysis
@@ -1296,8 +1321,9 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
     return labels[speed] || speed;
   };
 
-  // Check if we should show live preview (setup, countdown, or recording)
-  const showLivePreview = phase === 'setup' || phase === 'countdown' || phase === 'recording';
+  // Check if we should show live preview (setup, countdown, recording, OR auto-record countdown)
+  const showAutoRecordPreview = phase === 'complete' && autoRecordEnabled && autoRecordCountdown > 0;
+  const showLivePreview = phase === 'setup' || phase === 'countdown' || phase === 'recording' || showAutoRecordPreview;
 
   return (
     <>
@@ -1335,14 +1361,14 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                     exit={{ opacity: 0, y: -20 }}
                     className={`${isFullscreen ? '' : 'space-y-4'}`}
                   >
-                    {/* Camera Preview - LARGER in setup phase to show what will be recorded */}
+                    {/* Camera Preview - LARGER in setup phase AND auto-record countdown to show what will be recorded */}
                     {/* When fullscreen, this fills the entire screen */}
                     <div 
                       ref={cameraContainerRef}
                       className={`relative overflow-hidden bg-black ${
                         isFullscreen 
                           ? 'fixed inset-0 z-[9999] rounded-none' 
-                          : phase === 'setup'
+                          : (phase === 'setup' || showAutoRecordPreview)
                             ? 'rounded-xl min-h-[55vh] sm:min-h-[60vh] aspect-auto'
                             : 'rounded-xl aspect-[4/3] sm:aspect-video max-h-[40vh] sm:max-h-none'
                       }`}
@@ -1375,8 +1401,8 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                             </div>
                           )}
                           
-                          {/* Recording Area Indicator - Setup Phase */}
-                          {phase === 'setup' && (
+                          {/* Recording Area Indicator - Setup Phase AND Auto-Record Countdown */}
+                          {(phase === 'setup' || showAutoRecordPreview) && (
                             <>
                               {/* Corner brackets to show recording area */}
                               <div className="absolute inset-4 pointer-events-none">
@@ -1392,11 +1418,115 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                                 <span>{t('realTimePlayback.thisWillBeRecorded', 'This is what will be recorded')}</span>
                               </div>
                               
-                              {/* Orientation tip */}
-                              <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-black/70 text-white text-xs flex items-center gap-2">
-                                <span>📱</span>
-                                <span>{t('realTimePlayback.lockOrientation', 'Lock orientation before recording')}</span>
-                              </div>
+                              {/* Orientation tip - only show in setup, not during auto-record countdown */}
+                              {phase === 'setup' && (
+                                <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-black/70 text-white text-xs flex items-center gap-2">
+                                  <span>📱</span>
+                                  <span>{t('realTimePlayback.lockOrientation', 'Lock orientation before recording')}</span>
+                                </div>
+                              )}
+                              
+                              {/* Auto-Record Countdown Overlay - Shows LARGE preview with countdown */}
+                              {showAutoRecordPreview && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50">
+                                  {/* Waiting for analysis message */}
+                                  {analysisEnabled && isAnalyzing && (
+                                    <div className="mb-4 px-4 py-2 rounded-full bg-blue-500/90 text-white text-sm flex items-center gap-2 animate-pulse">
+                                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                                      <span>{t('realTimePlayback.waitingForAnalysis', 'Waiting for analysis...')}</span>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Paused indicator */}
+                                  {autoRecordPaused && (
+                                    <div className="mb-4 px-4 py-2 rounded-full bg-yellow-500/90 text-black text-sm font-medium flex items-center gap-2">
+                                      <Pause className="h-4 w-4" />
+                                      <span>{t('realTimePlayback.autoRecordPaused', 'Auto-record paused')}</span>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Main countdown display */}
+                                  {!autoRecordPaused && !(analysisEnabled && isAnalyzing) && (
+                                    <p className="text-lg text-white mb-2">{t('realTimePlayback.nextRecordingIn', 'Next recording in...')}</p>
+                                  )}
+                                  
+                                  <motion.p 
+                                    key={autoRecordCountdown}
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    className="text-7xl font-bold text-white drop-shadow-lg"
+                                  >
+                                    {autoRecordCountdown}
+                                  </motion.p>
+                                  
+                                  {/* Control buttons */}
+                                  <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                                    {/* Pause/Resume button */}
+                                    <Button
+                                      variant="outline"
+                                      onClick={handleToggleAutoRecordPause}
+                                      className="bg-white/10 border-white/30 text-white hover:bg-white/20 gap-2"
+                                    >
+                                      {autoRecordPaused ? (
+                                        <>
+                                          <Play className="h-4 w-4" />
+                                          {t('realTimePlayback.resumeAutoRecord', 'Resume')}
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Pause className="h-4 w-4" />
+                                          {t('realTimePlayback.pauseAutoRecord', 'Pause')}
+                                        </>
+                                      )}
+                                    </Button>
+                                    
+                                    {/* Continue without analysis button - when waiting for analysis */}
+                                    {analysisEnabled && isAnalyzing && (
+                                      <Button
+                                        variant="outline"
+                                        onClick={handleContinueWithoutAnalysis}
+                                        className="bg-white/10 border-white/30 text-white hover:bg-white/20 gap-2"
+                                      >
+                                        <SkipForward className="h-4 w-4" />
+                                        {t('realTimePlayback.continueWithoutAnalysis', 'Continue Anyway')}
+                                      </Button>
+                                    )}
+                                    
+                                    {/* Stop auto-record button */}
+                                    <Button
+                                      variant="outline"
+                                      onClick={handleStopAutoRecord}
+                                      className="bg-red-500/20 border-red-400/50 text-red-200 hover:bg-red-500/30 gap-2"
+                                    >
+                                      <Square className="h-4 w-4" />
+                                      {t('realTimePlayback.stopAutoRecord', 'Stop Auto Record')}
+                                    </Button>
+                                  </div>
+                                  
+                                  {/* Analysis status indicator at bottom */}
+                                  {analysisEnabled && (
+                                    <div className="mt-4 flex items-center gap-2 text-sm">
+                                      {isAnalyzing ? (
+                                        <span className="text-blue-300">
+                                          {analysisStatus === 'uploading' && t('realTimePlayback.uploading', 'Uploading...')}
+                                          {analysisStatus === 'extracting' && t('realTimePlayback.extracting', 'Extracting frames...')}
+                                          {analysisStatus === 'analyzing' && t('realTimePlayback.analyzing', 'Analyzing...')}
+                                        </span>
+                                      ) : analysisStatus === 'complete' ? (
+                                        <span className="text-green-300 flex items-center gap-1">
+                                          <CheckCircle2 className="h-4 w-4" />
+                                          {t('realTimePlayback.analysisComplete', 'Analysis complete')}
+                                        </span>
+                                      ) : analysisStatus === 'failed' ? (
+                                        <span className="text-red-300 flex items-center gap-1">
+                                          <AlertCircle className="h-4 w-4" />
+                                          {t('realTimePlayback.failed', 'Analysis failed')}
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </>
                           )}
                           
@@ -1721,8 +1851,8 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                   </motion.div>
                 )}
                 
-                {/* Playback & Complete Phase */}
-                {(phase === 'playback' || phase === 'complete') && (
+                {/* Playback & Complete Phase - but NOT during auto-record countdown which shows camera preview */}
+                {(phase === 'playback' || (phase === 'complete' && !showAutoRecordPreview)) && (
                   <motion.div
                     key="playback"
                     initial={{ opacity: 0 }}
@@ -1983,20 +2113,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                         </div>
                       )}
 
-                      {/* Auto-record countdown overlay */}
-                      {phase === 'complete' && autoRecordEnabled && autoRecordCountdown > 0 && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
-                          <p className="text-lg text-white mb-2">{t('realTimePlayback.nextRecordingIn', 'Next recording in...')}</p>
-                          <p className="text-6xl font-bold text-white">{autoRecordCountdown}</p>
-                          <Button
-                            variant="outline"
-                            onClick={handleStopAutoRecord}
-                            className="mt-6 bg-white/10 border-white/30 text-white hover:bg-white/20"
-                          >
-                            {t('realTimePlayback.stopAutoRecord', 'Stop Auto Record')}
-                          </Button>
-                        </div>
-                      )}
+                      {/* Auto-record countdown overlay - REMOVED, now shows in camera preview section */}
                     </div>
                     
                     {/* Frame Count Setting */}
