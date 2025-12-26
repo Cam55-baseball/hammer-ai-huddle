@@ -5,15 +5,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Check, Clock, Bell, Pencil, Dumbbell, X, MessageSquare } from 'lucide-react';
+import { Check, Clock, Bell, Pencil, Dumbbell, X, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
-import { CustomField } from '@/types/customActivity';
+import { CustomField, CustomActivityLog } from '@/types/customActivity';
 
 interface CustomActivityDetailDialogProps {
   open: boolean;
@@ -24,7 +23,7 @@ interface CustomActivityDetailDialogProps {
   onComplete: () => void;
   onEdit: () => void;
   onSaveTime: (time: string | null, reminder: number | null) => void;
-  onUpdateCustomFields?: (fields: CustomField[]) => void;
+  onToggleCheckbox?: (fieldId: string, checked: boolean) => void;
 }
 
 export function CustomActivityDetailDialog({
@@ -36,19 +35,29 @@ export function CustomActivityDetailDialog({
   onComplete,
   onEdit,
   onSaveTime,
-  onUpdateCustomFields,
+  onToggleCheckbox,
 }: CustomActivityDetailDialogProps) {
   const { t } = useTranslation();
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempTime, setTempTime] = useState(taskTime || '');
   const [tempReminder, setTempReminder] = useState<number | null>(taskReminder);
-  const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null);
 
   if (!task || !task.customActivityData) return null;
 
   const template = task.customActivityData.template;
+  const log = task.customActivityData.log;
   const IconComponent = getActivityIcon(template.icon);
   const customColor = template.color || '#10b981';
+
+  // Get checkbox states from log's performance_data (resets daily) or fall back to template defaults
+  const getCheckboxState = (fieldId: string, defaultValue: string): boolean => {
+    const performanceData = log?.performance_data as Record<string, any> | null;
+    const checkboxStates = performanceData?.checkboxStates as Record<string, boolean> | undefined;
+    if (checkboxStates && fieldId in checkboxStates) {
+      return checkboxStates[fieldId];
+    }
+    return defaultValue === 'true';
+  };
 
   const formatTimeDisplay = (time: string | null) => {
     if (!time) return null;
@@ -72,16 +81,9 @@ export function CustomActivityDetailDialog({
   };
 
   const handleToggleCheckbox = (fieldId: string, checked: boolean) => {
-    if (!onUpdateCustomFields || !template.custom_fields) return;
-    
-    const updatedFields = (template.custom_fields as CustomField[]).map(f =>
-      f.id === fieldId ? { ...f, value: checked ? 'true' : 'false' } : f
-    );
-    onUpdateCustomFields(updatedFields);
-  };
-
-  const toggleFieldExpanded = (fieldId: string) => {
-    setExpandedFieldId(expandedFieldId === fieldId ? null : fieldId);
+    if (onToggleCheckbox) {
+      onToggleCheckbox(fieldId, checked);
+    }
   };
 
   return (
@@ -113,7 +115,7 @@ export function CustomActivityDetailDialog({
         </div>
 
         {/* Scrollable Content */}
-        <ScrollArea className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           <div className="p-6 pt-2 space-y-4">
             {/* Description */}
             {template.description && (
@@ -140,64 +142,58 @@ export function CustomActivityDetailDialog({
               )}
             </div>
 
-            {/* Custom Fields - Expandable */}
+            {/* Custom Fields - Always visible, no accordion */}
             {template.custom_fields && Array.isArray(template.custom_fields) && template.custom_fields.length > 0 && (
-              <Accordion type="single" collapsible className="w-full" defaultValue="custom-fields">
-                <AccordionItem value="custom-fields" className="border-none">
-                  <AccordionTrigger className="text-sm font-bold py-2 hover:no-underline">
-                    {t('customActivity.customFields.title', 'Custom Fields')} ({template.custom_fields.length})
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-2 pt-1">
-                      {(template.custom_fields as CustomField[]).map((field) => (
-                        <div 
-                          key={field.id} 
-                          className={cn(
-                            "rounded-lg bg-muted overflow-hidden transition-all",
-                            expandedFieldId === field.id && "ring-1 ring-primary/30"
-                          )}
-                        >
-                          {/* Field header - always visible */}
-                          <div 
-                            className="p-3 flex items-center justify-between cursor-pointer hover:bg-muted/80"
-                            onClick={() => field.notes && toggleFieldExpanded(field.id)}
-                          >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <span className="text-sm font-medium truncate">{field.label}</span>
-                              {field.notes && (
-                                <MessageSquare className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                              )}
-                            </div>
-                            {field.type === 'checkbox' ? (
-                              <Checkbox
-                                checked={field.value === 'true'}
-                                onCheckedChange={(checked) => handleToggleCheckbox(field.id, !!checked)}
-                                onClick={(e) => e.stopPropagation()}
-                                className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                              />
-                            ) : field.type === 'time' ? (
-                              <span className="text-sm font-mono text-primary">{field.value || '—'}</span>
-                            ) : field.type === 'number' ? (
-                              <Badge variant="outline">{field.value || '—'}</Badge>
-                            ) : (
-                              <span className="text-sm text-muted-foreground truncate max-w-[120px]">{field.value || '—'}</span>
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-foreground">
+                  {t('customActivity.customFields.title', 'Tasks')}
+                </h4>
+                <div className="space-y-2">
+                  {(template.custom_fields as CustomField[]).map((field) => (
+                    <div 
+                      key={field.id} 
+                      className="rounded-lg bg-muted p-3"
+                    >
+                      {/* Field content */}
+                      <div className="flex items-start gap-3">
+                        {field.type === 'checkbox' ? (
+                          <Checkbox
+                            checked={getCheckboxState(field.id, field.value)}
+                            onCheckedChange={(checked) => handleToggleCheckbox(field.id, !!checked)}
+                            className="mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                          />
+                        ) : null}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={cn(
+                              "text-sm font-medium",
+                              field.type === 'checkbox' && getCheckboxState(field.id, field.value) && "line-through text-muted-foreground"
+                            )}>
+                              {field.label}
+                            </span>
+                            {field.type !== 'checkbox' && (
+                              field.type === 'time' ? (
+                                <span className="text-sm font-mono text-primary">{field.value || '—'}</span>
+                              ) : field.type === 'number' ? (
+                                <Badge variant="outline">{field.value || '—'}</Badge>
+                              ) : (
+                                <span className="text-sm text-muted-foreground truncate max-w-[120px]">{field.value || '—'}</span>
+                              )
                             )}
                           </div>
-                          
-                          {/* Expanded notes section */}
-                          {expandedFieldId === field.id && field.notes && (
-                            <div className="px-3 pb-3 border-t border-border/50">
-                              <p className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap">
-                                {field.notes}
-                              </p>
-                            </div>
+                          {/* Notes always visible when present */}
+                          {field.notes && (
+                            <p className="text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5">
+                              <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                              <span>{field.notes}</span>
+                            </p>
                           )}
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Scheduled Time Section */}
@@ -330,7 +326,7 @@ export function CustomActivityDetailDialog({
               </Button>
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

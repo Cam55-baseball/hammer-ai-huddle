@@ -132,14 +132,17 @@ export function CustomFieldsBuilder({ fields, onChange }: CustomFieldsBuilderPro
               <div className="px-3 pb-3 border-t bg-muted/30">
                 <div className="pt-3">
                   <Label className="text-xs text-muted-foreground mb-1.5 block">
-                    {t('customActivity.customFields.notes', 'Notes')}
+                    {t('customActivity.customFields.notes', 'Description / Instructions')}
                   </Label>
                   <Textarea
                     value={field.notes || ''}
                     onChange={(e) => updateField(field.id, { notes: e.target.value })}
-                    placeholder={t('customActivity.customFields.notesPlaceholder', 'Add notes or details about this field...')}
+                    placeholder={t('customActivity.customFields.notesPlaceholder', 'Add description that will show when viewing this task...')}
                     className="min-h-[60px] text-sm"
                   />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    {t('customActivity.customFields.notesHint', 'This text appears below the task when viewing the activity')}
+                  </p>
                 </div>
               </div>
             )}

@@ -44,7 +44,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const navigate = useNavigate();
   const { tasks, customActivities, completedCount, totalCount, loading, refetch } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress } = useRecapCountdown();
-  const { getFavorites, toggleComplete, addToToday, templates, createTemplate, updateTemplate, deleteTemplate: deleteActivityTemplate } = useCustomActivities(selectedSport);
+  const { getFavorites, toggleComplete, addToToday, templates, createTemplate, updateTemplate, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
@@ -1395,9 +1395,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             setTaskReminders(prev => ({ ...prev, [selectedCustomTask.id]: reminder }));
           }
         }}
-        onUpdateCustomFields={async (fields) => {
-          if (selectedCustomTask?.customActivityData?.template) {
-            await updateTemplate(selectedCustomTask.customActivityData.template.id, { custom_fields: fields });
+        onToggleCheckbox={async (fieldId, checked) => {
+          if (selectedCustomTask?.customActivityData?.log) {
+            const log = selectedCustomTask.customActivityData.log;
+            const currentData = (log.performance_data as Record<string, any>) || {};
+            const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
+            const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
+            const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
+            await updateLogPerformanceData(log.id, newPerformanceData);
             refetch();
           }
         }}
