@@ -1421,41 +1421,44 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           )}
         </div>
 
-      </CardContent>
-
-        {/* Skipped Tasks Section */}
+        {/* Skipped Tasks Section - Now inside CardContent */}
         {skippedTasksList.length > 0 && (
-          <Collapsible open={showSkippedSection} onOpenChange={setShowSkippedSection}>
-            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-white/50 py-2 w-full hover:text-white/70 transition-colors">
-              <ChevronDown className={cn("h-4 w-4 transition-transform", showSkippedSection && "rotate-180")} />
-              {t('gamePlan.skippedForToday', 'Skipped for today')} ({skippedTasksList.length})
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-2 mt-2">
-              {skippedTasksList.map(task => {
-                const Icon = task.icon;
-                return (
-                  <div 
-                    key={task.id} 
-                    className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 opacity-60"
-                  >
-                    <Icon className="h-5 w-5 text-white/40 flex-shrink-0" />
-                    <span className="flex-1 text-sm line-through text-white/50">
-                      {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
-                    </span>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleRestoreTask(task.id)}
-                      className="h-10 w-10 text-white/60 hover:text-green-400 hover:bg-green-500/10"
+          <div className="mt-6 pt-4 border-t border-white/20">
+            <Collapsible open={showSkippedSection} onOpenChange={setShowSkippedSection}>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm text-amber-400/80 py-2 w-full hover:text-amber-300 transition-colors font-medium">
+                <ChevronDown className={cn("h-4 w-4 transition-transform", showSkippedSection && "rotate-180")} />
+                {t('gamePlan.skippedForToday', 'Skipped for today')} ({skippedTasksList.length})
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-2 mt-2">
+                {skippedTasksList.map(task => {
+                  const Icon = task.icon;
+                  return (
+                    <div 
+                      key={task.id} 
+                      className="flex items-center gap-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20"
                     >
-                      <Undo2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                );
-              })}
-            </CollapsibleContent>
-          </Collapsible>
+                      <Icon className="h-5 w-5 text-amber-400/50 flex-shrink-0" />
+                      <span className="flex-1 text-sm line-through text-white/50">
+                        {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
+                      </span>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleRestoreTask(task.id)}
+                        className="h-10 px-3 text-green-400 hover:text-green-300 hover:bg-green-500/10 gap-1"
+                      >
+                        <Undo2 className="h-4 w-4" />
+                        <span className="text-xs">Restore</span>
+                      </Button>
+                    </div>
+                  );
+                })}
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
         )}
+
+      </CardContent>
       
       {/* Quick Nutrition Log Dialog */}
       <QuickNutritionLogDialog
