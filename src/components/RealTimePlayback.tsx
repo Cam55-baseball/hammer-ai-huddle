@@ -1138,7 +1138,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     if ((phase === 'playback' || phase === 'complete') && autoRecordEnabled) {
       // Initialize countdown when entering playback phase (only once)
       if (phase === 'playback' && autoRecordCountdown === 0) {
-        setAutoRecordCountdown(5); // Start countdown during playback
+        setAutoRecordCountdown(repeatDuration); // Use the configured repeat duration
       }
       
       const interval = setInterval(() => {
@@ -1166,7 +1166,16 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       // Reset countdown when auto-record is disabled
       setAutoRecordCountdown(0);
     }
-  }, [phase, autoRecordEnabled, autoRecordPaused, analysisEnabled, isAnalyzing]);
+  }, [phase, autoRecordEnabled, autoRecordPaused, analysisEnabled, isAnalyzing, repeatDuration]);
+  
+  // Transition warning toast at 5 seconds before camera preview appears
+  useEffect(() => {
+    if (phase === 'complete' && autoRecordEnabled && !autoRecordPaused && autoRecordCountdown === 5) {
+      toast.info(t('realTimePlayback.preparingNextRecording', 'Preparing next recording in 5 seconds...'), {
+        duration: 3000,
+      });
+    }
+  }, [autoRecordCountdown, phase, autoRecordEnabled, autoRecordPaused, t]);
   
   // Auto-play video when playback starts - ensure immediate display
   useEffect(() => {
@@ -1326,8 +1335,11 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
     return labels[speed] || speed;
   };
 
-  // Check if we should show live preview (setup, countdown, recording, OR auto-record countdown)
-  const showAutoRecordPreview = phase === 'complete' && autoRecordEnabled && autoRecordCountdown > 0;
+  // Check if we should show live preview (setup, countdown, recording, OR auto-record final countdown)
+  // Only show camera preview in final 3 seconds of auto-record countdown AND when not paused
+  // This keeps video playback visible during most of the countdown so user can review analysis
+  const showAutoRecordPreview = phase === 'complete' && autoRecordEnabled && 
+    autoRecordCountdown > 0 && autoRecordCountdown <= 3 && !autoRecordPaused;
   const showLivePreview = phase === 'setup' || phase === 'countdown' || phase === 'recording' || showAutoRecordPreview;
 
   return (
