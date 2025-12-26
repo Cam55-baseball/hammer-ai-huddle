@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { CustomField } from '@/types/customActivity';
 
 interface CustomFieldsBuilderProps {
@@ -60,13 +61,22 @@ export function CustomFieldsBuilder({ fields, onChange }: CustomFieldsBuilderPro
                 placeholder={t('customActivity.customFields.labelPlaceholder')}
                 className="h-9"
               />
-              <Input
-                value={field.value}
-                onChange={(e) => updateField(field.id, { value: e.target.value })}
-                placeholder={t('customActivity.customFields.valuePlaceholder')}
-                className="h-9"
-                type={field.type === 'number' ? 'number' : field.type === 'time' ? 'time' : 'text'}
-              />
+              {field.type === 'checkbox' ? (
+                <div className="flex items-center justify-center h-9">
+                  <Checkbox
+                    checked={field.value === 'true'}
+                    onCheckedChange={(checked) => updateField(field.id, { value: checked ? 'true' : 'false' })}
+                  />
+                </div>
+              ) : (
+                <Input
+                  value={field.value}
+                  onChange={(e) => updateField(field.id, { value: e.target.value })}
+                  placeholder={t('customActivity.customFields.valuePlaceholder')}
+                  className="h-9"
+                  type={field.type === 'number' ? 'number' : field.type === 'time' ? 'time' : 'text'}
+                />
+              )}
               <Select
                 value={field.type}
                 onValueChange={(value) => updateField(field.id, { type: value as CustomField['type'] })}

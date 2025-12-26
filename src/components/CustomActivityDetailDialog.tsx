@@ -5,6 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { Check, Clock, Bell, Pencil, Calendar, Dumbbell, Utensils, Play, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GamePlanTask } from '@/hooks/useGamePlan';
@@ -118,25 +121,42 @@ export function CustomActivityDetailDialog({
             )}
           </div>
 
-          {/* Custom Fields */}
+          {/* Custom Fields - Expandable */}
           {template.custom_fields && Array.isArray(template.custom_fields) && template.custom_fields.length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-bold text-foreground">{t('customActivity.customFields.title', 'Custom Fields')}</h4>
-              <div className="space-y-2">
-                {(template.custom_fields as Array<{id: string; label: string; type: string; value?: string}>).map((field) => (
-                  <div key={field.id} className="flex items-center justify-between p-2 rounded-lg bg-muted">
-                    <span className="text-sm font-medium">{field.label}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {field.type === 'checkbox' ? (
-                        field.value === 'true' ? <Check className="h-4 w-4 text-green-500" /> : <span className="text-muted-foreground">—</span>
-                      ) : (
-                        field.value || '—'
-                      )}
-                    </span>
+            <Accordion type="single" collapsible className="w-full" defaultValue="custom-fields">
+              <AccordionItem value="custom-fields" className="border-none">
+                <AccordionTrigger className="text-sm font-bold py-2 hover:no-underline">
+                  {t('customActivity.customFields.title', 'Custom Fields')} ({template.custom_fields.length})
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2 pt-1">
+                    {(template.custom_fields as Array<{id: string; label: string; type: string; value?: string}>).map((field) => (
+                      <div key={field.id} className="p-3 rounded-lg bg-muted space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{field.label}</span>
+                          {field.type === 'checkbox' ? (
+                            <Checkbox
+                              checked={field.value === 'true'}
+                              disabled
+                              className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                            />
+                          ) : field.type === 'time' ? (
+                            <span className="text-sm font-mono text-primary">{field.value || '—'}</span>
+                          ) : field.type === 'number' ? (
+                            <Badge variant="outline">{field.value || '—'}</Badge>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">{field.value || '—'}</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {t(`customActivity.customFields.types.${field.type}`, field.type)}
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           )}
 
           {/* Scheduled Time Section */}

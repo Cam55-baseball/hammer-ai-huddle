@@ -121,12 +121,17 @@ export function CustomActivityCard({ activity, onToggleComplete, onEdit }: Custo
           {template.custom_fields && Array.isArray(template.custom_fields) && template.custom_fields.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
               {(template.custom_fields as Array<{id: string; label: string; type: string; value?: string}>).slice(0, 3).map((field) => (
-                <span key={field.id} className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/60">
+                <span key={field.id} className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/60 flex items-center gap-1">
                   {field.type === 'checkbox' ? (
-                    <span className="flex items-center gap-1">
-                      {field.value === 'true' && <Check className="h-2.5 w-2.5" />}
+                    <>
+                      <span className={cn(
+                        "h-3 w-3 rounded border flex items-center justify-center flex-shrink-0",
+                        field.value === 'true' ? "bg-green-500 border-green-500" : "border-white/40"
+                      )}>
+                        {field.value === 'true' && <Check className="h-2 w-2 text-white" />}
+                      </span>
                       {field.label}
-                    </span>
+                    </>
                   ) : (
                     `${field.label}${field.value ? `: ${field.value}` : ''}`
                   )}

@@ -667,7 +667,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
           
           {/* Content */}
-          <div className="flex-1 text-left min-w-0 pr-8">
+          <div className="flex-1 text-left min-w-0">
             <div className="flex items-start gap-2 flex-wrap">
               <h3 className={cn(
                 "text-sm sm:text-base line-clamp-2",
