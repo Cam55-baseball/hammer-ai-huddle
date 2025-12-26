@@ -1493,7 +1493,7 @@ export default function Profile() {
                     {saving ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t('common.saving')}
+                        {t('common.saving', 'Saving...')}
                       </>
                     ) : (
                       t('common.saveChanges')

@@ -271,10 +271,10 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
             disabled={saving}
             className="w-full h-10 font-bold"
           >
-            {saving ? (
+          {saving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                {t('common.saving')}
+                {t('common.saving', 'Saving...')}
               </>
             ) : (
               t('vault.nutrition.logMeal')

@@ -662,7 +662,7 @@ export function CustomActivityBuilderDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
             <Button onClick={handleSave} disabled={!activityType || !title.trim() || saving} className="gap-2">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {saving ? t('common.saving') : t('common.save')}
+              {saving ? t('common.saving', 'Saving...') : t('common.save')}
             </Button>
           </div>
         </div>
