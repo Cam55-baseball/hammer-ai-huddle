@@ -406,6 +406,33 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     }
   };
 
+  // Update log performance data (for daily checkbox states, etc.)
+  const updateLogPerformanceData = async (
+    logId: string,
+    performanceData: Record<string, any>
+  ): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('custom_activity_logs')
+        .update({ performance_data: performanceData })
+        .eq('id', logId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('[useCustomActivities] Error updating performance data:', error);
+        return false;
+      }
+
+      await fetchTodayLogs();
+      return true;
+    } catch (error) {
+      console.error('[useCustomActivities] Error updating performance data:', error);
+      return false;
+    }
+  };
+
   return {
     templates,
     todayLogs,
@@ -419,6 +446,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     addToToday,
     toggleComplete,
     removeFromToday,
+    updateLogPerformanceData,
     refetch: fetchAll,
   };
 }
