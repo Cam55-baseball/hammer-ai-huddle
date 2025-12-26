@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye } from 'lucide-react';
-import { CustomActivityDetailDialog } from '@/components/CustomActivityDetailDialog';
+import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
@@ -1456,12 +1456,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             // PERSIST: Save checkbox states to database
             await updateLogPerformanceData(log.id, newPerformanceData);
             
-            // AUTO-COMPLETE LOGIC: Check if all checkboxes are now checked
-            const customFields = (template.custom_fields as CustomField[]) || [];
-            const checkboxFields = customFields.filter(f => f.type === 'checkbox');
+            // AUTO-COMPLETE LOGIC: Check if ALL checkable items are now checked
+            const allCheckableIds = getAllCheckableIds(template);
             
-            if (checkboxFields.length > 0) {
-              const allChecked = checkboxFields.every(f => newCheckboxStates[f.id] === true);
+            if (allCheckableIds.length > 0) {
+              const allChecked = allCheckableIds.every(id => newCheckboxStates[id] === true);
               const wasCompleted = log.completed;
               
               if (allChecked && !wasCompleted) {

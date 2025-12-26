@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,7 +11,36 @@ import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pi
 import { cn } from '@/lib/utils';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
-import { CustomField, Exercise, MealData, RunningInterval, EmbeddedRunningSession } from '@/types/customActivity';
+import { CustomField, Exercise, MealData, RunningInterval, EmbeddedRunningSession, CustomActivityTemplate } from '@/types/customActivity';
+
+// Helper to get all checkable item IDs from a template
+export const getAllCheckableIds = (template: CustomActivityTemplate): string[] => {
+  const ids: string[] = [];
+  
+  // Custom field checkboxes (only checkbox type)
+  const customFields = (template.custom_fields as CustomField[]) || [];
+  customFields.filter(f => f.type === 'checkbox').forEach(f => ids.push(f.id));
+  
+  // Exercises
+  const exercises = (template.exercises as Exercise[]) || [];
+  exercises.forEach(e => ids.push(`exercise_${e.id}`));
+  
+  // Meal items
+  const meals = template.meals as MealData;
+  if (meals?.items) meals.items.forEach(i => ids.push(`meal_${i.id}`));
+  if (meals?.vitamins) meals.vitamins.forEach(v => ids.push(`vitamin_${v.id}`));
+  if (meals?.supplements) meals.supplements.forEach(s => ids.push(`supplement_${s.id}`));
+  
+  // Running intervals
+  const intervals = (template.intervals as RunningInterval[]) || [];
+  intervals.forEach(i => ids.push(`interval_${i.id}`));
+  
+  // Embedded running sessions
+  const runSessions = (template.embedded_running_sessions as EmbeddedRunningSession[]) || [];
+  runSessions.forEach(r => ids.push(`running_${r.id}`));
+  
+  return ids;
+};
 
 interface CustomActivityDetailDialogProps {
   open: boolean;
@@ -50,7 +79,7 @@ export function CustomActivityDetailDialog({
   const customColor = template.color || '#10b981';
 
   // Get checkbox states from log's performance_data (resets daily) or fall back to template defaults
-  const getCheckboxState = (fieldId: string, defaultValue: string): boolean => {
+  const getCheckboxState = (fieldId: string, defaultValue?: string): boolean => {
     const performanceData = log?.performance_data as Record<string, any> | null;
     const checkboxStates = performanceData?.checkboxStates as Record<string, boolean> | undefined;
     if (checkboxStates && fieldId in checkboxStates) {
@@ -58,6 +87,11 @@ export function CustomActivityDetailDialog({
     }
     return defaultValue === 'true';
   };
+
+  // Calculate progress
+  const allCheckableIds = getAllCheckableIds(template);
+  const checkedCount = allCheckableIds.filter(id => getCheckboxState(id)).length;
+  const totalCheckableCount = allCheckableIds.length;
 
   const formatTimeDisplay = (time: string | null) => {
     if (!time) return null;
@@ -112,9 +146,22 @@ export function CustomActivityDetailDialog({
                 <IconComponent className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <DialogTitle className="text-xl font-black text-foreground truncate">
-                  {template.title}
-                </DialogTitle>
+                <div className="flex items-center gap-2">
+                  <DialogTitle className="text-xl font-black text-foreground truncate">
+                    {template.title}
+                  </DialogTitle>
+                  {totalCheckableCount > 0 && (
+                    <Badge 
+                      variant={checkedCount === totalCheckableCount ? "default" : "secondary"}
+                      className={cn(
+                        "text-xs font-bold",
+                        checkedCount === totalCheckableCount && "bg-green-500"
+                      )}
+                    >
+                      {checkedCount}/{totalCheckableCount}
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   {t(`customActivity.types.${template.activity_type}`)}
                 </p>
@@ -159,29 +206,57 @@ export function CustomActivityDetailDialog({
                   {t('customActivity.exercises.title', 'Exercises')} ({(template.exercises as Exercise[]).length})
                 </h4>
                 <div className="space-y-2">
-                  {(template.exercises as Exercise[]).map((exercise) => (
-                    <div key={exercise.id} className="rounded-lg bg-muted p-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm">{exercise.name}</span>
-                        <Badge variant="outline" className="text-xs capitalize">
-                          {exercise.type}
-                        </Badge>
+                  {(template.exercises as Exercise[]).map((exercise) => {
+                    const fieldId = `exercise_${exercise.id}`;
+                    const isChecked = getCheckboxState(fieldId);
+                    return (
+                      <div key={exercise.id} className="rounded-lg bg-muted p-3">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={(checked) => handleToggleCheckbox(fieldId, !!checked)}
+                            disabled={savingFieldIds.has(fieldId)}
+                            className={cn(
+                              "mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
+                              savingFieldIds.has(fieldId) && "opacity-50"
+                            )}
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className={cn(
+                                "font-medium text-sm",
+                                isChecked && "line-through text-muted-foreground"
+                              )}>
+                                {exercise.name}
+                              </span>
+                              <Badge variant="outline" className="text-xs capitalize">
+                                {exercise.type}
+                              </Badge>
+                            </div>
+                            <div className={cn(
+                              "flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground",
+                              isChecked && "opacity-60"
+                            )}>
+                              {exercise.sets && <span>{exercise.sets} sets</span>}
+                              {exercise.reps && <span>× {exercise.reps} reps</span>}
+                              {exercise.weight && <span>@ {exercise.weight} {exercise.weightUnit || 'lbs'}</span>}
+                              {exercise.rest && <span>• {exercise.rest}s rest</span>}
+                              {exercise.duration && <span>• {exercise.duration}s</span>}
+                            </div>
+                            {exercise.notes && (
+                              <p className={cn(
+                                "text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5",
+                                isChecked && "opacity-60"
+                              )}>
+                                <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                <span>{exercise.notes}</span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground">
-                        {exercise.sets && <span>{exercise.sets} sets</span>}
-                        {exercise.reps && <span>× {exercise.reps} reps</span>}
-                        {exercise.weight && <span>@ {exercise.weight} {exercise.weightUnit || 'lbs'}</span>}
-                        {exercise.rest && <span>• {exercise.rest}s rest</span>}
-                        {exercise.duration && <span>• {exercise.duration}s</span>}
-                      </div>
-                      {exercise.notes && (
-                        <p className="text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5">
-                          <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                          <span>{exercise.notes}</span>
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -194,24 +269,49 @@ export function CustomActivityDetailDialog({
                   {t('customActivity.meals.items', 'Meal Items')}
                 </h4>
                 <div className="space-y-2">
-                  {(template.meals as MealData).items.map((item) => (
-                    <div key={item.id} className="rounded-lg bg-muted p-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm">{item.name}</span>
-                        {item.quantity && item.unit && (
-                          <span className="text-xs text-muted-foreground">{item.quantity} {item.unit}</span>
-                        )}
-                      </div>
-                      {(item.calories || item.protein || item.carbs || item.fats) && (
-                        <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground">
-                          {item.calories && <span>{item.calories} cal</span>}
-                          {item.protein && <span>• {item.protein}g protein</span>}
-                          {item.carbs && <span>• {item.carbs}g carbs</span>}
-                          {item.fats && <span>• {item.fats}g fats</span>}
+                  {(template.meals as MealData).items.map((item) => {
+                    const fieldId = `meal_${item.id}`;
+                    const isChecked = getCheckboxState(fieldId);
+                    return (
+                      <div key={item.id} className="rounded-lg bg-muted p-3">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={(checked) => handleToggleCheckbox(fieldId, !!checked)}
+                            disabled={savingFieldIds.has(fieldId)}
+                            className={cn(
+                              "mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
+                              savingFieldIds.has(fieldId) && "opacity-50"
+                            )}
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className={cn(
+                                "font-medium text-sm",
+                                isChecked && "line-through text-muted-foreground"
+                              )}>
+                                {item.name}
+                              </span>
+                              {item.quantity && item.unit && (
+                                <span className="text-xs text-muted-foreground">{item.quantity} {item.unit}</span>
+                              )}
+                            </div>
+                            {(item.calories || item.protein || item.carbs || item.fats) && (
+                              <div className={cn(
+                                "flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground",
+                                isChecked && "opacity-60"
+                              )}>
+                                {item.calories && <span>{item.calories} cal</span>}
+                                {item.protein && <span>• {item.protein}g protein</span>}
+                                {item.carbs && <span>• {item.carbs}g carbs</span>}
+                                {item.fats && <span>• {item.fats}g fats</span>}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -223,12 +323,30 @@ export function CustomActivityDetailDialog({
                   <Pill className="h-4 w-4" />
                   {t('customActivity.meals.vitamins', 'Vitamins')}
                 </h4>
-                <div className="flex flex-wrap gap-2">
-                  {(template.meals as MealData).vitamins.map((vitamin) => (
-                    <Badge key={vitamin.id} variant="secondary" className="text-xs">
-                      {vitamin.name} {vitamin.dosage && `(${vitamin.dosage})`}
-                    </Badge>
-                  ))}
+                <div className="space-y-2">
+                  {(template.meals as MealData).vitamins.map((vitamin) => {
+                    const fieldId = `vitamin_${vitamin.id}`;
+                    const isChecked = getCheckboxState(fieldId);
+                    return (
+                      <div key={vitamin.id} className="flex items-center gap-3 rounded-lg bg-muted p-2.5">
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={(checked) => handleToggleCheckbox(fieldId, !!checked)}
+                          disabled={savingFieldIds.has(fieldId)}
+                          className={cn(
+                            "data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
+                            savingFieldIds.has(fieldId) && "opacity-50"
+                          )}
+                        />
+                        <span className={cn(
+                          "text-sm",
+                          isChecked && "line-through text-muted-foreground"
+                        )}>
+                          {vitamin.name} {vitamin.dosage && `(${vitamin.dosage})`}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -240,12 +358,30 @@ export function CustomActivityDetailDialog({
                   <Pill className="h-4 w-4" />
                   {t('customActivity.meals.supplements', 'Supplements')}
                 </h4>
-                <div className="flex flex-wrap gap-2">
-                  {(template.meals as MealData).supplements.map((supplement) => (
-                    <Badge key={supplement.id} variant="secondary" className="text-xs">
-                      {supplement.name} {supplement.dosage && `(${supplement.dosage})`}
-                    </Badge>
-                  ))}
+                <div className="space-y-2">
+                  {(template.meals as MealData).supplements.map((supplement) => {
+                    const fieldId = `supplement_${supplement.id}`;
+                    const isChecked = getCheckboxState(fieldId);
+                    return (
+                      <div key={supplement.id} className="flex items-center gap-3 rounded-lg bg-muted p-2.5">
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={(checked) => handleToggleCheckbox(fieldId, !!checked)}
+                          disabled={savingFieldIds.has(fieldId)}
+                          className={cn(
+                            "data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
+                            savingFieldIds.has(fieldId) && "opacity-50"
+                          )}
+                        />
+                        <span className={cn(
+                          "text-sm",
+                          isChecked && "line-through text-muted-foreground"
+                        )}>
+                          {supplement.name} {supplement.dosage && `(${supplement.dosage})`}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -258,17 +394,40 @@ export function CustomActivityDetailDialog({
                   {t('customActivity.running.intervals', 'Intervals')}
                 </h4>
                 <div className="space-y-2">
-                  {(template.intervals as RunningInterval[]).map((interval) => (
-                    <div key={interval.id} className="rounded-lg bg-muted p-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm capitalize">{interval.type}</span>
-                        <div className="flex gap-2 text-xs text-muted-foreground">
-                          {interval.duration && <span>{Math.floor(interval.duration / 60)}:{String(interval.duration % 60).padStart(2, '0')}</span>}
-                          {interval.distance && <span>{interval.distance} {interval.distanceUnit}</span>}
+                  {(template.intervals as RunningInterval[]).map((interval) => {
+                    const fieldId = `interval_${interval.id}`;
+                    const isChecked = getCheckboxState(fieldId);
+                    return (
+                      <div key={interval.id} className="rounded-lg bg-muted p-3">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={(checked) => handleToggleCheckbox(fieldId, !!checked)}
+                            disabled={savingFieldIds.has(fieldId)}
+                            className={cn(
+                              "mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
+                              savingFieldIds.has(fieldId) && "opacity-50"
+                            )}
+                          />
+                          <div className="flex-1 flex items-center justify-between">
+                            <span className={cn(
+                              "font-medium text-sm capitalize",
+                              isChecked && "line-through text-muted-foreground"
+                            )}>
+                              {interval.type}
+                            </span>
+                            <div className={cn(
+                              "flex gap-2 text-xs text-muted-foreground",
+                              isChecked && "opacity-60"
+                            )}>
+                              {interval.duration && <span>{Math.floor(interval.duration / 60)}:{String(interval.duration % 60).padStart(2, '0')}</span>}
+                              {interval.distance && <span>{interval.distance} {interval.distanceUnit}</span>}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -281,21 +440,44 @@ export function CustomActivityDetailDialog({
                   {t('customActivity.running.goals', 'Running Goals')}
                 </h4>
                 <div className="space-y-2">
-                  {(template.embedded_running_sessions as EmbeddedRunningSession[]).map((session) => (
-                    <div key={session.id} className="rounded-lg bg-muted p-3">
-                      <div className="flex flex-wrap gap-3 text-sm">
-                        {session.distance_value && (
-                          <span className="font-medium">{session.distance_value} {session.distance_unit}</span>
-                        )}
-                        {session.time_goal && (
-                          <span className="text-muted-foreground">Goal: {session.time_goal}</span>
-                        )}
-                        {session.pace_goal && (
-                          <span className="text-muted-foreground">Pace: {session.pace_goal}</span>
-                        )}
+                  {(template.embedded_running_sessions as EmbeddedRunningSession[]).map((session) => {
+                    const fieldId = `running_${session.id}`;
+                    const isChecked = getCheckboxState(fieldId);
+                    return (
+                      <div key={session.id} className="rounded-lg bg-muted p-3">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={(checked) => handleToggleCheckbox(fieldId, !!checked)}
+                            disabled={savingFieldIds.has(fieldId)}
+                            className={cn(
+                              "mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
+                              savingFieldIds.has(fieldId) && "opacity-50"
+                            )}
+                          />
+                          <div className={cn(
+                            "flex flex-wrap gap-3 text-sm flex-1",
+                            isChecked && "opacity-60"
+                          )}>
+                            {session.distance_value && (
+                              <span className={cn(
+                                "font-medium",
+                                isChecked && "line-through text-muted-foreground"
+                              )}>
+                                {session.distance_value} {session.distance_unit}
+                              </span>
+                            )}
+                            {session.time_goal && (
+                              <span className="text-muted-foreground">Goal: {session.time_goal}</span>
+                            )}
+                            {session.pace_goal && (
+                              <span className="text-muted-foreground">Pace: {session.pace_goal}</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
