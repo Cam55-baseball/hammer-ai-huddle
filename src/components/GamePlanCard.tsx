@@ -1395,6 +1395,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             setTaskReminders(prev => ({ ...prev, [selectedCustomTask.id]: reminder }));
           }
         }}
+        onUpdateCustomFields={async (fields) => {
+          if (selectedCustomTask?.customActivityData?.template) {
+            await updateTemplate(selectedCustomTask.customActivityData.template.id, { custom_fields: fields });
+            refetch();
+          }
+        }}
       />
       {/* Quick Add Favorites Drawer */}
       <QuickAddFavoritesDrawer
