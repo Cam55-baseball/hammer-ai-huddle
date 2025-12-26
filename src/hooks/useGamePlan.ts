@@ -256,7 +256,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         .from('user_viewed_lessons')
         .select('id')
         .eq('user_id', user.id)
-        .gte('viewed_at', `${today}T00:00:00`)
+        .gte('viewed_at', localMidnight)
         .limit(1);
       const hasLesson = (lessonData?.length || 0) > 0;
 
@@ -274,7 +274,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         .from('mental_health_journal')
         .select('id')
         .eq('user_id', user.id)
-        .gte('created_at', `${today}T00:00:00`)
+        .gte('created_at', localMidnight)
         .limit(1);
       const hasJournal = (journalData?.length || 0) > 0;
 
@@ -292,7 +292,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         .from('mind_fuel_challenges')
         .select('id')
         .eq('user_id', user.id)
-        .gte('last_checkin_at', `${today}T00:00:00`)
+        .gte('last_checkin_at', localMidnight)
         .limit(1);
       const hasChallenge = (challengeData?.length || 0) > 0;
 
@@ -304,7 +304,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         .from('user_viewed_tips')
         .select('id')
         .eq('user_id', user.id)
-        .gte('viewed_at', `${today}T00:00:00`)
+        .gte('viewed_at', localMidnight)
         .limit(1);
       
       status['healthtip'] = (healthTipData?.length || 0) > 0;
