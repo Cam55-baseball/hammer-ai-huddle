@@ -615,7 +615,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return (
       <div
         className={cn(
-          "w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
+          "relative w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
           "border-2",
           task.completed && "bg-green-500/20 border-green-500/50"
         )}
@@ -625,11 +625,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           animation: 'game-plan-pulse-custom 2s ease-in-out infinite',
         } : undefined}
       >
-        {/* Timeline number badge */}
-        {showTimelineNumber && (
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-sm font-black text-primary-foreground">{index + 1}</span>
-          </div>
+        {/* Time badge - positioned absolutely at top right */}
+        {sortMode === 'timeline' && taskTime && (
+          <button
+            className="absolute top-1.5 right-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-bold text-primary hover:bg-primary/30 transition-colors"
+            onClick={(e) => { e.stopPropagation(); openTimePicker(task.id); }}
+          >
+            <Clock className="h-2.5 w-2.5" />
+            {formatTimeDisplay(taskTime)}
+            {hasReminder && <Bell className="h-2.5 w-2.5 text-yellow-400" />}
+          </button>
         )}
         
         {/* Drag handle - visible in manual and timeline modes (disabled when locked) */}
@@ -645,7 +650,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {/* Clickable main area */}
         <button
           onClick={() => handleTaskClick(task)}
-          className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
+          className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
         >
           {/* Icon */}
           <div 
@@ -662,10 +667,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
           
           {/* Content */}
-          <div className="flex-1 text-left min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex-1 text-left min-w-0 pr-8">
+            <div className="flex items-start gap-2 flex-wrap">
               <h3 className={cn(
-                "text-sm sm:text-base truncate",
+                "text-sm sm:text-base line-clamp-2",
                 task.completed 
                   ? "font-semibold text-white/50 line-through" 
                   : "font-black text-white"
@@ -693,7 +698,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             </div>
             <div className="flex items-center gap-2">
               <p className={cn(
-                "text-xs sm:text-sm truncate",
+                "text-xs sm:text-sm line-clamp-1",
                 task.completed ? "text-white/40" : "text-white/70"
               )}>
                 {task.taskType === 'custom' ? (task.descriptionKey || t(`customActivity.types.${task.customActivityData?.template.activity_type}`)) : t(task.descriptionKey)}
@@ -701,20 +706,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             </div>
           </div>
         </button>
-        
-        {/* Time badge in timeline mode - only show if time is set */}
-        {sortMode === 'timeline' && taskTime && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex-shrink-0 gap-1 text-xs h-7 px-2 text-primary bg-primary/10 hover:bg-primary/20"
-            onClick={(e) => { e.stopPropagation(); openTimePicker(task.id); }}
-          >
-            <Clock className="h-3 w-3" />
-            {formatTimeDisplay(taskTime)}
-            {hasReminder && <Bell className="h-3 w-3 ml-1 text-yellow-400" />}
-          </Button>
-        )}
         
         {/* Edit button - opens time settings drawer in timeline mode, activity editor for custom */}
         {(sortMode === 'timeline' || isCustom) && (
