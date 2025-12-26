@@ -84,6 +84,7 @@ export interface CustomField {
   label: string;
   value: string;
   type: 'text' | 'number' | 'time' | 'checkbox';
+  notes?: string;
 }
 
 export interface EmbeddedRunningSession {
