@@ -14,7 +14,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2 } from 'lucide-react';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
@@ -26,6 +27,8 @@ import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizD
 import { CustomActivityBuilderDialog, QuickAddFavoritesDrawer, getActivityIcon } from '@/components/custom-activities';
 import { GamePlanCalendarView } from '@/components/GamePlanCalendarView';
 import { useVault } from '@/hooks/useVault';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
 import { useScheduleTemplates, ScheduleItem } from '@/hooks/useScheduleTemplates';
@@ -165,6 +168,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Timeline mode: single unified list for complete control
   const [timelineTasks, setTimelineTasks] = useState<GamePlanTask[]>([]);
   
+  // Skipped tasks state (load management)
+  const [skippedTasks, setSkippedTasks] = useState<Set<string>>(new Set());
+  const [showSkippedSection, setShowSkippedSection] = useState(false);
+  const { user } = useAuth();
+  
   const favorites = useMemo(() => getFavorites(), [getFavorites, templates]);
   
   // Auto-scroll for drag and drop
@@ -189,6 +197,87 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   useEffect(() => {
     localStorage.setItem('gameplan-task-reminders', JSON.stringify(taskReminders));
   }, [taskReminders]);
+
+  // Fetch skipped tasks for today
+  const getTodayDate = () => new Date().toISOString().split('T')[0];
+  
+  useEffect(() => {
+    const fetchSkippedTasks = async () => {
+      if (!user) return;
+      
+      const today = getTodayDate();
+      const { data, error } = await supabase
+        .from('game_plan_skipped_tasks')
+        .select('task_id')
+        .eq('user_id', user.id)
+        .eq('skip_date', today);
+      
+      if (!error && data) {
+        setSkippedTasks(new Set(data.map(d => d.task_id)));
+      }
+    };
+    
+    fetchSkippedTasks();
+  }, [user]);
+  
+  // Skip task handler (load management)
+  const handleSkipTask = async (taskId: string) => {
+    if (!user) return;
+    
+    // Optimistic UI update
+    setSkippedTasks(prev => new Set([...prev, taskId]));
+    
+    const today = getTodayDate();
+    const { error } = await supabase
+      .from('game_plan_skipped_tasks')
+      .upsert({
+        user_id: user.id,
+        task_id: taskId,
+        skip_date: today,
+      }, { onConflict: 'user_id,task_id,skip_date' });
+    
+    if (error) {
+      console.error('Error skipping task:', error);
+      // Rollback on error
+      setSkippedTasks(prev => {
+        const next = new Set(prev);
+        next.delete(taskId);
+        return next;
+      });
+      toast.error(t('gamePlan.skipError', 'Failed to skip task'));
+    } else {
+      toast.success(t('gamePlan.taskSkipped', 'Task skipped for today'));
+    }
+  };
+  
+  // Restore skipped task handler
+  const handleRestoreTask = async (taskId: string) => {
+    if (!user) return;
+    
+    // Optimistic UI update
+    setSkippedTasks(prev => {
+      const next = new Set(prev);
+      next.delete(taskId);
+      return next;
+    });
+    
+    const today = getTodayDate();
+    const { error } = await supabase
+      .from('game_plan_skipped_tasks')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('task_id', taskId)
+      .eq('skip_date', today);
+    
+    if (error) {
+      console.error('Error restoring task:', error);
+      // Rollback on error
+      setSkippedTasks(prev => new Set([...prev, taskId]));
+      toast.error(t('gamePlan.restoreError', 'Failed to restore task'));
+    } else {
+      toast.success(t('gamePlan.taskRestored', 'Task restored'));
+    }
+  };
 
   // Auto-populate task times from template reminder settings for custom activities
   useEffect(() => {
@@ -581,11 +670,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return `${h12}:${minutes} ${ampm}`;
   };
 
-  // Get display tasks based on sort mode
-  const checkinTasks = autoSort ? sortByCompletion(orderedCheckin) : orderedCheckin;
-  const trainingTasks = autoSort ? sortByCompletion(orderedTraining) : orderedTraining;
-  const trackingTasks = autoSort ? sortByCompletion(orderedTracking) : orderedTracking;
-  const customTasks = autoSort ? sortByCompletion(orderedCustom) : orderedCustom;
+  // Get display tasks based on sort mode, filtering out skipped tasks
+  const filterSkipped = (taskList: GamePlanTask[]) => taskList.filter(t => !skippedTasks.has(t.id));
+  const checkinTasks = filterSkipped(autoSort ? sortByCompletion(orderedCheckin) : orderedCheckin);
+  const trainingTasks = filterSkipped(autoSort ? sortByCompletion(orderedTraining) : orderedTraining);
+  const trackingTasks = filterSkipped(autoSort ? sortByCompletion(orderedTracking) : orderedTracking);
+  const customTasks = filterSkipped(autoSort ? sortByCompletion(orderedCustom) : orderedCustom);
+  
+  // Get all tasks for skipped section
+  const allTasks = [...orderedCheckin, ...orderedTraining, ...orderedTracking, ...orderedCustom];
+  const skippedTasksList = allTasks.filter(t => skippedTasks.has(t.id));
 
   const renderTask = (task: GamePlanTask, index?: number) => {
     const Icon = task.icon;
@@ -617,7 +711,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return (
       <div
         className={cn(
-          "relative w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
+          "group relative w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
           "border-2",
           task.completed && "bg-green-500/20 border-green-500/50"
         )}
@@ -735,6 +829,20 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             <Pencil className="h-4 w-4" />
           </Button>
         )}
+        
+        {/* Skip button - visible on mobile always, hover on desktop */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="flex-shrink-0 h-10 w-10 sm:h-8 sm:w-8 text-white/40 hover:text-red-400 hover:bg-red-500/10 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            handleSkipTask(task.id);
+          }}
+          title={t('gamePlan.skipTask', 'Skip for today')}
+        >
+          <X className="h-5 w-5 sm:h-4 sm:w-4" />
+        </Button>
         
         {/* Status indicator - clickable for custom activities with prominent styling */}
         <button
@@ -1184,8 +1292,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <p className="text-xs text-muted-foreground text-center mb-2">
                 {t('gamePlan.timelineHint')}
               </p>
-              <Reorder.Group axis="y" values={timelineTasks} onReorder={handleReorderTimeline} className="space-y-2">
-                {timelineTasks.map((task, index) => (
+              <Reorder.Group axis="y" values={timelineTasks.filter(t => !skippedTasks.has(t.id))} onReorder={handleReorderTimeline} className="space-y-2">
+                {timelineTasks.filter(t => !skippedTasks.has(t.id)).map((task, index) => (
                   <Reorder.Item 
                     key={task.id} 
                     value={task}
@@ -1314,6 +1422,40 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         </div>
 
       </CardContent>
+
+        {/* Skipped Tasks Section */}
+        {skippedTasksList.length > 0 && (
+          <Collapsible open={showSkippedSection} onOpenChange={setShowSkippedSection}>
+            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-white/50 py-2 w-full hover:text-white/70 transition-colors">
+              <ChevronDown className={cn("h-4 w-4 transition-transform", showSkippedSection && "rotate-180")} />
+              {t('gamePlan.skippedForToday', 'Skipped for today')} ({skippedTasksList.length})
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-2 mt-2">
+              {skippedTasksList.map(task => {
+                const Icon = task.icon;
+                return (
+                  <div 
+                    key={task.id} 
+                    className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 opacity-60"
+                  >
+                    <Icon className="h-5 w-5 text-white/40 flex-shrink-0" />
+                    <span className="flex-1 text-sm line-through text-white/50">
+                      {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
+                    </span>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => handleRestoreTask(task.id)}
+                      className="h-10 w-10 text-white/60 hover:text-green-400 hover:bg-green-500/10"
+                    >
+                      <Undo2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       
       {/* Quick Nutrition Log Dialog */}
       <QuickNutritionLogDialog

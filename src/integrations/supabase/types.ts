@@ -165,7 +165,10 @@ export type Database = {
           custom_fields: Json | null
           custom_logo_url: string | null
           description: string | null
+          display_days: number[] | null
           display_nickname: string | null
+          display_on_game_plan: boolean | null
+          display_time: string | null
           distance_unit: string | null
           distance_value: number | null
           duration_minutes: number | null
@@ -194,7 +197,10 @@ export type Database = {
           custom_fields?: Json | null
           custom_logo_url?: string | null
           description?: string | null
+          display_days?: number[] | null
           display_nickname?: string | null
+          display_on_game_plan?: boolean | null
+          display_time?: string | null
           distance_unit?: string | null
           distance_value?: number | null
           duration_minutes?: number | null
@@ -223,7 +229,10 @@ export type Database = {
           custom_fields?: Json | null
           custom_logo_url?: string | null
           description?: string | null
+          display_days?: number[] | null
           display_nickname?: string | null
+          display_on_game_plan?: boolean | null
+          display_time?: string | null
           distance_unit?: string | null
           distance_value?: number | null
           duration_minutes?: number | null
@@ -282,6 +291,30 @@ export type Database = {
           intensity?: number | null
           trigger_category?: string | null
           trigger_description?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      game_plan_skipped_tasks: {
+        Row: {
+          created_at: string | null
+          id: string
+          skip_date: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          skip_date?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          skip_date?: string
+          task_id?: string
           user_id?: string
         }
         Relationships: []

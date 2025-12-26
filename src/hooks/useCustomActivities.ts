@@ -255,6 +255,10 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
       if (data.custom_logo_url !== undefined) updateData.custom_logo_url = data.custom_logo_url;
       if (data.reminder_enabled !== undefined) updateData.reminder_enabled = data.reminder_enabled;
       if (data.reminder_time !== undefined) updateData.reminder_time = data.reminder_time;
+      // Schedule display settings
+      if (data.display_on_game_plan !== undefined) updateData.display_on_game_plan = data.display_on_game_plan;
+      if (data.display_days !== undefined) updateData.display_days = data.display_days;
+      if (data.display_time !== undefined) updateData.display_time = data.display_time;
 
       console.log('[useCustomActivities] Updating template:', id, updateData);
       
