@@ -844,7 +844,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     );
   };
 
-  if (loading) {
+  // Only show skeleton on initial load (when we have no tasks yet)
+  // This prevents the dialog from unmounting during background refreshes
+  if (loading && tasks.length === 0) {
     return (
       <Card className="relative overflow-hidden border-3 border-primary/50 bg-secondary">
         <CardContent className="p-4 sm:p-6">
@@ -1408,58 +1410,120 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onToggleCheckbox={async (fieldId, checked) => {
           if (!selectedCustomTask?.customActivityData) return;
           
-          const template = selectedCustomTask.customActivityData.template;
-          let log = selectedCustomTask.customActivityData.log;
-          
-          // If no log exists, create one first (prevents crash for recurring activities)
-          if (!log) {
-            await addToToday(template.id);
-            await refetch();
-            // Find the newly created log from todayLogs
-            const newLog = todayLogs.find(l => l.template_id === template.id);
-            if (!newLog) {
-              toast.error(t('customActivity.addError'));
-              return;
-            }
-            log = newLog;
-            // Update the selected task with the new log
-            setSelectedCustomTask(prev => prev ? {
-              ...prev,
-              customActivityData: prev.customActivityData ? {
-                ...prev.customActivityData,
-                log: newLog
-              } : undefined
-            } : null);
-          }
-          
-          // Update checkbox states in performance_data
-          const currentData = (log.performance_data as Record<string, any>) || {};
-          const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
-          const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
-          const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
-          await updateLogPerformanceData(log.id, newPerformanceData);
-          
-          // Check if all checkboxes are now checked
-          const customFields = (template.custom_fields as CustomField[]) || [];
-          const checkboxFields = customFields.filter(f => f.type === 'checkbox');
-          
-          if (checkboxFields.length > 0) {
-            const allChecked = checkboxFields.every(f => newCheckboxStates[f.id] === true);
+          try {
+            const template = selectedCustomTask.customActivityData.template;
+            let log = selectedCustomTask.customActivityData.log;
             
-            if (allChecked && !log.completed) {
-              // Auto-complete the activity with celebration!
-              await toggleComplete(template.id);
-              triggerCelebration();
-              toast.success(t('customActivity.allTasksComplete', 'All tasks complete! 🎉'), {
-                description: template.title
-              });
-            } else if (!allChecked && log.completed) {
-              // Un-complete if a checkbox is unchecked
-              await toggleComplete(template.id);
+            // OPTIMISTIC UI UPDATE: Immediately update the checkbox state in memory
+            const currentData = (log?.performance_data as Record<string, any>) || {};
+            const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
+            const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
+            const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
+            
+            // Update selected task immediately (optimistic)
+            setSelectedCustomTask(prev => {
+              if (!prev?.customActivityData) return prev;
+              return {
+                ...prev,
+                customActivityData: {
+                  ...prev.customActivityData,
+                  log: prev.customActivityData.log ? {
+                    ...prev.customActivityData.log,
+                    performance_data: newPerformanceData
+                  } : undefined
+                }
+              };
+            });
+            
+            // If no log exists, create one first (for recurring activities without a log yet)
+            if (!log) {
+              const success = await addToToday(template.id);
+              if (!success) {
+                toast.error(t('customActivity.addError'));
+                return;
+              }
+              // Refetch activities to get the new log
+              await refetchActivities();
+              // Find the newly created log
+              const newLog = todayLogs.find(l => l.template_id === template.id);
+              if (!newLog) {
+                // If still not found, fetch fresh
+                await refetchActivities();
+                const freshLog = todayLogs.find(l => l.template_id === template.id);
+                if (!freshLog) {
+                  toast.error(t('customActivity.addError'));
+                  return;
+                }
+                log = freshLog;
+              } else {
+                log = newLog;
+              }
+              // Update selected task with the new log
+              setSelectedCustomTask(prev => prev ? {
+                ...prev,
+                customActivityData: prev.customActivityData ? {
+                  ...prev.customActivityData,
+                  log: { ...log!, performance_data: newPerformanceData }
+                } : undefined
+              } : null);
             }
+            
+            // Persist checkbox states to database
+            await updateLogPerformanceData(log.id, newPerformanceData);
+            
+            // Check if all checkboxes are now checked for auto-complete
+            const customFields = (template.custom_fields as CustomField[]) || [];
+            const checkboxFields = customFields.filter(f => f.type === 'checkbox');
+            
+            if (checkboxFields.length > 0) {
+              const allChecked = checkboxFields.every(f => newCheckboxStates[f.id] === true);
+              const wasCompleted = log.completed;
+              
+              if (allChecked && !wasCompleted) {
+                // Auto-complete the activity with celebration!
+                await toggleComplete(template.id);
+                // Update UI optimistically
+                setSelectedCustomTask(prev => prev ? {
+                  ...prev,
+                  completed: true,
+                  customActivityData: prev.customActivityData ? {
+                    ...prev.customActivityData,
+                    log: prev.customActivityData.log ? {
+                      ...prev.customActivityData.log,
+                      completed: true,
+                      performance_data: newPerformanceData
+                    } : undefined
+                  } : undefined
+                } : null);
+                triggerCelebration();
+                toast.success(t('customActivity.allTasksComplete', 'All tasks complete! 🎉'), {
+                  description: template.title
+                });
+              } else if (!allChecked && wasCompleted) {
+                // Un-complete if a checkbox is unchecked
+                await toggleComplete(template.id);
+                // Update UI optimistically
+                setSelectedCustomTask(prev => prev ? {
+                  ...prev,
+                  completed: false,
+                  customActivityData: prev.customActivityData ? {
+                    ...prev.customActivityData,
+                    log: prev.customActivityData.log ? {
+                      ...prev.customActivityData.log,
+                      completed: false,
+                      performance_data: newPerformanceData
+                    } : undefined
+                  } : undefined
+                } : null);
+              }
+            }
+            
+            // Background refresh - won't unmount dialog now since we check tasks.length
+            refetch();
+          } catch (error) {
+            console.error('Error toggling checkbox:', error);
+            toast.error(t('common.error'));
           }
-          
-          refetch();
         }}
       />
       {/* Quick Add Favorites Drawer */}
