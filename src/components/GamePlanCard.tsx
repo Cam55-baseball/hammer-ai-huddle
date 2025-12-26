@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye } from 'lucide-react';
 import { CustomActivityDetailDialog } from '@/components/CustomActivityDetailDialog';
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
@@ -33,6 +33,8 @@ import { useDailySummaryNotification } from '@/hooks/useDailySummaryNotification
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { CustomActivityTemplate } from '@/types/customActivity';
+import { CustomField } from '@/types/customActivity';
+import { triggerCelebration } from '@/lib/confetti';
 import { format, addDays, startOfWeek, isSameDay, getDay } from 'date-fns';
 
 interface GamePlanCardProps {
@@ -44,7 +46,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const navigate = useNavigate();
   const { tasks, customActivities, completedCount, totalCount, loading, refetch } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress } = useRecapCountdown();
-  const { getFavorites, toggleComplete, addToToday, templates, createTemplate, updateTemplate, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData } = useCustomActivities(selectedSport);
+  const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, refetch: refetchActivities } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
@@ -682,6 +684,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500/30 to-teal-500/30 text-white animate-pulse"
                 >
                   {t('customActivity.badge')}
+                </span>
+              )}
+              {isCustom && task.completed && (
+                <span 
+                  className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-white/10 text-white/60"
+                >
+                  <Eye className="h-3 w-3" />
+                  {t('customActivity.tapToView', 'View')}
                 </span>
               )}
               {task.badge && !task.completed && (
@@ -1396,15 +1406,60 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           }
         }}
         onToggleCheckbox={async (fieldId, checked) => {
-          if (selectedCustomTask?.customActivityData?.log) {
-            const log = selectedCustomTask.customActivityData.log;
-            const currentData = (log.performance_data as Record<string, any>) || {};
-            const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
-            const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
-            const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
-            await updateLogPerformanceData(log.id, newPerformanceData);
-            refetch();
+          if (!selectedCustomTask?.customActivityData) return;
+          
+          const template = selectedCustomTask.customActivityData.template;
+          let log = selectedCustomTask.customActivityData.log;
+          
+          // If no log exists, create one first (prevents crash for recurring activities)
+          if (!log) {
+            await addToToday(template.id);
+            await refetch();
+            // Find the newly created log from todayLogs
+            const newLog = todayLogs.find(l => l.template_id === template.id);
+            if (!newLog) {
+              toast.error(t('customActivity.addError'));
+              return;
+            }
+            log = newLog;
+            // Update the selected task with the new log
+            setSelectedCustomTask(prev => prev ? {
+              ...prev,
+              customActivityData: prev.customActivityData ? {
+                ...prev.customActivityData,
+                log: newLog
+              } : undefined
+            } : null);
           }
+          
+          // Update checkbox states in performance_data
+          const currentData = (log.performance_data as Record<string, any>) || {};
+          const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
+          const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
+          const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
+          await updateLogPerformanceData(log.id, newPerformanceData);
+          
+          // Check if all checkboxes are now checked
+          const customFields = (template.custom_fields as CustomField[]) || [];
+          const checkboxFields = customFields.filter(f => f.type === 'checkbox');
+          
+          if (checkboxFields.length > 0) {
+            const allChecked = checkboxFields.every(f => newCheckboxStates[f.id] === true);
+            
+            if (allChecked && !log.completed) {
+              // Auto-complete the activity with celebration!
+              await toggleComplete(template.id);
+              triggerCelebration();
+              toast.success(t('customActivity.allTasksComplete', 'All tasks complete! 🎉'), {
+                description: template.title
+              });
+            } else if (!allChecked && log.completed) {
+              // Un-complete if a checkbox is unchecked
+              await toggleComplete(template.id);
+            }
+          }
+          
+          refetch();
         }}
       />
       {/* Quick Add Favorites Drawer */}

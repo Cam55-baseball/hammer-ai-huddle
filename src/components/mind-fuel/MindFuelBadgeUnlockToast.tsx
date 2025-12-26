@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { triggerConfetti, triggerHapticFeedback } from '@/lib/confetti';
 
 interface BadgeUnlockConfig {
   badgeKey: string;
@@ -28,83 +29,13 @@ const BADGE_INFO: Record<string, { name: string; emoji: string }> = {
   comeback_kid: { name: 'Comeback Kid', emoji: '💪' },
 };
 
-function triggerConfetti() {
-  // Create confetti container
-  const container = document.createElement('div');
-  container.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 9999;
-    overflow: hidden;
-  `;
-  document.body.appendChild(container);
-
-  // Create confetti particles
-  const colors = ['#8b5cf6', '#d946ef', '#f59e0b', '#10b981', '#3b82f6', '#ec4899'];
-  const particleCount = 50;
-
-  for (let i = 0; i < particleCount; i++) {
-    const particle = document.createElement('div');
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    const size = Math.random() * 10 + 5;
-    const left = Math.random() * 100;
-    const animationDuration = Math.random() * 2 + 2;
-    const delay = Math.random() * 0.5;
-
-    particle.style.cssText = `
-      position: absolute;
-      width: ${size}px;
-      height: ${size}px;
-      background-color: ${color};
-      left: ${left}%;
-      top: -20px;
-      border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
-      animation: confetti-fall ${animationDuration}s ease-out ${delay}s forwards;
-    `;
-
-    container.appendChild(particle);
-  }
-
-  // Add animation keyframes
-  if (!document.getElementById('confetti-styles')) {
-    const style = document.createElement('style');
-    style.id = 'confetti-styles';
-    style.textContent = `
-      @keyframes confetti-fall {
-        0% {
-          transform: translateY(0) rotate(0deg);
-          opacity: 1;
-        }
-        100% {
-          transform: translateY(100vh) rotate(720deg);
-          opacity: 0;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-  // Clean up after animation
-  setTimeout(() => {
-    container.remove();
-  }, 5000);
-}
-
 export function showBadgeUnlockToast({ badgeKey }: BadgeUnlockConfig) {
   const badgeInfo = BADGE_INFO[badgeKey];
   if (!badgeInfo) return;
 
-  // Trigger confetti
+  // Trigger confetti and haptic feedback
   triggerConfetti();
-
-  // Haptic feedback
-  if (navigator.vibrate) {
-    navigator.vibrate([100, 50, 100]);
-  }
+  triggerHapticFeedback();
 
   // Show toast
   toast.custom(
