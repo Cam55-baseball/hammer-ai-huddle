@@ -64,6 +64,7 @@ const Weather = lazyWithRetry(() => import("./pages/Weather"));
 const Subscribers = lazyWithRetry(() => import("./pages/Subscribers"));
 const PlayersClub = lazyWithRetry(() => import("./pages/PlayersClub"));
 const Nutrition = lazyWithRetry(() => import("./pages/Nutrition"));
+const NutritionHub = lazyWithRetry(() => import("./pages/NutritionHub"));
 const BounceBackBay = lazyWithRetry(() => import("./pages/BounceBackBay"));
 const MindFuel = lazyWithRetry(() => import("./pages/MindFuel"));
 const ProductionLab = lazyWithRetry(() => import("./pages/ProductionLab"));
@@ -118,6 +119,7 @@ const App = () => {
               <Route path="/subscribers" element={<Subscribers />} />
               <Route path="/players-club" element={<PlayersClub />} />
               <Route path="/nutrition" element={<Nutrition />} />
+              <Route path="/nutrition-hub" element={<NutritionHub />} />
               <Route path="/mind-fuel" element={<MindFuel />} />
               <Route path="/bounce-back-bay" element={<BounceBackBay />} />
               <Route path="/production-lab" element={<ProductionLab />} />
