@@ -5633,5 +5633,62 @@
     "muscleGroups": "Grupos musculares objetivo",
     "estimatedTime": "Tiempo estimado",
     "difficulty": "Dificultad"
+  },
+  "sentActivity": {
+    "sendTitle": "Enviar Actividad al Jugador",
+    "lockSettings": "Configuración de Bloqueo",
+    "lockDescription": "Elige qué campos el jugador no puede editar cuando acepte esta actividad.",
+    "selectPlayers": "Seleccionar Jugadores",
+    "noPlayers": "No se encontraron jugadores seguidos",
+    "noPlayersHint": "Sigue jugadores para enviarles actividades",
+    "message": "Mensaje (Opcional)",
+    "messagePlaceholder": "Añade una nota para el jugador...",
+    "send": "Enviar Actividad",
+    "presets": {
+      "none": "Ninguno (Totalmente Editable)",
+      "lockAll": "Bloquear Todo",
+      "lockStructure": "Bloquear Solo Estructura",
+      "lockBasics": "Bloquear Info Básica"
+    },
+    "locks": {
+      "title": "Título",
+      "description": "Descripción",
+      "duration": "Duración",
+      "type": "Tipo de Actividad",
+      "exercises": "Ejercicios",
+      "meals": "Comidas",
+      "intervals": "Intervalos",
+      "schedule": "Horario",
+      "color": "Color",
+      "icon": "Icono"
+    },
+    "fields": {
+      "title": "Título",
+      "description": "Descripción",
+      "duration": "Duración",
+      "type": "Tipo de Actividad",
+      "exercises": "Ejercicios",
+      "meals": "Comidas",
+      "intervals": "Intervalos",
+      "schedule": "Horario",
+      "color": "Color",
+      "icon": "Icono"
+    },
+    "received": {
+      "title": "Actividades Recibidas",
+      "pending": "Pendientes",
+      "history": "Historial",
+      "noPending": "No hay actividades pendientes",
+      "noHistory": "Sin historial de actividades",
+      "fromCoach": "Del Entrenador",
+      "sentBy": "Enviado por",
+      "accept": "Aceptar",
+      "reject": "Rechazar",
+      "accepted": "Aceptada",
+      "rejected": "Rechazada",
+      "lockedFields": "Campos Bloqueados",
+      "fullyEditable": "Totalmente Editable",
+      "coachMessage": "Mensaje del Entrenador"
+    }
   }
 }

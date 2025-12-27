@@ -4837,5 +4837,62 @@
     "muscleGroups": "ターゲット筋肉群",
     "estimatedTime": "推定時間",
     "difficulty": "難易度"
+  },
+  "sentActivity": {
+    "sendTitle": "選手にアクティビティを送信",
+    "lockSettings": "ロック設定",
+    "lockDescription": "選手がこのアクティビティを受け入れたときに編集できないフィールドを選択します。",
+    "selectPlayers": "選手を選択",
+    "noPlayers": "フォロー中の選手が見つかりません",
+    "noPlayersHint": "選手をフォローしてアクティビティを送信",
+    "message": "メッセージ（任意）",
+    "messagePlaceholder": "選手へのメモを追加...",
+    "send": "アクティビティを送信",
+    "presets": {
+      "none": "なし（完全編集可能）",
+      "lockAll": "すべてをロック",
+      "lockStructure": "構造のみロック",
+      "lockBasics": "基本情報をロック"
+    },
+    "locks": {
+      "title": "タイトル",
+      "description": "説明",
+      "duration": "時間",
+      "type": "アクティビティタイプ",
+      "exercises": "エクササイズ",
+      "meals": "食事",
+      "intervals": "インターバル",
+      "schedule": "スケジュール",
+      "color": "色",
+      "icon": "アイコン"
+    },
+    "fields": {
+      "title": "タイトル",
+      "description": "説明",
+      "duration": "時間",
+      "type": "アクティビティタイプ",
+      "exercises": "エクササイズ",
+      "meals": "食事",
+      "intervals": "インターバル",
+      "schedule": "スケジュール",
+      "color": "色",
+      "icon": "アイコン"
+    },
+    "received": {
+      "title": "受信したアクティビティ",
+      "pending": "保留中",
+      "history": "履歴",
+      "noPending": "保留中のアクティビティはありません",
+      "noHistory": "アクティビティ履歴なし",
+      "fromCoach": "コーチから",
+      "sentBy": "送信者",
+      "accept": "承認",
+      "reject": "拒否",
+      "accepted": "承認済み",
+      "rejected": "拒否済み",
+      "lockedFields": "ロックされたフィールド",
+      "fullyEditable": "完全編集可能",
+      "coachMessage": "コーチからのメッセージ"
+    }
   }
 }

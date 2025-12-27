@@ -6236,5 +6236,62 @@
     "muscleGroups": "Target muscle groups",
     "estimatedTime": "Estimated time",
     "difficulty": "Difficulty"
+  },
+  "sentActivity": {
+    "sendTitle": "Send Activity to Player",
+    "lockSettings": "Lock Settings",
+    "lockDescription": "Choose which fields the player cannot edit when they accept this activity.",
+    "selectPlayers": "Select Players",
+    "noPlayers": "No followed players found",
+    "noPlayersHint": "Follow players to send them activities",
+    "message": "Message (Optional)",
+    "messagePlaceholder": "Add a note for the player...",
+    "send": "Send Activity",
+    "presets": {
+      "none": "None (Fully Editable)",
+      "lockAll": "Lock All Fields",
+      "lockStructure": "Lock Structure Only",
+      "lockBasics": "Lock Basic Info"
+    },
+    "locks": {
+      "title": "Title",
+      "description": "Description",
+      "duration": "Duration",
+      "type": "Activity Type",
+      "exercises": "Exercises",
+      "meals": "Meals",
+      "intervals": "Intervals",
+      "schedule": "Schedule",
+      "color": "Color",
+      "icon": "Icon"
+    },
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "duration": "Duration",
+      "type": "Activity Type",
+      "exercises": "Exercises",
+      "meals": "Meals",
+      "intervals": "Intervals",
+      "schedule": "Schedule",
+      "color": "Color",
+      "icon": "Icon"
+    },
+    "received": {
+      "title": "Received Activities",
+      "pending": "Pending",
+      "history": "History",
+      "noPending": "No pending activities",
+      "noHistory": "No activity history",
+      "fromCoach": "From Coach",
+      "sentBy": "Sent by",
+      "accept": "Accept",
+      "reject": "Reject",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "lockedFields": "Locked Fields",
+      "fullyEditable": "Fully Editable",
+      "coachMessage": "Coach's Message"
+    }
   }
 }

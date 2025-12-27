@@ -4737,5 +4737,62 @@
     "muscleGroups": "Doelspiergroepen",
     "estimatedTime": "Geschatte tijd",
     "difficulty": "Moeilijkheid"
+  },
+  "sentActivity": {
+    "sendTitle": "Activiteit naar Speler Sturen",
+    "lockSettings": "Vergrendelingsinstellingen",
+    "lockDescription": "Kies welke velden de speler niet kan bewerken wanneer ze deze activiteit accepteren.",
+    "selectPlayers": "Spelers Selecteren",
+    "noPlayers": "Geen gevolgde spelers gevonden",
+    "noPlayersHint": "Volg spelers om activiteiten te sturen",
+    "message": "Bericht (Optioneel)",
+    "messagePlaceholder": "Voeg een notitie toe voor de speler...",
+    "send": "Activiteit Verzenden",
+    "presets": {
+      "none": "Geen (Volledig Bewerkbaar)",
+      "lockAll": "Alles Vergrendelen",
+      "lockStructure": "Alleen Structuur Vergrendelen",
+      "lockBasics": "Basisinfo Vergrendelen"
+    },
+    "locks": {
+      "title": "Titel",
+      "description": "Beschrijving",
+      "duration": "Duur",
+      "type": "Activiteitstype",
+      "exercises": "Oefeningen",
+      "meals": "Maaltijden",
+      "intervals": "Intervallen",
+      "schedule": "Schema",
+      "color": "Kleur",
+      "icon": "Icoon"
+    },
+    "fields": {
+      "title": "Titel",
+      "description": "Beschrijving",
+      "duration": "Duur",
+      "type": "Activiteitstype",
+      "exercises": "Oefeningen",
+      "meals": "Maaltijden",
+      "intervals": "Intervallen",
+      "schedule": "Schema",
+      "color": "Kleur",
+      "icon": "Icoon"
+    },
+    "received": {
+      "title": "Ontvangen Activiteiten",
+      "pending": "In Afwachting",
+      "history": "Geschiedenis",
+      "noPending": "Geen wachtende activiteiten",
+      "noHistory": "Geen activiteitsgeschiedenis",
+      "fromCoach": "Van Coach",
+      "sentBy": "Verzonden door",
+      "accept": "Accepteren",
+      "reject": "Afwijzen",
+      "accepted": "Geaccepteerd",
+      "rejected": "Afgewezen",
+      "lockedFields": "Vergrendelde Velden",
+      "fullyEditable": "Volledig Bewerkbaar",
+      "coachMessage": "Coach Bericht"
+    }
   }
 }
