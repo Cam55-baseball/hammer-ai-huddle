@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { RecipeBuilder } from './RecipeBuilder';
 import { RecipeIngredient } from '@/hooks/useRecipes';
 import { BarcodeScanner } from './BarcodeScanner';
 import { FoodSearchResult } from '@/hooks/useFoodSearch';
+import { MealTypeSelector, MEAL_TYPES } from './MealTypeSelector';
 
 interface QuickLogActionsProps {
   onLogMeal?: (mealType: string, prefilledItems?: RecipeIngredient[]) => void;
@@ -20,15 +21,6 @@ interface QuickLogActionsProps {
 }
 
 const QUICK_WATER_AMOUNTS = [8, 16, 24, 32];
-
-const MEAL_TYPES = [
-  { value: 'breakfast', label: 'Breakfast', icon: '🌅' },
-  { value: 'lunch', label: 'Lunch', icon: '☀️' },
-  { value: 'dinner', label: 'Dinner', icon: '🌙' },
-  { value: 'snack', label: 'Snack', icon: '🍎' },
-  { value: 'pre_workout', label: 'Pre-Workout', icon: '💪' },
-  { value: 'post_workout', label: 'Post-Workout', icon: '🏃' },
-];
 
 export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsProps) {
   const { t } = useTranslation();
@@ -40,12 +32,26 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
   const [selectedMealType, setSelectedMealType] = useState('');
   const [isLogging, setIsLogging] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [mealTypeSelectorOpen, setMealTypeSelectorOpen] = useState(false);
+  
+  // Store pending items waiting for meal type selection
+  const pendingItemsRef = useRef<RecipeIngredient[] | null>(null);
+  const pendingMessageRef = useRef<string>('');
 
   const handleRecipeSelect = (ingredients: RecipeIngredient[], servings: number) => {
-    if (onLogMeal) {
-      onLogMeal('snack', ingredients);
+    // Store the recipe ingredients and show meal type selector
+    pendingItemsRef.current = ingredients;
+    pendingMessageRef.current = `Recipe added with ${ingredients.length} ingredients (${servings} servings)`;
+    setMealTypeSelectorOpen(true);
+  };
+
+  const handleMealTypeSelected = (mealType: string) => {
+    if (onLogMeal && pendingItemsRef.current) {
+      onLogMeal(mealType, pendingItemsRef.current);
+      toast.success(pendingMessageRef.current);
     }
-    toast.success(`Recipe added with ${ingredients.length} ingredients (${servings} servings)`);
+    pendingItemsRef.current = null;
+    pendingMessageRef.current = '';
   };
 
   const handleQuickWater = async (amount: number) => {
@@ -96,10 +102,10 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
       fats_g: food.fats || 0,
     };
     
-    if (onLogMeal) {
-      onLogMeal('snack', [ingredient]);
-    }
-    toast.success(`Added ${food.name} to meal`);
+    // Store the scanned food and show meal type selector
+    pendingItemsRef.current = [ingredient];
+    pendingMessageRef.current = `Added ${food.name} to meal`;
+    setMealTypeSelectorOpen(true);
   };
 
   if (compact) {
@@ -325,6 +331,14 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
           {t('nutrition.trackSupplements', 'Track Supplements')}
         </Button>
       </CardContent>
+
+      {/* Meal Type Selector for barcode/recipe items */}
+      <MealTypeSelector
+        open={mealTypeSelectorOpen}
+        onOpenChange={setMealTypeSelectorOpen}
+        onSelect={handleMealTypeSelected}
+        title={t('nutrition.selectMealTypeFor', 'Add to which meal?')}
+      />
     </Card>
   );
 }
