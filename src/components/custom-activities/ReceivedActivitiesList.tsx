@@ -18,7 +18,7 @@ interface ReceivedActivitiesListProps {
 export function ReceivedActivitiesList({ selectedSport }: ReceivedActivitiesListProps) {
   const { t } = useTranslation();
   const { pendingActivities, historyActivities, loading, acceptActivity, rejectActivity } = useReceivedActivities();
-  const { createTemplate, updateTemplate } = useCustomActivities(selectedSport);
+  const { createTemplate, updateTemplate, refetch: refetchTemplates } = useCustomActivities(selectedSport);
   
   const [acceptingActivity, setAcceptingActivity] = useState<SentActivityTemplate | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<CustomActivityTemplate | null>(null);
@@ -49,6 +49,8 @@ export function ReceivedActivitiesList({ selectedSport }: ReceivedActivitiesList
       setEditingTemplate(null);
       setAcceptingActivity(null);
       setLockedFields([]);
+      // Refetch templates to ensure the new activity appears in Templates tab
+      await refetchTemplates();
     }
     return success;
   };

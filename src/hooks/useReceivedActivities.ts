@@ -112,7 +112,9 @@ export function useReceivedActivities() {
       if (error) throw error;
 
       await fetchActivities();
-      toast.success(t('sentActivity.accepted', 'Activity accepted and added to your templates!'));
+      toast.success(t('sentActivity.acceptedSuccess', 'Activity accepted and saved to your Templates!'), {
+        description: t('sentActivity.acceptedSuccessHint', 'Go to the Templates tab to view and customize it.')
+      });
       return newTemplate;
     } catch (error) {
       console.error('Error accepting activity:', error);
