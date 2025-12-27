@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { MacroTargetDisplay } from './MacroTargetDisplay';
 import { QuickLogActions } from './QuickLogActions';
 import { NutritionDailyLog } from './NutritionDailyLog';
 import { NutritionWeeklySummary } from './NutritionWeeklySummary';
+import { MealLoggingDialog } from './MealLoggingDialog';
 import { HydrationTrackerWidget } from '@/components/custom-activities/HydrationTrackerWidget';
 import { VitaminSupplementTracker } from '@/components/vault/VitaminSupplementTracker';
 import { format } from 'date-fns';
@@ -43,42 +44,46 @@ export function NutritionHubContent() {
     fiber: 0,
   });
   const [loadingConsumed, setLoadingConsumed] = useState(true);
+  
+  // Meal logging dialog state
+  const [mealLoggingOpen, setMealLoggingOpen] = useState(false);
+  const [selectedMealType, setSelectedMealType] = useState('');
 
   // Fetch today's consumed totals
-  useEffect(() => {
-    const fetchConsumed = async () => {
-      if (!user) return;
+  const fetchConsumed = useCallback(async () => {
+    if (!user) return;
+    
+    setLoadingConsumed(true);
+    try {
+      const today = format(new Date(), 'yyyy-MM-dd');
       
-      setLoadingConsumed(true);
-      try {
-        const today = format(new Date(), 'yyyy-MM-dd');
-        
-        const { data, error } = await supabase
-          .from('vault_nutrition_logs')
-          .select('calories, protein_g, carbs_g, fats_g')
-          .eq('user_id', user.id)
-          .eq('entry_date', today);
+      const { data, error } = await supabase
+        .from('vault_nutrition_logs')
+        .select('calories, protein_g, carbs_g, fats_g')
+        .eq('user_id', user.id)
+        .eq('entry_date', today);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        const totals = (data || []).reduce((acc, log) => ({
-          calories: acc.calories + (log.calories || 0),
-          protein: acc.protein + (log.protein_g || 0),
-          carbs: acc.carbs + (log.carbs_g || 0),
-          fats: acc.fats + (log.fats_g || 0),
-          fiber: acc.fiber,
-        }), { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 });
+      const totals = (data || []).reduce((acc, log) => ({
+        calories: acc.calories + (log.calories || 0),
+        protein: acc.protein + (log.protein_g || 0),
+        carbs: acc.carbs + (log.carbs_g || 0),
+        fats: acc.fats + (log.fats_g || 0),
+        fiber: acc.fiber,
+      }), { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 });
 
-        setConsumedTotals(totals);
-      } catch (error) {
-        console.error('Error fetching consumed totals:', error);
-      } finally {
-        setLoadingConsumed(false);
-      }
-    };
-
-    fetchConsumed();
+      setConsumedTotals(totals);
+    } catch (error) {
+      console.error('Error fetching consumed totals:', error);
+    } finally {
+      setLoadingConsumed(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchConsumed();
+  }, [fetchConsumed]);
 
   // Check if we need to show setup wizards
   useEffect(() => {
@@ -92,9 +97,13 @@ export function NutritionHubContent() {
   }, [tdeeLoading, isProfileComplete, hasActiveGoal]);
 
   const handleLogMeal = (mealType: string) => {
-    // Navigate to meal logging or open a dialog
-    // For now, we'll just show a toast - integrate with MealBuilder later
-    console.log('Log meal:', mealType);
+    setSelectedMealType(mealType);
+    setMealLoggingOpen(true);
+  };
+
+  const handleMealSaved = () => {
+    setMealLoggingOpen(false);
+    fetchConsumed();
   };
 
   const handleTDEEComplete = () => {
@@ -248,6 +257,14 @@ export function NutritionHubContent() {
           <VitaminSupplementTracker />
         </TabsContent>
       </Tabs>
+
+      {/* Meal Logging Dialog */}
+      <MealLoggingDialog
+        open={mealLoggingOpen}
+        onOpenChange={setMealLoggingOpen}
+        mealType={selectedMealType}
+        onMealSaved={handleMealSaved}
+      />
     </div>
   );
 }
