@@ -1,24 +1,31 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, Apple, Pill, Sparkles, Droplets } from 'lucide-react';
+import { Plus, Trash2, Apple, Pill, Sparkles, Droplets, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { MealData, MealItem, Vitamin, Supplement, HydrationData } from '@/types/customActivity';
 import { cn } from '@/lib/utils';
+import { useMealVaultSync } from '@/hooks/useMealVaultSync';
+import { toast } from 'sonner';
 
 interface MealBuilderProps {
   meals: MealData;
   onChange: (meals: MealData) => void;
+  showVaultSync?: boolean;
 }
 
 const HYDRATION_UNITS = ['oz', 'ml', 'cups', 'liters'] as const;
 
-export function MealBuilder({ meals, onChange }: MealBuilderProps) {
+export function MealBuilder({ meals, onChange, showVaultSync = false }: MealBuilderProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('items');
+  const [syncToVault, setSyncToVault] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const { syncAll } = useMealVaultSync();
 
   // Ensure hydration exists
   const hydration = meals.hydration || { amount: 0, unit: 'oz' as const, goal: 64 };
@@ -111,8 +118,50 @@ export function MealBuilder({ meals, onChange }: MealBuilderProps) {
     updateHydration({ entries: entries.filter(e => e.id !== id) });
   };
 
+  const handleSyncToVault = async () => {
+    setSyncing(true);
+    try {
+      await syncAll(meals, { syncToVault: true });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* Vault Sync Option */}
+      {showVaultSync && (
+        <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Upload className="h-4 w-4 text-primary" />
+            <div>
+              <Label className="text-sm font-medium">
+                {t('customActivity.meals.syncToVault', 'Sync to Nutrition Tracker')}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('customActivity.meals.syncToVaultDesc', 'Log this data to The Vault')}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={syncToVault}
+              onCheckedChange={setSyncToVault}
+            />
+            {syncToVault && (
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={handleSyncToVault}
+                disabled={syncing}
+              >
+                {syncing ? 'Syncing...' : 'Sync Now'}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full grid grid-cols-4">
           <TabsTrigger value="items" className="gap-1.5 text-xs">
