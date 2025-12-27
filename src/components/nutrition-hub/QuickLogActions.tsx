@@ -41,7 +41,7 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
   const handleRecipeSelect = (ingredients: RecipeIngredient[], servings: number) => {
     // Store the recipe ingredients and show meal type selector
     pendingItemsRef.current = ingredients;
-    pendingMessageRef.current = `Recipe added with ${ingredients.length} ingredients (${servings} servings)`;
+    pendingMessageRef.current = t('nutrition.recipeAdded', 'Recipe added with {{count}} ingredients ({{servings}} servings)', { count: ingredients.length, servings });
     setMealTypeSelectorOpen(true);
   };
 
@@ -58,7 +58,7 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
     setIsLogging(true);
     try {
       await addWater(amount);
-      toast.success(`Added ${amount}oz water`);
+      toast.success(t('nutrition.waterAdded', 'Added {{amount}}oz water', { amount }));
     } finally {
       setIsLogging(false);
     }
@@ -67,13 +67,13 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
   const handleCustomWater = async () => {
     const amount = parseInt(customWaterAmount);
     if (isNaN(amount) || amount <= 0) {
-      toast.error('Please enter a valid amount');
+      toast.error(t('nutrition.invalidAmount', 'Please enter a valid amount'));
       return;
     }
     setIsLogging(true);
     try {
       await addWater(amount);
-      toast.success(`Added ${amount}oz water`);
+      toast.success(t('nutrition.waterAdded', 'Added {{amount}}oz water', { amount }));
       setCustomWaterAmount('');
       setWaterDialogOpen(false);
     } finally {
@@ -95,7 +95,7 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
       food_id: food.id,
       name: food.brand ? `${food.name} (${food.brand})` : food.name,
       quantity: 1,
-      unit: food.servingSize || 'serving',
+      unit: food.servingSize || t('nutrition.barcode.serving', 'serving'),
       calories: food.caloriesPerServing || 0,
       protein_g: food.protein || 0,
       carbs_g: food.carbs || 0,
@@ -104,7 +104,7 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
     
     // Store the scanned food and show meal type selector
     pendingItemsRef.current = [ingredient];
-    pendingMessageRef.current = `Added ${food.name} to meal`;
+    pendingMessageRef.current = t('nutrition.foodAdded', 'Added {{name}} to meal', { name: food.name });
     setMealTypeSelectorOpen(true);
   };
 
@@ -140,17 +140,17 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-2">
-                {MEAL_TYPES.map((type) => (
-                  <Button
-                    key={type.value}
-                    variant={selectedMealType === type.value ? 'default' : 'outline'}
-                    className="justify-start gap-2"
-                    onClick={() => setSelectedMealType(type.value)}
-                  >
-                    <span>{type.icon}</span>
-                    {type.label}
-                  </Button>
-                ))}
+                  {MEAL_TYPES.map((type) => (
+                    <Button
+                      key={type.value}
+                      variant={selectedMealType === type.value ? 'default' : 'outline'}
+                      className="justify-start gap-2"
+                      onClick={() => setSelectedMealType(type.value)}
+                    >
+                      <span>{type.icon}</span>
+                      {t(`nutrition.mealTypes.${type.value}`, type.label)}
+                    </Button>
+                  ))}
               </div>
               <Button
                 className="w-full"
@@ -252,7 +252,7 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
                 onClick={() => onLogMeal?.(type.value)}
               >
                 <span>{type.icon}</span>
-                <span className="text-xs">{type.label}</span>
+                <span className="text-xs">{t(`nutrition.mealTypes.${type.value}`, type.label)}</span>
               </Button>
             ))}
           </div>
@@ -276,7 +276,7 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
                       onClick={() => setSelectedMealType(type.value)}
                     >
                       <span>{type.icon}</span>
-                      {type.label}
+                      {t(`nutrition.mealTypes.${type.value}`, type.label)}
                     </Button>
                   ))}
                 </div>
