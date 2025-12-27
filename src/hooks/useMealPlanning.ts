@@ -121,7 +121,7 @@ export function useMealPlanning() {
 
       setTemplates((data || []).map(t => ({
         ...t,
-        meals: Array.isArray(t.meals) ? t.meals as PlannedMeal[] : []
+        meals: Array.isArray(t.meals) ? (t.meals as unknown as PlannedMeal[]) : []
       })));
     } catch (error) {
       console.error('Error fetching templates:', error);
@@ -235,7 +235,7 @@ export function useMealPlanning() {
         .insert({
           user_id: userId,
           name,
-          meals: allMeals,
+          meals: allMeals as unknown as any,
         })
         .select()
         .single();
