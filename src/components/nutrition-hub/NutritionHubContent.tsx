@@ -16,6 +16,7 @@ import { NutritionWeeklySummary } from './NutritionWeeklySummary';
 import { MealLoggingDialog, PrefilledItem } from './MealLoggingDialog';
 import { HydrationTrackerWidget } from '@/components/custom-activities/HydrationTrackerWidget';
 import { VitaminSupplementTracker } from '@/components/vault/VitaminSupplementTracker';
+import { WeightTrackingSection } from './WeightTrackingSection';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { RecipeIngredient } from '@/hooks/useRecipes';
@@ -255,6 +256,9 @@ export function NutritionHubContent() {
 
       {/* Quick Actions */}
       <QuickLogActions onLogMeal={handleLogMeal} />
+
+      {/* Weight Tracking Section */}
+      <WeightTrackingSection />
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="today" className="w-full">

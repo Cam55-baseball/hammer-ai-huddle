@@ -3450,6 +3450,39 @@ export type Database = {
         }
         Relationships: []
       }
+      weight_entries: {
+        Row: {
+          body_fat_percent: number | null
+          created_at: string | null
+          entry_date: string
+          id: string
+          notes: string | null
+          updated_at: string | null
+          user_id: string
+          weight_lbs: number
+        }
+        Insert: {
+          body_fat_percent?: number | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string | null
+          user_id: string
+          weight_lbs: number
+        }
+        Update: {
+          body_fat_percent?: number | null
+          created_at?: string | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string | null
+          user_id?: string
+          weight_lbs?: number
+        }
+        Relationships: []
+      }
       wellness_milestones: {
         Row: {
           celebrated: boolean | null
