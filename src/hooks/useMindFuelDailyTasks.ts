@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { BookOpen, Heart, PenLine, Smile, Target, LucideIcon } from 'lucide-react';
 import type { WellnessModule } from '@/components/mind-fuel/wellness-hub/WellnessHubNav';
+import { getTodayDate } from '@/utils/dateUtils';
 
 export type TaskId = 'daily_lesson' | 'mindfulness' | 'journal' | 'emotion_checkin' | 'weekly_challenge';
 
@@ -65,9 +66,7 @@ export function useMindFuelDailyTasks() {
   const [loading, setLoading] = useState(true);
   const [allComplete, setAllComplete] = useState(false);
 
-  const getTodayDate = () => {
-    return new Date().toISOString().split('T')[0];
-  };
+  // Using imported getTodayDate from utils/dateUtils for consistent local timezone
 
   const fetchTasks = useCallback(async () => {
     if (!user) {

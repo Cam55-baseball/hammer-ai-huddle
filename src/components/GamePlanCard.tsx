@@ -16,6 +16,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2 } from 'lucide-react';
+import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
@@ -198,8 +199,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     localStorage.setItem('gameplan-task-reminders', JSON.stringify(taskReminders));
   }, [taskReminders]);
 
-  // Fetch skipped tasks for today
-  const getTodayDate = () => new Date().toISOString().split('T')[0];
+  // Fetch skipped tasks for today (using imported getTodayDate from utils/dateUtils)
   
   useEffect(() => {
     const fetchSkippedTasks = async () => {

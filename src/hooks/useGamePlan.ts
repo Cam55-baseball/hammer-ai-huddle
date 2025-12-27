@@ -5,6 +5,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star, LucideIcon, Lightbulb, Sparkles, Target, Eye, Heart, Zap, Trophy, Timer, Utensils, Coffee, Salad, Bike, Users, Clipboard, Pencil } from 'lucide-react';
 import { startOfWeek, differenceInDays, format, getDay } from 'date-fns';
 import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from '@/types/customActivity';
+import { getTodayDate } from '@/utils/dateUtils';
 
 // Icon mapping for custom activities
 const customActivityIconMap: Record<string, LucideIcon> = {
@@ -75,14 +76,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const hasThrowingAccess = subscribedModules.some(m => m.includes('throwing'));
   const hasAnyModuleAccess = subscribedModules.length > 0;
 
-  // Get today's date in local timezone (YYYY-MM-DD)
-  const getTodayDate = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
+  // Using imported getTodayDate from utils/dateUtils for consistent local timezone
 
   // Get user's local midnight as UTC timestamp for database queries
   const getLocalMidnightUTC = () => {
