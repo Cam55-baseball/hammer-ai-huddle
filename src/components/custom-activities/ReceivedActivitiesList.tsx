@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Inbox, ChevronDown, History, Loader2 } from 'lucide-react';
+import { Inbox, ChevronDown, History, Loader2, Sparkles } from 'lucide-react';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { ReceivedActivityCard } from './ReceivedActivityCard';
@@ -63,48 +63,68 @@ export function ReceivedActivitiesList({ selectedSport }: ReceivedActivitiesList
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">{t('common.loading', 'Loading...')}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Pending Activities */}
       <div className="space-y-4">
-        <h3 className="text-lg font-bold flex items-center gap-2">
-          <Inbox className="h-5 w-5" />
-          {t('sentActivity.pending', 'Pending')}
-          {pendingActivities.length > 0 && (
-            <span className="text-sm font-normal text-muted-foreground">
-              ({pendingActivities.length})
-            </span>
-          )}
-        </h3>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Inbox className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              {t('sentActivity.pending', 'Pending')}
+              {pendingActivities.length > 0 && (
+                <span className="relative flex h-6 w-6 items-center justify-center">
+                  <span className="animate-ping absolute h-full w-full rounded-full bg-primary/40" />
+                  <span className="relative flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                    {pendingActivities.length}
+                  </span>
+                </span>
+              )}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {t('sentActivity.pendingDescription', 'Activities awaiting your response')}
+            </p>
+          </div>
+        </div>
 
         {pendingActivities.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Inbox className="h-12 w-12 text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">
+          <Card className="border-2 border-dashed bg-gradient-to-br from-muted/30 to-transparent">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                <Inbox className="h-10 w-10 text-muted-foreground/40" />
+              </div>
+              <p className="text-lg font-medium text-muted-foreground">
                 {t('sentActivity.noPending', 'No pending activities from coaches')}
               </p>
-              <p className="text-sm text-muted-foreground/70">
+              <p className="text-sm text-muted-foreground/70 mt-1 max-w-sm">
                 {t('sentActivity.noPendingHint', 'Activities sent by your coaches will appear here')}
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {pendingActivities.map(activity => (
-              <ReceivedActivityCard
+            {pendingActivities.map((activity, index) => (
+              <div 
                 key={activity.id}
-                activity={activity}
-                onAccept={() => handleAccept(activity)}
-                onReject={() => handleReject(activity.id)}
-                isPending={true}
-              />
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <ReceivedActivityCard
+                  activity={activity}
+                  onAccept={() => handleAccept(activity)}
+                  onReject={() => handleReject(activity.id)}
+                  isPending={true}
+                />
+              </div>
             ))}
           </div>
         )}
@@ -114,13 +134,18 @@ export function ReceivedActivitiesList({ selectedSport }: ReceivedActivitiesList
       {historyActivities.length > 0 && (
         <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between gap-2">
-              <span className="flex items-center gap-2">
-                <History className="h-4 w-4" />
-                {t('sentActivity.history', 'History')}
-                <span className="text-muted-foreground">({historyActivities.length})</span>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-between gap-2 h-14 px-4 border-2 border-dashed hover:border-solid hover:bg-muted/50 transition-all"
+            >
+              <span className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-muted">
+                  <History className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <span className="font-semibold">{t('sentActivity.history', 'History')}</span>
+                <span className="text-muted-foreground font-normal">({historyActivities.length})</span>
               </span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${historyOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${historyOpen ? 'rotate-180' : ''}`} />
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-4">
