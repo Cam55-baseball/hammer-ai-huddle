@@ -37,11 +37,9 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
   const [mealDialogOpen, setMealDialogOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState('');
   const [isLogging, setIsLogging] = useState(false);
-  const [recipeDialogOpen, setRecipeDialogOpen] = useState(false);
+  
 
   const handleRecipeSelect = (ingredients: RecipeIngredient[], servings: number) => {
-    // Open meal logging with prefilled recipe ingredients
-    setRecipeDialogOpen(false);
     if (onLogMeal) {
       onLogMeal('snack', ingredients);
     }
@@ -273,18 +271,7 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
             <BookOpen className="h-4 w-4 text-orange-500" />
             {t('nutrition.recipes', 'Recipes')}
           </Label>
-          <Dialog open={recipeDialogOpen} onOpenChange={setRecipeDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full gap-2 hover:bg-orange-500/10 hover:border-orange-500/50"
-              >
-                <BookOpen className="h-4 w-4 text-orange-500" />
-                {t('nutrition.openRecipes', 'Open Recipe Builder')}
-              </Button>
-            </DialogTrigger>
-            <RecipeBuilder onRecipeSelect={handleRecipeSelect} />
-          </Dialog>
+          <RecipeBuilder onRecipeSelect={handleRecipeSelect} />
         </div>
 
         {/* Supplement reminder */}
