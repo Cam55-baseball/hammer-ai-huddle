@@ -1405,6 +1405,36 @@
         "content4": "Nature exposure supports mental and physical recovery.",
         "content5": "Community and team meals enhance the eating experience."
       }
+    },
+    "weight": {
+      "title": "Weight Tracking",
+      "logWeight": "Log Weight",
+      "weightLbs": "Weight (lbs)",
+      "date": "Date",
+      "bodyFatOptional": "Body Fat % (optional)",
+      "notesOptional": "Notes (optional)",
+      "notesPlaceholder": "Morning weigh-in, after workout...",
+      "logEntry": "Log Entry",
+      "progressChart": "Weight Progress",
+      "noDataYet": "Log your first weight entry to see progress",
+      "actual": "Actual",
+      "projected": "Projected",
+      "target": "Target",
+      "lbsPerWeek": "lbs/week",
+      "totalChange": "Total",
+      "targetLabel": "Target",
+      "history": "Weight History",
+      "weight": "Weight",
+      "change": "Change",
+      "bodyFat": "Body Fat",
+      "showingRecent": "Showing 10 most recent of {{total}} entries",
+      "deleteEntry": "Delete Entry?",
+      "deleteConfirm": "This action cannot be undone. This will permanently delete this weight entry.",
+      "onTrack": "On Track",
+      "adjustNeeded": "Adjust Needed",
+      "current": "Current",
+      "starting": "Starting",
+      "startTracking": "Start tracking your weight to see progress"
     }
   },
   "tutorial": {

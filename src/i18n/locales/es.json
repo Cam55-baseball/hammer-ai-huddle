@@ -1159,6 +1159,36 @@
         "content4": "La exposición a la naturaleza apoya la recuperación mental y física.",
         "content5": "La comunidad y las comidas en equipo mejoran la experiencia alimenticia."
       }
+    },
+    "weight": {
+      "title": "Seguimiento de Peso",
+      "logWeight": "Registrar Peso",
+      "weightLbs": "Peso (lbs)",
+      "date": "Fecha",
+      "bodyFatOptional": "% Grasa Corporal (opcional)",
+      "notesOptional": "Notas (opcional)",
+      "notesPlaceholder": "Pesaje matutino, después del entrenamiento...",
+      "logEntry": "Registrar Entrada",
+      "progressChart": "Progreso de Peso",
+      "noDataYet": "Registra tu primer peso para ver el progreso",
+      "actual": "Real",
+      "projected": "Proyectado",
+      "target": "Meta",
+      "lbsPerWeek": "lbs/semana",
+      "totalChange": "Total",
+      "targetLabel": "Meta",
+      "history": "Historial de Peso",
+      "weight": "Peso",
+      "change": "Cambio",
+      "bodyFat": "Grasa Corporal",
+      "showingRecent": "Mostrando 10 más recientes de {{total}} entradas",
+      "deleteEntry": "¿Eliminar Entrada?",
+      "deleteConfirm": "Esta acción no se puede deshacer. Esto eliminará permanentemente esta entrada de peso.",
+      "onTrack": "En Camino",
+      "adjustNeeded": "Ajuste Necesario",
+      "current": "Actual",
+      "starting": "Inicial",
+      "startTracking": "Comienza a rastrear tu peso para ver el progreso"
     }
   },
   "tutorial": {
