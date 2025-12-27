@@ -479,6 +479,21 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     fetchTaskStatus();
   }, [fetchTaskStatus]);
 
+  // Run date repair once per day when user is authenticated
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    repairRecentCustomActivityLogDatesOncePerDay(user.id)
+      .then((result) => {
+        if (result.ran && (result.updated > 0 || result.merged > 0)) {
+          console.log(`[useGamePlan] Repaired ${result.updated} shifted, merged ${result.merged} duplicates`);
+          // Refetch to reflect corrected dates
+          fetchTaskStatus();
+        }
+      })
+      .catch((err) => console.error("[useGamePlan] Date repair error:", err));
+  }, [user?.id, fetchTaskStatus]);
+
   // Listen for custom activity creation from other components
   useEffect(() => {
     const checkForNewActivity = () => {
