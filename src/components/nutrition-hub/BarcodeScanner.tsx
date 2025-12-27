@@ -196,7 +196,7 @@ export function BarcodeScanner({
               className="flex-1"
             >
               <Camera className="h-4 w-4 mr-2" />
-              Camera
+              {t('nutrition.barcode.camera', 'Camera')}
             </Button>
             <Button
               variant={manualMode ? 'default' : 'outline'}
@@ -205,7 +205,7 @@ export function BarcodeScanner({
               className="flex-1"
             >
               <Keyboard className="h-4 w-4 mr-2" />
-              Manual
+              {t('nutrition.barcode.manual', 'Manual')}
             </Button>
           </div>
 
@@ -239,7 +239,7 @@ export function BarcodeScanner({
                 <div className="absolute inset-0 flex items-center justify-center bg-background/50">
                   <div className="text-center">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-                    <p className="text-sm text-muted-foreground mt-2">Starting camera...</p>
+                    <p className="text-sm text-muted-foreground mt-2">{t('nutrition.barcode.startingCamera', 'Starting camera...')}</p>
                   </div>
                 </div>
               )}
@@ -249,7 +249,7 @@ export function BarcodeScanner({
                 <div className="absolute inset-0 flex items-center justify-center bg-background/80">
                   <div className="text-center">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-                    <p className="text-sm text-muted-foreground mt-2">Looking up product...</p>
+                    <p className="text-sm text-muted-foreground mt-2">{t('nutrition.barcode.lookingUpProduct', 'Looking up product...')}</p>
                   </div>
                 </div>
               )}
@@ -263,11 +263,11 @@ export function BarcodeScanner({
                     <div className="flex gap-2 mt-4 justify-center">
                       <Button variant="outline" size="sm" onClick={startScanner}>
                         <RotateCcw className="h-4 w-4 mr-2" />
-                        Retry
+                        {t('nutrition.barcode.retry', 'Retry')}
                       </Button>
                       <Button variant="outline" size="sm" onClick={toggleManualMode}>
                         <Keyboard className="h-4 w-4 mr-2" />
-                        Enter Manually
+                        {t('nutrition.barcode.enterManually', 'Enter Manually')}
                       </Button>
                     </div>
                   </div>
@@ -280,11 +280,11 @@ export function BarcodeScanner({
           {manualMode && scannerState !== 'found' && scannerState !== 'not_found' && (
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label>Barcode Number</Label>
+                <Label>{t('nutrition.barcode.barcodeNumber', 'Barcode Number')}</Label>
                 <Input
                   value={manualBarcode}
                   onChange={(e) => setManualBarcode(e.target.value)}
-                  placeholder="Enter barcode (e.g., 0123456789012)"
+                  placeholder={t('nutrition.barcode.enterBarcode', 'Enter barcode (e.g., 0123456789012)')}
                   className="text-center text-lg tracking-widest"
                   autoFocus
                 />
@@ -297,10 +297,10 @@ export function BarcodeScanner({
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Searching...
+                    {t('nutrition.barcode.searching', 'Searching...')}
                   </>
                 ) : (
-                  'Search'
+                  t('nutrition.barcode.search', 'Search')
                 )}
               </Button>
             </div>
@@ -317,7 +317,7 @@ export function BarcodeScanner({
                       <p className="text-sm text-muted-foreground">{foundFood.brand}</p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
-                      {foundFood.servingSize || '1 serving'}
+                      {foundFood.servingSize || `1 ${t('nutrition.barcode.serving', 'serving')}`}
                     </p>
                   </div>
                 </div>
@@ -345,11 +345,11 @@ export function BarcodeScanner({
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleScanAgain} className="flex-1">
                   <RotateCcw className="h-4 w-4 mr-2" />
-                  Scan Again
+                  {t('nutrition.barcode.scanAgain', 'Scan Again')}
                 </Button>
                 <Button onClick={handleAddFood} className="flex-1">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Food
+                  {t('nutrition.barcode.addFood', 'Add Food')}
                 </Button>
               </div>
             </div>
@@ -360,21 +360,21 @@ export function BarcodeScanner({
             <div className="space-y-4 text-center py-4">
               <div className="text-muted-foreground">
                 <X className="h-12 w-12 mx-auto mb-2 text-destructive/50" />
-                <p className="font-medium">Product Not Found</p>
+                <p className="font-medium">{t('nutrition.barcode.productNotFound', 'Product Not Found')}</p>
                 <p className="text-sm">
-                  Barcode: {lastScannedBarcode}
+                  {t('nutrition.barcode.barcodeNumber', 'Barcode')}: {lastScannedBarcode}
                 </p>
               </div>
 
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleScanAgain} className="flex-1">
                   <RotateCcw className="h-4 w-4 mr-2" />
-                  Scan Again
+                  {t('nutrition.barcode.scanAgain', 'Scan Again')}
                 </Button>
                 {onCreateCustom && (
                   <Button onClick={handleCreateCustom} className="flex-1">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Custom
+                    {t('nutrition.barcode.createCustom', 'Create Custom')}
                   </Button>
                 )}
               </div>
