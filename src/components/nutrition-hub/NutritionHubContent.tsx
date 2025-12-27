@@ -31,7 +31,7 @@ export function NutritionHubContent() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const { isProfileComplete, hasActiveGoal, loading: tdeeLoading } = useTDEE();
+  const { isProfileComplete, hasActiveGoal, loading: tdeeLoading, biometrics } = useTDEE();
   
   const [showTDEESetup, setShowTDEESetup] = useState(false);
   const [showGoalSetup, setShowGoalSetup] = useState(false);
@@ -169,7 +169,10 @@ export function NutritionHubContent() {
           </div>
         </div>
         
-        <BodyGoalSetup onComplete={handleGoalComplete} />
+        <BodyGoalSetup 
+          currentWeight={biometrics?.weightLbs ?? undefined} 
+          onComplete={handleGoalComplete} 
+        />
       </div>
     );
   }
