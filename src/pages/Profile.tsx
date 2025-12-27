@@ -924,9 +924,9 @@ export default function Profile() {
             {!viewingOtherProfile && (
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4 mr-2" />
-                    {t('profile.editProfile')}
+                  <Button variant="outline" size="sm" className="shrink-0">
+                    <Edit className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">{t('profile.editProfile')}</span>
                   </Button>
                 </DialogTrigger>
               <DialogContent className="max-w-md max-h-[85vh] flex flex-col">

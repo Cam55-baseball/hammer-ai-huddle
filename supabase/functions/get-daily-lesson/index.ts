@@ -137,12 +137,14 @@ serve(async (req) => {
     }
 
     // Get viewed lessons count for today
-    const { count: todayViewCount } = await supabase
+    const { data: todayViewed, count: todayViewCount } = await supabase
       .from('user_viewed_lessons')
-      .select('*', { count: 'exact', head: true })
+      .select('lesson_id, viewed_at', { count: 'exact' })
       .eq('user_id', userId)
       .gte('viewed_at', `${today}T00:00:00`)
-      .lte('viewed_at', `${today}T23:59:59`);
+      .lte('viewed_at', `${today}T23:59:59`)
+      .order('viewed_at', { ascending: false })
+      .limit(1);
 
     const dailyLimit = 1;
     const lessonsRemainingToday = Math.max(0, dailyLimit - (todayViewCount || 0));
@@ -161,7 +163,20 @@ serve(async (req) => {
     let lesson = null;
     let isNewLesson = false;
 
-    if (lessonsRemainingToday > 0) {
+    // If already viewed today, return the most recent lesson
+    if (lessonsRemainingToday <= 0 && todayViewed && todayViewed.length > 0) {
+      const { data: existingLesson } = await supabase
+        .from('mind_fuel_lessons')
+        .select('*')
+        .eq('id', todayViewed[0].lesson_id)
+        .single();
+      
+      if (existingLesson) {
+        lesson = existingLesson;
+        isNewLesson = false;
+        console.log(`[get-daily-lesson] Returning today's already viewed lesson: ${lesson.id}`);
+      }
+    } else if (lessonsRemainingToday > 0) {
       // Get a random unviewed lesson
       const { data: viewedIds } = await supabase
         .from('user_viewed_lessons')
