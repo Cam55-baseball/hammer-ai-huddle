@@ -1025,6 +1025,69 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_recipes: {
+        Row: {
+          cook_time_minutes: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          ingredients: Json
+          is_favorite: boolean | null
+          last_used_at: string | null
+          name: string
+          prep_time_minutes: number | null
+          servings: number
+          total_calories: number | null
+          total_carbs_g: number | null
+          total_fats_g: number | null
+          total_fiber_g: number | null
+          total_protein_g: number | null
+          updated_at: string | null
+          use_count: number | null
+          user_id: string
+        }
+        Insert: {
+          cook_time_minutes?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          ingredients?: Json
+          is_favorite?: boolean | null
+          last_used_at?: string | null
+          name: string
+          prep_time_minutes?: number | null
+          servings?: number
+          total_calories?: number | null
+          total_carbs_g?: number | null
+          total_fats_g?: number | null
+          total_fiber_g?: number | null
+          total_protein_g?: number | null
+          updated_at?: string | null
+          use_count?: number | null
+          user_id: string
+        }
+        Update: {
+          cook_time_minutes?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          ingredients?: Json
+          is_favorite?: boolean | null
+          last_used_at?: string | null
+          name?: string
+          prep_time_minutes?: number | null
+          servings?: number
+          total_calories?: number | null
+          total_carbs_g?: number | null
+          total_fats_g?: number | null
+          total_fiber_g?: number | null
+          total_protein_g?: number | null
+          updated_at?: string | null
+          use_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       nutrition_streaks: {
         Row: {
           badges_earned: string[] | null
