@@ -710,12 +710,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     // Determine which color set to use for pending tasks
     const activeColors = isCustom ? customColors : isTexVision ? texVisionColors : isTracking ? trackingColors : pendingColors;
     
+    const showTimeBadge = sortMode === 'timeline' && taskTime;
+    
     return (
       <div
         className={cn(
           "group relative w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl transition-all duration-200",
           "border-2",
-          task.completed && "bg-green-500/20 border-green-500/50"
+          task.completed && "bg-green-500/20 border-green-500/50",
+          showTimeBadge && "pt-8"
         )}
         style={!task.completed ? {
           backgroundColor: activeColors.background,
@@ -723,10 +726,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           animation: 'game-plan-pulse-custom 2s ease-in-out infinite',
         } : undefined}
       >
-        {/* Time badge - positioned absolutely at top right */}
-        {sortMode === 'timeline' && taskTime && (
+        {/* Time badge - positioned absolutely at top right with proper spacing */}
+        {showTimeBadge && (
           <button
-            className="absolute top-1.5 right-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-bold text-primary hover:bg-primary/30 transition-colors"
+            className="absolute top-1.5 right-12 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-primary/20 border border-primary/30 text-[10px] font-bold text-primary hover:bg-primary/30 transition-colors shadow-sm"
             onClick={(e) => { e.stopPropagation(); openTimePicker(task.id); }}
           >
             <Clock className="h-2.5 w-2.5" />

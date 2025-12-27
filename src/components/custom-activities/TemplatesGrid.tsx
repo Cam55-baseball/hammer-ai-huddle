@@ -138,78 +138,106 @@ export function TemplatesGrid({
             return (
               <Card 
                 key={template.id} 
-                className="group relative overflow-hidden transition-all hover:shadow-lg"
-                style={{ borderColor: hexToRgba(template.color, 0.5) }}
+                className="group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 border-2"
+                style={{ 
+                  borderColor: hexToRgba(template.color, 0.4),
+                  background: `linear-gradient(135deg, ${hexToRgba(template.color, 0.08)} 0%, transparent 60%)`
+                }}
               >
+                {/* Decorative gradient accent */}
+                <div 
+                  className="absolute top-0 right-0 w-32 h-32 opacity-20 blur-3xl pointer-events-none"
+                  style={{ background: template.color }}
+                />
+                
                 {template.display_nickname && (
                   <div 
-                    className="absolute top-0 left-0 right-0 px-3 py-1 text-xs font-bold text-white truncate"
+                    className="absolute top-0 left-0 right-0 px-3 py-1.5 text-xs font-bold text-white truncate shadow-sm"
                     style={{ backgroundColor: template.color }}
                   >
                     {template.display_nickname}
                   </div>
                 )}
-                <CardHeader className={cn("pb-2", template.display_nickname && "pt-8")}>
+                <CardHeader className={cn("pb-2 relative z-10", template.display_nickname && "pt-10")}>
                   <div className="flex items-start gap-3">
                     <div 
-                      className="p-2 rounded-lg flex-shrink-0"
-                      style={{ backgroundColor: hexToRgba(template.color, 0.2) }}
+                      className="p-2.5 rounded-xl flex-shrink-0 shadow-md transition-transform group-hover:scale-110"
+                      style={{ 
+                        backgroundColor: hexToRgba(template.color, 0.25),
+                        boxShadow: `0 4px 12px ${hexToRgba(template.color, 0.3)}`
+                      }}
                     >
                       {template.custom_logo_url ? (
-                        <img src={template.custom_logo_url} alt="" className="h-6 w-6 object-contain" />
+                        <img src={template.custom_logo_url} alt="" className="h-7 w-7 object-contain" />
                       ) : (
-                        <Icon className="h-6 w-6" style={{ color: template.color }} />
+                        <Icon className="h-7 w-7" style={{ color: template.color }} />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-base font-bold truncate flex items-center gap-2">
+                      <CardTitle className="text-base font-bold line-clamp-1 flex items-center gap-2">
                         {template.title}
-                        {template.is_favorited && <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />}
+                        {template.is_favorited && (
+                          <Star className="h-4 w-4 fill-yellow-500 text-yellow-500 animate-pulse" />
+                        )}
                       </CardTitle>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="text-xs">
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs font-semibold"
+                          style={{ 
+                            backgroundColor: hexToRgba(template.color, 0.15),
+                            color: template.color
+                          }}
+                        >
                           {t(`customActivity.types.${template.activity_type}`)}
                         </Badge>
                         {template.recurring_active && (
-                          <Badge variant="outline" className="text-xs gap-1">
+                          <Badge variant="outline" className="text-xs gap-1 border-primary/30">
                             <RefreshCw className="h-3 w-3" />
                             {t('customActivity.recurring.label')}
+                          </Badge>
+                        )}
+                        {template.display_on_game_plan && (
+                          <Badge variant="outline" className="text-xs gap-1 border-green-500/30 text-green-600">
+                            <Calendar className="h-3 w-3" />
                           </Badge>
                         )}
                       </div>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 relative z-10">
                   {template.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
                       {template.description}
                     </p>
                   )}
-                  <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  {!template.description && <div className="h-3" />}
+                  <div className="flex items-center gap-1 pt-2 border-t border-border/50 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200">
                     <Button 
                       size="sm" 
                       variant="ghost" 
                       onClick={() => setScheduleSettingsTemplate(template)}
                       title={t('customActivity.scheduleSettings', 'Schedule Settings')}
+                      className="hover:bg-primary/10"
                     >
                       <Calendar className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditingTemplate(template)}>
+                    <Button size="sm" variant="ghost" onClick={() => setEditingTemplate(template)} className="hover:bg-primary/10">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => onToggleFavorite(template.id)}>
-                      <Star className={cn("h-4 w-4", template.is_favorited && "fill-yellow-500 text-yellow-500")} />
+                    <Button size="sm" variant="ghost" onClick={() => onToggleFavorite(template.id)} className="hover:bg-yellow-500/10">
+                      <Star className={cn("h-4 w-4 transition-all", template.is_favorited && "fill-yellow-500 text-yellow-500")} />
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setSharingTemplate(template)}>
+                    <Button size="sm" variant="ghost" onClick={() => setSharingTemplate(template)} className="hover:bg-blue-500/10">
                       <Share2 className="h-4 w-4" />
                     </Button>
                     {isScout && (
-                      <Button size="sm" variant="ghost" onClick={() => setSendingTemplate(template)} title={t('sentActivity.sendToPlayer', 'Send to Player')}>
+                      <Button size="sm" variant="ghost" onClick={() => setSendingTemplate(template)} title={t('sentActivity.sendToPlayer', 'Send to Player')} className="hover:bg-green-500/10">
                         <Send className="h-4 w-4" />
                       </Button>
                     )}
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onDeleteTemplate(template.id)}>
+                    <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => onDeleteTemplate(template.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
