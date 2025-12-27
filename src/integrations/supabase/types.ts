@@ -540,6 +540,36 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_favorite: boolean | null
+          meals: Json | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          meals?: Json | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          meals?: Json | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       mental_health_journal: {
         Row: {
           content: string
@@ -1600,6 +1630,42 @@ export type Database = {
           },
         ]
       }
+      shopping_lists: {
+        Row: {
+          created_at: string | null
+          date_range_end: string | null
+          date_range_start: string | null
+          id: string
+          is_active: boolean | null
+          items: Json | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          id?: string
+          is_active?: boolean | null
+          items?: Json | null
+          name?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          id?: string
+          is_active?: boolean | null
+          items?: Json | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       stress_assessments: {
         Row: {
           assessment_date: string | null
@@ -2621,6 +2687,7 @@ export type Database = {
           meal_type: string | null
           notes: string | null
           planned_date: string
+          time_slot: string | null
           user_id: string
         }
         Insert: {
@@ -2636,6 +2703,7 @@ export type Database = {
           meal_type?: string | null
           notes?: string | null
           planned_date: string
+          time_slot?: string | null
           user_id: string
         }
         Update: {
@@ -2651,6 +2719,7 @@ export type Database = {
           meal_type?: string | null
           notes?: string | null
           planned_date?: string
+          time_slot?: string | null
           user_id?: string
         }
         Relationships: []
