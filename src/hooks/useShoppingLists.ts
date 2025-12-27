@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export interface ShoppingItem {
@@ -48,26 +47,35 @@ function categorizeItem(name: string): string {
 }
 
 export function useShoppingLists() {
-  const { user } = useAuth();
+  const [userId, setUserId] = useState<string | null>(null);
   const [lists, setLists] = useState<ShoppingList[]>([]);
   const [activeList, setActiveList] = useState<ShoppingList | null>(null);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id || null));
+  }, []);
+
   const fetchLists = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
 
     try {
       const { data, error } = await supabase
         .from('shopping_lists')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const parsedLists = (data || []).map(list => ({
-        ...list,
-        items: Array.isArray(list.items) ? list.items : []
+      const parsedLists: ShoppingList[] = (data || []).map(list => ({
+        id: list.id,
+        name: list.name,
+        items: Array.isArray(list.items) ? (list.items as unknown as ShoppingItem[]) : [],
+        is_active: list.is_active ?? false,
+        date_range_start: list.date_range_start ?? undefined,
+        date_range_end: list.date_range_end ?? undefined,
+        created_at: list.created_at ?? '',
       }));
 
       setLists(parsedLists);
@@ -80,26 +88,26 @@ export function useShoppingLists() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     fetchLists();
   }, [fetchLists]);
 
   const createList = async (name: string, dateRangeStart?: string, dateRangeEnd?: string) => {
-    if (!user) return null;
+    if (!userId) return null;
 
     try {
       // Set all other lists to inactive
       await supabase
         .from('shopping_lists')
         .update({ is_active: false })
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       const { data, error } = await supabase
         .from('shopping_lists')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           name,
           is_active: true,
           date_range_start: dateRangeStart,
@@ -122,14 +130,14 @@ export function useShoppingLists() {
   };
 
   const generateFromMealPlan = async (startDate: string, endDate: string) => {
-    if (!user) return null;
+    if (!userId) return null;
 
     try {
       // Fetch meal plans for the date range
       const { data: meals, error: mealsError } = await supabase
         .from('vault_meal_plans')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .gte('planned_date', startDate)
         .lte('planned_date', endDate);
 
@@ -183,14 +191,14 @@ export function useShoppingLists() {
   };
 
   const updateListItems = async (listId: string, items: ShoppingItem[]) => {
-    if (!user) return false;
+    if (!userId) return false;
 
     try {
       const { error } = await supabase
         .from('shopping_lists')
-        .update({ items })
+        .update({ items: items as unknown as any })
         .eq('id', listId)
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -247,14 +255,14 @@ export function useShoppingLists() {
   };
 
   const deleteList = async (listId: string) => {
-    if (!user) return false;
+    if (!userId) return false;
 
     try {
       const { error } = await supabase
         .from('shopping_lists')
         .delete()
         .eq('id', listId)
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -269,21 +277,21 @@ export function useShoppingLists() {
   };
 
   const setListActive = async (listId: string) => {
-    if (!user) return false;
+    if (!userId) return false;
 
     try {
       // Set all to inactive
       await supabase
         .from('shopping_lists')
         .update({ is_active: false })
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       // Set selected to active
       const { error } = await supabase
         .from('shopping_lists')
         .update({ is_active: true })
         .eq('id', listId)
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
 
