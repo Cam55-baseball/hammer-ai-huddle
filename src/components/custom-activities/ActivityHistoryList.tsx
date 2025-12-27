@@ -13,6 +13,8 @@ import { CustomActivityLog, CustomActivityTemplate } from '@/types/customActivit
 import { cn } from '@/lib/utils';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
+import { parseLocalDateString } from '@/utils/dateUtils';
+import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 
 interface ActivityHistoryListProps {
   selectedSport: 'baseball' | 'softball';
@@ -50,8 +52,15 @@ export function ActivityHistoryList({ selectedSport }: ActivityHistoryListProps)
     const fetchData = async () => {
       if (!user) return;
       setLoading(true);
-      
+
       try {
+        // Repair legacy UTC-shifted entry_date values (runs at most once/day per user)
+        try {
+          await repairRecentCustomActivityLogDatesOncePerDay(user.id, 7);
+        } catch (error) {
+          console.warn('[ActivityHistoryList] Date repair failed:', error);
+        }
+
         // Fetch both logs and templates in parallel
         const [logsResult, templatesResult] = await Promise.all([
           supabase
@@ -75,6 +84,7 @@ export function ActivityHistoryList({ selectedSport }: ActivityHistoryListProps)
             .eq('user_id', user.id)
             .eq('sport', selectedSport)
         ]);
+
 
         if (logsResult.error) throw logsResult.error;
         if (templatesResult.error) throw templatesResult.error;
@@ -400,7 +410,7 @@ export function ActivityHistoryList({ selectedSport }: ActivityHistoryListProps)
                     <div key={date}>
                       <div className="flex items-center gap-2 mb-3">
                         <h3 className="text-sm font-semibold text-muted-foreground">
-                          {format(new Date(date), 'EEEE, MMMM d')}
+                          {format(parseLocalDateString(date), 'EEEE, MMMM d')}
                         </h3>
                         {allComplete && (
                           <Badge className="text-xs bg-green-500/20 text-green-600 border-green-500/30">

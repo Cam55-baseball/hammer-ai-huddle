@@ -6,6 +6,7 @@ import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star
 import { startOfWeek, differenceInDays, format, getDay } from 'date-fns';
 import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from '@/types/customActivity';
 import { getTodayDate } from '@/utils/dateUtils';
+import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 
 // Icon mapping for custom activities
 const customActivityIconMap: Record<string, LucideIcon> = {

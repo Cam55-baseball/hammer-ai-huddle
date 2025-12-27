@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getTodayDate } from '@/utils/dateUtils';
+import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 
 export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   const { user } = useAuth();
@@ -71,9 +72,19 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
+
+    if (user) {
+      try {
+        await repairRecentCustomActivityLogDatesOncePerDay(user.id, 7);
+      } catch (error) {
+        console.warn('[useCustomActivities] Date repair failed:', error);
+      }
+    }
+
     await Promise.all([fetchTemplates(), fetchTodayLogs()]);
     setLoading(false);
-  }, [fetchTemplates, fetchTodayLogs]);
+  }, [fetchTemplates, fetchTodayLogs, user]);
+
 
   useEffect(() => {
     fetchAll();
