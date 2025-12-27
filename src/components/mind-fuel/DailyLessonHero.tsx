@@ -135,8 +135,11 @@ export default function DailyLessonHero({ lesson, stats, isLoading, onGetNewLess
             <h3 className="text-lg font-semibold text-white mb-2">
               {t('mindFuel.lesson.limitReached', 'Daily Fuel Collected!')}
             </h3>
-            <p className="text-violet-300/80 text-sm max-w-md mx-auto">
+            <p className="text-violet-300/80 text-sm max-w-md mx-auto mb-4">
               {t('mindFuel.lesson.limitMessage', "You've collected your daily mind fuel. Return tomorrow for more mental mastery content.")}
+            </p>
+            <p className="text-violet-400/60 text-xs">
+              {t('mindFuel.lesson.viewedToday', 'Tap "Get New Fuel" to view today\'s lesson again.')}
             </p>
           </div>
         ) : (
@@ -164,13 +167,10 @@ export default function DailyLessonHero({ lesson, stats, isLoading, onGetNewLess
           </div>
           <Button
             onClick={onGetNewLesson}
-            disabled={hasNoLessonsRemaining}
             className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white border-0"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            {hasNoLessonsRemaining
-              ? t('mindFuel.lesson.returnTomorrow', 'Return Tomorrow')
-              : t('mindFuel.lesson.getNew', 'Get New Fuel')}
+            {t('mindFuel.lesson.getNew', 'Get New Fuel')}
           </Button>
         </div>
       </CardContent>

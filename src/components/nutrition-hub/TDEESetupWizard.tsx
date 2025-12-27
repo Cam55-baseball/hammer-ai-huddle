@@ -130,14 +130,20 @@ export function TDEESetupWizard({ onComplete, initialData }: TDEESetupWizardProp
             <p className="text-muted-foreground text-sm">
               This helps us calculate your basal metabolic rate accurately.
             </p>
-            <RadioGroup value={sex} onValueChange={(v) => setSex(v as Sex)}>
-              <div className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-accent/50 cursor-pointer">
-                <RadioGroupItem value="male" id="male" />
-                <Label htmlFor="male" className="cursor-pointer flex-1">Male</Label>
+            <RadioGroup value={sex} onValueChange={(v) => setSex(v as Sex)} className="space-y-2">
+              <div 
+                className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-accent/50 cursor-pointer"
+                onClick={() => setSex('male' as Sex)}
+              >
+                <RadioGroupItem value="male" id="sex-male" />
+                <Label htmlFor="sex-male" className="cursor-pointer flex-1">Male</Label>
               </div>
-              <div className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-accent/50 cursor-pointer">
-                <RadioGroupItem value="female" id="female" />
-                <Label htmlFor="female" className="cursor-pointer flex-1">Female</Label>
+              <div 
+                className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-accent/50 cursor-pointer"
+                onClick={() => setSex('female' as Sex)}
+              >
+                <RadioGroupItem value="female" id="sex-female" />
+                <Label htmlFor="sex-female" className="cursor-pointer flex-1">Female</Label>
               </div>
             </RadioGroup>
           </div>
@@ -234,14 +240,15 @@ export function TDEESetupWizard({ onComplete, initialData }: TDEESetupWizardProp
             <p className="text-muted-foreground text-sm">
               How active are you on a typical week?
             </p>
-            <RadioGroup value={activityLevel} onValueChange={(v) => setActivityLevel(v as ActivityLevel)}>
+            <RadioGroup value={activityLevel} onValueChange={(v) => setActivityLevel(v as ActivityLevel)} className="space-y-2">
               {(Object.keys(ACTIVITY_LABELS) as ActivityLevel[]).map(level => (
                 <div 
                   key={level}
                   className="flex items-start space-x-2 p-3 rounded-lg border border-border hover:bg-accent/50 cursor-pointer"
+                  onClick={() => setActivityLevel(level as ActivityLevel)}
                 >
-                  <RadioGroupItem value={level} id={level} className="mt-0.5" />
-                  <Label htmlFor={level} className="cursor-pointer flex-1">
+                  <RadioGroupItem value={level} id={`activity-${level}`} className="mt-0.5" />
+                  <Label htmlFor={`activity-${level}`} className="cursor-pointer flex-1">
                     <div className="font-medium">{ACTIVITY_LABELS[level].label}</div>
                     <div className="text-xs text-muted-foreground">{ACTIVITY_LABELS[level].description}</div>
                   </Label>

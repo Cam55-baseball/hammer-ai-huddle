@@ -718,7 +718,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
       {weather && (
         <div className="space-y-4">
           {/* Main Weather Card - Premium Design */}
-          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${weatherGradient} p-5 sm:p-6 text-white shadow-xl`}>
+          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${weatherGradient} p-4 sm:p-5 md:p-6 text-white shadow-xl`}>
             {/* Decorative elements */}
             <div className="absolute inset-0 overflow-hidden">
               <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
@@ -726,14 +726,14 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
             </div>
             
             <div className="relative z-10">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4">
+                <div className="flex-1 min-w-0">
                   {/* Location with Timezone */}
                   <div className="flex items-center gap-2 text-white/80 mb-1 flex-wrap">
-                    <MapPin className="h-4 w-4" />
-                    <span className="text-sm font-medium">{weather.location}</span>
+                    <MapPin className="h-4 w-4 shrink-0" />
+                    <span className="text-sm font-medium truncate">{weather.location}</span>
                     {weather.timezone && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 bg-white/20 rounded-full text-[10px] font-semibold">
+                      <div className="flex items-center gap-1 px-2 py-0.5 bg-white/20 rounded-full text-[10px] font-semibold shrink-0">
                         <Globe className="h-3 w-3" />
                         <span>{weather.timezone}</span>
                       </div>
@@ -741,7 +741,7 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
                   </div>
                   
                   {/* Temperature - Large Display */}
-                  <p className="text-6xl sm:text-7xl font-bold tracking-tight">
+                  <p className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight">
                     {Math.round(weather.temperature)}°
                   </p>
                   

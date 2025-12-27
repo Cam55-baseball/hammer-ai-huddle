@@ -165,21 +165,21 @@ export default function CrisisResourcesCard() {
                 key={resource.id}
                 className="p-4 rounded-xl bg-card border border-border/50 hover:border-wellness-lavender/50 transition-colors"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                  <div className="flex-1 min-w-0 w-full">
                     <h4 className="font-medium text-foreground">{resource.name}</h4>
                     <p className="text-sm text-muted-foreground mt-1">{resource.description}</p>
-                    <div className="flex items-center gap-2 mt-2 text-sm">
+                    <div className="flex items-center gap-2 mt-2 text-sm flex-wrap">
                       {getContactIcon(resource.contactType)}
-                      <span className="font-medium text-wellness-lavender">{resource.contact}</span>
-                      <span className="text-muted-foreground">• {resource.available}</span>
+                      <span className="font-medium text-wellness-lavender break-all">{resource.contact}</span>
+                      <span className="text-muted-foreground whitespace-nowrap">• {resource.available}</span>
                     </div>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleContact(resource)}
-                    className="shrink-0 border-wellness-lavender/30 hover:bg-wellness-lavender/10"
+                    className="shrink-0 w-full sm:w-auto border-wellness-lavender/30 hover:bg-wellness-lavender/10"
                   >
                     {resource.contactType === 'website' ? (
                       <>
@@ -210,21 +210,21 @@ export default function CrisisResourcesCard() {
                 key={resource.id}
                 className="p-4 rounded-xl bg-card border border-border/50 hover:border-wellness-sky/50 transition-colors"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                  <div className="flex-1 min-w-0 w-full">
                     <h4 className="font-medium text-foreground">{resource.name}</h4>
                     <p className="text-sm text-muted-foreground mt-1">{resource.description}</p>
-                    <div className="flex items-center gap-2 mt-2 text-sm">
+                    <div className="flex items-center gap-2 mt-2 text-sm flex-wrap">
                       {getContactIcon(resource.contactType)}
-                      <span className="font-medium text-wellness-sky">{resource.contact}</span>
-                      <span className="text-muted-foreground">• {resource.available}</span>
+                      <span className="font-medium text-wellness-sky break-all">{resource.contact}</span>
+                      <span className="text-muted-foreground whitespace-nowrap">• {resource.available}</span>
                     </div>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleContact(resource)}
-                    className="shrink-0 border-wellness-sky/30 hover:bg-wellness-sky/10"
+                    className="shrink-0 w-full sm:w-auto border-wellness-sky/30 hover:bg-wellness-sky/10"
                   >
                     {resource.contactType === 'website' ? (
                       <>
