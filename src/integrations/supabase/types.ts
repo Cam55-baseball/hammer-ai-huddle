@@ -2151,6 +2151,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_food_history: {
+        Row: {
+          created_at: string | null
+          food_id: string
+          id: string
+          is_favorite: boolean | null
+          last_used_at: string | null
+          use_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          food_id: string
+          id?: string
+          is_favorite?: boolean | null
+          last_used_at?: string | null
+          use_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          food_id?: string
+          id?: string
+          is_favorite?: boolean | null
+          last_used_at?: string | null
+          use_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_food_history_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "nutrition_food_database"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_injury_progress: {
         Row: {
           badges_earned: string[] | null
