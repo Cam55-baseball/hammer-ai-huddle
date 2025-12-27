@@ -12,6 +12,7 @@ import {
 } from '@/types/customActivity';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { getTodayDate } from '@/utils/dateUtils';
 
 export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   const { user } = useAuth();
@@ -19,8 +20,6 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   const [templates, setTemplates] = useState<CustomActivityTemplate[]>([]);
   const [todayLogs, setTodayLogs] = useState<CustomActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const getTodayDate = () => new Date().toISOString().split('T')[0];
 
   const fetchTemplates = useCallback(async () => {
     if (!user) return;
