@@ -17,3 +17,13 @@ export const getLocalDateString = (date: Date = new Date()): string => {
  * Convenience wrapper around getLocalDateString().
  */
 export const getTodayDate = (): string => getLocalDateString(new Date());
+
+/**
+ * Parse a YYYY-MM-DD string into a Date at local midnight.
+ * Avoids the UTC parsing behavior of `new Date('YYYY-MM-DD')`.
+ */
+export const parseLocalDateString = (dateString: string): Date => {
+  const [y, m, d] = dateString.split('-').map((n) => Number(n));
+  return new Date(y, (m || 1) - 1, d || 1);
+};
+
