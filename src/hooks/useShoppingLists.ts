@@ -148,28 +148,61 @@ export function useShoppingLists() {
 
       (meals || []).forEach(meal => {
         const foodItems = Array.isArray(meal.food_items) ? meal.food_items : [];
-        foodItems.forEach((item: any) => {
-          const key = `${item.name?.toLowerCase()}_${item.unit || 'unit'}`;
-          const existing = ingredientMap.get(key);
+        
+        // If meal has structured food_items, use them
+        if (foodItems.length > 0) {
+          foodItems.forEach((item: any) => {
+            const itemName = item.name || 'Unknown';
+            const key = `${itemName.toLowerCase()}_${item.unit || 'unit'}`;
+            const existing = ingredientMap.get(key);
+            
+            if (existing) {
+              existing.quantity += item.quantity || 1;
+            } else {
+              ingredientMap.set(key, {
+                id: crypto.randomUUID(),
+                name: itemName,
+                quantity: item.quantity || 1,
+                unit: item.unit || 'unit',
+                category: categorizeItem(itemName),
+                checked: false,
+                source: 'meal_plan',
+              });
+            }
+          });
+        } else if (meal.meal_name) {
+          // Fallback: parse meal name to generate shopping items
+          // This handles meals added without detailed food_items
+          const mealName = meal.meal_name as string;
+          const words = mealName.split(/[,&\s]+/).filter(w => w.length > 2);
           
-          if (existing) {
-            existing.quantity += item.quantity || 1;
-          } else {
-            ingredientMap.set(key, {
-              id: crypto.randomUUID(),
-              name: item.name || 'Unknown',
-              quantity: item.quantity || 1,
-              unit: item.unit || 'unit',
-              category: categorizeItem(item.name || ''),
-              checked: false,
-              source: 'meal_plan',
-            });
-          }
-        });
+          words.forEach(word => {
+            const normalized = word.toLowerCase().replace(/[^a-z]/g, '');
+            if (normalized.length > 2) {
+              const key = `${normalized}_unit`;
+              if (!ingredientMap.has(key)) {
+                ingredientMap.set(key, {
+                  id: crypto.randomUUID(),
+                  name: word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+                  quantity: 1,
+                  unit: 'unit',
+                  category: categorizeItem(word),
+                  checked: false,
+                  source: 'meal_name_parse',
+                });
+              }
+            }
+          });
+        }
       });
 
       const items = Array.from(ingredientMap.values())
         .sort((a, b) => a.category.localeCompare(b.category));
+
+      if (items.length === 0) {
+        toast.info('No ingredients found in meal plans for this date range');
+        return null;
+      }
 
       // Create the list
       const list = await createList(
@@ -182,6 +215,7 @@ export function useShoppingLists() {
         await updateListItems(list.id, items);
       }
 
+      toast.success(`Shopping list created with ${items.length} items`);
       return list;
     } catch (error) {
       console.error('Error generating list:', error);

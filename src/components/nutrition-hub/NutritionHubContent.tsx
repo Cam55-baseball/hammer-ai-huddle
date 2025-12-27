@@ -20,9 +20,11 @@ import { WeightTrackingSection } from './WeightTrackingSection';
 import { MealPlanningTab } from './MealPlanningTab';
 import { ShoppingListTab } from './ShoppingListTab';
 import { RecipeImportDialog } from './RecipeImportDialog';
+import { AIMealSuggestions } from './AIMealSuggestions';
+import { useRecipes, RecipeIngredient, CreateRecipeInput } from '@/hooks/useRecipes';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { RecipeIngredient } from '@/hooks/useRecipes';
+
 interface ConsumedTotals {
   calories: number;
   protein: number;
@@ -31,10 +33,34 @@ interface ConsumedTotals {
   fiber: number;
 }
 
+// Interface for parsed recipe from URL
+interface ParsedRecipe {
+  name: string;
+  description?: string;
+  servings: number;
+  prepTime?: number;
+  cookTime?: number;
+  ingredients: Array<{
+    name: string;
+    quantity: number;
+    unit: string;
+    notes?: string;
+  }>;
+  instructions?: string[];
+  estimatedNutrition?: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    fiber?: number;
+  };
+}
+
 export function NutritionHubContent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { createRecipe } = useRecipes();
   
   const { isProfileComplete, hasActiveGoal, loading: tdeeLoading, biometrics } = useTDEE();
   
@@ -53,6 +79,14 @@ export function NutritionHubContent() {
   const [mealLoggingOpen, setMealLoggingOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState('');
   const [prefilledItems, setPrefilledItems] = useState<PrefilledItem[] | undefined>();
+
+  // Get nutrition targets
+  const { targets } = useDailyNutritionTargets({
+    calories: consumedTotals.calories,
+    protein: consumedTotals.protein,
+    carbs: consumedTotals.carbs,
+    fats: consumedTotals.fats,
+  });
 
   // Fetch today's consumed totals
   const fetchConsumed = useCallback(async () => {
@@ -143,6 +177,49 @@ export function NutritionHubContent() {
 
   const handleGoalComplete = () => {
     setShowGoalSetup(false);
+  };
+
+  // Handle recipe import - save to database
+  const handleRecipeImport = async (recipe: ParsedRecipe) => {
+    // Convert parsed recipe to CreateRecipeInput format
+    const perServingDivisor = recipe.servings || 1;
+    const nutrition = recipe.estimatedNutrition || { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 };
+    
+    const recipeInput: CreateRecipeInput = {
+      name: recipe.name,
+      description: recipe.description,
+      servings: recipe.servings,
+      prep_time_minutes: recipe.prepTime,
+      cook_time_minutes: recipe.cookTime,
+      ingredients: recipe.ingredients.map((ing, index) => ({
+        name: ing.name,
+        quantity: ing.quantity,
+        unit: ing.unit,
+        // Distribute nutrition across ingredients (simple approximation)
+        calories: Math.round(nutrition.calories / recipe.ingredients.length),
+        protein_g: Math.round((nutrition.protein / recipe.ingredients.length) * 10) / 10,
+        carbs_g: Math.round((nutrition.carbs / recipe.ingredients.length) * 10) / 10,
+        fats_g: Math.round((nutrition.fats / recipe.ingredients.length) * 10) / 10,
+        fiber_g: nutrition.fiber ? Math.round((nutrition.fiber / recipe.ingredients.length) * 10) / 10 : undefined,
+      })),
+    };
+
+    await createRecipe(recipeInput);
+  };
+
+  // Handle AI suggestion add to meal log
+  const handleAddAISuggestion = (food: { name: string; calories: number; protein: number; carbs: number; fats: number }) => {
+    setPrefilledItems([{
+      name: food.name,
+      calories: food.calories,
+      protein_g: food.protein,
+      carbs_g: food.carbs,
+      fats_g: food.fats,
+      quantity: 1,
+      unit: 'serving',
+    }]);
+    setSelectedMealType('snack');
+    setMealLoggingOpen(true);
   };
 
   // Show TDEE setup wizard
@@ -242,23 +319,24 @@ export function NutritionHubContent() {
           </div>
         </div>
         
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowTDEESetup(true)}
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
-        
-        <RecipeImportDialog 
-          onImport={(recipe) => console.log('Imported recipe:', recipe)}
-          trigger={
-            <Button variant="outline" size="sm">
-              <Link className="h-4 w-4 mr-2" />
-              {t('recipeImport.importFromUrl', 'Import Recipe')}
-            </Button>
-          }
-        />
+        <div className="flex items-center gap-2">
+          <RecipeImportDialog 
+            onImport={handleRecipeImport}
+            trigger={
+              <Button variant="outline" size="sm">
+                <Link className="h-4 w-4 mr-2" />
+                {t('recipeImport.importFromUrl', 'Import Recipe')}
+              </Button>
+            }
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowTDEESetup(true)}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Macro Targets Display */}
@@ -285,6 +363,24 @@ export function NutritionHubContent() {
         
         <TabsContent value="today" className="space-y-4 mt-4">
           <NutritionDailyLog onEditMeal={(id) => console.log('Edit meal:', id)} />
+          
+          {/* AI Meal Suggestions - shows after user has logged food */}
+          <AIMealSuggestions
+            consumed={{
+              calories: consumedTotals.calories,
+              protein: consumedTotals.protein,
+              carbs: consumedTotals.carbs,
+              fats: consumedTotals.fats,
+            }}
+            targets={{
+              calories: targets.calories,
+              protein: targets.protein,
+              carbs: targets.carbs,
+              fats: targets.fats,
+            }}
+            onAddFood={handleAddAISuggestion}
+          />
+          
           <div className="flex justify-center">
             <HydrationTrackerWidget />
           </div>
