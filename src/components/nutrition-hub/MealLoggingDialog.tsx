@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -16,11 +16,22 @@ import { useMealVaultSync } from '@/hooks/useMealVaultSync';
 import { MealData } from '@/types/customActivity';
 import { toast } from 'sonner';
 
+interface PrefilledItem {
+  name: string;
+  quantity: number;
+  unit: string;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fats_g: number;
+}
+
 interface MealLoggingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mealType: string;
   onMealSaved?: () => void;
+  prefilledItems?: PrefilledItem[];
 }
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
@@ -49,6 +60,7 @@ export function MealLoggingDialog({
   onOpenChange,
   mealType,
   onMealSaved,
+  prefilledItems,
 }: MealLoggingDialogProps) {
   const { t } = useTranslation();
   const { syncMealToVault } = useMealVaultSync();
@@ -64,7 +76,48 @@ export function MealLoggingDialog({
   const [fats, setFats] = useState('');
   
   // Detailed entry state (MealBuilder)
-  const [mealData, setMealData] = useState<MealData>(getDefaultMealData());
+  const [mealData, setMealData] = useState<MealData>(() => {
+    if (prefilledItems && prefilledItems.length > 0) {
+      return {
+        items: prefilledItems.map(item => ({
+          id: crypto.randomUUID(),
+          name: item.name,
+          calories: item.calories,
+          protein: item.protein_g,
+          carbs: item.carbs_g,
+          fats: item.fats_g,
+          quantity: item.quantity,
+          unit: item.unit,
+        })),
+        vitamins: [],
+        supplements: [],
+        hydration: { amount: 0, unit: 'oz', goal: 100, entries: [] },
+      };
+    }
+    return getDefaultMealData();
+  });
+
+  // When prefilledItems change, update mode to detailed and update mealData
+  useEffect(() => {
+    if (prefilledItems && prefilledItems.length > 0) {
+      setMode('detailed');
+      setMealData({
+        items: prefilledItems.map(item => ({
+          id: crypto.randomUUID(),
+          name: item.name,
+          calories: item.calories,
+          protein: item.protein_g,
+          carbs: item.carbs_g,
+          fats: item.fats_g,
+          quantity: item.quantity,
+          unit: item.unit,
+        })),
+        vitamins: [],
+        supplements: [],
+        hydration: { amount: 0, unit: 'oz', goal: 100, entries: [] },
+      });
+    }
+  }, [prefilledItems]);
 
   const mealTypeLabel = MEAL_TYPE_LABELS[mealType] || mealType;
 
