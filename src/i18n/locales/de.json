@@ -5438,5 +5438,62 @@
     "muscleGroups": "Zielmuskelgruppen",
     "estimatedTime": "Geschätzte Zeit",
     "difficulty": "Schwierigkeit"
+  },
+  "sentActivity": {
+    "sendTitle": "Aktivität an Spieler senden",
+    "lockSettings": "Sperreinstellungen",
+    "lockDescription": "Wähle, welche Felder der Spieler nicht bearbeiten kann, wenn er diese Aktivität akzeptiert.",
+    "selectPlayers": "Spieler auswählen",
+    "noPlayers": "Keine gefolgten Spieler gefunden",
+    "noPlayersHint": "Folge Spielern, um ihnen Aktivitäten zu senden",
+    "message": "Nachricht (Optional)",
+    "messagePlaceholder": "Füge eine Notiz für den Spieler hinzu...",
+    "send": "Aktivität senden",
+    "presets": {
+      "none": "Keine (Vollständig bearbeitbar)",
+      "lockAll": "Alles sperren",
+      "lockStructure": "Nur Struktur sperren",
+      "lockBasics": "Grundinfos sperren"
+    },
+    "locks": {
+      "title": "Titel",
+      "description": "Beschreibung",
+      "duration": "Dauer",
+      "type": "Aktivitätstyp",
+      "exercises": "Übungen",
+      "meals": "Mahlzeiten",
+      "intervals": "Intervalle",
+      "schedule": "Zeitplan",
+      "color": "Farbe",
+      "icon": "Symbol"
+    },
+    "fields": {
+      "title": "Titel",
+      "description": "Beschreibung",
+      "duration": "Dauer",
+      "type": "Aktivitätstyp",
+      "exercises": "Übungen",
+      "meals": "Mahlzeiten",
+      "intervals": "Intervalle",
+      "schedule": "Zeitplan",
+      "color": "Farbe",
+      "icon": "Symbol"
+    },
+    "received": {
+      "title": "Erhaltene Aktivitäten",
+      "pending": "Ausstehend",
+      "history": "Verlauf",
+      "noPending": "Keine ausstehenden Aktivitäten",
+      "noHistory": "Kein Aktivitätsverlauf",
+      "fromCoach": "Vom Trainer",
+      "sentBy": "Gesendet von",
+      "accept": "Akzeptieren",
+      "reject": "Ablehnen",
+      "accepted": "Akzeptiert",
+      "rejected": "Abgelehnt",
+      "lockedFields": "Gesperrte Felder",
+      "fullyEditable": "Vollständig bearbeitbar",
+      "coachMessage": "Trainer-Nachricht"
+    }
   }
 }

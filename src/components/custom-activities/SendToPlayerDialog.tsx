@@ -219,7 +219,8 @@ export function SendToPlayerDialog({ open, onOpenChange, template }: SendToPlaye
                     >
                       <Checkbox 
                         checked={selectedPlayers.includes(player.id)}
-                        onCheckedChange={() => handlePlayerToggle(player.id)}
+                        onCheckedChange={() => {}}
+                        onClick={(e) => e.stopPropagation()}
                       />
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={player.avatar_url || undefined} />

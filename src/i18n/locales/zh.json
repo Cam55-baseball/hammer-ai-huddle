@@ -4681,5 +4681,62 @@
     "muscleGroups": "目标肌群",
     "estimatedTime": "预计时间",
     "difficulty": "难度"
+  },
+  "sentActivity": {
+    "sendTitle": "发送活动给球员",
+    "lockSettings": "锁定设置",
+    "lockDescription": "选择球员接受此活动后无法编辑的字段。",
+    "selectPlayers": "选择球员",
+    "noPlayers": "未找到关注的球员",
+    "noPlayersHint": "关注球员以发送活动",
+    "message": "消息（可选）",
+    "messagePlaceholder": "为球员添加备注...",
+    "send": "发送活动",
+    "presets": {
+      "none": "无（完全可编辑）",
+      "lockAll": "锁定全部",
+      "lockStructure": "仅锁定结构",
+      "lockBasics": "锁定基本信息"
+    },
+    "locks": {
+      "title": "标题",
+      "description": "描述",
+      "duration": "时长",
+      "type": "活动类型",
+      "exercises": "练习",
+      "meals": "餐食",
+      "intervals": "间隔",
+      "schedule": "日程",
+      "color": "颜色",
+      "icon": "图标"
+    },
+    "fields": {
+      "title": "标题",
+      "description": "描述",
+      "duration": "时长",
+      "type": "活动类型",
+      "exercises": "练习",
+      "meals": "餐食",
+      "intervals": "间隔",
+      "schedule": "日程",
+      "color": "颜色",
+      "icon": "图标"
+    },
+    "received": {
+      "title": "收到的活动",
+      "pending": "待处理",
+      "history": "历史",
+      "noPending": "没有待处理的活动",
+      "noHistory": "没有活动历史",
+      "fromCoach": "来自教练",
+      "sentBy": "发送者",
+      "accept": "接受",
+      "reject": "拒绝",
+      "accepted": "已接受",
+      "rejected": "已拒绝",
+      "lockedFields": "锁定的字段",
+      "fullyEditable": "完全可编辑",
+      "coachMessage": "教练留言"
+    }
   }
 }
