@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Trash2, Apple, Pill, Sparkles, Droplets, Upload } from 'lucide-react';
+import { Plus, Trash2, Apple, Pill, Sparkles, Droplets, Upload, Search } from 'lucide-react';
+import { FoodSearchDialog } from '@/components/nutrition-hub/FoodSearchDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,12 +26,17 @@ export function MealBuilder({ meals, onChange, showVaultSync = false }: MealBuil
   const [activeTab, setActiveTab] = useState('items');
   const [syncToVault, setSyncToVault] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [foodSearchOpen, setFoodSearchOpen] = useState(false);
   const { syncAll } = useMealVaultSync();
 
   // Ensure hydration exists
   const hydration = meals.hydration || { amount: 0, unit: 'oz' as const, goal: 64 };
 
-  const addItem = () => {
+  const addFoodItem = (item: MealItem) => {
+    onChange({ ...meals, items: [...meals.items, item] });
+  };
+
+  const addManualItem = () => {
     const newItem: MealItem = {
       id: crypto.randomUUID(),
       name: '',
@@ -183,16 +189,28 @@ export function MealBuilder({ meals, onChange, showVaultSync = false }: MealBuil
         </TabsList>
 
         <TabsContent value="items" className="space-y-3 mt-4">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addItem}
-            className="w-full gap-1"
-          >
-            <Plus className="h-4 w-4" />
-            {t('customActivity.meals.addFood')}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={() => setFoodSearchOpen(true)}
+              className="flex-1 gap-1"
+            >
+              <Search className="h-4 w-4" />
+              {t('customActivity.meals.searchFoods', 'Search Foods')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addManualItem}
+              className="gap-1"
+            >
+              <Plus className="h-4 w-4" />
+              {t('customActivity.meals.addManual', 'Manual')}
+            </Button>
+          </div>
 
           {meals.items.map(item => (
             <div key={item.id} className="flex items-start gap-2 p-3 rounded-lg border bg-background/50">
@@ -473,6 +491,14 @@ export function MealBuilder({ meals, onChange, showVaultSync = false }: MealBuil
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Food Search Dialog */}
+      <FoodSearchDialog
+        open={foodSearchOpen}
+        onOpenChange={setFoodSearchOpen}
+        onSelectFood={addFoodItem}
+        onCreateCustom={addManualItem}
+      />
     </div>
   );
 }
