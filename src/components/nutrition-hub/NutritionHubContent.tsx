@@ -353,12 +353,12 @@ export function NutritionHubContent() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="today" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="today">{t('nutrition.today', 'Today')}</TabsTrigger>
-          <TabsTrigger value="weekly">{t('nutrition.weekly', 'Weekly')}</TabsTrigger>
-          <TabsTrigger value="planning">{t('mealPlanning.title', 'Planning')}</TabsTrigger>
-          <TabsTrigger value="shopping">{t('shoppingList.title', 'Shopping')}</TabsTrigger>
-          <TabsTrigger value="supplements">{t('nutrition.supplements', 'Supplements')}</TabsTrigger>
+        <TabsList className="w-full flex overflow-x-auto">
+          <TabsTrigger value="today" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.today', 'Today')}</TabsTrigger>
+          <TabsTrigger value="weekly" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.weekly', 'Weekly')}</TabsTrigger>
+          <TabsTrigger value="planning" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('mealPlanning.title', 'Planning')}</TabsTrigger>
+          <TabsTrigger value="shopping" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('shoppingList.title', 'Shopping')}</TabsTrigger>
+          <TabsTrigger value="supplements" className="flex-1 min-w-fit text-xs sm:text-sm whitespace-nowrap">{t('nutrition.supplements', 'Supplements')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="today" className="space-y-4 mt-4">

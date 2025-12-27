@@ -632,8 +632,18 @@ export default function Profile() {
       </div>
 
         {/* User Info Card */}
-        <Card className="p-6 mb-6">
-          <div className="flex items-center gap-6 mb-6">
+        <Card className="p-4 sm:p-6 mb-6 relative overflow-hidden">
+          {/* Edit button positioned absolutely in top-right */}
+          {!viewingOtherProfile && (
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" className="absolute top-3 right-3 h-8 w-8 z-10">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+            </Dialog>
+          )}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-6 pr-10 sm:pr-12">
             <Avatar className="h-20 w-20">
               {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
               <AvatarFallback className="text-2xl bg-primary/10 text-primary">
@@ -923,12 +933,6 @@ export default function Profile() {
             </div>
             {!viewingOtherProfile && (
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="shrink-0">
-                    <Edit className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">{t('profile.editProfile')}</span>
-                  </Button>
-                </DialogTrigger>
               <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>{t('profile.editProfile')}</DialogTitle>
