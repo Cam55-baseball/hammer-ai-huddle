@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplets, Utensils, Pill, Plus, Zap, BookOpen } from 'lucide-react';
+import { Droplets, Utensils, Pill, Plus, Zap, BookOpen, ScanBarcode } from 'lucide-react';
 import { useHydration } from '@/hooks/useHydration';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { RecipeBuilder } from './RecipeBuilder';
 import { RecipeIngredient } from '@/hooks/useRecipes';
+import { BarcodeScanner } from './BarcodeScanner';
+import { FoodSearchResult } from '@/hooks/useFoodSearch';
 
 interface QuickLogActionsProps {
   onLogMeal?: (mealType: string, prefilledItems?: RecipeIngredient[]) => void;
@@ -37,7 +39,7 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
   const [mealDialogOpen, setMealDialogOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState('');
   const [isLogging, setIsLogging] = useState(false);
-  
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const handleRecipeSelect = (ingredients: RecipeIngredient[], servings: number) => {
     if (onLogMeal) {
@@ -79,6 +81,25 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
       setMealDialogOpen(false);
       setSelectedMealType('');
     }
+  };
+
+  const handleBarcodeFound = (food: FoodSearchResult) => {
+    // Convert FoodSearchResult to RecipeIngredient format for meal logging
+    const ingredient: RecipeIngredient = {
+      food_id: food.id,
+      name: food.brand ? `${food.name} (${food.brand})` : food.name,
+      quantity: 1,
+      unit: food.servingSize || 'serving',
+      calories: food.caloriesPerServing || 0,
+      protein_g: food.protein || 0,
+      carbs_g: food.carbs || 0,
+      fats_g: food.fats || 0,
+    };
+    
+    if (onLogMeal) {
+      onLogMeal('snack', [ingredient]);
+    }
+    toast.success(`Added ${food.name} to meal`);
   };
 
   if (compact) {
@@ -263,6 +284,27 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
               </div>
             </DialogContent>
         </Dialog>
+        </div>
+
+        {/* Barcode Scanner */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <ScanBarcode className="h-4 w-4 text-cyan-500" />
+            {t('nutrition.barcodeScanner', 'Barcode Scanner')}
+          </Label>
+          <Button
+            variant="outline"
+            className="w-full gap-2 hover:bg-cyan-500/10 hover:border-cyan-500/50"
+            onClick={() => setScannerOpen(true)}
+          >
+            <ScanBarcode className="h-4 w-4 text-cyan-500" />
+            {t('nutrition.scanBarcode', 'Scan Barcode')}
+          </Button>
+          <BarcodeScanner
+            open={scannerOpen}
+            onOpenChange={setScannerOpen}
+            onFoodFound={handleBarcodeFound}
+          />
         </div>
 
         {/* Recipe Builder */}

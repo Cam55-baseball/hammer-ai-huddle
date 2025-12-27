@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, X, Loader2, Star, Clock } from 'lucide-react';
+import { Search, Plus, X, Loader2, Star, Clock, ScanBarcode } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { useFoodSearch, FoodSearchResult } from '@/hooks/useFoodSearch';
 import { useRecentFoods } from '@/hooks/useRecentFoods';
 import { MealItem } from '@/types/customActivity';
 import { cn } from '@/lib/utils';
+import { BarcodeScanner } from './BarcodeScanner';
 
 interface FoodSearchDialogProps {
   open: boolean;
@@ -36,6 +37,7 @@ export function FoodSearchDialog({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFood, setSelectedFood] = useState<FoodSearchResult | null>(null);
   const [servings, setServings] = useState(1);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -97,6 +99,12 @@ export function FoodSearchDialog({
   const handleToggleFavorite = async (e: React.MouseEvent, foodId: string) => {
     e.stopPropagation();
     await toggleFavorite(foodId);
+  };
+
+  const handleBarcodeFound = (food: FoodSearchResult) => {
+    setScannerOpen(false);
+    setSelectedFood(food);
+    setServings(1);
   };
 
   const showInitialView = searchQuery.length < 2 && !loading;
@@ -169,27 +177,44 @@ export function FoodSearchDialog({
         </DialogHeader>
 
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-          {/* Search Input */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search for a food..."
-              className="pl-10 pr-10"
-              autoFocus
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                onClick={() => handleSearchChange('')}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+          {/* Search Input with Barcode Button */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search for a food..."
+                className="pl-10 pr-10"
+                autoFocus
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => handleSearchChange('')}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setScannerOpen(true)}
+              title="Scan barcode"
+            >
+              <ScanBarcode className="h-4 w-4" />
+            </Button>
           </div>
+
+          {/* Barcode Scanner */}
+          <BarcodeScanner
+            open={scannerOpen}
+            onOpenChange={setScannerOpen}
+            onFoodFound={handleBarcodeFound}
+          />
 
           {/* Results / Initial View */}
           <ScrollArea className="flex-1 -mx-6 px-6">
