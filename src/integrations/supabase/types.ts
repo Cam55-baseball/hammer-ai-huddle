@@ -38,6 +38,87 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_body_goals: {
+        Row: {
+          created_at: string | null
+          goal_type: string
+          id: string
+          is_active: boolean | null
+          started_at: string | null
+          starting_weight_lbs: number | null
+          target_body_fat_percent: number | null
+          target_date: string | null
+          target_weight_lbs: number | null
+          updated_at: string | null
+          user_id: string
+          weekly_change_rate: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          goal_type: string
+          id?: string
+          is_active?: boolean | null
+          started_at?: string | null
+          starting_weight_lbs?: number | null
+          target_body_fat_percent?: number | null
+          target_date?: string | null
+          target_weight_lbs?: number | null
+          updated_at?: string | null
+          user_id: string
+          weekly_change_rate?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          goal_type?: string
+          id?: string
+          is_active?: boolean | null
+          started_at?: string | null
+          starting_weight_lbs?: number | null
+          target_body_fat_percent?: number | null
+          target_date?: string | null
+          target_weight_lbs?: number | null
+          updated_at?: string | null
+          user_id?: string
+          weekly_change_rate?: number | null
+        }
+        Relationships: []
+      }
+      athlete_events: {
+        Row: {
+          created_at: string | null
+          event_date: string
+          event_time: string | null
+          event_type: string
+          id: string
+          intensity_level: number | null
+          notes: string | null
+          sport: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_date: string
+          event_time?: string | null
+          event_type: string
+          id?: string
+          intensity_level?: number | null
+          notes?: string | null
+          sport?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_date?: string
+          event_time?: string | null
+          event_type?: string
+          id?: string
+          intensity_level?: number | null
+          notes?: string | null
+          sport?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -830,42 +911,177 @@ export type Database = {
         }
         Relationships: []
       }
+      nutrition_food_database: {
+        Row: {
+          barcode: string | null
+          brand: string | null
+          calories_per_serving: number | null
+          carbs_g: number | null
+          created_at: string | null
+          created_by: string | null
+          external_id: string | null
+          fats_g: number | null
+          fiber_g: number | null
+          id: string
+          name: string
+          protein_g: number | null
+          serving_size: string | null
+          serving_size_grams: number | null
+          sodium_mg: number | null
+          source: string | null
+          sugar_g: number | null
+        }
+        Insert: {
+          barcode?: string | null
+          brand?: string | null
+          calories_per_serving?: number | null
+          carbs_g?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          external_id?: string | null
+          fats_g?: number | null
+          fiber_g?: number | null
+          id?: string
+          name: string
+          protein_g?: number | null
+          serving_size?: string | null
+          serving_size_grams?: number | null
+          sodium_mg?: number | null
+          source?: string | null
+          sugar_g?: number | null
+        }
+        Update: {
+          barcode?: string | null
+          brand?: string | null
+          calories_per_serving?: number | null
+          carbs_g?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          external_id?: string | null
+          fats_g?: number | null
+          fiber_g?: number | null
+          id?: string
+          name?: string
+          protein_g?: number | null
+          serving_size?: string | null
+          serving_size_grams?: number | null
+          sodium_mg?: number | null
+          source?: string | null
+          sugar_g?: number | null
+        }
+        Relationships: []
+      }
+      nutrition_meal_templates: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          food_items: Json | null
+          id: string
+          is_favorite: boolean | null
+          meal_type: string | null
+          name: string
+          prep_time_minutes: number | null
+          total_calories: number | null
+          total_carbs_g: number | null
+          total_fats_g: number | null
+          total_protein_g: number | null
+          updated_at: string | null
+          use_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          food_items?: Json | null
+          id?: string
+          is_favorite?: boolean | null
+          meal_type?: string | null
+          name: string
+          prep_time_minutes?: number | null
+          total_calories?: number | null
+          total_carbs_g?: number | null
+          total_fats_g?: number | null
+          total_protein_g?: number | null
+          updated_at?: string | null
+          use_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          food_items?: Json | null
+          id?: string
+          is_favorite?: boolean | null
+          meal_type?: string | null
+          name?: string
+          prep_time_minutes?: number | null
+          total_calories?: number | null
+          total_carbs_g?: number | null
+          total_fats_g?: number | null
+          total_protein_g?: number | null
+          updated_at?: string | null
+          use_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       nutrition_streaks: {
         Row: {
           badges_earned: string[] | null
           created_at: string | null
           current_streak: number
+          hydration_streak: number | null
           id: string
+          last_hydration_date: string | null
+          last_meal_log_date: string | null
+          last_supplement_date: string | null
           last_visit_date: string | null
           longest_streak: number
+          meal_logging_streak: number | null
+          supplement_streak: number | null
           tips_collected: number
           total_visits: number
           updated_at: string | null
           user_id: string
+          weekly_consistency_score: number | null
         }
         Insert: {
           badges_earned?: string[] | null
           created_at?: string | null
           current_streak?: number
+          hydration_streak?: number | null
           id?: string
+          last_hydration_date?: string | null
+          last_meal_log_date?: string | null
+          last_supplement_date?: string | null
           last_visit_date?: string | null
           longest_streak?: number
+          meal_logging_streak?: number | null
+          supplement_streak?: number | null
           tips_collected?: number
           total_visits?: number
           updated_at?: string | null
           user_id: string
+          weekly_consistency_score?: number | null
         }
         Update: {
           badges_earned?: string[] | null
           created_at?: string | null
           current_streak?: number
+          hydration_streak?: number | null
           id?: string
+          last_hydration_date?: string | null
+          last_meal_log_date?: string | null
+          last_supplement_date?: string | null
           last_visit_date?: string | null
           longest_streak?: number
+          meal_logging_streak?: number | null
+          supplement_streak?: number | null
           tips_collected?: number
           total_visits?: number
           updated_at?: string | null
           user_id?: string
+          weekly_consistency_score?: number | null
         }
         Relationships: []
       }
@@ -898,6 +1114,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          activity_level: string | null
           avatar_url: string | null
           batting_side: Database["public"]["Enums"]["batting_side"] | null
           bio: string | null
@@ -909,12 +1126,14 @@ export type Database = {
           contact_email: string | null
           created_at: string | null
           credentials: string[] | null
+          date_of_birth: string | null
           enrolled_in_college: boolean | null
           experience_level: string | null
           first_name: string | null
           full_name: string | null
           graduation_year: number | null
           height: string | null
+          height_inches: number | null
           high_school_grad_year: number | null
           id: string
           independent_league: string | null
@@ -925,6 +1144,7 @@ export type Database = {
           mlb_affiliate: string | null
           position: string | null
           preferred_language: string | null
+          sex: string | null
           social_facebook: string | null
           social_instagram: string | null
           social_linkedin: string | null
@@ -945,6 +1165,7 @@ export type Database = {
           years_affiliated: number | null
         }
         Insert: {
+          activity_level?: string | null
           avatar_url?: string | null
           batting_side?: Database["public"]["Enums"]["batting_side"] | null
           bio?: string | null
@@ -956,12 +1177,14 @@ export type Database = {
           contact_email?: string | null
           created_at?: string | null
           credentials?: string[] | null
+          date_of_birth?: string | null
           enrolled_in_college?: boolean | null
           experience_level?: string | null
           first_name?: string | null
           full_name?: string | null
           graduation_year?: number | null
           height?: string | null
+          height_inches?: number | null
           high_school_grad_year?: number | null
           id: string
           independent_league?: string | null
@@ -972,6 +1195,7 @@ export type Database = {
           mlb_affiliate?: string | null
           position?: string | null
           preferred_language?: string | null
+          sex?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_linkedin?: string | null
@@ -992,6 +1216,7 @@ export type Database = {
           years_affiliated?: number | null
         }
         Update: {
+          activity_level?: string | null
           avatar_url?: string | null
           batting_side?: Database["public"]["Enums"]["batting_side"] | null
           bio?: string | null
@@ -1003,12 +1228,14 @@ export type Database = {
           contact_email?: string | null
           created_at?: string | null
           credentials?: string[] | null
+          date_of_birth?: string | null
           enrolled_in_college?: boolean | null
           experience_level?: string | null
           first_name?: string | null
           full_name?: string | null
           graduation_year?: number | null
           height?: string | null
+          height_inches?: number | null
           high_school_grad_year?: number | null
           id?: string
           independent_league?: string | null
@@ -1019,6 +1246,7 @@ export type Database = {
           mlb_affiliate?: string | null
           position?: string | null
           preferred_language?: string | null
+          sex?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_linkedin?: string | null
@@ -2278,16 +2506,69 @@ export type Database = {
         }
         Relationships: []
       }
+      vault_meal_plans: {
+        Row: {
+          created_at: string | null
+          estimated_calories: number | null
+          estimated_carbs_g: number | null
+          estimated_fats_g: number | null
+          estimated_protein_g: number | null
+          food_items: Json | null
+          id: string
+          is_completed: boolean | null
+          meal_name: string | null
+          meal_type: string | null
+          notes: string | null
+          planned_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          estimated_calories?: number | null
+          estimated_carbs_g?: number | null
+          estimated_fats_g?: number | null
+          estimated_protein_g?: number | null
+          food_items?: Json | null
+          id?: string
+          is_completed?: boolean | null
+          meal_name?: string | null
+          meal_type?: string | null
+          notes?: string | null
+          planned_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          estimated_calories?: number | null
+          estimated_carbs_g?: number | null
+          estimated_fats_g?: number | null
+          estimated_protein_g?: number | null
+          food_items?: Json | null
+          id?: string
+          is_completed?: boolean | null
+          meal_name?: string | null
+          meal_type?: string | null
+          notes?: string | null
+          planned_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vault_nutrition_goals: {
         Row: {
           calorie_goal: number | null
           carbs_goal: number | null
           created_at: string | null
           fats_goal: number | null
+          fiber_goal: number | null
+          goal_adjustment_percent: number | null
           hydration_goal: number | null
           id: string
           protein_goal: number | null
+          sodium_limit: number | null
+          sugar_limit: number | null
           supplement_goals: Json | null
+          tdee_calculated: number | null
           updated_at: string | null
           user_id: string
         }
@@ -2296,10 +2577,15 @@ export type Database = {
           carbs_goal?: number | null
           created_at?: string | null
           fats_goal?: number | null
+          fiber_goal?: number | null
+          goal_adjustment_percent?: number | null
           hydration_goal?: number | null
           id?: string
           protein_goal?: number | null
+          sodium_limit?: number | null
+          sugar_limit?: number | null
           supplement_goals?: Json | null
+          tdee_calculated?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -2308,10 +2594,15 @@ export type Database = {
           carbs_goal?: number | null
           created_at?: string | null
           fats_goal?: number | null
+          fiber_goal?: number | null
+          goal_adjustment_percent?: number | null
           hydration_goal?: number | null
           id?: string
           protein_goal?: number | null
+          sodium_limit?: number | null
+          sugar_limit?: number | null
           supplement_goals?: Json | null
+          tdee_calculated?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -2698,6 +2989,45 @@ export type Database = {
           supplements_taken?: Json | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      vault_vitamin_logs: {
+        Row: {
+          created_at: string | null
+          dosage: string | null
+          entry_date: string | null
+          id: string
+          is_recurring: boolean | null
+          taken: boolean | null
+          taken_at: string | null
+          timing: string | null
+          user_id: string
+          vitamin_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          dosage?: string | null
+          entry_date?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          taken?: boolean | null
+          taken_at?: string | null
+          timing?: string | null
+          user_id: string
+          vitamin_name: string
+        }
+        Update: {
+          created_at?: string | null
+          dosage?: string | null
+          entry_date?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          taken?: boolean | null
+          taken_at?: string | null
+          timing?: string | null
+          user_id?: string
+          vitamin_name?: string
         }
         Relationships: []
       }
