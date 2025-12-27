@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Apple, Settings, Sparkles } from 'lucide-react';
+import { ArrowLeft, Apple, Settings, Sparkles, Link } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTDEE } from '@/hooks/useTDEE';
 import { useDailyNutritionTargets } from '@/hooks/useDailyNutritionTargets';
@@ -17,6 +17,9 @@ import { MealLoggingDialog, PrefilledItem } from './MealLoggingDialog';
 import { HydrationTrackerWidget } from '@/components/custom-activities/HydrationTrackerWidget';
 import { VitaminSupplementTracker } from '@/components/vault/VitaminSupplementTracker';
 import { WeightTrackingSection } from './WeightTrackingSection';
+import { MealPlanningTab } from './MealPlanningTab';
+import { ShoppingListTab } from './ShoppingListTab';
+import { RecipeImportDialog } from './RecipeImportDialog';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { RecipeIngredient } from '@/hooks/useRecipes';
@@ -246,6 +249,16 @@ export function NutritionHubContent() {
         >
           <Settings className="h-4 w-4" />
         </Button>
+        
+        <RecipeImportDialog 
+          onImport={(recipe) => console.log('Imported recipe:', recipe)}
+          trigger={
+            <Button variant="outline" size="sm">
+              <Link className="h-4 w-4 mr-2" />
+              {t('recipeImport.importFromUrl', 'Import Recipe')}
+            </Button>
+          }
+        />
       </div>
 
       {/* Macro Targets Display */}
@@ -262,16 +275,16 @@ export function NutritionHubContent() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="today" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="today">{t('nutrition.today', 'Today')}</TabsTrigger>
           <TabsTrigger value="weekly">{t('nutrition.weekly', 'Weekly')}</TabsTrigger>
+          <TabsTrigger value="planning">{t('mealPlanning.title', 'Planning')}</TabsTrigger>
+          <TabsTrigger value="shopping">{t('shoppingList.title', 'Shopping')}</TabsTrigger>
           <TabsTrigger value="supplements">{t('nutrition.supplements', 'Supplements')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="today" className="space-y-4 mt-4">
           <NutritionDailyLog onEditMeal={(id) => console.log('Edit meal:', id)} />
-          
-          {/* Hydration Widget */}
           <div className="flex justify-center">
             <HydrationTrackerWidget />
           </div>
@@ -279,6 +292,14 @@ export function NutritionHubContent() {
         
         <TabsContent value="weekly" className="mt-4">
           <NutritionWeeklySummary />
+        </TabsContent>
+        
+        <TabsContent value="planning" className="mt-4">
+          <MealPlanningTab />
+        </TabsContent>
+        
+        <TabsContent value="shopping" className="mt-4">
+          <ShoppingListTab />
         </TabsContent>
         
         <TabsContent value="supplements" className="mt-4">
