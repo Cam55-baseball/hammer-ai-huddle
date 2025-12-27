@@ -16,7 +16,7 @@ import { useMealVaultSync } from '@/hooks/useMealVaultSync';
 import { MealData } from '@/types/customActivity';
 import { toast } from 'sonner';
 
-interface PrefilledItem {
+export interface PrefilledItem {
   name: string;
   quantity: number;
   unit: string;

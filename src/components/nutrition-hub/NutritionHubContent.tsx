@@ -13,12 +13,12 @@ import { MacroTargetDisplay } from './MacroTargetDisplay';
 import { QuickLogActions } from './QuickLogActions';
 import { NutritionDailyLog } from './NutritionDailyLog';
 import { NutritionWeeklySummary } from './NutritionWeeklySummary';
-import { MealLoggingDialog } from './MealLoggingDialog';
+import { MealLoggingDialog, PrefilledItem } from './MealLoggingDialog';
 import { HydrationTrackerWidget } from '@/components/custom-activities/HydrationTrackerWidget';
 import { VitaminSupplementTracker } from '@/components/vault/VitaminSupplementTracker';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-
+import { RecipeIngredient } from '@/hooks/useRecipes';
 interface ConsumedTotals {
   calories: number;
   protein: number;
@@ -48,6 +48,7 @@ export function NutritionHubContent() {
   // Meal logging dialog state
   const [mealLoggingOpen, setMealLoggingOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState('');
+  const [prefilledItems, setPrefilledItems] = useState<PrefilledItem[] | undefined>();
 
   // Fetch today's consumed totals
   const fetchConsumed = useCallback(async () => {
@@ -96,13 +97,36 @@ export function NutritionHubContent() {
     }
   }, [tdeeLoading, isProfileComplete, hasActiveGoal]);
 
-  const handleLogMeal = (mealType: string) => {
+  const handleLogMeal = (mealType: string, items?: RecipeIngredient[]) => {
     setSelectedMealType(mealType);
+    // Convert RecipeIngredient[] to PrefilledItem[] if provided
+    if (items && items.length > 0) {
+      const converted: PrefilledItem[] = items.map(item => ({
+        name: item.name,
+        calories: item.calories || 0,
+        protein_g: item.protein_g || 0,
+        carbs_g: item.carbs_g || 0,
+        fats_g: item.fats_g || 0,
+        quantity: item.quantity,
+        unit: item.unit,
+      }));
+      setPrefilledItems(converted);
+    } else {
+      setPrefilledItems(undefined);
+    }
     setMealLoggingOpen(true);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setMealLoggingOpen(open);
+    if (!open) {
+      setPrefilledItems(undefined);
+    }
   };
 
   const handleMealSaved = () => {
     setMealLoggingOpen(false);
+    setPrefilledItems(undefined);
     fetchConsumed();
   };
 
@@ -261,9 +285,10 @@ export function NutritionHubContent() {
       {/* Meal Logging Dialog */}
       <MealLoggingDialog
         open={mealLoggingOpen}
-        onOpenChange={setMealLoggingOpen}
+        onOpenChange={handleDialogClose}
         mealType={selectedMealType}
         onMealSaved={handleMealSaved}
+        prefilledItems={prefilledItems}
       />
     </div>
   );
