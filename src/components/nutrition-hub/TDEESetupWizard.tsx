@@ -99,17 +99,18 @@ export function TDEESetupWizard({ onComplete, onDataSaved, initialData }: TDEESe
 
     setSaving(true);
     try {
+      // Use upsert to handle both new and existing profile rows
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
           sex: sex,
           date_of_birth: dateOfBirth,
           height_inches: totalHeightInches,
           weight: weightLbs,
           activity_level: activityLevel,
           updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+        }, { onConflict: 'id' });
 
       if (error) throw error;
 

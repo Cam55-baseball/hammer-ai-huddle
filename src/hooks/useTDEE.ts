@@ -49,21 +49,29 @@ export function useTDEE() {
     setLoading(true);
     
     try {
-      // Fetch profile biometrics
-      const { data: profile } = await supabase
+      // Fetch profile biometrics - use maybeSingle to handle missing rows
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('weight, height_inches, date_of_birth, sex, activity_level')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
+      
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      }
       
       if (profile) {
+        const parsedWeight = profile.weight ? parseFloat(profile.weight) : null;
         setBiometrics({
-          weightLbs: profile.weight ? parseFloat(profile.weight) : null,
+          weightLbs: parsedWeight && !isNaN(parsedWeight) ? parsedWeight : null,
           heightInches: profile.height_inches,
           dateOfBirth: profile.date_of_birth ? new Date(profile.date_of_birth) : null,
           sex: profile.sex as Sex | null,
           activityLevel: (profile.activity_level as ActivityLevel) || 'moderately_active'
         });
+      } else {
+        // Explicitly clear biometrics if no profile exists
+        setBiometrics(null);
       }
 
       // Fetch active body goal
@@ -85,6 +93,8 @@ export function useTDEE() {
           weeklyChangeRate: goal.weekly_change_rate || 1,
           isActive: goal.is_active || false
         });
+      } else {
+        setActiveGoal(null);
       }
 
       // Fetch today's event type
@@ -102,6 +112,8 @@ export function useTDEE() {
           eventType: event.event_type as DayType,
           intensityLevel: event.intensity_level
         });
+      } else {
+        setTodayEvent(null);
       }
     } catch (error) {
       console.error('Error fetching TDEE data:', error);
