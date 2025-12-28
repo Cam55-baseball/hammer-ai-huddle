@@ -124,14 +124,12 @@ export function NutritionHubContent() {
     fetchConsumed();
   }, [fetchConsumed]);
 
-  // Check if we need to show setup wizards
+  // Deterministically set wizard visibility based on profile completeness
   useEffect(() => {
     if (!tdeeLoading) {
-      if (!isProfileComplete) {
-        setShowTDEESetup(true);
-      } else if (!hasActiveGoal) {
-        setShowGoalSetup(true);
-      }
+      // Explicitly set both states based on current data
+      setShowTDEESetup(!isProfileComplete);
+      setShowGoalSetup(isProfileComplete && !hasActiveGoal);
     }
   }, [tdeeLoading, isProfileComplete, hasActiveGoal]);
 
