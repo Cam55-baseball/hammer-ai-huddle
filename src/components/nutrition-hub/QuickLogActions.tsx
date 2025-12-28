@@ -90,22 +90,27 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
   };
 
   const handleBarcodeFound = (food: FoodSearchResult) => {
-    // Convert FoodSearchResult to RecipeIngredient format for meal logging
-    const ingredient: RecipeIngredient = {
-      food_id: food.id,
-      name: food.brand ? `${food.name} (${food.brand})` : food.name,
-      quantity: 1,
-      unit: food.servingSize || t('nutrition.barcode.serving', 'serving'),
-      calories: food.caloriesPerServing || 0,
-      protein_g: food.protein || 0,
-      carbs_g: food.carbs || 0,
-      fats_g: food.fats || 0,
-    };
-    
-    // Store the scanned food and show meal type selector
-    pendingItemsRef.current = [ingredient];
-    pendingMessageRef.current = t('nutrition.foodAdded', 'Added {{name}} to meal', { name: food.name });
-    setMealTypeSelectorOpen(true);
+    try {
+      // Convert FoodSearchResult to RecipeIngredient format for meal logging
+      const ingredient: RecipeIngredient = {
+        food_id: food.id,
+        name: food.brand ? `${food.name} (${food.brand})` : food.name,
+        quantity: 1,
+        unit: food.servingSize || t('nutrition.barcode.serving', 'serving'),
+        calories: food.caloriesPerServing || 0,
+        protein_g: food.protein || 0,
+        carbs_g: food.carbs || 0,
+        fats_g: food.fats || 0,
+      };
+      
+      // Store the scanned food and show meal type selector
+      pendingItemsRef.current = [ingredient];
+      pendingMessageRef.current = t('nutrition.foodAdded', 'Added {{name}} to meal', { name: food.name });
+      setMealTypeSelectorOpen(true);
+    } catch (error) {
+      console.error('Error handling barcode result:', error);
+      toast.error(t('nutrition.barcode.addFailed', 'Failed to add food. Please try again.'));
+    }
   };
 
   if (compact) {

@@ -62,7 +62,7 @@ export function NutritionHubContent() {
   const { user } = useAuth();
   const { createRecipe } = useRecipes();
   
-  const { isProfileComplete, hasActiveGoal, loading: tdeeLoading, biometrics } = useTDEE();
+  const { isProfileComplete, hasActiveGoal, loading: tdeeLoading, biometrics, refetch: refetchTDEE } = useTDEE();
   
   const [showTDEESetup, setShowTDEESetup] = useState(false);
   const [showGoalSetup, setShowGoalSetup] = useState(false);
@@ -250,7 +250,7 @@ export function NutritionHubContent() {
           </div>
         </div>
         
-        <TDEESetupWizard onComplete={handleTDEEComplete} />
+        <TDEESetupWizard onComplete={handleTDEEComplete} onDataSaved={refetchTDEE} />
       </div>
     );
   }

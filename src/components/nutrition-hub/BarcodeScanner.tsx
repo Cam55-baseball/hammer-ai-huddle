@@ -109,15 +109,22 @@ export function BarcodeScanner({
     if (scannerState === 'processing') return;
     
     setScannerState('processing');
-    await stopScanner();
-
-    const food = await searchByBarcode(decodedText);
     
-    if (food) {
-      setFoundFood(food);
-      setScannerState('found');
-    } else {
-      setScannerState('not_found');
+    try {
+      await stopScanner();
+
+      const food = await searchByBarcode(decodedText);
+      
+      if (food) {
+        setFoundFood(food);
+        setScannerState('found');
+      } else {
+        setScannerState('not_found');
+      }
+    } catch (error) {
+      console.error('Error processing barcode:', error);
+      setScannerState('error');
+      setCameraError('Failed to process barcode. Please try again.');
     }
   };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -40,79 +40,83 @@ export function useTDEE() {
   const [todayEvent, setTodayEvent] = useState<TodayEvent | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!user?.id) {
       setLoading(false);
       return;
     }
-
-    const fetchData = async () => {
-      setLoading(true);
+    
+    setLoading(true);
+    
+    try {
+      // Fetch profile biometrics
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('weight, height_inches, date_of_birth, sex, activity_level')
+        .eq('id', user.id)
+        .single();
       
-      try {
-        // Fetch profile biometrics
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('weight, height_inches, date_of_birth, sex, activity_level')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile) {
-          setBiometrics({
-            weightLbs: profile.weight ? parseFloat(profile.weight) : null,
-            heightInches: profile.height_inches,
-            dateOfBirth: profile.date_of_birth ? new Date(profile.date_of_birth) : null,
-            sex: profile.sex as Sex | null,
-            activityLevel: (profile.activity_level as ActivityLevel) || 'moderately_active'
-          });
-        }
-
-        // Fetch active body goal
-        const { data: goal } = await supabase
-          .from('athlete_body_goals')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        if (goal) {
-          setActiveGoal({
-            id: goal.id,
-            goalType: goal.goal_type as GoalType,
-            targetWeightLbs: goal.target_weight_lbs,
-            targetBodyFatPercent: goal.target_body_fat_percent,
-            weeklyChangeRate: goal.weekly_change_rate || 1,
-            isActive: goal.is_active || false
-          });
-        }
-
-        // Fetch today's event type
-        const today = new Date().toISOString().split('T')[0];
-        const { data: event } = await supabase
-          .from('athlete_events')
-          .select('event_type, intensity_level')
-          .eq('user_id', user.id)
-          .eq('event_date', today)
-          .limit(1)
-          .maybeSingle();
-        
-        if (event) {
-          setTodayEvent({
-            eventType: event.event_type as DayType,
-            intensityLevel: event.intensity_level
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching TDEE data:', error);
-      } finally {
-        setLoading(false);
+      if (profile) {
+        setBiometrics({
+          weightLbs: profile.weight ? parseFloat(profile.weight) : null,
+          heightInches: profile.height_inches,
+          dateOfBirth: profile.date_of_birth ? new Date(profile.date_of_birth) : null,
+          sex: profile.sex as Sex | null,
+          activityLevel: (profile.activity_level as ActivityLevel) || 'moderately_active'
+        });
       }
-    };
 
-    fetchData();
+      // Fetch active body goal
+      const { data: goal } = await supabase
+        .from('athlete_body_goals')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (goal) {
+        setActiveGoal({
+          id: goal.id,
+          goalType: goal.goal_type as GoalType,
+          targetWeightLbs: goal.target_weight_lbs,
+          targetBodyFatPercent: goal.target_body_fat_percent,
+          weeklyChangeRate: goal.weekly_change_rate || 1,
+          isActive: goal.is_active || false
+        });
+      }
+
+      // Fetch today's event type
+      const today = new Date().toISOString().split('T')[0];
+      const { data: event } = await supabase
+        .from('athlete_events')
+        .select('event_type, intensity_level')
+        .eq('user_id', user.id)
+        .eq('event_date', today)
+        .limit(1)
+        .maybeSingle();
+      
+      if (event) {
+        setTodayEvent({
+          eventType: event.event_type as DayType,
+          intensityLevel: event.intensity_level
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching TDEE data:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [user?.id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const refetch = useCallback(() => {
+    return fetchData();
+  }, [fetchData]);
 
   const nutritionTargets = useMemo((): NutritionTargets | null => {
     if (!biometrics?.weightLbs || !biometrics?.heightInches || 
@@ -153,6 +157,7 @@ export function useTDEE() {
     nutritionTargets,
     isProfileComplete,
     hasActiveGoal,
-    loading
+    loading,
+    refetch
   };
 }
