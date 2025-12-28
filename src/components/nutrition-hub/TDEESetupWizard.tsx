@@ -21,6 +21,7 @@ import {
 
 interface TDEESetupWizardProps {
   onComplete?: () => void;
+  onDataSaved?: () => Promise<void> | void;
   initialData?: {
     sex?: Sex;
     dateOfBirth?: string;
@@ -47,7 +48,7 @@ const ACTIVITY_LABELS: Record<ActivityLevel, { label: string; description: strin
   extra_active: { label: 'Extra Active', description: 'Very hard exercise or physical job' }
 };
 
-export function TDEESetupWizard({ onComplete, initialData }: TDEESetupWizardProps) {
+export function TDEESetupWizard({ onComplete, onDataSaved, initialData }: TDEESetupWizardProps) {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -113,6 +114,10 @@ export function TDEESetupWizard({ onComplete, initialData }: TDEESetupWizardProp
       if (error) throw error;
 
       toast.success('TDEE profile saved!');
+      
+      // Refresh the TDEE data to update isProfileComplete
+      await onDataSaved?.();
+      
       onComplete?.();
     } catch (error) {
       console.error('Error saving TDEE profile:', error);
