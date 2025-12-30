@@ -37,10 +37,17 @@ export function BarcodeScanner({
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize scanner when dialog opens
+  // Initialize scanner when dialog opens - with delay to ensure DOM is ready
   useEffect(() => {
     if (open && !manualMode) {
-      startScanner();
+      // Delay to ensure the container is mounted after dialog opens
+      const timeoutId = setTimeout(() => {
+        startScanner();
+      }, 150);
+      return () => {
+        clearTimeout(timeoutId);
+        stopScanner();
+      };
     }
 
     return () => {
@@ -49,7 +56,13 @@ export function BarcodeScanner({
   }, [open, manualMode]);
 
   const startScanner = async () => {
-    if (!containerRef.current) return;
+    // Check if container exists, retry if not
+    const container = document.getElementById('barcode-scanner-container');
+    if (!container) {
+      console.warn('Scanner container not ready, retrying...');
+      setTimeout(startScanner, 100);
+      return;
+    }
     
     setScannerState('starting');
     setCameraError(null);
@@ -63,8 +76,13 @@ export function BarcodeScanner({
           Html5QrcodeSupportedFormats.EAN_13,
           Html5QrcodeSupportedFormats.CODE_128,
           Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.CODE_93,
+          Html5QrcodeSupportedFormats.CODABAR,
+          Html5QrcodeSupportedFormats.ITF,
+          Html5QrcodeSupportedFormats.QR_CODE,
         ],
         verbose: false,
+        useBarCodeDetectorIfSupported: true, // Use native BarcodeDetector API when available
       });
       
       scannerRef.current = html5Qrcode;
@@ -72,9 +90,17 @@ export function BarcodeScanner({
       await html5Qrcode.start(
         { facingMode: 'environment' },
         {
-          fps: 10,
-          qrbox: { width: 250, height: 150 },
+          fps: 15, // Increased from 10 for faster detection
+          qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+            // Dynamic sizing for better barcode targeting across screen sizes
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            return {
+              width: Math.floor(minEdge * 0.85),
+              height: Math.floor(minEdge * 0.45),
+            };
+          },
           aspectRatio: 1.5,
+          disableFlip: true, // Improve performance
         },
         onScanSuccess,
         () => {} // Ignore scan failures
@@ -228,16 +254,22 @@ export function BarcodeScanner({
                 )}
               />
               
-              {/* Scanner overlay */}
+              {/* Scanner overlay with guidance */}
               {scannerState === 'scanning' && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-64 h-24 border-2 border-primary rounded-lg relative">
-                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary" />
-                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary" />
-                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary" />
-                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary" />
-                    <div className="absolute inset-x-0 top-1/2 h-0.5 bg-primary/50 animate-pulse" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <p className="text-sm text-white font-medium mb-3 bg-black/50 px-3 py-1 rounded-full">
+                    {t('nutrition.barcode.pointAtBarcode', 'Point camera at barcode')}
+                  </p>
+                  <div className="w-[80%] max-w-72 h-28 border-2 border-primary rounded-lg relative shadow-lg">
+                    <div className="absolute -top-0.5 -left-0.5 w-6 h-6 border-t-3 border-l-3 border-primary rounded-tl" />
+                    <div className="absolute -top-0.5 -right-0.5 w-6 h-6 border-t-3 border-r-3 border-primary rounded-tr" />
+                    <div className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-3 border-l-3 border-primary rounded-bl" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-3 border-r-3 border-primary rounded-br" />
+                    <div className="absolute inset-x-2 top-1/2 h-0.5 bg-primary animate-pulse" />
                   </div>
+                  <p className="text-xs text-white/80 mt-2 bg-black/40 px-2 py-0.5 rounded">
+                    {t('nutrition.barcode.holdSteady', 'Hold steady')}
+                  </p>
                 </div>
               )}
 
