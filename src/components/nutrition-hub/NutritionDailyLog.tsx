@@ -14,12 +14,14 @@ interface NutritionDailyLogProps {
   date?: Date;
   onDateChange?: (date: Date) => void;
   onEditMeal?: (mealId: string) => void;
+  refreshTrigger?: number;
 }
 
 export function NutritionDailyLog({ 
   date: controlledDate, 
   onDateChange,
-  onEditMeal 
+  onEditMeal,
+  refreshTrigger 
 }: NutritionDailyLogProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -76,7 +78,7 @@ export function NutritionDailyLog({
 
   useEffect(() => {
     fetchMeals();
-  }, [fetchMeals]);
+  }, [fetchMeals, refreshTrigger]);
 
   const handleDeleteMeal = async (mealId: string) => {
     try {

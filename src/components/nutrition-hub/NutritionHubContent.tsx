@@ -79,6 +79,7 @@ export function NutritionHubContent() {
   const [mealLoggingOpen, setMealLoggingOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState('');
   const [prefilledItems, setPrefilledItems] = useState<PrefilledItem[] | undefined>();
+  const [dailyLogRefreshTrigger, setDailyLogRefreshTrigger] = useState(0);
 
   // Get nutrition targets
   const { targets } = useDailyNutritionTargets({
@@ -164,6 +165,7 @@ export function NutritionHubContent() {
     setMealLoggingOpen(false);
     setPrefilledItems(undefined);
     fetchConsumed();
+    setDailyLogRefreshTrigger(prev => prev + 1);
   };
 
   const handleTDEEComplete = () => {
@@ -360,7 +362,7 @@ export function NutritionHubContent() {
         </TabsList>
         
         <TabsContent value="today" className="space-y-4 mt-4">
-          <NutritionDailyLog onEditMeal={(id) => console.log('Edit meal:', id)} />
+          <NutritionDailyLog onEditMeal={(id) => console.log('Edit meal:', id)} refreshTrigger={dailyLogRefreshTrigger} />
           
           {/* AI Meal Suggestions - shows after user has logged food */}
           <AIMealSuggestions
