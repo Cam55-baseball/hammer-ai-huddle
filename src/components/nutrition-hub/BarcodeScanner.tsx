@@ -1,11 +1,11 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScanBarcode, Camera, CameraOff, Loader2, X, Keyboard, RotateCcw, Plus, Circle, Lightbulb } from 'lucide-react';
+import { ScanBarcode, Camera, CameraOff, Loader2, X, Keyboard, RotateCcw, Plus } from 'lucide-react';
 import { useBarcodeSearch } from '@/hooks/useBarcodeSearch';
 import { FoodSearchResult } from '@/hooks/useFoodSearch';
 import { cn } from '@/lib/utils';
@@ -17,26 +17,7 @@ interface BarcodeScannerProps {
   onCreateCustom?: (barcode: string) => void;
 }
 
-type ScannerState = 'idle' | 'starting' | 'preview' | 'capturing' | 'analyzing' | 'found' | 'not_found' | 'no_barcode' | 'error';
-
-const SUPPORTED_FORMATS = [
-  Html5QrcodeSupportedFormats.UPC_A,
-  Html5QrcodeSupportedFormats.UPC_E,
-  Html5QrcodeSupportedFormats.EAN_8,
-  Html5QrcodeSupportedFormats.EAN_13,
-  Html5QrcodeSupportedFormats.CODE_128,
-  Html5QrcodeSupportedFormats.CODE_39,
-  Html5QrcodeSupportedFormats.CODE_93,
-  Html5QrcodeSupportedFormats.CODABAR,
-  Html5QrcodeSupportedFormats.ITF,
-  Html5QrcodeSupportedFormats.QR_CODE,
-];
-
-// Native BarcodeDetector format mapping
-const NATIVE_FORMATS = [
-  'upc_a', 'upc_e', 'ean_8', 'ean_13', 
-  'code_128', 'code_39', 'code_93', 'codabar', 'itf', 'qr_code'
-];
+type ScannerState = 'idle' | 'starting' | 'scanning' | 'processing' | 'found' | 'not_found' | 'error';
 
 export function BarcodeScanner({
   open,
@@ -45,315 +26,94 @@ export function BarcodeScanner({
   onCreateCustom,
 }: BarcodeScannerProps) {
   const { t } = useTranslation();
-  const { searchByBarcode, loading, lastScannedBarcode } = useBarcodeSearch();
+  const { searchByBarcode, loading, error, lastScannedBarcode } = useBarcodeSearch();
   
   const [scannerState, setScannerState] = useState<ScannerState>('idle');
   const [foundFood, setFoundFood] = useState<FoodSearchResult | null>(null);
   const [manualMode, setManualMode] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [isVideoReady, setIsVideoReady] = useState(false);
-  const [torchOn, setTorchOn] = useState(false);
-  const [torchSupported, setTorchSupported] = useState(false);
   
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Cleanup on unmount or close
+  // Initialize scanner when dialog opens
   useEffect(() => {
+    if (open && !manualMode) {
+      startScanner();
+    }
+
     return () => {
-      stopCamera();
-      cleanupDecoder();
+      stopScanner();
     };
-  }, []);
+  }, [open, manualMode]);
 
-  // Reset state when dialog closes
-  useEffect(() => {
-    if (!open) {
-      stopCamera();
-      cleanupDecoder();
-      resetState();
-    }
-  }, [open]);
-
-  const resetState = () => {
-    setFoundFood(null);
-    setCapturedImage(null);
-    setManualBarcode('');
-    setManualMode(false);
-    setScannerState('idle');
-    setCameraError(null);
-    setIsVideoReady(false);
-    setTorchOn(false);
-  };
-
-  const cleanupDecoder = async () => {
-    if (html5QrCodeRef.current) {
-      try {
-        await html5QrCodeRef.current.clear();
-      } catch (e) {
-        // Ignore cleanup errors
-      }
-      html5QrCodeRef.current = null;
-    }
-  };
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setIsVideoReady(false);
-    setTorchSupported(false);
-  };
-
-  // Start camera - called directly from user gesture (button click)
-  const startCamera = async () => {
+  const startScanner = async () => {
+    if (!containerRef.current) return;
+    
     setScannerState('starting');
     setCameraError(null);
-    setCapturedImage(null);
-    setIsVideoReady(false);
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1920, min: 640 },
-          height: { ideal: 1080, min: 480 }
-        }
-      });
-      
-      streamRef.current = stream;
-      
-      // Check for torch support
-      const videoTrack = stream.getVideoTracks()[0];
-      const capabilities = videoTrack.getCapabilities?.() as any;
-      if (capabilities?.torch) {
-        setTorchSupported(true);
-      }
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Wait for video to be ready
-        videoRef.current.onloadedmetadata = () => {
-          if (videoRef.current) {
-            videoRef.current.play()
-              .then(() => {
-                // Additional check for video dimensions
-                const checkReady = () => {
-                  if (videoRef.current && 
-                      videoRef.current.videoWidth > 0 && 
-                      videoRef.current.videoHeight > 0 &&
-                      videoRef.current.readyState >= 2) {
-                    setIsVideoReady(true);
-                    setScannerState('preview');
-                  } else {
-                    requestAnimationFrame(checkReady);
-                  }
-                };
-                checkReady();
-              })
-              .catch(err => {
-                console.error('Failed to play video:', err);
-                setCameraError('Failed to start video playback');
-                setScannerState('error');
-              });
-          }
-        };
-      }
-    } catch (err) {
-      console.error('Failed to start camera:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      
-      if (errorMessage.includes('Permission') || errorMessage.includes('NotAllowed')) {
-        setCameraError('Camera access denied. Please grant camera permissions in your browser settings.');
-      } else if (errorMessage.includes('NotFound') || errorMessage.includes('DevicesNotFound')) {
-        setCameraError('No camera found on this device.');
-      } else {
-        setCameraError(`Camera error: ${errorMessage}`);
-      }
-      setScannerState('error');
-    }
-  };
-
-  const toggleTorch = async () => {
-    if (!streamRef.current) return;
-    
-    const videoTrack = streamRef.current.getVideoTracks()[0];
-    try {
-      await videoTrack.applyConstraints({
-        advanced: [{ torch: !torchOn } as any]
-      });
-      setTorchOn(!torchOn);
-    } catch (e) {
-      console.error('Failed to toggle torch:', e);
-    }
-  };
-
-  // Capture frame using ImageCapture API (high quality) or canvas fallback
-  const captureFrame = useCallback(async () => {
-    if (!videoRef.current || !isVideoReady) return;
-    
-    setScannerState('capturing');
-    
-    const video = videoRef.current;
-    
-    try {
-      let imageBlob: Blob;
-      
-      // Try ImageCapture API first (higher quality)
-      if ('ImageCapture' in window && streamRef.current) {
-        try {
-          const track = streamRef.current.getVideoTracks()[0];
-          const imageCapture = new (window as any).ImageCapture(track);
-          imageBlob = await imageCapture.takePhoto();
-        } catch (e) {
-          console.log('ImageCapture failed, falling back to canvas:', e);
-          imageBlob = await captureViaCanvas(video);
-        }
-      } else {
-        imageBlob = await captureViaCanvas(video);
-      }
-      
-      // Save captured image for display
-      const imageDataUrl = URL.createObjectURL(imageBlob);
-      setCapturedImage(imageDataUrl);
-      
-      // Analyze the image
-      const file = new File([imageBlob], 'barcode.jpg', { type: 'image/jpeg' });
-      await analyzeWithBurstRetry(file, video);
-      
-    } catch (err) {
-      console.error('Capture failed:', err);
-      setScannerState('error');
-      setCameraError('Failed to capture image. Please try again.');
-    }
-  }, [isVideoReady]);
-
-  const captureViaCanvas = (video: HTMLVideoElement): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const canvas = canvasRef.current;
-      if (!canvas) {
-        reject(new Error('Canvas not available'));
-        return;
-      }
-      
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Canvas context not available'));
-        return;
-      }
-      
-      ctx.drawImage(video, 0, 0);
-      
-      canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error('Failed to create blob'));
-        }
-      }, 'image/jpeg', 0.95);
-    });
-  };
-
-  // Burst retry - try multiple frames if first decode fails
-  const analyzeWithBurstRetry = async (initialFile: File, video: HTMLVideoElement) => {
-    setScannerState('analyzing');
-    
-    // Try initial capture first
-    let result = await tryDecode(initialFile);
-    if (result) {
-      await lookupProduct(result);
-      return;
-    }
-    
-    // Burst retry: capture 2 more frames with delays
-    for (let attempt = 0; attempt < 2; attempt++) {
-      await new Promise(r => setTimeout(r, 150));
-      
-      if (!videoRef.current || !streamRef.current) break;
-      
-      try {
-        const blob = await captureViaCanvas(video);
-        const file = new File([blob], `barcode-${attempt}.jpg`, { type: 'image/jpeg' });
-        result = await tryDecode(file);
-        
-        if (result) {
-          await lookupProduct(result);
-          return;
-        }
-      } catch (e) {
-        console.log(`Burst attempt ${attempt + 1} failed:`, e);
-      }
-    }
-    
-    // All attempts failed
-    setScannerState('no_barcode');
-  };
-
-  // Try decoding with native BarcodeDetector first, then html5-qrcode
-  const tryDecode = async (imageFile: File): Promise<string | null> => {
-    // Try native BarcodeDetector first (faster, more reliable on supported browsers)
-    if ('BarcodeDetector' in window) {
-      try {
-        const detector = new (window as any).BarcodeDetector({ formats: NATIVE_FORMATS });
-        const imageBitmap = await createImageBitmap(imageFile);
-        const barcodes = await detector.detect(imageBitmap);
-        
-        if (barcodes.length > 0) {
-          console.log('Native BarcodeDetector found:', barcodes[0].rawValue);
-          return barcodes[0].rawValue;
-        }
-      } catch (e) {
-        console.log('Native BarcodeDetector failed:', e);
-      }
-    }
-    
-    // Fallback to html5-qrcode
-    try {
-      // Create a fresh instance for each scan
-      const tempId = `scanner-${Date.now()}`;
-      const tempDiv = document.createElement('div');
-      tempDiv.id = tempId;
-      tempDiv.style.display = 'none';
-      document.body.appendChild(tempDiv);
-      
-      const html5QrCode = new Html5Qrcode(tempId, {
-        formatsToSupport: SUPPORTED_FORMATS,
+      const html5Qrcode = new Html5Qrcode('barcode-scanner-container', {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+        ],
         verbose: false,
-        useBarCodeDetectorIfSupported: true,
       });
       
-      try {
-        const decodedText = await html5QrCode.scanFile(imageFile, false);
-        console.log('html5-qrcode found:', decodedText);
-        await html5QrCode.clear();
-        document.body.removeChild(tempDiv);
-        return decodedText;
-      } catch (e) {
-        await html5QrCode.clear();
-        document.body.removeChild(tempDiv);
-        throw e;
-      }
-    } catch (e) {
-      // No barcode found
-      return null;
+      scannerRef.current = html5Qrcode;
+
+      await html5Qrcode.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 150 },
+          aspectRatio: 1.5,
+        },
+        onScanSuccess,
+        () => {} // Ignore scan failures
+      );
+
+      setScannerState('scanning');
+    } catch (err) {
+      console.error('Failed to start scanner:', err);
+      setCameraError(
+        err instanceof Error 
+          ? err.message 
+          : 'Camera access denied. Please grant camera permissions.'
+      );
+      setScannerState('error');
     }
   };
 
-  const lookupProduct = async (barcode: string) => {
+  const stopScanner = async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+      } catch (err) {
+        // Ignore stop errors
+      }
+      scannerRef.current = null;
+    }
+  };
+
+  const onScanSuccess = async (decodedText: string) => {
+    // Prevent multiple scans
+    if (scannerState === 'processing') return;
+    
+    setScannerState('processing');
+    
     try {
-      const food = await searchByBarcode(barcode);
+      await stopScanner();
+
+      const food = await searchByBarcode(decodedText);
       
       if (food) {
         setFoundFood(food);
@@ -362,16 +122,16 @@ export function BarcodeScanner({
         setScannerState('not_found');
       }
     } catch (error) {
-      console.error('Error looking up product:', error);
+      console.error('Error processing barcode:', error);
       setScannerState('error');
-      setCameraError('Failed to look up product. Please try again.');
+      setCameraError('Failed to process barcode. Please try again.');
     }
   };
 
   const handleManualSearch = async () => {
     if (!manualBarcode.trim()) return;
     
-    setScannerState('analyzing');
+    setScannerState('processing');
     const food = await searchByBarcode(manualBarcode.trim());
     
     if (food) {
@@ -396,41 +156,32 @@ export function BarcodeScanner({
     handleClose();
   };
 
-  const handleRetake = () => {
+  const handleScanAgain = () => {
     setFoundFood(null);
-    setCapturedImage(null);
     setManualBarcode('');
-    setScannerState('preview');
-    // Camera stream is still running, just reset state
+    setScannerState('idle');
+    if (!manualMode) {
+      startScanner();
+    }
   };
 
   const handleClose = () => {
-    stopCamera();
-    cleanupDecoder();
-    resetState();
+    stopScanner();
+    setFoundFood(null);
+    setManualBarcode('');
+    setManualMode(false);
+    setScannerState('idle');
+    setCameraError(null);
     onOpenChange(false);
   };
 
   const toggleManualMode = () => {
     if (!manualMode) {
-      stopCamera();
-    } else {
-      // Switching back to camera - start it
-      startCamera();
+      stopScanner();
     }
     setManualMode(!manualMode);
-    setCapturedImage(null);
     setScannerState('idle');
   };
-
-  // Handle initial camera start when opening in camera mode
-  const handleOpenCamera = () => {
-    setManualMode(false);
-    startCamera();
-  };
-
-  const showCaptureUI = (scannerState === 'preview' || scannerState === 'starting') && !manualMode;
-  const showCapturedImage = (scannerState === 'capturing' || scannerState === 'analyzing' || scannerState === 'no_barcode') && !manualMode;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -442,20 +193,13 @@ export function BarcodeScanner({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Hidden canvas for capturing frames */}
-        <canvas ref={canvasRef} className="hidden" />
-
         <div className="space-y-4">
           {/* Scanner / Manual Input Toggle */}
           <div className="flex gap-2">
             <Button
               variant={!manualMode ? 'default' : 'outline'}
               size="sm"
-              onClick={() => {
-                if (manualMode) {
-                  handleOpenCamera();
-                }
-              }}
+              onClick={() => manualMode && toggleManualMode()}
               className="flex-1"
             >
               <Camera className="h-4 w-4 mr-2" />
@@ -464,11 +208,7 @@ export function BarcodeScanner({
             <Button
               variant={manualMode ? 'default' : 'outline'}
               size="sm"
-              onClick={() => {
-                if (!manualMode) {
-                  toggleManualMode();
-                }
-              }}
+              onClick={() => !manualMode && toggleManualMode()}
               className="flex-1"
             >
               <Keyboard className="h-4 w-4 mr-2" />
@@ -476,151 +216,59 @@ export function BarcodeScanner({
             </Button>
           </div>
 
-          {/* Initial state - prompt to start camera */}
-          {!manualMode && scannerState === 'idle' && (
-            <div className="w-full aspect-[4/3] bg-muted rounded-lg flex items-center justify-center">
-              <div className="text-center p-4">
-                <Camera className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground mb-4">
-                  {t('nutrition.barcode.tapToStart', 'Tap to start the camera and scan a barcode')}
-                </p>
-                <Button onClick={startCamera} size="lg">
-                  <Camera className="h-4 w-4 mr-2" />
-                  {t('nutrition.barcode.startCamera', 'Start Camera')}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Camera Preview View */}
-          {!manualMode && scannerState !== 'found' && scannerState !== 'not_found' && scannerState !== 'idle' && (
+          {/* Camera Scanner View */}
+          {!manualMode && scannerState !== 'found' && scannerState !== 'not_found' && (
             <div className="relative">
-              {/* Live video preview - always mounted when camera is active */}
-              <div className={cn("relative", showCapturedImage && "hidden")}>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full aspect-[4/3] bg-muted rounded-lg object-cover"
-                />
-                
-                {/* Starting state overlay */}
-                {scannerState === 'starting' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-lg">
-                    <div className="text-center">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {t('nutrition.barcode.startingCamera', 'Starting camera...')}
-                      </p>
-                    </div>
+              <div
+                id="barcode-scanner-container"
+                ref={containerRef}
+                className={cn(
+                  "w-full aspect-[4/3] bg-muted rounded-lg overflow-hidden",
+                  scannerState === 'starting' && "animate-pulse"
+                )}
+              />
+              
+              {/* Scanner overlay */}
+              {scannerState === 'scanning' && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-64 h-24 border-2 border-primary rounded-lg relative">
+                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary" />
+                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary" />
+                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary" />
+                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary" />
+                    <div className="absolute inset-x-0 top-1/2 h-0.5 bg-primary/50 animate-pulse" />
                   </div>
-                )}
-                
-                {/* Preview overlay with targeting guide */}
-                {scannerState === 'preview' && (
-                  <>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <p className="text-sm text-white font-medium mb-3 bg-black/60 px-3 py-1.5 rounded-full shadow-lg">
-                        {t('nutrition.barcode.positionBarcode', 'Position barcode in frame')}
-                      </p>
-                      <div className="w-[80%] max-w-72 h-28 border-2 border-white/80 rounded-lg relative">
-                        <div className="absolute -top-0.5 -left-0.5 w-6 h-6 border-t-3 border-l-3 border-primary rounded-tl" />
-                        <div className="absolute -top-0.5 -right-0.5 w-6 h-6 border-t-3 border-r-3 border-primary rounded-tr" />
-                        <div className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-3 border-l-3 border-primary rounded-bl" />
-                        <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-3 border-r-3 border-primary rounded-br" />
-                      </div>
-                      <p className="text-xs text-white/80 mt-2 bg-black/40 px-2 py-1 rounded">
-                        {t('nutrition.barcode.holdSteady', 'Hold steady in good lighting')}
-                      </p>
-                    </div>
-                    
-                    {/* Torch toggle */}
-                    {torchSupported && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className={cn(
-                          "absolute top-3 right-3 bg-background/80 backdrop-blur-sm",
-                          torchOn && "bg-yellow-500/20 border-yellow-500"
-                        )}
-                        onClick={toggleTorch}
-                      >
-                        <Lightbulb className={cn("h-4 w-4", torchOn && "text-yellow-500")} />
-                      </Button>
-                    )}
-                    
-                    {/* Capture Button */}
-                    <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-                      <Button
-                        onClick={captureFrame}
-                        size="lg"
-                        className="rounded-full h-16 w-16 p-0 shadow-lg"
-                        disabled={!isVideoReady}
-                      >
-                        <Circle className="h-8 w-8 fill-current" />
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* Captured image display */}
-              {showCapturedImage && capturedImage && (
-                <div className="relative">
-                  <img 
-                    src={capturedImage} 
-                    alt="Captured barcode" 
-                    className="w-full aspect-[4/3] bg-muted rounded-lg object-cover"
-                  />
-                  
-                  {/* Analyzing overlay */}
-                  {(scannerState === 'capturing' || scannerState === 'analyzing') && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-lg">
-                      <div className="text-center">
-                        <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
-                        <p className="text-sm font-medium mt-2">
-                          {t('nutrition.barcode.analyzingImage', 'Analyzing barcode...')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* No barcode detected */}
-                  {scannerState === 'no_barcode' && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
-                      <div className="text-center p-4">
-                        <X className="h-10 w-10 mx-auto text-muted-foreground" />
-                        <p className="font-medium mt-2">
-                          {t('nutrition.barcode.noBarcodeDetected', 'No barcode detected')}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {t('nutrition.barcode.tryAgainTip', 'Make sure the barcode is clear and well-lit')}
-                        </p>
-                        <div className="flex gap-2 mt-4 justify-center">
-                          <Button variant="outline" size="sm" onClick={handleRetake}>
-                            <RotateCcw className="h-4 w-4 mr-2" />
-                            {t('nutrition.barcode.retake', 'Retake')}
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={toggleManualMode}>
-                            <Keyboard className="h-4 w-4 mr-2" />
-                            {t('nutrition.barcode.enterManually', 'Enter Manually')}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+              {/* Starting state */}
+              {scannerState === 'starting' && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                    <p className="text-sm text-muted-foreground mt-2">{t('nutrition.barcode.startingCamera', 'Starting camera...')}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Processing state */}
+              {scannerState === 'processing' && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                    <p className="text-sm text-muted-foreground mt-2">{t('nutrition.barcode.lookingUpProduct', 'Looking up product...')}</p>
+                  </div>
                 </div>
               )}
 
               {/* Camera error */}
               {scannerState === 'error' && cameraError && (
-                <div className="w-full aspect-[4/3] bg-muted rounded-lg flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center bg-background/90">
                   <div className="text-center p-4">
                     <CameraOff className="h-10 w-10 mx-auto text-muted-foreground" />
                     <p className="text-sm text-destructive mt-2">{cameraError}</p>
                     <div className="flex gap-2 mt-4 justify-center">
-                      <Button variant="outline" size="sm" onClick={startCamera}>
+                      <Button variant="outline" size="sm" onClick={startScanner}>
                         <RotateCcw className="h-4 w-4 mr-2" />
                         {t('nutrition.barcode.retry', 'Retry')}
                       </Button>
@@ -702,7 +350,7 @@ export function BarcodeScanner({
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" onClick={handleRetake} className="flex-1">
+                <Button variant="outline" onClick={handleScanAgain} className="flex-1">
                   <RotateCcw className="h-4 w-4 mr-2" />
                   {t('nutrition.barcode.scanAgain', 'Scan Again')}
                 </Button>
@@ -714,28 +362,21 @@ export function BarcodeScanner({
             </div>
           )}
 
-          {/* Product Not Found */}
+          {/* Not Found State */}
           {scannerState === 'not_found' && (
-            <div className="space-y-4">
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <X className="h-10 w-10 mx-auto text-muted-foreground" />
-                <p className="font-medium mt-2">
-                  {t('nutrition.barcode.productNotFound', 'Product Not Found')}
+            <div className="space-y-4 text-center py-4">
+              <div className="text-muted-foreground">
+                <X className="h-12 w-12 mx-auto mb-2 text-destructive/50" />
+                <p className="font-medium">{t('nutrition.barcode.productNotFound', 'Product Not Found')}</p>
+                <p className="text-sm">
+                  {t('nutrition.barcode.barcodeNumber', 'Barcode')}: {lastScannedBarcode}
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t('nutrition.barcode.notInDatabase', "This product isn't in our database yet")}
-                </p>
-                {lastScannedBarcode && (
-                  <p className="text-xs text-muted-foreground mt-2 font-mono">
-                    {t('nutrition.barcode.scannedCode', 'Barcode')}: {lastScannedBarcode}
-                  </p>
-                )}
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" onClick={handleRetake} className="flex-1">
+                <Button variant="outline" onClick={handleScanAgain} className="flex-1">
                   <RotateCcw className="h-4 w-4 mr-2" />
-                  {t('nutrition.barcode.tryAgain', 'Try Again')}
+                  {t('nutrition.barcode.scanAgain', 'Scan Again')}
                 </Button>
                 {onCreateCustom && (
                   <Button onClick={handleCreateCustom} className="flex-1">
@@ -745,6 +386,11 @@ export function BarcodeScanner({
                 )}
               </div>
             </div>
+          )}
+
+          {/* API Error */}
+          {error && scannerState !== 'not_found' && (
+            <p className="text-sm text-destructive text-center">{error}</p>
           )}
         </div>
       </DialogContent>
