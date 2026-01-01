@@ -248,9 +248,9 @@ export default function ActiveDrillView({
 
         {/* Objective */}
         {instructions && (
-          <div className="max-w-md w-full space-y-6">
+          <div className="max-w-md w-full space-y-5">
             <div className="text-center">
-              <p className="text-lg text-[hsl(var(--tex-vision-text))]">
+              <p className="text-lg text-[hsl(var(--tex-vision-text))] font-medium">
                 {instructions.objective}
               </p>
             </div>
@@ -261,11 +261,13 @@ export default function ActiveDrillView({
                 <Info className="h-4 w-4" />
                 {t('texVision.drills.howToPlay', 'How to Play')}
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {instructions.howToPlay.map((step, i) => (
-                  <li key={i} className="text-sm text-[hsl(var(--tex-vision-text-muted))] flex items-start gap-2">
-                    <span className="text-[hsl(var(--tex-vision-feedback))] font-medium">{i + 1}.</span>
-                    {step}
+                  <li key={i} className="text-sm text-[hsl(var(--tex-vision-text-muted))] flex items-start gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--tex-vision-feedback))]/20 text-[hsl(var(--tex-vision-feedback))] flex items-center justify-center text-xs font-bold">
+                      {i + 1}
+                    </span>
+                    <span className="pt-0.5">{step}</span>
                   </li>
                 ))}
               </ul>
@@ -273,8 +275,15 @@ export default function ActiveDrillView({
 
             {/* Tips */}
             {instructions.tips && instructions.tips.length > 0 && (
-              <div className="text-center text-sm text-[hsl(var(--tex-vision-timing))]">
-                💡 {instructions.tips[0]}
+              <div className="bg-[hsl(var(--tex-vision-timing))]/10 rounded-lg p-3 space-y-2">
+                <h4 className="text-xs font-semibold text-[hsl(var(--tex-vision-timing))] uppercase tracking-wide">
+                  {t('texVision.drills.tips', 'Tips')}
+                </h4>
+                {instructions.tips.map((tip, i) => (
+                  <p key={i} className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
+                    • {tip}
+                  </p>
+                ))}
               </div>
             )}
           </div>
