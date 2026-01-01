@@ -34,6 +34,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
   const [reactionTimes, setReactionTimes] = useState<number[]>([]);
   const [lastClickTime, setLastClickTime] = useState(Date.now());
   const [isComplete, setIsComplete] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
 
   const totalRounds = tier === 'beginner' ? 5 : tier === 'advanced' ? 7 : 10;
   const shapes: ('circle' | 'square' | 'triangle')[] = ['circle', 'square', 'triangle'];
@@ -68,6 +69,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
     setGrid(cells);
     setFoundCount(0);
     setLastClickTime(Date.now());
+    setGameStarted(true);
   }, [gridSize, targetCount]);
 
   useEffect(() => {
@@ -76,7 +78,10 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
 
   // Check if round is complete
   useEffect(() => {
-    if (foundCount === targetCount && !isComplete) {
+    // Guard: Only check completion if game has started and grid exists
+    if (!gameStarted || grid.length === 0 || isComplete) return;
+    
+    if (foundCount === targetCount) {
       const newRounds = roundsCompleted + 1;
       setRoundsCompleted(newRounds);
       

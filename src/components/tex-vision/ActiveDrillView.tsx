@@ -4,7 +4,8 @@ import { DrillResult } from '@/hooks/useTexVisionSession';
 import { useAdaptiveDifficulty } from '@/hooks/useAdaptiveDifficulty';
 import { FatigueIndicator } from './shared/FatigueIndicator';
 import { Button } from '@/components/ui/button';
-import { Play, X, Coffee, AlertTriangle } from 'lucide-react';
+import { Play, X, Coffee, AlertTriangle, Target, Info } from 'lucide-react';
+import { DRILL_INSTRUCTIONS } from './drillInstructions';
 
 // Import all drill components
 import SoftFocusGame from './drills/SoftFocusGame';
@@ -71,7 +72,7 @@ export default function ActiveDrillView({
   sport = 'baseball',
 }: ActiveDrillViewProps) {
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<'countdown' | 'playing' | 'break'>('countdown');
+  const [phase, setPhase] = useState<'instructions' | 'countdown' | 'playing' | 'break'>('instructions');
   const [countdown, setCountdown] = useState(3);
   const [fatigueLevel, setFatigueLevel] = useState(0);
   const [drillsCompletedThisSession, setDrillsCompletedThisSession] = useState(0);
@@ -215,6 +216,78 @@ export default function ActiveDrillView({
           className="mt-6"
         >
           {t('texVision.fatigue.skipBreak', 'Skip Break')}
+        </Button>
+      </div>
+    );
+  }
+
+  // Instructions phase
+  if (phase === 'instructions') {
+    const instructions = DRILL_INSTRUCTIONS[drillId];
+    
+    return (
+      <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] flex flex-col items-center justify-center p-6">
+        {/* Exit button */}
+        <button
+          onClick={onExit}
+          className="absolute top-4 right-4 p-2 rounded-full bg-[hsl(var(--tex-vision-primary))]/50 text-[hsl(var(--tex-vision-text-muted))] hover:bg-[hsl(var(--tex-vision-primary))]/70 transition-colors"
+        >
+          <X className="h-6 w-6" />
+        </button>
+
+        {/* Drill icon and name */}
+        <Target className="h-12 w-12 text-[hsl(var(--tex-vision-feedback))] mb-4" />
+        <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
+          {DRILL_NAMES[drillId] || drillId}
+        </h2>
+        
+        {/* Difficulty badge */}
+        <div className="text-sm text-[hsl(var(--tex-vision-text-muted))] mb-6">
+          {t('texVision.difficulty.level', 'Level')} {currentDifficultyLevel}/10 • {tier}
+        </div>
+
+        {/* Objective */}
+        {instructions && (
+          <div className="max-w-md w-full space-y-6">
+            <div className="text-center">
+              <p className="text-lg text-[hsl(var(--tex-vision-text))]">
+                {instructions.objective}
+              </p>
+            </div>
+
+            {/* How to play */}
+            <div className="bg-[hsl(var(--tex-vision-primary))]/30 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-[hsl(var(--tex-vision-text))] mb-3 flex items-center gap-2">
+                <Info className="h-4 w-4" />
+                {t('texVision.drills.howToPlay', 'How to Play')}
+              </h3>
+              <ul className="space-y-2">
+                {instructions.howToPlay.map((step, i) => (
+                  <li key={i} className="text-sm text-[hsl(var(--tex-vision-text-muted))] flex items-start gap-2">
+                    <span className="text-[hsl(var(--tex-vision-feedback))] font-medium">{i + 1}.</span>
+                    {step}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Tips */}
+            {instructions.tips && instructions.tips.length > 0 && (
+              <div className="text-center text-sm text-[hsl(var(--tex-vision-timing))]">
+                💡 {instructions.tips[0]}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Start button */}
+        <Button 
+          onClick={() => setPhase('countdown')}
+          className="mt-8 bg-[hsl(var(--tex-vision-feedback))] hover:bg-[hsl(var(--tex-vision-feedback))]/80 text-[hsl(var(--tex-vision-primary-dark))]"
+          size="lg"
+        >
+          <Play className="h-5 w-5 mr-2" />
+          {t('texVision.drills.startDrill', 'Start Drill')}
         </Button>
       </div>
     );
