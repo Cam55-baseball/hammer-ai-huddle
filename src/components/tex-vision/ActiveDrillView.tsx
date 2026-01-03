@@ -226,78 +226,81 @@ export default function ActiveDrillView({
     const instructions = DRILL_INSTRUCTIONS[drillId];
     
     return (
-      <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] flex flex-col items-center justify-center p-6">
+      <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] flex flex-col items-center overflow-y-auto p-6 py-8">
         {/* Exit button */}
         <button
           onClick={onExit}
-          className="absolute top-4 right-4 p-2 rounded-full bg-[hsl(var(--tex-vision-primary))]/50 text-[hsl(var(--tex-vision-text-muted))] hover:bg-[hsl(var(--tex-vision-primary))]/70 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-full bg-[hsl(var(--tex-vision-primary))]/50 text-[hsl(var(--tex-vision-text-muted))] hover:bg-[hsl(var(--tex-vision-primary))]/70 transition-colors z-10"
         >
           <X className="h-6 w-6" />
         </button>
 
-        {/* Drill icon and name */}
-        <Target className="h-12 w-12 text-[hsl(var(--tex-vision-feedback))] mb-4" />
-        <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
-          {DRILL_NAMES[drillId] || drillId}
-        </h2>
-        
-        {/* Difficulty badge */}
-        <div className="text-sm text-[hsl(var(--tex-vision-text-muted))] mb-6">
-          {t('texVision.difficulty.level', 'Level')} {currentDifficultyLevel}/10 • {tier}
-        </div>
-
-        {/* Objective */}
-        {instructions && (
-          <div className="max-w-md w-full space-y-5">
-            <div className="text-center">
-              <p className="text-lg text-[hsl(var(--tex-vision-text))] font-medium">
-                {instructions.objective}
-              </p>
-            </div>
-
-            {/* How to play */}
-            <div className="bg-[hsl(var(--tex-vision-primary))]/30 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-[hsl(var(--tex-vision-text))] mb-3 flex items-center gap-2">
-                <Info className="h-4 w-4" />
-                {t('texVision.drills.howToPlay', 'How to Play')}
-              </h3>
-              <ul className="space-y-3">
-                {instructions.howToPlay.map((step, i) => (
-                  <li key={i} className="text-sm text-[hsl(var(--tex-vision-text-muted))] flex items-start gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--tex-vision-feedback))]/20 text-[hsl(var(--tex-vision-feedback))] flex items-center justify-center text-xs font-bold">
-                      {i + 1}
-                    </span>
-                    <span className="pt-0.5">{step}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Tips */}
-            {instructions.tips && instructions.tips.length > 0 && (
-              <div className="bg-[hsl(var(--tex-vision-timing))]/10 rounded-lg p-3 space-y-2">
-                <h4 className="text-xs font-semibold text-[hsl(var(--tex-vision-timing))] uppercase tracking-wide">
-                  {t('texVision.drills.tips', 'Tips')}
-                </h4>
-                {instructions.tips.map((tip, i) => (
-                  <p key={i} className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
-                    • {tip}
-                  </p>
-                ))}
-              </div>
-            )}
+        {/* Content wrapper - centers when short, scrolls when tall */}
+        <div className="flex flex-col items-center w-full max-w-md mt-auto mb-auto">
+          {/* Drill icon and name */}
+          <Target className="h-12 w-12 text-[hsl(var(--tex-vision-feedback))] mb-4" />
+          <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
+            {DRILL_NAMES[drillId] || drillId}
+          </h2>
+          
+          {/* Difficulty badge */}
+          <div className="text-sm text-[hsl(var(--tex-vision-text-muted))] mb-6">
+            {t('texVision.difficulty.level', 'Level')} {currentDifficultyLevel}/10 • {tier}
           </div>
-        )}
 
-        {/* Start button */}
-        <Button 
-          onClick={() => setPhase('countdown')}
-          className="mt-8 bg-[hsl(var(--tex-vision-feedback))] hover:bg-[hsl(var(--tex-vision-feedback))]/80 text-[hsl(var(--tex-vision-primary-dark))]"
-          size="lg"
-        >
-          <Play className="h-5 w-5 mr-2" />
-          {t('texVision.drills.startDrill', 'Start Drill')}
-        </Button>
+          {/* Objective */}
+          {instructions && (
+            <div className="w-full space-y-5">
+              <div className="text-center">
+                <p className="text-lg text-[hsl(var(--tex-vision-text))] font-medium">
+                  {instructions.objective}
+                </p>
+              </div>
+
+              {/* How to play */}
+              <div className="bg-[hsl(var(--tex-vision-primary))]/30 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-[hsl(var(--tex-vision-text))] mb-3 flex items-center gap-2">
+                  <Info className="h-4 w-4" />
+                  {t('texVision.drills.howToPlay', 'How to Play')}
+                </h3>
+                <ul className="space-y-3">
+                  {instructions.howToPlay.map((step, i) => (
+                    <li key={i} className="text-sm text-[hsl(var(--tex-vision-text-muted))] flex items-start gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--tex-vision-feedback))]/20 text-[hsl(var(--tex-vision-feedback))] flex items-center justify-center text-xs font-bold">
+                        {i + 1}
+                      </span>
+                      <span className="pt-0.5">{step}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Tips */}
+              {instructions.tips && instructions.tips.length > 0 && (
+                <div className="bg-[hsl(var(--tex-vision-timing))]/10 rounded-lg p-3 space-y-2">
+                  <h4 className="text-xs font-semibold text-[hsl(var(--tex-vision-timing))] uppercase tracking-wide">
+                    {t('texVision.drills.tips', 'Tips')}
+                  </h4>
+                  {instructions.tips.map((tip, i) => (
+                    <p key={i} className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
+                      • {tip}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Start button */}
+          <Button 
+            onClick={() => setPhase('countdown')}
+            className="mt-8 bg-[hsl(var(--tex-vision-feedback))] hover:bg-[hsl(var(--tex-vision-feedback))]/80 text-[hsl(var(--tex-vision-primary-dark))]"
+            size="lg"
+          >
+            <Play className="h-5 w-5 mr-2" />
+            {t('texVision.drills.startDrill', 'Start Drill')}
+          </Button>
+        </div>
       </div>
     );
   }
