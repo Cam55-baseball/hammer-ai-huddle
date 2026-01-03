@@ -35,6 +35,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
   const [lastClickTime, setLastClickTime] = useState(Date.now());
   const [isComplete, setIsComplete] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   const totalRounds = tier === 'beginner' ? 5 : tier === 'advanced' ? 7 : 10;
   const shapes: ('circle' | 'square' | 'triangle')[] = ['circle', 'square', 'triangle'];
@@ -70,6 +71,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
     setFoundCount(0);
     setLastClickTime(Date.now());
     setGameStarted(true);
+    setHasInteracted(false);
   }, [gridSize, targetCount]);
 
   useEffect(() => {
@@ -78,8 +80,11 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
 
   // Check if round is complete
   useEffect(() => {
-    // Guard: Only check completion if game has started and grid exists
+    // Guard: Only check completion if game has started, grid exists, and user has interacted (for first round)
     if (!gameStarted || grid.length === 0 || isComplete) return;
+    
+    // For the first round, require user interaction before allowing completion
+    if (roundsCompleted === 0 && !hasInteracted) return;
     
     if (foundCount === targetCount) {
       const newRounds = roundsCompleted + 1;
@@ -110,6 +115,9 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
 
   const handleCellClick = (target: Target) => {
     if (isComplete || target.found) return;
+
+    // Mark that user has interacted (prevents premature first-round completion)
+    setHasInteracted(true);
 
     const now = Date.now();
     const reaction = now - lastClickTime;
