@@ -4,7 +4,7 @@ import { DrillResult } from '@/hooks/useTexVisionSession';
 import { useAdaptiveDifficulty } from '@/hooks/useAdaptiveDifficulty';
 import { FatigueIndicator } from './shared/FatigueIndicator';
 import { Button } from '@/components/ui/button';
-import { Play, X, Coffee, AlertTriangle, Target, Info } from 'lucide-react';
+import { Play, X, Coffee, AlertTriangle, Target, Info, CheckCircle2 } from 'lucide-react';
 import { DRILL_INSTRUCTIONS } from './drillInstructions';
 
 // Import all drill components
@@ -72,11 +72,12 @@ export default function ActiveDrillView({
   sport = 'baseball',
 }: ActiveDrillViewProps) {
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<'instructions' | 'countdown' | 'playing' | 'break'>('instructions');
+  const [phase, setPhase] = useState<'instructions' | 'countdown' | 'playing' | 'break' | 'conclusion'>('instructions');
   const [countdown, setCountdown] = useState(3);
   const [fatigueLevel, setFatigueLevel] = useState(0);
   const [drillsCompletedThisSession, setDrillsCompletedThisSession] = useState(0);
   const [breakTimer, setBreakTimer] = useState(0);
+  const [completedResult, setCompletedResult] = useState<DrillResult | null>(null);
 
   // Adaptive difficulty hook
   const { 
@@ -145,8 +146,10 @@ export default function ActiveDrillView({
       fatigueScore: newFatigue,
     };
 
-    onComplete(fullResult);
-  }, [drillId, tier, fatigueLevel, drillsCompletedThisSession, updateDifficulty, onComplete]);
+    // Store result and show conclusion phase instead of immediately exiting
+    setCompletedResult(fullResult);
+    setPhase('conclusion');
+  }, [drillId, tier, fatigueLevel, drillsCompletedThisSession, updateDifficulty]);
 
   // Handle taking a break
   const handleTakeBreak = useCallback(() => {
@@ -172,6 +175,91 @@ export default function ActiveDrillView({
             {t('common.goBack', 'Go Back')}
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  // Helper function for performance feedback
+  const getPerformanceFeedback = (accuracy?: number): string => {
+    if (accuracy === undefined) return t('texVision.feedback.complete', 'Great job completing the drill!');
+    if (accuracy >= 90) return t('texVision.feedback.excellent', 'Excellent! Outstanding performance!');
+    if (accuracy >= 75) return t('texVision.feedback.great', 'Great work! Keep it up!');
+    if (accuracy >= 60) return t('texVision.feedback.good', 'Good effort! Room to improve.');
+    return t('texVision.feedback.keepPracticing', "Keep practicing! You'll improve.");
+  };
+
+  // Conclusion phase - show after drill completes
+  if (phase === 'conclusion' && completedResult) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] flex flex-col items-center justify-center p-6">
+        {/* Success icon */}
+        <div className="w-20 h-20 rounded-full bg-[hsl(var(--tex-vision-success))]/20 flex items-center justify-center mb-6">
+          <CheckCircle2 className="h-12 w-12 text-[hsl(var(--tex-vision-success))]" />
+        </div>
+        
+        {/* Drill name and completion message */}
+        <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
+          {DRILL_NAMES[drillId] || drillId}
+        </h2>
+        <p className="text-lg text-[hsl(var(--tex-vision-success))] mb-8">
+          {t('texVision.drills.drillComplete', 'Drill Complete!')}
+        </p>
+        
+        {/* Results summary */}
+        <div className="bg-[hsl(var(--tex-vision-primary))]/30 rounded-xl p-6 w-full max-w-sm mb-8">
+          <h3 className="text-sm font-semibold text-[hsl(var(--tex-vision-text-muted))] mb-4 text-center">
+            {t('texVision.drills.yourResults', 'Your Results')}
+          </h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            {/* Accuracy */}
+            {completedResult.accuracyPercent !== undefined && (
+              <div className="text-center">
+                <div className="text-3xl font-bold text-[hsl(var(--tex-vision-feedback))]">
+                  {completedResult.accuracyPercent}%
+                </div>
+                <div className="text-xs text-[hsl(var(--tex-vision-text-muted))]">
+                  {t('texVision.drills.accuracy', 'Accuracy')}
+                </div>
+              </div>
+            )}
+            
+            {/* Reaction Time */}
+            {completedResult.reactionTimeMs !== undefined && completedResult.reactionTimeMs > 0 && (
+              <div className="text-center">
+                <div className="text-3xl font-bold text-[hsl(var(--tex-vision-timing))]">
+                  {completedResult.reactionTimeMs}
+                </div>
+                <div className="text-xs text-[hsl(var(--tex-vision-text-muted))]">
+                  {t('texVision.drills.reactionMs', 'Avg ms')}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Performance feedback based on accuracy */}
+          <div className="mt-4 pt-4 border-t border-[hsl(var(--tex-vision-primary-light))]/20 text-center">
+            <p className="text-sm text-[hsl(var(--tex-vision-text))]">
+              {getPerformanceFeedback(completedResult.accuracyPercent)}
+            </p>
+          </div>
+        </div>
+        
+        {/* Fatigue indicator (if elevated) */}
+        {fatigueLevel >= 40 && (
+          <div className="mb-6 w-full max-w-sm">
+            <FatigueIndicator level={fatigueLevel} showRecoverySuggestion />
+          </div>
+        )}
+        
+        {/* Done button */}
+        <Button
+          onClick={() => onComplete(completedResult)}
+          className="bg-[hsl(var(--tex-vision-feedback))] hover:bg-[hsl(var(--tex-vision-feedback))]/80 text-[hsl(var(--tex-vision-primary-dark))]"
+          size="lg"
+        >
+          {t('texVision.drills.done', 'Done')}
+        </Button>
       </div>
     );
   }
