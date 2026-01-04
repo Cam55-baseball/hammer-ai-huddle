@@ -190,8 +190,8 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
         {renderTarget('up')}
         {renderTarget('down')}
 
-        {/* Instructions */}
-        <div className="absolute bottom-4 text-center">
+        {/* Instructions - positioned above metrics area */}
+        <div className="absolute bottom-20 left-4 right-4 text-center">
           <p className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
             {t('texVision.drills.peripheralVision.instruction', 'Click the target that appears in your peripheral vision')}
           </p>
