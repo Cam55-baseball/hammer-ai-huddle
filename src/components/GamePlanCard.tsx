@@ -1310,7 +1310,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => { setEditingTemplate(null); setPresetActivityType('meal'); setBuilderOpen(true); }}
+                  onClick={handleQuickLogClick}
                   className="gap-2 bg-green-600 hover:bg-green-700 text-white font-bold"
                 >
                   <Utensils className="h-4 w-4" />
@@ -1380,7 +1380,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => { setEditingTemplate(null); setPresetActivityType('meal'); setBuilderOpen(true); }}
+                    onClick={handleQuickLogClick}
                     className="gap-2 bg-green-600 hover:bg-green-700 text-white font-bold"
                   >
                     <Utensils className="h-4 w-4" />

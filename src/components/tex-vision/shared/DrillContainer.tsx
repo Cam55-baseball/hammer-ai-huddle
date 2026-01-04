@@ -76,7 +76,7 @@ export function DrillContainer({
         </div>
       </CardHeader>
       
-      <CardContent className="relative space-y-4">
+      <CardContent className="relative space-y-4 text-tex-vision-text">
         {/* Main drill content */}
         <div className="min-h-[300px] flex items-center justify-center">
           {children}
