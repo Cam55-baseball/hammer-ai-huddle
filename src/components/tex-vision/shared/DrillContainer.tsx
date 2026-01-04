@@ -82,9 +82,9 @@ export function DrillContainer({
           {children}
         </div>
         
-        {/* Metrics overlay */}
+        {/* Metrics overlay - positioned higher to avoid covering drill content */}
         {metrics && (
-          <div className="absolute bottom-4 left-4 right-4">
+          <div className="absolute bottom-16 left-4 right-4">
             {metrics}
           </div>
         )}
