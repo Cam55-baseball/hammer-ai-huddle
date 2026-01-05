@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { differenceInDays, addDays } from 'date-fns';
+import { toast } from 'sonner';
 
 interface ActiveDrill {
   id: string;
@@ -41,6 +42,8 @@ export default function TexVision() {
     updateChecklist,
     updateStreak,
     refetch,
+    checkAndUpdateTierProgression,
+    getTierProgressionStats,
   } = useTexVisionProgress(currentSport);
 
   const { getOrCreateTodaySession, saveDrillResult } = useTexVisionSession(currentSport);
@@ -132,10 +135,20 @@ export default function TexVision() {
       await saveDrillResult(sessionId, result);
       await updateChecklist(result.drillType, true);
       await updateStreak();
+      
+      // Check for tier progression after drill completion
+      const newTier = await checkAndUpdateTierProgression();
+      if (newTier) {
+        toast.success(`🎉 Tier Unlocked: ${newTier.charAt(0).toUpperCase() + newTier.slice(1)}!`, {
+          description: `You've earned access to ${newTier} level drills. Keep training!`,
+          duration: 5000,
+        });
+      }
+      
       await refetch();
     }
     setActiveDrill(null);
-  }, [sessionId, saveDrillResult, updateChecklist, updateStreak, refetch]);
+  }, [sessionId, saveDrillResult, updateChecklist, updateStreak, checkAndUpdateTierProgression, refetch]);
 
   const handleDrillExit = useCallback(() => {
     setActiveDrill(null);
@@ -291,6 +304,7 @@ export default function TexVision() {
           metrics={metrics}
           progress={progress}
           loading={progressLoading}
+          getTierProgressionStats={getTierProgressionStats}
         />
 
         {/* S2 Cognition Diagnostics */}
