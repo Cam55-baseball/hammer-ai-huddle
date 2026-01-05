@@ -199,6 +199,114 @@ export const useTexVisionProgress = (sport: string = 'baseball') => {
     }
   }, [user, progress]);
 
+  // Check and update tier progression based on drill performance
+  const checkAndUpdateTierProgression = useCallback(async (): Promise<TexVisionTier | null> => {
+    if (!user || !progress) return null;
+
+    try {
+      // Fetch all drill results for the user
+      const { data: results, error } = await supabase
+        .from('tex_vision_drill_results')
+        .select('tier, accuracy_percent')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Calculate stats per tier
+      const tierStats: Record<string, { count: number; totalAccuracy: number }> = {
+        beginner: { count: 0, totalAccuracy: 0 },
+        advanced: { count: 0, totalAccuracy: 0 },
+        chaos: { count: 0, totalAccuracy: 0 },
+      };
+
+      results?.forEach((r) => {
+        if (r.tier in tierStats && r.accuracy_percent !== null) {
+          tierStats[r.tier].count++;
+          tierStats[r.tier].totalAccuracy += r.accuracy_percent;
+        }
+      });
+
+      // Check progression based on current tier
+      let newTier: TexVisionTier = progress.current_tier;
+
+      if (progress.current_tier === 'beginner') {
+        const beginner = tierStats.beginner;
+        const avgAccuracy = beginner.count > 0 ? beginner.totalAccuracy / beginner.count : 0;
+        // Unlock Advanced: 10+ beginner drills at 70%+ average accuracy
+        if (beginner.count >= 10 && avgAccuracy >= 70) {
+          newTier = 'advanced';
+        }
+      } else if (progress.current_tier === 'advanced') {
+        const advanced = tierStats.advanced;
+        const avgAccuracy = advanced.count > 0 ? advanced.totalAccuracy / advanced.count : 0;
+        // Unlock Chaos: 10+ advanced drills at 80%+ average accuracy
+        if (advanced.count >= 10 && avgAccuracy >= 80) {
+          newTier = 'chaos';
+        }
+      }
+
+      // Update if tier changed
+      if (newTier !== progress.current_tier) {
+        const { data, error: updateError } = await supabase
+          .from('tex_vision_progress')
+          .update({ current_tier: newTier })
+          .eq('id', progress.id)
+          .select()
+          .single();
+
+        if (updateError) throw updateError;
+        setProgress(data as TexVisionProgressData);
+        return newTier;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error checking tier progression:', error);
+      return null;
+    }
+  }, [user, progress]);
+
+  // Get tier progression stats for UI display
+  const getTierProgressionStats = useCallback(async () => {
+    if (!user || !progress) return null;
+
+    try {
+      const { data: results, error } = await supabase
+        .from('tex_vision_drill_results')
+        .select('tier, accuracy_percent')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      const tierStats: Record<string, { count: number; avgAccuracy: number }> = {
+        beginner: { count: 0, avgAccuracy: 0 },
+        advanced: { count: 0, avgAccuracy: 0 },
+        chaos: { count: 0, avgAccuracy: 0 },
+      };
+
+      const tempTotals: Record<string, number> = { beginner: 0, advanced: 0, chaos: 0 };
+
+      results?.forEach((r) => {
+        if (r.tier in tierStats && r.accuracy_percent !== null) {
+          tierStats[r.tier].count++;
+          tempTotals[r.tier] += r.accuracy_percent;
+        }
+      });
+
+      // Calculate averages
+      Object.keys(tierStats).forEach((tier) => {
+        if (tierStats[tier].count > 0) {
+          tierStats[tier].avgAccuracy = tempTotals[tier] / tierStats[tier].count;
+        }
+      });
+
+      return tierStats;
+    } catch (error) {
+      console.error('Error fetching tier progression stats:', error);
+      return null;
+    }
+  }, [user, progress]);
+
   return {
     progress,
     dailyChecklist,
@@ -208,5 +316,7 @@ export const useTexVisionProgress = (sport: string = 'baseball') => {
     initializeProgress,
     updateChecklist,
     updateStreak,
+    checkAndUpdateTierProgression,
+    getTierProgressionStats,
   };
 };
