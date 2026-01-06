@@ -45,12 +45,23 @@ export default function Nutrition() {
   // Scroll to anchor if hash is present (for Game Plan navigation)
   useEffect(() => {
     if (location.hash === '#daily-tip') {
-      setTimeout(() => {
+      const scrollToTip = () => {
         const element = document.getElementById('daily-tip');
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      }, 100);
+      };
+      
+      // Multiple scroll attempts to handle async content loading
+      const timer1 = setTimeout(scrollToTip, 100);
+      const timer2 = setTimeout(scrollToTip, 500);
+      const timer3 = setTimeout(scrollToTip, 1000);
+      
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+      };
     }
   }, [location.hash]);
 
