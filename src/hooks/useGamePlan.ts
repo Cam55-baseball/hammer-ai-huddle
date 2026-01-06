@@ -559,7 +559,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     descriptionKey: 'gamePlan.healthtip.description',
     completed: completionStatus['healthtip'] || false,
     icon: Lightbulb,
-    link: '/nutrition',
+    link: '/nutrition#daily-tip',
     taskType: 'quiz',
     section: 'checkin',
   });

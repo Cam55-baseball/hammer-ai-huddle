@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Apple, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ interface StreakData {
 export default function Nutrition() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   
   const [currentSport, setCurrentSport] = useState<'baseball' | 'softball'>(() => {
@@ -40,6 +41,18 @@ export default function Nutrition() {
       navigate('/auth');
     }
   }, [user, authLoading, navigate]);
+
+  // Scroll to anchor if hash is present (for Game Plan navigation)
+  useEffect(() => {
+    if (location.hash === '#daily-tip') {
+      setTimeout(() => {
+        const element = document.getElementById('daily-tip');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [location.hash]);
 
   // Callback to receive streak data from DailyTipHero
   const handleStreakUpdate = (data: {
@@ -102,7 +115,9 @@ export default function Nutrition() {
         />
 
         {/* Daily Tip */}
-        <DailyTipHero sport={currentSport} onStreakUpdate={handleStreakUpdate} />
+        <div id="daily-tip">
+          <DailyTipHero sport={currentSport} onStreakUpdate={handleStreakUpdate} />
+        </div>
 
         {/* Today's Tips Review */}
         <TodaysTipsReview />
