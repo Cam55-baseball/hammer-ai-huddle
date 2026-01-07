@@ -19,6 +19,8 @@ import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Sta
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
+import { SystemTaskScheduleDrawer } from '@/components/SystemTaskScheduleDrawer';
+import { useSystemTaskSchedule } from '@/hooks/useSystemTaskSchedule';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
@@ -55,6 +57,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
   const { saveFocusQuiz } = useVault();
+  
+  // System task schedule hook
+  const { schedules: taskSchedules, saveSchedule: saveTaskSchedule, getSchedule, getScheduledOffTaskIds, isScheduledForToday } = useSystemTaskSchedule();
   
   // Schedule templates hook
   const { templates: scheduleTemplates, saveTemplate, deleteTemplate, getDefaultTemplate } = useScheduleTemplates();
@@ -146,6 +151,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [activeTimePickerTaskId, setActiveTimePickerTaskId] = useState<string | null>(null);
   const [tempTime, setTempTime] = useState('');
   const [tempReminder, setTempReminder] = useState<number | null>(null);
+  
+  // System task schedule drawer state
+  const [activeScheduleTaskId, setActiveScheduleTaskId] = useState<string | null>(null);
   
   // Custom activity state
   const [builderOpen, setBuilderOpen] = useState(false);
@@ -670,18 +678,24 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return `${h12}:${minutes} ${ampm}`;
   };
 
-  // Get display tasks based on sort mode, filtering out skipped tasks
-  const filterSkipped = (taskList: GamePlanTask[]) => taskList.filter(t => !skippedTasks.has(t.id));
-  const checkinTasks = filterSkipped(autoSort ? sortByCompletion(orderedCheckin) : orderedCheckin);
-  const trainingTasks = filterSkipped(autoSort ? sortByCompletion(orderedTraining) : orderedTraining);
-  const trackingTasks = filterSkipped(autoSort ? sortByCompletion(orderedTracking) : orderedTracking);
-  const customTasks = filterSkipped(autoSort ? sortByCompletion(orderedCustom) : orderedCustom);
+  // Get scheduled-off task IDs (tasks not scheduled for today)
+  const scheduledOffTaskIds = useMemo(() => getScheduledOffTaskIds(), [getScheduledOffTaskIds]);
+
+  // Get display tasks based on sort mode, filtering out skipped AND scheduled-off tasks
+  const filterSkippedAndScheduledOff = (taskList: GamePlanTask[]) => 
+    taskList.filter(t => !skippedTasks.has(t.id) && !scheduledOffTaskIds.has(t.id));
+  const checkinTasks = filterSkippedAndScheduledOff(autoSort ? sortByCompletion(orderedCheckin) : orderedCheckin);
+  const trainingTasks = filterSkippedAndScheduledOff(autoSort ? sortByCompletion(orderedTraining) : orderedTraining);
+  const trackingTasks = filterSkippedAndScheduledOff(autoSort ? sortByCompletion(orderedTracking) : orderedTracking);
+  const customTasks = filterSkippedAndScheduledOff(autoSort ? sortByCompletion(orderedCustom) : orderedCustom);
   
   // Get all tasks for skipped section - include timeline tasks when in that mode
   const allTasks = sortMode === 'timeline' 
     ? timelineTasks 
     : [...orderedCheckin, ...orderedTraining, ...orderedTracking, ...orderedCustom];
-  const skippedTasksList = allTasks.filter(t => skippedTasks.has(t.id));
+  
+  // Skipped tasks: manually skipped OR scheduled off for today
+  const skippedTasksList = allTasks.filter(t => skippedTasks.has(t.id) || scheduledOffTaskIds.has(t.id));
 
   const renderTask = (task: GamePlanTask, index?: number) => {
     const Icon = task.icon;
@@ -816,19 +830,19 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           </div>
         </button>
         
-        {/* Edit button - opens time settings drawer (with skip option) in timeline mode, or drawer in other modes for skip */}
+        {/* Edit button - opens schedule drawer for system tasks, activity editor for custom */}
         <Button
           variant="ghost"
           size="icon"
           className="flex-shrink-0 h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
           onClick={(e) => { 
             e.stopPropagation(); 
-            if (isCustom && sortMode !== 'timeline') {
-              // For custom activities outside timeline mode, open the activity editor
+            if (isCustom) {
+              // For custom activities, open the activity editor
               handleCustomActivityEdit(task);
             } else {
-              // For timeline mode or non-custom tasks, open time picker (which now has skip option)
-              openTimePicker(task.id);
+              // For system tasks, open the schedule drawer
+              setActiveScheduleTaskId(task.id);
             }
           }}
         >
@@ -1423,23 +1437,41 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <CollapsibleContent className="space-y-2 mt-2">
                 {skippedTasksList.map(task => {
                   const Icon = task.icon;
+                  const isScheduledOff = scheduledOffTaskIds.has(task.id) && !skippedTasks.has(task.id);
                   return (
                     <div 
                       key={task.id} 
                       className="flex items-center gap-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20"
                     >
                       <Icon className="h-5 w-5 text-amber-400/50 flex-shrink-0" />
-                      <span className="flex-1 text-sm line-through text-white/50">
-                        {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm line-through text-white/50 block truncate">
+                          {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
+                        </span>
+                        {isScheduledOff && (
+                          <span className="text-[10px] text-amber-400/70 font-medium flex items-center gap-1 mt-0.5">
+                            <CalendarDays className="h-3 w-3" />
+                            {t('gamePlan.taskSchedule.scheduledOff', 'Scheduled off')}
+                          </span>
+                        )}
+                      </div>
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        onClick={() => handleRestoreTask(task.id)}
+                        onClick={() => isScheduledOff ? setActiveScheduleTaskId(task.id) : handleRestoreTask(task.id)}
                         className="h-10 px-3 text-green-400 hover:text-green-300 hover:bg-green-500/10 gap-1"
                       >
-                        <Undo2 className="h-4 w-4" />
-                        <span className="text-xs">Restore</span>
+                        {isScheduledOff ? (
+                          <>
+                            <Pencil className="h-4 w-4" />
+                            <span className="text-xs">{t('common.edit', 'Edit')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Undo2 className="h-4 w-4" />
+                            <span className="text-xs">{t('gamePlan.restore', 'Restore')}</span>
+                          </>
+                        )}
                       </Button>
                     </div>
                   );
@@ -1797,6 +1829,42 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onSkipTask={() => {
           if (activeTimePickerTaskId) {
             handleSkipTask(activeTimePickerTaskId);
+          }
+        }}
+        showSkipOption={true}
+      />
+      
+      {/* System Task Schedule Drawer - for configuring display days */}
+      <SystemTaskScheduleDrawer
+        open={activeScheduleTaskId !== null}
+        onOpenChange={(open) => { if (!open) setActiveScheduleTaskId(null); }}
+        taskId={activeScheduleTaskId || ''}
+        taskTitle={(() => {
+          if (!activeScheduleTaskId) return '';
+          const allTasksList = [...orderedCheckin, ...orderedTraining, ...orderedTracking, ...orderedCustom, ...timelineTasks];
+          const task = allTasksList.find(t => t.id === activeScheduleTaskId);
+          if (!task) return '';
+          return task.taskType === 'custom' ? task.titleKey : t(task.titleKey);
+        })()}
+        currentDisplayDays={(() => {
+          if (!activeScheduleTaskId) return [0, 1, 2, 3, 4, 5, 6];
+          const schedule = getSchedule(activeScheduleTaskId);
+          return schedule?.display_days || [0, 1, 2, 3, 4, 5, 6];
+        })()}
+        currentDisplayTime={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.display_time || taskTimes[activeScheduleTaskId] || null) : null}
+        currentReminderEnabled={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.reminder_enabled || false) : false}
+        currentReminderMinutes={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.reminder_minutes || 15) : 15}
+        onSave={async (displayDays, displayTime, reminderEnabled, reminderMinutes) => {
+          if (activeScheduleTaskId) {
+            await saveTaskSchedule(activeScheduleTaskId, displayDays, displayTime, reminderEnabled, reminderMinutes);
+            // Also update local task times for consistency
+            setTaskTimes(prev => ({ ...prev, [activeScheduleTaskId]: displayTime }));
+            setTaskReminders(prev => ({ ...prev, [activeScheduleTaskId]: reminderEnabled ? reminderMinutes : null }));
+          }
+        }}
+        onSkipTask={() => {
+          if (activeScheduleTaskId) {
+            handleSkipTask(activeScheduleTaskId);
           }
         }}
         showSkipOption={true}
