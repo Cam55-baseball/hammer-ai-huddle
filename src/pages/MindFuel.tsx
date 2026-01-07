@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +58,7 @@ export default function MindFuel() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   const [isLoading, setIsLoading] = useState(true);
   const [streakData, setStreakData] = useState<StreakData | null>(null);
@@ -81,6 +82,30 @@ export default function MindFuel() {
       }, 300);
     }
   }, [searchParams]);
+
+  // Scroll to anchor if hash is present (for Game Plan navigation)
+  useEffect(() => {
+    if (location.hash === '#mental-fuel-plus') {
+      setActiveWellnessModule('overview');
+      const scrollToChecklist = () => {
+        const element = document.getElementById('mental-fuel-plus');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      };
+      
+      // Multiple scroll attempts to handle async content loading
+      const timer1 = setTimeout(scrollToChecklist, 100);
+      const timer2 = setTimeout(scrollToChecklist, 500);
+      const timer3 = setTimeout(scrollToChecklist, 1000);
+      
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+      };
+    }
+  }, [location.hash]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -182,7 +207,7 @@ export default function MindFuel() {
             />
 
             {/* Mental Fuel+ Daily Checklist */}
-            <div ref={checklistRef}>
+            <div ref={checklistRef} id="mental-fuel-plus">
               <MindFuelDailyChecklist
                 onModuleChange={setActiveWellnessModule}
                 onScrollToLesson={() => lessonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}

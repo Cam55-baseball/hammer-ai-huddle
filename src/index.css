@@ -220,6 +220,14 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
     overflow-x: hidden;
     max-width: 100vw;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+
+  /* Allow zoom in analysis modules only */
+  .analysis-zoomable {
+    touch-action: auto;
   }
 
   #root {

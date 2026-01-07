@@ -429,7 +429,7 @@ export default function AnalyzeVideo() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 sm:space-y-6 overflow-x-hidden max-w-full">
+      <div className="space-y-4 sm:space-y-6 overflow-x-hidden max-w-full analysis-zoomable">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold capitalize">{module} {t('videoAnalysis.analysis')}</h1>
