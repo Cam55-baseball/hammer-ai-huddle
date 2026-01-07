@@ -548,7 +548,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     descriptionKey: 'gamePlan.mindfuel.description',
     completed: completionStatus['mindfuel'] || false,
     icon: Sparkles,
-    link: '/mind-fuel',
+    link: '/mind-fuel#mental-fuel-plus',
     taskType: 'quiz',
     section: 'checkin',
   });
