@@ -400,6 +400,42 @@ export type Database = {
         }
         Relationships: []
       }
+      game_plan_task_schedule: {
+        Row: {
+          created_at: string | null
+          display_days: number[] | null
+          display_time: string | null
+          id: string
+          reminder_enabled: boolean | null
+          reminder_minutes: number | null
+          task_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_days?: number[] | null
+          display_time?: string | null
+          id?: string
+          reminder_enabled?: boolean | null
+          reminder_minutes?: number | null
+          task_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_days?: number[] | null
+          display_time?: string | null
+          id?: string
+          reminder_enabled?: boolean | null
+          reminder_minutes?: number | null
+          task_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       hydration_logs: {
         Row: {
           amount_oz: number

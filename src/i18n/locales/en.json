@@ -5183,7 +5183,22 @@
       "title": "6-WEEK RECAP",
       "days": "DAYS",
       "daysRemaining": "{{days}} days remaining"
-    }
+    },
+    "taskSchedule": {
+      "title": "Task Schedule",
+      "displayDays": "Display Days",
+      "displayDaysDesc": "Select which days to show this task",
+      "everyDay": "Every day",
+      "weekdays": "Weekdays",
+      "weekends": "Weekends",
+      "noDays": "No days selected",
+      "scheduledOff": "Scheduled off",
+      "saved": "Schedule saved",
+      "saveError": "Failed to save schedule"
+    },
+    "skipTask": "Skip for today",
+    "restore": "Restore",
+    "skippedForToday": "Skipped for today"
   },
   "weeklyWellnessQuiz": {
     "title": "Weekly Wellness Goals",
