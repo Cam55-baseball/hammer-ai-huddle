@@ -4,7 +4,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarDays, Clock, Bell, X, Check } from 'lucide-react';
+import { CalendarDays, Clock, Bell, X, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SystemTaskScheduleDrawerProps {
@@ -16,7 +16,7 @@ interface SystemTaskScheduleDrawerProps {
   currentDisplayTime: string | null;
   currentReminderEnabled: boolean;
   currentReminderMinutes: number;
-  onSave: (displayDays: number[], displayTime: string | null, reminderEnabled: boolean, reminderMinutes: number) => void;
+  onSave: (displayDays: number[], displayTime: string | null, reminderEnabled: boolean, reminderMinutes: number) => Promise<boolean>;
   onSkipTask?: () => void;
   showSkipOption?: boolean;
 }
@@ -50,6 +50,7 @@ export function SystemTaskScheduleDrawer({
   const [displayTime, setDisplayTime] = useState<string>(currentDisplayTime || '');
   const [reminderEnabled, setReminderEnabled] = useState(currentReminderEnabled);
   const [reminderMinutes, setReminderMinutes] = useState<number>(currentReminderMinutes);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Reset state when drawer opens with new values
   useEffect(() => {
@@ -62,6 +63,7 @@ export function SystemTaskScheduleDrawer({
   }, [open, currentDisplayDays, currentDisplayTime, currentReminderEnabled, currentReminderMinutes]);
 
   const toggleDay = (day: number) => {
+    if (isSaving) return;
     if (displayDays.includes(day)) {
       setDisplayDays(displayDays.filter(d => d !== day));
     } else {
@@ -69,9 +71,17 @@ export function SystemTaskScheduleDrawer({
     }
   };
 
-  const handleSave = () => {
-    onSave(displayDays, displayTime || null, reminderEnabled, reminderMinutes);
-    onOpenChange(false);
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const success = await onSave(displayDays, displayTime || null, reminderEnabled, reminderMinutes);
+      if (success) {
+        onOpenChange(false);
+      }
+      // If not successful, keep drawer open so user can retry
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getDaysSummary = () => {
@@ -95,7 +105,7 @@ export function SystemTaskScheduleDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="px-4 pb-8">
+      <DrawerContent className="px-4 pb-8 max-h-[85vh] overflow-y-auto">
         <DrawerHeader className="text-left px-0">
           <DrawerTitle className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-primary" />
@@ -122,9 +132,11 @@ export function SystemTaskScheduleDrawer({
                   key={value}
                   type="button"
                   onClick={() => toggleDay(value)}
+                  disabled={isSaving}
                   className={cn(
                     "flex-1 h-12 rounded-lg font-bold text-sm transition-all duration-200",
                     "border-2 hover:scale-105 active:scale-95",
+                    "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
                     displayDays.includes(value)
                       ? "bg-primary text-primary-foreground border-primary shadow-lg"
                       : "bg-background text-muted-foreground border-border hover:border-primary/50"
@@ -151,6 +163,7 @@ export function SystemTaskScheduleDrawer({
               value={displayTime}
               onChange={(e) => setDisplayTime(e.target.value)}
               className="h-12 text-lg"
+              disabled={isSaving}
             />
           </div>
 
@@ -170,6 +183,7 @@ export function SystemTaskScheduleDrawer({
                   setReminderMinutes(parseInt(v));
                 }
               }}
+              disabled={isSaving}
             >
               <SelectTrigger className="h-12">
                 <SelectValue placeholder={t('gamePlan.reminder.noReminder', 'No reminder')} />
@@ -190,10 +204,14 @@ export function SystemTaskScheduleDrawer({
             <Button
               onClick={handleSave}
               className="flex-1 h-12 gap-2"
-              disabled={displayDays.length === 0}
+              disabled={displayDays.length === 0 || isSaving}
             >
-              <Check className="h-4 w-4" />
-              {t('common.save', 'Save')}
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
+              {isSaving ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
             </Button>
           </div>
 
@@ -206,6 +224,7 @@ export function SystemTaskScheduleDrawer({
                   onSkipTask();
                   onOpenChange(false);
                 }}
+                disabled={isSaving}
                 className="w-full justify-start gap-3 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 h-12"
               >
                 <X className="h-5 w-5" />

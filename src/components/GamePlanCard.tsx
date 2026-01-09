@@ -841,7 +841,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               // For custom activities, open the activity editor
               handleCustomActivityEdit(task);
             } else {
-              // For system tasks, open the schedule drawer
+              // For system tasks, check auth first
+              if (!user) {
+                toast.error(t('gamePlan.taskSchedule.signInRequired', 'Please sign in to edit schedule'));
+                navigate('/auth');
+                return;
+              }
               setActiveScheduleTaskId(task.id);
             }
           }}
@@ -1856,11 +1861,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         currentReminderMinutes={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.reminder_minutes || 15) : 15}
         onSave={async (displayDays, displayTime, reminderEnabled, reminderMinutes) => {
           if (activeScheduleTaskId) {
-            await saveTaskSchedule(activeScheduleTaskId, displayDays, displayTime, reminderEnabled, reminderMinutes);
-            // Also update local task times for consistency
-            setTaskTimes(prev => ({ ...prev, [activeScheduleTaskId]: displayTime }));
-            setTaskReminders(prev => ({ ...prev, [activeScheduleTaskId]: reminderEnabled ? reminderMinutes : null }));
+            const success = await saveTaskSchedule(activeScheduleTaskId, displayDays, displayTime, reminderEnabled, reminderMinutes);
+            if (success) {
+              // Only update local task times if save succeeded
+              setTaskTimes(prev => ({ ...prev, [activeScheduleTaskId]: displayTime }));
+              setTaskReminders(prev => ({ ...prev, [activeScheduleTaskId]: reminderEnabled ? reminderMinutes : null }));
+            }
+            return success;
           }
+          return false;
         }}
         onSkipTask={() => {
           if (activeScheduleTaskId) {

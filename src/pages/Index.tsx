@@ -59,7 +59,7 @@ const Index = () => {
           <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <h2 className="text-5xl md:text-7xl font-extrabold tracking-tight">
               <span className="text-primary block">Elite Training for Champions.</span>
-              <span className="text-secondary text-4xl md:text-5xl block mt-2">Hammer AI-Powered Results</span>
+              <span className="text-secondary text-4xl md:text-5xl block mt-2">Hammer Powered Results</span>
             </h2>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
               Transform your game with advanced motion capture, real-time analytics, 
