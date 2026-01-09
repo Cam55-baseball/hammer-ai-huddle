@@ -23,6 +23,7 @@ export function useSystemTaskSchedule() {
   // Fetch all task schedules for the user
   const fetchSchedules = useCallback(async () => {
     if (!user) {
+      setSchedules({});
       setLoading(false);
       return;
     }
@@ -67,10 +68,13 @@ export function useSystemTaskSchedule() {
     reminderEnabled: boolean,
     reminderMinutes: number
   ): Promise<boolean> => {
-    if (!user) return false;
+    if (!user) {
+      toast.error(t('gamePlan.taskSchedule.signInRequired', 'Please sign in to save schedules'));
+      return false;
+    }
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('game_plan_task_schedule')
         .upsert({
           user_id: user.id,
@@ -82,22 +86,26 @@ export function useSystemTaskSchedule() {
           updated_at: new Date().toISOString(),
         }, { 
           onConflict: 'user_id,task_id'
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      // Update local state
-      setSchedules(prev => ({
-        ...prev,
-        [taskId]: {
-          id: prev[taskId]?.id || '',
-          task_id: taskId,
-          display_days: displayDays,
-          display_time: displayTime,
-          reminder_enabled: reminderEnabled,
-          reminder_minutes: reminderMinutes,
-        }
-      }));
+      // Update local state from the persisted row (source of truth)
+      if (data) {
+        setSchedules(prev => ({
+          ...prev,
+          [taskId]: {
+            id: data.id,
+            task_id: data.task_id,
+            display_days: (data.display_days as number[]) || [0, 1, 2, 3, 4, 5, 6],
+            display_time: data.display_time,
+            reminder_enabled: data.reminder_enabled || false,
+            reminder_minutes: data.reminder_minutes || 15,
+          }
+        }));
+      }
 
       toast.success(t('gamePlan.taskSchedule.saved', 'Schedule saved'));
       return true;
