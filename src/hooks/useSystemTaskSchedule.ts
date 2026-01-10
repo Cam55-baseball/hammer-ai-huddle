@@ -109,9 +109,10 @@ export function useSystemTaskSchedule() {
 
       toast.success(t('gamePlan.taskSchedule.saved', 'Schedule saved'));
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving task schedule:', error);
-      toast.error(t('gamePlan.taskSchedule.saveError', 'Failed to save schedule'));
+      const errorMessage = error?.message || t('gamePlan.taskSchedule.saveError', 'Failed to save schedule');
+      toast.error(errorMessage);
       return false;
     }
   }, [user, t]);

@@ -47,6 +47,9 @@ interface GamePlanCardProps {
   selectedSport: 'baseball' | 'softball';
 }
 
+// Stable constant to avoid new array instances triggering re-renders
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
+
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -1852,9 +1855,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           return task.taskType === 'custom' ? task.titleKey : t(task.titleKey);
         })()}
         currentDisplayDays={(() => {
-          if (!activeScheduleTaskId) return [0, 1, 2, 3, 4, 5, 6];
+          if (!activeScheduleTaskId) return [...ALL_DAYS];
           const schedule = getSchedule(activeScheduleTaskId);
-          return schedule?.display_days || [0, 1, 2, 3, 4, 5, 6];
+          return schedule?.display_days || [...ALL_DAYS];
         })()}
         currentDisplayTime={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.display_time || taskTimes[activeScheduleTaskId] || null) : null}
         currentReminderEnabled={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.reminder_enabled || false) : false}

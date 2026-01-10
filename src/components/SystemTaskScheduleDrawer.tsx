@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -51,16 +51,26 @@ export function SystemTaskScheduleDrawer({
   const [reminderEnabled, setReminderEnabled] = useState(currentReminderEnabled);
   const [reminderMinutes, setReminderMinutes] = useState<number>(currentReminderMinutes);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Track which taskId we've initialized for to prevent mid-edit overrides
+  const initializedForTaskIdRef = useRef<string | null>(null);
 
-  // Reset state when drawer opens with new values
+  // Only reset state when drawer opens for a NEW task (or first time)
   useEffect(() => {
-    if (open) {
+    if (open && taskId && taskId !== initializedForTaskIdRef.current) {
+      // New task being edited - initialize state
       setDisplayDays(currentDisplayDays);
       setDisplayTime(currentDisplayTime || '');
       setReminderEnabled(currentReminderEnabled);
       setReminderMinutes(currentReminderMinutes);
+      initializedForTaskIdRef.current = taskId;
     }
-  }, [open, currentDisplayDays, currentDisplayTime, currentReminderEnabled, currentReminderMinutes]);
+    
+    // Clear ref when drawer closes
+    if (!open) {
+      initializedForTaskIdRef.current = null;
+    }
+  }, [open, taskId, currentDisplayDays, currentDisplayTime, currentReminderEnabled, currentReminderMinutes]);
 
   const toggleDay = (day: number) => {
     if (isSaving) return;
@@ -105,18 +115,19 @@ export function SystemTaskScheduleDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="px-4 pb-8 max-h-[85vh] overflow-y-auto">
-        <DrawerHeader className="text-left px-0">
+      <DrawerContent className="px-4 pb-0 flex flex-col max-h-[85vh]">
+        <DrawerHeader className="text-left px-0 flex-shrink-0">
           <DrawerTitle className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-primary" />
             {t('gamePlan.taskSchedule.title', 'Task Schedule')}
           </DrawerTitle>
-          <DrawerDescription className="truncate">
+          <DrawerDescription className="whitespace-normal break-words line-clamp-3">
             {taskTitle}
           </DrawerDescription>
         </DrawerHeader>
 
-        <div className="space-y-6 mt-2">
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto space-y-6 mt-2 pb-4">
           {/* Display Days Picker */}
           <div className="space-y-3">
             <label className="text-sm font-bold text-foreground">
@@ -198,39 +209,38 @@ export function SystemTaskScheduleDrawer({
               </SelectContent>
             </Select>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              onClick={handleSave}
-              className="flex-1 h-12 gap-2"
-              disabled={displayDays.length === 0 || isSaving}
-            >
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="h-4 w-4" />
-              )}
-              {isSaving ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
-            </Button>
-          </div>
+        {/* Sticky Footer with Action Buttons */}
+        <div className="flex-shrink-0 border-t border-border bg-background pt-4 pb-8 space-y-3">
+          {/* Save Button */}
+          <Button
+            onClick={handleSave}
+            className="w-full h-12 gap-2"
+            disabled={displayDays.length === 0 || isSaving}
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
+            {isSaving ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+          </Button>
 
           {/* Skip for Today Option */}
           {showSkipOption && onSkipTask && (
-            <div className="border-t border-white/10 pt-4">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  onSkipTask();
-                  onOpenChange(false);
-                }}
-                disabled={isSaving}
-                className="w-full justify-start gap-3 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 h-12"
-              >
-                <X className="h-5 w-5" />
-                <span>{t('gamePlan.skipTask', 'Skip for today')}</span>
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                onSkipTask();
+                onOpenChange(false);
+              }}
+              disabled={isSaving}
+              className="w-full justify-center gap-3 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 h-12"
+            >
+              <X className="h-5 w-5" />
+              <span>{t('gamePlan.skipTask', 'Skip for today')}</span>
+            </Button>
           )}
         </div>
       </DrawerContent>
