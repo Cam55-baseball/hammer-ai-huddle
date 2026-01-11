@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -25,6 +25,13 @@ import {
 } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { useSubscription } from '@/hooks/useSubscription';
+import { 
+  parseVaultParams, 
+  scrollToVaultSection, 
+  getTabForSection,
+  shouldAutoOpen,
+  type VaultSection 
+} from '@/utils/vaultNavigation';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { VaultStreakRecapCard } from '@/components/vault/VaultStreakRecapCard';
 
@@ -109,12 +116,16 @@ export default function Vault() {
   // Use shared recap countdown hook
   const { daysUntilRecap, recapProgress, canGenerateRecap: canGenRecap } = useRecapCountdown();
   
-  // Refs for scrolling to sections
-  const performanceTestsRef = useRef<HTMLDivElement>(null);
-  const progressPhotosRef = useRef<HTMLDivElement>(null);
-  const scoutGradesRef = useRef<HTMLDivElement>(null);
-  const pitchingGradesRef = useRef<HTMLDivElement>(null);
-  const nutritionRef = useRef<HTMLDivElement>(null);
+  // Centralized ref map for vault sections
+  const sectionRefs = useMemo(() => ({
+    'performance-tests': useRef<HTMLDivElement>(null),
+    'progress-photos': useRef<HTMLDivElement>(null),
+    'scout-grades': useRef<HTMLDivElement>(null),
+    'pitching-grades': useRef<HTMLDivElement>(null),
+    'nutrition': useRef<HTMLDivElement>(null),
+    'wellness-goals': useRef<HTMLDivElement>(null),
+    'saved-items': useRef<HTMLDivElement>(null),
+  }), []);
   
   // Detect module access for grader display
   const hasHittingModule = subscribedModules.some(m => m.includes('hitting'));
@@ -123,73 +134,45 @@ export default function Vault() {
   const showHittingThrowingGrader = hasHittingModule || hasThrowingModule;
   const showPitchingGrader = hasPitchingModule;
 
-  // State for auto-opening performance tests from URL
-  const [autoOpenPerformance, setAutoOpenPerformance] = useState(false);
+  // State for auto-opening sections from URL
+  const [autoOpenSection, setAutoOpenSection] = useState<VaultSection | null>(null);
 
-  // Handle URL params for direct navigation
+  // Handle URL params for direct navigation using centralized utility
   useEffect(() => {
-    const openQuiz = searchParams.get('openQuiz');
-    const openSection = searchParams.get('openSection');
+    const { section, quiz } = parseVaultParams(searchParams);
     
-    if (openQuiz) {
-      // Open quiz dialog directly
-      if (openQuiz === 'morning') {
-        setSelectedQuizType('morning');
-        setQuizDialogOpen(true);
-      } else if (openQuiz === 'pre_lift' || openQuiz === 'prelift') {
-        setSelectedQuizType('pre_lift');
-        setQuizDialogOpen(true);
-      } else if (openQuiz === 'night') {
-        setSelectedQuizType('night');
-        setQuizDialogOpen(true);
-      }
+    // Handle quiz dialog opening
+    if (quiz) {
+      setSelectedQuizType(quiz);
+      setQuizDialogOpen(true);
       // Clear the param
       searchParams.delete('openQuiz');
       setSearchParams(searchParams, { replace: true });
     }
     
-    if (openSection) {
-      // Ensure "Today" tab is active for sections that live there
-      if (['scout-grades', 'pitching-grades', 'performance-tests', 'progress-photos', 'nutrition'].includes(openSection)) {
-        setActiveTab('today');
+    // Handle section navigation
+    if (section) {
+      // Switch to the correct tab for this section
+      const targetTab = getTabForSection(section);
+      setActiveTab(targetTab);
+      
+      // Set auto-open state if section should expand
+      if (shouldAutoOpen(section)) {
+        setAutoOpenSection(section);
       }
       
-      // Auto-open performance tests dropdown
-      if (openSection === 'performance-tests') {
-        setAutoOpenPerformance(true);
-      }
-      
-      // Scroll to section with retry mechanism for reliable rendering
-      const scrollToSection = () => {
-        let targetRef: React.RefObject<HTMLDivElement> | null = null;
-        
-        if (openSection === 'performance-tests') targetRef = performanceTestsRef;
-        else if (openSection === 'progress-photos') targetRef = progressPhotosRef;
-        else if (openSection === 'scout-grades') targetRef = scoutGradesRef;
-        else if (openSection === 'pitching-grades') targetRef = pitchingGradesRef;
-        else if (openSection === 'nutrition') targetRef = nutritionRef;
-        
-        if (targetRef?.current) {
-          targetRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Scroll to section using centralized utility
+      scrollToVaultSection(
+        sectionRefs,
+        section,
+        () => {
           // Clear params after successful scroll
           searchParams.delete('openSection');
           setSearchParams(searchParams, { replace: true });
-          return true;
         }
-        return false;
-      };
-      
-      // Wait for tab switch to complete, then try scrolling with retries
-      requestAnimationFrame(() => {
-        const attempts = [100, 300, 600, 1000];
-        attempts.forEach(delay => {
-          setTimeout(() => {
-            scrollToSection();
-          }, delay);
-        });
-      });
+      );
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, sectionRefs]);
 
   // Check if all 3 daily quizzes are completed
   const allQuizzesCompleted = useCallback(() => {
@@ -548,7 +531,7 @@ export default function Vault() {
                 </Card>
 
                 {/* Nutrition Log */}
-                <div ref={nutritionRef}>
+                <div ref={sectionRefs['nutrition']}>
                   <VaultNutritionLogCard 
                     todaysLogs={nutritionLogs}
                     goals={nutritionGoals}
@@ -678,18 +661,18 @@ export default function Vault() {
                     </div>
 
                     {/* Performance Tests */}
-                    <div ref={performanceTestsRef}>
+                    <div ref={sectionRefs['performance-tests']}>
                       <VaultPerformanceTestCard
                         tests={performanceTests}
                         onSave={handleSavePerformanceTest}
                         sport={userSport}
                         subscribedModules={subscribedModules}
-                        autoOpen={autoOpenPerformance}
+                        autoOpen={autoOpenSection === 'performance-tests'}
                       />
                     </div>
 
                     {/* Progress Photos */}
-                    <div ref={progressPhotosRef}>
+                    <div ref={sectionRefs['progress-photos']}>
                       <VaultProgressPhotosCard
                         photos={progressPhotos}
                         onSave={handleSaveProgressPhoto}
@@ -713,12 +696,12 @@ export default function Vault() {
 
                       {/* Hitting/Throwing Scout Self-Grades */}
                       {showHittingThrowingGrader && (
-                        <div ref={scoutGradesRef}>
+                        <div ref={sectionRefs['scout-grades']}>
                           <VaultScoutGradesCard
                             grades={scoutGrades}
                             sport={userSport}
                             gradeType="hitting_throwing"
-                            autoOpen={searchParams.get('openSection') === 'scout-grades'}
+                            autoOpen={autoOpenSection === 'scout-grades'}
                             onSave={handleSaveScoutGrade}
                           />
                         </div>
@@ -726,12 +709,12 @@ export default function Vault() {
 
                       {/* Pitching Scout Self-Grades */}
                       {showPitchingGrader && (
-                        <div ref={pitchingGradesRef}>
+                        <div ref={sectionRefs['pitching-grades']}>
                           <VaultScoutGradesCard
                             grades={pitchingGrades}
                             sport={userSport}
                             gradeType="pitching"
-                            autoOpen={searchParams.get('openSection') === 'pitching-grades'}
+                            autoOpen={autoOpenSection === 'pitching-grades'}
                             onSave={handleSaveScoutGrade}
                           />
                         </div>
