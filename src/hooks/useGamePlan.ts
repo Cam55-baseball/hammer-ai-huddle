@@ -712,7 +712,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       descriptionKey: 'gamePlan.tracking.photos.description',
       completed: false,
       icon: Camera,
-      link: '/vault',
+      link: '/vault?openSection=progress-photos',
       taskType: 'tracking',
       section: 'tracking',
       badge: 'gamePlan.tracking.photos.badge',
