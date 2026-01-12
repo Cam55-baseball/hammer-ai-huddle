@@ -116,15 +116,24 @@ export default function Vault() {
   // Use shared recap countdown hook
   const { daysUntilRecap, recapProgress, canGenerateRecap: canGenRecap } = useRecapCountdown();
   
-  // Centralized ref map for vault sections
+  // Individual refs declared at top level (React hooks rules)
+  const performanceTestsRef = useRef<HTMLDivElement>(null);
+  const progressPhotosRef = useRef<HTMLDivElement>(null);
+  const scoutGradesRef = useRef<HTMLDivElement>(null);
+  const pitchingGradesRef = useRef<HTMLDivElement>(null);
+  const nutritionRef = useRef<HTMLDivElement>(null);
+  const wellnessGoalsRef = useRef<HTMLDivElement>(null);
+  const savedItemsRef = useRef<HTMLDivElement>(null);
+  
+  // Stable ref map for centralized scroll utility
   const sectionRefs = useMemo(() => ({
-    'performance-tests': useRef<HTMLDivElement>(null),
-    'progress-photos': useRef<HTMLDivElement>(null),
-    'scout-grades': useRef<HTMLDivElement>(null),
-    'pitching-grades': useRef<HTMLDivElement>(null),
-    'nutrition': useRef<HTMLDivElement>(null),
-    'wellness-goals': useRef<HTMLDivElement>(null),
-    'saved-items': useRef<HTMLDivElement>(null),
+    'performance-tests': performanceTestsRef,
+    'progress-photos': progressPhotosRef,
+    'scout-grades': scoutGradesRef,
+    'pitching-grades': pitchingGradesRef,
+    'nutrition': nutritionRef,
+    'wellness-goals': wellnessGoalsRef,
+    'saved-items': savedItemsRef,
   }), []);
   
   // Detect module access for grader display
