@@ -444,12 +444,17 @@ export function useVault() {
       discipline_level?: number;
       mood_level?: number;
       stress_level?: number;
+      // Sleep tracking fields
+      bedtime_actual?: string;
+      wake_time_actual?: string;
+      bedtime_goal?: string;
+      wake_time_goal?: string;
     }
   ) => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
     try {
-      // Calculate sleep/wake times based on quiz type
+      // Calculate sleep/wake times based on quiz type (legacy behavior for backward compatibility)
       let sleepTime: string | undefined;
       let wakeTime: string | undefined;
 
@@ -488,6 +493,9 @@ export function useVault() {
           discipline_level: data.discipline_level,
           mood_level: data.mood_level,
           stress_level: data.stress_level,
+          // Sleep goal fields (Night quiz)
+          bedtime_goal: data.bedtime_goal,
+          wake_time_goal: data.wake_time_goal,
         }, {
           onConflict: 'user_id,entry_date,quiz_type',
         });

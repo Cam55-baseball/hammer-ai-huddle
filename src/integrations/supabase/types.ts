@@ -2615,6 +2615,7 @@ export type Database = {
       }
       vault_focus_quizzes: {
         Row: {
+          bedtime_goal: string | null
           created_at: string | null
           daily_intentions: string | null
           daily_motivation: string | null
@@ -2636,8 +2637,10 @@ export type Database = {
           stress_level: number | null
           user_id: string
           wake_time: string | null
+          wake_time_goal: string | null
         }
         Insert: {
+          bedtime_goal?: string | null
           created_at?: string | null
           daily_intentions?: string | null
           daily_motivation?: string | null
@@ -2659,8 +2662,10 @@ export type Database = {
           stress_level?: number | null
           user_id: string
           wake_time?: string | null
+          wake_time_goal?: string | null
         }
         Update: {
+          bedtime_goal?: string | null
           created_at?: string | null
           daily_intentions?: string | null
           daily_motivation?: string | null
@@ -2682,6 +2687,7 @@ export type Database = {
           stress_level?: number | null
           user_id?: string
           wake_time?: string | null
+          wake_time_goal?: string | null
         }
         Relationships: []
       }

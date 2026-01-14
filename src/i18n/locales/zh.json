@@ -3135,6 +3135,42 @@
       "sleepQualityDesc": "评价昨晚的睡眠质量",
       "sleepData": "睡眠数据",
       "hoursSleptPlaceholder": "例如：7.5",
+      "bedtimeActual": "昨晚几点上床睡觉？",
+      "wakeTimeActual": "今天早上几点起床？",
+      "sleepDuration": "你睡了{{hours}}",
+      "sleepAnalysis": {
+        "low": {
+          "title": "低能量",
+          "message": "能量可能已耗尽。今天专注于恢复。优先休息，避免过度劳累。"
+        },
+        "moderate-low": {
+          "title": "中低能量",
+          "message": "你可能会感到疲倦。优先补水和轻度活动。考虑今晚早点睡觉。"
+        },
+        "moderate": {
+          "title": "中等能量",
+          "message": "休息充足。你已准备好进行中等强度训练。挑战自己，但也要倾听身体。"
+        },
+        "good": {
+          "title": "良好能量",
+          "message": "休息充分！你有充足的训练能量。这是高水平表现的良好基础。"
+        },
+        "optimal": {
+          "title": "最佳能量",
+          "message": "恢复极佳！今天能量水平达到巅峰。你已准备好发挥最佳表现。"
+        },
+        "excessive": {
+          "title": "可能睡眠过多",
+          "message": "睡眠过多可能导致昏沉。轻度活动和运动可以帮助你更加清醒。"
+        }
+      },
+      "sleepGoals": {
+        "title": "明天的睡眠目标",
+        "subtitle": "设定今晚休息的意图",
+        "bedtimeGoal": "你计划几点睡觉？",
+        "wakeTimeGoal": "你计划几点起床？",
+        "goalDuration": "目标：{{hours}}睡眠"
+      },
       "phoneFree": {
         "title": "为什么睡前1小时不用手机？",
         "blueLight": "减少扰乱生物钟的蓝光暴露",

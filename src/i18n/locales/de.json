@@ -3978,6 +3978,42 @@
       "sleepQualityDesc": "Bewerte deine Schlafqualität letzte Nacht",
       "sleepData": "Schlafdaten",
       "hoursSleptPlaceholder": "z.B. 7.5",
+      "bedtimeActual": "Um wie viel Uhr bist du gestern ins Bett gegangen?",
+      "wakeTimeActual": "Um wie viel Uhr bist du heute aufgewacht?",
+      "sleepDuration": "Du hast {{hours}} geschlafen",
+      "sleepAnalysis": {
+        "low": {
+          "title": "Niedrige Energie",
+          "message": "Energie möglicherweise erschöpft. Konzentriere dich heute auf Erholung. Priorisiere Ruhe und vermeide Überanstrengung."
+        },
+        "moderate-low": {
+          "title": "Mäßig niedrige Energie",
+          "message": "Du fühlst dich vielleicht träge. Priorisiere Flüssigkeitszufuhr und leichte Aktivität. Geh heute Abend früher ins Bett."
+        },
+        "moderate": {
+          "title": "Mäßige Energie",
+          "message": "Ausreichend Ruhe. Du bist bereit für mittlere Intensität. Fordere dich heraus, aber höre auf deinen Körper."
+        },
+        "good": {
+          "title": "Gute Energie",
+          "message": "Gut ausgeruht! Du hast solide Energie fürs Training. Großartige Grundlage für Höchstleistung."
+        },
+        "optimal": {
+          "title": "Optimale Energie",
+          "message": "Hervorragende Erholung! Höchste Energielevel heute. Du bist auf Bestleistung vorbereitet."
+        },
+        "excessive": {
+          "title": "Mögliches Überschlafen",
+          "message": "Zu viel Schlaf kann Benommenheit verursachen. Leichte Aktivität und Bewegung können helfen."
+        }
+      },
+      "sleepGoals": {
+        "title": "Schlafziele für morgen",
+        "subtitle": "Setze deine Absichten für die Nachtruhe",
+        "bedtimeGoal": "Um wie viel Uhr planst du ins Bett zu gehen?",
+        "wakeTimeGoal": "Um wie viel Uhr planst du aufzuwachen?",
+        "goalDuration": "Ziel: {{hours}} Schlaf"
+      },
       "phoneFree": {
         "title": "Warum 1 Stunde ohne Handy vor dem Schlafengehen?",
         "blueLight": "Reduziert Blaulichtbelastung die deinen zirkadianen Rhythmus stört",

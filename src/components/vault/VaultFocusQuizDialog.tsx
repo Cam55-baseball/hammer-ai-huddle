@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -13,8 +13,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone, Flame, Target, Sword, Smile, AlertTriangle } from 'lucide-react';
+import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone, Flame, Target, Sword, Smile, AlertTriangle, Clock, BedDouble } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { calculateSleepDuration, getSleepAnalysis, formatSleepDuration } from '@/utils/sleepUtils';
 
 interface VaultFocusQuizDialogProps {
   open: boolean;
@@ -35,6 +36,10 @@ interface VaultFocusQuizDialogProps {
     discipline_level?: number;
     mood_level?: number;
     stress_level?: number;
+    bedtime_actual?: string;
+    wake_time_actual?: string;
+    bedtime_goal?: string;
+    wake_time_goal?: string;
   }) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -225,9 +230,14 @@ export function VaultFocusQuizDialog({
   const [nightMoodLevel, setNightMoodLevel] = useState(3);
   const [nightStressLevel, setNightStressLevel] = useState(3);
   
-  // Morning quiz sleep tracking
-  const [hoursSlept, setHoursSlept] = useState<number | ''>('');
+  // Morning quiz sleep tracking - now with bedtime/wake time
+  const [bedtimeActual, setBedtimeActual] = useState('');
+  const [wakeTimeActual, setWakeTimeActual] = useState('');
   const [sleepQuality, setSleepQuality] = useState(3);
+
+  // Night quiz sleep goals
+  const [bedtimeGoal, setBedtimeGoal] = useState('');
+  const [wakeTimeGoal, setWakeTimeGoal] = useState('');
 
   // Elite morning check-in fields
   const [dailyMotivation, setDailyMotivation] = useState('');
@@ -235,6 +245,29 @@ export function VaultFocusQuizDialog({
   const [disciplineLevel, setDisciplineLevel] = useState(3);
   const [moodLevel, setMoodLevel] = useState(3);
   const [stressLevel, setStressLevel] = useState(3);
+
+  // Calculate sleep duration and analysis for morning quiz
+  const calculatedSleep = useMemo(() => {
+    if (bedtimeActual && wakeTimeActual) {
+      return calculateSleepDuration(bedtimeActual, wakeTimeActual);
+    }
+    return null;
+  }, [bedtimeActual, wakeTimeActual]);
+
+  const sleepAnalysis = useMemo(() => {
+    if (calculatedSleep !== null) {
+      return getSleepAnalysis(calculatedSleep);
+    }
+    return null;
+  }, [calculatedSleep]);
+
+  // Calculate goal sleep duration for night quiz
+  const goalSleepDuration = useMemo(() => {
+    if (bedtimeGoal && wakeTimeGoal) {
+      return calculateSleepDuration(bedtimeGoal, wakeTimeGoal);
+    }
+    return null;
+  }, [bedtimeGoal, wakeTimeGoal]);
 
   const getQuizIcon = () => {
     switch (quizType) {
@@ -282,14 +315,21 @@ export function VaultFocusQuizDialog({
     }
 
     if (quizType === 'morning') {
-      data.hours_slept = hoursSlept || undefined;
+      data.hours_slept = calculatedSleep || undefined;
       data.sleep_quality = sleepQuality;
+      data.bedtime_actual = bedtimeActual || undefined;
+      data.wake_time_actual = wakeTimeActual || undefined;
       // Elite morning check-in fields
       data.daily_motivation = dailyMotivation || undefined;
       data.daily_intentions = dailyIntentions || undefined;
       data.discipline_level = disciplineLevel;
       data.mood_level = moodLevel;
       data.stress_level = stressLevel;
+    }
+
+    if (quizType === 'night') {
+      data.bedtime_goal = bedtimeGoal || undefined;
+      data.wake_time_goal = wakeTimeGoal || undefined;
     }
 
     const result = await onSubmit(data);
@@ -306,8 +346,11 @@ export function VaultFocusQuizDialog({
       setMotivation('');
       setNightMoodLevel(3);
       setNightStressLevel(3);
-      setHoursSlept('');
+      setBedtimeActual('');
+      setWakeTimeActual('');
       setSleepQuality(3);
+      setBedtimeGoal('');
+      setWakeTimeGoal('');
       setDailyMotivation('');
       setDailyIntentions('');
       setDisciplineLevel(3);
@@ -357,20 +400,54 @@ export function VaultFocusQuizDialog({
                 {t('vault.quiz.sleepData')}
               </h4>
               
-              {/* Hours Slept Input */}
+              {/* Bedtime Input */}
               <div className="space-y-2">
-                <Label className="text-sm">{t('vault.quiz.hoursSlept')}</Label>
+                <Label className="text-sm flex items-center gap-2">
+                  <BedDouble className="h-4 w-4 text-indigo-400" />
+                  {t('vault.quiz.bedtimeActual')}
+                </Label>
                 <Input
-                  type="number"
-                  step="0.5"
-                  min="0"
-                  max="24"
-                  value={hoursSlept}
-                  onChange={(e) => setHoursSlept(e.target.value ? parseFloat(e.target.value) : '')}
-                  placeholder={t('vault.quiz.hoursSleptPlaceholder')}
-                  className="max-w-[140px]"
+                  type="time"
+                  value={bedtimeActual}
+                  onChange={(e) => setBedtimeActual(e.target.value)}
+                  className="max-w-[160px]"
                 />
               </div>
+
+              {/* Wake Time Input */}
+              <div className="space-y-2">
+                <Label className="text-sm flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-amber-400" />
+                  {t('vault.quiz.wakeTimeActual')}
+                </Label>
+                <Input
+                  type="time"
+                  value={wakeTimeActual}
+                  onChange={(e) => setWakeTimeActual(e.target.value)}
+                  className="max-w-[160px]"
+                />
+              </div>
+
+              {/* Sleep Duration & Analysis */}
+              {calculatedSleep !== null && sleepAnalysis && (
+                <div className={cn(
+                  "p-4 rounded-xl border transition-all duration-300",
+                  sleepAnalysis.bgColor,
+                  sleepAnalysis.borderColor
+                )}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      💤 {t('vault.quiz.sleepDuration', { hours: formatSleepDuration(calculatedSleep) })}
+                    </span>
+                    <span className={cn("text-sm font-bold", sleepAnalysis.color)}>
+                      {sleepAnalysis.emoji} {t(`vault.quiz.sleepAnalysis.${sleepAnalysis.level}.title`)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {t(`vault.quiz.sleepAnalysis.${sleepAnalysis.level}.message`)}
+                  </p>
+                </div>
+              )}
               
               {/* Sleep Quality Rating */}
               <RatingButtonGroup
@@ -627,6 +704,60 @@ export function VaultFocusQuizDialog({
                   </ul>
                 </CollapsibleContent>
               </Collapsible>
+
+              {/* Sleep Goals Section */}
+              <div className="space-y-4 p-4 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-xl border border-indigo-500/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-indigo-500/20">
+                    <Target className="h-5 w-5 text-indigo-500" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-bold text-foreground">
+                      {t('vault.quiz.sleepGoals.title')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('vault.quiz.sleepGoals.subtitle')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bedtime Goal */}
+                <div className="space-y-2">
+                  <Label className="text-sm flex items-center gap-2">
+                    <BedDouble className="h-4 w-4 text-indigo-400" />
+                    {t('vault.quiz.sleepGoals.bedtimeGoal')}
+                  </Label>
+                  <Input
+                    type="time"
+                    value={bedtimeGoal}
+                    onChange={(e) => setBedtimeGoal(e.target.value)}
+                    className="max-w-[160px]"
+                  />
+                </div>
+
+                {/* Wake Time Goal */}
+                <div className="space-y-2">
+                  <Label className="text-sm flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-amber-400" />
+                    {t('vault.quiz.sleepGoals.wakeTimeGoal')}
+                  </Label>
+                  <Input
+                    type="time"
+                    value={wakeTimeGoal}
+                    onChange={(e) => setWakeTimeGoal(e.target.value)}
+                    className="max-w-[160px]"
+                  />
+                </div>
+
+                {/* Goal Duration Display */}
+                {goalSleepDuration !== null && (
+                  <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                    <p className="text-sm font-medium text-indigo-400 flex items-center gap-2">
+                      💡 {t('vault.quiz.sleepGoals.goalDuration', { hours: formatSleepDuration(goalSleepDuration) })}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
