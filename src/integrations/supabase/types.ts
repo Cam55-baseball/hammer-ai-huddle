@@ -265,6 +265,7 @@ export type Database = {
           recurring_active: boolean | null
           recurring_days: Json | null
           reminder_enabled: boolean | null
+          reminder_minutes: number | null
           reminder_time: string | null
           sport: string
           title: string
@@ -297,6 +298,7 @@ export type Database = {
           recurring_active?: boolean | null
           recurring_days?: Json | null
           reminder_enabled?: boolean | null
+          reminder_minutes?: number | null
           reminder_time?: string | null
           sport?: string
           title: string
@@ -329,6 +331,7 @@ export type Database = {
           recurring_active?: boolean | null
           recurring_days?: Json | null
           reminder_enabled?: boolean | null
+          reminder_minutes?: number | null
           reminder_time?: string | null
           sport?: string
           title?: string
