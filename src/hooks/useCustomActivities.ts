@@ -481,6 +481,47 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     }
   };
 
+  // Update template schedule settings (display days, time, reminder)
+  const updateTemplateSchedule = async (
+    templateId: string,
+    displayDays: number[],
+    displayTime: string | null,
+    reminderEnabled: boolean,
+    reminderMinutes: number
+  ): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('custom_activity_templates')
+        .update({
+          display_days: displayDays,
+          display_time: displayTime,
+          reminder_enabled: reminderEnabled,
+          reminder_minutes: reminderMinutes,
+          // Also update recurring_days to keep them in sync
+          recurring_days: displayDays,
+          recurring_active: displayDays.length > 0,
+        })
+        .eq('id', templateId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('[useCustomActivities] Error updating template schedule:', error);
+        toast.error(t('customActivity.updateError'));
+        return false;
+      }
+
+      toast.success(t('customActivity.scheduleUpdated', 'Schedule updated'));
+      await fetchTemplates();
+      return true;
+    } catch (error) {
+      console.error('[useCustomActivities] Error updating template schedule:', error);
+      toast.error(t('customActivity.updateError'));
+      return false;
+    }
+  };
+
   return {
     templates,
     todayLogs,
@@ -489,6 +530,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     getFavorites,
     createTemplate,
     updateTemplate,
+    updateTemplateSchedule,
     deleteTemplate,
     toggleFavorite,
     addToToday,

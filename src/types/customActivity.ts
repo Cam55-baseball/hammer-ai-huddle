@@ -124,6 +124,7 @@ export interface CustomActivityTemplate {
   // Reminder settings
   reminder_enabled?: boolean;
   reminder_time?: string;
+  reminder_minutes?: number;
   // Schedule display settings
   display_on_game_plan?: boolean;
   display_days?: number[];

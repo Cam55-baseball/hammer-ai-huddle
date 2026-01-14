@@ -55,7 +55,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const navigate = useNavigate();
   const { tasks, customActivities, completedCount, totalCount, loading, refetch } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress } = useRecapCountdown();
-  const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
+  const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
@@ -157,6 +157,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   
   // System task schedule drawer state
   const [activeScheduleTaskId, setActiveScheduleTaskId] = useState<string | null>(null);
+  
+  // Custom activity schedule drawer state (separate from system task schedule)
+  const [activeCustomScheduleTask, setActiveCustomScheduleTask] = useState<GamePlanTask | null>(null);
   
   // Custom activity state
   const [builderOpen, setBuilderOpen] = useState(false);
@@ -546,7 +549,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   };
 
-  const handleCustomActivityEdit = (task: GamePlanTask) => {
+  // Custom activity schedule edit handler - now opens schedule drawer like system tasks
+  const handleCustomActivityScheduleEdit = (task: GamePlanTask) => {
+    if (task.customActivityData) {
+      // For custom activities, we'll use a separate state to track that we're editing a custom activity schedule
+      setActiveCustomScheduleTask(task);
+    }
+  };
+
+  // Custom activity full edit handler - for editing the activity template itself
+  const handleCustomActivityFullEdit = (task: GamePlanTask) => {
     if (task.customActivityData) {
       setEditingTemplate(task.customActivityData.template);
       setBuilderOpen(true);
@@ -841,8 +853,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           onClick={(e) => { 
             e.stopPropagation(); 
             if (isCustom) {
-              // For custom activities, open the activity editor
-              handleCustomActivityEdit(task);
+              // For custom activities, open the schedule drawer (same UX as system tasks)
+              handleCustomActivityScheduleEdit(task);
             } else {
               // For system tasks, check auth first
               if (!user) {
@@ -1573,7 +1585,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         }}
         onEdit={() => {
           if (selectedCustomTask) {
-            handleCustomActivityEdit(selectedCustomTask);
+            handleCustomActivityFullEdit(selectedCustomTask);
             setDetailDialogOpen(false);
           }
         }}
@@ -1882,6 +1894,43 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         showSkipOption={true}
       />
       
+      {/* Custom Activity Schedule Drawer - same UI as system tasks */}
+      <SystemTaskScheduleDrawer
+        open={activeCustomScheduleTask !== null}
+        onOpenChange={(open) => { if (!open) setActiveCustomScheduleTask(null); }}
+        taskId={activeCustomScheduleTask?.customActivityData?.template.id || ''}
+        taskTitle={activeCustomScheduleTask?.titleKey || ''}
+        currentDisplayDays={(() => {
+          if (!activeCustomScheduleTask?.customActivityData) return [...ALL_DAYS];
+          const template = activeCustomScheduleTask.customActivityData.template;
+          // Use display_days if set, otherwise recurring_days, otherwise all days
+          return (template.display_days as number[]) || template.recurring_days || [...ALL_DAYS];
+        })()}
+        currentDisplayTime={activeCustomScheduleTask?.customActivityData?.template.display_time || null}
+        currentReminderEnabled={activeCustomScheduleTask?.customActivityData?.template.reminder_enabled || false}
+        currentReminderMinutes={activeCustomScheduleTask?.customActivityData?.template.reminder_minutes || 15}
+        onSave={async (displayDays, displayTime, reminderEnabled, reminderMinutes) => {
+          if (activeCustomScheduleTask?.customActivityData) {
+            const templateId = activeCustomScheduleTask.customActivityData.template.id;
+            const success = await updateTemplateSchedule(templateId, displayDays, displayTime, reminderEnabled, reminderMinutes);
+            if (success) {
+              // Update local task times for display
+              setTaskTimes(prev => ({ ...prev, [activeCustomScheduleTask.id]: displayTime }));
+              setTaskReminders(prev => ({ ...prev, [activeCustomScheduleTask.id]: reminderEnabled ? reminderMinutes : null }));
+              // Refetch to update UI
+              refetch();
+            }
+            return success;
+          }
+          return false;
+        }}
+        onSkipTask={() => {
+          if (activeCustomScheduleTask) {
+            handleSkipTask(activeCustomScheduleTask.id);
+          }
+        }}
+        showSkipOption={true}
+      />
       {/* Pulsing animation for incomplete tasks */}
       <style>{`
         @keyframes game-plan-pulse-custom {
