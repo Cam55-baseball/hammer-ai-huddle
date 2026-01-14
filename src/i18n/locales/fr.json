@@ -3978,6 +3978,42 @@
       "sleepQualityDesc": "Évaluez la qualité de votre sommeil hier soir",
       "sleepData": "Données de Sommeil",
       "hoursSleptPlaceholder": "ex. 7.5",
+      "bedtimeActual": "À quelle heure vous êtes-vous couché hier soir?",
+      "wakeTimeActual": "À quelle heure vous êtes-vous réveillé ce matin?",
+      "sleepDuration": "Vous avez dormi {{hours}}",
+      "sleepAnalysis": {
+        "low": {
+          "title": "Énergie Faible",
+          "message": "L'énergie peut être épuisée. Concentrez-vous sur la récupération aujourd'hui. Priorisez le repos et évitez les efforts excessifs."
+        },
+        "moderate-low": {
+          "title": "Énergie Modérée-Faible",
+          "message": "Vous pourriez vous sentir léthargique. Priorisez l'hydratation et une activité légère. Envisagez de vous coucher plus tôt ce soir."
+        },
+        "moderate": {
+          "title": "Énergie Modérée",
+          "message": "Repos adéquat. Vous êtes prêt pour un entraînement d'intensité modérée. Poussez-vous mais écoutez votre corps."
+        },
+        "good": {
+          "title": "Bonne Énergie",
+          "message": "Bien reposé! Vous avez une énergie solide pour l'entraînement. Excellente base pour la haute performance."
+        },
+        "optimal": {
+          "title": "Énergie Optimale",
+          "message": "Excellente récupération! Niveaux d'énergie au maximum aujourd'hui. Vous êtes prêt pour votre meilleure performance."
+        },
+        "excessive": {
+          "title": "Possible Excès de Sommeil",
+          "message": "Trop dormir peut causer de la somnolence. Une activité légère et du mouvement peuvent vous aider à vous sentir plus alerte."
+        }
+      },
+      "sleepGoals": {
+        "title": "Objectifs de Sommeil pour Demain",
+        "subtitle": "Définissez vos intentions pour le repos de ce soir",
+        "bedtimeGoal": "À quelle heure prévoyez-vous de vous coucher?",
+        "wakeTimeGoal": "À quelle heure prévoyez-vous de vous réveiller?",
+        "goalDuration": "Objectif: {{hours}} de sommeil"
+      },
       "phoneFree": {
         "title": "Pourquoi 1 heure sans téléphone avant de dormir?",
         "blueLight": "Réduit l'exposition à la lumière bleue qui perturbe votre rythme circadien",

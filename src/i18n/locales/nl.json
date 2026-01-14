@@ -3164,6 +3164,42 @@
       "sleepQualityDesc": "Beoordeel je slaapkwaliteit vannacht",
       "sleepData": "Slaapgegevens",
       "hoursSleptPlaceholder": "bijv. 7.5",
+      "bedtimeActual": "Hoe laat ben je gisteravond gaan slapen?",
+      "wakeTimeActual": "Hoe laat ben je vanochtend wakker geworden?",
+      "sleepDuration": "Je hebt {{hours}} geslapen",
+      "sleepAnalysis": {
+        "low": {
+          "title": "Lage Energie",
+          "message": "Energie kan uitgeput zijn. Focus vandaag op herstel. Geef prioriteit aan rust en vermijd overbelasting."
+        },
+        "moderate-low": {
+          "title": "Matig-Lage Energie",
+          "message": "Je voelt je misschien sloom. Geef prioriteit aan hydratatie en lichte activiteit. Overweeg vanavond eerder naar bed te gaan."
+        },
+        "moderate": {
+          "title": "Matige Energie",
+          "message": "Voldoende rust. Je bent klaar voor matige intensiteit training. Push jezelf maar luister naar je lichaam."
+        },
+        "good": {
+          "title": "Goede Energie",
+          "message": "Goed uitgerust! Je hebt stevige energie voor training. Geweldige basis voor topprestaties."
+        },
+        "optimal": {
+          "title": "Optimale Energie",
+          "message": "Uitstekend herstel! Piek energieniveaus vandaag. Je bent klaar voor je beste prestatie."
+        },
+        "excessive": {
+          "title": "Mogelijk Te Lang Geslapen",
+          "message": "Te lang slapen kan sufheid veroorzaken. Lichte activiteit en beweging kunnen je helpen alerter te voelen."
+        }
+      },
+      "sleepGoals": {
+        "title": "Slaapdoelen voor Morgen",
+        "subtitle": "Stel je intenties voor de nachtrust van vanavond",
+        "bedtimeGoal": "Hoe laat ben je van plan te gaan slapen?",
+        "wakeTimeGoal": "Hoe laat ben je van plan wakker te worden?",
+        "goalDuration": "Doel: {{hours}} slaap"
+      },
       "phoneFree": {
         "title": "Waarom 1 uur geen telefoon voor het slapen?",
         "blueLight": "Vermindert blootstelling aan blauw licht dat je circadiaanse ritme verstoort",

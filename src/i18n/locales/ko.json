@@ -3151,6 +3151,42 @@
       "sleepQualityDesc": "어젯밤 수면 품질을 평가하세요",
       "sleepData": "수면 데이터",
       "hoursSleptPlaceholder": "예: 7.5",
+      "bedtimeActual": "어젯밤 몇 시에 잠자리에 들었나요?",
+      "wakeTimeActual": "오늘 아침 몇 시에 일어났나요?",
+      "sleepDuration": "{{hours}} 잤습니다",
+      "sleepAnalysis": {
+        "low": {
+          "title": "낮은 에너지",
+          "message": "에너지가 부족할 수 있습니다. 오늘은 회복에 집중하세요. 휴식을 우선시하고 과로를 피하세요."
+        },
+        "moderate-low": {
+          "title": "중저 에너지",
+          "message": "나른함을 느낄 수 있습니다. 수분 섭취와 가벼운 활동을 우선시하세요. 오늘 밤 일찍 자는 것을 고려하세요."
+        },
+        "moderate": {
+          "title": "적당한 에너지",
+          "message": "충분한 휴식을 취했습니다. 중간 강도 훈련을 할 준비가 되었습니다. 자신을 밀어붙이되 몸의 신호를 들으세요."
+        },
+        "good": {
+          "title": "좋은 에너지",
+          "message": "충분히 쉬었습니다! 훈련을 위한 탄탄한 에너지가 있습니다. 높은 성과를 위한 훌륭한 기반입니다."
+        },
+        "optimal": {
+          "title": "최적의 에너지",
+          "message": "훌륭한 회복! 오늘 최고의 에너지 수준입니다. 최고의 퍼포먼스를 위한 준비가 되었습니다."
+        },
+        "excessive": {
+          "title": "과수면 가능성",
+          "message": "너무 많이 자면 졸음이 올 수 있습니다. 가벼운 활동과 움직임이 더 또렷하게 느끼는 데 도움이 됩니다."
+        }
+      },
+      "sleepGoals": {
+        "title": "내일의 수면 목표",
+        "subtitle": "오늘 밤 휴식에 대한 의도를 설정하세요",
+        "bedtimeGoal": "몇 시에 잠자리에 들 계획인가요?",
+        "wakeTimeGoal": "몇 시에 일어날 계획인가요?",
+        "goalDuration": "목표: {{hours}} 수면"
+      },
       "phoneFree": {
         "title": "왜 취침 1시간 전 폰 금지인가요?",
         "blueLight": "생체리듬을 교란하는 블루라이트 노출을 줄입니다",

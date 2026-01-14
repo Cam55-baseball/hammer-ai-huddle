@@ -4406,6 +4406,42 @@
       "sleepQualityDesc": "Rate your sleep quality last night",
       "sleepData": "Sleep Data",
       "hoursSleptPlaceholder": "e.g. 7.5",
+      "bedtimeActual": "What time did you go to bed last night?",
+      "wakeTimeActual": "What time did you wake up this morning?",
+      "sleepDuration": "You slept {{hours}}",
+      "sleepAnalysis": {
+        "low": {
+          "title": "Low Energy",
+          "message": "Energy may be depleted. Focus on recovery today. Prioritize rest and avoid overexertion."
+        },
+        "moderate-low": {
+          "title": "Moderate-Low Energy",
+          "message": "You may feel sluggish. Prioritize hydration and light activity. Consider an earlier bedtime tonight."
+        },
+        "moderate": {
+          "title": "Moderate Energy",
+          "message": "Adequate rest. You're ready for moderate intensity training. Push yourself but listen to your body."
+        },
+        "good": {
+          "title": "Good Energy",
+          "message": "Well-rested! You have solid energy for training. Great foundation for high performance."
+        },
+        "optimal": {
+          "title": "Optimal Energy",
+          "message": "Excellent recovery! Peak energy levels today. You're primed for your best performance."
+        },
+        "excessive": {
+          "title": "Possible Oversleep",
+          "message": "Oversleeping may cause grogginess. Light activity and movement can help you feel more alert."
+        }
+      },
+      "sleepGoals": {
+        "title": "Tomorrow's Sleep Goals",
+        "subtitle": "Set your intentions for tonight's rest",
+        "bedtimeGoal": "What time do you plan to go to bed?",
+        "wakeTimeGoal": "What time do you plan to wake up?",
+        "goalDuration": "Goal: {{hours}} of sleep"
+      },
       "phoneFree": {
         "title": "Why 1 Hour Phone-Free Before Bed?",
         "blueLight": "Reduces blue light exposure that disrupts your circadian rhythm",

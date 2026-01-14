@@ -4029,6 +4029,42 @@
       "sleepQualityDesc": "Califica la calidad de tu sueño anoche",
       "sleepData": "Datos de Sueño",
       "hoursSleptPlaceholder": "ej. 7.5",
+      "bedtimeActual": "¿A qué hora te fuiste a dormir anoche?",
+      "wakeTimeActual": "¿A qué hora te despertaste esta mañana?",
+      "sleepDuration": "Dormiste {{hours}}",
+      "sleepAnalysis": {
+        "low": {
+          "title": "Energía Baja",
+          "message": "La energía puede estar agotada. Concéntrate en la recuperación hoy. Prioriza el descanso y evita el sobreesfuerzo."
+        },
+        "moderate-low": {
+          "title": "Energía Moderada-Baja",
+          "message": "Podrías sentirte lento. Prioriza la hidratación y actividad ligera. Considera acostarte más temprano esta noche."
+        },
+        "moderate": {
+          "title": "Energía Moderada",
+          "message": "Descanso adecuado. Estás listo para entrenamiento de intensidad moderada. Esfuérzate pero escucha a tu cuerpo."
+        },
+        "good": {
+          "title": "Buena Energía",
+          "message": "¡Bien descansado! Tienes buena energía para entrenar. Gran base para alto rendimiento."
+        },
+        "optimal": {
+          "title": "Energía Óptima",
+          "message": "¡Excelente recuperación! Niveles de energía máximos hoy. Estás preparado para tu mejor rendimiento."
+        },
+        "excessive": {
+          "title": "Posible Exceso de Sueño",
+          "message": "Dormir demasiado puede causar somnolencia. Actividad ligera y movimiento pueden ayudarte a estar más alerta."
+        }
+      },
+      "sleepGoals": {
+        "title": "Objetivos de Sueño para Mañana",
+        "subtitle": "Establece tus intenciones para el descanso de esta noche",
+        "bedtimeGoal": "¿A qué hora planeas ir a dormir?",
+        "wakeTimeGoal": "¿A qué hora planeas despertar?",
+        "goalDuration": "Objetivo: {{hours}} de sueño"
+      },
       "phoneFree": {
         "title": "¿Por qué 1 hora sin teléfono antes de dormir?",
         "blueLight": "Reduce la exposición a luz azul que interrumpe tu ritmo circadiano",
