@@ -5072,7 +5072,22 @@
       "prevWeek": "Previous Week",
       "nextWeek": "Next Week",
       "viewToday": "View Today",
-      "viewWeek": "View Week"
+      "viewWeek": "View Week",
+      "lockDay": "Lock Day",
+      "unlockDay": "Unlock Day",
+      "dayLocked": "Day Locked",
+      "lockedScheduleInfo": "This schedule repeats every {{day}} until unlocked",
+      "activitiesForDay": "Activities for {{day}}",
+      "noActivitiesForDay": "No activities scheduled for this day",
+      "lockToRepeat": "Lock this day to repeat this schedule every week"
+    },
+    "lockedDays": {
+      "dayLocked": "Day locked successfully",
+      "dayUnlocked": "Day unlocked",
+      "lockError": "Failed to lock day",
+      "unlockError": "Failed to unlock day",
+      "confirmLock": "Lock this day's schedule?",
+      "confirmUnlock": "Unlock this day?"
     },
     "scheduleTemplate": {
       "saveAsTemplate": "Save as Template",

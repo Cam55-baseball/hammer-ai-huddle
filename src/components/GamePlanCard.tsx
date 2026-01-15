@@ -36,6 +36,7 @@ import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
 import { useScheduleTemplates, ScheduleItem } from '@/hooks/useScheduleTemplates';
 import { useDailySummaryNotification } from '@/hooks/useDailySummaryNotification';
+import { useLockedDays } from '@/hooks/useLockedDays';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { CustomActivityTemplate } from '@/types/customActivity';
@@ -66,6 +67,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   
   // Schedule templates hook
   const { templates: scheduleTemplates, saveTemplate, deleteTemplate, getDefaultTemplate } = useScheduleTemplates();
+  
+  // Locked days hook
+  const { lockedDays, lockDay, unlockDay } = useLockedDays();
   
   // Daily summary notification hook
   const { 
@@ -1035,8 +1039,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         <GamePlanCalendarView
           tasks={tasks}
           taskTimes={taskTimes}
+          taskReminders={taskReminders}
           onDaySelect={setSelectedDate}
           selectedDate={selectedDate}
+          lockedDays={lockedDays}
+          onLockDay={lockDay}
+          onUnlockDay={unlockDay}
         />
       </div>
     );

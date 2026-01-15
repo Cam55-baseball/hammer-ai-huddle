@@ -379,6 +379,36 @@ export type Database = {
         }
         Relationships: []
       }
+      game_plan_locked_days: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          id: string
+          locked_at: string | null
+          schedule: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          id?: string
+          locked_at?: string | null
+          schedule?: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          id?: string
+          locked_at?: string | null
+          schedule?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       game_plan_skipped_tasks: {
         Row: {
           created_at: string | null
