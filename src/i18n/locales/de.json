@@ -4628,7 +4628,20 @@
       "prevWeek": "Vorherige Woche",
       "nextWeek": "Nächste Woche",
       "viewToday": "Heute anzeigen",
-      "viewWeek": "Woche anzeigen"
+      "viewWeek": "Woche anzeigen",
+      "lockDay": "Tag sperren",
+      "unlockDay": "Tag entsperren",
+      "dayLocked": "Gesperrt",
+      "lockedScheduleInfo": "Dieser Zeitplan wiederholt sich jeden {{day}} bis zur Entsperrung",
+      "activitiesForDay": "Aktivitäten für {{day}}",
+      "noActivitiesForDay": "Keine Aktivitäten für diesen Tag geplant",
+      "lockToRepeat": "Sperren Sie diesen Tag, um den Zeitplan jede Woche zu wiederholen"
+    },
+    "lockedDays": {
+      "dayLocked": "Tag erfolgreich gesperrt",
+      "dayUnlocked": "Tag entsperrt",
+      "lockError": "Tag konnte nicht gesperrt werden",
+      "unlockError": "Tag konnte nicht entsperrt werden"
     },
     "scheduleTemplate": {
       "saveAsTemplate": "Als Vorlage speichern",
