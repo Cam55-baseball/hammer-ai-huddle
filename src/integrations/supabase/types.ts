@@ -469,6 +469,36 @@ export type Database = {
         }
         Relationships: []
       }
+      game_plan_week_overrides: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          id: string
+          override_schedule: Json
+          updated_at: string | null
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          id?: string
+          override_schedule?: Json
+          updated_at?: string | null
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          id?: string
+          override_schedule?: Json
+          updated_at?: string | null
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       hydration_logs: {
         Row: {
           amount_oz: number
