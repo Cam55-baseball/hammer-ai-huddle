@@ -69,7 +69,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { templates: scheduleTemplates, saveTemplate, deleteTemplate, getDefaultTemplate } = useScheduleTemplates();
   
   // Locked days hook
-  const { lockedDays, lockDay, unlockDay } = useLockedDays();
+  const { 
+    lockedDays, 
+    weekOverrides,
+    lockDay, 
+    unlockDay, 
+    copyDayToMultiple,
+    unlockForWeek,
+    saveWeekOverride,
+    discardWeekOverride,
+    hasWeekOverride
+  } = useLockedDays();
   
   // Daily summary notification hook
   const { 
@@ -1043,8 +1053,15 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           onDaySelect={setSelectedDate}
           selectedDate={selectedDate}
           lockedDays={lockedDays}
+          weekOverrides={weekOverrides}
           onLockDay={lockDay}
           onUnlockDay={unlockDay}
+          onCopyDay={copyDayToMultiple}
+          onUnlockForWeek={unlockForWeek}
+          onSaveWeekOverride={saveWeekOverride}
+          onDiscardWeekOverride={discardWeekOverride}
+          hasWeekOverride={hasWeekOverride}
+          timelineTaskOrder={timelineTasks.map(t => t.id)}
         />
       </div>
     );
