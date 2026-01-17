@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay, isToday, getDay } from 'date-fns';
 import { Reorder } from 'framer-motion';
@@ -164,7 +164,7 @@ export function GamePlanCalendarView({
   }, [tasks, taskTimes, isDayLocked, effectiveSchedule, selectedDayOfWeek, timelineTaskOrder]);
 
   // Initialize reordered tasks when display tasks change
-  useMemo(() => {
+  useEffect(() => {
     setReorderedTasks(displayTasks);
     setHasReorderChanges(false);
   }, [displayTasks]);
