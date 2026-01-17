@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay, isToday, getDay } from 'date-fns';
 import { Reorder } from 'framer-motion';
@@ -64,6 +64,8 @@ export function GamePlanCalendarView({
   const [selectedCopyDays, setSelectedCopyDays] = useState<number[]>([]);
   const [reorderedTasks, setReorderedTasks] = useState<TimelineTaskWithTime[]>([]);
   const [hasReorderChanges, setHasReorderChanges] = useState(false);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [selectedUnlockDays, setSelectedUnlockDays] = useState<number[]>([]);
 
   const weekDays = useMemo(() => {
     const end = endOfWeek(currentWeekStart, { weekStartsOn: 1 });
@@ -163,11 +165,20 @@ export function GamePlanCalendarView({
     }
   }, [tasks, taskTimes, isDayLocked, effectiveSchedule, selectedDayOfWeek, timelineTaskOrder]);
 
-  // Initialize reordered tasks when display tasks change
+  // Track the key that determines when to reset reordered tasks
+  const resetKey = `${selectedDayOfWeek}-${isDayLocked}-${isDayOverridden}-${effectiveSchedule.length}`;
+  const prevResetKeyRef = useRef(resetKey);
+  const initialLoadRef = useRef(true);
+
+  // Initialize reordered tasks when the underlying data source changes
   useEffect(() => {
-    setReorderedTasks(displayTasks);
-    setHasReorderChanges(false);
-  }, [displayTasks]);
+    if (prevResetKeyRef.current !== resetKey || initialLoadRef.current) {
+      setReorderedTasks(displayTasks);
+      setHasReorderChanges(false);
+      prevResetKeyRef.current = resetKey;
+      initialLoadRef.current = false;
+    }
+  }, [resetKey, displayTasks]);
 
   const formatTimeDisplay = (time: string | null): string => {
     if (!time) return '--:--';
@@ -264,6 +275,30 @@ export function GamePlanCalendarView({
   const handleReorder = (newOrder: TimelineTaskWithTime[]) => {
     setReorderedTasks(newOrder);
     setHasReorderChanges(true);
+  };
+
+  const handleOpenUnlockDialog = () => {
+    setSelectedUnlockDays([selectedDayOfWeek]);
+    setUnlockDialogOpen(true);
+  };
+
+  const toggleUnlockDay = (day: number) => {
+    setSelectedUnlockDays(prev => 
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
+  const handleUnlockMultipleDays = async () => {
+    if (selectedUnlockDays.length === 0) return;
+    setIsLocking(true);
+    try {
+      for (const day of selectedUnlockDays) {
+        await onUnlockForWeek(day);
+      }
+      setUnlockDialogOpen(false);
+    } finally {
+      setIsLocking(false);
+    }
   };
 
   const selectedDayName = DAY_NAMES[selectedDayOfWeek];
@@ -428,12 +463,12 @@ export function GamePlanCalendarView({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleUnlockForWeek}
+                  onClick={handleOpenUnlockDialog}
                   disabled={isLocking}
                   className="h-8 text-xs font-bold"
                 >
                   <CalendarClock className="h-3.5 w-3.5 mr-1.5" />
-                  {t('gamePlan.lockedDays.unlockForWeek', 'This Week')}
+                  {t('gamePlan.lockedDays.unlockForWeek', 'Unlock Order for This Week')}
                 </Button>
                 <Button
                   variant="outline"
@@ -658,6 +693,70 @@ export function GamePlanCalendarView({
               disabled={selectedCopyDays.length === 0 || isLocking}
             >
               {t('gamePlan.lockedDays.copyToDays', 'Copy to {{count}} Days', { count: selectedCopyDays.length })}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unlock for Week Dialog */}
+      <Dialog open={unlockDialogOpen} onOpenChange={setUnlockDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {t('gamePlan.lockedDays.unlockForWeekTitle', 'Unlock Order for This Week')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('gamePlan.lockedDays.selectUnlockDays', 'Select days to unlock for this week only:')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2 py-4">
+            {DAY_NAMES.map((day, index) => {
+              const isLocked = lockedDays.has(index);
+              const isSelected = selectedUnlockDays.includes(index);
+              
+              return (
+                <div
+                  key={day}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                    !isLocked && "opacity-50 cursor-not-allowed bg-muted",
+                    isLocked && isSelected && "bg-blue-500/10 border-blue-500",
+                    isLocked && !isSelected && "hover:bg-muted/50"
+                  )}
+                  onClick={() => isLocked && toggleUnlockDay(index)}
+                >
+                  <Checkbox
+                    checked={isSelected}
+                    disabled={!isLocked}
+                    onCheckedChange={() => isLocked && toggleUnlockDay(index)}
+                  />
+                  <span className="text-sm font-medium">
+                    {day}
+                    {!isLocked && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        ({t('gamePlan.lockedDays.notLocked', 'not locked')})
+                      </span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+            <Info className="h-4 w-4 text-blue-500 flex-shrink-0" />
+            <p className="text-xs text-blue-500">
+              {t('gamePlan.lockedDays.unlockForWeekInfo', 'This allows you to reorder activities for this week only. The original locked schedule will return next week.')}
+            </p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setUnlockDialogOpen(false)}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button
+              onClick={handleUnlockMultipleDays}
+              disabled={selectedUnlockDays.length === 0 || isLocking}
+            >
+              {t('gamePlan.lockedDays.unlockDays', 'Unlock {{count}} Days', { count: selectedUnlockDays.length })}
             </Button>
           </DialogFooter>
         </DialogContent>
