@@ -191,8 +191,8 @@ export function GamePlanCalendarView({
   const handleLockDay = async () => {
     setIsLocking(true);
     try {
-      // Build current schedule from visible tasks with order
-      const schedule: LockedDayScheduleItem[] = displayTasks.map((task, index) => ({
+      // Build current schedule from reordered tasks (preserves user's drag-drop order)
+      const schedule: LockedDayScheduleItem[] = reorderedTasks.map((task, index) => ({
         taskId: task.id,
         displayTime: taskTimes[task.id] || null,
         reminderEnabled: taskReminders[task.id] !== null && taskReminders[task.id] !== undefined,

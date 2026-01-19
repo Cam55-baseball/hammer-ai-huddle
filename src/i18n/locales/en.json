@@ -5114,7 +5114,11 @@
       "weekOverrideSaveError": "Failed to save week override",
       "weekOverrideDiscardError": "Failed to discard week override",
       "reorderHint": "Drag to reorder",
-      "lockToday": "Lock Today"
+      "lockToday": "Lock Today",
+      "lockDayTitle": "Lock Schedule",
+      "selectLockDays": "Select days to lock this schedule:",
+      "lockDays": "Lock {{count}} Days",
+      "lockInfo": "Locked schedules repeat every week on the selected days."
     },
     "scheduleTemplate": {
       "saveAsTemplate": "Save as Template",
