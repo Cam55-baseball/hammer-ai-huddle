@@ -7,11 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target } from 'lucide-react';
+import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
 import { CustomField, Exercise, MealData, RunningInterval, EmbeddedRunningSession, CustomActivityTemplate } from '@/types/customActivity';
+import { useScoutAccess } from '@/hooks/useScoutAccess';
+import { SendToPlayerDialog } from '@/components/custom-activities/SendToPlayerDialog';
 
 // Helper to get all checkable item IDs from a template
 export const getAllCheckableIds = (template: CustomActivityTemplate): string[] => {
@@ -70,6 +72,8 @@ export function CustomActivityDetailDialog({
   const [tempTime, setTempTime] = useState(taskTime || '');
   const [tempReminder, setTempReminder] = useState<number | null>(taskReminder);
   const [savingFieldIds, setSavingFieldIds] = useState<Set<string>>(new Set());
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const { canSendActivities, loading: accessLoading } = useScoutAccess();
 
   if (!task || !task.customActivityData) return null;
 
@@ -640,38 +644,60 @@ export function CustomActivityDetailDialog({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={onEdit}
-                className="flex-1 gap-2"
-              >
-                <Pencil className="h-4 w-4" />
-                {t('customActivity.detail.editActivity')}
-              </Button>
-              <Button
-                onClick={() => {
-                  onComplete();
-                  onOpenChange(false);
-                }}
-                className={cn(
-                  "flex-1 gap-2 font-bold",
-                  task.completed 
-                    ? "bg-muted text-muted-foreground hover:bg-muted" 
-                    : "bg-green-600 hover:bg-green-700 text-white"
-                )}
-                style={!task.completed ? { backgroundColor: customColor } : undefined}
-              >
-                <Check className="h-4 w-4" />
-                {task.completed 
-                  ? t('customActivity.detail.markedComplete') 
-                  : t('customActivity.detail.markComplete')
-                }
-              </Button>
+            <div className="flex flex-col gap-3 pt-4 border-t">
+              {/* Send to Player button - only for coaches/scouts */}
+              {(canSendActivities || accessLoading) && (
+                <Button
+                  variant="outline"
+                  onClick={() => setSendDialogOpen(true)}
+                  disabled={accessLoading}
+                  className="w-full gap-2 border-primary/50 text-primary hover:bg-primary/10"
+                >
+                  <Send className="h-4 w-4" />
+                  {t('sentActivity.sendToPlayer', 'Send to Player')}
+                </Button>
+              )}
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={onEdit}
+                  className="flex-1 gap-2"
+                >
+                  <Pencil className="h-4 w-4" />
+                  {t('customActivity.detail.editActivity')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    onComplete();
+                    onOpenChange(false);
+                  }}
+                  className={cn(
+                    "flex-1 gap-2 font-bold",
+                    task.completed 
+                      ? "bg-muted text-muted-foreground hover:bg-muted" 
+                      : ""
+                  )}
+                  style={!task.completed ? { backgroundColor: customColor } : undefined}
+                >
+                  <Check className="h-4 w-4" />
+                  {task.completed 
+                    ? t('customActivity.detail.markedComplete') 
+                    : t('customActivity.detail.markComplete')
+                  }
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </DialogContent>
+
+      {/* Send Dialog */}
+      <SendToPlayerDialog 
+        open={sendDialogOpen} 
+        onOpenChange={setSendDialogOpen} 
+        template={template} 
+      />
     </Dialog>
   );
 }

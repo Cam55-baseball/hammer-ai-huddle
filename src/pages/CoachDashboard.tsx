@@ -11,7 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { GraduationCap, Check, Clock, BookMarked, User, UserMinus, Send } from 'lucide-react';
+import { GraduationCap, Check, Clock, BookMarked, User, UserMinus, Send, Package } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { SentActivitiesHistory } from '@/components/coach/SentActivitiesHistory';
+import { BulkSendDialog } from '@/components/coach/BulkSendDialog';
 import { 
   Command,
   CommandEmpty,
@@ -44,6 +47,8 @@ export default function CoachDashboard() {
   const [isUnfollowing, setIsUnfollowing] = useState(false);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [ownerLoading, setOwnerLoading] = useState(true);
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [bulkSendDialogOpen, setBulkSendDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
     positions: [] as string[],
     throwingHands: [] as string[],
@@ -367,9 +372,20 @@ export default function CoachDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>{t('coach.myPlayers', 'My Players')}</span>
-              <Badge variant="secondary">{followingCount}</Badge>
+            <CardTitle className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <span>{t('coach.myPlayers', 'My Players')}</span>
+                <Badge variant="secondary">{followingCount}</Badge>
+              </div>
+              {selectedPlayers.length > 0 && (
+                <Button 
+                  onClick={() => setBulkSendDialogOpen(true)}
+                  className="gap-2"
+                >
+                  <Package className="h-4 w-4" />
+                  {t('coach.sendActivities', 'Send Activities')} ({selectedPlayers.length})
+                </Button>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -387,6 +403,16 @@ export default function CoachDashboard() {
                     className="flex items-center justify-between gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors flex-wrap"
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Checkbox 
+                        checked={selectedPlayers.includes(player.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedPlayers(prev => [...prev, player.id]);
+                          } else {
+                            setSelectedPlayers(prev => prev.filter(id => id !== player.id));
+                          }
+                        }}
+                      />
                       <div className="flex-shrink-0">
                         {player.avatar_url ? (
                           <img
@@ -450,6 +476,8 @@ export default function CoachDashboard() {
             )}
           </CardContent>
         </Card>
+
+        <SentActivitiesHistory />
 
         <Card>
           <CardHeader>
@@ -572,6 +600,13 @@ export default function CoachDashboard() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <BulkSendDialog 
+          open={bulkSendDialogOpen}
+          onOpenChange={setBulkSendDialogOpen}
+          selectedPlayerIds={selectedPlayers}
+          selectedPlayerNames={following.filter(p => selectedPlayers.includes(p.id)).map(p => p.full_name)}
+        />
       </div>
     </DashboardLayout>
   );
