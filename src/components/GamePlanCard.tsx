@@ -997,50 +997,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     );
   }
 
-  // If calendar view is active, show it instead
-  if (showCalendarView) {
-    return (
-      <div className="space-y-4">
-        <Card className="p-4 bg-secondary border-primary/30">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary">
-                <CalendarDays className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <h2 className="text-lg font-black text-white uppercase">{t('gamePlan.calendarView.title')}</h2>
-            </div>
-            <ToggleGroup 
-              type="single" 
-              value="week" 
-              onValueChange={(value) => {
-                if (value === 'today') setShowCalendarView(false);
-              }}
-              className="bg-background/10 rounded-lg p-0.5"
-            >
-              <ToggleGroupItem 
-                value="today" 
-                className="h-7 px-3 text-xs font-bold data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-              >
-                {t('gamePlan.calendarView.today')}
-              </ToggleGroupItem>
-              <ToggleGroupItem 
-                value="week" 
-                className="h-7 px-3 text-xs font-bold data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-              >
-                {t('gamePlan.calendarView.viewWeek')}
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-        </Card>
-        <GamePlanCalendarView
-          tasks={tasks}
-          taskTimes={taskTimes}
-          onDaySelect={setSelectedDate}
-          selectedDate={selectedDate}
-        />
-      </div>
-    );
-  }
+  // Calendar view removed - now use dedicated /calendar page
+  // Users can access via navigation sidebar
 
   return (
     <Card className="relative overflow-hidden border-3 border-primary bg-secondary shadow-2xl">
@@ -1071,30 +1029,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           
           {/* Action buttons row */}
           <div className="flex items-center gap-1 flex-wrap">
-            {/* Today/Week View Toggle */}
-            <ToggleGroup 
-              type="single" 
-              value={showCalendarView ? 'week' : 'today'} 
-              onValueChange={(value) => {
-                if (value === 'week') setShowCalendarView(true);
-                else if (value === 'today') setShowCalendarView(false);
-              }}
-              className="bg-background/10 rounded-lg p-0.5"
-            >
-              <ToggleGroupItem 
-                value="today" 
-                className="h-7 px-3 text-xs font-bold data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-              >
-                {t('gamePlan.calendarView.today')}
-              </ToggleGroupItem>
-              <ToggleGroupItem 
-                value="week" 
-                className="h-7 px-3 text-xs font-bold data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-              >
-                {t('gamePlan.calendarView.viewWeek')}
-              </ToggleGroupItem>
-            </ToggleGroup>
-            
             {/* Sort mode toggle */}
             <Button
               variant="ghost"

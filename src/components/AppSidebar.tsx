@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -157,6 +157,7 @@ export function AppSidebar() {
 
   const mainNavItems = [
     { title: t('navigation.dashboard'), url: "/dashboard", icon: Home },
+    { title: t('navigation.calendar'), url: "/calendar", icon: CalendarDays },
     ...(!isScout ? [{ title: t('navigation.myFollowers'), url: "/my-followers", icon: Users }] : []),
     { title: t('navigation.rankings'), url: "/rankings", icon: Trophy },
     { title: t('navigation.nutritionHub', 'Nutrition Hub'), url: "/nutrition-hub", icon: Apple },

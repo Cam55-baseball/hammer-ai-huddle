@@ -598,6 +598,62 @@
     "failedToCancel": "Failed to cancel subscriptions",
     "confirmCancellation": "Confirm Cancellation"
   },
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "View and manage your schedule",
+    "addEvent": "Add Event",
+    "today": "Today",
+    "noEvents": "No events scheduled",
+    "addFirst": "Add your first event",
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "evening": "Evening",
+    "allDay": "All Day",
+    "eventAdded": "Event added",
+    "legend": {
+      "athleteEvent": "Game/Rest Day",
+      "activity": "Activity",
+      "program": "Training",
+      "meal": "Meal",
+      "event": "Event"
+    },
+    "eventTypes": {
+      "athlete_event": "Athlete Event",
+      "custom_activity": "Activity",
+      "program": "Training",
+      "meal": "Meal",
+      "manual": "Event",
+      "game_plan": "Game Plan"
+    },
+    "types": {
+      "event": "General Event",
+      "game": "Game Day",
+      "practice": "Practice",
+      "training": "Training",
+      "rest": "Rest Day",
+      "travel": "Travel",
+      "appointment": "Appointment",
+      "other": "Other"
+    },
+    "form": {
+      "title": "Title",
+      "titlePlaceholder": "Event title",
+      "type": "Type",
+      "description": "Description",
+      "descriptionPlaceholder": "Optional details",
+      "allDay": "All Day",
+      "startTime": "Start",
+      "endTime": "End",
+      "color": "Color",
+      "reminder": "Reminder"
+    },
+    "errors": {
+      "titleRequired": "Please enter a title",
+      "addFailed": "Failed to add event"
+    },
+    "minutes": "minutes before",
+    "hour": "hour before"
+  },
   "deleteUserDialog": {
     "title": "Delete User Account",
     "description": "This is a permanent action that cannot be undone. All user data will be deleted.",
@@ -688,6 +744,7 @@
   "navigation": {
     "menu": "Menu",
     "dashboard": "Dashboard",
+    "calendar": "Calendar",
     "playersClub": "Players Club",
     "rankings": "Rankings",
     "nutrition": "Nutrition",
