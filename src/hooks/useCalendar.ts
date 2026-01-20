@@ -290,7 +290,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
                   description: template.description || undefined,
                   startTime: template.display_time,
                   type: 'custom_activity',
-                  source: template.activity_type,
+                  source: `template-${template.id}`,
                   color: template.color || getEventColor('custom_activity'),
                   icon: Activity,
                   completed: false,
