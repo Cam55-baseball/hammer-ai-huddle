@@ -85,19 +85,37 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
     return events[dateKey] || [];
   };
 
-  // Event indicators - show dots for each event type present
+  // Event indicators - show unique colored dots for each distinct event
   const getEventIndicators = (dayEvents: CalendarEvent[]) => {
-    const types = new Set(dayEvents.map(e => e.type));
-    const indicators: { color: string; type: string }[] = [];
+    // Collect unique colors from all events (each event has its own color)
+    const uniqueColors = new Map<string, string>();
     
-    if (types.has('athlete_event')) indicators.push({ color: 'bg-red-500', type: 'athlete' });
-    if (types.has('custom_activity')) indicators.push({ color: 'bg-purple-500', type: 'activity' });
-    if (types.has('program')) indicators.push({ color: 'bg-amber-500', type: 'program' });
-    if (types.has('meal')) indicators.push({ color: 'bg-green-500', type: 'meal' });
-    if (types.has('manual')) indicators.push({ color: 'bg-indigo-500', type: 'manual' });
-    if (types.has('game_plan')) indicators.push({ color: 'bg-blue-500', type: 'gameplan' });
+    dayEvents.forEach(event => {
+      // Use the event's assigned color, or fall back to type-based defaults
+      const eventColor = event.color || getDefaultColorForType(event.type);
+      // Create a unique key based on color to avoid duplicate dots of the same color
+      if (!uniqueColors.has(eventColor)) {
+        uniqueColors.set(eventColor, eventColor);
+      }
+    });
     
-    return indicators.slice(0, 4); // Max 4 indicators
+    // Convert to array and limit to 4 dots
+    return Array.from(uniqueColors.values())
+      .slice(0, 4)
+      .map(color => ({ color }));
+  };
+
+  // Helper for default colors by event type
+  const getDefaultColorForType = (type: string): string => {
+    const defaults: Record<string, string> = {
+      'athlete_event': '#ef4444', // red
+      'custom_activity': '#8b5cf6', // purple
+      'program': '#f59e0b', // amber (Iron Bambino default, Heat Factory uses #f97316)
+      'meal': '#22c55e', // green
+      'game_plan': '#3b82f6', // blue
+      'manual': '#6366f1', // indigo
+    };
+    return defaults[type] || '#6b7280';
   };
 
   return (
@@ -216,13 +234,14 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
                     {format(day, 'd')}
                   </span>
                   
-                  {/* Event indicators */}
+                  {/* Event indicators - unique colored dots */}
                   {indicators.length > 0 && (
                     <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
                       {indicators.map((ind, idx) => (
                         <div
                           key={idx}
-                          className={cn("w-1.5 h-1.5 rounded-full", ind.color)}
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{ backgroundColor: ind.color }}
                         />
                       ))}
                     </div>

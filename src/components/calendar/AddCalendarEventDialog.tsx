@@ -132,8 +132,8 @@ export function AddCalendarEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-w-md p-0 max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
             {t('calendar.addEvent', 'Add Event')}
@@ -143,138 +143,138 @@ export function AddCalendarEventDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 max-h-[60vh] pr-4">
-        <div className="space-y-4 py-4">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">{t('calendar.form.title', 'Title')} *</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t('calendar.form.titlePlaceholder', 'Event title')}
-              autoFocus
-            />
-          </div>
-
-          {/* Event Type */}
-          <div className="space-y-2">
-            <Label>{t('calendar.form.type', 'Type')}</Label>
-            <Select value={eventType} onValueChange={setEventType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {EVENT_TYPES.map(type => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {t(`calendar.types.${type.value}`, type.label)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">{t('calendar.form.description', 'Description')}</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t('calendar.form.descriptionPlaceholder', 'Optional details')}
-              rows={2}
-            />
-          </div>
-
-          {/* All Day Toggle */}
-          <div className="flex items-center justify-between">
-            <Label htmlFor="allDay">{t('calendar.form.allDay', 'All Day')}</Label>
-            <Switch
-              id="allDay"
-              checked={allDay}
-              onCheckedChange={setAllDay}
-            />
-          </div>
-
-          {/* Time Selection */}
-          {!allDay && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="startTime" className="flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
-                  {t('calendar.form.startTime', 'Start')}
-                </Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endTime">{t('calendar.form.endTime', 'End')}</Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Color */}
-          <div className="space-y-2">
-            <Label>{t('calendar.form.color', 'Color')}</Label>
-            <div className="flex gap-2 flex-wrap">
-              {EVENT_COLORS.map(c => (
-                <button
-                  key={c.value}
-                  type="button"
-                  onClick={() => setColor(c.value)}
-                  className={`w-7 h-7 rounded-full transition-transform ${
-                    color === c.value ? 'ring-2 ring-primary ring-offset-2 scale-110' : ''
-                  }`}
-                  style={{ backgroundColor: c.value }}
-                  title={c.label}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Reminder */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="reminder">{t('calendar.form.reminder', 'Reminder')}</Label>
-              <Switch
-                id="reminder"
-                checked={reminderEnabled}
-                onCheckedChange={setReminderEnabled}
+        <div className="flex-1 overflow-y-auto px-6">
+          <div className="space-y-4 py-4">
+            {/* Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title">{t('calendar.form.title', 'Title')} *</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t('calendar.form.titlePlaceholder', 'Event title')}
+                autoFocus
               />
             </div>
-            
-            {reminderEnabled && (
-              <Select 
-                value={reminderMinutes.toString()} 
-                onValueChange={(v) => setReminderMinutes(parseInt(v, 10))}
-              >
+
+            {/* Event Type */}
+            <div className="space-y-2">
+              <Label>{t('calendar.form.type', 'Type')}</Label>
+              <Select value={eventType} onValueChange={setEventType}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="5">5 {t('calendar.minutes', 'minutes before')}</SelectItem>
-                  <SelectItem value="10">10 {t('calendar.minutes', 'minutes before')}</SelectItem>
-                  <SelectItem value="15">15 {t('calendar.minutes', 'minutes before')}</SelectItem>
-                  <SelectItem value="30">30 {t('calendar.minutes', 'minutes before')}</SelectItem>
-                  <SelectItem value="60">1 {t('calendar.hour', 'hour before')}</SelectItem>
+                  {EVENT_TYPES.map(type => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {t(`calendar.types.${type.value}`, type.label)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-          )}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">{t('calendar.form.description', 'Description')}</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t('calendar.form.descriptionPlaceholder', 'Optional details')}
+                rows={2}
+              />
+            </div>
+
+            {/* All Day Toggle */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="allDay">{t('calendar.form.allDay', 'All Day')}</Label>
+              <Switch
+                id="allDay"
+                checked={allDay}
+                onCheckedChange={setAllDay}
+              />
+            </div>
+
+            {/* Time Selection */}
+            {!allDay && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="startTime" className="flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5" />
+                    {t('calendar.form.startTime', 'Start')}
+                  </Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">{t('calendar.form.endTime', 'End')}</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Color */}
+            <div className="space-y-2">
+              <Label>{t('calendar.form.color', 'Color')}</Label>
+              <div className="flex gap-2 flex-wrap">
+                {EVENT_COLORS.map(c => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => setColor(c.value)}
+                    className={`w-7 h-7 rounded-full transition-transform ${
+                      color === c.value ? 'ring-2 ring-primary ring-offset-2 scale-110' : ''
+                    }`}
+                    style={{ backgroundColor: c.value }}
+                    title={c.label}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Reminder */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="reminder">{t('calendar.form.reminder', 'Reminder')}</Label>
+                <Switch
+                  id="reminder"
+                  checked={reminderEnabled}
+                  onCheckedChange={setReminderEnabled}
+                />
+              </div>
+              
+              {reminderEnabled && (
+                <Select 
+                  value={reminderMinutes.toString()} 
+                  onValueChange={(v) => setReminderMinutes(parseInt(v, 10))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 {t('calendar.minutes', 'minutes before')}</SelectItem>
+                    <SelectItem value="10">10 {t('calendar.minutes', 'minutes before')}</SelectItem>
+                    <SelectItem value="15">15 {t('calendar.minutes', 'minutes before')}</SelectItem>
+                    <SelectItem value="30">30 {t('calendar.minutes', 'minutes before')}</SelectItem>
+                    <SelectItem value="60">1 {t('calendar.hour', 'hour before')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
         </div>
-        </ScrollArea>
 
-        <DialogFooter className="flex-shrink-0">
+        <DialogFooter className="flex-shrink-0 px-6 pb-6 pt-4 border-t border-border">
           <Button variant="outline" onClick={handleClose} disabled={loading}>
             {t('common.cancel', 'Cancel')}
           </Button>
