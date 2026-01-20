@@ -33,17 +33,19 @@ serve(async (req) => {
       throw new Error("Invalid user");
     }
 
-    // Verify user is a scout
-    const { data: scoutRole } = await supabase
+    // Verify user is a scout or coach
+    const { data: userRole } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "scout")
+      .in("role", ["scout", "coach"])
       .maybeSingle();
 
-    if (!scoutRole) {
-      throw new Error("User is not a scout");
+    if (!userRole) {
+      throw new Error("User is not a scout or coach");
     }
+
+    console.log("User role verified:", userRole.role);
 
     // Validate input
     const body = await req.json();
