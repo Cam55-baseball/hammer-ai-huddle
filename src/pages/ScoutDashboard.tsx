@@ -180,6 +180,12 @@ export default function ScoutDashboard() {
 
   // Debounced search effect with filters
   useEffect(() => {
+    // Don't search if user isn't authenticated or doesn't have access
+    if (!user || !hasScoutAccess) {
+      setSearchResults([]);
+      return;
+    }
+
     // Check if we have search term or active filters
     const hasActiveFilters = 
       filters.positions.length > 0 ||
