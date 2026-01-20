@@ -823,71 +823,71 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
 
           {/* Stats Grid - Enhanced Cards with Air Quality */}
           {expanded && (
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {/* Wind Card */}
-              <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-sky-100 text-sky-600 group-hover:scale-110 transition-transform">
-                      <Wind className="h-5 w-5" />
+              <Card className="group hover:shadow-lg transition-all duration-300 border-border/50">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-sky-100 text-sky-600 group-hover:scale-110 transition-transform">
+                      <Wind className="h-6 w-6" />
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.wind')}</p>
-                      <p className="text-lg font-bold">{weather.windSpeed} mph</p>
-                      <p className="text-xs text-muted-foreground">{weather.windDirection}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-foreground/60 uppercase tracking-wide font-semibold mb-1">{t('weather.wind')}</p>
+                      <p className="text-xl font-bold text-foreground">{weather.windSpeed} mph</p>
+                      <p className="text-sm text-muted-foreground">{weather.windDirection}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Humidity Card */}
-              <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform">
-                      <Droplets className="h-5 w-5" />
+              <Card className="group hover:shadow-lg transition-all duration-300 border-border/50">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-blue-100 text-blue-600 group-hover:scale-110 transition-transform">
+                      <Droplets className="h-6 w-6" />
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.humidity')}</p>
-                      <p className="text-lg font-bold">{weather.humidity}%</p>
-                      <p className="text-xs text-muted-foreground">{weather.humidity > 70 ? t('weather.high') : weather.humidity > 40 ? t('weather.moderate') : t('weather.low')}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-foreground/60 uppercase tracking-wide font-semibold mb-1">{t('weather.humidity')}</p>
+                      <p className="text-xl font-bold text-foreground">{weather.humidity}%</p>
+                      <p className="text-sm text-muted-foreground">{weather.humidity > 70 ? t('weather.high') : weather.humidity > 40 ? t('weather.moderate') : t('weather.low')}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Visibility Card */}
-              <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-purple-100 text-purple-600 group-hover:scale-110 transition-transform">
-                      <Eye className="h-5 w-5" />
+              <Card className="group hover:shadow-lg transition-all duration-300 border-border/50">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-purple-100 text-purple-600 group-hover:scale-110 transition-transform">
+                      <Eye className="h-6 w-6" />
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.visibility')}</p>
-                      <p className="text-lg font-bold">{weather.visibility} mi</p>
-                      <p className="text-xs text-muted-foreground">{weather.visibility >= 10 ? t('weather.clear') : weather.visibility >= 5 ? t('weather.good') : t('weather.limited')}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-foreground/60 uppercase tracking-wide font-semibold mb-1">{t('weather.visibility')}</p>
+                      <p className="text-xl font-bold text-foreground">{weather.visibility} mi</p>
+                      <p className="text-sm text-muted-foreground">{weather.visibility >= 10 ? t('weather.clear') : weather.visibility >= 5 ? t('weather.good') : t('weather.limited')}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* UV Index Card */}
-              <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-xl group-hover:scale-110 transition-transform ${
+              <Card className="group hover:shadow-lg transition-all duration-300 border-border/50">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-xl group-hover:scale-110 transition-transform ${
                       weather.uvIndex >= 8 ? 'bg-red-100 text-red-600' : 
                       weather.uvIndex >= 6 ? 'bg-orange-100 text-orange-600' : 
                       weather.uvIndex >= 3 ? 'bg-amber-100 text-amber-600' : 
                       'bg-green-100 text-green-600'
                     }`}>
-                      <Sun className="h-5 w-5" />
+                      <Sun className="h-6 w-6" />
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.uvIndex')}</p>
-                      <p className="text-lg font-bold">{weather.uvIndex}</p>
-                      <p className="text-xs text-muted-foreground">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-foreground/60 uppercase tracking-wide font-semibold mb-1">{t('weather.uvIndex')}</p>
+                      <p className="text-xl font-bold text-foreground">{weather.uvIndex}</p>
+                      <p className="text-sm text-muted-foreground">
                         {weather.uvIndex >= 8 ? t('weather.veryHigh') : weather.uvIndex >= 6 ? t('weather.high') : weather.uvIndex >= 3 ? t('weather.moderate') : t('weather.low')}
                       </p>
                     </div>
@@ -896,20 +896,20 @@ export function WeatherWidget({ expanded = false, sport = 'baseball' }: WeatherW
               </Card>
 
               {/* Air Quality Card */}
-              <Card className="group hover:shadow-md transition-all duration-300 border-border/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-xl group-hover:scale-110 transition-transform ${
+              <Card className="group hover:shadow-lg transition-all duration-300 border-border/50">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-xl group-hover:scale-110 transition-transform ${
                       weather.airQuality ? getAqiColorClass(weather.airQuality.color) : 'bg-gray-100 text-gray-600'
                     }`}>
-                      <Haze className="h-5 w-5" />
+                      <Haze className="h-6 w-6" />
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">{t('weather.airQuality.title')}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-foreground/60 uppercase tracking-wide font-semibold mb-1">{t('weather.airQuality.title')}</p>
                       {weather.airQuality ? (
                         <>
-                          <p className="text-lg font-bold">{weather.airQuality.usAqi}</p>
-                          <p className="text-xs text-muted-foreground">{weather.airQuality.category}</p>
+                          <p className="text-xl font-bold text-foreground">{weather.airQuality.usAqi}</p>
+                          <p className="text-sm text-muted-foreground">{weather.airQuality.category}</p>
                         </>
                       ) : (
                         <p className="text-sm text-muted-foreground">{t('weather.airQuality.unavailable')}</p>

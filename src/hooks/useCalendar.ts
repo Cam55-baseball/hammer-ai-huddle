@@ -56,7 +56,7 @@ const SYSTEM_TASKS: Record<string, { title: string; icon: LucideIcon; color: str
   'healthtip': { title: 'Daily Health Tip', icon: Lightbulb, color: '#14b8a6' },
   'quiz-morning': { title: 'Morning Check-in', icon: Sun, color: '#f59e0b' },
   'quiz-night': { title: 'Night Reflection', icon: Moon, color: '#6366f1' },
-  'quiz-prelift': { title: 'Pre-Lift Check-in', icon: Dumbbell, color: '#f59e0b' },
+  'quiz-prelift': { title: 'Pre-Workout Check-in', icon: Dumbbell, color: '#f59e0b' },
   'texvision': { title: 'Tex Vision Training', icon: Eye, color: '#0ea5e9' },
   'hydration': { title: 'Hydration Reminder', icon: Sparkles, color: '#06b6d4' },
   'sleep': { title: 'Sleep Tracking', icon: BedDouble, color: '#8b5cf6' },
