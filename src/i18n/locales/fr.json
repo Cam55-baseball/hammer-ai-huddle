@@ -4628,20 +4628,7 @@
       "prevWeek": "Semaine précédente",
       "nextWeek": "Semaine suivante",
       "viewToday": "Voir aujourd'hui",
-      "viewWeek": "Voir la semaine",
-      "lockDay": "Verrouiller le jour",
-      "unlockDay": "Déverrouiller le jour",
-      "dayLocked": "Verrouillé",
-      "lockedScheduleInfo": "Ce planning se répète chaque {{day}} jusqu'au déverrouillage",
-      "activitiesForDay": "Activités pour {{day}}",
-      "noActivitiesForDay": "Aucune activité programmée pour ce jour",
-      "lockToRepeat": "Verrouillez ce jour pour répéter ce planning chaque semaine"
-    },
-    "lockedDays": {
-      "dayLocked": "Jour verrouillé avec succès",
-      "dayUnlocked": "Jour déverrouillé",
-      "lockError": "Échec du verrouillage",
-      "unlockError": "Échec du déverrouillage"
+      "viewWeek": "Voir la semaine"
     },
     "scheduleTemplate": {
       "saveAsTemplate": "Enregistrer comme modèle",

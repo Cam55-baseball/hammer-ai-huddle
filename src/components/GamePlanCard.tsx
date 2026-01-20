@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, CalendarClock, Copy } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2 } from 'lucide-react';
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
@@ -36,7 +36,6 @@ import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
 import { useScheduleTemplates, ScheduleItem } from '@/hooks/useScheduleTemplates';
 import { useDailySummaryNotification } from '@/hooks/useDailySummaryNotification';
-import { useLockedDays } from '@/hooks/useLockedDays';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { CustomActivityTemplate } from '@/types/customActivity';
@@ -67,19 +66,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   
   // Schedule templates hook
   const { templates: scheduleTemplates, saveTemplate, deleteTemplate, getDefaultTemplate } = useScheduleTemplates();
-  
-  // Locked days hook
-  const { 
-    lockedDays, 
-    weekOverrides,
-    lockDay, 
-    unlockDay, 
-    copyDayToMultiple,
-    unlockForWeek,
-    saveWeekOverride,
-    discardWeekOverride,
-    hasWeekOverride
-  } = useLockedDays();
   
   // Daily summary notification hook
   const { 
@@ -201,20 +187,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [skippedTasks, setSkippedTasks] = useState<Set<string>>(new Set());
   const [showSkippedSection, setShowSkippedSection] = useState(false);
   const { user } = useAuth();
-  
-  // Today lock/unlock dialog state
-  const [todayLockDialogOpen, setTodayLockDialogOpen] = useState(false);
-  const [todayUnlockDialogOpen, setTodayUnlockDialogOpen] = useState(false);
-  const [todayCopyDialogOpen, setTodayCopyDialogOpen] = useState(false);
-  const [selectedLockDays, setSelectedLockDays] = useState<number[]>([]);
-  const [selectedUnlockDays, setSelectedUnlockDays] = useState<number[]>([]);
-  const [selectedCopyDays, setSelectedCopyDays] = useState<number[]>([]);
-  const [isLockingToday, setIsLockingToday] = useState(false);
-  
-  // Today's lock status helpers
-  const todayDayOfWeek = getDay(new Date());
-  const isTodayLocked = lockedDays.has(todayDayOfWeek);
-  const isTodayOverridden = hasWeekOverride(todayDayOfWeek);
   
   const favorites = useMemo(() => getFavorites(), [getFavorites, templates]);
   
@@ -711,122 +683,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     toast.success(t('gamePlan.scheduleTemplate.applySuccess'));
   };
   
-  // Today Lock/Unlock handlers
-  const handleOpenTodayLockDialog = () => {
-    setSelectedLockDays([todayDayOfWeek]);
-    setTodayLockDialogOpen(true);
-  };
-
-  const handleOpenTodayUnlockDialog = () => {
-    setSelectedUnlockDays([todayDayOfWeek]);
-    setTodayUnlockDialogOpen(true);
-  };
-
-  const handleOpenTodayCopyDialog = () => {
-    setSelectedCopyDays([]);
-    setTodayCopyDialogOpen(true);
-  };
-
-  const toggleTodayLockDay = (day: number) => {
-    setSelectedLockDays(prev => 
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  };
-
-  const toggleTodayUnlockDay = (day: number) => {
-    setSelectedUnlockDays(prev => 
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  };
-
-  const toggleTodayCopyDay = (day: number) => {
-    setSelectedCopyDays(prev => 
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  };
-
-  const handleLockMultipleDays = async () => {
-    if (selectedLockDays.length === 0) return;
-    setIsLockingToday(true);
-    try {
-      // Build schedule from current timeline tasks
-      const schedule = timelineTasks.map((task, index) => ({
-        taskId: task.id,
-        displayTime: taskTimes[task.id] || null,
-        reminderEnabled: taskReminders[task.id] !== null && taskReminders[task.id] !== undefined,
-        reminderMinutes: taskReminders[task.id] || null,
-        order: index,
-      }));
-      
-      for (const day of selectedLockDays) {
-        await lockDay(day, schedule);
-      }
-      setTodayLockDialogOpen(false);
-    } finally {
-      setIsLockingToday(false);
-    }
-  };
-
-  const handleUnlockMultipleDaysToday = async () => {
-    if (selectedUnlockDays.length === 0) return;
-    setIsLockingToday(true);
-    try {
-      for (const day of selectedUnlockDays) {
-        await unlockForWeek(day);
-      }
-      setTodayUnlockDialogOpen(false);
-    } finally {
-      setIsLockingToday(false);
-    }
-  };
-
-  const handleUnlockTodayPermanently = async () => {
-    setIsLockingToday(true);
-    try {
-      await unlockDay(todayDayOfWeek);
-    } finally {
-      setIsLockingToday(false);
-    }
-  };
-
-  const handleCopyToMultipleDays = async () => {
-    if (selectedCopyDays.length === 0) return;
-    setIsLockingToday(true);
-    try {
-      await copyDayToMultiple(todayDayOfWeek, selectedCopyDays);
-      setTodayCopyDialogOpen(false);
-    } finally {
-      setIsLockingToday(false);
-    }
-  };
-
-  const handleDiscardTodayOverride = async () => {
-    setIsLockingToday(true);
-    try {
-      await discardWeekOverride(todayDayOfWeek);
-    } finally {
-      setIsLockingToday(false);
-    }
-  };
-
-  const handleSaveTodayOverride = async () => {
-    setIsLockingToday(true);
-    try {
-      const schedule = timelineTasks.map((task, index) => ({
-        taskId: task.id,
-        displayTime: taskTimes[task.id] || null,
-        reminderEnabled: taskReminders[task.id] !== null && taskReminders[task.id] !== undefined,
-        reminderMinutes: taskReminders[task.id] || null,
-        order: index,
-      }));
-      await saveWeekOverride(todayDayOfWeek, schedule);
-    } finally {
-      setIsLockingToday(false);
-    }
-  };
-
-  const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  
   // Format time for display
   const formatTimeDisplay = (time: string | null) => {
     if (!time) return null;
@@ -1179,19 +1035,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         <GamePlanCalendarView
           tasks={tasks}
           taskTimes={taskTimes}
-          taskReminders={taskReminders}
           onDaySelect={setSelectedDate}
           selectedDate={selectedDate}
-          lockedDays={lockedDays}
-          weekOverrides={weekOverrides}
-          onLockDay={lockDay}
-          onUnlockDay={unlockDay}
-          onCopyDay={copyDayToMultiple}
-          onUnlockForWeek={unlockForWeek}
-          onSaveWeekOverride={saveWeekOverride}
-          onDiscardWeekOverride={discardWeekOverride}
-          hasWeekOverride={hasWeekOverride}
-          timelineTaskOrder={timelineTasks.map(t => t.id)}
         />
       </div>
     );
@@ -1458,99 +1303,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             </span>
           </div>
         </div>
-
-        {/* Today's Lock/Unlock Controls - Timeline mode only */}
-        {sortMode === 'timeline' && (
-          <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-background/30 border border-border/30">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-bold text-white">
-                {format(new Date(), 'EEEE, MMM d')}
-              </span>
-              {isTodayLocked && !isTodayOverridden && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 text-xs font-bold">
-                  <Lock className="h-3 w-3" />
-                  {t('gamePlan.calendarView.dayLocked', 'Locked')}
-                </span>
-              )}
-              {isTodayOverridden && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-500 text-xs font-bold">
-                  <CalendarClock className="h-3 w-3" />
-                  {t('gamePlan.lockedDays.weekOverrideActive', 'Week Override')}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-1 flex-wrap">
-              {isTodayOverridden ? (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDiscardTodayOverride}
-                    disabled={isLockingToday}
-                    className="h-8 text-xs font-bold"
-                  >
-                    <X className="h-3.5 w-3.5 mr-1.5" />
-                    {t('gamePlan.lockedDays.discardWeekChanges', 'Discard')}
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={handleSaveTodayOverride}
-                    disabled={isLockingToday}
-                    className="h-8 text-xs font-bold"
-                  >
-                    <Check className="h-3.5 w-3.5 mr-1.5" />
-                    {t('gamePlan.lockedDays.saveWeekChanges', 'Save')}
-                  </Button>
-                </>
-              ) : isTodayLocked ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleOpenTodayCopyDialog}
-                    disabled={isLockingToday}
-                    className="h-8 text-xs font-bold"
-                  >
-                    <Copy className="h-3.5 w-3.5 mr-1.5" />
-                    {t('gamePlan.lockedDays.copyTo', 'Copy to...')}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleOpenTodayUnlockDialog}
-                    disabled={isLockingToday}
-                    className="h-8 text-xs font-bold"
-                  >
-                    <CalendarClock className="h-3.5 w-3.5 mr-1.5" />
-                    {t('gamePlan.lockedDays.unlockForWeek', 'Unlock Order for This Week')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleUnlockTodayPermanently}
-                    disabled={isLockingToday}
-                    className="h-8 text-xs font-bold"
-                  >
-                    <Unlock className="h-3.5 w-3.5 mr-1.5" />
-                    {t('gamePlan.calendarView.unlockDay', 'Unlock')}
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleOpenTodayLockDialog}
-                  disabled={isLockingToday}
-                  className="h-8 text-xs font-bold"
-                >
-                  <Lock className="h-3.5 w-3.5 mr-1.5" />
-                  {t('gamePlan.calendarView.lockDay', 'Lock Day')}
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Task Sections */}
         <div className="space-y-4">
@@ -2179,183 +1931,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         }}
         showSkipOption={true}
       />
-      
-      {/* Today Lock Day Dialog */}
-      <Dialog open={todayLockDialogOpen} onOpenChange={setTodayLockDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('gamePlan.lockedDays.lockDayTitle', 'Lock Schedule')}</DialogTitle>
-            <DialogDescription>
-              {t('gamePlan.lockedDays.selectLockDays', 'Select days to lock this schedule:')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="grid grid-cols-2 gap-3">
-              {DAY_NAMES_SHORT.map((dayName, day) => (
-                <div 
-                  key={day}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
-                    selectedLockDays.includes(day) 
-                      ? "border-primary bg-primary/10" 
-                      : "border-border hover:border-primary/50"
-                  )}
-                  onClick={() => toggleTodayLockDay(day)}
-                >
-                  <Checkbox 
-                    checked={selectedLockDays.includes(day)}
-                    onCheckedChange={() => toggleTodayLockDay(day)}
-                  />
-                  <span className="font-medium">{dayName}</span>
-                  {day === todayDayOfWeek && (
-                    <span className="text-[10px] text-primary font-bold">{t('gamePlan.calendarView.today', 'Today')}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-              <p className="text-xs text-blue-400">
-                {t('gamePlan.lockedDays.lockInfo', 'Locked schedules repeat every week on the selected days.')}
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTodayLockDialogOpen(false)}>
-              {t('common.cancel', 'Cancel')}
-            </Button>
-            <Button onClick={handleLockMultipleDays} disabled={selectedLockDays.length === 0 || isLockingToday}>
-              <Lock className="h-4 w-4 mr-2" />
-              {t('gamePlan.lockedDays.lockDays', 'Lock {{count}} Days', { count: selectedLockDays.length })}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Today Unlock for Week Dialog */}
-      <Dialog open={todayUnlockDialogOpen} onOpenChange={setTodayUnlockDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('gamePlan.lockedDays.unlockForWeekTitle', 'Unlock Order for This Week')}</DialogTitle>
-            <DialogDescription>
-              {t('gamePlan.lockedDays.selectUnlockDays', 'Select days to unlock for this week only:')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="grid grid-cols-2 gap-3">
-              {DAY_NAMES_SHORT.map((dayName, day) => {
-                const isLocked = lockedDays.has(day);
-                return (
-                  <div 
-                    key={day}
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border transition-all",
-                      !isLocked && "opacity-50 cursor-not-allowed",
-                      isLocked && "cursor-pointer",
-                      selectedUnlockDays.includes(day) && isLocked
-                        ? "border-primary bg-primary/10" 
-                        : "border-border hover:border-primary/50"
-                    )}
-                    onClick={() => isLocked && toggleTodayUnlockDay(day)}
-                  >
-                    <Checkbox 
-                      checked={selectedUnlockDays.includes(day)}
-                      onCheckedChange={() => isLocked && toggleTodayUnlockDay(day)}
-                      disabled={!isLocked}
-                    />
-                    <div className="flex flex-col">
-                      <span className="font-medium">{dayName}</span>
-                      {!isLocked && (
-                        <span className="text-[10px] text-muted-foreground">
-                          {t('gamePlan.lockedDays.notLocked', 'not locked')}
-                        </span>
-                      )}
-                    </div>
-                    {day === todayDayOfWeek && (
-                      <span className="text-[10px] text-primary font-bold">{t('gamePlan.calendarView.today', 'Today')}</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-              <p className="text-xs text-amber-400">
-                {t('gamePlan.lockedDays.unlockForWeekInfo', 'This allows you to reorder activities for this week only. The original locked schedule will return next week.')}
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTodayUnlockDialogOpen(false)}>
-              {t('common.cancel', 'Cancel')}
-            </Button>
-            <Button onClick={handleUnlockMultipleDaysToday} disabled={selectedUnlockDays.length === 0 || isLockingToday}>
-              <CalendarClock className="h-4 w-4 mr-2" />
-              {t('gamePlan.lockedDays.unlockDays', 'Unlock {{count}} Days', { count: selectedUnlockDays.length })}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Today Copy Day Dialog */}
-      <Dialog open={todayCopyDialogOpen} onOpenChange={setTodayCopyDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {t('gamePlan.lockedDays.copyDayTitle', "Copy {{day}}'s Schedule", { day: DAY_NAMES_SHORT[todayDayOfWeek] })}
-            </DialogTitle>
-            <DialogDescription>
-              {t('gamePlan.lockedDays.selectTargetDays', 'Select days to apply this schedule:')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="grid grid-cols-2 gap-3">
-              {DAY_NAMES_SHORT.map((dayName, day) => {
-                const isSourceDay = day === todayDayOfWeek;
-                return (
-                  <div 
-                    key={day}
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-lg border transition-all",
-                      isSourceDay && "opacity-50 cursor-not-allowed bg-primary/5",
-                      !isSourceDay && "cursor-pointer",
-                      selectedCopyDays.includes(day) && !isSourceDay
-                        ? "border-primary bg-primary/10" 
-                        : "border-border hover:border-primary/50"
-                    )}
-                    onClick={() => !isSourceDay && toggleTodayCopyDay(day)}
-                  >
-                    <Checkbox 
-                      checked={selectedCopyDays.includes(day) || isSourceDay}
-                      onCheckedChange={() => !isSourceDay && toggleTodayCopyDay(day)}
-                      disabled={isSourceDay}
-                    />
-                    <span className="font-medium">{dayName}</span>
-                    {isSourceDay && (
-                      <span className="text-[10px] text-primary font-bold">
-                        {t('gamePlan.lockedDays.source', 'source')}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-              <p className="text-xs text-amber-400">
-                {t('gamePlan.lockedDays.copyWarning', 'This will override existing locked schedules on selected days')}
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTodayCopyDialogOpen(false)}>
-              {t('common.cancel', 'Cancel')}
-            </Button>
-            <Button onClick={handleCopyToMultipleDays} disabled={selectedCopyDays.length === 0 || isLockingToday}>
-              <Copy className="h-4 w-4 mr-2" />
-              {t('gamePlan.lockedDays.copyToDays', 'Copy to {{count}} Days', { count: selectedCopyDays.length })}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Pulsing animation for incomplete tasks */}
       <style>{`
         @keyframes game-plan-pulse-custom {
