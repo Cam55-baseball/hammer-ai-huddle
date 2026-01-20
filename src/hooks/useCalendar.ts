@@ -48,18 +48,36 @@ interface UseCalendarResult {
   refetch: () => void;
 }
 
-// System tasks that appear on Game Plan
-const SYSTEM_TASKS: Record<string, { title: string; icon: LucideIcon; color: string }> = {
+// System tasks that appear on Game Plan - EXPANDED to include all task IDs
+const SYSTEM_TASKS: Record<string, { title: string; icon: LucideIcon; color: string; type?: 'game_plan' | 'program' }> = {
+  // Daily check-ins (blue - game_plan)
   'nutrition': { title: 'Nutrition Check-in', icon: Apple, color: '#22c55e' },
   'mindfuel': { title: 'Mind Fuel Daily', icon: Brain, color: '#8b5cf6' },
   'healthtip': { title: 'Daily Health Tip', icon: Lightbulb, color: '#14b8a6' },
   'quiz-morning': { title: 'Morning Check-in', icon: Sun, color: '#f59e0b' },
   'quiz-night': { title: 'Night Reflection', icon: Moon, color: '#6366f1' },
+  'quiz-prelift': { title: 'Pre-Lift Check-in', icon: Dumbbell, color: '#f59e0b' },
   'texvision': { title: 'Tex Vision Training', icon: Eye, color: '#0ea5e9' },
   'hydration': { title: 'Hydration Reminder', icon: Sparkles, color: '#06b6d4' },
   'sleep': { title: 'Sleep Tracking', icon: BedDouble, color: '#8b5cf6' },
   'warmup': { title: 'Warm-up Routine', icon: Timer, color: '#f97316' },
   'cooldown': { title: 'Cool-down Routine', icon: Activity, color: '#10b981' },
+  
+  // Workouts - these are PROGRAM type (amber for hitting, red for pitching)
+  'workout-hitting': { title: 'Iron Bambino', icon: Dumbbell, color: '#f59e0b', type: 'program' },
+  'workout-pitching': { title: 'Heat Factory', icon: Flame, color: '#ef4444', type: 'program' },
+  
+  // Video analysis tasks
+  'video-hitting': { title: 'Video Analysis (Hitting)', icon: Eye, color: '#3b82f6' },
+  'video-pitching': { title: 'Video Analysis (Pitching)', icon: Eye, color: '#3b82f6' },
+  'video-throwing': { title: 'Video Analysis (Throwing)', icon: Eye, color: '#3b82f6' },
+  
+  // Tracking tasks
+  'tracking-performance': { title: 'Performance Tracking', icon: Activity, color: '#3b82f6' },
+  'tracking-photos': { title: 'Progress Photos', icon: Activity, color: '#3b82f6' },
+  'tracking-grades': { title: 'Self Grades (Hitting)', icon: Target, color: '#3b82f6' },
+  'tracking-pitching-grades': { title: 'Self Grades (Pitching)', icon: Target, color: '#3b82f6' },
+  'tracking-wellness-goals': { title: 'Wellness Goals', icon: Target, color: '#3b82f6' },
 };
 
 // Map event sources to icons
@@ -323,11 +341,19 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
 
       // Process Game Plan task schedules
       if (taskSchedulesRes.data) {
+        console.debug('[Calendar] Processing task schedules:', taskSchedulesRes.data.length);
+        
         taskSchedulesRes.data.forEach(schedule => {
           const taskDef = SYSTEM_TASKS[schedule.task_id];
-          if (!taskDef) return;
+          if (!taskDef) {
+            console.debug('[Calendar] Skipping unknown task_id:', schedule.task_id);
+            return;
+          }
           
           const displayDays = schedule.display_days || [0, 1, 2, 3, 4, 5, 6];
+          
+          // Determine event type - workouts are 'program', others are 'game_plan'
+          const eventType = taskDef.type || 'game_plan';
           
           daysInRange.forEach(day => {
             const dayOfWeek = getDay(day);
@@ -340,7 +366,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
                 date: dateKey,
                 title: taskDef.title,
                 startTime: schedule.display_time,
-                type: 'game_plan',
+                type: eventType,
                 source: schedule.task_id,
                 color: taskDef.color,
                 icon: taskDef.icon,
@@ -353,14 +379,22 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
       }
 
       // Process sub_module_progress for Iron Bambino and Heat Factory
+      // Now also recognizes production_lab (Iron Bambino) and production_studio (Heat Factory)
       if (subModuleProgressRes.data) {
+        console.debug('[Calendar] Processing sub_module_progress:', subModuleProgressRes.data.length);
         const today = format(new Date(), 'yyyy-MM-dd');
         
         subModuleProgressRes.data.forEach(progress => {
-          const isIronBambino = progress.sub_module === 'iron_bambino';
-          const isHeatFactory = progress.sub_module === 'heat_factory';
+          // Recognize both old and new identifiers
+          const isIronBambino = progress.sub_module === 'iron_bambino' || 
+            (progress.module === 'hitting' && progress.sub_module === 'production_lab');
+          const isHeatFactory = progress.sub_module === 'heat_factory' || 
+            (progress.module === 'pitching' && progress.sub_module === 'production_studio');
           
-          if (!isIronBambino && !isHeatFactory) return;
+          if (!isIronBambino && !isHeatFactory) {
+            console.debug('[Calendar] Skipping non-program sub_module:', progress.sub_module);
+            return;
+          }
           
           // Check subscription access
           if (isIronBambino && !hasHittingAccess) return;
@@ -368,6 +402,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           
           const programName = isIronBambino ? 'Iron Bambino' : 'Heat Factory';
           const programColor = isIronBambino ? '#f59e0b' : '#ef4444'; // amber / red
+          const programTaskId = isIronBambino ? 'workout-hitting' : 'workout-pitching';
           
           // Get current week/day from progress
           const currentWeek = progress.current_week || 1;
@@ -379,22 +414,42 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           const nextDay = days.findIndex(completed => !completed) + 1 || 1;
           const isStrengthDay = [1, 5].includes(nextDay);
           
-          // Add to today's date if it exists in range
-          if (aggregatedEvents[today]) {
-            aggregatedEvents[today].push({
-              id: `program-${progress.sub_module}-${today}`,
-              date: today,
-              title: `${programName} W${currentWeek}D${nextDay}`,
-              description: isStrengthDay ? 'Strength Training' : 'Skill Development',
-              type: 'program',
-              source: progress.sub_module,
-              color: programColor,
-              icon: isStrengthDay ? Dumbbell : Flame,
-              editable: false,
-              deletable: false,
-              sport: progress.sport,
-            });
-          }
+          // Find scheduled days for this program from task schedules
+          const programSchedule = taskSchedulesRes.data?.find(s => s.task_id === programTaskId);
+          const scheduledDays = programSchedule?.display_days || [0, 1, 2, 3, 4, 5, 6];
+          
+          // Add program events on scheduled days across the month
+          daysInRange.forEach(day => {
+            const dayOfWeek = getDay(day);
+            if (scheduledDays.includes(dayOfWeek)) {
+              const dateKey = format(day, 'yyyy-MM-dd');
+              if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
+              
+              // For today, show detailed progress; for other days, show general info
+              const isToday = dateKey === today;
+              const title = isToday 
+                ? `${programName} W${currentWeek}D${nextDay}` 
+                : `${programName} Session`;
+              const description = isToday 
+                ? (isStrengthDay ? 'Strength Training' : 'Skill Development')
+                : 'Scheduled workout';
+              
+              aggregatedEvents[dateKey].push({
+                id: `program-${progress.sub_module}-${dateKey}`,
+                date: dateKey,
+                title,
+                description,
+                startTime: programSchedule?.display_time || null,
+                type: 'program',
+                source: progress.sub_module,
+                color: programColor,
+                icon: isStrengthDay && isToday ? Dumbbell : Flame,
+                editable: false,
+                deletable: false,
+                sport: progress.sport,
+              });
+            }
+          });
         });
       }
 
