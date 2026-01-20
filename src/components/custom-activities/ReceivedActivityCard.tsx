@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, Lock, MessageSquare, Clock, Sparkles } from 'lucide-react';
+import { Check, X, Lock, MessageSquare, Clock, Sparkles, GraduationCap, Search } from 'lucide-react';
 import { SentActivityTemplate } from '@/types/sentActivity';
 import { getActivityIcon } from './IconPicker';
 import { hexToRgba } from '@/hooks/useUserColors';
@@ -22,6 +22,8 @@ export function ReceivedActivityCard({ activity, onAccept, onReject, isPending =
   const template = activity.template_snapshot;
   const Icon = getActivityIcon(template.icon);
   const hasLockedFields = activity.locked_fields.length > 0;
+  const senderRole = activity.sender?.role || 'scout';
+  const isCoach = senderRole === 'coach';
 
   return (
     <Card 
@@ -44,7 +46,9 @@ export function ReceivedActivityCard({ activity, onAccept, onReject, isPending =
         {/* Header with sender info */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Avatar className="h-11 w-11 ring-2 ring-primary/50 ring-offset-2 ring-offset-background">
+            <Avatar className="h-11 w-11 ring-2 ring-offset-2 ring-offset-background" style={{ 
+              '--tw-ring-color': isCoach ? 'hsl(var(--primary))' : 'hsl(var(--secondary))' 
+            } as React.CSSProperties}>
               <AvatarImage src={activity.sender?.avatar_url || undefined} />
               <AvatarFallback className="font-bold" style={{ backgroundColor: hexToRgba(template.color, 0.2) }}>
                 {activity.sender?.full_name?.charAt(0) || 'C'}
@@ -58,10 +62,34 @@ export function ReceivedActivityCard({ activity, onAccept, onReject, isPending =
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">
-              {t('sentActivity.sentBy', 'Sent by')} <span className="font-bold text-foreground">{activity.sender?.full_name || 'Coach'}</span>
-            </p>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm font-medium">
+                {t('sentActivity.sentBy', 'Sent by')} <span className="font-bold text-foreground">{activity.sender?.full_name || 'Coach'}</span>
+              </p>
+              {/* Role badge */}
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "text-xs font-semibold gap-1",
+                  isCoach 
+                    ? "bg-primary/10 text-primary border-primary/30" 
+                    : "bg-amber-500/10 text-amber-600 border-amber-500/30"
+                )}
+              >
+                {isCoach ? (
+                  <>
+                    <GraduationCap className="h-3 w-3" />
+                    {t('sentActivity.fromCoach', 'From your Coach')}
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-3 w-3" />
+                    {t('sentActivity.fromScout', 'From a Scout')}
+                  </>
+                )}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
               <Clock className="h-3 w-3" />
               {formatDistanceToNow(new Date(activity.sent_at), { addSuffix: true })}
             </p>
