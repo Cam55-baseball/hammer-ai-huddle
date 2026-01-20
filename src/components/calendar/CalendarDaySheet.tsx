@@ -92,12 +92,19 @@ export function CalendarDaySheet({
 
   const dayOfWeek = getDay(date);
   
+  // Helper to get unique item ID for skip tracking
+  const getSkipItemId = (event: CalendarEvent): string => {
+    // For custom_activity, use the source which now contains template-{uuid}
+    // For other types, fall back to source or id
+    return event.source || event.id;
+  };
+  
   // Separate events into active and skipped based on day of week
   const activeEvents = events.filter(event => 
-    !isSkippedForDay(event.source || event.id, event.type, date)
+    !isSkippedForDay(getSkipItemId(event), event.type, date)
   );
   const skippedEvents = events.filter(event => 
-    isSkippedForDay(event.source || event.id, event.type, date)
+    isSkippedForDay(getSkipItemId(event), event.type, date)
   );
 
   const { morning, afternoon, evening, allDay } = groupEventsByTimeOfDay(activeEvents);
@@ -111,7 +118,7 @@ export function CalendarDaySheet({
   const handleSaveSkip = async (skipDays: number[]): Promise<boolean> => {
     if (!selectedEventForSkip) return false;
     
-    const itemId = selectedEventForSkip.source || selectedEventForSkip.id;
+    const itemId = getSkipItemId(selectedEventForSkip);
     const success = await updateSkipDays(itemId, selectedEventForSkip.type, skipDays);
     
     if (success) {
@@ -124,7 +131,7 @@ export function CalendarDaySheet({
   };
 
   const handleUnskip = async (event: CalendarEvent) => {
-    const itemId = event.source || event.id;
+    const itemId = getSkipItemId(event);
     const success = await unskipForDay(itemId, event.type, dayOfWeek);
     
     if (success) {
