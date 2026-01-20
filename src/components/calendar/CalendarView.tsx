@@ -314,11 +314,11 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
                     </div>
                   )}
                   
-                  {/* Event count badge for mobile (shows filtered count) */}
+                  {/* Event count badge - positioned bottom-right for clear separation from date */}
                   {filteredDayEvents.length > 0 && (
                     <Badge
                       variant="secondary"
-                      className="absolute top-1 right-1 h-4 min-w-4 p-0 text-[10px] flex items-center justify-center"
+                      className="absolute bottom-1 right-1 h-4 min-w-4 px-1 text-[10px] flex items-center justify-center bg-secondary/80 backdrop-blur-sm"
                     >
                       {filteredDayEvents.length}
                     </Badge>
