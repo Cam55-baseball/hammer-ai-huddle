@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2 } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck } from 'lucide-react';
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
@@ -24,6 +24,8 @@ import { useSystemTaskSchedule } from '@/hooks/useSystemTaskSchedule';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
+import { useReceivedActivities } from '@/hooks/useReceivedActivities';
+import { PendingCoachActivityCard } from '@/components/game-plan/PendingCoachActivityCard';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizDialog';
@@ -55,6 +57,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const navigate = useNavigate();
   const { tasks, customActivities, completedCount, totalCount, loading, refetch } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress } = useRecapCountdown();
+  const { pendingActivities, pendingCount, acceptActivity, rejectActivity, refetch: refetchPending } = useReceivedActivities();
   const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
@@ -1327,6 +1330,40 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 t('gamePlan.sections.cycleTracking'),
                 'text-purple-400',
                 'bg-purple-500/30'
+              )}
+
+              {/* Coach Activities Section - Only visible when pending activities exist */}
+              {pendingCount > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                    <span className="h-px flex-1 bg-blue-500/30" />
+                    <UserCheck className="h-4 w-4" />
+                    {t('gamePlan.sections.coachActivities', 'Coach Activities')}
+                    <span className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-blue-500 text-white text-xs font-bold">
+                      {pendingCount}
+                    </span>
+                    <span className="h-px flex-1 bg-blue-500/30" />
+                  </h3>
+                  
+                  <div className="space-y-2">
+                    {pendingActivities.map(activity => (
+                      <PendingCoachActivityCard
+                        key={activity.id}
+                        activity={activity}
+                        onAccept={async () => {
+                          const template = await acceptActivity(activity.id, createTemplate);
+                          if (template) {
+                            refetch();
+                            refetchActivities();
+                          }
+                        }}
+                        onReject={async () => {
+                          await rejectActivity(activity.id);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
 
               {/* Custom Activities Section - Always visible */}

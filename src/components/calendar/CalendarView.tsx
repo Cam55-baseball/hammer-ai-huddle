@@ -24,6 +24,7 @@ import {
 import { useCalendar, CalendarEvent } from '@/hooks/useCalendar';
 import { CalendarDaySheet } from './CalendarDaySheet';
 import { AddCalendarEventDialog } from './AddCalendarEventDialog';
+import { PendingCoachActivitiesSection } from './PendingCoachActivitiesSection';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewProps {
@@ -217,6 +218,12 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pending Coach Activities Section */}
+      <PendingCoachActivitiesSection 
+        selectedSport={selectedSport}
+        onActivityAccepted={() => refetch()}
+      />
 
       {/* Month Navigation */}
       <Card className="border-border/50">

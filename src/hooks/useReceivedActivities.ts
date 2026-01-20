@@ -122,7 +122,17 @@ export function useReceivedActivities() {
       // Create a copy of the template for the player
       const { id, user_id, created_at, updated_at, ...templateData } = activity.template_snapshot;
       
-      const newTemplate = await createTemplate(templateData);
+      // Ensure the template shows on game plan immediately
+      const todayDayOfWeek = new Date().getDay();
+      const enhancedData = {
+        ...templateData,
+        display_on_game_plan: true,
+        // Default to showing on today's day of week so it appears immediately
+        display_days: templateData.display_days?.length ? templateData.display_days : [todayDayOfWeek],
+        recurring_days: templateData.recurring_days?.length ? templateData.recurring_days : [todayDayOfWeek],
+      };
+      
+      const newTemplate = await createTemplate(enhancedData);
       if (!newTemplate) return null;
 
       // Update the sent activity status
@@ -138,8 +148,8 @@ export function useReceivedActivities() {
       if (error) throw error;
 
       await fetchActivities();
-      toast.success(t('sentActivity.acceptedSuccess', 'Activity accepted and saved to your Templates!'), {
-        description: t('sentActivity.acceptedSuccessHint', 'Go to the Templates tab to view and customize it.')
+      toast.success(t('sentActivity.acceptedSuccess', 'Activity accepted and added to your Game Plan!'), {
+        description: t('sentActivity.acceptedSuccessHint', 'It will now appear in your daily tasks.')
       });
       return newTemplate;
     } catch (error) {
