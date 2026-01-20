@@ -4475,8 +4475,8 @@
     "quiz": {
       "title": "Daily Focus Check",
       "todayStatus": "Today's Check-ins",
-      "preLift": "Pre-Lift",
-      "preLiftTitle": "Pre-Lift Check-in",
+      "preLift": "Pre-Workout",
+      "preLiftTitle": "Pre-Workout Check-in",
       "morningLabel": "Morning",
       "morningTitle": "Morning Check-in",
       "morningTip": "Try to complete within 15 minutes of waking up",
@@ -5237,7 +5237,7 @@
         "description": "Log sleep quality and morning readiness"
       },
       "prelift": {
-        "title": "Complete Pre-Lift Check-in",
+        "title": "Complete Pre-Workout Check-in",
         "description": "Set your mental focus before training"
       },
       "night": {
