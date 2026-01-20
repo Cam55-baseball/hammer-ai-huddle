@@ -1591,6 +1591,7 @@ export type Database = {
       }
       scout_applications: {
         Row: {
+          applying_as: string | null
           created_at: string | null
           email: string
           first_name: string
@@ -1606,6 +1607,7 @@ export type Database = {
           video_submission_url: string | null
         }
         Insert: {
+          applying_as?: string | null
           created_at?: string | null
           email: string
           first_name: string
@@ -1621,6 +1623,7 @@ export type Database = {
           video_submission_url?: string | null
         }
         Update: {
+          applying_as?: string | null
           created_at?: string | null
           email?: string
           first_name?: string

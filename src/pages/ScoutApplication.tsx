@@ -6,10 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadScoutLetter, uploadScoutVideo } from "@/lib/uploadHelpers";
-import { ArrowLeft, Upload, FileText, Video } from "lucide-react";
+import { ArrowLeft, Upload, FileText, Video, Search, GraduationCap } from "lucide-react";
 
 export default function ScoutApplication() {
   const { t } = useTranslation();
@@ -23,6 +24,7 @@ export default function ScoutApplication() {
     lastName: "",
     email: user?.email || "",
     sport: localStorage.getItem("scoutSport") || "",
+    applyingAs: "scout" as "scout" | "coach",
   });
 
   const [letterFile, setLetterFile] = useState<File | null>(null);
@@ -56,7 +58,7 @@ export default function ScoutApplication() {
       const letterUrl = await uploadScoutLetter(letterFile, user.id);
       const videoUrl = await uploadScoutVideo(videoFile, user.id);
 
-      // Insert application
+      // Insert application with applying_as field
       const { error } = await supabase
         .from("scout_applications")
         .insert({
@@ -67,6 +69,7 @@ export default function ScoutApplication() {
           sport: formData.sport,
           organization_letter_url: letterUrl,
           video_submission_url: videoUrl,
+          applying_as: formData.applyingAs,
         });
 
       if (error) throw error;
@@ -146,6 +149,33 @@ export default function ScoutApplication() {
                 disabled
                 className="bg-muted"
               />
+            </div>
+
+            <div className="space-y-3">
+              <Label>{t('scoutApplication.applyingAs')} *</Label>
+              <p className="text-sm text-muted-foreground">
+                {t('scoutApplication.applyingAsDesc')}
+              </p>
+              <RadioGroup 
+                value={formData.applyingAs} 
+                onValueChange={(value) => setFormData({ ...formData, applyingAs: value as "scout" | "coach" })}
+                className="flex gap-6 pt-1"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="scout" id="apply-scout" />
+                  <Label htmlFor="apply-scout" className="flex items-center gap-2 cursor-pointer font-normal">
+                    <Search className="h-4 w-4" />
+                    {t('scoutApplication.scout')}
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="coach" id="apply-coach" />
+                  <Label htmlFor="apply-coach" className="flex items-center gap-2 cursor-pointer font-normal">
+                    <GraduationCap className="h-4 w-4" />
+                    {t('scoutApplication.coach')}
+                  </Label>
+                </div>
+              </RadioGroup>
             </div>
 
             <div className="space-y-2">

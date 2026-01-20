@@ -24,6 +24,7 @@ interface ScoutApplicationCardProps {
     video_submission_url: string | null;
     status: string;
     created_at: string;
+    applying_as?: string | null;
   };
   onUpdate: () => void;
 }
@@ -38,7 +39,9 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
   const [viewerTitle, setViewerTitle] = useState('');
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [scoutProfile, setScoutProfile] = useState<any>(null);
-  const [selectedRole, setSelectedRole] = useState<'scout' | 'coach'>('scout');
+  const [selectedRole, setSelectedRole] = useState<'scout' | 'coach'>(
+    (application.applying_as as 'scout' | 'coach') || 'scout'
+  );
 
   const handleAction = async (action: "approve" | "deny") => {
     setLoading(true);
@@ -192,10 +195,23 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
               </h3>
               <p className="text-sm text-muted-foreground">{application.email}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="secondary" className="capitalize">
                 {application.sport}
               </Badge>
+              {application.applying_as && (
+                <Badge variant="outline" className="capitalize flex items-center gap-1">
+                  {application.applying_as === 'coach' ? (
+                    <GraduationCap className="h-3 w-3" />
+                  ) : (
+                    <Search className="h-3 w-3" />
+                  )}
+                  {application.applying_as === 'coach' 
+                    ? t('scoutApplication.applyingAsCoach')
+                    : t('scoutApplication.applyingAsScout')
+                  }
+                </Badge>
+              )}
               {application.status !== "pending" && (
                 <Badge
                   variant={application.status === "approved" ? "default" : "destructive"}
