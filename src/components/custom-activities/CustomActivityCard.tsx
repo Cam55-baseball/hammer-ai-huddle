@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Pencil, Star, RefreshCw, Zap, Share2 } from 'lucide-react';
+import { Check, Pencil, Star, RefreshCw, Zap, Share2, Send } from 'lucide-react';
 import { CustomActivityWithLog } from '@/types/customActivity';
 import { getActivityIcon } from './IconPicker';
 import { ShareTemplateDialog } from './ShareTemplateDialog';
+import { SendToPlayerDialog } from './SendToPlayerDialog';
+import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { cn } from '@/lib/utils';
 import { hexToRgba } from '@/hooks/useUserColors';
 
@@ -20,6 +22,8 @@ export function CustomActivityCard({ activity, onToggleComplete, onEdit }: Custo
   const Icon = getActivityIcon(template.icon);
   const color = template.color;
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const { canSendActivities, loading: accessLoading } = useScoutAccess();
 
   // Use display_nickname if set, otherwise fall back to title
   const displayName = template.display_nickname || template.title;
@@ -163,6 +167,22 @@ export function CustomActivityCard({ activity, onToggleComplete, onEdit }: Custo
           <Share2 className="h-4 w-4 text-white/60" />
         </button>
 
+        {/* Send to Player button - only for coaches/scouts */}
+        {(canSendActivities || accessLoading) && (
+          <button
+            onClick={() => setSendDialogOpen(true)}
+            disabled={accessLoading}
+            className={cn(
+              "flex-shrink-0 p-2 rounded-lg transition-colors",
+              "hover:bg-green-500/20",
+              accessLoading && "opacity-50 cursor-not-allowed"
+            )}
+            title={t('sentActivity.sendToPlayer', 'Send to Player')}
+          >
+            <Send className="h-4 w-4 text-green-400" />
+          </button>
+        )}
+
         {/* Edit button */}
         <button
           onClick={() => onEdit(template)}
@@ -201,6 +221,12 @@ export function CustomActivityCard({ activity, onToggleComplete, onEdit }: Custo
       <ShareTemplateDialog 
         open={shareDialogOpen} 
         onOpenChange={setShareDialogOpen} 
+        template={template} 
+      />
+
+      <SendToPlayerDialog 
+        open={sendDialogOpen} 
+        onOpenChange={setSendDialogOpen} 
         template={template} 
       />
     </>
