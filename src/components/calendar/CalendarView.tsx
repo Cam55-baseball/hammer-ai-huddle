@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CalendarDays, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Toggle } from '@/components/ui/toggle';
+import { CalendarDays, ChevronLeft, ChevronRight, Plus, Filter } from 'lucide-react';
 import { 
   format, 
   startOfMonth, 
@@ -29,6 +30,36 @@ interface CalendarViewProps {
   selectedSport: 'baseball' | 'softball';
 }
 
+interface CalendarFilters {
+  meals: boolean;
+  workouts: boolean;
+  activities: boolean;
+  events: boolean;
+  gamePlan: boolean;
+  athleteEvents: boolean;
+}
+
+const FILTER_STORAGE_KEY = 'calendarFilters';
+
+const getInitialFilters = (): CalendarFilters => {
+  try {
+    const stored = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    // Ignore localStorage errors
+  }
+  return {
+    meals: true,
+    workouts: true,
+    activities: true,
+    events: true,
+    gamePlan: true,
+    athleteEvents: true,
+  };
+};
+
 export function CalendarView({ selectedSport }: CalendarViewProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -37,8 +68,35 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   const [daySheetOpen, setDaySheetOpen] = useState(false);
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [addEventDate, setAddEventDate] = useState<Date | null>(null);
+  const [filters, setFilters] = useState<CalendarFilters>(getInitialFilters);
   
   const { events, loading, fetchEventsForRange, addEvent, deleteEvent, refetch } = useCalendar(selectedSport);
+  
+  // Persist filters to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+  }, [filters]);
+  
+  const toggleFilter = useCallback((key: keyof CalendarFilters) => {
+    setFilters(prev => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+  
+  // Filter events based on current filter state
+  const filterEvents = useCallback((dayEvents: CalendarEvent[]): CalendarEvent[] => {
+    return dayEvents.filter(event => {
+      if (event.type === 'meal' && !filters.meals) return false;
+      if (event.type === 'program' && !filters.workouts) return false;
+      if (event.type === 'custom_activity' && !filters.activities) return false;
+      if (event.type === 'manual' && !filters.events) return false;
+      if (event.type === 'game_plan' && !filters.gamePlan) return false;
+      if (event.type === 'athlete_event' && !filters.athleteEvents) return false;
+      return true;
+    });
+  }, [filters]);
 
   // Calculate visible range (include days from adjacent months shown in calendar grid)
   const monthStart = startOfMonth(currentMonth);
@@ -84,13 +142,21 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
     const dateKey = format(day, 'yyyy-MM-dd');
     return events[dateKey] || [];
   };
+  
+  // Get filtered events for a day (applies user's filter preferences)
+  const getFilteredEventsForDay = useCallback((day: Date): CalendarEvent[] => {
+    return filterEvents(getEventsForDay(day));
+  }, [events, filterEvents]);
 
   // Event indicators - show unique colored dots for each distinct event
   const getEventIndicators = (dayEvents: CalendarEvent[]) => {
+    // Apply filters first
+    const filteredEvents = filterEvents(dayEvents);
+    
     // Collect unique colors from all events (each event has its own color)
     const uniqueColors = new Map<string, string>();
     
-    dayEvents.forEach(event => {
+    filteredEvents.forEach(event => {
       // Use the event's assigned color, or fall back to type-based defaults
       const eventColor = event.color || getDefaultColorForType(event.type);
       // Create a unique key based on color to avoid duplicate dots of the same color
@@ -203,6 +269,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
             {/* Calendar days */}
             {calendarDays.map(day => {
               const dayEvents = getEventsForDay(day);
+              const filteredDayEvents = getFilteredEventsForDay(day);
               const indicators = getEventIndicators(dayEvents);
               const isCurrentMonth = isSameMonth(day, currentMonth);
               const isSelected = selectedDate && isSameDay(day, selectedDate);
@@ -247,18 +314,92 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
                     </div>
                   )}
                   
-                  {/* Event count badge for mobile */}
-                  {dayEvents.length > 0 && (
+                  {/* Event count badge for mobile (shows filtered count) */}
+                  {filteredDayEvents.length > 0 && (
                     <Badge
                       variant="secondary"
                       className="absolute top-1 right-1 h-4 min-w-4 p-0 text-[10px] flex items-center justify-center"
                     >
-                      {dayEvents.length}
+                      {filteredDayEvents.length}
                     </Badge>
                   )}
                 </button>
               );
             })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Filter Toggles */}
+      <Card className="border-border/50">
+        <CardContent className="p-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 mr-2">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">
+                {t('calendar.filter.title', 'Filter:')}
+              </span>
+            </div>
+            
+            <Toggle
+              pressed={filters.meals}
+              onPressedChange={() => toggleFilter('meals')}
+              size="sm"
+              className="h-7 px-2 gap-1.5 data-[state=on]:bg-green-500/20 data-[state=on]:text-green-700 dark:data-[state=on]:text-green-400"
+            >
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="text-xs">{t('calendar.filter.meals', 'Meals')}</span>
+            </Toggle>
+            
+            <Toggle
+              pressed={filters.workouts}
+              onPressedChange={() => toggleFilter('workouts')}
+              size="sm"
+              className="h-7 px-2 gap-1.5 data-[state=on]:bg-amber-500/20 data-[state=on]:text-amber-700 dark:data-[state=on]:text-amber-400"
+            >
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="text-xs">{t('calendar.filter.workouts', 'Workouts')}</span>
+            </Toggle>
+            
+            <Toggle
+              pressed={filters.activities}
+              onPressedChange={() => toggleFilter('activities')}
+              size="sm"
+              className="h-7 px-2 gap-1.5 data-[state=on]:bg-purple-500/20 data-[state=on]:text-purple-700 dark:data-[state=on]:text-purple-400"
+            >
+              <div className="w-2 h-2 rounded-full bg-purple-500" />
+              <span className="text-xs">{t('calendar.filter.activities', 'Activities')}</span>
+            </Toggle>
+            
+            <Toggle
+              pressed={filters.gamePlan}
+              onPressedChange={() => toggleFilter('gamePlan')}
+              size="sm"
+              className="h-7 px-2 gap-1.5 data-[state=on]:bg-blue-500/20 data-[state=on]:text-blue-700 dark:data-[state=on]:text-blue-400"
+            >
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-xs">{t('calendar.filter.gamePlan', 'Game Plan')}</span>
+            </Toggle>
+            
+            <Toggle
+              pressed={filters.athleteEvents}
+              onPressedChange={() => toggleFilter('athleteEvents')}
+              size="sm"
+              className="h-7 px-2 gap-1.5 data-[state=on]:bg-red-500/20 data-[state=on]:text-red-700 dark:data-[state=on]:text-red-400"
+            >
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-xs">{t('calendar.filter.athleteEvents', 'Events')}</span>
+            </Toggle>
+            
+            <Toggle
+              pressed={filters.events}
+              onPressedChange={() => toggleFilter('events')}
+              size="sm"
+              className="h-7 px-2 gap-1.5 data-[state=on]:bg-indigo-500/20 data-[state=on]:text-indigo-700 dark:data-[state=on]:text-indigo-400"
+            >
+              <div className="w-2 h-2 rounded-full bg-indigo-500" />
+              <span className="text-xs">{t('calendar.filter.manual', 'Manual')}</span>
+            </Toggle>
           </div>
         </CardContent>
       </Card>
@@ -280,7 +421,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
               <span className="text-muted-foreground">{t('calendar.legend.program', 'Iron Bambino')}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#ef4444' }} />
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#f97316' }} />
               <span className="text-muted-foreground">{t('calendar.legend.heatFactory', 'Heat Factory')}</span>
             </div>
             <div className="flex items-center gap-1.5">
