@@ -149,6 +149,63 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_events: {
+        Row: {
+          all_day: boolean | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          end_time: string | null
+          event_date: string
+          event_type: string
+          id: string
+          related_id: string | null
+          reminder_enabled: boolean | null
+          reminder_minutes: number | null
+          sport: string | null
+          start_time: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          all_day?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_time?: string | null
+          event_date: string
+          event_type?: string
+          id?: string
+          related_id?: string | null
+          reminder_enabled?: boolean | null
+          reminder_minutes?: number | null
+          sport?: string | null
+          start_time?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          all_day?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          end_time?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          related_id?: string | null
+          reminder_enabled?: boolean | null
+          reminder_minutes?: number | null
+          sport?: string | null
+          start_time?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       coupon_metadata: {
         Row: {
           coupon_code: string
