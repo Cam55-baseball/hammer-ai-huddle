@@ -663,6 +663,36 @@
       "gamePlan": "Game Plan",
       "athleteEvents": "Events",
       "manual": "Manual"
+    },
+    "skip": {
+      "title": "Skip Activity",
+      "selectDays": "Select days to skip:",
+      "description": "This will hide the item on selected days until you change it.",
+      "save": "Save Skip",
+      "unskip": "Un-skip",
+      "skippedSection": "Skipped",
+      "skipButton": "Skip",
+      "skippedOnDays": "Skipped on {{days}}",
+      "skipFailed": "Failed to skip item",
+      "unskipFailed": "Failed to un-skip item",
+      "skipSuccess": "Item skip settings saved",
+      "unskipSuccess": "Item un-skipped"
+    },
+    "days": {
+      "sun": "Sunday",
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday",
+      "sunShort": "Su",
+      "monShort": "Mo",
+      "tueShort": "Tu",
+      "wedShort": "We",
+      "thuShort": "Th",
+      "friShort": "Fr",
+      "satShort": "Sa"
     }
   },
   "deleteUserDialog": {
