@@ -166,6 +166,7 @@ export function AppSidebar() {
     { title: t('navigation.bounceBackBay'), url: "/bounce-back-bay", icon: HeartPulse },
     { title: t('navigation.weather'), url: "/weather", icon: Cloud },
     ...(isScout ? [{ title: t('navigation.scoutDashboard'), url: "/scout-dashboard", icon: UserPlus }] : []),
+    ...(isCoach ? [{ title: t('navigation.coachDashboard', 'Coach Dashboard'), url: "/coach-dashboard", icon: UserPlus }] : []),
   ];
 
   const trainingModules = [

@@ -57,6 +57,7 @@ const AnalyzeVideo = lazyWithRetry(() => import("./pages/AnalyzeVideo"));
 const OwnerDashboard = lazyWithRetry(() => import("./pages/OwnerDashboard"));
 const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
 const ScoutDashboard = lazyWithRetry(() => import("./pages/ScoutDashboard"));
+const CoachDashboard = lazyWithRetry(() => import("./pages/CoachDashboard"));
 const InitializeOwner = lazyWithRetry(() => import("./pages/InitializeOwner"));
 const Profile = lazyWithRetry(() => import("./pages/Profile"));
 const Rankings = lazyWithRetry(() => import("./pages/Rankings"));
@@ -113,6 +114,7 @@ const App = () => {
               <Route path="/owner" element={<OwnerDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/scout-dashboard" element={<ScoutDashboard />} />
+              <Route path="/coach-dashboard" element={<CoachDashboard />} />
               <Route path="/initialize-owner" element={<InitializeOwner />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/rankings" element={<Rankings />} />

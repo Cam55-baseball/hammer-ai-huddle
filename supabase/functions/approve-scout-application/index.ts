@@ -42,10 +42,18 @@ serve(async (req) => {
       });
     }
 
-    const { application_id, action } = await req.json();
+    const { application_id, action, role = "scout" } = await req.json();
 
     if (!application_id || !action || !["approve", "deny"].includes(action)) {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate role parameter
+    if (!["scout", "coach"].includes(role)) {
+      return new Response(JSON.stringify({ error: "Invalid role - must be 'scout' or 'coach'" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -74,18 +82,18 @@ serve(async (req) => {
 
     // Handle approval
     if (action === "approve") {
-      // Create scout role
+      // Create role (scout or coach based on parameter)
       const { error: roleError } = await supabaseClient
         .from("user_roles")
         .insert({
           user_id: application.user_id,
-          role: "scout",
+          role: role, // Use the role parameter (scout or coach)
           status: "active",
         });
 
       if (roleError) {
-        console.error("Error creating scout role:", roleError);
-        return new Response(JSON.stringify({ error: "Failed to create scout role" }), {
+        console.error(`Error creating ${role} role:`, roleError);
+        return new Response(JSON.stringify({ error: `Failed to create ${role} role` }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -100,7 +108,7 @@ serve(async (req) => {
           .maybeSingle();
 
         if (ownerRole?.user_id) {
-          console.log(`Auto-creating follow relationship: scout ${application.user_id} -> owner ${ownerRole.user_id}`);
+          console.log(`Auto-creating follow relationship: ${role} ${application.user_id} -> owner ${ownerRole.user_id}`);
           
           const { error: followError } = await supabaseClient
             .from("scout_follows")
@@ -142,7 +150,7 @@ serve(async (req) => {
         });
       }
 
-      return new Response(JSON.stringify({ success: true, message: "Application approved" }), {
+      return new Response(JSON.stringify({ success: true, message: `Application approved as ${role}` }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

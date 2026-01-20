@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Video, Check, X, User } from "lucide-react";
+import { FileText, Video, Check, X, User, GraduationCap, Search } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScoutProfileDialog } from "./ScoutProfileDialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface ScoutApplicationCardProps {
   application: {
@@ -36,6 +38,7 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
   const [viewerTitle, setViewerTitle] = useState('');
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [scoutProfile, setScoutProfile] = useState<any>(null);
+  const [selectedRole, setSelectedRole] = useState<'scout' | 'coach'>('scout');
 
   const handleAction = async (action: "approve" | "deny") => {
     setLoading(true);
@@ -44,13 +47,20 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
         body: {
           application_id: application.id,
           action,
+          role: selectedRole, // Include selected role
         },
       });
 
       if (error) throw error;
 
+      const roleLabel = selectedRole === 'coach' 
+        ? t('scoutApplication.coach', 'Coach') 
+        : t('scoutApplication.scout', 'Scout');
+
       toast({
-        title: action === "approve" ? t('scoutApplication.applicationApproved') : t('scoutApplication.applicationDenied'),
+        title: action === "approve" 
+          ? t('scoutApplication.applicationApprovedAs', { role: roleLabel }) 
+          : t('scoutApplication.applicationDenied'),
         description: t('scoutApplication.applicationHasBeen', { 
           name: `${application.first_name} ${application.last_name}`,
           action: action === "approve" ? t('scoutApplication.approved') : t('scoutApplication.denied')
@@ -233,25 +243,52 @@ export function ScoutApplicationCard({ application, onUpdate }: ScoutApplication
             )}
 
             {application.status === "pending" && (
-              <div className="flex gap-2 pt-2">
-                <Button
-                  onClick={() => handleAction("approve")}
-                  disabled={loading}
-                  className="flex-1"
-                >
-                  <Check className="mr-2 h-4 w-4" />
-                  {t('scoutApplication.approve')}
-                </Button>
-                <Button
-                  onClick={() => handleAction("deny")}
-                  disabled={loading}
-                  variant="destructive"
-                  className="flex-1"
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  {t('scoutApplication.deny')}
-                </Button>
-              </div>
+              <>
+                {/* Role selection */}
+                <div className="p-3 bg-muted/50 rounded-lg border">
+                  <p className="text-sm font-medium mb-2">{t('scoutApplication.approveAs', 'Approve as:')}</p>
+                  <RadioGroup 
+                    value={selectedRole} 
+                    onValueChange={(value) => setSelectedRole(value as 'scout' | 'coach')}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="scout" id="role-scout" />
+                      <Label htmlFor="role-scout" className="flex items-center gap-1.5 cursor-pointer">
+                        <Search className="h-4 w-4" />
+                        {t('scoutApplication.scout', 'Scout')}
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="coach" id="role-coach" />
+                      <Label htmlFor="role-coach" className="flex items-center gap-1.5 cursor-pointer">
+                        <GraduationCap className="h-4 w-4" />
+                        {t('scoutApplication.coach', 'Coach')}
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    onClick={() => handleAction("approve")}
+                    disabled={loading}
+                    className="flex-1"
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    {t('scoutApplication.approve')}
+                  </Button>
+                  <Button
+                    onClick={() => handleAction("deny")}
+                    disabled={loading}
+                    variant="destructive"
+                    className="flex-1"
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    {t('scoutApplication.deny')}
+                  </Button>
+                </div>
+              </>
             )}
           </div>
         </div>

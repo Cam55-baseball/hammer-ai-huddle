@@ -48,7 +48,7 @@ export interface SentActivityTemplate {
   sent_at: string;
   responded_at?: string;
   // Joined data
-  sender?: { full_name: string; avatar_url: string | null };
+  sender?: { full_name: string; avatar_url: string | null; role?: 'scout' | 'coach' };
 }
 
 export interface FollowedPlayer {

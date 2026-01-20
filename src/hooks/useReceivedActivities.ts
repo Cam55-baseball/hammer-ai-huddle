@@ -23,23 +23,49 @@ export function useReceivedActivities() {
 
       if (error) throw error;
 
-      // Fetch sender profiles
+      // Fetch sender profiles and roles
       if (data && data.length > 0) {
         const senderIds = [...new Set(data.map(a => a.sender_id))];
+        
+        // Fetch profiles
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, full_name, avatar_url')
           .in('id', senderIds);
 
-        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        // Fetch sender roles (scout or coach)
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('user_id, role')
+          .in('user_id', senderIds)
+          .in('role', ['scout', 'coach']);
 
-        const enrichedActivities: SentActivityTemplate[] = data.map(activity => ({
-          ...activity,
-          template_snapshot: activity.template_snapshot as unknown as CustomActivityTemplate,
-          locked_fields: (activity.locked_fields || []) as LockableField[],
-          status: activity.status as 'pending' | 'accepted' | 'rejected',
-          sender: profileMap.get(activity.sender_id) || { full_name: 'Unknown Coach', avatar_url: null }
-        }));
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        const roleMap = new Map<string, 'scout' | 'coach'>();
+        
+        // Build role map - prioritize coach if user has both roles
+        roles?.forEach(r => {
+          if (r.role === 'coach' || !roleMap.has(r.user_id)) {
+            roleMap.set(r.user_id, r.role as 'scout' | 'coach');
+          }
+        });
+
+        const enrichedActivities: SentActivityTemplate[] = data.map(activity => {
+          const profile = profileMap.get(activity.sender_id);
+          const role = roleMap.get(activity.sender_id) || 'scout'; // Default to scout
+          
+          return {
+            ...activity,
+            template_snapshot: activity.template_snapshot as unknown as CustomActivityTemplate,
+            locked_fields: (activity.locked_fields || []) as LockableField[],
+            status: activity.status as 'pending' | 'accepted' | 'rejected',
+            sender: {
+              full_name: profile?.full_name || 'Unknown',
+              avatar_url: profile?.avatar_url || null,
+              role: role
+            }
+          };
+        });
 
         setActivities(enrichedActivities);
       } else {
@@ -72,7 +98,7 @@ export function useReceivedActivities() {
           },
           () => {
             fetchActivities();
-            toast.info(t('sentActivity.newActivityReceived', 'New activity received from a coach!'));
+            toast.info(t('sentActivity.newActivityReceived', 'New activity received!'));
           }
         )
         .subscribe();
