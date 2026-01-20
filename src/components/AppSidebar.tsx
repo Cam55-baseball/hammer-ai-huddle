@@ -89,7 +89,7 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
-  const { isScout } = useScoutAccess();
+  const { isScout, isCoach } = useScoutAccess();
   const { modules } = useSubscription();
   const { hasPendingItems, pendingCount } = useVaultPendingStatus();
   const { isSoftball } = useSportTheme();
