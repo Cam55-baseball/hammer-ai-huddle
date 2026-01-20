@@ -258,11 +258,19 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-amber-500" />
-              <span className="text-muted-foreground">{t('calendar.legend.program', 'Training')}</span>
+              <span className="text-muted-foreground">{t('calendar.legend.program', 'Iron Bambino')}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#ef4444' }} />
+              <span className="text-muted-foreground">{t('calendar.legend.heatFactory', 'Heat Factory')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <span className="text-muted-foreground">{t('calendar.legend.meal', 'Meal')}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-muted-foreground">{t('calendar.legend.gamePlan', 'Game Plan')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-indigo-500" />

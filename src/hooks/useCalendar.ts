@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfMonth, endOfMonth, addDays, eachDayOfInterval, getDay } from 'date-fns';
-import { LucideIcon, Target, Utensils, Dumbbell, Calendar, Brain, Eye, Moon, Sun, Activity } from 'lucide-react';
+import { LucideIcon, Target, Utensils, Dumbbell, Calendar, Brain, Eye, Moon, Sun, Activity, Apple, Lightbulb, Sparkles, BedDouble, Timer, Flame } from 'lucide-react';
 
 export interface CalendarEvent {
   id: string;
@@ -48,6 +48,20 @@ interface UseCalendarResult {
   refetch: () => void;
 }
 
+// System tasks that appear on Game Plan
+const SYSTEM_TASKS: Record<string, { title: string; icon: LucideIcon; color: string }> = {
+  'nutrition': { title: 'Nutrition Check-in', icon: Apple, color: '#22c55e' },
+  'mindfuel': { title: 'Mind Fuel Daily', icon: Brain, color: '#8b5cf6' },
+  'healthtip': { title: 'Daily Health Tip', icon: Lightbulb, color: '#14b8a6' },
+  'quiz-morning': { title: 'Morning Check-in', icon: Sun, color: '#f59e0b' },
+  'quiz-night': { title: 'Night Reflection', icon: Moon, color: '#6366f1' },
+  'texvision': { title: 'Tex Vision Training', icon: Eye, color: '#0ea5e9' },
+  'hydration': { title: 'Hydration Reminder', icon: Sparkles, color: '#06b6d4' },
+  'sleep': { title: 'Sleep Tracking', icon: BedDouble, color: '#8b5cf6' },
+  'warmup': { title: 'Warm-up Routine', icon: Timer, color: '#f97316' },
+  'cooldown': { title: 'Cool-down Routine', icon: Activity, color: '#10b981' },
+};
+
 // Map event sources to icons
 const getEventIcon = (type: string, source: string): LucideIcon => {
   if (type === 'athlete_event') {
@@ -58,6 +72,9 @@ const getEventIcon = (type: string, source: string): LucideIcon => {
   if (type === 'custom_activity') return Activity;
   if (type === 'meal') return Utensils;
   if (type === 'program') return Dumbbell;
+  if (type === 'game_plan') {
+    return SYSTEM_TASKS[source]?.icon || Calendar;
+  }
   if (source === 'morning-checkin') return Sun;
   if (source === 'night-reflection') return Moon;
   if (source === 'mindfuel') return Brain;
@@ -67,6 +84,9 @@ const getEventIcon = (type: string, source: string): LucideIcon => {
 
 // Map event types to colors
 const getEventColor = (type: string, source?: string): string => {
+  if (type === 'game_plan' && source && SYSTEM_TASKS[source]) {
+    return SYSTEM_TASKS[source].color;
+  }
   const colorMap: Record<string, string> = {
     'athlete_event': '#ef4444', // red
     'game_plan': '#3b82f6', // blue
@@ -78,12 +98,33 @@ const getEventColor = (type: string, source?: string): string => {
   return colorMap[type] || '#6b7280';
 };
 
+// Map meal types to approximate times
+const getMealTime = (mealType: string): string => {
+  const mealTimes: Record<string, string> = {
+    'breakfast': '07:00',
+    'lunch': '12:00',
+    'dinner': '18:00',
+    'snack': '15:00',
+    'pre_workout': '06:00',
+    'post_workout': '10:00',
+    'pre_game': '11:00',
+    'post_game': '20:00',
+  };
+  return mealTimes[mealType] || '12:00';
+};
+
 export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCalendarResult {
   const { user } = useAuth();
   const { modules } = useSubscription();
   const [events, setEvents] = useState<Record<string, CalendarEvent[]>>({});
   const [loading, setLoading] = useState(true);
   const [currentRange, setCurrentRange] = useState<{ start: Date; end: Date } | null>(null);
+
+  // Check subscription access for programs
+  const hasHittingAccess = useMemo(() => 
+    modules.some(m => m.includes('hitting')), [modules]);
+  const hasPitchingAccess = useMemo(() => 
+    modules.some(m => m.includes('pitching')), [modules]);
 
   const fetchEventsForRange = useCallback(async (startDate: Date, endDate: Date) => {
     if (!user) return;
@@ -101,6 +142,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         customTemplatesRes,
         customLogsRes,
         calendarEventsRes,
+        taskSchedulesRes,
+        subModuleProgressRes,
+        mealPlansRes,
       ] = await Promise.all([
         // Athlete events (game days, rest days, etc.)
         supabase
@@ -132,6 +176,27 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('event_date', startStr)
           .lte('event_date', endStr),
+        
+        // Game Plan task schedules
+        supabase
+          .from('game_plan_task_schedule')
+          .select('*')
+          .eq('user_id', user.id),
+        
+        // Program progress (Iron Bambino / Heat Factory)
+        supabase
+          .from('sub_module_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('sport', sport),
+        
+        // Meal plans
+        supabase
+          .from('vault_meal_plans')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('planned_date', startStr)
+          .lte('planned_date', endStr),
       ]);
 
       const aggregatedEvents: Record<string, CalendarEvent[]> = {};
@@ -256,6 +321,112 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         });
       }
 
+      // Process Game Plan task schedules
+      if (taskSchedulesRes.data) {
+        taskSchedulesRes.data.forEach(schedule => {
+          const taskDef = SYSTEM_TASKS[schedule.task_id];
+          if (!taskDef) return;
+          
+          const displayDays = schedule.display_days || [0, 1, 2, 3, 4, 5, 6];
+          
+          daysInRange.forEach(day => {
+            const dayOfWeek = getDay(day);
+            if (displayDays.includes(dayOfWeek)) {
+              const dateKey = format(day, 'yyyy-MM-dd');
+              if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
+              
+              aggregatedEvents[dateKey].push({
+                id: `task-${schedule.task_id}-${dateKey}`,
+                date: dateKey,
+                title: taskDef.title,
+                startTime: schedule.display_time,
+                type: 'game_plan',
+                source: schedule.task_id,
+                color: taskDef.color,
+                icon: taskDef.icon,
+                editable: false,
+                deletable: false,
+              });
+            }
+          });
+        });
+      }
+
+      // Process sub_module_progress for Iron Bambino and Heat Factory
+      if (subModuleProgressRes.data) {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        
+        subModuleProgressRes.data.forEach(progress => {
+          const isIronBambino = progress.sub_module === 'iron_bambino';
+          const isHeatFactory = progress.sub_module === 'heat_factory';
+          
+          if (!isIronBambino && !isHeatFactory) return;
+          
+          // Check subscription access
+          if (isIronBambino && !hasHittingAccess) return;
+          if (isHeatFactory && !hasPitchingAccess) return;
+          
+          const programName = isIronBambino ? 'Iron Bambino' : 'Heat Factory';
+          const programColor = isIronBambino ? '#f59e0b' : '#ef4444'; // amber / red
+          
+          // Get current week/day from progress
+          const currentWeek = progress.current_week || 1;
+          const weekProgress = (progress.week_progress as Record<string, boolean[]>) || {};
+          const weekKey = `week${currentWeek}`;
+          const days = weekProgress[weekKey] || [];
+          
+          // Find next uncompleted day
+          const nextDay = days.findIndex(completed => !completed) + 1 || 1;
+          const isStrengthDay = [1, 5].includes(nextDay);
+          
+          // Add to today's date if it exists in range
+          if (aggregatedEvents[today]) {
+            aggregatedEvents[today].push({
+              id: `program-${progress.sub_module}-${today}`,
+              date: today,
+              title: `${programName} W${currentWeek}D${nextDay}`,
+              description: isStrengthDay ? 'Strength Training' : 'Skill Development',
+              type: 'program',
+              source: progress.sub_module,
+              color: programColor,
+              icon: isStrengthDay ? Dumbbell : Flame,
+              editable: false,
+              deletable: false,
+              sport: progress.sport,
+            });
+          }
+        });
+      }
+
+      // Process meal plans
+      if (mealPlansRes.data) {
+        mealPlansRes.data.forEach(meal => {
+          const dateKey = meal.planned_date;
+          if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
+          
+          const mealTypeName = meal.meal_type 
+            ? meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1).replace('_', ' ')
+            : 'Meal';
+          
+          aggregatedEvents[dateKey].push({
+            id: meal.id,
+            date: dateKey,
+            title: meal.meal_name || mealTypeName,
+            description: meal.estimated_calories 
+              ? `${meal.estimated_calories} kcal` 
+              : undefined,
+            startTime: meal.time_slot || getMealTime(meal.meal_type || 'lunch'),
+            type: 'meal',
+            source: meal.meal_type || 'meal',
+            color: '#22c55e', // green
+            icon: Utensils,
+            completed: meal.is_completed || false,
+            editable: false, // Edit in Nutrition Hub
+            deletable: false,
+          });
+        });
+      }
+
       // Sort events by time within each day
       Object.keys(aggregatedEvents).forEach(dateKey => {
         aggregatedEvents[dateKey].sort((a, b) => {
@@ -272,7 +443,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     } finally {
       setLoading(false);
     }
-  }, [user, sport]);
+  }, [user, sport, hasHittingAccess, hasPitchingAccess]);
 
   const addEvent = useCallback(async (event: CreateCalendarEvent): Promise<boolean> => {
     if (!user) return false;

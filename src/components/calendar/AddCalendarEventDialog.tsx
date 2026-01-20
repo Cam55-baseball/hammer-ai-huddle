@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -131,8 +132,8 @@ export function AddCalendarEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
             {t('calendar.addEvent', 'Add Event')}
@@ -142,6 +143,7 @@ export function AddCalendarEventDialog({
           </DialogDescription>
         </DialogHeader>
 
+        <ScrollArea className="flex-1 max-h-[60vh] pr-4">
         <div className="space-y-4 py-4">
           {/* Title */}
           <div className="space-y-2">
@@ -267,11 +269,12 @@ export function AddCalendarEventDialog({
                   <SelectItem value="60">1 {t('calendar.hour', 'hour before')}</SelectItem>
                 </SelectContent>
               </Select>
-            )}
+          )}
           </div>
         </div>
+        </ScrollArea>
 
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <Button variant="outline" onClick={handleClose} disabled={loading}>
             {t('common.cancel', 'Cancel')}
           </Button>
