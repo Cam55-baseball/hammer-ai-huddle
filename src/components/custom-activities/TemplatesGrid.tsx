@@ -47,7 +47,7 @@ export function TemplatesGrid({
   const [sharingTemplate, setSharingTemplate] = useState<CustomActivityTemplate | null>(null);
   const [sendingTemplate, setSendingTemplate] = useState<CustomActivityTemplate | null>(null);
   const [scheduleSettingsTemplate, setScheduleSettingsTemplate] = useState<CustomActivityTemplate | null>(null);
-  const { canSendActivities } = useScoutAccess();
+  const { canSendActivities, loading: accessLoading } = useScoutAccess();
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -232,8 +232,15 @@ export function TemplatesGrid({
                     <Button size="sm" variant="ghost" onClick={() => setSharingTemplate(template)} className="hover:bg-blue-500/10">
                       <Share2 className="h-4 w-4" />
                     </Button>
-                    {canSendActivities && (
-                      <Button size="sm" variant="ghost" onClick={() => setSendingTemplate(template)} title={t('sentActivity.sendToPlayer', 'Send to Player')} className="hover:bg-green-500/10">
+                    {(canSendActivities || accessLoading) && (
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => setSendingTemplate(template)} 
+                        title={t('sentActivity.sendToPlayer', 'Send to Player')} 
+                        className="hover:bg-green-500/10"
+                        disabled={accessLoading}
+                      >
                         <Send className="h-4 w-4" />
                       </Button>
                     )}

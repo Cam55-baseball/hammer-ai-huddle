@@ -169,7 +169,7 @@ export function FollowRequestsPanel() {
           {requests.map((request) => (
             <div
               key={request.id}
-              className="flex items-center justify-between p-3 border rounded-lg"
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-lg"
             >
               <div className="flex items-center gap-3">
                 {request.profiles.avatar_url ? (
@@ -190,30 +190,30 @@ export function FollowRequestsPanel() {
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleViewProfile(request.scout_id)}
                 >
-                  <Eye className="h-4 w-4 mr-1" />
-                  {t('followRequests.viewProfile')}
+                  <Eye className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">{t('followRequests.viewProfile')}</span>
                 </Button>
                 <Button
                   size="sm"
                   variant="default"
                   onClick={() => handleResponse(request.id, 'accepted')}
                 >
-                  <Check className="h-4 w-4 mr-1" />
-                  {t('followRequests.accept')}
+                  <Check className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">{t('followRequests.accept')}</span>
                 </Button>
                 <Button
                   size="sm"
                   variant="destructive"
                   onClick={() => handleResponse(request.id, 'rejected')}
                 >
-                  <X className="h-4 w-4 mr-1" />
-                  {t('followRequests.reject')}
+                  <X className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">{t('followRequests.reject')}</span>
                 </Button>
               </div>
             </div>
