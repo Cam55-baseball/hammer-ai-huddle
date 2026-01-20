@@ -206,6 +206,36 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_skipped_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          item_id: string
+          item_type: string
+          skip_days: number[]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          item_id: string
+          item_type: string
+          skip_days?: number[]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          item_id?: string
+          item_type?: string
+          skip_days?: number[]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       coupon_metadata: {
         Row: {
           coupon_code: string
