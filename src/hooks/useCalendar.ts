@@ -63,9 +63,9 @@ const SYSTEM_TASKS: Record<string, { title: string; icon: LucideIcon; color: str
   'warmup': { title: 'Warm-up Routine', icon: Timer, color: '#f97316' },
   'cooldown': { title: 'Cool-down Routine', icon: Activity, color: '#10b981' },
   
-  // Workouts - these are PROGRAM type (amber for hitting, red for pitching)
+  // Workouts - these are PROGRAM type (amber for hitting, red/orange for pitching)
   'workout-hitting': { title: 'Iron Bambino', icon: Dumbbell, color: '#f59e0b', type: 'program' },
-  'workout-pitching': { title: 'Heat Factory', icon: Flame, color: '#ef4444', type: 'program' },
+  'workout-pitching': { title: 'Heat Factory', icon: Flame, color: '#f97316', type: 'program' },
   
   // Video analysis tasks
   'video-hitting': { title: 'Video Analysis (Hitting)', icon: Eye, color: '#3b82f6' },
@@ -78,6 +78,21 @@ const SYSTEM_TASKS: Record<string, { title: string; icon: LucideIcon; color: str
   'tracking-grades': { title: 'Self Grades (Hitting)', icon: Target, color: '#3b82f6' },
   'tracking-pitching-grades': { title: 'Self Grades (Pitching)', icon: Target, color: '#3b82f6' },
   'tracking-wellness-goals': { title: 'Wellness Goals', icon: Target, color: '#3b82f6' },
+};
+
+// DEFAULT daily tasks that appear EVERY day regardless of explicit scheduling
+const DEFAULT_DAILY_TASKS = [
+  'nutrition',
+  'mindfuel', 
+  'healthtip',
+  'quiz-morning',
+  'quiz-night',
+];
+
+// Tasks that require module access
+const MODULE_GATED_TASKS: Record<string, string[]> = {
+  hitting: ['texvision', 'video-hitting', 'tracking-grades'],
+  pitching: ['video-pitching', 'tracking-pitching-grades'],
 };
 
 // Map event sources to icons
@@ -377,6 +392,96 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           });
         });
       }
+      
+      // Add DEFAULT daily tasks (appear every day regardless of explicit scheduling)
+      const scheduledTaskIds = new Set(
+        (taskSchedulesRes.data || []).map(s => s.task_id)
+      );
+      
+      daysInRange.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
+        
+        // Add default daily tasks that aren't explicitly scheduled
+        DEFAULT_DAILY_TASKS.forEach(taskId => {
+          // Skip if already added via explicit schedule
+          if (scheduledTaskIds.has(taskId)) return;
+          
+          const taskDef = SYSTEM_TASKS[taskId];
+          if (!taskDef) return;
+          
+          // Check if already exists from another source
+          const alreadyExists = aggregatedEvents[dateKey].some(
+            e => e.source === taskId && e.type === 'game_plan'
+          );
+          if (alreadyExists) return;
+          
+          aggregatedEvents[dateKey].push({
+            id: `default-${taskId}-${dateKey}`,
+            date: dateKey,
+            title: taskDef.title,
+            type: 'game_plan',
+            source: taskId,
+            color: taskDef.color,
+            icon: taskDef.icon,
+            editable: false,
+            deletable: false,
+          });
+        });
+        
+        // Add module-gated tasks for users with subscription access
+        if (hasHittingAccess) {
+          MODULE_GATED_TASKS.hitting.forEach(taskId => {
+            if (scheduledTaskIds.has(taskId)) return;
+            
+            const taskDef = SYSTEM_TASKS[taskId];
+            if (!taskDef) return;
+            
+            const alreadyExists = aggregatedEvents[dateKey].some(
+              e => e.source === taskId && e.type === 'game_plan'
+            );
+            if (alreadyExists) return;
+            
+            aggregatedEvents[dateKey].push({
+              id: `gated-${taskId}-${dateKey}`,
+              date: dateKey,
+              title: taskDef.title,
+              type: 'game_plan',
+              source: taskId,
+              color: taskDef.color,
+              icon: taskDef.icon,
+              editable: false,
+              deletable: false,
+            });
+          });
+        }
+        
+        if (hasPitchingAccess) {
+          MODULE_GATED_TASKS.pitching.forEach(taskId => {
+            if (scheduledTaskIds.has(taskId)) return;
+            
+            const taskDef = SYSTEM_TASKS[taskId];
+            if (!taskDef) return;
+            
+            const alreadyExists = aggregatedEvents[dateKey].some(
+              e => e.source === taskId && e.type === 'game_plan'
+            );
+            if (alreadyExists) return;
+            
+            aggregatedEvents[dateKey].push({
+              id: `gated-${taskId}-${dateKey}`,
+              date: dateKey,
+              title: taskDef.title,
+              type: 'game_plan',
+              source: taskId,
+              color: taskDef.color,
+              icon: taskDef.icon,
+              editable: false,
+              deletable: false,
+            });
+          });
+        }
+      });
 
       // Process sub_module_progress for Iron Bambino and Heat Factory
       // Now also recognizes production_lab (Iron Bambino) and production_studio (Heat Factory)

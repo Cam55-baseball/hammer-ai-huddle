@@ -613,8 +613,10 @@
     "legend": {
       "athleteEvent": "Game/Rest Day",
       "activity": "Activity",
-      "program": "Training",
+      "program": "Iron Bambino",
+      "heatFactory": "Heat Factory",
       "meal": "Meal",
+      "gamePlan": "Game Plan",
       "event": "Event"
     },
     "eventTypes": {
@@ -652,7 +654,16 @@
       "addFailed": "Failed to add event"
     },
     "minutes": "minutes before",
-    "hour": "hour before"
+    "hour": "hour before",
+    "filter": {
+      "title": "Filter:",
+      "meals": "Meals",
+      "workouts": "Workouts",
+      "activities": "Activities",
+      "gamePlan": "Game Plan",
+      "athleteEvents": "Events",
+      "manual": "Manual"
+    }
   },
   "deleteUserDialog": {
     "title": "Delete User Account",
