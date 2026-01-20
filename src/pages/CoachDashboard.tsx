@@ -180,6 +180,12 @@ export default function CoachDashboard() {
 
   // Debounced search effect with filters
   useEffect(() => {
+    // Don't search if user isn't authenticated or doesn't have access
+    if (!user || !hasCoachAccess) {
+      setSearchResults([]);
+      return;
+    }
+
     const hasActiveFilters = 
       filters.positions.length > 0 ||
       filters.throwingHands.length > 0 ||
