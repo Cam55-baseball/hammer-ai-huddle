@@ -1,9 +1,7 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +16,33 @@ const requestSchema = z.object({
   userId: z.string().uuid("Invalid user ID format"),
   modules: z.array(z.string()).max(50, "Too many modules specified"),
 });
+
+async function sendWithResend(params: { to: string; subject: string; html: string }) {
+  const apiKey = Deno.env.get("RESEND_API_KEY") ?? "";
+  if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "HammerAI Huddle <onboarding@resend.dev>",
+      to: [params.to],
+      subject: params.subject,
+      html: params.html,
+    }),
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    console.error("Resend error response:", json);
+    throw new Error(typeof json?.message === "string" ? json.message : "Failed to send email");
+  }
+
+  return json;
+}
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -87,10 +112,9 @@ serve(async (req) => {
       timeZone: 'America/New_York'
     });
 
-    // Send email using Resend
-    const emailResponse = await resend.emails.send({
-      from: "HammerAI Huddle <onboarding@resend.dev>",
-      to: [ownerEmail],
+    // Send email (native fetch to Resend API to avoid heavy module graphs)
+    const emailResponse = await sendWithResend({
+      to: ownerEmail,
       subject: `Subscription ${actionText} Feedback from ${userName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
