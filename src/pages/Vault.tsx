@@ -392,6 +392,8 @@ export default function Vault() {
                 daysUntilNextRecap={daysUntilRecap}
                 recapProgress={recapProgress}
                 onGenerateRecap={handleGenerateRecap}
+                onSaveRecap={saveRecapToLibrary}
+                onDeleteRecap={deleteRecap}
                 isLoading={loading}
                 hasMissedRecap={hasMissedRecap}
                 missedCycleEnd={missedCycleEnd}
