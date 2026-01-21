@@ -163,6 +163,9 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         custom_logo_url: data.custom_logo_url,
         reminder_enabled: data.reminder_enabled,
         reminder_time: data.reminder_time,
+        display_on_game_plan: data.display_on_game_plan ?? true,
+        display_days: data.display_days as unknown as number[],
+        display_time: data.display_time,
       };
 
       console.log('[useCustomActivities] Creating template with data:', {

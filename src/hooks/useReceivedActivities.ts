@@ -43,10 +43,14 @@ export function useReceivedActivities() {
         const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
         const roleMap = new Map<string, 'scout' | 'coach'>();
         
-        // Build role map - prioritize coach if user has both roles
+        // Build role map - coach takes priority over scout
         roles?.forEach(r => {
-          if (r.role === 'coach' || !roleMap.has(r.user_id)) {
-            roleMap.set(r.user_id, r.role as 'scout' | 'coach');
+          if (r.role === 'coach') {
+            // Coach always takes priority
+            roleMap.set(r.user_id, 'coach');
+          } else if (r.role === 'scout' && !roleMap.has(r.user_id)) {
+            // Only set scout if no role exists yet (coach wasn't set first)
+            roleMap.set(r.user_id, 'scout');
           }
         });
 
@@ -130,6 +134,8 @@ export function useReceivedActivities() {
         // Default to showing on today's day of week so it appears immediately
         display_days: templateData.display_days?.length ? templateData.display_days : [todayDayOfWeek],
         recurring_days: templateData.recurring_days?.length ? templateData.recurring_days : [todayDayOfWeek],
+        // Ensure recurring is active so it shows on game plan
+        recurring_active: true,
       };
       
       const newTemplate = await createTemplate(enhancedData);
