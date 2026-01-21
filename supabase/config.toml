@@ -122,3 +122,6 @@ verify_jwt = true
 
 [functions.suggest-meals]
 verify_jwt = true
+
+[functions.send-recap-email]
+verify_jwt = true

@@ -1018,6 +1018,31 @@ export function useVault() {
     }
   }, [user, fetchRecaps]);
 
+  // Save recap to library
+  const saveRecapToLibrary = useCallback(async (recapId: string) => {
+    if (!user) return { success: false };
+    const { error } = await supabase
+      .from('vault_recaps')
+      .update({ saved_to_library: true })
+      .eq('id', recapId)
+      .eq('user_id', user.id);
+    if (!error) await fetchRecaps();
+    return { success: !error };
+  }, [user, fetchRecaps]);
+
+  // Delete recap
+  const deleteRecap = useCallback(async (recapId: string) => {
+    if (!user) return { success: false };
+    const { error } = await supabase
+      .from('vault_recaps')
+      .delete()
+      .eq('id', recapId)
+      .eq('user_id', user.id);
+    if (!error) await fetchRecaps();
+    return { success: !error };
+  }, [user, fetchRecaps]);
+
+
   // Fetch history for date - includes all vault data types
   const fetchHistoryForDate = useCallback(async (date: string) => {
     if (!user) return { 
@@ -1345,5 +1370,6 @@ export function useVault() {
     deleteQuiz, deleteFreeNote, deleteWorkoutNote, deleteNutritionLog, deletePerformanceTest, deleteProgressPhoto, deleteScoutGrade,
     fetchWeeklyData, fetchWeeklyNutrition, fetchEntriesWithData, fetchSavedItems,
     saveFavoriteMeal, deleteFavoriteMeal, useFavoriteMeal,
+    saveRecapToLibrary, deleteRecap,
   };
 }
