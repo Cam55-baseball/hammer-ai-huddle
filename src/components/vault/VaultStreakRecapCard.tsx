@@ -6,14 +6,23 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   Flame, Trophy, Calendar, Award, Sparkles, ChevronDown,
   FileText, TrendingUp, Dumbbell, Brain, Target, Activity,
-  Zap, Lightbulb, CheckCircle2, Heart, AlertCircle
+  Zap, Lightbulb, CheckCircle2, Heart, AlertCircle,
+  Bookmark, BookmarkCheck, Download, Mail, Share2, Trash2, Send
 } from 'lucide-react';
+import { FaXTwitter, FaInstagram } from 'react-icons/fa6';
 import { VaultStreak } from '@/hooks/useVault';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { generateRecapPdf, generateRecapPdfBase64 } from '@/utils/generateRecapPdf';
+import { generateRecapShareImage } from '@/utils/generateRecapShareImage';
 
 interface VaultRecap {
   id: string;
@@ -48,6 +57,7 @@ interface VaultRecap {
     performance_tests?: number;
   };
   generated_at: string;
+  saved_to_library?: boolean;
 }
 
 interface VaultStreakRecapCardProps {
@@ -57,9 +67,12 @@ interface VaultStreakRecapCardProps {
   daysUntilNextRecap: number;
   recapProgress: number;
   onGenerateRecap: (periodEnd?: Date) => Promise<{ success: boolean }>;
+  onSaveRecap?: (recapId: string) => Promise<{ success: boolean }>;
+  onDeleteRecap?: (recapId: string) => Promise<{ success: boolean }>;
   isLoading?: boolean;
   hasMissedRecap?: boolean;
   missedCycleEnd?: Date | null;
+  athleteName?: string;
 }
 
 export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapCardProps>(({ 
@@ -69,15 +82,23 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
   daysUntilNextRecap,
   recapProgress,
   onGenerateRecap,
+  onSaveRecap,
+  onDeleteRecap,
   isLoading,
   hasMissedRecap = false,
   missedCycleEnd = null,
+  athleteName = 'Athlete',
 }, ref) => {
   const { t } = useTranslation();
   const [recapsOpen, setRecapsOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [selectedRecap, setSelectedRecap] = useState<VaultRecap | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState<'save' | 'delete' | 'pdf' | 'email' | 'share' | null>(null);
+  const [emailForm, setEmailForm] = useState({ recipientEmail: '', recipientName: '' });
 
   const currentStreak = streak?.current_streak || 0;
   const longestStreak = streak?.longest_streak || 0;
@@ -92,12 +113,10 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
 
   const getStreakGlow = () => currentStreak >= 25;
 
-  // Determine if we should show the generate button with emphasis
   const showRecapButton = canGenerateRecap || hasMissedRecap;
 
   const handleGenerate = async () => {
     setGenerating(true);
-    // If this is a missed recap, pass the missed cycle end date
     if (hasMissedRecap && missedCycleEnd) {
       await onGenerateRecap(missedCycleEnd);
     } else {
@@ -109,6 +128,140 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
   const handleViewRecap = (recap: VaultRecap) => {
     setSelectedRecap(recap);
     setViewDialogOpen(true);
+  };
+
+  const handleSaveRecap = async () => {
+    if (!selectedRecap || !onSaveRecap) return;
+    setActionLoading('save');
+    const result = await onSaveRecap(selectedRecap.id);
+    if (result.success) {
+      toast.success(t('vault.recap.recapSaved'));
+      setSelectedRecap({ ...selectedRecap, saved_to_library: true });
+    }
+    setActionLoading(null);
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!selectedRecap) return;
+    setActionLoading('pdf');
+    try {
+      await generateRecapPdf(selectedRecap);
+      toast.success(t('vault.recap.pdfDownloaded'));
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('Failed to generate PDF');
+    }
+    setActionLoading(null);
+  };
+
+  const handleSendEmail = async () => {
+    if (!selectedRecap) return;
+    setActionLoading('email');
+    
+    try {
+      const pdfBase64 = await generateRecapPdfBase64(selectedRecap);
+      
+      const { error } = await supabase.functions.invoke('send-recap-email', {
+        body: {
+          recipientEmail: emailForm.recipientEmail,
+          recipientName: emailForm.recipientName,
+          recapData: {
+            recap_period_start: selectedRecap.recap_period_start,
+            recap_period_end: selectedRecap.recap_period_end,
+            summary: selectedRecap.recap_data.summary,
+            highlights: selectedRecap.recap_data.highlights,
+            improvements: selectedRecap.recap_data.improvements,
+            recommendations: selectedRecap.recap_data.recommendations,
+            workout_stats: selectedRecap.recap_data.workout_stats,
+            mental_stats: selectedRecap.recap_data.mental_stats,
+          },
+          athleteName,
+          totalWeightLifted: selectedRecap.total_weight_lifted,
+          strengthChangePercent: selectedRecap.strength_change_percent,
+          pdfBase64,
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast.success(t('vault.recap.emailSent'));
+      setEmailDialogOpen(false);
+      setEmailForm({ recipientEmail: '', recipientName: '' });
+    } catch (error) {
+      console.error('Email error:', error);
+      toast.error(t('vault.recap.emailFailed'));
+    }
+    
+    setActionLoading(null);
+  };
+
+  const handleShareToTwitter = async () => {
+    if (!selectedRecap) return;
+    setActionLoading('share');
+    
+    try {
+      const imageBlob = await generateRecapShareImage(selectedRecap);
+      const url = URL.createObjectURL(imageBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `training-recap-${selectedRecap.recap_period_end}.png`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      const tweetText = encodeURIComponent(
+        `Just completed my 6-week training recap! 💪\n\n` +
+        `📊 ${selectedRecap.recap_data.workout_stats?.total_workouts || 0} workouts\n` +
+        `🏋️ ${selectedRecap.total_weight_lifted?.toLocaleString() || 0} lbs lifted\n\n` +
+        `#Training #Athlete #HammersModality`
+      );
+      window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
+      
+      toast.success(t('vault.recap.imageCreated'));
+      setShareDialogOpen(false);
+    } catch (error) {
+      console.error('Share error:', error);
+      toast.error('Failed to create share image');
+    }
+    
+    setActionLoading(null);
+  };
+
+  const handleShareToInstagram = async () => {
+    if (!selectedRecap) return;
+    setActionLoading('share');
+    
+    try {
+      const imageBlob = await generateRecapShareImage(selectedRecap);
+      const url = URL.createObjectURL(imageBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `training-recap-${selectedRecap.recap_period_end}.png`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      toast.success(t('vault.recap.imageCreated') + ' ' + t('vault.recap.uploadToInstagram'));
+      setShareDialogOpen(false);
+    } catch (error) {
+      console.error('Share error:', error);
+      toast.error('Failed to create share image');
+    }
+    
+    setActionLoading(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedRecap || !onDeleteRecap) return;
+    setActionLoading('delete');
+    const result = await onDeleteRecap(selectedRecap.id);
+    if (result.success) {
+      toast.success(t('vault.recap.recapDeleted'));
+      setViewDialogOpen(false);
+      setSelectedRecap(null);
+    }
+    setActionLoading(null);
+    setDeleteDialogOpen(false);
   };
 
   if (isLoading) {
@@ -140,7 +293,6 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
         <CardContent className="p-4 space-y-4">
           {/* Header Row: Streak + Stats */}
           <div className="flex items-center gap-4">
-            {/* Streak Fire */}
             <div className={cn(
               "relative flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-500/30",
               getStreakGlow() && "animate-pulse"
@@ -153,7 +305,6 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
               )}
             </div>
 
-            {/* Streak Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-bold text-lg">
@@ -233,7 +384,7 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
             )}
           </div>
 
-          {/* Badges (compact) */}
+          {/* Badges */}
           {badges.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {badges.slice(0, 3).map((badge) => (
@@ -250,7 +401,7 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
             </div>
           )}
 
-          {/* Past Recaps (Collapsible) */}
+          {/* Past Recaps */}
           {recaps.length > 0 && (
             <Collapsible open={recapsOpen} onOpenChange={setRecapsOpen}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-muted/50 transition-colors">
@@ -271,7 +422,10 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                         className="p-2 rounded-lg bg-muted/50 border border-border hover:bg-muted/70 transition-colors cursor-pointer"
                       >
                         <div className="flex items-center justify-between text-xs">
-                          <span className="font-medium">
+                          <span className="font-medium flex items-center gap-1.5">
+                            {recap.saved_to_library && (
+                              <BookmarkCheck className="h-3 w-3 text-green-500" />
+                            )}
                             {new Date(recap.recap_period_start).toLocaleDateString()} - {new Date(recap.recap_period_end).toLocaleDateString()}
                           </span>
                           {recap.strength_change_percent !== null && recap.strength_change_percent !== 0 && (
@@ -403,8 +557,203 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                   ))}
                 </div>
               )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t mt-4">
+                {/* Save Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveRecap}
+                  disabled={actionLoading !== null || selectedRecap?.saved_to_library}
+                  className="gap-2"
+                >
+                  {selectedRecap?.saved_to_library ? (
+                    <>
+                      <BookmarkCheck className="h-4 w-4 text-green-500" />
+                      {t('vault.recap.savedToLibrary')}
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="h-4 w-4" />
+                      {t('vault.recap.saveRecap')}
+                    </>
+                  )}
+                </Button>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Download PDF */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadPdf}
+                    disabled={actionLoading !== null}
+                    className="gap-2"
+                  >
+                    {actionLoading === 'pdf' ? (
+                      <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                    {t('vault.recap.downloadPdf')}
+                  </Button>
+
+                  {/* Email */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEmailDialogOpen(true)}
+                    disabled={actionLoading !== null}
+                    className="gap-2"
+                  >
+                    <Mail className="h-4 w-4" />
+                    {t('vault.recap.emailRecap')}
+                  </Button>
+
+                  {/* Share */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShareDialogOpen(true)}
+                    disabled={actionLoading !== null}
+                    className="gap-2"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    {t('vault.recap.shareToSocial')}
+                  </Button>
+
+                  {/* Delete */}
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    disabled={actionLoading !== null}
+                    className="gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('vault.recap.deleteRecap')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('vault.recap.confirmDelete')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm} 
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {actionLoading === 'delete' ? (
+                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                t('common.delete')
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Email Dialog */}
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              {t('vault.recap.emailRecap')}
+            </DialogTitle>
+            <DialogDescription>
+              Send this recap to a coach, parent, or trainer
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>{t('vault.recap.recipientName')}</Label>
+              <Input 
+                placeholder="Coach Smith" 
+                value={emailForm.recipientName}
+                onChange={(e) => setEmailForm(prev => ({ ...prev, recipientName: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('vault.recap.recipientEmail')}</Label>
+              <Input 
+                type="email" 
+                placeholder="coach@team.com" 
+                value={emailForm.recipientEmail}
+                onChange={(e) => setEmailForm(prev => ({ ...prev, recipientEmail: e.target.value }))}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button 
+              onClick={handleSendEmail} 
+              disabled={actionLoading === 'email' || !emailForm.recipientEmail || !emailForm.recipientName}
+            >
+              {actionLoading === 'email' ? (
+                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              {t('vault.recap.sendEmail')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Social Share Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5" />
+              {t('vault.recap.shareToSocial')}
+            </DialogTitle>
+            <DialogDescription>
+              Share your training progress on social media
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <Button 
+              variant="outline" 
+              className="h-24 flex-col gap-2"
+              onClick={handleShareToTwitter}
+              disabled={actionLoading === 'share'}
+            >
+              <FaXTwitter className="h-8 w-8" />
+              {t('vault.recap.shareToTwitter')}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="h-24 flex-col gap-2"
+              onClick={handleShareToInstagram}
+              disabled={actionLoading === 'share'}
+            >
+              <FaInstagram className="h-8 w-8" />
+              {t('vault.recap.shareToInstagram')}
+            </Button>
+          </div>
+          
+          <p className="text-xs text-muted-foreground text-center mt-4">
+            A share image will be downloaded. Upload it to your social media platform.
+          </p>
         </DialogContent>
       </Dialog>
     </>
