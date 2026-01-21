@@ -15,7 +15,8 @@ export type VaultSection =
   | 'pitching-grades' 
   | 'nutrition'
   | 'wellness-goals'
-  | 'saved-items';
+  | 'saved-items'
+  | 'recap-generation';
 
 // Type-safe quiz identifiers  
 export type VaultQuiz = 'morning' | 'pre_lift' | 'night';
@@ -34,7 +35,15 @@ export const VAULT_SECTIONS: Record<VaultSection, SectionConfig> = {
   'nutrition': { tab: 'today', autoOpen: false },
   'wellness-goals': { tab: 'today', autoOpen: true },
   'saved-items': { tab: 'today', autoOpen: false },
+  'recap-generation': { tab: 'today', autoOpen: false },
 } as const;
+
+/**
+ * Generate a URL to navigate to the recap generation section
+ */
+export function getVaultRecapUrl(): string {
+  return '/vault?openSection=recap-generation';
+}
 
 // Quiz types that can be opened via URL
 export const VAULT_QUIZZES = ['morning', 'pre_lift', 'night', 'prelift'] as const;

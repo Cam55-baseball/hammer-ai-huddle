@@ -996,11 +996,14 @@ export function useVault() {
     setRecaps((data || []).map(r => ({ ...r, recap_data: r.recap_data as Record<string, unknown> })));
   }, [user]);
 
-  const generateRecap = useCallback(async () => {
+  const generateRecap = useCallback(async (periodEnd?: Date) => {
     if (!user) return { success: false, error: 'Not authenticated' };
     
     try {
-      const { data, error } = await supabase.functions.invoke('generate-vault-recap');
+      const body = periodEnd ? { periodEnd: periodEnd.toISOString() } : undefined;
+      const { data, error } = await supabase.functions.invoke('generate-vault-recap', {
+        body,
+      });
       
       if (error) {
         console.error('Error generating recap:', error);

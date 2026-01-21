@@ -114,7 +114,7 @@ export default function Vault() {
   const { modules: subscribedModules } = useSubscription();
   
   // Use shared recap countdown hook
-  const { daysUntilRecap, recapProgress, canGenerateRecap: canGenRecap } = useRecapCountdown();
+  const { daysUntilRecap, recapProgress, canGenerateRecap: canGenRecap, hasMissedRecap, missedCycleEnd } = useRecapCountdown();
   
   // Individual refs declared at top level (React hooks rules)
   const performanceTestsRef = useRef<HTMLDivElement>(null);
@@ -300,8 +300,8 @@ export default function Vault() {
     return result;
   };
 
-  const handleGenerateRecap = async () => {
-    const result = await generateRecap();
+  const handleGenerateRecap = async (periodEnd?: Date) => {
+    const result = await generateRecap(periodEnd);
     if (result.success) {
       toast.success(t('vault.recap.generated'));
     } else {
@@ -393,6 +393,8 @@ export default function Vault() {
                 recapProgress={recapProgress}
                 onGenerateRecap={handleGenerateRecap}
                 isLoading={loading}
+                hasMissedRecap={hasMissedRecap}
+                missedCycleEnd={missedCycleEnd}
               />
 
               {/* Weekly Trend Cards */}

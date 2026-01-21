@@ -5341,7 +5341,8 @@
     "recapCountdown": {
       "title": "6-WEEK RECAP",
       "days": "DAYS",
-      "daysRemaining": "{{days}} days remaining"
+      "daysRemaining": "{{days}} days remaining",
+      "generateRecap": "Generate Recap"
     },
     "taskSchedule": {
       "title": "Task Schedule",
