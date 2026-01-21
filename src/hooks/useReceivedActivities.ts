@@ -33,26 +33,37 @@ export function useReceivedActivities() {
           .select('id, full_name, avatar_url')
           .in('id', senderIds);
 
-        // Fetch sender roles (scout or coach)
-        const { data: roles } = await supabase
+        // Fetch ALL sender roles (don't filter by role type - this was causing coach roles to be missed)
+        const { data: roles, error: rolesError } = await supabase
           .from('user_roles')
-          .select('user_id, role')
+          .select('user_id, role, status')
           .in('user_id', senderIds)
-          .in('role', ['scout', 'coach']);
+          .eq('status', 'active');
+
+        if (rolesError) {
+          console.error('[useReceivedActivities] Error fetching roles:', rolesError);
+        }
 
         const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
         const roleMap = new Map<string, 'scout' | 'coach'>();
         
         // Build role map - coach takes priority over scout
+        // Iterate through all roles and prioritize coach > scout
         roles?.forEach(r => {
-          if (r.role === 'coach') {
-            // Coach always takes priority
+          const roleValue = r.role as string;
+          if (roleValue === 'coach') {
+            // Coach always takes priority - overwrite any existing
             roleMap.set(r.user_id, 'coach');
-          } else if (r.role === 'scout' && !roleMap.has(r.user_id)) {
-            // Only set scout if no role exists yet (coach wasn't set first)
-            roleMap.set(r.user_id, 'scout');
+          } else if (roleValue === 'scout') {
+            // Only set scout if user doesn't already have coach role
+            if (!roleMap.has(r.user_id)) {
+              roleMap.set(r.user_id, 'scout');
+            }
           }
         });
+        
+        // Debug logging to verify role assignment
+        console.log('[useReceivedActivities] Roles fetched:', roles?.length, 'Role map:', Object.fromEntries(roleMap));
 
         const enrichedActivities: SentActivityTemplate[] = data.map(activity => {
           const profile = profileMap.get(activity.sender_id);
@@ -128,13 +139,23 @@ export function useReceivedActivities() {
       
       // Ensure the template shows on game plan immediately
       const todayDayOfWeek = new Date().getDay();
+      
+      // Use template's display_days if set, otherwise default to today
+      const effectiveDisplayDays = templateData.display_days?.length 
+        ? templateData.display_days 
+        : [todayDayOfWeek];
+      
+      // Sync recurring_days to display_days for E2E visibility on Game Plan & Calendar
+      const effectiveRecurringDays = templateData.recurring_days?.length 
+        ? templateData.recurring_days 
+        : effectiveDisplayDays;
+      
       const enhancedData = {
         ...templateData,
         display_on_game_plan: true,
-        // Default to showing on today's day of week so it appears immediately
-        display_days: templateData.display_days?.length ? templateData.display_days : [todayDayOfWeek],
-        recurring_days: templateData.recurring_days?.length ? templateData.recurring_days : [todayDayOfWeek],
-        // Ensure recurring is active so it shows on game plan
+        display_days: effectiveDisplayDays,
+        recurring_days: effectiveRecurringDays,
+        // Critical: Must be true for activity to show on Game Plan
         recurring_active: true,
       };
       
