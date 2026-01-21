@@ -101,6 +101,8 @@ export default function Vault() {
     saveFavoriteMeal,
     deleteFavoriteMeal,
     useFavoriteMeal,
+    saveRecapToLibrary,
+    deleteRecap,
   } = useVault();
 
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
