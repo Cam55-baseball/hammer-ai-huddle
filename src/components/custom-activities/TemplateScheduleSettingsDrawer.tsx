@@ -18,6 +18,9 @@ export interface ScheduleSettings {
   reminder_enabled: boolean;
   reminder_time: string | null;
   reminder_minutes?: number;
+  // Recurrence fields - key for Game Plan & Calendar visibility
+  recurring_days: number[];
+  recurring_active: boolean;
 }
 
 interface TemplateScheduleSettingsDrawerProps {
@@ -71,6 +74,10 @@ export function TemplateScheduleSettingsDrawer({
     
     setSaving(true);
     try {
+      // Determine recurrence based on display settings
+      // If showing on game plan with specific days, sync recurring_days to display_days
+      const shouldRecur = displayOnGamePlan && displayDays.length > 0;
+      
       const success = await onSave(template.id, {
         display_on_game_plan: displayOnGamePlan,
         display_days: displayDays,
@@ -78,6 +85,9 @@ export function TemplateScheduleSettingsDrawer({
         reminder_enabled: reminderEnabled,
         reminder_time: template.reminder_time || null,
         reminder_minutes: reminderMinutes,
+        // Sync recurrence to display settings for E2E visibility
+        recurring_days: shouldRecur ? displayDays : [],
+        recurring_active: shouldRecur,
       });
       
       if (success) {

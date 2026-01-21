@@ -77,6 +77,9 @@ export function TemplatesGrid({
       display_time: settings.display_time || undefined,
       reminder_enabled: settings.reminder_enabled,
       reminder_time: settings.reminder_time || undefined,
+      // Sync recurrence fields for E2E Game Plan & Calendar visibility
+      recurring_days: settings.recurring_days,
+      recurring_active: settings.recurring_active,
     });
   };
 

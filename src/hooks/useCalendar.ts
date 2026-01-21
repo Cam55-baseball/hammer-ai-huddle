@@ -268,7 +268,13 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         customTemplatesRes.data.forEach(template => {
           if (!template.display_on_game_plan) return;
           
-          const recurringDays = (template.recurring_days as number[] | null) || template.display_days || [];
+          // Fix: Prefer recurring_days ONLY if it has content, otherwise fallback to display_days
+          // An empty array [] is falsy for .length but truthy for || check, so check .length explicitly
+          const templateRecurringDays = template.recurring_days as number[] | null;
+          const templateDisplayDays = template.display_days as number[] | null;
+          const recurringDays = (templateRecurringDays && templateRecurringDays.length > 0) 
+            ? templateRecurringDays 
+            : (templateDisplayDays && templateDisplayDays.length > 0 ? templateDisplayDays : []);
           if (recurringDays.length === 0) return;
           
           daysInRange.forEach(day => {
