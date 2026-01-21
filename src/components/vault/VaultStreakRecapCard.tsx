@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { 
   Flame, Trophy, Calendar, Award, Sparkles, ChevronDown,
   FileText, TrendingUp, Dumbbell, Brain, Target, Activity,
-  Zap, Lightbulb, CheckCircle2, Heart
+  Zap, Lightbulb, CheckCircle2, Heart, AlertCircle
 } from 'lucide-react';
 import { VaultStreak } from '@/hooks/useVault';
 import { cn } from '@/lib/utils';
@@ -56,19 +56,23 @@ interface VaultStreakRecapCardProps {
   canGenerateRecap: boolean;
   daysUntilNextRecap: number;
   recapProgress: number;
-  onGenerateRecap: () => Promise<{ success: boolean }>;
+  onGenerateRecap: (periodEnd?: Date) => Promise<{ success: boolean }>;
   isLoading?: boolean;
+  hasMissedRecap?: boolean;
+  missedCycleEnd?: Date | null;
 }
 
-export function VaultStreakRecapCard({ 
+export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapCardProps>(({ 
   streak, 
   recaps, 
   canGenerateRecap, 
   daysUntilNextRecap,
   recapProgress,
   onGenerateRecap,
-  isLoading 
-}: VaultStreakRecapCardProps) {
+  isLoading,
+  hasMissedRecap = false,
+  missedCycleEnd = null,
+}, ref) => {
   const { t } = useTranslation();
   const [recapsOpen, setRecapsOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -88,9 +92,17 @@ export function VaultStreakRecapCard({
 
   const getStreakGlow = () => currentStreak >= 25;
 
+  // Determine if we should show the generate button with emphasis
+  const showRecapButton = canGenerateRecap || hasMissedRecap;
+
   const handleGenerate = async () => {
     setGenerating(true);
-    await onGenerateRecap();
+    // If this is a missed recap, pass the missed cycle end date
+    if (hasMissedRecap && missedCycleEnd) {
+      await onGenerateRecap(missedCycleEnd);
+    } else {
+      await onGenerateRecap();
+    }
     setGenerating(false);
   };
 
@@ -118,7 +130,13 @@ export function VaultStreakRecapCard({
 
   return (
     <>
-      <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-background via-primary/5 to-orange-500/5">
+      <Card 
+        ref={ref}
+        className={cn(
+          "overflow-hidden border-primary/20 bg-gradient-to-br from-background via-primary/5 to-orange-500/5 transition-all duration-300",
+          showRecapButton && "ring-2 ring-violet-500 ring-offset-2 ring-offset-background"
+        )}
+      >
         <CardContent className="p-4 space-y-4">
           {/* Header Row: Streak + Stats */}
           <div className="flex items-center gap-4">
@@ -157,28 +175,44 @@ export function VaultStreakRecapCard({
           </div>
 
           {/* 6-Week Progress */}
-          <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20 space-y-2">
+          <div className={cn(
+            "p-3 rounded-lg space-y-2 transition-all duration-300",
+            showRecapButton 
+              ? "bg-violet-500/20 border-2 border-violet-500" 
+              : "bg-violet-500/10 border border-violet-500/20"
+          )}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-violet-500" />
                 <span className="text-sm font-medium">{t('vault.recap.sixWeekCycle')}</span>
               </div>
-              {canGenerateRecap ? (
-                <Badge className="bg-violet-500 text-white text-xs">{t('vault.recap.ready')}</Badge>
-              ) : (
-                <Badge variant="outline" className="text-xs">
-                  {daysUntilNextRecap} {t('vault.recap.daysLeft')}
-                </Badge>
-              )}
+              <div className="flex items-center gap-2">
+                {hasMissedRecap && (
+                  <Badge variant="destructive" className="text-xs gap-1 animate-pulse">
+                    <AlertCircle className="h-3 w-3" />
+                    {t('vault.recap.missed')}
+                  </Badge>
+                )}
+                {canGenerateRecap && !hasMissedRecap ? (
+                  <Badge className="bg-violet-500 text-white text-xs">{t('vault.recap.ready')}</Badge>
+                ) : !hasMissedRecap && (
+                  <Badge variant="outline" className="text-xs">
+                    {daysUntilNextRecap} {t('vault.recap.daysLeft')}
+                  </Badge>
+                )}
+              </div>
             </div>
             <Progress value={recapProgress} className="h-2" />
             
-            {canGenerateRecap ? (
+            {showRecapButton ? (
               <Button 
                 onClick={handleGenerate} 
                 disabled={generating} 
                 size="sm" 
-                className="w-full gap-2 mt-2"
+                className={cn(
+                  "w-full gap-2 mt-2 bg-violet-500 hover:bg-violet-600 text-white",
+                  !generating && "animate-pulse"
+                )}
               >
                 {generating ? (
                   <>
@@ -188,7 +222,7 @@ export function VaultStreakRecapCard({
                 ) : (
                   <>
                     <Sparkles className="h-3 w-3" />
-                    {t('vault.recap.generate')}
+                    {hasMissedRecap ? t('vault.recap.generateMissed') : t('vault.recap.generate')}
                   </>
                 )}
               </Button>
@@ -375,7 +409,9 @@ export function VaultStreakRecapCard({
       </Dialog>
     </>
   );
-}
+});
+
+VaultStreakRecapCard.displayName = 'VaultStreakRecapCard';
 
 function getBadgeIcon(badge: string): string {
   switch (badge) {

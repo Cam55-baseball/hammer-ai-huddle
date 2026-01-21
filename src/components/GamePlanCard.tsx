@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles } from 'lucide-react';
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
@@ -56,7 +56,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { tasks, customActivities, completedCount, totalCount, loading, refetch } = useGamePlan(selectedSport);
-  const { daysUntilRecap, recapProgress } = useRecapCountdown();
+  const { daysUntilRecap, recapProgress, canGenerateRecap, hasMissedRecap } = useRecapCountdown();
   const { pendingActivities, pendingCount, acceptActivity, rejectActivity, refetch: refetchPending } = useReceivedActivities();
   const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
@@ -1221,8 +1221,16 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         </div>
 
         {/* 6-Week Recap Countdown - Compact Box */}
-        <div className="flex items-center gap-3 bg-background/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-primary/30">
-          <Clock className="h-4 w-4 text-primary flex-shrink-0" />
+        <div className={cn(
+          "flex items-center gap-3 bg-background/10 backdrop-blur-sm px-4 py-2 rounded-xl border transition-all duration-300",
+          (canGenerateRecap || hasMissedRecap) 
+            ? "border-violet-500 ring-2 ring-violet-500/30" 
+            : "border-primary/30"
+        )}>
+          <Clock className={cn(
+            "h-4 w-4 flex-shrink-0",
+            (canGenerateRecap || hasMissedRecap) ? "text-violet-500" : "text-primary"
+          )} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-white/70 uppercase tracking-wide">
@@ -1231,14 +1239,26 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <Progress value={recapProgress} className="h-1.5 flex-1 bg-muted/20 max-w-24" />
             </div>
           </div>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 flex-shrink-0">
-            <span className="text-sm font-black text-primary">
-              {daysUntilRecap}
-            </span>
-            <span className="text-[10px] font-bold text-white/70 uppercase">
-              {t('gamePlan.recapCountdown.days')}
-            </span>
-          </div>
+          
+          {(canGenerateRecap || hasMissedRecap) ? (
+            <Button
+              size="sm"
+              onClick={() => navigate('/vault?openSection=recap-generation')}
+              className="gap-1.5 bg-violet-500 hover:bg-violet-600 text-white animate-pulse h-7 px-3"
+            >
+              <Sparkles className="h-3 w-3" />
+              <span className="text-xs font-bold">{t('gamePlan.recapCountdown.generateRecap')}</span>
+            </Button>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 flex-shrink-0">
+              <span className="text-sm font-black text-primary">
+                {daysUntilRecap}
+              </span>
+              <span className="text-[10px] font-bold text-white/70 uppercase">
+                {t('gamePlan.recapCountdown.days')}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Task Sections */}

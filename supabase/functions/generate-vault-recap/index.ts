@@ -36,12 +36,26 @@ serve(async (req) => {
 
     console.log(`Generating vault recap for user: ${user.id}`);
 
-    // Calculate 6-week period
-    const endDate = new Date();
-    const startDate = new Date();
+    // Parse optional periodEnd from request body (for missed recaps)
+    let periodEndDate: Date | null = null;
+    try {
+      const body = await req.json();
+      if (body?.periodEnd) {
+        periodEndDate = new Date(body.periodEnd);
+        console.log(`Using custom period end: ${periodEndDate.toISOString()}`);
+      }
+    } catch {
+      // No body or invalid JSON, use current date
+    }
+
+    // Calculate 6-week period (use custom end date if provided for missed recaps)
+    const endDate = periodEndDate || new Date();
+    const startDate = new Date(endDate);
     startDate.setDate(startDate.getDate() - 42);
     const startDateStr = startDate.toISOString().split("T")[0];
     const endDateStr = endDate.toISOString().split("T")[0];
+    
+    console.log(`Recap period: ${startDateStr} to ${endDateStr}`);
 
     // Fetch all vault data for the period
     const [
