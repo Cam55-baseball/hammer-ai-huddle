@@ -5,6 +5,7 @@ import { useGamePlanLock } from '@/hooks/useGamePlanLock';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfMonth, endOfMonth, addDays, eachDayOfInterval, getDay } from 'date-fns';
 import { LucideIcon, Target, Utensils, Dumbbell, Calendar, Brain, Eye, Moon, Sun, Activity, Apple, Lightbulb, Sparkles, BedDouble, Timer, Flame } from 'lucide-react';
+import { getOrderKey, CalendarDayOrder } from '@/hooks/useCalendarDayOrders';
 
 // Helper to get the Game Plan task ID for a calendar event
 const getTaskIdForEvent = (event: { type: string; source: string }): string | null => {
@@ -55,6 +56,7 @@ export interface CalendarEvent {
   editable: boolean;
   deletable: boolean;
   sport?: string;
+  orderKey?: string; // Canonical key for ordering (e.g., gp:nutrition, ca:uuid, meal:uuid)
 }
 
 export interface CreateCalendarEvent {
@@ -212,6 +214,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         taskSchedulesRes,
         subModuleProgressRes,
         mealPlansRes,
+        dayOrdersRes,
       ] = await Promise.all([
         // Athlete events (game days, rest days, etc.)
         supabase
@@ -264,7 +267,23 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           .eq('user_id', user.id)
           .gte('planned_date', startStr)
           .lte('planned_date', endStr),
+          
+        // Date-specific day orders (for calendar locking)
+        (supabase
+          .from('calendar_day_orders' as any)
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('event_date', startStr)
+          .lte('event_date', endStr) as any),
       ]);
+
+      // Build date-specific order map
+      const dateOrdersMap: Record<string, CalendarDayOrder> = {};
+      if (dayOrdersRes.data) {
+        (dayOrdersRes.data as CalendarDayOrder[]).forEach((order) => {
+          dateOrdersMap[order.event_date] = order;
+        });
+      }
 
       const aggregatedEvents: Record<string, CalendarEvent[]> = {};
       
@@ -280,7 +299,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           const dateKey = event.event_date;
           if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
           
-          aggregatedEvents[dateKey].push({
+          const calEvent: CalendarEvent = {
             id: event.id,
             date: dateKey,
             title: event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1),
@@ -293,7 +312,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             editable: true,
             deletable: true,
             sport: event.sport || undefined,
-          });
+          };
+          calEvent.orderKey = getOrderKey(calEvent);
+          aggregatedEvents[dateKey].push(calEvent);
         });
       }
 
@@ -323,7 +344,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
               );
               
               if (!hasLog) {
-                aggregatedEvents[dateKey].push({
+                const calEvent: CalendarEvent = {
                   id: `template-${template.id}-${dateKey}`,
                   date: dateKey,
                   title: template.display_nickname || template.title,
@@ -337,7 +358,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
                   editable: false,
                   deletable: false,
                   sport: template.sport,
-                });
+                };
+                calEvent.orderKey = getOrderKey(calEvent);
+                aggregatedEvents[dateKey].push(calEvent);
               }
             }
           });
@@ -353,7 +376,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           const template = log.custom_activity_templates;
           // FIX: Use template-{uuid} format to match Game Plan task IDs
           const sourceId = template?.id ? `template-${template.id}` : (template?.activity_type || 'custom');
-          aggregatedEvents[dateKey].push({
+          const calEvent: CalendarEvent = {
             id: log.id,
             date: dateKey,
             title: template?.display_nickname || template?.title || 'Custom Activity',
@@ -367,7 +390,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             editable: true,
             deletable: true,
             sport: template?.sport,
-          });
+          };
+          calEvent.orderKey = getOrderKey(calEvent);
+          aggregatedEvents[dateKey].push(calEvent);
         });
       }
 
@@ -377,7 +402,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           const dateKey = event.event_date;
           if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
           
-          aggregatedEvents[dateKey].push({
+          const calEvent: CalendarEvent = {
             id: event.id,
             date: dateKey,
             title: event.title,
@@ -392,7 +417,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             editable: true,
             deletable: true,
             sport: event.sport || undefined,
-          });
+          };
+          calEvent.orderKey = getOrderKey(calEvent);
+          aggregatedEvents[dateKey].push(calEvent);
         });
       }
 
@@ -418,7 +445,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
               const dateKey = format(day, 'yyyy-MM-dd');
               if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
               
-              aggregatedEvents[dateKey].push({
+              const calEvent: CalendarEvent = {
                 id: `task-${schedule.task_id}-${dateKey}`,
                 date: dateKey,
                 title: taskDef.title,
@@ -429,7 +456,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
                 icon: taskDef.icon,
                 editable: false,
                 deletable: false,
-              });
+              };
+              calEvent.orderKey = getOrderKey(calEvent);
+              aggregatedEvents[dateKey].push(calEvent);
             }
           });
         });
@@ -458,7 +487,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           );
           if (alreadyExists) return;
           
-          aggregatedEvents[dateKey].push({
+          const calEvent: CalendarEvent = {
             id: `default-${taskId}-${dateKey}`,
             date: dateKey,
             title: taskDef.title,
@@ -468,7 +497,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             icon: taskDef.icon,
             editable: false,
             deletable: false,
-          });
+          };
+          calEvent.orderKey = getOrderKey(calEvent);
+          aggregatedEvents[dateKey].push(calEvent);
         });
         
         // Add module-gated tasks for users with subscription access
@@ -484,7 +515,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             );
             if (alreadyExists) return;
             
-            aggregatedEvents[dateKey].push({
+            const calEvent: CalendarEvent = {
               id: `gated-${taskId}-${dateKey}`,
               date: dateKey,
               title: taskDef.title,
@@ -494,7 +525,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
               icon: taskDef.icon,
               editable: false,
               deletable: false,
-            });
+            };
+            calEvent.orderKey = getOrderKey(calEvent);
+            aggregatedEvents[dateKey].push(calEvent);
           });
         }
         
@@ -510,7 +543,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             );
             if (alreadyExists) return;
             
-            aggregatedEvents[dateKey].push({
+            const calEvent: CalendarEvent = {
               id: `gated-${taskId}-${dateKey}`,
               date: dateKey,
               title: taskDef.title,
@@ -520,7 +553,9 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
               icon: taskDef.icon,
               editable: false,
               deletable: false,
-            });
+            };
+            calEvent.orderKey = getOrderKey(calEvent);
+            aggregatedEvents[dateKey].push(calEvent);
           });
         }
       });
@@ -581,7 +616,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
                 ? (isStrengthDay ? 'Strength Training' : 'Skill Development')
                 : 'Scheduled workout';
               
-              aggregatedEvents[dateKey].push({
+              const calEvent: CalendarEvent = {
                 id: `program-${progress.sub_module}-${dateKey}`,
                 date: dateKey,
                 title,
@@ -594,13 +629,15 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
                 editable: false,
                 deletable: false,
                 sport: progress.sport,
-              });
+              };
+              calEvent.orderKey = getOrderKey(calEvent);
+              aggregatedEvents[dateKey].push(calEvent);
             }
           });
         });
       }
 
-      // Process meal plans
+      // Process meal plans - use meal.id as the source for unique identification
       if (mealPlansRes.data) {
         mealPlansRes.data.forEach(meal => {
           const dateKey = meal.planned_date;
@@ -610,7 +647,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             ? meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1).replace('_', ' ')
             : 'Meal';
           
-          aggregatedEvents[dateKey].push({
+          const calEvent: CalendarEvent = {
             id: meal.id,
             date: dateKey,
             title: meal.meal_name || mealTypeName,
@@ -619,22 +656,58 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
               : undefined,
             startTime: meal.time_slot || getMealTime(meal.meal_type || 'lunch'),
             type: 'meal',
-            source: meal.meal_type || 'meal',
+            source: meal.id, // Use meal ID for unique ordering
             color: '#22c55e', // green
             icon: Utensils,
             completed: meal.is_completed || false,
             editable: false, // Edit in Nutrition Hub
             deletable: false,
-          });
+          };
+          calEvent.orderKey = getOrderKey(calEvent);
+          aggregatedEvents[dateKey].push(calEvent);
         });
       }
 
-      // Sort events by locked Game Plan order (if day is locked) or by time
+      // Sort events: date-specific order takes priority, then weekly lock, then time
       Object.keys(aggregatedEvents).forEach(dateKey => {
         const date = new Date(dateKey);
         const dayOfWeek = getDay(date);
-        const lockedSchedule = getDaySchedule(dayOfWeek);
         
+        // Check for date-specific lock FIRST (highest priority)
+        const dateLock = dateOrdersMap[dateKey];
+        if (dateLock && dateLock.locked && dateLock.order_keys.length > 0) {
+          // Build order map from orderKeys (these use the orderKey format: gp:nutrition, ca:uuid, etc.)
+          const orderMap = new Map<string, number>();
+          dateLock.order_keys.forEach((key, idx) => {
+            orderMap.set(key, idx);
+          });
+          
+          // Sort events by orderKey
+          aggregatedEvents[dateKey].sort((a, b) => {
+            const aKey = a.orderKey;
+            const bKey = b.orderKey;
+            const aOrder = aKey ? orderMap.get(aKey) : undefined;
+            const bOrder = bKey ? orderMap.get(bKey) : undefined;
+            
+            // Both in locked order → use order
+            if (aOrder !== undefined && bOrder !== undefined) {
+              return aOrder - bOrder;
+            }
+            // Only one in order → ordered item comes first
+            if (aOrder !== undefined) return -1;
+            if (bOrder !== undefined) return 1;
+            
+            // Neither in order → fall back to time sorting
+            if (!a.startTime && !b.startTime) return 0;
+            if (!a.startTime) return 1;
+            if (!b.startTime) return -1;
+            return a.startTime.localeCompare(b.startTime);
+          });
+          return; // Done with this date
+        }
+        
+        // Fall back to weekly Game Plan lock (lower priority)
+        const lockedSchedule = getDaySchedule(dayOfWeek);
         if (lockedSchedule && lockedSchedule.length > 0) {
           // Build an order map: taskId → order index
           const orderMap = new Map<string, number>();
