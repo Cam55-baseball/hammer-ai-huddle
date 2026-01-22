@@ -13,9 +13,17 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone, Flame, Target, Sword, Smile, AlertTriangle, Clock, BedDouble } from 'lucide-react';
+import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone, Flame, Target, Sword, Smile, AlertTriangle, Clock, BedDouble, Scale, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { calculateSleepDuration, getSleepAnalysis, formatSleepDuration } from '@/utils/sleepUtils';
+
+// Import new quiz sub-components
+import { TenPointScale } from './quiz/TenPointScale';
+import { QuickReactionTest } from './quiz/QuickReactionTest';
+import { BalanceTest } from './quiz/BalanceTest';
+import { BodyAreaSelector } from './quiz/BodyAreaSelector';
+import { TrainingIntentSelector } from './quiz/TrainingIntentSelector';
+import { MentalEnergyRating } from './quiz/MentalEnergyRating';
 
 interface VaultFocusQuizDialogProps {
   open: boolean;
@@ -40,6 +48,20 @@ interface VaultFocusQuizDialogProps {
     wake_time_actual?: string;
     bedtime_goal?: string;
     wake_time_goal?: string;
+    // New morning check-in fields
+    weight_lbs?: number;
+    perceived_recovery?: number;
+    // New pre-workout CNS fields
+    reaction_time_ms?: number;
+    reaction_time_score?: number;
+    balance_duration_seconds?: number;
+    // New pre-workout pain fields
+    pain_location?: string[];
+    pain_scale?: number;
+    pain_increases_with_movement?: boolean;
+    // New pre-workout intent fields
+    training_intent?: string[];
+    mental_energy?: number;
   }) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -246,6 +268,24 @@ export function VaultFocusQuizDialog({
   const [moodLevel, setMoodLevel] = useState(3);
   const [stressLevel, setStressLevel] = useState(3);
 
+  // NEW: Morning check-in additions
+  const [weightLbs, setWeightLbs] = useState<string>('');
+  const [perceivedRecovery, setPerceivedRecovery] = useState(5);
+
+  // NEW: Pre-workout CNS section
+  const [reactionTimeMs, setReactionTimeMs] = useState<number | null>(null);
+  const [reactionTimeScore, setReactionTimeScore] = useState<number | null>(null);
+  const [balanceDurationSeconds, setBalanceDurationSeconds] = useState<number | null>(null);
+
+  // NEW: Pre-workout Pain section
+  const [painLocations, setPainLocations] = useState<string[]>([]);
+  const [painScale, setPainScale] = useState(0);
+  const [painIncreasesWithMovement, setPainIncreasesWithMovement] = useState<boolean | null>(null);
+
+  // NEW: Pre-workout Intent & Focus section
+  const [trainingIntents, setTrainingIntents] = useState<string[]>([]);
+  const [mentalEnergy, setMentalEnergy] = useState(3);
+
   // Calculate sleep duration and analysis for morning quiz
   const calculatedSleep = useMemo(() => {
     if (bedtimeActual && wakeTimeActual) {
@@ -325,6 +365,23 @@ export function VaultFocusQuizDialog({
       data.discipline_level = disciplineLevel;
       data.mood_level = moodLevel;
       data.stress_level = stressLevel;
+      // NEW: Morning additions
+      data.weight_lbs = weightLbs ? parseFloat(weightLbs) : undefined;
+      data.perceived_recovery = perceivedRecovery;
+    }
+
+    if (quizType === 'pre_lift') {
+      // NEW: CNS section
+      data.reaction_time_ms = reactionTimeMs || undefined;
+      data.reaction_time_score = reactionTimeScore || undefined;
+      data.balance_duration_seconds = balanceDurationSeconds || undefined;
+      // NEW: Pain section
+      data.pain_location = painLocations.length > 0 ? painLocations : undefined;
+      data.pain_scale = painLocations.length > 0 ? painScale : undefined;
+      data.pain_increases_with_movement = painLocations.length > 0 ? painIncreasesWithMovement : undefined;
+      // NEW: Intent & Focus section
+      data.training_intent = trainingIntents.length > 0 ? trainingIntents : undefined;
+      data.mental_energy = mentalEnergy;
     }
 
     if (quizType === 'night') {
@@ -356,6 +413,17 @@ export function VaultFocusQuizDialog({
       setDisciplineLevel(3);
       setMoodLevel(3);
       setStressLevel(3);
+      // NEW: Reset new fields
+      setWeightLbs('');
+      setPerceivedRecovery(5);
+      setReactionTimeMs(null);
+      setReactionTimeScore(null);
+      setBalanceDurationSeconds(null);
+      setPainLocations([]);
+      setPainScale(0);
+      setPainIncreasesWithMovement(null);
+      setTrainingIntents([]);
+      setMentalEnergy(3);
       onOpenChange(false);
     }
   };
@@ -456,6 +524,51 @@ export function VaultFocusQuizDialog({
                 label={t('vault.quiz.sleepQuality')}
                 icon={<Moon className="h-5 w-5 text-indigo-500" />}
                 getLevelLabel={getLevelLabel}
+              />
+            </div>
+          )}
+
+          {/* NEW: Morning Quiz - Weight & Recovery Section */}
+          {quizType === 'morning' && (
+            <div className="space-y-4 p-4 bg-gradient-to-br from-teal-500/10 to-cyan-500/10 rounded-xl border border-teal-500/20">
+              <h4 className="text-sm font-bold flex items-center gap-2">
+                <Scale className="h-4 w-4 text-teal-500" />
+                {t('vault.quiz.morning.bodyStatus', 'Body Status')}
+              </h4>
+              
+              {/* Weight Input */}
+              <div className="space-y-2">
+                <Label className="text-sm flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-teal-400" />
+                  {t('vault.quiz.morning.weightLabel', 'Weight Check-in (lbs)')}
+                </Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={weightLbs}
+                  onChange={(e) => setWeightLbs(e.target.value)}
+                  placeholder={t('vault.quiz.morning.weightPlaceholder', 'e.g. 175.5')}
+                  className="max-w-[160px]"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('vault.quiz.morning.weightHint', 'Track daily for trends')}
+                </p>
+              </div>
+
+              {/* Perceived Recovery 1-10 */}
+              <TenPointScale
+                value={perceivedRecovery}
+                onChange={setPerceivedRecovery}
+                label={t('vault.quiz.morning.recoveryLabel', 'Perceived Recovery')}
+                icon={<Heart className="h-5 w-5 text-teal-500" />}
+                getLevelLabel={(val) => {
+                  if (val <= 2) return t('vault.quiz.morning.recoveryLevel1', 'Very Poor');
+                  if (val <= 4) return t('vault.quiz.morning.recoveryLevel2', 'Below Average');
+                  if (val <= 6) return t('vault.quiz.morning.recoveryLevel3', 'Moderate');
+                  if (val <= 8) return t('vault.quiz.morning.recoveryLevel4', 'Good');
+                  return t('vault.quiz.morning.recoveryLevel5', 'Excellent');
+                }}
+                inverted={false}
               />
             </div>
           )}
@@ -649,6 +762,153 @@ export function VaultFocusQuizDialog({
                 {t('vault.quiz.preLiftTip')}
               </AlertDescription>
             </Alert>
+          )}
+
+          {/* NEW: Pre-Lift Section 2 - CNS Readiness */}
+          {quizType === 'pre_lift' && (
+            <div className="space-y-4 p-4 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl border border-cyan-500/20">
+              <div className="flex items-center gap-2">
+                <div className="px-2 py-1 rounded-md bg-cyan-500/20 text-cyan-500 text-xs font-bold">
+                  {t('vault.quiz.cns.section', 'Section 2')}
+                </div>
+                <h4 className="text-sm font-bold">{t('vault.quiz.cns.title', 'CNS Readiness')}</h4>
+              </div>
+
+              {/* Reaction Time Test */}
+              <QuickReactionTest
+                onComplete={(avgTime, score) => {
+                  setReactionTimeMs(avgTime);
+                  setReactionTimeScore(score);
+                }}
+                disabled={false}
+              />
+
+              {/* Balance Test */}
+              <BalanceTest
+                onComplete={(duration) => {
+                  setBalanceDurationSeconds(duration);
+                }}
+                disabled={false}
+              />
+            </div>
+          )}
+
+          {/* NEW: Pre-Lift Section 3 - Pain or Limitation Check */}
+          {quizType === 'pre_lift' && (
+            <div className="space-y-4 p-4 bg-gradient-to-br from-red-500/5 to-orange-500/5 rounded-xl border border-red-500/20">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="px-2 py-1 rounded-md bg-red-500/20 text-red-500 text-xs font-bold">
+                    {t('vault.quiz.pain.section', 'Section 3')}
+                  </div>
+                  <h4 className="text-sm font-bold">{t('vault.quiz.pain.title', 'Pain or Limitation Check')}</h4>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  {t('vault.quiz.pain.subtitle', 'High Performers avoid accumulating micro-injury')}
+                </p>
+              </div>
+
+              {/* Body Area Selector */}
+              <BodyAreaSelector
+                selectedAreas={painLocations}
+                onChange={setPainLocations}
+              />
+
+              {/* Pain Scale - only shown if areas selected */}
+              {painLocations.length > 0 && (
+                <TenPointScale
+                  value={painScale}
+                  onChange={setPainScale}
+                  label={t('vault.quiz.pain.scaleLabel', 'Pain Scale')}
+                  icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
+                  getLevelLabel={(val) => {
+                    if (val <= 2) return t('vault.quiz.pain.level1', 'Minimal');
+                    if (val <= 4) return t('vault.quiz.pain.level2', 'Mild');
+                    if (val <= 6) return t('vault.quiz.pain.level3', 'Moderate');
+                    if (val <= 8) return t('vault.quiz.pain.level4', 'Significant');
+                    return t('vault.quiz.pain.level5', 'Severe');
+                  }}
+                  inverted={true}
+                />
+              )}
+
+              {/* Pain increases with movement */}
+              {painLocations.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    {t('vault.quiz.pain.movementQuestion', 'Does pain increase with movement?')}
+                  </Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={painIncreasesWithMovement === true ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        if (navigator.vibrate) navigator.vibrate(10);
+                        setPainIncreasesWithMovement(true);
+                      }}
+                      className={cn(
+                        painIncreasesWithMovement === true && "bg-amber-500 hover:bg-amber-600"
+                      )}
+                    >
+                      {t('common.yes', 'Yes')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={painIncreasesWithMovement === false ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        if (navigator.vibrate) navigator.vibrate(10);
+                        setPainIncreasesWithMovement(false);
+                      }}
+                      className={cn(
+                        painIncreasesWithMovement === false && "bg-green-500 hover:bg-green-600"
+                      )}
+                    >
+                      {t('common.no', 'No')}
+                    </Button>
+                  </div>
+                  {painIncreasesWithMovement === true && (
+                    <p className="text-xs text-amber-500 font-medium">
+                      ⚠️ {t('vault.quiz.pain.movementWarning', 'Monitor closely during training')}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground italic pt-1">
+                {t('vault.quiz.pain.footer', 'Spot motion-limiting issues early!')}
+              </p>
+            </div>
+          )}
+
+          {/* NEW: Pre-Lift Section 4 - Intent & Focus */}
+          {quizType === 'pre_lift' && (
+            <div className="space-y-4 p-4 bg-gradient-to-br from-purple-500/5 to-indigo-500/5 rounded-xl border border-purple-500/20">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="px-2 py-1 rounded-md bg-purple-500/20 text-purple-500 text-xs font-bold">
+                    {t('vault.quiz.intent.section', 'Section 4')}
+                  </div>
+                  <h4 className="text-sm font-bold">{t('vault.quiz.intent.title', 'Intent & Focus')}</h4>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  {t('vault.quiz.intent.subtitle', 'Awareness of readiness sets context')}
+                </p>
+              </div>
+
+              {/* Training Intent Selector */}
+              <TrainingIntentSelector
+                selectedIntents={trainingIntents}
+                onChange={setTrainingIntents}
+              />
+
+              {/* Mental Energy - Separate rating */}
+              <MentalEnergyRating
+                value={mentalEnergy}
+                onChange={setMentalEnergy}
+              />
+            </div>
           )}
 
           {/* Night Quiz Tips */}
