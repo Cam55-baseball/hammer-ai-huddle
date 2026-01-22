@@ -56,6 +56,20 @@ export interface VaultFocusQuiz {
   discipline_level?: number;
   mood_level?: number;
   stress_level?: number;
+  // NEW: Morning check-in additions
+  weight_lbs?: number;
+  perceived_recovery?: number;
+  // NEW: Pre-workout CNS fields
+  reaction_time_ms?: number;
+  reaction_time_score?: number;
+  balance_duration_seconds?: number;
+  // NEW: Pre-workout pain fields
+  pain_location?: string[];
+  pain_scale?: number;
+  pain_increases_with_movement?: boolean;
+  // NEW: Pre-workout intent fields
+  training_intent?: string[];
+  mental_energy?: number;
   created_at: string;
 }
 
@@ -449,6 +463,20 @@ export function useVault() {
       wake_time_actual?: string;
       bedtime_goal?: string;
       wake_time_goal?: string;
+      // NEW: Morning check-in additions
+      weight_lbs?: number;
+      perceived_recovery?: number;
+      // NEW: Pre-workout CNS fields
+      reaction_time_ms?: number;
+      reaction_time_score?: number;
+      balance_duration_seconds?: number;
+      // NEW: Pre-workout pain fields
+      pain_location?: string[];
+      pain_scale?: number;
+      pain_increases_with_movement?: boolean;
+      // NEW: Pre-workout intent fields
+      training_intent?: string[];
+      mental_energy?: number;
     }
   ) => {
     if (!user) return { success: false, error: 'Not authenticated' };
@@ -496,6 +524,20 @@ export function useVault() {
           // Sleep goal fields (Night quiz)
           bedtime_goal: data.bedtime_goal,
           wake_time_goal: data.wake_time_goal,
+          // NEW: Morning check-in additions
+          weight_lbs: data.weight_lbs,
+          perceived_recovery: data.perceived_recovery,
+          // NEW: Pre-workout CNS fields
+          reaction_time_ms: data.reaction_time_ms,
+          reaction_time_score: data.reaction_time_score,
+          balance_duration_seconds: data.balance_duration_seconds,
+          // NEW: Pre-workout pain fields
+          pain_location: data.pain_location,
+          pain_scale: data.pain_scale,
+          pain_increases_with_movement: data.pain_increases_with_movement,
+          // NEW: Pre-workout intent fields
+          training_intent: data.training_intent,
+          mental_energy: data.mental_energy,
         }, {
           onConflict: 'user_id,entry_date,quiz_type',
         });

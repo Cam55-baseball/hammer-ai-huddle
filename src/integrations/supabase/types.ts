@@ -2795,6 +2795,7 @@ export type Database = {
       }
       vault_focus_quizzes: {
         Row: {
+          balance_duration_seconds: number | null
           bedtime_goal: string | null
           created_at: string | null
           daily_intentions: string | null
@@ -2804,10 +2805,17 @@ export type Database = {
           entry_date: string
           hours_slept: number | null
           id: string
+          mental_energy: number | null
           mental_readiness: number
           mood_level: number | null
+          pain_increases_with_movement: boolean | null
+          pain_location: string[] | null
+          pain_scale: number | null
+          perceived_recovery: number | null
           physical_readiness: number
           quiz_type: string
+          reaction_time_ms: number | null
+          reaction_time_score: number | null
           reflection_did_well: string | null
           reflection_improve: string | null
           reflection_learned: string | null
@@ -2815,11 +2823,14 @@ export type Database = {
           sleep_quality: number | null
           sleep_time: string | null
           stress_level: number | null
+          training_intent: string[] | null
           user_id: string
           wake_time: string | null
           wake_time_goal: string | null
+          weight_lbs: number | null
         }
         Insert: {
+          balance_duration_seconds?: number | null
           bedtime_goal?: string | null
           created_at?: string | null
           daily_intentions?: string | null
@@ -2829,10 +2840,17 @@ export type Database = {
           entry_date?: string
           hours_slept?: number | null
           id?: string
+          mental_energy?: number | null
           mental_readiness: number
           mood_level?: number | null
+          pain_increases_with_movement?: boolean | null
+          pain_location?: string[] | null
+          pain_scale?: number | null
+          perceived_recovery?: number | null
           physical_readiness: number
           quiz_type: string
+          reaction_time_ms?: number | null
+          reaction_time_score?: number | null
           reflection_did_well?: string | null
           reflection_improve?: string | null
           reflection_learned?: string | null
@@ -2840,11 +2858,14 @@ export type Database = {
           sleep_quality?: number | null
           sleep_time?: string | null
           stress_level?: number | null
+          training_intent?: string[] | null
           user_id: string
           wake_time?: string | null
           wake_time_goal?: string | null
+          weight_lbs?: number | null
         }
         Update: {
+          balance_duration_seconds?: number | null
           bedtime_goal?: string | null
           created_at?: string | null
           daily_intentions?: string | null
@@ -2854,10 +2875,17 @@ export type Database = {
           entry_date?: string
           hours_slept?: number | null
           id?: string
+          mental_energy?: number | null
           mental_readiness?: number
           mood_level?: number | null
+          pain_increases_with_movement?: boolean | null
+          pain_location?: string[] | null
+          pain_scale?: number | null
+          perceived_recovery?: number | null
           physical_readiness?: number
           quiz_type?: string
+          reaction_time_ms?: number | null
+          reaction_time_score?: number | null
           reflection_did_well?: string | null
           reflection_improve?: string | null
           reflection_learned?: string | null
@@ -2865,9 +2893,11 @@ export type Database = {
           sleep_quality?: number | null
           sleep_time?: string | null
           stress_level?: number | null
+          training_intent?: string[] | null
           user_id?: string
           wake_time?: string | null
           wake_time_goal?: string | null
+          weight_lbs?: number | null
         }
         Relationships: []
       }
