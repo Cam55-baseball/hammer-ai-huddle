@@ -14,14 +14,14 @@ import {
   Flame, Trophy, Calendar, Award, Sparkles, ChevronDown,
   FileText, TrendingUp, Dumbbell, Brain, Target, Activity,
   Zap, Lightbulb, CheckCircle2, Heart, AlertCircle,
-  Bookmark, BookmarkCheck, Download, Mail, Share2, Trash2, Send
+  Bookmark, BookmarkCheck, Download, Share2, Trash2
 } from 'lucide-react';
 import { FaXTwitter, FaInstagram } from 'react-icons/fa6';
 import { VaultStreak } from '@/hooks/useVault';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { generateRecapPdf, generateRecapPdfBase64 } from '@/utils/generateRecapPdf';
+import { generateRecapPdf } from '@/utils/generateRecapPdf';
 import { generateRecapShareImage } from '@/utils/generateRecapShareImage';
 
 interface VaultRecap {
@@ -99,10 +99,8 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
   const [selectedRecap, setSelectedRecap] = useState<VaultRecap | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [actionLoading, setActionLoading] = useState<'save' | 'delete' | 'pdf' | 'email' | 'share' | null>(null);
-  const [emailForm, setEmailForm] = useState({ recipientEmail: '', recipientName: '' });
+  const [actionLoading, setActionLoading] = useState<'save' | 'delete' | 'pdf' | 'share' | null>(null);
 
   const currentStreak = streak?.current_streak || 0;
   const longestStreak = streak?.longest_streak || 0;
@@ -155,47 +153,6 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
       console.error('PDF generation error:', error);
       toast.error('Failed to generate PDF');
     }
-    setActionLoading(null);
-  };
-
-  const handleSendEmail = async () => {
-    if (!selectedRecap) return;
-    setActionLoading('email');
-    
-    try {
-      const pdfBase64 = await generateRecapPdfBase64(selectedRecap);
-      
-      const { error } = await supabase.functions.invoke('send-recap-email', {
-        body: {
-          recipientEmail: emailForm.recipientEmail,
-          recipientName: emailForm.recipientName,
-          recapData: {
-            recap_period_start: selectedRecap.recap_period_start,
-            recap_period_end: selectedRecap.recap_period_end,
-            summary: selectedRecap.recap_data.summary,
-            highlights: selectedRecap.recap_data.highlights,
-            improvements: selectedRecap.recap_data.improvements,
-            recommendations: selectedRecap.recap_data.recommendations,
-            workout_stats: selectedRecap.recap_data.workout_stats,
-            mental_stats: selectedRecap.recap_data.mental_stats,
-          },
-          athleteName,
-          totalWeightLifted: selectedRecap.total_weight_lifted,
-          strengthChangePercent: selectedRecap.strength_change_percent,
-          pdfBase64,
-        },
-      });
-      
-      if (error) throw error;
-      
-      toast.success(t('vault.recap.emailSent'));
-      setEmailDialogOpen(false);
-      setEmailForm({ recipientEmail: '', recipientName: '' });
-    } catch (error) {
-      console.error('Email error:', error);
-      toast.error(t('vault.recap.emailFailed'));
-    }
-    
     setActionLoading(null);
   };
 
@@ -611,17 +568,6 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                     {t('vault.recap.downloadPdf')}
                   </Button>
 
-                  {/* Email */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEmailDialogOpen(true)}
-                    disabled={actionLoading !== null}
-                    className="gap-2"
-                  >
-                    <Mail className="h-4 w-4" />
-                    {t('vault.recap.emailRecap')}
-                  </Button>
 
                   {/* Share */}
                   <Button
@@ -676,58 +622,6 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Email Dialog */}
-      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              {t('vault.recap.emailRecap')}
-            </DialogTitle>
-            <DialogDescription>
-              Send this recap to a coach, parent, or trainer
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('vault.recap.recipientName')}</Label>
-              <Input 
-                placeholder="Coach Smith" 
-                value={emailForm.recipientName}
-                onChange={(e) => setEmailForm(prev => ({ ...prev, recipientName: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('vault.recap.recipientEmail')}</Label>
-              <Input 
-                type="email" 
-                placeholder="coach@team.com" 
-                value={emailForm.recipientEmail}
-                onChange={(e) => setEmailForm(prev => ({ ...prev, recipientEmail: e.target.value }))}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button 
-              onClick={handleSendEmail} 
-              disabled={actionLoading === 'email' || !emailForm.recipientEmail || !emailForm.recipientName}
-            >
-              {actionLoading === 'email' ? (
-                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-              ) : (
-                <Send className="h-4 w-4 mr-2" />
-              )}
-              {t('vault.recap.sendEmail')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Social Share Dialog */}
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
