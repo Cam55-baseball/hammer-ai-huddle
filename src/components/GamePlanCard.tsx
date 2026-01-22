@@ -56,7 +56,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { tasks, customActivities, completedCount, totalCount, loading, refetch } = useGamePlan(selectedSport);
-  const { daysUntilRecap, recapProgress, canGenerateRecap, hasMissedRecap } = useRecapCountdown();
+  const { daysUntilRecap, recapProgress, canGenerateRecap, hasMissedRecap, waitingForProgressReports } = useRecapCountdown();
   const { pendingActivities, pendingCount, acceptActivity, rejectActivity, refetch: refetchPending } = useReceivedActivities();
   const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
   const { getEffectiveColors } = useUserColors(selectedSport);
@@ -1223,24 +1223,36 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {/* 6-Week Recap Countdown - Compact Box */}
         <div className={cn(
           "flex items-center gap-3 bg-background/10 backdrop-blur-sm px-4 py-2 rounded-xl border transition-all duration-300",
-          (canGenerateRecap || hasMissedRecap) 
+          (canGenerateRecap || hasMissedRecap) && !waitingForProgressReports
             ? "border-violet-500 ring-2 ring-violet-500/30" 
-            : "border-primary/30"
+            : waitingForProgressReports
+              ? "border-cyan-500 ring-2 ring-cyan-500/30"
+              : "border-primary/30"
         )}>
           <Clock className={cn(
             "h-4 w-4 flex-shrink-0",
-            (canGenerateRecap || hasMissedRecap) ? "text-violet-500" : "text-primary"
+            (canGenerateRecap || hasMissedRecap) && !waitingForProgressReports ? "text-violet-500" : 
+            waitingForProgressReports ? "text-cyan-500" : "text-primary"
           )} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-white/70 uppercase tracking-wide">
                 {t('gamePlan.recapCountdown.title')}
               </span>
-              <Progress value={recapProgress} className="h-1.5 flex-1 bg-muted/20 max-w-24" />
+              <Progress value={waitingForProgressReports ? 100 : recapProgress} className="h-1.5 flex-1 bg-muted/20 max-w-24" />
             </div>
           </div>
           
-          {(canGenerateRecap || hasMissedRecap) ? (
+          {waitingForProgressReports ? (
+            <Button
+              size="sm"
+              onClick={() => navigate('/vault?openSection=progress-photos')}
+              className="gap-1.5 bg-cyan-500 hover:bg-cyan-600 text-white h-7 px-3"
+            >
+              <Target className="h-3 w-3" />
+              <span className="text-xs font-bold">{t('gamePlan.recapCountdown.goToVault')}</span>
+            </Button>
+          ) : (canGenerateRecap || hasMissedRecap) ? (
             <Button
               size="sm"
               onClick={() => navigate('/vault?openSection=recap-generation')}

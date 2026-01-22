@@ -10,6 +10,9 @@ interface RecapCountdownData {
   missedCycleEnd: Date | null;
   loading: boolean;
   anchorDate: Date | null;
+  waitingForProgressReports: boolean;
+  progressReportsUnlockedAt: Date | null;
+  refetch: () => void;
 }
 
 /**
@@ -31,6 +34,13 @@ export function useRecapCountdown(): RecapCountdownData {
   const [hasMissedRecap, setHasMissedRecap] = useState(false);
   const [missedCycleEnd, setMissedCycleEnd] = useState<Date | null>(null);
   const [anchorDate, setAnchorDate] = useState<Date | null>(null);
+  const [waitingForProgressReports, setWaitingForProgressReports] = useState(false);
+  const [progressReportsUnlockedAt, setProgressReportsUnlockedAt] = useState<Date | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const refetch = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
 
   const calculateCountdown = useCallback(async (startDate: Date, userId: string) => {
     const now = new Date();
@@ -45,7 +55,7 @@ export function useRecapCountdown(): RecapCountdownData {
     // Fetch the latest recap to check if we've already generated one for the current/previous cycle
     const { data: latestRecap } = await supabase
       .from('vault_recaps')
-      .select('recap_period_end, generated_at')
+      .select('recap_period_end, generated_at, unlocked_progress_reports_at')
       .eq('user_id', userId)
       .order('generated_at', { ascending: false })
       .limit(1)
@@ -61,6 +71,8 @@ export function useRecapCountdown(): RecapCountdownData {
     let canGenerate = false;
     let hasMissed = false;
     let missedEnd: Date | null = null;
+    let waitingForReports = false;
+    let unlockedAt: Date | null = null;
     
     if (completedCycles > 0) {
       // At least one cycle has been completed
@@ -81,6 +93,38 @@ export function useRecapCountdown(): RecapCountdownData {
           // Within 7-day grace period of new cycle, can still generate
           canGenerate = true;
         }
+        
+        // Check if waiting for progress reports
+        // If recap was generated and unlocked_progress_reports_at is set, check if progress reports were completed
+        if (latestRecap.unlocked_progress_reports_at) {
+          unlockedAt = new Date(latestRecap.unlocked_progress_reports_at);
+          
+          // Check if any performance tests or progress photos were added after the unlock date
+          const [{ data: perfTests }, { data: photos }] = await Promise.all([
+            supabase
+              .from('vault_performance_tests')
+              .select('id')
+              .eq('user_id', userId)
+              .gt('created_at', latestRecap.unlocked_progress_reports_at)
+              .limit(1),
+            supabase
+              .from('vault_progress_photos')
+              .select('id')
+              .eq('user_id', userId)
+              .gt('created_at', latestRecap.unlocked_progress_reports_at)
+              .limit(1)
+          ]);
+          
+          const hasProgressReports = (perfTests && perfTests.length > 0) || (photos && photos.length > 0);
+          
+          // If no progress reports after unlock, user is waiting to complete them
+          if (!hasProgressReports) {
+            waitingForReports = true;
+            // While waiting, don't allow generating another recap
+            canGenerate = false;
+            hasMissed = false;
+          }
+        }
       } else {
         // No recaps exist, user has missed all previous cycles
         // Allow generating for the most recent completed cycle
@@ -91,7 +135,8 @@ export function useRecapCountdown(): RecapCountdownData {
     }
     
     // Also allow generation if exactly at day 0 (cycle just completed) or within grace period
-    if (daysInCurrentCycle <= 7 && completedCycles > 0) {
+    // But not if waiting for progress reports
+    if (daysInCurrentCycle <= 7 && completedCycles > 0 && !waitingForReports) {
       // Check if we already have a recap for this cycle period
       if (latestRecap) {
         const latestRecapEnd = new Date(latestRecap.recap_period_end);
@@ -107,6 +152,8 @@ export function useRecapCountdown(): RecapCountdownData {
     setCanGenerateRecap(canGenerate);
     setHasMissedRecap(hasMissed);
     setMissedCycleEnd(missedEnd);
+    setWaitingForProgressReports(waitingForReports);
+    setProgressReportsUnlockedAt(unlockedAt);
   }, []);
 
   useEffect(() => {
@@ -161,7 +208,7 @@ export function useRecapCountdown(): RecapCountdownData {
     };
 
     fetchAnchorDate();
-  }, [user, calculateCountdown]);
+  }, [user, calculateCountdown, refreshTrigger]);
 
   return {
     daysUntilRecap,
@@ -171,5 +218,8 @@ export function useRecapCountdown(): RecapCountdownData {
     missedCycleEnd,
     loading,
     anchorDate,
+    waitingForProgressReports,
+    progressReportsUnlockedAt,
+    refetch,
   };
 }

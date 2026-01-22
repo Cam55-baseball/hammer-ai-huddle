@@ -3134,6 +3134,7 @@ export type Database = {
           saved_to_library: boolean | null
           strength_change_percent: number | null
           total_weight_lifted: number | null
+          unlocked_progress_reports_at: string | null
           user_id: string
         }
         Insert: {
@@ -3146,6 +3147,7 @@ export type Database = {
           saved_to_library?: boolean | null
           strength_change_percent?: number | null
           total_weight_lifted?: number | null
+          unlocked_progress_reports_at?: string | null
           user_id: string
         }
         Update: {
@@ -3158,6 +3160,7 @@ export type Database = {
           saved_to_library?: boolean | null
           strength_change_percent?: number | null
           total_weight_lifted?: number | null
+          unlocked_progress_reports_at?: string | null
           user_id?: string
         }
         Relationships: []
