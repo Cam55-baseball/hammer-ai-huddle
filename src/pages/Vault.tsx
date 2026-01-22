@@ -49,6 +49,7 @@ import { VaultDisciplineTrendCard } from '@/components/vault/VaultDisciplineTren
 import { VaultMentalWellnessTrendCard } from '@/components/vault/VaultMentalWellnessTrendCard';
 import { VaultCorrelationAnalysisCard } from '@/components/vault/VaultCorrelationAnalysisCard';
 import { VaultWellnessGoalsCard, checkWellnessGoalsAndNotify } from '@/components/vault/VaultWellnessGoalsCard';
+import { checkPainPatternAndNotify } from '@/components/vault/VaultPainPatternAlert';
 import { VaultTexVisionCard } from '@/components/vault/VaultTexVisionCard';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -252,6 +253,13 @@ export default function Vault() {
         setTimeout(() => {
           checkWellnessGoalsAndNotify(user.id, t);
         }, 1000);
+      }
+      
+      // Check pain patterns and notify if same area logged 3+ consecutive days (for pre_lift quiz)
+      if (selectedQuizType === 'pre_lift' && user) {
+        setTimeout(() => {
+          checkPainPatternAndNotify(user.id, t);
+        }, 1500);
       }
       
       // Check if this completes all 3 quizzes (was 2 before, now 3)
