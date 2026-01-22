@@ -125,7 +125,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     lockToday, 
     lockDays: lockDaysDb, 
     unlockDays,
-    loading: lockLoading 
+    loading: lockLoading,
+    refetch: refetchLockedDays
   } = useGamePlanLock();
   
   const todayLocked = isTodayLocked();
@@ -631,6 +632,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }));
     
     await lockToday(schedule);
+    await refetchLockedDays();
   };
   
   const handleOpenUnlockDialog = () => {
@@ -656,6 +658,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     if (daysToLock.length > 0) {
       await lockDaysDb(daysToLock, schedule);
     }
+    
+    // Force refresh the local state immediately
+    await refetchLockedDays();
   };
   
   // Handle locking multiple days with current schedule
@@ -669,6 +674,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }));
     
     await lockDaysDb(daysToLock, schedule);
+    await refetchLockedDays();
   };
   
   // Template handlers
