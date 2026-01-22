@@ -41,6 +41,7 @@ import { useScheduleTemplates, ScheduleItem } from '@/hooks/useScheduleTemplates
 import { useDailySummaryNotification } from '@/hooks/useDailySummaryNotification';
 import { useGamePlanLock, ScheduleItem as LockScheduleItem } from '@/hooks/useGamePlanLock';
 import { UnlockDayPickerDialog } from '@/components/game-plan/UnlockDayPickerDialog';
+import { LockDayPickerDialog } from '@/components/game-plan/LockDayPickerDialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { CustomActivityTemplate } from '@/types/customActivity';
@@ -130,8 +131,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const todayLocked = isTodayLocked();
   const lockedDayNumbers = getLockedDayNumbers();
   
-  // Unlock for week dialog
+  // Lock/Unlock dialogs
   const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [lockDialogOpen, setLockDialogOpen] = useState(false);
   
   // Template dialogs
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
@@ -656,6 +658,19 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   };
   
+  // Handle locking multiple days with current schedule
+  const handleLockDays = async (daysToLock: number[]) => {
+    const schedule: LockScheduleItem[] = timelineTasks.map((t, idx) => ({
+      taskId: t.id,
+      order: idx,
+      displayTime: taskTimes[t.id] || null,
+      reminderMinutes: taskReminders[t.id] || null,
+      reminderEnabled: !!taskReminders[t.id],
+    }));
+    
+    await lockDaysDb(daysToLock, schedule);
+  };
+  
   // Template handlers
   const handleSaveTemplate = async () => {
     if (!newTemplateName.trim()) return;
@@ -1109,6 +1124,17 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                     >
                       <Lock className="h-4 w-4 mr-2" />
                       {t('gamePlan.lockOrder.forToday', 'Lock for Today')}
+                    </Button>
+                    
+                    {/* Lock for multiple days */}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={() => setLockDialogOpen(true)}
+                    >
+                      <Lock className="h-4 w-4 mr-2" />
+                      {t('gamePlan.lockOrder.lockForDays', 'Lock for Days...')}
                     </Button>
                     
                     {/* Unlock for week - opens dialog */}
@@ -1820,6 +1846,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onOpenChange={setUnlockDialogOpen}
         lockedDays={lockedDayNumbers}
         onSave={handleUnlockSave}
+      />
+      
+      {/* Lock Day Picker Dialog */}
+      <LockDayPickerDialog
+        open={lockDialogOpen}
+        onOpenChange={setLockDialogOpen}
+        lockedDays={lockedDayNumbers}
+        onSave={handleLockDays}
       />
       
       {/* Time Settings Drawer - mobile friendly */}
