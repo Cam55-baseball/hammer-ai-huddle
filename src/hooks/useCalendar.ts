@@ -1,9 +1,42 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useGamePlanLock } from '@/hooks/useGamePlanLock';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfMonth, endOfMonth, addDays, eachDayOfInterval, getDay } from 'date-fns';
 import { LucideIcon, Target, Utensils, Dumbbell, Calendar, Brain, Eye, Moon, Sun, Activity, Apple, Lightbulb, Sparkles, BedDouble, Timer, Flame } from 'lucide-react';
+
+// Helper to get the Game Plan task ID for a calendar event
+const getTaskIdForEvent = (event: { type: string; source: string }): string | null => {
+  // Game plan tasks match directly
+  if (event.type === 'game_plan') {
+    return event.source;
+  }
+  
+  // Custom activities: template-{uuid} → custom-{uuid}
+  if (event.type === 'custom_activity' && event.source?.startsWith('template-')) {
+    return `custom-${event.source.replace('template-', '')}`;
+  }
+  
+  // Custom activity logs have direct template IDs
+  if (event.type === 'custom_activity') {
+    // Could be a log with source like 'workout' - try custom- prefix
+    return null;
+  }
+  
+  // Program sub_modules map to workout task IDs
+  if (event.type === 'program') {
+    if (event.source === 'iron_bambino' || event.source === 'production_lab') {
+      return 'workout-hitting';
+    }
+    if (event.source === 'heat_factory' || event.source === 'production_studio') {
+      return 'workout-pitching';
+    }
+  }
+  
+  // Meals, manual events, athlete events not in Game Plan ordering
+  return null;
+};
 
 export interface CalendarEvent {
   id: string;
@@ -149,6 +182,7 @@ const getMealTime = (mealType: string): string => {
 export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCalendarResult {
   const { user } = useAuth();
   const { modules } = useSubscription();
+  const { getDaySchedule, lockedDays } = useGamePlanLock();
   const [events, setEvents] = useState<Record<string, CalendarEvent[]>>({});
   const [loading, setLoading] = useState(true);
   const [currentRange, setCurrentRange] = useState<{ start: Date; end: Date } | null>(null);
@@ -593,14 +627,51 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         });
       }
 
-      // Sort events by time within each day
+      // Sort events by locked Game Plan order (if day is locked) or by time
       Object.keys(aggregatedEvents).forEach(dateKey => {
-        aggregatedEvents[dateKey].sort((a, b) => {
-          if (!a.startTime && !b.startTime) return 0;
-          if (!a.startTime) return 1;
-          if (!b.startTime) return -1;
-          return a.startTime.localeCompare(b.startTime);
-        });
+        const date = new Date(dateKey);
+        const dayOfWeek = getDay(date);
+        const lockedSchedule = getDaySchedule(dayOfWeek);
+        
+        if (lockedSchedule && lockedSchedule.length > 0) {
+          // Build an order map: taskId → order index
+          const orderMap = new Map<string, number>();
+          [...lockedSchedule]
+            .sort((a, b) => a.order - b.order)
+            .forEach((item, idx) => {
+              orderMap.set(item.taskId, idx);
+            });
+          
+          // Sort events: locked order first, then unmatched items by time
+          aggregatedEvents[dateKey].sort((a, b) => {
+            const aTaskId = getTaskIdForEvent(a);
+            const bTaskId = getTaskIdForEvent(b);
+            const aOrder = aTaskId ? orderMap.get(aTaskId) : undefined;
+            const bOrder = bTaskId ? orderMap.get(bTaskId) : undefined;
+            
+            // Both in locked schedule → use order
+            if (aOrder !== undefined && bOrder !== undefined) {
+              return aOrder - bOrder;
+            }
+            // Only one in schedule → scheduled item comes first
+            if (aOrder !== undefined) return -1;
+            if (bOrder !== undefined) return 1;
+            
+            // Neither in schedule → fall back to time sorting
+            if (!a.startTime && !b.startTime) return 0;
+            if (!a.startTime) return 1;
+            if (!b.startTime) return -1;
+            return a.startTime.localeCompare(b.startTime);
+          });
+        } else {
+          // No locked schedule → pure time-based sorting
+          aggregatedEvents[dateKey].sort((a, b) => {
+            if (!a.startTime && !b.startTime) return 0;
+            if (!a.startTime) return 1;
+            if (!b.startTime) return -1;
+            return a.startTime.localeCompare(b.startTime);
+          });
+        }
       });
 
       setEvents(aggregatedEvents);
@@ -609,7 +680,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     } finally {
       setLoading(false);
     }
-  }, [user, sport, hasHittingAccess, hasPitchingAccess]);
+  }, [user, sport, hasHittingAccess, hasPitchingAccess, getDaySchedule]);
 
   const addEvent = useCallback(async (event: CreateCalendarEvent): Promise<boolean> => {
     if (!user) return false;
@@ -689,6 +760,14 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
       fetchEventsForRange(currentRange.start, currentRange.end);
     }
   }, [currentRange, fetchEventsForRange]);
+
+  // Refetch when locked days change (for order-aware sorting)
+  useEffect(() => {
+    if (currentRange && lockedDays.size >= 0) {
+      // Refetch to re-sort events based on new lock state
+      fetchEventsForRange(currentRange.start, currentRange.end);
+    }
+  }, [lockedDays]); // Only depend on lockedDays to avoid infinite loops
 
   // Set up real-time subscription
   useEffect(() => {
