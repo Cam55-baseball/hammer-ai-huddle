@@ -96,6 +96,7 @@ function DraggableEventCard({
   onUnskipClick,
   onDeleteClick,
   onEventClick,
+  onQuickComplete,
   t,
 }: {
   event: CalendarEvent;
@@ -105,9 +106,11 @@ function DraggableEventCard({
   onUnskipClick: (e: CalendarEvent) => void;
   onDeleteClick: (id: string) => void;
   onEventClick: (e: CalendarEvent) => void;
+  onQuickComplete: (e: CalendarEvent, evt: React.MouseEvent) => void;
   t: (key: string, fallback: string) => string;
 }) {
   const dragControls = useDragControls();
+  const isCompletable = event.type === 'custom_activity';
 
   return (
     <Reorder.Item
@@ -122,6 +125,22 @@ function DraggableEventCard({
         isReorderMode && "cursor-move"
       )}
     >
+      {/* Quick complete button for custom activities (when not in reorder mode) */}
+      {isCompletable && !isSkipped && !isReorderMode && (
+        <button
+          onClick={(e) => onQuickComplete(event, e)}
+          className={cn(
+            "flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center transition-all",
+            event.completed
+              ? "bg-primary text-primary-foreground"
+              : "border-2 border-primary/40 hover:border-primary hover:scale-110 hover:bg-primary/10"
+          )}
+          title={event.completed ? t('calendar.markIncomplete', 'Mark incomplete') : t('calendar.markComplete', 'Mark complete')}
+        >
+          <Check className={cn("h-3.5 w-3.5", !event.completed && "opacity-0")} />
+        </button>
+      )}
+
       {/* Drag handle - only in reorder mode */}
       {isReorderMode && !isSkipped && (
         <div
@@ -256,6 +275,7 @@ export function CalendarDaySheet({
     handleComplete,
     handleSaveTime,
     handleToggleCheckbox,
+    quickComplete,
   } = useCalendarActivityDetail(onRefresh);
   
   const { sport: themeSport } = useSportTheme();
@@ -431,11 +451,32 @@ export function CalendarDaySheet({
     openActivityDetail(event, date);
   };
 
+  // Handle quick complete from card button
+  const handleQuickComplete = async (event: CalendarEvent, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!date) return;
+
+    const success = await quickComplete(event, date);
+    if (success) {
+      // Haptic feedback on mobile
+      if (navigator.vibrate) navigator.vibrate(50);
+      toast.success(
+        event.completed
+          ? t('calendar.markedIncomplete', 'Marked incomplete')
+          : t('calendar.markedComplete', 'Marked complete')
+      );
+    } else {
+      toast.error(t('calendar.updateFailed', 'Failed to update'));
+    }
+  };
+
   // Handle edit from detail dialog
   const handleEditFromDetail = () => {
     closeDetailDialog();
     setEditDialogOpen(true);
   };
+
+  const isCompletable = (event: CalendarEvent) => event.type === 'custom_activity';
 
   const renderEventCard = (event: CalendarEvent, isSkipped = false) => (
     <div
@@ -447,6 +488,22 @@ export function CalendarDaySheet({
         event.completed && "opacity-60"
       )}
     >
+      {/* Quick complete button for custom activities */}
+      {isCompletable(event) && !isSkipped && (
+        <button
+          onClick={(e) => handleQuickComplete(event, e)}
+          className={cn(
+            "flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center transition-all",
+            event.completed
+              ? "bg-primary text-primary-foreground"
+              : "border-2 border-primary/40 hover:border-primary hover:scale-110 hover:bg-primary/10"
+          )}
+          title={event.completed ? t('calendar.markIncomplete', 'Mark incomplete') : t('calendar.markComplete', 'Mark complete')}
+        >
+          <Check className={cn("h-3.5 w-3.5", !event.completed && "opacity-0 group-hover:opacity-50")} />
+        </button>
+      )}
+
       {/* Color indicator */}
       <div
         className="w-1 h-full min-h-[40px] rounded-full flex-shrink-0"
@@ -700,6 +757,7 @@ export function CalendarDaySheet({
                           onUnskipClick={handleUnskip}
                           onDeleteClick={onDeleteEvent}
                           onEventClick={handleEventClick}
+                          onQuickComplete={handleQuickComplete}
                           t={t}
                         />
                       ))}
