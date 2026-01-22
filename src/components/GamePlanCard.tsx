@@ -701,6 +701,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   };
 
   // Helper to get the correct item ID and type for calendar skip lookup
+  // CRITICAL: This MUST match how Calendar saves skips for each task type
   const getCalendarSkipInfo = useCallback((task: GamePlanTask): { itemId: string; itemType: string } => {
     if (task.taskType === 'custom' && task.customActivityData?.template) {
       // Custom activities use template-{uuid} format
@@ -709,6 +710,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         itemType: 'custom_activity' 
       };
     }
+    // Workout tasks (Iron Bambino, Heat Factory) are saved as 'program' type by Calendar
+    if (task.taskType === 'workout') {
+      return { itemId: task.id, itemType: 'program' };
+    }
+    // All other system tasks use 'game_plan' type
     return { itemId: task.id, itemType: 'game_plan' };
   }, []);
 
@@ -1896,8 +1902,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         })()}
         currentDisplayDays={(() => {
           if (!activeScheduleTaskId) return [...ALL_DAYS];
+          // Find task to determine correct item_type
+          const allTasksList = [...orderedCheckin, ...orderedTraining, ...orderedTracking, ...orderedCustom, ...timelineTasks];
+          const task = allTasksList.find(t => t.id === activeScheduleTaskId);
+          const itemType = task?.taskType === 'workout' ? 'program' : 'game_plan';
           // Load from calendar_skipped_items and convert skip days to display days
-          const skipDays = getSkipDays(activeScheduleTaskId, 'game_plan');
+          const skipDays = getSkipDays(activeScheduleTaskId, itemType);
           return skipDaysToDisplayDays(skipDays);
         })()}
         currentDisplayTime={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.display_time || taskTimes[activeScheduleTaskId] || null) : null}
@@ -1905,9 +1915,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         currentReminderMinutes={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.reminder_minutes || 15) : 15}
         onSave={async (displayDays, displayTime, reminderEnabled, reminderMinutes) => {
           if (activeScheduleTaskId) {
+            // Find task to determine correct item_type
+            const allTasksList = [...orderedCheckin, ...orderedTraining, ...orderedTracking, ...orderedCustom, ...timelineTasks];
+            const task = allTasksList.find(t => t.id === activeScheduleTaskId);
+            const itemType = task?.taskType === 'workout' ? 'program' : 'game_plan';
+            
             // Convert display days to skip days and save to calendar_skipped_items
             const skipDays = displayDaysToSkipDays(displayDays);
-            const skipSuccess = await updateSkipDays(activeScheduleTaskId, 'game_plan', skipDays);
+            const skipSuccess = await updateSkipDays(activeScheduleTaskId, itemType, skipDays);
             
             // Also save time/reminder to game_plan_task_schedule (for time/reminder only)
             await saveTaskSchedule(activeScheduleTaskId, displayDays, displayTime, reminderEnabled, reminderMinutes);
