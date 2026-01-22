@@ -351,6 +351,8 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
           
           const template = log.custom_activity_templates;
+          // FIX: Use template-{uuid} format to match Game Plan task IDs
+          const sourceId = template?.id ? `template-${template.id}` : (template?.activity_type || 'custom');
           aggregatedEvents[dateKey].push({
             id: log.id,
             date: dateKey,
@@ -358,7 +360,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             description: log.notes || template?.description || undefined,
             startTime: log.start_time,
             type: 'custom_activity',
-            source: template?.activity_type || 'custom',
+            source: sourceId,
             color: template?.color || getEventColor('custom_activity'),
             icon: Activity,
             completed: log.completed || false,
