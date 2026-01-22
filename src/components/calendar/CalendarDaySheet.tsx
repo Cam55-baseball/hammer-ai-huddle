@@ -23,6 +23,7 @@ import {
   Unlock,
   GripVertical,
   ArrowUpDown,
+  Loader2,
 } from 'lucide-react';
 import { format, getDay } from 'date-fns';
 import { CalendarEvent } from '@/hooks/useCalendar';
@@ -230,8 +231,8 @@ export function CalendarDaySheet({
 }: CalendarDaySheetProps) {
   const { t } = useTranslation();
   const { isSkippedForDay, getSkipDays, updateSkipDays, unskipForDay } = useCalendarSkips();
-  const { isDateLocked, saveDayOrder, unlockDate, getOrderKeysForDate, fetchDayOrdersForRange, refetch: refetchDayOrders } = useCalendarDayOrders();
-  const { getDaySchedule, unlockDays } = useGamePlanLock();
+  const { isDateLocked, saveDayOrder, unlockDate, getOrderKeysForDate, fetchDayOrdersForRange, refetch: refetchDayOrders, loading: dayOrdersLoading } = useCalendarDayOrders();
+  const { getDaySchedule, unlockDays, loading: gamePlanLockLoading, refetch: refetchGamePlanLock } = useGamePlanLock();
   
   const [skipDialogOpen, setSkipDialogOpen] = useState(false);
   const [selectedEventForSkip, setSelectedEventForSkip] = useState<CalendarEvent | null>(null);
@@ -240,12 +241,16 @@ export function CalendarDaySheet({
   const [orderedEvents, setOrderedEvents] = useState<CalendarEvent[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch day orders when sheet opens with a date
+  // Combined loading state for lock data
+  const isLockDataLoading = gamePlanLockLoading || dayOrdersLoading;
+
+  // Fetch day orders AND game plan locks when sheet opens with a date
   useEffect(() => {
     if (open && date) {
       fetchDayOrdersForRange(date, date);
+      refetchGamePlanLock();
     }
-  }, [open, date, fetchDayOrdersForRange]);
+  }, [open, date, fetchDayOrdersForRange, refetchGamePlanLock]);
 
   // Update ordered events when events or date changes
   useEffect(() => {
@@ -263,9 +268,10 @@ export function CalendarDaySheet({
   const dayOfWeek = getDay(date);
   
   // Check BOTH lock sources: date-specific takes priority, then weekly template
-  const isDateLockedOrder = isDateLocked(date);
-  const weeklySchedule = getDaySchedule(dayOfWeek);
-  const isWeeklyLocked = weeklySchedule && weeklySchedule.length > 0;
+  // Only check when lock data is loaded to avoid flash of wrong state
+  const isDateLockedOrder = !isLockDataLoading && isDateLocked(date);
+  const weeklySchedule = !gamePlanLockLoading ? getDaySchedule(dayOfWeek) : null;
+  const isWeeklyLocked = !!(weeklySchedule && weeklySchedule.length > 0);
   
   // Combined: locked if EITHER source is locked
   const isLockedOrder = isDateLockedOrder || isWeeklyLocked;
@@ -548,7 +554,11 @@ export function CalendarDaySheet({
               {/* Action buttons */}
               {!isReorderMode ? (
                 <div className="flex items-center gap-2">
-                  {isLockedOrder ? (
+                  {isLockDataLoading ? (
+                    <Button size="sm" variant="outline" disabled className="gap-1.5">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </Button>
+                  ) : isLockedOrder ? (
                     <Button
                       size="sm"
                       variant="outline"

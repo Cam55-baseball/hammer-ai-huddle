@@ -852,7 +852,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     }
   }, [lockedDays]); // Only depend on lockedDays to avoid infinite loops
 
-  // Set up real-time subscriptions for calendar events AND day orders
+  // Set up real-time subscriptions for calendar events, day orders, and weekly locks
   useEffect(() => {
     if (!user) return;
 
@@ -889,10 +889,29 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         }
       )
       .subscribe();
+    
+    // Subscribe to game_plan_locked_days changes for weekly lock sync
+    const weeklyLocksChannel = supabase
+      .channel('game-plan-lock-calendar-sync')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'game_plan_locked_days',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          console.log('[Calendar] Weekly lock changed, refetching...');
+          refetch();
+        }
+      )
+      .subscribe();
 
     return () => {
       supabase.removeChannel(eventsChannel);
       supabase.removeChannel(dayOrdersChannel);
+      supabase.removeChannel(weeklyLocksChannel);
     };
   }, [user, refetch]);
 
