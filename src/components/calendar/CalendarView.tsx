@@ -463,6 +463,7 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
           if (success) refetch();
         }}
         sport={selectedSport}
+        onRefresh={refetch}
       />
 
       {/* Add Event Dialog */}

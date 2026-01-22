@@ -24,6 +24,7 @@ import {
   GripVertical,
   ArrowUpDown,
   Loader2,
+  ChevronRight,
 } from 'lucide-react';
 import { format, getDay } from 'date-fns';
 import { CalendarEvent } from '@/hooks/useCalendar';
@@ -32,7 +33,12 @@ import { SkipDayPickerDialog } from './SkipDayPickerDialog';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
 import { useCalendarDayOrders, getOrderKey } from '@/hooks/useCalendarDayOrders';
 import { useGamePlanLock } from '@/hooks/useGamePlanLock';
+import { useCalendarActivityDetail } from '@/hooks/useCalendarActivityDetail';
+import { CustomActivityDetailDialog } from '@/components/CustomActivityDetailDialog';
+import { CustomActivityBuilderDialog } from '@/components/custom-activities/CustomActivityBuilderDialog';
+import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { toast } from 'sonner';
+import { useSportTheme } from '@/contexts/SportThemeContext';
 
 interface CalendarDaySheetProps {
   open: boolean;
@@ -42,6 +48,7 @@ interface CalendarDaySheetProps {
   onAddEvent: () => void;
   onDeleteEvent: (id: string) => Promise<void>;
   sport: 'baseball' | 'softball';
+  onRefresh?: () => void;
 }
 
 // Group events by time of day
@@ -88,6 +95,7 @@ function DraggableEventCard({
   onSkipClick,
   onUnskipClick,
   onDeleteClick,
+  onEventClick,
   t,
 }: {
   event: CalendarEvent;
@@ -96,6 +104,7 @@ function DraggableEventCard({
   onSkipClick: (e: CalendarEvent) => void;
   onUnskipClick: (e: CalendarEvent) => void;
   onDeleteClick: (id: string) => void;
+  onEventClick: (e: CalendarEvent) => void;
   t: (key: string, fallback: string) => string;
 }) {
   const dragControls = useDragControls();
@@ -228,11 +237,30 @@ export function CalendarDaySheet({
   onAddEvent,
   onDeleteEvent,
   sport,
+  onRefresh,
 }: CalendarDaySheetProps) {
   const { t } = useTranslation();
   const { isSkippedForDay, getSkipDays, updateSkipDays, unskipForDay } = useCalendarSkips();
   const { isDateLocked, saveDayOrder, unlockDate, getOrderKeysForDate, fetchDayOrdersForRange, refetch: refetchDayOrders, loading: dayOrdersLoading } = useCalendarDayOrders();
   const { getDaySchedule, unlockDays, loading: gamePlanLockLoading, refetch: refetchGamePlanLock } = useGamePlanLock();
+  
+  // Activity detail hook
+  const {
+    selectedTask,
+    taskTime,
+    taskReminder,
+    detailDialogOpen,
+    loading: detailLoading,
+    openActivityDetail,
+    closeDetailDialog,
+    handleComplete,
+    handleSaveTime,
+    handleToggleCheckbox,
+  } = useCalendarActivityDetail(onRefresh);
+  
+  const { sport: themeSport } = useSportTheme();
+  const selectedSportForEdit = sport || themeSport || 'baseball';
+  const { updateTemplate } = useCustomActivities(selectedSportForEdit);
   
   const [skipDialogOpen, setSkipDialogOpen] = useState(false);
   const [selectedEventForSkip, setSelectedEventForSkip] = useState<CalendarEvent | null>(null);
@@ -240,6 +268,7 @@ export function CalendarDaySheet({
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [orderedEvents, setOrderedEvents] = useState<CalendarEvent[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // Combined loading state for lock data
   const isLockDataLoading = gamePlanLockLoading || dayOrdersLoading;
@@ -396,12 +425,25 @@ export function CalendarDaySheet({
     }
   };
 
+  // Handle clicking on an event to view details
+  const handleEventClick = (event: CalendarEvent) => {
+    if (!date || isReorderMode) return;
+    openActivityDetail(event, date);
+  };
+
+  // Handle edit from detail dialog
+  const handleEditFromDetail = () => {
+    closeDetailDialog();
+    setEditDialogOpen(true);
+  };
+
   const renderEventCard = (event: CalendarEvent, isSkipped = false) => (
     <div
       key={event.id}
+      onClick={() => !isSkipped && handleEventClick(event)}
       className={cn(
-        "flex items-start gap-3 p-3 rounded-lg border transition-colors",
-        isSkipped ? "bg-muted/50 opacity-60" : "bg-card hover:bg-accent/30",
+        "flex items-start gap-3 p-3 rounded-lg border transition-all",
+        isSkipped ? "bg-muted/50 opacity-60" : "bg-card hover:bg-accent/30 cursor-pointer active:scale-[0.99]",
         event.completed && "opacity-60"
       )}
     >
@@ -465,18 +507,22 @@ export function CalendarDaySheet({
                 <RotateCcw className="h-3.5 w-3.5" />
               </Button>
             ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOpenSkipDialog(event);
-                }}
-                title={t('calendar.skip.skipButton', 'Skip')}
-              >
-                <SkipForward className="h-3.5 w-3.5" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenSkipDialog(event);
+                  }}
+                  title={t('calendar.skip.skipButton', 'Skip')}
+                >
+                  <SkipForward className="h-3.5 w-3.5" />
+                </Button>
+                {/* Chevron indicator for clickable cards */}
+                <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+              </>
             )}
             
             {!isSkipped && event.deletable && (
@@ -653,6 +699,7 @@ export function CalendarDaySheet({
                           onSkipClick={handleOpenSkipDialog}
                           onUnskipClick={handleUnskip}
                           onDeleteClick={onDeleteEvent}
+                          onEventClick={handleEventClick}
                           t={t}
                         />
                       ))}
@@ -750,6 +797,37 @@ export function CalendarDaySheet({
         }
         onSave={handleSaveSkip}
       />
+
+      {/* Custom Activity Detail Dialog */}
+      <CustomActivityDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={closeDetailDialog}
+        task={selectedTask}
+        taskTime={taskTime}
+        taskReminder={taskReminder}
+        onComplete={handleComplete}
+        onEdit={handleEditFromDetail}
+        onSaveTime={handleSaveTime}
+        onToggleCheckbox={handleToggleCheckbox}
+      />
+
+      {/* Edit Custom Activity Dialog */}
+      {selectedTask?.customActivityData?.template && (
+        <CustomActivityBuilderDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          template={selectedTask.customActivityData.template}
+          selectedSport={selectedSportForEdit}
+          onSave={async (data) => {
+            const templateId = selectedTask.customActivityData?.template?.id;
+            if (templateId) {
+              await updateTemplate(templateId, data);
+            }
+            setEditDialogOpen(false);
+            onRefresh?.();
+          }}
+        />
+      )}
     </>
   );
 }
