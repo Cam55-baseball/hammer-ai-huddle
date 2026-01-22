@@ -18,12 +18,14 @@ import {
   SkipForward,
   ChevronDown,
   RotateCcw,
+  Lock,
 } from 'lucide-react';
 import { format, getDay } from 'date-fns';
 import { CalendarEvent } from '@/hooks/useCalendar';
 import { cn } from '@/lib/utils';
 import { SkipDayPickerDialog } from './SkipDayPickerDialog';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
+import { useGamePlanLock } from '@/hooks/useGamePlanLock';
 import { toast } from 'sonner';
 
 interface CalendarDaySheetProps {
@@ -83,6 +85,7 @@ export function CalendarDaySheet({
 }: CalendarDaySheetProps) {
   const { t } = useTranslation();
   const { isSkippedForDay, getSkipDays, updateSkipDays, unskipForDay } = useCalendarSkips();
+  const { isDayLocked } = useGamePlanLock();
   
   const [skipDialogOpen, setSkipDialogOpen] = useState(false);
   const [selectedEventForSkip, setSelectedEventForSkip] = useState<CalendarEvent | null>(null);
@@ -91,6 +94,7 @@ export function CalendarDaySheet({
   if (!date) return null;
 
   const dayOfWeek = getDay(date);
+  const isLockedOrder = isDayLocked(dayOfWeek);
   
   // Helper to get unique item ID for skip tracking
   const getSkipItemId = (event: CalendarEvent): string => {
@@ -107,7 +111,10 @@ export function CalendarDaySheet({
     isSkippedForDay(getSkipItemId(event), event.type, date)
   );
 
-  const { morning, afternoon, evening, allDay } = groupEventsByTimeOfDay(activeEvents);
+  // Only group by time of day if NOT using locked order
+  const { morning, afternoon, evening, allDay } = isLockedOrder 
+    ? { morning: [], afternoon: [], evening: [], allDay: [] } 
+    : groupEventsByTimeOfDay(activeEvents);
   const hasActiveEvents = activeEvents.length > 0;
 
   const handleOpenSkipDialog = (event: CalendarEvent) => {
@@ -272,8 +279,14 @@ export function CalendarDaySheet({
           <SheetHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <SheetTitle className="text-lg font-bold">
+              <SheetTitle className="text-lg font-bold flex items-center gap-2">
                   {format(date, 'EEEE')}
+                  {isLockedOrder && (
+                    <Badge variant="outline" className="text-xs gap-1 text-wellness-coral-foreground border-wellness-coral/50 bg-wellness-coral/10">
+                      <Lock className="h-3 w-3" />
+                      {t('calendar.lockedOrder', 'Locked')}
+                    </Badge>
+                  )}
                 </SheetTitle>
                 <SheetDescription>
                   {format(date, 'MMMM d, yyyy')}
@@ -307,41 +320,56 @@ export function CalendarDaySheet({
               </div>
             ) : (
               <div className="space-y-6">
-                {/* All Day Events */}
-                {allDay.length > 0 && (
+                {/* Locked Order: Single ordered list */}
+                {isLockedOrder ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase">
-                      <Activity className="h-3.5 w-3.5" />
-                      <span>{t('calendar.allDay', 'All Day')}</span>
+                      <Lock className="h-3.5 w-3.5 text-wellness-coral" />
+                      <span>{t('calendar.lockedOrderSection', 'Game Plan Order')}</span>
                     </div>
                     <div className="space-y-2">
-                      {allDay.map(e => renderEventCard(e, false))}
+                      {activeEvents.map(e => renderEventCard(e, false))}
                     </div>
                   </div>
-                )}
-                
-                {/* Morning */}
-                {renderTimeSection(
-                  t('calendar.morning', 'Morning'),
-                  <Sun className="h-3.5 w-3.5" />,
-                  morning
-                )}
-                
-                {/* Afternoon */}
-                {renderTimeSection(
-                  t('calendar.afternoon', 'Afternoon'),
-                  <Clock className="h-3.5 w-3.5" />,
-                  afternoon
-                )}
-                
-                {/* Evening */}
-                {renderTimeSection(
-                  t('calendar.evening', 'Evening'),
-                  <Moon className="h-3.5 w-3.5" />,
-                  evening
+                ) : (
+                  <>
+                    {/* All Day Events */}
+                    {allDay.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase">
+                          <Activity className="h-3.5 w-3.5" />
+                          <span>{t('calendar.allDay', 'All Day')}</span>
+                        </div>
+                        <div className="space-y-2">
+                          {allDay.map(e => renderEventCard(e, false))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Morning */}
+                    {renderTimeSection(
+                      t('calendar.morning', 'Morning'),
+                      <Sun className="h-3.5 w-3.5" />,
+                      morning
+                    )}
+                    
+                    {/* Afternoon */}
+                    {renderTimeSection(
+                      t('calendar.afternoon', 'Afternoon'),
+                      <Clock className="h-3.5 w-3.5" />,
+                      afternoon
+                    )}
+                    
+                    {/* Evening */}
+                    {renderTimeSection(
+                      t('calendar.evening', 'Evening'),
+                      <Moon className="h-3.5 w-3.5" />,
+                      evening
+                    )}
+                  </>
                 )}
 
-                {/* Skipped Section */}
+                {/* Skipped Section - shown in both modes */}
                 {skippedEvents.length > 0 && (
                   <div className="mt-6 pt-4 border-t border-border">
                     <Collapsible open={showSkippedSection} onOpenChange={setShowSkippedSection}>
