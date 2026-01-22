@@ -19,7 +19,7 @@ import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Sta
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
-import { SystemTaskScheduleDrawer } from '@/components/SystemTaskScheduleDrawer';
+import { SystemTaskScheduleDrawer, displayDaysToSkipDays, skipDaysToDisplayDays } from '@/components/SystemTaskScheduleDrawer';
 import { useSystemTaskSchedule } from '@/hooks/useSystemTaskSchedule';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
@@ -65,11 +65,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const isSoftball = selectedSport === 'softball';
   const { saveFocusQuiz } = useVault();
   
-  // System task schedule hook
-  const { schedules: taskSchedules, saveSchedule: saveTaskSchedule, getSchedule, getScheduledOffTaskIds, isScheduledForToday } = useSystemTaskSchedule();
+  // System task schedule hook - for time/reminder settings only
+  const { schedules: taskSchedules, saveSchedule: saveTaskSchedule, getSchedule } = useSystemTaskSchedule();
   
-  // Calendar skips hook - for unified skip logic between Calendar and Game Plan
-  const { isSkippedForDay: isCalendarSkipped } = useCalendarSkips();
+  // Calendar skips hook - SINGLE SOURCE OF TRUTH for weekly skip logic
+  const { isSkippedForDay: isCalendarSkipped, getSkipDays, updateSkipDays, refetch: refetchCalendarSkips } = useCalendarSkips();
   
   // Schedule templates hook
   const { templates: scheduleTemplates, saveTemplate, deleteTemplate, getDefaultTemplate } = useScheduleTemplates();
@@ -700,24 +700,28 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     return `${h12}:${minutes} ${ampm}`;
   };
 
-  // Get scheduled-off task IDs (tasks not scheduled for today)
-  const scheduledOffTaskIds = useMemo(() => getScheduledOffTaskIds(), [getScheduledOffTaskIds]);
-
-  // Helper to determine item type for calendar skip lookup
-  const getCalendarItemType = useCallback((task: GamePlanTask): string => {
-    if (task.taskType === 'custom') return 'custom_activity';
-    return 'game_plan';
+  // Helper to get the correct item ID and type for calendar skip lookup
+  const getCalendarSkipInfo = useCallback((task: GamePlanTask): { itemId: string; itemType: string } => {
+    if (task.taskType === 'custom' && task.customActivityData?.template) {
+      // Custom activities use template-{uuid} format
+      return { 
+        itemId: `template-${task.customActivityData.template.id}`, 
+        itemType: 'custom_activity' 
+      };
+    }
+    return { itemId: task.id, itemType: 'game_plan' };
   }, []);
 
-  // Check if a task is weekly-skipped via calendar skips
+  // Check if a task is weekly-skipped via calendar skips (SINGLE SOURCE OF TRUTH)
   const isWeeklySkipped = useCallback((task: GamePlanTask): boolean => {
-    return isCalendarSkipped(task.id, getCalendarItemType(task), new Date());
-  }, [isCalendarSkipped, getCalendarItemType]);
+    const { itemId, itemType } = getCalendarSkipInfo(task);
+    return isCalendarSkipped(itemId, itemType, new Date());
+  }, [isCalendarSkipped, getCalendarSkipInfo]);
 
-  // Get display tasks based on sort mode, filtering out skipped AND scheduled-off AND weekly-skipped tasks
+  // Get display tasks based on sort mode, filtering out skipped (today only) AND weekly-skipped tasks
   const filterSkippedAndScheduledOff = useCallback((taskList: GamePlanTask[]) => 
-    taskList.filter(t => !skippedTasks.has(t.id) && !scheduledOffTaskIds.has(t.id) && !isWeeklySkipped(t)),
-  [skippedTasks, scheduledOffTaskIds, isWeeklySkipped]);
+    taskList.filter(t => !skippedTasks.has(t.id) && !isWeeklySkipped(t)),
+  [skippedTasks, isWeeklySkipped]);
   
   const checkinTasks = filterSkippedAndScheduledOff(autoSort ? sortByCompletion(orderedCheckin) : orderedCheckin);
   const trainingTasks = filterSkippedAndScheduledOff(autoSort ? sortByCompletion(orderedTraining) : orderedTraining);
@@ -729,8 +733,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     ? timelineTasks 
     : [...orderedCheckin, ...orderedTraining, ...orderedTracking, ...orderedCustom];
   
-  // Skipped tasks: manually skipped OR scheduled off for today OR weekly skipped via calendar
-  const skippedTasksList = allTasks.filter(t => skippedTasks.has(t.id) || scheduledOffTaskIds.has(t.id) || isWeeklySkipped(t));
+  // Skipped tasks: manually skipped (today only) OR weekly skipped via calendar
+  const skippedTasksList = allTasks.filter(t => skippedTasks.has(t.id) || isWeeklySkipped(t));
 
   const renderTask = (task: GamePlanTask, index?: number) => {
     const Icon = task.icon;
@@ -1477,7 +1481,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <CollapsibleContent className="space-y-2 mt-2">
                 {skippedTasksList.map(task => {
                   const Icon = task.icon;
-                  const isScheduledOff = scheduledOffTaskIds.has(task.id) && !skippedTasks.has(task.id);
+                  // Weekly skipped = via calendar skips, NOT manually skipped today
+                  const isWeeklySkippedTask = isWeeklySkipped(task) && !skippedTasks.has(task.id);
                   return (
                     <div 
                       key={task.id} 
@@ -1488,7 +1493,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                         <span className="text-sm line-through text-white/50 block truncate">
                           {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
                         </span>
-                        {isScheduledOff && (
+                        {isWeeklySkippedTask && (
                           <span className="text-[10px] text-amber-400/70 font-medium flex items-center gap-1 mt-0.5">
                             <CalendarDays className="h-3 w-3" />
                             {t('gamePlan.taskSchedule.scheduledOff', 'Scheduled off')}
@@ -1498,10 +1503,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        onClick={() => isScheduledOff ? setActiveScheduleTaskId(task.id) : handleRestoreTask(task.id)}
+                        onClick={() => isWeeklySkippedTask 
+                          ? (task.taskType === 'custom' ? setActiveCustomScheduleTask(task) : setActiveScheduleTaskId(task.id))
+                          : handleRestoreTask(task.id)
+                        }
                         className="h-10 px-3 text-green-400 hover:text-green-300 hover:bg-green-500/10 gap-1"
                       >
-                        {isScheduledOff ? (
+                        {isWeeklySkippedTask ? (
                           <>
                             <Pencil className="h-4 w-4" />
                             <span className="text-xs">{t('common.edit', 'Edit')}</span>
@@ -1874,7 +1882,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         showSkipOption={true}
       />
       
-      {/* System Task Schedule Drawer - for configuring display days */}
+      {/* System Task Schedule Drawer - for configuring weekly repeat days */}
       <SystemTaskScheduleDrawer
         open={activeScheduleTaskId !== null}
         onOpenChange={(open) => { if (!open) setActiveScheduleTaskId(null); }}
@@ -1888,21 +1896,29 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         })()}
         currentDisplayDays={(() => {
           if (!activeScheduleTaskId) return [...ALL_DAYS];
-          const schedule = getSchedule(activeScheduleTaskId);
-          return schedule?.display_days || [...ALL_DAYS];
+          // Load from calendar_skipped_items and convert skip days to display days
+          const skipDays = getSkipDays(activeScheduleTaskId, 'game_plan');
+          return skipDaysToDisplayDays(skipDays);
         })()}
         currentDisplayTime={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.display_time || taskTimes[activeScheduleTaskId] || null) : null}
         currentReminderEnabled={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.reminder_enabled || false) : false}
         currentReminderMinutes={activeScheduleTaskId ? (getSchedule(activeScheduleTaskId)?.reminder_minutes || 15) : 15}
         onSave={async (displayDays, displayTime, reminderEnabled, reminderMinutes) => {
           if (activeScheduleTaskId) {
-            const success = await saveTaskSchedule(activeScheduleTaskId, displayDays, displayTime, reminderEnabled, reminderMinutes);
-            if (success) {
-              // Only update local task times if save succeeded
+            // Convert display days to skip days and save to calendar_skipped_items
+            const skipDays = displayDaysToSkipDays(displayDays);
+            const skipSuccess = await updateSkipDays(activeScheduleTaskId, 'game_plan', skipDays);
+            
+            // Also save time/reminder to game_plan_task_schedule (for time/reminder only)
+            await saveTaskSchedule(activeScheduleTaskId, displayDays, displayTime, reminderEnabled, reminderMinutes);
+            
+            if (skipSuccess) {
               setTaskTimes(prev => ({ ...prev, [activeScheduleTaskId]: displayTime }));
               setTaskReminders(prev => ({ ...prev, [activeScheduleTaskId]: reminderEnabled ? reminderMinutes : null }));
+              // Refetch calendar skips to update UI
+              refetchCalendarSkips();
             }
-            return success;
+            return skipSuccess;
           }
           return false;
         }}
@@ -1922,8 +1938,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         taskTitle={activeCustomScheduleTask?.titleKey || ''}
         currentDisplayDays={(() => {
           if (!activeCustomScheduleTask?.customActivityData) return [...ALL_DAYS];
+          const templateId = `template-${activeCustomScheduleTask.customActivityData.template.id}`;
+          // Load from calendar_skipped_items and convert skip days to display days
+          const skipDays = getSkipDays(templateId, 'custom_activity');
+          if (skipDays.length > 0) {
+            return skipDaysToDisplayDays(skipDays);
+          }
+          // Fallback to template's display_days or recurring_days
           const template = activeCustomScheduleTask.customActivityData.template;
-          // Use display_days if set, otherwise recurring_days, otherwise all days
           return (template.display_days as number[]) || template.recurring_days || [...ALL_DAYS];
         })()}
         currentDisplayTime={activeCustomScheduleTask?.customActivityData?.template.display_time || null}
@@ -1932,15 +1954,22 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         onSave={async (displayDays, displayTime, reminderEnabled, reminderMinutes) => {
           if (activeCustomScheduleTask?.customActivityData) {
             const templateId = activeCustomScheduleTask.customActivityData.template.id;
-            const success = await updateTemplateSchedule(templateId, displayDays, displayTime, reminderEnabled, reminderMinutes);
-            if (success) {
-              // Update local task times for display
+            const itemId = `template-${templateId}`;
+            
+            // Convert display days to skip days and save to calendar_skipped_items
+            const skipDays = displayDaysToSkipDays(displayDays);
+            const skipSuccess = await updateSkipDays(itemId, 'custom_activity', skipDays);
+            
+            // Also update template schedule for backwards compatibility
+            await updateTemplateSchedule(templateId, displayDays, displayTime, reminderEnabled, reminderMinutes);
+            
+            if (skipSuccess) {
               setTaskTimes(prev => ({ ...prev, [activeCustomScheduleTask.id]: displayTime }));
               setTaskReminders(prev => ({ ...prev, [activeCustomScheduleTask.id]: reminderEnabled ? reminderMinutes : null }));
-              // Refetch to update UI
+              refetchCalendarSkips();
               refetch();
             }
-            return success;
+            return skipSuccess;
           }
           return false;
         }}

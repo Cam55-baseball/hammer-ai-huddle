@@ -12,14 +12,18 @@ interface SystemTaskScheduleDrawerProps {
   onOpenChange: (open: boolean) => void;
   taskId: string;
   taskTitle: string;
+  /** Days this task should repeat (0=Sunday, 6=Saturday) - inverse of skip days */
   currentDisplayDays: number[];
   currentDisplayTime: string | null;
   currentReminderEnabled: boolean;
   currentReminderMinutes: number;
+  /** Save function that receives display days (will be converted to skip days internally) */
   onSave: (displayDays: number[], displayTime: string | null, reminderEnabled: boolean, reminderMinutes: number) => Promise<boolean>;
   onSkipTask?: () => void;
   showSkipOption?: boolean;
 }
+
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
 const DAYS = [
   { value: 0, key: 'sun', short: 'S' },
@@ -84,6 +88,7 @@ export function SystemTaskScheduleDrawer({
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Pass display days to parent - parent will handle conversion to skip days
       const success = await onSave(displayDays, displayTime || null, reminderEnabled, reminderMinutes);
       if (success) {
         onOpenChange(false);
@@ -246,4 +251,18 @@ export function SystemTaskScheduleDrawer({
       </DrawerContent>
     </Drawer>
   );
+}
+
+/**
+ * Utility to convert display days (days to show) to skip days (days to hide)
+ */
+export function displayDaysToSkipDays(displayDays: number[]): number[] {
+  return ALL_DAYS.filter(d => !displayDays.includes(d));
+}
+
+/**
+ * Utility to convert skip days (days to hide) to display days (days to show)
+ */
+export function skipDaysToDisplayDays(skipDays: number[]): number[] {
+  return ALL_DAYS.filter(d => !skipDays.includes(d));
 }
