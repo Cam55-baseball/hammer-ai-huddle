@@ -1197,6 +1197,24 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 </PopoverTrigger>
                 <PopoverContent className="w-56 p-2" align="end">
                   <div className="space-y-1">
+                    {/* Unlock Today - shown when date-specific lock exists */}
+                    {isDateLockedToday && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-start text-yellow-500 hover:text-yellow-600"
+                        onClick={async () => {
+                          const today = new Date();
+                          await unlockDate(today);
+                          await refetchDayOrders();
+                          toast.success(t('gamePlan.lockOrder.unlocked', 'Day unlocked'));
+                        }}
+                      >
+                        <Unlock className="h-4 w-4 mr-2" />
+                        {t('gamePlan.lockOrder.unlockToday', 'Unlock Today')}
+                      </Button>
+                    )}
+                    
                     {/* Lock current order for today */}
                     <Button 
                       variant="ghost" 
@@ -1231,10 +1249,23 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                       {t('gamePlan.lockOrder.unlockForWeek', 'Unlock for Week...')}
                     </Button>
                     
-                    {/* Show locked days indicator */}
-                    {lockedDayNumbers.length > 0 && (
+                    {/* Show lock source indicator */}
+                    {todayLocked && (
                       <div className="px-2 py-1.5 text-xs text-muted-foreground border-t mt-1 pt-2">
-                        {t('gamePlan.lockOrder.currentlyLocked', 'Locked:')} {lockedDayNumbers.length} {t('gamePlan.lockOrder.daysLabel', 'days')}
+                        <span className="flex items-center gap-1">
+                          <Lock className="h-3 w-3" />
+                          {isDateLockedToday 
+                            ? t('gamePlan.lockOrder.lockedForToday', 'Today: Day Locked')
+                            : t('gamePlan.lockOrder.lockedWeekly', 'Today: Weekly Lock')
+                          }
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Show weekly locked days count */}
+                    {lockedDayNumbers.length > 0 && (
+                      <div className="px-2 py-1 text-xs text-muted-foreground">
+                        {t('gamePlan.lockOrder.weeklyLocked', 'Weekly:')} {lockedDayNumbers.length} {t('gamePlan.lockOrder.daysLabel', 'days')}
                       </div>
                     )}
                   </div>
