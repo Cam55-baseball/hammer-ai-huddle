@@ -4,7 +4,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarDays, Clock, Bell, X, Check, Loader2 } from 'lucide-react';
+import { RefreshCw, Clock, Bell, X, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SystemTaskScheduleDrawerProps {
@@ -118,8 +118,8 @@ export function SystemTaskScheduleDrawer({
       <DrawerContent className="px-4 pb-0 flex flex-col max-h-[85vh]">
         <DrawerHeader className="text-left px-0 flex-shrink-0">
           <DrawerTitle className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            {t('gamePlan.taskSchedule.title', 'Task Schedule')}
+            <RefreshCw className="h-5 w-5 text-primary" />
+            {t('gamePlan.taskSchedule.repeatWeekly', 'Repeat Weekly')}
           </DrawerTitle>
           <DrawerDescription className="whitespace-normal break-words line-clamp-3">
             {taskTitle}
@@ -128,13 +128,13 @@ export function SystemTaskScheduleDrawer({
 
         {/* Scrollable content area */}
         <div className="flex-1 overflow-y-auto space-y-6 mt-2 pb-4">
-          {/* Display Days Picker */}
+          {/* Repeat Weekly Picker */}
           <div className="space-y-3">
             <label className="text-sm font-bold text-foreground">
-              {t('gamePlan.taskSchedule.displayDays', 'Display Days')}
+              {t('gamePlan.taskSchedule.repeatWeekly', 'Repeat Weekly')}
             </label>
             <p className="text-xs text-muted-foreground">
-              {t('gamePlan.taskSchedule.displayDaysDesc', 'Select which days to show this task')}
+              {t('gamePlan.taskSchedule.repeatWeeklyDesc', 'Select which days this activity repeats')}
             </p>
             
             <div className="flex justify-between gap-1">
