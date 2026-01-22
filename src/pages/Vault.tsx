@@ -116,7 +116,16 @@ export default function Vault() {
   const { modules: subscribedModules } = useSubscription();
   
   // Use shared recap countdown hook
-  const { daysUntilRecap, recapProgress, canGenerateRecap: canGenRecap, hasMissedRecap, missedCycleEnd } = useRecapCountdown();
+  const { 
+    daysUntilRecap, 
+    recapProgress, 
+    canGenerateRecap: canGenRecap, 
+    hasMissedRecap, 
+    missedCycleEnd,
+    waitingForProgressReports,
+    progressReportsUnlockedAt,
+    refetch: refetchRecapCountdown
+  } = useRecapCountdown();
   
   // Individual refs declared at top level (React hooks rules)
   const performanceTestsRef = useRef<HTMLDivElement>(null);
@@ -276,6 +285,7 @@ export default function Vault() {
     const result = await savePerformanceTest(testType, results);
     if (result.success) {
       toast.success(t('vault.performance.saved'));
+      refetchRecapCountdown(); // Refresh countdown state after progress report saved
     } else {
       toast.error(t('vault.performance.error'));
     }
@@ -286,6 +296,7 @@ export default function Vault() {
     const result = await saveProgressPhoto(data);
     if (result.success) {
       toast.success(t('vault.photos.saved'));
+      refetchRecapCountdown(); // Refresh countdown state after progress report saved
     } else {
       toast.error(t('vault.photos.error'));
     }
@@ -399,6 +410,7 @@ export default function Vault() {
                 isLoading={loading}
                 hasMissedRecap={hasMissedRecap}
                 missedCycleEnd={missedCycleEnd}
+                waitingForProgressReports={waitingForProgressReports}
               />
 
               {/* Weekly Trend Cards */}
@@ -683,6 +695,7 @@ export default function Vault() {
                         sport={userSport}
                         subscribedModules={subscribedModules}
                         autoOpen={autoOpenSection === 'performance-tests'}
+                        recapUnlockedAt={progressReportsUnlockedAt}
                       />
                     </div>
 
@@ -691,6 +704,7 @@ export default function Vault() {
                       <VaultProgressPhotosCard
                         photos={progressPhotos}
                         onSave={handleSaveProgressPhoto}
+                        recapUnlockedAt={progressReportsUnlockedAt}
                       />
                     </div>
                   </div>
