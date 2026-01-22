@@ -39,6 +39,8 @@ import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
 import { useScheduleTemplates, ScheduleItem } from '@/hooks/useScheduleTemplates';
 import { useDailySummaryNotification } from '@/hooks/useDailySummaryNotification';
+import { useGamePlanLock, ScheduleItem as LockScheduleItem } from '@/hooks/useGamePlanLock';
+import { UnlockDayPickerDialog } from '@/components/game-plan/UnlockDayPickerDialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { CustomActivityTemplate } from '@/types/customActivity';
@@ -114,39 +116,22 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     } catch { return {}; }
   });
   
-  // Lock order state with day selection for "this week"
-  const [orderLocked, setOrderLocked] = useState<'day' | 'week' | null>(() => {
-    try {
-      const stored = localStorage.getItem('gameplan-order-lock');
-      if (!stored) return null;
-      const { type, expires, days } = JSON.parse(stored);
-      if (new Date(expires) < new Date()) {
-        localStorage.removeItem('gameplan-order-lock');
-        return null;
-      }
-      // For week lock, check if today is in the selected days
-      if (type === 'week' && days) {
-        const todayDayOfWeek = getDay(new Date());
-        if (!days.includes(todayDayOfWeek)) {
-          return null; // Lock doesn't apply today
-        }
-      }
-      return type;
-    } catch { return null; }
-  });
+  // Database-backed lock state
+  const { 
+    isTodayLocked, 
+    getLockedDayNumbers, 
+    getTodaySchedule,
+    lockToday, 
+    lockDays: lockDaysDb, 
+    unlockDays,
+    loading: lockLoading 
+  } = useGamePlanLock();
   
-  // Selected days for week lock (0=Sunday, 1=Monday, ... 6=Saturday)
-  const [lockDays, setLockDays] = useState<number[]>(() => {
-    try {
-      const stored = localStorage.getItem('gameplan-order-lock');
-      if (!stored) return [1, 2, 3, 4, 5]; // Default to weekdays
-      const { days } = JSON.parse(stored);
-      return days || [1, 2, 3, 4, 5];
-    } catch { return [1, 2, 3, 4, 5]; }
-  });
+  const todayLocked = isTodayLocked();
+  const lockedDayNumbers = getLockedDayNumbers();
   
-  // Day picker dialog for "Lock for This Week"
-  const [dayPickerOpen, setDayPickerOpen] = useState(false);
+  // Unlock for week dialog
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   
   // Template dialogs
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
@@ -349,7 +334,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     }
   }, [dailySummaryEnabled, tasks, taskTimes, taskReminders, scheduleDailySummary]);
 
-  // Sync ordered tasks with fetched tasks and restore saved order
+  // Sync ordered tasks with fetched tasks and restore saved order (or locked order)
   useEffect(() => {
     const checkinTasksList = tasks.filter(t => t.section === 'checkin');
     const trainingTasksList = tasks.filter(t => t.section === 'training');
@@ -378,25 +363,57 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     };
 
     if (sortMode === 'timeline') {
-      // Timeline mode: single unified list
-      const savedTimelineOrder = localStorage.getItem('gameplan-timeline-order');
-      if (savedTimelineOrder) {
-        try {
-          const orderIds = JSON.parse(savedTimelineOrder) as string[];
-          const allTasks = [...tasks].sort((a, b) => {
-            const aIdx = orderIds.indexOf(a.id);
-            const bIdx = orderIds.indexOf(b.id);
-            if (aIdx === -1 && bIdx === -1) return 0;
-            if (aIdx === -1) return 1;
-            if (bIdx === -1) return -1;
-            return aIdx - bIdx;
-          });
-          setTimelineTasks(allTasks);
-        } catch {
+      // Timeline mode: check for locked schedule first, then fall back to localStorage
+      const lockedSchedule = getTodaySchedule();
+      
+      if (lockedSchedule && lockedSchedule.length > 0) {
+        // Apply locked order from database
+        const orderIds = lockedSchedule.sort((a, b) => a.order - b.order).map(s => s.taskId);
+        const allTasks = [...tasks].sort((a, b) => {
+          const aIdx = orderIds.indexOf(a.id);
+          const bIdx = orderIds.indexOf(b.id);
+          if (aIdx === -1 && bIdx === -1) return 0;
+          if (aIdx === -1) return 1;
+          if (bIdx === -1) return -1;
+          return aIdx - bIdx;
+        });
+        setTimelineTasks(allTasks);
+        
+        // Also apply saved times/reminders from locked schedule
+        const newTimes: Record<string, string | null> = { ...taskTimes };
+        const newReminders: Record<string, number | null> = { ...taskReminders };
+        lockedSchedule.forEach(item => {
+          if (item.displayTime) newTimes[item.taskId] = item.displayTime;
+          if (item.reminderEnabled && item.reminderMinutes) {
+            newReminders[item.taskId] = item.reminderMinutes;
+          }
+        });
+        // Only update if there are differences to avoid infinite loops
+        const timesChanged = JSON.stringify(newTimes) !== JSON.stringify(taskTimes);
+        const remindersChanged = JSON.stringify(newReminders) !== JSON.stringify(taskReminders);
+        if (timesChanged) setTaskTimes(newTimes);
+        if (remindersChanged) setTaskReminders(newReminders);
+      } else {
+        // Fall back to localStorage
+        const savedTimelineOrder = localStorage.getItem('gameplan-timeline-order');
+        if (savedTimelineOrder) {
+          try {
+            const orderIds = JSON.parse(savedTimelineOrder) as string[];
+            const allTasks = [...tasks].sort((a, b) => {
+              const aIdx = orderIds.indexOf(a.id);
+              const bIdx = orderIds.indexOf(b.id);
+              if (aIdx === -1 && bIdx === -1) return 0;
+              if (aIdx === -1) return 1;
+              if (bIdx === -1) return -1;
+              return aIdx - bIdx;
+            });
+            setTimelineTasks(allTasks);
+          } catch {
+            setTimelineTasks([...tasks]);
+          }
+        } else {
           setTimelineTasks([...tasks]);
         }
-      } else {
-        setTimelineTasks([...tasks]);
       }
     } else if (sortMode === 'manual') {
       setOrderedCheckin(restoreOrder(checkinTasksList, 'gameplan-checkin-order'));
@@ -410,7 +427,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       setOrderedCustom(customTasksList);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasksKey, sortMode]);
+  }, [tasksKey, sortMode, todayLocked]);
 
   const handleTaskClick = (task: GamePlanTask) => {
     // Handle custom activities - open detail dialog
@@ -495,7 +512,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   }, []);
 
   const cycleSortMode = () => {
-    if (orderLocked) {
+    if (todayLocked) {
       toast.error(t('gamePlan.lockOrder.locked'));
       return;
     }
@@ -507,31 +524,31 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   };
 
   const handleReorderTimeline = (newOrder: GamePlanTask[]) => {
-    if (orderLocked) return;
+    if (todayLocked) return;
     setTimelineTasks(newOrder);
     localStorage.setItem('gameplan-timeline-order', JSON.stringify(newOrder.map(t => t.id)));
   };
 
   const handleReorderCheckin = (newOrder: GamePlanTask[]) => {
-    if (orderLocked) return;
+    if (todayLocked) return;
     setOrderedCheckin(newOrder);
     localStorage.setItem('gameplan-checkin-order', JSON.stringify(newOrder.map(t => t.id)));
   };
 
   const handleReorderTraining = (newOrder: GamePlanTask[]) => {
-    if (orderLocked) return;
+    if (todayLocked) return;
     setOrderedTraining(newOrder);
     localStorage.setItem('gameplan-training-order', JSON.stringify(newOrder.map(t => t.id)));
   };
 
   const handleReorderTracking = (newOrder: GamePlanTask[]) => {
-    if (orderLocked) return;
+    if (todayLocked) return;
     setOrderedTracking(newOrder);
     localStorage.setItem('gameplan-tracking-order', JSON.stringify(newOrder.map(t => t.id)));
   };
 
   const handleReorderCustom = (newOrder: GamePlanTask[]) => {
-    if (orderLocked) return;
+    if (todayLocked) return;
     setOrderedCustom(newOrder);
     localStorage.setItem('gameplan-custom-order', JSON.stringify(newOrder.map(t => t.id)));
   };
@@ -601,47 +618,42 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     setActiveTimePickerTaskId(null);
   };
   
-  // Lock order handlers
-  const handleLockOrder = (type: 'day' | 'week') => {
-    if (type === 'week') {
-      // Open day picker dialog for week lock
-      setDayPickerOpen(true);
-      return;
-    }
-    
-    const expires = new Date(new Date().setHours(23, 59, 59, 999));
-    localStorage.setItem('gameplan-order-lock', JSON.stringify({ type, expires: expires.toISOString() }));
-    setOrderLocked(type);
-    toast.success(t('gamePlan.lockOrder.locked'));
-  };
-  
-  const handleConfirmWeekLock = () => {
-    if (lockDays.length === 0) {
-      toast.error(t('gamePlan.lockOrder.selectAtLeastOne'));
-      return;
-    }
-    
-    const expires = addDays(startOfWeek(new Date(), { weekStartsOn: 1 }), 7);
-    localStorage.setItem('gameplan-order-lock', JSON.stringify({ 
-      type: 'week', 
-      expires: expires.toISOString(),
-      days: lockDays 
+  // Lock order handlers - now use database-backed hook
+  const handleLockCurrentOrder = async () => {
+    const schedule: LockScheduleItem[] = timelineTasks.map((t, idx) => ({
+      taskId: t.id,
+      order: idx,
+      displayTime: taskTimes[t.id] || null,
+      reminderMinutes: taskReminders[t.id] || null,
+      reminderEnabled: !!taskReminders[t.id],
     }));
-    setOrderLocked('week');
-    setDayPickerOpen(false);
-    toast.success(t('gamePlan.lockOrder.locked'));
+    
+    await lockToday(schedule);
   };
   
-  const toggleLockDay = (day: number) => {
-    setLockDays(prev => 
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
+  const handleOpenUnlockDialog = () => {
+    setUnlockDialogOpen(true);
   };
   
-  const handleUnlockOrder = () => {
-    localStorage.removeItem('gameplan-order-lock');
-    setOrderLocked(null);
-    toast.success(t('gamePlan.lockOrder.unlocked'));
+  const handleUnlockSave = async (daysToUnlock: number[], daysToLock: number[]) => {
+    // Build current schedule for any new locks
+    const schedule: LockScheduleItem[] = timelineTasks.map((t, idx) => ({
+      taskId: t.id,
+      order: idx,
+      displayTime: taskTimes[t.id] || null,
+      reminderMinutes: taskReminders[t.id] || null,
+      reminderEnabled: !!taskReminders[t.id],
+    }));
+    
+    // Unlock days first
+    if (daysToUnlock.length > 0) {
+      await unlockDays(daysToUnlock);
+    }
+    
+    // Lock new days
+    if (daysToLock.length > 0) {
+      await lockDaysDb(daysToLock, schedule);
+    }
   };
   
   // Template handlers
@@ -801,7 +813,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         {(sortMode === 'manual' || sortMode === 'timeline') && (
           <div className={cn(
             "flex-shrink-0 text-white/60",
-            orderLocked ? "opacity-30" : "cursor-grab active:cursor-grabbing hover:text-white"
+            todayLocked ? "opacity-30" : "cursor-grab active:cursor-grabbing hover:text-white"
           )}>
             <GripVertical className="h-5 w-5" />
           </div>
@@ -997,7 +1009,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         ) : sortMode === 'manual' ? (
           <Reorder.Group axis="y" values={orderedTasks} onReorder={onReorder} className="space-y-2">
             {orderedTasks.map((task) => (
-              <Reorder.Item key={task.id} value={task} drag={!orderLocked}>
+              <Reorder.Item key={task.id} value={task} drag={!todayLocked}>
                 {renderTask(task)}
               </Reorder.Item>
             ))}
@@ -1079,45 +1091,44 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                     size="sm"
                     className={cn(
                       "h-8 px-2",
-                      orderLocked ? "text-yellow-400" : "text-white/70 hover:text-white"
+                      todayLocked ? "text-yellow-400" : "text-white/70 hover:text-white"
                     )}
                   >
-                    {orderLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                    {todayLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-48 p-2" align="end">
-                  {orderLocked ? (
+                <PopoverContent className="w-56 p-2" align="end">
+                  <div className="space-y-1">
+                    {/* Lock current order for today */}
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       className="w-full justify-start"
-                      onClick={handleUnlockOrder}
+                      onClick={handleLockCurrentOrder}
+                      disabled={todayLocked}
+                    >
+                      <Lock className="h-4 w-4 mr-2" />
+                      {t('gamePlan.lockOrder.forToday', 'Lock for Today')}
+                    </Button>
+                    
+                    {/* Unlock for week - opens dialog */}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full justify-start"
+                      onClick={handleOpenUnlockDialog}
                     >
                       <Unlock className="h-4 w-4 mr-2" />
-                      {t('gamePlan.lockOrder.unlock')}
+                      {t('gamePlan.lockOrder.unlockForWeek', 'Unlock for Week...')}
                     </Button>
-                  ) : (
-                    <>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full justify-start"
-                        onClick={() => handleLockOrder('day')}
-                      >
-                        <Lock className="h-4 w-4 mr-2" />
-                        {t('gamePlan.lockOrder.forToday')}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full justify-start"
-                        onClick={() => handleLockOrder('week')}
-                      >
-                        <Lock className="h-4 w-4 mr-2" />
-                        {t('gamePlan.lockOrder.forWeek')}
-                      </Button>
-                    </>
-                  )}
+                    
+                    {/* Show locked days indicator */}
+                    {lockedDayNumbers.length > 0 && (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground border-t mt-1 pt-2">
+                        {t('gamePlan.lockOrder.currentlyLocked', 'Locked:')} {lockedDayNumbers.length} {t('gamePlan.lockOrder.daysLabel', 'days')}
+                      </div>
+                    )}
+                  </div>
                 </PopoverContent>
               </Popover>
             )}
@@ -1318,7 +1329,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   <Reorder.Item 
                     key={task.id} 
                     value={task}
-                    drag={!orderLocked}
+                    drag={!todayLocked}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
                     onDrag={(e) => handleDrag(e as any)}
@@ -1803,57 +1814,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         </DrawerContent>
       </Drawer>
       
-      {/* Day Picker Dialog for Week Lock */}
-      <Dialog open={dayPickerOpen} onOpenChange={setDayPickerOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('gamePlan.lockOrder.selectDays')}</DialogTitle>
-            <DialogDescription>
-              {t('gamePlan.lockOrder.selectDaysDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { day: 0, label: t('gamePlan.lockOrder.days.sun') },
-                { day: 1, label: t('gamePlan.lockOrder.days.mon') },
-                { day: 2, label: t('gamePlan.lockOrder.days.tue') },
-                { day: 3, label: t('gamePlan.lockOrder.days.wed') },
-                { day: 4, label: t('gamePlan.lockOrder.days.thu') },
-                { day: 5, label: t('gamePlan.lockOrder.days.fri') },
-                { day: 6, label: t('gamePlan.lockOrder.days.sat') },
-              ].map(({ day, label }) => (
-                <div 
-                  key={day}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
-                    lockDays.includes(day) 
-                      ? "border-primary bg-primary/10" 
-                      : "border-border hover:border-primary/50"
-                  )}
-                  onClick={() => toggleLockDay(day)}
-                >
-                  <Checkbox 
-                    checked={lockDays.includes(day)}
-                    onCheckedChange={() => toggleLockDay(day)}
-                  />
-                  <span className="font-medium">{label}</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground mt-4 text-center">
-              {t('gamePlan.lockOrder.daysSelected', { count: lockDays.length })}
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDayPickerOpen(false)}>{t('common.cancel')}</Button>
-            <Button onClick={handleConfirmWeekLock} disabled={lockDays.length === 0}>
-              <Lock className="h-4 w-4 mr-2" />
-              {t('gamePlan.lockOrder.lock')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Unlock Day Picker Dialog */}
+      <UnlockDayPickerDialog
+        open={unlockDialogOpen}
+        onOpenChange={setUnlockDialogOpen}
+        lockedDays={lockedDayNumbers}
+        onSave={handleUnlockSave}
+      />
       
       {/* Time Settings Drawer - mobile friendly */}
       <TimeSettingsDrawer
