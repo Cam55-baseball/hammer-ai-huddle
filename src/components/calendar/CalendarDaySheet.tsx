@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Reorder, useDragControls } from 'framer-motion';
 import { 
   Plus, 
   Clock, 
@@ -19,13 +20,16 @@ import {
   ChevronDown,
   RotateCcw,
   Lock,
+  Unlock,
+  GripVertical,
+  ArrowUpDown,
 } from 'lucide-react';
 import { format, getDay } from 'date-fns';
 import { CalendarEvent } from '@/hooks/useCalendar';
 import { cn } from '@/lib/utils';
 import { SkipDayPickerDialog } from './SkipDayPickerDialog';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
-import { useGamePlanLock } from '@/hooks/useGamePlanLock';
+import { useCalendarDayOrders, getOrderKey } from '@/hooks/useCalendarDayOrders';
 import { toast } from 'sonner';
 
 interface CalendarDaySheetProps {
@@ -74,6 +78,146 @@ const formatTime = (time: string | null | undefined): string => {
   return `${displayHour}:${minutes} ${ampm}`;
 };
 
+// Draggable event item component
+function DraggableEventCard({
+  event,
+  isSkipped,
+  isReorderMode,
+  onSkipClick,
+  onUnskipClick,
+  onDeleteClick,
+  t,
+}: {
+  event: CalendarEvent;
+  isSkipped: boolean;
+  isReorderMode: boolean;
+  onSkipClick: (e: CalendarEvent) => void;
+  onUnskipClick: (e: CalendarEvent) => void;
+  onDeleteClick: (id: string) => void;
+  t: (key: string, fallback: string) => string;
+}) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={event}
+      id={event.id}
+      dragListener={false}
+      dragControls={dragControls}
+      className={cn(
+        "flex items-start gap-3 p-3 rounded-lg border transition-colors",
+        isSkipped ? "bg-muted/50 opacity-60" : "bg-card hover:bg-accent/30",
+        event.completed && "opacity-60",
+        isReorderMode && "cursor-move"
+      )}
+    >
+      {/* Drag handle - only in reorder mode */}
+      {isReorderMode && !isSkipped && (
+        <div
+          className="flex-shrink-0 touch-none cursor-grab active:cursor-grabbing p-1"
+          onPointerDown={(e) => dragControls.start(e)}
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
+      )}
+      
+      {/* Color indicator */}
+      <div
+        className="w-1 h-full min-h-[40px] rounded-full flex-shrink-0"
+        style={{ backgroundColor: event.color }}
+      />
+      
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              {event.completed && (
+                <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+              )}
+              <h4 className={cn(
+                "font-semibold text-sm truncate",
+                event.completed && "line-through text-muted-foreground",
+                isSkipped && "line-through text-muted-foreground"
+              )}>
+                {event.title}
+              </h4>
+            </div>
+            
+            {event.description && !isSkipped && (
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                {event.description}
+              </p>
+            )}
+            
+            <div className="flex items-center gap-2 mt-1.5">
+              {event.startTime && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>{formatTime(event.startTime)}</span>
+                  {event.endTime && (
+                    <span>- {formatTime(event.endTime)}</span>
+                  )}
+                </div>
+              )}
+              
+              <Badge variant="outline" className="text-[10px] h-5">
+                {t(`calendar.eventTypes.${event.type}`, event.type)}
+              </Badge>
+            </div>
+          </div>
+          
+          {/* Actions - hidden in reorder mode */}
+          {!isReorderMode && (
+            <div className="flex items-center gap-1">
+              {isSkipped ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onUnskipClick(event);
+                  }}
+                  title={t('calendar.skip.unskip', 'Un-skip')}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSkipClick(event);
+                  }}
+                  title={t('calendar.skip.skipButton', 'Skip')}
+                >
+                  <SkipForward className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              
+              {!isSkipped && event.deletable && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteClick(event.id);
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </Reorder.Item>
+  );
+}
+
 export function CalendarDaySheet({
   open,
   onOpenChange,
@@ -85,21 +229,40 @@ export function CalendarDaySheet({
 }: CalendarDaySheetProps) {
   const { t } = useTranslation();
   const { isSkippedForDay, getSkipDays, updateSkipDays, unskipForDay } = useCalendarSkips();
-  const { isDayLocked } = useGamePlanLock();
+  const { isDateLocked, saveDayOrder, unlockDate, getOrderKeysForDate, fetchDayOrdersForRange, refetch: refetchDayOrders } = useCalendarDayOrders();
   
   const [skipDialogOpen, setSkipDialogOpen] = useState(false);
   const [selectedEventForSkip, setSelectedEventForSkip] = useState<CalendarEvent | null>(null);
   const [showSkippedSection, setShowSkippedSection] = useState(false);
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [orderedEvents, setOrderedEvents] = useState<CalendarEvent[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch day orders when sheet opens with a date
+  useEffect(() => {
+    if (open && date) {
+      fetchDayOrdersForRange(date, date);
+    }
+  }, [open, date, fetchDayOrdersForRange]);
+
+  // Update ordered events when events or date changes
+  useEffect(() => {
+    if (date && events.length > 0) {
+      // Filter to active events only for reordering
+      const active = events.filter(event => 
+        !isSkippedForDay(event.source || event.id, event.type, date)
+      );
+      setOrderedEvents(active);
+    }
+  }, [events, date, isSkippedForDay]);
 
   if (!date) return null;
 
   const dayOfWeek = getDay(date);
-  const isLockedOrder = isDayLocked(dayOfWeek);
+  const isLockedOrder = isDateLocked(date);
   
   // Helper to get unique item ID for skip tracking
   const getSkipItemId = (event: CalendarEvent): string => {
-    // For custom_activity, use the source which now contains template-{uuid}
-    // For other types, fall back to source or id
     return event.source || event.id;
   };
   
@@ -111,8 +274,8 @@ export function CalendarDaySheet({
     isSkippedForDay(getSkipItemId(event), event.type, date)
   );
 
-  // Only group by time of day if NOT using locked order
-  const { morning, afternoon, evening, allDay } = isLockedOrder 
+  // Only group by time of day if NOT using locked order and NOT in reorder mode
+  const { morning, afternoon, evening, allDay } = (isLockedOrder || isReorderMode)
     ? { morning: [], afternoon: [], evening: [], allDay: [] } 
     : groupEventsByTimeOfDay(activeEvents);
   const hasActiveEvents = activeEvents.length > 0;
@@ -145,6 +308,66 @@ export function CalendarDaySheet({
       toast.success(t('calendar.skip.unskipSuccess', 'Item un-skipped'));
     } else {
       toast.error(t('calendar.skip.unskipFailed', 'Failed to un-skip item'));
+    }
+  };
+
+  const handleEnterReorderMode = () => {
+    setOrderedEvents([...activeEvents]);
+    setIsReorderMode(true);
+  };
+
+  const handleCancelReorder = () => {
+    setIsReorderMode(false);
+    setOrderedEvents([...activeEvents]);
+  };
+
+  const handleLockOrder = async () => {
+    if (!date) return;
+    
+    setIsSaving(true);
+    try {
+      // Generate order keys from current ordered events
+      const orderKeys = orderedEvents.map(event => {
+        // Use the event's orderKey if available, otherwise generate one
+        return event.orderKey || getOrderKey(event);
+      });
+      
+      const success = await saveDayOrder(date, orderKeys, true);
+      
+      if (success) {
+        toast.success(t('calendar.lock.lockSuccess', 'Day order locked'));
+        setIsReorderMode(false);
+        // Refetch to get updated state
+        await refetchDayOrders();
+      } else {
+        toast.error(t('calendar.lock.lockFailed', 'Failed to lock day order'));
+      }
+    } catch (err) {
+      console.error('Error locking day order:', err);
+      toast.error(t('calendar.lock.lockFailed', 'Failed to lock day order'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUnlock = async () => {
+    if (!date) return;
+    
+    setIsSaving(true);
+    try {
+      const success = await unlockDate(date);
+      
+      if (success) {
+        toast.success(t('calendar.lock.unlockSuccess', 'Day order unlocked'));
+        await refetchDayOrders();
+      } else {
+        toast.error(t('calendar.lock.unlockFailed', 'Failed to unlock day order'));
+      }
+    } catch (err) {
+      console.error('Error unlocking day order:', err);
+      toast.error(t('calendar.lock.unlockFailed', 'Failed to unlock day order'));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -203,7 +426,6 @@ export function CalendarDaySheet({
           </div>
           
           <div className="flex items-center gap-1">
-            {/* Skip/Un-skip button based on state */}
             {isSkipped ? (
               <Button
                 variant="ghost"
@@ -232,7 +454,6 @@ export function CalendarDaySheet({
               </Button>
             )}
             
-            {/* Delete button - only for non-skipped deletable items */}
             {!isSkipped && event.deletable && (
               <Button
                 variant="ghost"
@@ -279,12 +500,18 @@ export function CalendarDaySheet({
           <SheetHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div>
-              <SheetTitle className="text-lg font-bold flex items-center gap-2">
+                <SheetTitle className="text-lg font-bold flex items-center gap-2">
                   {format(date, 'EEEE')}
-                  {isLockedOrder && (
+                  {isLockedOrder && !isReorderMode && (
                     <Badge variant="outline" className="text-xs gap-1 text-wellness-coral-foreground border-wellness-coral/50 bg-wellness-coral/10">
                       <Lock className="h-3 w-3" />
                       {t('calendar.lockedOrder', 'Locked')}
+                    </Badge>
+                  )}
+                  {isReorderMode && (
+                    <Badge variant="outline" className="text-xs gap-1 border-primary/50 bg-primary/10">
+                      <ArrowUpDown className="h-3 w-3" />
+                      {t('calendar.reorderMode', 'Reordering')}
                     </Badge>
                   )}
                 </SheetTitle>
@@ -292,10 +519,59 @@ export function CalendarDaySheet({
                   {format(date, 'MMMM d, yyyy')}
                 </SheetDescription>
               </div>
-              <Button size="sm" onClick={onAddEvent} className="gap-1.5">
-                <Plus className="h-4 w-4" />
-                {t('calendar.addEvent', 'Add')}
-              </Button>
+              
+              {/* Action buttons */}
+              {!isReorderMode ? (
+                <div className="flex items-center gap-2">
+                  {isLockedOrder ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleUnlock}
+                      disabled={isSaving}
+                      className="gap-1.5"
+                    >
+                      <Unlock className="h-4 w-4" />
+                      {t('calendar.unlock', 'Unlock')}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleEnterReorderMode}
+                      className="gap-1.5"
+                      disabled={activeEvents.length < 2}
+                    >
+                      <ArrowUpDown className="h-4 w-4" />
+                      {t('calendar.reorder', 'Reorder')}
+                    </Button>
+                  )}
+                  <Button size="sm" onClick={onAddEvent} className="gap-1.5">
+                    <Plus className="h-4 w-4" />
+                    {t('calendar.addEvent', 'Add')}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCancelReorder}
+                    disabled={isSaving}
+                  >
+                    {t('common.cancel', 'Cancel')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleLockOrder}
+                    disabled={isSaving}
+                    className="gap-1.5"
+                  >
+                    <Lock className="h-4 w-4" />
+                    {t('calendar.lock.lockDay', 'Lock Order')}
+                  </Button>
+                </div>
+              )}
             </div>
           </SheetHeader>
           
@@ -320,12 +596,39 @@ export function CalendarDaySheet({
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Locked Order: Single ordered list */}
-                {isLockedOrder ? (
+                {/* Reorder Mode: Draggable list */}
+                {isReorderMode ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase">
+                      <GripVertical className="h-3.5 w-3.5" />
+                      <span>{t('calendar.dragToReorder', 'Drag to reorder')}</span>
+                    </div>
+                    <Reorder.Group
+                      axis="y"
+                      values={orderedEvents}
+                      onReorder={setOrderedEvents}
+                      className="space-y-2"
+                    >
+                      {orderedEvents.map(event => (
+                        <DraggableEventCard
+                          key={event.id}
+                          event={event}
+                          isSkipped={false}
+                          isReorderMode={true}
+                          onSkipClick={handleOpenSkipDialog}
+                          onUnskipClick={handleUnskip}
+                          onDeleteClick={onDeleteEvent}
+                          t={t}
+                        />
+                      ))}
+                    </Reorder.Group>
+                  </div>
+                ) : isLockedOrder ? (
+                  /* Locked Order: Single ordered list */
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase">
                       <Lock className="h-3.5 w-3.5 text-wellness-coral" />
-                      <span>{t('calendar.lockedOrderSection', 'Game Plan Order')}</span>
+                      <span>{t('calendar.lockedOrderSection', 'Locked Order')}</span>
                     </div>
                     <div className="space-y-2">
                       {activeEvents.map(e => renderEventCard(e, false))}
@@ -369,8 +672,8 @@ export function CalendarDaySheet({
                   </>
                 )}
 
-                {/* Skipped Section - shown in both modes */}
-                {skippedEvents.length > 0 && (
+                {/* Skipped Section - shown when not in reorder mode */}
+                {!isReorderMode && skippedEvents.length > 0 && (
                   <div className="mt-6 pt-4 border-t border-border">
                     <Collapsible open={showSkippedSection} onOpenChange={setShowSkippedSection}>
                       <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">

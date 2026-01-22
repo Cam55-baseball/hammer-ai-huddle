@@ -149,6 +149,36 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_day_orders: {
+        Row: {
+          created_at: string
+          event_date: string
+          id: string
+          locked: boolean
+          order_keys: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_date: string
+          id?: string
+          locked?: boolean
+          order_keys?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          id?: string
+          locked?: boolean
+          order_keys?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           all_day: boolean | null
