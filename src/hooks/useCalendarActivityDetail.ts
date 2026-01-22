@@ -20,6 +20,7 @@ interface UseCalendarActivityDetailReturn {
   handleSaveTime: (time: string | null, reminder: number | null) => Promise<void>;
   handleToggleCheckbox: (fieldId: string, checked: boolean) => Promise<void>;
   navigateToSystemTask: (event: CalendarEvent) => void;
+  quickComplete: (event: CalendarEvent, date: Date) => Promise<boolean>;
 }
 
 // Route mappings for system tasks
@@ -303,6 +304,58 @@ export function useCalendarActivityDetail(
     }
   }, [currentTemplateId, currentDate, selectedTask]);
 
+  // Quick complete for calendar cards without opening detail dialog
+  const quickComplete = useCallback(async (event: CalendarEvent, date: Date): Promise<boolean> => {
+    // Only custom_activity type supports quick complete
+    if (event.type !== 'custom_activity') return false;
+
+    const templateId = event.source?.replace('template-', '');
+    if (!templateId) return false;
+
+    try {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Check for existing log
+      const { data: existingLog } = await supabase
+        .from('custom_activity_logs')
+        .select('*')
+        .eq('template_id', templateId)
+        .eq('entry_date', dateStr)
+        .maybeSingle();
+
+      if (existingLog) {
+        // Toggle existing
+        const newCompleted = !existingLog.completed;
+        await supabase
+          .from('custom_activity_logs')
+          .update({
+            completed: newCompleted,
+            completed_at: newCompleted ? new Date().toISOString() : null,
+          })
+          .eq('id', existingLog.id);
+      } else {
+        // Create new completed log
+        await supabase
+          .from('custom_activity_logs')
+          .insert({
+            template_id: templateId,
+            user_id: user.id,
+            entry_date: dateStr,
+            completed: true,
+            completed_at: new Date().toISOString(),
+          });
+      }
+
+      onRefresh?.();
+      return true;
+    } catch (err) {
+      console.error('Error quick completing activity:', err);
+      return false;
+    }
+  }, [onRefresh]);
+
   return {
     selectedTask,
     taskTime,
@@ -315,5 +368,6 @@ export function useCalendarActivityDetail(
     handleSaveTime,
     handleToggleCheckbox,
     navigateToSystemTask,
+    quickComplete,
   };
 }
