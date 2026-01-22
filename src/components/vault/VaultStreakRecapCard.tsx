@@ -73,6 +73,8 @@ interface VaultStreakRecapCardProps {
   hasMissedRecap?: boolean;
   missedCycleEnd?: Date | null;
   athleteName?: string;
+  waitingForProgressReports?: boolean;
+  onGoToProgressReports?: () => void;
 }
 
 export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapCardProps>(({ 
@@ -88,6 +90,8 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
   hasMissedRecap = false,
   missedCycleEnd = null,
   athleteName = 'Athlete',
+  waitingForProgressReports = false,
+  onGoToProgressReports,
 }, ref) => {
   const { t } = useTranslation();
   const [recapsOpen, setRecapsOpen] = useState(false);
@@ -113,7 +117,7 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
 
   const getStreakGlow = () => currentStreak >= 25;
 
-  const showRecapButton = canGenerateRecap || hasMissedRecap;
+  const showRecapButton = (canGenerateRecap || hasMissedRecap) && !waitingForProgressReports;
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -353,9 +357,18 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                 )}
               </div>
             </div>
-            <Progress value={recapProgress} className="h-2" />
+            <Progress value={waitingForProgressReports ? 100 : recapProgress} className="h-2" />
             
-            {showRecapButton ? (
+            {waitingForProgressReports ? (
+              <Button 
+                onClick={onGoToProgressReports} 
+                size="sm" 
+                className="w-full gap-2 mt-2 bg-cyan-500 hover:bg-cyan-600 text-white"
+              >
+                <Target className="h-3 w-3" />
+                {t('gamePlan.recapCountdown.completeProgressReports')}
+              </Button>
+            ) : showRecapButton ? (
               <Button 
                 onClick={handleGenerate} 
                 disabled={generating} 

@@ -1010,6 +1010,15 @@ export function useVault() {
         return { success: false, error: error.message };
       }
       
+      // After successful recap generation, set unlocked_progress_reports_at to unlock 6-week tracking cards
+      if (data?.recap?.id) {
+        await supabase
+          .from('vault_recaps')
+          .update({ unlocked_progress_reports_at: new Date().toISOString() })
+          .eq('id', data.recap.id)
+          .eq('user_id', user.id);
+      }
+      
       await fetchRecaps();
       return { success: true, data };
     } catch (err) {

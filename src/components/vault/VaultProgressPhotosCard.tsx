@@ -38,11 +38,12 @@ interface VaultProgressPhotosCardProps {
     leg_measurement: number | null;
     notes: string | null;
   }) => Promise<{ success: boolean }>;
+  recapUnlockedAt?: Date | null;
 }
 
 const LOCK_PERIOD_WEEKS = 6;
 
-export function VaultProgressPhotosCard({ photos, onSave }: VaultProgressPhotosCardProps) {
+export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null }: VaultProgressPhotosCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -58,8 +59,12 @@ export function VaultProgressPhotosCard({ photos, onSave }: VaultProgressPhotosC
   const [notes, setNotes] = useState('');
 
   // Check if entry is locked
+  // Recap-unlock override: If recap was generated and no entry exists after that date, unlock the card
   const latestPhoto = photos[0];
-  const isLocked = latestPhoto?.next_entry_date && new Date(latestPhoto.next_entry_date) > new Date();
+  const latestPhotoDate = latestPhoto?.photo_date ? new Date(latestPhoto.photo_date) : null;
+  const unlockedByRecap = recapUnlockedAt && (!latestPhotoDate || latestPhotoDate < recapUnlockedAt);
+  
+  const isLocked = !unlockedByRecap && latestPhoto?.next_entry_date && new Date(latestPhoto.next_entry_date) > new Date();
   const daysRemaining = latestPhoto?.next_entry_date 
     ? Math.max(0, Math.ceil((new Date(latestPhoto.next_entry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;

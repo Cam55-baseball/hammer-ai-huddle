@@ -28,6 +28,7 @@ interface VaultPerformanceTestCardProps {
   sport?: 'baseball' | 'softball';
   subscribedModules?: string[];
   autoOpen?: boolean;
+  recapUnlockedAt?: Date | null;
 }
 
 const LOCK_PERIOD_WEEKS = 6;
@@ -121,7 +122,8 @@ export function VaultPerformanceTestCard({
   onSave, 
   sport = 'baseball',
   subscribedModules = [],
-  autoOpen = false 
+  autoOpen = false,
+  recapUnlockedAt = null
 }: VaultPerformanceTestCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(autoOpen);
@@ -155,8 +157,12 @@ export function VaultPerformanceTestCard({
   const metrics = selectedModule ? (testTypes[selectedModule as keyof typeof testTypes] || []) : [];
 
   // Check if entry is locked
+  // Recap-unlock override: If recap was generated and no entry exists after that date, unlock the card
   const latestTest = tests[0];
-  const isLocked = latestTest?.next_entry_date && new Date(latestTest.next_entry_date) > new Date();
+  const latestTestDate = latestTest?.test_date ? new Date(latestTest.test_date) : null;
+  const unlockedByRecap = recapUnlockedAt && (!latestTestDate || latestTestDate < recapUnlockedAt);
+  
+  const isLocked = !unlockedByRecap && latestTest?.next_entry_date && new Date(latestTest.next_entry_date) > new Date();
   const daysRemaining = latestTest?.next_entry_date 
     ? Math.max(0, Math.ceil((new Date(latestTest.next_entry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
