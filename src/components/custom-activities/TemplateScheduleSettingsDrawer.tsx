@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { RefreshCw, Bell } from 'lucide-react';
 import { CustomActivityTemplate } from '@/types/customActivity';
+import { useCalendarSkips } from '@/hooks/useCalendarSkips';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -30,8 +31,23 @@ interface TemplateScheduleSettingsDrawerProps {
   onSave: (templateId: string, settings: ScheduleSettings) => Promise<boolean>;
 }
 
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/**
+ * Convert display days (days to show) to skip days (days to hide)
+ */
+function displayDaysToSkipDays(displayDays: number[]): number[] {
+  return ALL_DAYS.filter(d => !displayDays.includes(d));
+}
+
+/**
+ * Convert skip days (days to hide) to display days (days to show)
+ */
+function skipDaysToDisplayDays(skipDays: number[]): number[] {
+  return ALL_DAYS.filter(d => !skipDays.includes(d));
+}
 
 export function TemplateScheduleSettingsDrawer({
   template,
@@ -41,6 +57,7 @@ export function TemplateScheduleSettingsDrawer({
 }: TemplateScheduleSettingsDrawerProps) {
   const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
+  const { getSkipDays, updateSkipDays, refetch: refetchCalendarSkips } = useCalendarSkips();
   
   // Form state
   const [displayOnGamePlan, setDisplayOnGamePlan] = useState(true);
@@ -51,15 +68,23 @@ export function TemplateScheduleSettingsDrawer({
 
   // Initialize form when template changes
   useEffect(() => {
-    if (template) {
+    if (template && open) {
       setDisplayOnGamePlan(template.display_on_game_plan !== false);
-      setDisplayDays((template.display_days as number[]) || [0, 1, 2, 3, 4, 5, 6]);
       setDisplayTime(template.display_time || '');
       setReminderEnabled(template.reminder_enabled || false);
-      // Parse reminder time to get minutes (stored as minutes before display_time)
       setReminderMinutes(15);
+      
+      // Load display days from calendar_skipped_items (SINGLE SOURCE OF TRUTH)
+      const itemId = `template-${template.id}`;
+      const skipDays = getSkipDays(itemId, 'custom_activity');
+      if (skipDays.length > 0) {
+        setDisplayDays(skipDaysToDisplayDays(skipDays));
+      } else {
+        // Fallback to template's display_days for backwards compatibility
+        setDisplayDays((template.display_days as number[]) || [0, 1, 2, 3, 4, 5, 6]);
+      }
     }
-  }, [template]);
+  }, [template, open, getSkipDays]);
 
   const toggleDay = (day: number) => {
     setDisplayDays(prev => 
@@ -74,10 +99,15 @@ export function TemplateScheduleSettingsDrawer({
     
     setSaving(true);
     try {
+      // Save skip days to calendar_skipped_items (SINGLE SOURCE OF TRUTH)
+      const itemId = `template-${template.id}`;
+      const skipDays = displayDaysToSkipDays(displayDays);
+      await updateSkipDays(itemId, 'custom_activity', skipDays);
+      
       // Determine recurrence based on display settings
-      // If showing on game plan with specific days, sync recurring_days to display_days
       const shouldRecur = displayOnGamePlan && displayDays.length > 0;
       
+      // Also save to template for backwards compatibility
       const success = await onSave(template.id, {
         display_on_game_plan: displayOnGamePlan,
         display_days: displayDays,
@@ -85,12 +115,12 @@ export function TemplateScheduleSettingsDrawer({
         reminder_enabled: reminderEnabled,
         reminder_time: template.reminder_time || null,
         reminder_minutes: reminderMinutes,
-        // Sync recurrence to display settings for E2E visibility
         recurring_days: shouldRecur ? displayDays : [],
         recurring_active: shouldRecur,
       });
       
       if (success) {
+        refetchCalendarSkips();
         toast.success(t('customActivity.scheduleSettingsSaved', 'Schedule settings saved'));
         onOpenChange(false);
       }
