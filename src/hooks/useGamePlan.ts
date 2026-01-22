@@ -414,21 +414,21 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         // Check display settings first
         if (template.display_on_game_plan === false) return;
         
-        // Check if today is in display_days (default to all days if not set)
-        const displayDays = (template.display_days as number[] | null) || [0, 1, 2, 3, 4, 5, 6];
-        if (!displayDays.includes(todayDayOfWeek)) return;
+        // Use recurring_days as single source of truth, fallback to display_days for legacy
+        const scheduledDays = template.recurring_active 
+          ? (template.recurring_days as number[]) || []
+          : (template.display_days as number[] | null) || [0, 1, 2, 3, 4, 5, 6];
         
-        const recurringDays = (template.recurring_days || []) as number[];
-        const isRecurringToday = template.recurring_active && recurringDays.includes(todayDayOfWeek);
+        const isScheduledToday = scheduledDays.includes(todayDayOfWeek);
         const todayLog = logs.find(l => l.template_id === template.id);
         
-        // Include if recurring today OR has a log for today
-        if (isRecurringToday || todayLog) {
+        // Include if scheduled for today OR has a log for today
+        if (isScheduledToday || todayLog) {
           customActivitiesForToday.push({
             template,
             log: todayLog,
-            isRecurring: isRecurringToday,
-            isScheduledForToday: isRecurringToday || !!todayLog,
+            isRecurring: template.recurring_active || false,
+            isScheduledForToday: isScheduledToday || !!todayLog,
           });
         }
       });

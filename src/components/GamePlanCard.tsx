@@ -21,6 +21,7 @@ import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/Cus
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
 import { SystemTaskScheduleDrawer } from '@/components/SystemTaskScheduleDrawer';
 import { useSystemTaskSchedule } from '@/hooks/useSystemTaskSchedule';
+import { useCalendarSkips } from '@/hooks/useCalendarSkips';
 import { useGamePlan, GamePlanTask } from '@/hooks/useGamePlan';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
@@ -66,6 +67,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   
   // System task schedule hook
   const { schedules: taskSchedules, saveSchedule: saveTaskSchedule, getSchedule, getScheduledOffTaskIds, isScheduledForToday } = useSystemTaskSchedule();
+  
+  // Calendar skips hook - for unified skip logic between Calendar and Game Plan
+  const { isSkippedForDay: isCalendarSkipped } = useCalendarSkips();
   
   // Schedule templates hook
   const { templates: scheduleTemplates, saveTemplate, deleteTemplate, getDefaultTemplate } = useScheduleTemplates();
@@ -699,9 +703,22 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Get scheduled-off task IDs (tasks not scheduled for today)
   const scheduledOffTaskIds = useMemo(() => getScheduledOffTaskIds(), [getScheduledOffTaskIds]);
 
-  // Get display tasks based on sort mode, filtering out skipped AND scheduled-off tasks
-  const filterSkippedAndScheduledOff = (taskList: GamePlanTask[]) => 
-    taskList.filter(t => !skippedTasks.has(t.id) && !scheduledOffTaskIds.has(t.id));
+  // Helper to determine item type for calendar skip lookup
+  const getCalendarItemType = useCallback((task: GamePlanTask): string => {
+    if (task.taskType === 'custom') return 'custom_activity';
+    return 'game_plan';
+  }, []);
+
+  // Check if a task is weekly-skipped via calendar skips
+  const isWeeklySkipped = useCallback((task: GamePlanTask): boolean => {
+    return isCalendarSkipped(task.id, getCalendarItemType(task), new Date());
+  }, [isCalendarSkipped, getCalendarItemType]);
+
+  // Get display tasks based on sort mode, filtering out skipped AND scheduled-off AND weekly-skipped tasks
+  const filterSkippedAndScheduledOff = useCallback((taskList: GamePlanTask[]) => 
+    taskList.filter(t => !skippedTasks.has(t.id) && !scheduledOffTaskIds.has(t.id) && !isWeeklySkipped(t)),
+  [skippedTasks, scheduledOffTaskIds, isWeeklySkipped]);
+  
   const checkinTasks = filterSkippedAndScheduledOff(autoSort ? sortByCompletion(orderedCheckin) : orderedCheckin);
   const trainingTasks = filterSkippedAndScheduledOff(autoSort ? sortByCompletion(orderedTraining) : orderedTraining);
   const trackingTasks = filterSkippedAndScheduledOff(autoSort ? sortByCompletion(orderedTracking) : orderedTracking);
@@ -712,8 +729,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     ? timelineTasks 
     : [...orderedCheckin, ...orderedTraining, ...orderedTracking, ...orderedCustom];
   
-  // Skipped tasks: manually skipped OR scheduled off for today
-  const skippedTasksList = allTasks.filter(t => skippedTasks.has(t.id) || scheduledOffTaskIds.has(t.id));
+  // Skipped tasks: manually skipped OR scheduled off for today OR weekly skipped via calendar
+  const skippedTasksList = allTasks.filter(t => skippedTasks.has(t.id) || scheduledOffTaskIds.has(t.id) || isWeeklySkipped(t));
 
   const renderTask = (task: GamePlanTask, index?: number) => {
     const Icon = task.icon;

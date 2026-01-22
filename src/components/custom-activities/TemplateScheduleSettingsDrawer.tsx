@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Calendar, Bell } from 'lucide-react';
+import { RefreshCw, Bell } from 'lucide-react';
 import { CustomActivityTemplate } from '@/types/customActivity';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -104,8 +104,8 @@ export function TemplateScheduleSettingsDrawer({
       <DrawerContent className="px-4 pb-8 max-h-[90vh]">
         <DrawerHeader className="text-left px-0">
           <DrawerTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            {t('customActivity.scheduleSettings', 'Schedule Settings')}
+            <RefreshCw className="h-5 w-5 text-primary" />
+            {t('customActivity.repeatWeeklyTitle', 'Repeat Weekly')}
           </DrawerTitle>
           <DrawerDescription>{template?.title}</DrawerDescription>
         </DrawerHeader>
@@ -131,9 +131,9 @@ export function TemplateScheduleSettingsDrawer({
               <>
                 {/* Day Picker - Mobile optimized grid */}
                 <div className="space-y-3">
-                  <label className="font-medium">{t('customActivity.displayDays', 'Display Days')}</label>
+                  <label className="font-medium">{t('customActivity.repeatWeekly', 'Repeat Weekly')}</label>
                   <p className="text-sm text-muted-foreground">
-                    {t('customActivity.displayDaysDesc', 'Select which days to show this activity')}
+                    {t('customActivity.repeatWeeklyDesc', 'Select which days this activity repeats')}
                   </p>
                   <div className="grid grid-cols-7 gap-1">
                     {DAY_LABELS.map((day, i) => (

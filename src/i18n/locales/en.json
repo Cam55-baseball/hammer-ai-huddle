@@ -5370,6 +5370,8 @@
     },
     "taskSchedule": {
       "title": "Task Schedule",
+      "repeatWeekly": "Repeat Weekly",
+      "repeatWeeklyDesc": "Select which days this activity repeats",
       "displayDays": "Display Days",
       "displayDaysDesc": "Select which days to show this task",
       "everyDay": "Every day",
@@ -6198,6 +6200,10 @@
         "sat": "Sat"
       }
     },
+    "repeatWeekly": "Repeat Weekly",
+    "repeatWeeklyDesc": "Select which days this activity repeats",
+    "repeatWeeklyTitle": "Repeat Weekly",
+    "scheduleSettingsSaved": "Schedule saved",
     "favorite": "Add to Favorites",
     "isFavorited": "Favorited",
     "exercises": {
