@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { SkipDayPickerDialog } from './SkipDayPickerDialog';
 import { useCalendarSkips } from '@/hooks/useCalendarSkips';
 import { useCalendarDayOrders, getOrderKey } from '@/hooks/useCalendarDayOrders';
+import { useGamePlanLock } from '@/hooks/useGamePlanLock';
 import { toast } from 'sonner';
 
 interface CalendarDaySheetProps {
@@ -230,6 +231,7 @@ export function CalendarDaySheet({
   const { t } = useTranslation();
   const { isSkippedForDay, getSkipDays, updateSkipDays, unskipForDay } = useCalendarSkips();
   const { isDateLocked, saveDayOrder, unlockDate, getOrderKeysForDate, fetchDayOrdersForRange, refetch: refetchDayOrders } = useCalendarDayOrders();
+  const { getDaySchedule, unlockDays } = useGamePlanLock();
   
   const [skipDialogOpen, setSkipDialogOpen] = useState(false);
   const [selectedEventForSkip, setSelectedEventForSkip] = useState<CalendarEvent | null>(null);
@@ -259,7 +261,17 @@ export function CalendarDaySheet({
   if (!date) return null;
 
   const dayOfWeek = getDay(date);
-  const isLockedOrder = isDateLocked(date);
+  
+  // Check BOTH lock sources: date-specific takes priority, then weekly template
+  const isDateLockedOrder = isDateLocked(date);
+  const weeklySchedule = getDaySchedule(dayOfWeek);
+  const isWeeklyLocked = weeklySchedule && weeklySchedule.length > 0;
+  
+  // Combined: locked if EITHER source is locked
+  const isLockedOrder = isDateLockedOrder || isWeeklyLocked;
+  
+  // Track which lock source is active (for badge display)
+  const lockSource: 'day' | 'weekly' | null = isDateLockedOrder ? 'day' : (isWeeklyLocked ? 'weekly' : null);
   
   // Helper to get unique item ID for skip tracking
   const getSkipItemId = (event: CalendarEvent): string => {
@@ -355,9 +367,16 @@ export function CalendarDaySheet({
     
     setIsSaving(true);
     try {
-      const success = await unlockDate(date);
+      // Unlock date-specific lock
+      const dateUnlockSuccess = await unlockDate(date);
       
-      if (success) {
+      // Also clear weekly template lock for this day of week if it exists
+      const weeklyScheduleForDay = getDaySchedule(dayOfWeek);
+      if (weeklyScheduleForDay && weeklyScheduleForDay.length > 0) {
+        await unlockDays([dayOfWeek]);
+      }
+      
+      if (dateUnlockSuccess || weeklyScheduleForDay) {
         toast.success(t('calendar.lock.unlockSuccess', 'Day order unlocked'));
         await refetchDayOrders();
       } else {
@@ -502,10 +521,16 @@ export function CalendarDaySheet({
               <div>
                 <SheetTitle className="text-lg font-bold flex items-center gap-2">
                   {format(date, 'EEEE')}
-                  {isLockedOrder && !isReorderMode && (
+                  {lockSource === 'day' && !isReorderMode && (
                     <Badge variant="outline" className="text-xs gap-1 text-wellness-coral-foreground border-wellness-coral/50 bg-wellness-coral/10">
                       <Lock className="h-3 w-3" />
-                      {t('calendar.lockedOrder', 'Locked')}
+                      {t('calendar.dayLocked', 'Day Locked')}
+                    </Badge>
+                  )}
+                  {lockSource === 'weekly' && !isReorderMode && (
+                    <Badge variant="outline" className="text-xs gap-1 text-primary/80 border-primary/50 bg-primary/10">
+                      <Lock className="h-3 w-3" />
+                      {t('calendar.weeklyLocked', 'Weekly')}
                     </Badge>
                   )}
                   {isReorderMode && (

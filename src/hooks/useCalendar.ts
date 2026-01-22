@@ -709,20 +709,28 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         // Fall back to weekly Game Plan lock (lower priority)
         const lockedSchedule = getDaySchedule(dayOfWeek);
         if (lockedSchedule && lockedSchedule.length > 0) {
-          // Build an order map: taskId → order index
+          // Build order map: convert weekly taskId format to orderKey format
           const orderMap = new Map<string, number>();
           [...lockedSchedule]
             .sort((a, b) => a.order - b.order)
             .forEach((item, idx) => {
-              orderMap.set(item.taskId, idx);
+              // Convert weekly lock taskId to orderKey format
+              // Weekly locks use: custom-{uuid} for custom activities, or taskId like 'nutrition'
+              let orderKey: string;
+              if (item.taskId.startsWith('custom-')) {
+                // custom-{uuid} → ca:{uuid}
+                orderKey = `ca:${item.taskId.replace('custom-', '')}`;
+              } else {
+                // nutrition → gp:nutrition
+                orderKey = `gp:${item.taskId}`;
+              }
+              orderMap.set(orderKey, idx);
             });
           
-          // Sort events: locked order first, then unmatched items by time
+          // Sort events using orderKey matching (same format as date-specific locks)
           aggregatedEvents[dateKey].sort((a, b) => {
-            const aTaskId = getTaskIdForEvent(a);
-            const bTaskId = getTaskIdForEvent(b);
-            const aOrder = aTaskId ? orderMap.get(aTaskId) : undefined;
-            const bOrder = bTaskId ? orderMap.get(bTaskId) : undefined;
+            const aOrder = a.orderKey ? orderMap.get(a.orderKey) : undefined;
+            const bOrder = b.orderKey ? orderMap.get(b.orderKey) : undefined;
             
             // Both in locked schedule → use order
             if (aOrder !== undefined && bOrder !== undefined) {
@@ -844,11 +852,11 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     }
   }, [lockedDays]); // Only depend on lockedDays to avoid infinite loops
 
-  // Set up real-time subscription
+  // Set up real-time subscriptions for calendar events AND day orders
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
+    const eventsChannel = supabase
       .channel('calendar-events-changes')
       .on(
         'postgres_changes',
@@ -863,9 +871,28 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
         }
       )
       .subscribe();
+    
+    // Subscribe to calendar_day_orders changes for order sync
+    const dayOrdersChannel = supabase
+      .channel('calendar-day-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'calendar_day_orders',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          console.log('[Calendar] Day orders changed, refetching...');
+          refetch();
+        }
+      )
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(eventsChannel);
+      supabase.removeChannel(dayOrdersChannel);
     };
   }, [user, refetch]);
 
