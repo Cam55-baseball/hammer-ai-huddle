@@ -6,6 +6,8 @@ import { FatigueIndicator } from './shared/FatigueIndicator';
 import { Button } from '@/components/ui/button';
 import { Play, X, Coffee, AlertTriangle, Target, Info, CheckCircle2 } from 'lucide-react';
 import { DRILL_INSTRUCTIONS } from './drillInstructions';
+import { DRILL_REFLECTIONS } from './drillReflections';
+import DrillReflectionPhase from './shared/DrillReflectionPhase';
 
 // Import all drill components
 import SoftFocusGame from './drills/SoftFocusGame';
@@ -17,6 +19,13 @@ import FollowTheTargetGame from './drills/FollowTheTargetGame';
 import WhackAMoleGame from './drills/WhackAMoleGame';
 import MeterTimingGame from './drills/MeterTimingGame';
 import BrockStringExercise from './drills/BrockStringExercise';
+import ColorFlashGame from './drills/ColorFlashGame';
+import EyeRelaxationGame from './drills/EyeRelaxationGame';
+import StroopChallengeGame from './drills/StroopChallengeGame';
+import MultiTargetTrackGame from './drills/MultiTargetTrackGame';
+import RapidSwitchGame from './drills/RapidSwitchGame';
+import DualTaskVisionGame from './drills/DualTaskVisionGame';
+import ChaosGridGame from './drills/ChaosGridGame';
 
 interface ActiveDrillViewProps {
   drillId: string;
@@ -44,6 +53,13 @@ const DRILL_COMPONENTS: Record<string, React.ComponentType<DrillComponentProps>>
   whack_a_mole: WhackAMoleGame,
   meter_timing: MeterTimingGame,
   brock_string: BrockStringExercise,
+  color_flash: ColorFlashGame,
+  eye_relaxation: EyeRelaxationGame,
+  stroop_challenge: StroopChallengeGame,
+  multi_target_track: MultiTargetTrackGame,
+  rapid_switch: RapidSwitchGame,
+  dual_task_vision: DualTaskVisionGame,
+  chaos_grid: ChaosGridGame,
 };
 
 const DRILL_NAMES: Record<string, string> = {
@@ -56,6 +72,13 @@ const DRILL_NAMES: Record<string, string> = {
   whack_a_mole: 'Whack-a-Mole',
   meter_timing: 'Meter Timing',
   brock_string: 'Brock String',
+  color_flash: 'Color Flash',
+  eye_relaxation: 'Eye Relaxation',
+  stroop_challenge: 'Stroop Challenge',
+  multi_target_track: 'Multi-Target Track',
+  rapid_switch: 'Rapid Switch',
+  dual_task_vision: 'Dual-Task Vision',
+  chaos_grid: 'Chaos Grid',
 };
 
 // Fatigue calculation constants
@@ -72,12 +95,13 @@ export default function ActiveDrillView({
   sport = 'baseball',
 }: ActiveDrillViewProps) {
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<'instructions' | 'countdown' | 'playing' | 'break' | 'conclusion'>('instructions');
+  const [phase, setPhase] = useState<'instructions' | 'countdown' | 'playing' | 'reflection' | 'break' | 'conclusion'>('instructions');
   const [countdown, setCountdown] = useState(3);
   const [fatigueLevel, setFatigueLevel] = useState(0);
   const [drillsCompletedThisSession, setDrillsCompletedThisSession] = useState(0);
   const [breakTimer, setBreakTimer] = useState(0);
   const [completedResult, setCompletedResult] = useState<DrillResult | null>(null);
+  const [reflectionResponses, setReflectionResponses] = useState<Record<string, string | number>>({});
 
   // Adaptive difficulty hook
   const { 
@@ -146,10 +170,28 @@ export default function ActiveDrillView({
       fatigueScore: newFatigue,
     };
 
-    // Store result and show conclusion phase instead of immediately exiting
+    // Store result and check if drill has reflection questions
     setCompletedResult(fullResult);
-    setPhase('conclusion');
+    
+    // Check if this drill has reflection questions
+    const hasReflection = DRILL_REFLECTIONS[drillId]?.length > 0;
+    if (hasReflection) {
+      setPhase('reflection');
+    } else {
+      setPhase('conclusion');
+    }
   }, [drillId, tier, fatigueLevel, drillsCompletedThisSession, updateDifficulty]);
+
+  // Handle reflection completion
+  const handleReflectionComplete = useCallback((responses: Record<string, string | number>) => {
+    setReflectionResponses(responses);
+    setPhase('conclusion');
+  }, []);
+
+  // Handle reflection skip
+  const handleReflectionSkip = useCallback(() => {
+    setPhase('conclusion');
+  }, []);
 
   // Handle taking a break
   const handleTakeBreak = useCallback(() => {
@@ -187,6 +229,17 @@ export default function ActiveDrillView({
     if (accuracy >= 60) return t('texVision.feedback.good', 'Good effort! Room to improve.');
     return t('texVision.feedback.keepPracticing', "Keep practicing! You'll improve.");
   };
+
+  // Reflection phase - show after playing phase for drills with reflection questions
+  if (phase === 'reflection') {
+    return (
+      <DrillReflectionPhase
+        drillId={drillId}
+        onComplete={handleReflectionComplete}
+        onSkip={handleReflectionSkip}
+      />
+    );
+  }
 
   // Conclusion phase - show after drill completes
   if (phase === 'conclusion' && completedResult) {

@@ -15,7 +15,13 @@ import {
   Glasses,
   Lock,
   Play,
-  ChevronRight
+  Palette,
+  Moon,
+  Brain,
+  Layers,
+  Zap,
+  Split,
+  Grid3X3
 } from 'lucide-react';
 import { TexVisionTier } from '@/hooks/useTexVisionProgress';
 
@@ -37,6 +43,7 @@ interface Drill {
 }
 
 const DRILLS: Drill[] = [
+  // BEGINNER TIER
   {
     id: 'soft_focus',
     nameKey: 'texVision.drills.softFocus.title',
@@ -82,6 +89,29 @@ const DRILLS: Drill[] = [
     category: 'coordination',
   },
   {
+    id: 'color_flash',
+    nameKey: 'texVision.drills.colorFlash.title',
+    defaultName: 'Color Flash',
+    descriptionKey: 'texVision.drills.colorFlash.description',
+    defaultDescription: 'React quickly to target colors',
+    icon: <Palette className="h-5 w-5" />,
+    tier: 'beginner',
+    duration: '1-2 min',
+    category: 'reaction',
+  },
+  {
+    id: 'eye_relaxation',
+    nameKey: 'texVision.drills.eyeRelaxation.title',
+    defaultName: 'Eye Relaxation',
+    descriptionKey: 'texVision.drills.eyeRelaxation.description',
+    defaultDescription: 'Guided rest and eye recovery',
+    icon: <Moon className="h-5 w-5" />,
+    tier: 'beginner',
+    duration: '2-3 min',
+    category: 'focus',
+  },
+  // ADVANCED TIER
+  {
     id: 'near_far',
     nameKey: 'texVision.drills.nearFar.title',
     defaultName: 'Near-Far Sight',
@@ -126,6 +156,29 @@ const DRILLS: Drill[] = [
     category: 'reaction',
   },
   {
+    id: 'stroop_challenge',
+    nameKey: 'texVision.drills.stroopChallenge.title',
+    defaultName: 'Stroop Challenge',
+    descriptionKey: 'texVision.drills.stroopChallenge.description',
+    defaultDescription: 'Color-word interference training',
+    icon: <Brain className="h-5 w-5" />,
+    tier: 'advanced',
+    duration: '2-3 min',
+    category: 'focus',
+  },
+  {
+    id: 'multi_target_track',
+    nameKey: 'texVision.drills.multiTargetTrack.title',
+    defaultName: 'Multi-Target Track',
+    descriptionKey: 'texVision.drills.multiTargetTrack.description',
+    defaultDescription: 'Track multiple moving objects',
+    icon: <Layers className="h-5 w-5" />,
+    tier: 'advanced',
+    duration: '2-4 min',
+    category: 'tracking',
+  },
+  // CHAOS TIER
+  {
     id: 'brock_string',
     nameKey: 'texVision.drills.brockString.title',
     defaultName: 'Brock String',
@@ -135,6 +188,39 @@ const DRILLS: Drill[] = [
     tier: 'chaos',
     duration: '3-5 min',
     category: 'coordination',
+  },
+  {
+    id: 'rapid_switch',
+    nameKey: 'texVision.drills.rapidSwitch.title',
+    defaultName: 'Rapid Switch',
+    descriptionKey: 'texVision.drills.rapidSwitch.description',
+    defaultDescription: 'Quick task switching under pressure',
+    icon: <Zap className="h-5 w-5" />,
+    tier: 'chaos',
+    duration: '2-3 min',
+    category: 'reaction',
+  },
+  {
+    id: 'dual_task_vision',
+    nameKey: 'texVision.drills.dualTaskVision.title',
+    defaultName: 'Dual-Task Vision',
+    descriptionKey: 'texVision.drills.dualTaskVision.description',
+    defaultDescription: 'Central focus + peripheral awareness',
+    icon: <Split className="h-5 w-5" />,
+    tier: 'chaos',
+    duration: '2-3 min',
+    category: 'coordination',
+  },
+  {
+    id: 'chaos_grid',
+    nameKey: 'texVision.drills.chaosGrid.title',
+    defaultName: 'Chaos Grid',
+    descriptionKey: 'texVision.drills.chaosGrid.description',
+    defaultDescription: 'Track targets through visual chaos',
+    icon: <Grid3X3 className="h-5 w-5" />,
+    tier: 'chaos',
+    duration: '3-5 min',
+    category: 'tracking',
   },
 ];
 
@@ -173,12 +259,75 @@ export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: Tex
     }
   };
 
+  // Group drills by tier for display
+  const beginnerDrills = filteredDrills.filter(d => d.tier === 'beginner');
+  const advancedDrills = filteredDrills.filter(d => d.tier === 'advanced');
+  const chaosDrills = filteredDrills.filter(d => d.tier === 'chaos');
+
+  const renderDrillCard = (drill: Drill) => {
+    const unlocked = isDrillUnlocked(drill.tier);
+
+    return (
+      <div
+        key={drill.id}
+        className={`relative p-4 rounded-lg border transition-all duration-150 ${
+          unlocked
+            ? 'bg-[hsl(var(--tex-vision-primary-dark))]/50 border-[hsl(var(--tex-vision-primary-light))]/20 hover:border-[hsl(var(--tex-vision-feedback))]/50 cursor-pointer'
+            : 'bg-[hsl(var(--tex-vision-primary-dark))]/30 border-[hsl(var(--tex-vision-primary-light))]/10 opacity-60'
+        }`}
+        onClick={() => unlocked && onDrillStart(drill.id, drill.tier)}
+      >
+        <div className="flex items-start gap-3">
+          <div className={`p-2 rounded-lg ${
+            unlocked 
+              ? 'bg-[hsl(var(--tex-vision-feedback))]/10 text-[hsl(var(--tex-vision-feedback))]' 
+              : 'bg-[hsl(var(--tex-vision-primary-light))]/10 text-[hsl(var(--tex-vision-text-muted))]'
+          }`}>
+            {unlocked ? drill.icon : <Lock className="h-5 w-5" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h4 className={`font-medium text-sm ${
+                unlocked ? 'text-[hsl(var(--tex-vision-text))]' : 'text-[hsl(var(--tex-vision-text-muted))]'
+              }`}>
+                {t(drill.nameKey, drill.defaultName)}
+              </h4>
+              <Badge 
+                variant="outline" 
+                className={`text-[10px] ${getTierBadgeStyle(drill.tier)}`}
+              >
+                {drill.tier}
+              </Badge>
+            </div>
+            <p className="text-xs text-[hsl(var(--tex-vision-text-muted))] line-clamp-2">
+              {t(drill.descriptionKey, drill.defaultDescription)}
+            </p>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-[10px] text-[hsl(var(--tex-vision-text-muted))]">
+                {drill.duration}
+              </span>
+              {unlocked && (
+                <div className="flex items-center gap-1 text-[10px] text-[hsl(var(--tex-vision-feedback))]">
+                  <Play className="h-3 w-3" />
+                  <span>{t('texVision.drillLibrary.start', 'Start')}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Card className="bg-[hsl(var(--tex-vision-primary))]/50 border-[hsl(var(--tex-vision-primary-light))]/30">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg text-blue-900 flex items-center gap-2">
           <Target className="h-5 w-5 text-[hsl(var(--tex-vision-feedback))]" />
           {t('texVision.drillLibrary.title', 'Drill Library')}
+          <Badge variant="secondary" className="ml-2 text-xs">
+            {DRILLS.length} drills
+          </Badge>
         </CardTitle>
         <CardDescription className="text-blue-900">
           {t('texVision.drillLibrary.description', 'Select a drill to begin your neuro-visual training')}
@@ -216,62 +365,46 @@ export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: Tex
           ))}
         </div>
 
-        {/* Drills Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filteredDrills.map((drill) => {
-            const unlocked = isDrillUnlocked(drill.tier);
-
-            return (
-              <div
-                key={drill.id}
-                className={`relative p-4 rounded-lg border transition-all duration-150 ${
-                  unlocked
-                    ? 'bg-[hsl(var(--tex-vision-primary-dark))]/50 border-[hsl(var(--tex-vision-primary-light))]/20 hover:border-[hsl(var(--tex-vision-feedback))]/50 cursor-pointer'
-                    : 'bg-[hsl(var(--tex-vision-primary-dark))]/30 border-[hsl(var(--tex-vision-primary-light))]/10 opacity-60'
-                }`}
-                onClick={() => unlocked && onDrillStart(drill.id, drill.tier)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-lg ${
-                    unlocked 
-                      ? 'bg-[hsl(var(--tex-vision-feedback))]/10 text-[hsl(var(--tex-vision-feedback))]' 
-                      : 'bg-[hsl(var(--tex-vision-primary-light))]/10 text-[hsl(var(--tex-vision-text-muted))]'
-                  }`}>
-                    {unlocked ? drill.icon : <Lock className="h-5 w-5" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className={`font-medium text-sm ${
-                        unlocked ? 'text-[hsl(var(--tex-vision-text))]' : 'text-[hsl(var(--tex-vision-text-muted))]'
-                      }`}>
-                        {t(drill.nameKey, drill.defaultName)}
-                      </h4>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-[10px] ${getTierBadgeStyle(drill.tier)}`}
-                      >
-                        {drill.tier}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-[hsl(var(--tex-vision-text-muted))] line-clamp-2">
-                      {t(drill.descriptionKey, drill.defaultDescription)}
-                    </p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-[10px] text-[hsl(var(--tex-vision-text-muted))]">
-                        {drill.duration}
-                      </span>
-                      {unlocked && (
-                        <div className="flex items-center gap-1 text-[10px] text-[hsl(var(--tex-vision-feedback))]">
-                          <Play className="h-3 w-3" />
-                          <span>{t('texVision.drillLibrary.start', 'Start')}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+        {/* Drills by Tier */}
+        <div className="space-y-6">
+          {/* Beginner Section */}
+          {beginnerDrills.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-[hsl(var(--tex-vision-success))] mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[hsl(var(--tex-vision-success))]" />
+                Beginner ({beginnerDrills.length})
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {beginnerDrills.map(renderDrillCard)}
               </div>
-            );
-          })}
+            </div>
+          )}
+
+          {/* Advanced Section */}
+          {advancedDrills.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-[hsl(var(--tex-vision-feedback))] mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[hsl(var(--tex-vision-feedback))]" />
+                Advanced ({advancedDrills.length})
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {advancedDrills.map(renderDrillCard)}
+              </div>
+            </div>
+          )}
+
+          {/* Chaos Section */}
+          {chaosDrills.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-[hsl(var(--tex-vision-timing))] mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[hsl(var(--tex-vision-timing))]" />
+                Chaos ({chaosDrills.length})
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {chaosDrills.map(renderDrillCard)}
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

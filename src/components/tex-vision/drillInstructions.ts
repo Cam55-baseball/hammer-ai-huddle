@@ -122,4 +122,96 @@ export const DRILL_INSTRUCTIONS: Record<string, DrillInstruction> = {
       "This exercise works best with an actual Brock string for practice"
     ]
   },
+  // New drills
+  color_flash: {
+    objective: "Rapidly recognize and react to a specific target color",
+    howToPlay: [
+      "A target color is shown at the top of the screen",
+      "Colors will flash briefly in the center",
+      "Tap anywhere when you see your target color",
+      "Avoid tapping on wrong colors - accuracy matters"
+    ],
+    tips: [
+      "Stay focused but relaxed - reaction time improves with calm focus",
+      "The target color may change every few seconds"
+    ]
+  },
+  eye_relaxation: {
+    objective: "Rest and restore your eyes with guided relaxation exercises",
+    howToPlay: [
+      "Follow the guided steps: palming, breathing, eye circles, blinking",
+      "Each step has a timer - just follow along",
+      "For palming, cup your hands gently over closed eyes",
+      "End with a final rest period"
+    ],
+    tips: [
+      "This drill is about recovery - no performance pressure",
+      "Use this after intense drills or when eyes feel fatigued"
+    ]
+  },
+  stroop_challenge: {
+    objective: "Train cognitive flexibility with color-word interference",
+    howToPlay: [
+      "A color word (e.g., 'RED') will appear in a different ink color",
+      "Identify either the INK COLOR or the WORD (instruction shown above)",
+      "Tap the correct answer from the four buttons below",
+      "The task may switch between color and word identification"
+    ],
+    tips: [
+      "Read the instruction each time - it may change",
+      "This trains your brain to filter conflicting information"
+    ]
+  },
+  multi_target_track: {
+    objective: "Track multiple moving objects simultaneously",
+    howToPlay: [
+      "Several targets will be highlighted briefly - memorize them",
+      "All dots will start moving and look identical",
+      "Track the original targets with your attention only",
+      "After movement stops, select the targets you tracked"
+    ],
+    tips: [
+      "Don't try to focus on one target - use peripheral awareness",
+      "This drill trains the same skills used in team sports"
+    ]
+  },
+  rapid_switch: {
+    objective: "Quickly switch between different visual tasks",
+    howToPlay: [
+      "A stimulus will appear (color, shape, count, or direction)",
+      "The task type is shown above - identify correctly",
+      "Tap the correct answer from the options below",
+      "Task type changes periodically - stay adaptable"
+    ],
+    tips: [
+      "Read the task instruction before answering",
+      "This trains cognitive flexibility and rapid adaptation"
+    ]
+  },
+  dual_task_vision: {
+    objective: "Maintain central focus while responding to peripheral events",
+    howToPlay: [
+      "Numbers will change in the center - try to track the total",
+      "Targets will appear in your peripheral vision",
+      "Tap peripheral targets WITHOUT looking away from center",
+      "Both tasks happen simultaneously"
+    ],
+    tips: [
+      "Keep your gaze locked on the center",
+      "Use peripheral vision to detect and tap targets"
+    ]
+  },
+  chaos_grid: {
+    objective: "Track targets through visual distractions and chaos",
+    howToPlay: [
+      "Targets are highlighted briefly - memorize their positions",
+      "A chaos phase begins with distracting animations",
+      "After chaos, select the cells where targets were",
+      "Avoid clicking wrong cells"
+    ],
+    tips: [
+      "During chaos, try to hold the target pattern in your mind",
+      "Don't let distractors pull your attention"
+    ]
+  },
 };
