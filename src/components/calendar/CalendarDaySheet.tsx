@@ -276,6 +276,7 @@ export function CalendarDaySheet({
     handleSaveTime,
     handleToggleCheckbox,
     quickComplete,
+    refreshSelectedTask,
   } = useCalendarActivityDetail(onRefresh);
   
   const { sport: themeSport } = useSportTheme();
@@ -880,6 +881,7 @@ export function CalendarDaySheet({
             const templateId = selectedTask.customActivityData?.template?.id;
             if (templateId) {
               await updateTemplate(templateId, data);
+              await refreshSelectedTask();
             }
             setEditDialogOpen(false);
             onRefresh?.();

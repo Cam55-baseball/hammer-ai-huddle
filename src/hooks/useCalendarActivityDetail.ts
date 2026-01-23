@@ -21,6 +21,7 @@ interface UseCalendarActivityDetailReturn {
   handleToggleCheckbox: (fieldId: string, checked: boolean) => Promise<void>;
   navigateToSystemTask: (event: CalendarEvent) => void;
   quickComplete: (event: CalendarEvent, date: Date) => Promise<boolean>;
+  refreshSelectedTask: () => Promise<void>;
 }
 
 // Route mappings for system tasks
@@ -356,6 +357,31 @@ export function useCalendarActivityDetail(
     }
   }, [onRefresh]);
 
+  // Refresh selectedTask with fresh data from database
+  const refreshSelectedTask = useCallback(async () => {
+    if (!currentTemplateId) return;
+    
+    try {
+      const { data: template } = await supabase
+        .from('custom_activity_templates')
+        .select('*')
+        .eq('id', currentTemplateId)
+        .single();
+        
+      if (!template || !selectedTask) return;
+      
+      setSelectedTask({
+        ...selectedTask,
+        customActivityData: {
+          ...selectedTask.customActivityData!,
+          template: template as unknown as CustomActivityTemplate,
+        },
+      });
+    } catch (err) {
+      console.error('Error refreshing task:', err);
+    }
+  }, [currentTemplateId, selectedTask]);
+
   return {
     selectedTask,
     taskTime,
@@ -369,5 +395,6 @@ export function useCalendarActivityDetail(
     handleToggleCheckbox,
     navigateToSystemTask,
     quickComplete,
+    refreshSelectedTask,
   };
 }
