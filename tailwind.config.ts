@@ -153,6 +153,16 @@ export default {
             boxShadow: "0 0 12px 4px hsl(var(--amber-glow, 45 100% 50%) / 0.6)",
           },
         },
+        "checkbox-bounce": {
+          "0%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.15)" },
+          "100%": { transform: "scale(1)" },
+        },
+        "checkmark-pop": {
+          "0%": { transform: "scale(0)", opacity: "0" },
+          "60%": { transform: "scale(1.2)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -164,6 +174,8 @@ export default {
         "fade-in-up": "fade-in-up 0.2s ease-out",
         "pulse-subtle": "pulse-subtle 2s ease-in-out infinite",
         "vault-pulse": "vault-pulse 2s ease-in-out infinite",
+        "checkbox-bounce": "checkbox-bounce 0.2s ease-out",
+        "checkmark-pop": "checkmark-pop 0.15s ease-out forwards",
       },
     },
   },
