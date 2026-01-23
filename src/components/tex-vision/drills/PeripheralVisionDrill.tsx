@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
 import { DrillMetricsDisplay } from '../shared/DrillMetricsDisplay';
+import { StreakIndicator } from '../shared/StreakIndicator';
 import { ScanEye } from 'lucide-react';
 import { DrillResult } from '@/hooks/useTexVisionSession';
 
@@ -25,6 +26,8 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
   const [leftRightBalance, setLeftRightBalance] = useState({ left: 0, right: 0 });
   const [isComplete, setIsComplete] = useState(false);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
 
   const targetDuration = tier === 'beginner' ? 1500 : tier === 'advanced' ? 1000 : 700;
   const intervalMin = tier === 'beginner' ? 2000 : tier === 'advanced' ? 1500 : 1000;
@@ -67,6 +70,12 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
       setScore(prev => prev + 1);
       setReactionTimes(prev => [...prev, reactionTime]);
       setFeedback('correct');
+      // Update streak
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak > bestStreak) {
+        setBestStreak(newStreak);
+      }
       
       if (direction === 'left') {
         setLeftRightBalance(prev => ({ ...prev, left: prev.left + 1 }));
@@ -75,6 +84,8 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
       }
     } else {
       setFeedback('wrong');
+      setBestStreak(bs => Math.max(bs, streak));
+      setStreak(0);
     }
 
     setShowingTarget(false);
@@ -89,6 +100,8 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
         ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
         : 0;
       
+      const finalBestStreak = Math.max(bestStreak, streak);
+      
       onComplete({
         accuracyPercent: Math.round((score / Math.max(attempts + 1, 1)) * 100),
         reactionTimeMs: avgReaction,
@@ -96,6 +109,7 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
         drillMetrics: {
           leftRightBalance,
           totalAttempts: attempts + 1,
+          bestStreak: finalBestStreak,
         },
       });
     }
@@ -108,6 +122,8 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
         ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
         : 0;
       
+      const finalBestStreak = Math.max(bestStreak, streak);
+      
       onComplete({
         accuracyPercent: Math.round((score / Math.max(attempts, 1)) * 100),
         reactionTimeMs: avgReaction,
@@ -115,6 +131,7 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
         drillMetrics: {
           leftRightBalance,
           totalAttempts: attempts,
+          bestStreak: finalBestStreak,
         },
       });
     }
@@ -160,11 +177,13 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
         />
       }
       metrics={
-        <DrillMetricsDisplay
-          accuracy={Math.round((score / Math.max(attempts, 1)) * 100)}
-          reactionTimeMs={reactionTimes.length > 0 ? reactionTimes[reactionTimes.length - 1] : undefined}
-          streak={score}
-        />
+        <div className="flex items-center gap-4">
+          <DrillMetricsDisplay
+            accuracy={Math.round((score / Math.max(attempts, 1)) * 100)}
+            reactionTimeMs={reactionTimes.length > 0 ? reactionTimes[reactionTimes.length - 1] : undefined}
+          />
+          <StreakIndicator currentStreak={streak} bestStreak={bestStreak} />
+        </div>
       }
     >
       <div className="relative flex items-center justify-center w-full h-full min-h-[400px]">

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { usePersonalBests } from '@/hooks/usePersonalBests';
 import { 
   Eye, 
   Search, 
@@ -21,7 +22,8 @@ import {
   Layers,
   Zap,
   Split,
-  Grid3X3
+  Grid3X3,
+  Trophy
 } from 'lucide-react';
 import { TexVisionTier } from '@/hooks/useTexVisionProgress';
 
@@ -229,6 +231,7 @@ const TIER_ORDER: TexVisionTier[] = ['beginner', 'advanced', 'chaos'];
 export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: TexVisionDrillLibraryProps) {
   const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { personalBests, getPersonalBest } = usePersonalBests();
 
   const currentTierIndex = TIER_ORDER.indexOf(currentTier);
 
@@ -266,6 +269,8 @@ export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: Tex
 
   const renderDrillCard = (drill: Drill) => {
     const unlocked = isDrillUnlocked(drill.tier);
+    const pb = getPersonalBest(drill.id, drill.tier);
+    const hasPB = pb && (pb.best_accuracy_percent !== null || pb.best_reaction_time_ms !== null);
 
     return (
       <div
@@ -303,9 +308,20 @@ export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: Tex
               {t(drill.descriptionKey, drill.defaultDescription)}
             </p>
             <div className="flex items-center justify-between mt-2">
-              <span className="text-[10px] text-[hsl(var(--tex-vision-text-muted))]">
-                {drill.duration}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-[hsl(var(--tex-vision-text-muted))]">
+                  {drill.duration}
+                </span>
+                {/* Personal best indicator */}
+                {hasPB && unlocked && (
+                  <div className="flex items-center gap-1">
+                    <Trophy className="h-3 w-3 text-amber-400" />
+                    <span className="text-[10px] text-amber-400 font-medium">
+                      {pb.best_accuracy_percent}%
+                    </span>
+                  </div>
+                )}
+              </div>
               {unlocked && (
                 <div className="flex items-center gap-1 text-[10px] text-[hsl(var(--tex-vision-feedback))]">
                   <Play className="h-3 w-3" />
