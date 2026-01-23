@@ -284,7 +284,9 @@ export default function TexVision() {
         <TexVisionDailyChecklist
           checklist={dailyChecklist}
           onUpdateChecklist={updateChecklist}
+          onDrillStart={handleDrillStart}
           loading={progressLoading}
+          currentTier={progress?.current_tier || 'beginner'}
           s2DiagnosticResult={s2DiagnosticResult}
           s2Loading={s2Loading}
           canTakeS2Test={canTakeS2Test}
