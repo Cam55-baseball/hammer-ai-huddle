@@ -31,6 +31,7 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
         .select('*')
         .eq('user_id', user.id)
         .eq('sport', selectedSport)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -297,24 +298,30 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
     }
   };
 
-  // Delete a template
+  // Soft delete a template (moves to Recently Deleted)
   const deleteTemplate = async (id: string): Promise<boolean> => {
     if (!user) return false;
 
     try {
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+
       const { error } = await supabase
         .from('custom_activity_templates')
-        .delete()
+        .update({
+          deleted_at: now.toISOString(),
+          deleted_permanently_at: expiresAt.toISOString()
+        })
         .eq('id', id)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
-      toast.success(t('customActivity.deleted'));
+      toast.success(t('customActivity.movedToTrash', 'Moved to Recently Deleted. You have 30 days to restore it.'));
       await fetchTemplates();
       return true;
     } catch (error) {
-      console.error('Error deleting template:', error);
+      console.error('Error soft-deleting template:', error);
       toast.error(t('customActivity.deleteError'));
       return false;
     }

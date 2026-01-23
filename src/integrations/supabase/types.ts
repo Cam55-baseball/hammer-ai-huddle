@@ -362,6 +362,8 @@ export type Database = {
           created_at: string | null
           custom_fields: Json | null
           custom_logo_url: string | null
+          deleted_at: string | null
+          deleted_permanently_at: string | null
           description: string | null
           display_days: number[] | null
           display_nickname: string | null
@@ -395,6 +397,8 @@ export type Database = {
           created_at?: string | null
           custom_fields?: Json | null
           custom_logo_url?: string | null
+          deleted_at?: string | null
+          deleted_permanently_at?: string | null
           description?: string | null
           display_days?: number[] | null
           display_nickname?: string | null
@@ -428,6 +432,8 @@ export type Database = {
           created_at?: string | null
           custom_fields?: Json | null
           custom_logo_url?: string | null
+          deleted_at?: string | null
+          deleted_permanently_at?: string | null
           description?: string | null
           display_days?: number[] | null
           display_nickname?: string | null
@@ -3891,6 +3897,7 @@ export type Database = {
     }
     Functions: {
       archive_old_scout_applications: { Args: never; Returns: undefined }
+      cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
       has_role: {
         Args: {

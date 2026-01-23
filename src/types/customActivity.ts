@@ -131,6 +131,9 @@ export interface CustomActivityTemplate {
   display_time?: string;
   created_at: string;
   updated_at: string;
+  // Soft delete fields
+  deleted_at?: string | null;
+  deleted_permanently_at?: string | null;
 }
 
 export interface CustomActivityLog {
