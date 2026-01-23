@@ -11,9 +11,11 @@ import { HydrationTrackerWidget } from '@/components/custom-activities/Hydration
 import { RunningPresetLibrary } from '@/components/custom-activities/RunningPresetLibrary';
 import { WorkoutTemplatesLibrary } from '@/components/custom-activities/WorkoutTemplatesLibrary';
 import { ReceivedActivitiesList } from '@/components/custom-activities/ReceivedActivitiesList';
+import { RecentlyDeletedList } from '@/components/custom-activities/RecentlyDeletedList';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
-import { LayoutGrid, History, BarChart3, Droplets, Footprints, BookOpen, Inbox, Sparkles } from 'lucide-react';
+import { useDeletedActivities } from '@/hooks/useDeletedActivities';
+import { LayoutGrid, History, BarChart3, Droplets, Footprints, BookOpen, Inbox, Sparkles, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
@@ -35,6 +37,7 @@ export default function MyCustomActivities() {
   } = useCustomActivities(selectedSport);
 
   const { pendingCount } = useReceivedActivities();
+  const { deletedCount, refetch: refetchDeleted } = useDeletedActivities(selectedSport);
 
   const handleUseTemplate = (exercises: any[], templateName: string) => {
     toast.success(t('workoutTemplates.templateLoaded', `Template "${templateName}" loaded! Create a new activity to use it.`));
@@ -43,9 +46,15 @@ export default function MyCustomActivities() {
     sessionStorage.setItem('pendingWorkoutName', templateName);
   };
 
+  const handleRestoreComplete = () => {
+    // Refetch main templates when an activity is restored
+    refetch();
+  };
+
   const tabs = [
     { value: 'templates', icon: LayoutGrid, label: t('myCustomActivities.tabs.templates', 'Templates') },
     { value: 'received', icon: Inbox, label: t('myCustomActivities.tabs.received', 'Received'), badge: pendingCount },
+    { value: 'deleted', icon: Trash2, label: t('myCustomActivities.tabs.deleted', 'Recently Deleted'), badge: deletedCount },
     { value: 'library', icon: BookOpen, label: t('myCustomActivities.tabs.library', 'Library') },
     { value: 'history', icon: History, label: t('myCustomActivities.tabs.history', 'History') },
     { value: 'analytics', icon: BarChart3, label: t('myCustomActivities.tabs.analytics', 'Analytics') },
@@ -118,6 +127,13 @@ export default function MyCustomActivities() {
 
             <TabsContent value="received" className="mt-0 animate-fade-in">
               <ReceivedActivitiesList selectedSport={selectedSport} />
+            </TabsContent>
+
+            <TabsContent value="deleted" className="mt-0 animate-fade-in">
+              <RecentlyDeletedList 
+                selectedSport={selectedSport}
+                onRestore={handleRestoreComplete}
+              />
             </TabsContent>
 
             <TabsContent value="library" className="mt-0 animate-fade-in">
