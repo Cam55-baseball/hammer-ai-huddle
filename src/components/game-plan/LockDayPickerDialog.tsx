@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -31,12 +31,15 @@ export function LockDayPickerDialog({
   const { t } = useTranslation();
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
+  const prevOpenRef = useRef(false);
 
-  // Initialize with current locked days when dialog opens
+  // Initialize with current locked days ONLY when dialog transitions from closed to open
   useEffect(() => {
-    if (open) {
+    if (open && !prevOpenRef.current) {
+      // Dialog just opened - initialize with current locked days
       setSelectedDays([...lockedDays]);
     }
+    prevOpenRef.current = open;
   }, [open, lockedDays]);
 
   const toggleDay = (day: number) => {
