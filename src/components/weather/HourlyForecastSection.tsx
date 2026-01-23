@@ -95,11 +95,38 @@ const getHourlyCardGradient = (condition: string, isNight: boolean, isNow: boole
     : 'from-sky-400 via-blue-400 to-sky-500';
 };
 
+// Determine if card needs dark text (for light backgrounds)
+const needsDarkText = (condition: string, isNight: boolean, isNow: boolean): boolean => {
+  if (isNow) return false; // Primary color cards keep white text
+  if (isNight) return false; // Night cards are always dark backgrounds
+  
+  const c = condition.toLowerCase();
+  
+  // Light backgrounds that need dark text
+  if (c.includes('snow') || c.includes('sleet')) return true;
+  if (c.includes('clear') || c.includes('sunny')) return true;
+  if (c.includes('partly')) return true;
+  
+  return false;
+};
+
+// Get text color classes based on background brightness
+const getTextColors = (useDarkText: boolean) => ({
+  primary: useDarkText ? 'text-slate-900' : 'text-white',
+  secondary: useDarkText ? 'text-slate-700' : 'text-white/80',
+  muted: useDarkText ? 'text-slate-600' : 'text-white/70',
+});
+
 // Get weather icon with animations - supports night mode with moon
-const getAnimatedWeatherIcon = (condition: string, isNow: boolean, isNight: boolean) => {
+const getAnimatedWeatherIcon = (condition: string, isNow: boolean, isNight: boolean, useDarkText: boolean = false) => {
   const c = condition.toLowerCase();
   const baseClass = isNow ? 'h-10 w-10' : 'h-8 w-8';
   const dropShadow = 'drop-shadow-lg';
+  
+  // Icon colors adapt to background brightness
+  const sunColor = useDarkText ? 'text-amber-600' : 'text-yellow-300';
+  const cloudColor = useDarkText ? 'text-slate-500' : 'text-white/90';
+  const snowflakeColor = useDarkText ? 'text-blue-500' : 'text-blue-200';
   
   if (c.includes('clear') || c.includes('sunny')) {
     if (isNight) {
@@ -116,8 +143,8 @@ const getAnimatedWeatherIcon = (condition: string, isNow: boolean, isNight: bool
     }
     return (
       <div className="relative animate-float">
-        <Sun className={`${baseClass} text-yellow-300 ${dropShadow} animate-pulse`} />
-        <div className="absolute inset-0 bg-yellow-300/30 rounded-full blur-md animate-ping" style={{ animationDuration: '2s' }} />
+        <Sun className={`${baseClass} ${sunColor} ${dropShadow} animate-pulse`} />
+        <div className={`absolute inset-0 ${useDarkText ? 'bg-amber-500/30' : 'bg-yellow-300/30'} rounded-full blur-md animate-ping`} style={{ animationDuration: '2s' }} />
       </div>
     );
   }
@@ -130,15 +157,15 @@ const getAnimatedWeatherIcon = (condition: string, isNow: boolean, isNight: bool
         </div>
       );
     }
-    return <CloudSun className={`${baseClass} text-white ${dropShadow} animate-float`} />;
+    return <CloudSun className={`${baseClass} ${useDarkText ? 'text-slate-600' : 'text-white'} ${dropShadow} animate-float`} />;
   }
   if (c.includes('cloud') || c.includes('overcast')) {
-    return <Cloud className={`${baseClass} text-white/90 ${dropShadow} animate-float`} style={{ animationDuration: '4s' }} />;
+    return <Cloud className={`${baseClass} ${cloudColor} ${dropShadow} animate-float`} style={{ animationDuration: '4s' }} />;
   }
   if (c.includes('rain') || c.includes('drizzle')) {
     return (
       <div className="relative animate-float">
-        <CloudRain className={`${baseClass} text-white ${dropShadow}`} />
+        <CloudRain className={`${baseClass} ${cloudColor} ${dropShadow}`} />
         <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
           <div className="w-0.5 h-2 bg-blue-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
           <div className="w-0.5 h-2 bg-blue-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -158,7 +185,7 @@ const getAnimatedWeatherIcon = (condition: string, isNow: boolean, isNight: bool
   if (c.includes('snow') || c.includes('sleet')) {
     return (
       <div className="relative animate-float">
-        <Snowflake className={`${baseClass} text-blue-200 ${dropShadow} animate-spin`} style={{ animationDuration: '8s' }} />
+        <Snowflake className={`${baseClass} ${snowflakeColor} ${dropShadow} animate-spin`} style={{ animationDuration: '8s' }} />
       </div>
     );
   }
@@ -167,7 +194,7 @@ const getAnimatedWeatherIcon = (condition: string, isNow: boolean, isNight: bool
   if (isNight) {
     return <Moon className={`${baseClass} text-white/90 ${dropShadow} animate-float`} />;
   }
-  return <Cloud className={`${baseClass} text-white/90 ${dropShadow} animate-float`} />;
+  return <Cloud className={`${baseClass} ${cloudColor} ${dropShadow} animate-float`} />;
 };
 
 // Format time for display
@@ -287,6 +314,8 @@ export function HourlyForecastSection({ hourlyForecast, sunrise, sunset }: Hourl
               const isNight = isNightTimeActual(hour.time, sunrise, sunset);
               const isNow = index === 0;
               const gradient = getHourlyCardGradient(hour.condition, isNight, isNow);
+              const useDarkText = needsDarkText(hour.condition, isNight, isNow);
+              const textColors = getTextColors(useDarkText);
               
               // Staggered animation delay based on index
               const animationDelay = `${index * 50}ms`;
@@ -315,7 +344,7 @@ export function HourlyForecastSection({ hourlyForecast, sunrise, sunset }: Hourl
                   >
                     {/* Background decorations */}
                     <div className="absolute inset-0 overflow-hidden">
-                      <div className={`absolute -top-4 -right-4 h-16 w-16 rounded-full ${isNight ? 'bg-white/5' : 'bg-white/10'} blur-2xl`} />
+                      <div className={`absolute -top-4 -right-4 h-16 w-16 rounded-full ${isNight ? 'bg-white/5' : (useDarkText ? 'bg-slate-900/5' : 'bg-white/10')} blur-2xl`} />
                       {hour.precipitationChance > 50 && (
                         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-blue-500/20" />
                       )}
@@ -351,7 +380,7 @@ export function HourlyForecastSection({ hourlyForecast, sunrise, sunset }: Hourl
                           {Array.from({ length: Math.min(Math.floor(hour.precipitationChance / 12), 10) }).map((_, i) => (
                             <div
                               key={`snow-${i}`}
-                              className="absolute w-1.5 h-1.5 bg-white/80 rounded-full animate-snow"
+                              className={`absolute w-1.5 h-1.5 ${useDarkText ? 'bg-blue-400/80' : 'bg-white/80'} rounded-full animate-snow`}
                               style={{
                                 left: `${8 + (i * 10)}%`,
                                 animationDelay: `${i * 0.3}s`,
@@ -373,23 +402,23 @@ export function HourlyForecastSection({ hourlyForecast, sunrise, sunset }: Hourl
                       )}
                       
                       {/* Time */}
-                      <p className={`text-xs font-semibold ${isNight ? 'text-white/70' : 'text-white/80'} ${isNow ? 'mt-3' : ''}`}>
+                      <p className={`text-xs font-semibold ${textColors.secondary} ${isNow ? 'mt-3' : ''}`}>
                         {isNow ? '' : formatHourlyTime(hour.time)}
                       </p>
                       
                       {/* Weather Icon */}
                       <div className="flex justify-center py-1">
-                        {getAnimatedWeatherIcon(hour.condition, isNow, isNight)}
+                        {getAnimatedWeatherIcon(hour.condition, isNow, isNight, useDarkText)}
                       </div>
                       
                       {/* Temperature */}
-                      <p className={`text-2xl font-bold ${isNow ? 'text-3xl' : ''} text-white drop-shadow-md`}>
+                      <p className={`text-2xl font-bold ${isNow ? 'text-3xl' : ''} ${textColors.primary} drop-shadow-md`}>
                         {Math.round(hour.temperature)}°
                       </p>
                       
                       {/* Condition text for NOW card */}
                       {isNow && (
-                        <p className="text-[10px] text-white/80 font-medium truncate px-1">
+                        <p className={`text-[10px] ${textColors.secondary} font-medium truncate px-1`}>
                           {hour.condition}
                         </p>
                       )}
@@ -397,23 +426,23 @@ export function HourlyForecastSection({ hourlyForecast, sunrise, sunset }: Hourl
                       {/* Stats row - always show wind, humidity, and precipitation */}
                       <div className="flex justify-center items-center gap-1.5 pt-1">
                         {/* Wind indicator */}
-                        <div className={`flex items-center gap-0.5 text-[10px] ${isNight ? 'text-white/60' : 'text-white/70'}`}>
+                        <div className={`flex items-center gap-0.5 text-[10px] ${textColors.muted}`}>
                           <Wind className={`h-3 w-3 ${hour.windSpeed > 15 ? 'animate-pulse' : ''}`} />
                           <span>{Math.round(hour.windSpeed)}</span>
                         </div>
                         
                         {/* Humidity */}
-                        <div className={`flex items-center gap-0.5 text-[10px] ${isNight ? 'text-white/60' : 'text-white/70'}`}>
+                        <div className={`flex items-center gap-0.5 text-[10px] ${textColors.muted}`}>
                           <Droplets className="h-3 w-3" />
                           <span>{hour.humidity}%</span>
                         </div>
                         
                         {/* Precipitation - always visible with color coding */}
                         <div className={`flex items-center gap-0.5 text-[10px] ${
-                          hour.precipitationChance >= 70 ? 'text-red-300' :
-                          hour.precipitationChance >= 50 ? 'text-orange-300' :
-                          hour.precipitationChance >= 30 ? 'text-yellow-300' :
-                          'text-blue-200'
+                          hour.precipitationChance >= 70 ? (useDarkText ? 'text-red-600' : 'text-red-300') :
+                          hour.precipitationChance >= 50 ? (useDarkText ? 'text-orange-600' : 'text-orange-300') :
+                          hour.precipitationChance >= 30 ? (useDarkText ? 'text-yellow-600' : 'text-yellow-300') :
+                          (useDarkText ? 'text-blue-600' : 'text-blue-200')
                         }`}>
                           <CloudRain className="h-3 w-3" />
                           <span>{hour.precipitationChance}%</span>
