@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
 import { DrillMetricsDisplay } from '../shared/DrillMetricsDisplay';
+import { StreakIndicator } from '../shared/StreakIndicator';
 import { Search } from 'lucide-react';
 import { DrillResult } from '@/hooks/useTexVisionSession';
 
@@ -36,6 +37,8 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
   const [isComplete, setIsComplete] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
 
   const totalRounds = tier === 'beginner' ? 5 : tier === 'advanced' ? 7 : 10;
   const shapes: ('circle' | 'square' | 'triangle')[] = ['circle', 'square', 'triangle'];
@@ -96,6 +99,8 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
           ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
           : 0;
         
+        const finalBestStreak = Math.max(bestStreak, streak);
+        
         onComplete({
           accuracyPercent: Math.round((foundCount / (foundCount + mistakes)) * 100) || 100,
           reactionTimeMs: avgReaction,
@@ -105,13 +110,14 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
             roundsCompleted: newRounds,
             gridSize,
             avgReactionTime: avgReaction,
+            bestStreak: finalBestStreak,
           },
         });
       } else {
         setTimeout(generateGrid, 500);
       }
     }
-  }, [foundCount, targetCount, roundsCompleted, totalRounds, mistakes, reactionTimes, tier, onComplete, generateGrid, gridSize, isComplete]);
+  }, [foundCount, targetCount, roundsCompleted, totalRounds, mistakes, reactionTimes, tier, onComplete, generateGrid, gridSize, isComplete, streak, bestStreak]);
 
   const handleCellClick = (target: Target) => {
     if (isComplete || target.found) return;
@@ -126,8 +132,16 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
       setGrid(prev => prev.map(t => t.id === target.id ? { ...t, found: true } : t));
       setFoundCount(prev => prev + 1);
       setReactionTimes(prev => [...prev, reaction]);
+      // Increase streak
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak > bestStreak) {
+        setBestStreak(newStreak);
+      }
     } else {
       setMistakes(prev => prev + 1);
+      setBestStreak(bs => Math.max(bs, streak));
+      setStreak(0);
     }
     setLastClickTime(now);
   };
@@ -160,6 +174,8 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
         ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
         : 0;
       
+      const finalBestStreak = Math.max(bestStreak, streak);
+      
       onComplete({
         accuracyPercent: Math.round((foundCount / Math.max(foundCount + mistakes, 1)) * 100),
         reactionTimeMs: avgReaction,
@@ -168,6 +184,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
         drillMetrics: {
           roundsCompleted,
           gridSize,
+          bestStreak: finalBestStreak,
         },
       });
     }
@@ -188,11 +205,13 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
         />
       }
       metrics={
-        <DrillMetricsDisplay
-          accuracy={Math.round((foundCount / Math.max(foundCount + mistakes, 1)) * 100)}
-          reactionTimeMs={reactionTimes.length > 0 ? reactionTimes[reactionTimes.length - 1] : undefined}
-          streak={roundsCompleted}
-        />
+        <div className="flex items-center gap-4">
+          <DrillMetricsDisplay
+            accuracy={Math.round((foundCount / Math.max(foundCount + mistakes, 1)) * 100)}
+            reactionTimeMs={reactionTimes.length > 0 ? reactionTimes[reactionTimes.length - 1] : undefined}
+          />
+          <StreakIndicator currentStreak={streak} bestStreak={bestStreak} />
+        </div>
       }
     >
       <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px]">

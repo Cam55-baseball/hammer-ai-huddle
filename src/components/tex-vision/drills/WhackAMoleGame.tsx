@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
 import { DrillMetricsDisplay } from '../shared/DrillMetricsDisplay';
+import { StreakIndicator } from '../shared/StreakIndicator';
 import { Gamepad2, Check, X } from 'lucide-react';
 import { DrillResult } from '@/hooks/useTexVisionSession';
 
@@ -32,6 +33,7 @@ export default function WhackAMoleGame({ tier, onComplete, onExit }: WhackAMoleG
   const [moleAppearTime, setMoleAppearTime] = useState(Date.now());
   const [isComplete, setIsComplete] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
   const [feedback, setFeedback] = useState<{ id: number; type: 'hit' | 'miss' | 'wrong' } | null>(null);
 
   const moleUpDuration = tier === 'beginner' ? 1500 : tier === 'advanced' ? 1200 : 900;
@@ -75,6 +77,7 @@ export default function WhackAMoleGame({ tier, onComplete, onExit }: WhackAMoleG
           if (mole?.isUp && !mole.wasHit && mole.isGo) {
             setMisses(p => p + 1);
             setStreak(0);
+            setBestStreak(bs => Math.max(bs, streak));
           }
           return prev.map(m => 
             m.id === randomMole.id ? { ...m, isUp: false } : m
@@ -95,12 +98,17 @@ export default function WhackAMoleGame({ tier, onComplete, onExit }: WhackAMoleG
     if (mole.isGo) {
       // Correct hit
       setScore(prev => prev + 1);
-      setStreak(prev => prev + 1);
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak > bestStreak) {
+        setBestStreak(newStreak);
+      }
       setReactionTimes(prev => [...prev, reactionTime]);
       setFeedback({ id: moleId, type: 'hit' });
     } else {
       // Hit a no-go target
       setMistakes(prev => prev + 1);
+      setBestStreak(bs => Math.max(bs, streak));
       setStreak(0);
       setFeedback({ id: moleId, type: 'wrong' });
     }
@@ -125,6 +133,8 @@ export default function WhackAMoleGame({ tier, onComplete, onExit }: WhackAMoleG
         ? Math.round((score / totalAttempts) * 100)
         : 0;
 
+      const finalBestStreak = Math.max(bestStreak, streak);
+
       onComplete({
         accuracyPercent: accuracy,
         reactionTimeMs: avgReaction,
@@ -134,11 +144,11 @@ export default function WhackAMoleGame({ tier, onComplete, onExit }: WhackAMoleG
           totalHits: score,
           totalMisses: misses,
           noGoMistakes: mistakes,
-          bestStreak: streak,
+          bestStreak: finalBestStreak,
         },
       });
     }
-  }, [isComplete, score, mistakes, misses, streak, reactionTimes, tier, onComplete]);
+  }, [isComplete, score, mistakes, misses, streak, bestStreak, reactionTimes, tier, onComplete]);
 
   return (
     <DrillContainer
@@ -155,11 +165,13 @@ export default function WhackAMoleGame({ tier, onComplete, onExit }: WhackAMoleG
         />
       }
       metrics={
-        <DrillMetricsDisplay
-          accuracy={Math.round((score / Math.max(score + mistakes + misses, 1)) * 100)}
-          reactionTimeMs={reactionTimes.length > 0 ? reactionTimes[reactionTimes.length - 1] : undefined}
-          streak={streak}
-        />
+        <div className="flex items-center gap-4">
+          <DrillMetricsDisplay
+            accuracy={Math.round((score / Math.max(score + mistakes + misses, 1)) * 100)}
+            reactionTimeMs={reactionTimes.length > 0 ? reactionTimes[reactionTimes.length - 1] : undefined}
+          />
+          <StreakIndicator currentStreak={streak} bestStreak={bestStreak} />
+        </div>
       }
     >
       <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px]">

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
 import { DrillMetricsDisplay } from '../shared/DrillMetricsDisplay';
+import { StreakIndicator } from '../shared/StreakIndicator';
 import { Palette } from 'lucide-react';
 import { DrillResult } from '@/hooks/useTexVisionSession';
 
@@ -31,6 +32,8 @@ export default function ColorFlashGame({ tier, onComplete, onExit }: ColorFlashG
   const [reactionTimes, setReactionTimes] = useState<number[]>([]);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [isComplete, setIsComplete] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
   const flashStartTime = useRef<number>(0);
 
   const totalAttempts = tier === 'beginner' ? 15 : tier === 'advanced' ? 20 : 30;
@@ -88,10 +91,11 @@ export default function ColorFlashGame({ tier, onComplete, onExit }: ColorFlashG
         drillMetrics: {
           correctHits: score,
           totalAttempts: attempts,
+          bestStreak: bestStreak,
         },
       });
     }
-  }, [attempts, totalAttempts, isComplete, score, reactionTimes, tier, onComplete]);
+  }, [attempts, totalAttempts, isComplete, score, reactionTimes, tier, onComplete, bestStreak]);
 
   const handleTap = useCallback(() => {
     if (!isFlashing || !flashedColor || isComplete) return;
@@ -102,8 +106,15 @@ export default function ColorFlashGame({ tier, onComplete, onExit }: ColorFlashG
       setScore(prev => prev + 1);
       setReactionTimes(prev => [...prev, reactionTime]);
       setFeedback('correct');
+      // Update streak
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak > bestStreak) {
+        setBestStreak(newStreak);
+      }
     } else {
       setFeedback('wrong');
+      setStreak(0); // Reset streak on wrong answer
     }
     
     setAttempts(prev => prev + 1);
@@ -111,7 +122,7 @@ export default function ColorFlashGame({ tier, onComplete, onExit }: ColorFlashG
     setFlashedColor(null);
 
     setTimeout(() => setFeedback(null), 300);
-  }, [isFlashing, flashedColor, targetColor, isComplete]);
+  }, [isFlashing, flashedColor, targetColor, isComplete, streak, bestStreak]);
 
   const handleTimerComplete = useCallback(() => {
     if (!isComplete) {
@@ -127,10 +138,11 @@ export default function ColorFlashGame({ tier, onComplete, onExit }: ColorFlashG
         drillMetrics: {
           correctHits: score,
           totalAttempts: attempts,
+          bestStreak: bestStreak,
         },
       });
     }
-  }, [isComplete, score, attempts, reactionTimes, tier, onComplete]);
+  }, [isComplete, score, attempts, reactionTimes, tier, onComplete, bestStreak]);
 
   const targetColorData = COLORS.find(c => c.type === targetColor)!;
   const flashedColorData = flashedColor ? COLORS.find(c => c.type === flashedColor) : null;
@@ -150,11 +162,13 @@ export default function ColorFlashGame({ tier, onComplete, onExit }: ColorFlashG
         />
       }
       metrics={
-        <DrillMetricsDisplay
-          accuracy={attempts > 0 ? Math.round((score / attempts) * 100) : undefined}
-          difficulty={tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8}
-          streak={score}
-        />
+        <div className="flex items-center gap-4">
+          <DrillMetricsDisplay
+            accuracy={attempts > 0 ? Math.round((score / attempts) * 100) : undefined}
+            difficulty={tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8}
+          />
+          <StreakIndicator currentStreak={streak} bestStreak={bestStreak} />
+        </div>
       }
     >
       <div 

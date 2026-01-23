@@ -2,12 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DrillResult } from '@/hooks/useTexVisionSession';
 import { useAdaptiveDifficulty } from '@/hooks/useAdaptiveDifficulty';
+import { usePersonalBests, PersonalBestResult } from '@/hooks/usePersonalBests';
 import { FatigueIndicator } from './shared/FatigueIndicator';
+import { CelebrationBadge, CelebrationType } from './shared/CelebrationBadge';
 import { Button } from '@/components/ui/button';
-import { Play, X, Coffee, AlertTriangle, Target, Info, CheckCircle2 } from 'lucide-react';
+import { Play, X, Coffee, AlertTriangle, Target, Info, CheckCircle2, Trophy } from 'lucide-react';
 import { DRILL_INSTRUCTIONS } from './drillInstructions';
 import { DRILL_REFLECTIONS } from './drillReflections';
 import DrillReflectionPhase from './shared/DrillReflectionPhase';
+import { triggerCelebration } from '@/lib/confetti';
 
 // Import all drill components
 import SoftFocusGame from './drills/SoftFocusGame';
@@ -102,6 +105,9 @@ export default function ActiveDrillView({
   const [breakTimer, setBreakTimer] = useState(0);
   const [completedResult, setCompletedResult] = useState<DrillResult | null>(null);
   const [reflectionResponses, setReflectionResponses] = useState<Record<string, string | number>>({});
+  const [pbResult, setPbResult] = useState<PersonalBestResult | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationType, setCelebrationType] = useState<CelebrationType>('perfect');
 
   // Adaptive difficulty hook
   const { 
@@ -109,6 +115,9 @@ export default function ActiveDrillView({
     updateDifficulty,
     getRecommendedAdjustment 
   } = useAdaptiveDifficulty(sport);
+
+  // Personal bests hook
+  const { getPersonalBest, checkAndUpdatePersonalBest } = usePersonalBests();
 
   const currentDifficultyLevel = getCurrentDifficulty(drillId);
   const recommendedAdjustment = getRecommendedAdjustment(drillId);
@@ -138,7 +147,7 @@ export default function ActiveDrillView({
     }
   }, [phase, breakTimer]);
 
-  // Handle drill completion with fatigue tracking
+  // Handle drill completion with fatigue tracking and personal bests
   const handleDrillComplete = useCallback(async (partialResult: Omit<DrillResult, 'drillType' | 'tier'>) => {
     // Update fatigue based on performance
     let fatigueIncrease = FATIGUE_INCREASE_PER_DRILL;
@@ -170,6 +179,29 @@ export default function ActiveDrillView({
       fatigueScore: newFatigue,
     };
 
+    // Check for personal best
+    const pbCheckResult = await checkAndUpdatePersonalBest(drillId, tier, {
+      accuracyPercent: partialResult.accuracyPercent,
+      reactionTimeMs: partialResult.reactionTimeMs,
+      streak: (partialResult.drillMetrics as Record<string, number>)?.bestStreak || 
+              (partialResult.drillMetrics as Record<string, number>)?.correctHits,
+    });
+    setPbResult(pbCheckResult);
+
+    // Determine celebration type
+    if (partialResult.accuracyPercent === 100) {
+      setCelebrationType('perfect');
+      setShowCelebration(true);
+      triggerCelebration();
+    } else if (pbCheckResult.isNewAccuracyRecord || pbCheckResult.isNewReactionRecord) {
+      setCelebrationType('newPB');
+      setShowCelebration(true);
+      triggerCelebration();
+    } else if (partialResult.accuracyPercent !== undefined && partialResult.accuracyPercent >= 90) {
+      setCelebrationType('excellent');
+      setShowCelebration(true);
+    }
+
     // Store result and check if drill has reflection questions
     setCompletedResult(fullResult);
     
@@ -180,7 +212,7 @@ export default function ActiveDrillView({
     } else {
       setPhase('conclusion');
     }
-  }, [drillId, tier, fatigueLevel, drillsCompletedThisSession, updateDifficulty]);
+  }, [drillId, tier, fatigueLevel, drillsCompletedThisSession, updateDifficulty, checkAndUpdatePersonalBest]);
 
   // Handle reflection completion
   const handleReflectionComplete = useCallback((responses: Record<string, string | number>) => {
@@ -243,20 +275,49 @@ export default function ActiveDrillView({
 
   // Conclusion phase - show after drill completes
   if (phase === 'conclusion' && completedResult) {
+    const isNewPB = pbResult?.isNewAccuracyRecord || pbResult?.isNewReactionRecord || pbResult?.isNewStreakRecord;
+    const previousBest = pbResult?.previousBest;
+
     return (
       <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] flex flex-col items-center justify-center p-6">
-        {/* Success icon */}
-        <div className="w-20 h-20 rounded-full bg-[hsl(var(--tex-vision-success))]/20 flex items-center justify-center mb-6">
-          <CheckCircle2 className="h-12 w-12 text-[hsl(var(--tex-vision-success))]" />
+        {/* Celebration Badge Overlay */}
+        <CelebrationBadge
+          type={celebrationType}
+          value={celebrationType === 'newPB' && completedResult.accuracyPercent !== undefined 
+            ? `${completedResult.accuracyPercent}% Accuracy` 
+            : undefined}
+          show={showCelebration}
+          onAnimationComplete={() => setShowCelebration(false)}
+        />
+
+        {/* Success icon - use trophy for PB */}
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${
+          isNewPB 
+            ? 'bg-gradient-to-br from-amber-400/30 to-yellow-300/30' 
+            : 'bg-[hsl(var(--tex-vision-success))]/20'
+        }`}>
+          {isNewPB ? (
+            <Trophy className="h-12 w-12 text-amber-400" />
+          ) : (
+            <CheckCircle2 className="h-12 w-12 text-[hsl(var(--tex-vision-success))]" />
+          )}
         </div>
         
         {/* Drill name and completion message */}
         <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
           {DRILL_NAMES[drillId] || drillId}
         </h2>
-        <p className="text-lg text-[hsl(var(--tex-vision-success))] mb-8">
-          {t('texVision.drills.drillComplete', 'Drill Complete!')}
-        </p>
+        
+        {/* New PB or Drill Complete message */}
+        {isNewPB ? (
+          <p className="text-lg text-amber-400 font-bold mb-8">
+            🏆 {t('texVision.drills.newPersonalBest', 'New Personal Best!')}
+          </p>
+        ) : (
+          <p className="text-lg text-[hsl(var(--tex-vision-success))] mb-8">
+            {t('texVision.drills.drillComplete', 'Drill Complete!')}
+          </p>
+        )}
         
         {/* Results summary */}
         <div className="bg-[hsl(var(--tex-vision-primary))]/30 rounded-xl p-6 w-full max-w-sm mb-8">
@@ -268,24 +329,40 @@ export default function ActiveDrillView({
             {/* Accuracy */}
             {completedResult.accuracyPercent !== undefined && (
               <div className="text-center">
-                <div className="text-3xl font-bold text-[hsl(var(--tex-vision-feedback))]">
+                <div className={`text-3xl font-bold ${
+                  pbResult?.isNewAccuracyRecord ? 'text-amber-400' : 'text-[hsl(var(--tex-vision-feedback))]'
+                }`}>
                   {completedResult.accuracyPercent}%
+                  {pbResult?.isNewAccuracyRecord && <span className="text-sm ml-1">🔥</span>}
                 </div>
                 <div className="text-xs text-[hsl(var(--tex-vision-text-muted))]">
                   {t('texVision.drills.accuracy', 'Accuracy')}
                 </div>
+                {previousBest?.best_accuracy_percent && (
+                  <div className="text-[10px] text-[hsl(var(--tex-vision-text-muted))] mt-1">
+                    PB: {previousBest.best_accuracy_percent}%
+                  </div>
+                )}
               </div>
             )}
             
             {/* Reaction Time */}
             {completedResult.reactionTimeMs !== undefined && completedResult.reactionTimeMs > 0 && (
               <div className="text-center">
-                <div className="text-3xl font-bold text-[hsl(var(--tex-vision-timing))]">
+                <div className={`text-3xl font-bold ${
+                  pbResult?.isNewReactionRecord ? 'text-amber-400' : 'text-[hsl(var(--tex-vision-timing))]'
+                }`}>
                   {completedResult.reactionTimeMs}
+                  {pbResult?.isNewReactionRecord && <span className="text-sm ml-1">⚡</span>}
                 </div>
                 <div className="text-xs text-[hsl(var(--tex-vision-text-muted))]">
                   {t('texVision.drills.reactionMs', 'Avg ms')}
                 </div>
+                {previousBest?.best_reaction_time_ms && (
+                  <div className="text-[10px] text-[hsl(var(--tex-vision-text-muted))] mt-1">
+                    PB: {previousBest.best_reaction_time_ms}ms
+                  </div>
+                )}
               </div>
             )}
           </div>

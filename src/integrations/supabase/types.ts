@@ -2223,6 +2223,42 @@ export type Database = {
         }
         Relationships: []
       }
+      tex_vision_personal_bests: {
+        Row: {
+          achieved_at: string | null
+          best_accuracy_percent: number | null
+          best_reaction_time_ms: number | null
+          best_streak: number | null
+          drill_type: string
+          id: string
+          tier: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string | null
+          best_accuracy_percent?: number | null
+          best_reaction_time_ms?: number | null
+          best_streak?: number | null
+          drill_type: string
+          id?: string
+          tier: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string | null
+          best_accuracy_percent?: number | null
+          best_reaction_time_ms?: number | null
+          best_streak?: number | null
+          drill_type?: string
+          id?: string
+          tier?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       tex_vision_progress: {
         Row: {
           created_at: string | null
