@@ -201,7 +201,20 @@ export const useTexVisionProgress = (sport: string = 'baseball') => {
 
   // Check and update tier progression based on drill performance
   const checkAndUpdateTierProgression = useCallback(async (): Promise<TexVisionTier | null> => {
-    if (!user || !progress) return null;
+    if (!user) return null;
+
+    // Safeguard: fetch progress if not loaded to prevent race conditions
+    let currentProgress = progress;
+    if (!currentProgress) {
+      const { data } = await supabase
+        .from('tex_vision_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('sport', sport)
+        .maybeSingle();
+      currentProgress = data as TexVisionProgressData | null;
+      if (!currentProgress) return null;
+    }
 
     try {
       // Fetch all drill results for the user
@@ -227,16 +240,16 @@ export const useTexVisionProgress = (sport: string = 'baseball') => {
       });
 
       // Check progression based on current tier
-      let newTier: TexVisionTier = progress.current_tier;
+      let newTier: TexVisionTier = currentProgress.current_tier;
 
-      if (progress.current_tier === 'beginner') {
+      if (currentProgress.current_tier === 'beginner') {
         const beginner = tierStats.beginner;
         const avgAccuracy = beginner.count > 0 ? beginner.totalAccuracy / beginner.count : 0;
         // Unlock Advanced: 10+ beginner drills at 70%+ average accuracy
         if (beginner.count >= 10 && avgAccuracy >= 70) {
           newTier = 'advanced';
         }
-      } else if (progress.current_tier === 'advanced') {
+      } else if (currentProgress.current_tier === 'advanced') {
         const advanced = tierStats.advanced;
         const avgAccuracy = advanced.count > 0 ? advanced.totalAccuracy / advanced.count : 0;
         // Unlock Chaos: 10+ advanced drills at 80%+ average accuracy
@@ -246,11 +259,11 @@ export const useTexVisionProgress = (sport: string = 'baseball') => {
       }
 
       // Update if tier changed
-      if (newTier !== progress.current_tier) {
+      if (newTier !== currentProgress.current_tier) {
         const { data, error: updateError } = await supabase
           .from('tex_vision_progress')
           .update({ current_tier: newTier })
-          .eq('id', progress.id)
+          .eq('id', currentProgress.id)
           .select()
           .single();
 
@@ -264,7 +277,7 @@ export const useTexVisionProgress = (sport: string = 'baseball') => {
       console.error('Error checking tier progression:', error);
       return null;
     }
-  }, [user, progress]);
+  }, [user, progress, sport]);
 
   // Get tier progression stats for UI display
   const getTierProgressionStats = useCallback(async () => {
