@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Reorder } from 'framer-motion';
 import { format, addDays } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, Circle, Clock, Zap, Brain, ArrowRight, AlertTriangle, CalendarClock, ArrowUpDown, GripVertical } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Zap, Brain, ArrowRight, AlertTriangle, CalendarClock, ArrowUpDown, GripVertical, Play } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TexVisionDailyChecklist as ChecklistType } from '@/hooks/useTexVisionProgress';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,9 @@ import { Separator } from '@/components/ui/separator';
 interface TexVisionDailyChecklistProps {
   checklist: ChecklistType | null;
   onUpdateChecklist: (drillId: string, completed: boolean) => void;
+  onDrillStart: (drillId: string, tier: string) => void;
   loading: boolean;
+  currentTier?: string;
   // S2 Diagnostic props
   s2DiagnosticResult?: S2DiagnosticResult | null;
   s2Loading?: boolean;
@@ -30,14 +32,15 @@ interface DrillItem {
   nameKey: string;
   defaultName: string;
   icon: string;
+  tier: string;
 }
 
 // Drill definitions for checklist
 const DAILY_DRILLS: DrillItem[] = [
-  { id: 'soft_focus', nameKey: 'texVision.drills.softFocus.title', defaultName: 'Soft Focus', icon: '👁️' },
-  { id: 'pattern_search', nameKey: 'texVision.drills.patternSearch.title', defaultName: 'Pattern Search', icon: '🔍' },
-  { id: 'peripheral_vision', nameKey: 'texVision.drills.peripheralVision.title', defaultName: 'Peripheral Vision', icon: '↔️' },
-  { id: 'convergence', nameKey: 'texVision.drills.convergence.title', defaultName: 'Convergence', icon: '🎯' },
+  { id: 'soft_focus', nameKey: 'texVision.drills.softFocus.title', defaultName: 'Soft Focus', icon: '👁️', tier: 'beginner' },
+  { id: 'pattern_search', nameKey: 'texVision.drills.patternSearch.title', defaultName: 'Pattern Search', icon: '🔍', tier: 'beginner' },
+  { id: 'peripheral_vision', nameKey: 'texVision.drills.peripheralVision.title', defaultName: 'Peripheral Vision', icon: '↔️', tier: 'beginner' },
+  { id: 'convergence', nameKey: 'texVision.drills.convergence.title', defaultName: 'Convergence', icon: '🎯', tier: 'beginner' },
 ];
 
 // Helper to format days as weeks + days
@@ -72,8 +75,10 @@ const getScoreColor = (score: number | null): string => {
 
 export default function TexVisionDailyChecklist({ 
   checklist, 
-  onUpdateChecklist, 
+  onUpdateChecklist,
+  onDrillStart,
   loading,
+  currentTier = 'beginner',
   s2DiagnosticResult,
   s2Loading,
   canTakeS2Test,
@@ -249,6 +254,16 @@ export default function TexVisionDailyChecklist({
     );
   };
 
+  const handleDrillClick = (drill: DrillItem) => {
+    const isCompleted = checklist?.checklist_items?.[drill.id] || false;
+    
+    if (!isCompleted) {
+      // Start the drill - completion will be handled when drill finishes
+      onDrillStart(drill.id, currentTier);
+    }
+    // If already completed, do nothing - user can replay from Drill Library
+  };
+
   const renderDrillItem = (drill: DrillItem) => {
     const isCompleted = checklist?.checklist_items?.[drill.id] || false;
     
@@ -259,7 +274,7 @@ export default function TexVisionDailyChecklist({
             ? 'bg-[hsl(var(--tex-vision-success))]/10 border border-[hsl(var(--tex-vision-success))]/30' 
             : 'bg-[hsl(var(--tex-vision-primary-dark))]/50 border border-[hsl(var(--tex-vision-primary-light))]/20 hover:border-[hsl(var(--tex-vision-feedback))]/50'
           }`}
-        onClick={() => onUpdateChecklist(drill.id, !isCompleted)}
+        onClick={() => handleDrillClick(drill)}
       >
         {/* Drag handle - only visible in manual mode */}
         {!autoSort && (
@@ -283,10 +298,15 @@ export default function TexVisionDailyChecklist({
         }`}>
           {t(drill.nameKey, drill.defaultName)}
         </span>
-        {isCompleted && (
+        {isCompleted ? (
           <span className="text-xs text-green-700">
             ✓
           </span>
+        ) : (
+          <div className="flex items-center gap-1 text-[10px] text-[hsl(var(--tex-vision-feedback))] font-medium">
+            <Play className="h-3 w-3" />
+            <span>Start</span>
+          </div>
         )}
       </div>
     );
