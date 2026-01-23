@@ -22,6 +22,7 @@ interface UseCalendarActivityDetailReturn {
   navigateToSystemTask: (event: CalendarEvent) => void;
   quickComplete: (event: CalendarEvent, date: Date) => Promise<boolean>;
   refreshSelectedTask: () => Promise<void>;
+  updateSelectedTaskOptimistically: (templateUpdates: Partial<CustomActivityTemplate>) => void;
 }
 
 // Route mappings for system tasks
@@ -236,71 +237,72 @@ export function useCalendarActivityDetail(
   }, [currentTemplateId, onRefresh]);
 
   const handleToggleCheckbox = useCallback(async (fieldId: string, checked: boolean) => {
-    if (!currentTemplateId || !currentDate) return;
+    if (!currentTemplateId || !currentDate || !selectedTask?.customActivityData) return;
 
+    // Store previous state for rollback
+    const previousTask = selectedTask;
+    const currentLog = selectedTask.customActivityData.log;
+    const currentData = (currentLog?.performance_data as Record<string, unknown>) || {};
+    const currentCheckboxStates = (currentData.checkboxStates as Record<string, boolean>) || {};
+    const newCheckboxStates = { ...currentCheckboxStates, [fieldId]: checked };
+    const newPerformanceData = { ...currentData, checkboxStates: newCheckboxStates };
+
+    // OPTIMISTIC UPDATE: Immediately update UI
+    setSelectedTask({
+      ...selectedTask,
+      customActivityData: {
+        ...selectedTask.customActivityData,
+        log: currentLog 
+          ? { ...currentLog, performance_data: newPerformanceData } as CustomActivityLog
+          : { id: 'pending', template_id: currentTemplateId, completed: false, performance_data: newPerformanceData, entry_date: format(currentDate, 'yyyy-MM-dd') } as unknown as CustomActivityLog
+      }
+    });
+
+    // PERSIST IN BACKGROUND
     try {
       const dateStr = format(currentDate, 'yyyy-MM-dd');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Get or create log
-      let { data: log } = await supabase
-        .from('custom_activity_logs')
-        .select('*')
-        .eq('template_id', currentTemplateId)
-        .eq('entry_date', dateStr)
-        .maybeSingle();
-
-      if (!log) {
-        const { data: newLog } = await supabase
+      let log = currentLog;
+      if (!log || (log as unknown as { id: string }).id === 'pending') {
+        const { data: existingLog } = await supabase
           .from('custom_activity_logs')
-          .insert({
-            template_id: currentTemplateId,
-            user_id: user.id,
-            entry_date: dateStr,
-            completed: false,
-          })
-          .select()
-          .single();
-        log = newLog;
+          .select('*')
+          .eq('template_id', currentTemplateId)
+          .eq('entry_date', dateStr)
+          .maybeSingle();
+
+        if (existingLog) {
+          log = existingLog as CustomActivityLog;
+        } else {
+          const { data: newLog } = await supabase
+            .from('custom_activity_logs')
+            .insert({
+              template_id: currentTemplateId,
+              user_id: user.id,
+              entry_date: dateStr,
+              completed: false,
+            })
+            .select()
+            .single();
+          log = newLog as CustomActivityLog;
+        }
       }
 
       if (!log) return;
 
-      // Update checkbox state in performance_data
-      const performanceData = (log.performance_data as Record<string, unknown>) || {};
-      const checkboxStates = (performanceData.checkboxStates as Record<string, boolean>) || {};
-      checkboxStates[fieldId] = checked;
-
+      // Persist checkbox states
       await supabase
         .from('custom_activity_logs')
-        .update({
-          performance_data: {
-            ...performanceData,
-            checkboxStates,
-          },
-        })
+        .update({ performance_data: newPerformanceData })
         .eq('id', log.id);
 
-      // Update local state to reflect change
-      if (selectedTask?.customActivityData) {
-        const updatedLog = {
-          ...log,
-          performance_data: {
-            ...performanceData,
-            checkboxStates,
-          },
-        };
-        setSelectedTask({
-          ...selectedTask,
-          customActivityData: {
-            ...selectedTask.customActivityData,
-            log: updatedLog as CustomActivityLog,
-          },
-        });
-      }
     } catch (err) {
       console.error('Error toggling checkbox:', err);
+      // ROLLBACK on error
+      setSelectedTask(previousTask);
       toast.error('Failed to save');
     }
   }, [currentTemplateId, currentDate, selectedTask]);
@@ -382,6 +384,22 @@ export function useCalendarActivityDetail(
     }
   }, [currentTemplateId, selectedTask]);
 
+  // Optimistically update template data without database fetch
+  const updateSelectedTaskOptimistically = useCallback((templateUpdates: Partial<CustomActivityTemplate>) => {
+    if (!selectedTask?.customActivityData?.template) return;
+    
+    setSelectedTask({
+      ...selectedTask,
+      customActivityData: {
+        ...selectedTask.customActivityData,
+        template: {
+          ...selectedTask.customActivityData.template,
+          ...templateUpdates,
+        },
+      },
+    });
+  }, [selectedTask]);
+
   return {
     selectedTask,
     taskTime,
@@ -396,5 +414,6 @@ export function useCalendarActivityDetail(
     navigateToSystemTask,
     quickComplete,
     refreshSelectedTask,
+    updateSelectedTaskOptimistically,
   };
 }

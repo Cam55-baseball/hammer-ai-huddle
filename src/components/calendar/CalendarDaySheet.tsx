@@ -276,7 +276,7 @@ export function CalendarDaySheet({
     handleSaveTime,
     handleToggleCheckbox,
     quickComplete,
-    refreshSelectedTask,
+    updateSelectedTaskOptimistically,
   } = useCalendarActivityDetail(onRefresh);
   
   const { sport: themeSport } = useSportTheme();
@@ -879,9 +879,11 @@ export function CalendarDaySheet({
           selectedSport={selectedSportForEdit}
           onSave={async (data) => {
             const templateId = selectedTask.customActivityData?.template?.id;
-            if (templateId) {
+            if (templateId && selectedTask?.customActivityData) {
+              // OPTIMISTIC UPDATE: Apply changes immediately
+              updateSelectedTaskOptimistically(data as Partial<import('@/types/customActivity').CustomActivityTemplate>);
+              // Persist in background
               await updateTemplate(templateId, data);
-              await refreshSelectedTask();
             }
             setEditDialogOpen(false);
             onRefresh?.();
