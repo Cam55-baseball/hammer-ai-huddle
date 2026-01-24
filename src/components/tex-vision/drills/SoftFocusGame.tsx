@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
 import { DrillMetricsDisplay } from '../shared/DrillMetricsDisplay';
-import { Eye } from 'lucide-react';
+import { Eye, Sparkles } from 'lucide-react';
 import { DrillResult } from '@/hooks/useTexVisionSession';
 
 interface SoftFocusGameProps {
@@ -12,33 +12,55 @@ interface SoftFocusGameProps {
   onExit: () => void;
 }
 
+type Phase = 'focus' | 'expand' | 'hold';
+
 export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGameProps) {
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<'focus' | 'expand' | 'hold'>('focus');
+  const [phase, setPhase] = useState<Phase>('focus');
   const [cycleCount, setCycleCount] = useState(0);
-  const [breathPhase, setBreathPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
+  const [breathPhase, setBreathPhase] = useState<'in' | 'hold' | 'out'>('in');
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
-  
+  const [peripheralTaps, setPeripheralTaps] = useState(0);
+  const [showPeripheralPrompt, setShowPeripheralPrompt] = useState(false);
+  const [peripheralPosition, setPeripheralPosition] = useState<'left' | 'right'>('left');
+
   const totalCycles = tier === 'beginner' ? 3 : tier === 'advanced' ? 5 : 7;
   const cycleDuration = 20; // seconds per cycle
+  const totalDuration = totalCycles * cycleDuration;
 
-  // Breathing animation
+  // Breathing cycle: 4s in, 2s hold, 4s out
   useEffect(() => {
     if (isComplete) return;
-    
-    const breathInterval = setInterval(() => {
-      setBreathPhase(prev => {
-        if (prev === 'inhale') return 'hold';
-        if (prev === 'hold') return 'exhale';
-        return 'inhale';
-      });
-    }, 2000);
 
-    return () => clearInterval(breathInterval);
+    const breathCycle = [
+      { phase: 'in' as const, duration: 4000 },
+      { phase: 'hold' as const, duration: 2000 },
+      { phase: 'out' as const, duration: 4000 },
+    ];
+
+    let currentIndex = 0;
+    
+    const advanceBreath = () => {
+      currentIndex = (currentIndex + 1) % breathCycle.length;
+      setBreathPhase(breathCycle[currentIndex].phase);
+    };
+
+    // Run through cycle
+    let timeout: NodeJS.Timeout;
+    const scheduleNext = () => {
+      timeout = setTimeout(() => {
+        advanceBreath();
+        scheduleNext();
+      }, breathCycle[currentIndex].duration);
+    };
+    
+    scheduleNext();
+
+    return () => clearTimeout(timeout);
   }, [isComplete]);
 
-  // Cycle progression
+  // Cycle progression - update phase based on cycle
   useEffect(() => {
     if (isComplete) return;
 
@@ -53,6 +75,37 @@ export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGam
     return () => clearInterval(phaseInterval);
   }, [isComplete]);
 
+  // Show peripheral awareness prompts every 15-20 seconds
+  useEffect(() => {
+    if (isComplete) return;
+
+    const showPrompt = () => {
+      setPeripheralPosition(Math.random() > 0.5 ? 'left' : 'right');
+      setShowPeripheralPrompt(true);
+      
+      // Auto-hide after 3 seconds if not tapped
+      setTimeout(() => {
+        setShowPeripheralPrompt(false);
+      }, 3000);
+    };
+
+    // Initial delay then recurring
+    const initialDelay = setTimeout(showPrompt, 8000);
+    const interval = setInterval(showPrompt, 15000 + Math.random() * 5000);
+    
+    return () => {
+      clearTimeout(initialDelay);
+      clearInterval(interval);
+    };
+  }, [isComplete]);
+
+  const handlePeripheralTap = useCallback(() => {
+    if (showPeripheralPrompt) {
+      setPeripheralTaps(prev => prev + 1);
+      setShowPeripheralPrompt(false);
+    }
+  }, [showPeripheralPrompt]);
+
   const handleTimerTick = useCallback((seconds: number) => {
     setElapsedSeconds(seconds);
     const newCycle = Math.floor(seconds / cycleDuration);
@@ -64,35 +117,28 @@ export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGam
   const handleTimerComplete = useCallback(() => {
     setIsComplete(true);
     onComplete({
-      accuracyPercent: 100, // Soft focus is about completion, not accuracy
+      accuracyPercent: 100,
       reactionTimeMs: undefined,
       difficultyLevel: tier === 'beginner' ? 1 : tier === 'advanced' ? 4 : 7,
       drillMetrics: {
         cyclesCompleted: cycleCount + 1,
         totalDuration: elapsedSeconds,
+        peripheralAwareness: peripheralTaps,
       },
     });
-  }, [cycleCount, elapsedSeconds, tier, onComplete]);
+  }, [cycleCount, elapsedSeconds, tier, peripheralTaps, onComplete]);
 
-  const getPhaseInstruction = () => {
-    switch (phase) {
-      case 'focus':
-        return t('texVision.drills.softFocus.focusCenter', 'Focus softly on the center dot');
-      case 'expand':
-        return t('texVision.drills.softFocus.expandAwareness', 'Expand awareness to the whole screen');
-      case 'hold':
-        return t('texVision.drills.softFocus.holdSoft', 'Hold soft gaze, notice periphery');
-    }
-  };
+  // Visual scale for breathing animation
+  const breathScale = breathPhase === 'in' ? 1.3 : breathPhase === 'hold' ? 1.3 : 1;
 
-  const getBreathInstruction = () => {
-    switch (breathPhase) {
-      case 'inhale':
-        return t('texVision.drills.softFocus.inhale', 'Breathe in...');
-      case 'hold':
-        return t('texVision.drills.softFocus.holdBreath', 'Hold...');
-      case 'exhale':
-        return t('texVision.drills.softFocus.exhale', 'Breathe out...');
+  // Ring colors based on phase
+  const getRingOpacity = (ringIndex: number) => {
+    if (phase === 'focus') {
+      return ringIndex === 0 ? 0.8 : 0.2;
+    } else if (phase === 'expand') {
+      return 0.5 - ringIndex * 0.1;
+    } else {
+      return 0.6;
     }
   };
 
@@ -104,7 +150,7 @@ export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGam
       onExit={onExit}
       timer={
         <DrillTimer
-          initialSeconds={totalCycles * cycleDuration}
+          initialSeconds={totalDuration}
           mode="countdown"
           autoStart={true}
           onTick={handleTimerTick}
@@ -114,50 +160,84 @@ export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGam
       metrics={
         <DrillMetricsDisplay
           difficulty={tier === 'beginner' ? 1 : tier === 'advanced' ? 4 : 7}
-          streak={cycleCount}
+          streak={peripheralTaps}
         />
       }
     >
-      <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px] relative">
-        {/* Peripheral awareness rings */}
-        <div 
-          className={`absolute w-80 h-80 rounded-full border-2 border-[hsl(var(--tex-vision-feedback))]/20 transition-all duration-1000 ${
-            phase === 'expand' || phase === 'hold' ? 'scale-110 opacity-100' : 'scale-100 opacity-40'
-          }`}
-        />
-        <div 
-          className={`absolute w-60 h-60 rounded-full border-2 border-[hsl(var(--tex-vision-feedback))]/30 transition-all duration-1000 ${
-            phase === 'expand' || phase === 'hold' ? 'scale-110 opacity-100' : 'scale-100 opacity-50'
-          }`}
-        />
-        <div 
-          className={`absolute w-40 h-40 rounded-full border-2 border-[hsl(var(--tex-vision-feedback))]/40 transition-all duration-1000 ${
-            phase === 'expand' ? 'scale-105 opacity-100' : 'scale-100 opacity-60'
-          }`}
-        />
-
-        {/* Center focus point */}
-        <div 
-          className={`w-6 h-6 rounded-full bg-[hsl(var(--tex-vision-feedback))] transition-all duration-500 ${
-            breathPhase === 'inhale' ? 'scale-125' : breathPhase === 'exhale' ? 'scale-75' : 'scale-100'
-          }`}
-          style={{
-            boxShadow: `0 0 ${phase === 'focus' ? '20px' : '10px'} hsl(var(--tex-vision-feedback) / 0.5)`,
-          }}
-        />
-
-        {/* Cycle progress - top left */}
-        <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
-          {t('texVision.drills.cycle', 'Cycle')} {cycleCount + 1}/{totalCycles}
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-[350px] relative">
+        {/* Phase indicator - header bar, not overlapping circles */}
+        <div className="absolute top-4 left-4 flex items-center gap-2 text-sm">
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            phase === 'focus' 
+              ? 'bg-[hsl(var(--tex-vision-feedback))]/20 text-[hsl(var(--tex-vision-feedback))]'
+              : phase === 'expand'
+                ? 'bg-[hsl(var(--tex-vision-timing))]/20 text-[hsl(var(--tex-vision-timing))]'
+                : 'bg-[hsl(var(--tex-vision-success))]/20 text-[hsl(var(--tex-vision-success))]'
+          }`}>
+            {phase === 'focus' ? 'Focus' : phase === 'expand' ? 'Expand' : 'Hold'}
+          </span>
         </div>
 
-        {/* Instructions - below the visual elements, not overlapping */}
-        <div className="absolute bottom-4 left-4 right-4 text-center space-y-1">
-          <p className="text-lg font-medium text-[hsl(var(--tex-vision-text))]">
-            {getPhaseInstruction()}
-          </p>
+        {/* Breath indicator - icon only, top right */}
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <Sparkles 
+            className={`w-5 h-5 transition-all duration-500 ${
+              breathPhase === 'in' 
+                ? 'text-[hsl(var(--tex-vision-success))] scale-125' 
+                : breathPhase === 'hold'
+                  ? 'text-[hsl(var(--tex-vision-timing))] scale-110'
+                  : 'text-[hsl(var(--tex-vision-text-muted))] scale-100'
+            }`}
+          />
+        </div>
+
+        {/* Peripheral awareness prompt - left side */}
+        {showPeripheralPrompt && peripheralPosition === 'left' && (
+          <button
+            onClick={handlePeripheralTap}
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[hsl(var(--tex-vision-feedback))]/40 animate-pulse"
+            style={{ boxShadow: '0 0 20px hsl(var(--tex-vision-feedback) / 0.5)' }}
+          />
+        )}
+
+        {/* Peripheral awareness prompt - right side */}
+        {showPeripheralPrompt && peripheralPosition === 'right' && (
+          <button
+            onClick={handlePeripheralTap}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[hsl(var(--tex-vision-feedback))]/40 animate-pulse"
+            style={{ boxShadow: '0 0 20px hsl(var(--tex-vision-feedback) / 0.5)' }}
+          />
+        )}
+
+        {/* Concentric rings for peripheral awareness - NO TEXT overlapping */}
+        <div className="relative flex items-center justify-center">
+          {[0, 1, 2, 3].map((ringIndex) => (
+            <div
+              key={ringIndex}
+              className="absolute rounded-full border-2 border-[hsl(var(--tex-vision-feedback))] transition-all duration-1000"
+              style={{
+                width: `${(ringIndex + 1) * 60}px`,
+                height: `${(ringIndex + 1) * 60}px`,
+                opacity: getRingOpacity(ringIndex),
+                transform: `scale(${phase === 'expand' || phase === 'hold' ? 1.1 : 1})`,
+              }}
+            />
+          ))}
+
+          {/* Center focus point - breathing animation */}
+          <div
+            className="w-8 h-8 rounded-full bg-[hsl(var(--tex-vision-feedback))] transition-transform duration-[2000ms] ease-in-out"
+            style={{
+              transform: `scale(${breathScale})`,
+              boxShadow: `0 0 ${breathPhase === 'hold' ? 30 : 15}px hsl(var(--tex-vision-feedback) / 0.6)`,
+            }}
+          />
+        </div>
+
+        {/* Cycle counter - bottom */}
+        <div className="absolute bottom-4 text-center">
           <p className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
-            {getBreathInstruction()}
+            {t('texVision.drills.cycle', 'Cycle')} {cycleCount + 1}/{totalCycles}
           </p>
         </div>
       </div>

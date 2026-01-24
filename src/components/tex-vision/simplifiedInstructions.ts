@@ -31,13 +31,13 @@ export const ACTION_ICONS: Record<ActionIcon, string> = {
 export const SIMPLIFIED_INSTRUCTIONS: Record<string, SimplifiedDrillInstruction> = {
   // Beginner drills
   soft_focus: {
-    goalSentence: "Relax your eyes and see the whole screen!",
+    goalSentence: "Relax your eyes and notice the whole screen!",
     quickSteps: [
-      { icon: 'watch', action: "Look at the dot in the middle" },
-      { icon: 'breathe', action: "Breathe slowly and stay calm" },
-      { icon: 'hold', action: "Don't stare hard—keep it soft" }
+      { icon: 'watch', action: "Look at the center dot softly" },
+      { icon: 'breathe', action: "Breathe with the pulsing rhythm" },
+      { icon: 'tap', action: "Tap the glowing circles on the sides" }
     ],
-    successCriteria: "Complete all breathing cycles"
+    successCriteria: "Complete all breathing cycles and tap peripheral prompts"
   },
   
   pattern_search: {
@@ -61,13 +61,13 @@ export const SIMPLIFIED_INSTRUCTIONS: Record<string, SimplifiedDrillInstruction>
   },
   
   convergence: {
-    goalSentence: "Watch the dots come together and apart!",
+    goalSentence: "Watch the dots come together—you should see ONE dot!",
     quickSteps: [
       { icon: 'watch', action: "Follow the dots with your eyes" },
-      { icon: 'hold', action: "Keep both dots looking like ONE" },
+      { icon: 'tap', action: "Tap when you see ONE dot!" },
       { icon: 'breathe', action: "Stay relaxed the whole time" }
     ],
-    successCriteria: "Complete all cycles smoothly"
+    successCriteria: "Confirm when dots merge into one"
   },
   
   color_flash: {
@@ -81,13 +81,13 @@ export const SIMPLIFIED_INSTRUCTIONS: Record<string, SimplifiedDrillInstruction>
   },
   
   eye_relaxation: {
-    goalSentence: "Give your eyes a rest—just follow along!",
+    goalSentence: "Give your eyes a rest—tap to continue between steps!",
     quickSteps: [
-      { icon: 'breathe', action: "Close eyes and breathe deeply" },
-      { icon: 'follow', action: "Follow the relaxation steps" },
-      { icon: 'hold', action: "No rushing—just chill" }
+      { icon: 'breathe', action: "Follow the visual breathing cues" },
+      { icon: 'follow', action: "Watch the animated exercises" },
+      { icon: 'tap', action: "Tap Continue when each step ends" }
     ],
-    successCriteria: "Complete the relaxation routine"
+    successCriteria: "Complete all relaxation steps"
   },
   
   // Advanced drills
