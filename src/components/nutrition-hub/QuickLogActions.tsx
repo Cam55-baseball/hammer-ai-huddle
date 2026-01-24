@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplets, Utensils, Pill, Plus, Zap, BookOpen, ScanBarcode, Mic } from 'lucide-react';
+import { Droplets, Utensils, Pill, Plus, Zap, BookOpen, ScanBarcode, Mic, Camera } from 'lucide-react';
 import { useHydration } from '@/hooks/useHydration';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ import { BarcodeScanner } from './BarcodeScanner';
 import { FoodSearchResult } from '@/hooks/useFoodSearch';
 import { MealTypeSelector, MEAL_TYPES } from './MealTypeSelector';
 import { VoiceFoodLogger } from './VoiceFoodLogger';
+import { PhotoFoodLogger } from './PhotoFoodLogger';
 
 interface QuickLogActionsProps {
   onLogMeal?: (mealType: string, prefilledItems?: RecipeIngredient[]) => void;
@@ -326,6 +327,19 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
             {t('nutrition.voiceLog', 'Voice Log')}
           </Label>
           <VoiceFoodLogger onFoodsLogged={(mealType, foods) => {
+            if (onLogMeal) {
+              onLogMeal(mealType, foods);
+            }
+          }} />
+        </div>
+
+        {/* Photo Food Logger */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <Camera className="h-4 w-4 text-emerald-500" />
+            {t('nutrition.photoLog', 'Photo Log')}
+          </Label>
+          <PhotoFoodLogger onFoodsLogged={(mealType, foods) => {
             if (onLogMeal) {
               onLogMeal(mealType, foods);
             }
