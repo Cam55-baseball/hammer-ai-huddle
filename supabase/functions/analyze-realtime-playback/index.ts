@@ -34,10 +34,35 @@ Respond in ${languageName}.
 1. Ground Force
 2. Legs Drive
 3. BACK ELBOW TRAVELS FORWARD (BEFORE hips rotate) ⭐
-4. Hips Rotate
-5. Torso Rotates
-6. Shoulders Rotate (FRONT SHOULDER MUST STAY CLOSED UNTIL THIS POINT) ⭐
-7. Hands/Bat Release (HANDS MUST NOT PASS BACK ELBOW BEFORE SHOULDERS ROTATE) ⭐⭐
+4. FRONT FOOT LANDS & STABILIZES (BEFORE any rotation) ⭐⭐⭐
+5. Hips Rotate (ONLY AFTER front foot is planted)
+6. Torso Rotates
+7. Shoulders Rotate (FRONT SHOULDER MUST STAY CLOSED UNTIL THIS POINT) ⭐
+8. Hands/Bat Release (HANDS MUST NOT PASS BACK ELBOW BEFORE SHOULDERS ROTATE) ⭐⭐
+
+STRIDE & LANDING - FOUNDATION OF POWER:
+
+⭐⭐⭐ CRITICAL: FRONT FOOT MUST BE PLANTED BEFORE SHOULDER ROTATION ⭐⭐⭐
+
+The swing sequence CANNOT properly begin until the front foot is on the ground:
+- Ground contact creates the stable base for rotational force
+- Without this foundation, rotation has no anchor point
+- This is NON-NEGOTIABLE for elite-level hitting
+
+POWER LEAK WARNING - EARLY SHOULDER ROTATION:
+If shoulders begin rotating BEFORE front foot lands:
+→ MASSIVE POWER LEAK - rotational force dissipates into air, not through kinetic chain
+→ ADJUSTABILITY DESTROYED - cannot track/adjust to pitch location mid-swing
+→ BALANCE COMPROMISED - body unstable during rotation = inconsistent contact
+→ ACCURACY REDUCED - contact point varies due to unanchored rotation
+→ EFFORT INEFFICIENCY - requires significantly more muscular effort for same output
+
+WHY THIS MATTERS FOR ELITE PERFORMANCE:
+- Elite hitters use the ground as leverage - rotation builds FROM the ground UP
+- Feet planted = stable platform = efficient energy transfer
+- When feet are down first, the kinetic chain fires in proper sequence AUTOMATICALLY
+- This creates an "effortless" feel with maximum power output
+- The best hitters in the world look smooth because their timing starts from the ground
 
 BALANCE & HEAD CONTROL - PHASE-SPECIFIC ANALYSIS:
 
@@ -69,6 +94,12 @@ HEAD MOVEMENT ROOT CAUSES:
 - **IMPORTANT:** Don't sacrifice swing sequence to keep head still - proper sequence creates natural head stability
 
 RED FLAGS TO IDENTIFY:
+- ⚠️ CRITICAL: Shoulders begin rotating BEFORE front foot lands → MASSIVE POWER LEAK ⭐⭐⭐
+  * This is the #1 cause of inconsistent, effortful swings
+  * Destroys ability to adjust to pitch location
+  * Cannot generate maximum force without ground connection
+  * Makes the swing feel "heavy" and requires more effort
+  * Elite hitters NEVER rotate before landing - this is non-negotiable
 - ⚠️ CRITICAL: Hands pass back elbow BEFORE shoulders begin rotating → MAJOR SEQUENCE DISRUPTOR
   * Bat not on plane early enough or long enough
   * Reduces contact abilities and accuracy at contact
@@ -93,25 +124,29 @@ RED FLAGS TO IDENTIFY:
 - Hips rotate before back elbow travels → Broken kinetic chain
 
 Focus on:
-1. ⭐⭐⭐ Does the head move LATERALLY toward the pitcher during swing sequence? (CRITICAL RED FLAG)
-2. ⭐⭐ Does the head move EXCESSIVELY FORWARD during swing sequence? (Some natural movement OK)
-3. ⭐ Do hands stay BEHIND the back elbow until AFTER shoulders begin rotating?
-4. ⭐ Does the FRONT SHOULDER stay CLOSED until proper timing in sequence?
-5. Does back elbow TRAVEL forward before hips?
-6. Are timing gaps correct (elbow → hips → shoulders → hands)?
+1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
+2. ⭐⭐⭐ Does the head move LATERALLY toward the pitcher during swing sequence? (CRITICAL RED FLAG)
+3. ⭐⭐ Does the head move EXCESSIVELY FORWARD during swing sequence? (Some natural movement OK)
+4. ⭐ Do hands stay BEHIND the back elbow until AFTER shoulders begin rotating?
+5. ⭐ Does the FRONT SHOULDER stay CLOSED until proper timing in sequence?
+6. Does back elbow TRAVEL forward before hips?
+7. Are timing gaps correct (land → elbow → hips → shoulders → hands)?
 
 Provide:
 - Efficiency score (1-10) based on form correctness
+- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (MAJOR deduction - up to 2.5 points)
 - **PRIORITY CHECK:** Flag if hands pass back elbow before shoulder rotation (major deduction to score)
 - **PRIORITY CHECK:** Flag if front shoulder opens/pulls out of sequence (major deduction to score)
 - **BALANCE CHECK:** Assess head movement and balance throughout the swing
 - Specific feedback on:
+  * Front foot landing timing relative to rotation (MUST land first)
   * Hand-elbow timing relative to shoulder rotation
   * Front shoulder control and timing (watch for early opening)
   * Head position and forward movement (balance indicator)
   * Back elbow travel
   * Kinetic sequence timing
 - Identify any sequence violations and their impact on power/contact
+- **If early rotation detected:** Explain how this creates power leak, hurts adjustability, and requires more effort
 - **If front shoulder opens early:** Explain impact on barrel tension, swing plane, and contact accuracy
 - **If forward head movement detected:** Note correlation with back elbow position and hand travel
 - Recommended drills to correct any sequence issues and improve balance
