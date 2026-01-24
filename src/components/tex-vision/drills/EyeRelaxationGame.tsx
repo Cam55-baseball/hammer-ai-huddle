@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
@@ -22,6 +22,8 @@ interface ExerciseStep {
   duration: number;
 }
 
+const AUTO_ADVANCE_DELAY = 2000; // Auto-advance after 2 seconds if user doesn't click
+
 export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteraction }: EyeRelaxationGameProps) {
   const { t } = useTranslation();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -32,6 +34,8 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
   const [showTransition, setShowTransition] = useState(false);
   const [confirmations, setConfirmations] = useState(0);
   const [waitingForConfirm, setWaitingForConfirm] = useState(false);
+  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState(0);
+  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const baseDuration = tier === 'beginner' ? 15 : tier === 'advanced' ? 20 : 25;
 
@@ -65,6 +69,7 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
           if (currentStepIndex < exercises.length - 1) {
             setShowTransition(true);
             setWaitingForConfirm(true);
+            setAutoAdvanceCountdown(2); // Start 2 second countdown for auto-advance
           }
           return 0;
         }
@@ -74,6 +79,45 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
 
     return () => clearInterval(timer);
   }, [stepTimeRemaining, currentStepIndex, exercises.length, isComplete, waitingForConfirm]);
+
+  // Auto-advance countdown when waiting for confirm
+  useEffect(() => {
+    if (!waitingForConfirm || autoAdvanceCountdown <= 0) return;
+
+    const timer = setInterval(() => {
+      setAutoAdvanceCountdown(prev => {
+        if (prev <= 1) {
+          // Auto-advance to next step
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [waitingForConfirm, autoAdvanceCountdown]);
+
+  // Trigger auto-advance when countdown reaches 0
+  useEffect(() => {
+    if (waitingForConfirm && autoAdvanceCountdown === 0 && showTransition) {
+      // Auto-advance after countdown expires
+      autoAdvanceTimerRef.current = setTimeout(() => {
+        onInteraction?.(); // Count as interaction for validation
+        setConfirmations(prev => prev + 1);
+        setShowTransition(false);
+        setWaitingForConfirm(false);
+        if (currentStepIndex < exercises.length - 1) {
+          setCurrentStepIndex(prev => prev + 1);
+        }
+      }, 100); // Small delay to ensure state is stable
+    }
+
+    return () => {
+      if (autoAdvanceTimerRef.current) {
+        clearTimeout(autoAdvanceTimerRef.current);
+      }
+    };
+  }, [waitingForConfirm, autoAdvanceCountdown, showTransition, currentStepIndex, exercises.length, onInteraction]);
 
   // Breathing animation
   useEffect(() => {
@@ -98,10 +142,16 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
   }, [currentStep?.phase, isComplete]);
 
   const handleContinue = useCallback(() => {
+    // Clear auto-advance timer if user clicks manually
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+    }
+    
     onInteraction?.(); // Report interaction to parent for validation tracking
     setConfirmations(prev => prev + 1);
     setShowTransition(false);
     setWaitingForConfirm(false);
+    setAutoAdvanceCountdown(0);
 
     if (currentStepIndex < exercises.length - 1) {
       setCurrentStepIndex(prev => prev + 1);
@@ -185,12 +235,17 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
         {showTransition && nextStep && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--tex-vision-primary))]/90 z-10 animate-fade-in rounded-lg">
             <p className="text-lg text-[hsl(var(--tex-vision-text-muted))] mb-2">Next:</p>
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4">
               <NextIcon className="w-8 h-8 text-[hsl(var(--tex-vision-feedback))]" />
               <span className="text-2xl font-bold text-[hsl(var(--tex-vision-text))]">
                 {nextStep.title}
               </span>
             </div>
+            {autoAdvanceCountdown > 0 && (
+              <p className="text-sm text-[hsl(var(--tex-vision-text-muted))] mb-4">
+                Auto-continuing in {autoAdvanceCountdown}...
+              </p>
+            )}
             <button
               onClick={handleContinue}
               className="flex items-center gap-2 px-6 py-3 bg-[hsl(var(--tex-vision-feedback))] text-[hsl(var(--tex-vision-primary-dark))] font-bold rounded-lg hover:scale-105 transition-transform"
