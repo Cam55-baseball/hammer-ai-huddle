@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, RotateCcw } from 'lucide-react';
@@ -28,6 +28,20 @@ export function DrillTimer({
   const [isRunning, setIsRunning] = useState(autoStart);
   const [hasStarted, setHasStarted] = useState(autoStart);
 
+  // Store callbacks in refs to prevent interval reset on parent re-renders
+  // This is critical for drills that update state at 60fps (e.g., Follow the Target)
+  const onTickRef = useRef(onTick);
+  const onCompleteRef = useRef(onComplete);
+
+  // Keep refs in sync with latest props
+  useEffect(() => {
+    onTickRef.current = onTick;
+  }, [onTick]);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
   // Sync autoStart prop changes to internal state (e.g., after countdown completes)
   useEffect(() => {
     if (autoStart && !isRunning) {
@@ -55,11 +69,12 @@ export function DrillTimer({
       interval = setInterval(() => {
         setSeconds((prev) => {
           const next = mode === 'countdown' ? prev - 1 : prev + 1;
-          onTick?.(next);
+          // Use refs to call callbacks - prevents interval reset on parent re-renders
+          onTickRef.current?.(next);
           
           if (mode === 'countdown' && next <= 0) {
             setIsRunning(false);
-            onComplete?.();
+            onCompleteRef.current?.();
             return 0;
           }
           
@@ -71,7 +86,7 @@ export function DrillTimer({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning, mode, onComplete, onTick]);
+  }, [isRunning, mode]); // Only depend on isRunning and mode - callbacks use refs
 
   const handleStart = useCallback(() => {
     setIsRunning(true);

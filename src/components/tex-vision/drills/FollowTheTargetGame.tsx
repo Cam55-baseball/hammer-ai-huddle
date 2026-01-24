@@ -24,33 +24,27 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
   const [cursorPosition, setCursorPosition] = useState<Position>({ x: 50, y: 50 });
   const [trackingScore, setTrackingScore] = useState<number[]>([]);
   const [isComplete, setIsComplete] = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [countdown, setCountdown] = useState(3);
-  const [isTracking, setIsTracking] = useState(false);
-  const [timerStarted, setTimerStarted] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  
+  // Use refs for stable callback access
+  const trackingScoreRef = useRef<number[]>([]);
+  const initialSeconds = tier === 'beginner' ? 60 : tier === 'advanced' ? 90 : 120;
 
   const speed = tier === 'beginner' ? 0.5 : tier === 'advanced' ? 1 : 1.5;
   const patternComplexity = tier === 'beginner' ? 1 : tier === 'advanced' ? 2 : 3;
 
-  // Countdown before tracking starts
+  // Keep ref in sync with state for stable callback access
   useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(prev => prev - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (!isTracking) {
-      setIsTracking(true);
-      setTimerStarted(true); // Start the drill timer after countdown
-    }
-  }, [countdown, isTracking]);
+    trackingScoreRef.current = trackingScore;
+  }, [trackingScore]);
 
-  // Generate smooth movement path
+  // Generate smooth movement path - starts immediately (no internal countdown)
   useEffect(() => {
-    if (isComplete || !isTracking) return;
+    if (isComplete) return;
 
     let angle = 0;
-    let radiusX = 30;
-    let radiusY = 20;
+    const radiusX = 30;
+    const radiusY = 20;
     
     const interval = setInterval(() => {
       angle += speed * 0.05;
@@ -66,7 +60,7 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
     }, 16); // ~60fps
 
     return () => clearInterval(interval);
-  }, [speed, patternComplexity, isComplete, isTracking]);
+  }, [speed, patternComplexity, isComplete]);
 
   // Calculate tracking accuracy
   useEffect(() => {
@@ -83,7 +77,7 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
   }, [targetPosition, cursorPosition, isComplete]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || isComplete || !isTracking) return;
+    if (!containerRef.current || isComplete) return;
 
     if (!hasInteracted) setHasInteracted(true);
     
@@ -92,10 +86,10 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     
     setCursorPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
-  }, [isComplete, isTracking, hasInteracted]);
+  }, [isComplete, hasInteracted]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-    if (!containerRef.current || isComplete || !isTracking) return;
+    if (!containerRef.current || isComplete) return;
     
     if (!hasInteracted) setHasInteracted(true);
     
@@ -105,10 +99,10 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
     const y = ((touch.clientY - rect.top) / rect.height) * 100;
     
     setCursorPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
-  }, [isComplete, isTracking, hasInteracted]);
+  }, [isComplete, hasInteracted]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-    if (!containerRef.current || isComplete || !isTracking) return;
+    if (!containerRef.current || isComplete) return;
     
     e.preventDefault(); // Prevent scrolling while tracking
     
@@ -118,30 +112,28 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
     const y = ((touch.clientY - rect.top) / rect.height) * 100;
     
     setCursorPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
-  }, [isComplete, isTracking]);
-
-  const handleTimerTick = useCallback((seconds: number) => {
-    setElapsedSeconds(seconds);
-  }, []);
+  }, [isComplete]);
 
   const handleTimerComplete = useCallback(() => {
-    if (!isComplete) {
-      setIsComplete(true);
-      
-      const avgAccuracy = trackingScore.length > 0
-        ? Math.round(trackingScore.reduce((a, b) => a + b, 0) / trackingScore.length)
-        : 0;
-      
-      onComplete({
-        accuracyPercent: avgAccuracy,
-        difficultyLevel: tier === 'beginner' ? 4 : tier === 'advanced' ? 6 : 9,
-        drillMetrics: {
-          trackingSamples: trackingScore.length,
-          duration: elapsedSeconds,
-        },
-      });
-    }
-  }, [isComplete, trackingScore, tier, elapsedSeconds, onComplete]);
+    if (isComplete) return;
+    
+    setIsComplete(true);
+    
+    // Use ref for stable access to latest scores
+    const scores = trackingScoreRef.current;
+    const avgAccuracy = scores.length > 0
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      : 0;
+    
+    onComplete({
+      accuracyPercent: avgAccuracy,
+      difficultyLevel: tier === 'beginner' ? 4 : tier === 'advanced' ? 6 : 9,
+      drillMetrics: {
+        trackingSamples: scores.length,
+        duration: initialSeconds,
+      },
+    });
+  }, [isComplete, tier, initialSeconds, onComplete]);
 
   const currentAccuracy = trackingScore.length > 0
     ? Math.round(trackingScore.slice(-10).reduce((a, b) => a + b, 0) / Math.min(trackingScore.length, 10))
@@ -155,10 +147,9 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
       onExit={onExit}
       timer={
         <DrillTimer
-          initialSeconds={tier === 'beginner' ? 60 : tier === 'advanced' ? 90 : 120}
+          initialSeconds={initialSeconds}
           mode="countdown"
-          autoStart={timerStarted}
-          onTick={handleTimerTick}
+          autoStart={true}
           onComplete={handleTimerComplete}
         />
       }
@@ -177,18 +168,6 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
       >
-        {/* Countdown overlay */}
-        {countdown > 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--tex-vision-primary))]/80 z-10">
-            <p className="text-6xl font-bold text-[hsl(var(--tex-vision-feedback))] animate-pulse">
-              {countdown}
-            </p>
-            <p className="mt-4 text-lg text-[hsl(var(--tex-vision-text))]">
-              {t('texVision.drills.smoothPursuit.getReady', 'Get ready to track!')}
-            </p>
-          </div>
-        )}
-
         {/* Trail effect */}
         <div
           className="absolute w-8 h-8 rounded-full bg-[hsl(var(--tex-vision-feedback))]/20 transition-all duration-100"
@@ -228,8 +207,8 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
           />
         )}
 
-        {/* Tracking status indicator */}
-        {isTracking && !hasInteracted && countdown === 0 && (
+        {/* Tracking status indicator - shows when user hasn't started interacting */}
+        {!hasInteracted && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
             <p className="text-lg text-[hsl(var(--tex-vision-text))] animate-pulse">
               {t('texVision.drills.smoothPursuit.placeFingerDesktop', 'Move your cursor to the target')}
