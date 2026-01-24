@@ -3,14 +3,23 @@
  * Creates a confetti animation overlay that respects reduced motion preferences
  */
 
+// Global lock to prevent multiple simultaneous confetti bursts
+let isConfettiActive = false;
+
 export function triggerConfetti() {
+  // Prevent multiple simultaneous confetti bursts
+  if (isConfettiActive) return;
+
   // Respect reduced motion preferences
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     return;
   }
 
-  // Create confetti container
+  isConfettiActive = true;
+
+  // Create confetti container with data attribute for cleanup
   const container = document.createElement('div');
+  container.setAttribute('data-confetti-container', 'true');
   container.style.cssText = `
     position: fixed;
     top: 0;
@@ -27,14 +36,23 @@ export function triggerConfetti() {
   const colors = ['#8b5cf6', '#d946ef', '#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#22c55e', '#ef4444'];
   const particleCount = 60;
 
+  // Track max animation time for proper cleanup
+  let maxAnimationEnd = 0;
+
   for (let i = 0; i < particleCount; i++) {
     const particle = document.createElement('div');
     const color = colors[Math.floor(Math.random() * colors.length)];
     const size = Math.random() * 10 + 5;
     const left = Math.random() * 100;
-    const animationDuration = Math.random() * 2 + 2;
-    const delay = Math.random() * 0.5;
+    const animationDuration = Math.random() * 2 + 2; // 2-4 seconds
+    const delay = Math.random() * 0.5; // 0-0.5 seconds
     const rotation = Math.random() * 720;
+
+    // Track when this particle's animation will end
+    const particleEnd = (animationDuration + delay) * 1000;
+    if (particleEnd > maxAnimationEnd) {
+      maxAnimationEnd = particleEnd;
+    }
 
     particle.style.cssText = `
       position: absolute;
@@ -70,10 +88,23 @@ export function triggerConfetti() {
     document.head.appendChild(style);
   }
 
-  // Clean up after animation
+  // Clean up after longest animation completes (add 500ms buffer)
+  const cleanupTime = Math.max(maxAnimationEnd + 500, 5000);
   setTimeout(() => {
     container.remove();
-  }, 5000);
+    isConfettiActive = false;
+  }, cleanupTime);
+}
+
+/**
+ * Force stop any active confetti
+ */
+export function stopConfetti() {
+  const container = document.querySelector('[data-confetti-container]');
+  if (container) {
+    container.remove();
+  }
+  isConfettiActive = false;
 }
 
 /**

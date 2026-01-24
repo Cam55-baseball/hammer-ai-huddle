@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-
+import { useState, useEffect } from 'react';
 interface PreviewProps {
   isPlaying: boolean;
 }
@@ -151,25 +151,74 @@ export const SoftFocusPreview = ({ isPlaying }: PreviewProps) => {
   );
 };
 
-// Near-Far Preview - Depth circles
+// Near-Far Preview - Vertically stacked depth targets matching actual game
 export const NearFarPreview = ({ isPlaying }: PreviewProps) => {
+  const [activeDepth, setActiveDepth] = useState<'far' | 'mid' | 'near'>('mid');
+  
+  useEffect(() => {
+    if (!isPlaying) {
+      setActiveDepth('mid');
+      return;
+    }
+    
+    const depths: ('far' | 'mid' | 'near')[] = ['far', 'mid', 'near'];
+    let index = 1; // Start at mid
+    const interval = setInterval(() => {
+      index = (index + 1) % depths.length;
+      setActiveDepth(depths[index]);
+    }, 1200);
+    
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+  
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full gap-4">
+    <div className="flex flex-col items-center justify-between w-full h-full py-3">
+      {/* Far - top, smallest */}
       <motion.div
-        className="w-16 h-16 rounded-full border-4 border-[hsl(var(--tex-vision-feedback))]"
-        animate={isPlaying ? { 
-          scale: [0.5, 1, 0.5],
-          opacity: [0.3, 1, 0.3]
-        } : {}}
-        transition={{ duration: 2, repeat: Infinity }}
+        className="rounded-full"
+        style={{ width: 16, height: 16 }}
+        animate={{
+          backgroundColor: activeDepth === 'far' 
+            ? 'hsl(var(--tex-vision-feedback))' 
+            : 'hsl(var(--tex-vision-primary-light) / 0.3)',
+          boxShadow: activeDepth === 'far' 
+            ? '0 0 12px hsl(var(--tex-vision-feedback) / 0.6)' 
+            : 'none',
+          scale: activeDepth === 'far' ? 1.2 : 1,
+        }}
+        transition={{ duration: 0.3 }}
       />
+      
+      {/* Mid - center, medium */}
       <motion.div
-        className="w-10 h-10 rounded-full border-4 border-[hsl(var(--tex-vision-success))]"
-        animate={isPlaying ? { 
-          scale: [1, 0.5, 1],
-          opacity: [1, 0.3, 1]
-        } : {}}
-        transition={{ duration: 2, repeat: Infinity }}
+        className="rounded-full"
+        style={{ width: 28, height: 28 }}
+        animate={{
+          backgroundColor: activeDepth === 'mid' 
+            ? 'hsl(var(--tex-vision-feedback))' 
+            : 'hsl(var(--tex-vision-primary-light) / 0.4)',
+          boxShadow: activeDepth === 'mid' 
+            ? '0 0 15px hsl(var(--tex-vision-feedback) / 0.5)' 
+            : 'none',
+          scale: activeDepth === 'mid' ? 1.15 : 1,
+        }}
+        transition={{ duration: 0.3 }}
+      />
+      
+      {/* Near - bottom, largest */}
+      <motion.div
+        className="rounded-full"
+        style={{ width: 44, height: 44 }}
+        animate={{
+          backgroundColor: activeDepth === 'near' 
+            ? 'hsl(var(--tex-vision-feedback))' 
+            : 'hsl(var(--tex-vision-primary-light) / 0.5)',
+          boxShadow: activeDepth === 'near' 
+            ? '0 0 20px hsl(var(--tex-vision-feedback) / 0.7)' 
+            : 'none',
+          scale: activeDepth === 'near' ? 1.1 : 1,
+        }}
+        transition={{ duration: 0.3 }}
       />
     </div>
   );
@@ -313,20 +362,81 @@ export const StroopChallengePreview = ({ isPlaying }: PreviewProps) => {
   );
 };
 
-// Multi-Target Track Preview - Moving dots
+// Multi-Target Track Preview - Shows memorize, track, select phases
 export const MultiTargetTrackPreview = ({ isPlaying }: PreviewProps) => {
+  const [phase, setPhase] = useState<'memorize' | 'track' | 'select'>('memorize');
+  
+  useEffect(() => {
+    if (!isPlaying) {
+      setPhase('memorize');
+      return;
+    }
+    
+    // Cycle through phases
+    const phases: ('memorize' | 'track' | 'select')[] = ['memorize', 'track', 'select'];
+    let index = 0;
+    const interval = setInterval(() => {
+      index = (index + 1) % phases.length;
+      setPhase(phases[index]);
+    }, 1500);
+    
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+  
+  // Dots with their states
+  const dots = [
+    { x: 25, y: 25, isTarget: true },
+    { x: 65, y: 30, isTarget: true },
+    { x: 45, y: 60, isTarget: false },
+    { x: 75, y: 55, isTarget: false },
+    { x: 30, y: 50, isTarget: false },
+  ];
+  
   return (
-    <div className="relative w-full h-full">
-      {[0, 1, 2, 3, 4].map((i) => (
+    <div className="relative w-full h-full bg-[hsl(var(--tex-vision-primary))]/20 rounded-lg overflow-hidden">
+      {/* Phase label */}
+      <motion.div
+        className="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] font-bold z-10"
+        animate={{
+          color: phase === 'memorize' 
+            ? 'hsl(var(--tex-vision-feedback))' 
+            : phase === 'track' 
+            ? 'hsl(var(--tex-vision-timing))' 
+            : 'hsl(var(--tex-vision-success))'
+        }}
+      >
+        {phase === 'memorize' ? 'MEMORIZE' : phase === 'track' ? 'TRACK...' : 'SELECT!'}
+      </motion.div>
+      
+      {/* Dots */}
+      {dots.map((dot, i) => (
         <motion.div
           key={i}
-          className={`absolute w-4 h-4 rounded-full ${i < 2 ? 'bg-[hsl(var(--tex-vision-feedback))]' : 'bg-[hsl(var(--tex-vision-text))]/50'}`}
-          style={{ top: `${20 + i * 15}%`, left: `${20 + i * 12}%` }}
-          animate={isPlaying ? {
-            x: [0, 20 * (i % 2 ? 1 : -1), 0],
-            y: [0, 15 * (i % 3 ? 1 : -1), 0]
-          } : {}}
-          transition={{ duration: 2, delay: i * 0.1, repeat: Infinity }}
+          className="absolute w-3 h-3 rounded-full"
+          style={{
+            left: `${dot.x}%`,
+            top: `${dot.y}%`,
+          }}
+          animate={{
+            x: phase === 'track' ? [0, 8, -4, 6, 0] : 0,
+            y: phase === 'track' ? [0, -6, 4, -2, 0] : 0,
+            backgroundColor: 
+              phase === 'memorize' && dot.isTarget 
+                ? 'hsl(var(--tex-vision-feedback))'
+                : phase === 'select' && dot.isTarget
+                ? 'hsl(var(--tex-vision-success))'
+                : 'hsl(var(--tex-vision-text-muted))',
+            scale: phase === 'memorize' && dot.isTarget ? 1.3 : 1,
+            boxShadow: phase === 'memorize' && dot.isTarget 
+              ? '0 0 10px hsl(var(--tex-vision-feedback) / 0.6)' 
+              : phase === 'select' && dot.isTarget
+              ? '0 0 6px hsl(var(--tex-vision-success) / 0.5)'
+              : 'none',
+          }}
+          transition={{ 
+            duration: phase === 'track' ? 1.5 : 0.3,
+            repeat: phase === 'track' ? Infinity : 0,
+          }}
         />
       ))}
     </div>

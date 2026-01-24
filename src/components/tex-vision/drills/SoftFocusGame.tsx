@@ -146,19 +146,19 @@ export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGam
           }}
         />
 
-        {/* Instructions */}
-        <div className="absolute bottom-16 text-center space-y-2">
+        {/* Cycle progress - top left */}
+        <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
+          {t('texVision.drills.cycle', 'Cycle')} {cycleCount + 1}/{totalCycles}
+        </div>
+
+        {/* Instructions - below the visual elements, not overlapping */}
+        <div className="absolute bottom-4 left-4 right-4 text-center space-y-1">
           <p className="text-lg font-medium text-[hsl(var(--tex-vision-text))]">
             {getPhaseInstruction()}
           </p>
           <p className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
             {getBreathInstruction()}
           </p>
-        </div>
-
-        {/* Cycle progress */}
-        <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
-          {t('texVision.drills.cycle', 'Cycle')} {cycleCount + 1}/{totalCycles}
         </div>
       </div>
     </DrillContainer>
