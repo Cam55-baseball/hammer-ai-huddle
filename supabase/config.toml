@@ -1,5 +1,8 @@
 project_id = "wysikbsjalfvjwqzkihj"
 
+[functions.parse-voice-food]
+verify_jwt = true
+
 [functions.get-daily-tip]
 verify_jwt = true
 
