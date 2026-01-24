@@ -47,6 +47,7 @@ export interface DrillComponentProps {
   difficultyLevel?: number;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  onInteraction?: () => void;
 }
 
 const DRILL_COMPONENTS: Record<string, React.ComponentType<DrillComponentProps>> = {
@@ -705,6 +706,7 @@ export default function ActiveDrillView({
         difficultyLevel={currentDifficultyLevel}
         onComplete={handleDrillComplete}
         onExit={onExit}
+        onInteraction={() => { interactionCount.current += 1; }}
       />
     </div>
   );

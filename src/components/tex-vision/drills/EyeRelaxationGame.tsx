@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
@@ -10,6 +10,7 @@ interface EyeRelaxationGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  onInteraction?: () => void;
 }
 
 type Phase = 'palming' | 'breathe' | 'circles' | 'blink' | 'rest';
@@ -21,7 +22,7 @@ interface ExerciseStep {
   duration: number;
 }
 
-export default function EyeRelaxationGame({ tier, onComplete, onExit }: EyeRelaxationGameProps) {
+export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteraction }: EyeRelaxationGameProps) {
   const { t } = useTranslation();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [stepTimeRemaining, setStepTimeRemaining] = useState(0);
@@ -34,13 +35,14 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit }: EyeRelax
 
   const baseDuration = tier === 'beginner' ? 15 : tier === 'advanced' ? 20 : 25;
 
-  const exercises: ExerciseStep[] = [
+  // Memoize exercises array to prevent re-creation on every render
+  const exercises: ExerciseStep[] = useMemo(() => [
     { phase: 'palming', icon: Hand, title: 'Palming', duration: baseDuration },
     { phase: 'breathe', icon: Sparkles, title: 'Deep Breathing', duration: baseDuration },
     { phase: 'circles', icon: RotateCcw, title: 'Eye Circles', duration: baseDuration },
     { phase: 'blink', icon: Eye, title: 'Gentle Blinking', duration: baseDuration - 5 },
     { phase: 'rest', icon: Moon, title: 'Final Rest', duration: baseDuration - 5 },
-  ];
+  ], [baseDuration]);
 
   const currentStep = exercises[currentStepIndex];
   const totalDuration = exercises.reduce((sum, ex) => sum + ex.duration, 0);
@@ -96,6 +98,7 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit }: EyeRelax
   }, [currentStep?.phase, isComplete]);
 
   const handleContinue = useCallback(() => {
+    onInteraction?.(); // Report interaction to parent for validation tracking
     setConfirmations(prev => prev + 1);
     setShowTransition(false);
     setWaitingForConfirm(false);
@@ -103,7 +106,7 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit }: EyeRelax
     if (currentStepIndex < exercises.length - 1) {
       setCurrentStepIndex(prev => prev + 1);
     }
-  }, [currentStepIndex, exercises.length]);
+  }, [currentStepIndex, exercises.length, onInteraction]);
 
   // Game complete when last step finishes
   useEffect(() => {
