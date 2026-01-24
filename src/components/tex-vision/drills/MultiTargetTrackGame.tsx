@@ -47,13 +47,17 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
     const containerHeight = containerRef.current?.clientHeight || 300;
     const padding = 30;
 
+    // Speed increases by 5% per round for progressive difficulty
+    const speedBonus = 1 + (round - 1) * 0.05;
+    const baseSpeed = tier === 'beginner' ? 3 : tier === 'advanced' ? 4 : 5;
+
     for (let i = 0; i < totalDots; i++) {
       newTargets.push({
         id: i,
         x: padding + Math.random() * (containerWidth - padding * 2),
         y: padding + Math.random() * (containerHeight - padding * 2),
-        vx: (Math.random() - 0.5) * 2,
-        vy: (Math.random() - 0.5) * 2,
+        vx: (Math.random() - 0.5) * baseSpeed * speedBonus,
+        vy: (Math.random() - 0.5) * baseSpeed * speedBonus,
         isTarget: i < targetCount,
       });
     }
@@ -64,7 +68,7 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
     setMemorizeCountdown(3);
     setSlowdownProgress(0);
     velocityMultiplier.current = 1;
-  }, [totalDots, targetCount]);
+  }, [totalDots, targetCount, tier, round]);
 
   // Initialize first round
   useEffect(() => {
@@ -89,16 +93,19 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
     }
   }, [phase, memorizeCountdown, trackDuration]);
 
-  // Slowdown phase - gradually reduce velocity
+  // Slowdown phase - use cubic ease-out for smooth deceleration
   useEffect(() => {
     if (phase !== 'slowdown') return;
 
     const startTime = Date.now();
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+    
     const slowdownInterval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / slowdownDuration, 1);
       setSlowdownProgress(progress);
-      velocityMultiplier.current = 1 - progress;
+      // Apply cubic ease-out for smooth deceleration
+      velocityMultiplier.current = 1 - easeOutCubic(progress);
 
       if (progress >= 1) {
         clearInterval(slowdownInterval);

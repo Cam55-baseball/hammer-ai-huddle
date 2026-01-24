@@ -61,13 +61,13 @@ export const SIMPLIFIED_INSTRUCTIONS: Record<string, SimplifiedDrillInstruction>
   },
   
   convergence: {
-    goalSentence: "Watch the dots come together—you should see ONE dot!",
+    goalSentence: "Make 2 dots become 1 by crossing your eyes slightly!",
     quickSteps: [
-      { icon: 'watch', action: "Follow the dots with your eyes" },
-      { icon: 'tap', action: "Tap when you see ONE dot!" },
-      { icon: 'breathe', action: "Stay relaxed the whole time" }
+      { icon: 'watch', action: "RELAX eyes and look 'through' the screen" },
+      { icon: 'hold', action: "When 2 dots MERGE into 1, you got it!" },
+      { icon: 'tap', action: "TAP the button to confirm you see ONE dot" },
     ],
-    successCriteria: "Confirm when dots merge into one"
+    successCriteria: "Confirm convergence multiple times"
   },
   
   color_flash: {
