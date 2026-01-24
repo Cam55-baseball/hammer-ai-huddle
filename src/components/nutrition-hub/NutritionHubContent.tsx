@@ -21,6 +21,7 @@ import { MealPlanningTab } from './MealPlanningTab';
 import { ShoppingListTab } from './ShoppingListTab';
 import { RecipeImportDialog } from './RecipeImportDialog';
 import { AIMealSuggestions } from './AIMealSuggestions';
+import { FavoriteFoodsWidget } from './FavoriteFoodsWidget';
 import { useRecipes, RecipeIngredient, CreateRecipeInput } from '@/hooks/useRecipes';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -222,6 +223,32 @@ export function NutritionHubContent() {
     setMealLoggingOpen(true);
   };
 
+  // Handle quick-adding favorite foods
+  const handleQuickAddFavorite = (food: {
+    id: string;
+    name: string;
+    brand?: string | null;
+    caloriesPerServing?: number | null;
+    protein?: number | null;
+    carbs?: number | null;
+    fats?: number | null;
+    servingSize?: string | null;
+  }, mealType: string) => {
+    const prefilledItem: PrefilledItem = {
+      name: food.brand ? `${food.name} (${food.brand})` : food.name,
+      calories: food.caloriesPerServing || 0,
+      protein_g: food.protein || 0,
+      carbs_g: food.carbs || 0,
+      fats_g: food.fats || 0,
+      quantity: 1,
+      unit: food.servingSize || 'serving',
+    };
+    
+    setPrefilledItems([prefilledItem]);
+    setSelectedMealType(mealType);
+    setMealLoggingOpen(true);
+  };
+
   // Show TDEE setup wizard
   if (showTDEESetup && !tdeeLoading) {
     return (
@@ -344,6 +371,9 @@ export function NutritionHubContent() {
         consumed={consumedTotals}
         showHydration
       />
+
+      {/* Food Favorites Quick Access */}
+      <FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />
 
       {/* Quick Actions */}
       <QuickLogActions onLogMeal={handleLogMeal} />
