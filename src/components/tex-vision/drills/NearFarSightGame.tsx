@@ -121,25 +121,11 @@ export default function NearFarSightGame({ tier, onComplete, onExit }: NearFarSi
 
   const getDistanceStyles = (distance: FocusDistance) => {
     const isTarget = showTarget && targetFocus === distance;
-    const isSelected = currentFocus === distance;
+    const isSelected = currentFocus === distance && feedback === 'correct';
     
-    const sizeMap = {
-      near: 'w-24 h-24',
-      mid: 'w-16 h-16',
-      far: 'w-10 h-10',
-    };
-
-    const opacityMap = {
-      near: isTarget ? 'opacity-100' : 'opacity-40',
-      mid: isTarget ? 'opacity-100' : 'opacity-50',
-      far: isTarget ? 'opacity-100' : 'opacity-60',
-    };
-
     return {
-      size: sizeMap[distance],
-      opacity: opacityMap[distance],
       glow: isTarget,
-      selected: isSelected && feedback === 'correct',
+      selected: isSelected,
     };
   };
 
@@ -165,74 +151,78 @@ export default function NearFarSightGame({ tier, onComplete, onExit }: NearFarSi
         />
       }
     >
-      <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px]">
-        {/* Depth visualization */}
-        <div className="relative h-80 w-80 flex items-center justify-center perspective-1000">
-          {/* Far target */}
-          <button
-            onClick={() => handleFocusClick('far')}
-            className={`absolute transition-all duration-150 rounded-full ${getDistanceStyles('far').size} ${getDistanceStyles('far').opacity} ${
-              getDistanceStyles('far').glow 
-                ? 'bg-[hsl(var(--tex-vision-feedback))]' 
-                : 'bg-[hsl(var(--tex-vision-primary-light))]/30'
-            } ${getDistanceStyles('far').selected ? 'ring-4 ring-[hsl(var(--tex-vision-success))]' : ''}`}
-            style={{
-              transform: 'translateZ(-100px) scale(0.6)',
-              boxShadow: getDistanceStyles('far').glow ? '0 0 30px hsl(var(--tex-vision-feedback) / 0.6)' : undefined,
-            }}
-          >
-            <span className="text-xs text-[hsl(var(--tex-vision-text))]">
-              {t('texVision.drills.nearFar.far', 'Far')}
-            </span>
-          </button>
-
-          {/* Mid target */}
-          <button
-            onClick={() => handleFocusClick('mid')}
-            className={`absolute transition-all duration-150 rounded-full ${getDistanceStyles('mid').size} ${getDistanceStyles('mid').opacity} ${
-              getDistanceStyles('mid').glow 
-                ? 'bg-[hsl(var(--tex-vision-feedback))]' 
-                : 'bg-[hsl(var(--tex-vision-primary-light))]/40'
-            } ${getDistanceStyles('mid').selected ? 'ring-4 ring-[hsl(var(--tex-vision-success))]' : ''}`}
-            style={{
-              boxShadow: getDistanceStyles('mid').glow ? '0 0 25px hsl(var(--tex-vision-feedback) / 0.5)' : undefined,
-            }}
-          >
-            <span className="text-sm text-[hsl(var(--tex-vision-text))]">
-              {t('texVision.drills.nearFar.mid', 'Mid')}
-            </span>
-          </button>
-
-          {/* Near target */}
-          <button
-            onClick={() => handleFocusClick('near')}
-            className={`absolute transition-all duration-150 rounded-full ${getDistanceStyles('near').size} ${getDistanceStyles('near').opacity} ${
-              getDistanceStyles('near').glow 
-                ? 'bg-[hsl(var(--tex-vision-feedback))]' 
-                : 'bg-[hsl(var(--tex-vision-primary-light))]/50'
-            } ${getDistanceStyles('near').selected ? 'ring-4 ring-[hsl(var(--tex-vision-success))]' : ''}`}
-            style={{
-              transform: 'translateZ(50px) scale(1.2)',
-              boxShadow: getDistanceStyles('near').glow ? '0 0 35px hsl(var(--tex-vision-feedback) / 0.7)' : undefined,
-            }}
-          >
-            <span className="text-base font-medium text-[hsl(var(--tex-vision-text))]">
-              {t('texVision.drills.nearFar.near', 'Near')}
-            </span>
-          </button>
-        </div>
-
-        {/* Instructions */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
-            {t('texVision.drills.nearFar.instruction', 'Click the glowing target at the correct depth')}
-          </p>
-        </div>
-
-        {/* Progress */}
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-[350px]">
+        {/* Progress indicator - top left */}
         <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
           {attempts}/{totalAttempts}
         </div>
+
+        {/* Depth visualization - vertically stacked for clear separation */}
+        <div 
+          className="relative w-full max-w-xs h-72 flex flex-col items-center justify-between py-4"
+          style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
+        >
+          {/* Depth labels - positioned outside tap zones */}
+          <span className="absolute -left-8 top-4 text-xs text-[hsl(var(--tex-vision-text-muted))] font-medium">FAR</span>
+          <span className="absolute -left-8 top-1/2 -translate-y-1/2 text-xs text-[hsl(var(--tex-vision-text-muted))] font-medium">MID</span>
+          <span className="absolute -left-8 bottom-4 text-xs text-[hsl(var(--tex-vision-text-muted))] font-medium">NEAR</span>
+
+          {/* Far target - top, smallest */}
+          <button
+            onClick={() => handleFocusClick('far')}
+            aria-label="Far target"
+            className={`transition-all duration-150 rounded-full flex items-center justify-center ${
+              getDistanceStyles('far').glow 
+                ? 'bg-[hsl(var(--tex-vision-feedback))] animate-pulse' 
+                : 'bg-[hsl(var(--tex-vision-primary-light))]/30'
+            } ${getDistanceStyles('far').selected ? 'ring-4 ring-[hsl(var(--tex-vision-success))]' : ''}`}
+            style={{
+              width: '2.5rem',
+              height: '2.5rem',
+              opacity: getDistanceStyles('far').glow ? 1 : 0.5,
+              boxShadow: getDistanceStyles('far').glow ? '0 0 30px hsl(var(--tex-vision-feedback) / 0.6)' : undefined,
+            }}
+          />
+
+          {/* Mid target - center, medium */}
+          <button
+            onClick={() => handleFocusClick('mid')}
+            aria-label="Mid target"
+            className={`transition-all duration-150 rounded-full flex items-center justify-center ${
+              getDistanceStyles('mid').glow 
+                ? 'bg-[hsl(var(--tex-vision-feedback))] animate-pulse' 
+                : 'bg-[hsl(var(--tex-vision-primary-light))]/40'
+            } ${getDistanceStyles('mid').selected ? 'ring-4 ring-[hsl(var(--tex-vision-success))]' : ''}`}
+            style={{
+              width: '4rem',
+              height: '4rem',
+              opacity: getDistanceStyles('mid').glow ? 1 : 0.6,
+              boxShadow: getDistanceStyles('mid').glow ? '0 0 25px hsl(var(--tex-vision-feedback) / 0.5)' : undefined,
+            }}
+          />
+
+          {/* Near target - bottom, largest */}
+          <button
+            onClick={() => handleFocusClick('near')}
+            aria-label="Near target"
+            className={`transition-all duration-150 rounded-full flex items-center justify-center ${
+              getDistanceStyles('near').glow 
+                ? 'bg-[hsl(var(--tex-vision-feedback))] animate-pulse' 
+                : 'bg-[hsl(var(--tex-vision-primary-light))]/50'
+            } ${getDistanceStyles('near').selected ? 'ring-4 ring-[hsl(var(--tex-vision-success))]' : ''}`}
+            style={{
+              width: '6rem',
+              height: '6rem',
+              opacity: getDistanceStyles('near').glow ? 1 : 0.7,
+              boxShadow: getDistanceStyles('near').glow ? '0 0 35px hsl(var(--tex-vision-feedback) / 0.7)' : undefined,
+            }}
+          />
+        </div>
+
+        {/* Instructions - below game area, not overlapping */}
+        <p className="mt-4 text-sm text-[hsl(var(--tex-vision-text-muted))] text-center">
+          {t('texVision.drills.nearFar.instruction', 'Tap the glowing target')}
+        </p>
       </div>
     </DrillContainer>
   );

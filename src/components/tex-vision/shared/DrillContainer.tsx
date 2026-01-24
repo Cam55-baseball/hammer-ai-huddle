@@ -76,15 +76,15 @@ export function DrillContainer({
         </div>
       </CardHeader>
       
-      <CardContent className="relative space-y-4 text-tex-vision-text">
-        {/* Main drill content */}
-        <div className="min-h-[300px] flex items-center justify-center">
+      <CardContent className="relative flex flex-col text-tex-vision-text">
+        {/* Main drill content - takes available space */}
+        <div className="flex-1 min-h-[300px] flex items-center justify-center">
           {children}
         </div>
         
-        {/* Metrics overlay - positioned higher to avoid covering drill content */}
+        {/* Metrics - fixed at bottom, never overlapping game content */}
         {metrics && (
-          <div className="absolute bottom-16 left-4 right-4">
+          <div className="pt-3 mt-2 border-t border-tex-vision-primary/20">
             {metrics}
           </div>
         )}

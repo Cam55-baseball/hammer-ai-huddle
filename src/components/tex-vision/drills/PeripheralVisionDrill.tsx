@@ -186,9 +186,14 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
         </div>
       }
     >
-      <div className="relative flex items-center justify-center w-full h-full min-h-[400px]">
+      <div className="relative flex items-center justify-center w-full h-full min-h-[350px]">
+        {/* Progress - top left */}
+        <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
+          {attempts}/{totalAttempts}
+        </div>
+
         {/* Center fixation point */}
-        <div className="relative">
+        <div className="flex flex-col items-center">
           <div 
             className={`w-6 h-6 rounded-full transition-all duration-150 ${
               feedback === 'correct'
@@ -198,8 +203,8 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
                   : 'bg-[hsl(var(--tex-vision-text))]'
             }`}
           />
-          <p className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-[hsl(var(--tex-vision-text-muted))] whitespace-nowrap">
-            {t('texVision.drills.peripheralVision.keepFocus', 'Keep focus here')}
+          <p className="mt-2 text-xs text-[hsl(var(--tex-vision-text-muted))]">
+            {t('texVision.drills.peripheralVision.keepFocus', 'Focus here')}
           </p>
         </div>
 
@@ -208,18 +213,6 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
         {renderTarget('right')}
         {renderTarget('up')}
         {renderTarget('down')}
-
-        {/* Instructions - positioned above metrics area */}
-        <div className="absolute bottom-20 left-4 right-4 text-center">
-          <p className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
-            {t('texVision.drills.peripheralVision.instruction', 'Click the target that appears in your peripheral vision')}
-          </p>
-        </div>
-
-        {/* Progress */}
-        <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
-          {attempts}/{totalAttempts}
-        </div>
       </div>
     </DrillContainer>
   );

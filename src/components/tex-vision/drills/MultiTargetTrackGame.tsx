@@ -197,12 +197,17 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
         />
       }
     >
-      <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px] relative">
-        {/* Phase indicator */}
-        <div className="absolute top-4 text-center">
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-[380px]">
+        {/* Round progress - top left, outside game area */}
+        <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
+          {t('texVision.drills.round', 'Round')} {round}/{totalRounds}
+        </div>
+
+        {/* Phase indicator - above tracking area, fixed height */}
+        <div className="h-8 mb-3 text-center flex items-center justify-center">
           {phase === 'memorize' && (
             <p className="text-lg text-[hsl(var(--tex-vision-feedback))] font-bold">
-              {t('texVision.drills.multiTargetTrack.memorize', 'MEMORIZE the highlighted dots!')} ({memorizeCountdown})
+              {t('texVision.drills.multiTargetTrack.memorize', 'MEMORIZE!')} ({memorizeCountdown})
             </p>
           )}
           {phase === 'track' && (
@@ -212,52 +217,48 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
           )}
           {phase === 'select' && (
             <p className="text-lg text-[hsl(var(--tex-vision-success))] font-bold">
-              {t('texVision.drills.multiTargetTrack.select', 'Select the targets!')} ({selectedIds.size}/{targetCount})
+              {t('texVision.drills.multiTargetTrack.select', 'Select!')} ({selectedIds.size}/{targetCount})
             </p>
           )}
         </div>
 
-        {/* Tracking area */}
+        {/* Tracking area - larger for better gameplay */}
         <div 
           ref={containerRef}
-          className="relative w-full h-64 bg-[hsl(var(--tex-vision-primary))]/20 rounded-xl overflow-hidden"
+          className="relative w-full h-72 bg-[hsl(var(--tex-vision-primary))]/20 rounded-xl overflow-hidden border border-[hsl(var(--tex-vision-primary))]/30"
         >
           {targets.map((target) => (
-            <div
+            <button
               key={target.id}
               onClick={() => handleDotClick(target.id)}
-              className={`absolute w-6 h-6 rounded-full transition-all duration-100 cursor-pointer ${
+              disabled={phase !== 'select'}
+              className={`absolute w-7 h-7 rounded-full transition-all duration-100 ${
                 phase === 'memorize' && target.isTarget
                   ? 'bg-[hsl(var(--tex-vision-feedback))] scale-125 shadow-lg shadow-[hsl(var(--tex-vision-feedback))]/50'
                   : selectedIds.has(target.id)
-                  ? 'bg-[hsl(var(--tex-vision-success))] ring-2 ring-white'
+                  ? 'bg-[hsl(var(--tex-vision-success))] ring-2 ring-white scale-110'
+                  : phase === 'select'
+                  ? 'bg-[hsl(var(--tex-vision-text-muted))] hover:bg-[hsl(var(--tex-vision-primary-light))] cursor-pointer'
                   : 'bg-[hsl(var(--tex-vision-text-muted))]'
               }`}
               style={{
-                left: target.x - 12,
-                top: target.y - 12,
+                left: target.x - 14,
+                top: target.y - 14,
               }}
             />
           ))}
         </div>
 
-        {/* Submit button for select phase */}
-        {phase === 'select' && selectedIds.size === targetCount && (
-          <button
-            onClick={handleSubmit}
-            className="mt-4 px-6 py-2 bg-[hsl(var(--tex-vision-feedback))] text-[hsl(var(--tex-vision-primary-dark))] font-bold rounded-lg hover:scale-105 transition-transform"
-          >
-            {t('texVision.drills.multiTargetTrack.submit', 'Submit')}
-          </button>
-        )}
-
-        {/* Round progress */}
-        <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
-          {t('texVision.drills.round', 'Round')} {round}/{totalRounds}
-        </div>
-
-        {/* Score */}
-        <div className="absolute bottom-4 text-center">
+        {/* Submit button and score - below tracking area */}
+        <div className="mt-4 flex flex-col items-center gap-2">
+          {phase === 'select' && selectedIds.size === targetCount && (
+            <button
+              onClick={handleSubmit}
+              className="px-6 py-2 bg-[hsl(var(--tex-vision-feedback))] text-[hsl(var(--tex-vision-primary-dark))] font-bold rounded-lg hover:scale-105 transition-transform"
+            >
+              {t('texVision.drills.multiTargetTrack.submit', 'Submit')}
+            </button>
+          )}
           <p className="text-lg font-bold text-[hsl(var(--tex-vision-text))]">
             {t('texVision.drills.score', 'Score')}: {score}
           </p>

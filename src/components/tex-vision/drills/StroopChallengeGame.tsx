@@ -137,20 +137,23 @@ export default function StroopChallengeGame({ tier, onComplete, onExit }: Stroop
         />
       }
     >
-      <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px] relative">
-        {/* Instruction */}
-        <div className="absolute top-4 text-center">
-          <p className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
-            {mode === 'color' 
-              ? t('texVision.drills.stroopChallenge.identifyColor', 'Identify the INK COLOR')
-              : t('texVision.drills.stroopChallenge.identifyWord', 'Identify the WORD')
-            }
-          </p>
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-[380px]">
+        {/* Progress - top left */}
+        <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
+          {attempts}/{totalAttempts}
         </div>
+
+        {/* Instruction - above the word */}
+        <p className="text-sm text-[hsl(var(--tex-vision-text-muted))] mb-4">
+          {mode === 'color' 
+            ? t('texVision.drills.stroopChallenge.identifyColor', 'Identify the INK COLOR')
+            : t('texVision.drills.stroopChallenge.identifyWord', 'Identify the WORD')
+          }
+        </p>
 
         {/* The Stroop word */}
         <div 
-          className={`text-6xl font-bold mb-12 transition-all duration-150 ${displayColor.textClass} ${
+          className={`text-6xl font-bold mb-8 transition-all duration-150 ${displayColor.textClass} ${
             feedback === 'correct' ? 'scale-110' : feedback === 'wrong' ? 'scale-90 opacity-50' : ''
           }`}
         >
@@ -173,17 +176,10 @@ export default function StroopChallengeGame({ tier, onComplete, onExit }: Stroop
           ))}
         </div>
 
-        {/* Score */}
-        <div className="absolute bottom-16 text-center">
-          <p className="text-2xl font-bold text-[hsl(var(--tex-vision-text))]">
-            {score} / {attempts}
-          </p>
-        </div>
-
-        {/* Progress */}
-        <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
-          {attempts}/{totalAttempts}
-        </div>
+        {/* Score - below buttons */}
+        <p className="mt-6 text-2xl font-bold text-[hsl(var(--tex-vision-text))]">
+          {score} / {attempts}
+        </p>
       </div>
     </DrillContainer>
   );
