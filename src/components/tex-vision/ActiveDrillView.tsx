@@ -1,14 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DrillResult } from '@/hooks/useTexVisionSession';
 import { useAdaptiveDifficulty } from '@/hooks/useAdaptiveDifficulty';
 import { usePersonalBests, PersonalBestResult } from '@/hooks/usePersonalBests';
 import { FatigueIndicator } from './shared/FatigueIndicator';
 import { CelebrationBadge, CelebrationType } from './shared/CelebrationBadge';
+import DrillPreviewAnimation from './shared/DrillPreviewAnimation';
 import { Button } from '@/components/ui/button';
-import { Play, X, Coffee, AlertTriangle, Target, Info, CheckCircle2, Trophy } from 'lucide-react';
-import { DRILL_INSTRUCTIONS } from './drillInstructions';
+import { Play, X, Coffee, Target, CheckCircle2, Trophy, SkipForward, Zap } from 'lucide-react';
+import { SIMPLIFIED_INSTRUCTIONS, ACTION_ICONS, getSimplifiedInstructions } from './simplifiedInstructions';
 import { DRILL_REFLECTIONS } from './drillReflections';
+import { getDrillBenefit } from '@/constants/drillBenefits';
+import { validateDrillCompletion } from '@/constants/drillCompletionRequirements';
 import DrillReflectionPhase from './shared/DrillReflectionPhase';
 import { triggerCelebration } from '@/lib/confetti';
 
@@ -108,6 +111,11 @@ export default function ActiveDrillView({
   const [pbResult, setPbResult] = useState<PersonalBestResult | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationType, setCelebrationType] = useState<CelebrationType>('perfect');
+  
+  // Skip tutorial tracking
+  const [hasSeenDrill, setHasSeenDrill] = useState<Set<string>>(new Set());
+  const drillStartTime = useRef<number>(0);
+  const interactionCount = useRef<number>(0);
 
   // Adaptive difficulty hook
   const { 
@@ -121,6 +129,33 @@ export default function ActiveDrillView({
 
   const currentDifficultyLevel = getCurrentDifficulty(drillId);
   const recommendedAdjustment = getRecommendedAdjustment(drillId);
+  
+  // Load seen drills from localStorage
+  useEffect(() => {
+    const seen = localStorage.getItem('tex_vision_seen_drills');
+    if (seen) {
+      try {
+        setHasSeenDrill(new Set(JSON.parse(seen)));
+      } catch (e) {
+        console.error('Failed to load seen drills:', e);
+      }
+    }
+  }, []);
+  
+  // Mark drill as seen after completion
+  const markDrillAsSeen = useCallback((id: string) => {
+    const updated = new Set(hasSeenDrill).add(id);
+    localStorage.setItem('tex_vision_seen_drills', JSON.stringify([...updated]));
+    setHasSeenDrill(updated);
+  }, [hasSeenDrill]);
+  
+  // Start drill (with or without skip)
+  const handleStartDrill = useCallback(() => {
+    drillStartTime.current = Date.now();
+    interactionCount.current = 0;
+    setCountdown(3);
+    setPhase('countdown');
+  }, []);
 
   // Countdown effect
   useEffect(() => {
@@ -147,8 +182,35 @@ export default function ActiveDrillView({
     }
   }, [phase, breakTimer]);
 
-  // Handle drill completion with fatigue tracking and personal bests
+  // Handle drill completion with fatigue tracking, validation, and personal bests
   const handleDrillComplete = useCallback(async (partialResult: Omit<DrillResult, 'drillType' | 'tier'>) => {
+    // Calculate drill duration
+    const durationSeconds = drillStartTime.current > 0 
+      ? Math.floor((Date.now() - drillStartTime.current) / 1000) 
+      : 60; // Default if timer wasn't set
+    
+    // Validate completion requirements
+    const hasResult = partialResult.accuracyPercent !== undefined;
+    const validation = validateDrillCompletion(
+      drillId,
+      interactionCount.current,
+      durationSeconds,
+      hasResult
+    );
+    
+    // Log validation for debugging (can be removed in production)
+    console.log('Drill completion validation:', {
+      drillId,
+      interactions: interactionCount.current,
+      duration: durationSeconds,
+      hasResult,
+      isValid: validation.isValid,
+      reason: validation.reason
+    });
+    
+    // Mark drill as seen for skip tutorial feature
+    markDrillAsSeen(drillId);
+    
     // Update fatigue based on performance
     let fatigueIncrease = FATIGUE_INCREASE_PER_DRILL;
     if (partialResult.accuracyPercent !== undefined && partialResult.accuracyPercent < 60) {
@@ -171,15 +233,21 @@ export default function ActiveDrillView({
       );
     }
 
-    // Build full result with fatigue score
+    // Build full result with fatigue score and validation status
     const fullResult: DrillResult = {
       ...partialResult,
       drillType: drillId,
       tier,
       fatigueScore: newFatigue,
+      drillMetrics: {
+        ...(partialResult.drillMetrics as Record<string, unknown> || {}),
+        completionValid: validation.isValid,
+        durationSeconds,
+        interactionCount: interactionCount.current,
+      },
     };
 
-    // Check for personal best
+    // Check for personal best (only if validation passed)
     const pbCheckResult = await checkAndUpdatePersonalBest(drillId, tier, {
       accuracyPercent: partialResult.accuracyPercent,
       reactionTimeMs: partialResult.reactionTimeMs,
@@ -212,7 +280,7 @@ export default function ActiveDrillView({
     } else {
       setPhase('conclusion');
     }
-  }, [drillId, tier, fatigueLevel, drillsCompletedThisSession, updateDifficulty, checkAndUpdatePersonalBest]);
+  }, [drillId, tier, fatigueLevel, drillsCompletedThisSession, updateDifficulty, checkAndUpdatePersonalBest, markDrillAsSeen]);
 
   // Handle reflection completion
   const handleReflectionComplete = useCallback((responses: Record<string, string | number>) => {
@@ -330,7 +398,7 @@ export default function ActiveDrillView({
             {completedResult.accuracyPercent !== undefined && (
               <div className="text-center">
                 <div className={`text-3xl font-bold ${
-                  pbResult?.isNewAccuracyRecord ? 'text-amber-400' : 'text-[hsl(var(--tex-vision-feedback))]'
+                  pbResult?.isNewAccuracyRecord ? 'text-[hsl(var(--tex-vision-warning))]' : 'text-[hsl(var(--tex-vision-feedback))]'
                 }`}>
                   {completedResult.accuracyPercent}%
                   {pbResult?.isNewAccuracyRecord && <span className="text-sm ml-1">🔥</span>}
@@ -350,7 +418,7 @@ export default function ActiveDrillView({
             {completedResult.reactionTimeMs !== undefined && completedResult.reactionTimeMs > 0 && (
               <div className="text-center">
                 <div className={`text-3xl font-bold ${
-                  pbResult?.isNewReactionRecord ? 'text-amber-400' : 'text-[hsl(var(--tex-vision-timing))]'
+                  pbResult?.isNewReactionRecord ? 'text-[hsl(var(--tex-vision-warning))]' : 'text-[hsl(var(--tex-vision-timing))]'
                 }`}>
                   {completedResult.reactionTimeMs}
                   {pbResult?.isNewReactionRecord && <span className="text-sm ml-1">⚡</span>}
@@ -439,84 +507,93 @@ export default function ActiveDrillView({
     );
   }
 
-  // Instructions phase
+  // Instructions phase - NEW kid-friendly visual design
   if (phase === 'instructions') {
-    const instructions = DRILL_INSTRUCTIONS[drillId];
+    const instructions = getSimplifiedInstructions(drillId);
+    const benefit = getDrillBenefit(drillId);
+    const userHasSeenDrill = hasSeenDrill.has(drillId);
     
     return (
-      <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] flex flex-col items-center overflow-y-auto p-6 py-8">
-        {/* Exit button */}
-        <button
-          onClick={onExit}
-          className="absolute top-4 right-4 p-2 rounded-full bg-[hsl(var(--tex-vision-primary))]/50 text-[hsl(var(--tex-vision-text-muted))] hover:bg-[hsl(var(--tex-vision-primary))]/70 transition-colors z-10"
-        >
-          <X className="h-6 w-6" />
-        </button>
-
-        {/* Content wrapper - centers when short, scrolls when tall */}
-        <div className="flex flex-col items-center w-full max-w-md mt-auto mb-auto">
-          {/* Drill icon and name */}
-          <Target className="h-12 w-12 text-[hsl(var(--tex-vision-feedback))] mb-4" />
-          <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
-            {DRILL_NAMES[drillId] || drillId}
-          </h2>
+      <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] flex flex-col items-center overflow-y-auto p-4 py-6">
+        {/* Top bar: Exit + Skip */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
+          <button
+            onClick={onExit}
+            className="p-2 rounded-full bg-[hsl(var(--tex-vision-primary))]/50 text-[hsl(var(--tex-vision-text-muted))] hover:bg-[hsl(var(--tex-vision-primary))]/70 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
           
-          {/* Difficulty badge */}
-          <div className="text-sm text-[hsl(var(--tex-vision-text-muted))] mb-6">
-            {t('texVision.difficulty.level', 'Level')} {currentDifficultyLevel}/10 • {tier}
+          {userHasSeenDrill && (
+            <button
+              onClick={handleStartDrill}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[hsl(var(--tex-vision-primary))]/50 text-[hsl(var(--tex-vision-text-muted))] hover:bg-[hsl(var(--tex-vision-primary))]/70 transition-colors text-sm"
+            >
+              <SkipForward className="h-4 w-4" />
+              {t('texVision.drills.skipTutorial', 'Skip')}
+            </button>
+          )}
+        </div>
+
+        {/* Content wrapper */}
+        <div className="flex flex-col items-center w-full max-w-sm mt-16 mb-auto space-y-5">
+          {/* Animated Preview */}
+          <div className="w-full h-40 rounded-xl overflow-hidden">
+            <DrillPreviewAnimation drillId={drillId} />
           </div>
 
-          {/* Objective */}
-          {instructions && (
-            <div className="w-full space-y-5">
-              <div className="text-center">
-                <p className="text-lg text-[hsl(var(--tex-vision-text))] font-medium">
-                  {instructions.objective}
-                </p>
-              </div>
+          {/* Drill name + goal */}
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-bold text-[hsl(var(--tex-vision-text))]">
+              {DRILL_NAMES[drillId] || drillId}
+            </h2>
+            {instructions && (
+              <p className="text-lg text-[hsl(var(--tex-vision-feedback))] font-medium">
+                {instructions.goalSentence}
+              </p>
+            )}
+          </div>
 
-              {/* How to play */}
-              <div className="bg-[hsl(var(--tex-vision-primary))]/30 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-[hsl(var(--tex-vision-text))] mb-3 flex items-center gap-2">
-                  <Info className="h-4 w-4" />
-                  {t('texVision.drills.howToPlay', 'How to Play')}
-                </h3>
-                <ul className="space-y-3">
-                  {instructions.howToPlay.map((step, i) => (
-                    <li key={i} className="text-sm text-[hsl(var(--tex-vision-text-muted))] flex items-start gap-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[hsl(var(--tex-vision-feedback))]/20 text-[hsl(var(--tex-vision-feedback))] flex items-center justify-center text-xs font-bold">
-                        {i + 1}
-                      </span>
-                      <span className="pt-0.5">{step}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Tips */}
-              {instructions.tips && instructions.tips.length > 0 && (
-                <div className="bg-[hsl(var(--tex-vision-timing))]/10 rounded-lg p-3 space-y-2">
-                  <h4 className="text-xs font-semibold text-[hsl(var(--tex-vision-timing))] uppercase tracking-wide">
-                    {t('texVision.drills.tips', 'Tips')}
-                  </h4>
-                  {instructions.tips.map((tip, i) => (
-                    <p key={i} className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
-                      • {tip}
-                    </p>
-                  ))}
-                </div>
-              )}
+          {/* Sport benefit badge */}
+          {benefit && (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--tex-vision-success))]/15 border border-[hsl(var(--tex-vision-success))]/30">
+              <span className="text-lg">{benefit.icon}</span>
+              <span className="text-sm text-[hsl(var(--tex-vision-success))]">
+                {benefit.sportImpact}
+              </span>
             </div>
           )}
 
+          {/* Quick steps - icon based */}
+          {instructions && (
+            <div className="w-full space-y-3 mt-4">
+              {instructions.quickSteps.map((step, i) => (
+                <div 
+                  key={i} 
+                  className="flex items-center gap-4 p-3 rounded-xl bg-[hsl(var(--tex-vision-primary))]/30"
+                >
+                  <span className="text-2xl">{ACTION_ICONS[step.icon]}</span>
+                  <span className="text-base text-[hsl(var(--tex-vision-text))] font-medium">
+                    {step.action}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Level indicator */}
+          <div className="text-xs text-[hsl(var(--tex-vision-text-muted))]">
+            {t('texVision.difficulty.level', 'Level')} {currentDifficultyLevel}/10 • {tier}
+          </div>
+
           {/* Start button */}
           <Button 
-            onClick={() => setPhase('countdown')}
-            className="mt-8 bg-[hsl(var(--tex-vision-feedback))] hover:bg-[hsl(var(--tex-vision-feedback))]/80 text-[hsl(var(--tex-vision-primary-dark))]"
+            onClick={handleStartDrill}
+            className="w-full mt-4 bg-[hsl(var(--tex-vision-feedback))] hover:bg-[hsl(var(--tex-vision-feedback))]/80 text-[hsl(var(--tex-vision-primary-dark))] h-14 text-lg font-bold"
             size="lg"
           >
-            <Play className="h-5 w-5 mr-2" />
-            {t('texVision.drills.startDrill', 'Start Drill')}
+            <Zap className="h-5 w-5 mr-2" />
+            {t('texVision.drills.imReady', "I'm Ready!")}
           </Button>
         </div>
       </div>
