@@ -5,8 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScanBarcode, Camera, CameraOff, Loader2, X, Keyboard, RotateCcw, Plus } from 'lucide-react';
-import { useBarcodeSearch } from '@/hooks/useBarcodeSearch';
+import { ScanBarcode, Camera, CameraOff, Loader2, X, Keyboard, RotateCcw, Plus, Flashlight, Clock } from 'lucide-react';
+import { useBarcodeSearch, validateBarcode } from '@/hooks/useBarcodeSearch';
+import { useRecentFoods } from '@/hooks/useRecentFoods';
 import { FoodSearchResult } from '@/hooks/useFoodSearch';
 import { cn } from '@/lib/utils';
 
@@ -27,15 +28,20 @@ export function BarcodeScanner({
 }: BarcodeScannerProps) {
   const { t } = useTranslation();
   const { searchByBarcode, loading, error, lastScannedBarcode } = useBarcodeSearch();
+  const { recentlyScanned, refresh: refreshRecentFoods } = useRecentFoods();
   
   const [scannerState, setScannerState] = useState<ScannerState>('idle');
   const [foundFood, setFoundFood] = useState<FoodSearchResult | null>(null);
   const [manualMode, setManualMode] = useState(false);
   const [manualBarcode, setManualBarcode] = useState('');
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [torchEnabled, setTorchEnabled] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
   
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<MediaStreamTrack | null>(null);
 
   // Initialize scanner when dialog opens
   useEffect(() => {
@@ -53,6 +59,8 @@ export function BarcodeScanner({
     
     setScannerState('starting');
     setCameraError(null);
+    setTorchEnabled(false);
+    setTorchSupported(false);
 
     try {
       const html5Qrcode = new Html5Qrcode('barcode-scanner-container', {
@@ -69,26 +77,80 @@ export function BarcodeScanner({
       
       scannerRef.current = html5Qrcode;
 
+      // Mobile-optimized camera configuration
       await html5Qrcode.start(
-        { facingMode: 'environment' },
+        { facingMode: { exact: 'environment' } },
         {
-          fps: 10,
-          qrbox: { width: 250, height: 150 },
+          fps: 15,
+          qrbox: { width: 280, height: 180 },
           aspectRatio: 1.5,
+          videoConstraints: {
+            facingMode: { exact: 'environment' },
+            width: { ideal: 1280, min: 640 },
+            height: { ideal: 720, min: 480 },
+          } as MediaTrackConstraints,
         },
         onScanSuccess,
         () => {} // Ignore scan failures
       );
 
+      // Check if torch is supported
+      try {
+        const videoElement = document.querySelector('#barcode-scanner-container video') as HTMLVideoElement;
+        if (videoElement?.srcObject) {
+          const stream = videoElement.srcObject as MediaStream;
+          const track = stream.getVideoTracks()[0];
+          trackRef.current = track;
+          
+          const capabilities = track.getCapabilities?.() as any;
+          if (capabilities?.torch) {
+            setTorchSupported(true);
+          }
+        }
+      } catch {
+        // Torch not supported
+      }
+
       setScannerState('scanning');
     } catch (err) {
       console.error('Failed to start scanner:', err);
-      setCameraError(
-        err instanceof Error 
-          ? err.message 
-          : 'Camera access denied. Please grant camera permissions.'
-      );
-      setScannerState('error');
+      
+      // Try fallback without exact facingMode
+      try {
+        const html5Qrcode = new Html5Qrcode('barcode-scanner-container', {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+          ],
+          verbose: false,
+        });
+        
+        scannerRef.current = html5Qrcode;
+
+        await html5Qrcode.start(
+          { facingMode: 'environment' },
+          {
+            fps: 15,
+            qrbox: { width: 280, height: 180 },
+            aspectRatio: 1.5,
+          },
+          onScanSuccess,
+          () => {}
+        );
+        
+        setScannerState('scanning');
+      } catch (fallbackErr) {
+        setCameraError(
+          fallbackErr instanceof Error 
+            ? fallbackErr.message 
+            : 'Camera access denied. Please grant camera permissions.'
+        );
+        setScannerState('error');
+      }
     }
   };
 
@@ -102,6 +164,22 @@ export function BarcodeScanner({
       }
       scannerRef.current = null;
     }
+    trackRef.current = null;
+    setTorchEnabled(false);
+    setTorchSupported(false);
+  };
+
+  const toggleTorch = async () => {
+    if (!trackRef.current) return;
+    
+    try {
+      await trackRef.current.applyConstraints({
+        advanced: [{ torch: !torchEnabled } as any]
+      });
+      setTorchEnabled(!torchEnabled);
+    } catch (err) {
+      console.error('Failed to toggle torch:', err);
+    }
   };
 
   const onScanSuccess = async (decodedText: string) => {
@@ -109,6 +187,11 @@ export function BarcodeScanner({
     if (scannerState === 'processing') return;
     
     setScannerState('processing');
+    
+    // Haptic feedback on successful scan
+    if (navigator.vibrate) {
+      navigator.vibrate(100);
+    }
     
     try {
       await stopScanner();
@@ -129,10 +212,19 @@ export function BarcodeScanner({
   };
 
   const handleManualSearch = async () => {
-    if (!manualBarcode.trim()) return;
+    const trimmedBarcode = manualBarcode.trim();
+    if (!trimmedBarcode) return;
     
+    // Validate barcode format
+    const validation = validateBarcode(trimmedBarcode);
+    if (!validation.isValid) {
+      setValidationError(validation.error || 'Invalid barcode format');
+      return;
+    }
+    
+    setValidationError(null);
     setScannerState('processing');
-    const food = await searchByBarcode(manualBarcode.trim());
+    const food = await searchByBarcode(trimmedBarcode);
     
     if (food) {
       setFoundFood(food);
@@ -145,8 +237,15 @@ export function BarcodeScanner({
   const handleAddFood = () => {
     if (foundFood) {
       onFoodFound(foundFood);
+      refreshRecentFoods();
       handleClose();
     }
+  };
+
+  const handleQuickAdd = (food: FoodSearchResult) => {
+    onFoodFound(food);
+    refreshRecentFoods();
+    handleClose();
   };
 
   const handleCreateCustom = () => {
@@ -159,6 +258,7 @@ export function BarcodeScanner({
   const handleScanAgain = () => {
     setFoundFood(null);
     setManualBarcode('');
+    setValidationError(null);
     setScannerState('idle');
     if (!manualMode) {
       startScanner();
@@ -172,6 +272,7 @@ export function BarcodeScanner({
     setManualMode(false);
     setScannerState('idle');
     setCameraError(null);
+    setValidationError(null);
     onOpenChange(false);
   };
 
@@ -181,11 +282,16 @@ export function BarcodeScanner({
     }
     setManualMode(!manualMode);
     setScannerState('idle');
+    setValidationError(null);
   };
+
+  const showRecentlyScanned = recentlyScanned.length > 0 && 
+    (scannerState === 'idle' || scannerState === 'scanning') && 
+    !manualMode;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ScanBarcode className="h-5 w-5" />
@@ -194,6 +300,36 @@ export function BarcodeScanner({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Recently Scanned Section */}
+          {showRecentlyScanned && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                {t('nutrition.barcode.recentlyScanned', 'Recently Scanned')}
+              </div>
+              <div className="space-y-1">
+                {recentlyScanned.map(food => (
+                  <Button 
+                    key={food.id}
+                    variant="ghost" 
+                    className="w-full justify-start h-auto py-2 px-3"
+                    onClick={() => handleQuickAdd(food)}
+                  >
+                    <div className="flex-1 text-left">
+                      <span className="block text-sm font-medium truncate">{food.name}</span>
+                      {food.brand && (
+                        <span className="block text-xs text-muted-foreground truncate">{food.brand}</span>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {food.caloriesPerServing || 0} cal
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Scanner / Manual Input Toggle */}
           <div className="flex gap-2">
             <Button
@@ -226,11 +362,24 @@ export function BarcodeScanner({
                   "w-full aspect-[4/3] bg-muted rounded-lg overflow-hidden",
                   scannerState === 'starting' && "animate-pulse"
                 )}
+                style={{ touchAction: 'manipulation' }}
               />
+              
+              {/* Torch toggle button */}
+              {torchSupported && scannerState === 'scanning' && (
+                <Button
+                  variant={torchEnabled ? 'default' : 'outline'}
+                  size="icon"
+                  className="absolute top-2 right-2 h-8 w-8 bg-background/80 backdrop-blur-sm"
+                  onClick={toggleTorch}
+                >
+                  <Flashlight className={cn("h-4 w-4", torchEnabled && "text-yellow-400")} />
+                </Button>
+              )}
               
               {/* Scanner overlay */}
               {scannerState === 'scanning' && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <div className="w-64 h-24 border-2 border-primary rounded-lg relative">
                     <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary" />
                     <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary" />
@@ -238,6 +387,9 @@ export function BarcodeScanner({
                     <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary" />
                     <div className="absolute inset-x-0 top-1/2 h-0.5 bg-primary/50 animate-pulse" />
                   </div>
+                  <p className="text-xs text-muted-foreground mt-3 bg-background/80 px-2 py-1 rounded">
+                    {t('nutrition.barcode.holdSteady', 'Hold steady over barcode')}
+                  </p>
                 </div>
               )}
 
@@ -290,11 +442,24 @@ export function BarcodeScanner({
                 <Label>{t('nutrition.barcode.barcodeNumber', 'Barcode Number')}</Label>
                 <Input
                   value={manualBarcode}
-                  onChange={(e) => setManualBarcode(e.target.value)}
+                  onChange={(e) => {
+                    setManualBarcode(e.target.value);
+                    setValidationError(null);
+                  }}
                   placeholder={t('nutrition.barcode.enterBarcode', 'Enter barcode (e.g., 0123456789012)')}
-                  className="text-center text-lg tracking-widest"
+                  className={cn(
+                    "text-center text-lg tracking-widest",
+                    validationError && "border-destructive"
+                  )}
                   autoFocus
+                  inputMode="numeric"
                 />
+                {validationError && (
+                  <p className="text-sm text-destructive">{validationError}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  {t('nutrition.barcode.formatHint', 'Supports UPC-A, UPC-E, EAN-8, EAN-13 (8-14 digits)')}
+                </p>
               </div>
               <Button 
                 onClick={handleManualSearch} 
@@ -310,6 +475,33 @@ export function BarcodeScanner({
                   t('nutrition.barcode.search', 'Search')
                 )}
               </Button>
+              
+              {/* Show recently scanned in manual mode too */}
+              {recentlyScanned.length > 0 && (
+                <div className="pt-3 border-t">
+                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                    <Clock className="h-4 w-4" />
+                    {t('nutrition.barcode.recentlyScanned', 'Recently Scanned')}
+                  </div>
+                  <div className="space-y-1">
+                    {recentlyScanned.slice(0, 3).map(food => (
+                      <Button 
+                        key={food.id}
+                        variant="ghost" 
+                        className="w-full justify-start h-auto py-2 px-3"
+                        onClick={() => handleQuickAdd(food)}
+                      >
+                        <div className="flex-1 text-left">
+                          <span className="block text-sm font-medium truncate">{food.name}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {food.caloriesPerServing || 0} cal
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

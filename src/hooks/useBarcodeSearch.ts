@@ -30,6 +30,45 @@ interface UseBarcodeSearchReturn {
   loading: boolean;
   error: string | null;
   lastScannedBarcode: string | null;
+  validateBarcode: (barcode: string) => { isValid: boolean; format: string | null; error?: string };
+}
+
+// Barcode format validation
+const BARCODE_FORMATS: Record<string, RegExp> = {
+  UPC_A: /^\d{12}$/,
+  UPC_E: /^\d{8}$/,
+  EAN_13: /^\d{13}$/,
+  EAN_8: /^\d{8}$/,
+};
+
+export function validateBarcode(barcode: string): { 
+  isValid: boolean; 
+  format: string | null;
+  error?: string;
+} {
+  const cleaned = barcode.trim().replace(/\s/g, '');
+  
+  if (!cleaned) {
+    return { isValid: false, format: null, error: 'Barcode cannot be empty' };
+  }
+  
+  // Check each format
+  for (const [format, regex] of Object.entries(BARCODE_FORMATS)) {
+    if (regex.test(cleaned)) {
+      return { isValid: true, format };
+    }
+  }
+  
+  // Allow numeric strings of 8-14 digits as fallback
+  if (/^\d{8,14}$/.test(cleaned)) {
+    return { isValid: true, format: 'NUMERIC' };
+  }
+  
+  return { 
+    isValid: false, 
+    format: null, 
+    error: 'Invalid barcode format. Enter 8-14 digits.' 
+  };
 }
 
 export function useBarcodeSearch(): UseBarcodeSearchReturn {
@@ -116,31 +155,36 @@ export function useBarcodeSearch(): UseBarcodeSearchReturn {
         ? nutriments.sodium_serving 
         : nutriments.sodium_100g;
 
-      // Step 3: Save to local database for future lookups
-      const { data: savedFood, error: insertError } = await supabase
+      // Step 3: Upsert to local database for future lookups (prevents duplicates)
+      const { data: savedFood, error: upsertError } = await supabase
         .from('nutrition_food_database')
-        .insert({
-          name: product.product_name || 'Unknown Product',
-          brand: product.brands || null,
-          barcode: barcode,
-          serving_size: product.serving_size || (useServing ? `${servingGrams}g` : '100g'),
-          serving_size_grams: servingGrams,
-          calories_per_serving: calories ? Math.round(calories) : null,
-          protein_g: protein ? Math.round(protein * 10) / 10 : null,
-          carbs_g: carbs ? Math.round(carbs * 10) / 10 : null,
-          fats_g: fats ? Math.round(fats * 10) / 10 : null,
-          fiber_g: fiber ? Math.round(fiber * 10) / 10 : null,
-          sugar_g: sugar ? Math.round(sugar * 10) / 10 : null,
-          sodium_mg: sodium ? Math.round(sodium * 1000) : null,
-          source: 'openfoodfacts',
-          external_id: barcode,
-        })
+        .upsert(
+          {
+            external_id: barcode,
+            name: product.product_name || 'Unknown Product',
+            brand: product.brands || null,
+            barcode: barcode,
+            serving_size: product.serving_size || (useServing ? `${servingGrams}g` : '100g'),
+            serving_size_grams: servingGrams,
+            calories_per_serving: calories ? Math.round(calories) : null,
+            protein_g: protein ? Math.round(protein * 10) / 10 : null,
+            carbs_g: carbs ? Math.round(carbs * 10) / 10 : null,
+            fats_g: fats ? Math.round(fats * 10) / 10 : null,
+            fiber_g: fiber ? Math.round(fiber * 10) / 10 : null,
+            sugar_g: sugar ? Math.round(sugar * 10) / 10 : null,
+            sodium_mg: sodium ? Math.round(sodium * 1000) : null,
+            source: 'openfoodfacts',
+          },
+          { 
+            onConflict: 'external_id',
+            ignoreDuplicates: false
+          }
+        )
         .select()
         .single();
 
-      if (insertError) {
-        console.error('Failed to save food to database:', insertError);
-        // Still return the result even if save fails
+      if (upsertError) {
+        console.error('Failed to save food to database:', upsertError);
       }
 
       return {
@@ -166,5 +210,5 @@ export function useBarcodeSearch(): UseBarcodeSearchReturn {
     }
   }, []);
 
-  return { searchByBarcode, loading, error, lastScannedBarcode };
+  return { searchByBarcode, loading, error, lastScannedBarcode, validateBarcode };
 }
