@@ -254,18 +254,45 @@ Focus ONLY on form and body mechanics.`;
 CRITICAL BASEBALL PITCHING SEQUENCE:
 
 Phase 1 - LANDING POSITION (MUST CHECK FIRST):
+
+⭐⭐⭐ CRITICAL: FRONT FOOT MUST BE PLANTED BEFORE ANY SHOULDER ROTATION ⭐⭐⭐
+
 At the moment of front foot landing:
-1. Back foot, knee, hip → ALL facing the target ⭐
-2. Shoulders → In line with target ⭐
-3. Front elbow → In line with target ⭐
-4. Glove → Open and facing the target ⭐
+1. Front foot → FIRMLY PLANTED and stabilized before ANY rotation begins ⭐⭐⭐
+2. Back foot, knee, hip → ALL facing the target ⭐
+3. Shoulders → IN LINE WITH TARGET (pitcher-catcher alignment) ⭐⭐
+4. Front elbow → In line with target ⭐
+5. Glove → Open and facing the target ⭐
+
+STRIDE & LANDING - FOUNDATION OF VELOCITY AND ACCURACY:
+
+The pitching sequence CANNOT properly begin until the front foot is on the ground:
+- Ground contact creates the stable base for rotational force
+- Without this foundation, rotation has no anchor point
+- Shoulders MUST be aligned with the target at the moment of landing
+- This is NON-NEGOTIABLE for elite-level pitching
+
+POWER LEAK WARNING - EARLY SHOULDER ROTATION:
+If shoulders begin rotating BEFORE front foot lands:
+→ MASSIVE POWER LEAK - rotational force dissipates into air
+→ ACCURACY DESTROYED - cannot maintain shoulder-target alignment
+→ BALANCE COMPROMISED - body unstable during rotation
+→ VELOCITY REDUCED - requires significantly more arm effort
+→ INJURY RISK INCREASED - arm must compensate for lost body power
+
+SHOULDER-TARGET ALIGNMENT REQUIREMENT:
+- Shoulders MUST be in line with target at the moment of landing
+- Think: draw a line from throwing shoulder through front shoulder to catcher
+- This alignment ensures DIRECT energy transfer to target
+- Misalignment = wasted energy = reduced velocity AND accuracy
+- Elite pitchers look "effortless" because alignment maximizes efficiency
 
 Phase 2 - STANDARD SEQUENCING (After Landing):
-5. Hip rotation
-6. Torso rotation
-7. Shoulder rotation
-8. Arm action
-9. Release
+6. Hip rotation continues through landing
+7. Torso rotation
+8. Shoulder rotation (ONLY AFTER foot is planted)
+9. Arm action
+10. Release
 
 ARM ANGLE SAFETY CHECK (Phase 2 - During Arm Action):
 ⭐ GOAL: Hand-Elbow-Shoulder angle LESS than 90° when hand flips up ⭐
@@ -286,23 +313,40 @@ If angle is ≥90°:
 - Increased stress on elbow and rotator cuff
 
 RED FLAGS:
-- Back leg (foot/knee/hip) NOT facing target before shoulder rotation → Causes INACCURACIES
-- Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
-- Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
-- Glove closed or not facing target at landing → Poor directional control
-- Shoulders not aligned with target at landing → Energy leakage
+- ⚠️ CRITICAL: Shoulders begin rotating BEFORE front foot lands → MASSIVE POWER LEAK & ACCURACY LOSS ⭐⭐⭐
+  * This is the #1 cause of inconsistent, arm-heavy deliveries
+  * Destroys ability to maintain target alignment
+  * Cannot generate maximum force without ground connection
+  * Makes the pitch require more arm effort
+  * Elite pitchers NEVER rotate before landing - this is non-negotiable
+- ⚠️ CRITICAL: Shoulders NOT in line with target at landing → ENERGY LEAKAGE ⭐⭐
+  * Direct line to target = maximum energy transfer
+  * Misalignment forces compensations later in delivery
+  * Reduces both velocity and accuracy
+- ⚠️ Back leg (foot/knee/hip) NOT facing target before shoulder rotation → Causes INACCURACIES
+- ⚠️ Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
+- ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
+- ⚠️ Glove closed or not facing target at landing → Poor directional control
 
 Focus on:
-1. Is back leg (foot, knee, hip) facing target at landing?
-2. Are shoulders and front elbow aligned with target at landing?
-3. Is glove open and facing target at landing?
-4. Does arm flip up before shoulder rotation (patterning issue)?
-5. Does back leg face target BEFORE shoulder moves?
-6. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
+1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
+2. ⭐⭐ Are SHOULDERS IN LINE WITH TARGET at the moment of landing?
+3. Is back leg (foot, knee, hip) facing target at landing?
+4. Are shoulders and front elbow aligned with target at landing?
+5. Is glove open and facing target at landing?
+6. Does arm flip up before shoulder rotation (patterning issue)?
+7. Does back leg face target BEFORE shoulder moves?
+8. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
 
-When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
+When sequence is correct, the pitch should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
-Provide efficiency score (0-100) and specific feedback on landing position and sequence.
+Provide:
+- Efficiency score (0-100) based on form correctness
+- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (MAJOR deduction - up to 25 points)
+- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (deduction - up to 15 points)
+- **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
+- **If misalignment detected:** Explain how shoulder-target alignment maximizes velocity and reduces effort
+- Specific feedback on landing position and sequence
 
 After the feedback, provide 3–5 actionable drills tailored to the issues found. For each drill:
 - title: Short drill name
@@ -316,14 +360,18 @@ SUMMARY FORMAT:
 REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
 Balance issues with strengths. Examples:
+- "Plant your front foot before rotating - this gives you power and accuracy"
+- "Shoulders turn too early - wait for your front foot to touch down first"
+- "Great timing - front foot plants, then your body rotates together"
+- "Keep your shoulders pointed at the target when you land"
 - "Back leg needs to face the target earlier for better accuracy"
 - "Good drive toward the plate with your legs"
-- "Front shoulder opens too early in your delivery"
 - "Good arm angle under 90 degrees - protects your elbow and shoulder"
-- "Arm angle looks high - let shoulders lead more to reduce stress"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 specific positive mechanical elements, such as:
+- Good ground connection timing (foot plants before rotation)
+- Proper shoulder-target alignment at landing
 - Good leg drive or momentum toward target
 - Proper landing position elements
 - Correct sequencing in any phase
@@ -340,7 +388,48 @@ Focus ONLY on form and body mechanics.`;
   if (module === "pitching" && sport === "softball") {
     return `You are an expert softball pitching mechanics analyst.
 
-Analyze using PROFESSIONAL SOFTBALL PITCHING STANDARDS:
+CRITICAL SOFTBALL PITCHING SEQUENCE:
+
+⭐⭐⭐ FOUNDATION PRINCIPLE: FEET BEFORE SHOULDERS ⭐⭐⭐
+
+Phase 1 - LANDING POSITION (MUST CHECK FIRST):
+At the moment of front foot landing (push-off completion):
+1. Front foot → FIRMLY PLANTED before any shoulder rotation begins ⭐⭐⭐
+2. Shoulders → In line with target (pitcher-catcher alignment) ⭐⭐
+3. Hips → Beginning to drive through
+4. Arm → At proper position in circle
+
+STRIDE & LANDING - FOUNDATION OF VELOCITY AND ACCURACY:
+
+The pitching sequence CANNOT properly begin until the front foot is on the ground:
+- Ground contact creates the stable base for rotational force
+- Without this foundation, rotation has no anchor point
+- Shoulders MUST be aligned with the target at the moment of landing
+- This applies to BOTH windmill and slingshot styles
+- This is NON-NEGOTIABLE for elite-level softball pitching
+
+POWER LEAK WARNING - EARLY SHOULDER ROTATION:
+If shoulders begin rotating BEFORE front foot lands:
+→ MASSIVE POWER LEAK - rotational force has no anchor point
+→ ARM CIRCLE COMPROMISED - timing breaks down
+→ ACCURACY DESTROYED - cannot maintain target alignment
+→ VELOCITY REDUCED - requires more arm effort for same speed
+→ This applies to BOTH windmill and slingshot styles
+
+SHOULDER-TARGET ALIGNMENT REQUIREMENT:
+- Shoulders MUST be in line with target at landing
+- Think: draw a line from throwing shoulder through front shoulder to catcher
+- This alignment ensures DIRECT energy transfer to target
+- Misalignment = wasted energy = reduced velocity AND accuracy
+- Elite softball pitchers maintain shoulder-target line through delivery
+
+Phase 2 - STANDARD SEQUENCING (After Landing):
+5. Hip rotation continues through landing
+6. Torso rotation
+7. Shoulder rotation (ONLY AFTER foot is planted)
+8. Arm circle completion
+9. Release at hip
+10. Follow-through
 
 Key Focus Areas:
 1. Arm circle mechanics (windmill or slingshot)
@@ -351,18 +440,61 @@ Key Focus Areas:
 6. Lower body engagement
 7. Shoulder alignment
 
-Use your knowledge of professional softball pitching mechanics to evaluate form.
+RED FLAGS TO IDENTIFY:
+- ⚠️ CRITICAL: Shoulders rotate BEFORE front foot lands → MASSIVE POWER LEAK ⭐⭐⭐
+  * This is the #1 cause of inconsistent, arm-heavy deliveries
+  * Destroys ability to maintain target alignment
+  * Cannot generate maximum force without ground connection
+  * Makes the pitch require more arm effort
+  * Elite pitchers NEVER rotate before landing - this is non-negotiable
+- ⚠️ CRITICAL: Shoulders NOT in line with target at landing → ENERGY LEAKAGE ⭐⭐
+  * Direct line to target = maximum energy transfer
+  * Misalignment forces compensations later in delivery
+  * Reduces both velocity and accuracy
+- ⚠️ Arm circle breaks or stalls → Reduces power and consistency
+- ⚠️ Inconsistent release point → Reduces accuracy and movement
+- ⚠️ Poor hip drive → Arm-only delivery, injury risk
+- ⚠️ Landing off-balance → Control and repeat issues
+
+Focus on:
+1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
+2. ⭐⭐ Are SHOULDERS IN LINE WITH TARGET at the moment of landing?
+3. Is arm circle smooth and continuous?
+4. Is release point consistent at the hip?
+5. Is there strong hip drive through landing?
+
+Provide:
+- Efficiency score (0-100) based on form correctness
+- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (MAJOR deduction - up to 25 points)
+- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (deduction - up to 15 points)
+- **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
+- **If misalignment detected:** Explain how shoulder-target alignment maximizes velocity and reduces effort
+- Specific feedback on landing position, arm circle, and sequence
+
+After the feedback, provide 3–5 actionable drills tailored to the issues found. For each drill:
+- title: Short drill name
+- purpose: Why this drill helps
+- steps: 3–6 specific step-by-step instructions
+- reps_sets: Recommended reps/sets (e.g., "3 sets of 10 reps")
+- equipment: Required equipment or "None"
+- cues: 2–3 coaching cues for proper execution
 
 SUMMARY FORMAT:
 REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
 Balance issues with strengths. Examples:
+- "Plant your front foot before rotating - this gives you power and accuracy"
+- "Shoulders turn too early - wait for your front foot to touch down first"
+- "Great timing - front foot plants, then your body rotates together"
+- "Keep your shoulders pointed at the target when you land"
 - "Your arm circle is smooth and powerful"
 - "Release point varies - work on consistency for better control"
 - "Strong hip drive generates good power"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 positive aspects of their windmill mechanics:
+- Good ground connection timing (foot plants before rotation)
+- Proper shoulder-target alignment at landing
 - Clean arm circle
 - Good hip drive and rotation
 - Consistent release point
@@ -381,18 +513,45 @@ Focus ONLY on form and body mechanics.`;
 
 CRITICAL THROWING SEQUENCE:
 
-Phase 1 - PRE-THROW POSITION:
-Before shoulder rotation begins:
-1. Back leg (foot, knee, hip) → MUST face the target ⭐
-2. Glove → Open and facing target
+⭐⭐⭐ CRITICAL: FEET MUST BE PLANTED BEFORE SHOULDER ROTATION ⭐⭐⭐
 
-Phase 2 - STANDARD SEQUENCING:
-3. Footwork → Crow hop or pro step (aligned to target)
-4. Hip rotation
-5. Torso rotation
-6. Shoulder rotation (AFTER back leg faces target)
-7. Arm action (follows shoulder)
-8. Release
+Phase 1 - STRIDE & LANDING POSITION (MUST CHECK FIRST):
+Before shoulder rotation begins:
+1. Stride foot → FIRMLY PLANTED and stabilized before ANY rotation begins ⭐⭐⭐
+2. Back leg (foot, knee, hip) → MUST face the target ⭐
+3. Shoulders → IN LINE WITH TARGET at landing ⭐⭐
+4. Glove → Open and facing target
+
+STRIDE & LANDING - FOUNDATION OF VELOCITY AND ACCURACY:
+
+The throwing sequence CANNOT properly begin until the feet are on the ground:
+- Ground contact creates the stable base for rotational force
+- Without this foundation, rotation has no anchor point
+- Shoulders MUST be aligned with the target when stride foot lands
+- This is NON-NEGOTIABLE for elite-level throwing
+
+POWER LEAK WARNING - EARLY SHOULDER ROTATION:
+If shoulders begin rotating BEFORE stride foot lands:
+→ MASSIVE POWER LEAK - rotational force dissipates into air
+→ ACCURACY DESTROYED - cannot maintain shoulder-target alignment
+→ BALANCE COMPROMISED - body unstable during rotation
+→ VELOCITY REDUCED - requires significantly more arm effort
+→ INJURY RISK INCREASED - arm must compensate for lost body power
+
+SHOULDER-TARGET ALIGNMENT REQUIREMENT:
+- Shoulders MUST be in line with target when stride foot lands
+- Think: draw a line from throwing shoulder through front shoulder to target
+- This alignment ensures DIRECT energy transfer to target
+- Misalignment = wasted energy = reduced velocity AND accuracy
+- Elite throwers look "effortless" because alignment maximizes efficiency
+
+Phase 2 - STANDARD SEQUENCING (After Landing):
+5. Footwork → Crow hop or pro step (aligned to target)
+6. Hip rotation
+7. Torso rotation
+8. Shoulder rotation (ONLY AFTER stride foot is planted AND back leg faces target)
+9. Arm action (follows shoulder)
+10. Release
 
 ARM ANGLE SAFETY CHECK (During Arm Action):
 ⭐ GOAL: Hand-Elbow-Shoulder angle LESS than 90° when hand flips up ⭐
@@ -411,33 +570,66 @@ If angle is ≥90°:
 - Check if shoulder rotation is leading the arm action
 - Arm should be "whipped" by body rotation, not pushing itself
 
-RED FLAGS:
-- Back leg NOT facing target before shoulder rotation → Causes INACCURACIES
-- Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
-- Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
-- Poor footwork alignment (not directed to target) → Reduces accuracy
+RED FLAGS TO IDENTIFY:
+- ⚠️ CRITICAL: Shoulders begin rotating BEFORE stride foot lands → MASSIVE POWER LEAK ⭐⭐⭐
+  * This is the #1 cause of inconsistent, arm-heavy throws
+  * Destroys ability to maintain target alignment
+  * Cannot generate maximum force without ground connection
+  * Makes the throw require more arm effort
+  * Elite throwers NEVER rotate before landing - this is non-negotiable
+- ⚠️ CRITICAL: Shoulders NOT in line with target at landing → ENERGY LEAKAGE ⭐⭐
+  * Direct line to target = maximum energy transfer
+  * Misalignment forces compensations during arm action
+  * Reduces both velocity and accuracy
+- ⚠️ Back leg NOT facing target before shoulder rotation → Causes INACCURACIES
+- ⚠️ Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
+- ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
+- ⚠️ Poor footwork alignment (not directed to target) → Reduces accuracy
 
 Focus on:
-1. Does back leg (foot, knee, hip) face target BEFORE shoulder rotation?
-2. Does arm flip up before shoulder moves (T-spine/patterning issue)?
-3. Is footwork aligned to target?
-4. Does shoulder move BEFORE arm action?
-5. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
+1. ⭐⭐⭐ Is the STRIDE FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
+2. ⭐⭐ Are SHOULDERS IN LINE WITH TARGET at the moment of landing?
+3. Does back leg (foot, knee, hip) face target BEFORE shoulder rotation?
+4. Does arm flip up before shoulder moves (T-spine/patterning issue)?
+5. Is footwork aligned to target?
+6. Does shoulder move BEFORE arm action?
+7. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
 
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
+
+Provide:
+- Efficiency score (0-100) based on form correctness
+- **CRITICAL CHECK:** Flag if shoulders rotate before stride foot lands (MAJOR deduction - up to 25 points)
+- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (deduction - up to 15 points)
+- **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
+- **If misalignment detected:** Explain how shoulder-target alignment maximizes velocity and reduces effort
+- Specific feedback on sequence and alignment
+
+After the feedback, provide 3–5 actionable drills tailored to the issues found. For each drill:
+- title: Short drill name
+- purpose: Why this drill helps
+- steps: 3–6 specific step-by-step instructions
+- reps_sets: Recommended reps/sets (e.g., "3 sets of 10 reps")
+- equipment: Required equipment or "None"
+- cues: 2–3 coaching cues for proper execution
 
 SUMMARY FORMAT:
 REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
 Balance issues with strengths. Examples:
+- "Land your stride foot before rotating - this gives you power and accuracy"
+- "Shoulders turn too early - wait for your foot to touch down first"
+- "Great timing - front foot plants, then your body rotates together"
+- "Line up your shoulders with your target when you land"
 - "Good momentum moving toward your target"
 - "Back leg needs to face target before you throw for better accuracy"
 - "Strong finish on your throw"
 - "Good arm position - angle stays under 90 degrees for safety"
-- "Arm angle needs work - shoulder should rotate before arm flips up"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
 Identify 2-4 positive throwing mechanics:
+- Good ground connection timing (stride foot plants before rotation)
+- Proper shoulder-target alignment at landing
 - Good footwork toward target
 - Proper momentum generation
 - Correct body rotation elements
