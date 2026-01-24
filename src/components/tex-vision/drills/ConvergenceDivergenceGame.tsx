@@ -225,6 +225,12 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: 
           <p className="text-lg font-medium text-[hsl(var(--tex-vision-text))]">
             {getPhaseInstruction()}
           </p>
+          {/* Clear explanation for first cycle */}
+          {cycleCount === 0 && phase === 'converge' && (
+            <p className="text-xs text-[hsl(var(--tex-vision-feedback))] mt-2 animate-pulse">
+              💡 Goal: Cross your eyes slightly until 2 dots merge into 1!
+            </p>
+          )}
         </div>
 
         {/* Cycle progress */}
@@ -232,9 +238,20 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: 
           {t('texVision.drills.cycle', 'Cycle')} {cycleCount + 1}/{totalCycles}
         </div>
 
-        {/* Confirmation count */}
-        <div className="absolute top-4 right-4 text-sm text-[hsl(var(--tex-vision-success))]">
-          {t('texVision.drills.convergence.confirmed', 'Confirmed')}: {confirmCount}
+        {/* Confirmation count with extra info */}
+        <div className="absolute top-4 right-4 text-sm">
+          <p className="text-[hsl(var(--tex-vision-success))]">
+            {t('texVision.drills.convergence.confirmed', 'Confirmed')}: {confirmCount}
+          </p>
+        </div>
+
+        {/* Bottom instructions */}
+        <div className="absolute bottom-4 left-0 right-0 text-center">
+          <p className="text-xs text-[hsl(var(--tex-vision-text-muted))]">
+            {confirmCount > 0 
+              ? `✓ You've confirmed convergence ${confirmCount}x` 
+              : 'Tap the button when you see ONE dot'}
+          </p>
         </div>
       </div>
     </DrillContainer>

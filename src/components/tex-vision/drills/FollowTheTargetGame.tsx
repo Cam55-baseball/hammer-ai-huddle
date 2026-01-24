@@ -27,6 +27,7 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [countdown, setCountdown] = useState(3);
   const [isTracking, setIsTracking] = useState(false);
+  const [timerStarted, setTimerStarted] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
   const speed = tier === 'beginner' ? 0.5 : tier === 'advanced' ? 1 : 1.5;
@@ -39,6 +40,7 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
       return () => clearTimeout(timer);
     } else if (!isTracking) {
       setIsTracking(true);
+      setTimerStarted(true); // Start the drill timer after countdown
     }
   }, [countdown, isTracking]);
 
@@ -155,7 +157,7 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
         <DrillTimer
           initialSeconds={tier === 'beginner' ? 60 : tier === 'advanced' ? 90 : 120}
           mode="countdown"
-          autoStart={true}
+          autoStart={timerStarted}
           onTick={handleTimerTick}
           onComplete={handleTimerComplete}
         />
@@ -169,8 +171,8 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
     >
       <div 
         ref={containerRef}
-        className="relative w-full h-full min-h-[400px] cursor-none"
-        style={{ touchAction: 'none' }}
+        className="relative w-full h-full min-h-[400px] cursor-none select-none"
+        style={{ touchAction: 'manipulation' }}
         onMouseMove={handleMouseMove}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

@@ -305,24 +305,60 @@ export const BrockStringPreview = ({ isPlaying }: PreviewProps) => {
   );
 };
 
-// Eye Relaxation Preview - Calming animation
+// Eye Relaxation Preview - Shows all 5 exercise steps
 export const EyeRelaxationPreview = ({ isPlaying }: PreviewProps) => {
+  const [stepIndex, setStepIndex] = useState(0);
+  const steps = [
+    { icon: '🫲', name: 'Palm your eyes' },
+    { icon: '✨', name: 'Deep breathing' },
+    { icon: '🔄', name: 'Eye circles' },
+    { icon: '👁️', name: 'Gentle blinking' },
+    { icon: '🌙', name: 'Final rest' },
+  ];
+
+  useEffect(() => {
+    if (!isPlaying) {
+      setStepIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setStepIndex(prev => (prev + 1) % steps.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [isPlaying, steps.length]);
+
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full gap-2">
-      <motion.div
-        className="text-4xl"
-        animate={isPlaying ? { scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] } : {}}
-        transition={{ duration: 3, repeat: Infinity }}
+    <div className="flex flex-col items-center justify-center w-full h-full gap-3">
+      <motion.div 
+        className="text-3xl"
+        key={stepIndex}
+        initial={{ scale: 0.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.3 }}
       >
-        😌
+        {steps[stepIndex].icon}
       </motion.div>
-      <motion.div
-        className="text-sm text-[hsl(var(--tex-vision-text-muted))]"
-        animate={isPlaying ? { opacity: [0.5, 1, 0.5] } : {}}
-        transition={{ duration: 3, repeat: Infinity }}
+      <motion.p 
+        className="text-xs font-medium text-center text-[hsl(var(--tex-vision-text))]"
+        key={`name-${stepIndex}`}
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.3 }}
       >
-        Breathe...
-      </motion.div>
+        {steps[stepIndex].name}
+      </motion.p>
+      <div className="flex gap-1 mt-1">
+        {steps.map((_, i) => (
+          <div 
+            key={i} 
+            className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+              i === stepIndex 
+                ? 'bg-[hsl(var(--tex-vision-feedback))] scale-125' 
+                : 'bg-[hsl(var(--tex-vision-text-muted))]/30'
+            }`} 
+          />
+        ))}
+      </div>
     </div>
   );
 };

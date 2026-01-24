@@ -209,15 +209,15 @@ export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGam
           />
         )}
 
-        {/* Concentric rings for peripheral awareness - NO TEXT overlapping */}
-        <div className="relative flex items-center justify-center">
+        {/* Concentric rings for peripheral awareness - responsive sizing */}
+        <div className="relative flex items-center justify-center w-full max-w-[280px] aspect-square">
           {[0, 1, 2, 3].map((ringIndex) => (
             <div
               key={ringIndex}
               className="absolute rounded-full border-2 border-[hsl(var(--tex-vision-feedback))] transition-all duration-1000"
               style={{
-                width: `${(ringIndex + 1) * 60}px`,
-                height: `${(ringIndex + 1) * 60}px`,
+                width: `${(ringIndex + 1) * 25}%`,
+                height: `${(ringIndex + 1) * 25}%`,
                 opacity: getRingOpacity(ringIndex),
                 transform: `scale(${phase === 'expand' || phase === 'hold' ? 1.1 : 1})`,
               }}

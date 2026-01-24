@@ -30,6 +30,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
   const [grid, setGrid] = useState<Target[]>([]);
   const [targetShape, setTargetShape] = useState<'circle' | 'square' | 'triangle'>('circle');
   const [foundCount, setFoundCount] = useState(0);
+  const [totalFoundCount, setTotalFoundCount] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [roundsCompleted, setRoundsCompleted] = useState(0);
   const [reactionTimes, setReactionTimes] = useState<number[]>([]);
@@ -39,6 +40,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
   const [hasInteracted, setHasInteracted] = useState(false);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [showRoundComplete, setShowRoundComplete] = useState(false);
 
   const totalRounds = tier === 'beginner' ? 5 : tier === 'advanced' ? 7 : 10;
   const shapes: ('circle' | 'square' | 'triangle')[] = ['circle', 'square', 'triangle'];
@@ -74,7 +76,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
     setFoundCount(0);
     setLastClickTime(Date.now());
     setGameStarted(true);
-    setHasInteracted(false);
+    // Only reset hasInteracted on the first round
   }, [gridSize, targetCount]);
 
   useEffect(() => {
@@ -84,9 +86,9 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
   // Check if round is complete
   useEffect(() => {
     // Guard: Only check completion if game has started, grid exists, and user has interacted (for first round)
-    if (!gameStarted || grid.length === 0 || isComplete) return;
+    if (!gameStarted || grid.length === 0 || isComplete || showRoundComplete) return;
     
-    // For the first round, require user interaction before allowing completion
+    // For the first round only, require user interaction before allowing completion
     if (roundsCompleted === 0 && !hasInteracted) return;
     
     if (foundCount === targetCount) {
@@ -102,7 +104,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
         const finalBestStreak = Math.max(bestStreak, streak);
         
         onComplete({
-          accuracyPercent: Math.round((foundCount / (foundCount + mistakes)) * 100) || 100,
+          accuracyPercent: Math.round((totalFoundCount / Math.max(totalFoundCount + mistakes, 1)) * 100) || 100,
           reactionTimeMs: avgReaction,
           difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
           falsePositives: mistakes,
@@ -114,10 +116,15 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
           },
         });
       } else {
-        setTimeout(generateGrid, 500);
+        // Show round complete celebration before next round
+        setShowRoundComplete(true);
+        setTimeout(() => {
+          setShowRoundComplete(false);
+          generateGrid();
+        }, 1200);
       }
     }
-  }, [foundCount, targetCount, roundsCompleted, totalRounds, mistakes, reactionTimes, tier, onComplete, generateGrid, gridSize, isComplete, streak, bestStreak]);
+  }, [foundCount, targetCount, roundsCompleted, totalRounds, mistakes, reactionTimes, tier, onComplete, generateGrid, gridSize, isComplete, streak, bestStreak, showRoundComplete, totalFoundCount, hasInteracted]);
 
   const handleCellClick = (target: Target) => {
     if (isComplete || target.found) return;
@@ -131,6 +138,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
     if (target.isTarget) {
       setGrid(prev => prev.map(t => t.id === target.id ? { ...t, found: true } : t));
       setFoundCount(prev => prev + 1);
+      setTotalFoundCount(prev => prev + 1);
       setReactionTimes(prev => [...prev, reaction]);
       // Increase streak
       const newStreak = streak + 1;
@@ -200,7 +208,7 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
         <DrillTimer
           initialSeconds={tier === 'beginner' ? 120 : tier === 'advanced' ? 150 : 180}
           mode="countdown"
-          autoStart={true}
+          autoStart={!showRoundComplete}
           onComplete={handleTimerComplete}
         />
       }
@@ -214,7 +222,24 @@ export default function PatternSearchGame({ tier, onComplete, onExit }: PatternS
         </div>
       }
     >
-      <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px]">
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-[400px] relative">
+        {/* Round Complete Celebration Overlay */}
+        {showRoundComplete && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--tex-vision-primary))]/90 z-20 animate-fade-in rounded-lg">
+            <p className="text-3xl font-bold text-[hsl(var(--tex-vision-success))] mb-2">
+              {t('texVision.drills.patternSearch.roundComplete', 'ROUND COMPLETE!')}
+            </p>
+            <p className="text-lg text-[hsl(var(--tex-vision-text))]">
+              {t('texVision.drills.patternSearch.nextRound', 'Next round starting...')}
+            </p>
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
+                {t('texVision.drills.round', 'Round')} {roundsCompleted}/{totalRounds}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Target indicator */}
         <div className="mb-6 flex items-center gap-3 p-3 rounded-lg bg-[hsl(var(--tex-vision-primary))]/50">
           <span className="text-sm text-[hsl(var(--tex-vision-text-muted))]">
