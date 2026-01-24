@@ -28,6 +28,14 @@ export function DrillTimer({
   const [isRunning, setIsRunning] = useState(autoStart);
   const [hasStarted, setHasStarted] = useState(autoStart);
 
+  // Sync autoStart prop changes to internal state (e.g., after countdown completes)
+  useEffect(() => {
+    if (autoStart && !isRunning) {
+      setIsRunning(true);
+      setHasStarted(true);
+    }
+  }, [autoStart, isRunning]);
+
   const maxSeconds = mode === 'countdown' ? initialSeconds : Math.max(seconds, initialSeconds);
   const progress = mode === 'countdown' 
     ? (seconds / initialSeconds) * 100 
