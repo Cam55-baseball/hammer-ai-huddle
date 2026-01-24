@@ -2122,6 +2122,36 @@ export type Database = {
         }
         Relationships: []
       }
+      tex_vision_daily_drill_selection: {
+        Row: {
+          created_at: string | null
+          id: string
+          selected_drills: Json
+          selection_date: string
+          selection_reasons: Json | null
+          sport: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          selected_drills: Json
+          selection_date: string
+          selection_reasons?: Json | null
+          sport?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          selected_drills?: Json
+          selection_date?: string
+          selection_reasons?: Json | null
+          sport?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tex_vision_drill_results: {
         Row: {
           accuracy_percent: number | null

@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Reorder } from 'framer-motion';
-import { format, addDays } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, Circle, Clock, Zap, Brain, ArrowRight, AlertTriangle, CalendarClock, ArrowUpDown, GripVertical, Play } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Zap, Brain, ArrowRight, AlertTriangle, ArrowUpDown, GripVertical, Play, Sparkles, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TexVisionDailyChecklist as ChecklistType } from '@/hooks/useTexVisionProgress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { S2DiagnosticResult } from './S2CognitionDiagnostics';
 import { Separator } from '@/components/ui/separator';
+import { useDailyDrillSelection, ScoredDrill } from '@/hooks/useDailyDrillSelection';
+import { DrillTier } from '@/constants/texVisionDrills';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TexVisionDailyChecklistProps {
   checklist: ChecklistType | null;
@@ -27,21 +28,14 @@ interface TexVisionDailyChecklistProps {
   onStartS2Assessment?: () => void;
 }
 
-interface DrillItem {
-  id: string;
-  nameKey: string;
-  defaultName: string;
-  icon: string;
-  tier: string;
-}
-
-// Drill definitions for checklist
-const DAILY_DRILLS: DrillItem[] = [
-  { id: 'soft_focus', nameKey: 'texVision.drills.softFocus.title', defaultName: 'Soft Focus', icon: '👁️', tier: 'beginner' },
-  { id: 'pattern_search', nameKey: 'texVision.drills.patternSearch.title', defaultName: 'Pattern Search', icon: '🔍', tier: 'beginner' },
-  { id: 'peripheral_vision', nameKey: 'texVision.drills.peripheralVision.title', defaultName: 'Peripheral Vision', icon: '↔️', tier: 'beginner' },
-  { id: 'convergence', nameKey: 'texVision.drills.convergence.title', defaultName: 'Convergence', icon: '🎯', tier: 'beginner' },
-];
+// Reason badge colors and labels
+const REASON_CONFIG: Record<string, { color: string; label: string }> = {
+  never_done: { color: 'bg-purple-500/20 text-purple-700 border-purple-500/30', label: 'New!' },
+  needs_practice: { color: 'bg-amber-500/20 text-amber-700 border-amber-500/30', label: 'Practice' },
+  due_review: { color: 'bg-blue-500/20 text-blue-700 border-blue-500/30', label: 'Review' },
+  tier_challenge: { color: 'bg-teal-500/20 text-teal-700 border-teal-500/30', label: 'Challenge' },
+  variety: { color: 'bg-slate-500/20 text-slate-700 border-slate-500/30', label: 'Balance' },
+};
 
 // Helper to format days as weeks + days
 const formatWeeksAndDays = (totalDays: number): string => {
@@ -88,30 +82,42 @@ export default function TexVisionDailyChecklist({
 }: TexVisionDailyChecklistProps) {
   const { t } = useTranslation();
   const [autoSort, setAutoSort] = useState(() => localStorage.getItem('texvision-sort') !== 'original');
-  const [orderedDrills, setOrderedDrills] = useState<DrillItem[]>(DAILY_DRILLS);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Use the smart daily drill selection hook
+  const { 
+    dailyDrills, 
+    loading: selectionLoading, 
+    refreshSelection 
+  } = useDailyDrillSelection(currentTier as DrillTier);
 
-  // Restore saved order on mount
+  // Local state for ordered drills (for manual reordering)
+  const [orderedDrills, setOrderedDrills] = useState<ScoredDrill[]>([]);
+
+  // Sync ordered drills when daily drills change
   useEffect(() => {
-    const savedOrder = localStorage.getItem('texvision-drills-order');
-    if (savedOrder && !autoSort) {
-      try {
-        const orderIds = JSON.parse(savedOrder) as string[];
-        const sorted = [...DAILY_DRILLS].sort((a, b) => {
-          const aIdx = orderIds.indexOf(a.id);
-          const bIdx = orderIds.indexOf(b.id);
-          if (aIdx === -1 && bIdx === -1) return 0;
-          if (aIdx === -1) return 1;
-          if (bIdx === -1) return -1;
-          return aIdx - bIdx;
-        });
-        setOrderedDrills(sorted);
-      } catch {
-        setOrderedDrills(DAILY_DRILLS);
+    if (dailyDrills) {
+      const savedOrder = localStorage.getItem('texvision-drills-order');
+      if (savedOrder && !autoSort) {
+        try {
+          const orderIds = JSON.parse(savedOrder) as string[];
+          const sorted = [...dailyDrills].sort((a, b) => {
+            const aIdx = orderIds.indexOf(a.id);
+            const bIdx = orderIds.indexOf(b.id);
+            if (aIdx === -1 && bIdx === -1) return 0;
+            if (aIdx === -1) return 1;
+            if (bIdx === -1) return -1;
+            return aIdx - bIdx;
+          });
+          setOrderedDrills(sorted);
+        } catch {
+          setOrderedDrills(dailyDrills);
+        }
+      } else {
+        setOrderedDrills(dailyDrills);
       }
-    } else {
-      setOrderedDrills(DAILY_DRILLS);
     }
-  }, [autoSort]);
+  }, [dailyDrills, autoSort]);
 
   const toggleAutoSort = () => {
     const newValue = !autoSort;
@@ -119,12 +125,18 @@ export default function TexVisionDailyChecklist({
     localStorage.setItem('texvision-sort', newValue ? 'auto' : 'original');
   };
 
-  const handleReorder = (newOrder: DrillItem[]) => {
+  const handleReorder = (newOrder: ScoredDrill[]) => {
     setOrderedDrills(newOrder);
     localStorage.setItem('texvision-drills-order', JSON.stringify(newOrder.map(d => d.id)));
   };
 
-  if (loading) {
+  const handleRefreshSelection = async () => {
+    setIsRefreshing(true);
+    await refreshSelection();
+    setIsRefreshing(false);
+  };
+
+  if (loading || selectionLoading) {
     return (
       <Card className="bg-[hsl(var(--tex-vision-primary))]/50 border-[hsl(var(--tex-vision-primary-light))]/30">
         <CardHeader>
@@ -142,8 +154,9 @@ export default function TexVisionDailyChecklist({
     );
   }
 
-  const completedCount = checklist 
-    ? Object.values(checklist.checklist_items).filter(Boolean).length 
+  // Calculate completed count from today's selected drills
+  const completedCount = dailyDrills 
+    ? dailyDrills.filter(d => checklist?.checklist_items?.[d.id]).length
     : 0;
   const isComplete = completedCount >= 2;
 
@@ -169,28 +182,28 @@ export default function TexVisionDailyChecklist({
         <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-teal-600" />
-              <span className="font-semibold text-blue-900">S2 Cognition Diagnostic</span>
+              <Brain className="h-5 w-5 text-[hsl(var(--tex-vision-accent))]" />
+              <span className="font-semibold text-[hsl(var(--tex-vision-text))]">S2 Cognition Diagnostic</span>
             </div>
-            <Badge variant="outline" className="bg-teal-500/10 text-teal-700 border-teal-500/30 text-xs">
+            <Badge variant="outline" className="bg-[hsl(var(--tex-vision-accent))]/10 text-[hsl(var(--tex-vision-accent))] border-[hsl(var(--tex-vision-accent))]/30 text-xs">
               16-Week Tracking
             </Badge>
           </div>
           
-          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+          <div className="p-4 bg-[hsl(var(--tex-vision-warning))]/10 border border-[hsl(var(--tex-vision-warning))]/30 rounded-lg">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="h-5 w-5 text-[hsl(var(--tex-vision-warning))] mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-sm text-blue-900 font-medium mb-1">
+                <p className="text-sm text-[hsl(var(--tex-vision-text))] font-medium mb-1">
                   Complete your baseline assessment
                 </p>
-                <p className="text-xs text-blue-900/70 mb-3">
+                <p className="text-xs text-[hsl(var(--tex-vision-text-muted))] mb-3">
                   Start tracking your cognitive development with an initial assessment
                 </p>
                 <Button 
                   size="sm" 
                   onClick={onStartS2Assessment}
-                  className="bg-teal-600 hover:bg-teal-700 text-white"
+                  className="bg-[hsl(var(--tex-vision-accent))] hover:bg-[hsl(var(--tex-vision-accent))]/90 text-white"
                 >
                   Start Baseline
                   <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
@@ -215,10 +228,10 @@ export default function TexVisionDailyChecklist({
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-teal-600" />
-            <span className="font-semibold text-blue-900">S2 Cognition Diagnostic</span>
+            <Brain className="h-5 w-5 text-[hsl(var(--tex-vision-accent))]" />
+            <span className="font-semibold text-[hsl(var(--tex-vision-text))]">S2 Cognition Diagnostic</span>
           </div>
-          <Badge variant="outline" className="bg-teal-500/10 text-teal-700 border-teal-500/30 text-xs">
+          <Badge variant="outline" className="bg-[hsl(var(--tex-vision-accent))]/10 text-[hsl(var(--tex-vision-accent))] border-[hsl(var(--tex-vision-accent))]/30 text-xs">
             16-Week Tracking
           </Badge>
         </div>
@@ -232,17 +245,17 @@ export default function TexVisionDailyChecklist({
               <div className={`text-2xl font-bold ${getScoreColor(s2DiagnosticResult.overall_score)}`}>
                 {s2DiagnosticResult.overall_score || '—'}
               </div>
-              <span className="text-xs text-blue-900/70">Previous Score</span>
+              <span className="text-xs text-[hsl(var(--tex-vision-text-muted))]">Previous Score</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-700" />
-              <span className="text-sm font-medium text-green-700">Ready for next assessment</span>
+              <CheckCircle2 className="h-4 w-4 text-[hsl(var(--tex-vision-success))]" />
+              <span className="text-sm font-medium text-[hsl(var(--tex-vision-success))]">Ready for next assessment</span>
             </div>
           </div>
           
           <Button 
             size="sm" 
-            className="w-full mt-2 bg-teal-600 hover:bg-teal-700 text-white"
+            className="w-full mt-2 bg-[hsl(var(--tex-vision-accent))] hover:bg-[hsl(var(--tex-vision-accent))]/90 text-white"
           >
             Take Assessment
             <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
@@ -254,18 +267,19 @@ export default function TexVisionDailyChecklist({
     );
   };
 
-  const handleDrillClick = (drill: DrillItem) => {
+  const handleDrillClick = (drill: ScoredDrill) => {
     const isCompleted = checklist?.checklist_items?.[drill.id] || false;
     
     if (!isCompleted) {
       // Start the drill - completion will be handled when drill finishes
-      onDrillStart(drill.id, currentTier);
+      onDrillStart(drill.id, drill.tier);
     }
     // If already completed, do nothing - user can replay from Drill Library
   };
 
-  const renderDrillItem = (drill: DrillItem) => {
+  const renderDrillItem = (drill: ScoredDrill) => {
     const isCompleted = checklist?.checklist_items?.[drill.id] || false;
+    const reasonConfig = REASON_CONFIG[drill.reason] || REASON_CONFIG.variety;
     
     return (
       <div
@@ -279,27 +293,52 @@ export default function TexVisionDailyChecklist({
         {/* Drag handle - only visible in manual mode */}
         {!autoSort && (
           <div 
-            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-blue-900/50 hover:text-blue-900"
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-[hsl(var(--tex-vision-text))]/50 hover:text-[hsl(var(--tex-vision-text))]"
             onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="h-5 w-5" />
           </div>
         )}
         {isCompleted ? (
-          <CheckCircle2 className="h-5 w-5 text-green-700 flex-shrink-0" />
+          <CheckCircle2 className="h-5 w-5 text-[hsl(var(--tex-vision-success))] flex-shrink-0" />
         ) : (
           <Circle className="h-5 w-5 text-[hsl(var(--tex-vision-text-muted))] flex-shrink-0" />
         )}
         <span className="text-lg mr-2">{drill.icon}</span>
-        <span className={`flex-1 text-sm font-medium ${
-          isCompleted 
-            ? 'text-green-700' 
-            : 'text-blue-900'
-        }`}>
-          {t(drill.nameKey, drill.defaultName)}
-        </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className={`text-sm font-medium truncate ${
+              isCompleted 
+                ? 'text-[hsl(var(--tex-vision-success))]' 
+                : 'text-[hsl(var(--tex-vision-text))]'
+            }`}>
+              {t(drill.nameKey, drill.defaultName)}
+            </span>
+            {!isCompleted && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-[9px] px-1.5 py-0 h-4 ${reasonConfig.color}`}
+                    >
+                      {drill.reason === 'tier_challenge' && <Sparkles className="h-2.5 w-2.5 mr-0.5" />}
+                      {reasonConfig.label}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    {drill.reasonText}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+          {!isCompleted && drill.tier !== 'beginner' && (
+            <span className="text-[10px] text-[hsl(var(--tex-vision-text-muted))] capitalize">{drill.tier} tier</span>
+          )}
+        </div>
         {isCompleted ? (
-          <span className="text-xs text-green-700">
+          <span className="text-xs text-[hsl(var(--tex-vision-success))]">
             ✓
           </span>
         ) : (
@@ -316,16 +355,32 @@ export default function TexVisionDailyChecklist({
     <Card className="bg-[hsl(var(--tex-vision-primary))]/50 border-[hsl(var(--tex-vision-primary-light))]/30">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg text-blue-900 flex items-center gap-2">
+          <CardTitle className="text-lg text-[hsl(var(--tex-vision-text))] flex items-center gap-2">
             <Zap className="h-5 w-5 text-[hsl(var(--tex-vision-feedback))]" />
             {t('texVision.checklist.title', 'Daily Vision Training')}
           </CardTitle>
           <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRefreshSelection}
+                    disabled={isRefreshing}
+                    className="h-7 w-7 p-0 text-[hsl(var(--tex-vision-text))]/70 hover:text-[hsl(var(--tex-vision-text))]"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Regenerate today's drills</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleAutoSort}
-              className="flex items-center gap-1 text-xs font-medium text-blue-900/70 hover:text-blue-900 px-2 py-1 h-auto"
+              className="flex items-center gap-1 text-xs font-medium text-[hsl(var(--tex-vision-text))]/70 hover:text-[hsl(var(--tex-vision-text))] px-2 py-1 h-auto"
             >
               <ArrowUpDown className="h-3 w-3" />
               {autoSort ? t('texVision.autoSort', 'Auto') : t('texVision.manualSort', 'Manual')}
@@ -334,15 +389,15 @@ export default function TexVisionDailyChecklist({
               variant="outline"
               className={`${
                 isComplete 
-                  ? 'bg-[hsl(var(--tex-vision-success))]/20 text-green-700 border-[hsl(var(--tex-vision-success))]/50' 
-                  : 'bg-[hsl(var(--tex-vision-primary-light))]/20 text-blue-900 border-[hsl(var(--tex-vision-primary-light))]/30'
+                  ? 'bg-[hsl(var(--tex-vision-success))]/20 text-[hsl(var(--tex-vision-success))] border-[hsl(var(--tex-vision-success))]/50' 
+                  : 'bg-[hsl(var(--tex-vision-primary-light))]/20 text-[hsl(var(--tex-vision-text))] border-[hsl(var(--tex-vision-primary-light))]/30'
               }`}
             >
               {completedCount}/2+ {t('texVision.checklist.completed', 'completed')}
             </Badge>
           </div>
         </div>
-        <CardDescription className="text-blue-900">
+        <CardDescription className="text-[hsl(var(--tex-vision-text))]">
           {t('texVision.checklist.description', 'Complete 2-4 drills for optimal neuro-visual development (8-15 min)')}
         </CardDescription>
       </CardHeader>
@@ -370,7 +425,7 @@ export default function TexVisionDailyChecklist({
         )}
 
         {/* Session time indicator */}
-        <div className="mt-4 flex items-center gap-2 text-xs text-blue-900">
+        <div className="mt-4 flex items-center gap-2 text-xs text-[hsl(var(--tex-vision-text))]">
           <Clock className="h-3.5 w-3.5" />
           <span>{t('texVision.checklist.sessionTime', 'Recommended: 8-15 minutes per session')}</span>
         </div>
