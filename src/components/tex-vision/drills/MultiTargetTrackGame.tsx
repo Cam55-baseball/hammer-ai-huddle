@@ -21,6 +21,12 @@ interface Target {
   isTarget: boolean;
 }
 
+interface RoundFeedback {
+  show: boolean;
+  correct: number;
+  total: number;
+}
+
 export default function MultiTargetTrackGame({ tier, onComplete, onExit }: MultiTargetTrackGameProps) {
   const { t } = useTranslation();
   const [phase, setPhase] = useState<'memorize' | 'track' | 'slowdown' | 'select'>('memorize');
@@ -31,6 +37,7 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
   const [isComplete, setIsComplete] = useState(false);
   const [memorizeCountdown, setMemorizeCountdown] = useState(3);
   const [slowdownProgress, setSlowdownProgress] = useState(0);
+  const [roundFeedback, setRoundFeedback] = useState<RoundFeedback | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
   const velocityMultiplier = useRef(1);
@@ -39,7 +46,9 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
   const targetCount = tier === 'beginner' ? 2 : tier === 'advanced' ? 3 : 4;
   const totalDots = tier === 'beginner' ? 6 : tier === 'advanced' ? 8 : 10;
   const trackDuration = tier === 'beginner' ? 4000 : tier === 'advanced' ? 5000 : 6000;
-  const slowdownDuration = 800; // Smooth slowdown over 800ms
+  
+  // Progressive slowdown duration for smoother, more cinematic deceleration
+  const slowdownDuration = tier === 'beginner' ? 1200 : tier === 'advanced' ? 1500 : 2000;
 
   const initializeRound = useCallback(() => {
     const newTargets: Target[] = [];
@@ -183,13 +192,26 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
     
     setScore(prev => prev + correct);
 
-    if (round >= totalRounds) {
-      setIsComplete(true);
-    } else {
-      setRound(prev => prev + 1);
+    // Show round feedback for 1.5 seconds before proceeding
+    setRoundFeedback({ show: true, correct, total: targetCount });
+    
+    setTimeout(() => {
+      setRoundFeedback(null);
+      
+      if (round >= totalRounds) {
+        setIsComplete(true);
+      } else {
+        setRound(prev => prev + 1);
+      }
+    }, 1500);
+  }, [selectedIds, targets, round, totalRounds, targetCount]);
+
+  // Re-initialize when round changes (after feedback)
+  useEffect(() => {
+    if (round > 1 && !roundFeedback && !isComplete) {
       initializeRound();
     }
-  }, [selectedIds, targets, round, totalRounds, initializeRound]);
+  }, [round, roundFeedback, isComplete, initializeRound]);
 
   // Completion effect
   useEffect(() => {
@@ -212,6 +234,9 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
       setIsComplete(true);
     }
   }, [isComplete]);
+
+  // Calculate current speed percentage for display
+  const currentSpeedPercent = Math.round(100 + (round - 1) * 5);
 
   return (
     <DrillContainer
@@ -241,6 +266,11 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
           {t('texVision.drills.round', 'Round')} {round}/{totalRounds}
         </div>
 
+        {/* Speed indicator - top right, shows progressive difficulty */}
+        <div className="absolute top-4 right-4 text-xs text-[hsl(var(--tex-vision-text-muted))]">
+          Speed: {currentSpeedPercent}%
+        </div>
+
         {/* Phase indicator - above tracking area, fixed height */}
         <div className="h-8 mb-3 text-center flex items-center justify-center">
           {phase === 'memorize' && (
@@ -255,7 +285,7 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
           )}
           {phase === 'slowdown' && (
             <p className="text-lg text-[hsl(var(--tex-vision-text))] font-bold">
-              {t('texVision.drills.multiTargetTrack.slowdown', 'Slowing down...')} ({Math.round((1 - slowdownProgress) * 100)}%)
+              {t('texVision.drills.multiTargetTrack.slowdown', 'Get ready...')}
             </p>
           )}
           {phase === 'select' && (
@@ -270,12 +300,34 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
           ref={containerRef}
           className="relative w-full h-72 bg-[hsl(var(--tex-vision-primary))]/20 rounded-xl overflow-hidden border border-[hsl(var(--tex-vision-primary))]/30"
         >
+          {/* Round feedback overlay */}
+          {roundFeedback?.show && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--tex-vision-primary))]/90 z-20 animate-fade-in rounded-xl">
+              <p className={`text-3xl font-bold mb-2 ${
+                roundFeedback.correct === roundFeedback.total 
+                  ? 'text-[hsl(var(--tex-vision-success))]' 
+                  : roundFeedback.correct > 0 
+                    ? 'text-[hsl(var(--tex-vision-feedback))]'
+                    : 'text-[hsl(var(--tex-vision-text-muted))]'
+              }`}>
+                {roundFeedback.correct === roundFeedback.total 
+                  ? '🎯 PERFECT!' 
+                  : roundFeedback.correct > 0 
+                    ? '👍 NICE TRY!' 
+                    : '💪 KEEP GOING!'}
+              </p>
+              <p className="text-lg text-[hsl(var(--tex-vision-text))]">
+                {roundFeedback.correct}/{roundFeedback.total} correct
+              </p>
+            </div>
+          )}
+
           {targets.map((target) => (
             <button
               key={target.id}
               onClick={() => handleDotClick(target.id)}
               disabled={phase !== 'select'}
-              className={`absolute w-7 h-7 rounded-full transition-all duration-100 ${
+              className={`absolute w-7 h-7 rounded-full transition-colors transition-transform duration-100 ${
                 phase === 'memorize' && target.isTarget
                   ? 'bg-[hsl(var(--tex-vision-feedback))] scale-125 shadow-lg shadow-[hsl(var(--tex-vision-feedback))]/50'
                   : selectedIds.has(target.id)
@@ -294,7 +346,7 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
 
         {/* Submit button and score - below tracking area */}
         <div className="mt-4 flex flex-col items-center gap-2">
-          {phase === 'select' && selectedIds.size === targetCount && (
+          {phase === 'select' && selectedIds.size === targetCount && !roundFeedback && (
             <button
               onClick={handleSubmit}
               className="px-6 py-2 bg-[hsl(var(--tex-vision-feedback))] text-[hsl(var(--tex-vision-primary-dark))] font-bold rounded-lg hover:scale-105 transition-transform"
