@@ -42,6 +42,41 @@ export function BarcodeScanner({
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<MediaStreamTrack | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  // Play sound effect for feedback
+  const playSound = (type: 'success' | 'notFound') => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      const ctx = audioContextRef.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      if (type === 'success') {
+        // Pleasant ascending two-tone beep
+        oscillator.frequency.setValueAtTime(880, ctx.currentTime); // A5
+        oscillator.frequency.setValueAtTime(1320, ctx.currentTime + 0.1); // E6
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.25);
+      } else {
+        // Lower single tone for not found
+        oscillator.frequency.value = 330; // E4
+        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.2);
+      }
+    } catch {
+      // Silently fail if audio isn't available
+    }
+  };
 
   // Initialize scanner when dialog opens
   useEffect(() => {
@@ -188,7 +223,7 @@ export function BarcodeScanner({
     
     setScannerState('processing');
     
-    // Haptic feedback on successful scan
+    // Initial haptic feedback on detection
     if (navigator.vibrate) {
       navigator.vibrate(100);
     }
@@ -199,9 +234,21 @@ export function BarcodeScanner({
       const food = await searchByBarcode(decodedText);
       
       if (food) {
+        // Success: haptic + sound
+        if (navigator.vibrate) {
+          navigator.vibrate(100);
+        }
+        playSound('success');
+        
         setFoundFood(food);
         setScannerState('found');
       } else {
+        // Not found: double tap haptic + lower sound
+        if (navigator.vibrate) {
+          navigator.vibrate([50, 30, 50]);
+        }
+        playSound('notFound');
+        
         setScannerState('not_found');
       }
     } catch (error) {
