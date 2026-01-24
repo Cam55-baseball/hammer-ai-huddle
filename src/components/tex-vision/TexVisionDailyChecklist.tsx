@@ -19,6 +19,7 @@ interface TexVisionDailyChecklistProps {
   onDrillStart: (drillId: string, tier: string) => void;
   loading: boolean;
   currentTier?: string;
+  sport?: string;
   // S2 Diagnostic props
   s2DiagnosticResult?: S2DiagnosticResult | null;
   s2Loading?: boolean;
@@ -73,6 +74,7 @@ export default function TexVisionDailyChecklist({
   onDrillStart,
   loading,
   currentTier = 'beginner',
+  sport = 'baseball',
   s2DiagnosticResult,
   s2Loading,
   canTakeS2Test,
@@ -84,12 +86,12 @@ export default function TexVisionDailyChecklist({
   const [autoSort, setAutoSort] = useState(() => localStorage.getItem('texvision-sort') !== 'original');
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // Use the smart daily drill selection hook
+  // Use the smart daily drill selection hook with sport for proper data isolation
   const { 
     dailyDrills, 
     loading: selectionLoading, 
     refreshSelection 
-  } = useDailyDrillSelection(currentTier as DrillTier);
+  } = useDailyDrillSelection(currentTier as DrillTier, sport);
 
   // Local state for ordered drills (for manual reordering)
   const [orderedDrills, setOrderedDrills] = useState<ScoredDrill[]>([]);

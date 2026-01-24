@@ -25,220 +25,48 @@ import {
   Grid3X3,
   Trophy
 } from 'lucide-react';
-import { TexVisionTier } from '@/hooks/useTexVisionProgress';
+import { ALL_DRILLS, DrillTier, isTierUnlocked } from '@/constants/texVisionDrills';
 
 interface TexVisionDrillLibraryProps {
-  currentTier: TexVisionTier;
+  currentTier: DrillTier;
   onDrillStart: (drillId: string, tier: string) => void;
 }
 
-interface Drill {
-  id: string;
-  nameKey: string;
-  defaultName: string;
-  descriptionKey: string;
-  defaultDescription: string;
-  icon: React.ReactNode;
-  tier: TexVisionTier;
-  duration: string;
-  category: 'focus' | 'tracking' | 'reaction' | 'coordination';
-}
+// Icon mapping for centralized drill definitions
+const DRILL_ICONS: Record<string, React.ReactNode> = {
+  soft_focus: <Eye className="h-5 w-5" />,
+  pattern_search: <Search className="h-5 w-5" />,
+  peripheral_vision: <ScanEye className="h-5 w-5" />,
+  convergence: <Focus className="h-5 w-5" />,
+  color_flash: <Palette className="h-5 w-5" />,
+  eye_relaxation: <Moon className="h-5 w-5" />,
+  near_far: <Glasses className="h-5 w-5" />,
+  smooth_pursuit: <Target className="h-5 w-5" />,
+  whack_a_mole: <Gamepad2 className="h-5 w-5" />,
+  meter_timing: <Timer className="h-5 w-5" />,
+  stroop_challenge: <Brain className="h-5 w-5" />,
+  multi_target_track: <Layers className="h-5 w-5" />,
+  brock_string: <Crosshair className="h-5 w-5" />,
+  rapid_switch: <Zap className="h-5 w-5" />,
+  dual_task_vision: <Split className="h-5 w-5" />,
+  chaos_grid: <Grid3X3 className="h-5 w-5" />,
+};
 
-const DRILLS: Drill[] = [
-  // BEGINNER TIER
-  {
-    id: 'soft_focus',
-    nameKey: 'texVision.drills.softFocus.title',
-    defaultName: 'Soft Focus',
-    descriptionKey: 'texVision.drills.softFocus.description',
-    defaultDescription: 'Develop calm awareness and reduce over-fixation',
-    icon: <Eye className="h-5 w-5" />,
-    tier: 'beginner',
-    duration: '2-3 min',
-    category: 'focus',
-  },
-  {
-    id: 'pattern_search',
-    nameKey: 'texVision.drills.patternSearch.title',
-    defaultName: 'Pattern Search',
-    descriptionKey: 'texVision.drills.patternSearch.description',
-    defaultDescription: 'Improve visual scanning efficiency',
-    icon: <Search className="h-5 w-5" />,
-    tier: 'beginner',
-    duration: '2-4 min',
-    category: 'focus',
-  },
-  {
-    id: 'peripheral_vision',
-    nameKey: 'texVision.drills.peripheralVision.title',
-    defaultName: 'Peripheral Vision',
-    descriptionKey: 'texVision.drills.peripheralVision.description',
-    defaultDescription: 'Expand your visual field awareness',
-    icon: <ScanEye className="h-5 w-5" />,
-    tier: 'beginner',
-    duration: '2-3 min',
-    category: 'tracking',
-  },
-  {
-    id: 'convergence',
-    nameKey: 'texVision.drills.convergence.title',
-    defaultName: 'Convergence',
-    descriptionKey: 'texVision.drills.convergence.description',
-    defaultDescription: 'Train eye alignment and depth perception',
-    icon: <Focus className="h-5 w-5" />,
-    tier: 'beginner',
-    duration: '2-3 min',
-    category: 'coordination',
-  },
-  {
-    id: 'color_flash',
-    nameKey: 'texVision.drills.colorFlash.title',
-    defaultName: 'Color Flash',
-    descriptionKey: 'texVision.drills.colorFlash.description',
-    defaultDescription: 'React quickly to target colors',
-    icon: <Palette className="h-5 w-5" />,
-    tier: 'beginner',
-    duration: '1-2 min',
-    category: 'reaction',
-  },
-  {
-    id: 'eye_relaxation',
-    nameKey: 'texVision.drills.eyeRelaxation.title',
-    defaultName: 'Eye Relaxation',
-    descriptionKey: 'texVision.drills.eyeRelaxation.description',
-    defaultDescription: 'Guided rest and eye recovery',
-    icon: <Moon className="h-5 w-5" />,
-    tier: 'beginner',
-    duration: '2-3 min',
-    category: 'focus',
-  },
-  // ADVANCED TIER
-  {
-    id: 'near_far',
-    nameKey: 'texVision.drills.nearFar.title',
-    defaultName: 'Near-Far Sight',
-    descriptionKey: 'texVision.drills.nearFar.description',
-    defaultDescription: 'Rapid depth switching exercises',
-    icon: <Glasses className="h-5 w-5" />,
-    tier: 'advanced',
-    duration: '2-4 min',
-    category: 'coordination',
-  },
-  {
-    id: 'smooth_pursuit',
-    nameKey: 'texVision.drills.smoothPursuit.title',
-    defaultName: 'Follow the Target',
-    descriptionKey: 'texVision.drills.smoothPursuit.description',
-    defaultDescription: 'Track moving objects with precision',
-    icon: <Target className="h-5 w-5" />,
-    tier: 'advanced',
-    duration: '2-3 min',
-    category: 'tracking',
-  },
-  {
-    id: 'whack_a_mole',
-    nameKey: 'texVision.drills.whackAMole.title',
-    defaultName: 'Whack-a-Mole',
-    descriptionKey: 'texVision.drills.whackAMole.description',
-    defaultDescription: 'Reaction time and decision making',
-    icon: <Gamepad2 className="h-5 w-5" />,
-    tier: 'advanced',
-    duration: '2-4 min',
-    category: 'reaction',
-  },
-  {
-    id: 'meter_timing',
-    nameKey: 'texVision.drills.meterTiming.title',
-    defaultName: 'Meter Timing',
-    descriptionKey: 'texVision.drills.meterTiming.description',
-    defaultDescription: 'Precision timing catch game',
-    icon: <Timer className="h-5 w-5" />,
-    tier: 'advanced',
-    duration: '2-3 min',
-    category: 'reaction',
-  },
-  {
-    id: 'stroop_challenge',
-    nameKey: 'texVision.drills.stroopChallenge.title',
-    defaultName: 'Stroop Challenge',
-    descriptionKey: 'texVision.drills.stroopChallenge.description',
-    defaultDescription: 'Color-word interference training',
-    icon: <Brain className="h-5 w-5" />,
-    tier: 'advanced',
-    duration: '2-3 min',
-    category: 'focus',
-  },
-  {
-    id: 'multi_target_track',
-    nameKey: 'texVision.drills.multiTargetTrack.title',
-    defaultName: 'Multi-Target Track',
-    descriptionKey: 'texVision.drills.multiTargetTrack.description',
-    defaultDescription: 'Track multiple moving objects',
-    icon: <Layers className="h-5 w-5" />,
-    tier: 'advanced',
-    duration: '2-4 min',
-    category: 'tracking',
-  },
-  // CHAOS TIER
-  {
-    id: 'brock_string',
-    nameKey: 'texVision.drills.brockString.title',
-    defaultName: 'Brock String',
-    descriptionKey: 'texVision.drills.brockString.description',
-    defaultDescription: 'Guided eye alignment exercises',
-    icon: <Crosshair className="h-5 w-5" />,
-    tier: 'chaos',
-    duration: '3-5 min',
-    category: 'coordination',
-  },
-  {
-    id: 'rapid_switch',
-    nameKey: 'texVision.drills.rapidSwitch.title',
-    defaultName: 'Rapid Switch',
-    descriptionKey: 'texVision.drills.rapidSwitch.description',
-    defaultDescription: 'Quick task switching under pressure',
-    icon: <Zap className="h-5 w-5" />,
-    tier: 'chaos',
-    duration: '2-3 min',
-    category: 'reaction',
-  },
-  {
-    id: 'dual_task_vision',
-    nameKey: 'texVision.drills.dualTaskVision.title',
-    defaultName: 'Dual-Task Vision',
-    descriptionKey: 'texVision.drills.dualTaskVision.description',
-    defaultDescription: 'Central focus + peripheral awareness',
-    icon: <Split className="h-5 w-5" />,
-    tier: 'chaos',
-    duration: '2-3 min',
-    category: 'coordination',
-  },
-  {
-    id: 'chaos_grid',
-    nameKey: 'texVision.drills.chaosGrid.title',
-    defaultName: 'Chaos Grid',
-    descriptionKey: 'texVision.drills.chaosGrid.description',
-    defaultDescription: 'Track targets through visual chaos',
-    icon: <Grid3X3 className="h-5 w-5" />,
-    tier: 'chaos',
-    duration: '3-5 min',
-    category: 'tracking',
-  },
-];
+// Transform centralized drills with React icons for display
+const DRILLS = ALL_DRILLS.map(drill => ({
+  ...drill,
+  icon: DRILL_ICONS[drill.id] || <Eye className="h-5 w-5" />,
+}));
 
-const TIER_ORDER: TexVisionTier[] = ['beginner', 'advanced', 'chaos'];
+type DrillWithIcon = typeof DRILLS[number];
 
 export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: TexVisionDrillLibraryProps) {
   const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { personalBests, getPersonalBest } = usePersonalBests();
+  const { getPersonalBest } = usePersonalBests();
 
-  const currentTierIndex = TIER_ORDER.indexOf(currentTier);
-
-  const isDrillUnlocked = (drillTier: TexVisionTier) => {
-    const drillTierIndex = TIER_ORDER.indexOf(drillTier);
-    return drillTierIndex <= currentTierIndex;
-  };
+  // Use centralized tier check function
+  const isDrillUnlocked = (drillTier: DrillTier) => isTierUnlocked(drillTier, currentTier);
 
   const filteredDrills = selectedCategory
     ? DRILLS.filter(d => d.category === selectedCategory)
@@ -251,7 +79,7 @@ export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: Tex
     { id: 'coordination', labelKey: 'texVision.categories.coordination', defaultLabel: 'Coordination' },
   ];
 
-  const getTierBadgeStyle = (tier: TexVisionTier) => {
+  const getTierBadgeStyle = (tier: DrillTier) => {
     switch (tier) {
       case 'beginner':
         return 'bg-[hsl(var(--tex-vision-success))]/20 text-[hsl(var(--tex-vision-success))] border-[hsl(var(--tex-vision-success))]/30';
@@ -267,7 +95,7 @@ export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: Tex
   const advancedDrills = filteredDrills.filter(d => d.tier === 'advanced');
   const chaosDrills = filteredDrills.filter(d => d.tier === 'chaos');
 
-  const renderDrillCard = (drill: Drill) => {
+  const renderDrillCard = (drill: DrillWithIcon) => {
     const unlocked = isDrillUnlocked(drill.tier);
     const pb = getPersonalBest(drill.id, drill.tier);
     const hasPB = pb && (pb.best_accuracy_percent !== null || pb.best_reaction_time_ms !== null);
@@ -315,8 +143,8 @@ export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: Tex
                 {/* Personal best indicator */}
                 {hasPB && unlocked && (
                   <div className="flex items-center gap-1">
-                    <Trophy className="h-3 w-3 text-amber-400" />
-                    <span className="text-[10px] text-amber-400 font-medium">
+                    <Trophy className="h-3 w-3 text-[hsl(var(--tex-vision-warning))]" />
+                    <span className="text-[10px] text-[hsl(var(--tex-vision-warning))] font-medium">
                       {pb.best_accuracy_percent}%
                     </span>
                   </div>
@@ -338,14 +166,14 @@ export default function TexVisionDrillLibrary({ currentTier, onDrillStart }: Tex
   return (
     <Card className="bg-[hsl(var(--tex-vision-primary))]/50 border-[hsl(var(--tex-vision-primary-light))]/30">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg text-blue-900 flex items-center gap-2">
+        <CardTitle className="text-lg text-[hsl(var(--tex-vision-text))] flex items-center gap-2">
           <Target className="h-5 w-5 text-[hsl(var(--tex-vision-feedback))]" />
           {t('texVision.drillLibrary.title', 'Drill Library')}
           <Badge variant="secondary" className="ml-2 text-xs">
             {DRILLS.length} drills
           </Badge>
         </CardTitle>
-        <CardDescription className="text-blue-900">
+        <CardDescription className="text-[hsl(var(--tex-vision-text))]">
           {t('texVision.drillLibrary.description', 'Select a drill to begin your neuro-visual training')}
         </CardDescription>
       </CardHeader>
