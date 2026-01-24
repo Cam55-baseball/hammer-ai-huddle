@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
@@ -32,6 +32,10 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
   const [showTransition, setShowTransition] = useState(false);
   const [confirmations, setConfirmations] = useState(0);
   const [waitingForConfirm, setWaitingForConfirm] = useState(false);
+  const [showComplete, setShowComplete] = useState(false);
+  
+  // Ref for stable completion handler
+  const handleCompleteRef = useRef<() => void>();
 
   const baseDuration = tier === 'beginner' ? 15 : tier === 'advanced' ? 20 : 25;
 
@@ -54,15 +58,41 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
     }
   }, [currentStepIndex, exercises]);
 
-  // Step countdown - NO auto-advance, user must click Continue
+  // Stable completion handler ref
   useEffect(() => {
-    if (isComplete || stepTimeRemaining <= 0 || waitingForConfirm) return;
+    handleCompleteRef.current = () => {
+      if (!isComplete && !showComplete) {
+        setShowComplete(true);
+        setTimeout(() => {
+          setIsComplete(true);
+          onComplete({
+            accuracyPercent: 100,
+            difficultyLevel: tier === 'beginner' ? 1 : tier === 'advanced' ? 3 : 5,
+            drillMetrics: {
+              stepsCompleted: exercises.length,
+              confirmations,
+            },
+          });
+        }, 1500);
+      }
+    };
+  }, [isComplete, showComplete, tier, confirmations, onComplete, exercises.length]);
+
+  // Step countdown - triggers completion directly for Final Rest
+  useEffect(() => {
+    if (isComplete || showComplete || stepTimeRemaining <= 0 || waitingForConfirm) return;
 
     const timer = setInterval(() => {
       setStepTimeRemaining(prev => {
         if (prev <= 1) {
-          // Step complete, show transition (except for last step)
-          if (currentStepIndex < exercises.length - 1) {
+          // Check if this is the LAST step (Final Rest)
+          if (currentStepIndex === exercises.length - 1) {
+            // Trigger completion directly - no waiting
+            setTimeout(() => {
+              handleCompleteRef.current?.();
+            }, 0);
+          } else {
+            // Show transition for non-final steps
             setShowTransition(true);
             setWaitingForConfirm(true);
           }
@@ -73,7 +103,7 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [stepTimeRemaining, currentStepIndex, exercises.length, isComplete, waitingForConfirm]);
+  }, [stepTimeRemaining, currentStepIndex, exercises.length, isComplete, showComplete, waitingForConfirm]);
 
   // Breathing animation
   useEffect(() => {
@@ -109,34 +139,13 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
     }
   }, [currentStepIndex, exercises.length, onInteraction]);
 
-  // Game complete when last step finishes
-  useEffect(() => {
-    if (stepTimeRemaining === 0 && currentStepIndex === exercises.length - 1 && !isComplete && !waitingForConfirm) {
-      setIsComplete(true);
-      onComplete({
-        accuracyPercent: 100,
-        difficultyLevel: tier === 'beginner' ? 1 : tier === 'advanced' ? 3 : 5,
-        drillMetrics: {
-          stepsCompleted: exercises.length,
-          confirmations,
-        },
-      });
-    }
-  }, [stepTimeRemaining, currentStepIndex, exercises.length, isComplete, tier, confirmations, onComplete, waitingForConfirm]);
-
+  // Timer complete fallback (shouldn't be needed but kept for safety)
   const handleTimerComplete = useCallback(() => {
-    if (!isComplete) {
-      setIsComplete(true);
-      onComplete({
-        accuracyPercent: 100,
-        difficultyLevel: tier === 'beginner' ? 1 : tier === 'advanced' ? 3 : 5,
-        drillMetrics: {
-          stepsCompleted: currentStepIndex + 1,
-          confirmations,
-        },
-      });
+    if (!isComplete && !showComplete) {
+      handleCompleteRef.current?.();
     }
-  }, [isComplete, currentStepIndex, tier, confirmations, onComplete]);
+  }, [isComplete, showComplete]);
+
 
   const CurrentIcon = currentStep?.icon || Moon;
   const nextStep = exercises[currentStepIndex + 1];
@@ -182,8 +191,21 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
           </span>
         </div>
 
+        {/* Completion celebration overlay */}
+        {showComplete && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--tex-vision-primary))]/95 z-20 animate-fade-in rounded-lg">
+            <div className="text-6xl mb-4">✨</div>
+            <p className="text-2xl font-bold text-[hsl(var(--tex-vision-success))]">
+              Complete!
+            </p>
+            <p className="text-lg text-[hsl(var(--tex-vision-text-muted))] mt-2">
+              Great relaxation session
+            </p>
+          </div>
+        )}
+
         {/* Transition overlay - NO auto-advance, user must click */}
-        {showTransition && nextStep && (
+        {showTransition && nextStep && !showComplete && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--tex-vision-primary))]/90 z-10 animate-fade-in rounded-lg">
             <p className="text-lg text-[hsl(var(--tex-vision-text-muted))] mb-2">Next:</p>
             <div className="flex items-center gap-3 mb-6">
