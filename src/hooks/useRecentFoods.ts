@@ -5,6 +5,7 @@ import { FoodSearchResult } from './useFoodSearch';
 interface UseRecentFoodsReturn {
   recentFoods: FoodSearchResult[];
   favoriteFoods: FoodSearchResult[];
+  recentlyScanned: FoodSearchResult[];
   loading: boolean;
   trackFoodUsage: (foodId: string) => Promise<void>;
   toggleFavorite: (foodId: string) => Promise<void>;
@@ -15,6 +16,7 @@ interface UseRecentFoodsReturn {
 export function useRecentFoods(): UseRecentFoodsReturn {
   const [recentFoods, setRecentFoods] = useState<FoodSearchResult[]>([]);
   const [favoriteFoods, setFavoriteFoods] = useState<FoodSearchResult[]>([]);
+  const [recentlyScanned, setRecentlyScanned] = useState<FoodSearchResult[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
@@ -60,6 +62,23 @@ export function useRecentFoods(): UseRecentFoodsReturn {
         .order('last_used_at', { ascending: false })
         .limit(5);
 
+      // Fetch recently scanned items (items with barcodes)
+      const { data: scannedData } = await supabase
+        .from('user_food_history')
+        .select(`
+          food_id,
+          last_used_at,
+          nutrition_food_database!inner (
+            id, name, brand, serving_size, serving_size_grams,
+            calories_per_serving, protein_g, carbs_g, fats_g,
+            fiber_g, sugar_g, sodium_mg, barcode
+          )
+        `)
+        .eq('user_id', user.id)
+        .not('nutrition_food_database.barcode', 'is', null)
+        .order('last_used_at', { ascending: false })
+        .limit(5);
+
       const mapToFoodResult = (item: any): FoodSearchResult | null => {
         const food = item.nutrition_food_database;
         if (!food) return null;
@@ -87,8 +106,13 @@ export function useRecentFoods(): UseRecentFoodsReturn {
         .map(mapToFoodResult)
         .filter((f): f is FoodSearchResult => f !== null);
 
+      const scanned = (scannedData || [])
+        .map(mapToFoodResult)
+        .filter((f): f is FoodSearchResult => f !== null);
+
       setFavoriteFoods(favorites);
       setRecentFoods(recent);
+      setRecentlyScanned(scanned);
       setFavoriteIds(new Set(favorites.map(f => f.id)));
     } catch (err) {
       console.error('Error fetching food history:', err);
@@ -183,6 +207,7 @@ export function useRecentFoods(): UseRecentFoodsReturn {
   return {
     recentFoods,
     favoriteFoods,
+    recentlyScanned,
     loading,
     trackFoodUsage,
     toggleFavorite,
