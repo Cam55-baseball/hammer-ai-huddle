@@ -287,6 +287,7 @@ export default function TexVision() {
           onDrillStart={handleDrillStart}
           loading={progressLoading}
           currentTier={progress?.current_tier || 'beginner'}
+          sport={currentSport}
           s2DiagnosticResult={s2DiagnosticResult}
           s2Loading={s2Loading}
           canTakeS2Test={canTakeS2Test}
