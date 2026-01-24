@@ -20,6 +20,8 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: 
   const [dotPosition, setDotPosition] = useState(100); // percentage distance apart
   const [cycleCount, setCycleCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [confirmCount, setConfirmCount] = useState(0);
+  const [showConfirmPrompt, setShowConfirmPrompt] = useState(false);
 
   const totalCycles = tier === 'beginner' ? 5 : tier === 'advanced' ? 8 : 12;
   const phaseDuration = tier === 'beginner' ? 3000 : tier === 'advanced' ? 2500 : 2000;
@@ -43,19 +45,39 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: 
     return () => clearInterval(interval);
   }, [phase, isComplete, phaseDuration]);
 
+  // Show confirmation prompt during hold phase
+  useEffect(() => {
+    if (phase === 'hold') {
+      const timer = setTimeout(() => {
+        setShowConfirmPrompt(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setShowConfirmPrompt(false);
+    }
+  }, [phase]);
+
+  const handleConfirmMerged = useCallback(() => {
+    if (showConfirmPrompt) {
+      setConfirmCount(prev => prev + 1);
+      setShowConfirmPrompt(false);
+    }
+  }, [showConfirmPrompt]);
+
   useEffect(() => {
     if (cycleCount >= totalCycles && !isComplete) {
       setIsComplete(true);
       onComplete({
-        accuracyPercent: 100,
+        accuracyPercent: Math.round((confirmCount / Math.max(cycleCount, 1)) * 100),
         difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
         drillMetrics: {
           cyclesCompleted: cycleCount,
           phaseDuration,
+          convergenceConfirmed: confirmCount,
         },
       });
     }
-  }, [cycleCount, totalCycles, isComplete, tier, phaseDuration, onComplete]);
+  }, [cycleCount, totalCycles, isComplete, tier, phaseDuration, confirmCount, onComplete]);
 
   useEffect(() => {
     let targetPosition: number;
@@ -93,14 +115,15 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: 
     if (!isComplete) {
       setIsComplete(true);
       onComplete({
-        accuracyPercent: 100,
+        accuracyPercent: Math.round((confirmCount / Math.max(cycleCount, 1)) * 100),
         difficultyLevel: tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8,
         drillMetrics: {
           cyclesCompleted: cycleCount,
+          convergenceConfirmed: confirmCount,
         },
       });
     }
-  }, [isComplete, cycleCount, tier, onComplete]);
+  }, [isComplete, cycleCount, confirmCount, tier, onComplete]);
 
   const getPhaseInstruction = () => {
     switch (phase) {
@@ -132,7 +155,7 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: 
       metrics={
         <DrillMetricsDisplay
           difficulty={tier === 'beginner' ? 2 : tier === 'advanced' ? 5 : 8}
-          streak={cycleCount}
+          streak={confirmCount}
         />
       }
     >
@@ -173,6 +196,16 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: 
           />
         </div>
 
+        {/* Confirmation prompt during hold phase */}
+        {showConfirmPrompt && (
+          <button
+            onClick={handleConfirmMerged}
+            className="absolute top-20 px-4 py-2 bg-[hsl(var(--tex-vision-success))]/20 border border-[hsl(var(--tex-vision-success))] rounded-lg text-sm text-[hsl(var(--tex-vision-success))] font-medium hover:bg-[hsl(var(--tex-vision-success))]/30 transition-colors animate-pulse"
+          >
+            {t('texVision.drills.convergence.confirm', 'Tap if you see ONE dot!')}
+          </button>
+        )}
+
         {/* Phase indicator */}
         <div className="mt-8 flex gap-2">
           {(['converge', 'hold', 'diverge', 'rest'] as Phase[]).map((p) => (
@@ -197,6 +230,11 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: 
         {/* Cycle progress */}
         <div className="absolute top-4 left-4 text-sm text-[hsl(var(--tex-vision-text-muted))]">
           {t('texVision.drills.cycle', 'Cycle')} {cycleCount + 1}/{totalCycles}
+        </div>
+
+        {/* Confirmation count */}
+        <div className="absolute top-4 right-4 text-sm text-[hsl(var(--tex-vision-success))]">
+          {t('texVision.drills.convergence.confirmed', 'Confirmed')}: {confirmCount}
         </div>
       </div>
     </DrillContainer>

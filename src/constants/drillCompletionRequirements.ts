@@ -12,7 +12,7 @@ export interface DrillCompletionValidation {
 export const COMPLETION_REQUIREMENTS: Record<string, DrillCompletionValidation> = {
   // Beginner drills
   soft_focus: { 
-    minimumInteractions: 0, 
+    minimumInteractions: 1,  // At least 1 peripheral tap
     minimumDurationSeconds: 20, 
     mustHaveResult: false 
   },
@@ -27,7 +27,7 @@ export const COMPLETION_REQUIREMENTS: Record<string, DrillCompletionValidation> 
     mustHaveResult: true 
   },
   convergence: { 
-    minimumInteractions: 0, 
+    minimumInteractions: 2,  // At least 2 "I see one dot" confirmations
     minimumDurationSeconds: 15, 
     mustHaveResult: false 
   },
@@ -37,7 +37,7 @@ export const COMPLETION_REQUIREMENTS: Record<string, DrillCompletionValidation> 
     mustHaveResult: true 
   },
   eye_relaxation: { 
-    minimumInteractions: 0, 
+    minimumInteractions: 3,  // At least 3 "Continue" taps between steps
     minimumDurationSeconds: 30, 
     mustHaveResult: false 
   },

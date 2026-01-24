@@ -23,20 +23,23 @@ interface Target {
 
 export default function MultiTargetTrackGame({ tier, onComplete, onExit }: MultiTargetTrackGameProps) {
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<'memorize' | 'track' | 'select'>('memorize');
+  const [phase, setPhase] = useState<'memorize' | 'track' | 'slowdown' | 'select'>('memorize');
   const [targets, setTargets] = useState<Target[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [memorizeCountdown, setMemorizeCountdown] = useState(3);
+  const [slowdownProgress, setSlowdownProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
+  const velocityMultiplier = useRef(1);
 
   const totalRounds = tier === 'beginner' ? 5 : tier === 'advanced' ? 8 : 12;
   const targetCount = tier === 'beginner' ? 2 : tier === 'advanced' ? 3 : 4;
   const totalDots = tier === 'beginner' ? 6 : tier === 'advanced' ? 8 : 10;
   const trackDuration = tier === 'beginner' ? 4000 : tier === 'advanced' ? 5000 : 6000;
+  const slowdownDuration = 800; // Smooth slowdown over 800ms
 
   const initializeRound = useCallback(() => {
     const newTargets: Target[] = [];
@@ -59,6 +62,8 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
     setSelectedIds(new Set());
     setPhase('memorize');
     setMemorizeCountdown(3);
+    setSlowdownProgress(0);
+    velocityMultiplier.current = 1;
   }, [totalDots, targetCount]);
 
   // Initialize first round
@@ -75,14 +80,38 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
       return () => clearTimeout(timer);
     } else {
       setPhase('track');
-      // Start tracking phase timer
-      setTimeout(() => setPhase('select'), trackDuration);
+      velocityMultiplier.current = 1;
+      // Start tracking phase timer, then transition to slowdown
+      setTimeout(() => {
+        setPhase('slowdown');
+        setSlowdownProgress(0);
+      }, trackDuration);
     }
   }, [phase, memorizeCountdown, trackDuration]);
 
-  // Animation loop for tracking phase
+  // Slowdown phase - gradually reduce velocity
   useEffect(() => {
-    if (phase !== 'track') {
+    if (phase !== 'slowdown') return;
+
+    const startTime = Date.now();
+    const slowdownInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / slowdownDuration, 1);
+      setSlowdownProgress(progress);
+      velocityMultiplier.current = 1 - progress;
+
+      if (progress >= 1) {
+        clearInterval(slowdownInterval);
+        setPhase('select');
+      }
+    }, 16);
+
+    return () => clearInterval(slowdownInterval);
+  }, [phase, slowdownDuration]);
+
+  // Animation loop for tracking and slowdown phases
+  useEffect(() => {
+    if (phase !== 'track' && phase !== 'slowdown') {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       return;
     }
@@ -95,8 +124,10 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
       setTargets(prev => prev.map(target => {
         let { x, y, vx, vy } = target;
         
-        x += vx;
-        y += vy;
+        // Apply velocity multiplier for slowdown effect
+        const currentMultiplier = velocityMultiplier.current;
+        x += vx * currentMultiplier;
+        y += vy * currentMultiplier;
 
         // Bounce off walls
         if (x < padding || x > containerWidth - padding) {
@@ -213,6 +244,11 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
           {phase === 'track' && (
             <p className="text-lg text-[hsl(var(--tex-vision-timing))] font-bold animate-pulse">
               {t('texVision.drills.multiTargetTrack.tracking', 'Keep tracking...')}
+            </p>
+          )}
+          {phase === 'slowdown' && (
+            <p className="text-lg text-[hsl(var(--tex-vision-text))] font-bold">
+              {t('texVision.drills.multiTargetTrack.slowdown', 'Slowing down...')} ({Math.round((1 - slowdownProgress) * 100)}%)
             </p>
           )}
           {phase === 'select' && (
