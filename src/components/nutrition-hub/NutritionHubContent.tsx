@@ -22,6 +22,7 @@ import { ShoppingListTab } from './ShoppingListTab';
 import { RecipeImportDialog } from './RecipeImportDialog';
 import { AIMealSuggestions } from './AIMealSuggestions';
 import { FavoriteFoodsWidget } from './FavoriteFoodsWidget';
+import { CommonFoodsGallery } from './CommonFoodsGallery';
 import { useRecipes, RecipeIngredient, CreateRecipeInput } from '@/hooks/useRecipes';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,6 +82,7 @@ export function NutritionHubContent() {
   const [selectedMealType, setSelectedMealType] = useState('');
   const [prefilledItems, setPrefilledItems] = useState<PrefilledItem[] | undefined>();
   const [dailyLogRefreshTrigger, setDailyLogRefreshTrigger] = useState(0);
+  const [editingMealId, setEditingMealId] = useState<string | null>(null);
 
   // Get nutrition targets
   const { targets } = useDailyNutritionTargets({
@@ -155,16 +157,84 @@ export function NutritionHubContent() {
     setMealLoggingOpen(true);
   };
 
+  // Handle editing an existing meal
+  const handleEditMeal = async (mealId: string) => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('vault_nutrition_logs')
+        .select('*')
+        .eq('id', mealId)
+        .single();
+
+      if (error) throw error;
+      if (!data) return;
+
+      // Prefill the dialog with existing meal data
+      setEditingMealId(mealId);
+      setSelectedMealType(data.meal_type || 'snack');
+      setPrefilledItems([{
+        name: data.meal_title || data.meal_type || 'Meal',
+        calories: data.calories || 0,
+        protein_g: data.protein_g || 0,
+        carbs_g: data.carbs_g || 0,
+        fats_g: data.fats_g || 0,
+        quantity: 1,
+        unit: 'serving',
+      }]);
+      setMealLoggingOpen(true);
+    } catch (error) {
+      console.error('Error fetching meal for edit:', error);
+    }
+  };
+
+  // Handle adding from visual gallery
+  const handleGalleryFoodSelect = (food: {
+    name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    servingSize: string;
+  }) => {
+    setPrefilledItems([{
+      name: food.name,
+      calories: food.calories,
+      protein_g: food.protein,
+      carbs_g: food.carbs,
+      fats_g: food.fats,
+      quantity: 1,
+      unit: food.servingSize,
+    }]);
+    setSelectedMealType('snack');
+    setMealLoggingOpen(true);
+  };
+
   const handleDialogClose = (open: boolean) => {
     setMealLoggingOpen(open);
     if (!open) {
       setPrefilledItems(undefined);
+      setEditingMealId(null);
     }
   };
 
-  const handleMealSaved = () => {
+  const handleMealSaved = async () => {
+    // If editing, delete the old entry first (we create a new one with updated data)
+    if (editingMealId) {
+      try {
+        await supabase
+          .from('vault_nutrition_logs')
+          .delete()
+          .eq('id', editingMealId);
+      } catch (error) {
+        console.error('Error removing old meal entry:', error);
+      }
+    }
+    
     setMealLoggingOpen(false);
     setPrefilledItems(undefined);
+    setEditingMealId(null);
     fetchConsumed();
     setDailyLogRefreshTrigger(prev => prev + 1);
   };
@@ -375,6 +445,9 @@ export function NutritionHubContent() {
       {/* Food Favorites Quick Access */}
       <FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />
 
+      {/* Visual Food Gallery - Kid-friendly quick pick */}
+      <CommonFoodsGallery onSelectFood={handleGalleryFoodSelect} />
+
       {/* Quick Actions */}
       <QuickLogActions onLogMeal={handleLogMeal} />
 
@@ -392,7 +465,7 @@ export function NutritionHubContent() {
         </TabsList>
         
         <TabsContent value="today" className="space-y-4 mt-4">
-          <NutritionDailyLog onEditMeal={(id) => console.log('Edit meal:', id)} refreshTrigger={dailyLogRefreshTrigger} />
+          <NutritionDailyLog onEditMeal={handleEditMeal} refreshTrigger={dailyLogRefreshTrigger} />
           
           {/* AI Meal Suggestions - shows after user has logged food */}
           <AIMealSuggestions
