@@ -225,7 +225,7 @@ export function useVault() {
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState<VaultStreak | null>(null);
   const [todaysQuizzes, setTodaysQuizzes] = useState<VaultFocusQuiz[]>([]);
-  const [todaysNotes, setTodaysNotes] = useState<VaultFreeNote | null>(null);
+  const [todaysNotes, setTodaysNotes] = useState<VaultFreeNote[]>([]);
   const [workoutNotes, setWorkoutNotes] = useState<VaultWorkoutNote[]>([]);
   const [nutritionLogs, setNutritionLogs] = useState<VaultNutritionLog[]>([]);
   const [nutritionGoals, setNutritionGoals] = useState<VaultNutritionGoals | null>(null);
@@ -288,7 +288,7 @@ export function useVault() {
     }
   }, [user, today]);
 
-  // Fetch today's free notes
+  // Fetch today's free notes (now returns array for unlimited notes)
   const fetchTodaysNotes = useCallback(async () => {
     if (!user) return;
 
@@ -298,14 +298,14 @@ export function useVault() {
         .select('*')
         .eq('user_id', user.id)
         .eq('entry_date', today)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching notes:', error);
         return;
       }
 
-      setTodaysNotes(data as VaultFreeNote | null);
+      setTodaysNotes((data || []) as VaultFreeNote[]);
     } catch (err) {
       console.error('Error fetching today\'s notes:', err);
     }
@@ -584,19 +584,17 @@ export function useVault() {
     }
   }, [user, today, updateStreak, fetchTodaysQuizzes]);
 
-  // Save free note
+  // Save free note (insert new entry - unlimited notes per day)
   const saveFreeNote = useCallback(async (noteText: string) => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
     try {
       const { error } = await supabase
         .from('vault_free_notes')
-        .upsert({
+        .insert({
           user_id: user.id,
           entry_date: today,
           note_text: noteText,
-        }, {
-          onConflict: 'user_id,entry_date',
         });
 
       if (error) {
