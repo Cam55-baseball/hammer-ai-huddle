@@ -2868,6 +2868,8 @@ export type Database = {
       vault_focus_quizzes: {
         Row: {
           balance_duration_seconds: number | null
+          balance_left_seconds: number | null
+          balance_right_seconds: number | null
           bedtime_goal: string | null
           created_at: string | null
           daily_intentions: string | null
@@ -2903,6 +2905,8 @@ export type Database = {
         }
         Insert: {
           balance_duration_seconds?: number | null
+          balance_left_seconds?: number | null
+          balance_right_seconds?: number | null
           bedtime_goal?: string | null
           created_at?: string | null
           daily_intentions?: string | null
@@ -2938,6 +2942,8 @@ export type Database = {
         }
         Update: {
           balance_duration_seconds?: number | null
+          balance_left_seconds?: number | null
+          balance_right_seconds?: number | null
           bedtime_goal?: string | null
           created_at?: string | null
           daily_intentions?: string | null

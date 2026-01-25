@@ -62,7 +62,8 @@ export interface VaultFocusQuiz {
   // NEW: Pre-workout CNS fields
   reaction_time_ms?: number;
   reaction_time_score?: number;
-  balance_duration_seconds?: number;
+  balance_left_seconds?: number;
+  balance_right_seconds?: number;
   // NEW: Pre-workout pain fields
   pain_location?: string[];
   pain_scale?: number;
@@ -469,7 +470,8 @@ export function useVault() {
       // NEW: Pre-workout CNS fields
       reaction_time_ms?: number;
       reaction_time_score?: number;
-      balance_duration_seconds?: number;
+      balance_left_seconds?: number;
+      balance_right_seconds?: number;
       // NEW: Pre-workout pain fields
       pain_location?: string[];
       pain_scale?: number;
@@ -530,7 +532,8 @@ export function useVault() {
           // NEW: Pre-workout CNS fields
           reaction_time_ms: data.reaction_time_ms,
           reaction_time_score: data.reaction_time_score,
-          balance_duration_seconds: data.balance_duration_seconds,
+          balance_left_seconds: data.balance_left_seconds,
+          balance_right_seconds: data.balance_right_seconds,
           // NEW: Pre-workout pain fields
           pain_location: data.pain_location,
           pain_scale: data.pain_scale,

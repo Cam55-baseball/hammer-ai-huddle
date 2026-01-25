@@ -55,7 +55,8 @@ interface VaultFocusQuizDialogProps {
     // New pre-workout CNS fields
     reaction_time_ms?: number;
     reaction_time_score?: number;
-    balance_duration_seconds?: number;
+    balance_left_seconds?: number;
+    balance_right_seconds?: number;
     // New pre-workout pain fields
     pain_location?: string[];
     pain_scale?: number;
@@ -282,7 +283,8 @@ export function VaultFocusQuizDialog({
   // NEW: Pre-workout CNS section
   const [reactionTimeMs, setReactionTimeMs] = useState<number | null>(null);
   const [reactionTimeScore, setReactionTimeScore] = useState<number | null>(null);
-  const [balanceDurationSeconds, setBalanceDurationSeconds] = useState<number | null>(null);
+  const [balanceLeftSeconds, setBalanceLeftSeconds] = useState<number | null>(null);
+  const [balanceRightSeconds, setBalanceRightSeconds] = useState<number | null>(null);
 
   // NEW: Pre-workout Pain section
   const [painLocations, setPainLocations] = useState<string[]>([]);
@@ -383,7 +385,8 @@ export function VaultFocusQuizDialog({
       // NEW: CNS section
       data.reaction_time_ms = reactionTimeMs || undefined;
       data.reaction_time_score = reactionTimeScore || undefined;
-      data.balance_duration_seconds = balanceDurationSeconds || undefined;
+      data.balance_left_seconds = balanceLeftSeconds || undefined;
+      data.balance_right_seconds = balanceRightSeconds || undefined;
       // NEW: Pain section
       data.pain_location = painLocations.length > 0 ? painLocations : undefined;
       data.pain_scale = painLocations.length > 0 ? painScale : undefined;
@@ -434,7 +437,8 @@ export function VaultFocusQuizDialog({
       setNightWeightLbs('');
       setReactionTimeMs(null);
       setReactionTimeScore(null);
-      setBalanceDurationSeconds(null);
+      setBalanceLeftSeconds(null);
+      setBalanceRightSeconds(null);
       setPainLocations([]);
       setPainScale(0);
       setPainIncreasesWithMovement(null);
@@ -836,10 +840,11 @@ export function VaultFocusQuizDialog({
                 disabled={false}
               />
 
-              {/* Balance Test */}
+              {/* Balance Test - Dual Leg, Eyes Closed */}
               <BalanceTest
-                onComplete={(duration) => {
-                  setBalanceDurationSeconds(duration);
+                onComplete={(leftSeconds, rightSeconds) => {
+                  setBalanceLeftSeconds(leftSeconds);
+                  setBalanceRightSeconds(rightSeconds);
                 }}
                 disabled={false}
               />
