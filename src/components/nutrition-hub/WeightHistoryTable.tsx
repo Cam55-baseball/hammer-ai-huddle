@@ -94,6 +94,7 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                   <TableHead className="text-right">{t('nutrition.weight.weight', 'Weight')}</TableHead>
                   <TableHead className="text-right">{t('nutrition.weight.change', 'Change')}</TableHead>
                   <TableHead className="text-right">{t('nutrition.weight.bodyFat', 'Body Fat')}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t('nutrition.weight.source', 'Source')}</TableHead>
                   <TableHead className="w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -139,6 +140,17 @@ export function WeightHistoryTable({ entries, onUpdate, onDelete, loading }: Wei
                           />
                         ) : (
                           entry.body_fat_percent ? `${entry.body_fat_percent}%` : '-'
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {entry.notes ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary">
+                            {entry.notes.replace('Logged via ', '')}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
+                            {t('nutrition.weight.directEntry', 'Direct Entry')}
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>

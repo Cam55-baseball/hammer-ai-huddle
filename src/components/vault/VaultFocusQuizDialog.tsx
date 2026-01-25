@@ -24,6 +24,7 @@ import { BalanceTest } from './quiz/BalanceTest';
 import { BodyAreaSelector } from './quiz/BodyAreaSelector';
 import { TrainingIntentSelector } from './quiz/TrainingIntentSelector';
 import { MentalEnergyRating } from './quiz/MentalEnergyRating';
+import { WeightTrendMini } from './quiz/WeightTrendMini';
 
 interface VaultFocusQuizDialogProps {
   open: boolean;
@@ -272,6 +273,12 @@ export function VaultFocusQuizDialog({
   const [weightLbs, setWeightLbs] = useState<string>('');
   const [perceivedRecovery, setPerceivedRecovery] = useState(5);
 
+  // NEW: Pre-workout weight check-in
+  const [preLiftWeightLbs, setPreLiftWeightLbs] = useState<string>('');
+
+  // NEW: Night weight check-in
+  const [nightWeightLbs, setNightWeightLbs] = useState<string>('');
+
   // NEW: Pre-workout CNS section
   const [reactionTimeMs, setReactionTimeMs] = useState<number | null>(null);
   const [reactionTimeScore, setReactionTimeScore] = useState<number | null>(null);
@@ -371,6 +378,8 @@ export function VaultFocusQuizDialog({
     }
 
     if (quizType === 'pre_lift') {
+      // NEW: Pre-workout weight
+      data.weight_lbs = preLiftWeightLbs ? parseFloat(preLiftWeightLbs) : undefined;
       // NEW: CNS section
       data.reaction_time_ms = reactionTimeMs || undefined;
       data.reaction_time_score = reactionTimeScore || undefined;
@@ -382,6 +391,11 @@ export function VaultFocusQuizDialog({
       // NEW: Intent & Focus section
       data.training_intent = trainingIntents.length > 0 ? trainingIntents : undefined;
       data.mental_energy = mentalEnergy;
+    }
+
+    if (quizType === 'night') {
+      // NEW: Night weight
+      data.weight_lbs = nightWeightLbs ? parseFloat(nightWeightLbs) : undefined;
     }
 
     if (quizType === 'night') {
@@ -416,6 +430,8 @@ export function VaultFocusQuizDialog({
       // NEW: Reset new fields
       setWeightLbs('');
       setPerceivedRecovery(5);
+      setPreLiftWeightLbs('');
+      setNightWeightLbs('');
       setReactionTimeMs(null);
       setReactionTimeScore(null);
       setBalanceDurationSeconds(null);
@@ -535,6 +551,9 @@ export function VaultFocusQuizDialog({
                 <Scale className="h-4 w-4 text-teal-500" />
                 {t('vault.quiz.morning.bodyStatus', 'Body Status')}
               </h4>
+
+              {/* Weight Trend Display */}
+              <WeightTrendMini />
               
               {/* Weight Input */}
               <div className="space-y-2">
@@ -764,6 +783,40 @@ export function VaultFocusQuizDialog({
             </Alert>
           )}
 
+          {/* NEW: Pre-Lift Section 1 - Body Status */}
+          {quizType === 'pre_lift' && (
+            <div className="space-y-4 p-4 bg-gradient-to-br from-teal-500/10 to-cyan-500/10 rounded-xl border border-teal-500/20">
+              <div className="flex items-center gap-2">
+                <div className="px-2 py-1 rounded-md bg-teal-500/20 text-teal-500 text-xs font-bold">
+                  {t('vault.quiz.bodyStatus.section', 'Section 1')}
+                </div>
+                <h4 className="text-sm font-bold">{t('vault.quiz.bodyStatus.title', 'Body Status')}</h4>
+              </div>
+
+              {/* Weight Trend Display */}
+              <WeightTrendMini />
+
+              {/* Weight Input */}
+              <div className="space-y-2">
+                <Label className="text-sm flex items-center gap-2">
+                  <Scale className="h-4 w-4 text-teal-400" />
+                  {t('vault.quiz.bodyStatus.weightLabel', 'Pre-Workout Weight (lbs)')}
+                </Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={preLiftWeightLbs}
+                  onChange={(e) => setPreLiftWeightLbs(e.target.value)}
+                  placeholder={t('vault.quiz.bodyStatus.weightPlaceholder', 'e.g. 175.5')}
+                  className="max-w-[160px]"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('vault.quiz.bodyStatus.preLiftTip', 'Tracking before training helps identify hydration needs')}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* NEW: Pre-Lift Section 2 - CNS Readiness */}
           {quizType === 'pre_lift' && (
             <div className="space-y-4 p-4 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl border border-cyan-500/20">
@@ -908,6 +961,38 @@ export function VaultFocusQuizDialog({
                 value={mentalEnergy}
                 onChange={setMentalEnergy}
               />
+            </div>
+          )}
+
+          {/* Night Quiz - Body Status Section */}
+          {quizType === 'night' && (
+            <div className="space-y-4 p-4 bg-gradient-to-br from-teal-500/10 to-cyan-500/10 rounded-xl border border-teal-500/20">
+              <h4 className="text-sm font-bold flex items-center gap-2">
+                <Scale className="h-4 w-4 text-teal-500" />
+                {t('vault.quiz.night.bodyCheck', 'Evening Body Check')}
+              </h4>
+
+              {/* Weight Trend Display */}
+              <WeightTrendMini />
+
+              {/* Weight Input */}
+              <div className="space-y-2">
+                <Label className="text-sm flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-teal-400" />
+                  {t('vault.quiz.night.weightLabel', 'Evening Weight (lbs)')}
+                </Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={nightWeightLbs}
+                  onChange={(e) => setNightWeightLbs(e.target.value)}
+                  placeholder={t('vault.quiz.night.weightPlaceholder', 'e.g. 177')}
+                  className="max-w-[160px]"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('vault.quiz.night.weightTip', 'Evening weight is typically 2-4 lbs higher than morning')}
+                </p>
+              </div>
             </div>
           )}
 
