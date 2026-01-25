@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -26,6 +27,8 @@ const QUICK_WATER_AMOUNTS = [8, 16, 24, 32];
 
 export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [, setSearchParams] = useSearchParams();
   const { addWater, todayTotal, dailyGoal } = useHydration();
   
   const [waterDialogOpen, setWaterDialogOpen] = useState(false);
@@ -347,6 +350,15 @@ export function QuickLogActions({ onLogMeal, compact = false }: QuickLogActionsP
         <Button
           variant="outline"
           className="w-full gap-2 hover:bg-purple-500/10 hover:border-purple-500/50"
+          onClick={() => {
+            // Navigate to supplements tab
+            setSearchParams({ tab: 'supplements' });
+            // Also scroll to make it visible
+            const tabsTrigger = document.querySelector('[data-value="supplements"]');
+            if (tabsTrigger) {
+              (tabsTrigger as HTMLElement).click();
+            }
+          }}
         >
           <Pill className="h-4 w-4 text-purple-500" />
           {t('nutrition.trackSupplements', 'Track Supplements')}
