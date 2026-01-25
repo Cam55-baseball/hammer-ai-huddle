@@ -4702,7 +4702,29 @@
       "forWeek": "Pour cette semaine",
       "locked": "Ordre verrouillé",
       "lockedUntil": "Jusqu'au {{date}}",
-      "unlocked": "Ordre déverrouillé"
+      "unlocked": "Ordre déverrouillé",
+      "selectDays": "Sélectionner les jours à verrouiller",
+      "selectDaysDescription": "Choisissez les jours de la semaine pour appliquer cet emploi du temps verrouillé",
+      "selectAtLeastOne": "Veuillez sélectionner au moins un jour",
+      "daysSelected": "{{count}} jours sélectionnés",
+      "lockForDays": "Verrouiller l'ordre pour les jours",
+      "lockForDaysDescription": "Sélectionnez les jours qui doivent utiliser votre emploi du temps actuel. Cela enregistrera l'ordre des tâches, les horaires et les rappels.",
+      "currentlyLocked": "Actuellement verrouillé :",
+      "willLock": "Sera verrouillé :",
+      "selectDaysToLock": "Sélectionnez les jours pour verrouiller votre emploi du temps actuel",
+      "lockDays": "Verrouiller les jours",
+      "existingLocksNote": "Remarque :",
+      "existingLocksWillRemain": "Vos jours précédemment verrouillés resteront inchangés. Seuls les jours sélectionnés seront mis à jour.",
+      "wasLocked": "Précédemment verrouillé",
+      "days": {
+        "sun": "Dimanche",
+        "mon": "Lundi",
+        "tue": "Mardi",
+        "wed": "Mercredi",
+        "thu": "Jeudi",
+        "fri": "Vendredi",
+        "sat": "Samedi"
+      }
     },
     "quiz": {
       "morning": {

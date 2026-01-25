@@ -3876,7 +3876,29 @@
       "forWeek": "이번 주",
       "locked": "순서 잠김",
       "lockedUntil": "{{date}}까지",
-      "unlocked": "순서 잠금 해제됨"
+      "unlocked": "순서 잠금 해제됨",
+      "selectDays": "잠글 요일 선택",
+      "selectDaysDescription": "이 잠긴 일정을 적용할 요일을 선택하세요",
+      "selectAtLeastOne": "최소 하루를 선택하세요",
+      "daysSelected": "{{count}}일 선택됨",
+      "lockForDays": "요일별 순서 잠금",
+      "lockForDaysDescription": "현재 일정을 사용할 요일을 선택하세요. 작업 순서, 시간 및 알림이 저장됩니다.",
+      "currentlyLocked": "현재 잠김:",
+      "willLock": "잠금할 요일:",
+      "selectDaysToLock": "현재 일정을 잠글 요일 선택",
+      "lockDays": "요일 잠금",
+      "existingLocksNote": "참고:",
+      "existingLocksWillRemain": "이전에 잠긴 요일은 변경되지 않습니다. 선택한 요일만 업데이트됩니다.",
+      "wasLocked": "이전에 잠금됨",
+      "days": {
+        "sun": "일요일",
+        "mon": "월요일",
+        "tue": "화요일",
+        "wed": "수요일",
+        "thu": "목요일",
+        "fri": "금요일",
+        "sat": "토요일"
+      }
     },
     "quiz": {
       "morning": {

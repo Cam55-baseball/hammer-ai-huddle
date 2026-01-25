@@ -3989,7 +3989,29 @@
       "forWeek": "今週中",
       "locked": "順序ロック中",
       "lockedUntil": "{{date}}まで",
-      "unlocked": "順序ロック解除"
+      "unlocked": "順序ロック解除",
+      "selectDays": "ロックする曜日を選択",
+      "selectDaysDescription": "このロックされたスケジュールを適用する曜日を選択してください",
+      "selectAtLeastOne": "少なくとも1日を選択してください",
+      "daysSelected": "{{count}}日選択済み",
+      "lockForDays": "曜日の順序をロック",
+      "lockForDaysDescription": "現在のスケジュールを使用する曜日を選択してください。タスクの順序、時間、リマインダーが保存されます。",
+      "currentlyLocked": "現在ロック中：",
+      "willLock": "ロックする曜日：",
+      "selectDaysToLock": "現在のスケジュールをロックする曜日を選択",
+      "lockDays": "曜日をロック",
+      "existingLocksNote": "注意：",
+      "existingLocksWillRemain": "以前にロックした曜日は変更されません。選択した曜日のみが更新されます。",
+      "wasLocked": "以前ロック済み",
+      "days": {
+        "sun": "日曜日",
+        "mon": "月曜日",
+        "tue": "火曜日",
+        "wed": "水曜日",
+        "thu": "木曜日",
+        "fri": "金曜日",
+        "sat": "土曜日"
+      }
     },
     "quiz": {
       "morning": {

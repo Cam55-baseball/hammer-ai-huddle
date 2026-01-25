@@ -4780,6 +4780,37 @@
       "title": "RESUMEN 6 SEMANAS",
       "days": "DÍAS",
       "daysRemaining": "{{days}} días restantes"
+    },
+    "lockOrder": {
+      "lock": "Bloquear orden",
+      "unlock": "Desbloquear orden",
+      "forToday": "Solo para hoy",
+      "forWeek": "Para esta semana",
+      "locked": "Orden bloqueada",
+      "lockedUntil": "Hasta el {{date}}",
+      "unlocked": "Orden desbloqueada",
+      "selectDays": "Seleccionar días para bloquear",
+      "selectDaysDescription": "Elige los días de la semana para aplicar este horario bloqueado",
+      "selectAtLeastOne": "Por favor selecciona al menos un día",
+      "daysSelected": "{{count}} días seleccionados",
+      "lockForDays": "Bloquear orden para días",
+      "lockForDaysDescription": "Selecciona qué días deben usar tu horario actual. Esto guardará el orden de tareas, horarios y recordatorios.",
+      "currentlyLocked": "Actualmente bloqueado:",
+      "willLock": "Se bloqueará:",
+      "selectDaysToLock": "Selecciona días para bloquear tu horario actual",
+      "lockDays": "Bloquear días",
+      "existingLocksNote": "Nota:",
+      "existingLocksWillRemain": "Tus días previamente bloqueados permanecerán sin cambios. Solo los días seleccionados se actualizarán.",
+      "wasLocked": "Previamente bloqueado",
+      "days": {
+        "sun": "Domingo",
+        "mon": "Lunes",
+        "tue": "Martes",
+        "wed": "Miércoles",
+        "thu": "Jueves",
+        "fri": "Viernes",
+        "sat": "Sábado"
+      }
     }
   },
   "weeklyWellnessQuiz": {

@@ -3860,7 +3860,29 @@
       "forWeek": "本周",
       "locked": "顺序已锁定",
       "lockedUntil": "直到{{date}}",
-      "unlocked": "顺序已解锁"
+      "unlocked": "顺序已解锁",
+      "selectDays": "选择要锁定的日期",
+      "selectDaysDescription": "选择应用此锁定日程的星期几",
+      "selectAtLeastOne": "请至少选择一天",
+      "daysSelected": "已选择{{count}}天",
+      "lockForDays": "锁定日程顺序",
+      "lockForDaysDescription": "选择哪些天使用您当前的日程安排。这将保存任务顺序、时间和提醒。",
+      "currentlyLocked": "当前已锁定：",
+      "willLock": "将锁定：",
+      "selectDaysToLock": "选择要锁定当前日程的日期",
+      "lockDays": "锁定日期",
+      "existingLocksNote": "注意：",
+      "existingLocksWillRemain": "您之前锁定的日期将保持不变。只有选中的日期会被更新。",
+      "wasLocked": "之前已锁定",
+      "days": {
+        "sun": "星期日",
+        "mon": "星期一",
+        "tue": "星期二",
+        "wed": "星期三",
+        "thu": "星期四",
+        "fri": "星期五",
+        "sat": "星期六"
+      }
     },
     "quiz": {
       "morning": {
