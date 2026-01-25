@@ -547,6 +547,29 @@ export function useVault() {
         return { success: false, error: error.message };
       }
 
+      // Sync weight to weight_entries table if provided (for any quiz type)
+      if (data.weight_lbs && data.weight_lbs > 0) {
+        const noteSource = quizType === 'morning' ? 'Morning Check-in' 
+                         : quizType === 'pre_lift' ? 'Pre-Workout Check-in' 
+                         : 'Night Check-in';
+        
+        try {
+          await supabase
+            .from('weight_entries')
+            .upsert({
+              user_id: user.id,
+              entry_date: today,
+              weight_lbs: data.weight_lbs,
+              notes: `Logged via ${noteSource}`,
+            }, { 
+              onConflict: 'user_id,entry_date' 
+            });
+        } catch (weightErr) {
+          console.error('Error syncing weight to weight_entries:', weightErr);
+          // Don't fail the quiz save if weight sync fails
+        }
+      }
+
       // Update streak
       await updateStreak();
       await fetchTodaysQuizzes();
