@@ -3889,7 +3889,29 @@
       "forWeek": "Voor deze week",
       "locked": "Volgorde vergrendeld",
       "lockedUntil": "Tot {{date}}",
-      "unlocked": "Volgorde ontgrendeld"
+      "unlocked": "Volgorde ontgrendeld",
+      "selectDays": "Selecteer dagen om te vergrendelen",
+      "selectDaysDescription": "Kies welke dagen van de week dit vergrendelde schema moeten gebruiken",
+      "selectAtLeastOne": "Selecteer minimaal één dag",
+      "daysSelected": "{{count}} dagen geselecteerd",
+      "lockForDays": "Volgorde vergrendelen voor dagen",
+      "lockForDaysDescription": "Selecteer welke dagen je huidige schema moeten gebruiken. Dit slaat de taakvolgorde, tijden en herinneringen op.",
+      "currentlyLocked": "Momenteel vergrendeld:",
+      "willLock": "Wordt vergrendeld:",
+      "selectDaysToLock": "Selecteer dagen om je huidige schema te vergrendelen",
+      "lockDays": "Dagen vergrendelen",
+      "existingLocksNote": "Opmerking:",
+      "existingLocksWillRemain": "Je eerder vergrendelde dagen blijven ongewijzigd. Alleen de geselecteerde dagen worden bijgewerkt.",
+      "wasLocked": "Eerder vergrendeld",
+      "days": {
+        "sun": "Zondag",
+        "mon": "Maandag",
+        "tue": "Dinsdag",
+        "wed": "Woensdag",
+        "thu": "Donderdag",
+        "fri": "Vrijdag",
+        "sat": "Zaterdag"
+      }
     },
     "quiz": {
       "morning": {

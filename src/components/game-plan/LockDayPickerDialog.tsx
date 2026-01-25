@@ -33,16 +33,18 @@ export function LockDayPickerDialog({
   const [saving, setSaving] = useState(false);
   const prevOpenRef = useRef(false);
 
-  // Initialize with current locked days ONLY when dialog transitions from closed to open
+  // Initialize with EMPTY array when dialog opens - only new days can be selected
   useEffect(() => {
     if (open && !prevOpenRef.current) {
-      // Dialog just opened - initialize with current locked days
-      setSelectedDays([...lockedDays]);
+      // Dialog just opened - start with empty selection (locked days are disabled)
+      setSelectedDays([]);
     }
     prevOpenRef.current = open;
   }, [open, lockedDays]);
 
   const toggleDay = (day: number) => {
+    // Prevent toggling already-locked days
+    if (lockedDays.includes(day)) return;
     setSelectedDays(prev =>
       prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
     );
@@ -64,12 +66,18 @@ export function LockDayPickerDialog({
   };
 
   const handleCancel = () => {
-    setSelectedDays([...lockedDays]);
+    setSelectedDays([]);
     onOpenChange(false);
   };
 
-  // Get display labels for selected days
+  // Get display labels for selected days (new locks only)
   const selectedDayLabels = selectedDays
+    .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b))
+    .map(d => t(`gamePlan.lockOrder.days.${DAYS.find(day => day.value === d)?.key}`))
+    .join(', ');
+
+  // Get display labels for already locked days
+  const lockedDayLabels = lockedDays
     .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b))
     .map(d => t(`gamePlan.lockOrder.days.${DAYS.find(day => day.value === d)?.key}`))
     .join(', ');
@@ -92,52 +100,56 @@ export function LockDayPickerDialog({
           <div className="flex flex-wrap justify-center gap-2">
             {DAYS.map(({ value, key }) => {
               const isSelected = selectedDays.includes(value);
-              const wasAlreadyLocked = lockedDays.includes(value);
+              const isAlreadyLocked = lockedDays.includes(value);
               return (
                 <button
                   key={value}
                   onClick={() => toggleDay(value)}
+                  disabled={isAlreadyLocked}
                   className={cn(
                     "relative h-12 w-12 rounded-full border-2 font-bold text-sm transition-all duration-200",
                     "flex flex-col items-center justify-center gap-0.5",
-                    isSelected
-                      ? "bg-primary/20 border-primary text-primary"
-                      : "bg-background border-muted-foreground/30 text-muted-foreground hover:border-primary/50"
+                    isAlreadyLocked
+                      ? "bg-muted/50 border-muted-foreground/20 text-muted-foreground cursor-not-allowed opacity-60"
+                      : isSelected
+                        ? "bg-primary/20 border-primary text-primary"
+                        : "bg-background border-muted-foreground/30 text-muted-foreground hover:border-primary/50"
                   )}
                 >
                   <span className="text-xs uppercase">
                     {t(`gamePlan.lockOrder.days.${key}`).slice(0, 2)}
                   </span>
-                  {isSelected && (
+                  {(isAlreadyLocked || isSelected) && (
                     <Lock className="h-3 w-3" />
-                  )}
-                  {wasAlreadyLocked && !isSelected && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-yellow-500" title={t('gamePlan.lockOrder.wasLocked', 'Previously locked')} />
                   )}
                 </button>
               );
             })}
           </div>
 
-          {/* Status summary */}
+          {/* Status summary - Two sections */}
           <div className="space-y-2 text-sm">
+            {/* Section 1: Currently Locked (read-only) */}
+            {lockedDays.length > 0 && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Lock className="h-4 w-4 flex-shrink-0" />
+                <span>
+                  <strong>{t('gamePlan.lockOrder.currentlyLocked', 'Currently Locked:')}</strong> {lockedDayLabels}
+                </span>
+              </div>
+            )}
+            
+            {/* Section 2: Will Lock (user selection) */}
             {selectedDays.length > 0 ? (
               <div className="flex items-center gap-2 text-primary">
                 <Lock className="h-4 w-4 flex-shrink-0" />
                 <span>
-                  <strong>{t('gamePlan.lockOrder.willLock', 'Will lock:')}</strong> {selectedDayLabels}
+                  <strong>{t('gamePlan.lockOrder.willLock', 'Will Lock:')}</strong> {selectedDayLabels}
                 </span>
               </div>
             ) : (
               <div className="text-muted-foreground text-center">
                 {t('gamePlan.lockOrder.selectDaysToLock', 'Select days to lock your current schedule')}
-              </div>
-            )}
-            {/* Show note when adding NEW days AND there are existing locks */}
-            {lockedDays.length > 0 && selectedDays.some(d => !lockedDays.includes(d)) && (
-              <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-md">
-                <span className="font-medium">{t('gamePlan.lockOrder.existingLocksNote', 'Note:')}</span>{' '}
-                {t('gamePlan.lockOrder.existingLocksWillRemain', 'Your previously locked days will remain unchanged. Only the selected days will be updated.')}
               </div>
             )}
           </div>

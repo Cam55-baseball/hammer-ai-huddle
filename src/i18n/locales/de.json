@@ -4702,7 +4702,29 @@
       "forWeek": "Für diese Woche",
       "locked": "Reihenfolge gesperrt",
       "lockedUntil": "Bis {{date}}",
-      "unlocked": "Reihenfolge entsperrt"
+      "unlocked": "Reihenfolge entsperrt",
+      "selectDays": "Tage zum Sperren auswählen",
+      "selectDaysDescription": "Wähle die Wochentage, auf die dieser gesperrte Zeitplan angewendet werden soll",
+      "selectAtLeastOne": "Bitte wähle mindestens einen Tag",
+      "daysSelected": "{{count}} Tage ausgewählt",
+      "lockForDays": "Reihenfolge für Tage sperren",
+      "lockForDaysDescription": "Wähle aus, welche Tage deinen aktuellen Zeitplan verwenden sollen. Dies speichert die Aufgabenreihenfolge, Zeiten und Erinnerungen.",
+      "currentlyLocked": "Derzeit gesperrt:",
+      "willLock": "Wird gesperrt:",
+      "selectDaysToLock": "Wähle Tage aus, um deinen aktuellen Zeitplan zu sperren",
+      "lockDays": "Tage sperren",
+      "existingLocksNote": "Hinweis:",
+      "existingLocksWillRemain": "Deine zuvor gesperrten Tage bleiben unverändert. Nur die ausgewählten Tage werden aktualisiert.",
+      "wasLocked": "Zuvor gesperrt",
+      "days": {
+        "sun": "Sonntag",
+        "mon": "Montag",
+        "tue": "Dienstag",
+        "wed": "Mittwoch",
+        "thu": "Donnerstag",
+        "fri": "Freitag",
+        "sat": "Samstag"
+      }
     },
     "quiz": {
       "morning": {
