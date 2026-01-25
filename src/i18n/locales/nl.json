@@ -3376,9 +3376,12 @@
       "title": "Snelle Notitie",
       "placeholder": "Schrijf een snelle gedachte of notitie voor vandaag...",
       "save": "Notitie Opslaan",
+      "addNote": "Notitie Toevoegen",
       "saved": "Notitie opgeslagen!",
       "error": "Notitie opslaan mislukt",
-      "alreadySaved": "Notitie al opgeslagen voor vandaag"
+      "alreadySaved": "Notitie al opgeslagen voor vandaag",
+      "today": "vandaag",
+      "todaysNotes": "Notities van Vandaag"
     },
     "workoutNotes": {
       "title": "Workout Notities",

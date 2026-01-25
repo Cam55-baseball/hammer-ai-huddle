@@ -133,9 +133,11 @@ export function LockDayPickerDialog({
                 {t('gamePlan.lockOrder.selectDaysToLock', 'Select days to lock your current schedule')}
               </div>
             )}
-            {lockedDays.some(d => !selectedDays.includes(d)) && (
-              <div className="text-xs text-muted-foreground">
-                {t('gamePlan.lockOrder.existingLocksNote', 'Note: Days you deselect will keep their existing lock.')}
+            {/* Show note when adding NEW days AND there are existing locks */}
+            {lockedDays.length > 0 && selectedDays.some(d => !lockedDays.includes(d)) && (
+              <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-md">
+                <span className="font-medium">{t('gamePlan.lockOrder.existingLocksNote', 'Note:')}</span>{' '}
+                {t('gamePlan.lockOrder.existingLocksWillRemain', 'Your previously locked days will remain unchanged. Only the selected days will be updated.')}
               </div>
             )}
           </div>

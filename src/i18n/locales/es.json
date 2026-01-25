@@ -4239,9 +4239,12 @@
       "title": "Nota Rápida",
       "placeholder": "Escribe un pensamiento o nota rápida para hoy...",
       "save": "Guardar Nota",
+      "addNote": "Añadir Nota",
       "saved": "¡Nota guardada!",
       "error": "Error al guardar nota",
-      "alreadySaved": "Nota ya guardada para hoy"
+      "alreadySaved": "Nota ya guardada para hoy",
+      "today": "hoy",
+      "todaysNotes": "Notas de Hoy"
     },
     "workoutNotes": {
       "title": "Notas de Entrenamiento",

@@ -4188,9 +4188,12 @@
       "title": "Schnelle Notiz",
       "placeholder": "Schreibe einen schnellen Gedanken oder eine Notiz für heute...",
       "save": "Notiz Speichern",
+      "addNote": "Notiz Hinzufügen",
       "saved": "Notiz gespeichert!",
       "error": "Notiz speichern fehlgeschlagen",
-      "alreadySaved": "Notiz bereits für heute gespeichert"
+      "alreadySaved": "Notiz bereits für heute gespeichert",
+      "today": "heute",
+      "todaysNotes": "Heutige Notizen"
     },
     "workoutNotes": {
       "title": "Workout-Notizen",

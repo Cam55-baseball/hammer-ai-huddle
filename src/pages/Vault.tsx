@@ -595,38 +595,56 @@ export default function Vault() {
                 </TabsList>
 
                 <TabsContent value="today" className="space-y-4 mt-4">
-                  {/* Free Note Entry */}
+                  {/* Free Note Entry - Unlimited Notes Per Day */}
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg flex items-center gap-2">
                         <NotebookPen className="h-5 w-5 text-primary" />
                         {t('vault.freeNote.title')}
+                        {todaysNotes.length > 0 && (
+                          <Badge variant="secondary" className="ml-2">
+                            {todaysNotes.length} {t('vault.freeNote.today', 'today')}
+                          </Badge>
+                        )}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {todaysNotes ? (
-                        <Alert className="bg-green-500/10 border-green-500/30">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <AlertDescription>
-                            {t('vault.freeNote.alreadySaved')}
-                          </AlertDescription>
-                        </Alert>
-                      ) : (
-                        <>
-                          <Textarea
-                            value={freeNote}
-                            onChange={(e) => setFreeNote(e.target.value)}
-                            placeholder={t('vault.freeNote.placeholder')}
-                            className="min-h-[120px]"
-                          />
-                          <Button
-                            onClick={handleSaveFreeNote}
-                            disabled={!freeNote.trim() || savingNote}
-                            className="w-full sm:w-auto"
-                          >
-                            {savingNote ? t('common.loading') : t('vault.freeNote.save')}
-                          </Button>
-                        </>
+                      {/* Always show the input - unlimited notes */}
+                      <Textarea
+                        value={freeNote}
+                        onChange={(e) => setFreeNote(e.target.value)}
+                        placeholder={t('vault.freeNote.placeholder')}
+                        className="min-h-[100px]"
+                      />
+                      <Button
+                        onClick={handleSaveFreeNote}
+                        disabled={!freeNote.trim() || savingNote}
+                        className="w-full sm:w-auto"
+                      >
+                        {savingNote ? t('common.loading') : t('vault.freeNote.addNote', 'Add Note')}
+                      </Button>
+                      
+                      {/* Show today's notes list */}
+                      {todaysNotes.length > 0 && (
+                        <div className="space-y-2 pt-3 border-t">
+                          <p className="text-sm text-muted-foreground font-medium">
+                            {t('vault.freeNote.todaysNotes', "Today's Notes")}
+                          </p>
+                          <ScrollArea className="max-h-[200px]">
+                            <div className="space-y-2">
+                              {todaysNotes.map((note) => (
+                                <div key={note.id} className="p-3 rounded-lg bg-muted/50 text-sm">
+                                  <div className="flex justify-between items-start gap-2">
+                                    <p className="flex-1 whitespace-pre-wrap">{note.note_text}</p>
+                                    <Badge variant="outline" className="text-xs shrink-0">
+                                      {new Date(note.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                        </div>
                       )}
                     </CardContent>
                   </Card>

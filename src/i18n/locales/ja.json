@@ -3476,9 +3476,12 @@
       "title": "クイックノート",
       "placeholder": "今日の考えやメモを書いてください...",
       "save": "ノートを保存",
+      "addNote": "ノートを追加",
       "saved": "ノートが保存されました！",
       "error": "ノートの保存に失敗しました",
-      "alreadySaved": "今日のノートは既に保存されています"
+      "alreadySaved": "今日のノートは既に保存されています",
+      "today": "今日",
+      "todaysNotes": "今日のノート"
     },
     "workoutNotes": {
       "title": "ワークアウトノート",

@@ -4730,9 +4730,12 @@
       "title": "Quick Note",
       "placeholder": "Write a quick thought or note for today...",
       "save": "Save Note",
+      "addNote": "Add Note",
       "saved": "Note saved!",
       "error": "Failed to save note",
-      "alreadySaved": "Note already saved for today"
+      "alreadySaved": "Note already saved for today",
+      "today": "today",
+      "todaysNotes": "Today's Notes"
     },
     "workoutNotes": {
       "title": "Workout Notes",
@@ -5268,6 +5271,14 @@
       "selectDaysDescription": "Choose which days of the week to apply this locked schedule",
       "selectAtLeastOne": "Please select at least one day",
       "daysSelected": "{{count}} days selected",
+      "lockForDays": "Lock Order for Days",
+      "lockForDaysDescription": "Select which days should use your current schedule. This will save your task order, times, and reminders.",
+      "willLock": "Will lock:",
+      "selectDaysToLock": "Select days to lock your current schedule",
+      "lockDays": "Lock Days",
+      "existingLocksNote": "Note:",
+      "existingLocksWillRemain": "Your previously locked days will remain unchanged. Only the selected days will be updated.",
+      "wasLocked": "Previously locked",
       "days": {
         "sun": "Sunday",
         "mon": "Monday",

@@ -3347,9 +3347,12 @@
       "title": "快速笔记",
       "placeholder": "写下今天的快速想法或笔记...",
       "save": "保存笔记",
+      "addNote": "添加笔记",
       "saved": "笔记已保存！",
       "error": "保存笔记失败",
-      "alreadySaved": "今天的笔记已保存"
+      "alreadySaved": "今天的笔记已保存",
+      "today": "今天",
+      "todaysNotes": "今日笔记"
     },
     "workoutNotes": {
       "title": "锻炼笔记",
