@@ -5,15 +5,36 @@ import { format, subDays, parseISO, differenceInCalendarDays } from 'date-fns';
 // Body area ID to display name mapping
 const BODY_AREA_LABELS: Record<string, string> = {
   head_neck: 'Head/Neck',
-  shoulder: 'Shoulder',
+  // Shoulders
+  left_shoulder: 'Left Shoulder',
+  right_shoulder: 'Right Shoulder',
+  shoulder: 'Shoulder', // backward compatibility
   upper_back: 'Upper Back',
   lower_back: 'Lower Back',
-  elbow: 'Elbow',
-  wrist_hand: 'Wrist/Hand',
-  hip: 'Hip',
-  knee: 'Knee',
-  ankle: 'Ankle',
-  foot: 'Foot'
+  // Elbows
+  left_elbow: 'Left Elbow',
+  right_elbow: 'Right Elbow',
+  elbow: 'Elbow', // backward compatibility
+  // Wrists
+  left_wrist_hand: 'Left Wrist/Hand',
+  right_wrist_hand: 'Right Wrist/Hand',
+  wrist_hand: 'Wrist/Hand', // backward compatibility
+  // Hips
+  left_hip: 'Left Hip',
+  right_hip: 'Right Hip',
+  hip: 'Hip', // backward compatibility
+  // Knees
+  left_knee: 'Left Knee',
+  right_knee: 'Right Knee',
+  knee: 'Knee', // backward compatibility
+  // Ankles
+  left_ankle: 'Left Ankle',
+  right_ankle: 'Right Ankle',
+  ankle: 'Ankle', // backward compatibility
+  // Feet
+  left_foot: 'Left Foot',
+  right_foot: 'Right Foot',
+  foot: 'Foot' // backward compatibility
 };
 
 interface QuizEntry {
