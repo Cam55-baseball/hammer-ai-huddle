@@ -1,173 +1,188 @@
 
-# Interactive Body Map for Pain/Limitation Tracking
+
+# Left/Right Body Side Differentiation for Pain Tracking
 
 ## Overview
 
-Replace the current button-based pain selector with an interactive SVG human silhouette that users can tap to highlight specific body areas experiencing pain or limitations. This creates a more intuitive, visual experience for athletes during their pre-workout check-in.
+Enhance the interactive body map to allow users to specify exactly which side of their body is experiencing pain. Instead of selecting "Shoulder" for both sides, users can now tap "Left Shoulder" or "Right Shoulder" independently.
 
 ## Current State
 
-The `BodyAreaSelector` component currently displays 10 emoji-labeled buttons for body regions. Users tap buttons to toggle selection, which works but lacks visual context and feels less engaging than an anatomical diagram.
+The body map currently groups bilateral body parts together:
+- Shoulders (both)
+- Elbows (both)  
+- Wrists/Hands (both)
+- Hips (combined zone)
+- Knees (both)
+- Ankles (both)
+- Feet (both)
 
-**Current body areas tracked:**
-- Head/Neck, Shoulder, Upper Back, Lower Back
-- Elbow, Wrist/Hand, Hip
-- Knee, Ankle, Foot
+Tapping any part of a bilateral zone selects the entire area, losing specificity about which side hurts.
 
 ## Design Approach
 
-Create a front-facing human silhouette SVG with clearly defined, tappable zones for each body region. Selected areas glow red to indicate pain/limitation.
+### Visual Changes
+- Split each bilateral body part into separate tappable SVG zones
+- Left side zones appear on the right side of the SVG (anatomical view - facing the user)
+- Right side zones appear on the left side of the SVG
+- Each zone highlights independently when selected
+- Color coding remains consistent (red glow for pain)
 
-### Visual Design
-- Clean, minimal human outline (gender-neutral athletic silhouette)
-- Responsive sizing to fit mobile dialogs
-- Color scheme:
-  - Default zones: subtle gray/muted outline
-  - Hover: light highlight
-  - Selected (pain): red glow with pulsing animation
-- Labels appear on hover/selection for accessibility
+### New Body Area IDs
+
+| Current ID | New Left ID | New Right ID |
+|------------|-------------|--------------|
+| `shoulder` | `left_shoulder` | `right_shoulder` |
+| `elbow` | `left_elbow` | `right_elbow` |
+| `wrist_hand` | `left_wrist_hand` | `right_wrist_hand` |
+| `hip` | `left_hip` | `right_hip` |
+| `knee` | `left_knee` | `right_knee` |
+| `ankle` | `left_ankle` | `right_ankle` |
+| `foot` | `left_foot` | `right_foot` |
+
+Centerline areas remain unchanged:
+- `head_neck`
+- `upper_back`
+- `lower_back`
 
 ### User Experience
-- Tap any body zone to toggle pain selection
-- Haptic feedback on selection (existing vibration pattern)
-- Selected areas visually "light up" in red
-- Summary chips below the map show selected areas
-- Works alongside existing pain scale and movement questions
+- Each side is independently tappable
+- Summary chips show specific side (e.g., "L Shoulder", "R Knee")
+- Haptic feedback on each selection
+- Clear visual distinction between left and right zones
 
 ---
 
 ## Technical Implementation
 
-### File Changes
+### Files to Modify
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/components/vault/quiz/BodyMapSelector.tsx` | **Create** | New interactive SVG body map component |
-| `src/components/vault/quiz/BodyAreaSelector.tsx` | **Modify** | Update to use BodyMapSelector internally |
-| `src/i18n/locales/en.json` | **Update** | Add new translation keys for body map labels |
+| File | Action | Changes |
+|------|--------|---------|
+| `src/components/vault/quiz/BodyMapSelector.tsx` | **Modify** | Split SVG zones into left/right, update IDs and labels |
+| `src/components/vault/VaultPainPatternAlert.tsx` | **Modify** | Add new left/right labels to the mapping |
 
-### New Component: BodyMapSelector.tsx
+### 1. BodyMapSelector.tsx Changes
 
-The core component will contain:
-
-1. **SVG Human Silhouette** with defined path regions for each body area
-2. **Interactive Zones** - Each zone is a clickable SVG path/group with:
-   - Unique ID matching existing area IDs (head_neck, shoulder, etc.)
-   - Hover and selected states via CSS classes
-   - Click handler to toggle selection
-3. **Selected Area Chips** - Display selected areas below the map as visual confirmation
-
-### SVG Zone Structure
-
-```text
-+-------------------+
-|       HEAD        |  head_neck zone
-|      /    \       |
-|     SHOULDER      |  shoulder zone (symmetric)
-|    /        \     |
-|   UPPER BACK      |  upper_back zone
-|   |   ARM   |     |  
-|   | (ELBOW) |     |  elbow zone (symmetric)
-|   |  WRIST  |     |  wrist_hand zone (symmetric)
-|   LOWER BACK      |  lower_back zone
-|      HIP          |  hip zone
-|     /    \        |
-|    KNEE   KNEE    |  knee zone (symmetric)
-|    |      |       |
-|   ANKLE  ANKLE    |  ankle zone (symmetric)
-|   FOOT   FOOT     |  foot zone (symmetric)
-+-------------------+
-```
-
-### Zone Mapping
-
-| Zone ID | SVG Region | Position |
-|---------|------------|----------|
-| `head_neck` | Head + neck area | Top center |
-| `shoulder` | Both shoulder caps | Upper sides |
-| `upper_back` | Upper torso back | Upper center |
-| `lower_back` | Lower torso back | Mid center |
-| `elbow` | Both elbow joints | Mid arms |
-| `wrist_hand` | Both wrists/hands | Lower arms |
-| `hip` | Hip/pelvis area | Lower torso |
-| `knee` | Both knee joints | Upper legs |
-| `ankle` | Both ankle joints | Lower legs |
-| `foot` | Both feet | Bottom |
-
-### Interaction Behavior
-
-1. **Tap/Click Zone** → Toggle selection state
-2. **Haptic Feedback** → `navigator.vibrate(10)` on toggle (existing pattern)
-3. **Visual Feedback**:
-   - Unselected: `fill: hsl(var(--muted))` with subtle stroke
-   - Hover: `fill: hsl(var(--muted-foreground)/20%)`
-   - Selected: `fill: rgba(239, 68, 68, 0.3)` (red-500/30) with red stroke and subtle pulse animation
-
-### Component Props (unchanged)
+#### Update BODY_AREAS Array
+Replace bilateral entries with left/right variants:
 
 ```typescript
-interface BodyMapSelectorProps {
-  selectedAreas: string[];
-  onChange: (areas: string[]) => void;
-}
+const BODY_AREAS = [
+  { id: 'head_neck', labelKey: 'Head/Neck' },
+  // Shoulders - split
+  { id: 'left_shoulder', labelKey: 'L Shoulder' },
+  { id: 'right_shoulder', labelKey: 'R Shoulder' },
+  { id: 'upper_back', labelKey: 'Upper Back' },
+  { id: 'lower_back', labelKey: 'Lower Back' },
+  // Elbows - split
+  { id: 'left_elbow', labelKey: 'L Elbow' },
+  { id: 'right_elbow', labelKey: 'R Elbow' },
+  // Wrists - split
+  { id: 'left_wrist_hand', labelKey: 'L Wrist/Hand' },
+  { id: 'right_wrist_hand', labelKey: 'R Wrist/Hand' },
+  // Hips - split
+  { id: 'left_hip', labelKey: 'L Hip' },
+  { id: 'right_hip', labelKey: 'R Hip' },
+  // Knees - split
+  { id: 'left_knee', labelKey: 'L Knee' },
+  { id: 'right_knee', labelKey: 'R Knee' },
+  // Ankles - split
+  { id: 'left_ankle', labelKey: 'L Ankle' },
+  { id: 'right_ankle', labelKey: 'R Ankle' },
+  // Feet - split
+  { id: 'left_foot', labelKey: 'L Foot' },
+  { id: 'right_foot', labelKey: 'R Foot' },
+];
 ```
 
-This maintains full backward compatibility with the existing `BodyAreaSelector` interface.
+#### Split SVG Zones
+Convert each bilateral `<g>` group into two separate groups:
 
----
-
-## Integration Points
-
-### VaultFocusQuizDialog
-
-No changes needed - the existing integration at lines 870-873 will work with the updated component:
-
-```tsx
-<BodyAreaSelector
-  selectedAreas={painLocations}
-  onChange={setPainLocations}
-/>
+**Before (Shoulders):**
+```xml
+<g onClick={() => toggleArea('shoulder')} ...>
+  <ellipse cx="62" cy="78" ... />  <!-- Left shoulder -->
+  <ellipse cx="138" cy="78" ... /> <!-- Right shoulder -->
+</g>
 ```
 
-### Pain Pattern Alert System
+**After (Shoulders):**
+```xml
+<!-- Left Shoulder (appears on viewer's right - anatomical view) -->
+<g onClick={() => toggleArea('left_shoulder')} className={getZoneClasses('left_shoulder')} ...>
+  <ellipse cx="138" cy="78" rx="18" ry="12" />
+</g>
+<!-- Right Shoulder (appears on viewer's left) -->
+<g onClick={() => toggleArea('right_shoulder')} className={getZoneClasses('right_shoulder')} ...>
+  <ellipse cx="62" cy="78" rx="18" ry="12" />
+</g>
+```
 
-No changes needed - the `VaultPainPatternAlert` component uses the same area IDs stored in the database.
+Apply the same pattern to: elbows, wrists/hands, hips, knees, ankles, and feet.
 
-### Translations
+### 2. VaultPainPatternAlert.tsx Changes
 
-Add body map specific labels if needed (existing area translations remain unchanged).
+#### Expand Label Mapping
+Add the new left/right area IDs to support pain pattern detection and display:
+
+```typescript
+const BODY_AREA_LABELS: Record<string, string> = {
+  head_neck: 'Head/Neck',
+  // Shoulders
+  left_shoulder: 'Left Shoulder',
+  right_shoulder: 'Right Shoulder',
+  shoulder: 'Shoulder', // Keep for backward compatibility
+  upper_back: 'Upper Back',
+  lower_back: 'Lower Back',
+  // Elbows
+  left_elbow: 'Left Elbow',
+  right_elbow: 'Right Elbow',
+  elbow: 'Elbow',
+  // Wrists
+  left_wrist_hand: 'Left Wrist/Hand',
+  right_wrist_hand: 'Right Wrist/Hand',
+  wrist_hand: 'Wrist/Hand',
+  // Hips
+  left_hip: 'Left Hip',
+  right_hip: 'Right Hip',
+  hip: 'Hip',
+  // Knees
+  left_knee: 'Left Knee',
+  right_knee: 'Right Knee',
+  knee: 'Knee',
+  // Ankles
+  left_ankle: 'Left Ankle',
+  right_ankle: 'Right Ankle',
+  ankle: 'Ankle',
+  // Feet
+  left_foot: 'Left Foot',
+  right_foot: 'Right Foot',
+  foot: 'Foot'
+};
+```
 
 ---
 
-## Accessibility Considerations
+## Anatomical Orientation Note
 
-- Each zone has an accessible role and aria-label
-- Keyboard navigation support (Tab through zones, Enter/Space to toggle)
-- Focus indicators for keyboard users
-- Screen reader announces: "Body region [name], [selected/not selected]"
-- Selected areas also shown as text chips below the map for clarity
+The body map uses **anatomical position** (facing the viewer):
+- The figure's LEFT side appears on the VIEWER'S RIGHT
+- The figure's RIGHT side appears on the VIEWER'S LEFT
 
----
-
-## Mobile Optimization
-
-- SVG scales responsively within the dialog container
-- Touch targets sized for comfortable tapping (minimum 44x44px effective area)
-- Zones sized proportionally to ensure easy selection on small screens
-- No pinch-to-zoom interference (maintains dialog scroll behavior)
+This is the standard medical convention and matches what users expect when looking at a body diagram.
 
 ---
 
-## Animation Details
+## Backward Compatibility
 
-Following the app's animation standards (fast, professional):
-
-- Zone hover: 150ms transition
-- Selection toggle: 100ms scale-in with red glow
-- Pulse animation on selected zones: subtle 2s infinite pulse at reduced opacity
+- Existing pain data with old IDs (`shoulder`, `knee`, etc.) will still display correctly in pain alerts
+- The label mapping includes both old and new IDs
+- No database migration required - the `pain_location` column accepts any string array
 
 ---
 
 ## Summary
 
-This enhancement transforms the pain tracking experience from a list of buttons to an intuitive visual interface. Athletes can quickly tap exactly where they feel pain on a body silhouette, making the pre-workout check-in faster and more engaging while maintaining full compatibility with the existing data model and alert systems.
+This enhancement provides precise pain location tracking by splitting 7 bilateral body areas into 14 individual zones. Users can now specify exactly which shoulder, knee, or ankle hurts, enabling more accurate injury pattern detection and recovery insights.
+
