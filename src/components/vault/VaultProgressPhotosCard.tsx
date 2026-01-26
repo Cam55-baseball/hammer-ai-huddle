@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,15 +39,24 @@ interface VaultProgressPhotosCardProps {
     notes: string | null;
   }) => Promise<{ success: boolean }>;
   recapUnlockedAt?: Date | null;
+  autoOpen?: boolean;
 }
 
 const LOCK_PERIOD_WEEKS = 6;
 
-export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null }: VaultProgressPhotosCardProps) {
+export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null, autoOpen = false }: VaultProgressPhotosCardProps) {
   const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(autoOpen);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Handle autoOpen changes with delay for smooth animation
+  useEffect(() => {
+    if (autoOpen) {
+      const timer = setTimeout(() => setIsOpen(true), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [autoOpen]);
   
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [weight, setWeight] = useState('');
