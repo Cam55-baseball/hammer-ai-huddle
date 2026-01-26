@@ -46,6 +46,7 @@ import { VaultHistoryTab } from '@/components/vault/VaultHistoryTab';
 import { VaultWeeklySummary } from '@/components/vault/VaultWeeklySummary';
 import { VaultNutritionWeeklySummary } from '@/components/vault/VaultNutritionWeeklySummary';
 import { VaultDisciplineTrendCard } from '@/components/vault/VaultDisciplineTrendCard';
+import { VaultPainHeatMapCard } from '@/components/vault/VaultPainHeatMapCard';
 import { VaultMentalWellnessTrendCard } from '@/components/vault/VaultMentalWellnessTrendCard';
 import { VaultCorrelationAnalysisCard } from '@/components/vault/VaultCorrelationAnalysisCard';
 import { VaultWellnessGoalsCard, checkWellnessGoalsAndNotify } from '@/components/vault/VaultWellnessGoalsCard';
@@ -792,6 +793,7 @@ export default function Vault() {
                     fetchWeeklyNutrition={fetchWeeklyNutrition}
                     goals={nutritionGoals}
                   />
+                  <VaultPainHeatMapCard />
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-4">
