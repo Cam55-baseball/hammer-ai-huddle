@@ -136,6 +136,7 @@ export default function Vault() {
   const nutritionRef = useRef<HTMLDivElement>(null);
   const wellnessGoalsRef = useRef<HTMLDivElement>(null);
   const savedItemsRef = useRef<HTMLDivElement>(null);
+  const sixWeekCheckinRef = useRef<HTMLDivElement>(null);
   
   // Stable ref map for centralized scroll utility
   const sectionRefs = useMemo(() => ({
@@ -146,6 +147,7 @@ export default function Vault() {
     'nutrition': nutritionRef,
     'wellness-goals': wellnessGoalsRef,
     'saved-items': savedItemsRef,
+    'six-week-checkin': sixWeekCheckinRef,
   }), []);
   
   // Detect module access for grader display
@@ -701,7 +703,7 @@ export default function Vault() {
                   />
 
                   {/* 6-Week Tracking Section */}
-                  <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 sm:p-6 space-y-4">
+                  <div ref={sectionRefs['six-week-checkin']} className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 sm:p-6 space-y-4">
                     {/* Section Header */}
                     <div className="flex items-center gap-3 pb-3 border-b border-primary/20">
                       <div className="p-2 rounded-lg bg-primary/10">
