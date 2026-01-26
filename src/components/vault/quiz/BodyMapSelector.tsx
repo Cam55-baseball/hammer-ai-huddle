@@ -8,15 +8,22 @@ interface BodyMapSelectorProps {
 
 const BODY_AREAS = [
   { id: 'head_neck', labelKey: 'Head/Neck' },
-  { id: 'shoulder', labelKey: 'Shoulder' },
+  { id: 'left_shoulder', labelKey: 'L Shoulder' },
+  { id: 'right_shoulder', labelKey: 'R Shoulder' },
   { id: 'upper_back', labelKey: 'Upper Back' },
   { id: 'lower_back', labelKey: 'Lower Back' },
-  { id: 'elbow', labelKey: 'Elbow' },
-  { id: 'wrist_hand', labelKey: 'Wrist/Hand' },
-  { id: 'hip', labelKey: 'Hip' },
-  { id: 'knee', labelKey: 'Knee' },
-  { id: 'ankle', labelKey: 'Ankle' },
-  { id: 'foot', labelKey: 'Foot' },
+  { id: 'left_elbow', labelKey: 'L Elbow' },
+  { id: 'right_elbow', labelKey: 'R Elbow' },
+  { id: 'left_wrist_hand', labelKey: 'L Wrist/Hand' },
+  { id: 'right_wrist_hand', labelKey: 'R Wrist/Hand' },
+  { id: 'left_hip', labelKey: 'L Hip' },
+  { id: 'right_hip', labelKey: 'R Hip' },
+  { id: 'left_knee', labelKey: 'L Knee' },
+  { id: 'right_knee', labelKey: 'R Knee' },
+  { id: 'left_ankle', labelKey: 'L Ankle' },
+  { id: 'right_ankle', labelKey: 'R Ankle' },
+  { id: 'left_foot', labelKey: 'L Foot' },
+  { id: 'right_foot', labelKey: 'R Foot' },
 ];
 
 export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProps) {
@@ -77,20 +84,30 @@ export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProp
             <rect x="92" y="52" width="16" height="16" rx="2" />
           </g>
 
-          {/* Shoulders */}
+          {/* Left Shoulder (appears on viewer's right - anatomical view) */}
           <g
-            onClick={() => toggleArea('shoulder')}
-            onKeyDown={(e) => handleKeyDown(e, 'shoulder')}
-            className={getZoneClasses('shoulder')}
+            onClick={() => toggleArea('left_shoulder')}
+            onKeyDown={(e) => handleKeyDown(e, 'left_shoulder')}
+            className={getZoneClasses('left_shoulder')}
             tabIndex={0}
             role="button"
-            aria-label={t('vault.quiz.pain.area.shoulder', 'Shoulder') + (isSelected('shoulder') ? ' - selected' : '')}
-            aria-pressed={isSelected('shoulder')}
+            aria-label={t('vault.quiz.pain.area.left_shoulder', 'L Shoulder') + (isSelected('left_shoulder') ? ' - selected' : '')}
+            aria-pressed={isSelected('left_shoulder')}
           >
-            {/* Left shoulder */}
-            <ellipse cx="62" cy="78" rx="18" ry="12" />
-            {/* Right shoulder */}
             <ellipse cx="138" cy="78" rx="18" ry="12" />
+          </g>
+
+          {/* Right Shoulder (appears on viewer's left) */}
+          <g
+            onClick={() => toggleArea('right_shoulder')}
+            onKeyDown={(e) => handleKeyDown(e, 'right_shoulder')}
+            className={getZoneClasses('right_shoulder')}
+            tabIndex={0}
+            role="button"
+            aria-label={t('vault.quiz.pain.area.right_shoulder', 'R Shoulder') + (isSelected('right_shoulder') ? ' - selected' : '')}
+            aria-pressed={isSelected('right_shoulder')}
+          >
+            <ellipse cx="62" cy="78" rx="18" ry="12" />
           </g>
 
           {/* Upper Back / Chest */}
@@ -119,117 +136,170 @@ export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProp
             <rect x="76" y="110" width="48" height="36" rx="4" />
           </g>
 
-          {/* Elbows */}
+          {/* Left Elbow (appears on viewer's right - anatomical view) */}
           <g
-            onClick={() => toggleArea('elbow')}
-            onKeyDown={(e) => handleKeyDown(e, 'elbow')}
-            className={getZoneClasses('elbow')}
+            onClick={() => toggleArea('left_elbow')}
+            onKeyDown={(e) => handleKeyDown(e, 'left_elbow')}
+            className={getZoneClasses('left_elbow')}
             tabIndex={0}
             role="button"
-            aria-label={t('vault.quiz.pain.area.elbow', 'Elbow') + (isSelected('elbow') ? ' - selected' : '')}
-            aria-pressed={isSelected('elbow')}
+            aria-label={t('vault.quiz.pain.area.left_elbow', 'L Elbow') + (isSelected('left_elbow') ? ' - selected' : '')}
+            aria-pressed={isSelected('left_elbow')}
           >
-            {/* Left upper arm */}
-            <rect x="42" y="88" width="14" height="36" rx="6" />
-            {/* Right upper arm */}
             <rect x="144" y="88" width="14" height="36" rx="6" />
-            {/* Left elbow joint */}
-            <ellipse cx="49" cy="130" rx="10" ry="8" />
-            {/* Right elbow joint */}
             <ellipse cx="151" cy="130" rx="10" ry="8" />
           </g>
 
-          {/* Wrist/Hand */}
+          {/* Right Elbow (appears on viewer's left) */}
           <g
-            onClick={() => toggleArea('wrist_hand')}
-            onKeyDown={(e) => handleKeyDown(e, 'wrist_hand')}
-            className={getZoneClasses('wrist_hand')}
+            onClick={() => toggleArea('right_elbow')}
+            onKeyDown={(e) => handleKeyDown(e, 'right_elbow')}
+            className={getZoneClasses('right_elbow')}
             tabIndex={0}
             role="button"
-            aria-label={t('vault.quiz.pain.area.wrist_hand', 'Wrist/Hand') + (isSelected('wrist_hand') ? ' - selected' : '')}
-            aria-pressed={isSelected('wrist_hand')}
+            aria-label={t('vault.quiz.pain.area.right_elbow', 'R Elbow') + (isSelected('right_elbow') ? ' - selected' : '')}
+            aria-pressed={isSelected('right_elbow')}
           >
-            {/* Left forearm */}
-            <rect x="38" y="136" width="12" height="32" rx="5" />
-            {/* Right forearm */}
+            <rect x="42" y="88" width="14" height="36" rx="6" />
+            <ellipse cx="49" cy="130" rx="10" ry="8" />
+          </g>
+
+          {/* Left Wrist/Hand (appears on viewer's right - anatomical view) */}
+          <g
+            onClick={() => toggleArea('left_wrist_hand')}
+            onKeyDown={(e) => handleKeyDown(e, 'left_wrist_hand')}
+            className={getZoneClasses('left_wrist_hand')}
+            tabIndex={0}
+            role="button"
+            aria-label={t('vault.quiz.pain.area.left_wrist_hand', 'L Wrist/Hand') + (isSelected('left_wrist_hand') ? ' - selected' : '')}
+            aria-pressed={isSelected('left_wrist_hand')}
+          >
             <rect x="150" y="136" width="12" height="32" rx="5" />
-            {/* Left wrist */}
-            <ellipse cx="44" cy="172" rx="8" ry="6" />
-            {/* Right wrist */}
             <ellipse cx="156" cy="172" rx="8" ry="6" />
-            {/* Left hand */}
-            <ellipse cx="44" cy="186" rx="10" ry="12" />
-            {/* Right hand */}
             <ellipse cx="156" cy="186" rx="10" ry="12" />
           </g>
 
-          {/* Hip */}
+          {/* Right Wrist/Hand (appears on viewer's left) */}
           <g
-            onClick={() => toggleArea('hip')}
-            onKeyDown={(e) => handleKeyDown(e, 'hip')}
-            className={getZoneClasses('hip')}
+            onClick={() => toggleArea('right_wrist_hand')}
+            onKeyDown={(e) => handleKeyDown(e, 'right_wrist_hand')}
+            className={getZoneClasses('right_wrist_hand')}
             tabIndex={0}
             role="button"
-            aria-label={t('vault.quiz.pain.area.hip', 'Hip') + (isSelected('hip') ? ' - selected' : '')}
-            aria-pressed={isSelected('hip')}
+            aria-label={t('vault.quiz.pain.area.right_wrist_hand', 'R Wrist/Hand') + (isSelected('right_wrist_hand') ? ' - selected' : '')}
+            aria-pressed={isSelected('right_wrist_hand')}
           >
-            <path d="M68 146 Q100 156 132 146 L130 168 Q100 178 70 168 Z" />
+            <rect x="38" y="136" width="12" height="32" rx="5" />
+            <ellipse cx="44" cy="172" rx="8" ry="6" />
+            <ellipse cx="44" cy="186" rx="10" ry="12" />
           </g>
 
-          {/* Knees */}
+          {/* Left Hip (appears on viewer's right - anatomical view) */}
           <g
-            onClick={() => toggleArea('knee')}
-            onKeyDown={(e) => handleKeyDown(e, 'knee')}
-            className={getZoneClasses('knee')}
+            onClick={() => toggleArea('left_hip')}
+            onKeyDown={(e) => handleKeyDown(e, 'left_hip')}
+            className={getZoneClasses('left_hip')}
             tabIndex={0}
             role="button"
-            aria-label={t('vault.quiz.pain.area.knee', 'Knee') + (isSelected('knee') ? ' - selected' : '')}
-            aria-pressed={isSelected('knee')}
+            aria-label={t('vault.quiz.pain.area.left_hip', 'L Hip') + (isSelected('left_hip') ? ' - selected' : '')}
+            aria-pressed={isSelected('left_hip')}
           >
-            {/* Left thigh */}
-            <rect x="72" y="170" width="18" height="48" rx="8" />
-            {/* Right thigh */}
+            <path d="M100 146 Q116 151 132 146 L130 168 Q115 173 100 168 Z" />
+          </g>
+
+          {/* Right Hip (appears on viewer's left) */}
+          <g
+            onClick={() => toggleArea('right_hip')}
+            onKeyDown={(e) => handleKeyDown(e, 'right_hip')}
+            className={getZoneClasses('right_hip')}
+            tabIndex={0}
+            role="button"
+            aria-label={t('vault.quiz.pain.area.right_hip', 'R Hip') + (isSelected('right_hip') ? ' - selected' : '')}
+            aria-pressed={isSelected('right_hip')}
+          >
+            <path d="M68 146 Q84 151 100 146 L100 168 Q85 173 70 168 Z" />
+          </g>
+
+          {/* Left Knee (appears on viewer's right - anatomical view) */}
+          <g
+            onClick={() => toggleArea('left_knee')}
+            onKeyDown={(e) => handleKeyDown(e, 'left_knee')}
+            className={getZoneClasses('left_knee')}
+            tabIndex={0}
+            role="button"
+            aria-label={t('vault.quiz.pain.area.left_knee', 'L Knee') + (isSelected('left_knee') ? ' - selected' : '')}
+            aria-pressed={isSelected('left_knee')}
+          >
             <rect x="110" y="170" width="18" height="48" rx="8" />
-            {/* Left knee joint */}
-            <ellipse cx="81" cy="226" rx="12" ry="10" />
-            {/* Right knee joint */}
             <ellipse cx="119" cy="226" rx="12" ry="10" />
           </g>
 
-          {/* Ankles */}
+          {/* Right Knee (appears on viewer's left) */}
           <g
-            onClick={() => toggleArea('ankle')}
-            onKeyDown={(e) => handleKeyDown(e, 'ankle')}
-            className={getZoneClasses('ankle')}
+            onClick={() => toggleArea('right_knee')}
+            onKeyDown={(e) => handleKeyDown(e, 'right_knee')}
+            className={getZoneClasses('right_knee')}
             tabIndex={0}
             role="button"
-            aria-label={t('vault.quiz.pain.area.ankle', 'Ankle') + (isSelected('ankle') ? ' - selected' : '')}
-            aria-pressed={isSelected('ankle')}
+            aria-label={t('vault.quiz.pain.area.right_knee', 'R Knee') + (isSelected('right_knee') ? ' - selected' : '')}
+            aria-pressed={isSelected('right_knee')}
           >
-            {/* Left shin */}
-            <rect x="74" y="238" width="14" height="44" rx="6" />
-            {/* Right shin */}
+            <rect x="72" y="170" width="18" height="48" rx="8" />
+            <ellipse cx="81" cy="226" rx="12" ry="10" />
+          </g>
+
+          {/* Left Ankle (appears on viewer's right - anatomical view) */}
+          <g
+            onClick={() => toggleArea('left_ankle')}
+            onKeyDown={(e) => handleKeyDown(e, 'left_ankle')}
+            className={getZoneClasses('left_ankle')}
+            tabIndex={0}
+            role="button"
+            aria-label={t('vault.quiz.pain.area.left_ankle', 'L Ankle') + (isSelected('left_ankle') ? ' - selected' : '')}
+            aria-pressed={isSelected('left_ankle')}
+          >
             <rect x="112" y="238" width="14" height="44" rx="6" />
-            {/* Left ankle */}
-            <ellipse cx="81" cy="288" rx="10" ry="8" />
-            {/* Right ankle */}
             <ellipse cx="119" cy="288" rx="10" ry="8" />
           </g>
 
-          {/* Feet */}
+          {/* Right Ankle (appears on viewer's left) */}
           <g
-            onClick={() => toggleArea('foot')}
-            onKeyDown={(e) => handleKeyDown(e, 'foot')}
-            className={getZoneClasses('foot')}
+            onClick={() => toggleArea('right_ankle')}
+            onKeyDown={(e) => handleKeyDown(e, 'right_ankle')}
+            className={getZoneClasses('right_ankle')}
             tabIndex={0}
             role="button"
-            aria-label={t('vault.quiz.pain.area.foot', 'Foot') + (isSelected('foot') ? ' - selected' : '')}
-            aria-pressed={isSelected('foot')}
+            aria-label={t('vault.quiz.pain.area.right_ankle', 'R Ankle') + (isSelected('right_ankle') ? ' - selected' : '')}
+            aria-pressed={isSelected('right_ankle')}
           >
-            {/* Left foot */}
-            <ellipse cx="81" cy="308" rx="14" ry="18" />
-            {/* Right foot */}
+            <rect x="74" y="238" width="14" height="44" rx="6" />
+            <ellipse cx="81" cy="288" rx="10" ry="8" />
+          </g>
+
+          {/* Left Foot (appears on viewer's right - anatomical view) */}
+          <g
+            onClick={() => toggleArea('left_foot')}
+            onKeyDown={(e) => handleKeyDown(e, 'left_foot')}
+            className={getZoneClasses('left_foot')}
+            tabIndex={0}
+            role="button"
+            aria-label={t('vault.quiz.pain.area.left_foot', 'L Foot') + (isSelected('left_foot') ? ' - selected' : '')}
+            aria-pressed={isSelected('left_foot')}
+          >
             <ellipse cx="119" cy="308" rx="14" ry="18" />
+          </g>
+
+          {/* Right Foot (appears on viewer's left) */}
+          <g
+            onClick={() => toggleArea('right_foot')}
+            onKeyDown={(e) => handleKeyDown(e, 'right_foot')}
+            className={getZoneClasses('right_foot')}
+            tabIndex={0}
+            role="button"
+            aria-label={t('vault.quiz.pain.area.right_foot', 'R Foot') + (isSelected('right_foot') ? ' - selected' : '')}
+            aria-pressed={isSelected('right_foot')}
+          >
+            <ellipse cx="81" cy="308" rx="14" ry="18" />
           </g>
         </svg>
       </div>
