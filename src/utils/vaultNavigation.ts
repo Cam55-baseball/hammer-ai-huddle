@@ -16,7 +16,8 @@ export type VaultSection =
   | 'nutrition'
   | 'wellness-goals'
   | 'saved-items'
-  | 'recap-generation';
+  | 'recap-generation'
+  | 'six-week-checkin';
 
 // Type-safe quiz identifiers  
 export type VaultQuiz = 'morning' | 'pre_lift' | 'night';
@@ -36,6 +37,7 @@ export const VAULT_SECTIONS: Record<VaultSection, SectionConfig> = {
   'wellness-goals': { tab: 'today', autoOpen: true },
   'saved-items': { tab: 'today', autoOpen: false },
   'recap-generation': { tab: 'today', autoOpen: false },
+  'six-week-checkin': { tab: 'today', autoOpen: true },
 } as const;
 
 /**

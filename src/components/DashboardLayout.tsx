@@ -7,7 +7,7 @@ import { TutorialButton } from "./TutorialButton";
 import { TutorialModal } from "./TutorialModal";
 import { OfflineIndicator } from "./OfflineIndicator";
 import { Button } from "@/components/ui/button";
-import { Menu, ShoppingBag } from "lucide-react";
+import { Menu, ShoppingBag, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useHydrationReminders } from "@/hooks/useHydrationReminders";
@@ -40,6 +40,17 @@ function DashboardHeader({ tutorialCompleted, user, onTutorialOpen }: {
         
       </div>
       <div className="ml-auto flex items-center gap-2">
+        {/* Refresh Button - Always visible for troubleshooting */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => window.location.reload()}
+          className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors"
+          title={t('dashboard.header.refresh')}
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+        
         {/* Small but mighty Merch button */}
         <Button
           variant="outline"

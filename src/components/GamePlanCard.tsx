@@ -1424,7 +1424,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           {waitingForProgressReports ? (
             <Button
               size="sm"
-              onClick={() => navigate('/vault?openSection=progress-photos')}
+              onClick={() => navigate('/vault?openSection=six-week-checkin')}
               className="gap-1.5 bg-cyan-500 hover:bg-cyan-600 text-white h-7 px-3"
             >
               <Target className="h-3 w-3" />
