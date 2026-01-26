@@ -1,83 +1,173 @@
 
-Goal: Make the “Complete your 6-week check in” button (the one shown inside the Vault’s cycle/recap card) reliably scroll the user to the “6-Week Tracking” section (Performance Tests + Progress Photos), with an “elite / no hiccups” feel.
+# Interactive Body Map for Pain/Limitation Tracking
 
-## What’s happening (root cause)
-You currently have two different “complete your progress reports / 6-week check-in” entry points:
+## Overview
 
-1) From Game Plan (outside Vault):
-- `GamePlanCard.tsx` navigates to `/vault?openSection=six-week-checkin` and Vault’s URL-param effect handles tab switch + scroll.
+Replace the current button-based pain selector with an interactive SVG human silhouette that users can tap to highlight specific body areas experiencing pain or limitations. This creates a more intuitive, visual experience for athletes during their pre-workout check-in.
 
-2) Inside Vault (this is the one in your screenshot):
-- `VaultStreakRecapCard.tsx` renders a button:
-  - `onClick={onGoToProgressReports}`
-  - But in `src/pages/Vault.tsx`, the component is rendered WITHOUT passing `onGoToProgressReports`.
-- Result: the button click does nothing (no navigation, no scroll), which matches your report.
+## Current State
 
-## Implementation plan (what I will change)
+The `BodyAreaSelector` component currently displays 10 emoji-labeled buttons for body regions. Users tap buttons to toggle selection, which works but lacks visual context and feels less engaging than an anatomical diagram.
 
-### 1) Wire the Vault-internal button to an actual scroll action (primary fix)
-File: `src/pages/Vault.tsx`
+**Current body areas tracked:**
+- Head/Neck, Shoulder, Upper Back, Lower Back
+- Elbow, Wrist/Hand, Hip
+- Knee, Ankle, Foot
 
-- Create a dedicated handler (e.g. `handleGoToProgressReports`) that:
-  1. Forces the Vault tab to “today” (because the 6-week section lives in the Today tab).
-  2. Sets `autoOpenSection` to `'six-week-checkin'` so BOTH Performance Tests and Progress Photos expand.
-  3. Executes a “bulletproof” scroll to `sixWeekCheckinRef` using the existing centralized `scrollToVaultSection(sectionRefs, 'six-week-checkin')`.
+## Design Approach
 
-- Pass that handler into the left-column card:
-  - Add prop: `onGoToProgressReports={handleGoToProgressReports}` on `<VaultStreakRecapCard ... />`
+Create a front-facing human silhouette SVG with clearly defined, tappable zones for each body region. Selected areas glow red to indicate pain/limitation.
 
-This makes the exact button in your screenshot functional immediately.
+### Visual Design
+- Clean, minimal human outline (gender-neutral athletic silhouette)
+- Responsive sizing to fit mobile dialogs
+- Color scheme:
+  - Default zones: subtle gray/muted outline
+  - Hover: light highlight
+  - Selected (pain): red glow with pulsing animation
+- Labels appear on hover/selection for accessibility
 
-### 2) Make the scroll “elite” (timing + retry hardening)
-Even after wiring the handler, scrolling can still “feel flaky” if it fires before the Today tab finishes rendering. To prevent that:
+### User Experience
+- Tap any body zone to toggle pain selection
+- Haptic feedback on selection (existing vibration pattern)
+- Selected areas visually "light up" in red
+- Summary chips below the map show selected areas
+- Works alongside existing pain scale and movement questions
 
-File: `src/pages/Vault.tsx`
-- In `handleGoToProgressReports`, run scroll in a short staged sequence (fast + reliable):
-  - Attempt immediately
-  - Retry after small delays (ex: 50ms, 150ms, 350ms, 700ms, 1200ms)
-- This ensures it works even on slow devices or heavy renders.
+---
 
-Optional (but recommended) hardening in the shared utility:
-File: `src/utils/vaultNavigation.ts`
-- Improve `scrollToVaultSection()` so it only counts as “success” if the element is actually scrollable/visible (not just `ref.current` existing).
-  - For example, require `ref.current.getClientRects().length > 0` before treating it as a successful attempt.
-- Extend retry window slightly (up to ~2–2.5s) to cover worst-case render timing.
+## Technical Implementation
 
-This protects both:
-- deep-links coming from Game Plan (`/vault?openSection=six-week-checkin`)
-- same-page scroll requests from within Vault
+### File Changes
 
-### 3) Add a short “you landed here” visual confirmation (no confusion)
-File: `src/pages/Vault.tsx`
-- Add a transient highlight state (e.g. `highlightSection: VaultSection | null`)
-- When scrolling to `'six-week-checkin'`, set highlight on, then clear after ~1.5–2 seconds.
-- Apply a subtle ring/outline/pulse class to the 6-week container while highlighted.
+| File | Action | Description |
+|------|--------|-------------|
+| `src/components/vault/quiz/BodyMapSelector.tsx` | **Create** | New interactive SVG body map component |
+| `src/components/vault/quiz/BodyAreaSelector.tsx` | **Modify** | Update to use BodyMapSelector internally |
+| `src/i18n/locales/en.json` | **Update** | Add new translation keys for body map labels |
 
-Outcome: users instantly see where they landed, even if they were already near that area.
+### New Component: BodyMapSelector.tsx
 
-## Validation checklist (what I will verify in Preview)
-1) Go to `/vault`, stay near the top.
-2) Click the Vault’s internal “Complete your 6-week check in” button (from the recap/cycle card).
-   - Expected:
-     - Switches to Today tab if needed
-     - Scrolls down to the 6-Week Tracking section
-     - Both Performance Tests + Progress Photos are expanded
-     - Section briefly highlights
-3) From Game Plan, click its “Complete your 6-week check in” CTA.
-   - Expected:
-     - Navigates to Vault and scrolls to the same section, same behavior
-4) Repeat the click multiple times to ensure it works consistently (no “first click only” issues).
+The core component will contain:
 
-## Files that will be updated
-- `src/pages/Vault.tsx`
-  - Pass `onGoToProgressReports`
-  - Add robust scroll handler + optional highlight state/classes
-- (Recommended) `src/utils/vaultNavigation.ts`
-  - Hardening: visibility-aware scroll + longer retry window
-- (Optional) `src/components/vault/VaultStreakRecapCard.tsx`
-  - Defensive fallback: if `onGoToProgressReports` is missing, disable/hide the button to prevent silent failure in the future
+1. **SVG Human Silhouette** with defined path regions for each body area
+2. **Interactive Zones** - Each zone is a clickable SVG path/group with:
+   - Unique ID matching existing area IDs (head_neck, shoulder, etc.)
+   - Hover and selected states via CSS classes
+   - Click handler to toggle selection
+3. **Selected Area Chips** - Display selected areas below the map as visual confirmation
 
-## Expected result
-- The Vault’s internal “Complete your 6-week check in” button becomes 100% functional.
-- It scrolls users directly to the 6-week check-in section reliably and quickly.
-- Both required cards are open immediately, with clear visual confirmation so there’s no confusion.
+### SVG Zone Structure
+
+```text
++-------------------+
+|       HEAD        |  head_neck zone
+|      /    \       |
+|     SHOULDER      |  shoulder zone (symmetric)
+|    /        \     |
+|   UPPER BACK      |  upper_back zone
+|   |   ARM   |     |  
+|   | (ELBOW) |     |  elbow zone (symmetric)
+|   |  WRIST  |     |  wrist_hand zone (symmetric)
+|   LOWER BACK      |  lower_back zone
+|      HIP          |  hip zone
+|     /    \        |
+|    KNEE   KNEE    |  knee zone (symmetric)
+|    |      |       |
+|   ANKLE  ANKLE    |  ankle zone (symmetric)
+|   FOOT   FOOT     |  foot zone (symmetric)
++-------------------+
+```
+
+### Zone Mapping
+
+| Zone ID | SVG Region | Position |
+|---------|------------|----------|
+| `head_neck` | Head + neck area | Top center |
+| `shoulder` | Both shoulder caps | Upper sides |
+| `upper_back` | Upper torso back | Upper center |
+| `lower_back` | Lower torso back | Mid center |
+| `elbow` | Both elbow joints | Mid arms |
+| `wrist_hand` | Both wrists/hands | Lower arms |
+| `hip` | Hip/pelvis area | Lower torso |
+| `knee` | Both knee joints | Upper legs |
+| `ankle` | Both ankle joints | Lower legs |
+| `foot` | Both feet | Bottom |
+
+### Interaction Behavior
+
+1. **Tap/Click Zone** → Toggle selection state
+2. **Haptic Feedback** → `navigator.vibrate(10)` on toggle (existing pattern)
+3. **Visual Feedback**:
+   - Unselected: `fill: hsl(var(--muted))` with subtle stroke
+   - Hover: `fill: hsl(var(--muted-foreground)/20%)`
+   - Selected: `fill: rgba(239, 68, 68, 0.3)` (red-500/30) with red stroke and subtle pulse animation
+
+### Component Props (unchanged)
+
+```typescript
+interface BodyMapSelectorProps {
+  selectedAreas: string[];
+  onChange: (areas: string[]) => void;
+}
+```
+
+This maintains full backward compatibility with the existing `BodyAreaSelector` interface.
+
+---
+
+## Integration Points
+
+### VaultFocusQuizDialog
+
+No changes needed - the existing integration at lines 870-873 will work with the updated component:
+
+```tsx
+<BodyAreaSelector
+  selectedAreas={painLocations}
+  onChange={setPainLocations}
+/>
+```
+
+### Pain Pattern Alert System
+
+No changes needed - the `VaultPainPatternAlert` component uses the same area IDs stored in the database.
+
+### Translations
+
+Add body map specific labels if needed (existing area translations remain unchanged).
+
+---
+
+## Accessibility Considerations
+
+- Each zone has an accessible role and aria-label
+- Keyboard navigation support (Tab through zones, Enter/Space to toggle)
+- Focus indicators for keyboard users
+- Screen reader announces: "Body region [name], [selected/not selected]"
+- Selected areas also shown as text chips below the map for clarity
+
+---
+
+## Mobile Optimization
+
+- SVG scales responsively within the dialog container
+- Touch targets sized for comfortable tapping (minimum 44x44px effective area)
+- Zones sized proportionally to ensure easy selection on small screens
+- No pinch-to-zoom interference (maintains dialog scroll behavior)
+
+---
+
+## Animation Details
+
+Following the app's animation standards (fast, professional):
+
+- Zone hover: 150ms transition
+- Selection toggle: 100ms scale-in with red glow
+- Pulse animation on selected zones: subtle 2s infinite pulse at reduced opacity
+
+---
+
+## Summary
+
+This enhancement transforms the pain tracking experience from a list of buttons to an intuitive visual interface. Athletes can quickly tap exactly where they feel pain on a body silhouette, making the pre-workout check-in faster and more engaging while maintaining full compatibility with the existing data model and alert systems.
