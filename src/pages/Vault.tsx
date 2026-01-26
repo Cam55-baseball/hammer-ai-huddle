@@ -722,7 +722,7 @@ export default function Vault() {
                         onSave={handleSavePerformanceTest}
                         sport={userSport}
                         subscribedModules={subscribedModules}
-                        autoOpen={autoOpenSection === 'performance-tests'}
+                        autoOpen={autoOpenSection === 'performance-tests' || autoOpenSection === 'six-week-checkin'}
                         recapUnlockedAt={progressReportsUnlockedAt}
                       />
                     </div>
@@ -733,6 +733,7 @@ export default function Vault() {
                         photos={progressPhotos}
                         onSave={handleSaveProgressPhoto}
                         recapUnlockedAt={progressReportsUnlockedAt}
+                        autoOpen={autoOpenSection === 'progress-photos' || autoOpenSection === 'six-week-checkin'}
                       />
                     </div>
                   </div>
