@@ -703,7 +703,7 @@ export default function Vault() {
                   />
 
                   {/* 6-Week Tracking Section */}
-                  <div ref={sectionRefs['six-week-checkin']} className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 sm:p-6 space-y-4">
+                  <div ref={sixWeekCheckinRef} className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background p-4 sm:p-6 space-y-4">
                     {/* Section Header */}
                     <div className="flex items-center gap-3 pb-3 border-b border-primary/20">
                       <div className="p-2 rounded-lg bg-primary/10">
@@ -716,7 +716,7 @@ export default function Vault() {
                     </div>
 
                     {/* Performance Tests */}
-                    <div ref={sectionRefs['performance-tests']}>
+                    <div ref={performanceTestsRef}>
                       <VaultPerformanceTestCard
                         tests={performanceTests}
                         onSave={handleSavePerformanceTest}
@@ -728,7 +728,7 @@ export default function Vault() {
                     </div>
 
                     {/* Progress Photos */}
-                    <div ref={sectionRefs['progress-photos']}>
+                    <div ref={progressPhotosRef}>
                       <VaultProgressPhotosCard
                         photos={progressPhotos}
                         onSave={handleSaveProgressPhoto}
