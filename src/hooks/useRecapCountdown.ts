@@ -20,10 +20,12 @@ interface RecapCountdownData {
  * Uses vault_streaks.created_at as the anchor date, falling back to subscriptions.created_at.
  * The countdown is based on 42-day cycles from the anchor date.
  * 
- * New features:
+ * Features:
  * - Detects missed recaps (cycle completed without generating a recap)
  * - Provides 7-day grace period after cycle ends to generate recap
  * - Returns hasMissedRecap and missedCycleEnd for UI indicators
+ * - Prevents duplicate generation within same cycle period
+ * - Gates next countdown on progress report completion
  */
 export function useRecapCountdown(): RecapCountdownData {
   const { user } = useAuth();
@@ -55,7 +57,7 @@ export function useRecapCountdown(): RecapCountdownData {
     // Fetch the latest recap to check if we've already generated one for the current/previous cycle
     const { data: latestRecap } = await supabase
       .from('vault_recaps')
-      .select('recap_period_end, generated_at, unlocked_progress_reports_at')
+      .select('recap_period_end, recap_period_start, generated_at, unlocked_progress_reports_at')
       .eq('user_id', userId)
       .order('generated_at', { ascending: false })
       .limit(1)
@@ -66,6 +68,8 @@ export function useRecapCountdown(): RecapCountdownData {
     const currentCycleStart = new Date(currentCycleStartMs);
     const previousCycleEndMs = currentCycleStartMs - 1; // Last moment of previous cycle
     const previousCycleEnd = completedCycles > 0 ? new Date(previousCycleEndMs) : null;
+    const previousCycleStartMs = currentCycleStartMs - (42 * 24 * 60 * 60 * 1000);
+    const previousCycleStart = completedCycles > 0 ? new Date(previousCycleStartMs) : null;
     
     // Determine recap status
     let canGenerate = false;
@@ -77,77 +81,70 @@ export function useRecapCountdown(): RecapCountdownData {
     if (completedCycles > 0) {
       // At least one cycle has been completed
       if (latestRecap) {
-        const latestRecapEnd = new Date(latestRecap.recap_period_end);
+        const recapPeriodStart = new Date(latestRecap.recap_period_start);
+        const recapPeriodEnd = new Date(latestRecap.recap_period_end);
+        const recapGeneratedAt = new Date(latestRecap.generated_at);
         
-        // Check if the latest recap covers the most recent completed cycle
-        // A recap is considered "covering" a cycle if its end date is within that cycle's period
-        const recapCoversCurrentCycle = latestRecapEnd >= currentCycleStart;
-        const recapCoversPreviousCycle = previousCycleEnd && latestRecapEnd >= new Date(currentCycleStart.getTime() - 42 * 24 * 60 * 60 * 1000);
+        // STRICT CHECK: Does the latest recap cover the most recently completed cycle?
+        // A recap covers a cycle if its period_start matches the cycle start (within a day tolerance)
+        const recapCoversMostRecentCycle = previousCycleStart && 
+          Math.abs(recapPeriodStart.getTime() - previousCycleStart.getTime()) < (2 * 24 * 60 * 60 * 1000);
         
-        if (!recapCoversCurrentCycle && !recapCoversPreviousCycle) {
+        // Also check by generation time - if generated within 7 days after the cycle ended
+        const daysSinceGenerated = Math.floor((now.getTime() - recapGeneratedAt.getTime()) / (1000 * 60 * 60 * 24));
+        const generatedForThisCycle = daysSinceGenerated <= 7 && recapPeriodEnd >= (previousCycleStart || new Date(0));
+        
+        if (!recapCoversMostRecentCycle && !generatedForThisCycle) {
           // User missed generating a recap for the previous cycle
           hasMissed = true;
           missedEnd = previousCycleEnd;
           canGenerate = true;
-        } else if (!recapCoversCurrentCycle && daysInCurrentCycle <= 7) {
-          // Within 7-day grace period of new cycle, can still generate
-          canGenerate = true;
-        }
-        
-        // Check if waiting for progress reports
-        // If recap was generated and unlocked_progress_reports_at is set, check if progress reports were completed
-        if (latestRecap.unlocked_progress_reports_at) {
-          unlockedAt = new Date(latestRecap.unlocked_progress_reports_at);
-          
-          // Check if any performance tests or progress photos were added after the unlock date
-          const [{ data: perfTests }, { data: photos }] = await Promise.all([
-            supabase
-              .from('vault_performance_tests')
-              .select('id')
-              .eq('user_id', userId)
-              .gt('created_at', latestRecap.unlocked_progress_reports_at)
-              .limit(1),
-            supabase
-              .from('vault_progress_photos')
-              .select('id')
-              .eq('user_id', userId)
-              .gt('created_at', latestRecap.unlocked_progress_reports_at)
-              .limit(1)
-          ]);
-          
-          const hasProgressReports = (perfTests && perfTests.length > 0) || (photos && photos.length > 0);
-          
-          // If no progress reports after unlock, user is waiting to complete them
-          if (!hasProgressReports) {
-            waitingForReports = true;
-            // While waiting, don't allow generating another recap
+        } else if (recapCoversMostRecentCycle || generatedForThisCycle) {
+          // Recap exists for this cycle - check if waiting for progress reports
+          if (latestRecap.unlocked_progress_reports_at) {
+            unlockedAt = new Date(latestRecap.unlocked_progress_reports_at);
+            
+            // Check if any performance tests or progress photos were added after the unlock date
+            const [{ data: perfTests }, { data: photos }] = await Promise.all([
+              supabase
+                .from('vault_performance_tests')
+                .select('id')
+                .eq('user_id', userId)
+                .gt('created_at', latestRecap.unlocked_progress_reports_at)
+                .limit(1),
+              supabase
+                .from('vault_progress_photos')
+                .select('id')
+                .eq('user_id', userId)
+                .gt('created_at', latestRecap.unlocked_progress_reports_at)
+                .limit(1)
+            ]);
+            
+            const hasProgressReports = (perfTests && perfTests.length > 0) || (photos && photos.length > 0);
+            
+            // If no progress reports after unlock, user is waiting to complete them
+            if (!hasProgressReports) {
+              waitingForReports = true;
+              // While waiting, countdown is paused - don't allow generating another recap
+              canGenerate = false;
+              hasMissed = false;
+            }
+            // If progress reports completed, countdown continues normally
+          } else {
+            // Recap exists but unlocked_progress_reports_at not set (legacy)
+            // Don't allow duplicate generation
             canGenerate = false;
-            hasMissed = false;
           }
         }
       } else {
-        // No recaps exist, user has missed all previous cycles
+        // No recaps exist at all, user has missed all previous cycles
         // Allow generating for the most recent completed cycle
         hasMissed = true;
         missedEnd = previousCycleEnd;
         canGenerate = true;
       }
     }
-    
-    // Also allow generation if exactly at day 0 (cycle just completed) or within grace period
-    // But not if waiting for progress reports
-    if (daysInCurrentCycle <= 7 && completedCycles > 0 && !waitingForReports) {
-      // Check if we already have a recap for this cycle period
-      if (latestRecap) {
-        const latestRecapEnd = new Date(latestRecap.recap_period_end);
-        const cycleStartForCheck = new Date(startDate.getTime() + ((completedCycles - 1) * 42 * 24 * 60 * 60 * 1000));
-        if (latestRecapEnd < cycleStartForCheck) {
-          canGenerate = true;
-        }
-      } else {
-        canGenerate = true;
-      }
-    }
+    // If completedCycles === 0, user is still in their first cycle - no recap available yet
     
     setCanGenerateRecap(canGenerate);
     setHasMissedRecap(hasMissed);

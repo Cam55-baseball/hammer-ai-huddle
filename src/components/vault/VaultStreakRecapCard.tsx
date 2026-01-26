@@ -8,19 +8,17 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { 
   Flame, Trophy, Calendar, Award, Sparkles, ChevronDown,
   FileText, TrendingUp, Dumbbell, Brain, Target, Activity,
   Zap, Lightbulb, CheckCircle2, Heart, AlertCircle,
-  Bookmark, BookmarkCheck, Download, Share2, Trash2
+  Bookmark, BookmarkCheck, Download, Share2, Trash2,
+  Moon, Scale, AlertTriangle, Utensils, BarChart3, Star
 } from 'lucide-react';
 import { FaXTwitter, FaInstagram } from 'react-icons/fa6';
 import { VaultStreak } from '@/hooks/useVault';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { generateRecapPdf } from '@/utils/generateRecapPdf';
 import { generateRecapShareImage } from '@/utils/generateRecapShareImage';
 
@@ -31,30 +29,73 @@ interface VaultRecap {
   total_weight_lifted: number | null;
   strength_change_percent: number | null;
   recap_data: {
+    // Elite analysis fields
+    executive_summary?: string;
+    training_analysis?: string[];
+    recovery_assessment?: string[];
+    mental_performance?: string[];
+    scout_grade_analysis?: string[];
+    nutrition_impact?: string[];
+    critical_focus_areas?: string[];
+    strategic_recommendations?: string[];
+    elite_insight?: string;
+    // Legacy fields for backward compatibility
     summary?: string;
     highlights?: string[];
     improvements?: string[];
     focus_areas?: string[];
     recommendations?: string[];
+    // Stats objects
     workout_stats?: {
       total_workouts: number;
       total_weight: number;
       weight_increases: number;
       avg_session_weight: number;
+      strength_change_percent?: number;
+    };
+    sleep_stats?: {
+      avg_hours: number;
+      avg_quality: number;
+      consistency: string;
+      trend: string;
+      entries_count: number;
+    };
+    pain_stats?: {
+      total_reports: number;
+      avg_scale: number;
+      chronic_areas: { area: string; occurrences: number }[];
+    };
+    weight_stats?: {
+      start_weight: number;
+      end_weight: number;
+      change: number;
+      trend: string;
     };
     mental_stats?: {
       avg_mental: number;
       avg_emotional: number;
       avg_physical: number;
+      avg_discipline?: number;
+      avg_stress?: number;
+      avg_mood?: number;
       quiz_count: number;
     };
     nutrition_stats?: {
       avg_calories: number;
       avg_protein: number;
+      avg_carbs?: number;
+      avg_fats?: number;
       avg_energy: number;
       logs_count: number;
     };
-    performance_tests?: number;
+    scout_analysis?: {
+      totalGrades: number;
+      strongestTools: { tool: string; grade: number }[];
+      weakestTools: { tool: string; grade: number }[];
+      improvements: { field: string; change: number }[];
+      regressions: { field: string; change: number }[];
+    };
+    performance_tests?: any[];
   };
   generated_at: string;
   saved_to_library?: boolean;
@@ -101,6 +142,7 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState<'save' | 'delete' | 'pdf' | 'share' | null>(null);
+  const [justGenerated, setJustGenerated] = useState(false);
 
   const currentStreak = streak?.current_streak || 0;
   const longestStreak = streak?.longest_streak || 0;
@@ -115,16 +157,23 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
 
   const getStreakGlow = () => currentStreak >= 25;
 
-  const showRecapButton = (canGenerateRecap || hasMissedRecap) && !waitingForProgressReports;
+  // Hide button immediately after generation
+  const showRecapButton = !justGenerated && (canGenerateRecap || hasMissedRecap) && !waitingForProgressReports;
 
   const handleGenerate = async () => {
     setGenerating(true);
+    let result;
     if (hasMissedRecap && missedCycleEnd) {
-      await onGenerateRecap(missedCycleEnd);
+      result = await onGenerateRecap(missedCycleEnd);
     } else {
-      await onGenerateRecap();
+      result = await onGenerateRecap();
     }
     setGenerating(false);
+    
+    // Immediately hide the button after successful generation
+    if (result.success) {
+      setJustGenerated(true);
+    }
   };
 
   const handleViewRecap = (recap: VaultRecap) => {
@@ -242,6 +291,19 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
     );
   }
 
+  // Get display content - prefer new elite fields, fallback to legacy
+  const getExecutiveSummary = (recap: VaultRecap) => 
+    recap.recap_data.executive_summary || recap.recap_data.summary;
+  
+  const getTrainingAnalysis = (recap: VaultRecap) => 
+    recap.recap_data.training_analysis?.length ? recap.recap_data.training_analysis : recap.recap_data.highlights;
+  
+  const getRecoveryAssessment = (recap: VaultRecap) => 
+    recap.recap_data.recovery_assessment?.length ? recap.recap_data.recovery_assessment : recap.recap_data.improvements;
+  
+  const getStrategicRecommendations = (recap: VaultRecap) => 
+    recap.recap_data.strategic_recommendations?.length ? recap.recap_data.strategic_recommendations : recap.recap_data.recommendations;
+
   return (
     <>
       <Card 
@@ -299,13 +361,18 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                 <span className="text-sm font-medium">{t('vault.recap.sixWeekCycle')}</span>
               </div>
               <div className="flex items-center gap-2">
-                {hasMissedRecap && (
+                {hasMissedRecap && !justGenerated && (
                   <Badge variant="destructive" className="text-xs gap-1 animate-pulse">
                     <AlertCircle className="h-3 w-3" />
                     {t('vault.recap.missed')}
                   </Badge>
                 )}
-                {canGenerateRecap && !hasMissedRecap ? (
+                {justGenerated ? (
+                  <Badge className="bg-green-500 text-white text-xs gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Generated
+                  </Badge>
+                ) : canGenerateRecap && !hasMissedRecap ? (
                   <Badge className="bg-violet-500 text-white text-xs">{t('vault.recap.ready')}</Badge>
                 ) : !hasMissedRecap && (
                   <Badge variant="outline" className="text-xs">
@@ -314,7 +381,7 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                 )}
               </div>
             </div>
-            <Progress value={waitingForProgressReports ? 100 : recapProgress} className="h-2" />
+            <Progress value={waitingForProgressReports || justGenerated ? 100 : recapProgress} className="h-2" />
             
             {waitingForProgressReports ? (
               <Button 
@@ -347,6 +414,10 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                   </>
                 )}
               </Button>
+            ) : justGenerated ? (
+              <p className="text-xs text-green-500 text-center font-medium">
+                ✓ Recap generated! Complete your progress reports to start the next cycle.
+              </p>
             ) : (
               <p className="text-xs text-muted-foreground text-center">
                 {t('vault.recap.keepLogging')}
@@ -428,7 +499,7 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
         </CardContent>
       </Card>
 
-      {/* Recap Detail Dialog */}
+      {/* Recap Detail Dialog - Enhanced for Elite Analysis */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-full sm:max-w-2xl max-h-[85vh] overflow-y-auto overflow-x-hidden p-3 sm:p-6">
           <DialogHeader>
@@ -437,7 +508,7 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
               {t('vault.recap.detailTitle')}
               <Badge variant="outline" className="text-xs gap-1">
                 <Sparkles className="h-3 w-3" />
-                {t('vault.recap.aiGenerated')}
+                Elite Analysis
               </Badge>
             </DialogTitle>
             <DialogDescription>
@@ -451,75 +522,153 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
 
           {selectedRecap && (
             <div className="space-y-4">
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Stats Grid - Enhanced */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {selectedRecap.recap_data.workout_stats && (
                   <>
                     <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
                       <Dumbbell className="h-4 w-4 mx-auto mb-1 text-orange-500" />
                       <p className="text-lg font-bold">{selectedRecap.recap_data.workout_stats.total_workouts}</p>
-                      <p className="text-xs text-muted-foreground">{t('vault.recap.workoutsLabel')}</p>
+                      <p className="text-xs text-muted-foreground">Workouts</p>
                     </div>
                     <div className="p-2 rounded-lg bg-violet-500/10 border border-violet-500/20 text-center">
                       <Activity className="h-4 w-4 mx-auto mb-1 text-violet-500" />
                       <p className="text-lg font-bold">{selectedRecap.total_weight_lifted?.toLocaleString() || 0}</p>
-                      <p className="text-xs text-muted-foreground">{t('vault.recap.totalLbs')}</p>
+                      <p className="text-xs text-muted-foreground">lbs Lifted</p>
                     </div>
                   </>
                 )}
+                {selectedRecap.recap_data.sleep_stats && (
+                  <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
+                    <Moon className="h-4 w-4 mx-auto mb-1 text-blue-500" />
+                    <p className="text-lg font-bold">{selectedRecap.recap_data.sleep_stats.avg_hours}h</p>
+                    <p className="text-xs text-muted-foreground">Avg Sleep</p>
+                  </div>
+                )}
+                {selectedRecap.recap_data.mental_stats && (
+                  <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20 text-center">
+                    <Brain className="h-4 w-4 mx-auto mb-1 text-purple-500" />
+                    <p className="text-lg font-bold">{selectedRecap.recap_data.mental_stats.avg_mental}/5</p>
+                    <p className="text-xs text-muted-foreground">Mental</p>
+                  </div>
+                )}
               </div>
 
-              {/* AI Summary */}
-              {selectedRecap.recap_data.summary && (
+              {/* Executive Summary */}
+              {getExecutiveSummary(selectedRecap) && (
                 <div className="p-3 rounded-lg bg-gradient-to-br from-violet-500/10 to-primary/5 border border-violet-500/20">
                   <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="h-4 w-4 text-violet-500" />
-                    <h4 className="text-sm font-semibold">{t('vault.recap.summary')}</h4>
+                    <h4 className="text-sm font-semibold">Executive Summary</h4>
                   </div>
-                  <p className="text-sm text-foreground leading-relaxed">{selectedRecap.recap_data.summary}</p>
+                  <p className="text-sm text-foreground leading-relaxed">{getExecutiveSummary(selectedRecap)}</p>
                 </div>
               )}
 
-              {/* Highlights */}
-              {selectedRecap.recap_data.highlights && selectedRecap.recap_data.highlights.length > 0 && (
+              {/* Training Analysis */}
+              {getTrainingAnalysis(selectedRecap) && getTrainingAnalysis(selectedRecap)!.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <Award className="h-4 w-4 text-amber-500" />
-                    {t('vault.recap.highlights')}
+                    <BarChart3 className="h-4 w-4 text-orange-500" />
+                    Training Analysis
                   </h4>
-                  {selectedRecap.recap_data.highlights.map((h, i) => (
-                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-amber-500/5 border border-amber-500/10">
-                      <CheckCircle2 className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                      <span className="text-sm">{h}</span>
+                  {getTrainingAnalysis(selectedRecap)!.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
+                      <Dumbbell className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                      <span className="text-sm">{item}</span>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Improvements */}
-              {selectedRecap.recap_data.improvements && selectedRecap.recap_data.improvements.length > 0 && (
+              {/* Recovery Assessment */}
+              {getRecoveryAssessment(selectedRecap) && getRecoveryAssessment(selectedRecap)!.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    {t('vault.recap.improvements')}
+                    <Moon className="h-4 w-4 text-blue-500" />
+                    Recovery Assessment
                   </h4>
-                  {selectedRecap.recap_data.improvements.map((imp, i) => (
+                  {getRecoveryAssessment(selectedRecap)!.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                      <Heart className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                      <span className="text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Mental Performance */}
+              {selectedRecap.recap_data.mental_performance && selectedRecap.recap_data.mental_performance.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-purple-500" />
+                    Mental Performance
+                  </h4>
+                  {selectedRecap.recap_data.mental_performance.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-purple-500/5 border border-purple-500/10">
+                      <Zap className="h-4 w-4 text-purple-500 mt-0.5 shrink-0" />
+                      <span className="text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Scout Grade Analysis */}
+              {selectedRecap.recap_data.scout_grade_analysis && selectedRecap.recap_data.scout_grade_analysis.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    Scout Grade Analysis
+                  </h4>
+                  {selectedRecap.recap_data.scout_grade_analysis.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                      <Target className="h-4 w-4 text-yellow-500 mt-0.5 shrink-0" />
+                      <span className="text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Nutrition Impact */}
+              {selectedRecap.recap_data.nutrition_impact && selectedRecap.recap_data.nutrition_impact.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Utensils className="h-4 w-4 text-green-500" />
+                    Nutrition Impact
+                  </h4>
+                  {selectedRecap.recap_data.nutrition_impact.map((item, i) => (
                     <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-green-500/5 border border-green-500/10">
-                      <Zap className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                      <span className="text-sm">{imp}</span>
+                      <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
+                      <span className="text-sm">{item}</span>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Recommendations */}
-              {selectedRecap.recap_data.recommendations && selectedRecap.recap_data.recommendations.length > 0 && (
+              {/* Critical Focus Areas */}
+              {selectedRecap.recap_data.critical_focus_areas && selectedRecap.recap_data.critical_focus_areas.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                    Critical Focus Areas
+                  </h4>
+                  {selectedRecap.recap_data.critical_focus_areas.map((item, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-red-500/5 border border-red-500/10">
+                      <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+                      <span className="text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Strategic Recommendations */}
+              {getStrategicRecommendations(selectedRecap) && getStrategicRecommendations(selectedRecap)!.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
                     <Lightbulb className="h-4 w-4 text-primary" />
-                    {t('vault.recap.recommendations')}
+                    Strategic Recommendations
                   </h4>
-                  {selectedRecap.recap_data.recommendations.map((rec, i) => (
+                  {getStrategicRecommendations(selectedRecap)!.map((rec, i) => (
                     <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
                       <Lightbulb className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       <span className="text-sm">{rec}</span>
@@ -528,9 +677,19 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                 </div>
               )}
 
+              {/* Elite Insight */}
+              {selectedRecap.recap_data.elite_insight && (
+                <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-red-500/10 border border-amber-500/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className="h-5 w-5 text-amber-500" />
+                    <h4 className="text-sm font-semibold text-amber-600 dark:text-amber-400">Elite Coach Insight</h4>
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed italic">{selectedRecap.recap_data.elite_insight}</p>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t mt-4">
-                {/* Save Button */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -552,7 +711,6 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                 </Button>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  {/* Download PDF */}
                   <Button
                     variant="outline"
                     size="sm"
@@ -568,8 +726,6 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                     {t('vault.recap.downloadPdf')}
                   </Button>
 
-
-                  {/* Share */}
                   <Button
                     variant="outline"
                     size="sm"
@@ -581,7 +737,6 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
                     {t('vault.recap.shareToSocial')}
                   </Button>
 
-                  {/* Delete */}
                   <Button
                     variant="destructive"
                     size="sm"

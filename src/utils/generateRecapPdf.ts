@@ -9,6 +9,15 @@ interface VaultRecap {
   total_weight_lifted: number | null;
   strength_change_percent: number | null;
   recap_data: {
+    executive_summary?: string;
+    training_analysis?: string[];
+    recovery_assessment?: string[];
+    mental_performance?: string[];
+    scout_grade_analysis?: string[];
+    nutrition_impact?: string[];
+    critical_focus_areas?: string[];
+    strategic_recommendations?: string[];
+    elite_insight?: string;
     summary?: string;
     highlights?: string[];
     improvements?: string[];
@@ -32,7 +41,7 @@ interface VaultRecap {
       avg_energy: number;
       logs_count: number;
     };
-    performance_tests?: number;
+    performance_tests?: any[];
   };
   generated_at: string;
   saved_to_library?: boolean;
