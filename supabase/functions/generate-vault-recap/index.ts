@@ -324,22 +324,53 @@ serve(async (req) => {
       recommendations: [],
     };
 
+    // ========== RECOVERY PHASE DETECTION ==========
+    // Detect if athlete is in recovery/rehabilitation phase (post-surgery, injury, etc.)
+    const scoutNotes = grades?.[grades.length - 1]?.notes || '';
+    const hasInjuryIndicators = scoutNotes.toLowerCase().includes('surgery') || 
+                                scoutNotes.toLowerCase().includes('injury') ||
+                                scoutNotes.toLowerCase().includes('cleared') ||
+                                scoutNotes.toLowerCase().includes('rehab') ||
+                                chronicPainAreas.length > 0;
+    const isRecoveryPhase = totalWorkouts === 0 && (quizzes?.length || 0) >= 5 && hasInjuryIndicators;
+    
+    console.log(`Recovery phase detected: ${isRecoveryPhase} (workouts: ${totalWorkouts}, quizzes: ${quizzes?.length}, injury indicators: ${hasInjuryIndicators})`);
+
     if (LOVABLE_API_KEY && (totalWorkouts > 0 || (quizzes?.length || 0) > 0)) {
       try {
-        const elitePrompt = `You are an elite sports performance analyst with 20+ years of experience working with professional and Olympic athletes. You are creating a comprehensive 6-week training recap that demonstrates deep expertise in athlete development. This analysis should be at the level of a .001% professional in this field.
+        // Dynamic context prefix for recovery phase athletes
+        const recoveryContext = isRecoveryPhase ? `
+═══════════════════════════════════════════════════════════════
+⚠️ CRITICAL CONTEXT: RECOVERY/REHABILITATION PHASE DETECTED
+═══════════════════════════════════════════════════════════════
 
+This athlete appears to be in a RECOVERY PHASE post-injury or surgery. Your analysis must adapt:
+
+- DO NOT focus on training volume or strength progression (they are recovering)
+- FOCUS INSTEAD on: mental resilience, psychological readiness, sleep quality during rehab, pain management patterns, emotional stability, and return-to-play indicators
+- Their Scout Grades may show artificially low scores (e.g., Speed grade) due to physical limitations - contextualize this
+- Recognize their commitment to daily check-ins as a positive indicator of discipline and recovery mindset
+- Look for patterns in their mental/emotional data that indicate healthy recovery psychology
+
+SCOUT NOTES (from athlete): "${scoutNotes}"
+
+` : '';
+
+        const elitePrompt = `You are an elite sports performance analyst with 20+ years of experience working with professional and Olympic athletes. You are creating a comprehensive 6-week training recap that demonstrates deep expertise in athlete development. This analysis should be at the level of a .001% professional in this field.
+${recoveryContext}
 ATHLETE PROFILE:
 - Name: ${profile?.first_name || 'Athlete'}
 - Position: ${profile?.position || 'Not specified'}
 - Sport: ${profile?.sport || 'Baseball/Softball'}
 - Analysis Period: ${startDateStr} to ${endDateStr}
+- Phase: ${isRecoveryPhase ? '🔄 REHABILITATION/RECOVERY' : '📈 ACTIVE TRAINING'}
 
 ═══════════════════════════════════════════════════════════════
 COMPREHENSIVE DATA ANALYSIS
 ═══════════════════════════════════════════════════════════════
 
 1. TRAINING VOLUME & PROGRESSION
-   • Total Workouts: ${totalWorkouts}
+   • Total Workouts: ${totalWorkouts}${isRecoveryPhase ? ' (expected low - athlete recovering)' : ''}
    • Total Weight Lifted: ${totalWeightLifted.toLocaleString()} lbs
    • Weight Increases Logged: ${totalWeightIncreases}
    • Week 1 Avg Session: ${Math.round(firstWeekAvgWeight).toLocaleString()} lbs
@@ -365,7 +396,7 @@ COMPREHENSIVE DATA ANALYSIS
    • Weight Trend: ${weightTrend}
    • Total Weight Entries: ${weights.length}
 
-5. MENTAL & EMOTIONAL READINESS
+5. MENTAL & EMOTIONAL READINESS ${isRecoveryPhase ? '(KEY RECOVERY METRICS)' : ''}
    • Average Mental Readiness: ${avgMental.toFixed(1)}/5
    • Average Emotional State: ${avgEmotional.toFixed(1)}/5
    • Average Physical Readiness: ${avgPhysical.toFixed(1)}/5
@@ -389,7 +420,7 @@ COMPREHENSIVE DATA ANALYSIS
    ${scoutAnalysis ? `
    • Total Grades Recorded: ${scoutAnalysis.totalGrades}
    • Strongest Tools: ${scoutAnalysis.strongestTools.map((t: any) => `${t.tool} (${t.grade})`).join(', ') || 'N/A'}
-   • Weakest Tools: ${scoutAnalysis.weakestTools.map((t: any) => `${t.tool} (${t.grade})`).join(', ') || 'N/A'}
+   • Weakest Tools: ${scoutAnalysis.weakestTools.map((t: any) => `${t.tool} (${t.grade})`).join(', ') || 'N/A'}${isRecoveryPhase ? ' (may be affected by recovery status)' : ''}
    • Improvements (+5 or more): ${scoutAnalysis.improvements.map((i: any) => `${i.field} (+${i.change})`).join(', ') || 'None'}
    • Regressions (-5 or more): ${scoutAnalysis.regressions.map((r: any) => `${r.field} (${r.change})`).join(', ') || 'None'}` : '• No scout grades recorded'}
 
@@ -407,7 +438,21 @@ COMPREHENSIVE DATA ANALYSIS
 
 ═══════════════════════════════════════════════════════════════
 
+${isRecoveryPhase ? `
+SPECIAL INSTRUCTIONS FOR RECOVERY PHASE ANALYSIS:
+Generate an elite-level REHABILITATION & RECOVERY recap. Focus on:
+- Mental resilience and psychological readiness for return-to-play
+- Sleep quality as a recovery accelerator
+- Pain pattern monitoring and management
+- Emotional stability during limited activity
+- Discipline in maintaining daily check-ins despite not training
+- Return-to-play readiness indicators
+- How Scout Grade limitations (e.g., low Speed score) are temporary due to injury
+
+Do NOT criticize lack of training volume - the athlete is recovering. Instead, praise their commitment to tracking and mental preparation.
+` : `
 Generate a PROFESSIONAL, ELITE-LEVEL 6-week training recap. This should read like it was written by a top-tier performance coach working with elite athletes. Be specific with numbers, percentages, and trends. Correlate different data points to reveal insights (e.g., "Your sleep quality dropped in week 4, which correlates with the decrease in training volume").
+`}
 
 CRITICAL REQUIREMENTS:
 - Use specific numbers and percentages from the data
@@ -415,26 +460,27 @@ CRITICAL REQUIREMENTS:
 - Provide actionable, specific recommendations
 - Write with authority and expertise
 - Focus on patterns and trends, not just averages
+${isRecoveryPhase ? '- Frame everything through the lens of recovery optimization and return-to-play preparation' : ''}
 
 REQUIRED SECTIONS (return as JSON):
 
-1. executive_summary (3-4 sentences): High-level assessment with the most important metrics. Lead with the key finding.
+1. executive_summary (3-4 sentences): High-level assessment with the most important metrics. ${isRecoveryPhase ? 'Acknowledge the recovery phase and focus on mental/psychological readiness.' : 'Lead with the key finding.'}
 
-2. training_analysis (4-6 bullet points): Specific observations about training volume, intensity, consistency, and progression. Include percentages.
+2. training_analysis (4-6 bullet points): ${isRecoveryPhase ? 'Focus on what limited activity was done, saved drills for future reference, and preparation for return-to-training. Do not criticize lack of volume.' : 'Specific observations about training volume, intensity, consistency, and progression. Include percentages.'}
 
-3. recovery_assessment (3-4 bullet points): Sleep quality analysis, pain patterns, perceived recovery. Flag concerning patterns.
+3. recovery_assessment (3-4 bullet points): Sleep quality analysis, pain patterns, perceived recovery. ${isRecoveryPhase ? 'This is the MOST IMPORTANT section for recovery phase athletes.' : 'Flag concerning patterns.'}
 
-4. mental_performance (3-4 bullet points): Mental readiness trends, stress management, discipline scores. Correlate with physical performance.
+4. mental_performance (3-4 bullet points): Mental readiness trends, stress management, discipline scores. ${isRecoveryPhase ? 'Emphasize psychological resilience and commitment to daily check-ins as key recovery indicators.' : 'Correlate with physical performance.'}
 
-5. scout_grade_analysis (3-4 bullet points): Strongest/weakest tools, grade improvements/regressions, what the numbers mean competitively.
+5. scout_grade_analysis (3-4 bullet points): ${isRecoveryPhase ? 'Acknowledge that some grades (especially physical tools like Speed) may be artificially low due to recovery. Focus on mental/leadership grades as current strengths.' : 'Strongest/weakest tools, grade improvements/regressions, what the numbers mean competitively.'}
 
-6. nutrition_impact (2-3 bullet points): Caloric patterns, protein consistency, energy correlation with training output.
+6. nutrition_impact (2-3 bullet points): Caloric patterns, protein consistency, energy correlation. ${isRecoveryPhase ? 'Frame nutrition as recovery fuel.' : ''}
 
 7. critical_focus_areas (2-3 bullet points): The most important areas needing immediate attention. Be direct and specific.
 
-8. strategic_recommendations (4-5 bullet points): Specific, implementable recommendations for the next 6-week cycle.
+8. strategic_recommendations (4-5 bullet points): ${isRecoveryPhase ? 'Focus on progressive return-to-play protocols, maintaining mental sharpness, and injury prevention for the next cycle.' : 'Specific, implementable recommendations for the next 6-week cycle.'}
 
-9. elite_insight (1 paragraph): A deeper analysis connecting multiple data points to reveal a pattern or insight the athlete may not have noticed. This demonstrates elite-level coaching.
+9. elite_insight (1 paragraph): A deeper analysis connecting multiple data points to reveal a pattern or insight the athlete may not have noticed. ${isRecoveryPhase ? 'Connect their mental data with recovery readiness. Show how their discipline and mindset during this down period will translate to a stronger return.' : 'This demonstrates elite-level coaching.'}
 
 Return ONLY valid JSON with this exact structure:
 {
