@@ -1,148 +1,126 @@
 
-# Fix: System Tasks Ignoring Repeat Weekly Schedule
+## What’s happening (why you’re seeing “Scheduled off” items still in the main list)
 
-## Problem
+From the current code, the app correctly detects that “Complete Morning Check-In” (`quiz-morning`) and “Complete Pre-Workout Check-In” (`quiz-prelift`) are scheduled off for Monday (they’re in `calendar_skipped_items` and the UI even labels them “Scheduled off”).
 
-The Morning Check-In (`quiz-morning`) and Pre-Workout Check-In (`quiz-prelift`) are marked as "Scheduled off" in the schedule settings but still appear on the Game Plan. The database confirms:
-- `quiz-morning` has `skip_days: [1, 2]` (Monday, Tuesday skipped)
-- `quiz-prelift` has `skip_days: [1]` (Monday skipped)
-- Today is Monday (day 1), so both should be hidden
+However, on the Dashboard Game Plan, there is one view mode where “Scheduled off” tasks are not filtered out of the *main* list:
 
-## Root Cause
+- In **Timeline mode**, the main task list only filters out **manually skipped** tasks, but it **does not filter out “scheduled off” (weekly skipped)** tasks.
+- At the same time, the “Skipped for today” section *does* include weekly-skipped tasks.
+- Result: the same task appears in both places (main list + “Skipped for today”), which matches exactly what you’re reporting.
 
-In `useGamePlan.ts`, the skip items fetch only queries for `item_type = 'custom_activity'`:
-
-```typescript
-const { data: skipItemsData } = await supabase
-  .from('calendar_skipped_items')
-  .select('item_id, skip_days')
-  .eq('user_id', user.id)
-  .eq('item_type', 'custom_activity'); // ← Only fetches custom activities!
-```
-
-System tasks (`quiz-morning`, `quiz-prelift`, `quiz-night`, etc.) use `item_type = 'game_plan'` but this data is never fetched or used when building the tasks list.
-
-## Solution
-
-Modify `useGamePlan.ts` to:
-1. Fetch skip items for BOTH `custom_activity` AND `game_plan` types
-2. Check system tasks against the skip list before adding them to the tasks array
+This is an end-to-end UI logic mismatch inside `src/components/GamePlanCard.tsx`.
 
 ---
 
-## Technical Changes
+## Goal
 
-### File: `src/hooks/useGamePlan.ts`
-
-**Change 1: Expand skip items query to include game_plan type**
-
-Replace the single query with one that fetches both types:
-
-```typescript
-// Fetch skip days from calendar_skipped_items (SINGLE SOURCE OF TRUTH)
-// Include BOTH custom_activity and game_plan types
-const { data: skipItemsData } = await supabase
-  .from('calendar_skipped_items')
-  .select('item_id, skip_days, item_type')
-  .eq('user_id', user.id)
-  .in('item_type', ['custom_activity', 'game_plan']);
-
-const skipItemsMap = new Map<string, number[]>();
-(skipItemsData || []).forEach(item => {
-  skipItemsMap.set(item.item_id, item.skip_days || []);
-});
-```
-
-**Change 2: Store skip map in state for use in task building**
-
-The skip map needs to be available when building the tasks array (which happens in the component body, not in the async function). Add state and update it:
-
-```typescript
-const [gamePlanSkips, setGamePlanSkips] = useState<Map<string, number[]>>(new Map());
-```
-
-And in fetchTaskStatus:
-```typescript
-setGamePlanSkips(skipItemsMap);
-```
-
-**Change 3: Create helper to check if system task is skipped today**
-
-```typescript
-const isSystemTaskSkippedToday = (taskId: string): boolean => {
-  const skipDays = gamePlanSkips.get(taskId) || [];
-  const todayDayOfWeek = getDay(new Date()); // 0=Sun, 1=Mon, etc.
-  return skipDays.includes(todayDayOfWeek);
-};
-```
-
-**Change 4: Apply skip logic when adding system tasks**
-
-Wrap each system task addition with a skip check:
-
-```typescript
-// Morning Check-In
-if (hasAnyModuleAccess && !isSystemTaskSkippedToday('quiz-morning')) {
-  tasks.push({
-    id: 'quiz-morning',
-    // ... rest of task config
-  });
-}
-
-// Pre-Workout Check-In  
-if (isStrengthDay && (hasHittingAccess || hasPitchingAccess) && !isSystemTaskSkippedToday('quiz-prelift')) {
-  tasks.push({
-    id: 'quiz-prelift',
-    // ... rest of task config
-  });
-}
-
-// Night Check-In
-if (hasAnyModuleAccess && !isSystemTaskSkippedToday('quiz-night')) {
-  tasks.push({
-    id: 'quiz-night',
-    // ... rest of task config
-  });
-}
-```
-
-**Change 5: Apply same logic to ALL other schedulable system tasks**
-
-Apply the skip check to all tasks that can be scheduled via calendar:
-- `workout-hitting`, `workout-pitching` (program type)
-- `video-hitting`, `video-pitching`, `video-throwing`
-- `texvision`, `mindfuel`, `healthtip`
-- Any other tasks that have scheduling controls
+On Monday (or any day):
+- If a task is “Scheduled off” via weekly repeat settings, it must **not** appear in the **main actionable** Game Plan list in any sort mode (Auto / Manual / Timeline).
+- It can still appear under **“Skipped for today”** with the “Scheduled off” label so the user can hit the pencil icon to edit the schedule back on (this keeps the ability to re-enable a task).
 
 ---
 
-## Data Flow After Fix
+## Scope of changes (files)
 
-```text
-User deselects Monday for "Morning Check-In"
-           ↓
-TemplateScheduleSettingsDrawer saves skip_days: [1] to calendar_skipped_items
-           ↓
-useGamePlan fetches ALL skip items (both custom_activity and game_plan)
-           ↓
-gamePlanSkips map contains: { 'quiz-morning': [1], 'quiz-prelift': [1] }
-           ↓
-On Monday: isSystemTaskSkippedToday('quiz-morning') = true
-           ↓
-Morning Check-In NOT added to tasks array
-           ↓
-Game Plan shows no Morning Check-In on Monday ✓
-```
+1) `src/components/GamePlanCard.tsx`
+- Fix Timeline mode filtering to exclude weekly-skipped items from the main list.
+- Ensure timeline reorder logic doesn’t accidentally “lose” hidden (scheduled-off) tasks.
+- Ensure any “save schedule / lock schedule” actions based on timeline tasks use the same “visible today” list (so scheduled-off tasks aren’t locked/saved as if active today).
+
+No backend/schema changes required.
 
 ---
 
-## Summary
+## Implementation steps (code-level)
 
-| Task | Current Behavior | After Fix |
-|------|-----------------|-----------|
-| Quiz-Morning (Mon skipped) | Shows on Monday | Hidden on Monday |
-| Quiz-Prelift (Mon skipped) | Shows on Monday | Hidden on Monday |
-| Custom Activities | Already fixed | No change needed |
-| Other system tasks | No skip support | Will respect schedules |
+### Step 1 — Centralize “hidden today” logic in GamePlanCard
+In `GamePlanCard.tsx`, create a single helper predicate for “should not show in the main list today”:
 
-This fix ensures the `calendar_skipped_items` table is the **single source of truth** for ALL schedulable items, not just custom activities.
+- hidden if:
+  - manually skipped today (`skippedTasks.has(task.id)`), OR
+  - weekly scheduled off (`isWeeklySkipped(task)`)
+
+This reduces the chance of future view modes drifting out of sync.
+
+### Step 2 — Fix Timeline mode main list filtering
+Currently Timeline mode renders:
+
+- `timelineTasks.filter(t => !skippedTasks.has(t.id))`
+
+Update Timeline mode to instead use:
+
+- `timelineVisibleTasks = timelineTasks.filter(t => !skippedTasks.has(t.id) && !isWeeklySkipped(t))`
+
+Then render the `Reorder.Group` values and list using `timelineVisibleTasks`.
+
+This ensures “Scheduled off” tasks never appear in the main list in Timeline mode.
+
+### Step 3 — Keep “Scheduled off” tasks available in the “Skipped for today” section
+Do not remove weekly-skipped tasks from `skippedTasksList`. That section is where “Scheduled off” belongs (with the pencil icon).
+
+This maintains:
+- Visibility that it’s scheduled off
+- A direct edit path to re-enable it
+
+### Step 4 — Make Timeline reorder work even when some tasks are hidden
+Important: If Timeline mode only renders `timelineVisibleTasks`, the drag reorder callback will only reorder visible tasks.
+
+We must update `handleReorderTimeline(newVisibleOrder)` so it:
+- Reorders only the visible tasks within the full `timelineTasks` array,
+- While keeping hidden tasks (scheduled off / manually skipped) in the underlying `timelineTasks` state so they can reappear automatically when schedules change.
+
+Implementation approach:
+- Build a queue from `newVisibleOrder`
+- Iterate the existing `timelineTasks` in order:
+  - if a task is visible, replace it with the next from the queue
+  - if a task is hidden, keep it in place
+- Save the merged order back into `timelineTasks`
+- Persist localStorage order from the merged list (or persist only visible IDs + keep hidden stable; simplest is merged list IDs)
+
+This prevents:
+- “Scheduled off” tasks from disappearing permanently from timeline state
+- Ordering corruption when toggling schedule settings
+
+### Step 5 — Ensure Timeline-based “Lock Schedule” / “Save Template” uses visible-today tasks
+There are multiple places in `GamePlanCard.tsx` that build schedules from `timelineTasks` directly (locking, templates, etc.).
+
+Update those to use the same filtered list used for Timeline display (i.e., exclude weekly-skipped and manually-skipped for today), so that “scheduled off” tasks are not treated as part of today’s active schedule.
+
+Specifically update any place that does something like:
+- `timelineTasks.map(...)`
+
+to use:
+- `timelineVisibleTasks.map(...)`
+
+Key places to update:
+- Lock order saving (schedule build)
+- Template save (schedule build)
+- Any other timeline-only schedule serialization
+
+This is the “E2E” part: not just hiding in UI, but also preventing scheduled-off tasks from being “baked into” today’s saved schedule artifacts.
+
+---
+
+## Testing checklist (to confirm it’s fixed)
+
+On **Monday**:
+
+1) Ensure `quiz-morning` is scheduled off for Monday (already is in your DB based on the data).
+2) Go to `/dashboard`.
+3) Switch sort mode to **Timeline** (if not already).
+4) Confirm:
+   - “Complete Morning Check-In” and “Complete Pre-Workout Check-In” do **not** appear in the main list.
+   - They appear only under “Skipped for today” with the “Scheduled off” label.
+5) Edit one scheduled-off task from the skipped section (pencil), re-enable Monday, save:
+   - It should immediately move from “Skipped for today” back into the main list (Timeline view) without refresh.
+6) Confirm lock/template actions don’t include scheduled-off tasks:
+   - With a task scheduled off, lock today’s schedule and verify it does not reinsert that task as active.
+
+---
+
+## Expected result after fix
+
+- No more duplication (“Scheduled off” tasks showing as actionable).
+- Consistent behavior across Auto, Manual, and Timeline modes.
+- Scheduled-off tasks remain discoverable/editable under “Skipped for today” only.
