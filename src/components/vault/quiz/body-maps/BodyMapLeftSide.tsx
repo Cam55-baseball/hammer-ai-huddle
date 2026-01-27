@@ -26,9 +26,10 @@ export function BodyMapLeftSide({ selectedAreas, onToggle }: BodyMapLeftSideProp
   return (
     <svg
       viewBox="0 0 140 380"
-      className="w-full max-w-[120px] h-auto"
+      className="w-full h-auto"
       role="group"
       aria-label="Left side body view for pain selection"
+      style={{ touchAction: 'manipulation' }}
     >
       {/* Head silhouette outline */}
       <ellipse cx="70" cy="28" rx="22" ry="26" className="fill-none stroke-muted-foreground/20 stroke-[1]" />
