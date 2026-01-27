@@ -1,177 +1,284 @@
 
-
-# Add Custom Activity Data to 6-Week Recaps
+# Past Days Journal Viewer for The Vault
 
 ## Overview
 
-Currently, the 6-week recap system only analyzes Hammers Modality program workouts (stored in `vault_workout_notes`). Users who primarily use custom activities instead of the built-in programs are getting incomplete recaps that don't reflect their actual training.
+This feature adds a "Past Days" dropdown at the bottom of the Vault that allows users to quickly browse and review their journal entries for any past date. Unlike the existing History tab (which requires navigating to a separate tab), this dropdown provides an in-context, journal-style recap view directly on the Today tab for swift review of historical data.
 
-This enhancement will integrate custom activity data into the AI analysis, ensuring athletes who create their own workouts, running sessions, recovery routines, and other custom activities receive meaningful, accurate recaps.
+The feature will support:
+- Viewing complete daily recaps in a formatted journal style
+- Saving individual day entries to a favorites/bookmarks list
+- Exporting day entries as PDF
+- Quick date navigation via dropdown
 
 ---
 
-## What Data Will Be Included
+## Current Architecture
 
-From the `custom_activity_logs` and `custom_activity_templates` tables, we'll extract:
+The Vault already has robust history retrieval capabilities:
 
-| Metric | Source | How It's Used |
-|--------|--------|---------------|
-| Total custom activities completed | `custom_activity_logs.completed = true` | Training volume |
-| Activities by type | `custom_activity_templates.activity_type` | Training variety (workout, running, recovery, etc.) |
-| Total training time | `duration_minutes` | Time investment |
-| Intensity distribution | `intensity` field | Training load pattern |
-| Completion rate | Completed vs scheduled | Consistency metric |
-| Activity notes | `notes` field | Athlete reflections |
-| Daily breakdown | `entry_date` grouping | Weekly consistency |
+| Component | Purpose |
+|-----------|---------|
+| `useVault.fetchHistoryForDate()` | Fetches all vault data for a specific date |
+| `VaultHistoryTab.tsx` | Displays historical entries with calendar navigation |
+| `entriesWithData` | Tracks which dates have journal entries (last 90 days) |
+
+The existing `fetchHistoryForDate` function retrieves:
+- Focus Quizzes (morning, pre-workout, night)
+- Free Notes
+- Workout Notes
+- Nutrition Logs
+- Performance Tests
+- Progress Photos
+- Scout Grades
+
+**Missing from current history retrieval:** Custom Activity Logs are not included in `fetchHistoryForDate`, so they need to be added for a complete picture.
 
 ---
 
 ## Implementation Plan
 
-### Step 1: Fetch Custom Activity Data
+### Step 1: Extend History Data to Include Custom Activities
 
-Add a new database query in the edge function to fetch custom activity logs with their template details for the 6-week period:
+**File:** `src/hooks/useVault.ts`
+
+Add custom activity logs to the `fetchHistoryForDate` function and update the return type:
 
 ```typescript
-// Add to the Promise.all fetch block
-{ data: customActivityLogs } = await supabase
-  .from("custom_activity_logs")
+// In the Promise.all block, add:
+{ data: customActivities } = await supabase
+  .from('custom_activity_logs')
   .select(`
-    id, entry_date, completed, completed_at, 
-    actual_duration_minutes, notes, performance_data,
-    custom_activity_templates!inner (
-      title, activity_type, duration_minutes, 
-      intensity, sport
-    )
+    *, 
+    custom_activity_templates (title, activity_type, icon, color)
   `)
-  .eq("user_id", user.id)
-  .eq("completed", true)
-  .gte("entry_date", startDateStr)
-  .lte("entry_date", endDateStr)
+  .eq('user_id', user.id)
+  .eq('entry_date', date)
+  .eq('completed', true)
+
+// Return object includes:
+customActivities: (customActivities || []) as CustomActivityLog[]
 ```
 
-### Step 2: Aggregate Custom Activity Metrics
+Update the `HistoryEntry` interface to include `customActivities`.
 
-Create a dedicated analysis section for custom activities:
+---
 
+### Step 2: Create the VaultPastDaysDropdown Component
+
+**New File:** `src/components/vault/VaultPastDaysDropdown.tsx`
+
+A collapsible dropdown component placed at the bottom of the Vault Today tab:
+
+**Features:**
+- Collapsed by default, shows "Past Days" label with calendar icon
+- Expands to show a date picker (last 90 days with data highlights)
+- Displays formatted journal recap for selected date
+- Action buttons: Save to Library, Export PDF, Close
+
+**UI Structure:**
+```
+[Collapsible Trigger: "Past Days" with ChevronDown icon]
+  │
+  └─[Expanded Content]
+      ├── Date Selector (dropdown of dates with entries)
+      ├── Journal Recap Card
+      │   ├── Header: Date + Entry Count
+      │   ├── Morning Check-In Summary
+      │   ├── Pre-Workout Summary
+      │   ├── Night Check-In Summary
+      │   ├── Custom Activities Completed
+      │   ├── Workout Notes
+      │   ├── Nutrition Summary
+      │   ├── Free Notes
+      │   └── Performance Tests / Photos / Grades (if any)
+      └── Action Buttons: [Save] [Export PDF] [Close]
+```
+
+---
+
+### Step 3: Create the Journal Day Recap Format Component
+
+**New File:** `src/components/vault/VaultDayRecapCard.tsx`
+
+A formatted, readable journal-style card that summarizes all vault entries for a single day:
+
+**Sections (conditionally rendered):**
+
+1. **Daily Wellness Overview**
+   - Morning: mood, discipline, sleep hours, sleep quality, weight
+   - Pre-Workout: CNS scores, pain tracking, training intent
+   - Night: reflections, goals for tomorrow
+
+2. **Training Summary**
+   - Custom activities completed (with duration, intensity, notes)
+   - Program workouts (weight lifted, exercises)
+
+3. **Nutrition Snapshot**
+   - Calories, macros, hydration, energy level
+
+4. **Personal Notes**
+   - Free-form journal entries
+
+5. **Periodic Tracking** (if logged that day)
+   - Performance test results
+   - Progress photos
+   - Scout grades
+
+Each section uses compact, scannable formatting with icons and color-coded badges.
+
+---
+
+### Step 4: Implement Save-to-Library Functionality
+
+**Database:** Use existing `vault_saved_entries` pattern or create new table
+
+**Option A (Simpler):** Store saved day references in localStorage
 ```typescript
-// ========== CUSTOM ACTIVITY ANALYSIS ==========
-const customActivities = customActivityLogs || [];
-const totalCustomActivities = customActivities.length;
+// Key: vault_saved_days
+// Value: ["2025-01-20", "2025-01-15", ...]
+```
 
-// Group by activity type
-const activityByType: Record<string, number> = {};
-customActivities.forEach(log => {
-  const type = log.custom_activity_templates?.activity_type || 'other';
-  activityByType[type] = (activityByType[type] || 0) + 1;
-});
-
-// Calculate total custom training time
-const totalCustomMinutes = customActivities.reduce((sum, log) => {
-  return sum + (log.actual_duration_minutes || 
-    log.custom_activity_templates?.duration_minutes || 0);
-}, 0);
-
-// Group by intensity
-const intensityDistribution: Record<string, number> = {};
-customActivities.forEach(log => {
-  const intensity = log.custom_activity_templates?.intensity || 'moderate';
-  intensityDistribution[intensity] = (intensityDistribution[intensity] || 0) + 1;
-});
-
-// Get unique activity titles for variety analysis
-const uniqueActivities = new Set(
-  customActivities.map(log => log.custom_activity_templates?.title)
+**Option B (Persistent):** Create database table for saved days
+```sql
+CREATE TABLE vault_saved_days (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  entry_date DATE NOT NULL,
+  saved_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, entry_date)
 );
-
-// Weekly consistency (days with at least one custom activity)
-const activeDates = new Set(customActivities.map(log => log.entry_date));
-const customActivityDays = activeDates.size;
-
-// Extract notes for AI analysis (limit to prevent token overflow)
-const activityNotes = customActivities
-  .filter(log => log.notes && log.notes.trim())
-  .map(log => log.notes)
-  .slice(0, 5);
 ```
 
-### Step 3: Add to AI Prompt
+For this implementation, I recommend **Option A (localStorage)** initially for simplicity, with the ability to upgrade to database storage later.
 
-Insert a new section in the elite prompt for custom activity data:
+---
 
-```text
-12. CUSTOM TRAINING ACTIVITIES (User-Created)
-    • Total Completed: ${totalCustomActivities}
-    • Unique Activities: ${uniqueActivities.size} different activities
-    • Total Training Time: ${Math.floor(totalCustomMinutes / 60)}h ${totalCustomMinutes % 60}m
-    • Days Active: ${customActivityDays} of 42 possible days
-    • Activity Types: ${Object.entries(activityByType)
-        .map(([type, count]) => `${type}: ${count}`)
-        .join(', ') || 'None'}
-    • Intensity Distribution: ${Object.entries(intensityDistribution)
-        .map(([i, count]) => `${i}: ${count}`)
-        .join(', ') || 'N/A'}
-    • Top Activities: ${[...uniqueActivities].slice(0, 5).join(', ')}
-    ${activityNotes.length > 0 
-        ? `• Athlete Notes: ${activityNotes.join(' | ')}` 
-        : ''}
-```
+### Step 5: Implement PDF Export
 
-### Step 4: Update AI Analysis Instructions
-
-Modify the AI prompt to recognize and analyze custom activities:
-
-```text
-CRITICAL REQUIREMENTS:
-...
-- RECOGNIZE that athletes may train using CUSTOM ACTIVITIES (user-created) 
-  in addition to or instead of structured program workouts. Both sources 
-  count toward their training volume and commitment.
-- If custom activity data shows high engagement but program workouts are low,
-  acknowledge the athlete IS training actively via their personalized routines.
-```
-
-### Step 5: Store Custom Activity Stats in Recap Data
-
-Include aggregated custom activity stats in the saved recap for future reference:
+**Approach:** Use dynamic import of `jspdf` (already in project for recap exports)
 
 ```typescript
-// Add to recap_data object
-custom_activity_stats: {
-  total_completed: totalCustomActivities,
-  unique_activities: uniqueActivities.size,
-  total_minutes: totalCustomMinutes,
-  days_active: customActivityDays,
-  by_type: activityByType,
-  by_intensity: intensityDistribution,
-}
+const exportDayAsPdf = async (historyData: HistoryEntry) => {
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF();
+  
+  // Add formatted content for each section
+  doc.text(`Vault Journal - ${format(date, 'MMMM d, yyyy')}`, 20, 20);
+  // ... add sections
+  
+  doc.save(`vault-journal-${date}.pdf`);
+};
 ```
 
 ---
 
-## Benefits
+### Step 6: Integrate into Vault.tsx
 
-1. **Accurate Training Volume**: Athletes who use custom activities won't see "0 workouts" if they're actively training their own way
-2. **Holistic Analysis**: AI can correlate custom activity patterns with sleep, recovery, and mental readiness
-3. **Motivation**: Users feel their custom activities "count" and are valued
-4. **Personalization**: Recaps reflect the actual training approach of each individual athlete
-5. **Activity Type Insights**: AI can identify if an athlete is focusing too much on one type (e.g., all running, no recovery)
+**File:** `src/pages/Vault.tsx`
+
+Place the dropdown at the bottom of the Today tab content, after the 12-Week Tracking section:
+
+```tsx
+{/* Past Days Journal Dropdown */}
+<VaultPastDaysDropdown
+  fetchHistoryForDate={fetchHistoryForDate}
+  entriesWithData={entriesWithData}
+/>
+```
 
 ---
+
+## Component Architecture
+
+```
+Vault.tsx
+└── TabsContent value="today"
+    ├── [existing content...]
+    └── VaultPastDaysDropdown (NEW)
+        ├── Collapsible trigger
+        ├── Date selector
+        ├── VaultDayRecapCard (NEW)
+        │   ├── DailyWellnessSection
+        │   ├── TrainingSection
+        │   ├── NutritionSection
+        │   ├── NotesSection
+        │   └── PeriodicTrackingSection
+        └── Action buttons (Save, Export, Close)
+```
+
+---
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/components/vault/VaultPastDaysDropdown.tsx` | Main dropdown container with date selection and actions |
+| `src/components/vault/VaultDayRecapCard.tsx` | Formatted journal-style day summary |
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `supabase/functions/generate-vault-recap/index.ts` | Add custom activity fetch, aggregation, and include in AI prompt |
+| `src/hooks/useVault.ts` | Add custom activities to `fetchHistoryForDate`, update interface |
+| `src/pages/Vault.tsx` | Import and render `VaultPastDaysDropdown` at bottom of Today tab |
+| `src/components/vault/VaultHistoryTab.tsx` | Update `HistoryEntry` interface to include `customActivities` |
 
 ---
 
-## Example Output in Recap
+## User Experience Flow
 
-After implementation, the AI might generate insights like:
+1. User scrolls to bottom of Vault Today tab
+2. Sees "Past Days" button/dropdown (collapsed)
+3. Clicks to expand
+4. Selects a date from dropdown (dates with entries are highlighted)
+5. Views formatted journal recap for that day
+6. Can:
+   - **Save** to bookmarks for quick access
+   - **Export** as PDF for offline review
+   - **Close** to collapse and continue with today's entries
+7. Saved days appear at top of the date dropdown for quick access
 
-> "While your structured program workouts were limited (2 sessions), your custom training volume tells a different story. You completed 28 custom activities totaling 14+ hours of training across warmups, recovery, and practice sessions. Your 'Fascia Prep' and 'Wake Up Starter' routines were completed consistently, showing excellent morning discipline..."
+---
 
-This ensures users who build their own training routines through Custom Activities receive the same quality of analysis as those using the structured Hammers Modality programs.
+## Technical Details
 
+### Date Selection Dropdown
+- Shows last 90 days
+- Highlights dates with entries (bold/underlined)
+- Saved dates appear with a bookmark icon
+- Uses Popover + Calendar component (existing pattern)
+
+### Journal Recap Format
+- Scannable, not verbose
+- Uses icons and color badges
+- Groups related data (wellness, training, nutrition)
+- Shows timestamps for context
+- Expandable sections for detailed data
+
+### PDF Export Format
+- Clean, printable layout
+- Includes date header
+- Sections match on-screen view
+- Uses jsPDF (already in dependencies)
+
+### Save/Bookmark System
+- localStorage for MVP
+- Toggle save/unsave
+- Saved dates list accessible in dropdown
+
+---
+
+## Internationalization
+
+All new text will use translation keys under `vault.pastDays.*`:
+- `vault.pastDays.title` - "Past Days"
+- `vault.pastDays.selectDate` - "Select a date"
+- `vault.pastDays.noEntries` - "No entries for this day"
+- `vault.pastDays.save` - "Save to Library"
+- `vault.pastDays.export` - "Export PDF"
+- `vault.pastDays.saved` - "Saved"
+- `vault.pastDays.morningCheckin` - "Morning Check-In"
+- `vault.pastDays.preWorkout` - "Pre-Workout"
+- `vault.pastDays.nightReflection` - "Night Reflection"
+- etc.
