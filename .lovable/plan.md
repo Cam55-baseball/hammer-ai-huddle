@@ -1,30 +1,32 @@
 
-# Fix: Repeat Weekly Deselection Not Hiding Activities from Game Plan
+# Fix: System Tasks Ignoring Repeat Weekly Schedule
 
-## Problem Identified
+## Problem
 
-When you deselect days in the "Repeat Weekly" settings for a custom activity, the schedule drawer correctly:
-1. Saves skip days to `calendar_skipped_items` table (the single source of truth)
-2. Updates the display text showing which days are selected
-
-However, the activity still appears on deselected days because `useGamePlan.ts` does NOT check the `calendar_skipped_items` table when determining which custom activities to include.
+The Morning Check-In (`quiz-morning`) and Pre-Workout Check-In (`quiz-prelift`) are marked as "Scheduled off" in the schedule settings but still appear on the Game Plan. The database confirms:
+- `quiz-morning` has `skip_days: [1, 2]` (Monday, Tuesday skipped)
+- `quiz-prelift` has `skip_days: [1]` (Monday skipped)
+- Today is Monday (day 1), so both should be hidden
 
 ## Root Cause
 
-In `src/hooks/useGamePlan.ts` (lines 413-434), the logic checks:
-- `template.recurring_days` (stored on the template itself)
-- `template.display_days` (fallback)
+In `useGamePlan.ts`, the skip items fetch only queries for `item_type = 'custom_activity'`:
 
-But it IGNORES the `calendar_skipped_items` table, which is supposed to be the **single source of truth** for weekly scheduling.
+```typescript
+const { data: skipItemsData } = await supabase
+  .from('calendar_skipped_items')
+  .select('item_id, skip_days')
+  .eq('user_id', user.id)
+  .eq('item_type', 'custom_activity'); // ← Only fetches custom activities!
+```
 
-The `GamePlanCard.tsx` component does have a secondary filter (`isWeeklySkipped`) but by that point, the activities have already been added to the list by `useGamePlan`, so they still appear.
+System tasks (`quiz-morning`, `quiz-prelift`, `quiz-night`, etc.) use `item_type = 'game_plan'` but this data is never fetched or used when building the tasks list.
 
 ## Solution
 
 Modify `useGamePlan.ts` to:
-1. Fetch the user's `calendar_skipped_items` data
-2. Check if today's day is in the skip list for each custom activity
-3. Only include activities that are NOT skipped for today
+1. Fetch skip items for BOTH `custom_activity` AND `game_plan` types
+2. Check system tasks against the skip list before adding them to the tasks array
 
 ---
 
@@ -32,17 +34,18 @@ Modify `useGamePlan.ts` to:
 
 ### File: `src/hooks/useGamePlan.ts`
 
-**Change 1: Add skip items fetch (around line 400)**
+**Change 1: Expand skip items query to include game_plan type**
 
-Fetch the skip data from `calendar_skipped_items` alongside templates and logs:
+Replace the single query with one that fetches both types:
 
 ```typescript
 // Fetch skip days from calendar_skipped_items (SINGLE SOURCE OF TRUTH)
+// Include BOTH custom_activity and game_plan types
 const { data: skipItemsData } = await supabase
   .from('calendar_skipped_items')
-  .select('item_id, skip_days')
+  .select('item_id, skip_days, item_type')
   .eq('user_id', user.id)
-  .eq('item_type', 'custom_activity');
+  .in('item_type', ['custom_activity', 'game_plan']);
 
 const skipItemsMap = new Map<string, number[]>();
 (skipItemsData || []).forEach(item => {
@@ -50,71 +53,96 @@ const skipItemsMap = new Map<string, number[]>();
 });
 ```
 
-**Change 2: Update the filtering logic (lines 413-434)**
+**Change 2: Store skip map in state for use in task building**
 
-Check the skip items map when determining if an activity should appear today:
+The skip map needs to be available when building the tasks array (which happens in the component body, not in the async function). Add state and update it:
 
 ```typescript
-templates.forEach(template => {
-  // Check display settings first
-  if (template.display_on_game_plan === false) return;
-  
-  // Check calendar_skipped_items first (SINGLE SOURCE OF TRUTH)
-  const itemId = `template-${template.id}`;
-  const skipDays = skipItemsMap.get(itemId) || [];
-  const isSkippedToday = skipDays.includes(todayDayOfWeek);
-  
-  // If explicitly skipped for today via calendar settings, don't include
-  if (isSkippedToday) {
-    // Still check if there's a log for today - if user already logged, show it
-    const todayLog = logs.find(l => l.template_id === template.id);
-    if (!todayLog) return; // Skip this activity entirely
-  }
-  
-  // Fallback to template settings if no skip record exists
-  const scheduledDays = template.recurring_active 
-    ? (template.recurring_days as number[]) || []
-    : (template.display_days as number[] | null) || [0, 1, 2, 3, 4, 5, 6];
-  
-  const isScheduledToday = scheduledDays.includes(todayDayOfWeek);
-  const todayLog = logs.find(l => l.template_id === template.id);
-  
-  // Include if: (scheduled AND not skipped) OR has a log for today
-  if ((isScheduledToday && !isSkippedToday) || todayLog) {
-    customActivitiesForToday.push({
-      template,
-      log: todayLog,
-      isRecurring: template.recurring_active || false,
-      isScheduledForToday: (isScheduledToday && !isSkippedToday) || !!todayLog,
-    });
-  }
-});
+const [gamePlanSkips, setGamePlanSkips] = useState<Map<string, number[]>>(new Map());
 ```
+
+And in fetchTaskStatus:
+```typescript
+setGamePlanSkips(skipItemsMap);
+```
+
+**Change 3: Create helper to check if system task is skipped today**
+
+```typescript
+const isSystemTaskSkippedToday = (taskId: string): boolean => {
+  const skipDays = gamePlanSkips.get(taskId) || [];
+  const todayDayOfWeek = getDay(new Date()); // 0=Sun, 1=Mon, etc.
+  return skipDays.includes(todayDayOfWeek);
+};
+```
+
+**Change 4: Apply skip logic when adding system tasks**
+
+Wrap each system task addition with a skip check:
+
+```typescript
+// Morning Check-In
+if (hasAnyModuleAccess && !isSystemTaskSkippedToday('quiz-morning')) {
+  tasks.push({
+    id: 'quiz-morning',
+    // ... rest of task config
+  });
+}
+
+// Pre-Workout Check-In  
+if (isStrengthDay && (hasHittingAccess || hasPitchingAccess) && !isSystemTaskSkippedToday('quiz-prelift')) {
+  tasks.push({
+    id: 'quiz-prelift',
+    // ... rest of task config
+  });
+}
+
+// Night Check-In
+if (hasAnyModuleAccess && !isSystemTaskSkippedToday('quiz-night')) {
+  tasks.push({
+    id: 'quiz-night',
+    // ... rest of task config
+  });
+}
+```
+
+**Change 5: Apply same logic to ALL other schedulable system tasks**
+
+Apply the skip check to all tasks that can be scheduled via calendar:
+- `workout-hitting`, `workout-pitching` (program type)
+- `video-hitting`, `video-pitching`, `video-throwing`
+- `texvision`, `mindfuel`, `healthtip`
+- Any other tasks that have scheduling controls
 
 ---
 
 ## Data Flow After Fix
 
 ```text
-User deselects Monday in Repeat Weekly
+User deselects Monday for "Morning Check-In"
            ↓
 TemplateScheduleSettingsDrawer saves skip_days: [1] to calendar_skipped_items
            ↓
-useGamePlan fetches calendar_skipped_items
+useGamePlan fetches ALL skip items (both custom_activity and game_plan)
            ↓
-On Monday: skipDays.includes(1) = true → activity NOT added to list
+gamePlanSkips map contains: { 'quiz-morning': [1], 'quiz-prelift': [1] }
            ↓
-Game Plan shows no activity on Monday ✓
+On Monday: isSystemTaskSkippedToday('quiz-morning') = true
+           ↓
+Morning Check-In NOT added to tasks array
+           ↓
+Game Plan shows no Morning Check-In on Monday ✓
 ```
 
-## Files Modified
+---
 
-| File | Change |
-|------|--------|
-| `src/hooks/useGamePlan.ts` | Add calendar_skipped_items fetch and filter logic |
+## Summary
 
-## Edge Cases Handled
+| Task | Current Behavior | After Fix |
+|------|-----------------|-----------|
+| Quiz-Morning (Mon skipped) | Shows on Monday | Hidden on Monday |
+| Quiz-Prelift (Mon skipped) | Shows on Monday | Hidden on Monday |
+| Custom Activities | Already fixed | No change needed |
+| Other system tasks | No skip support | Will respect schedules |
 
-1. **Activity with existing log**: If user already logged the activity today (before deselecting), it will still appear (so they don't lose their data)
-2. **No skip record**: Falls back to template's `recurring_days`/`display_days` for backward compatibility
-3. **Real-time sync**: The existing real-time subscription in `useCalendarSkips` will trigger refetches when skip data changes
+This fix ensures the `calendar_skipped_items` table is the **single source of truth** for ALL schedulable items, not just custom activities.
