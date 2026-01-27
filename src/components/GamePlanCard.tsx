@@ -578,11 +578,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     localStorage.setItem('gameplan-sort-mode', nextMode);
   };
 
-  const handleReorderTimeline = (newOrder: GamePlanTask[]) => {
-    if (todayLocked) return;
-    setTimelineTasks(newOrder);
-    localStorage.setItem('gameplan-timeline-order', JSON.stringify(newOrder.map(t => t.id)));
-  };
 
   const handleReorderCheckin = (newOrder: GamePlanTask[]) => {
     if (todayLocked) return;
@@ -674,17 +669,23 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   };
   
   // Lock order handlers - dual-write to calendar_day_orders AND game_plan_locked_days
+  // IMPORTANT: Only lock visible tasks (exclude manually skipped and weekly scheduled-off)
   const handleLockCurrentOrder = async () => {
     const today = new Date();
     
+    // Filter to only visible tasks for locking
+    const visibleTasks = timelineTasks.filter(t => !skippedTasks.has(t.id));
+    // Note: isWeeklySkipped can't be called here since it's defined later,
+    // but scheduled-off tasks shouldn't be in timelineTasks to begin with
+    
     // Build order_keys for calendar_day_orders (date-specific)
-    const orderKeys = timelineTasks.map(task => getGamePlanOrderKey(task));
+    const orderKeys = visibleTasks.map(task => getGamePlanOrderKey(task));
     
     // Save to calendar_day_orders first (syncs with Calendar)
     const dayOrderSuccess = await saveDayOrder(today, orderKeys, true);
     
     // Also save to game_plan_locked_days for backward compatibility
-    const schedule: LockScheduleItem[] = timelineTasks.map((t, idx) => ({
+    const schedule: LockScheduleItem[] = visibleTasks.map((t, idx) => ({
       taskId: t.id,
       order: idx,
       displayTime: taskTimes[t.id] || null,
@@ -709,8 +710,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const today = new Date();
     const todayDayOfWeek = getDay(today);
     
-    // Build current schedule for any new locks
-    const schedule: LockScheduleItem[] = timelineTasks.map((t, idx) => ({
+    // Filter to only visible tasks for locking
+    const visibleTasks = timelineTasks.filter(t => !skippedTasks.has(t.id));
+    
+    // Build current schedule for any new locks (only visible tasks)
+    const schedule: LockScheduleItem[] = visibleTasks.map((t, idx) => ({
       taskId: t.id,
       order: idx,
       displayTime: taskTimes[t.id] || null,
@@ -740,7 +744,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   
   // Handle locking multiple days with current schedule
   const handleLockDays = async (daysToLock: number[]) => {
-    const schedule: LockScheduleItem[] = timelineTasks.map((t, idx) => ({
+    // Filter to only visible tasks for locking
+    const visibleTasks = timelineTasks.filter(t => !skippedTasks.has(t.id));
+    
+    const schedule: LockScheduleItem[] = visibleTasks.map((t, idx) => ({
       taskId: t.id,
       order: idx,
       displayTime: taskTimes[t.id] || null,
@@ -756,7 +763,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const handleSaveTemplate = async () => {
     if (!newTemplateName.trim()) return;
     
-    const schedule: ScheduleItem[] = timelineTasks.map(t => ({
+    // Filter to only visible tasks for template
+    const visibleTasks = timelineTasks.filter(t => !skippedTasks.has(t.id));
+    
+    const schedule: ScheduleItem[] = visibleTasks.map(t => ({
       taskId: t.id,
       startTime: taskTimes[t.id] || null,
       reminderMinutes: taskReminders[t.id] || null,
@@ -831,6 +841,36 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const { itemId, itemType } = getCalendarSkipInfo(task);
     return isCalendarSkipped(itemId, itemType, new Date());
   }, [isCalendarSkipped, getCalendarSkipInfo]);
+
+  // Helper to check if a task should be hidden from the main list today
+  // Hidden = manually skipped today OR weekly scheduled off
+  const isTaskHiddenToday = useCallback((task: GamePlanTask): boolean => {
+    return skippedTasks.has(task.id) || isWeeklySkipped(task);
+  }, [skippedTasks, isWeeklySkipped]);
+
+  // Get visible timeline tasks (excludes manually skipped AND weekly scheduled-off)
+  const timelineVisibleTasks = useMemo(() => 
+    timelineTasks.filter(t => !isTaskHiddenToday(t)),
+  [timelineTasks, isTaskHiddenToday]);
+
+  // Reorder handler for timeline mode - preserves hidden tasks in place
+  const handleReorderTimeline = useCallback((newVisibleOrder: GamePlanTask[]) => {
+    if (todayLocked) return;
+    
+    // Merge the new visible order back into the full timeline, preserving hidden tasks in place
+    const visibleQueue = [...newVisibleOrder];
+    const mergedOrder = timelineTasks.map(task => {
+      if (isTaskHiddenToday(task)) {
+        // Keep hidden tasks in their original position
+        return task;
+      }
+      // Replace visible tasks with reordered version
+      return visibleQueue.shift() || task;
+    });
+    
+    setTimelineTasks(mergedOrder);
+    localStorage.setItem('gameplan-timeline-order', JSON.stringify(mergedOrder.map(t => t.id)));
+  }, [todayLocked, timelineTasks, isTaskHiddenToday]);
 
   // Get display tasks based on sort mode, filtering out skipped (today only) AND weekly-skipped tasks
   const filterSkippedAndScheduledOff = useCallback((taskList: GamePlanTask[]) => 
@@ -1464,8 +1504,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               <p className="text-xs text-muted-foreground text-center mb-2">
                 {t('gamePlan.timelineHint')}
               </p>
-              <Reorder.Group axis="y" values={timelineTasks.filter(t => !skippedTasks.has(t.id))} onReorder={handleReorderTimeline} className="space-y-2">
-                {timelineTasks.filter(t => !skippedTasks.has(t.id)).map((task, index) => (
+              <Reorder.Group axis="y" values={timelineVisibleTasks} onReorder={handleReorderTimeline} className="space-y-2">
+                {timelineVisibleTasks.map((task, index) => (
                   <Reorder.Item 
                     key={task.id} 
                     value={task}
