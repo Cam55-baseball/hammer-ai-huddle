@@ -1,41 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, subDays, parseISO, differenceInCalendarDays } from 'date-fns';
-
-// Body area ID to display name mapping
-const BODY_AREA_LABELS: Record<string, string> = {
-  head_neck: 'Head/Neck',
-  // Shoulders
-  left_shoulder: 'Left Shoulder',
-  right_shoulder: 'Right Shoulder',
-  shoulder: 'Shoulder', // backward compatibility
-  upper_back: 'Upper Back',
-  lower_back: 'Lower Back',
-  // Elbows
-  left_elbow: 'Left Elbow',
-  right_elbow: 'Right Elbow',
-  elbow: 'Elbow', // backward compatibility
-  // Wrists
-  left_wrist_hand: 'Left Wrist/Hand',
-  right_wrist_hand: 'Right Wrist/Hand',
-  wrist_hand: 'Wrist/Hand', // backward compatibility
-  // Hips
-  left_hip: 'Left Hip',
-  right_hip: 'Right Hip',
-  hip: 'Hip', // backward compatibility
-  // Knees
-  left_knee: 'Left Knee',
-  right_knee: 'Right Knee',
-  knee: 'Knee', // backward compatibility
-  // Ankles
-  left_ankle: 'Left Ankle',
-  right_ankle: 'Right Ankle',
-  ankle: 'Ankle', // backward compatibility
-  // Feet
-  left_foot: 'Left Foot',
-  right_foot: 'Right Foot',
-  foot: 'Foot' // backward compatibility
-};
+import { getBodyAreaLabel } from './quiz/body-maps/bodyAreaDefinitions';
 
 interface QuizEntry {
   entry_date: string;
@@ -130,9 +96,9 @@ export async function checkPainPatternAndNotify(
     const consecutivePainAreas = findConsecutivePainAreas(quizData);
 
     if (consecutivePainAreas.length > 0) {
-      // Convert area IDs to display names
+      // Convert area IDs to display names using centralized definitions
       const areaNames = consecutivePainAreas
-        .map(id => BODY_AREA_LABELS[id] || id)
+        .map(id => getBodyAreaLabel(id))
         .join(', ');
 
       const title = t('vault.painAlert.title', { defaultValue: '⚠️ Pain Pattern Detected' });

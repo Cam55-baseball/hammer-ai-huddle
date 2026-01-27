@@ -10,6 +10,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { Activity } from 'lucide-react';
+import { 
+  ALL_BODY_AREAS_WITH_LEGACY, 
+  getBodyAreaLabel,
+  FRONT_BODY_AREAS,
+  BACK_BODY_AREAS,
+  LEFT_SIDE_BODY_AREAS,
+  RIGHT_SIDE_BODY_AREAS,
+  type BodyView 
+} from './quiz/body-maps/bodyAreaDefinitions';
 
 type TimePeriod = '7d' | '30d' | '6wk' | 'all';
 
@@ -19,40 +28,19 @@ interface AreaFrequency {
   count: number;
 }
 
-const BODY_AREAS = [
-  { id: 'head_neck', label: 'Head/Neck' },
-  { id: 'left_shoulder', label: 'L Shoulder' },
-  { id: 'right_shoulder', label: 'R Shoulder' },
-  { id: 'upper_back', label: 'Upper Back' },
-  { id: 'lower_back', label: 'Lower Back' },
-  { id: 'left_elbow', label: 'L Elbow' },
-  { id: 'right_elbow', label: 'R Elbow' },
-  { id: 'left_wrist_hand', label: 'L Wrist/Hand' },
-  { id: 'right_wrist_hand', label: 'R Wrist/Hand' },
-  { id: 'left_hip', label: 'L Hip' },
-  { id: 'right_hip', label: 'R Hip' },
-  { id: 'left_knee', label: 'L Knee' },
-  { id: 'right_knee', label: 'R Knee' },
-  { id: 'left_ankle', label: 'L Ankle' },
-  { id: 'right_ankle', label: 'R Ankle' },
-  { id: 'left_foot', label: 'L Foot' },
-  { id: 'right_foot', label: 'R Foot' },
-  // Legacy IDs for backward compatibility
-  { id: 'shoulder', label: 'Shoulder' },
-  { id: 'elbow', label: 'Elbow' },
-  { id: 'wrist_hand', label: 'Wrist/Hand' },
-  { id: 'hip', label: 'Hip' },
-  { id: 'knee', label: 'Knee' },
-  { id: 'ankle', label: 'Ankle' },
-  { id: 'foot', label: 'Foot' },
-];
-
 const TIME_PERIODS: { value: TimePeriod; label: string; days: number | null }[] = [
   { value: '7d', label: '7d', days: 7 },
   { value: '30d', label: '30d', days: 30 },
   { value: '6wk', label: '6wk', days: 42 },
   { value: 'all', label: 'All', days: null },
 ];
+
+const VIEW_LABELS: Record<BodyView, string> = {
+  front: 'Front',
+  back: 'Back',
+  left: 'L Side',
+  right: 'R Side',
+};
 
 const getZoneColor = (count: number): string => {
   if (count === 0) return 'hsl(var(--muted))';
@@ -82,6 +70,7 @@ export function VaultPainHeatMapCard() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [period, setPeriod] = useState<TimePeriod>('30d');
+  const [activeView, setActiveView] = useState<BodyView>('front');
 
   const daysBack = TIME_PERIODS.find(p => p.value === period)?.days ?? null;
 
@@ -116,11 +105,11 @@ export function VaultPainHeatMapCard() {
     enabled: !!user?.id,
   });
 
-  const { frequencies, topAreas, painFreeDays, totalEntriesWithPain } = useMemo(() => {
+  const { frequencies, topAreas, totalEntriesWithPain } = useMemo(() => {
     const freqMap: Record<string, number> = {};
 
     // Initialize all areas with 0
-    BODY_AREAS.forEach(area => {
+    ALL_BODY_AREAS_WITH_LEGACY.forEach(area => {
       freqMap[area.id] = 0;
     });
 
@@ -138,8 +127,8 @@ export function VaultPainHeatMapCard() {
       }
     });
 
-    // Convert to array and sort
-    const freqArray: AreaFrequency[] = BODY_AREAS.map(area => ({
+    // Convert to array and sort for top areas
+    const freqArray: AreaFrequency[] = ALL_BODY_AREAS_WITH_LEGACY.map(area => ({
       areaId: area.id,
       label: area.label,
       count: freqMap[area.id] || 0,
@@ -151,30 +140,21 @@ export function VaultPainHeatMapCard() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
 
-    // Calculate pain-free days
+    // Calculate entries with pain
     const daysWithPain = (painData?.entries || []).length;
-    const totalDays = painData?.totalDays || 0;
-    const painFreePercent = totalDays > 0 
-      ? Math.round(((totalDays - daysWithPain) / totalDays) * 100)
-      : 100;
 
     return {
       frequencies: freqMap,
       topAreas: top,
-      painFreeDays: painFreePercent,
       totalEntriesWithPain: daysWithPain,
     };
   }, [painData]);
-
-  const getAreaLabel = (areaId: string): string => {
-    return BODY_AREAS.find(a => a.id === areaId)?.label || areaId;
-  };
 
   const renderZone = (areaId: string, children: React.ReactNode) => {
     const count = frequencies[areaId] || 0;
     const color = getZoneColor(count);
     const opacity = getZoneOpacity(count);
-    const label = getAreaLabel(areaId);
+    const label = getBodyAreaLabel(areaId);
     const intensity = getIntensityLabel(count);
 
     return (
@@ -193,6 +173,16 @@ export function VaultPainHeatMapCard() {
           {children}
         </g>
       </TooltipTrigger>
+    );
+  };
+
+  const renderTooltipContent = (areaId: string) => {
+    const count = frequencies[areaId] || 0;
+    return (
+      <TooltipContent className="text-xs">
+        <p className="font-medium">{getBodyAreaLabel(areaId)}</p>
+        <p>{count} occurrences</p>
+      </TooltipContent>
     );
   };
 
@@ -229,238 +219,522 @@ export function VaultPainHeatMapCard() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* View Selector Tabs */}
+        <div className="flex justify-center">
+          <div className="inline-flex rounded-lg bg-muted/50 p-1">
+            {(['front', 'back', 'left', 'right'] as BodyView[]).map(view => (
+              <button
+                key={view}
+                type="button"
+                onClick={() => setActiveView(view)}
+                className={cn(
+                  "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                  activeView === view
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {VIEW_LABELS[view]}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Body Heat Map SVG */}
         <TooltipProvider delayDuration={100}>
           <div className="flex justify-center">
-            <svg
-              viewBox="0 0 200 340"
-              className="w-full max-w-[180px] h-auto"
-              role="img"
-              aria-label={t('vault.painHeatMap.bodyMapLabel', 'Pain frequency heat map')}
-            >
-              {/* Head & Neck */}
-              <Tooltip>
-                {renderZone('head_neck', (
-                  <>
-                    <ellipse cx="100" cy="28" rx="22" ry="26" />
-                    <rect x="92" y="52" width="16" height="16" rx="2" />
-                  </>
-                ))}
-                <TooltipContent side="right" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('head_neck')}</p>
-                  <p>{frequencies['head_neck'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
+            {activeView === 'front' && (
+              <svg viewBox="0 0 200 380" className="w-full max-w-[180px] h-auto" role="img" aria-label="Pain frequency heat map - Front view">
+                {/* Head (Front) */}
+                <Tooltip>
+                  {renderZone('head_front', <ellipse cx="100" cy="25" rx="20" ry="23" />)}
+                  {renderTooltipContent('head_front')}
+                </Tooltip>
+                {/* Neck (Front) */}
+                <Tooltip>
+                  {renderZone('neck_front', <rect x="92" y="48" width="16" height="14" rx="2" />)}
+                  {renderTooltipContent('neck_front')}
+                </Tooltip>
+                {/* Left Shoulder (Front) */}
+                <Tooltip>
+                  {renderZone('left_shoulder_front', <ellipse cx="140" cy="72" rx="16" ry="10" />)}
+                  {renderTooltipContent('left_shoulder_front')}
+                </Tooltip>
+                {/* Right Shoulder (Front) */}
+                <Tooltip>
+                  {renderZone('right_shoulder_front', <ellipse cx="60" cy="72" rx="16" ry="10" />)}
+                  {renderTooltipContent('right_shoulder_front')}
+                </Tooltip>
+                {/* Left Chest */}
+                <Tooltip>
+                  {renderZone('left_chest', <path d="M102 64 L124 62 L128 88 L102 92 Z" />)}
+                  {renderTooltipContent('left_chest')}
+                </Tooltip>
+                {/* Right Chest */}
+                <Tooltip>
+                  {renderZone('right_chest', <path d="M98 64 L76 62 L72 88 L98 92 Z" />)}
+                  {renderTooltipContent('right_chest')}
+                </Tooltip>
+                {/* Sternum */}
+                <Tooltip>
+                  {renderZone('sternum', <rect x="96" y="64" width="8" height="28" rx="2" />)}
+                  {renderTooltipContent('sternum')}
+                </Tooltip>
+                {/* Upper Abs */}
+                <Tooltip>
+                  {renderZone('upper_abs', <rect x="80" y="92" width="40" height="24" rx="3" />)}
+                  {renderTooltipContent('upper_abs')}
+                </Tooltip>
+                {/* Lower Abs */}
+                <Tooltip>
+                  {renderZone('lower_abs', <rect x="82" y="118" width="36" height="24" rx="3" />)}
+                  {renderTooltipContent('lower_abs')}
+                </Tooltip>
+                {/* Left Bicep */}
+                <Tooltip>
+                  {renderZone('left_bicep', <rect x="148" y="82" width="12" height="32" rx="5" />)}
+                  {renderTooltipContent('left_bicep')}
+                </Tooltip>
+                {/* Right Bicep */}
+                <Tooltip>
+                  {renderZone('right_bicep', <rect x="40" y="82" width="12" height="32" rx="5" />)}
+                  {renderTooltipContent('right_bicep')}
+                </Tooltip>
+                {/* Left Elbow Inner */}
+                <Tooltip>
+                  {renderZone('left_elbow_inner', <ellipse cx="154" cy="120" rx="8" ry="6" />)}
+                  {renderTooltipContent('left_elbow_inner')}
+                </Tooltip>
+                {/* Right Elbow Inner */}
+                <Tooltip>
+                  {renderZone('right_elbow_inner', <ellipse cx="46" cy="120" rx="8" ry="6" />)}
+                  {renderTooltipContent('right_elbow_inner')}
+                </Tooltip>
+                {/* Left Forearm Front */}
+                <Tooltip>
+                  {renderZone('left_forearm_front', <rect x="150" y="126" width="10" height="30" rx="4" />)}
+                  {renderTooltipContent('left_forearm_front')}
+                </Tooltip>
+                {/* Right Forearm Front */}
+                <Tooltip>
+                  {renderZone('right_forearm_front', <rect x="40" y="126" width="10" height="30" rx="4" />)}
+                  {renderTooltipContent('right_forearm_front')}
+                </Tooltip>
+                {/* Left Wrist Front */}
+                <Tooltip>
+                  {renderZone('left_wrist_front', <rect x="151" y="156" width="8" height="10" rx="3" />)}
+                  {renderTooltipContent('left_wrist_front')}
+                </Tooltip>
+                {/* Right Wrist Front */}
+                <Tooltip>
+                  {renderZone('right_wrist_front', <rect x="41" y="156" width="8" height="10" rx="3" />)}
+                  {renderTooltipContent('right_wrist_front')}
+                </Tooltip>
+                {/* Left Palm */}
+                <Tooltip>
+                  {renderZone('left_palm', <ellipse cx="155" cy="176" rx="9" ry="12" />)}
+                  {renderTooltipContent('left_palm')}
+                </Tooltip>
+                {/* Right Palm */}
+                <Tooltip>
+                  {renderZone('right_palm', <ellipse cx="45" cy="176" rx="9" ry="12" />)}
+                  {renderTooltipContent('right_palm')}
+                </Tooltip>
+                {/* Left Hip Flexor */}
+                <Tooltip>
+                  {renderZone('left_hip_flexor', <path d="M102 142 L118 142 L120 158 L104 158 Z" />)}
+                  {renderTooltipContent('left_hip_flexor')}
+                </Tooltip>
+                {/* Right Hip Flexor */}
+                <Tooltip>
+                  {renderZone('right_hip_flexor', <path d="M98 142 L82 142 L80 158 L96 158 Z" />)}
+                  {renderTooltipContent('right_hip_flexor')}
+                </Tooltip>
+                {/* Left Groin */}
+                <Tooltip>
+                  {renderZone('left_groin', <path d="M100 158 L112 158 L110 172 L100 172 Z" />)}
+                  {renderTooltipContent('left_groin')}
+                </Tooltip>
+                {/* Right Groin */}
+                <Tooltip>
+                  {renderZone('right_groin', <path d="M100 158 L88 158 L90 172 L100 172 Z" />)}
+                  {renderTooltipContent('right_groin')}
+                </Tooltip>
+                {/* Left Quad Inner */}
+                <Tooltip>
+                  {renderZone('left_quad_inner', <rect x="104" y="172" width="12" height="48" rx="4" />)}
+                  {renderTooltipContent('left_quad_inner')}
+                </Tooltip>
+                {/* Left Quad Outer */}
+                <Tooltip>
+                  {renderZone('left_quad_outer', <rect x="118" y="172" width="12" height="48" rx="4" />)}
+                  {renderTooltipContent('left_quad_outer')}
+                </Tooltip>
+                {/* Right Quad Inner */}
+                <Tooltip>
+                  {renderZone('right_quad_inner', <rect x="84" y="172" width="12" height="48" rx="4" />)}
+                  {renderTooltipContent('right_quad_inner')}
+                </Tooltip>
+                {/* Right Quad Outer */}
+                <Tooltip>
+                  {renderZone('right_quad_outer', <rect x="70" y="172" width="12" height="48" rx="4" />)}
+                  {renderTooltipContent('right_quad_outer')}
+                </Tooltip>
+                {/* Left Knee Front */}
+                <Tooltip>
+                  {renderZone('left_knee_front', <ellipse cx="117" cy="230" rx="12" ry="10" />)}
+                  {renderTooltipContent('left_knee_front')}
+                </Tooltip>
+                {/* Right Knee Front */}
+                <Tooltip>
+                  {renderZone('right_knee_front', <ellipse cx="83" cy="230" rx="12" ry="10" />)}
+                  {renderTooltipContent('right_knee_front')}
+                </Tooltip>
+                {/* Left Shin */}
+                <Tooltip>
+                  {renderZone('left_shin', <rect x="111" y="242" width="12" height="42" rx="5" />)}
+                  {renderTooltipContent('left_shin')}
+                </Tooltip>
+                {/* Right Shin */}
+                <Tooltip>
+                  {renderZone('right_shin', <rect x="77" y="242" width="12" height="42" rx="5" />)}
+                  {renderTooltipContent('right_shin')}
+                </Tooltip>
+                {/* Left Ankle Inside */}
+                <Tooltip>
+                  {renderZone('left_ankle_inside', <ellipse cx="110" cy="292" rx="6" ry="7" />)}
+                  {renderTooltipContent('left_ankle_inside')}
+                </Tooltip>
+                {/* Left Ankle Outside */}
+                <Tooltip>
+                  {renderZone('left_ankle_outside', <ellipse cx="124" cy="292" rx="6" ry="7" />)}
+                  {renderTooltipContent('left_ankle_outside')}
+                </Tooltip>
+                {/* Right Ankle Inside */}
+                <Tooltip>
+                  {renderZone('right_ankle_inside', <ellipse cx="90" cy="292" rx="6" ry="7" />)}
+                  {renderTooltipContent('right_ankle_inside')}
+                </Tooltip>
+                {/* Right Ankle Outside */}
+                <Tooltip>
+                  {renderZone('right_ankle_outside', <ellipse cx="76" cy="292" rx="6" ry="7" />)}
+                  {renderTooltipContent('right_ankle_outside')}
+                </Tooltip>
+                {/* Left Foot Top */}
+                <Tooltip>
+                  {renderZone('left_foot_top', <ellipse cx="117" cy="318" rx="13" ry="18" />)}
+                  {renderTooltipContent('left_foot_top')}
+                </Tooltip>
+                {/* Right Foot Top */}
+                <Tooltip>
+                  {renderZone('right_foot_top', <ellipse cx="83" cy="318" rx="13" ry="18" />)}
+                  {renderTooltipContent('right_foot_top')}
+                </Tooltip>
+              </svg>
+            )}
 
-              {/* Left Shoulder (viewer's right) */}
-              <Tooltip>
-                {renderZone('left_shoulder', (
-                  <ellipse cx="138" cy="78" rx="18" ry="12" />
-                ))}
-                <TooltipContent side="right" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('left_shoulder')}</p>
-                  <p>{frequencies['left_shoulder'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
+            {activeView === 'back' && (
+              <svg viewBox="0 0 200 380" className="w-full max-w-[180px] h-auto" role="img" aria-label="Pain frequency heat map - Back view">
+                {/* Head (Back) */}
+                <Tooltip>
+                  {renderZone('head_back', <ellipse cx="100" cy="25" rx="20" ry="23" />)}
+                  {renderTooltipContent('head_back')}
+                </Tooltip>
+                {/* Neck (Back) */}
+                <Tooltip>
+                  {renderZone('neck_back', <rect x="92" y="48" width="16" height="14" rx="2" />)}
+                  {renderTooltipContent('neck_back')}
+                </Tooltip>
+                {/* Left Shoulder (Back) */}
+                <Tooltip>
+                  {renderZone('left_shoulder_back', <ellipse cx="60" cy="72" rx="16" ry="10" />)}
+                  {renderTooltipContent('left_shoulder_back')}
+                </Tooltip>
+                {/* Right Shoulder (Back) */}
+                <Tooltip>
+                  {renderZone('right_shoulder_back', <ellipse cx="140" cy="72" rx="16" ry="10" />)}
+                  {renderTooltipContent('right_shoulder_back')}
+                </Tooltip>
+                {/* Left Upper Back */}
+                <Tooltip>
+                  {renderZone('left_upper_back', <rect x="72" y="64" width="26" height="28" rx="3" />)}
+                  {renderTooltipContent('left_upper_back')}
+                </Tooltip>
+                {/* Right Upper Back */}
+                <Tooltip>
+                  {renderZone('right_upper_back', <rect x="102" y="64" width="26" height="28" rx="3" />)}
+                  {renderTooltipContent('right_upper_back')}
+                </Tooltip>
+                {/* Left Lat */}
+                <Tooltip>
+                  {renderZone('left_lat', <path d="M72 92 L72 120 L82 115 L82 92 Z" />)}
+                  {renderTooltipContent('left_lat')}
+                </Tooltip>
+                {/* Right Lat */}
+                <Tooltip>
+                  {renderZone('right_lat', <path d="M128 92 L128 120 L118 115 L118 92 Z" />)}
+                  {renderTooltipContent('right_lat')}
+                </Tooltip>
+                {/* Left Tricep */}
+                <Tooltip>
+                  {renderZone('left_tricep', <rect x="40" y="82" width="12" height="32" rx="5" />)}
+                  {renderTooltipContent('left_tricep')}
+                </Tooltip>
+                {/* Right Tricep */}
+                <Tooltip>
+                  {renderZone('right_tricep', <rect x="148" y="82" width="12" height="32" rx="5" />)}
+                  {renderTooltipContent('right_tricep')}
+                </Tooltip>
+                {/* Left Elbow Outer */}
+                <Tooltip>
+                  {renderZone('left_elbow_outer', <ellipse cx="46" cy="120" rx="8" ry="6" />)}
+                  {renderTooltipContent('left_elbow_outer')}
+                </Tooltip>
+                {/* Right Elbow Outer */}
+                <Tooltip>
+                  {renderZone('right_elbow_outer', <ellipse cx="154" cy="120" rx="8" ry="6" />)}
+                  {renderTooltipContent('right_elbow_outer')}
+                </Tooltip>
+                {/* Left Forearm Back */}
+                <Tooltip>
+                  {renderZone('left_forearm_back', <rect x="40" y="126" width="10" height="30" rx="4" />)}
+                  {renderTooltipContent('left_forearm_back')}
+                </Tooltip>
+                {/* Right Forearm Back */}
+                <Tooltip>
+                  {renderZone('right_forearm_back', <rect x="150" y="126" width="10" height="30" rx="4" />)}
+                  {renderTooltipContent('right_forearm_back')}
+                </Tooltip>
+                {/* Left Wrist Back */}
+                <Tooltip>
+                  {renderZone('left_wrist_back', <rect x="41" y="156" width="8" height="10" rx="3" />)}
+                  {renderTooltipContent('left_wrist_back')}
+                </Tooltip>
+                {/* Right Wrist Back */}
+                <Tooltip>
+                  {renderZone('right_wrist_back', <rect x="151" y="156" width="8" height="10" rx="3" />)}
+                  {renderTooltipContent('right_wrist_back')}
+                </Tooltip>
+                {/* Left Hand Back */}
+                <Tooltip>
+                  {renderZone('left_hand_back', <ellipse cx="45" cy="176" rx="9" ry="12" />)}
+                  {renderTooltipContent('left_hand_back')}
+                </Tooltip>
+                {/* Right Hand Back */}
+                <Tooltip>
+                  {renderZone('right_hand_back', <ellipse cx="155" cy="176" rx="9" ry="12" />)}
+                  {renderTooltipContent('right_hand_back')}
+                </Tooltip>
+                {/* Lower Back Center */}
+                <Tooltip>
+                  {renderZone('lower_back_center', <rect x="92" y="92" width="16" height="54" rx="3" />)}
+                  {renderTooltipContent('lower_back_center')}
+                </Tooltip>
+                {/* Lower Back Left */}
+                <Tooltip>
+                  {renderZone('lower_back_left', <rect x="82" y="118" width="16" height="28" rx="3" />)}
+                  {renderTooltipContent('lower_back_left')}
+                </Tooltip>
+                {/* Lower Back Right */}
+                <Tooltip>
+                  {renderZone('lower_back_right', <rect x="102" y="118" width="16" height="28" rx="3" />)}
+                  {renderTooltipContent('lower_back_right')}
+                </Tooltip>
+                {/* Left Glute */}
+                <Tooltip>
+                  {renderZone('left_glute', <ellipse cx="82" cy="160" rx="16" ry="14" />)}
+                  {renderTooltipContent('left_glute')}
+                </Tooltip>
+                {/* Right Glute */}
+                <Tooltip>
+                  {renderZone('right_glute', <ellipse cx="118" cy="160" rx="16" ry="14" />)}
+                  {renderTooltipContent('right_glute')}
+                </Tooltip>
+                {/* Left Hamstring Inner */}
+                <Tooltip>
+                  {renderZone('left_hamstring_inner', <rect x="84" y="176" width="12" height="45" rx="4" />)}
+                  {renderTooltipContent('left_hamstring_inner')}
+                </Tooltip>
+                {/* Left Hamstring Outer */}
+                <Tooltip>
+                  {renderZone('left_hamstring_outer', <rect x="70" y="176" width="12" height="45" rx="4" />)}
+                  {renderTooltipContent('left_hamstring_outer')}
+                </Tooltip>
+                {/* Right Hamstring Inner */}
+                <Tooltip>
+                  {renderZone('right_hamstring_inner', <rect x="104" y="176" width="12" height="45" rx="4" />)}
+                  {renderTooltipContent('right_hamstring_inner')}
+                </Tooltip>
+                {/* Right Hamstring Outer */}
+                <Tooltip>
+                  {renderZone('right_hamstring_outer', <rect x="118" y="176" width="12" height="45" rx="4" />)}
+                  {renderTooltipContent('right_hamstring_outer')}
+                </Tooltip>
+                {/* Left Knee Back */}
+                <Tooltip>
+                  {renderZone('left_knee_back', <ellipse cx="83" cy="230" rx="12" ry="10" />)}
+                  {renderTooltipContent('left_knee_back')}
+                </Tooltip>
+                {/* Right Knee Back */}
+                <Tooltip>
+                  {renderZone('right_knee_back', <ellipse cx="117" cy="230" rx="12" ry="10" />)}
+                  {renderTooltipContent('right_knee_back')}
+                </Tooltip>
+                {/* Left Calf Inner */}
+                <Tooltip>
+                  {renderZone('left_calf_inner', <rect x="83" y="242" width="10" height="38" rx="4" />)}
+                  {renderTooltipContent('left_calf_inner')}
+                </Tooltip>
+                {/* Left Calf Outer */}
+                <Tooltip>
+                  {renderZone('left_calf_outer', <rect x="71" y="242" width="10" height="38" rx="4" />)}
+                  {renderTooltipContent('left_calf_outer')}
+                </Tooltip>
+                {/* Right Calf Inner */}
+                <Tooltip>
+                  {renderZone('right_calf_inner', <rect x="107" y="242" width="10" height="38" rx="4" />)}
+                  {renderTooltipContent('right_calf_inner')}
+                </Tooltip>
+                {/* Right Calf Outer */}
+                <Tooltip>
+                  {renderZone('right_calf_outer', <rect x="119" y="242" width="10" height="38" rx="4" />)}
+                  {renderTooltipContent('right_calf_outer')}
+                </Tooltip>
+                {/* Left Achilles */}
+                <Tooltip>
+                  {renderZone('left_achilles', <rect x="80" y="282" width="6" height="16" rx="2" />)}
+                  {renderTooltipContent('left_achilles')}
+                </Tooltip>
+                {/* Right Achilles */}
+                <Tooltip>
+                  {renderZone('right_achilles', <rect x="114" y="282" width="6" height="16" rx="2" />)}
+                  {renderTooltipContent('right_achilles')}
+                </Tooltip>
+                {/* Left Heel */}
+                <Tooltip>
+                  {renderZone('left_heel', <ellipse cx="83" cy="310" rx="11" ry="14" />)}
+                  {renderTooltipContent('left_heel')}
+                </Tooltip>
+                {/* Right Heel */}
+                <Tooltip>
+                  {renderZone('right_heel', <ellipse cx="117" cy="310" rx="11" ry="14" />)}
+                  {renderTooltipContent('right_heel')}
+                </Tooltip>
+              </svg>
+            )}
 
-              {/* Right Shoulder (viewer's left) */}
-              <Tooltip>
-                {renderZone('right_shoulder', (
-                  <ellipse cx="62" cy="78" rx="18" ry="12" />
-                ))}
-                <TooltipContent side="left" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('right_shoulder')}</p>
-                  <p>{frequencies['right_shoulder'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
+            {activeView === 'left' && (
+              <svg viewBox="0 0 140 380" className="w-full max-w-[120px] h-auto" role="img" aria-label="Pain frequency heat map - Left side view">
+                {/* Body outline */}
+                <ellipse cx="70" cy="28" rx="22" ry="26" className="fill-none stroke-muted-foreground/20 stroke-[1]" />
+                <path d="M58 68 L58 150 Q58 160 62 168 L78 168 Q82 160 82 150 L82 68" className="fill-none stroke-muted-foreground/20 stroke-[1]" />
+                {/* Left Temple */}
+                <Tooltip>
+                  {renderZone('left_temple', <ellipse cx="52" cy="22" rx="10" ry="12" />)}
+                  {renderTooltipContent('left_temple')}
+                </Tooltip>
+                {/* Left Jaw */}
+                <Tooltip>
+                  {renderZone('left_jaw', <path d="M48 38 L56 48 L68 52 L68 42 L58 36 Z" />)}
+                  {renderTooltipContent('left_jaw')}
+                </Tooltip>
+                {/* Left Neck Side */}
+                <Tooltip>
+                  {renderZone('left_neck_side', <rect x="58" y="52" width="14" height="16" rx="3" />)}
+                  {renderTooltipContent('left_neck_side')}
+                </Tooltip>
+                {/* Left Deltoid */}
+                <Tooltip>
+                  {renderZone('left_deltoid', <ellipse cx="46" cy="78" rx="14" ry="12" />)}
+                  {renderTooltipContent('left_deltoid')}
+                </Tooltip>
+                {/* Left Ribs */}
+                <Tooltip>
+                  {renderZone('left_ribs', <rect x="48" y="85" width="14" height="32" rx="4" />)}
+                  {renderTooltipContent('left_ribs')}
+                </Tooltip>
+                {/* Left Oblique */}
+                <Tooltip>
+                  {renderZone('left_oblique', <rect x="50" y="120" width="12" height="28" rx="4" />)}
+                  {renderTooltipContent('left_oblique')}
+                </Tooltip>
+                {/* Left IT Band */}
+                <Tooltip>
+                  {renderZone('left_it_band', <rect x="50" y="178" width="10" height="52" rx="4" />)}
+                  {renderTooltipContent('left_it_band')}
+                </Tooltip>
+                {/* Left Knee Side */}
+                <Tooltip>
+                  {renderZone('left_knee_side', <ellipse cx="58" cy="238" rx="12" ry="10" />)}
+                  {renderTooltipContent('left_knee_side')}
+                </Tooltip>
+                {/* Left Foot Arch */}
+                <Tooltip>
+                  {renderZone('left_foot_arch', <path d="M48 300 Q45 315 50 328 L62 328 Q66 315 62 300 Z" />)}
+                  {renderTooltipContent('left_foot_arch')}
+                </Tooltip>
+              </svg>
+            )}
 
-              {/* Upper Back */}
-              <Tooltip>
-                {renderZone('upper_back', (
-                  <rect x="72" y="68" width="56" height="40" rx="4" />
-                ))}
-                <TooltipContent className="text-xs">
-                  <p className="font-medium">{getAreaLabel('upper_back')}</p>
-                  <p>{frequencies['upper_back'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Lower Back */}
-              <Tooltip>
-                {renderZone('lower_back', (
-                  <rect x="76" y="110" width="48" height="36" rx="4" />
-                ))}
-                <TooltipContent className="text-xs">
-                  <p className="font-medium">{getAreaLabel('lower_back')}</p>
-                  <p>{frequencies['lower_back'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Left Elbow (viewer's right) */}
-              <Tooltip>
-                {renderZone('left_elbow', (
-                  <>
-                    <rect x="144" y="88" width="14" height="36" rx="6" />
-                    <ellipse cx="151" cy="130" rx="10" ry="8" />
-                  </>
-                ))}
-                <TooltipContent side="right" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('left_elbow')}</p>
-                  <p>{frequencies['left_elbow'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Right Elbow (viewer's left) */}
-              <Tooltip>
-                {renderZone('right_elbow', (
-                  <>
-                    <rect x="42" y="88" width="14" height="36" rx="6" />
-                    <ellipse cx="49" cy="130" rx="10" ry="8" />
-                  </>
-                ))}
-                <TooltipContent side="left" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('right_elbow')}</p>
-                  <p>{frequencies['right_elbow'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Left Wrist/Hand (viewer's right) */}
-              <Tooltip>
-                {renderZone('left_wrist_hand', (
-                  <>
-                    <rect x="150" y="136" width="12" height="32" rx="5" />
-                    <ellipse cx="156" cy="172" rx="8" ry="6" />
-                    <ellipse cx="156" cy="186" rx="10" ry="12" />
-                  </>
-                ))}
-                <TooltipContent side="right" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('left_wrist_hand')}</p>
-                  <p>{frequencies['left_wrist_hand'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Right Wrist/Hand (viewer's left) */}
-              <Tooltip>
-                {renderZone('right_wrist_hand', (
-                  <>
-                    <rect x="38" y="136" width="12" height="32" rx="5" />
-                    <ellipse cx="44" cy="172" rx="8" ry="6" />
-                    <ellipse cx="44" cy="186" rx="10" ry="12" />
-                  </>
-                ))}
-                <TooltipContent side="left" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('right_wrist_hand')}</p>
-                  <p>{frequencies['right_wrist_hand'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Left Hip (viewer's right) */}
-              <Tooltip>
-                {renderZone('left_hip', (
-                  <path d="M100 146 Q116 151 132 146 L130 168 Q115 173 100 168 Z" />
-                ))}
-                <TooltipContent side="right" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('left_hip')}</p>
-                  <p>{frequencies['left_hip'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Right Hip (viewer's left) */}
-              <Tooltip>
-                {renderZone('right_hip', (
-                  <path d="M68 146 Q84 151 100 146 L100 168 Q85 173 70 168 Z" />
-                ))}
-                <TooltipContent side="left" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('right_hip')}</p>
-                  <p>{frequencies['right_hip'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Left Knee (viewer's right) */}
-              <Tooltip>
-                {renderZone('left_knee', (
-                  <>
-                    <rect x="110" y="170" width="18" height="48" rx="8" />
-                    <ellipse cx="119" cy="226" rx="12" ry="10" />
-                  </>
-                ))}
-                <TooltipContent side="right" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('left_knee')}</p>
-                  <p>{frequencies['left_knee'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Right Knee (viewer's left) */}
-              <Tooltip>
-                {renderZone('right_knee', (
-                  <>
-                    <rect x="72" y="170" width="18" height="48" rx="8" />
-                    <ellipse cx="81" cy="226" rx="12" ry="10" />
-                  </>
-                ))}
-                <TooltipContent side="left" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('right_knee')}</p>
-                  <p>{frequencies['right_knee'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Left Ankle (viewer's right) */}
-              <Tooltip>
-                {renderZone('left_ankle', (
-                  <>
-                    <rect x="112" y="238" width="14" height="44" rx="6" />
-                    <ellipse cx="119" cy="288" rx="10" ry="8" />
-                  </>
-                ))}
-                <TooltipContent side="right" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('left_ankle')}</p>
-                  <p>{frequencies['left_ankle'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Right Ankle (viewer's left) */}
-              <Tooltip>
-                {renderZone('right_ankle', (
-                  <>
-                    <rect x="74" y="238" width="14" height="44" rx="6" />
-                    <ellipse cx="81" cy="288" rx="10" ry="8" />
-                  </>
-                ))}
-                <TooltipContent side="left" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('right_ankle')}</p>
-                  <p>{frequencies['right_ankle'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Left Foot (viewer's right) */}
-              <Tooltip>
-                {renderZone('left_foot', (
-                  <ellipse cx="119" cy="308" rx="14" ry="18" />
-                ))}
-                <TooltipContent side="right" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('left_foot')}</p>
-                  <p>{frequencies['left_foot'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Right Foot (viewer's left) */}
-              <Tooltip>
-                {renderZone('right_foot', (
-                  <ellipse cx="81" cy="308" rx="14" ry="18" />
-                ))}
-                <TooltipContent side="left" className="text-xs">
-                  <p className="font-medium">{getAreaLabel('right_foot')}</p>
-                  <p>{frequencies['right_foot'] || 0} occurrences</p>
-                </TooltipContent>
-              </Tooltip>
-            </svg>
+            {activeView === 'right' && (
+              <svg viewBox="0 0 140 380" className="w-full max-w-[120px] h-auto" role="img" aria-label="Pain frequency heat map - Right side view">
+                {/* Body outline */}
+                <ellipse cx="70" cy="28" rx="22" ry="26" className="fill-none stroke-muted-foreground/20 stroke-[1]" />
+                <path d="M58 68 L58 150 Q58 160 62 168 L78 168 Q82 160 82 150 L82 68" className="fill-none stroke-muted-foreground/20 stroke-[1]" />
+                {/* Right Temple */}
+                <Tooltip>
+                  {renderZone('right_temple', <ellipse cx="88" cy="22" rx="10" ry="12" />)}
+                  {renderTooltipContent('right_temple')}
+                </Tooltip>
+                {/* Right Jaw */}
+                <Tooltip>
+                  {renderZone('right_jaw', <path d="M92 38 L84 48 L72 52 L72 42 L82 36 Z" />)}
+                  {renderTooltipContent('right_jaw')}
+                </Tooltip>
+                {/* Right Neck Side */}
+                <Tooltip>
+                  {renderZone('right_neck_side', <rect x="68" y="52" width="14" height="16" rx="3" />)}
+                  {renderTooltipContent('right_neck_side')}
+                </Tooltip>
+                {/* Right Deltoid */}
+                <Tooltip>
+                  {renderZone('right_deltoid', <ellipse cx="94" cy="78" rx="14" ry="12" />)}
+                  {renderTooltipContent('right_deltoid')}
+                </Tooltip>
+                {/* Right Ribs */}
+                <Tooltip>
+                  {renderZone('right_ribs', <rect x="78" y="85" width="14" height="32" rx="4" />)}
+                  {renderTooltipContent('right_ribs')}
+                </Tooltip>
+                {/* Right Oblique */}
+                <Tooltip>
+                  {renderZone('right_oblique', <rect x="78" y="120" width="12" height="28" rx="4" />)}
+                  {renderTooltipContent('right_oblique')}
+                </Tooltip>
+                {/* Right IT Band */}
+                <Tooltip>
+                  {renderZone('right_it_band', <rect x="80" y="178" width="10" height="52" rx="4" />)}
+                  {renderTooltipContent('right_it_band')}
+                </Tooltip>
+                {/* Right Knee Side */}
+                <Tooltip>
+                  {renderZone('right_knee_side', <ellipse cx="82" cy="238" rx="12" ry="10" />)}
+                  {renderTooltipContent('right_knee_side')}
+                </Tooltip>
+                {/* Right Foot Arch */}
+                <Tooltip>
+                  {renderZone('right_foot_arch', <path d="M92 300 Q95 315 90 328 L78 328 Q74 315 78 300 Z" />)}
+                  {renderTooltipContent('right_foot_arch')}
+                </Tooltip>
+              </svg>
+            )}
           </div>
         </TooltipProvider>
 
         {/* Legend */}
         <div className="flex flex-wrap justify-center gap-2 text-xs">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'hsl(var(--muted))', opacity: 0.3 }} />
+            <div className="w-3 h-3 rounded-sm bg-muted opacity-30" />
             <span className="text-muted-foreground">None</span>
           </div>
           <div className="flex items-center gap-1">
@@ -493,7 +767,7 @@ export function VaultPainHeatMapCard() {
                   key={area.areaId}
                   className={cn(
                     "px-2 py-0.5 rounded-full text-xs font-medium",
-                    i === 0 && "bg-red-500/20 text-red-400 border border-red-500/50",
+                    i === 0 && "bg-destructive/20 text-destructive border border-destructive/50",
                     i === 1 && "bg-orange-500/20 text-orange-400 border border-orange-500/50",
                     i === 2 && "bg-yellow-500/20 text-yellow-600 border border-yellow-500/50"
                   )}
