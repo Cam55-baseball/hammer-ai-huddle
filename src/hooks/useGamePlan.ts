@@ -404,6 +404,18 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         .eq('user_id', user.id)
         .eq('entry_date', today);
 
+      // Fetch skip days from calendar_skipped_items (SINGLE SOURCE OF TRUTH for Repeat Weekly)
+      const { data: skipItemsData } = await supabase
+        .from('calendar_skipped_items')
+        .select('item_id, skip_days')
+        .eq('user_id', user.id)
+        .eq('item_type', 'custom_activity');
+
+      const skipItemsMap = new Map<string, number[]>();
+      (skipItemsData || []).forEach(item => {
+        skipItemsMap.set(item.item_id, item.skip_days || []);
+      });
+
       const templates = (templatesData || []) as unknown as CustomActivityTemplate[];
       const logs = (logsData || []) as unknown as CustomActivityLog[];
 
@@ -414,21 +426,33 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         // Check display settings first
         if (template.display_on_game_plan === false) return;
         
-        // Use recurring_days as single source of truth, fallback to display_days for legacy
+        // Check calendar_skipped_items first (SINGLE SOURCE OF TRUTH for Repeat Weekly)
+        const itemId = `template-${template.id}`;
+        const skipDays = skipItemsMap.get(itemId) || [];
+        const isSkippedToday = skipDays.includes(todayDayOfWeek);
+        
+        // Check if there's a log for today
+        const todayLog = logs.find(l => l.template_id === template.id);
+        
+        // If explicitly skipped for today via calendar settings, only show if already logged
+        if (isSkippedToday && !todayLog) {
+          return; // Skip this activity entirely
+        }
+        
+        // Fallback to template settings if no skip record exists
         const scheduledDays = template.recurring_active 
           ? (template.recurring_days as number[]) || []
           : (template.display_days as number[] | null) || [0, 1, 2, 3, 4, 5, 6];
         
         const isScheduledToday = scheduledDays.includes(todayDayOfWeek);
-        const todayLog = logs.find(l => l.template_id === template.id);
         
-        // Include if scheduled for today OR has a log for today
-        if (isScheduledToday || todayLog) {
+        // Include if: (scheduled AND not skipped) OR has a log for today
+        if ((isScheduledToday && !isSkippedToday) || todayLog) {
           customActivitiesForToday.push({
             template,
             log: todayLog,
             isRecurring: template.recurring_active || false,
-            isScheduledForToday: isScheduledToday || !!todayLog,
+            isScheduledForToday: (isScheduledToday && !isSkippedToday) || !!todayLog,
           });
         }
       });
