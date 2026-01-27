@@ -1,126 +1,177 @@
 
-## What’s happening (why you’re seeing “Scheduled off” items still in the main list)
 
-From the current code, the app correctly detects that “Complete Morning Check-In” (`quiz-morning`) and “Complete Pre-Workout Check-In” (`quiz-prelift`) are scheduled off for Monday (they’re in `calendar_skipped_items` and the UI even labels them “Scheduled off”).
+# Add Custom Activity Data to 6-Week Recaps
 
-However, on the Dashboard Game Plan, there is one view mode where “Scheduled off” tasks are not filtered out of the *main* list:
+## Overview
 
-- In **Timeline mode**, the main task list only filters out **manually skipped** tasks, but it **does not filter out “scheduled off” (weekly skipped)** tasks.
-- At the same time, the “Skipped for today” section *does* include weekly-skipped tasks.
-- Result: the same task appears in both places (main list + “Skipped for today”), which matches exactly what you’re reporting.
+Currently, the 6-week recap system only analyzes Hammers Modality program workouts (stored in `vault_workout_notes`). Users who primarily use custom activities instead of the built-in programs are getting incomplete recaps that don't reflect their actual training.
 
-This is an end-to-end UI logic mismatch inside `src/components/GamePlanCard.tsx`.
+This enhancement will integrate custom activity data into the AI analysis, ensuring athletes who create their own workouts, running sessions, recovery routines, and other custom activities receive meaningful, accurate recaps.
 
 ---
 
-## Goal
+## What Data Will Be Included
 
-On Monday (or any day):
-- If a task is “Scheduled off” via weekly repeat settings, it must **not** appear in the **main actionable** Game Plan list in any sort mode (Auto / Manual / Timeline).
-- It can still appear under **“Skipped for today”** with the “Scheduled off” label so the user can hit the pencil icon to edit the schedule back on (this keeps the ability to re-enable a task).
+From the `custom_activity_logs` and `custom_activity_templates` tables, we'll extract:
 
----
-
-## Scope of changes (files)
-
-1) `src/components/GamePlanCard.tsx`
-- Fix Timeline mode filtering to exclude weekly-skipped items from the main list.
-- Ensure timeline reorder logic doesn’t accidentally “lose” hidden (scheduled-off) tasks.
-- Ensure any “save schedule / lock schedule” actions based on timeline tasks use the same “visible today” list (so scheduled-off tasks aren’t locked/saved as if active today).
-
-No backend/schema changes required.
+| Metric | Source | How It's Used |
+|--------|--------|---------------|
+| Total custom activities completed | `custom_activity_logs.completed = true` | Training volume |
+| Activities by type | `custom_activity_templates.activity_type` | Training variety (workout, running, recovery, etc.) |
+| Total training time | `duration_minutes` | Time investment |
+| Intensity distribution | `intensity` field | Training load pattern |
+| Completion rate | Completed vs scheduled | Consistency metric |
+| Activity notes | `notes` field | Athlete reflections |
+| Daily breakdown | `entry_date` grouping | Weekly consistency |
 
 ---
 
-## Implementation steps (code-level)
+## Implementation Plan
 
-### Step 1 — Centralize “hidden today” logic in GamePlanCard
-In `GamePlanCard.tsx`, create a single helper predicate for “should not show in the main list today”:
+### Step 1: Fetch Custom Activity Data
 
-- hidden if:
-  - manually skipped today (`skippedTasks.has(task.id)`), OR
-  - weekly scheduled off (`isWeeklySkipped(task)`)
+Add a new database query in the edge function to fetch custom activity logs with their template details for the 6-week period:
 
-This reduces the chance of future view modes drifting out of sync.
+```typescript
+// Add to the Promise.all fetch block
+{ data: customActivityLogs } = await supabase
+  .from("custom_activity_logs")
+  .select(`
+    id, entry_date, completed, completed_at, 
+    actual_duration_minutes, notes, performance_data,
+    custom_activity_templates!inner (
+      title, activity_type, duration_minutes, 
+      intensity, sport
+    )
+  `)
+  .eq("user_id", user.id)
+  .eq("completed", true)
+  .gte("entry_date", startDateStr)
+  .lte("entry_date", endDateStr)
+```
 
-### Step 2 — Fix Timeline mode main list filtering
-Currently Timeline mode renders:
+### Step 2: Aggregate Custom Activity Metrics
 
-- `timelineTasks.filter(t => !skippedTasks.has(t.id))`
+Create a dedicated analysis section for custom activities:
 
-Update Timeline mode to instead use:
+```typescript
+// ========== CUSTOM ACTIVITY ANALYSIS ==========
+const customActivities = customActivityLogs || [];
+const totalCustomActivities = customActivities.length;
 
-- `timelineVisibleTasks = timelineTasks.filter(t => !skippedTasks.has(t.id) && !isWeeklySkipped(t))`
+// Group by activity type
+const activityByType: Record<string, number> = {};
+customActivities.forEach(log => {
+  const type = log.custom_activity_templates?.activity_type || 'other';
+  activityByType[type] = (activityByType[type] || 0) + 1;
+});
 
-Then render the `Reorder.Group` values and list using `timelineVisibleTasks`.
+// Calculate total custom training time
+const totalCustomMinutes = customActivities.reduce((sum, log) => {
+  return sum + (log.actual_duration_minutes || 
+    log.custom_activity_templates?.duration_minutes || 0);
+}, 0);
 
-This ensures “Scheduled off” tasks never appear in the main list in Timeline mode.
+// Group by intensity
+const intensityDistribution: Record<string, number> = {};
+customActivities.forEach(log => {
+  const intensity = log.custom_activity_templates?.intensity || 'moderate';
+  intensityDistribution[intensity] = (intensityDistribution[intensity] || 0) + 1;
+});
 
-### Step 3 — Keep “Scheduled off” tasks available in the “Skipped for today” section
-Do not remove weekly-skipped tasks from `skippedTasksList`. That section is where “Scheduled off” belongs (with the pencil icon).
+// Get unique activity titles for variety analysis
+const uniqueActivities = new Set(
+  customActivities.map(log => log.custom_activity_templates?.title)
+);
 
-This maintains:
-- Visibility that it’s scheduled off
-- A direct edit path to re-enable it
+// Weekly consistency (days with at least one custom activity)
+const activeDates = new Set(customActivities.map(log => log.entry_date));
+const customActivityDays = activeDates.size;
 
-### Step 4 — Make Timeline reorder work even when some tasks are hidden
-Important: If Timeline mode only renders `timelineVisibleTasks`, the drag reorder callback will only reorder visible tasks.
+// Extract notes for AI analysis (limit to prevent token overflow)
+const activityNotes = customActivities
+  .filter(log => log.notes && log.notes.trim())
+  .map(log => log.notes)
+  .slice(0, 5);
+```
 
-We must update `handleReorderTimeline(newVisibleOrder)` so it:
-- Reorders only the visible tasks within the full `timelineTasks` array,
-- While keeping hidden tasks (scheduled off / manually skipped) in the underlying `timelineTasks` state so they can reappear automatically when schedules change.
+### Step 3: Add to AI Prompt
 
-Implementation approach:
-- Build a queue from `newVisibleOrder`
-- Iterate the existing `timelineTasks` in order:
-  - if a task is visible, replace it with the next from the queue
-  - if a task is hidden, keep it in place
-- Save the merged order back into `timelineTasks`
-- Persist localStorage order from the merged list (or persist only visible IDs + keep hidden stable; simplest is merged list IDs)
+Insert a new section in the elite prompt for custom activity data:
 
-This prevents:
-- “Scheduled off” tasks from disappearing permanently from timeline state
-- Ordering corruption when toggling schedule settings
+```text
+12. CUSTOM TRAINING ACTIVITIES (User-Created)
+    • Total Completed: ${totalCustomActivities}
+    • Unique Activities: ${uniqueActivities.size} different activities
+    • Total Training Time: ${Math.floor(totalCustomMinutes / 60)}h ${totalCustomMinutes % 60}m
+    • Days Active: ${customActivityDays} of 42 possible days
+    • Activity Types: ${Object.entries(activityByType)
+        .map(([type, count]) => `${type}: ${count}`)
+        .join(', ') || 'None'}
+    • Intensity Distribution: ${Object.entries(intensityDistribution)
+        .map(([i, count]) => `${i}: ${count}`)
+        .join(', ') || 'N/A'}
+    • Top Activities: ${[...uniqueActivities].slice(0, 5).join(', ')}
+    ${activityNotes.length > 0 
+        ? `• Athlete Notes: ${activityNotes.join(' | ')}` 
+        : ''}
+```
 
-### Step 5 — Ensure Timeline-based “Lock Schedule” / “Save Template” uses visible-today tasks
-There are multiple places in `GamePlanCard.tsx` that build schedules from `timelineTasks` directly (locking, templates, etc.).
+### Step 4: Update AI Analysis Instructions
 
-Update those to use the same filtered list used for Timeline display (i.e., exclude weekly-skipped and manually-skipped for today), so that “scheduled off” tasks are not treated as part of today’s active schedule.
+Modify the AI prompt to recognize and analyze custom activities:
 
-Specifically update any place that does something like:
-- `timelineTasks.map(...)`
+```text
+CRITICAL REQUIREMENTS:
+...
+- RECOGNIZE that athletes may train using CUSTOM ACTIVITIES (user-created) 
+  in addition to or instead of structured program workouts. Both sources 
+  count toward their training volume and commitment.
+- If custom activity data shows high engagement but program workouts are low,
+  acknowledge the athlete IS training actively via their personalized routines.
+```
 
-to use:
-- `timelineVisibleTasks.map(...)`
+### Step 5: Store Custom Activity Stats in Recap Data
 
-Key places to update:
-- Lock order saving (schedule build)
-- Template save (schedule build)
-- Any other timeline-only schedule serialization
+Include aggregated custom activity stats in the saved recap for future reference:
 
-This is the “E2E” part: not just hiding in UI, but also preventing scheduled-off tasks from being “baked into” today’s saved schedule artifacts.
+```typescript
+// Add to recap_data object
+custom_activity_stats: {
+  total_completed: totalCustomActivities,
+  unique_activities: uniqueActivities.size,
+  total_minutes: totalCustomMinutes,
+  days_active: customActivityDays,
+  by_type: activityByType,
+  by_intensity: intensityDistribution,
+}
+```
 
 ---
 
-## Testing checklist (to confirm it’s fixed)
+## Benefits
 
-On **Monday**:
-
-1) Ensure `quiz-morning` is scheduled off for Monday (already is in your DB based on the data).
-2) Go to `/dashboard`.
-3) Switch sort mode to **Timeline** (if not already).
-4) Confirm:
-   - “Complete Morning Check-In” and “Complete Pre-Workout Check-In” do **not** appear in the main list.
-   - They appear only under “Skipped for today” with the “Scheduled off” label.
-5) Edit one scheduled-off task from the skipped section (pencil), re-enable Monday, save:
-   - It should immediately move from “Skipped for today” back into the main list (Timeline view) without refresh.
-6) Confirm lock/template actions don’t include scheduled-off tasks:
-   - With a task scheduled off, lock today’s schedule and verify it does not reinsert that task as active.
+1. **Accurate Training Volume**: Athletes who use custom activities won't see "0 workouts" if they're actively training their own way
+2. **Holistic Analysis**: AI can correlate custom activity patterns with sleep, recovery, and mental readiness
+3. **Motivation**: Users feel their custom activities "count" and are valued
+4. **Personalization**: Recaps reflect the actual training approach of each individual athlete
+5. **Activity Type Insights**: AI can identify if an athlete is focusing too much on one type (e.g., all running, no recovery)
 
 ---
 
-## Expected result after fix
+## Files to Modify
 
-- No more duplication (“Scheduled off” tasks showing as actionable).
-- Consistent behavior across Auto, Manual, and Timeline modes.
-- Scheduled-off tasks remain discoverable/editable under “Skipped for today” only.
+| File | Changes |
+|------|---------|
+| `supabase/functions/generate-vault-recap/index.ts` | Add custom activity fetch, aggregation, and include in AI prompt |
+
+---
+
+## Example Output in Recap
+
+After implementation, the AI might generate insights like:
+
+> "While your structured program workouts were limited (2 sessions), your custom training volume tells a different story. You completed 28 custom activities totaling 14+ hours of training across warmups, recovery, and practice sessions. Your 'Fascia Prep' and 'Wake Up Starter' routines were completed consistently, showing excellent morning discipline..."
+
+This ensures users who build their own training routines through Custom Activities receive the same quality of analysis as those using the structured Hammers Modality programs.
+
