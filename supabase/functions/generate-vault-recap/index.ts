@@ -89,6 +89,7 @@ serve(async (req) => {
       { data: wellnessGoals },
       { data: freeNotes },
       { data: weightEntries },
+      { data: customActivityLogs },
     ] = await Promise.all([
       supabase.from("vault_workout_notes").select("*").eq("user_id", user.id)
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr),
@@ -108,6 +109,16 @@ serve(async (req) => {
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr),
       supabase.from("weight_entries").select("*").eq("user_id", user.id)
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr).order("entry_date", { ascending: true }),
+      // Fetch custom activities (user-created workouts, runs, recovery, etc.)
+      supabase.from("custom_activity_logs").select(`
+        id, entry_date, completed, completed_at, 
+        actual_duration_minutes, notes, performance_data,
+        custom_activity_templates!inner (
+          title, activity_type, duration_minutes, 
+          intensity, sport
+        )
+      `).eq("user_id", user.id).eq("completed", true)
+        .gte("entry_date", startDateStr).lte("entry_date", endDateStr),
     ]);
 
     // ========== WORKOUT ANALYSIS ==========
@@ -301,6 +312,46 @@ serve(async (req) => {
       previousResults: t.previous_results,
     })) || [];
 
+    // ========== CUSTOM ACTIVITY ANALYSIS ==========
+    const customActivities = customActivityLogs || [];
+    const totalCustomActivities = customActivities.length;
+
+    // Group by activity type
+    const activityByType: Record<string, number> = {};
+    customActivities.forEach((log: any) => {
+      const type = log.custom_activity_templates?.activity_type || 'other';
+      activityByType[type] = (activityByType[type] || 0) + 1;
+    });
+
+    // Calculate total custom training time
+    const totalCustomMinutes = customActivities.reduce((sum: number, log: any) => {
+      return sum + (log.actual_duration_minutes || 
+        log.custom_activity_templates?.duration_minutes || 0);
+    }, 0);
+
+    // Group by intensity
+    const customIntensityDistribution: Record<string, number> = {};
+    customActivities.forEach((log: any) => {
+      const intensity = log.custom_activity_templates?.intensity || 'moderate';
+      customIntensityDistribution[intensity] = (customIntensityDistribution[intensity] || 0) + 1;
+    });
+
+    // Get unique activity titles for variety analysis
+    const uniqueActivities = new Set(
+      customActivities.map((log: any) => log.custom_activity_templates?.title)
+    );
+
+    // Weekly consistency (days with at least one custom activity)
+    const customActiveDates = new Set(customActivities.map((log: any) => log.entry_date));
+    const customActivityDays = customActiveDates.size;
+
+    // Extract notes for AI analysis (limit to prevent token overflow)
+    const activityNotes = customActivities
+      .filter((log: any) => log.notes && log.notes.trim())
+      .map((log: any) => log.notes)
+      .slice(0, 5);
+
+    console.log(`Custom activities: ${totalCustomActivities} completed, ${customActivityDays} active days, ${Math.floor(totalCustomMinutes / 60)}h ${totalCustomMinutes % 60}m total time`);
     console.log("Comprehensive data collected for AI analysis");
 
     // ========== ELITE AI PROMPT ==========
@@ -436,6 +487,16 @@ COMPREHENSIVE DATA ANALYSIS
     What they learned: ${learnedReflections.slice(0, 3).join(' | ') || 'No reflections logged'}
     Motivations: ${motivationReflections.slice(0, 2).join(' | ') || 'No motivations logged'}
 
+12. CUSTOM TRAINING ACTIVITIES (User-Created)
+    • Total Completed: ${totalCustomActivities}
+    • Unique Activities: ${uniqueActivities.size} different activities
+    • Total Training Time: ${Math.floor(totalCustomMinutes / 60)}h ${totalCustomMinutes % 60}m
+    • Days Active: ${customActivityDays} of 42 possible days
+    • Activity Types: ${Object.entries(activityByType).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None'}
+    • Intensity Distribution: ${Object.entries(customIntensityDistribution).map(([i, count]) => `${i}: ${count}`).join(', ') || 'N/A'}
+    • Top Activities: ${[...uniqueActivities].slice(0, 5).join(', ') || 'None'}
+    ${activityNotes.length > 0 ? `• Athlete Notes: ${activityNotes.join(' | ')}` : ''}
+
 ═══════════════════════════════════════════════════════════════
 
 ${isRecoveryPhase ? `
@@ -460,6 +521,8 @@ CRITICAL REQUIREMENTS:
 - Provide actionable, specific recommendations
 - Write with authority and expertise
 - Focus on patterns and trends, not just averages
+- RECOGNIZE that athletes may train using CUSTOM ACTIVITIES (user-created workouts, runs, recovery sessions, practices) in addition to or instead of structured program workouts. Both sources count toward their training volume and commitment.
+- If custom activity data shows high engagement but program workouts are low, acknowledge the athlete IS training actively via their personalized routines.
 ${isRecoveryPhase ? '- Frame everything through the lens of recovery optimization and return-to-play preparation' : ''}
 
 REQUIRED SECTIONS (return as JSON):
@@ -600,6 +663,14 @@ Return ONLY valid JSON with this exact structure:
       performance_tests: perfTestSummary,
       training_focus: trainingFocus,
       wellness_goals_count: goalsAnalysis.length,
+      custom_activity_stats: {
+        total_completed: totalCustomActivities,
+        unique_activities: uniqueActivities.size,
+        total_minutes: totalCustomMinutes,
+        days_active: customActivityDays,
+        by_type: activityByType,
+        by_intensity: customIntensityDistribution,
+      },
     };
 
     // Save recap to database with unlocked_progress_reports_at set immediately
