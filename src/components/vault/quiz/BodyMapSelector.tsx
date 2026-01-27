@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ZoomOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 import { BodyMapFront } from './body-maps/BodyMapFront';
 import { BodyMapBack } from './body-maps/BodyMapBack';
 import { BodyMapLeftSide } from './body-maps/BodyMapLeftSide';
@@ -21,12 +24,54 @@ const VIEW_LABELS: Record<BodyView, string> = {
 
 export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<BodyView>('front');
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const touchRef = useRef<{ distance: number; center: { x: number; y: number } } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const getDistance = (t1: React.Touch, t2: React.Touch) =>
+    Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+  const getCenter = (t1: React.Touch, t2: React.Touch) => ({
+    x: (t1.clientX + t2.clientX) / 2,
+    y: (t1.clientY + t2.clientY) / 2,
+  });
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const distance = getDistance(e.touches[0], e.touches[1]);
+      const center = getCenter(e.touches[0], e.touches[1]);
+      touchRef.current = { distance, center };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchRef.current) {
+      const newDistance = getDistance(e.touches[0], e.touches[1]);
+      const scale = newDistance / touchRef.current.distance;
+      setZoomLevel((prev) => Math.min(Math.max(prev * scale, 1), 3));
+      touchRef.current = {
+        distance: newDistance,
+        center: getCenter(e.touches[0], e.touches[1]),
+      };
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchRef.current = null;
+  };
+
+  const resetZoom = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
 
   const toggleArea = (areaId: string) => {
-    if (navigator.vibrate) navigator.vibrate(10);
+    if (navigator.vibrate) navigator.vibrate(isMobile ? 20 : 10);
     if (selectedAreas.includes(areaId)) {
-      onChange(selectedAreas.filter(a => a !== areaId));
+      onChange(selectedAreas.filter((a) => a !== areaId));
     } else {
       onChange([...selectedAreas, areaId]);
     }
@@ -37,20 +82,28 @@ export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProp
       <p className="text-sm font-medium">
         {t('vault.quiz.pain.locationLabel', 'Localized pain today?')}
       </p>
-      
-      {/* View Selector Tabs */}
+
+      {/* View Selector Tabs - Larger on mobile */}
       <div className="flex justify-center">
-        <div className="inline-flex rounded-lg bg-muted/50 p-1">
-          {(['front', 'back', 'left', 'right'] as BodyView[]).map(view => (
+        <div
+          className={cn(
+            'inline-flex rounded-lg bg-muted/50 p-1',
+            isMobile && 'w-full justify-between'
+          )}
+        >
+          {(['front', 'back', 'left', 'right'] as BodyView[]).map((view) => (
             <button
               key={view}
               type="button"
               onClick={() => setActiveView(view)}
               className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                'rounded-md transition-colors font-medium',
+                isMobile
+                  ? 'flex-1 px-2 py-2 text-sm min-h-[44px]'
+                  : 'px-3 py-1 text-xs',
                 activeView === view
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
               {VIEW_LABELS[view]}
@@ -59,23 +112,84 @@ export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProp
         </div>
       </div>
 
-      {/* Body Map SVG - switches based on view */}
-      <div className="flex justify-center">
-        {activeView === 'front' && <BodyMapFront selectedAreas={selectedAreas} onToggle={toggleArea} />}
-        {activeView === 'back' && <BodyMapBack selectedAreas={selectedAreas} onToggle={toggleArea} />}
-        {activeView === 'left' && <BodyMapLeftSide selectedAreas={selectedAreas} onToggle={toggleArea} />}
-        {activeView === 'right' && <BodyMapRightSide selectedAreas={selectedAreas} onToggle={toggleArea} />}
+      {/* Zoom Controls - Mobile only */}
+      {isMobile && zoomLevel > 1 && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetZoom}
+            className="text-xs gap-1"
+            type="button"
+          >
+            <ZoomOut className="h-3 w-3" />
+            Reset Zoom
+          </Button>
+        </div>
+      )}
+
+      {/* Zoomable Body Map Container */}
+      <div
+        ref={containerRef}
+        className={cn(
+          'flex justify-center overflow-hidden rounded-lg',
+          isMobile && 'touch-manipulation bg-muted/20 p-2'
+        )}
+        onTouchStart={isMobile ? handleTouchStart : undefined}
+        onTouchMove={isMobile ? handleTouchMove : undefined}
+        onTouchEnd={isMobile ? handleTouchEnd : undefined}
+      >
+        <div
+          style={{
+            transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`,
+            transformOrigin: 'center center',
+            transition: zoomLevel === 1 ? 'transform 0.2s ease' : 'none',
+          }}
+          className={cn(isMobile ? 'w-full max-w-[280px]' : 'max-w-[180px]')}
+        >
+          {activeView === 'front' && (
+            <BodyMapFront selectedAreas={selectedAreas} onToggle={toggleArea} />
+          )}
+          {activeView === 'back' && (
+            <BodyMapBack selectedAreas={selectedAreas} onToggle={toggleArea} />
+          )}
+          {activeView === 'left' && (
+            <BodyMapLeftSide selectedAreas={selectedAreas} onToggle={toggleArea} />
+          )}
+          {activeView === 'right' && (
+            <BodyMapRightSide selectedAreas={selectedAreas} onToggle={toggleArea} />
+          )}
+        </div>
       </div>
+
+      {/* Mobile hint when zoomed out */}
+      {isMobile && zoomLevel === 1 && (
+        <p className="text-xs text-muted-foreground text-center">
+          {t('vault.quiz.pain.zoomHint', 'Pinch to zoom for precise selection')}
+        </p>
+      )}
 
       {/* Selected Areas Summary Chips - shows selections from ALL views */}
       {selectedAreas.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5 justify-center max-h-24 overflow-y-auto">
+        <div
+          className={cn(
+            'flex gap-1.5 justify-center',
+            isMobile
+              ? 'overflow-x-auto pb-2 -mx-2 px-2 flex-nowrap'
+              : 'flex-wrap max-h-24 overflow-y-auto'
+          )}
+        >
           {selectedAreas.map((areaId) => (
             <button
               key={areaId}
               type="button"
               onClick={() => toggleArea(areaId)}
-              className="px-2 py-0.5 rounded-full text-xs font-medium bg-destructive/20 text-destructive border border-destructive/50 hover:bg-destructive/30 transition-colors"
+              className={cn(
+                'rounded-full font-medium bg-destructive/20 text-destructive border border-destructive/50 hover:bg-destructive/30 transition-colors',
+                isMobile
+                  ? 'px-3 py-1.5 text-sm whitespace-nowrap min-h-[36px]'
+                  : 'px-2 py-0.5 text-xs'
+              )}
             >
               {t(`vault.quiz.pain.area.${areaId}`, getBodyAreaLabel(areaId))}
               <span className="ml-1">×</span>

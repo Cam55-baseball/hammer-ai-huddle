@@ -26,9 +26,10 @@ export function BodyMapBack({ selectedAreas, onToggle }: BodyMapBackProps) {
   return (
     <svg
       viewBox="0 0 200 380"
-      className="w-full max-w-[180px] h-auto"
+      className="w-full h-auto"
       role="group"
       aria-label="Back body view for pain selection"
+      style={{ touchAction: 'manipulation' }}
     >
       {/* Head (Back) */}
       <g
