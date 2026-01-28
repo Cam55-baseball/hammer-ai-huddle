@@ -4411,11 +4411,23 @@
         "long_toss_distance": "Langwurf-Distanz",
         "ten_yard_dash": "10-Yard Sprint",
         "sl_broad_jump": "SL Weitsprung",
+        "sl_broad_jump_left": "SL Weitsprung (Links)",
+        "sl_broad_jump_right": "SL Weitsprung (Rechts)",
         "sl_lateral_broad_jump": "SL Seitwärts-Weitsprung",
         "sl_vert_jump": "SL Vertikalsprung",
         "mb_situp_throw": "MB Sit-Up Wurf",
         "seated_chest_pass": "Brustpass Sitzend",
         "max_tee_distance": "Max Tee-Distanz"
+      },
+      "throwingHand": "Wurfhand",
+      "battingSide": "Schlagseite",
+      "leftLeg": "Linkes Bein",
+      "rightLeg": "Rechtes Bein",
+      "handedness": {
+        "right": "Rechts (R)",
+        "left": "Links (L)",
+        "both": "Beide",
+        "switch": "Beidhändig"
       }
     },
     "progressPhotos": {

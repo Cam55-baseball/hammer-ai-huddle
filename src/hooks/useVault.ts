@@ -947,15 +947,27 @@ export function useVault() {
     setPerformanceTests((data || []).map(t => ({ ...t, results: t.results as Record<string, number>, previous_results: t.previous_results as Record<string, number> | null })));
   }, [user]);
 
-  const savePerformanceTest = useCallback(async (testType: string, results: Record<string, number>) => {
+  const savePerformanceTest = useCallback(async (
+    testType: string, 
+    results: Record<string, number>,
+    handedness?: { throwing?: string; batting?: string }
+  ) => {
     if (!user) return { success: false };
     const lastTest = performanceTests.find(t => t.test_type === testType);
     // Calculate next entry date (6 weeks from now)
     const nextEntryDate = new Date();
     nextEntryDate.setDate(nextEntryDate.getDate() + 42); // 6 weeks = 42 days
     
+    // Include handedness metadata in results if provided
+    const enhancedResults = {
+      ...results,
+      ...(handedness?.throwing ? { _throwing_hand: handedness.throwing } : {}),
+      ...(handedness?.batting ? { _batting_side: handedness.batting } : {}),
+    };
+    
     const { error } = await supabase.from('vault_performance_tests').insert({
-      user_id: user.id, test_type: testType, sport: 'baseball', module: testType, results, previous_results: lastTest?.results || null,
+      user_id: user.id, test_type: testType, sport: 'baseball', module: testType, 
+      results: enhancedResults, previous_results: lastTest?.results || null,
       next_entry_date: nextEntryDate.toISOString().split('T')[0],
     });
     if (!error) await fetchPerformanceTests();

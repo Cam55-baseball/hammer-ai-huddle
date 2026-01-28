@@ -3576,11 +3576,23 @@
         "long_toss_distance": "롱 토스 거리",
         "ten_yard_dash": "10야드 대시",
         "sl_broad_jump": "SL 멀리뛰기",
+        "sl_broad_jump_left": "SL 멀리뛰기 (왼쪽)",
+        "sl_broad_jump_right": "SL 멀리뛰기 (오른쪽)",
         "sl_lateral_broad_jump": "SL 측면 멀리뛰기",
         "sl_vert_jump": "SL 수직 점프",
         "mb_situp_throw": "MB 윗몸일으키기 던지기",
         "seated_chest_pass": "앉아서 가슴 패스",
         "max_tee_distance": "최대 티 거리"
+      },
+      "throwingHand": "투구 손",
+      "battingSide": "타격 방향",
+      "leftLeg": "왼쪽 다리",
+      "rightLeg": "오른쪽 다리",
+      "handedness": {
+        "right": "오른쪽 (R)",
+        "left": "왼쪽 (L)",
+        "both": "양쪽",
+        "switch": "스위치"
       }
     },
     "progressPhotos": {

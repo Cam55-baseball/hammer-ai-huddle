@@ -293,8 +293,12 @@ export default function Vault() {
     return result;
   };
 
-  const handleSavePerformanceTest = async (testType: string, results: Record<string, number>) => {
-    const result = await savePerformanceTest(testType, results);
+  const handleSavePerformanceTest = async (
+    testType: string, 
+    results: Record<string, number>,
+    handedness?: { throwing?: string; batting?: string }
+  ) => {
+    const result = await savePerformanceTest(testType, results, handedness);
     if (result.success) {
       toast.success(t('vault.performance.saved'));
       refetchRecapCountdown(); // Refresh countdown state after progress report saved

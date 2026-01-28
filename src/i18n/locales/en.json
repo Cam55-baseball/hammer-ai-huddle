@@ -4953,11 +4953,23 @@
         "long_toss_distance": "Long Toss Distance",
         "ten_yard_dash": "10-Yard Dash",
         "sl_broad_jump": "SL Broad Jump",
+        "sl_broad_jump_left": "SL Broad Jump (Left)",
+        "sl_broad_jump_right": "SL Broad Jump (Right)",
         "sl_lateral_broad_jump": "SL Lateral Broad Jump",
         "sl_vert_jump": "SL Vertical Jump",
         "mb_situp_throw": "MB Sit-Up Throw",
         "seated_chest_pass": "Seated Chest Pass",
         "max_tee_distance": "Max Tee Distance"
+      },
+      "throwingHand": "Throwing Hand",
+      "battingSide": "Batting Side",
+      "leftLeg": "Left Leg",
+      "rightLeg": "Right Leg",
+      "handedness": {
+        "right": "Right (R)",
+        "left": "Left (L)",
+        "both": "Both",
+        "switch": "Switch"
       }
     },
     "progressPhotos": {
