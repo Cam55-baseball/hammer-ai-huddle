@@ -1118,11 +1118,12 @@ export function useVault() {
   }, [user, fetchRecaps]);
 
 
-  // Fetch history for date - includes all vault data types
+  // Fetch history for date - includes all vault data types and custom activities
   const fetchHistoryForDate = useCallback(async (date: string) => {
     if (!user) return { 
       date, quizzes: [], notes: [], workouts: [], nutritionLogged: false,
-      performanceTests: [], progressPhotos: [], scoutGrades: [], nutritionLog: null
+      performanceTests: [], progressPhotos: [], scoutGrades: [], nutritionLog: null,
+      customActivities: []
     };
     
     const [
@@ -1132,7 +1133,8 @@ export function useVault() {
       { data: nutrition },
       { data: perfTests },
       { data: photos },
-      { data: grades }
+      { data: grades },
+      { data: customActivities }
     ] = await Promise.all([
       supabase.from('vault_focus_quizzes').select('*').eq('user_id', user.id).eq('entry_date', date),
       supabase.from('vault_free_notes').select('*').eq('user_id', user.id).eq('entry_date', date),
@@ -1141,6 +1143,10 @@ export function useVault() {
       supabase.from('vault_performance_tests').select('*').eq('user_id', user.id).eq('test_date', date),
       supabase.from('vault_progress_photos').select('*').eq('user_id', user.id).eq('photo_date', date),
       supabase.from('vault_scout_grades').select('*').eq('user_id', user.id).gte('graded_at', `${date}T00:00:00`).lt('graded_at', `${date}T23:59:59`),
+      supabase.from('custom_activity_logs').select(`
+        *, 
+        template:custom_activity_templates (id, title, activity_type, icon, color)
+      `).eq('user_id', user.id).eq('entry_date', date).eq('completed', true),
     ]);
     
     return {
@@ -1153,6 +1159,7 @@ export function useVault() {
       performanceTests: (perfTests || []).map(t => ({ ...t, results: t.results as Record<string, number>, previous_results: t.previous_results as Record<string, number> | null })) as VaultPerformanceTest[],
       progressPhotos: (photos || []).map(p => ({ ...p, photo_urls: (p.photo_urls as string[]) || [] })) as VaultProgressPhoto[],
       scoutGrades: (grades || []) as VaultScoutGrade[],
+      customActivities: (customActivities || []) as any[],
     };
   }, [user]);
 
