@@ -1,18 +1,21 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Sun, Moon, Dumbbell, Apple, NotebookPen, 
   Sparkles, Activity, Camera, Star, Droplets,
-  Zap, Heart, Brain, Target, Clock
+  Zap, Heart, Brain, Target, Clock, ChevronDown,
+  Pill, Coffee, Utensils, CheckSquare, Timer
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { 
   VaultFocusQuiz, VaultFreeNote, VaultWorkoutNote, 
   VaultPerformanceTest, VaultProgressPhoto, VaultScoutGrade, VaultNutritionLog 
 } from '@/hooks/useVault';
-import { CustomActivityLog } from '@/types/customActivity';
+import { CustomActivityLog, MealData, Exercise, CustomField } from '@/types/customActivity';
 
 interface HistoryEntry {
   date: string;
@@ -30,6 +33,226 @@ interface HistoryEntry {
 interface VaultDayRecapCardProps {
   historyData: HistoryEntry;
   isLoading?: boolean;
+}
+
+// Sub-component for detailed activity card
+function ActivityDetailCard({ activity }: { activity: CustomActivityLog }) {
+  const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const template = activity.template;
+  if (!template) return null;
+
+  const meals = template.meals as MealData | null;
+  const exercises = (template.exercises as Exercise[]) || [];
+  const customFields = (template.custom_fields as CustomField[]) || [];
+  
+  const hasDetails = 
+    (meals?.items && meals.items.length > 0) ||
+    (meals?.supplements && meals.supplements.length > 0) ||
+    (meals?.vitamins && meals.vitamins.length > 0) ||
+    (meals?.hydration) ||
+    exercises.length > 0 ||
+    customFields.length > 0;
+
+  const activityColor = template.color || '#6366f1';
+
+  return (
+    <Card 
+      className="border overflow-hidden"
+      style={{ 
+        borderColor: `${activityColor}40`,
+        background: `linear-gradient(135deg, ${activityColor}08 0%, transparent 50%)`
+      }}
+    >
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger className="w-full">
+          <CardHeader className="pb-2 pt-3 px-4">
+            <CardTitle className="text-sm flex items-center gap-2 justify-between">
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-6 h-6 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${activityColor}20` }}
+                >
+                  <Target className="h-3.5 w-3.5" style={{ color: activityColor }} />
+                </div>
+                <span>{template.title}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {activity.actual_duration_minutes && (
+                  <Badge variant="outline" className="text-xs">
+                    <Timer className="h-3 w-3 mr-1" />
+                    {activity.actual_duration_minutes}m
+                  </Badge>
+                )}
+                {hasDetails && (
+                  <ChevronDown 
+                    className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+                  />
+                )}
+              </div>
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+
+        {hasDetails && (
+          <CollapsibleContent>
+            <CardContent className="pb-3 px-4 pt-0 space-y-3">
+              {/* Meal Items */}
+              {meals?.items && meals.items.length > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Utensils className="h-3 w-3" />
+                    <span>{t('vault.pastDays.items', 'Items')}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {meals.items.map((item) => (
+                      <Badge 
+                        key={item.id} 
+                        variant="secondary" 
+                        className="text-xs py-0.5 px-2"
+                      >
+                        {item.name}
+                        {item.quantity && item.unit && (
+                          <span className="text-muted-foreground ml-1">
+                            ({item.quantity} {item.unit})
+                          </span>
+                        )}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Supplements */}
+              {meals?.supplements && meals.supplements.length > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Pill className="h-3 w-3" />
+                    <span>{t('vault.pastDays.supplements', 'Supplements')}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {meals.supplements.map((supp) => (
+                      <Badge 
+                        key={supp.id} 
+                        variant="secondary" 
+                        className="text-xs py-0.5 px-2 bg-green-500/10 text-green-700 dark:text-green-300"
+                      >
+                        {supp.name}
+                        {supp.dosage && (
+                          <span className="text-muted-foreground ml-1">({supp.dosage})</span>
+                        )}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Vitamins */}
+              {meals?.vitamins && meals.vitamins.length > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Sparkles className="h-3 w-3" />
+                    <span>{t('vault.pastDays.vitamins', 'Vitamins')}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {meals.vitamins.map((vit) => (
+                      <Badge 
+                        key={vit.id} 
+                        variant="secondary" 
+                        className="text-xs py-0.5 px-2 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                      >
+                        {vit.name}
+                        {vit.dosage && (
+                          <span className="text-muted-foreground ml-1">({vit.dosage})</span>
+                        )}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Hydration */}
+              {meals?.hydration && meals.hydration.amount > 0 && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Droplets className="h-3 w-3 text-blue-500" />
+                  <span className="text-muted-foreground">{t('vault.pastDays.hydration', 'Hydration')}:</span>
+                  <span className="font-medium">{meals.hydration.amount} {meals.hydration.unit}</span>
+                </div>
+              )}
+
+              {/* Custom Fields (checkboxes, etc.) */}
+              {customFields.length > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <CheckSquare className="h-3 w-3" />
+                    <span>{t('vault.pastDays.customFields', 'Logged')}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {customFields.map((field) => (
+                      <Badge 
+                        key={field.id} 
+                        variant="outline" 
+                        className="text-xs py-0.5 px-2"
+                      >
+                        {field.label}
+                        {field.value && field.type !== 'checkbox' && (
+                          <span className="text-muted-foreground ml-1">: {field.value}</span>
+                        )}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Exercises */}
+              {exercises.length > 0 && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Dumbbell className="h-3 w-3" />
+                    <span>{t('vault.pastDays.exercises', 'Exercises')}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {exercises.slice(0, 8).map((ex) => (
+                      <Badge 
+                        key={ex.id} 
+                        variant="secondary" 
+                        className="text-xs py-0.5 px-2 bg-orange-500/10 text-orange-700 dark:text-orange-300"
+                      >
+                        {ex.name}
+                        {ex.sets && ex.reps && (
+                          <span className="text-muted-foreground ml-1">
+                            ({ex.sets}×{ex.reps})
+                          </span>
+                        )}
+                        {ex.duration && !ex.sets && (
+                          <span className="text-muted-foreground ml-1">
+                            ({Math.floor(ex.duration / 60)}:{String(ex.duration % 60).padStart(2, '0')})
+                          </span>
+                        )}
+                      </Badge>
+                    ))}
+                    {exercises.length > 8 && (
+                      <Badge variant="outline" className="text-xs py-0.5 px-2">
+                        +{exercises.length - 8} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Activity Notes */}
+              {activity.notes && (
+                <div className="text-xs text-muted-foreground italic border-t pt-2 mt-2">
+                  "{activity.notes}"
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        )}
+      </Collapsible>
+    </Card>
+  );
 }
 
 export function VaultDayRecapCard({ historyData, isLoading }: VaultDayRecapCardProps) {
@@ -190,31 +413,19 @@ export function VaultDayRecapCard({ historyData, isLoading }: VaultDayRecapCardP
           </div>
         )}
 
-        {/* Custom Activities */}
+        {/* Custom Activities - Enhanced with Details */}
         {historyData.customActivities && historyData.customActivities.length > 0 && (
           <div className="space-y-2">
             <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
               <Target className="h-4 w-4" />
               {t('vault.pastDays.activitiesCompleted', 'Activities Completed')}
+              <Badge variant="secondary" className="ml-1 text-xs">
+                {historyData.customActivities.length}
+              </Badge>
             </h4>
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
               {historyData.customActivities.map((activity) => (
-                <Badge 
-                  key={activity.id} 
-                  variant="secondary"
-                  className="gap-1"
-                  style={{ 
-                    backgroundColor: `${activity.template?.color || '#6366f1'}20`,
-                    borderColor: activity.template?.color || '#6366f1',
-                  }}
-                >
-                  <span>{activity.template?.title || 'Activity'}</span>
-                  {activity.actual_duration_minutes && (
-                    <span className="text-muted-foreground">
-                      ({activity.actual_duration_minutes}m)
-                    </span>
-                  )}
-                </Badge>
+                <ActivityDetailCard key={activity.id} activity={activity} />
               ))}
             </div>
           </div>
