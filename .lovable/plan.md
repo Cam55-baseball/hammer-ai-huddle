@@ -1,330 +1,258 @@
 
-# Tex Vision E2E Fix Plan: Seamless Drill Flow & Fatigue System
 
-## Issues Identified
+# Vault Performance Test Enhancement: Bilateral Metrics & Handedness
 
-### 1. Confetti + Slow Checklist Loading
-- Confetti triggers immediately on drill completion, but the conclusion screen feels sluggish
-- Multiple async operations run sequentially in `handleDrillComplete`
-- The `triggerCelebration()` call blocks visual feedback while heavy state updates happen
+## Overview
 
-### 2. Drill Gets Stuck on Completed Screen with Critical Fatigue
-- Critical fatigue indicator (>=80%) appears as a non-blocking overlay during the playing phase
-- The drill continues running in the background while the fatigue warning shows
-- If drill completes while fatigue modal is visible, state can get corrupted
+Enhance the 6-week performance test entry in the Vault to:
+1. Split SL Broad Jump into separate Left Leg and Right Leg measurements
+2. Add throwing hand and batting side input fields to capture athlete laterality for proper metric interpretation
 
-### 3. Done Button Not Working
-- The Done button calls `onComplete(completedResult)` which then calls parent's `handleDrillComplete`
-- If `completedResult` state is stale or the async chain fails silently, the button appears to do nothing
-- No loading state or error handling on the Done button
+## Current State Analysis
 
-### 4. Critical Fatigue Needs Better UX
-- No "Continue Anyway" option - only "End Session"
-- Game doesn't pause when critical fatigue appears
-- Athletes can't choose to push through if they want to
+### SL Broad Jump
+- Currently stored as single metric `sl_broad_jump` in the `results` JSONB field
+- Used in hitting, pitching, and throwing modules across baseball and softball
+- Unit: inches, higher is better
 
-### 5. Pause Button Not Working
-- DrillTimer has pause functionality, but drills use `autoStart={true}` and manage their own intervals
-- Pausing the DrillTimer does NOT pause the game logic (flashing colors, moles appearing, etc.)
-- No global `isPaused` state passed to drill components
+### Handedness
+- Profile table already has `throwing_hand` and `batting_side` columns
+- Values: 'R' (Right), 'L' (Left), 'B' (Both/Switch)
+- Displayed on profile page but NOT integrated with performance testing
 
-## Technical Solution
+## Solution Design
 
-### Phase 1: Global Pause System
+### Phase 1: Update Metric Configuration
 
-**File: `src/components/tex-vision/ActiveDrillView.tsx`**
+**File: `src/components/vault/VaultPerformanceTestCard.tsx`**
 
-Add global pause state that propagates to all drills:
+Replace single `sl_broad_jump` with bilateral variants in all module lists:
 
 ```text
-// Add new state
-const [isPaused, setIsPaused] = useState(false);
+// From:
+'sl_broad_jump',
+'sl_lateral_broad_jump',
 
-// Pass to drill components
-<DrillComponent
-  tier={tier}
-  difficultyLevel={currentDifficultyLevel}
-  onComplete={handleDrillComplete}
-  onExit={onExit}
-  onInteraction={() => { interactionCount.current += 1; }}
-  isPaused={isPaused}  // NEW
-  onPauseChange={setIsPaused}  // NEW
-/>
+// To:
+'sl_broad_jump_left',
+'sl_broad_jump_right',
+'sl_lateral_broad_jump',
 ```
 
-**File: `src/components/tex-vision/ActiveDrillView.tsx` (interface update)**
+Update TEST_METRICS configuration:
 
 ```text
-export interface DrillComponentProps {
-  tier: string;
-  difficultyLevel?: number;
-  onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
-  onExit: () => void;
-  onInteraction?: () => void;
-  isPaused?: boolean;  // NEW
-  onPauseChange?: (paused: boolean) => void;  // NEW
+// Remove single entry:
+sl_broad_jump: { unit: 'in', higher_better: true },
+
+// Add bilateral entries:
+sl_broad_jump_left: { unit: 'in', higher_better: true },
+sl_broad_jump_right: { unit: 'in', higher_better: true },
+```
+
+### Phase 2: Add Handedness Selectors
+
+Add state for handedness in the card component:
+
+```text
+const [throwingHand, setThrowingHand] = useState<string>('');
+const [battingSide, setBattingSide] = useState<string>('');
+```
+
+Add new props interface:
+
+```text
+interface VaultPerformanceTestCardProps {
+  tests: PerformanceTest[];
+  onSave: (testType: string, results: Record<string, number>, handedness?: { throwing?: string; batting?: string }) => Promise<{ success: boolean }>;
+  sport?: 'baseball' | 'softball';
+  subscribedModules?: string[];
+  autoOpen?: boolean;
+  recapUnlockedAt?: Date | null;
+  userProfile?: { throwing_hand?: string; batting_side?: string }; // NEW
 }
 ```
 
-### Phase 2: Critical Fatigue Modal System
+### Phase 3: UI Layout for Handedness
 
-**File: `src/components/tex-vision/shared/FatigueIndicator.tsx`**
-
-Add "Continue Anyway" functionality:
+Add handedness selectors before the module selector:
 
 ```text
-interface FatigueIndicatorProps {
-  level: number;
-  onTakeBreak?: () => void;
-  onEndSession?: () => void;
-  onContinue?: () => void;  // NEW - allows athlete to continue despite fatigue
-  showRecoverySuggestion?: boolean;
-  isModal?: boolean;  // NEW - when true, renders as blocking overlay
-  className?: string;
-}
-```
-
-Add Continue button for critical state:
-
-```text
-{state === 'critical' && (
-  <div className="flex items-center gap-2 mt-2">
-    {onContinue && (
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={onContinue}
-        className="h-7 text-xs border-tex-vision-feedback/50 text-tex-vision-feedback hover:bg-tex-vision-feedback/10"
-      >
-        Continue Anyway
-      </Button>
-    )}
-    {onEndSession && (
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={onEndSession}
-        className="h-7 text-xs border-tex-vision-text/50 text-tex-vision-text hover:bg-tex-vision-text/10"
-      >
-        <Moon className="h-3 w-3 mr-1" />
-        End Session
-      </Button>
-    )}
+{/* Handedness Section */}
+<div className="grid grid-cols-2 gap-3 p-2 rounded-lg bg-muted/20 border border-border/50">
+  <div className="space-y-1">
+    <Label className="text-xs flex items-center gap-1">
+      <Hand className="h-3 w-3" />
+      Throwing Hand
+    </Label>
+    <Select value={throwingHand} onValueChange={setThrowingHand}>
+      <SelectTrigger className="h-8">
+        <SelectValue placeholder="Select" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="R">Right (R)</SelectItem>
+        <SelectItem value="L">Left (L)</SelectItem>
+        <SelectItem value="B">Both</SelectItem>
+      </SelectContent>
+    </Select>
   </div>
+  
+  <div className="space-y-1">
+    <Label className="text-xs flex items-center gap-1">
+      <Activity className="h-3 w-3" />
+      Batting Side
+    </Label>
+    <Select value={battingSide} onValueChange={setBattingSide}>
+      <SelectTrigger className="h-8">
+        <SelectValue placeholder="Select" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="R">Right (R)</SelectItem>
+        <SelectItem value="L">Left (L)</SelectItem>
+        <SelectItem value="B">Switch (Both)</SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+</div>
+```
+
+### Phase 4: UI Layout for Bilateral Jump Metrics
+
+Group the left/right metrics visually:
+
+```text
+{/* Special handling for bilateral metrics */}
+{metric.includes('_left') || metric.includes('_right') ? (
+  <div className="col-span-2">
+    <Label className="text-xs font-medium mb-2 block">
+      SL Broad Jump
+    </Label>
+    <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-1">
+        <Label className="text-xs text-muted-foreground">Left Leg (in)</Label>
+        <Input type="number" ... />
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs text-muted-foreground">Right Leg (in)</Label>
+        <Input type="number" ... />
+      </div>
+    </div>
+  </div>
+) : (
+  // Standard single metric input
 )}
 ```
 
-**File: `src/components/tex-vision/ActiveDrillView.tsx`**
+### Phase 5: Update Data Storage
 
-Auto-pause when critical fatigue is reached:
+**File: `src/hooks/useVault.ts`**
 
-```text
-// Watch for critical fatigue and auto-pause
-useEffect(() => {
-  if (fatigueLevel >= 80 && phase === 'playing' && !isPaused) {
-    setIsPaused(true);  // Auto-pause on critical fatigue
-  }
-}, [fatigueLevel, phase, isPaused]);
-
-// Handle continue despite fatigue
-const handleContinueDespiteFatigue = useCallback(() => {
-  setIsPaused(false);
-}, []);
-```
-
-Update playing phase fatigue overlay to be modal-like:
+Update `savePerformanceTest` to include handedness data in the results:
 
 ```text
-{/* Critical fatigue modal overlay */}
-{fatigueLevel >= 80 && isPaused && (
-  <div className="absolute inset-0 z-20 bg-black/60 flex items-center justify-center">
-    <FatigueIndicator 
-      level={fatigueLevel}
-      onContinue={handleContinueDespiteFatigue}
-      onEndSession={handleEndSessionFatigue}
-      isModal={true}
-      className="w-72 bg-[hsl(var(--tex-vision-primary-dark))]"
-    />
-  </div>
-)}
-```
-
-### Phase 3: Drill-Level Pause Implementation
-
-Each drill needs to respect the `isPaused` prop. Example for ColorFlashGame:
-
-**File: `src/components/tex-vision/drills/ColorFlashGame.tsx`**
-
-```text
-interface ColorFlashGameProps {
-  tier: string;
-  onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
-  onExit: () => void;
-  isPaused?: boolean;  // NEW
-}
-
-// Update flash interval effect
-useEffect(() => {
-  if (isComplete || attempts >= totalAttempts || isPaused) return;  // Add isPaused check
+const savePerformanceTest = useCallback(async (
+  testType: string, 
+  results: Record<string, number>,
+  handedness?: { throwing?: string; batting?: string }
+) => {
+  // Include handedness in the results object for storage
+  const enhancedResults = {
+    ...results,
+    _throwing_hand: handedness?.throwing || null,
+    _batting_side: handedness?.batting || null,
+  };
   
-  // ... rest of flash logic
-}, [isComplete, attempts, totalAttempts, flashDuration, flashInterval, targetColor, isPaused]);
+  const { error } = await supabase.from('vault_performance_tests').insert({
+    user_id: user.id,
+    test_type: testType,
+    sport: 'baseball',
+    module: testType,
+    results: enhancedResults,
+    previous_results: lastTest?.results || null,
+    next_entry_date: nextEntryDate.toISOString().split('T')[0],
+  });
+  // ...
+}, [user, performanceTests, fetchPerformanceTests]);
 ```
 
-Apply same pattern to all drill files:
-- WhackAMoleGame.tsx
-- PatternSearchGame.tsx
-- PeripheralVisionDrill.tsx
-- ConvergenceDivergenceGame.tsx
-- NearFarSightGame.tsx
-- FollowTheTargetGame.tsx
-- MeterTimingGame.tsx
-- StroopChallengeGame.tsx
-- MultiTargetTrackGame.tsx
-- RapidSwitchGame.tsx
-- DualTaskVisionGame.tsx
-- ChaosGridGame.tsx
-- SoftFocusGame.tsx
+### Phase 6: Update Translations
 
-### Phase 4: Fix Done Button
+**File: `src/i18n/locales/en.json` (and all other locale files)**
 
-**File: `src/components/tex-vision/ActiveDrillView.tsx`**
+Add new metric translations:
 
-Add loading state and defensive coding:
-
-```text
-const [isCompletingDrill, setIsCompletingDrill] = useState(false);
-
-// In conclusion phase
-<Button
-  onClick={async () => {
-    if (completedResult && !isCompletingDrill) {
-      setIsCompletingDrill(true);
-      try {
-        await onComplete(completedResult);
-      } catch (error) {
-        console.error('Error completing drill:', error);
-        // Fallback: still try to exit
-        onExit();
-      }
-    }
-  }}
-  disabled={isCompletingDrill || !completedResult}
-  className="bg-[hsl(var(--tex-vision-feedback))] hover:bg-[hsl(var(--tex-vision-feedback))]/80 text-[hsl(var(--tex-vision-primary-dark))]"
-  size="lg"
->
-  {isCompletingDrill ? (
-    <>
-      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-      Saving...
-    </>
-  ) : (
-    t('texVision.drills.done', 'Done')
-  )}
-</Button>
-```
-
-### Phase 5: Optimize Confetti + Transition
-
-**File: `src/components/tex-vision/ActiveDrillView.tsx`**
-
-Defer heavy operations to allow UI to render first:
-
-```text
-const handleDrillComplete = useCallback(async (partialResult) => {
-  // ... validation logic ...
-
-  // Store result and transition to conclusion FIRST
-  setCompletedResult(fullResult);
-  
-  // Check if drill has reflection questions
-  const hasReflection = DRILL_REFLECTIONS[drillId]?.length > 0;
-  if (hasReflection) {
-    setPhase('reflection');
-  } else {
-    setPhase('conclusion');
-  }
-
-  // THEN trigger celebration (non-blocking)
-  if (partialResult.accuracyPercent === 100) {
-    setCelebrationType('perfect');
-    setShowCelebration(true);
-    // Use requestAnimationFrame to not block render
-    requestAnimationFrame(() => triggerCelebration());
-  } else if (pbCheckResult.isNewAccuracyRecord || pbCheckResult.isNewReactionRecord) {
-    setCelebrationType('newPB');
-    setShowCelebration(true);
-    requestAnimationFrame(() => triggerCelebration());
-  }
-  // ... rest of logic
-}, [...]);
-```
-
-### Phase 6: DrillTimer Pause State Sync
-
-**File: `src/components/tex-vision/shared/DrillTimer.tsx`**
-
-Add external pause control:
-
-```text
-interface DrillTimerProps {
-  initialSeconds?: number;
-  mode?: 'countdown' | 'countup';
-  onComplete?: () => void;
-  onTick?: (seconds: number) => void;
-  fatigueLevel?: number;
-  autoStart?: boolean;
-  isPaused?: boolean;  // NEW - external pause control
-  onPauseChange?: (paused: boolean) => void;  // NEW
-  className?: string;
+```json
+"metrics": {
+  "sl_broad_jump": "SL Broad Jump",
+  "sl_broad_jump_left": "SL Broad Jump (Left)",
+  "sl_broad_jump_right": "SL Broad Jump (Right)",
+  "throwing_hand": "Throwing Hand",
+  "batting_side": "Batting Side"
 }
+```
 
-// Sync external pause state
-useEffect(() => {
-  if (isPaused !== undefined && isPaused !== !isRunning) {
-    setIsRunning(!isPaused);
-  }
-}, [isPaused]);
+### Phase 7: Update History Display
 
-// Notify parent of pause changes
-const handlePause = useCallback(() => {
-  setIsRunning(false);
-  onPauseChange?.(true);
-}, [onPauseChange]);
+Update the recent tests display to show bilateral metrics grouped:
 
-const handleStart = useCallback(() => {
-  setIsRunning(true);
-  setHasStarted(true);
-  onPauseChange?.(false);
-}, [onPauseChange]);
+```text
+{/* In recent tests section */}
+{Object.entries(test.results)
+  .filter(([key]) => !key.startsWith('_')) // Exclude metadata
+  .map(([key, value]) => (
+    // Group left/right metrics visually
+  ))}
 ```
 
 ## Files to Modify
 
-1. `src/components/tex-vision/ActiveDrillView.tsx` - Main drill orchestration
-2. `src/components/tex-vision/shared/FatigueIndicator.tsx` - Add Continue option
-3. `src/components/tex-vision/shared/DrillTimer.tsx` - External pause sync
-4. `src/components/tex-vision/drills/ColorFlashGame.tsx` - Add isPaused
-5. `src/components/tex-vision/drills/WhackAMoleGame.tsx` - Add isPaused
-6. `src/components/tex-vision/drills/PatternSearchGame.tsx` - Add isPaused
-7. `src/components/tex-vision/drills/PeripheralVisionDrill.tsx` - Add isPaused
-8. `src/components/tex-vision/drills/ConvergenceDivergenceGame.tsx` - Add isPaused
-9. `src/components/tex-vision/drills/NearFarSightGame.tsx` - Add isPaused
-10. `src/components/tex-vision/drills/FollowTheTargetGame.tsx` - Add isPaused
-11. `src/components/tex-vision/drills/MeterTimingGame.tsx` - Add isPaused
-12. `src/components/tex-vision/drills/StroopChallengeGame.tsx` - Add isPaused
-13. `src/components/tex-vision/drills/MultiTargetTrackGame.tsx` - Add isPaused
-14. `src/components/tex-vision/drills/RapidSwitchGame.tsx` - Add isPaused
-15. `src/components/tex-vision/drills/DualTaskVisionGame.tsx` - Add isPaused
-16. `src/components/tex-vision/drills/ChaosGridGame.tsx` - Add isPaused
-17. `src/components/tex-vision/drills/SoftFocusGame.tsx` - Add isPaused
+1. **`src/components/vault/VaultPerformanceTestCard.tsx`**
+   - Update TEST_TYPES_BY_SPORT to replace `sl_broad_jump` with bilateral variants
+   - Update TEST_METRICS configuration
+   - Add handedness state and UI selectors
+   - Group bilateral metrics in the input form
+   - Update history display for grouped metrics
+
+2. **`src/hooks/useVault.ts`**
+   - Update savePerformanceTest signature to accept handedness
+   - Store handedness as metadata in results JSONB
+
+3. **`src/pages/Vault.tsx`**
+   - Pass user profile handedness to VaultPerformanceTestCard
+   - Update handleSavePerformanceTest to forward handedness
+
+4. **Translation files** (8 files):
+   - `src/i18n/locales/en.json`
+   - `src/i18n/locales/es.json`
+   - `src/i18n/locales/fr.json`
+   - `src/i18n/locales/de.json`
+   - `src/i18n/locales/ja.json`
+   - `src/i18n/locales/ko.json`
+   - `src/i18n/locales/zh.json`
+   - `src/i18n/locales/nl.json`
+
+## Database Considerations
+
+No schema changes required - the `results` JSONB column already supports storing any key-value pairs. The bilateral metrics and handedness metadata will be stored within the existing structure:
+
+```json
+{
+  "sl_broad_jump_left": 48,
+  "sl_broad_jump_right": 52,
+  "ten_yard_dash": 1.85,
+  "_throwing_hand": "R",
+  "_batting_side": "L"
+}
+```
 
 ## Expected Outcome
 
-After implementation:
+After implementation, athletes will:
 
-1. **Confetti + Checklist**: Phase transitions instantly, confetti animates independently
-2. **Critical Fatigue**: Game auto-pauses, modal appears with "Continue Anyway" and "End Session" options
-3. **Done Button**: Has loading state, defensive error handling, always navigates back
-4. **Pause Button**: DrillTimer pause actually pauses all game logic
-5. **Seamless E2E Flow**: Start drill -> Play (pause anytime) -> Complete -> Celebration -> Done -> Back to checklist
+1. See separate input fields for Left Leg and Right Leg SL Broad Jump measurements
+2. Be able to select their throwing hand (R/L/Both) and batting side (R/L/Switch)
+3. Have this handedness context stored with each performance test for proper analysis
+4. See grouped bilateral metrics in their test history
+
+This enables more precise athletic assessment, particularly for identifying leg strength imbalances and understanding how laterality affects performance metrics.
+
