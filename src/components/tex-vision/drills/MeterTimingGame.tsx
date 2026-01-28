@@ -10,9 +10,11 @@ interface MeterTimingGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
-export default function MeterTimingGame({ tier, onComplete, onExit }: MeterTimingGameProps) {
+export default function MeterTimingGame({ tier, onComplete, onExit, isPaused }: MeterTimingGameProps) {
   const { t } = useTranslation();
   const [meterPosition, setMeterPosition] = useState(0); // 0-100
   const [meterDirection, setMeterDirection] = useState<1 | -1>(1);
@@ -40,9 +42,9 @@ export default function MeterTimingGame({ tier, onComplete, onExit }: MeterTimin
     generateTargetZone();
   }, [generateTargetZone]);
 
-  // Animate meter
+  // Animate meter - respects isPaused
   useEffect(() => {
-    if (isComplete) return;
+    if (isComplete || isPaused) return;
 
     const interval = setInterval(() => {
       setMeterPosition(prev => {
@@ -61,7 +63,7 @@ export default function MeterTimingGame({ tier, onComplete, onExit }: MeterTimin
     }, 16);
 
     return () => clearInterval(interval);
-  }, [meterSpeed, meterDirection, isComplete]);
+  }, [meterSpeed, meterDirection, isComplete, isPaused]);
 
   const handleTap = useCallback(() => {
     if (isComplete) return;

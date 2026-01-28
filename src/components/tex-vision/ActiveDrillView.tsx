@@ -7,7 +7,7 @@ import { FatigueIndicator } from './shared/FatigueIndicator';
 import { CelebrationBadge, CelebrationType } from './shared/CelebrationBadge';
 import DrillPreviewAnimation from './shared/DrillPreviewAnimation';
 import { Button } from '@/components/ui/button';
-import { Play, X, Coffee, Target, CheckCircle2, Trophy, SkipForward, Zap } from 'lucide-react';
+import { Play, X, Coffee, Target, CheckCircle2, Trophy, SkipForward, Zap, Loader2 } from 'lucide-react';
 import { SIMPLIFIED_INSTRUCTIONS, ACTION_ICONS, getSimplifiedInstructions } from './simplifiedInstructions';
 import { DRILL_REFLECTIONS } from './drillReflections';
 import { getDrillBenefit } from '@/constants/drillBenefits';
@@ -48,6 +48,8 @@ export interface DrillComponentProps {
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
   onInteraction?: () => void;
+  isPaused?: boolean; // NEW - global pause state
+  onPauseChange?: (paused: boolean) => void; // NEW - notify parent of pause changes
 }
 
 const DRILL_COMPONENTS: Record<string, React.ComponentType<DrillComponentProps>> = {
@@ -112,6 +114,11 @@ export default function ActiveDrillView({
   const [pbResult, setPbResult] = useState<PersonalBestResult | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationType, setCelebrationType] = useState<CelebrationType>('perfect');
+  
+  // NEW: Global pause state for drills
+  const [isPaused, setIsPaused] = useState(false);
+  const [isCompletingDrill, setIsCompletingDrill] = useState(false);
+  const [criticalFatigueAcknowledged, setCriticalFatigueAcknowledged] = useState(false);
   
   // Skip tutorial tracking
   const [hasSeenDrill, setHasSeenDrill] = useState<Set<string>>(new Set());
@@ -257,29 +264,29 @@ export default function ActiveDrillView({
     });
     setPbResult(pbCheckResult);
 
-    // Determine celebration type
-    if (partialResult.accuracyPercent === 100) {
-      setCelebrationType('perfect');
-      setShowCelebration(true);
-      triggerCelebration();
-    } else if (pbCheckResult.isNewAccuracyRecord || pbCheckResult.isNewReactionRecord) {
-      setCelebrationType('newPB');
-      setShowCelebration(true);
-      triggerCelebration();
-    } else if (partialResult.accuracyPercent !== undefined && partialResult.accuracyPercent >= 90) {
-      setCelebrationType('excellent');
-      setShowCelebration(true);
-    }
-
-    // Store result and check if drill has reflection questions
+    // Store result and transition to conclusion FIRST (before celebration for smoother UX)
     setCompletedResult(fullResult);
     
-    // Check if this drill has reflection questions
+    // Check if drill has reflection questions
     const hasReflection = DRILL_REFLECTIONS[drillId]?.length > 0;
     if (hasReflection) {
       setPhase('reflection');
     } else {
       setPhase('conclusion');
+    }
+
+    // THEN trigger celebration (non-blocking, deferred)
+    if (partialResult.accuracyPercent === 100) {
+      setCelebrationType('perfect');
+      setShowCelebration(true);
+      requestAnimationFrame(() => triggerCelebration());
+    } else if (pbCheckResult.isNewAccuracyRecord || pbCheckResult.isNewReactionRecord) {
+      setCelebrationType('newPB');
+      setShowCelebration(true);
+      requestAnimationFrame(() => triggerCelebration());
+    } else if (partialResult.accuracyPercent !== undefined && partialResult.accuracyPercent >= 90) {
+      setCelebrationType('excellent');
+      setShowCelebration(true);
     }
   }, [drillId, tier, fatigueLevel, drillsCompletedThisSession, updateDifficulty, checkAndUpdatePersonalBest, markDrillAsSeen]);
 
@@ -296,6 +303,7 @@ export default function ActiveDrillView({
 
   // Handle taking a break
   const handleTakeBreak = useCallback(() => {
+    setIsPaused(false); // Reset pause when taking break
     setPhase('break');
     setBreakTimer(30); // 30 second break
   }, []);
@@ -304,6 +312,26 @@ export default function ActiveDrillView({
   const handleEndSessionFatigue = useCallback(() => {
     onExit();
   }, [onExit]);
+
+  // NEW: Handle continuing despite critical fatigue
+  const handleContinueDespiteFatigue = useCallback(() => {
+    setCriticalFatigueAcknowledged(true);
+    setIsPaused(false);
+  }, []);
+
+  // NEW: Watch for critical fatigue and auto-pause
+  useEffect(() => {
+    if (fatigueLevel >= 80 && phase === 'playing' && !isPaused && !criticalFatigueAcknowledged) {
+      setIsPaused(true);
+    }
+  }, [fatigueLevel, phase, isPaused, criticalFatigueAcknowledged]);
+
+  // NEW: Reset fatigue acknowledgment when starting new drill
+  useEffect(() => {
+    if (phase === 'countdown') {
+      setCriticalFatigueAcknowledged(false);
+    }
+  }, [phase]);
 
   const DrillComponent = DRILL_COMPONENTS[drillId];
 
@@ -451,13 +479,32 @@ export default function ActiveDrillView({
           </div>
         )}
         
-        {/* Done button */}
+        {/* Done button with loading state */}
         <Button
-          onClick={() => onComplete(completedResult)}
+          onClick={async () => {
+            if (completedResult && !isCompletingDrill) {
+              setIsCompletingDrill(true);
+              try {
+                await onComplete(completedResult);
+              } catch (error) {
+                console.error('Error completing drill:', error);
+                // Fallback: still try to exit
+                onExit();
+              }
+            }
+          }}
+          disabled={isCompletingDrill || !completedResult}
           className="bg-[hsl(var(--tex-vision-feedback))] hover:bg-[hsl(var(--tex-vision-feedback))]/80 text-[hsl(var(--tex-vision-primary-dark))]"
           size="lg"
         >
-          {t('texVision.drills.done', 'Done')}
+          {isCompletingDrill ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              {t('texVision.drills.saving', 'Saving...')}
+            </>
+          ) : (
+            t('texVision.drills.done', 'Done')
+          )}
         </Button>
       </div>
     );
@@ -687,16 +734,30 @@ export default function ActiveDrillView({
     );
   }
 
-  // Playing phase - render the actual drill with difficulty level
+  // Playing phase - render the actual drill with difficulty level and pause support
   return (
     <div className="fixed inset-0 z-50 bg-[hsl(var(--tex-vision-primary-dark))] overflow-auto">
-      {/* Fatigue indicator overlay */}
-      {fatigueLevel >= 60 && (
+      {/* Regular fatigue indicator overlay (non-modal) */}
+      {fatigueLevel >= 60 && fatigueLevel < 80 && (
         <div className="absolute top-4 left-4 z-10 w-64">
           <FatigueIndicator 
             level={fatigueLevel}
             onTakeBreak={handleTakeBreak}
             onEndSession={handleEndSessionFatigue}
+          />
+        </div>
+      )}
+      
+      {/* Critical fatigue modal overlay - pauses game and requires action */}
+      {fatigueLevel >= 80 && isPaused && !criticalFatigueAcknowledged && (
+        <div className="absolute inset-0 z-20 bg-black/60 flex items-center justify-center animate-fade-in">
+          <FatigueIndicator 
+            level={fatigueLevel}
+            onContinue={handleContinueDespiteFatigue}
+            onEndSession={handleEndSessionFatigue}
+            isModal={true}
+            showRecoverySuggestion={true}
+            className="w-80 bg-[hsl(var(--tex-vision-primary-dark))] shadow-2xl"
           />
         </div>
       )}
@@ -707,6 +768,8 @@ export default function ActiveDrillView({
         onComplete={handleDrillComplete}
         onExit={onExit}
         onInteraction={() => { interactionCount.current += 1; }}
+        isPaused={isPaused}
+        onPauseChange={setIsPaused}
       />
     </div>
   );

@@ -10,6 +10,8 @@ interface FollowTheTargetGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 interface Position {
@@ -17,7 +19,7 @@ interface Position {
   y: number;
 }
 
-export default function FollowTheTargetGame({ tier, onComplete, onExit }: FollowTheTargetGameProps) {
+export default function FollowTheTargetGame({ tier, onComplete, onExit, isPaused }: FollowTheTargetGameProps) {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [targetPosition, setTargetPosition] = useState<Position>({ x: 50, y: 50 });
@@ -38,9 +40,9 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
     trackingScoreRef.current = trackingScore;
   }, [trackingScore]);
 
-  // Generate smooth movement path - starts immediately (no internal countdown)
+  // Generate smooth movement path - starts immediately, respects isPaused
   useEffect(() => {
-    if (isComplete) return;
+    if (isComplete || isPaused) return;
 
     let angle = 0;
     const radiusX = 30;
@@ -60,7 +62,7 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit }: Follow
     }, 16); // ~60fps
 
     return () => clearInterval(interval);
-  }, [speed, patternComplexity, isComplete]);
+  }, [speed, patternComplexity, isComplete, isPaused]);
 
   // Calculate tracking accuracy
   useEffect(() => {

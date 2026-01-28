@@ -10,11 +10,13 @@ interface ConvergenceDivergenceGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 type Phase = 'converge' | 'hold' | 'diverge' | 'rest';
 
-export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: ConvergenceDivergenceGameProps) {
+export default function ConvergenceDivergenceGame({ tier, onComplete, onExit, isPaused }: ConvergenceDivergenceGameProps) {
   const { t } = useTranslation();
   const [phase, setPhase] = useState<Phase>('converge');
   const [dotPosition, setDotPosition] = useState(100); // percentage distance apart
@@ -27,7 +29,7 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: 
   const phaseDuration = tier === 'beginner' ? 3000 : tier === 'advanced' ? 2500 : 2000;
 
   useEffect(() => {
-    if (isComplete) return;
+    if (isComplete || isPaused) return;
 
     const phaseSequence: Phase[] = ['converge', 'hold', 'diverge', 'rest'];
     let currentPhaseIndex = phaseSequence.indexOf(phase);
@@ -43,7 +45,7 @@ export default function ConvergenceDivergenceGame({ tier, onComplete, onExit }: 
     }, phaseDuration);
 
     return () => clearInterval(interval);
-  }, [phase, isComplete, phaseDuration]);
+  }, [phase, isComplete, phaseDuration, isPaused]);
 
   // Show confirmation prompt during hold phase
   useEffect(() => {

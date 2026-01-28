@@ -10,6 +10,8 @@ interface ChaosGridGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 interface GridCell {
@@ -20,7 +22,7 @@ interface GridCell {
   position: { row: number; col: number };
 }
 
-export default function ChaosGridGame({ tier, onComplete, onExit }: ChaosGridGameProps) {
+export default function ChaosGridGame({ tier, onComplete, onExit, isPaused }: ChaosGridGameProps) {
   const { t } = useTranslation();
   const [grid, setGrid] = useState<GridCell[]>([]);
   const [targetIds, setTargetIds] = useState<Set<number>>(new Set());
@@ -83,9 +85,9 @@ export default function ChaosGridGame({ tier, onComplete, onExit }: ChaosGridGam
     initializeRound();
   }, [initializeRound]);
 
-  // Show phase countdown
+  // Show phase countdown - respects isPaused
   useEffect(() => {
-    if (phase !== 'show') return;
+    if (phase !== 'show' || isPaused) return;
 
     if (showCountdown > 0) {
       const timer = setTimeout(() => setShowCountdown(prev => prev - 1), 1000);
@@ -98,7 +100,7 @@ export default function ChaosGridGame({ tier, onComplete, onExit }: ChaosGridGam
         roundStartTime.current = Date.now();
       }, chaosDuration);
     }
-  }, [phase, showCountdown, chaosDuration]);
+  }, [phase, showCountdown, chaosDuration, isPaused]);
 
   const handleCellClick = useCallback((cellId: number) => {
     if (phase !== 'select' || foundIds.has(cellId)) return;

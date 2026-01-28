@@ -10,6 +10,8 @@ interface StroopChallengeGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 type ColorName = 'RED' | 'GREEN' | 'BLUE' | 'YELLOW';
@@ -27,7 +29,7 @@ const COLORS: ColorOption[] = [
   { name: 'YELLOW', textClass: 'text-yellow-400', bgClass: 'bg-yellow-400' },
 ];
 
-export default function StroopChallengeGame({ tier, onComplete, onExit }: StroopChallengeGameProps) {
+export default function StroopChallengeGame({ tier, onComplete, onExit, isPaused }: StroopChallengeGameProps) {
   const { t } = useTranslation();
   const [displayWord, setDisplayWord] = useState<ColorName>('RED');
   const [displayColor, setDisplayColor] = useState<ColorOption>(COLORS[0]);

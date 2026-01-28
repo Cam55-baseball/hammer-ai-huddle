@@ -10,6 +10,8 @@ interface MultiTargetTrackGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 interface Target {
@@ -27,7 +29,7 @@ interface RoundFeedback {
   total: number;
 }
 
-export default function MultiTargetTrackGame({ tier, onComplete, onExit }: MultiTargetTrackGameProps) {
+export default function MultiTargetTrackGame({ tier, onComplete, onExit, isPaused }: MultiTargetTrackGameProps) {
   const { t } = useTranslation();
   const [phase, setPhase] = useState<'memorize' | 'track' | 'slowdown' | 'select'>('memorize');
   const [targets, setTargets] = useState<Target[]>([]);
@@ -125,9 +127,9 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
     return () => clearInterval(slowdownInterval);
   }, [phase, slowdownDuration]);
 
-  // Animation loop for tracking and slowdown phases
+  // Animation loop for tracking and slowdown phases - respects isPaused
   useEffect(() => {
-    if (phase !== 'track' && phase !== 'slowdown') {
+    if ((phase !== 'track' && phase !== 'slowdown') || isPaused) {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       return;
     }
@@ -165,7 +167,7 @@ export default function MultiTargetTrackGame({ tier, onComplete, onExit }: Multi
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [phase]);
+  }, [phase, isPaused]);
 
   const handleDotClick = useCallback((id: number) => {
     if (phase !== 'select') return;

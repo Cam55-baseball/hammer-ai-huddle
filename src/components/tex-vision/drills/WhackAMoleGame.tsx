@@ -11,6 +11,8 @@ interface WhackAMoleGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 interface MoleState {
@@ -20,7 +22,7 @@ interface MoleState {
   wasHit: boolean;
 }
 
-export default function WhackAMoleGame({ tier, onComplete, onExit }: WhackAMoleGameProps) {
+export default function WhackAMoleGame({ tier, onComplete, onExit, isPaused }: WhackAMoleGameProps) {
   const { t } = useTranslation();
   const gridSize = tier === 'beginner' ? 3 : tier === 'advanced' ? 4 : 5;
   const totalMoles = gridSize * gridSize;
@@ -51,9 +53,9 @@ export default function WhackAMoleGame({ tier, onComplete, onExit }: WhackAMoleG
     setMoles(initialMoles);
   }, [totalMoles]);
 
-  // Pop up moles randomly
+  // Pop up moles randomly - respects isPaused
   useEffect(() => {
-    if (isComplete || moles.length === 0) return;
+    if (isComplete || moles.length === 0 || isPaused) return;
 
     const interval = setInterval(() => {
       // Find moles that are down
@@ -87,7 +89,7 @@ export default function WhackAMoleGame({ tier, onComplete, onExit }: WhackAMoleG
     }, moleInterval);
 
     return () => clearInterval(interval);
-  }, [moles, isComplete, moleUpDuration, moleInterval, noGoRatio]);
+  }, [moles, isComplete, moleUpDuration, moleInterval, noGoRatio, isPaused]);
 
   const handleMoleClick = useCallback((moleId: number) => {
     const mole = moles.find(m => m.id === moleId);

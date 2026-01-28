@@ -11,6 +11,8 @@ interface PatternSearchGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 interface Target {
@@ -22,7 +24,7 @@ interface Target {
   found?: boolean;
 }
 
-export default function PatternSearchGame({ tier, onComplete, onExit }: PatternSearchGameProps) {
+export default function PatternSearchGame({ tier, onComplete, onExit, isPaused }: PatternSearchGameProps) {
   const { t } = useTranslation();
   const gridSize = tier === 'beginner' ? 4 : tier === 'advanced' ? 5 : 6;
   const targetCount = tier === 'beginner' ? 2 : tier === 'advanced' ? 3 : 4;
