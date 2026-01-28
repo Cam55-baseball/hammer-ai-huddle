@@ -1145,7 +1145,10 @@ export function useVault() {
       supabase.from('vault_scout_grades').select('*').eq('user_id', user.id).gte('graded_at', `${date}T00:00:00`).lt('graded_at', `${date}T23:59:59`),
       supabase.from('custom_activity_logs').select(`
         *, 
-        template:custom_activity_templates (id, title, activity_type, icon, color)
+        template:custom_activity_templates (
+          id, title, activity_type, icon, color, description,
+          exercises, meals, custom_fields, duration_minutes, intensity
+        )
       `).eq('user_id', user.id).eq('entry_date', date).eq('completed', true),
     ]);
     
