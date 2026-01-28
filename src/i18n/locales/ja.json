@@ -3689,11 +3689,23 @@
         "long_toss_distance": "遠投距離",
         "ten_yard_dash": "10ヤードダッシュ",
         "sl_broad_jump": "SL立ち幅跳び",
+        "sl_broad_jump_left": "SL立ち幅跳び (左)",
+        "sl_broad_jump_right": "SL立ち幅跳び (右)",
         "sl_lateral_broad_jump": "SL横立ち幅跳び",
         "sl_vert_jump": "SL垂直跳び",
         "mb_situp_throw": "MBシットアップスロー",
         "seated_chest_pass": "シーテッドチェストパス",
         "max_tee_distance": "最大ティー距離"
+      },
+      "throwingHand": "投げる手",
+      "battingSide": "打席",
+      "leftLeg": "左脚",
+      "rightLeg": "右脚",
+      "handedness": {
+        "right": "右 (R)",
+        "left": "左 (L)",
+        "both": "両方",
+        "switch": "スイッチ"
       }
     },
     "progressPhotos": {

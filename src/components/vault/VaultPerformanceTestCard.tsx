@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Activity, ChevronDown, TrendingUp, TrendingDown, Minus, Calendar, Lock, AlertCircle } from 'lucide-react';
+import { Activity, ChevronDown, TrendingUp, TrendingDown, Minus, Calendar, Lock, AlertCircle, Hand } from 'lucide-react';
 
 interface PerformanceTest {
   id: string;
@@ -24,23 +24,25 @@ interface PerformanceTest {
 
 interface VaultPerformanceTestCardProps {
   tests: PerformanceTest[];
-  onSave: (testType: string, results: Record<string, number>) => Promise<{ success: boolean }>;
+  onSave: (testType: string, results: Record<string, number>, handedness?: { throwing?: string; batting?: string }) => Promise<{ success: boolean }>;
   sport?: 'baseball' | 'softball';
   subscribedModules?: string[];
   autoOpen?: boolean;
   recapUnlockedAt?: Date | null;
+  userProfile?: { throwing_hand?: string; batting_side?: string };
 }
 
 const LOCK_PERIOD_WEEKS = 6;
 
-// Sport-specific test types by module
+// Sport-specific test types by module - updated with bilateral SL Broad Jump
 const TEST_TYPES_BY_SPORT = {
   baseball: {
     hitting: [
       'ten_yard_dash',
       'exit_velocity',
       'max_tee_distance',
-      'sl_broad_jump',
+      'sl_broad_jump_left',
+      'sl_broad_jump_right',
       'sl_lateral_broad_jump',
       'mb_situp_throw',
       'seated_chest_pass'
@@ -49,7 +51,8 @@ const TEST_TYPES_BY_SPORT = {
       'long_toss_distance',
       'velocity',
       'ten_yard_dash',
-      'sl_broad_jump',
+      'sl_broad_jump_left',
+      'sl_broad_jump_right',
       'sl_vert_jump',
       'mb_situp_throw',
       'seated_chest_pass'
@@ -57,7 +60,8 @@ const TEST_TYPES_BY_SPORT = {
     throwing: [
       'long_toss_distance',
       'ten_yard_dash',
-      'sl_broad_jump',
+      'sl_broad_jump_left',
+      'sl_broad_jump_right',
       'sl_lateral_broad_jump',
       'sl_vert_jump',
       'mb_situp_throw',
@@ -69,7 +73,8 @@ const TEST_TYPES_BY_SPORT = {
       'ten_yard_dash',
       'exit_velocity',
       'max_tee_distance',
-      'sl_broad_jump',
+      'sl_broad_jump_left',
+      'sl_broad_jump_right',
       'sl_lateral_broad_jump',
       'sl_vert_jump',
       'mb_situp_throw',
@@ -79,7 +84,8 @@ const TEST_TYPES_BY_SPORT = {
       'long_toss_distance',
       'velocity',
       'ten_yard_dash',
-      'sl_broad_jump',
+      'sl_broad_jump_left',
+      'sl_broad_jump_right',
       'sl_vert_jump',
       'mb_situp_throw',
       'seated_chest_pass'
@@ -87,7 +93,8 @@ const TEST_TYPES_BY_SPORT = {
     throwing: [
       'long_toss_distance',
       'ten_yard_dash',
-      'sl_broad_jump',
+      'sl_broad_jump_left',
+      'sl_broad_jump_right',
       'sl_lateral_broad_jump',
       'sl_vert_jump',
       'mb_situp_throw',
@@ -96,7 +103,7 @@ const TEST_TYPES_BY_SPORT = {
   }
 };
 
-// Metric configuration with units and trend direction
+// Metric configuration with units and trend direction - updated with bilateral metrics
 const TEST_METRICS: Record<string, { unit: string; higher_better: boolean }> = {
   // Distance metrics (feet)
   long_toss_distance: { unit: 'ft', higher_better: true },
@@ -104,8 +111,9 @@ const TEST_METRICS: Record<string, { unit: string; higher_better: boolean }> = {
   mb_situp_throw: { unit: 'ft', higher_better: true },
   seated_chest_pass: { unit: 'ft', higher_better: true },
   
-  // Distance metrics (inches)
-  sl_broad_jump: { unit: 'in', higher_better: true },
+  // Distance metrics (inches) - bilateral SL Broad Jump
+  sl_broad_jump_left: { unit: 'in', higher_better: true },
+  sl_broad_jump_right: { unit: 'in', higher_better: true },
   sl_lateral_broad_jump: { unit: 'in', higher_better: true },
   sl_vert_jump: { unit: 'in', higher_better: true },
   
@@ -123,13 +131,18 @@ export function VaultPerformanceTestCard({
   sport = 'baseball',
   subscribedModules = [],
   autoOpen = false,
-  recapUnlockedAt = null
+  recapUnlockedAt = null,
+  userProfile
 }: VaultPerformanceTestCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(autoOpen);
   const [saving, setSaving] = useState(false);
   const [selectedModule, setSelectedModule] = useState<string>('');
   const [testResults, setTestResults] = useState<Record<string, string>>({});
+  
+  // Handedness state - initialize from user profile if available
+  const [throwingHand, setThrowingHand] = useState<string>(userProfile?.throwing_hand || '');
+  const [battingSide, setBattingSide] = useState<string>(userProfile?.batting_side || '');
 
   // Filter modules to only show those the user has access to
   const availableModules = ['hitting', 'pitching', 'throwing'].filter(module => {
@@ -151,10 +164,25 @@ export function VaultPerformanceTestCard({
       return () => clearTimeout(timer);
     }
   }, [autoOpen]);
+  
+  // Update handedness from profile when it changes
+  useEffect(() => {
+    if (userProfile?.throwing_hand && !throwingHand) {
+      setThrowingHand(userProfile.throwing_hand);
+    }
+    if (userProfile?.batting_side && !battingSide) {
+      setBattingSide(userProfile.batting_side);
+    }
+  }, [userProfile, throwingHand, battingSide]);
 
   // Get metrics for selected module and sport
   const testTypes = TEST_TYPES_BY_SPORT[sport] || TEST_TYPES_BY_SPORT.baseball;
   const metrics = selectedModule ? (testTypes[selectedModule as keyof typeof testTypes] || []) : [];
+  
+  // Filter out bilateral metrics for special rendering
+  const bilateralMetrics = metrics.filter(m => m === 'sl_broad_jump_left' || m === 'sl_broad_jump_right');
+  const regularMetrics = metrics.filter(m => m !== 'sl_broad_jump_left' && m !== 'sl_broad_jump_right');
+  const hasBilateralMetrics = bilateralMetrics.length > 0;
 
   // Check if entry is locked
   // Recap-unlock override: If recap was generated and no entry exists after that date, unlock the card
@@ -175,8 +203,13 @@ export function VaultPerformanceTestCard({
     
     if (Object.keys(results).length === 0) return;
     
+    // Include handedness data if provided
+    const handedness = (throwingHand || battingSide) 
+      ? { throwing: throwingHand || undefined, batting: battingSide || undefined }
+      : undefined;
+    
     setSaving(true);
-    await onSave(selectedModule, results);
+    await onSave(selectedModule, results, handedness);
     setTestResults({});
     setSaving(false);
   };
@@ -259,6 +292,43 @@ export function VaultPerformanceTestCard({
                   </Label>
                 </div>
                 
+                {/* Handedness Section */}
+                <div className="grid grid-cols-2 gap-3 p-2 rounded-lg bg-muted/20 border border-border/50">
+                  <div className="space-y-1">
+                    <Label className="text-xs flex items-center gap-1">
+                      <Hand className="h-3 w-3" />
+                      {t('vault.performance.throwingHand')}
+                    </Label>
+                    <Select value={throwingHand} onValueChange={setThrowingHand}>
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder={t('common.select')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="R">{t('vault.performance.handedness.right')}</SelectItem>
+                        <SelectItem value="L">{t('vault.performance.handedness.left')}</SelectItem>
+                        <SelectItem value="B">{t('vault.performance.handedness.both')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <Label className="text-xs flex items-center gap-1">
+                      <Activity className="h-3 w-3" />
+                      {t('vault.performance.battingSide')}
+                    </Label>
+                    <Select value={battingSide} onValueChange={setBattingSide}>
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder={t('common.select')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="R">{t('vault.performance.handedness.right')}</SelectItem>
+                        <SelectItem value="L">{t('vault.performance.handedness.left')}</SelectItem>
+                        <SelectItem value="B">{t('vault.performance.handedness.switch')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
                 <Select value={selectedModule} onValueChange={setSelectedModule}>
                   <SelectTrigger className="h-9">
                     <SelectValue placeholder={t('vault.performance.selectModule')} />
@@ -277,22 +347,62 @@ export function VaultPerformanceTestCard({
                 </Select>
 
                 {selectedModule && metrics.length > 0 && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {metrics.map((metric) => (
-                      <div key={metric} className="space-y-1">
-                        <Label className="text-xs">
-                          {t(`vault.performance.metrics.${metric}`)} ({TEST_METRICS[metric]?.unit})
+                  <div className="space-y-3">
+                    {/* Bilateral SL Broad Jump - Special grouped rendering */}
+                    {hasBilateralMetrics && (
+                      <div className="p-2 rounded-lg bg-background/50 border border-border/50">
+                        <Label className="text-xs font-medium mb-2 block">
+                          {t('vault.performance.metrics.sl_broad_jump')} (in)
                         </Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={testResults[metric] || ''}
-                          onChange={(e) => setTestResults({ ...testResults, [metric]: e.target.value })}
-                          placeholder="0"
-                          className="h-8"
-                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">
+                              {t('vault.performance.leftLeg')}
+                            </Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={testResults['sl_broad_jump_left'] || ''}
+                              onChange={(e) => setTestResults({ ...testResults, sl_broad_jump_left: e.target.value })}
+                              placeholder="0"
+                              className="h-8"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">
+                              {t('vault.performance.rightLeg')}
+                            </Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={testResults['sl_broad_jump_right'] || ''}
+                              onChange={(e) => setTestResults({ ...testResults, sl_broad_jump_right: e.target.value })}
+                              placeholder="0"
+                              className="h-8"
+                            />
+                          </div>
+                        </div>
                       </div>
-                    ))}
+                    )}
+                    
+                    {/* Regular metrics */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {regularMetrics.map((metric) => (
+                        <div key={metric} className="space-y-1">
+                          <Label className="text-xs">
+                            {t(`vault.performance.metrics.${metric}`)} ({TEST_METRICS[metric]?.unit})
+                          </Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={testResults[metric] || ''}
+                            onChange={(e) => setTestResults({ ...testResults, [metric]: e.target.value })}
+                            placeholder="0"
+                            className="h-8"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -314,14 +424,24 @@ export function VaultPerformanceTestCard({
                     {recentTests.map((test) => (
                       <div key={test.id} className="p-3 rounded-lg bg-muted/50 border border-border">
                         <div className="flex items-center justify-between mb-2">
-                          <Badge variant="outline">{test.test_type}</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">{test.test_type}</Badge>
+                            {/* Show handedness if stored */}
+                            {(test.results as any)?._throwing_hand && (
+                              <Badge variant="secondary" className="text-xs">
+                                {t('vault.performance.throwingHand')}: {(test.results as any)._throwing_hand}
+                              </Badge>
+                            )}
+                          </div>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Calendar className="h-3 w-3" />
                             {new Date(test.test_date).toLocaleDateString()}
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
-                          {Object.entries(test.results).map(([key, value]) => (
+                          {Object.entries(test.results)
+                            .filter(([key]) => !key.startsWith('_')) // Exclude metadata
+                            .map(([key, value]) => (
                             <div key={key} className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground text-xs">
                                 {t(`vault.performance.metrics.${key}`)}

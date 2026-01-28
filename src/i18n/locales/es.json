@@ -4462,11 +4462,23 @@
         "long_toss_distance": "Distancia de Lanzamiento Largo",
         "ten_yard_dash": "Sprint 10 Yardas",
         "sl_broad_jump": "Salto Largo SL",
+        "sl_broad_jump_left": "Salto Largo SL (Izq)",
+        "sl_broad_jump_right": "Salto Largo SL (Der)",
         "sl_lateral_broad_jump": "Salto Lateral Largo SL",
         "sl_vert_jump": "Salto Vertical SL",
         "mb_situp_throw": "Lanzamiento MB Abdominal",
         "seated_chest_pass": "Pase de Pecho Sentado",
         "max_tee_distance": "Distancia Máxima de Tee"
+      },
+      "throwingHand": "Mano de Lanzamiento",
+      "battingSide": "Lado de Bateo",
+      "leftLeg": "Pierna Izquierda",
+      "rightLeg": "Pierna Derecha",
+      "handedness": {
+        "right": "Derecha (D)",
+        "left": "Izquierda (I)",
+        "both": "Ambas",
+        "switch": "Ambidiestro"
       }
     },
     "progressPhotos": {

@@ -3560,11 +3560,23 @@
         "long_toss_distance": "远投距离",
         "ten_yard_dash": "10码冲刺",
         "sl_broad_jump": "单腿立定跳远",
+        "sl_broad_jump_left": "单腿立定跳远 (左)",
+        "sl_broad_jump_right": "单腿立定跳远 (右)",
         "sl_lateral_broad_jump": "单腿侧跳远",
         "sl_vert_jump": "单腿垂直跳",
         "mb_situp_throw": "药球仰卧起坐抛",
         "seated_chest_pass": "坐姿胸前传球",
         "max_tee_distance": "最大座架距离"
+      },
+      "throwingHand": "投掷手",
+      "battingSide": "击球侧",
+      "leftLeg": "左腿",
+      "rightLeg": "右腿",
+      "handedness": {
+        "right": "右 (R)",
+        "left": "左 (L)",
+        "both": "双手",
+        "switch": "换手"
       }
     },
     "progressPhotos": {
