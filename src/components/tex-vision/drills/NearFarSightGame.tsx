@@ -10,11 +10,13 @@ interface NearFarSightGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 type FocusDistance = 'near' | 'mid' | 'far';
 
-export default function NearFarSightGame({ tier, onComplete, onExit }: NearFarSightGameProps) {
+export default function NearFarSightGame({ tier, onComplete, onExit, isPaused }: NearFarSightGameProps) {
   const { t } = useTranslation();
   const [currentFocus, setCurrentFocus] = useState<FocusDistance>('near');
   const [targetFocus, setTargetFocus] = useState<FocusDistance>('near');

@@ -11,6 +11,8 @@ interface DrillTimerProps {
   onTick?: (seconds: number) => void;
   fatigueLevel?: number;
   autoStart?: boolean;
+  isPaused?: boolean; // NEW - external pause control
+  onPauseChange?: (paused: boolean) => void; // NEW - notify parent of pause changes
   className?: string;
 }
 
@@ -21,6 +23,8 @@ export function DrillTimer({
   onTick,
   fatigueLevel = 0,
   autoStart = false,
+  isPaused: externalPaused,
+  onPauseChange,
   className,
 }: DrillTimerProps) {
   const { t } = useTranslation();
@@ -49,6 +53,13 @@ export function DrillTimer({
       setHasStarted(true);
     }
   }, [autoStart, isRunning]);
+
+  // Sync external pause state - NEW
+  useEffect(() => {
+    if (externalPaused !== undefined) {
+      setIsRunning(!externalPaused);
+    }
+  }, [externalPaused]);
 
   const maxSeconds = mode === 'countdown' ? initialSeconds : Math.max(seconds, initialSeconds);
   const progress = mode === 'countdown' 
@@ -91,17 +102,20 @@ export function DrillTimer({
   const handleStart = useCallback(() => {
     setIsRunning(true);
     setHasStarted(true);
-  }, []);
+    onPauseChange?.(false); // NEW - notify parent
+  }, [onPauseChange]);
 
   const handlePause = useCallback(() => {
     setIsRunning(false);
-  }, []);
+    onPauseChange?.(true); // NEW - notify parent
+  }, [onPauseChange]);
 
   const handleReset = useCallback(() => {
     setIsRunning(false);
     setHasStarted(false);
     setSeconds(mode === 'countdown' ? initialSeconds : 0);
-  }, [mode, initialSeconds]);
+    onPauseChange?.(true); // NEW - notify parent
+  }, [mode, initialSeconds, onPauseChange]);
 
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);

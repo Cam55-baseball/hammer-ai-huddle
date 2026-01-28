@@ -11,6 +11,8 @@ interface ColorFlashGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 type ColorType = 'red' | 'green' | 'blue' | 'yellow';
@@ -22,7 +24,7 @@ const COLORS: { type: ColorType; bg: string; name: string }[] = [
   { type: 'yellow', bg: 'bg-yellow-400', name: 'Yellow' },
 ];
 
-export default function ColorFlashGame({ tier, onComplete, onExit }: ColorFlashGameProps) {
+export default function ColorFlashGame({ tier, onComplete, onExit, isPaused }: ColorFlashGameProps) {
   const { t } = useTranslation();
   const [targetColor, setTargetColor] = useState<ColorType>('red');
   const [flashedColor, setFlashedColor] = useState<ColorType | null>(null);
@@ -49,9 +51,9 @@ export default function ColorFlashGame({ tier, onComplete, onExit }: ColorFlashG
     return () => clearInterval(interval);
   }, []);
 
-  // Flash colors
+  // Flash colors - respects isPaused
   useEffect(() => {
-    if (isComplete || attempts >= totalAttempts) return;
+    if (isComplete || attempts >= totalAttempts || isPaused) return;
 
     const flashColor = () => {
       const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)].type;
@@ -74,7 +76,7 @@ export default function ColorFlashGame({ tier, onComplete, onExit }: ColorFlashG
     setTimeout(flashColor, 500);
 
     return () => clearInterval(interval);
-  }, [isComplete, attempts, totalAttempts, flashDuration, flashInterval, targetColor]);
+  }, [isComplete, attempts, totalAttempts, flashDuration, flashInterval, targetColor, isPaused]);
 
   // Check completion
   useEffect(() => {

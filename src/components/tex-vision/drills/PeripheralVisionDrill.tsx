@@ -11,11 +11,13 @@ interface PeripheralVisionDrillProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 type Direction = 'left' | 'right' | 'up' | 'down';
 
-export default function PeripheralVisionDrill({ tier, onComplete, onExit }: PeripheralVisionDrillProps) {
+export default function PeripheralVisionDrill({ tier, onComplete, onExit, isPaused }: PeripheralVisionDrillProps) {
   const { t } = useTranslation();
   const [activeDirection, setActiveDirection] = useState<Direction | null>(null);
   const [showingTarget, setShowingTarget] = useState(false);
@@ -52,13 +54,13 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit }: Peri
   }, [isComplete, attempts, totalAttempts, targetDuration]);
 
   useEffect(() => {
-    if (isComplete || attempts >= totalAttempts) return;
+    if (isComplete || attempts >= totalAttempts || isPaused) return;
 
     const delay = Math.random() * (intervalMax - intervalMin) + intervalMin;
     const timer = setTimeout(showTarget, delay);
 
     return () => clearTimeout(timer);
-  }, [attempts, showTarget, isComplete, totalAttempts, intervalMin, intervalMax]);
+  }, [attempts, showTarget, isComplete, totalAttempts, intervalMin, intervalMax, isPaused]);
 
   const handleDirectionClick = (direction: Direction) => {
     if (!showingTarget || isComplete) return;

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Coffee, Moon, Eye } from 'lucide-react';
+import { AlertTriangle, Coffee, Moon, Eye, Play } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,9 @@ interface FatigueIndicatorProps {
   level: number; // 0-100
   onTakeBreak?: () => void;
   onEndSession?: () => void;
+  onContinue?: () => void; // NEW - allows athlete to continue despite fatigue
   showRecoverySuggestion?: boolean;
+  isModal?: boolean; // NEW - when true, renders as blocking modal
   className?: string;
 }
 
@@ -16,7 +18,9 @@ export function FatigueIndicator({
   level,
   onTakeBreak,
   onEndSession,
+  onContinue,
   showRecoverySuggestion = true,
+  isModal = false,
   className,
 }: FatigueIndicatorProps) {
   const { t } = useTranslation();
@@ -72,14 +76,15 @@ export function FatigueIndicator({
   const config = stateConfig[state];
   const Icon = config.icon;
 
-  // Don't show if fatigue is very low
-  if (level < 20) return null;
+  // Don't show if fatigue is very low (unless in modal mode)
+  if (level < 20 && !isModal) return null;
 
   return (
     <div className={cn(
       "rounded-xl border p-3",
       config.borderColor,
       config.bgColor,
+      isModal && "shadow-xl",
       className
     )}>
       <div className="flex items-start gap-3">
@@ -113,9 +118,9 @@ export function FatigueIndicator({
           )}
           
           {/* Action buttons for high fatigue */}
-          {state === 'high' || state === 'critical' ? (
+          {state === 'high' && (
             <div className="flex items-center gap-2 mt-2">
-              {onTakeBreak && state === 'high' && (
+              {onTakeBreak && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -126,19 +131,36 @@ export function FatigueIndicator({
                   {t('texVision.fatigue.actions.takeBreak')}
                 </Button>
               )}
-              {onEndSession && state === 'critical' && (
+            </div>
+          )}
+          
+          {/* Critical fatigue - show Continue Anyway + End Session */}
+          {state === 'critical' && (
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              {onContinue && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onContinue}
+                  className="h-8 text-xs border-tex-vision-feedback/50 text-tex-vision-feedback hover:bg-tex-vision-feedback/10"
+                >
+                  <Play className="h-3 w-3 mr-1" />
+                  {t('texVision.fatigue.actions.continueAnyway', 'Continue Anyway')}
+                </Button>
+              )}
+              {onEndSession && (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={onEndSession}
-                  className="h-7 text-xs border-tex-vision-text/50 text-tex-vision-text hover:bg-tex-vision-text/10"
+                  className="h-8 text-xs border-tex-vision-text/50 text-tex-vision-text hover:bg-tex-vision-text/10"
                 >
                   <Moon className="h-3 w-3 mr-1" />
                   {t('texVision.fatigue.actions.endSession')}
                 </Button>
               )}
             </div>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

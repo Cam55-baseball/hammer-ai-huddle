@@ -10,11 +10,13 @@ interface DualTaskVisionGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 type PeripheralPosition = 'left' | 'right' | 'top' | 'bottom' | null;
 
-export default function DualTaskVisionGame({ tier, onComplete, onExit }: DualTaskVisionGameProps) {
+export default function DualTaskVisionGame({ tier, onComplete, onExit, isPaused }: DualTaskVisionGameProps) {
   const { t } = useTranslation();
   
   // Central task: count
@@ -35,9 +37,9 @@ export default function DualTaskVisionGame({ tier, onComplete, onExit }: DualTas
   const peripheralInterval = tier === 'beginner' ? 2500 : tier === 'advanced' ? 2000 : 1500;
   const peripheralDuration = tier === 'beginner' ? 1200 : tier === 'advanced' ? 1000 : 700;
 
-  // Central task: numbers changing
+  // Central task: numbers changing - respects isPaused
   useEffect(() => {
-    if (isComplete) return;
+    if (isComplete || isPaused) return;
 
     const interval = setInterval(() => {
       const newNum = Math.floor(Math.random() * 9) + 1;
@@ -46,11 +48,11 @@ export default function DualTaskVisionGame({ tier, onComplete, onExit }: DualTas
     }, centralChangeInterval);
 
     return () => clearInterval(interval);
-  }, [isComplete, centralChangeInterval]);
+  }, [isComplete, centralChangeInterval, isPaused]);
 
-  // Peripheral task: targets appearing
+  // Peripheral task: targets appearing - respects isPaused
   useEffect(() => {
-    if (isComplete) return;
+    if (isComplete || isPaused) return;
 
     const positions: PeripheralPosition[] = ['left', 'right', 'top', 'bottom'];
     
@@ -76,7 +78,7 @@ export default function DualTaskVisionGame({ tier, onComplete, onExit }: DualTas
     setTimeout(showTarget, 1000); // Initial target
 
     return () => clearInterval(interval);
-  }, [isComplete, peripheralInterval, peripheralDuration]);
+  }, [isComplete, peripheralInterval, peripheralDuration, isPaused]);
 
   const handlePeripheralTap = useCallback((position: PeripheralPosition) => {
     if (!peripheralTarget || peripheralTarget !== position) return;

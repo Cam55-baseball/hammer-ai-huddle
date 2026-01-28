@@ -10,11 +10,13 @@ interface SoftFocusGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 type Phase = 'focus' | 'expand' | 'hold';
 
-export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGameProps) {
+export default function SoftFocusGame({ tier, onComplete, onExit, isPaused }: SoftFocusGameProps) {
   const { t } = useTranslation();
   const [phase, setPhase] = useState<Phase>('focus');
   const [cycleCount, setCycleCount] = useState(0);
@@ -29,9 +31,9 @@ export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGam
   const cycleDuration = 20; // seconds per cycle
   const totalDuration = totalCycles * cycleDuration;
 
-  // Breathing cycle: 4s in, 2s hold, 4s out
+  // Breathing cycle: 4s in, 2s hold, 4s out - respects isPaused
   useEffect(() => {
-    if (isComplete) return;
+    if (isComplete || isPaused) return;
 
     const breathCycle = [
       { phase: 'in' as const, duration: 4000 },
@@ -58,11 +60,11 @@ export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGam
     scheduleNext();
 
     return () => clearTimeout(timeout);
-  }, [isComplete]);
+  }, [isComplete, isPaused]);
 
-  // Cycle progression - update phase based on cycle
+  // Cycle progression - update phase based on cycle, respects isPaused
   useEffect(() => {
-    if (isComplete) return;
+    if (isComplete || isPaused) return;
 
     const phaseInterval = setInterval(() => {
       setPhase(prev => {
@@ -73,11 +75,11 @@ export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGam
     }, 6000);
 
     return () => clearInterval(phaseInterval);
-  }, [isComplete]);
+  }, [isComplete, isPaused]);
 
-  // Show peripheral awareness prompts every 15-20 seconds
+  // Show peripheral awareness prompts every 15-20 seconds - respects isPaused
   useEffect(() => {
-    if (isComplete) return;
+    if (isComplete || isPaused) return;
 
     const showPrompt = () => {
       setPeripheralPosition(Math.random() > 0.5 ? 'left' : 'right');
@@ -97,7 +99,7 @@ export default function SoftFocusGame({ tier, onComplete, onExit }: SoftFocusGam
       clearTimeout(initialDelay);
       clearInterval(interval);
     };
-  }, [isComplete]);
+  }, [isComplete, isPaused]);
 
   const handlePeripheralTap = useCallback(() => {
     if (showPeripheralPrompt) {

@@ -10,6 +10,8 @@ interface RapidSwitchGameProps {
   tier: string;
   onComplete: (result: Omit<DrillResult, 'drillType' | 'tier'>) => void;
   onExit: () => void;
+  isPaused?: boolean;
+  onPauseChange?: (paused: boolean) => void;
 }
 
 type TaskType = 'color' | 'shape' | 'count' | 'direction';
@@ -21,7 +23,7 @@ interface Task {
   options: string[];
 }
 
-export default function RapidSwitchGame({ tier, onComplete, onExit }: RapidSwitchGameProps) {
+export default function RapidSwitchGame({ tier, onComplete, onExit, isPaused }: RapidSwitchGameProps) {
   const { t } = useTranslation();
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [score, setScore] = useState(0);
