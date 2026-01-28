@@ -109,13 +109,14 @@ serve(async (req) => {
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr),
       supabase.from("weight_entries").select("*").eq("user_id", user.id)
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr).order("entry_date", { ascending: true }),
-      // Fetch custom activities (user-created workouts, runs, recovery, etc.)
+      // Fetch custom activities with FULL template details (exercises, meals, custom_fields)
       supabase.from("custom_activity_logs").select(`
         id, entry_date, completed, completed_at, 
         actual_duration_minutes, notes, performance_data,
         custom_activity_templates!inner (
-          title, activity_type, duration_minutes, 
-          intensity, sport
+          id, title, activity_type, duration_minutes, 
+          intensity, sport, description,
+          exercises, meals, custom_fields
         )
       `).eq("user_id", user.id).eq("completed", true)
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr),
@@ -312,15 +313,18 @@ serve(async (req) => {
       previousResults: t.previous_results,
     })) || [];
 
-    // ========== CUSTOM ACTIVITY ANALYSIS ==========
+    // ========== ELITE CUSTOM ACTIVITY ANALYSIS ==========
     const customActivities = customActivityLogs || [];
     const totalCustomActivities = customActivities.length;
 
-    // Group by activity type
-    const activityByType: Record<string, number> = {};
+    // Group by activity type with time tracking
+    const activityByType: Record<string, { count: number; minutes: number }> = {};
     customActivities.forEach((log: any) => {
       const type = log.custom_activity_templates?.activity_type || 'other';
-      activityByType[type] = (activityByType[type] || 0) + 1;
+      const mins = log.actual_duration_minutes || log.custom_activity_templates?.duration_minutes || 0;
+      if (!activityByType[type]) activityByType[type] = { count: 0, minutes: 0 };
+      activityByType[type].count += 1;
+      activityByType[type].minutes += mins;
     });
 
     // Calculate total custom training time
@@ -345,13 +349,176 @@ serve(async (req) => {
     const customActiveDates = new Set(customActivities.map((log: any) => log.entry_date));
     const customActivityDays = customActiveDates.size;
 
+    // ========== DEEP EXERCISE ANALYSIS (from workout/practice activities) ==========
+    let totalSets = 0;
+    let totalReps = 0;
+    let exerciseTypeDistribution: Record<string, number> = {};
+    let exerciseFrequency: Record<string, number> = {};
+    
+    customActivities.forEach((log: any) => {
+      const exercises = log.custom_activity_templates?.exercises || [];
+      if (Array.isArray(exercises)) {
+        exercises.forEach((ex: any) => {
+          const sets = ex.sets || 1;
+          const reps = typeof ex.reps === 'number' ? ex.reps : parseInt(ex.reps) || 0;
+          totalSets += sets;
+          totalReps += sets * reps;
+          
+          // Track exercise types
+          const exType = ex.type || 'other';
+          exerciseTypeDistribution[exType] = (exerciseTypeDistribution[exType] || 0) + 1;
+          
+          // Track exercise frequency
+          const exName = ex.name || 'Unknown';
+          exerciseFrequency[exName] = (exerciseFrequency[exName] || 0) + 1;
+        });
+      }
+    });
+    
+    // Get top 5 most performed exercises
+    const topExercises = Object.entries(exerciseFrequency)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([name, count]) => ({ name, count }));
+    
+    // Training variety score (unique exercises / total workout sessions)
+    const workoutTypeActivities = customActivities.filter((log: any) => 
+      ['workout', 'practice', 'short_practice'].includes(log.custom_activity_templates?.activity_type)
+    );
+    const trainingVarietyScore = workoutTypeActivities.length > 0 
+      ? Math.min(10, Math.round((Object.keys(exerciseFrequency).length / workoutTypeActivities.length) * 2))
+      : 0;
+
+    // ========== NUTRITION/SUPPLEMENT ANALYSIS (from meal activities) ==========
+    let supplementsTracked: Record<string, number> = {};
+    let vitaminsTracked: Record<string, number> = {};
+    let mealItemsCount = 0;
+    let hydrationEntries = 0;
+    
+    customActivities.forEach((log: any) => {
+      const meals = log.custom_activity_templates?.meals;
+      if (meals && typeof meals === 'object') {
+        // Count supplements
+        const supplements = meals.supplements || [];
+        if (Array.isArray(supplements)) {
+          supplements.forEach((sup: any) => {
+            const name = sup.name || 'Unknown';
+            supplementsTracked[name] = (supplementsTracked[name] || 0) + 1;
+          });
+        }
+        
+        // Count vitamins
+        const vitamins = meals.vitamins || [];
+        if (Array.isArray(vitamins)) {
+          vitamins.forEach((vit: any) => {
+            const name = vit.name || 'Unknown';
+            vitaminsTracked[name] = (vitaminsTracked[name] || 0) + 1;
+          });
+        }
+        
+        // Count meal items
+        const items = meals.items || [];
+        if (Array.isArray(items)) {
+          mealItemsCount += items.length;
+        }
+        
+        // Count hydration
+        if (meals.hydration?.entries?.length) {
+          hydrationEntries += meals.hydration.entries.length;
+        }
+      }
+    });
+    
+    // Format supplement/vitamin tracking for prompt
+    const topSupplements = Object.entries(supplementsTracked)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([name, count]) => `${name} (${count}x)`);
+    
+    const topVitamins = Object.entries(vitaminsTracked)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([name, count]) => `${name} (${count}x)`);
+
+    // ========== CUSTOM FIELD ANALYSIS ==========
+    let customFieldsLogged: Record<string, { total: number; completed: number }> = {};
+    
+    customActivities.forEach((log: any) => {
+      const customFields = log.custom_activity_templates?.custom_fields || [];
+      const performanceData = log.performance_data || {};
+      
+      if (Array.isArray(customFields)) {
+        customFields.forEach((field: any) => {
+          const label = field.label || 'Unknown';
+          if (!customFieldsLogged[label]) {
+            customFieldsLogged[label] = { total: 0, completed: 0 };
+          }
+          customFieldsLogged[label].total += 1;
+          
+          // Check if checkbox was checked or field had value
+          const fieldKey = `field_${field.id}`;
+          if (performanceData[fieldKey] || performanceData[field.id]) {
+            customFieldsLogged[label].completed += 1;
+          }
+        });
+      }
+    });
+    
+    const customFieldsCount = Object.keys(customFieldsLogged).length;
+
+    // ========== STREAK ANALYSIS ==========
+    const sortedDates = [...customActiveDates].sort();
+    let longestStreak = 0;
+    let currentStreak = 1;
+    
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prevDate = new Date(sortedDates[i - 1]);
+      const currDate = new Date(sortedDates[i]);
+      const diffDays = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        currentStreak++;
+      } else {
+        longestStreak = Math.max(longestStreak, currentStreak);
+        currentStreak = 1;
+      }
+    }
+    longestStreak = Math.max(longestStreak, currentStreak);
+    if (sortedDates.length === 0) longestStreak = 0;
+
+    // ========== ACTIVITY FREQUENCY (Top 3 by count) ==========
+    const activityFrequency: Record<string, number> = {};
+    customActivities.forEach((log: any) => {
+      const title = log.custom_activity_templates?.title || 'Unknown';
+      activityFrequency[title] = (activityFrequency[title] || 0) + 1;
+    });
+    
+    const topRoutines = Object.entries(activityFrequency)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3)
+      .map(([name, count]) => `${name} (${count}x)`);
+
     // Extract notes for AI analysis (limit to prevent token overflow)
     const activityNotes = customActivities
       .filter((log: any) => log.notes && log.notes.trim())
-      .map((log: any) => log.notes)
-      .slice(0, 5);
+      .map((log: any) => `${log.custom_activity_templates?.title}: ${log.notes}`)
+      .slice(0, 8);
+
+    // Average activities per active day
+    const avgActivitiesPerActiveDay = customActivityDays > 0 
+      ? (totalCustomActivities / customActivityDays).toFixed(1) 
+      : '0';
+
+    // Custom activities adherence percentage
+    const customAdherencePercent = Math.round((customActivityDays / 42) * 100);
+
+    // Detect if custom activities are the PRIMARY training source
+    const customActivityIsPrimary = totalWorkouts < 3 && totalCustomActivities >= 5;
 
     console.log(`Custom activities: ${totalCustomActivities} completed, ${customActivityDays} active days, ${Math.floor(totalCustomMinutes / 60)}h ${totalCustomMinutes % 60}m total time`);
+    console.log(`Exercise analysis: ${totalSets} sets, ${totalReps} total reps, variety score ${trainingVarietyScore}/10`);
+    console.log(`Supplements: ${Object.keys(supplementsTracked).length} types, Vitamins: ${Object.keys(vitaminsTracked).length} types`);
+    console.log(`Custom activity is primary training source: ${customActivityIsPrimary}`);
     console.log("Comprehensive data collected for AI analysis");
 
     // ========== ELITE AI PROMPT ==========
@@ -383,11 +550,17 @@ serve(async (req) => {
                                 scoutNotes.toLowerCase().includes('cleared') ||
                                 scoutNotes.toLowerCase().includes('rehab') ||
                                 chronicPainAreas.length > 0;
-    const isRecoveryPhase = totalWorkouts === 0 && (quizzes?.length || 0) >= 5 && hasInjuryIndicators;
+    // Modified training detection: custom activities during recovery = rehabilitation
+    const isModifiedTraining = totalWorkouts <= 2 && totalCustomActivities >= 5 && hasInjuryIndicators;
+    const isRecoveryPhase = totalWorkouts === 0 && totalCustomActivities < 5 && (quizzes?.length || 0) >= 5 && hasInjuryIndicators;
     
-    console.log(`Recovery phase detected: ${isRecoveryPhase} (workouts: ${totalWorkouts}, quizzes: ${quizzes?.length}, injury indicators: ${hasInjuryIndicators})`);
+    console.log(`Recovery phase detected: ${isRecoveryPhase} (workouts: ${totalWorkouts}, customActivities: ${totalCustomActivities}, quizzes: ${quizzes?.length}, injury indicators: ${hasInjuryIndicators})`);
+    console.log(`Modified training (rehab + custom): ${isModifiedTraining}`);
 
-    if (LOVABLE_API_KEY && (totalWorkouts > 0 || (quizzes?.length || 0) > 0)) {
+    // UPDATED: Include custom activities as valid training data for AI analysis
+    const hasTrainingData = totalWorkouts > 0 || totalCustomActivities > 0 || (quizzes?.length || 0) > 0;
+    
+    if (LOVABLE_API_KEY && hasTrainingData) {
       try {
         // Dynamic context prefix for recovery phase athletes
         const recoveryContext = isRecoveryPhase ? `
@@ -487,15 +660,43 @@ COMPREHENSIVE DATA ANALYSIS
     What they learned: ${learnedReflections.slice(0, 3).join(' | ') || 'No reflections logged'}
     Motivations: ${motivationReflections.slice(0, 2).join(' | ') || 'No motivations logged'}
 
-12. CUSTOM TRAINING ACTIVITIES (User-Created)
-    • Total Completed: ${totalCustomActivities}
-    • Unique Activities: ${uniqueActivities.size} different activities
+12. CUSTOM TRAINING ACTIVITIES (User-Designed Programs)
+═══════════════════════════════════════════════════════════════
+${customActivityIsPrimary ? '⭐ THIS ATHLETE PRIMARILY TRAINS VIA SELF-DESIGNED ROUTINES ⭐' : ''}
+This athlete designs their own training routines. Treat these as EQUAL 
+to structured program workouts. Analyze with full depth.
+
+VOLUME & CONSISTENCY:
+    • Total Activities Completed: ${totalCustomActivities}
+    • Unique Activity Types Created: ${uniqueActivities.size}
     • Total Training Time: ${Math.floor(totalCustomMinutes / 60)}h ${totalCustomMinutes % 60}m
-    • Days Active: ${customActivityDays} of 42 possible days
-    • Activity Types: ${Object.entries(activityByType).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None'}
-    • Intensity Distribution: ${Object.entries(customIntensityDistribution).map(([i, count]) => `${i}: ${count}`).join(', ') || 'N/A'}
-    • Top Activities: ${[...uniqueActivities].slice(0, 5).join(', ') || 'None'}
-    ${activityNotes.length > 0 ? `• Athlete Notes: ${activityNotes.join(' | ')}` : ''}
+    • Days Active: ${customActivityDays} of 42 (${customAdherencePercent}% adherence)
+    • Average Activities/Day (on active days): ${avgActivitiesPerActiveDay}
+    • Longest Streak: ${longestStreak} consecutive days
+
+TRAINING BREAKDOWN BY TYPE:
+    ${Object.entries(activityByType).map(([type, data]) => `• ${type.charAt(0).toUpperCase() + type.slice(1)}: ${data.count} (${Math.floor(data.minutes / 60)}h ${data.minutes % 60}m total)`).join('\n    ') || '• No activities logged'}
+
+EXERCISE ANALYSIS (from workout/practice activities):
+    • Total Sets Logged: ${totalSets} across ${Object.keys(exerciseFrequency).length} exercises
+    • Total Reps Logged: ${totalReps}
+    • Exercise Types: ${Object.entries(exerciseTypeDistribution).map(([type, count]) => `${type}: ${count}`).join(', ') || 'None tracked'}
+    • Most Trained Exercises: ${topExercises.map(e => `${e.name} (${e.count}x)`).join(', ') || 'None'}
+    • Training Variety Score: ${trainingVarietyScore}/10 (unique exercises per session)
+
+NUTRITION/SUPPLEMENT TRACKING (from meal activities):
+    • Supplements Logged: ${topSupplements.join(', ') || 'None tracked'}
+    • Vitamins Logged: ${topVitamins.join(', ') || 'None tracked'}
+    • Meal Items Tracked: ${mealItemsCount} unique items
+    • Hydration Entries: ${hydrationEntries}
+
+CUSTOM ROUTINE INSIGHTS:
+    • Top Routines by Frequency: ${topRoutines.join(', ') || 'None'}
+    • Intensity Distribution: ${Object.entries(customIntensityDistribution).map(([i, count]) => `${i}: ${Math.round((count / totalCustomActivities) * 100)}%`).join(', ') || 'N/A'}
+    • Custom Fields Logged: ${customFieldsCount} unique fields tracked
+
+ATHLETE NOTES FROM ACTIVITIES:
+    ${activityNotes.length > 0 ? activityNotes.join('\n    ') : 'No notes logged'}
 
 ═══════════════════════════════════════════════════════════════
 
@@ -521,9 +722,60 @@ CRITICAL REQUIREMENTS:
 - Provide actionable, specific recommendations
 - Write with authority and expertise
 - Focus on patterns and trends, not just averages
-- RECOGNIZE that athletes may train using CUSTOM ACTIVITIES (user-created workouts, runs, recovery sessions, practices) in addition to or instead of structured program workouts. Both sources count toward their training volume and commitment.
-- If custom activity data shows high engagement but program workouts are low, acknowledge the athlete IS training actively via their personalized routines.
 ${isRecoveryPhase ? '- Frame everything through the lens of recovery optimization and return-to-play preparation' : ''}
+
+═══════════════════════════════════════════════════════════════
+CUSTOM ACTIVITY ANALYSIS REQUIREMENTS (MANDATORY):
+═══════════════════════════════════════════════════════════════
+
+${customActivityIsPrimary ? `
+⭐ CRITICAL: CUSTOM ACTIVITIES ARE THIS ATHLETE'S PRIMARY TRAINING SOURCE ⭐
+Program workouts: ${totalWorkouts} | Custom activities: ${totalCustomActivities}
+
+You MUST:
+- Lead the executive summary with custom activity achievements
+- Frame ALL analysis through their personalized training approach
+- Provide recommendations specific to optimizing THEIR routines
+- NEVER suggest they "need to follow the program" - respect their autonomy
+- Celebrate their self-directed training discipline
+` : ''}
+
+If the athlete has significant custom activity data (${totalCustomActivities} activities, 
+${Math.floor(totalCustomMinutes / 60)}h ${totalCustomMinutes % 60}m training time), you MUST:
+
+1. CALCULATE COMBINED TRAINING VOLUME:
+   - TOTAL training hours = Program workouts + Custom activities
+   - Present TOTAL volume (${totalWorkouts} workouts + ${totalCustomActivities} custom = ${totalWorkouts + totalCustomActivities} total sessions)
+   - NEVER say the athlete "isn't training" if custom activities show engagement
+
+2. ANALYZE THEIR TRAINING DESIGN:
+   - Comment on exercise selection: ${topExercises.length > 0 ? topExercises.map(e => e.name).join(', ') : 'review their routine structure'}
+   - Identify potential gaps (e.g., if no flexibility exercises logged, mention it)
+   - Training variety score: ${trainingVarietyScore}/10 - ${trainingVarietyScore >= 7 ? 'excellent variety' : trainingVarietyScore >= 4 ? 'moderate variety, could diversify' : 'limited variety, recommend expanding'}
+
+3. EVALUATE ROUTINE CONSISTENCY:
+   - Longest streak: ${longestStreak} consecutive days
+   - Adherence: ${customAdherencePercent}% of days had custom activity
+   - Top routines: ${topRoutines.join(', ') || 'analyze their patterns'}
+   - Identify if morning vs evening patterns exist
+
+4. SUPPLEMENT/NUTRITION INTEGRATION:
+   ${topSupplements.length > 0 ? `- Supplements tracked: ${topSupplements.join(', ')} - comment on consistency` : '- No supplements logged - recommend tracking if athlete uses them'}
+   ${topVitamins.length > 0 ? `- Vitamins tracked: ${topVitamins.join(', ')} - acknowledge discipline` : ''}
+
+5. CELEBRATE INITIATIVE:
+   - Athletes who design their own training show HIGH self-direction
+   - Acknowledge the discipline required to create AND follow custom routines
+   - This is a sign of MATURE athletic development
+   - Frame custom activities as intentional training, not "side work"
+
+${isModifiedTraining ? `
+6. MODIFIED TRAINING DETECTED (Recovery + Custom Activities):
+   This athlete appears to be doing REHABILITATION exercises via custom activities 
+   while recovering from injury. Their custom activities during this period should 
+   be analyzed as REHABILITATION WORK, not compared to full training volume.
+   Praise their proactive approach to recovery.
+` : ''}
 
 REQUIRED SECTIONS (return as JSON):
 
@@ -607,10 +859,11 @@ Return ONLY valid JSON with this exact structure:
       } catch (aiError) {
         console.error("AI generation error:", aiError);
       }
-    } else if (totalWorkouts === 0 && (quizzes?.length || 0) === 0) {
-      aiContent.executive_summary = "No training data logged in the past 6 weeks. Start tracking your workouts and completing daily check-ins to receive personalized performance insights.";
+    } else if (totalWorkouts === 0 && totalCustomActivities === 0 && (quizzes?.length || 0) === 0) {
+      // UPDATED: Only show "no data" if BOTH program workouts AND custom activities are zero
+      aiContent.executive_summary = "No training data logged in the past 6 weeks. Start tracking your workouts, custom activities, or complete daily check-ins to receive personalized performance insights.";
       aiContent.summary = aiContent.executive_summary;
-      aiContent.critical_focus_areas = ["Begin logging workouts consistently", "Complete daily focus quizzes to track mental readiness", "Track nutrition to optimize recovery"];
+      aiContent.critical_focus_areas = ["Begin logging workouts or custom activities consistently", "Complete daily focus quizzes to track mental readiness", "Track nutrition to optimize recovery"];
       aiContent.focus_areas = aiContent.critical_focus_areas;
     }
 
@@ -668,8 +921,27 @@ Return ONLY valid JSON with this exact structure:
         unique_activities: uniqueActivities.size,
         total_minutes: totalCustomMinutes,
         days_active: customActivityDays,
+        adherence_percent: customAdherencePercent,
+        longest_streak: longestStreak,
+        avg_per_active_day: parseFloat(avgActivitiesPerActiveDay),
+        is_primary_source: customActivityIsPrimary,
         by_type: activityByType,
         by_intensity: customIntensityDistribution,
+        exercise_analysis: {
+          total_sets: totalSets,
+          total_reps: totalReps,
+          variety_score: trainingVarietyScore,
+          type_distribution: exerciseTypeDistribution,
+          top_exercises: topExercises,
+        },
+        nutrition_tracking: {
+          supplements: supplementsTracked,
+          vitamins: vitaminsTracked,
+          meal_items_count: mealItemsCount,
+          hydration_entries: hydrationEntries,
+        },
+        top_routines: topRoutines,
+        custom_fields_count: customFieldsCount,
       },
     };
 
