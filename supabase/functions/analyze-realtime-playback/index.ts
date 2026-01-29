@@ -123,6 +123,45 @@ RED FLAGS TO IDENTIFY:
 - Back elbow drops to slot without traveling forward → Reduces bat speed
 - Hips rotate before back elbow travels → Broken kinetic chain
 
+SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
+
+Base your efficiency score on THIS rubric:
+
+STARTING POINT: Begin at 5 (mediocre baseline) - scale is 1-10
+- ADD points for correct mechanics
+- Scores above 8 require NEAR-PERFECT fundamentals
+
+SCORE CAPS (NON-NEGOTIABLE):
+- If shoulders rotate BEFORE front foot lands → MAX SCORE: 7
+- If hands pass back elbow BEFORE shoulders rotate → MAX SCORE: 7
+- If front shoulder opens/pulls early → MAX SCORE: 7.5
+- If TWO OR MORE critical violations → MAX SCORE: 6
+
+SCORING BANDS:
+- 9-10: Elite. ALL fundamentals correct. Minor refinements only.
+- 8-8.9: Advanced. One minor flaw. All critical checkpoints pass.
+- 7-7.9: Good. 1-2 moderate issues. Core sequence mostly correct.
+- 6-6.9: Developing. Multiple issues OR 1-2 major sequence violations.
+- 5-5.9: Foundational. Several significant mechanical flaws.
+- Below 5: Major fundamental breakdowns.
+
+CALIBRATION - What 8.5+ REQUIRES:
+✓ Front foot FULLY planted before ANY shoulder rotation
+✓ Hands stay behind back elbow until shoulders rotate
+✓ Front shoulder stays closed until proper timing
+✓ Back elbow travels forward before hips rotate
+✓ Minimal head movement during swing sequence
+✓ Clean kinetic chain from ground up
+
+CALIBRATION - What 6 looks like:
+✗ Front foot lands but shoulders already rotating
+✗ Hands pass back elbow too early
+✓ Some correct elements (setup, finish)
+
+BE DIRECT: Do not inflate scores to be encouraging.
+Accurate assessment is what helps players develop.
+A score of 6.5 with honest feedback is more valuable than 8.5 with false praise.
+
 Focus on:
 1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
 2. ⭐⭐⭐ Does the head move LATERALLY toward the pitcher during swing sequence? (CRITICAL RED FLAG)
@@ -133,10 +172,10 @@ Focus on:
 7. Are timing gaps correct (land → elbow → hips → shoulders → hands)?
 
 Provide:
-- Efficiency score (1-10) based on form correctness
-- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (MAJOR deduction - up to 2.5 points)
-- **PRIORITY CHECK:** Flag if hands pass back elbow before shoulder rotation (major deduction to score)
-- **PRIORITY CHECK:** Flag if front shoulder opens/pulls out of sequence (major deduction to score)
+- Efficiency score (1-10) based on form correctness using the SCORING FRAMEWORK above
+- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (score CAPPED at 7)
+- **PRIORITY CHECK:** Flag if hands pass back elbow before shoulder rotation (score CAPPED at 7)
+- **PRIORITY CHECK:** Flag if front shoulder opens/pulls out of sequence (score CAPPED at 7.5)
 - **BALANCE CHECK:** Assess head movement and balance throughout the swing
 - Specific feedback on:
   * Front foot landing timing relative to rotation (MUST land first)
@@ -233,6 +272,45 @@ RED FLAGS TO IDENTIFY:
 - ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
 - ⚠️ Glove closed or not facing target at landing → Poor directional control
 
+SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
+
+Base your efficiency score on THIS rubric:
+
+STARTING POINT: Begin at 5 (mediocre baseline) - scale is 1-10
+- ADD points for correct mechanics
+- Scores above 8 require NEAR-PERFECT fundamentals
+
+SCORE CAPS (NON-NEGOTIABLE):
+- If shoulders rotate BEFORE front foot lands → MAX SCORE: 7
+- If shoulders NOT aligned with target at landing → MAX SCORE: 7.5
+- If back hip/leg NOT facing target at landing → MAX SCORE: 7.5
+- If TWO OR MORE critical violations → MAX SCORE: 6
+
+SCORING BANDS:
+- 9-10: Elite. ALL fundamentals correct. Minor refinements only.
+- 8-8.9: Advanced. One minor flaw. All critical checkpoints pass.
+- 7-7.9: Good. 1-2 moderate issues. Core sequence mostly correct.
+- 6-6.9: Developing. Multiple issues OR 1-2 major sequence violations.
+- 5-5.9: Foundational. Several significant mechanical flaws.
+- Below 5: Major fundamental breakdowns.
+
+CALIBRATION - What 8.5+ REQUIRES:
+✓ Front foot FULLY planted before ANY shoulder rotation
+✓ Shoulders PERFECTLY aligned with target at landing
+✓ Back leg (foot, knee, hip) ALL facing target
+✓ Glove open and facing target
+✓ Arm angle under 90° at flip-up
+✓ Clean sequencing through release
+
+CALIBRATION - What 6 looks like:
+✗ Front foot lands but shoulders already rotating
+✗ Shoulder alignment off by 15+ degrees
+✓ Some correct elements (arm path, follow-through)
+
+BE DIRECT: Do not inflate scores to be encouraging.
+Accurate assessment is what helps players develop.
+A score of 6.5 with honest feedback is more valuable than 8.5 with false praise.
+
 Focus on:
 1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
 2. ⭐⭐ Are SHOULDERS IN LINE WITH TARGET at the moment of landing?
@@ -317,6 +395,45 @@ RED FLAGS TO IDENTIFY:
 - ⚠️ Inconsistent release point → Reduces accuracy and movement
 - ⚠️ Poor hip drive → Arm-only delivery, injury risk
 - ⚠️ Landing off-balance → Control and repeat issues
+
+SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
+
+Base your efficiency score on THIS rubric:
+
+STARTING POINT: Begin at 5 (mediocre baseline) - scale is 1-10
+- ADD points for correct mechanics
+- Scores above 8 require NEAR-PERFECT fundamentals
+
+SCORE CAPS (NON-NEGOTIABLE):
+- If shoulders rotate BEFORE front foot lands → MAX SCORE: 7
+- If shoulders NOT aligned with target at landing → MAX SCORE: 7.5
+- If arm circle breaks or stalls → MAX SCORE: 7.5
+- If TWO OR MORE critical violations → MAX SCORE: 6
+
+SCORING BANDS:
+- 9-10: Elite. ALL fundamentals correct. Minor refinements only.
+- 8-8.9: Advanced. One minor flaw. All critical checkpoints pass.
+- 7-7.9: Good. 1-2 moderate issues. Core sequence mostly correct.
+- 6-6.9: Developing. Multiple issues OR 1-2 major sequence violations.
+- 5-5.9: Foundational. Several significant mechanical flaws.
+- Below 5: Major fundamental breakdowns.
+
+CALIBRATION - What 8.5+ REQUIRES:
+✓ Front foot FULLY planted before ANY shoulder rotation
+✓ Shoulders PERFECTLY aligned with target at landing
+✓ Smooth, continuous arm circle
+✓ Consistent release point at hip
+✓ Strong hip drive through landing
+✓ Clean sequencing through follow-through
+
+CALIBRATION - What 6 looks like:
+✗ Front foot lands but shoulders already rotating
+✗ Shoulder alignment off by 15+ degrees
+✓ Some correct elements (arm circle, follow-through)
+
+BE DIRECT: Do not inflate scores to be encouraging.
+Accurate assessment is what helps players develop.
+A score of 6.5 with honest feedback is more valuable than 8.5 with false praise.
 
 Focus on:
 1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
@@ -404,6 +521,45 @@ RED FLAGS TO IDENTIFY:
 - ⚠️ Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
 - ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
 - ⚠️ Poor footwork alignment (not directed to target) → Reduces accuracy
+
+SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
+
+Base your efficiency score on THIS rubric:
+
+STARTING POINT: Begin at 5 (mediocre baseline) - scale is 1-10
+- ADD points for correct mechanics
+- Scores above 8 require NEAR-PERFECT fundamentals
+
+SCORE CAPS (NON-NEGOTIABLE):
+- If shoulders rotate BEFORE stride foot lands → MAX SCORE: 7
+- If shoulders NOT aligned with target at landing → MAX SCORE: 7.5
+- If back hip/leg NOT facing target at landing → MAX SCORE: 7.5
+- If TWO OR MORE critical violations → MAX SCORE: 6
+
+SCORING BANDS:
+- 9-10: Elite. ALL fundamentals correct. Minor refinements only.
+- 8-8.9: Advanced. One minor flaw. All critical checkpoints pass.
+- 7-7.9: Good. 1-2 moderate issues. Core sequence mostly correct.
+- 6-6.9: Developing. Multiple issues OR 1-2 major sequence violations.
+- 5-5.9: Foundational. Several significant mechanical flaws.
+- Below 5: Major fundamental breakdowns.
+
+CALIBRATION - What 8.5+ REQUIRES:
+✓ Stride foot FULLY planted before ANY shoulder rotation
+✓ Shoulders PERFECTLY aligned with target at landing
+✓ Back leg (foot, knee, hip) ALL facing target
+✓ Arm angle under 90° at flip-up
+✓ Proper footwork toward target
+✓ Clean sequencing through release
+
+CALIBRATION - What 6 looks like:
+✗ Stride foot lands but shoulders already rotating
+✗ Shoulder alignment off by 15+ degrees
+✓ Some correct elements (footwork, follow-through)
+
+BE DIRECT: Do not inflate scores to be encouraging.
+Accurate assessment is what helps players develop.
+A score of 6.5 with honest feedback is more valuable than 8.5 with false praise.
 
 Focus on:
 1. ⭐⭐⭐ Is the STRIDE FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)

@@ -194,6 +194,45 @@ RED FLAGS:
 - Back elbow drops to slot without traveling forward → Reduces bat speed
 - Hips rotate before back elbow travels → Broken kinetic chain
 
+SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
+
+Base your efficiency score on THIS rubric:
+
+STARTING POINT: Begin at 50 (mediocre baseline)
+- ADD points for correct mechanics
+- Scores above 80 require NEAR-PERFECT fundamentals
+
+SCORE CAPS (NON-NEGOTIABLE):
+- If shoulders rotate BEFORE front foot lands → MAX SCORE: 70
+- If hands pass back elbow BEFORE shoulders rotate → MAX SCORE: 70
+- If front shoulder opens/pulls early → MAX SCORE: 75
+- If TWO OR MORE critical violations → MAX SCORE: 60
+
+SCORING BANDS:
+- 90-100: Elite. ALL fundamentals correct. Minor refinements only.
+- 80-89: Advanced. One minor flaw. All critical checkpoints pass.
+- 70-79: Good. 1-2 moderate issues. Core sequence mostly correct.
+- 60-69: Developing. Multiple issues OR 1-2 major sequence violations.
+- 50-59: Foundational. Several significant mechanical flaws.
+- Below 50: Major fundamental breakdowns.
+
+CALIBRATION - What 85+ REQUIRES:
+✓ Front foot FULLY planted before ANY shoulder rotation
+✓ Hands stay behind back elbow until shoulders rotate
+✓ Front shoulder stays closed until proper timing
+✓ Back elbow travels forward before hips rotate
+✓ Minimal head movement during swing sequence
+✓ Clean kinetic chain from ground up
+
+CALIBRATION - What 60 looks like:
+✗ Front foot lands but shoulders already rotating
+✗ Hands pass back elbow too early
+✓ Some correct elements (setup, finish)
+
+BE DIRECT: Do not inflate scores to be encouraging.
+Accurate assessment is what helps players develop.
+A score of 65 with honest feedback is more valuable than 85 with false praise.
+
 Focus on:
 1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
 2. ⭐⭐⭐ Does the head move LATERALLY toward the pitcher during swing sequence? (CRITICAL RED FLAG)
@@ -204,10 +243,10 @@ Focus on:
 7. Are timing gaps correct (land → elbow → hips → shoulders → hands)?
 
 Provide:
-- Efficiency score (0-100) based on form correctness
-- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (MAJOR deduction - up to 25 points)
-- **PRIORITY CHECK:** Flag if hands pass back elbow before shoulder rotation (major deduction to score)
-- **PRIORITY CHECK:** Flag if front shoulder opens/pulls out of sequence (major deduction to score)
+- Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
+- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (MAJOR deduction - score CAPPED at 70)
+- **PRIORITY CHECK:** Flag if hands pass back elbow before shoulder rotation (score CAPPED at 70)
+- **PRIORITY CHECK:** Flag if front shoulder opens/pulls out of sequence (score CAPPED at 75)
 - **BALANCE CHECK:** Assess head movement and balance throughout the swing
 - Specific feedback on:
   * Front foot landing timing relative to rotation (MUST land first)
@@ -225,7 +264,7 @@ Provide:
 SUMMARY FORMAT:
 REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
-Balance issues with strengths. Examples:
+Be honest about issues - accurate feedback helps development. Examples:
 - "Land your front foot before rotating - this gives you balance and power"
 - "Shoulders turn too early - wait for your front foot to touch down first"
 - "Great timing - front foot plants, then your body rotates together"
@@ -328,6 +367,45 @@ RED FLAGS:
 - ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
 - ⚠️ Glove closed or not facing target at landing → Poor directional control
 
+SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
+
+Base your efficiency score on THIS rubric:
+
+STARTING POINT: Begin at 50 (mediocre baseline)
+- ADD points for correct mechanics
+- Scores above 80 require NEAR-PERFECT fundamentals
+
+SCORE CAPS (NON-NEGOTIABLE):
+- If shoulders rotate BEFORE front foot lands → MAX SCORE: 70
+- If shoulders NOT aligned with target at landing → MAX SCORE: 75
+- If back hip/leg NOT facing target at landing → MAX SCORE: 75
+- If TWO OR MORE critical violations → MAX SCORE: 60
+
+SCORING BANDS:
+- 90-100: Elite. ALL fundamentals correct. Minor refinements only.
+- 80-89: Advanced. One minor flaw. All critical checkpoints pass.
+- 70-79: Good. 1-2 moderate issues. Core sequence mostly correct.
+- 60-69: Developing. Multiple issues OR 1-2 major sequence violations.
+- 50-59: Foundational. Several significant mechanical flaws.
+- Below 50: Major fundamental breakdowns.
+
+CALIBRATION - What 85+ REQUIRES:
+✓ Front foot FULLY planted before ANY shoulder rotation
+✓ Shoulders PERFECTLY aligned with target at landing
+✓ Back leg (foot, knee, hip) ALL facing target
+✓ Glove open and facing target
+✓ Arm angle under 90° at flip-up
+✓ Clean sequencing through release
+
+CALIBRATION - What 60 looks like:
+✗ Front foot lands but shoulders already rotating
+✗ Shoulder alignment off by 15+ degrees
+✓ Some correct elements (arm path, follow-through)
+
+BE DIRECT: Do not inflate scores to be encouraging.
+Accurate assessment is what helps players develop.
+A score of 65 with honest feedback is more valuable than 85 with false praise.
+
 Focus on:
 1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
 2. ⭐⭐ Are SHOULDERS IN LINE WITH TARGET at the moment of landing?
@@ -341,9 +419,10 @@ Focus on:
 When sequence is correct, the pitch should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
 Provide:
-- Efficiency score (0-100) based on form correctness
-- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (MAJOR deduction - up to 25 points)
-- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (deduction - up to 15 points)
+- Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
+- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (score CAPPED at 70)
+- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (score CAPPED at 75)
+- **BACK LEG CHECK:** Flag if back hip/leg not facing target at landing (score CAPPED at 75)
 - **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
 - **If misalignment detected:** Explain how shoulder-target alignment maximizes velocity and reduces effort
 - Specific feedback on landing position and sequence
@@ -359,7 +438,7 @@ After the feedback, provide 3–5 actionable drills tailored to the issues found
 SUMMARY FORMAT:
 REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
-Balance issues with strengths. Examples:
+Be honest about issues - accurate feedback helps development. Examples:
 - "Plant your front foot before rotating - this gives you power and accuracy"
 - "Shoulders turn too early - wait for your front foot to touch down first"
 - "Great timing - front foot plants, then your body rotates together"
@@ -456,6 +535,45 @@ RED FLAGS TO IDENTIFY:
 - ⚠️ Poor hip drive → Arm-only delivery, injury risk
 - ⚠️ Landing off-balance → Control and repeat issues
 
+SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
+
+Base your efficiency score on THIS rubric:
+
+STARTING POINT: Begin at 50 (mediocre baseline)
+- ADD points for correct mechanics
+- Scores above 80 require NEAR-PERFECT fundamentals
+
+SCORE CAPS (NON-NEGOTIABLE):
+- If shoulders rotate BEFORE front foot lands → MAX SCORE: 70
+- If shoulders NOT aligned with target at landing → MAX SCORE: 75
+- If arm circle breaks or stalls → MAX SCORE: 75
+- If TWO OR MORE critical violations → MAX SCORE: 60
+
+SCORING BANDS:
+- 90-100: Elite. ALL fundamentals correct. Minor refinements only.
+- 80-89: Advanced. One minor flaw. All critical checkpoints pass.
+- 70-79: Good. 1-2 moderate issues. Core sequence mostly correct.
+- 60-69: Developing. Multiple issues OR 1-2 major sequence violations.
+- 50-59: Foundational. Several significant mechanical flaws.
+- Below 50: Major fundamental breakdowns.
+
+CALIBRATION - What 85+ REQUIRES:
+✓ Front foot FULLY planted before ANY shoulder rotation
+✓ Shoulders PERFECTLY aligned with target at landing
+✓ Smooth, continuous arm circle
+✓ Consistent release point at hip
+✓ Strong hip drive through landing
+✓ Clean sequencing through follow-through
+
+CALIBRATION - What 60 looks like:
+✗ Front foot lands but shoulders already rotating
+✗ Shoulder alignment off by 15+ degrees
+✓ Some correct elements (arm circle, follow-through)
+
+BE DIRECT: Do not inflate scores to be encouraging.
+Accurate assessment is what helps players develop.
+A score of 65 with honest feedback is more valuable than 85 with false praise.
+
 Focus on:
 1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
 2. ⭐⭐ Are SHOULDERS IN LINE WITH TARGET at the moment of landing?
@@ -464,9 +582,9 @@ Focus on:
 5. Is there strong hip drive through landing?
 
 Provide:
-- Efficiency score (0-100) based on form correctness
-- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (MAJOR deduction - up to 25 points)
-- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (deduction - up to 15 points)
+- Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
+- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (score CAPPED at 70)
+- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (score CAPPED at 75)
 - **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
 - **If misalignment detected:** Explain how shoulder-target alignment maximizes velocity and reduces effort
 - Specific feedback on landing position, arm circle, and sequence
@@ -482,7 +600,7 @@ After the feedback, provide 3–5 actionable drills tailored to the issues found
 SUMMARY FORMAT:
 REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
-Balance issues with strengths. Examples:
+Be honest about issues - accurate feedback helps development. Examples:
 - "Plant your front foot before rotating - this gives you power and accuracy"
 - "Shoulders turn too early - wait for your front foot to touch down first"
 - "Great timing - front foot plants, then your body rotates together"
@@ -586,6 +704,45 @@ RED FLAGS TO IDENTIFY:
 - ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
 - ⚠️ Poor footwork alignment (not directed to target) → Reduces accuracy
 
+SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
+
+Base your efficiency score on THIS rubric:
+
+STARTING POINT: Begin at 50 (mediocre baseline)
+- ADD points for correct mechanics
+- Scores above 80 require NEAR-PERFECT fundamentals
+
+SCORE CAPS (NON-NEGOTIABLE):
+- If shoulders rotate BEFORE stride foot lands → MAX SCORE: 70
+- If shoulders NOT aligned with target at landing → MAX SCORE: 75
+- If back hip/leg NOT facing target at landing → MAX SCORE: 75
+- If TWO OR MORE critical violations → MAX SCORE: 60
+
+SCORING BANDS:
+- 90-100: Elite. ALL fundamentals correct. Minor refinements only.
+- 80-89: Advanced. One minor flaw. All critical checkpoints pass.
+- 70-79: Good. 1-2 moderate issues. Core sequence mostly correct.
+- 60-69: Developing. Multiple issues OR 1-2 major sequence violations.
+- 50-59: Foundational. Several significant mechanical flaws.
+- Below 50: Major fundamental breakdowns.
+
+CALIBRATION - What 85+ REQUIRES:
+✓ Stride foot FULLY planted before ANY shoulder rotation
+✓ Shoulders PERFECTLY aligned with target at landing
+✓ Back leg (foot, knee, hip) ALL facing target
+✓ Arm angle under 90° at flip-up
+✓ Proper footwork toward target
+✓ Clean sequencing through release
+
+CALIBRATION - What 60 looks like:
+✗ Stride foot lands but shoulders already rotating
+✗ Shoulder alignment off by 15+ degrees
+✓ Some correct elements (footwork, follow-through)
+
+BE DIRECT: Do not inflate scores to be encouraging.
+Accurate assessment is what helps players develop.
+A score of 65 with honest feedback is more valuable than 85 with false praise.
+
 Focus on:
 1. ⭐⭐⭐ Is the STRIDE FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
 2. ⭐⭐ Are SHOULDERS IN LINE WITH TARGET at the moment of landing?
@@ -598,9 +755,10 @@ Focus on:
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
 Provide:
-- Efficiency score (0-100) based on form correctness
-- **CRITICAL CHECK:** Flag if shoulders rotate before stride foot lands (MAJOR deduction - up to 25 points)
-- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (deduction - up to 15 points)
+- Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
+- **CRITICAL CHECK:** Flag if shoulders rotate before stride foot lands (score CAPPED at 70)
+- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (score CAPPED at 75)
+- **BACK LEG CHECK:** Flag if back hip/leg not facing target at landing (score CAPPED at 75)
 - **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
 - **If misalignment detected:** Explain how shoulder-target alignment maximizes velocity and reduces effort
 - Specific feedback on sequence and alignment
@@ -616,7 +774,7 @@ After the feedback, provide 3–5 actionable drills tailored to the issues found
 SUMMARY FORMAT:
 REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
-Balance issues with strengths. Examples:
+Be honest about issues - accurate feedback helps development. Examples:
 - "Land your stride foot before rotating - this gives you power and accuracy"
 - "Shoulders turn too early - wait for your foot to touch down first"
 - "Great timing - front foot plants, then your body rotates together"
