@@ -1,27 +1,23 @@
 
 
-# Fix Plan: Darken Educational Introduction Text
+# Fix Plan: Make Educational Text Even Darker
 
-## Problem
+## Current State
 
-The introductory text in both educational sections is too light, making it harder to read:
-- **Eating Disorder section**: `text-amber-200/90` (90% opacity amber-200)
-- **Body Image section**: `text-teal-200/90` (90% opacity teal-200)
+Based on the last diff, the introductory text colors are currently:
+- **Eating Disorder section**: `text-amber-300`
+- **Body Image section**: `text-teal-300`
 
 ## Solution
 
-Change both text colors to use full opacity versions of their respective colors, which will appear darker:
+Move to even darker shades in the Tailwind color scale:
 
 | File | Current | New |
 |------|---------|-----|
-| `EatingDisorderEducation.tsx` (line 100) | `text-amber-200/90` | `text-amber-100` |
-| `BodyImageEducation.tsx` (line 105) | `text-teal-200/90` | `text-teal-100` |
+| `EatingDisorderEducation.tsx` | `text-amber-300` | `text-amber-400` |
+| `BodyImageEducation.tsx` | `text-teal-300` | `text-teal-400` |
 
-In Tailwind's color scale:
-- `amber-100` is a lighter shade name but with full opacity it reads as more solid/darker on dark backgrounds
-- Alternatively, I can use `text-amber-300` which is an even more saturated/darker shade
-
-For better contrast, I'll use **`text-amber-300`** and **`text-teal-300`** which are darker, more saturated shades that will stand out better against the card backgrounds.
+The 400 shades are more saturated and will provide better contrast against the dark card backgrounds.
 
 ## Changes Required
 
@@ -29,25 +25,20 @@ For better contrast, I'll use **`text-amber-300`** and **`text-teal-300`** which
 
 **Line 100** - Change:
 ```tsx
-// Before
-<p className="text-sm text-amber-200/90">
-
-// After
-<p className="text-sm text-amber-300">
+<p className="text-sm text-amber-400">
 ```
 
 ### File 2: `src/components/nutrition/BodyImageEducation.tsx`
 
 **Line 105** - Change:
 ```tsx
-// Before
-<p className="text-sm text-teal-200/90">
-
-// After
-<p className="text-sm text-teal-300">
+<p className="text-sm text-teal-400">
 ```
 
-## Expected Result
+## Summary
 
-Both introductory paragraphs will appear with darker, more readable text that maintains the thematic color scheme (amber for eating disorder awareness, teal for body image education).
+| Change | File | Line |
+|--------|------|------|
+| `text-amber-300` → `text-amber-400` | `EatingDisorderEducation.tsx` | 100 |
+| `text-teal-300` → `text-teal-400` | `BodyImageEducation.tsx` | 105 |
 
