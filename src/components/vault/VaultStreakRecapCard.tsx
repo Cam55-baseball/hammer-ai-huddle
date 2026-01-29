@@ -503,7 +503,7 @@ export const VaultStreakRecapCard = forwardRef<HTMLDivElement, VaultStreakRecapC
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-full sm:max-w-2xl max-h-[85vh] overflow-y-auto overflow-x-hidden p-3 sm:p-6">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 flex-wrap">
+            <DialogTitle className="flex items-center gap-2 flex-wrap pr-8">
               <FileText className="h-5 w-5 text-violet-500" />
               {t('vault.recap.detailTitle')}
               <Badge variant="outline" className="text-xs gap-1">
