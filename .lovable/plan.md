@@ -1,182 +1,258 @@
 
 
-# Fix Plan: Enforce Score Caps Programmatically
+# Fix Plan: Force AI Violation Detection Accuracy
 
-## Problem
+## Problem Identified
 
-The AI correctly identifies mechanical violations in the feedback but does NOT reliably enforce score caps. Example:
-- AI feedback says: "back leg is still not fully facing the target at landing"
-- AI returns score: 85
-- Should be capped at: 75 (per the scoring framework)
-
-The scoring rules are in the prompt, but the AI model ignores them. We need a programmatic fail-safe.
-
-## Solution
-
-Add structured violation detection with mandatory score cap enforcement in code.
-
-### Phase 1: Add Violation Flags to Tool Schema
-
-Update the tool calling schema to require the AI to explicitly report critical violations:
-
-```text
+The database shows the most recent analysis returned:
+```
 violations: {
-  type: "object",
-  description: "Report ALL critical violations detected in the mechanics",
-  properties: {
-    early_shoulder_rotation: {
-      type: "boolean",
-      description: "TRUE if shoulders rotate BEFORE front foot lands"
-    },
-    shoulders_not_aligned: {
-      type: "boolean",
-      description: "TRUE if shoulders NOT aligned with target at landing"
-    },
-    back_leg_not_facing_target: {
-      type: "boolean",
-      description: "TRUE if back hip/leg NOT facing target at landing"
-    },
-    hands_pass_elbow_early: {
-      type: "boolean",
-      description: "TRUE if hands pass back elbow before shoulders rotate (hitting only)"
-    },
-    front_shoulder_opens_early: {
-      type: "boolean",
-      description: "TRUE if front shoulder opens/pulls early (hitting only)"
-    }
-  },
-  required: [
-    "early_shoulder_rotation",
-    "shoulders_not_aligned",
-    "back_leg_not_facing_target"
+  back_leg_not_facing_target: false,
+  shoulders_not_aligned: false,
+  early_shoulder_rotation: false,
+  ...all false
+}
+efficiency_score: 85
+score_adjusted: false
+```
+
+**The AI is incorrectly reporting violations as `false`** even when:
+- The video clearly shows back hip/leg NOT facing target at landing
+- The video clearly shows shoulders NOT aligned with target
+- The AI's own feedback text MENTIONS these issues
+
+The programmatic score cap enforcement is working correctly, but it depends on the AI truthfully reporting violations - which it is not doing.
+
+---
+
+## Root Cause
+
+The AI model has a tendency to:
+1. Notice mechanical issues in the detailed feedback
+2. But then mark violation flags as `false` to avoid triggering score caps
+3. This defeats the purpose of programmatic enforcement
+
+---
+
+## Solution: Dual-Layer Violation Detection
+
+### Strategy 1: Feedback Text Scanning (Failsafe)
+
+After parsing the AI response, scan the feedback text for keywords that indicate violations. If found, FORCE the violation flag to `true` regardless of what the AI reported.
+
+```typescript
+// Keyword patterns that indicate violations
+const VIOLATION_KEYWORDS = {
+  back_leg_not_facing_target: [
+    "back leg not facing",
+    "back hip not facing",
+    "back foot not facing",
+    "back leg still rotating",
+    "back hip still rotating",
+    "hips haven't reached",
+    "hips have not reached",
+    "hip not inline",
+    "hip not in line",
+    "back leg isn't facing",
+    "back hip isn't facing"
+  ],
+  shoulders_not_aligned: [
+    "shoulders not aligned",
+    "shoulders not in line",
+    "shoulder alignment",
+    "front shoulder not",
+    "shoulders aren't aligned",
+    "shoulder-target",
+    "misaligned shoulder",
+    "shoulder misalignment"
+  ],
+  early_shoulder_rotation: [
+    "shoulder rotation before",
+    "shoulders rotate before",
+    "early shoulder rotation",
+    "rotating before landing",
+    "shoulders rotating early",
+    "premature shoulder rotation"
   ]
+};
+
+// Scan feedback for violation keywords
+function detectViolationsFromFeedback(feedback: string): Record<string, boolean> {
+  const lowerFeedback = feedback.toLowerCase();
+  const detected: Record<string, boolean> = {};
+  
+  for (const [violation, keywords] of Object.entries(VIOLATION_KEYWORDS)) {
+    detected[violation] = keywords.some(kw => lowerFeedback.includes(kw));
+  }
+  
+  return detected;
+}
+
+// Override AI-reported violations with feedback-detected violations
+const feedbackViolations = detectViolationsFromFeedback(feedback);
+for (const [key, detected] of Object.entries(feedbackViolations)) {
+  if (detected && !violations[key]) {
+    console.log(`[VIOLATION OVERRIDE] Detected "${key}" in feedback but AI reported false - forcing TRUE`);
+    violations[key] = true;
+  }
 }
 ```
 
-### Phase 2: Add Post-Processing Score Enforcement
+### Strategy 2: Enhanced Prompt Instructions
 
-After parsing the AI response, apply mandatory score caps based on violation flags:
+Make the prompt even more explicit about what constitutes each violation, with specific visual cues:
+
+```text
+CRITICAL - VIOLATION DETECTION INSTRUCTIONS:
+
+⚠️ back_leg_not_facing_target = TRUE if ANY of these are visible at front foot landing:
+- Back foot is still rotating/pointing backward
+- Back knee is not facing the target
+- Back hip has not fully rotated toward target
+- If the back foot continues to rotate AFTER front foot lands, this is TRUE
+
+⚠️ shoulders_not_aligned = TRUE if at the moment of front foot landing:
+- Drawing a line from throwing shoulder through front shoulder does NOT point at target
+- Shoulders are rotated open or closed relative to target line
+- Front shoulder is pointing away from direct target line
+
+⚠️ early_shoulder_rotation = TRUE if:
+- Any shoulder rotation begins BEFORE the front foot is fully planted
+- Shoulders start opening while front foot is still in the air or just touching
+
+TIMING IS EVERYTHING:
+The moment of evaluation is EXACTLY when the front foot first contacts the ground.
+At that exact frame, check:
+1. Is back leg (foot/knee/hip) fully rotated toward target? If NO → back_leg_not_facing_target = true
+2. Are shoulders aligned with target? If NO → shoulders_not_aligned = true
+3. Have shoulders already started rotating? If YES → early_shoulder_rotation = true
+
+DO NOT GIVE PARTIAL CREDIT. If it's not perfect at landing, mark it TRUE.
+```
+
+### Strategy 3: Stricter Default Assumption
+
+Change the scoring logic to be more conservative - if the AI gives a score above 70 but reports zero violations, that's suspicious and should trigger additional scrutiny:
 
 ```typescript
-// Parse violations and enforce score caps
-const violations = analysisArgs.violations || {};
-let cappedScore = efficiency_score;
-let violationCount = 0;
+// If AI reports high score (>75) with zero violations, apply skepticism penalty
+if (efficiency_score > 75 && violationCount === 0) {
+  // Check if feedback mentions ANY issues at all
+  const feedbackMentionsIssues = feedbackViolations.back_leg_not_facing_target || 
+                                  feedbackViolations.shoulders_not_aligned ||
+                                  feedbackViolations.early_shoulder_rotation;
+  
+  if (feedbackMentionsIssues) {
+    console.log(`[SKEPTICISM CHECK] High score (${efficiency_score}) with zero violations but feedback mentions issues - capping at 75`);
+    efficiency_score = Math.min(efficiency_score, 75);
+    scoreWasAdjusted = true;
+  }
+}
+```
 
-// Count violations
+---
+
+## Files to Modify
+
+1. **`supabase/functions/analyze-video/index.ts`**
+   - Add `VIOLATION_KEYWORDS` constant with keyword patterns
+   - Add `detectViolationsFromFeedback()` function
+   - Add violation override logic after parsing AI response
+   - Add skepticism check for high scores with zero violations
+   - Update baseball pitching prompt with enhanced violation detection instructions
+
+2. **`supabase/functions/analyze-realtime-playback/index.ts`**
+   - Apply same dual-layer detection pattern
+   - Scale appropriately for 1-10 scoring
+
+---
+
+## Implementation Details
+
+### Keyword Detection Function
+
+```typescript
+const VIOLATION_KEYWORDS: Record<string, string[]> = {
+  back_leg_not_facing_target: [
+    "back leg not facing", "back hip not facing", "back foot not facing",
+    "back leg still rotating", "back hip still rotating", "hips haven't reached",
+    "hips have not reached", "hip not inline", "hip not in line",
+    "back leg isn't facing", "back hip isn't facing", "back leg continues",
+    "back foot continues", "hip rotation incomplete", "hip hasn't reached"
+  ],
+  shoulders_not_aligned: [
+    "shoulders not aligned", "shoulders not in line", "shoulder alignment off",
+    "front shoulder not", "shoulders aren't aligned", "shoulder-target misalignment",
+    "misaligned shoulder", "shoulder misalignment", "shoulders off target",
+    "shoulder line", "shoulder alignment issue"
+  ],
+  early_shoulder_rotation: [
+    "shoulder rotation before", "shoulders rotate before", "early shoulder rotation",
+    "rotating before landing", "shoulders rotating early", "premature shoulder rotation",
+    "shoulders open before", "shoulder rotation begins before"
+  ]
+};
+
+function detectViolationsFromFeedback(feedback: string): Record<string, boolean> {
+  const lowerFeedback = feedback.toLowerCase();
+  const detected: Record<string, boolean> = {};
+  
+  for (const [violation, keywords] of Object.entries(VIOLATION_KEYWORDS)) {
+    detected[violation] = keywords.some(keyword => lowerFeedback.includes(keyword));
+    if (detected[violation]) {
+      console.log(`[FEEDBACK SCAN] Detected "${violation}" via keyword match in feedback`);
+    }
+  }
+  
+  return detected;
+}
+```
+
+### Integration Point (after parsing AI response)
+
+```typescript
+// ============ FEEDBACK-BASED VIOLATION OVERRIDE ============
+const feedbackViolations = detectViolationsFromFeedback(feedback);
+
+for (const [key, detected] of Object.entries(feedbackViolations)) {
+  if (detected && !violations[key]) {
+    console.log(`[VIOLATION OVERRIDE] "${key}" detected in feedback but AI reported false - FORCING TRUE`);
+    violations[key] = true;
+  }
+}
+
+// Recount violations after override
+violationCount = 0;
 if (violations.early_shoulder_rotation) violationCount++;
 if (violations.shoulders_not_aligned) violationCount++;
 if (violations.back_leg_not_facing_target) violationCount++;
 if (violations.hands_pass_elbow_early) violationCount++;
 if (violations.front_shoulder_opens_early) violationCount++;
 
-// Apply score caps - MULTIPLE VIOLATIONS FIRST (most restrictive)
-if (violationCount >= 2) {
-  cappedScore = Math.min(cappedScore, 60);
-  console.log(`Multiple critical violations (${violationCount}) - capping score at 60`);
-}
-// Individual violation caps
-else if (violations.early_shoulder_rotation) {
-  cappedScore = Math.min(cappedScore, 70);
-  console.log("Early shoulder rotation detected - capping score at 70");
-}
-else if (violations.hands_pass_elbow_early) {
-  cappedScore = Math.min(cappedScore, 70);
-  console.log("Hands pass elbow early - capping score at 70");
-}
-else if (violations.shoulders_not_aligned) {
-  cappedScore = Math.min(cappedScore, 75);
-  console.log("Shoulders not aligned - capping score at 75");
-}
-else if (violations.back_leg_not_facing_target) {
-  cappedScore = Math.min(cappedScore, 75);
-  console.log("Back leg not facing target - capping score at 75");
-}
-else if (violations.front_shoulder_opens_early) {
-  cappedScore = Math.min(cappedScore, 75);
-  console.log("Front shoulder opens early - capping score at 75");
-}
-
-// Log if score was adjusted
-if (cappedScore !== efficiency_score) {
-  console.log(`Score adjusted from ${efficiency_score} to ${cappedScore} due to violations`);
-}
-
-efficiency_score = cappedScore;
+console.log(`[VIOLATIONS] After feedback override: ${JSON.stringify(violations)}, count: ${violationCount}`);
+// ============ END FEEDBACK-BASED VIOLATION OVERRIDE ============
 ```
 
-### Phase 3: Add Violation Reporting to AI Analysis
-
-Store the violations in the ai_analysis object for transparency:
-
-```typescript
-const ai_analysis = {
-  summary,
-  feedback,
-  positives,
-  drills,
-  scorecard,
-  violations_detected: violations, // NEW: Track what was flagged
-  score_adjusted: cappedScore !== originalScore, // NEW: Flag if we adjusted
-  original_ai_score: originalScore, // NEW: For debugging/transparency
-  model_used: "google/gemini-2.5-flash",
-  analyzed_at: new Date().toISOString(),
-};
-```
-
-### Phase 4: Update Prompt to Emphasize Violation Reporting
-
-Add explicit instruction to the prompt that violations MUST be reported truthfully:
-
-```text
-CRITICAL - VIOLATION REPORTING:
-You MUST honestly report ALL violations in the 'violations' object.
-- If back leg is not facing target → set back_leg_not_facing_target: true
-- If shoulders not aligned → set shoulders_not_aligned: true
-- The system will enforce score caps based on your violation report
-- DO NOT set violations to false if they are present - this defeats the purpose
-
-Be HONEST in violation detection. Your violation flags directly determine the score cap.
-```
-
-## Files to Modify
-
-1. **`supabase/functions/analyze-video/index.ts`**
-   - Add violations to tool schema (properties and required)
-   - Add post-processing score enforcement logic
-   - Store violations in ai_analysis
-   - Update prompts to emphasize violation reporting
-
-2. **`supabase/functions/analyze-realtime-playback/index.ts`**
-   - Apply same violation detection and enforcement pattern
-   - Scaled to 1-10 scoring range
-
-## Score Cap Rules (Reference)
-
-| Violation | Max Score |
-|-----------|-----------|
-| Early shoulder rotation (before foot lands) | 70 |
-| Hands pass back elbow before shoulders rotate | 70 |
-| Shoulders not aligned with target at landing | 75 |
-| Back hip/leg not facing target at landing | 75 |
-| Front shoulder opens/pulls early | 75 |
-| TWO OR MORE critical violations | 60 |
+---
 
 ## Expected Outcome
 
 With this implementation:
 
-1. **The example video WILL score 55-65**
-   - AI reports: `back_leg_not_facing_target: true` and `shoulders_not_aligned: true`
-   - Code detects 2 violations → caps score at 60
-   - Even if AI returns 85, code enforces the cap
+1. **The example video WILL score 60 or below**
+   - Feedback mentions back leg issues → `back_leg_not_facing_target` forced to `true`
+   - Feedback mentions shoulder alignment → `shoulders_not_aligned` forced to `true`
+   - Two violations → Capped at 60
 
-2. **Transparency maintained**
-   - `violations_detected` shows what was flagged
-   - `original_ai_score` vs `efficiency_score` shows adjustment
-   - Logs track all cap applications
+2. **AI cannot "game" the system**
+   - Even if AI marks violations as `false`, feedback text scanning catches them
+   - Cross-validation between violation flags and feedback text
 
-3. **Fail-safe enforcement**
-   - AI cannot inflate scores past violation caps
-   - Code is the final arbiter, not AI discretion
+3. **Transparency maintained**
+   - Logs show when overrides occur
+   - `violations_detected` in ai_analysis reflects final (corrected) values
+
+4. **Your reference image defines the standard**
+   - The MLB pitcher example with hip/shoulder alignment at landing = 85+ worthy
+   - The uploaded video with incomplete hip rotation at landing = 55-65 range
 
