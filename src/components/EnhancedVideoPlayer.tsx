@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2, ZoomIn, ZoomOut, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera, RotateCcw, Download, FlipHorizontal, Maximize2, Minimize2, X, Trash2, ZoomIn, ZoomOut, Pencil, Target } from "lucide-react";
 import { toast } from "sonner";
 import { FrameAnnotationDialog } from './FrameAnnotationDialog';
 
@@ -14,6 +14,8 @@ interface EnhancedVideoPlayerProps {
   isScoutView?: boolean;
   isOwnerView?: boolean;
   onSaveAnnotation?: (data: { annotationData: string; originalFrameData: string; notes?: string; frameTimestamp?: number }) => void;
+  onMarkLanding?: (time: number) => void;
+  landingTime?: number | null;
 }
 
 interface KeyFrame {
@@ -30,7 +32,9 @@ export const EnhancedVideoPlayer = ({
   playerId,
   isScoutView = false,
   isOwnerView = false,
-  onSaveAnnotation
+  onSaveAnnotation,
+  onMarkLanding,
+  landingTime
 }: EnhancedVideoPlayerProps) => {
   const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -780,6 +784,26 @@ export const EnhancedVideoPlayer = ({
             <Camera className="h-4 w-4" />
             <span className="hidden md:inline ml-1">{t('videoPlayer.capture')}</span>
           </Button>
+          {/* Mark Landing Button - Only shown when onMarkLanding prop is provided */}
+          {onMarkLanding && (
+            <Button
+              variant={landingTime != null ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                const video = videoRef.current;
+                if (video) {
+                  onMarkLanding(video.currentTime);
+                  toast.success(t('videoPlayer.landingMarked', `Landing marked at ${video.currentTime.toFixed(2)}s`));
+                }
+              }}
+              disabled={!videoReady}
+              title={t('videoPlayer.markLanding', 'Mark front foot landing moment')}
+              className={landingTime != null ? 'bg-primary text-primary-foreground' : ''}
+            >
+              <Target className="h-4 w-4" />
+              <span className="hidden md:inline ml-1">{landingTime != null ? t('videoPlayer.landingSet', 'Landing Set') : t('videoPlayer.markLanding', 'Mark Landing')}</span>
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
