@@ -697,9 +697,36 @@ Use the analyze_mechanics tool to return your structured analysis.`
                     type: 'number',
                     description: 'Overall mechanics score from 1-10 based on what you observe. 9-10=elite, 7-8=solid, 5-6=developing, 3-4=needs work, 1-2=major issues'
                   },
+                  violations: {
+                    type: 'object',
+                    description: 'CRITICAL: Report ALL critical violations detected. Be HONEST - these flags directly determine score caps.',
+                    properties: {
+                      early_shoulder_rotation: {
+                        type: 'boolean',
+                        description: 'TRUE if shoulders rotate BEFORE front foot lands/plants'
+                      },
+                      shoulders_not_aligned: {
+                        type: 'boolean',
+                        description: 'TRUE if shoulders NOT aligned with target at moment of landing'
+                      },
+                      back_leg_not_facing_target: {
+                        type: 'boolean',
+                        description: 'TRUE if back hip/leg (foot, knee, hip) NOT facing target at landing'
+                      },
+                      hands_pass_elbow_early: {
+                        type: 'boolean',
+                        description: 'TRUE if hands pass back elbow BEFORE shoulders rotate (hitting only)'
+                      },
+                      front_shoulder_opens_early: {
+                        type: 'boolean',
+                        description: 'TRUE if front shoulder opens/pulls out of sequence too early (hitting only)'
+                      }
+                    },
+                    required: ['early_shoulder_rotation', 'shoulders_not_aligned', 'back_leg_not_facing_target']
+                  },
                   quickSummary: {
                     type: 'string',
-                    description: 'One encouraging sentence summarizing their form. Must reference at least one specific mechanic you observed in the frames.'
+                    description: 'One direct sentence summarizing their form. Must reference at least one specific mechanic you observed in the frames. Be honest about issues.'
                   },
                   mechanicsBreakdown: {
                     type: 'array',
@@ -778,7 +805,7 @@ Use the analyze_mechanics tool to return your structured analysis.`
                     description: '1-3 actionable drills tailored to the issues found'
                   }
                 },
-                required: ['overallScore', 'quickSummary', 'mechanicsBreakdown', 'positives', 'keyStrength', 'priorityFix', 'drills']
+                required: ['overallScore', 'violations', 'quickSummary', 'mechanicsBreakdown', 'positives', 'keyStrength', 'priorityFix', 'drills']
               }
             }
           }
@@ -823,6 +850,77 @@ Use the analyze_mechanics tool to return your structured analysis.`
         if (!analysis.overallScore || !analysis.mechanicsBreakdown || !analysis.quickSummary) {
           throw new Error('Missing required fields in tool response');
         }
+        
+        // ============ PROGRAMMATIC SCORE CAP ENFORCEMENT ============
+        const violations = analysis.violations || {};
+        const originalScore = analysis.overallScore;
+        let cappedScore = analysis.overallScore;
+        let scoreWasAdjusted = false;
+        
+        // Count critical violations
+        let violationCount = 0;
+        if (violations.early_shoulder_rotation) violationCount++;
+        if (violations.shoulders_not_aligned) violationCount++;
+        if (violations.back_leg_not_facing_target) violationCount++;
+        if (violations.hands_pass_elbow_early) violationCount++;
+        if (violations.front_shoulder_opens_early) violationCount++;
+        
+        console.log(`[VIOLATIONS] Detected: ${JSON.stringify(violations)}, count: ${violationCount}`);
+        
+        // Apply score caps (scaled to 1-10) - MULTIPLE VIOLATIONS FIRST
+        if (violationCount >= 2) {
+          cappedScore = Math.min(cappedScore, 6); // 60/100 = 6/10
+          if (cappedScore !== analysis.overallScore) {
+            console.log(`[SCORE CAP] Multiple violations (${violationCount}) - capping from ${analysis.overallScore} to ${cappedScore}`);
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.early_shoulder_rotation) {
+          cappedScore = Math.min(cappedScore, 7); // 70/100 = 7/10
+          if (cappedScore !== analysis.overallScore) {
+            console.log(`[SCORE CAP] Early shoulder rotation - capping from ${analysis.overallScore} to ${cappedScore}`);
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.hands_pass_elbow_early) {
+          cappedScore = Math.min(cappedScore, 7);
+          if (cappedScore !== analysis.overallScore) {
+            console.log(`[SCORE CAP] Hands pass elbow early - capping from ${analysis.overallScore} to ${cappedScore}`);
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.shoulders_not_aligned) {
+          cappedScore = Math.min(cappedScore, 7.5); // 75/100 = 7.5/10
+          if (cappedScore !== analysis.overallScore) {
+            console.log(`[SCORE CAP] Shoulders not aligned - capping from ${analysis.overallScore} to ${cappedScore}`);
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.back_leg_not_facing_target) {
+          cappedScore = Math.min(cappedScore, 7.5);
+          if (cappedScore !== analysis.overallScore) {
+            console.log(`[SCORE CAP] Back leg not facing target - capping from ${analysis.overallScore} to ${cappedScore}`);
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.front_shoulder_opens_early) {
+          cappedScore = Math.min(cappedScore, 7.5);
+          if (cappedScore !== analysis.overallScore) {
+            console.log(`[SCORE CAP] Front shoulder opens early - capping from ${analysis.overallScore} to ${cappedScore}`);
+            scoreWasAdjusted = true;
+          }
+        }
+        
+        // Apply the capped score
+        analysis.overallScore = cappedScore;
+        analysis.violations_detected = violations;
+        analysis.score_adjusted = scoreWasAdjusted;
+        analysis.original_ai_score = originalScore;
+        
+        if (scoreWasAdjusted) {
+          console.log(`[SCORE CAP] Final: ${originalScore} → ${cappedScore}`);
+        }
+        // ============ END SCORE CAP ENFORCEMENT ============
         
         // Ensure arrays exist even if empty
         analysis.redFlags = analysis.redFlags || [];
