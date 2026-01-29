@@ -7,6 +7,52 @@ const corsHeaders = {
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
+// ============ VIOLATION KEYWORD DETECTION (FAILSAFE) ============
+// These keywords in feedback text indicate violations - used to override AI's violation flags
+const VIOLATION_KEYWORDS: Record<string, string[]> = {
+  back_leg_not_facing_target: [
+    "back leg not facing", "back hip not facing", "back foot not facing",
+    "back leg still rotating", "back hip still rotating", "hips haven't reached",
+    "hips have not reached", "hip not inline", "hip not in line",
+    "back leg isn't facing", "back hip isn't facing", "back leg continues",
+    "back foot continues", "hip rotation incomplete", "hip hasn't reached",
+    "back leg not fully facing", "back hip not fully", "continues to rotate",
+    "still rotating after", "not inline with", "not in line with target",
+    "hip not facing", "back knee not facing", "hip rotation not complete"
+  ],
+  shoulders_not_aligned: [
+    "shoulders not aligned", "shoulders not in line", "shoulder alignment off",
+    "front shoulder not", "shoulders aren't aligned", "shoulder-target misalignment",
+    "misaligned shoulder", "shoulder misalignment", "shoulders off target",
+    "shoulder line", "shoulder alignment issue", "shoulders not directly",
+    "shoulder not pointing", "shoulders open", "shoulders closed",
+    "not aligned with target", "alignment with target"
+  ],
+  early_shoulder_rotation: [
+    "shoulder rotation before", "shoulders rotate before", "early shoulder rotation",
+    "rotating before landing", "shoulders rotating early", "premature shoulder rotation",
+    "shoulders open before", "shoulder rotation begins before", "shoulders already",
+    "shoulder already rotating", "rotating too early", "before foot lands",
+    "before front foot", "rotation starts early"
+  ]
+};
+
+// Scan feedback/summary text for violation keywords and return detected violations
+function detectViolationsFromFeedback(text: string): Record<string, boolean> {
+  const lowerText = text.toLowerCase();
+  const detected: Record<string, boolean> = {};
+  
+  for (const [violation, keywords] of Object.entries(VIOLATION_KEYWORDS)) {
+    detected[violation] = keywords.some(keyword => lowerText.includes(keyword));
+    if (detected[violation]) {
+      console.log(`[FEEDBACK SCAN] Detected "${violation}" via keyword match`);
+    }
+  }
+  
+  return detected;
+}
+// ============ END VIOLATION KEYWORD DETECTION ============
+
 // Module-specific system prompts (aligned with analyze-video standards)
 const getSystemPrompt = (module: string, sport: string, languageName: string) => {
   const baseInstructions = `You are an elite ${sport} ${module} coach with 20+ years of experience coaching at all levels from youth to professional.
@@ -851,13 +897,34 @@ Use the analyze_mechanics tool to return your structured analysis.`
           throw new Error('Missing required fields in tool response');
         }
         
-        // ============ PROGRAMMATIC SCORE CAP ENFORCEMENT ============
+        // ============ FEEDBACK-BASED VIOLATION OVERRIDE (FAILSAFE) ============
+        // Combine all text fields for keyword scanning
+        const allTextForScanning = [
+          analysis.quickSummary || '',
+          analysis.priorityFix || '',
+          analysis.keyStrength || '',
+          ...(analysis.mechanicsBreakdown?.map((m: any) => `${m.observation || ''} ${m.tip || ''}`) || []),
+          ...(analysis.redFlags || [])
+        ].join(' ');
+        
+        const feedbackViolations = detectViolationsFromFeedback(allTextForScanning);
         const violations = analysis.violations || {};
+        
+        for (const [key, detected] of Object.entries(feedbackViolations)) {
+          if (detected && !violations[key]) {
+            console.log(`[VIOLATION OVERRIDE] "${key}" detected in text but AI reported false - FORCING TRUE`);
+            violations[key] = true;
+          }
+        }
+        analysis.violations = violations;
+        // ============ END FEEDBACK-BASED VIOLATION OVERRIDE ============
+        
+        // ============ PROGRAMMATIC SCORE CAP ENFORCEMENT ============
         const originalScore = analysis.overallScore;
         let cappedScore = analysis.overallScore;
         let scoreWasAdjusted = false;
         
-        // Count critical violations
+        // Count critical violations (after feedback override)
         let violationCount = 0;
         if (violations.early_shoulder_rotation) violationCount++;
         if (violations.shoulders_not_aligned) violationCount++;
@@ -865,7 +932,7 @@ Use the analyze_mechanics tool to return your structured analysis.`
         if (violations.hands_pass_elbow_early) violationCount++;
         if (violations.front_shoulder_opens_early) violationCount++;
         
-        console.log(`[VIOLATIONS] Detected: ${JSON.stringify(violations)}, count: ${violationCount}`);
+        console.log(`[VIOLATIONS] After feedback override: ${JSON.stringify(violations)}, count: ${violationCount}`);
         
         // Apply score caps (scaled to 1-10) - MULTIPLE VIOLATIONS FIRST
         if (violationCount >= 2) {
@@ -910,6 +977,21 @@ Use the analyze_mechanics tool to return your structured analysis.`
             scoreWasAdjusted = true;
           }
         }
+        
+        // ============ HIGH SCORE SKEPTICISM CHECK ============
+        // If AI gives high score (>7.5) with zero violations, but text mentions issues - be suspicious
+        if (cappedScore > 7.5 && violationCount === 0) {
+          const feedbackMentionsIssues = feedbackViolations.back_leg_not_facing_target || 
+                                          feedbackViolations.shoulders_not_aligned ||
+                                          feedbackViolations.early_shoulder_rotation;
+          
+          if (feedbackMentionsIssues) {
+            console.log(`[SKEPTICISM CHECK] High score (${cappedScore}) with zero violations but text mentions issues - capping at 7.5`);
+            cappedScore = Math.min(cappedScore, 7.5);
+            scoreWasAdjusted = true;
+          }
+        }
+        // ============ END SKEPTICISM CHECK ============
         
         // Apply the capped score
         analysis.overallScore = cappedScore;

@@ -13,6 +13,52 @@ const requestSchema = z.object({
   language: z.string().optional(),
 });
 
+// ============ VIOLATION KEYWORD DETECTION (FAILSAFE) ============
+// These keywords in feedback text indicate violations - used to override AI's violation flags
+const VIOLATION_KEYWORDS: Record<string, string[]> = {
+  back_leg_not_facing_target: [
+    "back leg not facing", "back hip not facing", "back foot not facing",
+    "back leg still rotating", "back hip still rotating", "hips haven't reached",
+    "hips have not reached", "hip not inline", "hip not in line",
+    "back leg isn't facing", "back hip isn't facing", "back leg continues",
+    "back foot continues", "hip rotation incomplete", "hip hasn't reached",
+    "back leg not fully facing", "back hip not fully", "continues to rotate",
+    "still rotating after", "not inline with", "not in line with target",
+    "hip not facing", "back knee not facing", "hip rotation not complete"
+  ],
+  shoulders_not_aligned: [
+    "shoulders not aligned", "shoulders not in line", "shoulder alignment off",
+    "front shoulder not", "shoulders aren't aligned", "shoulder-target misalignment",
+    "misaligned shoulder", "shoulder misalignment", "shoulders off target",
+    "shoulder line", "shoulder alignment issue", "shoulders not directly",
+    "shoulder not pointing", "shoulders open", "shoulders closed",
+    "not aligned with target", "alignment with target"
+  ],
+  early_shoulder_rotation: [
+    "shoulder rotation before", "shoulders rotate before", "early shoulder rotation",
+    "rotating before landing", "shoulders rotating early", "premature shoulder rotation",
+    "shoulders open before", "shoulder rotation begins before", "shoulders already",
+    "shoulder already rotating", "rotating too early", "before foot lands",
+    "before front foot", "rotation starts early"
+  ]
+};
+
+// Scan feedback text for violation keywords and return detected violations
+function detectViolationsFromFeedback(feedback: string): Record<string, boolean> {
+  const lowerFeedback = feedback.toLowerCase();
+  const detected: Record<string, boolean> = {};
+  
+  for (const [violation, keywords] of Object.entries(VIOLATION_KEYWORDS)) {
+    detected[violation] = keywords.some(keyword => lowerFeedback.includes(keyword));
+    if (detected[violation]) {
+      console.log(`[FEEDBACK SCAN] Detected "${violation}" via keyword match in feedback`);
+    }
+  }
+  
+  return detected;
+}
+// ============ END VIOLATION KEYWORD DETECTION ============
+
 // Language name mapping for AI instruction
 const getLanguageName = (code: string): string => {
   const languages: Record<string, string> = {
@@ -1152,8 +1198,20 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         drills = analysisArgs.drills || [];
         violations = analysisArgs.violations || {};
         
+        // ============ FEEDBACK-BASED VIOLATION OVERRIDE (FAILSAFE) ============
+        // Scan feedback text for violation keywords - override AI flags if needed
+        const feedbackViolations = detectViolationsFromFeedback(feedback);
+        
+        for (const [key, detected] of Object.entries(feedbackViolations)) {
+          if (detected && !violations[key]) {
+            console.log(`[VIOLATION OVERRIDE] "${key}" detected in feedback text but AI reported false - FORCING TRUE`);
+            violations[key] = true;
+          }
+        }
+        // ============ END FEEDBACK-BASED VIOLATION OVERRIDE ============
+        
         // ============ PROGRAMMATIC SCORE CAP ENFORCEMENT ============
-        // Count critical violations
+        // Count critical violations (after feedback override)
         let violationCount = 0;
         if (violations.early_shoulder_rotation) violationCount++;
         if (violations.shoulders_not_aligned) violationCount++;
@@ -1161,7 +1219,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         if (violations.hands_pass_elbow_early) violationCount++;
         if (violations.front_shoulder_opens_early) violationCount++;
         
-        console.log(`[VIOLATIONS] Detected violations: ${JSON.stringify(violations)}, count: ${violationCount}`);
+        console.log(`[VIOLATIONS] After feedback override: ${JSON.stringify(violations)}, count: ${violationCount}`);
         
         // Apply score caps - MULTIPLE VIOLATIONS FIRST (most restrictive)
         if (violationCount >= 2) {
@@ -1213,6 +1271,21 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
             scoreWasAdjusted = true;
           }
         }
+        
+        // ============ HIGH SCORE SKEPTICISM CHECK ============
+        // If AI gives high score (>75) with zero violations, but feedback mentions issues - be suspicious
+        if (efficiency_score > 75 && violationCount === 0) {
+          const feedbackMentionsIssues = feedbackViolations.back_leg_not_facing_target || 
+                                          feedbackViolations.shoulders_not_aligned ||
+                                          feedbackViolations.early_shoulder_rotation;
+          
+          if (feedbackMentionsIssues) {
+            console.log(`[SKEPTICISM CHECK] High score (${efficiency_score}) with zero violations but feedback mentions issues - capping at 75`);
+            efficiency_score = Math.min(efficiency_score, 75);
+            scoreWasAdjusted = true;
+          }
+        }
+        // ============ END SKEPTICISM CHECK ============
         
         if (scoreWasAdjusted) {
           console.log(`[SCORE CAP] Final score adjustment: ${originalAiScore} → ${efficiency_score}`);
