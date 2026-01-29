@@ -1,165 +1,182 @@
 
-# Tightening Video Analysis Grading Standards
 
-## Problem Statement
+# Fix Plan: Enforce Score Caps Programmatically
 
-The video analysis system is producing inflated efficiency scores for mechanics that have clear fundamental flaws. The example shows:
-- **Actual Score Given**: 85/100
-- **Issues Present**: Back hip/leg not facing target at landing, front shoulder not aligned with target, arm swinging out and dragging
-- **Expected Score**: Should be in the 55-65 range given these fundamental sequence violations
+## Problem
 
-This is damaging customer trust across ALL analysis categories (hitting, pitching, throwing for both baseball and softball).
+The AI correctly identifies mechanical violations in the feedback but does NOT reliably enforce score caps. Example:
+- AI feedback says: "back leg is still not fully facing the target at landing"
+- AI returns score: 85
+- Should be capped at: 75 (per the scoring framework)
 
-## Root Cause Analysis
+The scoring rules are in the prompt, but the AI model ignores them. We need a programmatic fail-safe.
 
-The AI prompts contain the correct mechanical criteria and deduction rules, BUT:
-1. **No explicit grading rubric** - The AI decides scores arbitrarily
-2. **No baseline score anchor** - AI defaults to high scores and deducts, instead of building from a neutral baseline
-3. **Positivity bias in instructions** - "Balance issues with strengths" and "encouraging" language may bias toward leniency
-4. **Vague deduction instructions** - "up to 25 points" gives AI too much discretion
-5. **Missing "mediocre baseline" anchor** - AI has no reference for what a 50-60 score looks like
+## Solution
 
-## Solution: Professional-Grade Scoring Rubric
+Add structured violation detection with mandatory score cap enforcement in code.
 
-### Phase 1: Add Explicit Scoring Framework
+### Phase 1: Add Violation Flags to Tool Schema
 
-Add a strict scoring rubric to ALL module prompts that establishes:
-
-**Starting Point Philosophy:**
-- Start from 50 (mediocre) and ADD points for correct mechanics
-- Not: Start from 100 and deduct (current behavior)
-
-**Scoring Bands:**
-- 90-100: Elite mechanics, ALL fundamentals correct, minor polish needed
-- 80-89: Advanced mechanics, ONE minor flaw, fundamentals sound
-- 70-79: Good mechanics, 1-2 moderate issues OR 1 significant flaw
-- 60-69: Developing mechanics, multiple moderate issues OR 1-2 major flaws
-- 50-59: Foundational mechanics, several significant flaws requiring attention
-- Below 50: Major fundamental breakdowns requiring complete rebuild
-
-### Phase 2: Enforce Non-Negotiable Deductions
-
-**Critical Violations (AUTOMATIC score caps):**
-
-For Pitching/Throwing:
-- Early shoulder rotation (before foot plants) → **Cannot score above 70**
-- Shoulders not aligned with target at landing → **Cannot score above 75**
-- Back hip/leg not facing target at landing → **Cannot score above 75**
-- Multiple critical violations → **Cannot score above 60**
-
-For Hitting:
-- Early shoulder rotation (before foot plants) → **Cannot score above 70**
-- Hands pass back elbow before shoulders rotate → **Cannot score above 70**
-- Front shoulder opens early → **Cannot score above 75**
-- Multiple critical violations → **Cannot score above 60**
-
-### Phase 3: Remove Positivity Bias
-
-Update prompt language:
-- Remove: "Balance issues with strengths"
-- Add: "Be honest and direct about mechanical flaws - sugar-coating hurts development"
-- Remove: General encouragement language
-- Add: "A score of 85+ requires near-perfect fundamental execution"
-
-### Phase 4: Add Calibration Examples
-
-Include explicit examples in the prompt:
-
-**Example: What 85/100 looks like:**
-- Front foot planted before ANY rotation ✓
-- Shoulders perfectly aligned with target at landing ✓
-- Back leg facing target at landing ✓
-- Clean arm path with angle <90° ✓
-- Minor timing refinement needed
-
-**Example: What 60/100 looks like:**
-- Front foot planted BUT shoulders already rotating ✗
-- Shoulder alignment is off by 15+ degrees ✗
-- Good arm path ✓
-- Back leg facing target ✓
-
-**Example: What the uploaded video should score (~60):**
-- Front foot landing position acceptable ✓
-- Back hip/leg NOT facing target ✗ (major issue)
-- Shoulders NOT aligned with target ✗ (major issue)
-- Arm dragging/swinging out ✗ (consequence of above)
-- Result: 55-65 range due to TWO critical alignment failures
-
-## Technical Implementation
-
-### Files to Modify
-
-1. **`supabase/functions/analyze-video/index.ts`**
-   - Update `getSystemPrompt()` for all modules (hitting, pitching baseball, pitching softball, throwing)
-   - Add scoring rubric section
-   - Add score cap rules
-   - Add calibration examples
-   - Remove positivity bias language
-
-2. **`supabase/functions/analyze-realtime-playback/index.ts`**
-   - Apply same scoring framework changes
-   - Ensure consistency between video upload and realtime analysis
-
-### Prompt Changes (Baseball Pitching Example)
-
-Add after RED FLAGS section:
+Update the tool calling schema to require the AI to explicitly report critical violations:
 
 ```text
-SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
-
-Base your efficiency score on THIS rubric:
-
-STARTING POINT: Begin at 50 (mediocre baseline)
-- ADD points for correct mechanics
-- Scores above 80 require NEAR-PERFECT fundamentals
-
-SCORE CAPS (NON-NEGOTIABLE):
-- If shoulders rotate BEFORE front foot lands → MAX SCORE: 70
-- If shoulders NOT aligned with target at landing → MAX SCORE: 75
-- If back hip/leg NOT facing target at landing → MAX SCORE: 75
-- If TWO OR MORE critical violations → MAX SCORE: 60
-
-SCORING BANDS:
-- 90-100: Elite. ALL fundamentals correct. Minor refinements only.
-- 80-89: Advanced. One minor flaw. All critical checkpoints pass.
-- 70-79: Good. 1-2 moderate issues. Core sequence mostly correct.
-- 60-69: Developing. Multiple issues OR 1-2 major sequence violations.
-- 50-59: Foundational. Several significant mechanical flaws.
-- Below 50: Major fundamental breakdowns.
-
-CALIBRATION - What 85+ REQUIRES:
-✓ Front foot FULLY planted before ANY shoulder rotation
-✓ Shoulders PERFECTLY aligned with target at landing
-✓ Back leg (foot, knee, hip) ALL facing target
-✓ Glove open and facing target
-✓ Arm angle under 90° at flip-up
-✓ Clean sequencing through release
-
-CALIBRATION - What 60 looks like:
-✗ Front foot lands but shoulders already rotating
-✗ Shoulder alignment off by 15+ degrees
-✓ Some correct elements (arm path, follow-through)
-
-BE DIRECT: Do not inflate scores to be encouraging. 
-Accurate assessment is what helps players develop. 
-A score of 65 with honest feedback is more valuable than 85 with false praise.
+violations: {
+  type: "object",
+  description: "Report ALL critical violations detected in the mechanics",
+  properties: {
+    early_shoulder_rotation: {
+      type: "boolean",
+      description: "TRUE if shoulders rotate BEFORE front foot lands"
+    },
+    shoulders_not_aligned: {
+      type: "boolean",
+      description: "TRUE if shoulders NOT aligned with target at landing"
+    },
+    back_leg_not_facing_target: {
+      type: "boolean",
+      description: "TRUE if back hip/leg NOT facing target at landing"
+    },
+    hands_pass_elbow_early: {
+      type: "boolean",
+      description: "TRUE if hands pass back elbow before shoulders rotate (hitting only)"
+    },
+    front_shoulder_opens_early: {
+      type: "boolean",
+      description: "TRUE if front shoulder opens/pulls early (hitting only)"
+    }
+  },
+  required: [
+    "early_shoulder_rotation",
+    "shoulders_not_aligned",
+    "back_leg_not_facing_target"
+  ]
+}
 ```
 
-### Similar Changes for All Modules
+### Phase 2: Add Post-Processing Score Enforcement
 
-Apply equivalent scoring frameworks to:
-- Baseball hitting
-- Softball hitting
-- Softball pitching
-- Baseball/softball throwing
+After parsing the AI response, apply mandatory score caps based on violation flags:
 
-Each with module-specific critical checkpoints and score caps.
+```typescript
+// Parse violations and enforce score caps
+const violations = analysisArgs.violations || {};
+let cappedScore = efficiency_score;
+let violationCount = 0;
+
+// Count violations
+if (violations.early_shoulder_rotation) violationCount++;
+if (violations.shoulders_not_aligned) violationCount++;
+if (violations.back_leg_not_facing_target) violationCount++;
+if (violations.hands_pass_elbow_early) violationCount++;
+if (violations.front_shoulder_opens_early) violationCount++;
+
+// Apply score caps - MULTIPLE VIOLATIONS FIRST (most restrictive)
+if (violationCount >= 2) {
+  cappedScore = Math.min(cappedScore, 60);
+  console.log(`Multiple critical violations (${violationCount}) - capping score at 60`);
+}
+// Individual violation caps
+else if (violations.early_shoulder_rotation) {
+  cappedScore = Math.min(cappedScore, 70);
+  console.log("Early shoulder rotation detected - capping score at 70");
+}
+else if (violations.hands_pass_elbow_early) {
+  cappedScore = Math.min(cappedScore, 70);
+  console.log("Hands pass elbow early - capping score at 70");
+}
+else if (violations.shoulders_not_aligned) {
+  cappedScore = Math.min(cappedScore, 75);
+  console.log("Shoulders not aligned - capping score at 75");
+}
+else if (violations.back_leg_not_facing_target) {
+  cappedScore = Math.min(cappedScore, 75);
+  console.log("Back leg not facing target - capping score at 75");
+}
+else if (violations.front_shoulder_opens_early) {
+  cappedScore = Math.min(cappedScore, 75);
+  console.log("Front shoulder opens early - capping score at 75");
+}
+
+// Log if score was adjusted
+if (cappedScore !== efficiency_score) {
+  console.log(`Score adjusted from ${efficiency_score} to ${cappedScore} due to violations`);
+}
+
+efficiency_score = cappedScore;
+```
+
+### Phase 3: Add Violation Reporting to AI Analysis
+
+Store the violations in the ai_analysis object for transparency:
+
+```typescript
+const ai_analysis = {
+  summary,
+  feedback,
+  positives,
+  drills,
+  scorecard,
+  violations_detected: violations, // NEW: Track what was flagged
+  score_adjusted: cappedScore !== originalScore, // NEW: Flag if we adjusted
+  original_ai_score: originalScore, // NEW: For debugging/transparency
+  model_used: "google/gemini-2.5-flash",
+  analyzed_at: new Date().toISOString(),
+};
+```
+
+### Phase 4: Update Prompt to Emphasize Violation Reporting
+
+Add explicit instruction to the prompt that violations MUST be reported truthfully:
+
+```text
+CRITICAL - VIOLATION REPORTING:
+You MUST honestly report ALL violations in the 'violations' object.
+- If back leg is not facing target → set back_leg_not_facing_target: true
+- If shoulders not aligned → set shoulders_not_aligned: true
+- The system will enforce score caps based on your violation report
+- DO NOT set violations to false if they are present - this defeats the purpose
+
+Be HONEST in violation detection. Your violation flags directly determine the score cap.
+```
+
+## Files to Modify
+
+1. **`supabase/functions/analyze-video/index.ts`**
+   - Add violations to tool schema (properties and required)
+   - Add post-processing score enforcement logic
+   - Store violations in ai_analysis
+   - Update prompts to emphasize violation reporting
+
+2. **`supabase/functions/analyze-realtime-playback/index.ts`**
+   - Apply same violation detection and enforcement pattern
+   - Scaled to 1-10 scoring range
+
+## Score Cap Rules (Reference)
+
+| Violation | Max Score |
+|-----------|-----------|
+| Early shoulder rotation (before foot lands) | 70 |
+| Hands pass back elbow before shoulders rotate | 70 |
+| Shoulders not aligned with target at landing | 75 |
+| Back hip/leg not facing target at landing | 75 |
+| Front shoulder opens/pulls early | 75 |
+| TWO OR MORE critical violations | 60 |
 
 ## Expected Outcome
 
-After implementation:
-1. **The example video would score 55-65** instead of 85 (back leg not facing target + shoulders misaligned = two critical violations = max 60)
-2. **Customers receive honest, actionable feedback** that helps them improve
-3. **Score inflation eliminated** - 85+ reserved for genuinely elite mechanics
-4. **Consistency across all modules** - same rigor applied to hitting, pitching, and throwing
-5. **Professional reputation restored** - analysis matches what any qualified coach would assess
+With this implementation:
+
+1. **The example video WILL score 55-65**
+   - AI reports: `back_leg_not_facing_target: true` and `shoulders_not_aligned: true`
+   - Code detects 2 violations → caps score at 60
+   - Even if AI returns 85, code enforces the cap
+
+2. **Transparency maintained**
+   - `violations_detected` shows what was flagged
+   - `original_ai_score` vs `efficiency_score` shows adjustment
+   - Logs track all cap applications
+
+3. **Fail-safe enforcement**
+   - AI cannot inflate scores past violation caps
+   - Code is the final arbiter, not AI discretion
+
