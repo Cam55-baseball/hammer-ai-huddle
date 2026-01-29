@@ -942,7 +942,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
             type: "function",
             function: {
               name: "return_analysis",
-              description: "Return structured analysis with score, feedback, drills, and progress scorecard",
+              description: "Provide structured video analysis with efficiency score and recommendations",
               parameters: {
                 type: "object",
                 properties: {
@@ -950,9 +950,36 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                     type: "number",
                     description: "Score from 0-100 based on form correctness"
                   },
+                  violations: {
+                    type: "object",
+                    description: "CRITICAL: Report ALL critical violations detected in the mechanics. Be HONEST - these flags directly determine score caps.",
+                    properties: {
+                      early_shoulder_rotation: {
+                        type: "boolean",
+                        description: "TRUE if shoulders rotate BEFORE front foot lands/plants"
+                      },
+                      shoulders_not_aligned: {
+                        type: "boolean",
+                        description: "TRUE if shoulders NOT aligned with target at moment of landing"
+                      },
+                      back_leg_not_facing_target: {
+                        type: "boolean",
+                        description: "TRUE if back hip/leg (foot, knee, hip) NOT facing target at landing"
+                      },
+                      hands_pass_elbow_early: {
+                        type: "boolean",
+                        description: "TRUE if hands pass back elbow BEFORE shoulders rotate (hitting only)"
+                      },
+                      front_shoulder_opens_early: {
+                        type: "boolean",
+                        description: "TRUE if front shoulder opens/pulls out of sequence too early (hitting only)"
+                      }
+                    },
+                    required: ["early_shoulder_rotation", "shoulders_not_aligned", "back_leg_not_facing_target"]
+                  },
                   summary: {
                     type: "array",
-                    description: "REQUIRED: Exactly 3-5 bullet points in plain, beginner-friendly language (no jargon, max 15 words per bullet). Focus on actionable insights a player or parent would understand. Balance issues with strengths.",
+                    description: "REQUIRED: Exactly 3-5 bullet points in plain, beginner-friendly language (no jargon, max 15 words per bullet). Focus on actionable insights a player or parent would understand. Be direct about issues.",
                     items: { type: "string" }
                   },
                   feedback: {
@@ -1042,7 +1069,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                     required: ["improvements", "regressions", "neutral", "overall_trend", "is_first_analysis"]
                   }
                 },
-                required: ["efficiency_score", "summary", "feedback", "positives", "drills", "scorecard"]
+                required: ["efficiency_score", "violations", "summary", "feedback", "positives", "drills", "scorecard"]
               }
             }
           }
@@ -1110,14 +1137,87 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
 
     // Parse tool calls for structured output
     const toolCalls = data.choices?.[0]?.message?.tool_calls;
+    let violations: any = {};
+    let originalAiScore = 75;
+    let scoreWasAdjusted = false;
+    
     if (toolCalls && toolCalls.length > 0) {
       try {
         const analysisArgs = JSON.parse(toolCalls[0].function.arguments);
         efficiency_score = Math.round(analysisArgs.efficiency_score || 75);
+        originalAiScore = efficiency_score;
         summary = analysisArgs.summary || [];
         feedback = analysisArgs.feedback || "No feedback available";
         positives = analysisArgs.positives || [];
         drills = analysisArgs.drills || [];
+        violations = analysisArgs.violations || {};
+        
+        // ============ PROGRAMMATIC SCORE CAP ENFORCEMENT ============
+        // Count critical violations
+        let violationCount = 0;
+        if (violations.early_shoulder_rotation) violationCount++;
+        if (violations.shoulders_not_aligned) violationCount++;
+        if (violations.back_leg_not_facing_target) violationCount++;
+        if (violations.hands_pass_elbow_early) violationCount++;
+        if (violations.front_shoulder_opens_early) violationCount++;
+        
+        console.log(`[VIOLATIONS] Detected violations: ${JSON.stringify(violations)}, count: ${violationCount}`);
+        
+        // Apply score caps - MULTIPLE VIOLATIONS FIRST (most restrictive)
+        if (violationCount >= 2) {
+          const cappedScore = Math.min(efficiency_score, 60);
+          if (cappedScore !== efficiency_score) {
+            console.log(`[SCORE CAP] Multiple critical violations (${violationCount}) - capping score from ${efficiency_score} to ${cappedScore}`);
+            efficiency_score = cappedScore;
+            scoreWasAdjusted = true;
+          }
+        }
+        // Individual violation caps (only if not already capped by multiple violations)
+        else if (violations.early_shoulder_rotation) {
+          const cappedScore = Math.min(efficiency_score, 70);
+          if (cappedScore !== efficiency_score) {
+            console.log(`[SCORE CAP] Early shoulder rotation - capping score from ${efficiency_score} to ${cappedScore}`);
+            efficiency_score = cappedScore;
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.hands_pass_elbow_early) {
+          const cappedScore = Math.min(efficiency_score, 70);
+          if (cappedScore !== efficiency_score) {
+            console.log(`[SCORE CAP] Hands pass elbow early - capping score from ${efficiency_score} to ${cappedScore}`);
+            efficiency_score = cappedScore;
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.shoulders_not_aligned) {
+          const cappedScore = Math.min(efficiency_score, 75);
+          if (cappedScore !== efficiency_score) {
+            console.log(`[SCORE CAP] Shoulders not aligned - capping score from ${efficiency_score} to ${cappedScore}`);
+            efficiency_score = cappedScore;
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.back_leg_not_facing_target) {
+          const cappedScore = Math.min(efficiency_score, 75);
+          if (cappedScore !== efficiency_score) {
+            console.log(`[SCORE CAP] Back leg not facing target - capping score from ${efficiency_score} to ${cappedScore}`);
+            efficiency_score = cappedScore;
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.front_shoulder_opens_early) {
+          const cappedScore = Math.min(efficiency_score, 75);
+          if (cappedScore !== efficiency_score) {
+            console.log(`[SCORE CAP] Front shoulder opens early - capping score from ${efficiency_score} to ${cappedScore}`);
+            efficiency_score = cappedScore;
+            scoreWasAdjusted = true;
+          }
+        }
+        
+        if (scoreWasAdjusted) {
+          console.log(`[SCORE CAP] Final score adjustment: ${originalAiScore} → ${efficiency_score}`);
+        }
+        // ============ END SCORE CAP ENFORCEMENT ============
         
         // Parse scorecard
         if (analysisArgs.scorecard) {
@@ -1180,6 +1280,9 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
       positives,
       drills,
       scorecard,
+      violations_detected: violations,
+      score_adjusted: scoreWasAdjusted,
+      original_ai_score: originalAiScore,
       model_used: "google/gemini-2.5-flash",
       analyzed_at: new Date().toISOString(),
     };
