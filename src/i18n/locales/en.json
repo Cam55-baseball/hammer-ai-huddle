@@ -1558,6 +1558,165 @@
       "current": "Current",
       "starting": "Starting",
       "startTracking": "Start tracking your weight to see progress"
+    },
+    "education": {
+      "sectionTitle": "Athlete Wellness Education",
+      "sectionSubtitle": "Important information for your health and well-being",
+      "healthy": "Healthy",
+      "concerning": "Concerning",
+      "eatingDisorder": {
+        "title": "Understanding Eating & Your Body",
+        "subtitle": "Educational information about healthy eating habits for athletes",
+        "intro": "Understanding the relationship between food and our bodies is an important part of being an athlete. This section provides educational information to help you recognize when eating habits might become unhealthy.",
+        "overview": {
+          "title": "What Are Eating Disorders?",
+          "content": "Eating disorders are serious conditions that affect how people think about food and their bodies. They can happen to anyone, including athletes. Understanding them can help you or someone you care about get help early."
+        },
+        "warningSigns": {
+          "title": "Recognizing Warning Signs",
+          "content": "These behaviors may indicate an unhealthy relationship with food. Remember, noticing these in yourself or others is the first step toward getting support."
+        },
+        "athleteRisks": {
+          "title": "Special Risks for Athletes",
+          "content": "Athletes face unique pressures that can lead to unhealthy eating patterns. Understanding these risks helps you make better choices for your long-term health and performance."
+        },
+        "properFueling": {
+          "title": "Why Proper Fueling Matters",
+          "content": "Your body needs fuel to perform, grow, and recover. Proper nutrition isn't about restriction—it's about giving your body what it needs to be its best."
+        },
+        "signs": {
+          "mindfulEating": "Eating when hungry, stopping when satisfied",
+          "obsessiveTracking": "Obsessive calorie counting or food tracking",
+          "regularMeals": "Eating regular meals with your team or family",
+          "skippingMeals": "Skipping meals or making excuses to avoid eating",
+          "balancedTraining": "Training as planned, resting when needed",
+          "excessiveExercise": "Exercising beyond training requirements to 'burn off' food",
+          "performanceFocus": "Focusing on how your body performs",
+          "bodyPreoccupation": "Constant worry about body weight or shape",
+          "socialEating": "Enjoying meals with teammates and family",
+          "avoidingMeals": "Avoiding eating with others or hiding food",
+          "openCommunication": "Talking openly about nutrition with coaches",
+          "hidingFood": "Hiding food or eating in secret",
+          "stableEnergy": "Having steady energy throughout the day",
+          "moodChanges": "Mood swings related to eating or not eating"
+        },
+        "risks": {
+          "reds": {
+            "title": "Relative Energy Deficiency (RED-S)",
+            "description": "When you don't eat enough to fuel your activity, your body can't perform or recover properly. This affects energy, mood, and long-term health."
+          },
+          "underFueling": {
+            "title": "Under-Fueling Impacts",
+            "description": "Not eating enough can lead to injuries, slower recovery, decreased performance, and weakened immune system."
+          },
+          "growthConcerns": {
+            "title": "Growth & Development",
+            "description": "Young athletes need proper nutrition for healthy growth. Restricting food can affect bone health, height, and development."
+          },
+          "overtraining": {
+            "title": "Overtraining Connection",
+            "description": "Combining excessive exercise with undereating creates a dangerous cycle that can harm both physical and mental health."
+          }
+        },
+        "fueling": {
+          "performance": "Proper nutrition gives you energy for training and competition",
+          "growth": "Good food supports healthy growth and development",
+          "recovery": "Eating well helps your body repair and get stronger",
+          "injury": "Proper fueling reduces your risk of injury"
+        }
+      },
+      "bodyImage": {
+        "title": "Body Image & Self-Confidence",
+        "subtitle": "Building a healthy relationship with your body as an athlete",
+        "intro": "Athletes come in all shapes and sizes. What matters most is how your body performs, recovers, and helps you achieve your goals. This section helps you build a healthy relationship with your body and resist unhelpful comparisons.",
+        "impact": {
+          "title": "How Body Image Affects You",
+          "content": "How you feel about your body can impact your confidence, performance, and mental health. A positive body image helps you focus on what really matters—your skills, effort, and growth as an athlete."
+        },
+        "diversity": {
+          "title": "Body Diversity in Athletics",
+          "content": "Look at any professional team and you'll see athletes of all shapes and sizes. Different body types excel at different positions and sports. There's no 'perfect' athletic body."
+        },
+        "comparison": {
+          "title": "The Comparison Trap",
+          "content": "Social media and peer pressure can make you feel like you don't measure up. But comparing yourself to others isn't fair to you—everyone's body and journey is different."
+        },
+        "function": {
+          "title": "Function Over Appearance",
+          "content": "Your body is an incredible tool. Instead of focusing on how it looks, celebrate what it can do—the skills it's learned, the strength it's built, and the goals it's helping you achieve."
+        },
+        "positions": {
+          "pitcher": "Pitchers",
+          "catcher": "Catchers",
+          "infielder": "Infielders",
+          "outfielder": "Outfielders"
+        },
+        "positionDesc": {
+          "pitcher": "All heights, builds, and arm styles can succeed",
+          "catcher": "Various body types excel behind the plate",
+          "infielder": "Speed and agility come in many forms",
+          "outfielder": "Range and power vary across players"
+        },
+        "dangers": {
+          "filters": {
+            "title": "Filters & Editing",
+            "description": "Most images you see online are edited. They don't show reality."
+          },
+          "highlights": {
+            "title": "Highlight Reels",
+            "description": "People only post their best moments, not their everyday reality."
+          },
+          "different": {
+            "title": "Different Goals",
+            "description": "Others may have different training goals, genetics, or situations than you."
+          },
+          "journey": {
+            "title": "Your Own Journey",
+            "description": "The only fair comparison is to your past self—focus on your own growth."
+          }
+        },
+        "functions": {
+          "strength": {
+            "title": "Strength",
+            "description": "The power to throw, hit, and compete"
+          },
+          "speed": {
+            "title": "Speed & Agility",
+            "description": "Your ability to move and react quickly"
+          },
+          "durability": {
+            "title": "Durability",
+            "description": "Staying healthy through a long season"
+          },
+          "recovery": {
+            "title": "Recovery",
+            "description": "How your body repairs and gets stronger"
+          }
+        },
+        "affirmations": {
+          "title": "Athlete Affirmations",
+          "message": "Positive self-talk helps build confidence. Try saying these to yourself:",
+          "affirmation1": "My body is strong and capable of amazing things.",
+          "affirmation2": "I fuel my body to perform, not to look a certain way.",
+          "affirmation3": "I am more than my appearance—I am my effort, my character, and my heart.",
+          "affirmation4": "Every body is different, and that's what makes teams great.",
+          "affirmation5": "I appreciate what my body can do today."
+        },
+        "keyMessage": "Your body is an incredible tool for achieving your athletic dreams. Treat it with respect, fuel it well, and appreciate everything it can do.",
+        "disclaimer": "This content is designed to promote positive body image. If you are struggling with how you feel about your body, please talk to a trusted adult, counselor, or healthcare professional."
+      },
+      "support": {
+        "title": "Need Support?",
+        "message": "If you or someone you know is struggling with food or body image concerns, please reach out to:",
+        "trustedAdult": "A parent, guardian, or trusted family member",
+        "coach": "A coach, teacher, or school counselor",
+        "healthcare": "A doctor or healthcare provider",
+        "helpline": "National Eating Disorders Association:"
+      },
+      "disclaimer": {
+        "title": "Educational Information Only",
+        "text": "This content is for educational purposes only and is not intended to diagnose or treat any condition. If you have concerns about your eating habits or relationship with food, please talk to a trusted adult or healthcare professional."
+      }
     }
   },
   "tutorial": {

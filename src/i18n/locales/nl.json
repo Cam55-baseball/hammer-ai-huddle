@@ -1469,6 +1469,165 @@
         "content3": "Slaapkwaliteit beïnvloedt voedselkeuzes en metabolisme",
         "content4": "Bewust eten verbetert maaltijdtevredenheid",
         "content5": "Mentale gezondheid is net zo belangrijk als fysieke gezondheid"
+      },
+      "education": {
+        "sectionTitle": "Atleten Wellness Educatie",
+        "sectionSubtitle": "Belangrijke informatie voor je gezondheid en welzijn",
+        "healthy": "Gezond",
+        "concerning": "Zorgwekkend",
+        "eatingDisorder": {
+          "title": "Eten en Je Lichaam Begrijpen",
+          "subtitle": "Educatieve informatie over gezonde eetgewoonten voor atleten",
+          "intro": "De relatie tussen voedsel en ons lichaam begrijpen is een belangrijk onderdeel van atleet zijn. Deze sectie biedt educatieve informatie om je te helpen herkennen wanneer eetgewoonten ongezond kunnen worden.",
+          "overview": {
+            "title": "Wat Zijn Eetstoornissen?",
+            "content": "Eetstoornissen zijn ernstige aandoeningen die invloed hebben op hoe mensen over voedsel en hun lichaam denken. Ze kunnen iedereen overkomen, inclusief atleten. Ze begrijpen kan jou of iemand om wie je geeft helpen om vroeg hulp te krijgen."
+          },
+          "warningSigns": {
+            "title": "Waarschuwingssignalen Herkennen",
+            "content": "Deze gedragingen kunnen wijzen op een ongezonde relatie met voedsel. Onthoud dat het opmerken van deze bij jezelf of anderen de eerste stap is naar het krijgen van ondersteuning."
+          },
+          "athleteRisks": {
+            "title": "Speciale Risico's voor Atleten",
+            "content": "Atleten worden geconfronteerd met unieke druk die kan leiden tot ongezonde eetpatronen. Deze risico's begrijpen helpt je betere beslissingen te nemen voor je langetermijn gezondheid en prestaties."
+          },
+          "properFueling": {
+            "title": "Waarom Goede Voeding Belangrijk Is",
+            "content": "Je lichaam heeft brandstof nodig om te presteren, te groeien en te herstellen. Goede voeding gaat niet over beperking—het gaat over je lichaam geven wat het nodig heeft om op zijn best te zijn."
+          },
+          "signs": {
+            "mindfulEating": "Eten wanneer je honger hebt, stoppen wanneer je verzadigd bent",
+            "obsessiveTracking": "Obsessief calorieën tellen of voedsel bijhouden",
+            "regularMeals": "Regelmatige maaltijden eten met je team of familie",
+            "skippingMeals": "Maaltijden overslaan of excuses maken om eten te vermijden",
+            "balancedTraining": "Trainen zoals gepland, rusten wanneer nodig",
+            "excessiveExercise": "Meer sporten dan de trainingsvereisten om voedsel 'te verbranden'",
+            "performanceFocus": "Focussen op hoe je lichaam presteert",
+            "bodyPreoccupation": "Constante zorgen over lichaamsgewicht of -vorm",
+            "socialEating": "Genieten van maaltijden met teamgenoten en familie",
+            "avoidingMeals": "Vermijden om met anderen te eten of voedsel te verbergen",
+            "openCommunication": "Open praten over voeding met coaches",
+            "hidingFood": "Voedsel verbergen of in het geheim eten",
+            "stableEnergy": "Stabiele energie hebben gedurende de dag",
+            "moodChanges": "Stemmingswisselingen gerelateerd aan eten of niet eten"
+          },
+          "risks": {
+            "reds": {
+              "title": "Relatief Energietekort (RED-S)",
+              "description": "Als je niet genoeg eet om je activiteit te voeden, kan je lichaam niet goed presteren of herstellen. Dit beïnvloedt energie, stemming en langetermijn gezondheid."
+            },
+            "underFueling": {
+              "title": "Gevolgen van Ondervoeding",
+              "description": "Niet genoeg eten kan leiden tot blessures, langzamer herstel, verminderde prestaties en een verzwakt immuunsysteem."
+            },
+            "growthConcerns": {
+              "title": "Groei en Ontwikkeling",
+              "description": "Jonge atleten hebben goede voeding nodig voor een gezonde groei. Voedsel beperken kan de botgezondheid, lengte en ontwikkeling beïnvloeden."
+            },
+            "overtraining": {
+              "title": "Verband met Overtraining",
+              "description": "Het combineren van overmatige training met ondervoeding creëert een gevaarlijke cyclus die zowel fysieke als mentale gezondheid kan schaden."
+            }
+          },
+          "fueling": {
+            "performance": "Goede voeding geeft je energie voor training en competitie",
+            "growth": "Goed eten ondersteunt gezonde groei en ontwikkeling",
+            "recovery": "Goed eten helpt je lichaam te herstellen en sterker te worden",
+            "injury": "Goede voeding vermindert je risico op blessures"
+          }
+        },
+        "bodyImage": {
+          "title": "Lichaamsbeeld en Zelfvertrouwen",
+          "subtitle": "Een gezonde relatie opbouwen met je lichaam als atleet",
+          "intro": "Atleten komen in alle vormen en maten. Wat het meest telt is hoe je lichaam presteert, herstelt en je helpt je doelen te bereiken. Deze sectie helpt je een gezonde relatie met je lichaam op te bouwen en nutteloze vergelijkingen te weerstaan.",
+          "impact": {
+            "title": "Hoe Lichaamsbeeld Je Beïnvloedt",
+            "content": "Hoe je je voelt over je lichaam kan je vertrouwen, prestaties en mentale gezondheid beïnvloeden. Een positief lichaamsbeeld helpt je te focussen op wat echt belangrijk is—je vaardigheden, inspanning en groei als atleet."
+          },
+          "diversity": {
+            "title": "Lichaamsdiversiteit in de Sport",
+            "content": "Kijk naar elk professioneel team en je ziet atleten van alle vormen en maten. Verschillende lichaamstypen excelleren in verschillende posities en sporten. Er is geen 'perfect' atletisch lichaam."
+          },
+          "comparison": {
+            "title": "De Vergelijkingsval",
+            "content": "Social media en groepsdruk kunnen je het gevoel geven dat je niet goed genoeg bent. Maar jezelf met anderen vergelijken is niet eerlijk tegenover jezelf—ieders lichaam en reis is anders."
+          },
+          "function": {
+            "title": "Functie Boven Uiterlijk",
+            "content": "Je lichaam is een ongelooflijk instrument. In plaats van je te focussen op hoe het eruitziet, vier wat het kan doen—de vaardigheden die het heeft geleerd, de kracht die het heeft opgebouwd en de doelen die het je helpt bereiken."
+          },
+          "positions": {
+            "pitcher": "Pitchers",
+            "catcher": "Catchers",
+            "infielder": "Infielders",
+            "outfielder": "Outfielders"
+          },
+          "positionDesc": {
+            "pitcher": "Alle lengtes, lichaamsbouw en armstijlen kunnen succesvol zijn",
+            "catcher": "Verschillende lichaamstypen excelleren achter de plate",
+            "infielder": "Snelheid en behendigheid komen in vele vormen",
+            "outfielder": "Bereik en kracht variëren per speler"
+          },
+          "dangers": {
+            "filters": {
+              "title": "Filters en Bewerking",
+              "description": "De meeste afbeeldingen die je online ziet zijn bewerkt. Ze tonen niet de werkelijkheid."
+            },
+            "highlights": {
+              "title": "Hoogtepunten",
+              "description": "Mensen posten alleen hun beste momenten, niet hun dagelijkse realiteit."
+            },
+            "different": {
+              "title": "Verschillende Doelen",
+              "description": "Anderen hebben mogelijk andere trainingsdoelen, genetica of situaties dan jij."
+            },
+            "journey": {
+              "title": "Je Eigen Reis",
+              "description": "De enige eerlijke vergelijking is met je vroegere zelf—focus op je eigen groei."
+            }
+          },
+          "functions": {
+            "strength": {
+              "title": "Kracht",
+              "description": "De kracht om te gooien, te slaan en te concurreren"
+            },
+            "speed": {
+              "title": "Snelheid en Behendigheid",
+              "description": "Je vermogen om snel te bewegen en te reageren"
+            },
+            "durability": {
+              "title": "Duurzaamheid",
+              "description": "Gezond blijven gedurende een lang seizoen"
+            },
+            "recovery": {
+              "title": "Herstel",
+              "description": "Hoe je lichaam herstelt en sterker wordt"
+            }
+          },
+          "affirmations": {
+            "title": "Atleten Affirmaties",
+            "message": "Positieve zelfspraak helpt vertrouwen op te bouwen. Probeer deze tegen jezelf te zeggen:",
+            "affirmation1": "Mijn lichaam is sterk en in staat tot geweldige dingen.",
+            "affirmation2": "Ik voed mijn lichaam om te presteren, niet om er op een bepaalde manier uit te zien.",
+            "affirmation3": "Ik ben meer dan mijn uiterlijk—ik ben mijn inspanning, mijn karakter en mijn hart.",
+            "affirmation4": "Elk lichaam is anders, en dat is wat teams geweldig maakt.",
+            "affirmation5": "Ik waardeer wat mijn lichaam vandaag kan doen."
+          },
+          "keyMessage": "Je lichaam is een ongelooflijk instrument om je atletische dromen te bereiken. Behandel het met respect, voed het goed en waardeer alles wat het kan doen.",
+          "disclaimer": "Deze inhoud is ontworpen om een positief lichaamsbeeld te bevorderen. Als je worstelt met hoe je je voelt over je lichaam, praat dan met een vertrouwde volwassene, counselor of zorgprofessional."
+        },
+        "support": {
+          "title": "Ondersteuning Nodig?",
+          "message": "Als jij of iemand die je kent worstelt met voedsel of lichaamsbeeld, neem dan contact op met:",
+          "trustedAdult": "Een ouder, voogd of vertrouwd familielid",
+          "coach": "Een coach, leraar of schoolcounselor",
+          "healthcare": "Een arts of zorgverlener",
+          "helpline": "Nationale Eetstoornissen Hulplijn:"
+        },
+        "disclaimer": {
+          "title": "Alleen Educatieve Informatie",
+          "text": "Deze inhoud is alleen voor educatieve doeleinden en is niet bedoeld om enige aandoening te diagnosticeren of te behandelen. Als je zorgen hebt over je eetgewoonten of je relatie met voedsel, praat dan met een vertrouwde volwassene of zorgprofessional."
+        }
       }
     }
   },

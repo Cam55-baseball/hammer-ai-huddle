@@ -1539,6 +1539,165 @@
         "content3": "Schlafqualität beeinflusst Essenswahl und Stoffwechsel",
         "content4": "Achtsames Essen verbessert die Zufriedenheit mit Mahlzeiten",
         "content5": "Geistige Gesundheit ist genauso wichtig wie körperliche Gesundheit"
+      },
+      "education": {
+        "sectionTitle": "Athleten-Wellness-Bildung",
+        "sectionSubtitle": "Wichtige Informationen für Ihre Gesundheit und Ihr Wohlbefinden",
+        "healthy": "Gesund",
+        "concerning": "Besorgniserregend",
+        "eatingDisorder": {
+          "title": "Essen und Ihren Körper Verstehen",
+          "subtitle": "Bildungsinformationen über gesunde Essgewohnheiten für Athleten",
+          "intro": "Das Verständnis der Beziehung zwischen Essen und unserem Körper ist ein wichtiger Teil des Athletenseins. Dieser Abschnitt bietet Bildungsinformationen, um Ihnen zu helfen, zu erkennen, wann Essgewohnheiten ungesund werden können.",
+          "overview": {
+            "title": "Was Sind Essstörungen?",
+            "content": "Essstörungen sind ernste Erkrankungen, die beeinflussen, wie Menschen über Essen und ihren Körper denken. Sie können jedem passieren, einschließlich Athleten. Sie zu verstehen kann Ihnen oder jemandem, der Ihnen wichtig ist, helfen, früh Hilfe zu bekommen."
+          },
+          "warningSigns": {
+            "title": "Warnzeichen Erkennen",
+            "content": "Diese Verhaltensweisen können auf eine ungesunde Beziehung zum Essen hinweisen. Denken Sie daran, dass das Bemerken dieser bei sich selbst oder anderen der erste Schritt ist, um Unterstützung zu bekommen."
+          },
+          "athleteRisks": {
+            "title": "Besondere Risiken für Athleten",
+            "content": "Athleten stehen vor einzigartigen Belastungen, die zu ungesunden Essgewohnheiten führen können. Das Verständnis dieser Risiken hilft Ihnen, bessere Entscheidungen für Ihre langfristige Gesundheit und Leistung zu treffen."
+          },
+          "properFueling": {
+            "title": "Warum Richtige Ernährung Wichtig Ist",
+            "content": "Ihr Körper braucht Treibstoff, um zu performen, zu wachsen und sich zu erholen. Richtige Ernährung geht nicht um Einschränkung—es geht darum, Ihrem Körper zu geben, was er braucht, um sein Bestes zu sein."
+          },
+          "signs": {
+            "mindfulEating": "Essen, wenn man hungrig ist, aufhören, wenn man satt ist",
+            "obsessiveTracking": "Obsessives Kalorienzählen oder Essenstracking",
+            "regularMeals": "Regelmäßige Mahlzeiten mit dem Team oder der Familie essen",
+            "skippingMeals": "Mahlzeiten auslassen oder Ausreden finden, um Essen zu vermeiden",
+            "balancedTraining": "Wie geplant trainieren, bei Bedarf ruhen",
+            "excessiveExercise": "Über die Trainingsanforderungen hinaus trainieren, um Essen 'abzuarbeiten'",
+            "performanceFocus": "Sich darauf konzentrieren, wie der Körper leistet",
+            "bodyPreoccupation": "Ständige Sorge über Körpergewicht oder -form",
+            "socialEating": "Mahlzeiten mit Teamkollegen und Familie genießen",
+            "avoidingMeals": "Vermeiden, mit anderen zu essen oder Essen zu verstecken",
+            "openCommunication": "Offen mit Trainern über Ernährung sprechen",
+            "hidingFood": "Essen verstecken oder heimlich essen",
+            "stableEnergy": "Den ganzen Tag über stabile Energie haben",
+            "moodChanges": "Stimmungsschwankungen im Zusammenhang mit Essen oder Nicht-Essen"
+          },
+          "risks": {
+            "reds": {
+              "title": "Relativer Energiemangel (RED-S)",
+              "description": "Wenn Sie nicht genug essen, um Ihre Aktivität zu befeuern, kann Ihr Körper nicht richtig performen oder sich erholen. Dies beeinflusst Energie, Stimmung und langfristige Gesundheit."
+            },
+            "underFueling": {
+              "title": "Auswirkungen von Unterernährung",
+              "description": "Nicht genug zu essen kann zu Verletzungen, langsamerer Erholung, verminderter Leistung und geschwächtem Immunsystem führen."
+            },
+            "growthConcerns": {
+              "title": "Wachstum und Entwicklung",
+              "description": "Junge Athleten brauchen richtige Ernährung für gesundes Wachstum. Essen einzuschränken kann die Knochengesundheit, Größe und Entwicklung beeinflussen."
+            },
+            "overtraining": {
+              "title": "Verbindung zu Übertraining",
+              "description": "Die Kombination von übermäßigem Training mit Unterernährung schafft einen gefährlichen Kreislauf, der sowohl der körperlichen als auch der geistigen Gesundheit schaden kann."
+            }
+          },
+          "fueling": {
+            "performance": "Richtige Ernährung gibt Ihnen Energie für Training und Wettkampf",
+            "growth": "Gute Ernährung unterstützt gesundes Wachstum und Entwicklung",
+            "recovery": "Gut zu essen hilft Ihrem Körper, sich zu reparieren und stärker zu werden",
+            "injury": "Richtige Ernährung reduziert Ihr Verletzungsrisiko"
+          }
+        },
+        "bodyImage": {
+          "title": "Körperbild und Selbstvertrauen",
+          "subtitle": "Eine gesunde Beziehung zu Ihrem Körper als Athlet aufbauen",
+          "intro": "Athleten gibt es in allen Formen und Größen. Was am meisten zählt, ist, wie Ihr Körper performt, sich erholt und Ihnen hilft, Ihre Ziele zu erreichen. Dieser Abschnitt hilft Ihnen, eine gesunde Beziehung zu Ihrem Körper aufzubauen und nutzlosen Vergleichen zu widerstehen.",
+          "impact": {
+            "title": "Wie Körperbild Sie Beeinflusst",
+            "content": "Wie Sie sich über Ihren Körper fühlen, kann Ihr Selbstvertrauen, Ihre Leistung und Ihre mentale Gesundheit beeinflussen. Ein positives Körperbild hilft Ihnen, sich auf das zu konzentrieren, was wirklich zählt—Ihre Fähigkeiten, Ihre Anstrengung und Ihr Wachstum als Athlet."
+          },
+          "diversity": {
+            "title": "Körperliche Vielfalt im Sport",
+            "content": "Schauen Sie sich ein professionelles Team an und Sie werden Athleten aller Formen und Größen sehen. Verschiedene Körpertypen glänzen in verschiedenen Positionen und Sportarten. Es gibt keinen 'perfekten' athletischen Körper."
+          },
+          "comparison": {
+            "title": "Die Vergleichsfalle",
+            "content": "Soziale Medien und Gruppendruck können Ihnen das Gefühl geben, nicht zu genügen. Aber sich mit anderen zu vergleichen ist Ihnen gegenüber nicht fair—jeder Körper und jede Reise ist anders."
+          },
+          "function": {
+            "title": "Funktion Vor Aussehen",
+            "content": "Ihr Körper ist ein unglaubliches Werkzeug. Anstatt sich darauf zu konzentrieren, wie er aussieht, feiern Sie, was er kann—die Fähigkeiten, die er gelernt hat, die Kraft, die er aufgebaut hat, und die Ziele, die er Ihnen hilft zu erreichen."
+          },
+          "positions": {
+            "pitcher": "Pitcher",
+            "catcher": "Catcher",
+            "infielder": "Infielder",
+            "outfielder": "Outfielder"
+          },
+          "positionDesc": {
+            "pitcher": "Alle Größen, Körperbau und Armstile können erfolgreich sein",
+            "catcher": "Verschiedene Körpertypen glänzen hinter dem Plate",
+            "infielder": "Geschwindigkeit und Agilität kommen in vielen Formen",
+            "outfielder": "Reichweite und Kraft variieren zwischen Spielern"
+          },
+          "dangers": {
+            "filters": {
+              "title": "Filter und Bearbeitung",
+              "description": "Die meisten Bilder, die Sie online sehen, sind bearbeitet. Sie zeigen nicht die Realität."
+            },
+            "highlights": {
+              "title": "Highlight-Reels",
+              "description": "Menschen posten nur ihre besten Momente, nicht ihre alltägliche Realität."
+            },
+            "different": {
+              "title": "Verschiedene Ziele",
+              "description": "Andere haben möglicherweise andere Trainingsziele, Genetik oder Situationen als Sie."
+            },
+            "journey": {
+              "title": "Ihre Eigene Reise",
+              "description": "Der einzige faire Vergleich ist mit Ihrem vergangenen Selbst—konzentrieren Sie sich auf Ihr eigenes Wachstum."
+            }
+          },
+          "functions": {
+            "strength": {
+              "title": "Stärke",
+              "description": "Die Kraft zu werfen, zu schlagen und zu wettkämpfen"
+            },
+            "speed": {
+              "title": "Geschwindigkeit und Agilität",
+              "description": "Ihre Fähigkeit, sich schnell zu bewegen und zu reagieren"
+            },
+            "durability": {
+              "title": "Haltbarkeit",
+              "description": "Während einer langen Saison gesund bleiben"
+            },
+            "recovery": {
+              "title": "Erholung",
+              "description": "Wie Ihr Körper sich repariert und stärker wird"
+            }
+          },
+          "affirmations": {
+            "title": "Athleten-Affirmationen",
+            "message": "Positives Selbstgespräch hilft, Selbstvertrauen aufzubauen. Versuchen Sie, sich diese zu sagen:",
+            "affirmation1": "Mein Körper ist stark und fähig zu erstaunlichen Dingen.",
+            "affirmation2": "Ich ernähre meinen Körper, um zu performen, nicht um auf eine bestimmte Weise auszusehen.",
+            "affirmation3": "Ich bin mehr als mein Aussehen—ich bin meine Anstrengung, mein Charakter und mein Herz.",
+            "affirmation4": "Jeder Körper ist anders, und das macht Teams großartig.",
+            "affirmation5": "Ich schätze, was mein Körper heute tun kann."
+          },
+          "keyMessage": "Ihr Körper ist ein unglaubliches Werkzeug, um Ihre athletischen Träume zu erreichen. Behandeln Sie ihn mit Respekt, ernähren Sie ihn gut und schätzen Sie alles, was er tun kann.",
+          "disclaimer": "Dieser Inhalt ist darauf ausgelegt, ein positives Körperbild zu fördern. Wenn Sie damit kämpfen, wie Sie sich über Ihren Körper fühlen, sprechen Sie bitte mit einem vertrauenswürdigen Erwachsenen, Berater oder Gesundheitsfachmann."
+        },
+        "support": {
+          "title": "Brauchen Sie Unterstützung?",
+          "message": "Wenn Sie oder jemand, den Sie kennen, mit Essen oder Körperbild zu kämpfen hat, wenden Sie sich bitte an:",
+          "trustedAdult": "Einen Elternteil, Vormund oder vertrauenswürdiges Familienmitglied",
+          "coach": "Einen Trainer, Lehrer oder Schulberater",
+          "healthcare": "Einen Arzt oder Gesundheitsdienstleister",
+          "helpline": "Nationale Essstörungen-Hotline:"
+        },
+        "disclaimer": {
+          "title": "Nur Bildungsinformation",
+          "text": "Dieser Inhalt dient nur Bildungszwecken und ist nicht dazu bestimmt, Erkrankungen zu diagnostizieren oder zu behandeln. Wenn Sie Bedenken bezüglich Ihrer Essgewohnheiten oder Ihrer Beziehung zum Essen haben, sprechen Sie bitte mit einem vertrauenswürdigen Erwachsenen oder Gesundheitsfachmann."
+        }
       }
     }
   },

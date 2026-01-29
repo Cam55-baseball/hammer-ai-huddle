@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Apple, ArrowLeft } from 'lucide-react';
+import { Apple, ArrowLeft, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { NutritionDisclaimer } from '@/components/NutritionDisclaimer';
@@ -10,6 +10,8 @@ import { NutritionCategory } from '@/components/NutritionCategory';
 import { TodaysTipsReview } from '@/components/TodaysTipsReview';
 import { NutritionStreakCard } from '@/components/NutritionStreakCard';
 import { NutritionBadges } from '@/components/NutritionBadges';
+import EatingDisorderEducation from '@/components/nutrition/EatingDisorderEducation';
+import BodyImageEducation from '@/components/nutrition/BodyImageEducation';
 import { useAuth } from '@/hooks/useAuth';
 
 interface StreakData {
@@ -140,6 +142,21 @@ export default function Nutrition() {
             <span className="text-xs text-muted-foreground font-normal">{t('nutrition.topicsCount', { count: 18 })}</span>
           </h2>
           <NutritionCategory />
+        </div>
+
+        {/* Athlete Wellness Education */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-teal-400" />
+            <span>{t('nutrition.education.sectionTitle', 'Athlete Wellness Education')}</span>
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('nutrition.education.sectionSubtitle', 'Important information for your health and well-being')}
+          </p>
+          <div className="space-y-4">
+            <EatingDisorderEducation />
+            <BodyImageEducation />
+          </div>
         </div>
 
         {/* Disclaimer at bottom */}
