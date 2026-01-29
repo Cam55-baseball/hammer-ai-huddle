@@ -102,7 +102,7 @@ export default function BodyImageEducation() {
       <CardContent className="space-y-4">
         {/* Introduction */}
         <div className="p-3 rounded-lg bg-teal-500/10 border border-teal-500/20">
-          <p className="text-sm text-teal-300">
+          <p className="text-sm text-teal-400">
             {t('nutrition.education.bodyImage.intro', 'Athletes come in all shapes and sizes. What matters most is how your body performs, recovers, and helps you achieve your goals. This section helps you build a healthy relationship with your body and resist unhelpful comparisons.')}
           </p>
         </div>
