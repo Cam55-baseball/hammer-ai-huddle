@@ -97,7 +97,7 @@ export default function EatingDisorderEducation() {
       <CardContent className="space-y-4">
         {/* Introduction */}
         <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-          <p className="text-sm text-amber-200/90">
+          <p className="text-sm text-amber-300">
             {t('nutrition.education.eatingDisorder.intro', 'Understanding the relationship between food and our bodies is an important part of being an athlete. This section provides educational information to help you recognize when eating habits might become unhealthy.')}
           </p>
         </div>
