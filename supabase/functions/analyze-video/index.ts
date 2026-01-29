@@ -11,6 +11,8 @@ const requestSchema = z.object({
   sport: z.enum(["baseball", "softball"], { errorMap: () => ({ message: "Invalid sport" }) }),
   userId: z.string().uuid("Invalid user ID format"),
   language: z.string().optional(),
+  frames: z.array(z.string()).min(3, "At least 3 frames required for accurate analysis"),
+  landingFrameIndex: z.number().optional(),
 });
 
 // ============ VIOLATION KEYWORD DETECTION (FAILSAFE) ============
@@ -902,7 +904,11 @@ Deno.serve(async (req) => {
   try {
     // Validate input
     const body = await req.json();
-    const { videoId, module, sport, userId } = requestSchema.parse(body);
+    const { videoId, module, sport, userId, frames, landingFrameIndex } = requestSchema.parse(body);
+
+    console.log(`[ANALYZE-VIDEO] Starting analysis for video ${videoId}`);
+    console.log(`[ANALYZE-VIDEO] Received ${frames.length} frames for visual analysis`);
+    console.log(`[ANALYZE-VIDEO] Landing frame index: ${landingFrameIndex ?? 'auto-detect'}`);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -912,8 +918,6 @@ Deno.serve(async (req) => {
       throw new Error("Missing required environment variables");
     }
 
-    console.log(`Analyzing video ${videoId} for user ${userId}`);
-
     // Initialize Supabase client with service role
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -922,7 +926,7 @@ Deno.serve(async (req) => {
     await supabase.from("videos").update({ status: "processing" }).eq("id", videoId);
 
     // ===== FETCH HISTORICAL ANALYSIS DATA =====
-    console.log(`Fetching historical analysis for user ${userId}, sport ${sport}, module ${module}`);
+    console.log(`[ANALYZE-VIDEO] Fetching historical analysis for user ${userId}, sport ${sport}, module ${module}`);
     
     const { data: historicalVideos, error: historyError } = await supabase
       .from("videos")
@@ -936,11 +940,11 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: true }); // Oldest first for chronological context
     
     if (historyError) {
-      console.error("Error fetching historical data:", historyError);
+      console.error("[ANALYZE-VIDEO] Error fetching historical data:", historyError);
     }
     
     const hasHistory = !!(historicalVideos && historicalVideos.length > 0);
-    console.log(`Found ${historicalVideos?.length || 0} previous analyses`);
+    console.log(`[ANALYZE-VIDEO] Found ${historicalVideos?.length || 0} previous analyses`);
     
     // Format historical context for AI
     const historicalContext = formatHistoricalContext(historicalVideos || []);
@@ -960,15 +964,68 @@ Deno.serve(async (req) => {
     // Get system prompt based on module and sport
     const systemPrompt = getSystemPrompt(module, sport) + getScorecardInstructions(hasHistory) + languageInstruction;
 
-    // Build user message with historical context
-    const userMessage = `${historicalContext}
+    // ===== BUILD MULTIMODAL USER CONTENT WITH FRAMES =====
+    const userContent: Array<{type: string; text?: string; image_url?: {url: string}}> = [];
+    
+    // Add critical analysis instruction for landing moment
+    const landingInstruction = landingFrameIndex != null 
+      ? `\n\n⭐⭐⭐ USER HAS MARKED Frame ${landingFrameIndex + 1} as the EXACT MOMENT of front foot landing. Use this frame as the primary reference for all alignment checks. ⭐⭐⭐`
+      : `\n\nIDENTIFY the landing frame yourself: Look for the frame where the front foot FIRST makes contact with the ground. This is your reference point for all alignment checks.`;
+    
+    // Add text instruction first
+    userContent.push({
+      type: 'text',
+      text: `${historicalContext}
 
 ---
 
-CURRENT VIDEO ANALYSIS:
-Analyze this ${sport} ${module} video. Provide detailed feedback on form and mechanics. Include an efficiency score out of 100 and recommended drills.
+CURRENT VIDEO ANALYSIS - VISUAL FRAME ANALYSIS:
 
-${hasHistory ? `Based on the historical data above and this current analysis, generate "The Scorecard" progress report comparing current performance to ALL previous uploads.` : `This is the player's first analysis - establish a baseline.`}`;
+You are analyzing ${frames.length} sequential frames from a ${sport} ${module} motion.
+${landingInstruction}
+
+⭐⭐⭐ CRITICAL LANDING ALIGNMENT CHECKS (at the EXACT frame of front foot landing):
+
+1. BACK LEG CHECK: Is the back leg (foot, knee, AND hip) ALL facing the target?
+   - Look at the back foot: Is it pointing toward the target or still pointing backward?
+   - Look at the back knee: Is it facing the target?
+   - Look at the back hip: Has it fully rotated toward the target?
+   → If ANY of these are NOT fully facing target at landing → back_leg_not_facing_target = TRUE
+
+2. SHOULDER ALIGNMENT CHECK: Are shoulders IN LINE with the target at landing?
+   - Draw an imaginary line from throwing shoulder → front shoulder → target
+   - If this line does NOT point directly at target → shoulders_not_aligned = TRUE
+
+3. TIMING CHECK: Have shoulders ALREADY started rotating before foot lands?
+   - If shoulders have begun their rotation BEFORE or AS the front foot lands → early_shoulder_rotation = TRUE
+
+THESE ARE PASS/FAIL CHECKPOINTS. No partial credit. Be BRUTALLY HONEST in your violation detection.
+
+The score caps depend on accurate flags:
+- Either alignment violation (back leg OR shoulders) → MAX SCORE: 60
+- Both alignment violations → MAX SCORE: 55
+- Early shoulder rotation → MAX SCORE: 65
+
+${hasHistory ? `Based on the historical data above and this current analysis, generate "The Scorecard" progress report comparing current performance to ALL previous uploads.` : `This is the player's first analysis - establish a baseline.`}`
+    });
+    
+    // Add each frame with temporal labels
+    for (let i = 0; i < frames.length; i++) {
+      const isLandingFrame = landingFrameIndex != null && i === landingFrameIndex;
+      
+      userContent.push({
+        type: 'text',
+        text: `[Frame ${i + 1}/${frames.length}${isLandingFrame ? ' ⭐ LANDING MOMENT - CHECK ALIGNMENT HERE ⭐' : ''}]`
+      });
+      
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: frames[i] }
+      });
+    }
+    
+    console.log(`[ANALYZE-VIDEO] Built multimodal message with ${frames.length} frames`);
+    // ===== END MULTIMODAL CONTENT BUILD =====
 
     // Call Lovable AI for video analysis with tool-calling for structured output
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -981,7 +1038,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userMessage },
+          { role: "user", content: userContent }, // Now multimodal with frames!
         ],
         tools: [
           {
@@ -1221,18 +1278,35 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         
         console.log(`[VIOLATIONS] After feedback override: ${JSON.stringify(violations)}, count: ${violationCount}`);
         
+        // ============ STRICT SCORE CAPS - MAX 60 FOR EITHER ALIGNMENT VIOLATION ============
         // Apply score caps - MULTIPLE VIOLATIONS FIRST (most restrictive)
         if (violationCount >= 2) {
-          const cappedScore = Math.min(efficiency_score, 60);
+          const cappedScore = Math.min(efficiency_score, 55);
           if (cappedScore !== efficiency_score) {
             console.log(`[SCORE CAP] Multiple critical violations (${violationCount}) - capping score from ${efficiency_score} to ${cappedScore}`);
             efficiency_score = cappedScore;
             scoreWasAdjusted = true;
           }
         }
-        // Individual violation caps (only if not already capped by multiple violations)
+        // EITHER back leg OR shoulders not aligned = MAX 60 (user requirement)
+        else if (violations.back_leg_not_facing_target) {
+          const cappedScore = Math.min(efficiency_score, 60);
+          if (cappedScore !== efficiency_score) {
+            console.log(`[SCORE CAP] Back leg not facing target - capping score from ${efficiency_score} to ${cappedScore}`);
+            efficiency_score = cappedScore;
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.shoulders_not_aligned) {
+          const cappedScore = Math.min(efficiency_score, 60);
+          if (cappedScore !== efficiency_score) {
+            console.log(`[SCORE CAP] Shoulders not aligned - capping score from ${efficiency_score} to ${cappedScore}`);
+            efficiency_score = cappedScore;
+            scoreWasAdjusted = true;
+          }
+        }
         else if (violations.early_shoulder_rotation) {
-          const cappedScore = Math.min(efficiency_score, 70);
+          const cappedScore = Math.min(efficiency_score, 65);
           if (cappedScore !== efficiency_score) {
             console.log(`[SCORE CAP] Early shoulder rotation - capping score from ${efficiency_score} to ${cappedScore}`);
             efficiency_score = cappedScore;
@@ -1247,30 +1321,15 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
             scoreWasAdjusted = true;
           }
         }
-        else if (violations.shoulders_not_aligned) {
-          const cappedScore = Math.min(efficiency_score, 75);
-          if (cappedScore !== efficiency_score) {
-            console.log(`[SCORE CAP] Shoulders not aligned - capping score from ${efficiency_score} to ${cappedScore}`);
-            efficiency_score = cappedScore;
-            scoreWasAdjusted = true;
-          }
-        }
-        else if (violations.back_leg_not_facing_target) {
-          const cappedScore = Math.min(efficiency_score, 75);
-          if (cappedScore !== efficiency_score) {
-            console.log(`[SCORE CAP] Back leg not facing target - capping score from ${efficiency_score} to ${cappedScore}`);
-            efficiency_score = cappedScore;
-            scoreWasAdjusted = true;
-          }
-        }
         else if (violations.front_shoulder_opens_early) {
-          const cappedScore = Math.min(efficiency_score, 75);
+          const cappedScore = Math.min(efficiency_score, 70);
           if (cappedScore !== efficiency_score) {
             console.log(`[SCORE CAP] Front shoulder opens early - capping score from ${efficiency_score} to ${cappedScore}`);
             efficiency_score = cappedScore;
             scoreWasAdjusted = true;
           }
         }
+        // ============ END STRICT SCORE CAPS ============
         
         // ============ HIGH SCORE SKEPTICISM CHECK ============
         // If AI gives high score (>75) with zero violations, but feedback mentions issues - be suspicious

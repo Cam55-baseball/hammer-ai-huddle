@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home, Heart } from "lucide-react";
+import { ArrowLeft, Upload, Video, Trash2, BookMarked, Home, Heart, Target } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SaveToLibraryDialog } from "@/components/SaveToLibraryDialog";
@@ -24,6 +24,7 @@ import { AnalysisResultSkeleton } from "@/components/skeletons/AnalysisResultSke
 import { TheScorecard } from "@/components/TheScorecard";
 import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
+import { extractKeyFrames, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { useVault } from "@/hooks/useVault";
 
 export default function AnalyzeVideo() {
@@ -83,6 +84,8 @@ export default function AnalyzeVideo() {
     return (saved === 'improvements' || saved === 'regressions') ? saved : 'all';
   });
   const [savedDrillIds, setSavedDrillIds] = useState<Set<string>>(new Set());
+  const [landingTime, setLandingTime] = useState<number | null>(null);
+  const [extractingFrames, setExtractingFrames] = useState(false);
   const { saveDrill, savedDrills } = useVault();
 
   // Track which drills are already saved
@@ -251,6 +254,40 @@ export default function AnalyzeVideo() {
     if (!videoFile || !user) return;
 
     setUploading(true);
+    
+    // ===== EXTRACT KEY FRAMES FOR AI ANALYSIS =====
+    let frames: string[] = [];
+    let landingFrameIndex: number | null = null;
+    
+    if (analysisEnabled) {
+      try {
+        setExtractingFrames(true);
+        toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
+        
+        frames = await extractKeyFrames(videoFile, landingTime);
+        
+        if (frames.length < 3) {
+          throw new Error("Could not extract enough frames for accurate analysis");
+        }
+        
+        // Calculate landing frame index if user marked landing
+        if (landingTime != null) {
+          landingFrameIndex = calculateLandingFrameIndex(landingTime, videoFile.size, frames.length);
+          console.log('[ANALYSIS] Using landing frame index:', landingFrameIndex);
+        }
+        
+        console.log(`[ANALYSIS] Successfully extracted ${frames.length} frames for analysis`);
+        setExtractingFrames(false);
+      } catch (frameError: any) {
+        console.error('[ANALYSIS] Frame extraction failed:', frameError);
+        setExtractingFrames(false);
+        toast.error(t('videoAnalysis.frameExtractionFailed', "Failed to extract video frames. Please try a different video format or browser."));
+        setUploading(false);
+        return;
+      }
+    }
+    // ===== END FRAME EXTRACTION =====
+    
     try {
       // Upload video to storage
       const fileExt = videoFile.name.split('.').pop();
@@ -327,7 +364,7 @@ export default function AnalyzeVideo() {
       setUploading(false);
       setAnalyzing(true);
 
-      // Call AI analysis edge function with language preference
+      // Call AI analysis edge function with frames for multimodal analysis
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
         "analyze-video",
         {
@@ -337,6 +374,8 @@ export default function AnalyzeVideo() {
             sport,
             userId: user.id,
             language: i18n.language,
+            frames, // Include extracted frames for visual analysis
+            landingFrameIndex, // Include landing frame index if user marked it
           },
         }
       );
@@ -367,6 +406,7 @@ export default function AnalyzeVideo() {
       setAnalyzing(false);
     } finally {
       setUploading(false);
+      setExtractingFrames(false);
     }
   };
 
@@ -544,9 +584,40 @@ export default function AnalyzeVideo() {
                   />
                 </div>
 
+                {/* Landing Marker for Pitching/Throwing */}
+                {analysisEnabled && (module === 'pitching' || module === 'throwing') && (
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-dashed">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium flex items-center gap-2">
+                        <Target className="h-4 w-4 text-primary" />
+                        {t('videoAnalysis.markLanding', 'Mark Landing Moment')}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {landingTime != null 
+                          ? t('videoAnalysis.landingMarked', `Landing marked at ${landingTime.toFixed(2)}s`)
+                          : t('videoAnalysis.landingHint', 'Optional: Pause at front foot landing, then click "Mark Landing"')}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      {landingTime != null && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setLandingTime(null)}
+                          className="text-muted-foreground"
+                        >
+                          {t('common.clear', 'Clear')}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <EnhancedVideoPlayer
                   videoSrc={videoPreview}
                   playbackRate={parseFloat(playbackRate)}
+                  onMarkLanding={analysisEnabled && (module === 'pitching' || module === 'throwing') ? setLandingTime : undefined}
+                  landingTime={landingTime}
                 />
               </div>
             </Card>
@@ -554,11 +625,13 @@ export default function AnalyzeVideo() {
             {!analyzing && !analysis && (
               <Button
                 onClick={handleUploadAndAnalyze}
-                disabled={uploading}
+                disabled={uploading || extractingFrames}
                 size="lg"
                 className="w-full"
               >
-                {uploading ? (
+                {extractingFrames ? (
+                  t('videoAnalysis.extractingFrames', "Extracting frames...")
+                ) : uploading ? (
                   t('videoAnalysis.uploading')
                 ) : analysisEnabled ? (
                   <>
