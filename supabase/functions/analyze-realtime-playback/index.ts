@@ -374,40 +374,58 @@ Focus ONLY on form and body mechanics.`;
   }
 
   if (module === "pitching" && sport === "softball") {
-    return baseInstructions + `CRITICAL SOFTBALL PITCHING SEQUENCE:
+    return baseInstructions + `CRITICAL SOFTBALL PITCHING SEQUENCE - ELITE 0.01% STANDARDS:
 
 ⭐⭐⭐ FOUNDATION PRINCIPLE: FEET BEFORE SHOULDERS ⭐⭐⭐
 
-Phase 1 - LANDING POSITION (MUST CHECK FIRST):
-At the moment of front foot landing (push-off completion):
-1. Front foot → FIRMLY PLANTED before any shoulder rotation begins ⭐⭐⭐
+Phase 1 - STRIDE FOOT CONTACT (SFC) - THE CRITICAL CHECKPOINT:
+At the moment of front foot landing (Stride Foot Contact):
+1. Front foot → FIRMLY PLANTED before any trunk/shoulder rotation begins ⭐⭐⭐
 2. Shoulders → In line with target (pitcher-catcher alignment) ⭐⭐
-3. Hips → Beginning to drive through
-4. Arm → At proper position in circle
+3. Pelvis and trunk → Rotated toward pitching arm side (but not excessively)
+4. Arm → At proper position in circle, perpendicular to ground
 
-STRIDE & LANDING - FOUNDATION OF VELOCITY AND ACCURACY:
+ELITE SOFTBALL PITCHING CHECKPOINTS (AT STRIDE FOOT CONTACT):
 
-The pitching sequence CANNOT properly begin until the front foot is on the ground:
-- Ground contact creates the stable base for rotational force
-- Without this foundation, rotation has no anchor point
-- Shoulders MUST be aligned with the target at the moment of landing
-- This applies to BOTH windmill and slingshot styles
-- This is NON-NEGOTIABLE for elite-level softball pitching
+⭐⭐⭐ CRITICAL - FEET BEFORE SHOULDERS ⭐⭐⭐
+- Front foot FIRMLY PLANTED before any trunk/shoulder rotation begins
+- This creates the stable base for kinetic chain energy transfer
+- Kinetic chain sequence: lower body → lumbopelvic-hip → trunk → arm
+- Disruptions in this sequence cause arm-dominant deliveries and injury risk
 
-POWER LEAK WARNING - EARLY SHOULDER ROTATION:
-If shoulders begin rotating BEFORE front foot lands:
+⭐⭐ STRIDE POSITION REQUIREMENTS ⭐⭐
+- Stride foot angle: 0-45° toward pitching arm side (not pointed at catcher)
+- Stride foot ON the power line (imaginary line from rubber to home plate)
+- Stride knee in neutral alignment (not collapsing inward/valgus)
+
+⭐⭐ TRUNK AND PELVIS POSITION AT SFC ⭐⭐
+- Pelvis and trunk should be rotated toward pitching arm side
+- Trunk should remain relatively upright (minimal flexion/extension)
+- NO excessive trunk lean or tilt in any direction
+- Front side collapse = energy leak (trunk/hip/knee flexion at SFC)
+
+⭐ ARM CIRCLE PATH ⭐
+- Arm circle perpendicular to ground throughout
+- Arm should NOT cross body's midline (horizontal adduction)
+- Keep arm close to power line - wide arm path = power leak
+- Smooth, continuous circle without breaks or stalls
+
+⭐ DRIVE LEG DURING DRAG ⭐
+- Drive leg stays close to power line during drag phase
+- Only inside of big toe should touch ground during drag
+- Leg straying off power line = excessive trunk flexion
+
+POWER LEAK WARNING - EARLY TRUNK/SHOULDER ROTATION:
+If trunk/shoulders begin rotating BEFORE front foot lands:
 → MASSIVE POWER LEAK - rotational force has no anchor point
 → ARM CIRCLE COMPROMISED - timing breaks down
 → ACCURACY DESTROYED - cannot maintain target alignment
 → VELOCITY REDUCED - requires more arm effort for same speed
-→ This applies to BOTH windmill and slingshot styles
 
 SHOULDER-TARGET ALIGNMENT REQUIREMENT:
 - Shoulders MUST be in line with target at landing
-- Think: draw a line from throwing shoulder through front shoulder to catcher
 - This alignment ensures DIRECT energy transfer to target
 - Misalignment = wasted energy = reduced velocity AND accuracy
-- Elite softball pitchers maintain shoulder-target line through delivery
 
 Phase 2 - STANDARD SEQUENCING (After Landing):
 5. Hip rotation continues through landing
@@ -417,32 +435,18 @@ Phase 2 - STANDARD SEQUENCING (After Landing):
 9. Release at hip
 10. Follow-through
 
-Key Focus Areas:
-1. Arm circle mechanics (windmill or slingshot)
-2. Hip drive and rotation
-3. Release point consistency
-4. Balance and stability throughout delivery
-5. Follow-through mechanics
-6. Lower body engagement
-7. Shoulder alignment
-
 RED FLAGS TO IDENTIFY:
-- ⚠️ CRITICAL: Shoulders rotate BEFORE front foot lands → MASSIVE POWER LEAK ⭐⭐⭐
-  * This is the #1 cause of inconsistent, arm-heavy deliveries
-  * Destroys ability to maintain target alignment
-  * Cannot generate maximum force without ground connection
-  * Makes the pitch require more arm effort
-  * Elite pitchers NEVER rotate before landing - this is non-negotiable
+- ⚠️ CRITICAL: Trunk/shoulders rotate BEFORE front foot lands → MASSIVE POWER LEAK ⭐⭐⭐
 - ⚠️ CRITICAL: Shoulders NOT in line with target at landing → ENERGY LEAKAGE ⭐⭐
-  * Direct line to target = maximum energy transfer
-  * Misalignment forces compensations later in delivery
-  * Reduces both velocity and accuracy
-- ⚠️ Arm circle breaks or stalls → Reduces power and consistency
-- ⚠️ Inconsistent release point → Reduces accuracy and movement
-- ⚠️ Poor hip drive → Arm-only delivery, injury risk
-- ⚠️ Landing off-balance → Control and repeat issues
+- ⚠️ CRITICAL: Arm circle breaks, stalls, or crosses midline → POWER LEAK ⭐⭐
+- ⚠️ Front side collapse (trunk/hip/knee flexion at SFC) → Energy leak
+- ⚠️ Stride foot NOT on power line → Directional issues
+- ⚠️ Stride foot angle >45° or pointing at catcher → Hip rotation inhibited
+- ⚠️ Drive leg strays far from power line → Trunk compensation
+- ⚠️ Excessive trunk lean at SFC → Balance and control issues
+- ⚠️ Stride knee valgus (collapsing inward) → Knee stress
 
-SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
+SCORING FRAMEWORK - ELITE PROFESSIONAL STANDARDS:
 
 Base your efficiency score on THIS rubric:
 
@@ -451,10 +455,12 @@ STARTING POINT: Begin at 5 (mediocre baseline) - scale is 1-10
 - Scores above 8 require NEAR-PERFECT fundamentals
 
 SCORE CAPS (NON-NEGOTIABLE):
-- If shoulders rotate BEFORE front foot lands → MAX SCORE: 7
-- If shoulders NOT aligned with target at landing → MAX SCORE: 7.5
-- If arm circle breaks or stalls → MAX SCORE: 7.5
-- If TWO OR MORE critical violations → MAX SCORE: 6
+- If shoulders NOT aligned with target at landing → MAX SCORE: 6
+- If early trunk rotation toward pitching arm side → MAX SCORE: 6
+- If arm circle breaks, stalls, or crosses midline → MAX SCORE: 6
+- If front side collapse at SFC → MAX SCORE: 6.5
+- If stride foot NOT on power line → MAX SCORE: 7
+- If TWO OR MORE critical violations → MAX SCORE: 5.5
 
 SCORING BANDS:
 - 9-10: Elite. ALL fundamentals correct. Minor refinements only.
@@ -465,28 +471,32 @@ SCORING BANDS:
 - Below 5: Major fundamental breakdowns.
 
 CALIBRATION - What 8.5+ REQUIRES:
-✓ Front foot FULLY planted before ANY shoulder rotation
+✓ Front foot FULLY planted before ANY trunk/shoulder rotation
 ✓ Shoulders PERFECTLY aligned with target at landing
-✓ Smooth, continuous arm circle
+✓ Smooth, continuous arm circle perpendicular to ground
+✓ Arm stays close to power line (no midline crossing)
+✓ Stride foot ON power line, angled 0-45° toward pitching arm
 ✓ Consistent release point at hip
 ✓ Strong hip drive through landing
-✓ Clean sequencing through follow-through
+✓ No front side collapse
+✓ Drive leg stays close to power line during drag
 
 CALIBRATION - What 6 looks like:
 ✗ Front foot lands but shoulders already rotating
 ✗ Shoulder alignment off by 15+ degrees
-✓ Some correct elements (arm circle, follow-through)
+✗ Arm circle crosses midline
+✓ Some correct elements (follow-through)
 
 BE DIRECT: Do not inflate scores to be encouraging.
 Accurate assessment is what helps players develop.
-A score of 6.5 with honest feedback is more valuable than 8.5 with false praise.
 
 Focus on:
-1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
+1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY trunk/shoulder rotation begins? (CRITICAL - #1 PRIORITY)
 2. ⭐⭐ Are SHOULDERS IN LINE WITH TARGET at the moment of landing?
-3. Is arm circle smooth and continuous?
-4. Is release point consistent at the hip?
-5. Is there strong hip drive through landing?
+3. ⭐⭐ Is arm circle perpendicular to ground and NOT crossing midline?
+4. Is stride foot ON the power line?
+5. Is there front side collapse at SFC?
+6. Is there strong hip drive through landing?
 
 DO NOT MENTION: velocity, spin rate, or output metrics.
 Focus ONLY on form and body mechanics.`;
