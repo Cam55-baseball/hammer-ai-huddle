@@ -272,7 +272,7 @@ export default function AnalyzeVideo() {
         
         // Calculate landing frame index if user marked landing
         if (landingTime != null) {
-          landingFrameIndex = calculateLandingFrameIndex(landingTime, videoFile.size, frames.length);
+          landingFrameIndex = calculateLandingFrameIndex(landingTime);
           console.log('[ANALYSIS] Using landing frame index:', landingFrameIndex);
         }
         
@@ -413,8 +413,44 @@ export default function AnalyzeVideo() {
   const handleRetryAnalysis = async () => {
     if (!currentVideoId || !user) return;
     
+    // Guard: Need video file to re-extract frames
+    if (!videoFile) {
+      toast.error(t('videoAnalysis.videoFileLost', "Video file not available. Please re-upload the video to retry analysis."));
+      return;
+    }
+    
     setAnalyzing(true);
     setAnalysisError(null);
+    
+    // Re-extract frames for retry
+    let frames: string[] = [];
+    let landingFrameIndex: number | null = null;
+    
+    try {
+      setExtractingFrames(true);
+      toast.info(t('videoAnalysis.extractingFrames', "Extracting key frames for analysis..."));
+      
+      frames = await extractKeyFrames(videoFile, landingTime);
+      
+      if (frames.length < 3) {
+        throw new Error("Could not extract enough frames for accurate analysis");
+      }
+      
+      // Calculate landing frame index if user marked landing
+      if (landingTime != null) {
+        landingFrameIndex = calculateLandingFrameIndex(landingTime);
+        console.log('[RETRY ANALYSIS] Using landing frame index:', landingFrameIndex);
+      }
+      
+      console.log(`[RETRY ANALYSIS] Successfully extracted ${frames.length} frames for analysis`);
+      setExtractingFrames(false);
+    } catch (frameError: any) {
+      console.error('[RETRY ANALYSIS] Frame extraction failed:', frameError);
+      setExtractingFrames(false);
+      toast.error(t('videoAnalysis.frameExtractionFailed', "Failed to extract video frames. Please try a different video format or browser."));
+      setAnalyzing(false);
+      return;
+    }
     
     try {
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
@@ -426,6 +462,8 @@ export default function AnalyzeVideo() {
             sport,
             userId: user.id,
             language: i18n.language,
+            frames, // Include re-extracted frames
+            landingFrameIndex, // Include landing frame index if user marked it
           },
         }
       );
@@ -453,6 +491,7 @@ export default function AnalyzeVideo() {
       toast.error(error.message || t('videoAnalysis.analysisFailed', "Failed to analyze video"));
     } finally {
       setAnalyzing(false);
+      setExtractingFrames(false);
     }
   };
 

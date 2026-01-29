@@ -154,15 +154,13 @@ export const extractKeyFrames = async (
 
 /**
  * Calculates the landing frame index based on user-marked landing time
+ * When landing is marked, frames are extracted centered around landing.
+ * The landing frame is always at index 3 (center of 7 frames).
  * @param landingTime - The user-marked landing time in seconds
- * @param videoDuration - Total video duration in seconds
- * @param totalFrames - Total number of extracted frames
- * @returns The index of the landing frame, or null if no landing was marked
+ * @returns The index of the landing frame (3), or null if no landing was marked
  */
 export const calculateLandingFrameIndex = (
-  landingTime: number | null,
-  videoDuration: number,
-  totalFrames: number
+  landingTime: number | null
 ): number | null => {
   if (landingTime == null || landingTime <= 0) return null;
   
