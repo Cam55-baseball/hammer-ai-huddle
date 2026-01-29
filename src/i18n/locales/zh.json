@@ -3563,7 +3563,11 @@
         "sl_broad_jump_left": "单腿立定跳远 (左)",
         "sl_broad_jump_right": "单腿立定跳远 (右)",
         "sl_lateral_broad_jump": "单腿侧跳远",
+        "sl_lateral_broad_jump_left": "单腿侧跳远 (左)",
+        "sl_lateral_broad_jump_right": "单腿侧跳远 (右)",
         "sl_vert_jump": "单腿垂直跳",
+        "sl_vert_jump_left": "单腿垂直跳 (左)",
+        "sl_vert_jump_right": "单腿垂直跳 (右)",
         "mb_situp_throw": "药球仰卧起坐抛",
         "seated_chest_pass": "坐姿胸前传球",
         "max_tee_distance": "最大座架距离"

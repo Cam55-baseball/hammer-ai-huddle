@@ -34,7 +34,7 @@ interface VaultPerformanceTestCardProps {
 
 const LOCK_PERIOD_WEEKS = 6;
 
-// Sport-specific test types by module - updated with bilateral SL Broad Jump
+// Sport-specific test types by module - all bilateral jump metrics
 const TEST_TYPES_BY_SPORT = {
   baseball: {
     hitting: [
@@ -43,7 +43,8 @@ const TEST_TYPES_BY_SPORT = {
       'max_tee_distance',
       'sl_broad_jump_left',
       'sl_broad_jump_right',
-      'sl_lateral_broad_jump',
+      'sl_lateral_broad_jump_left',
+      'sl_lateral_broad_jump_right',
       'mb_situp_throw',
       'seated_chest_pass'
     ],
@@ -53,7 +54,8 @@ const TEST_TYPES_BY_SPORT = {
       'ten_yard_dash',
       'sl_broad_jump_left',
       'sl_broad_jump_right',
-      'sl_vert_jump',
+      'sl_vert_jump_left',
+      'sl_vert_jump_right',
       'mb_situp_throw',
       'seated_chest_pass'
     ],
@@ -62,8 +64,10 @@ const TEST_TYPES_BY_SPORT = {
       'ten_yard_dash',
       'sl_broad_jump_left',
       'sl_broad_jump_right',
-      'sl_lateral_broad_jump',
-      'sl_vert_jump',
+      'sl_lateral_broad_jump_left',
+      'sl_lateral_broad_jump_right',
+      'sl_vert_jump_left',
+      'sl_vert_jump_right',
       'mb_situp_throw',
       'seated_chest_pass'
     ]
@@ -75,8 +79,10 @@ const TEST_TYPES_BY_SPORT = {
       'max_tee_distance',
       'sl_broad_jump_left',
       'sl_broad_jump_right',
-      'sl_lateral_broad_jump',
-      'sl_vert_jump',
+      'sl_lateral_broad_jump_left',
+      'sl_lateral_broad_jump_right',
+      'sl_vert_jump_left',
+      'sl_vert_jump_right',
       'mb_situp_throw',
       'seated_chest_pass'
     ],
@@ -86,7 +92,8 @@ const TEST_TYPES_BY_SPORT = {
       'ten_yard_dash',
       'sl_broad_jump_left',
       'sl_broad_jump_right',
-      'sl_vert_jump',
+      'sl_vert_jump_left',
+      'sl_vert_jump_right',
       'mb_situp_throw',
       'seated_chest_pass'
     ],
@@ -95,15 +102,17 @@ const TEST_TYPES_BY_SPORT = {
       'ten_yard_dash',
       'sl_broad_jump_left',
       'sl_broad_jump_right',
-      'sl_lateral_broad_jump',
-      'sl_vert_jump',
+      'sl_lateral_broad_jump_left',
+      'sl_lateral_broad_jump_right',
+      'sl_vert_jump_left',
+      'sl_vert_jump_right',
       'mb_situp_throw',
       'seated_chest_pass'
     ]
   }
 };
 
-// Metric configuration with units and trend direction - updated with bilateral metrics
+// Metric configuration with units and trend direction - all bilateral jump metrics
 const TEST_METRICS: Record<string, { unit: string; higher_better: boolean }> = {
   // Distance metrics (feet)
   long_toss_distance: { unit: 'ft', higher_better: true },
@@ -111,11 +120,13 @@ const TEST_METRICS: Record<string, { unit: string; higher_better: boolean }> = {
   mb_situp_throw: { unit: 'ft', higher_better: true },
   seated_chest_pass: { unit: 'ft', higher_better: true },
   
-  // Distance metrics (inches) - bilateral SL Broad Jump
+  // Distance metrics (inches) - all bilateral jumps
   sl_broad_jump_left: { unit: 'in', higher_better: true },
   sl_broad_jump_right: { unit: 'in', higher_better: true },
-  sl_lateral_broad_jump: { unit: 'in', higher_better: true },
-  sl_vert_jump: { unit: 'in', higher_better: true },
+  sl_lateral_broad_jump_left: { unit: 'in', higher_better: true },
+  sl_lateral_broad_jump_right: { unit: 'in', higher_better: true },
+  sl_vert_jump_left: { unit: 'in', higher_better: true },
+  sl_vert_jump_right: { unit: 'in', higher_better: true },
   
   // Speed metrics (lower is better)
   ten_yard_dash: { unit: 's', higher_better: false },
@@ -123,6 +134,13 @@ const TEST_METRICS: Record<string, { unit: string; higher_better: boolean }> = {
   // Velocity metrics (mph)
   velocity: { unit: 'mph', higher_better: true },
   exit_velocity: { unit: 'mph', higher_better: true },
+};
+
+// Define all bilateral metric groups for grouped UI rendering
+const BILATERAL_METRIC_GROUPS: Record<string, [string, string]> = {
+  sl_broad_jump: ['sl_broad_jump_left', 'sl_broad_jump_right'],
+  sl_lateral_broad_jump: ['sl_lateral_broad_jump_left', 'sl_lateral_broad_jump_right'],
+  sl_vert_jump: ['sl_vert_jump_left', 'sl_vert_jump_right'],
 };
 
 export function VaultPerformanceTestCard({ 
@@ -179,10 +197,18 @@ export function VaultPerformanceTestCard({
   const testTypes = TEST_TYPES_BY_SPORT[sport] || TEST_TYPES_BY_SPORT.baseball;
   const metrics = selectedModule ? (testTypes[selectedModule as keyof typeof testTypes] || []) : [];
   
-  // Filter out bilateral metrics for special rendering
-  const bilateralMetrics = metrics.filter(m => m === 'sl_broad_jump_left' || m === 'sl_broad_jump_right');
-  const regularMetrics = metrics.filter(m => m !== 'sl_broad_jump_left' && m !== 'sl_broad_jump_right');
-  const hasBilateralMetrics = bilateralMetrics.length > 0;
+  // Get all bilateral metric keys for filtering
+  const allBilateralMetrics = Object.values(BILATERAL_METRIC_GROUPS).flat();
+  
+  // Identify which bilateral groups are present in current metrics
+  const presentBilateralGroups = Object.entries(BILATERAL_METRIC_GROUPS)
+    .filter(([_, [left, right]]) => metrics.includes(left) || metrics.includes(right))
+    .map(([groupName]) => groupName);
+  
+  // Filter out bilateral metrics for regular rendering (they get grouped UI)
+  const bilateralMetrics = metrics.filter(m => allBilateralMetrics.includes(m));
+  const regularMetrics = metrics.filter(m => !allBilateralMetrics.includes(m));
+  const hasBilateralMetrics = presentBilateralGroups.length > 0;
 
   // Check if entry is locked
   // Recap-unlock override: If recap was generated and no entry exists after that date, unlock the card
@@ -348,42 +374,45 @@ export function VaultPerformanceTestCard({
 
                 {selectedModule && metrics.length > 0 && (
                   <div className="space-y-3">
-                    {/* Bilateral SL Broad Jump - Special grouped rendering */}
-                    {hasBilateralMetrics && (
-                      <div className="p-2 rounded-lg bg-background/50 border border-border/50">
-                        <Label className="text-xs font-medium mb-2 block">
-                          {t('vault.performance.metrics.sl_broad_jump')} (in)
-                        </Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">
-                              {t('vault.performance.leftLeg')}
-                            </Label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={testResults['sl_broad_jump_left'] || ''}
-                              onChange={(e) => setTestResults({ ...testResults, sl_broad_jump_left: e.target.value })}
-                              placeholder="0"
-                              className="h-8"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">
-                              {t('vault.performance.rightLeg')}
-                            </Label>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={testResults['sl_broad_jump_right'] || ''}
-                              onChange={(e) => setTestResults({ ...testResults, sl_broad_jump_right: e.target.value })}
-                              placeholder="0"
-                              className="h-8"
-                            />
+                    {/* Bilateral jump metrics - Special grouped rendering */}
+                    {presentBilateralGroups.map((groupName) => {
+                      const [leftKey, rightKey] = BILATERAL_METRIC_GROUPS[groupName];
+                      return (
+                        <div key={groupName} className="p-2 rounded-lg bg-background/50 border border-border/50">
+                          <Label className="text-xs font-medium mb-2 block">
+                            {t(`vault.performance.metrics.${groupName}`)} (in)
+                          </Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">
+                                {t('vault.performance.leftLeg')}
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={testResults[leftKey] || ''}
+                                onChange={(e) => setTestResults({ ...testResults, [leftKey]: e.target.value })}
+                                placeholder="0"
+                                className="h-8"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">
+                                {t('vault.performance.rightLeg')}
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={testResults[rightKey] || ''}
+                                onChange={(e) => setTestResults({ ...testResults, [rightKey]: e.target.value })}
+                                placeholder="0"
+                                className="h-8"
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })}
                     
                     {/* Regular metrics */}
                     <div className="grid grid-cols-2 gap-2">

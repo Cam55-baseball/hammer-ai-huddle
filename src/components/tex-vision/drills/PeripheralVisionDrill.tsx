@@ -30,6 +30,7 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit, isPaus
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [roundCounter, setRoundCounter] = useState(0); // Triggers next target regardless of hit/miss
 
   const targetDuration = tier === 'beginner' ? 1500 : tier === 'advanced' ? 1000 : 700;
   const intervalMin = tier === 'beginner' ? 2000 : tier === 'advanced' ? 1500 : 1000;
@@ -46,10 +47,11 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit, isPaus
     setShowingTarget(true);
     setTargetStartTime(Date.now());
 
-    // Auto-hide after duration
+    // Auto-hide after duration AND trigger next round (critical for missed targets)
     setTimeout(() => {
       setShowingTarget(false);
       setActiveDirection(null);
+      setRoundCounter(prev => prev + 1); // Always increment to schedule next target
     }, targetDuration);
   }, [isComplete, attempts, totalAttempts, targetDuration]);
 
@@ -60,7 +62,7 @@ export default function PeripheralVisionDrill({ tier, onComplete, onExit, isPaus
     const timer = setTimeout(showTarget, delay);
 
     return () => clearTimeout(timer);
-  }, [attempts, showTarget, isComplete, totalAttempts, intervalMin, intervalMax, isPaused]);
+  }, [roundCounter, showTarget, isComplete, totalAttempts, intervalMin, intervalMax, isPaused]); // Changed: depends on roundCounter, not attempts
 
   const handleDirectionClick = (direction: Direction) => {
     if (!showingTarget || isComplete) return;

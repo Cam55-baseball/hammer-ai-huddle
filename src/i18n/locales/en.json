@@ -4956,7 +4956,11 @@
         "sl_broad_jump_left": "SL Broad Jump (Left)",
         "sl_broad_jump_right": "SL Broad Jump (Right)",
         "sl_lateral_broad_jump": "SL Lateral Broad Jump",
+        "sl_lateral_broad_jump_left": "SL Lateral Broad Jump (Left)",
+        "sl_lateral_broad_jump_right": "SL Lateral Broad Jump (Right)",
         "sl_vert_jump": "SL Vertical Jump",
+        "sl_vert_jump_left": "SL Vertical Jump (Left)",
+        "sl_vert_jump_right": "SL Vertical Jump (Right)",
         "mb_situp_throw": "MB Sit-Up Throw",
         "seated_chest_pass": "Seated Chest Pass",
         "max_tee_distance": "Max Tee Distance"

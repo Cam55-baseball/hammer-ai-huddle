@@ -4414,7 +4414,11 @@
         "sl_broad_jump_left": "Saut en Longueur SL (Gauche)",
         "sl_broad_jump_right": "Saut en Longueur SL (Droite)",
         "sl_lateral_broad_jump": "Saut Latéral en Longueur SL",
+        "sl_lateral_broad_jump_left": "Saut Latéral en Longueur SL (Gauche)",
+        "sl_lateral_broad_jump_right": "Saut Latéral en Longueur SL (Droite)",
         "sl_vert_jump": "Saut Vertical SL",
+        "sl_vert_jump_left": "Saut Vertical SL (Gauche)",
+        "sl_vert_jump_right": "Saut Vertical SL (Droite)",
         "mb_situp_throw": "Lancer Abdominal MB",
         "seated_chest_pass": "Passe Poitrine Assise",
         "max_tee_distance": "Distance Max au Tee"

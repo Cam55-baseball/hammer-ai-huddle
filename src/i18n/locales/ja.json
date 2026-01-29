@@ -3692,7 +3692,11 @@
         "sl_broad_jump_left": "SL立ち幅跳び (左)",
         "sl_broad_jump_right": "SL立ち幅跳び (右)",
         "sl_lateral_broad_jump": "SL横立ち幅跳び",
+        "sl_lateral_broad_jump_left": "SL横立ち幅跳び (左)",
+        "sl_lateral_broad_jump_right": "SL横立ち幅跳び (右)",
         "sl_vert_jump": "SL垂直跳び",
+        "sl_vert_jump_left": "SL垂直跳び (左)",
+        "sl_vert_jump_right": "SL垂直跳び (右)",
         "mb_situp_throw": "MBシットアップスロー",
         "seated_chest_pass": "シーテッドチェストパス",
         "max_tee_distance": "最大ティー距離"
