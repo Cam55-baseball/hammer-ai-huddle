@@ -934,21 +934,41 @@ Use the analyze_mechanics tool to return your structured analysis.`
         
         console.log(`[VIOLATIONS] After feedback override: ${JSON.stringify(violations)}, count: ${violationCount}`);
         
-        // Apply score caps (scaled to 1-10) - MULTIPLE VIOLATIONS FIRST
+        // Apply score caps (scaled to 1-10) - STRICTER ALIGNMENT ENFORCEMENT
+        // Per user preference: Max 60 (6/10) if EITHER back leg or shoulders not aligned fails
+        
+        // MULTIPLE VIOLATIONS = MAX 5.5 (55/100)
         if (violationCount >= 2) {
-          cappedScore = Math.min(cappedScore, 6); // 60/100 = 6/10
+          cappedScore = Math.min(cappedScore, 5.5);
           if (cappedScore !== analysis.overallScore) {
             console.log(`[SCORE CAP] Multiple violations (${violationCount}) - capping from ${analysis.overallScore} to ${cappedScore}`);
             scoreWasAdjusted = true;
           }
         }
+        // CRITICAL ALIGNMENT VIOLATIONS = MAX 6 (60/100) - EITHER fails = max 60
+        else if (violations.back_leg_not_facing_target) {
+          cappedScore = Math.min(cappedScore, 6);
+          if (cappedScore !== analysis.overallScore) {
+            console.log(`[SCORE CAP] Back leg not facing target - capping from ${analysis.overallScore} to ${cappedScore}`);
+            scoreWasAdjusted = true;
+          }
+        }
+        else if (violations.shoulders_not_aligned) {
+          cappedScore = Math.min(cappedScore, 6);
+          if (cappedScore !== analysis.overallScore) {
+            console.log(`[SCORE CAP] Shoulders not aligned - capping from ${analysis.overallScore} to ${cappedScore}`);
+            scoreWasAdjusted = true;
+          }
+        }
+        // EARLY SHOULDER ROTATION = MAX 6.5 (65/100)
         else if (violations.early_shoulder_rotation) {
-          cappedScore = Math.min(cappedScore, 7); // 70/100 = 7/10
+          cappedScore = Math.min(cappedScore, 6.5);
           if (cappedScore !== analysis.overallScore) {
             console.log(`[SCORE CAP] Early shoulder rotation - capping from ${analysis.overallScore} to ${cappedScore}`);
             scoreWasAdjusted = true;
           }
         }
+        // OTHER VIOLATIONS = MAX 7 (70/100)
         else if (violations.hands_pass_elbow_early) {
           cappedScore = Math.min(cappedScore, 7);
           if (cappedScore !== analysis.overallScore) {
@@ -956,22 +976,8 @@ Use the analyze_mechanics tool to return your structured analysis.`
             scoreWasAdjusted = true;
           }
         }
-        else if (violations.shoulders_not_aligned) {
-          cappedScore = Math.min(cappedScore, 7.5); // 75/100 = 7.5/10
-          if (cappedScore !== analysis.overallScore) {
-            console.log(`[SCORE CAP] Shoulders not aligned - capping from ${analysis.overallScore} to ${cappedScore}`);
-            scoreWasAdjusted = true;
-          }
-        }
-        else if (violations.back_leg_not_facing_target) {
-          cappedScore = Math.min(cappedScore, 7.5);
-          if (cappedScore !== analysis.overallScore) {
-            console.log(`[SCORE CAP] Back leg not facing target - capping from ${analysis.overallScore} to ${cappedScore}`);
-            scoreWasAdjusted = true;
-          }
-        }
         else if (violations.front_shoulder_opens_early) {
-          cappedScore = Math.min(cappedScore, 7.5);
+          cappedScore = Math.min(cappedScore, 7);
           if (cappedScore !== analysis.overallScore) {
             console.log(`[SCORE CAP] Front shoulder opens early - capping from ${analysis.overallScore} to ${cappedScore}`);
             scoreWasAdjusted = true;
