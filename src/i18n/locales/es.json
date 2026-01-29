@@ -4465,7 +4465,11 @@
         "sl_broad_jump_left": "Salto Largo SL (Izq)",
         "sl_broad_jump_right": "Salto Largo SL (Der)",
         "sl_lateral_broad_jump": "Salto Lateral Largo SL",
+        "sl_lateral_broad_jump_left": "Salto Lateral Largo SL (Izq)",
+        "sl_lateral_broad_jump_right": "Salto Lateral Largo SL (Der)",
         "sl_vert_jump": "Salto Vertical SL",
+        "sl_vert_jump_left": "Salto Vertical SL (Izq)",
+        "sl_vert_jump_right": "Salto Vertical SL (Der)",
         "mb_situp_throw": "Lanzamiento MB Abdominal",
         "seated_chest_pass": "Pase de Pecho Sentado",
         "max_tee_distance": "Distancia Máxima de Tee"

@@ -4414,7 +4414,11 @@
         "sl_broad_jump_left": "SL Weitsprung (Links)",
         "sl_broad_jump_right": "SL Weitsprung (Rechts)",
         "sl_lateral_broad_jump": "SL Seitwärts-Weitsprung",
+        "sl_lateral_broad_jump_left": "SL Seitwärts-Weitsprung (Links)",
+        "sl_lateral_broad_jump_right": "SL Seitwärts-Weitsprung (Rechts)",
         "sl_vert_jump": "SL Vertikalsprung",
+        "sl_vert_jump_left": "SL Vertikalsprung (Links)",
+        "sl_vert_jump_right": "SL Vertikalsprung (Rechts)",
         "mb_situp_throw": "MB Sit-Up Wurf",
         "seated_chest_pass": "Brustpass Sitzend",
         "max_tee_distance": "Max Tee-Distanz"

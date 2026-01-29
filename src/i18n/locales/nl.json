@@ -3592,7 +3592,11 @@
         "sl_broad_jump_left": "SL Verspringen (Links)",
         "sl_broad_jump_right": "SL Verspringen (Rechts)",
         "sl_lateral_broad_jump": "SL Zijwaarts Verspringen",
+        "sl_lateral_broad_jump_left": "SL Zijwaarts Verspringen (Links)",
+        "sl_lateral_broad_jump_right": "SL Zijwaarts Verspringen (Rechts)",
         "sl_vert_jump": "SL Verticale Sprong",
+        "sl_vert_jump_left": "SL Verticale Sprong (Links)",
+        "sl_vert_jump_right": "SL Verticale Sprong (Rechts)",
         "mb_situp_throw": "MB Sit-Up Worp",
         "seated_chest_pass": "Zittende Borstpass",
         "max_tee_distance": "Max Tee Afstand"

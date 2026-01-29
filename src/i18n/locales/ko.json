@@ -3579,7 +3579,11 @@
         "sl_broad_jump_left": "SL 멀리뛰기 (왼쪽)",
         "sl_broad_jump_right": "SL 멀리뛰기 (오른쪽)",
         "sl_lateral_broad_jump": "SL 측면 멀리뛰기",
+        "sl_lateral_broad_jump_left": "SL 측면 멀리뛰기 (왼쪽)",
+        "sl_lateral_broad_jump_right": "SL 측면 멀리뛰기 (오른쪽)",
         "sl_vert_jump": "SL 수직 점프",
+        "sl_vert_jump_left": "SL 수직 점프 (왼쪽)",
+        "sl_vert_jump_right": "SL 수직 점프 (오른쪽)",
         "mb_situp_throw": "MB 윗몸일으키기 던지기",
         "seated_chest_pass": "앉아서 가슴 패스",
         "max_tee_distance": "최대 티 거리"
