@@ -1214,6 +1214,165 @@
       "current": "Actual",
       "starting": "Inicial",
       "startTracking": "Comienza a rastrear tu peso para ver el progreso"
+    },
+    "education": {
+      "sectionTitle": "Educación de Bienestar Atlético",
+      "sectionSubtitle": "Información importante para tu salud y bienestar",
+      "healthy": "Saludable",
+      "concerning": "Preocupante",
+      "eatingDisorder": {
+        "title": "Entendiendo la Alimentación y Tu Cuerpo",
+        "subtitle": "Información educativa sobre hábitos alimenticios saludables para atletas",
+        "intro": "Entender la relación entre la comida y nuestros cuerpos es una parte importante de ser atleta. Esta sección proporciona información educativa para ayudarte a reconocer cuando los hábitos alimenticios pueden volverse poco saludables.",
+        "overview": {
+          "title": "¿Qué Son los Trastornos Alimentarios?",
+          "content": "Los trastornos alimentarios son condiciones serias que afectan cómo las personas piensan sobre la comida y sus cuerpos. Pueden pasarle a cualquiera, incluyendo atletas. Entenderlos puede ayudarte a ti o a alguien que te importa a obtener ayuda temprana."
+        },
+        "warningSigns": {
+          "title": "Reconociendo Señales de Advertencia",
+          "content": "Estos comportamientos pueden indicar una relación poco saludable con la comida. Recuerda, notar estos en ti mismo o en otros es el primer paso para obtener apoyo."
+        },
+        "athleteRisks": {
+          "title": "Riesgos Especiales para Atletas",
+          "content": "Los atletas enfrentan presiones únicas que pueden llevar a patrones alimenticios poco saludables. Entender estos riesgos te ayuda a tomar mejores decisiones para tu salud y rendimiento a largo plazo."
+        },
+        "properFueling": {
+          "title": "Por Qué Importa la Nutrición Adecuada",
+          "content": "Tu cuerpo necesita combustible para rendir, crecer y recuperarse. La nutrición adecuada no se trata de restricción—se trata de darle a tu cuerpo lo que necesita para estar en su mejor momento."
+        },
+        "signs": {
+          "mindfulEating": "Comer cuando tienes hambre, parar cuando estás satisfecho",
+          "obsessiveTracking": "Conteo obsesivo de calorías o seguimiento de comida",
+          "regularMeals": "Comer comidas regulares con tu equipo o familia",
+          "skippingMeals": "Saltarse comidas o poner excusas para evitar comer",
+          "balancedTraining": "Entrenar según lo planeado, descansar cuando es necesario",
+          "excessiveExercise": "Ejercitarse más allá de los requisitos de entrenamiento para 'quemar' comida",
+          "performanceFocus": "Enfocarse en cómo rinde tu cuerpo",
+          "bodyPreoccupation": "Preocupación constante por el peso o forma corporal",
+          "socialEating": "Disfrutar comidas con compañeros de equipo y familia",
+          "avoidingMeals": "Evitar comer con otros o esconder comida",
+          "openCommunication": "Hablar abiertamente sobre nutrición con entrenadores",
+          "hidingFood": "Esconder comida o comer en secreto",
+          "stableEnergy": "Tener energía estable durante todo el día",
+          "moodChanges": "Cambios de humor relacionados con comer o no comer"
+        },
+        "risks": {
+          "reds": {
+            "title": "Deficiencia Energética Relativa (RED-S)",
+            "description": "Cuando no comes suficiente para alimentar tu actividad, tu cuerpo no puede rendir o recuperarse adecuadamente. Esto afecta la energía, el ánimo y la salud a largo plazo."
+          },
+          "underFueling": {
+            "title": "Impactos de la Sub-alimentación",
+            "description": "No comer suficiente puede llevar a lesiones, recuperación más lenta, disminución del rendimiento y sistema inmune debilitado."
+          },
+          "growthConcerns": {
+            "title": "Crecimiento y Desarrollo",
+            "description": "Los atletas jóvenes necesitan nutrición adecuada para un crecimiento saludable. Restringir la comida puede afectar la salud ósea, la altura y el desarrollo."
+          },
+          "overtraining": {
+            "title": "Conexión con el Sobreentrenamiento",
+            "description": "Combinar ejercicio excesivo con sub-alimentación crea un ciclo peligroso que puede dañar tanto la salud física como mental."
+          }
+        },
+        "fueling": {
+          "performance": "La nutrición adecuada te da energía para entrenar y competir",
+          "growth": "La buena alimentación apoya el crecimiento y desarrollo saludable",
+          "recovery": "Comer bien ayuda a tu cuerpo a repararse y fortalecerse",
+          "injury": "La nutrición adecuada reduce tu riesgo de lesiones"
+        }
+      },
+      "bodyImage": {
+        "title": "Imagen Corporal y Autoconfianza",
+        "subtitle": "Construyendo una relación saludable con tu cuerpo como atleta",
+        "intro": "Los atletas vienen en todas las formas y tamaños. Lo que más importa es cómo rinde tu cuerpo, se recupera y te ayuda a alcanzar tus metas. Esta sección te ayuda a construir una relación saludable con tu cuerpo y resistir comparaciones poco útiles.",
+        "impact": {
+          "title": "Cómo Te Afecta la Imagen Corporal",
+          "content": "Cómo te sientes sobre tu cuerpo puede impactar tu confianza, rendimiento y salud mental. Una imagen corporal positiva te ayuda a enfocarte en lo que realmente importa—tus habilidades, esfuerzo y crecimiento como atleta."
+        },
+        "diversity": {
+          "title": "Diversidad Corporal en el Atletismo",
+          "content": "Mira cualquier equipo profesional y verás atletas de todas las formas y tamaños. Diferentes tipos de cuerpo destacan en diferentes posiciones y deportes. No hay un cuerpo atlético 'perfecto'."
+        },
+        "comparison": {
+          "title": "La Trampa de la Comparación",
+          "content": "Las redes sociales y la presión de los compañeros pueden hacerte sentir que no estás a la altura. Pero compararte con otros no es justo contigo—el cuerpo y el viaje de cada uno es diferente."
+        },
+        "function": {
+          "title": "Función Sobre Apariencia",
+          "content": "Tu cuerpo es una herramienta increíble. En lugar de enfocarte en cómo se ve, celebra lo que puede hacer—las habilidades que ha aprendido, la fuerza que ha construido y las metas que te está ayudando a alcanzar."
+        },
+        "positions": {
+          "pitcher": "Lanzadores",
+          "catcher": "Receptores",
+          "infielder": "Jugadores de Cuadro",
+          "outfielder": "Jardineros"
+        },
+        "positionDesc": {
+          "pitcher": "Todas las alturas, complexiones y estilos de brazo pueden tener éxito",
+          "catcher": "Varios tipos de cuerpo destacan detrás del plato",
+          "infielder": "La velocidad y agilidad vienen en muchas formas",
+          "outfielder": "El alcance y potencia varían entre jugadores"
+        },
+        "dangers": {
+          "filters": {
+            "title": "Filtros y Edición",
+            "description": "La mayoría de las imágenes que ves en línea están editadas. No muestran la realidad."
+          },
+          "highlights": {
+            "title": "Mejores Momentos",
+            "description": "La gente solo publica sus mejores momentos, no su realidad cotidiana."
+          },
+          "different": {
+            "title": "Diferentes Metas",
+            "description": "Otros pueden tener diferentes metas de entrenamiento, genética o situaciones que tú."
+          },
+          "journey": {
+            "title": "Tu Propio Viaje",
+            "description": "La única comparación justa es con tu yo del pasado—enfócate en tu propio crecimiento."
+          }
+        },
+        "functions": {
+          "strength": {
+            "title": "Fuerza",
+            "description": "El poder para lanzar, batear y competir"
+          },
+          "speed": {
+            "title": "Velocidad y Agilidad",
+            "description": "Tu capacidad para moverte y reaccionar rápidamente"
+          },
+          "durability": {
+            "title": "Durabilidad",
+            "description": "Mantenerse saludable durante una larga temporada"
+          },
+          "recovery": {
+            "title": "Recuperación",
+            "description": "Cómo tu cuerpo se repara y se fortalece"
+          }
+        },
+        "affirmations": {
+          "title": "Afirmaciones de Atleta",
+          "message": "El diálogo interno positivo ayuda a construir confianza. Intenta decirte estas a ti mismo:",
+          "affirmation1": "Mi cuerpo es fuerte y capaz de cosas increíbles.",
+          "affirmation2": "Alimento mi cuerpo para rendir, no para verme de cierta manera.",
+          "affirmation3": "Soy más que mi apariencia—soy mi esfuerzo, mi carácter y mi corazón.",
+          "affirmation4": "Cada cuerpo es diferente, y eso es lo que hace grandes a los equipos.",
+          "affirmation5": "Aprecio lo que mi cuerpo puede hacer hoy."
+        },
+        "keyMessage": "Tu cuerpo es una herramienta increíble para alcanzar tus sueños atléticos. Trátalo con respeto, aliméntalo bien y aprecia todo lo que puede hacer.",
+        "disclaimer": "Este contenido está diseñado para promover una imagen corporal positiva. Si estás luchando con cómo te sientes sobre tu cuerpo, por favor habla con un adulto de confianza, consejero o profesional de la salud."
+      },
+      "support": {
+        "title": "¿Necesitas Apoyo?",
+        "message": "Si tú o alguien que conoces está luchando con preocupaciones sobre comida o imagen corporal, por favor contacta a:",
+        "trustedAdult": "Un padre, tutor o familiar de confianza",
+        "coach": "Un entrenador, maestro o consejero escolar",
+        "healthcare": "Un médico o proveedor de atención médica",
+        "helpline": "Línea de Ayuda Nacional de Trastornos Alimentarios:"
+      },
+      "disclaimer": {
+        "title": "Solo Información Educativa",
+        "text": "Este contenido es solo para propósitos educativos y no pretende diagnosticar o tratar ninguna condición. Si tienes preocupaciones sobre tus hábitos alimenticios o tu relación con la comida, por favor habla con un adulto de confianza o profesional de la salud."
+      }
     }
   },
   "tutorial": {

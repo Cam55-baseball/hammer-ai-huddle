@@ -1539,6 +1539,165 @@
         "content3": "La qualité du sommeil affecte les choix alimentaires et le métabolisme",
         "content4": "L'alimentation consciente améliore la satisfaction des repas",
         "content5": "La santé mentale est aussi importante que la santé physique"
+      },
+      "education": {
+        "sectionTitle": "Éducation au Bien-être Athlétique",
+        "sectionSubtitle": "Informations importantes pour votre santé et bien-être",
+        "healthy": "Sain",
+        "concerning": "Préoccupant",
+        "eatingDisorder": {
+          "title": "Comprendre l'Alimentation et Votre Corps",
+          "subtitle": "Information éducative sur les habitudes alimentaires saines pour athlètes",
+          "intro": "Comprendre la relation entre la nourriture et notre corps est une partie importante d'être athlète. Cette section fournit des informations éducatives pour vous aider à reconnaître quand les habitudes alimentaires peuvent devenir malsaines.",
+          "overview": {
+            "title": "Que Sont les Troubles Alimentaires?",
+            "content": "Les troubles alimentaires sont des conditions sérieuses qui affectent la façon dont les gens pensent à la nourriture et à leur corps. Ils peuvent arriver à n'importe qui, y compris les athlètes. Les comprendre peut vous aider ou aider quelqu'un que vous aimez à obtenir de l'aide tôt."
+          },
+          "warningSigns": {
+            "title": "Reconnaître les Signaux d'Alarme",
+            "content": "Ces comportements peuvent indiquer une relation malsaine avec la nourriture. N'oubliez pas que les remarquer chez vous-même ou chez les autres est la première étape pour obtenir du soutien."
+          },
+          "athleteRisks": {
+            "title": "Risques Spéciaux pour les Athlètes",
+            "content": "Les athlètes font face à des pressions uniques qui peuvent mener à des habitudes alimentaires malsaines. Comprendre ces risques vous aide à prendre de meilleures décisions pour votre santé et performance à long terme."
+          },
+          "properFueling": {
+            "title": "Pourquoi une Nutrition Adéquate Est Importante",
+            "content": "Votre corps a besoin de carburant pour performer, grandir et récupérer. Une nutrition adéquate n'est pas une question de restriction—c'est donner à votre corps ce dont il a besoin pour être au mieux."
+          },
+          "signs": {
+            "mindfulEating": "Manger quand on a faim, s'arrêter quand on est satisfait",
+            "obsessiveTracking": "Comptage obsessionnel des calories ou suivi alimentaire",
+            "regularMeals": "Manger des repas réguliers avec son équipe ou sa famille",
+            "skippingMeals": "Sauter des repas ou trouver des excuses pour éviter de manger",
+            "balancedTraining": "S'entraîner comme prévu, se reposer quand nécessaire",
+            "excessiveExercise": "Faire de l'exercice au-delà des exigences d'entraînement pour 'brûler' la nourriture",
+            "performanceFocus": "Se concentrer sur la performance de son corps",
+            "bodyPreoccupation": "Inquiétude constante sur le poids ou la forme corporelle",
+            "socialEating": "Apprécier les repas avec les coéquipiers et la famille",
+            "avoidingMeals": "Éviter de manger avec les autres ou cacher la nourriture",
+            "openCommunication": "Parler ouvertement de nutrition avec les entraîneurs",
+            "hidingFood": "Cacher la nourriture ou manger en secret",
+            "stableEnergy": "Avoir une énergie stable tout au long de la journée",
+            "moodChanges": "Sautes d'humeur liées au fait de manger ou ne pas manger"
+          },
+          "risks": {
+            "reds": {
+              "title": "Déficit Énergétique Relatif (RED-S)",
+              "description": "Quand vous ne mangez pas assez pour alimenter votre activité, votre corps ne peut pas performer ou récupérer correctement. Cela affecte l'énergie, l'humeur et la santé à long terme."
+            },
+            "underFueling": {
+              "title": "Impacts du Sous-alimentation",
+              "description": "Ne pas manger assez peut mener à des blessures, une récupération plus lente, une diminution des performances et un système immunitaire affaibli."
+            },
+            "growthConcerns": {
+              "title": "Croissance et Développement",
+              "description": "Les jeunes athlètes ont besoin d'une nutrition adéquate pour une croissance saine. Restreindre la nourriture peut affecter la santé osseuse, la taille et le développement."
+            },
+            "overtraining": {
+              "title": "Connexion au Surentraînement",
+              "description": "Combiner un exercice excessif avec une sous-alimentation crée un cycle dangereux qui peut nuire à la santé physique et mentale."
+            }
+          },
+          "fueling": {
+            "performance": "Une nutrition adéquate vous donne de l'énergie pour l'entraînement et la compétition",
+            "growth": "Une bonne alimentation soutient une croissance et un développement sains",
+            "recovery": "Bien manger aide votre corps à se réparer et à devenir plus fort",
+            "injury": "Une nutrition adéquate réduit votre risque de blessure"
+          }
+        },
+        "bodyImage": {
+          "title": "Image Corporelle et Confiance en Soi",
+          "subtitle": "Construire une relation saine avec votre corps en tant qu'athlète",
+          "intro": "Les athlètes viennent dans toutes les formes et tailles. Ce qui compte le plus, c'est comment votre corps performe, récupère et vous aide à atteindre vos objectifs. Cette section vous aide à construire une relation saine avec votre corps et à résister aux comparaisons inutiles.",
+          "impact": {
+            "title": "Comment l'Image Corporelle Vous Affecte",
+            "content": "Comment vous vous sentez par rapport à votre corps peut impacter votre confiance, vos performances et votre santé mentale. Une image corporelle positive vous aide à vous concentrer sur ce qui compte vraiment—vos compétences, vos efforts et votre croissance en tant qu'athlète."
+          },
+          "diversity": {
+            "title": "Diversité Corporelle dans l'Athlétisme",
+            "content": "Regardez n'importe quelle équipe professionnelle et vous verrez des athlètes de toutes les formes et tailles. Différents types de corps excellent dans différentes positions et sports. Il n'y a pas de corps athlétique 'parfait'."
+          },
+          "comparison": {
+            "title": "Le Piège de la Comparaison",
+            "content": "Les médias sociaux et la pression des pairs peuvent vous faire sentir que vous n'êtes pas à la hauteur. Mais vous comparer aux autres n'est pas juste envers vous—le corps et le parcours de chacun sont différents."
+          },
+          "function": {
+            "title": "Fonction Plutôt qu'Apparence",
+            "content": "Votre corps est un outil incroyable. Au lieu de vous concentrer sur son apparence, célébrez ce qu'il peut faire—les compétences qu'il a apprises, la force qu'il a développée et les objectifs qu'il vous aide à atteindre."
+          },
+          "positions": {
+            "pitcher": "Lanceurs",
+            "catcher": "Receveurs",
+            "infielder": "Joueurs de Champ Intérieur",
+            "outfielder": "Joueurs de Champ Extérieur"
+          },
+          "positionDesc": {
+            "pitcher": "Toutes les tailles, corpulences et styles de bras peuvent réussir",
+            "catcher": "Divers types de corps excellent derrière le marbre",
+            "infielder": "La vitesse et l'agilité prennent de nombreuses formes",
+            "outfielder": "La portée et la puissance varient selon les joueurs"
+          },
+          "dangers": {
+            "filters": {
+              "title": "Filtres et Retouches",
+              "description": "La plupart des images que vous voyez en ligne sont retouchées. Elles ne montrent pas la réalité."
+            },
+            "highlights": {
+              "title": "Moments Forts",
+              "description": "Les gens ne publient que leurs meilleurs moments, pas leur réalité quotidienne."
+            },
+            "different": {
+              "title": "Objectifs Différents",
+              "description": "D'autres peuvent avoir des objectifs d'entraînement, une génétique ou des situations différentes des vôtres."
+            },
+            "journey": {
+              "title": "Votre Propre Parcours",
+              "description": "La seule comparaison juste est avec votre passé—concentrez-vous sur votre propre croissance."
+            }
+          },
+          "functions": {
+            "strength": {
+              "title": "Force",
+              "description": "La puissance pour lancer, frapper et compétitionner"
+            },
+            "speed": {
+              "title": "Vitesse et Agilité",
+              "description": "Votre capacité à vous déplacer et réagir rapidement"
+            },
+            "durability": {
+              "title": "Durabilité",
+              "description": "Rester en bonne santé pendant une longue saison"
+            },
+            "recovery": {
+              "title": "Récupération",
+              "description": "Comment votre corps se répare et devient plus fort"
+            }
+          },
+          "affirmations": {
+            "title": "Affirmations d'Athlète",
+            "message": "Le discours intérieur positif aide à construire la confiance. Essayez de vous dire ceci:",
+            "affirmation1": "Mon corps est fort et capable de choses incroyables.",
+            "affirmation2": "Je nourris mon corps pour performer, pas pour avoir une certaine apparence.",
+            "affirmation3": "Je suis plus que mon apparence—je suis mes efforts, mon caractère et mon cœur.",
+            "affirmation4": "Chaque corps est différent, et c'est ce qui rend les équipes formidables.",
+            "affirmation5": "J'apprécie ce que mon corps peut faire aujourd'hui."
+          },
+          "keyMessage": "Votre corps est un outil incroyable pour atteindre vos rêves athlétiques. Traitez-le avec respect, nourrissez-le bien et appréciez tout ce qu'il peut faire.",
+          "disclaimer": "Ce contenu est conçu pour promouvoir une image corporelle positive. Si vous avez du mal avec ce que vous ressentez par rapport à votre corps, veuillez parler à un adulte de confiance, un conseiller ou un professionnel de santé."
+        },
+        "support": {
+          "title": "Besoin de Soutien?",
+          "message": "Si vous ou quelqu'un que vous connaissez a des difficultés avec la nourriture ou l'image corporelle, veuillez contacter:",
+          "trustedAdult": "Un parent, tuteur ou membre de famille de confiance",
+          "coach": "Un entraîneur, enseignant ou conseiller scolaire",
+          "healthcare": "Un médecin ou professionnel de santé",
+          "helpline": "Ligne d'aide nationale pour les troubles alimentaires:"
+        },
+        "disclaimer": {
+          "title": "Information Éducative Uniquement",
+          "text": "Ce contenu est à des fins éducatives uniquement et n'est pas destiné à diagnostiquer ou traiter une condition. Si vous avez des préoccupations concernant vos habitudes alimentaires ou votre relation avec la nourriture, veuillez parler à un adulte de confiance ou un professionnel de santé."
+        }
       }
     }
   },
