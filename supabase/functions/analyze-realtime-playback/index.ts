@@ -577,10 +577,10 @@ STARTING POINT: Begin at 5 (mediocre baseline) - scale is 1-10
 - Scores above 8 require NEAR-PERFECT fundamentals
 
 SCORE CAPS (NON-NEGOTIABLE):
-- If shoulders rotate BEFORE stride foot lands → MAX SCORE: 7
-- If shoulders NOT aligned with target at landing → MAX SCORE: 7.5
-- If back hip/leg NOT facing target at landing → MAX SCORE: 7.5
-- If TWO OR MORE critical violations → MAX SCORE: 6
+- If shoulders NOT aligned with target at landing → MAX SCORE: 6
+- If back hip/leg NOT facing target at landing → MAX SCORE: 6
+- If TWO OR MORE critical violations → MAX SCORE: 5.5
+- If shoulders rotate BEFORE stride foot lands → MAX SCORE: 6.5
 
 SCORING BANDS:
 - 9-10: Elite. ALL fundamentals correct. Minor refinements only.
