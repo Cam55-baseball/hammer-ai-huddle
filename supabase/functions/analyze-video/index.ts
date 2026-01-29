@@ -761,10 +761,10 @@ STARTING POINT: Begin at 50 (mediocre baseline)
 - Scores above 80 require NEAR-PERFECT fundamentals
 
 SCORE CAPS (NON-NEGOTIABLE):
-- If shoulders rotate BEFORE stride foot lands → MAX SCORE: 70
-- If shoulders NOT aligned with target at landing → MAX SCORE: 75
-- If back hip/leg NOT facing target at landing → MAX SCORE: 75
-- If TWO OR MORE critical violations → MAX SCORE: 60
+- If shoulders NOT aligned with target at landing → MAX SCORE: 60
+- If back hip/leg NOT facing target at landing → MAX SCORE: 60
+- If TWO OR MORE critical violations → MAX SCORE: 55
+- If shoulders rotate BEFORE stride foot lands → MAX SCORE: 65
 
 SCORING BANDS:
 - 90-100: Elite. ALL fundamentals correct. Minor refinements only.
@@ -804,9 +804,9 @@ When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to 
 
 Provide:
 - Efficiency score (0-100) based on form correctness using the SCORING FRAMEWORK above
-- **CRITICAL CHECK:** Flag if shoulders rotate before stride foot lands (score CAPPED at 70)
-- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (score CAPPED at 75)
-- **BACK LEG CHECK:** Flag if back hip/leg not facing target at landing (score CAPPED at 75)
+- **CRITICAL CHECK:** Flag if shoulders rotate before stride foot lands (score CAPPED at 65)
+- **ALIGNMENT CHECK:** Flag if shoulders not aligned with target at landing (score CAPPED at 60)
+- **BACK LEG CHECK:** Flag if back hip/leg not facing target at landing (score CAPPED at 60)
 - **If early rotation detected:** Explain how this creates power leak, hurts accuracy, and increases arm strain
 - **If misalignment detected:** Explain how shoulder-target alignment maximizes velocity and reduces effort
 - Specific feedback on sequence and alignment
