@@ -1,65 +1,173 @@
 
-# Fix Plan: Handle 404 Errors Gracefully in useSubscription
 
-## Problem
+# Corrected Plan: Fix Shoulder Position Formula for Throwing & Baseball Pitching
 
-The `check-subscription` edge function occasionally returns a 404 error (likely due to deployment propagation, cold starts, or stale PWA cache). While the hook has retry logic, after 3 failed retries it still throws an error that propagates to the ErrorBoundary, causing a blank screen.
+## Understanding the Correct Mechanics
 
-## Root Cause
+Based on your clarification, here's the CORRECT formula for baseball pitching and all throwing:
 
-After the retry loop (lines 94-108), if all retries fail with 404 errors, the code falls through to line 130 where it logs an error and attempts a database fallback. However, if the error message somehow causes issues or the fallback also fails, it can lead to unhandled states.
+**At the moment of foot landing (before rotation begins):**
 
-The real issue is that the 404 error is being treated as a critical failure when it should be treated as a temporary condition that gracefully falls back to showing the user as "not subscribed" while continuing to retry in the background.
+| Body Part | Correct Position | What This Means |
+|-----------|------------------|-----------------|
+| **Shoulders** | LATERAL to home plate (sideways) | Glove-side shoulder points at target, throwing shoulder faces away |
+| **Hips** | Forward-facing toward home plate | Hips are squared up, ready to rotate |
+| **Chest** | NOT facing home plate | Chest faces third base (RHP) or first base (LHP) |
+| **Upper body** | Resisted - no rotation yet | Stay closed until foot plants |
 
-## Solution
+**The key insight:** "Shoulders in line with target" means the shoulder LINE points at the target (like an arrow), NOT that the chest faces the target. The chest should be SIDEWAYS at landing.
 
-Enhance the error handling to:
-1. Treat 404 errors as non-fatal after retries are exhausted
-2. Fall back to database query when 404 persists
-3. Add explicit 404 handling that sets `initialized: true` and `loading: false` to prevent blank screens
-4. Log warnings instead of errors for 404s to reduce noise
+## Current Problem
 
-## Changes Required
+The current formula says:
+- "Shoulders IN LINE WITH TARGET at landing" (line 384)
+- Kid-friendly translation: "Your chest wasn't pointing at home plate" (line 535)
 
-### File: `src/hooks/useSubscription.ts`
+This is being interpreted as "chest should face home plate at landing" - which is **WRONG**. If the chest already faces home plate when the foot lands, the shoulders have ALREADY rotated (which is the early rotation violation).
 
-**Change 1: Add specific 404 handling after retry loop (after line 108)**
+## Files to Update
 
-After the retry loop, explicitly check if we still have a 404 error and handle it gracefully by falling through to the database fallback without treating it as a critical error.
+| File | Changes |
+|------|---------|
+| `supabase/functions/analyze-video/index.ts` | Fix baseball pitching + throwing prompts |
+| `supabase/functions/analyze-realtime-playback/index.ts` | Fix baseball pitching + throwing prompts |
 
-**Change 2: Improve the error logging (around line 131)**
+**Note:** Softball pitching will NOT be changed (per your instruction).
 
-Make the logging conditional - use `console.warn` for 404 errors and `console.error` for other errors.
+## Detailed Changes
 
-**Change 3: Ensure fallback always completes (lines 134-177)**
+### Change 1: Rewrite Shoulder Position Requirement (Baseball Pitching)
 
-The fallback logic is already good, but ensure it always sets `initialized: true` so the app doesn't get stuck in a loading state.
-
-## Code Changes
-
-```typescript
-// After line 108, before the if (!error && data) check:
-// If still getting 404 after all retries, log it as a warning (not error) 
-// and proceed to fallback - this is a transient deployment issue, not a critical error
-if (error && (error.message?.includes('NOT_FOUND') || error.message?.includes('not found') || (error as any)?.status === 404)) {
-  console.warn('[useSubscription] Function still unavailable after retries, using database fallback');
-  // Force the fallback path by keeping error set - the fallback will handle it
-}
+**Current (WRONG):**
+```
+3. Shoulders → IN LINE WITH TARGET (pitcher-catcher alignment) ⭐⭐
+...
+SHOULDER-TARGET ALIGNMENT REQUIREMENT:
+- Shoulders MUST be in line with target at the moment of landing
+- Think: draw a line from throwing shoulder through front shoulder to catcher
 ```
 
-The existing fallback logic starting at line 133 will handle this correctly since it queries the database directly.
+**Corrected:**
+```
+3. Shoulders → LATERAL TO TARGET (sideways, glove shoulder points at catcher) ⭐⭐
+4. Hips → FORWARD-FACING toward home plate (squared up) ⭐
+5. Chest → NOT facing home plate (stay closed) ⭐⭐
 
-## Summary
+SHOULDER POSITION REQUIREMENT AT LANDING:
+- Shoulders MUST be SIDEWAYS (lateral) at foot landing
+- Glove-side shoulder POINTS at the catcher
+- Throwing shoulder faces AWAY from catcher (toward second base)
+- Chest does NOT face home plate yet - it faces third base (RHP) or first base (LHP)
+- Hips are forward/squared to home plate, creating the separation
 
-| Change | Purpose |
-|--------|---------|
-| Add 404-specific warning after retries | Clarify that 404 is transient, not critical |
-| Downgrade 404 logs from error to warn | Reduce console noise |
-| Ensure `initialized: true` always set | Prevent blank screen/infinite loading |
+WHY THIS MATTERS:
+- This "separation" between closed shoulders and open hips creates rotational power
+- If chest already faces home plate at landing → shoulders have ALREADY rotated → EARLY ROTATION
+- Resist upper body rotation until foot plants → maximize velocity, accuracy, and arm health
+```
 
-## Expected Outcome
+### Change 2: Remove "shoulders_not_aligned" Violation
 
-- 404 errors will no longer cause blank screens
-- The app will gracefully show users their subscription status from the database
-- Console will show warnings (not errors) for transient 404s
-- The polling will continue to retry and pick up the function when it becomes available
+This violation is being triggered incorrectly and conflicts with the early rotation check. If the chest ISN'T facing home plate, that's actually CORRECT. 
+
+**Solution:** Replace "shoulders_not_aligned" with a new check: "shoulders_already_rotated" or simply merge it with "early_shoulder_rotation" since they describe the same problem from different angles.
+
+### Change 3: Fix Kid-Friendly Language (Baseball Pitching & Throwing)
+
+**Current (WRONG):**
+```
+Instead of: "Shoulders not aligned with target at landing"
+Say: "When your front foot touched down, your chest wasn't pointing at home plate - aim your belly button at the catcher"
+```
+
+**Corrected:**
+```
+CORRECT POSITION AT LANDING:
+- Your chest should NOT face home plate yet when your foot lands
+- Your glove shoulder (front shoulder) should point at home plate like an arrow
+- Your hips should face home plate, but your shoulders stay sideways
+- After your foot lands, THEN your shoulders can turn
+
+WHAT TO SAY IF SHOULDERS ROTATED TOO EARLY:
+"Your chest was already facing home plate when your foot landed - stay sideways longer, 
+let your front shoulder point at the catcher, and only turn your chest AFTER your foot plants"
+```
+
+### Change 4: Update Violation Keyword Detection
+
+**Remove these misleading keywords from "shoulders_not_aligned":**
+- "chest wasn't pointing"
+- "not aligned with target"
+- "shoulders not aligned"
+
+**Add new detection for the ACTUAL problem:**
+```javascript
+early_shoulder_rotation: [
+  // existing keywords...
+  "chest already facing", "chest was facing", "shoulders already turned",
+  "shoulders were open", "upper body rotated early", "chest facing home plate at landing"
+]
+```
+
+### Change 5: Update Violation Detection Logic
+
+**Current problem:** 3 violations detected → score capped at 55
+- `shoulders_not_aligned: true` (wrongly flagged because chest isn't facing home plate)
+- `back_leg_not_facing_target: true`
+- `early_shoulder_rotation: true`
+
+**Fix:** Remove "shoulders_not_aligned" as a separate violation for baseball pitching and throwing. Merge the concept into early_shoulder_rotation since:
+- If shoulders are "not aligned" (chest facing home plate) at landing → that IS early rotation
+- If shoulders are correctly lateral → no violation
+
+### Change 6: Update the Throwing Module Prompt
+
+Apply the same corrections to the throwing prompt:
+- Shoulders LATERAL at landing (glove shoulder points at target)
+- Hips forward-facing
+- Chest does NOT face target until AFTER foot plants
+- Upper body resists rotation until ground contact
+
+## Summary of Mechanical Formula
+
+### Correct Position at Foot Landing (Baseball Pitching + All Throwing)
+
+```text
++------------------+--------------------------------------------+
+| HIPS             | Forward-facing toward home plate           |
+| CHEST            | Sideways (NOT facing home plate yet)       |
+| GLOVE SHOULDER   | Points at home plate like an arrow         |
+| THROWING SHOULDER| Faces away from home plate                 |
+| BACK LEG         | Knee/hip pointing toward home plate        |
++------------------+--------------------------------------------+
+
+Timeline:
+1. Stride toward home plate
+2. Front foot LANDS → Hips squared, shoulders STILL sideways (closed)
+3. THEN shoulders rotate (chest turns to face home plate)
+4. Arm follows shoulder rotation
+5. Release
+```
+
+### What Constitutes Early Shoulder Rotation
+
+If ANY of these are true at foot landing, it's early rotation:
+- Chest is already facing home plate
+- Glove shoulder has moved past pointing at target
+- Upper body has started turning before foot contact
+
+## Expected Outcomes After Fix
+
+| Issue | Resolution |
+|-------|------------|
+| Contradicting feedback | Eliminated - one clear concept: "stay sideways until foot lands" |
+| "Chest wasn't pointing" confusion | Removed - this was wrong advice |
+| Everyone getting 55 | Fixed - false "shoulders_not_aligned" violations won't trigger |
+| Violation keyword false positives | Fixed - updated detection keywords |
+| Consistent with your formula | Yes - lateral shoulders, forward hips, resist upper body |
+
+## Modules NOT Changed (Per Your Request)
+
+- **Softball pitching** - No changes (different mechanics with arm circle)
+- **Hitting** - No changes (different mechanics)
+
