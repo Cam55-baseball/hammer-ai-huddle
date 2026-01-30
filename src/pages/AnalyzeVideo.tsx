@@ -200,6 +200,7 @@ export default function AnalyzeVideo() {
     setAnalysisError(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
+    setLandingTime(null);
     if (module && sport) {
       toast.info(t('videoAnalysis.switchedModule', `Switched to ${sport} - ${module}. Upload space cleared.`));
     }
@@ -226,6 +227,7 @@ export default function AnalyzeVideo() {
     setAnalysisError(null);
     setCurrentVideoId(null);
     setAnalysisEnabled(true);
+    setLandingTime(null);
     toast.success(t('videoAnalysis.videoRemoved', "Video removed. Select a new video to analyze."));
   };
 
@@ -248,6 +250,7 @@ export default function AnalyzeVideo() {
     setAnalysis(null);
     setAnalysisError(null);
     setCurrentVideoId(null);
+    setLandingTime(null);
   };
 
   const handleUploadAndAnalyze = async () => {
