@@ -107,6 +107,18 @@ export const useSubscription = () => {
         error = retry404.error;
       }
 
+      // Check if we still have a 404 after all retries - treat as non-fatal
+      const is404Error = error && (
+        error.message?.includes('NOT_FOUND') || 
+        error.message?.includes('not found') || 
+        (error as any)?.status === 404
+      );
+      
+      if (is404Error) {
+        console.warn('[useSubscription] Function still unavailable after retries, using database fallback');
+        // Fall through to the fallback logic below - don't treat as critical error
+      }
+
       if (!error && data) {
         const newModules = data.modules || [];
         
@@ -128,7 +140,12 @@ export const useSubscription = () => {
         }
         setPrevModules(newModules);
       } else {
-        console.error('Error fetching subscription:', error);
+        // Log as warning for 404s (transient), error for other issues
+        if (is404Error) {
+          console.warn('[useSubscription] Edge function unavailable, falling back to database');
+        } else if (error) {
+          console.error('Error fetching subscription:', error);
+        }
         
         // Fallback to database query
         try {
