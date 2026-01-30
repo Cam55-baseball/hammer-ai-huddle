@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoadingSkeleton } from "./components/skeletons/PageLoadingSkeleton";
 import { SportThemeProvider } from "./contexts/SportThemeContext";
+import { SubscriptionProvider } from "./hooks/useSubscription";
 
 // Clean up cache-busting param after successful load
 const cleanupCacheBustParam = () => {
@@ -89,56 +90,58 @@ const App = () => {
   return (
   <QueryClientProvider client={queryClient}>
     <SportThemeProvider>
-      <TooltipProvider>
-        <ErrorBoundary>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<PageLoadingSkeleton />}>
-              <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/select-user-role" element={<SelectUserRole />} />
-              <Route path="/select-sport-scout" element={<SelectSportScout />} />
-              <Route path="/scout-application" element={<ScoutApplication />} />
-              <Route path="/scout-application-pending" element={<ScoutApplicationPending />} />
-              <Route path="/select-sport" element={<SelectSport />} />
-              <Route path="/select-modules" element={<SelectModules />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/profile-setup" element={<ProfileSetup />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/my-followers" element={<MyFollowers />} />
-              <Route path="/analyze/:module" element={<AnalyzeVideo />} />
-              <Route path="/owner" element={<OwnerDashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/scout-dashboard" element={<ScoutDashboard />} />
-              <Route path="/coach-dashboard" element={<CoachDashboard />} />
-              <Route path="/initialize-owner" element={<InitializeOwner />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/rankings" element={<Rankings />} />
-              <Route path="/weather" element={<Weather />} />
-              <Route path="/subscribers" element={<Subscribers />} />
-              <Route path="/players-club" element={<PlayersClub />} />
-              <Route path="/nutrition" element={<Nutrition />} />
-              <Route path="/nutrition-hub" element={<NutritionHub />} />
-              <Route path="/mind-fuel" element={<MindFuel />} />
-              <Route path="/bounce-back-bay" element={<BounceBackBay />} />
-              <Route path="/production-lab" element={<ProductionLab />} />
-              <Route path="/production-studio" element={<ProductionStudio />} />
-              <Route path="/vault" element={<Vault />} />
-              <Route path="/tex-vision" element={<TexVision />} />
-              <Route path="/coming-soon" element={<ComingSoon />} />
-              <Route path="/my-custom-activities" element={<MyCustomActivities />} />
-              <Route path="/shared-activity/:shareCode" element={<SharedActivity />} />
-              <Route path="/calendar" element={<Calendar />} />
-              <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </ErrorBoundary>
-      </TooltipProvider>
+      <SubscriptionProvider>
+        <TooltipProvider>
+          <ErrorBoundary>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<PageLoadingSkeleton />}>
+                <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/select-user-role" element={<SelectUserRole />} />
+                <Route path="/select-sport-scout" element={<SelectSportScout />} />
+                <Route path="/scout-application" element={<ScoutApplication />} />
+                <Route path="/scout-application-pending" element={<ScoutApplicationPending />} />
+                <Route path="/select-sport" element={<SelectSport />} />
+                <Route path="/select-modules" element={<SelectModules />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/profile-setup" element={<ProfileSetup />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/my-followers" element={<MyFollowers />} />
+                <Route path="/analyze/:module" element={<AnalyzeVideo />} />
+                <Route path="/owner" element={<OwnerDashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/scout-dashboard" element={<ScoutDashboard />} />
+                <Route path="/coach-dashboard" element={<CoachDashboard />} />
+                <Route path="/initialize-owner" element={<InitializeOwner />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/rankings" element={<Rankings />} />
+                <Route path="/weather" element={<Weather />} />
+                <Route path="/subscribers" element={<Subscribers />} />
+                <Route path="/players-club" element={<PlayersClub />} />
+                <Route path="/nutrition" element={<Nutrition />} />
+                <Route path="/nutrition-hub" element={<NutritionHub />} />
+                <Route path="/mind-fuel" element={<MindFuel />} />
+                <Route path="/bounce-back-bay" element={<BounceBackBay />} />
+                <Route path="/production-lab" element={<ProductionLab />} />
+                <Route path="/production-studio" element={<ProductionStudio />} />
+                <Route path="/vault" element={<Vault />} />
+                <Route path="/tex-vision" element={<TexVision />} />
+                <Route path="/coming-soon" element={<ComingSoon />} />
+                <Route path="/my-custom-activities" element={<MyCustomActivities />} />
+                <Route path="/shared-activity/:shareCode" element={<SharedActivity />} />
+                <Route path="/calendar" element={<Calendar />} />
+                <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </ErrorBoundary>
+        </TooltipProvider>
+      </SubscriptionProvider>
     </SportThemeProvider>
   </QueryClientProvider>
   );
