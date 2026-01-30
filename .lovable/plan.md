@@ -1,126 +1,109 @@
 
-# Fix Owner/Admin Access Race Condition
+# Hide Efficiency Score Display Across All Modules
 
 ## Problem Summary
 
-Owners are incorrectly being told "You don't have access to this module. Please subscribe." because the access check runs BEFORE the owner/admin role queries complete.
+Users are complaining that players receive repetitive scores. To address this, the numeric efficiency score needs to be hidden from the analysis results display across all modules while keeping the score data available for 6-week recap generation.
 
-### Evidence from Console Logs
+## Files to Modify
 
-```
-AnalyzeVideo - Is Owner/Admin: false    ← Access check runs (too early!)
-AnalyzeVideo - Has Access: false
-...
-[useOwnerAccess] Setting isOwner to: true  ← Query completes (too late!)
-```
+| File | Location | What to Remove |
+|------|----------|----------------|
+| `src/pages/AnalyzeVideo.tsx` | Lines 754-759 | Large "Efficiency Score: XX/100" heading |
+| `src/components/SessionDetailDialog.tsx` | Lines 415-417 | "Efficiency: XX%" badge |
+| `src/components/RealTimePlayback.tsx` | Lines 2436-2439 | Score pill showing "X/10" |
+| `src/pages/PlayersClub.tsx` | Lines 320-324 | Score badge in mobile session cards |
+| `src/pages/PlayersClub.tsx` | Lines 440-442 | Score badge in desktop session cards |
+| `src/pages/OwnerDashboard.tsx` | Lines 607-609 | "Score: XX/100" text in video list |
+| `src/pages/Dashboard.tsx` | Lines 267-280 | "Average Score" card display |
+| `src/components/VideoComparisonView.tsx` | Lines 275-277 | Score badge for video 1 |
+| `src/components/VideoComparisonView.tsx` | Lines 348-350 | Score badge for video 2 |
+| `src/pages/AdminDashboard.tsx` | Lines 213-215 | "Score: XX/100" text in video list |
+| `src/pages/AdminDashboard.tsx` | Lines 360-372 | "Avg Score" statistics card |
 
-### Root Cause
+## What Will Remain Intact
 
-In `AnalyzeVideo.tsx`, the component:
-1. Gets `isOwner` and `isAdmin` from hooks BUT ignores their `loading` states
-2. Waits for `authLoading`, `subLoading`, and `initialized`
-3. Does NOT wait for `ownerLoading` or `adminLoading`
-4. Checks access while role queries are still in-flight → owner check returns `false`
-
-## Solution
-
-Include the `loading` states from `useOwnerAccess` and `useAdminAccess` in the guard condition.
-
-## Files to Update
-
-| File | Change |
-|------|--------|
-| `src/pages/AnalyzeVideo.tsx` | Add `ownerLoading` and `adminLoading` to guard condition |
-| `src/pages/Dashboard.tsx` | Same fix for consistency |
+- Score data continues to be calculated and stored in the database
+- 6-week recap system will still have full access to efficiency scores for AI analysis
+- `TheScorecard` component still receives `currentScore` for internal trend calculations
+- All qualitative feedback (summary, positives, negatives, recommendations) remains visible
+- Decision efficiency scores in S2 Cognition diagnostics (separate system, not affected)
 
 ## Detailed Changes
 
-### 1. Fix AnalyzeVideo.tsx
-
-**Current code (lines 37-38):**
-```typescript
-const { isOwner } = useOwnerAccess();
-const { isAdmin } = useAdminAccess();
+### 1. AnalyzeVideo.tsx (Lines 754-759)
+Remove the prominent score display block:
+```tsx
+// DELETE THIS BLOCK
+<div>
+  <h4 className="text-lg font-semibold">{t('videoAnalysis.efficiencyScore')}</h4>
+  <div className="text-4xl font-bold text-primary">
+    {analysis.efficiency_score}/100
+  </div>
+</div>
 ```
 
-**Updated:**
-```typescript
-const { isOwner, loading: ownerLoading } = useOwnerAccess();
-const { isAdmin, loading: adminLoading } = useAdminAccess();
+### 2. SessionDetailDialog.tsx (Lines 415-417)
+Remove the efficiency badge:
+```tsx
+// DELETE THIS BLOCK
+{session.efficiency_score !== undefined && (
+  <Badge>{t('sessionDetail.efficiency')}: {session.efficiency_score}%</Badge>
+)}
 ```
 
-**Current guard (lines 159-162):**
-```typescript
-useEffect(() => {
-  if (authLoading || subLoading || !initialized) {
-    return;
-  }
-  // ... access check runs here
+### 3. RealTimePlayback.tsx (Lines 2436-2439)
+Remove the score pill from the Quick Analysis header:
+```tsx
+// DELETE THIS BLOCK
+<div className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10">
+  <span className="text-lg font-bold text-primary">{analysis.overallScore}</span>
+  <span className="text-sm text-muted-foreground">/10</span>
+</div>
 ```
 
-**Updated guard:**
-```typescript
-useEffect(() => {
-  // Wait for all loading states before checking access
-  if (authLoading || subLoading || !initialized || ownerLoading || adminLoading) {
-    return;
-  }
-  // ... access check runs here
+### 4. PlayersClub.tsx (Lines 320-324 & 440-442)
+Remove both score badges (mobile and desktop views):
+```tsx
+// DELETE BOTH BLOCKS
+{session.efficiency_score !== undefined && (
+  <Badge variant="secondary" className="text-xs">
+    {session.efficiency_score}%
+  </Badge>
+)}
 ```
 
-**Update dependency array (line 190):**
-```typescript
-}, [authLoading, subLoading, initialized, ownerLoading, adminLoading, user, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate, t]);
+### 5. OwnerDashboard.tsx (Lines 607-609)
+Remove the score text:
+```tsx
+// DELETE THIS BLOCK
+{video.efficiency_score && (
+  <p className="text-sm">Score: {video.efficiency_score}/100</p>
+)}
 ```
 
-### 2. Fix Dashboard.tsx
+### 6. Dashboard.tsx (Lines 267-280)
+Replace the average score display with a placeholder - the entire block showing `average_efficiency_score` will be removed, leaving only the "No data yet" placeholder state.
 
-**Current code (lines 37-38):**
-```typescript
-const { isOwner } = useOwnerAccess();
-const { isAdmin } = useAdminAccess();
+### 7. VideoComparisonView.tsx (Lines 275-277 & 348-350)
+Remove score badges from both video comparison panels:
+```tsx
+// DELETE BOTH BLOCKS
+{video1.efficiency_score !== undefined && (
+  <Badge variant="secondary">{video1.efficiency_score}%</Badge>
+)}
 ```
 
-**Updated:**
-```typescript
-const { isOwner, loading: ownerLoading } = useOwnerAccess();
-const { isAdmin, loading: adminLoading } = useAdminAccess();
-```
+### 8. AdminDashboard.tsx (Lines 213-215 & 360-372)
+Remove the score text from video list and the entire "Avg Score" statistics card.
 
-(Dashboard.tsx may need the same guard update if it has similar access checks)
+## Impact Summary
 
-## Why This Works
-
-```text
-Timeline BEFORE fix:
-┌─────────────┬─────────────┬─────────────────────────┐
-│ authLoading │ subLoading  │ ownerLoading/adminLoading │
-│   Done      │    Done     │    Still loading...      │
-└─────────────┴─────────────┴─────────────────────────┘
-                     ↓
-         Access check runs → isOwner = false → BLOCKED!
-                     ↓
-         Query finishes → isOwner = true (too late)
-
-Timeline AFTER fix:
-┌─────────────┬─────────────┬─────────────────────────┐
-│ authLoading │ subLoading  │ ownerLoading/adminLoading │
-│   Done      │    Done     │    Still loading...      │
-└─────────────┴─────────────┴─────────────────────────┘
-         Guard returns early (waits for all loaders)
-                     ↓
-┌─────────────┬─────────────┬─────────────────────────┐
-│ authLoading │ subLoading  │ ownerLoading/adminLoading │
-│   Done      │    Done     │        Done             │
-└─────────────┴─────────────┴─────────────────────────┘
-                     ↓
-         Access check runs → isOwner = true → ACCESS GRANTED!
-```
-
-## Testing
-
-After the fix, verify:
-1. Owner can access all modules without subscribing
-2. Admin can access all modules without subscribing  
-3. Regular users still see subscription prompts for unpurchased modules
-4. No flash of "no access" error during page load
+| Area | Before | After |
+|------|--------|-------|
+| Analysis Results | Shows "Efficiency Score: 85/100" prominently | Qualitative feedback only |
+| Session Cards | Shows percentage badges | Sport/module badges only |
+| Owner/Admin Dashboards | Shows scores in lists | Status and date only |
+| Video Comparison | Shows score badges | Sport/module badges only |
+| 6-Week Recaps | Uses scores for AI analysis | **Unchanged** - still works |
+| Database | Stores efficiency scores | **Unchanged** - still stored |
