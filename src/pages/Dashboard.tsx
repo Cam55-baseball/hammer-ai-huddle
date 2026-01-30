@@ -256,43 +256,9 @@ export default function Dashboard() {
     }
   };
 
-  const getEfficiencyScoreDisplay = (module: ModuleType) => {
-    const moduleProgress = getModuleProgress(module);
-    const hasAccess = hasAccessForSport(module, selectedSport, isOwner || isAdmin);
-    
-    // Only show if user has access to the module
-    if (!hasAccess) return null;
-    
-    // Show if there's progress data
-    if (moduleProgress?.average_efficiency_score !== null && 
-        moduleProgress?.average_efficiency_score !== undefined) {
-      return (
-        <div className="w-full px-4 py-2 bg-primary/5 rounded-lg border border-primary/20">
-          <div className="text-center">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-              {t('dashboard.averageScore')}
-            </p>
-            <p className="text-2xl font-bold text-primary">
-              {moduleProgress.average_efficiency_score}%
-            </p>
-          </div>
-        </div>
-      );
-    }
-    
-    // Show placeholder if no data yet
-    return (
-      <div className="w-full px-4 py-2 bg-muted/30 rounded-lg border border-muted">
-        <div className="text-center">
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-            {t('dashboard.averageScore')}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {t('dashboard.noDataYet')}
-          </p>
-        </div>
-      </div>
-    );
+  // Score display function removed - scores hidden from UI but still stored for 6-week recaps
+  const getEfficiencyScoreDisplay = (_module: ModuleType) => {
+    return null;
   };
 
   if (authLoading || loading || subLoading) {
