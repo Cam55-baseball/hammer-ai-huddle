@@ -34,8 +34,8 @@ export default function Dashboard() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
-  const { isOwner } = useOwnerAccess();
-  const { isAdmin } = useAdminAccess();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
   const { isScout, loading: scoutLoading } = useScoutAccess();
   const navigate = useNavigate();
   const [selectedSport, setSelectedSport] = useState<SportType>(() => {
