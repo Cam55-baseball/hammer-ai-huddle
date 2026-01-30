@@ -2427,16 +2427,10 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                           </div>
                         ) : analysis ? (
                           <div className="space-y-4">
-                            {/* Header with Score */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Sparkles className="h-5 w-5 text-primary" />
-                                <span className="font-semibold">{t('realTimePlayback.quickAnalysis', 'Quick Analysis')}</span>
-                              </div>
-                              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10">
-                                <span className="text-lg font-bold text-primary">{analysis.overallScore}</span>
-                                <span className="text-sm text-muted-foreground">/10</span>
-                              </div>
+                            {/* Header */}
+                            <div className="flex items-center gap-2">
+                              <Sparkles className="h-5 w-5 text-primary" />
+                              <span className="font-semibold">{t('realTimePlayback.quickAnalysis', 'Quick Analysis')}</span>
                             </div>
                             
                             {/* Quick Summary */}

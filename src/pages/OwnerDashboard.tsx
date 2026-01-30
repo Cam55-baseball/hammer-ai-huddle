@@ -604,9 +604,6 @@ const OwnerDashboard = () => {
                             {video.sport} - {video.module}
                           </p>
                           <p className="text-sm text-muted-foreground">Status: {video.status}</p>
-                          {video.efficiency_score && (
-                            <p className="text-sm">Score: {video.efficiency_score}/100</p>
-                          )}
                           <p className="text-xs text-muted-foreground mt-1">
                             {new Date(video.created_at).toLocaleDateString()}
                           </p>
