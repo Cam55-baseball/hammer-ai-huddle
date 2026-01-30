@@ -378,7 +378,7 @@ export default function AnalyzeVideo() {
             userId: user.id,
             language: i18n.language,
             frames, // Include extracted frames for visual analysis
-            landingFrameIndex, // Include landing frame index if user marked it
+            ...(landingFrameIndex !== null && { landingFrameIndex }), // Only include if user marked landing
           },
         }
       );
@@ -466,7 +466,7 @@ export default function AnalyzeVideo() {
             userId: user.id,
             language: i18n.language,
             frames, // Include re-extracted frames
-            landingFrameIndex, // Include landing frame index if user marked it
+            ...(landingFrameIndex !== null && { landingFrameIndex }), // Only include if user marked landing
           },
         }
       );
