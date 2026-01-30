@@ -1,125 +1,65 @@
 
+# Fix Plan: Handle 404 Errors Gracefully in useSubscription
 
-# Improvement Plan: Kid-Friendly, Contradiction-Free Analysis Feedback
+## Problem
 
-## Problem Summary
-
-The AI analysis system currently has two issues:
-
-1. **Contradictions**: The analysis sometimes says something is good in one section (positives) but needs improvement in another section (summary/feedback)
-2. **Unclear terminology**: Instructions like "Ensure your glove always faces the target for direction" are confusing - what part of the glove? Which direction?
+The `check-subscription` edge function occasionally returns a 404 error (likely due to deployment propagation, cold starts, or stale PWA cache). While the hook has retry logic, after 3 failed retries it still throws an error that propagates to the ErrorBoundary, causing a blank screen.
 
 ## Root Cause
 
-The system prompts in two edge functions send instructions to the AI but don't:
-- Explicitly require consistency checking between positives and improvement areas
-- Provide kid-friendly language guidelines with specific examples
-- Define terminology in plain, visual language a 10-year-old could understand
+After the retry loop (lines 94-108), if all retries fail with 404 errors, the code falls through to line 130 where it logs an error and attempts a database fallback. However, if the error message somehow causes issues or the fallback also fails, it can lead to unhandled states.
 
-## Files to Update
+The real issue is that the 404 error is being treated as a critical failure when it should be treated as a temporary condition that gracefully falls back to showing the user as "not subscribed" while continuing to retry in the background.
 
-| File | Purpose |
-|------|---------|
-| `supabase/functions/analyze-video/index.ts` | Main video analysis function |
-| `supabase/functions/analyze-realtime-playback/index.ts` | Real-time analysis function |
+## Solution
 
-## Changes
+Enhance the error handling to:
+1. Treat 404 errors as non-fatal after retries are exhausted
+2. Fall back to database query when 404 persists
+3. Add explicit 404 handling that sets `initialized: true` and `loading: false` to prevent blank screens
+4. Log warnings instead of errors for 404s to reduce noise
 
-### 1. Add Contradiction Prevention Instructions
+## Changes Required
 
-Add explicit instructions to ALL system prompts requiring the AI to:
-- Cross-check positives against summary/feedback before returning
-- Never list the same element as both a strength AND an improvement area
-- If something is "mostly good but needs minor work," put it in improvements only
+### File: `src/hooks/useSubscription.ts`
 
-**Example instruction to add:**
-```
-CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
-Before finalizing your response, cross-check your positives against your summary and feedback:
-- If you list something as a POSITIVE, you CANNOT also say it needs improvement
-- If you identify something that needs work, it should NOT appear in positives
-- Example of what NOT to do: Positive says "Good shoulder alignment" but summary says "Work on shoulder alignment"
-- If a skill is partially correct, list it under improvements with acknowledgment of what's working
-```
+**Change 1: Add specific 404 handling after retry loop (after line 108)**
 
-### 2. Add Kid-Friendly Language Guidelines
+After the retry loop, explicitly check if we still have a 404 error and handle it gracefully by falling through to the database fallback without treating it as a critical error.
 
-Add a section requiring all feedback to be written so a 10-year-old who has never played baseball/softball can understand. Include specific terminology translations:
+**Change 2: Improve the error logging (around line 131)**
 
-**Example terminology guide to add:**
-```
-LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
-Write all feedback so a child who has never played the sport can understand.
+Make the logging conditional - use `console.warn` for 404 errors and `console.error` for other errors.
 
-USE VISUAL, SIMPLE DESCRIPTIONS:
-Instead of: "Ensure your glove always faces the target"
-Say: "Point the open pocket of your glove (the part where you catch the ball) toward home plate"
+**Change 3: Ensure fallback always completes (lines 134-177)**
 
-Instead of: "Shoulders aligned with target at landing"  
-Say: "When your front foot touches the ground, your chest and belly button should point toward home plate"
+The fallback logic is already good, but ensure it always sets `initialized: true` so the app doesn't get stuck in a loading state.
 
-Instead of: "Back leg facing target"
-Say: "Your back knee (the one you push off from) should point toward home plate when you land"
+## Code Changes
 
-Instead of: "Early shoulder rotation"
-Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
-
-Instead of: "Kinetic chain"
-Say: "The order your body parts move - feet first, then hips, then shoulders"
-
-Instead of: "Power line"
-Say: "An imaginary straight line from where you start to home plate"
-
-RULES:
-1. No technical jargon without immediate explanation
-2. Use body parts everyone knows (knee, belly button, chest, foot)
-3. Use "home plate" or "where you're throwing/hitting to" instead of "target"
-4. Describe positions like you're giving directions to a friend
-5. Keep sentences under 15 words when possible
+```typescript
+// After line 108, before the if (!error && data) check:
+// If still getting 404 after all retries, log it as a warning (not error) 
+// and proceed to fallback - this is a transient deployment issue, not a critical error
+if (error && (error.message?.includes('NOT_FOUND') || error.message?.includes('not found') || (error as any)?.status === 404)) {
+  console.warn('[useSubscription] Function still unavailable after retries, using database fallback');
+  // Force the fallback path by keeping error set - the fallback will handle it
+}
 ```
 
-### 3. Update Summary Format Instructions
+The existing fallback logic starting at line 133 will handle this correctly since it queries the database directly.
 
-Update the existing summary format sections to reinforce these requirements and add examples of good kid-friendly language.
+## Summary
 
-### 4. Update Positives Instructions
-
-Add a note that positives must use the same kid-friendly language and must not contradict any improvement areas.
-
-## Implementation Details
-
-### File 1: `supabase/functions/analyze-video/index.ts`
-
-**Locations to update:**
-- Hitting system prompt (lines ~148-335): Add consistency and language requirements
-- Baseball pitching system prompt (lines ~338-512): Add consistency and language requirements  
-- Softball pitching system prompt (lines ~515-710): Add consistency and language requirements
-- Throwing system prompt (lines ~713-886): Add consistency and language requirements
-
-For each module prompt, insert the two new instruction blocks:
-1. Contradiction prevention (after existing RED FLAGS section)
-2. Kid-friendly language guide (before SUMMARY FORMAT section)
-
-### File 2: `supabase/functions/analyze-realtime-playback/index.ts`
-
-**Locations to update:**
-- All module-specific prompts in `getSystemPrompt()` function
-- Same two instruction blocks as above
+| Change | Purpose |
+|--------|---------|
+| Add 404-specific warning after retries | Clarify that 404 is transient, not critical |
+| Downgrade 404 logs from error to warn | Reduce console noise |
+| Ensure `initialized: true` always set | Prevent blank screen/infinite loading |
 
 ## Expected Outcome
 
-After implementation:
-- A 10-year-old reading "Point the open pocket of your glove toward home plate" will understand what to do
-- Parents who don't know baseball terminology can help their kids with the feedback
-- The positives section will never contradict the improvement suggestions
-- All terminology will be explained in plain, visual language
-
-## Summary of Changes
-
-| Change | Description |
-|--------|-------------|
-| Add contradiction prevention | Explicit instruction requiring cross-check before response |
-| Add kid-friendly language guide | Terminology translations with simple, visual descriptions |
-| Update summary examples | Replace jargon-heavy examples with kid-friendly versions |
-| Update positives instructions | Require same language standards and no contradictions |
-
+- 404 errors will no longer cause blank screens
+- The app will gracefully show users their subscription status from the database
+- Console will show warnings (not errors) for transient 404s
+- The polling will continue to retry and pick up the function when it becomes available
