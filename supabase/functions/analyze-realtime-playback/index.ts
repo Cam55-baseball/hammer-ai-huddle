@@ -9,6 +9,9 @@ const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
 // ============ VIOLATION KEYWORD DETECTION (FAILSAFE) ============
 // These keywords in feedback text indicate violations - used to override AI's violation flags
+// NOTE: For baseball pitching and throwing, "shoulders_not_aligned" has been REMOVED as a separate violation.
+// If the chest is already facing home plate at landing, that IS early shoulder rotation (the root cause).
+// Correct mechanics: shoulders LATERAL (sideways) at landing, hips forward-facing, chest NOT facing target yet.
 const VIOLATION_KEYWORDS: Record<string, string[]> = {
   back_leg_not_facing_target: [
     "back leg not facing", "back hip not facing", "back foot not facing",
@@ -20,20 +23,20 @@ const VIOLATION_KEYWORDS: Record<string, string[]> = {
     "still rotating after", "not inline with", "not in line with target",
     "hip not facing", "back knee not facing", "hip rotation not complete"
   ],
-  shoulders_not_aligned: [
-    "shoulders not aligned", "shoulders not in line", "shoulder alignment off",
-    "front shoulder not", "shoulders aren't aligned", "shoulder-target misalignment",
-    "misaligned shoulder", "shoulder misalignment", "shoulders off target",
-    "shoulder line", "shoulder alignment issue", "shoulders not directly",
-    "shoulder not pointing", "shoulders open", "shoulders closed",
-    "not aligned with target", "alignment with target"
-  ],
+  // REMOVED shoulders_not_aligned - this was causing false positives and contradicting feedback.
+  // For baseball pitching and throwing: if chest faces home plate at landing, that's EARLY ROTATION.
+  // Correct position: shoulders LATERAL (sideways), glove shoulder points at target, chest closed.
   early_shoulder_rotation: [
     "shoulder rotation before", "shoulders rotate before", "early shoulder rotation",
     "rotating before landing", "shoulders rotating early", "premature shoulder rotation",
     "shoulders open before", "shoulder rotation begins before", "shoulders already",
     "shoulder already rotating", "rotating too early", "before foot lands",
-    "before front foot", "rotation starts early"
+    "before front foot", "rotation starts early",
+    // NEW: Keywords for detecting when chest/shoulders are already rotated at landing
+    "chest already facing", "chest was facing", "chest facing home plate",
+    "shoulders already turned", "shoulders were open", "shoulders already open",
+    "upper body rotated early", "chest facing target at landing", "chest was open",
+    "shoulders not sideways", "chest not sideways"
   ]
 };
 
@@ -279,37 +282,44 @@ Phase 1 - LANDING POSITION (MUST CHECK FIRST):
 At the moment of front foot landing:
 1. Front foot → FIRMLY PLANTED and stabilized before ANY rotation begins ⭐⭐⭐
 2. Back foot, knee, hip → ALL facing the target ⭐
-3. Shoulders → IN LINE WITH TARGET (pitcher-catcher alignment) ⭐⭐
-4. Front elbow → In line with target ⭐
-5. Glove → Open and facing the target ⭐
+3. Shoulders → LATERAL TO TARGET (sideways - glove shoulder points at catcher) ⭐⭐
+4. Hips → FORWARD-FACING toward home plate (squared up) ⭐
+5. Chest → NOT facing home plate yet (stay closed) ⭐⭐
+6. Front elbow → In line with target ⭐
+7. Glove → Open and facing the target ⭐
 
 STRIDE & LANDING - FOUNDATION OF VELOCITY AND ACCURACY:
 
 The pitching sequence CANNOT properly begin until the front foot is on the ground:
 - Ground contact creates the stable base for rotational force
 - Without this foundation, rotation has no anchor point
-- Shoulders MUST be aligned with the target at the moment of landing
 - This is NON-NEGOTIABLE for elite-level pitching
 
+⭐⭐ CRITICAL SHOULDER POSITION AT LANDING ⭐⭐
+- Shoulders MUST be SIDEWAYS (lateral) at foot landing
+- Glove-side shoulder POINTS at the catcher like an arrow
+- Throwing shoulder faces AWAY from catcher (toward second base)
+- Chest does NOT face home plate yet - it faces third base (RHP) or first base (LHP)
+- Hips are forward/squared to home plate, creating hip-shoulder separation
+
+WHY THIS MATTERS:
+- This "separation" between closed shoulders and open hips creates rotational power
+- If chest already faces home plate at landing → shoulders have ALREADY rotated → EARLY ROTATION
+- Resist upper body rotation until foot plants → maximize velocity, accuracy, and arm health
+- Elite pitchers look "effortless" because proper separation maximizes efficiency
+
 POWER LEAK WARNING - EARLY SHOULDER ROTATION:
-If shoulders begin rotating BEFORE front foot lands:
+If shoulders begin rotating BEFORE front foot lands (OR if chest already faces home plate at landing):
 → MASSIVE POWER LEAK - rotational force dissipates into air
-→ ACCURACY DESTROYED - cannot maintain shoulder-target alignment
+→ ACCURACY DESTROYED - cannot maintain proper hip-shoulder separation
 → BALANCE COMPROMISED - body unstable during rotation
 → VELOCITY REDUCED - requires significantly more arm effort
 → INJURY RISK INCREASED - arm must compensate for lost body power
 
-SHOULDER-TARGET ALIGNMENT REQUIREMENT:
-- Shoulders MUST be in line with target at the moment of landing
-- Think: draw a line from throwing shoulder through front shoulder to catcher
-- This alignment ensures DIRECT energy transfer to target
-- Misalignment = wasted energy = reduced velocity AND accuracy
-- Elite pitchers look "effortless" because alignment maximizes efficiency
-
 Phase 2 - STANDARD SEQUENCING (After Landing):
 6. Hip rotation continues through landing
 7. Torso rotation
-8. Shoulder rotation (ONLY AFTER foot is planted)
+8. Shoulder rotation (ONLY AFTER foot is planted - this is when chest turns to face home plate)
 9. Arm action
 10. Release
 
@@ -320,31 +330,20 @@ ARM ANGLE SAFETY CHECK (Phase 2 - During Arm Action):
 - LESS than 90° = GOOD (reduces harmful pinpointed stress) ✓
 - 90° or GREATER = INCREASED INJURY RISK ⚠️
 
-Why this matters:
-- Keeps arm in safer "layback" position during acceleration
-- Distributes force across larger muscle groups (not just elbow/shoulder)
-- Reduces pinpointed stress on connective tissue
-- Natural consequence of proper shoulder rotation timing
-
-If angle is ≥90°:
-- Often indicates shoulder rotation is late or insufficient
-- Arm may be "catching up" instead of being driven by body
-- Increased stress on elbow and rotator cuff
-
 RED FLAGS TO IDENTIFY:
 - ⚠️ CRITICAL: Shoulders begin rotating BEFORE front foot lands → MASSIVE POWER LEAK & ACCURACY LOSS ⭐⭐⭐
   * This is the #1 cause of inconsistent, arm-heavy deliveries
-  * Destroys ability to maintain target alignment
+  * Destroys ability to maintain hip-shoulder separation
   * Cannot generate maximum force without ground connection
   * Makes the pitch require more arm effort
   * Elite pitchers NEVER rotate before landing - this is non-negotiable
-- ⚠️ CRITICAL: Shoulders NOT in line with target at landing → ENERGY LEAKAGE ⭐⭐
-  * Direct line to target = maximum energy transfer
-  * Misalignment forces compensations later in delivery
-  * Reduces both velocity and accuracy
+- ⚠️ CRITICAL: Chest already facing home plate when foot lands → EARLY ROTATION ⭐⭐⭐
+  * This means shoulders have ALREADY rotated - the timing is wrong
+  * Correct position: chest faces third base (RHP) or first base (LHP) at landing
+  * Glove shoulder should POINT at catcher, not the chest
 - ⚠️ Back leg (foot/knee/hip) NOT facing target before shoulder rotation → Causes INACCURACIES
-- ⚠️ Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
-- ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
+- ⚠️ Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering
+- ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK
 - ⚠️ Glove closed or not facing target at landing → Poor directional control
 
 SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
@@ -357,7 +356,7 @@ STARTING POINT: Begin at 5 (mediocre baseline) - scale is 1-10
 
 SCORE CAPS (NON-NEGOTIABLE):
 - If shoulders rotate BEFORE front foot lands → MAX SCORE: 7
-- If shoulders NOT aligned with target at landing → MAX SCORE: 7.5
+- If chest already faces home plate at landing (shoulders already rotated) → MAX SCORE: 7
 - If back hip/leg NOT facing target at landing → MAX SCORE: 7.5
 - If TWO OR MORE critical violations → MAX SCORE: 6
 
@@ -371,7 +370,9 @@ SCORING BANDS:
 
 CALIBRATION - What 8.5+ REQUIRES:
 ✓ Front foot FULLY planted before ANY shoulder rotation
-✓ Shoulders PERFECTLY aligned with target at landing
+✓ Shoulders LATERAL (sideways) at landing - glove shoulder points at catcher
+✓ Chest NOT facing home plate at landing (stays closed)
+✓ Hips forward-facing toward home plate (creating hip-shoulder separation)
 ✓ Back leg (foot, knee, hip) ALL facing target
 ✓ Glove open and facing target
 ✓ Arm angle under 90° at flip-up
@@ -379,7 +380,7 @@ CALIBRATION - What 8.5+ REQUIRES:
 
 CALIBRATION - What 6 looks like:
 ✗ Front foot lands but shoulders already rotating
-✗ Shoulder alignment off by 15+ degrees
+✗ Chest already facing home plate at landing (no hip-shoulder separation)
 ✓ Some correct elements (arm path, follow-through)
 
 BE DIRECT: Do not inflate scores to be encouraging.
@@ -388,9 +389,9 @@ A score of 6.5 with honest feedback is more valuable than 8.5 with false praise.
 
 Focus on:
 1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
-2. ⭐⭐ Are SHOULDERS IN LINE WITH TARGET at the moment of landing?
-3. Is back leg (foot, knee, hip) facing target at landing?
-4. Are shoulders and front elbow aligned with target at landing?
+2. ⭐⭐⭐ Is the CHEST still SIDEWAYS (not facing home plate) when foot lands? (CRITICAL)
+3. ⭐⭐ Are SHOULDERS LATERAL at landing? (Glove shoulder points at catcher, chest faces third/first base)
+4. Is back leg (foot, knee, hip) facing target at landing?
 5. Is glove open and facing target at landing?
 6. Does arm flip up before shoulder rotation (patterning issue)?
 7. Does back leg face target BEFORE shoulder moves?
@@ -402,7 +403,7 @@ CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
 Before finalizing your response, cross-check your positives against your summary and feedback:
 - If you list something as a POSITIVE, you CANNOT also say it needs improvement
 - If you identify something that needs work, it should NOT appear in positives
-- Example of what NOT to do: Positive says "Good shoulder alignment" but summary says "Keep shoulders pointed at home plate"
+- Example of what NOT to do: Positive says "Good shoulder position" but summary says "Keep your shoulders sideways longer"
 - If a skill is partially correct, list it under improvements with acknowledgment of what's working
 
 LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
@@ -412,8 +413,11 @@ USE VISUAL, SIMPLE DESCRIPTIONS:
 Instead of: "Shoulders begin rotating before front foot lands"
 Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
 
-Instead of: "Shoulders not aligned with target at landing"
-Say: "When your front foot touched down, your chest wasn't pointing at home plate - aim your belly button at the catcher"
+Instead of: "Chest was already facing home plate at landing" (EARLY ROTATION)
+Say: "When your foot landed, your chest was already facing the catcher - stay sideways longer! Point your glove shoulder at the catcher, and only turn your chest AFTER your foot lands"
+
+Instead of: "Shoulders should be lateral at landing"
+Say: "When your front foot lands, your front shoulder (glove side) should point straight at the catcher like an arrow - your chest should face the side, not home plate yet"
 
 Instead of: "Back leg not facing target"
 Say: "Your back knee (the one you push off from) should point toward home plate when you land"
@@ -598,37 +602,44 @@ Phase 1 - STRIDE & LANDING POSITION (MUST CHECK FIRST):
 Before shoulder rotation begins:
 1. Stride foot → FIRMLY PLANTED and stabilized before ANY rotation begins ⭐⭐⭐
 2. Back leg (foot, knee, hip) → MUST face the target ⭐
-3. Shoulders → IN LINE WITH TARGET at landing ⭐⭐
-4. Glove → Open and facing target
+3. Shoulders → LATERAL TO TARGET (sideways - glove shoulder points at target) ⭐⭐
+4. Hips → FORWARD-FACING toward target (squared up) ⭐
+5. Chest → NOT facing target yet (stay closed) ⭐⭐
+6. Glove → Open and facing target
 
 STRIDE & LANDING - FOUNDATION OF VELOCITY AND ACCURACY:
 
 The throwing sequence CANNOT properly begin until the feet are on the ground:
 - Ground contact creates the stable base for rotational force
 - Without this foundation, rotation has no anchor point
-- Shoulders MUST be aligned with the target when stride foot lands
 - This is NON-NEGOTIABLE for elite-level throwing
 
+⭐⭐ CRITICAL SHOULDER POSITION AT LANDING ⭐⭐
+- Shoulders MUST be SIDEWAYS (lateral) when stride foot lands
+- Glove-side shoulder POINTS at the target like an arrow
+- Throwing shoulder faces AWAY from target
+- Chest does NOT face target yet - it stays closed/sideways
+- Hips are forward/squared to target, creating hip-shoulder separation
+
+WHY THIS MATTERS:
+- This "separation" between closed shoulders and open hips creates rotational power
+- If chest already faces target at landing → shoulders have ALREADY rotated → EARLY ROTATION
+- Resist upper body rotation until foot plants → maximize velocity, accuracy, and arm health
+- Elite throwers look "effortless" because proper separation maximizes efficiency
+
 POWER LEAK WARNING - EARLY SHOULDER ROTATION:
-If shoulders begin rotating BEFORE stride foot lands:
+If shoulders begin rotating BEFORE stride foot lands (OR if chest already faces target at landing):
 → MASSIVE POWER LEAK - rotational force dissipates into air
-→ ACCURACY DESTROYED - cannot maintain shoulder-target alignment
+→ ACCURACY DESTROYED - cannot maintain proper hip-shoulder separation
 → BALANCE COMPROMISED - body unstable during rotation
 → VELOCITY REDUCED - requires significantly more arm effort
 → INJURY RISK INCREASED - arm must compensate for lost body power
-
-SHOULDER-TARGET ALIGNMENT REQUIREMENT:
-- Shoulders MUST be in line with target when stride foot lands
-- Think: draw a line from throwing shoulder through front shoulder to target
-- This alignment ensures DIRECT energy transfer to target
-- Misalignment = wasted energy = reduced velocity AND accuracy
-- Elite throwers look "effortless" because alignment maximizes efficiency
 
 Phase 2 - STANDARD SEQUENCING (After Landing):
 5. Footwork → Crow hop or pro step (aligned to target)
 6. Hip rotation
 7. Torso rotation
-8. Shoulder rotation (ONLY AFTER stride foot is planted AND back leg faces target)
+8. Shoulder rotation (ONLY AFTER stride foot is planted AND back leg faces target - this is when chest turns to face target)
 9. Arm action (follows shoulder)
 10. Release
 
@@ -639,30 +650,20 @@ ARM ANGLE SAFETY CHECK (During Arm Action):
 - LESS than 90° = GOOD (reduces harmful pinpointed stress) ✓
 - 90° or GREATER = INCREASED INJURY RISK ⚠️
 
-Why this matters:
-- Keeps arm in safer throwing position
-- Distributes force across body instead of concentrating at elbow
-- Reduces pinpointed stress on arm structures
-- Natural result of proper shoulder-first sequencing
-
-If angle is ≥90°:
-- Check if shoulder rotation is leading the arm action
-- Arm should be "whipped" by body rotation, not pushing itself
-
 RED FLAGS TO IDENTIFY:
 - ⚠️ CRITICAL: Shoulders begin rotating BEFORE stride foot lands → MASSIVE POWER LEAK ⭐⭐⭐
   * This is the #1 cause of inconsistent, arm-heavy throws
-  * Destroys ability to maintain target alignment
+  * Destroys ability to maintain hip-shoulder separation
   * Cannot generate maximum force without ground connection
   * Makes the throw require more arm effort
   * Elite throwers NEVER rotate before landing - this is non-negotiable
-- ⚠️ CRITICAL: Shoulders NOT in line with target at landing → ENERGY LEAKAGE ⭐⭐
-  * Direct line to target = maximum energy transfer
-  * Misalignment forces compensations during arm action
-  * Reduces both velocity and accuracy
+- ⚠️ CRITICAL: Chest already facing target when foot lands → EARLY ROTATION ⭐⭐⭐
+  * This means shoulders have ALREADY rotated - the timing is wrong
+  * Correct position: chest stays sideways at landing
+  * Glove shoulder should POINT at target, not the chest
 - ⚠️ Back leg NOT facing target before shoulder rotation → Causes INACCURACIES
-- ⚠️ Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering (indicates T-spine mobility or patterning issue)
-- ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK (pinpointed stress)
+- ⚠️ Arm flips up BEFORE shoulder moves → INJURY RISK + velocity lowering
+- ⚠️ Hand-elbow-shoulder angle ≥90° during arm flip-up → INJURY RISK
 - ⚠️ Poor footwork alignment (not directed to target) → Reduces accuracy
 
 SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
@@ -674,10 +675,10 @@ STARTING POINT: Begin at 5 (mediocre baseline) - scale is 1-10
 - Scores above 8 require NEAR-PERFECT fundamentals
 
 SCORE CAPS (NON-NEGOTIABLE):
-- If shoulders NOT aligned with target at landing → MAX SCORE: 6
+- If shoulders rotate BEFORE stride foot lands → MAX SCORE: 6.5
+- If chest already faces target at landing (shoulders already rotated) → MAX SCORE: 6.5
 - If back hip/leg NOT facing target at landing → MAX SCORE: 6
 - If TWO OR MORE critical violations → MAX SCORE: 5.5
-- If shoulders rotate BEFORE stride foot lands → MAX SCORE: 6.5
 
 SCORING BANDS:
 - 9-10: Elite. ALL fundamentals correct. Minor refinements only.
@@ -689,7 +690,9 @@ SCORING BANDS:
 
 CALIBRATION - What 8.5+ REQUIRES:
 ✓ Stride foot FULLY planted before ANY shoulder rotation
-✓ Shoulders PERFECTLY aligned with target at landing
+✓ Shoulders LATERAL (sideways) at landing - glove shoulder points at target
+✓ Chest NOT facing target at landing (stays closed)
+✓ Hips forward-facing toward target (creating hip-shoulder separation)
 ✓ Back leg (foot, knee, hip) ALL facing target
 ✓ Arm angle under 90° at flip-up
 ✓ Proper footwork toward target
@@ -697,7 +700,7 @@ CALIBRATION - What 8.5+ REQUIRES:
 
 CALIBRATION - What 6 looks like:
 ✗ Stride foot lands but shoulders already rotating
-✗ Shoulder alignment off by 15+ degrees
+✗ Chest already facing target at landing (no hip-shoulder separation)
 ✓ Some correct elements (footwork, follow-through)
 
 BE DIRECT: Do not inflate scores to be encouraging.
@@ -706,12 +709,13 @@ A score of 6.5 with honest feedback is more valuable than 8.5 with false praise.
 
 Focus on:
 1. ⭐⭐⭐ Is the STRIDE FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
-2. ⭐⭐ Are SHOULDERS IN LINE WITH TARGET at the moment of landing?
-3. Does back leg (foot, knee, hip) face target BEFORE shoulder rotation?
-4. Does arm flip up before shoulder moves (T-spine/patterning issue)?
-5. Is footwork aligned to target?
-6. Does shoulder move BEFORE arm action?
-7. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
+2. ⭐⭐⭐ Is the CHEST still SIDEWAYS (not facing target) when foot lands? (CRITICAL)
+3. ⭐⭐ Are SHOULDERS LATERAL at landing? (Glove shoulder points at target, chest stays closed)
+4. Does back leg (foot, knee, hip) face target BEFORE shoulder rotation?
+5. Does arm flip up before shoulder moves (T-spine/patterning issue)?
+6. Is footwork aligned to target?
+7. Does shoulder move BEFORE arm action?
+8. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
 
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
@@ -719,7 +723,7 @@ CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
 Before finalizing your response, cross-check your positives against your summary and feedback:
 - If you list something as a POSITIVE, you CANNOT also say it needs improvement
 - If you identify something that needs work, it should NOT appear in positives
-- Example of what NOT to do: Positive says "Good shoulder alignment" but summary says "Line up your shoulders better"
+- Example of what NOT to do: Positive says "Good shoulder position" but summary says "Keep your shoulders sideways longer"
 - If a skill is partially correct, list it under improvements with acknowledgment of what's working
 
 LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
@@ -729,8 +733,11 @@ USE VISUAL, SIMPLE DESCRIPTIONS:
 Instead of: "Shoulders begin rotating before stride foot lands"
 Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
 
-Instead of: "Shoulders not aligned with target at landing"
-Say: "When your front foot touched down, your chest wasn't pointing at your target - aim your belly button where you're throwing"
+Instead of: "Chest was already facing target at landing" (EARLY ROTATION)
+Say: "When your foot landed, your chest was already facing where you're throwing - stay sideways longer! Point your front shoulder at your target, and only turn your chest AFTER your foot lands"
+
+Instead of: "Shoulders should be lateral at landing"
+Say: "When your front foot lands, your front shoulder (glove side) should point straight at your target like an arrow - your chest should face the side, not your target yet"
 
 Instead of: "Back leg not facing target"
 Say: "Your back knee (the one you push off from) should point toward where you're throwing when you land"
