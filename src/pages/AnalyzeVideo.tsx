@@ -34,8 +34,8 @@ export default function AnalyzeVideo() {
   const sport = searchParams.get("sport") || (localStorage.getItem('selectedSport') as string) || "baseball";
   const { user, loading: authLoading } = useAuth();
   const { modules: subscribedModules, loading: subLoading, initialized, refetch, hasAccessForSport } = useSubscription();
-  const { isOwner } = useOwnerAccess();
-  const { isAdmin } = useAdminAccess();
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -156,8 +156,8 @@ export default function AnalyzeVideo() {
   }, [refetch]);
 
   useEffect(() => {
-    // Wait for auth, subscription, and initialization to complete
-    if (authLoading || subLoading || !initialized) {
+    // Wait for auth, subscription, initialization, and role checks to complete
+    if (authLoading || subLoading || !initialized || ownerLoading || adminLoading) {
       return;
     }
     
@@ -187,7 +187,7 @@ export default function AnalyzeVideo() {
       navigate("/dashboard", { replace: true });
       return;
     }
-  }, [authLoading, subLoading, initialized, user, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate, t]);
+  }, [authLoading, subLoading, initialized, ownerLoading, adminLoading, user, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate, t]);
 
   // Clean upload space when module or sport changes
   useEffect(() => {
