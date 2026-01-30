@@ -309,18 +309,52 @@ Provide:
 - **If forward head movement detected:** Note correlation with back elbow position and hand travel
 - Recommended drills to correct any sequence issues and improve balance
 
+CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
+Before finalizing your response, cross-check your positives against your summary and feedback:
+- If you list something as a POSITIVE, you CANNOT also say it needs improvement
+- If you identify something that needs work, it should NOT appear in positives
+- Example of what NOT to do: Positive says "Good timing on front foot" but summary says "Land your front foot earlier"
+- If a skill is partially correct, list it under improvements with acknowledgment of what's working
+
+LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
+Write all feedback so a child who has never played the sport can understand.
+
+USE VISUAL, SIMPLE DESCRIPTIONS:
+Instead of: "Shoulders begin rotating before front foot lands"
+Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
+
+Instead of: "Hands pass back elbow before shoulders rotate"
+Say: "Your hands started moving toward the ball before your shoulders began turning - let your shoulders lead"
+
+Instead of: "Front shoulder opens early"
+Say: "Your front shoulder (the one closer to the pitcher) opened up too soon - keep it pointed at the pitcher longer"
+
+Instead of: "Kinetic chain disruption"
+Say: "The order your body parts move got mixed up - feet first, then hips, then shoulders, then hands"
+
+Instead of: "Maintain balance through the swing"
+Say: "Keep your head steady and don't lean too far forward or backward while you swing"
+
+RULES:
+1. No technical jargon without immediate explanation
+2. Use body parts everyone knows (knee, belly button, chest, foot, shoulder)
+3. Use "the pitcher" or "where you're hitting to" instead of "target"
+4. Describe positions like you're giving directions to a friend
+5. Keep sentences under 15 words when possible
+
 SUMMARY FORMAT:
-REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
+REQUIRED: Provide exactly 3-5 bullet points in plain, 10-year-old-friendly language (max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
 Be honest about issues - accurate feedback helps development. Examples:
 - "Land your front foot before rotating - this gives you balance and power"
-- "Shoulders turn too early - wait for your front foot to touch down first"
-- "Great timing - front foot plants, then your body rotates together"
-- "Your hands move too early - wait for shoulders to start turning first"
-- "Great balance throughout the swing - head stays steady"
-- "Front shoulder opens too soon - this makes contact harder"
+- "Your shoulders started turning too early - wait for your foot to touch down first"
+- "Great timing - your foot lands, then your body turns together"
+- "Your hands moved too early - let your shoulders start turning first"
+- "Great balance - your head stayed steady the whole time"
+- "Your front shoulder opened too fast - keep it closed a bit longer"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
+CRITICAL: Positives listed here must NOT contradict any improvement areas mentioned above.
 After your analysis, identify 2-4 specific positive aspects of the player's mechanics. Look for:
 - Good foundation elements (stance, setup, balance)
 - Correct sequencing in any part of the swing
@@ -483,19 +517,56 @@ After the feedback, provide 3–5 actionable drills tailored to the issues found
 - equipment: Required equipment or "None"
 - cues: 2–3 coaching cues for proper execution
 
+CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
+Before finalizing your response, cross-check your positives against your summary and feedback:
+- If you list something as a POSITIVE, you CANNOT also say it needs improvement
+- If you identify something that needs work, it should NOT appear in positives
+- Example of what NOT to do: Positive says "Good shoulder alignment" but summary says "Keep shoulders pointed at home plate"
+- If a skill is partially correct, list it under improvements with acknowledgment of what's working
+
+LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
+Write all feedback so a child who has never played the sport can understand.
+
+USE VISUAL, SIMPLE DESCRIPTIONS:
+Instead of: "Shoulders begin rotating before front foot lands"
+Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
+
+Instead of: "Shoulders not aligned with target at landing"
+Say: "When your front foot touched down, your chest wasn't pointing at home plate - aim your belly button at the catcher"
+
+Instead of: "Back leg not facing target"
+Say: "Your back knee (the one you push off from) should point toward home plate when you land"
+
+Instead of: "Glove not facing target"
+Say: "Point the open pocket of your glove (the part where you catch the ball) toward home plate"
+
+Instead of: "Kinetic chain"
+Say: "The order your body parts move - feet first, then hips, then shoulders, then arm"
+
+Instead of: "Power line"
+Say: "An imaginary straight line from where you start to home plate"
+
+RULES:
+1. No technical jargon without immediate explanation
+2. Use body parts everyone knows (knee, belly button, chest, foot, shoulder)
+3. Use "home plate" or "the catcher" instead of "target"
+4. Describe positions like you're giving directions to a friend
+5. Keep sentences under 15 words when possible
+
 SUMMARY FORMAT:
-REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
+REQUIRED: Provide exactly 3-5 bullet points in plain, 10-year-old-friendly language (max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
 Be honest about issues - accurate feedback helps development. Examples:
-- "Plant your front foot before rotating - this gives you power and accuracy"
-- "Shoulders turn too early - wait for your front foot to touch down first"
-- "Great timing - front foot plants, then your body rotates together"
-- "Keep your shoulders pointed at the target when you land"
-- "Back leg needs to face the target earlier for better accuracy"
-- "Good drive toward the plate with your legs"
-- "Good arm angle under 90 degrees - protects your elbow and shoulder"
+- "Land your front foot before turning - this gives you power and accuracy"
+- "Your shoulders started turning too early - wait for your foot to land first"
+- "Great timing - your foot lands, then your body turns together"
+- "Point your chest at the catcher when your foot lands"
+- "Your back knee should point at home plate earlier for better accuracy"
+- "Nice strong push toward home plate with your legs"
+- "Good arm position - keeps your elbow and shoulder safe"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
+CRITICAL: Positives listed here must NOT contradict any improvement areas mentioned above.
 Identify 2-4 specific positive mechanical elements, such as:
 - Good ground connection timing (foot plants before rotation)
 - Proper shoulder-target alignment at landing
@@ -678,20 +749,57 @@ After the feedback, provide 3–5 actionable drills tailored to the issues found
 - equipment: Required equipment or "None"
 - cues: 2–3 coaching cues for proper execution
 
+CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
+Before finalizing your response, cross-check your positives against your summary and feedback:
+- If you list something as a POSITIVE, you CANNOT also say it needs improvement
+- If you identify something that needs work, it should NOT appear in positives
+- Example of what NOT to do: Positive says "Good arm circle path" but summary says "Keep your arm circle straight"
+- If a skill is partially correct, list it under improvements with acknowledgment of what's working
+
+LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
+Write all feedback so a child who has never played the sport can understand.
+
+USE VISUAL, SIMPLE DESCRIPTIONS:
+Instead of: "Trunk/shoulders rotate before front foot lands"
+Say: "Your body started turning before your front foot touched the ground - wait for your foot to land first"
+
+Instead of: "Shoulders not aligned with target at landing"
+Say: "When your front foot touched down, your chest wasn't pointing at home plate - aim your belly button at the catcher"
+
+Instead of: "Arm circle crosses midline"
+Say: "Your arm swings across your body - keep it moving straight toward home plate like a wheel"
+
+Instead of: "Stride foot not on power line"
+Say: "Your front foot landed to the side - step straight toward home plate like walking on a tightrope"
+
+Instead of: "Front side collapse"
+Say: "Your front side bent too much when you landed - stay tall and strong"
+
+Instead of: "Kinetic chain"
+Say: "The order your body parts move - feet first, then hips, then shoulders, then arm"
+
+RULES:
+1. No technical jargon without immediate explanation
+2. Use body parts everyone knows (knee, belly button, chest, foot, shoulder)
+3. Use "home plate" or "the catcher" instead of "target"
+4. Describe positions like you're giving directions to a friend
+5. Keep sentences under 15 words when possible
+
 SUMMARY FORMAT:
-REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
+REQUIRED: Provide exactly 3-5 bullet points in plain, 10-year-old-friendly language (max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
 Be honest about issues - accurate feedback helps development. Examples:
-- "Plant your front foot before rotating - this gives you power and accuracy"
-- "Shoulders turn too early - wait for your front foot to touch down first"
-- "Great timing - front foot plants, then your body rotates together"
-- "Keep your shoulders pointed at the target when you land"
-- "Your arm circle is smooth and stays close to your body"
-- "Arm swings across your body - keep it straight toward home plate"
-- "Land on the power line for better accuracy"
-- "Strong hip drive generates good power"
+- "Land your front foot before turning - this gives you power and accuracy"
+- "Your body started turning too early - wait for your foot to land first"
+- "Great timing - your foot lands, then your body turns together"
+- "Point your chest at the catcher when your foot lands"
+- "Your arm circle is nice and smooth - great job!"
+- "Your arm swings across your body - keep it straight toward home plate"
+- "Step straight toward home plate for better accuracy"
+- "Strong push with your hips - that's where power comes from"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
+CRITICAL: Positives listed here must NOT contradict any improvement areas mentioned above.
 Identify 2-4 positive aspects of their windmill mechanics:
 - Good ground connection timing (foot plants before rotation)
 - Proper shoulder-target alignment at landing
@@ -855,20 +963,54 @@ After the feedback, provide 3–5 actionable drills tailored to the issues found
 - equipment: Required equipment or "None"
 - cues: 2–3 coaching cues for proper execution
 
+CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
+Before finalizing your response, cross-check your positives against your summary and feedback:
+- If you list something as a POSITIVE, you CANNOT also say it needs improvement
+- If you identify something that needs work, it should NOT appear in positives
+- Example of what NOT to do: Positive says "Good shoulder alignment" but summary says "Line up your shoulders better"
+- If a skill is partially correct, list it under improvements with acknowledgment of what's working
+
+LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
+Write all feedback so a child who has never played the sport can understand.
+
+USE VISUAL, SIMPLE DESCRIPTIONS:
+Instead of: "Shoulders begin rotating before stride foot lands"
+Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
+
+Instead of: "Shoulders not aligned with target at landing"
+Say: "When your front foot touched down, your chest wasn't pointing at your target - aim your belly button where you're throwing"
+
+Instead of: "Back leg not facing target"
+Say: "Your back knee (the one you push off from) should point toward where you're throwing when you land"
+
+Instead of: "Arm angle greater than 90 degrees"
+Say: "Your elbow went up too high - keep your throwing hand closer to your shoulder for a safer throw"
+
+Instead of: "Kinetic chain"
+Say: "The order your body parts move - feet first, then hips, then shoulders, then arm"
+
+RULES:
+1. No technical jargon without immediate explanation
+2. Use body parts everyone knows (knee, belly button, chest, foot, shoulder)
+3. Use "where you're throwing" or "your target" instead of technical terms
+4. Describe positions like you're giving directions to a friend
+5. Keep sentences under 15 words when possible
+
 SUMMARY FORMAT:
-REQUIRED: Provide exactly 3-5 bullet points in plain, beginner-friendly language (avoid jargon, max 15 words per bullet).
+REQUIRED: Provide exactly 3-5 bullet points in plain, 10-year-old-friendly language (max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
 Be honest about issues - accurate feedback helps development. Examples:
-- "Land your stride foot before rotating - this gives you power and accuracy"
-- "Shoulders turn too early - wait for your foot to touch down first"
-- "Great timing - front foot plants, then your body rotates together"
-- "Line up your shoulders with your target when you land"
-- "Good momentum moving toward your target"
-- "Back leg needs to face target before you throw for better accuracy"
-- "Strong finish on your throw"
-- "Good arm position - angle stays under 90 degrees for safety"
+- "Land your front foot before turning - this gives you power and accuracy"
+- "Your shoulders started turning too early - wait for your foot to land first"
+- "Great timing - your foot lands, then your body turns together"
+- "Point your chest where you're throwing when your foot lands"
+- "Nice strong step toward your target"
+- "Your back knee should point at your target earlier for better accuracy"
+- "Strong finish on your throw - great follow-through!"
+- "Good arm position - keeps your elbow safe"
 
 IMPORTANT - POSITIVES IDENTIFICATION:
+CRITICAL: Positives listed here must NOT contradict any improvement areas mentioned above.
 Identify 2-4 positive throwing mechanics:
 - Good ground connection timing (stride foot plants before rotation)
 - Proper shoulder-target alignment at landing

@@ -236,6 +236,35 @@ Provide:
 - **If forward head movement detected:** Note correlation with back elbow position and hand travel
 - Recommended drills to correct any sequence issues and improve balance
 
+CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
+Before finalizing your response, cross-check your positives against your summary and feedback:
+- If you list something as a POSITIVE, you CANNOT also say it needs improvement
+- If you identify something that needs work, it should NOT appear in positives
+- Example of what NOT to do: Positive says "Good timing on front foot" but summary says "Land your front foot earlier"
+- If a skill is partially correct, list it under improvements with acknowledgment of what's working
+
+LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
+Write all feedback so a child who has never played the sport can understand.
+
+USE VISUAL, SIMPLE DESCRIPTIONS:
+Instead of: "Shoulders begin rotating before front foot lands"
+Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
+
+Instead of: "Hands pass back elbow before shoulders rotate"
+Say: "Your hands started moving toward the ball before your shoulders began turning - let your shoulders lead"
+
+Instead of: "Front shoulder opens early"
+Say: "Your front shoulder (the one closer to the pitcher) opened up too soon - keep it pointed at the pitcher longer"
+
+Instead of: "Kinetic chain disruption"
+Say: "The order your body parts move got mixed up - feet first, then hips, then shoulders, then hands"
+
+RULES:
+1. No technical jargon without immediate explanation
+2. Use body parts everyone knows (knee, belly button, chest, foot, shoulder)
+3. Use "the pitcher" or "where you're hitting to" instead of "target"
+4. Keep sentences under 15 words when possible
+
 DO NOT MENTION: velocity, bat speed, exit velocity, or output metrics.
 Focus ONLY on form and body mechanics.`;
   }
@@ -369,6 +398,35 @@ Focus on:
 
 When sequence is correct, the pitch should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
 
+CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
+Before finalizing your response, cross-check your positives against your summary and feedback:
+- If you list something as a POSITIVE, you CANNOT also say it needs improvement
+- If you identify something that needs work, it should NOT appear in positives
+- Example of what NOT to do: Positive says "Good shoulder alignment" but summary says "Keep shoulders pointed at home plate"
+- If a skill is partially correct, list it under improvements with acknowledgment of what's working
+
+LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
+Write all feedback so a child who has never played the sport can understand.
+
+USE VISUAL, SIMPLE DESCRIPTIONS:
+Instead of: "Shoulders begin rotating before front foot lands"
+Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
+
+Instead of: "Shoulders not aligned with target at landing"
+Say: "When your front foot touched down, your chest wasn't pointing at home plate - aim your belly button at the catcher"
+
+Instead of: "Back leg not facing target"
+Say: "Your back knee (the one you push off from) should point toward home plate when you land"
+
+Instead of: "Glove not facing target"
+Say: "Point the open pocket of your glove (the part where you catch the ball) toward home plate"
+
+RULES:
+1. No technical jargon without immediate explanation
+2. Use body parts everyone knows (knee, belly button, chest, foot, shoulder)
+3. Use "home plate" or "the catcher" instead of "target"
+4. Keep sentences under 15 words when possible
+
 DO NOT MENTION: velocity, spin rate, or output metrics.
 Focus ONLY on form and body mechanics.`;
   }
@@ -497,6 +555,35 @@ Focus on:
 4. Is stride foot ON the power line?
 5. Is there front side collapse at SFC?
 6. Is there strong hip drive through landing?
+
+CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
+Before finalizing your response, cross-check your positives against your summary and feedback:
+- If you list something as a POSITIVE, you CANNOT also say it needs improvement
+- If you identify something that needs work, it should NOT appear in positives
+- Example of what NOT to do: Positive says "Good arm circle path" but summary says "Keep your arm circle straight"
+- If a skill is partially correct, list it under improvements with acknowledgment of what's working
+
+LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
+Write all feedback so a child who has never played the sport can understand.
+
+USE VISUAL, SIMPLE DESCRIPTIONS:
+Instead of: "Trunk/shoulders rotate before front foot lands"
+Say: "Your body started turning before your front foot touched the ground - wait for your foot to land first"
+
+Instead of: "Shoulders not aligned with target at landing"
+Say: "When your front foot touched down, your chest wasn't pointing at home plate - aim your belly button at the catcher"
+
+Instead of: "Arm circle crosses midline"
+Say: "Your arm swings across your body - keep it moving straight toward home plate like a wheel"
+
+Instead of: "Stride foot not on power line"
+Say: "Your front foot landed to the side - step straight toward home plate like walking on a tightrope"
+
+RULES:
+1. No technical jargon without immediate explanation
+2. Use body parts everyone knows (knee, belly button, chest, foot, shoulder)
+3. Use "home plate" or "the catcher" instead of "target"
+4. Keep sentences under 15 words when possible
 
 DO NOT MENTION: velocity, spin rate, or output metrics.
 Focus ONLY on form and body mechanics.`;
@@ -627,6 +714,35 @@ Focus on:
 7. Is hand-elbow-shoulder angle less than 90° when hand flips up to travel forward?
 
 When sequence is correct, the throw should feel EFFORTLESS and AUTOMATIC due to fascial contractile properties.
+
+CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
+Before finalizing your response, cross-check your positives against your summary and feedback:
+- If you list something as a POSITIVE, you CANNOT also say it needs improvement
+- If you identify something that needs work, it should NOT appear in positives
+- Example of what NOT to do: Positive says "Good shoulder alignment" but summary says "Line up your shoulders better"
+- If a skill is partially correct, list it under improvements with acknowledgment of what's working
+
+LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
+Write all feedback so a child who has never played the sport can understand.
+
+USE VISUAL, SIMPLE DESCRIPTIONS:
+Instead of: "Shoulders begin rotating before stride foot lands"
+Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
+
+Instead of: "Shoulders not aligned with target at landing"
+Say: "When your front foot touched down, your chest wasn't pointing at your target - aim your belly button where you're throwing"
+
+Instead of: "Back leg not facing target"
+Say: "Your back knee (the one you push off from) should point toward where you're throwing when you land"
+
+Instead of: "Arm angle greater than 90 degrees"
+Say: "Your elbow went up too high - keep your throwing hand closer to your shoulder for a safer throw"
+
+RULES:
+1. No technical jargon without immediate explanation
+2. Use body parts everyone knows (knee, belly button, chest, foot, shoulder)
+3. Use "where you're throwing" or "your target" instead of technical terms
+4. Keep sentences under 15 words when possible
 
 DO NOT MENTION: velocity or output metrics.
 Focus ONLY on form and body mechanics.`;
