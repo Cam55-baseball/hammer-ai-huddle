@@ -1,44 +1,50 @@
 
+# Fix Plan: Reset "Mark Landing Moment" State on New Video Upload
 
-# Fix Plan: Make Educational Text Even Darker
+## Problem
 
-## Current State
+When uploading a new pitching video, the "Mark Landing Moment" button retains its previous selection state from the last video. This means if you marked the landing moment on video A, then upload video B, it still shows the landing time from video A even though you never clicked it for the new video.
 
-Based on the last diff, the introductory text colors are currently:
-- **Eating Disorder section**: `text-amber-300`
-- **Body Image section**: `text-teal-300`
+## Root Cause
+
+The `landingTime` state variable is not being reset in three key places where video state is cleared:
+
+1. **Module/Sport Change Effect** - When switching between modules or sports
+2. **handleRemoveVideo** - When clicking to remove the current video  
+3. **handleFileSelect** - When selecting a new video file
 
 ## Solution
 
-Move to even darker shades in the Tailwind color scale:
-
-| File | Current | New |
-|------|---------|-----|
-| `EatingDisorderEducation.tsx` | `text-amber-300` | `text-amber-400` |
-| `BodyImageEducation.tsx` | `text-teal-300` | `text-teal-400` |
-
-The 400 shades are more saturated and will provide better contrast against the dark card backgrounds.
+Add `setLandingTime(null)` to all three state reset locations.
 
 ## Changes Required
 
-### File 1: `src/components/nutrition/EatingDisorderEducation.tsx`
+### File: `src/pages/AnalyzeVideo.tsx`
 
-**Line 100** - Change:
-```tsx
-<p className="text-sm text-amber-400">
-```
+**Change 1: Module/Sport Change Effect (around line 202)**
 
-### File 2: `src/components/nutrition/BodyImageEducation.tsx`
+Add `setLandingTime(null)` after the existing state resets in the `useEffect` that handles module/sport changes.
 
-**Line 105** - Change:
-```tsx
-<p className="text-sm text-teal-400">
-```
+**Change 2: handleRemoveVideo Function (around line 228)**
+
+Add `setLandingTime(null)` after the existing state resets when removing a video.
+
+**Change 3: handleFileSelect Function (around line 250)**
+
+Add `setLandingTime(null)` after `setCurrentVideoId(null)` when selecting a new video file.
 
 ## Summary
 
-| Change | File | Line |
-|--------|------|------|
-| `text-amber-300` → `text-amber-400` | `EatingDisorderEducation.tsx` | 100 |
-| `text-teal-300` → `text-teal-400` | `BodyImageEducation.tsx` | 105 |
+| Location | Line | Change |
+|----------|------|--------|
+| Module/sport change effect | ~202 | Add `setLandingTime(null);` |
+| `handleRemoveVideo` function | ~228 | Add `setLandingTime(null);` |
+| `handleFileSelect` function | ~250 | Add `setLandingTime(null);` |
 
+## Expected Outcome
+
+After this fix:
+- Uploading a new video will always start with no landing moment marked
+- Switching sports or modules will reset the landing marker
+- Removing a video will clear the landing marker
+- Users must explicitly mark the landing moment for each new video they upload
