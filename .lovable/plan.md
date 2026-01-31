@@ -1,161 +1,250 @@
 
+# Implementation Plan: Updated Hitting Mechanics Feedback
 
-# Fix Plan: Remove Pitching-Style Alignment Language from Hitting Feedback
+## Summary
 
-## Problem Summary
+Update the AI analysis prompts for baseball and softball hitting to correctly implement the **Foot → Hips → Back Elbow → Hands** kinetic chain with accurate error detection and kid-friendly feedback language.
 
-The AI is still generating pitching-style feedback for hitters, specifically in the Key Findings bullets:
-- "Your back hip isn't pointing to the pitcher when you land"
-- "Your shoulders are not aimed correctly when you land"
+---
 
-This happens because:
-1. The AI prompts still allow `shoulders_not_aligned` to be flagged for hitting modules
-2. The hitting prompt doesn't explicitly forbid mentioning "back hip pointing/facing" or "shoulders aligned" concepts
-3. The AI is generating pitching/throwing-style alignment feedback even though we excluded the violations from score capping
+## Confirmed Hitting Mechanics
 
-**The actual correct mechanics for hitting:**
-- Front foot lands and stabilizes first
-- Back hip rotates toward target AFTER foot plants (not at landing)
-- Shoulders stay closed (timing issue), but don't need to be "aligned with target" at landing
-- Focus should be on TIMING ("too early") not DIRECTION ("not pointed at")
+### Correct Kinetic Chain Sequence
+1. **Front foot lands and stabilizes** (ground connection)
+2. **Hips rotate toward ball** while chest stays facing home plate (core tension/separation)
+3. **Back elbow drives forward**, extending past the belly button toward the pitcher
+4. **Hands stay back** (near back shoulder, behind the elbow) until the last moment
+5. **Shoulders finally open** AFTER the back elbow passes the belly button
+6. **Bat whips through** to contact
 
-## Root Cause Analysis
+### Key Errors to Detect (Priority Order)
+| Priority | Error | Visual Cue |
+|----------|-------|------------|
+| #1 | Shoulders opening too early | Chest/jersey logo turns toward pitcher before elbow extends |
+| #2 | Hands drifting forward | Hands move forward with stride instead of staying loaded |
+| #3 | Back elbow staying tucked | Back elbow stays at side instead of driving forward past belly button |
 
-Looking at the database results, hitting analyses are returning:
-```
-summary: [
-  "Your back hip isn't pointing to the pitcher when you land.",
-  "Your shoulders are not aimed correctly when you land."
-]
-violations: { back_leg_not_facing_target: false, shoulders_not_aligned: true }
-```
+### Correct Mechanics Visual Cues
+- Chest facing home plate during hip rotation
+- Hands staying loaded near back shoulder
+- Visible hip-shoulder separation angle
+- Back elbow visibly extending forward past hip line
 
-The issue is in TWO places:
-
-| Issue | Location | Problem |
-|-------|----------|---------|
-| AI still checking shoulders_not_aligned for hitting | Both edge functions | The violation schema includes it, and the AI generates alignment-focused feedback |
-| Kid-friendly language uses "aim" and "pointing" | System prompts | The AI translates issues into pitching-style language |
+---
 
 ## Files to Update
 
-| File | Changes |
+| File | Purpose |
 |------|---------|
-| `supabase/functions/analyze-video/index.ts` | Update hitting prompt to forbid alignment language, exclude shoulders_not_aligned |
-| `supabase/functions/analyze-realtime-playback/index.ts` | Same changes for real-time analysis |
+| `supabase/functions/analyze-video/index.ts` | Full video analysis hitting prompt |
+| `supabase/functions/analyze-realtime-playback/index.ts` | Real-time analysis hitting prompt |
+
+---
 
 ## Detailed Changes
 
-### Change 1: Update Violation Schema for Hitting (Both Functions)
+### Change 1: Update the Kinetic Sequence Section
 
-**Current:** `shoulders_not_aligned` is in the schema (just not required for hitting)  
-**Fix:** For hitting, update description to say "For HITTING: Always set FALSE - focus on TIMING not alignment"
-
-```typescript
-shoulders_not_aligned: {
-  type: "boolean",
-  description: module === 'hitting'
-    ? "For HITTING: Always set FALSE - hitting does not use shoulder-target alignment checks. Focus on early rotation TIMING instead."
-    : "TRUE if shoulders NOT aligned with target at moment of landing (pitching/throwing only)"
-}
+**Current prompt shows:**
+```
+CRITICAL HITTING KINETIC SEQUENCE:
+1. Ground Force
+2. Legs Drive
+3. BACK ELBOW TRAVELS FORWARD (BEFORE hips rotate) ⭐
+4. FRONT FOOT LANDS & STABILIZES...
+5. Hips Rotate...
+6. Torso Rotates
+7. Shoulders Rotate...
+8. Hands/Bat Release...
 ```
 
-### Change 2: Add Explicit "DO NOT SAY" Rules for Hitting Prompts
-
-Add to the hitting prompt in both functions:
-
+**Updated to:**
 ```
-LANGUAGE RULES FOR HITTING (DO NOT VIOLATE):
+CORRECT HITTING KINETIC CHAIN (FOOT → HIPS → BACK ELBOW → HANDS):
 
-DO NOT say or reference:
-- "back hip isn't pointing to the pitcher" - WRONG FOR HITTING
-- "back hip not facing the target" - WRONG FOR HITTING
-- "shoulders are not aimed correctly" - WRONG FOR HITTING
-- "shoulders not aligned with target" - WRONG FOR HITTING
-- Any language about hip/shoulder DIRECTION at landing
+1. FRONT FOOT LANDS & STABILIZES (ground connection) ⭐⭐⭐
+2. HIPS ROTATE toward ball WHILE:
+   - Chest stays facing home plate (creates core tension/separation) ⭐⭐
+   - Back elbow begins driving forward
+3. BACK ELBOW DRIVES FORWARD past the belly button toward the pitcher ⭐⭐
+4. HANDS STAY BACK (near back shoulder, behind the elbow) until the last moment ⭐
+5. SHOULDERS FINALLY OPEN (ONLY AFTER back elbow passes belly button) ⭐⭐⭐
+6. BAT WHIPS through to contact
 
-CORRECT language for hitting timing issues:
-- "Your shoulders started turning too early" (timing)
-- "Your shoulders rotated before your foot landed" (sequence)
-- "Keep your shoulders closed until your foot plants" (instruction)
-- "Your back hip opened up too soon" (if truly premature - timing)
-
-For hitting, the ONLY landing checks are:
-1. Is the front foot planted before rotation begins? (timing)
-2. Are shoulders still closed at landing? (timing)
-3. Is there excessive lateral head movement? (stability)
-
-Do NOT check:
-- Whether back hip is "facing/pointing at" the pitcher at landing
-- Whether shoulders are "aligned with" or "aimed at" the target at landing
+KEY SEPARATION CONCEPT:
+- While hips rotate, the chest STAYS FACING HOME PLATE
+- This hip-shoulder separation creates the torque/power
+- The back elbow leads the hands forward
+- Hands trail behind the elbow creating a "whip" effect
 ```
 
-### Change 3: Update Alignment Checks Instruction (analyze-video/index.ts)
+### Change 2: Update Red Flags Section
 
-Current hitting alignment checks instruction (lines 1199-1235) mentions "BACK HIP CHECK" which the AI is interpreting as needing to evaluate direction.
+**Replace current RED FLAGS with:**
+```
+RED FLAGS TO IDENTIFY (in priority order):
 
-**Update to emphasize:**
-- Back hip rotation happens AFTER landing (do not evaluate its direction at landing)
-- Remove any language about "facing target" or "pointing at pitcher"
-- Focus only on TIMING violations (early rotation)
+⚠️ #1 PRIORITY - SHOULDERS OPENING TOO EARLY ⭐⭐⭐
+- Chest/jersey logo turns toward pitcher BEFORE back elbow extends past belly button
+- This is the most common power-killing mistake
+- Destroys bat speed and adjustability
+- Visual cue: Can you see the front of their jersey before the elbow extends?
 
-### Change 4: Update detectViolationsFromFeedback to Skip Hitting Keywords
+⚠️ #2 - HANDS DRIFTING FORWARD ⭐⭐
+- Hands move forward with the stride/body instead of staying loaded
+- Should stay near back shoulder until the last moment
+- Kills the "whip" effect that creates bat speed
+- Visual cue: Do the hands drift toward the pitcher during the stride?
 
-Currently the keyword detector scans for "back hip not facing", etc. For hitting specifically, we should also skip `shoulders_not_aligned` keyword detection since hitting doesn't use shoulder alignment checks.
-
-```typescript
-// Skip shoulders_not_aligned for hitting - this check doesn't apply
-if (violation === 'shoulders_not_aligned' && module === 'hitting') {
-  detected[violation] = false;
-  continue;
-}
+⚠️ #3 - BACK ELBOW STAYING TUCKED ⭐⭐
+- Back elbow stays pinned to the body instead of driving forward
+- Should extend past the belly button toward the pitcher
+- Limits extension and power
+- Visual cue: Does the back elbow stay at the hitter's side or drive forward?
 ```
 
-### Change 5: Update Summary/Bullet Generation Examples for Hitting
+### Change 3: Update Focus Checklist
 
-Remove any examples that mention alignment-style feedback for hitting. Add explicit examples of correct hitting feedback:
-
+**Replace the current "Focus on:" list with:**
 ```
-HITTING SUMMARY EXAMPLES (use these patterns):
-- "Land your front foot before turning - this creates power"
-- "Your shoulders started rotating too early - wait for your foot to plant"
-- "Keep your head steady - don't drift toward the pitcher"
-- "Your hands moved before your shoulders turned"
-- "Great sequence - foot lands, then hips, then shoulders"
-
-DO NOT USE these patterns for hitting:
-- "Your back hip isn't pointing to the pitcher when you land" (WRONG)
-- "Your shoulders are not aimed correctly when you land" (WRONG)
+Focus on (in this order):
+1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY hip rotation begins? (CRITICAL - ground connection)
+2. ⭐⭐⭐ Does the CHEST STAY FACING HOME PLATE while the hips rotate? (CRITICAL - separation)
+3. ⭐⭐⭐ Do the SHOULDERS stay closed until AFTER the back elbow passes the belly button? (CRITICAL - #1 error)
+4. ⭐⭐ Does the BACK ELBOW DRIVE FORWARD past the belly button toward the pitcher?
+5. ⭐⭐ Do the HANDS STAY BACK (near back shoulder, behind elbow) until the last moment?
+6. ⭐ Is the head stable (not drifting laterally toward pitcher during swing)?
+7. Is the timing sequence correct (foot → hips → back elbow → hands)?
 ```
 
-## Score Capping Updates
+### Change 4: Update Positive Feedback Examples
 
-Currently the code already excludes `shoulders_not_aligned` and `back_leg_not_facing_target` from score capping for hitting modules. This is correct. The issue is that the AI is still GENERATING this feedback even though it doesn't affect the score.
+**Add correct positive feedback patterns:**
+```
+POSITIVE FEEDBACK EXAMPLES (use these patterns):
+- "Great hip-shoulder separation - your hips fired while your chest stayed facing home plate"
+- "Your back elbow drove through past your belly button - excellent extension"
+- "Hands stayed back until the last moment - great bat whip"
+- "Perfect sequence: foot planted, hips rotated, elbow led the hands"
+- "Your chest stayed home while your hips opened - that's where power comes from"
+```
 
-## Expected Outcomes
+### Change 5: Update Correction Phrases
 
-| Issue | Resolution |
-|-------|------------|
-| "back hip isn't pointing to the pitcher" bullets | Eliminated - prompt forbids this language |
-| "shoulders are not aimed correctly" bullets | Eliminated - shoulders_not_aligned disabled for hitting |
-| AI generating alignment feedback for hitting | Fixed - explicit DO NOT SAY rules added |
-| Score still capped incorrectly | Already fixed in previous changes |
+**Add correct correction patterns:**
+```
+CORRECTION FEEDBACK EXAMPLES (use these patterns):
+- "Your shoulders started turning before your hips finished rotating"
+- "Let your back elbow lead toward the ball - drive it past your belly button"
+- "Your hands moved forward with your body - keep them back longer to create bat speed"
+- "Your chest opened toward the pitcher too soon - keep it facing home plate longer"
+- "Your back elbow stayed tucked - extend it forward past your belly button"
+```
 
-## Summary of Formula Changes
+### Change 6: Update Forbidden Language Section
 
-### For HITTING (Baseball & Softball):
+**Strengthen the "NEVER SAY" section:**
+```
+⛔⛔⛔ NEVER SAY FOR HITTING ⛔⛔⛔
 
-**At landing, ONLY check:**
-1. Is front foot planted? (pass/fail)
-2. Have shoulders already started rotating? (timing - early rotation)
-3. Is head moving laterally toward pitcher? (stability)
+These phrases are WRONG for hitting and must NEVER appear:
 
-**Do NOT check or mention:**
-- Back hip direction/pointing/facing at landing
-- Shoulder alignment with target at landing
-- Any "aimed at" or "in line with" language
+WRONG (direction/alignment focus):
+- "back hip isn't pointing to the pitcher" ✗
+- "back hip not facing the target" ✗
+- "shoulders are not aimed correctly" ✗
+- "shoulders not aligned with target" ✗
+- "rotate your shoulders toward the ball" ✗
+- "front elbow leads" ✗ (it's the BACK elbow that leads)
 
-**Correct feedback language:**
-- Timing-focused ("too early", "before foot landed")
-- NOT direction-focused ("not pointing at", "not aimed at")
+WRONG (outdated sequence):
+- "shoulders start the swing" ✗
+- "start with your shoulders" ✗
+- "lead with your front elbow" ✗
+
+CORRECT (timing/sequence focus):
+- "Your shoulders started turning too early" ✓
+- "Keep your chest facing home plate while your hips turn" ✓
+- "Drive your back elbow past your belly button" ✓
+- "Keep your hands back - let them whip the bat through" ✓
+```
+
+### Change 7: Update Kid-Friendly Language Examples
+
+**Replace existing examples with:**
+```
+USE VISUAL, SIMPLE DESCRIPTIONS:
+
+Instead of: "Early shoulder rotation"
+Say: "Your chest turned toward the pitcher before your elbow moved forward - keep your chest facing home plate longer"
+
+Instead of: "Lack of hip-shoulder separation"
+Say: "Your shoulders and hips turned together - let your hips go first while your chest stays home"
+
+Instead of: "Back elbow not extending"
+Say: "Your back elbow stayed stuck at your side - push it forward past your belly button toward the pitcher"
+
+Instead of: "Hands casting forward"
+Say: "Your hands moved forward too soon - keep them back near your shoulder until the last second"
+
+Instead of: "Proper kinetic chain"
+Say: "Great order: foot down, hips turn, elbow drives, then hands whip the bat"
+```
+
+### Change 8: Update Scoring Criteria
+
+**Update score caps to reflect new priorities:**
+```
+SCORE CAPS (NON-NEGOTIABLE):
+- If shoulders open BEFORE back elbow passes belly button → MAX SCORE: 70 (or 7.0)
+- If chest opens toward pitcher before hips finish rotating → MAX SCORE: 70 (or 7.0)
+- If hands drift forward during stride/load → MAX SCORE: 75 (or 7.5)
+- If back elbow stays tucked (doesn't extend forward) → MAX SCORE: 75 (or 7.5)
+- If TWO OR MORE critical violations → MAX SCORE: 60 (or 6.0)
+```
+
+### Change 9: Update Summary Format Examples
+
+**Replace hitting summary examples:**
+```
+HITTING SUMMARY EXAMPLES:
+Good feedback bullets:
+- "Keep your chest facing home plate while your hips turn - this creates power"
+- "Drive your back elbow forward past your belly button"
+- "Great separation - hips fired while chest stayed home"
+- "Hands stayed back - nice bat whip at the end"
+- "Your shoulders opened too early - wait for your elbow to extend first"
+
+Bad feedback bullets (NEVER USE):
+- "Your back hip isn't pointing to the pitcher when you land" ✗
+- "Your shoulders are not aimed correctly" ✗
+- "Rotate your shoulders toward the ball" ✗
+```
+
+---
+
+## Validation Checklist
+
+After implementation, the AI should:
+
+| Check | Expected Behavior |
+|-------|-------------------|
+| Foot → Hips → Back Elbow → Hands sequence | AI describes this specific order |
+| Hip-shoulder separation | AI mentions chest facing home plate during hip rotation |
+| Back elbow cue | AI references back elbow driving past belly button |
+| Hands staying back | AI notes hands staying near back shoulder |
+| Shoulder timing trigger | AI says shoulders open AFTER elbow passes belly button |
+| Never use alignment language | No "pointing at", "aimed at", "facing target" for hitting |
+| Priority error detection | Shoulders opening early is flagged as #1 issue |
+
+---
+
+## Testing Approach
+
+After deployment, test with a hitting video to verify:
+1. The feedback uses the correct kinetic chain language
+2. No pitching-style alignment phrases appear
+3. Back elbow and belly button cues are present
+4. Hip-shoulder separation is correctly described
+5. Score caps reflect the new priority errors
 
