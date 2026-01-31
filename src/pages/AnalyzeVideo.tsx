@@ -751,14 +751,7 @@ export default function AnalyzeVideo() {
               <Card className="p-4 sm:p-6">
                 <h3 className="text-2xl font-bold mb-6">{t('videoAnalysis.analysisResults')}</h3>
                 <div className="space-y-6">
-                  <div>
-                    <h4 className="text-lg font-semibold">{t('videoAnalysis.efficiencyScore')}</h4>
-                    <div className="text-4xl font-bold text-primary">
-                      {analysis.efficiency_score}/100
-                    </div>
-                  </div>
-
-                  {/* Summary - Moved here for prominence */}
+                  {/* Summary - Key Findings shown first for actionable feedback */}
                   {analysis.summary && analysis.summary.length > 0 && (
                     <div className="p-4 bg-muted/50 rounded-lg border border-border">
                       <h4 className="text-lg font-semibold mb-3">{t('videoAnalysis.keyFindings')}</h4>
