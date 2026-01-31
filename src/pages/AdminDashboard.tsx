@@ -209,7 +209,10 @@ const AdminDashboard = () => {
                           <p className="font-semibold capitalize">
                             {video.sport} - {video.module}
                           </p>
-                        <p className="text-sm text-muted-foreground">Status: {video.status}</p>
+                          <p className="text-sm text-muted-foreground">Status: {video.status}</p>
+                          {video.efficiency_score && (
+                            <p className="text-sm">Score: {video.efficiency_score}/100</p>
+                          )}
                           <p className="text-xs text-muted-foreground mt-1">
                             {new Date(video.created_at).toLocaleDateString()}
                           </p>
@@ -353,6 +356,19 @@ const AdminDashboard = () => {
               <Card className="p-6">
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">Training Data</h3>
                 <p className="text-3xl font-bold">{trainingData.length}</p>
+              </Card>
+              <Card className="p-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Avg Score</h3>
+                <p className="text-3xl font-bold">
+                  {videos.length > 0
+                    ? Math.round(
+                        videos
+                          .filter((v) => v.efficiency_score)
+                          .reduce((acc, v) => acc + (v.efficiency_score || 0), 0) /
+                          videos.filter((v) => v.efficiency_score).length
+                      )
+                    : 0}
+                </p>
               </Card>
             </div>
           </TabsContent>

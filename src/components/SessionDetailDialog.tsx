@@ -412,6 +412,9 @@ export function SessionDetailDialog({
           <div className="flex gap-2 flex-wrap">
             <Badge variant="outline">{session.sport}</Badge>
             <Badge variant="outline">{session.module}</Badge>
+            {session.efficiency_score !== undefined && (
+              <Badge>{t('sessionDetail.efficiency')}: {session.efficiency_score}%</Badge>
+            )}
             {session.shared_with_scouts && (
               <Badge variant="secondary">{t('sessionDetail.sharedWithScouts')}</Badge>
             )}

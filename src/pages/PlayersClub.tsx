@@ -317,6 +317,11 @@ export default function PlayersClub() {
                             <Badge variant="outline" className="capitalize text-xs">
                               {session.module}
                             </Badge>
+                            {session.efficiency_score !== undefined && (
+                              <Badge variant="secondary" className="text-xs">
+                                {session.efficiency_score}%
+                              </Badge>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center justify-between mt-2">
@@ -432,6 +437,9 @@ export default function PlayersClub() {
                       <div className="flex gap-2 flex-wrap">
                         <Badge variant="outline" className="capitalize">{session.sport}</Badge>
                         <Badge variant="outline" className="capitalize">{session.module}</Badge>
+                        {session.efficiency_score !== undefined && (
+                          <Badge variant="secondary">{session.efficiency_score}%</Badge>
+                        )}
                       </div>
 
                       {/* Actions */}

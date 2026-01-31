@@ -127,7 +127,7 @@ export default function BoxBreathing({ onComplete }: BoxBreathingProps) {
 
   const getBoxStyles = () => {
     const baseSize = 'w-48 h-48 sm:w-64 sm:h-64';
-    const baseClasses = 'rounded-2xl transition-all [transition-duration:4000ms] ease-linear flex items-center justify-center';
+    const baseClasses = 'rounded-2xl transition-all duration-[4000ms] ease-linear flex items-center justify-center';
     
     switch (phase) {
       case 'inhale':

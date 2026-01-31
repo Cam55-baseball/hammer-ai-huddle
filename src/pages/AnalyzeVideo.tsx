@@ -34,8 +34,8 @@ export default function AnalyzeVideo() {
   const sport = searchParams.get("sport") || (localStorage.getItem('selectedSport') as string) || "baseball";
   const { user, loading: authLoading } = useAuth();
   const { modules: subscribedModules, loading: subLoading, initialized, refetch, hasAccessForSport } = useSubscription();
-  const { isOwner, loading: ownerLoading } = useOwnerAccess();
-  const { isAdmin, loading: adminLoading } = useAdminAccess();
+  const { isOwner } = useOwnerAccess();
+  const { isAdmin } = useAdminAccess();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -156,8 +156,8 @@ export default function AnalyzeVideo() {
   }, [refetch]);
 
   useEffect(() => {
-    // Wait for auth, subscription, initialization, and role checks to complete
-    if (authLoading || subLoading || !initialized || ownerLoading || adminLoading) {
+    // Wait for auth, subscription, and initialization to complete
+    if (authLoading || subLoading || !initialized) {
       return;
     }
     
@@ -187,7 +187,7 @@ export default function AnalyzeVideo() {
       navigate("/dashboard", { replace: true });
       return;
     }
-  }, [authLoading, subLoading, initialized, ownerLoading, adminLoading, user, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate, t]);
+  }, [authLoading, subLoading, initialized, user, subscribedModules, module, sport, isOwner, isAdmin, hasAccessForSport, navigate, t]);
 
   // Clean upload space when module or sport changes
   useEffect(() => {
@@ -751,6 +751,13 @@ export default function AnalyzeVideo() {
               <Card className="p-4 sm:p-6">
                 <h3 className="text-2xl font-bold mb-6">{t('videoAnalysis.analysisResults')}</h3>
                 <div className="space-y-6">
+                  <div>
+                    <h4 className="text-lg font-semibold">{t('videoAnalysis.efficiencyScore')}</h4>
+                    <div className="text-4xl font-bold text-primary">
+                      {analysis.efficiency_score}/100
+                    </div>
+                  </div>
+
                   {/* Summary - Moved here for prominence */}
                   {analysis.summary && analysis.summary.length > 0 && (
                     <div className="p-4 bg-muted/50 rounded-lg border border-border">

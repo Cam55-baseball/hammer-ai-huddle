@@ -52,26 +52,8 @@ export const extractKeyFrames = async (
         return;
       }
 
-      // Resize frames to max 512px dimension to reduce payload size
-      // This matches RealTimePlayback implementation and keeps API calls efficient
-      const maxDim = 512;
-      let width = video.videoWidth;
-      let height = video.videoHeight;
-
-      if (width > height) {
-        if (width > maxDim) {
-          height = (height / width) * maxDim;
-          width = maxDim;
-        }
-      } else {
-        if (height > maxDim) {
-          width = (width / height) * maxDim;
-          height = maxDim;
-        }
-      }
-
-      canvas.width = Math.round(width);
-      canvas.height = Math.round(height);
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
       
       const duration = video.duration;
       const frames: string[] = [];

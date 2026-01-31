@@ -268,11 +268,14 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
             {/* Video 1 */}
             <div className={layout === 'overlay' ? 'absolute inset-0 z-10' : ''}>
               <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge>{video1.sport}</Badge>
-                      <Badge variant="outline">{video1.module}</Badge>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge>{video1.sport}</Badge>
+                    <Badge variant="outline">{video1.module}</Badge>
+                    {video1.efficiency_score !== undefined && (
+                      <Badge variant="secondary">{video1.efficiency_score}%</Badge>
+                    )}
+                  </div>
                   <Button
                     size="sm"
                     variant="outline"
@@ -338,11 +341,14 @@ export function VideoComparisonView({ video1, video2, open, onClose }: VideoComp
             {/* Video 2 */}
             <div className={layout === 'overlay' ? 'relative z-0' : ''}>
               <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge>{video2.sport}</Badge>
-                      <Badge variant="outline">{video2.module}</Badge>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge>{video2.sport}</Badge>
+                    <Badge variant="outline">{video2.module}</Badge>
+                    {video2.efficiency_score !== undefined && (
+                      <Badge variant="secondary">{video2.efficiency_score}%</Badge>
+                    )}
+                  </div>
                   <Button
                     size="sm"
                     variant="outline"
