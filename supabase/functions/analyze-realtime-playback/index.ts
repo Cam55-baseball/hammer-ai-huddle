@@ -12,7 +12,12 @@ const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 // NOTE: For baseball pitching and throwing, "shoulders_not_aligned" has been REMOVED as a separate violation.
 // If the chest is already facing home plate at landing, that IS early shoulder rotation (the root cause).
 // Correct mechanics: shoulders LATERAL (sideways) at landing, hips forward-facing, chest NOT facing target yet.
+// 
+// IMPORTANT: back_leg_not_facing_target and shoulders_not_aligned do NOT apply to HITTING modules.
+// For hitting: back hip rotates AFTER front foot lands (not at landing like pitching/throwing).
+// For hitting: we check shoulder TIMING (early rotation), not shoulder ALIGNMENT with target.
 const VIOLATION_KEYWORDS: Record<string, string[]> = {
+  // NOTE: back_leg_not_facing_target keywords are only scanned for pitching/throwing, NOT hitting
   back_leg_not_facing_target: [
     "back leg not facing", "back hip not facing", "back foot not facing",
     "back leg still rotating", "back hip still rotating", "hips haven't reached",
@@ -41,11 +46,23 @@ const VIOLATION_KEYWORDS: Record<string, string[]> = {
 };
 
 // Scan feedback/summary text for violation keywords and return detected violations
-function detectViolationsFromFeedback(text: string): Record<string, boolean> {
+// NOTE: module parameter used to skip back_leg and shoulders_not_aligned checks for hitting
+function detectViolationsFromFeedback(text: string, module?: string): Record<string, boolean> {
   const lowerText = text.toLowerCase();
   const detected: Record<string, boolean> = {};
   
   for (const [violation, keywords] of Object.entries(VIOLATION_KEYWORDS)) {
+    // Skip back_leg_not_facing_target for hitting - this check doesn't apply
+    if (violation === 'back_leg_not_facing_target' && module === 'hitting') {
+      detected[violation] = false;
+      continue;
+    }
+    // Skip shoulders_not_aligned for hitting - use timing (early rotation), not alignment
+    if (violation === 'shoulders_not_aligned' && module === 'hitting') {
+      detected[violation] = false;
+      continue;
+    }
+    
     detected[violation] = keywords.some(keyword => lowerText.includes(keyword));
     if (detected[violation]) {
       console.log(`[FEEDBACK SCAN] Detected "${violation}" via keyword match`);
@@ -267,6 +284,29 @@ RULES:
 2. Use body parts everyone knows (knee, belly button, chest, foot, shoulder)
 3. Use "the pitcher" or "where you're hitting to" instead of "target"
 4. Keep sentences under 15 words when possible
+
+⛔⛔⛔ DO NOT SAY (HITTING-SPECIFIC FORBIDDEN LANGUAGE) ⛔⛔⛔
+These phrases are WRONG for hitting and must NEVER appear in your feedback:
+- "back hip isn't pointing to the pitcher" - WRONG FOR HITTING
+- "back hip not facing the target" - WRONG FOR HITTING  
+- "back hip should face the pitcher when you land" - WRONG FOR HITTING
+- "shoulders are not aimed correctly" - WRONG FOR HITTING
+- "shoulders not aligned with target" - WRONG FOR HITTING
+- Any language about back hip/shoulder DIRECTION or ALIGNMENT at landing
+
+For HITTING, the back hip rotates TOWARD the target AFTER the foot lands - NOT at landing.
+For HITTING, we check shoulder TIMING (early rotation), NOT shoulder alignment with a target.
+
+CORRECT hitting feedback patterns:
+- "Your shoulders started turning too early" (timing-based ✓)
+- "Wait for your foot to land before your shoulders turn" (sequence-based ✓)
+- "Your back hip opened up too soon" (timing-based ✓)
+- "Keep your shoulders closed until your foot plants" (instruction ✓)
+
+WRONG hitting feedback patterns (NEVER USE):
+- "Your back hip isn't pointing to the pitcher when you land" ✗
+- "Your shoulders are not aimed correctly when you land" ✗
+- "Point your back hip at the pitcher" ✗
 
 DO NOT MENTION: velocity, bat speed, exit velocity, or output metrics.
 Focus ONLY on form and body mechanics.`;
@@ -886,12 +926,14 @@ Use the analyze_mechanics tool to return your structured analysis.`
                       },
                       shoulders_not_aligned: {
                         type: 'boolean',
-                        description: 'TRUE if shoulders NOT aligned with target at moment of landing (pitching/throwing only)'
+                        description: module === 'hitting'
+                          ? 'For HITTING: Always set FALSE - hitting uses shoulder TIMING checks (early rotation), NOT shoulder alignment with target'
+                          : 'TRUE if shoulders NOT aligned with target at moment of landing (pitching/throwing only)'
                       },
                       back_leg_not_facing_target: {
                         type: 'boolean',
                         description: module === 'hitting' 
-                          ? 'For HITTING: Always set FALSE - this check does not apply to hitting mechanics'
+                          ? 'For HITTING: Always set FALSE - back hip rotates AFTER foot landing, not at landing like pitching/throwing'
                           : 'TRUE if back hip/leg (foot, knee, hip) NOT facing target at landing (pitching/throwing only)'
                       },
                       hands_pass_elbow_early: {
@@ -1044,7 +1086,7 @@ Use the analyze_mechanics tool to return your structured analysis.`
           ...(analysis.redFlags || [])
         ].join(' ');
         
-        const feedbackViolations = detectViolationsFromFeedback(allTextForScanning);
+        const feedbackViolations = detectViolationsFromFeedback(allTextForScanning, module);
         const violations = analysis.violations || {};
         
         for (const [key, detected] of Object.entries(feedbackViolations)) {

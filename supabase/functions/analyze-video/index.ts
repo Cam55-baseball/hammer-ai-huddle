@@ -356,6 +356,29 @@ RULES:
 4. Describe positions like you're giving directions to a friend
 5. Keep sentences under 15 words when possible
 
+⛔⛔⛔ DO NOT SAY (HITTING-SPECIFIC FORBIDDEN LANGUAGE) ⛔⛔⛔
+These phrases are WRONG for hitting and must NEVER appear in your feedback:
+- "back hip isn't pointing to the pitcher" - WRONG FOR HITTING
+- "back hip not facing the target" - WRONG FOR HITTING  
+- "back hip should face the pitcher when you land" - WRONG FOR HITTING
+- "shoulders are not aimed correctly" - WRONG FOR HITTING
+- "shoulders not aligned with target" - WRONG FOR HITTING
+- Any language about back hip/shoulder DIRECTION or ALIGNMENT at landing
+
+For HITTING, the back hip rotates TOWARD the target AFTER the foot lands - NOT at landing.
+For HITTING, we check shoulder TIMING (early rotation), NOT shoulder alignment with a target.
+
+CORRECT hitting feedback patterns:
+- "Your shoulders started turning too early" (timing-based ✓)
+- "Wait for your foot to land before your shoulders turn" (sequence-based ✓)
+- "Your back hip opened up too soon" (timing-based ✓)
+- "Keep your shoulders closed until your foot plants" (instruction ✓)
+
+WRONG hitting feedback patterns (NEVER USE):
+- "Your back hip isn't pointing to the pitcher when you land" ✗
+- "Your shoulders are not aimed correctly when you land" ✗
+- "Point your back hip at the pitcher" ✗
+
 SUMMARY FORMAT:
 REQUIRED: Provide exactly 3-5 bullet points in plain, 10-year-old-friendly language (max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
@@ -1329,12 +1352,14 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                       },
                       shoulders_not_aligned: {
                         type: "boolean",
-                        description: "TRUE if shoulders NOT aligned with target at moment of landing (pitching/throwing only)"
+                        description: module === 'hitting'
+                          ? "For HITTING: Always set FALSE - hitting uses shoulder TIMING checks (early rotation), NOT shoulder alignment with target"
+                          : "TRUE if shoulders NOT aligned with target at moment of landing (pitching/throwing only)"
                       },
                       back_leg_not_facing_target: {
                         type: "boolean",
                         description: module === 'hitting' 
-                          ? "For HITTING: Always set FALSE - this check does not apply to hitting mechanics"
+                          ? "For HITTING: Always set FALSE - back hip rotates AFTER foot landing, not at landing like pitching/throwing"
                           : "TRUE if back hip/leg (foot, knee, hip) NOT facing target at landing (pitching/throwing only)"
                       },
                       hands_pass_elbow_early: {
