@@ -407,7 +407,9 @@ export default function Dashboard() {
           {/* Hitting Module */}
           <Card
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
-              !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
+              !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) 
+                ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
+                : ""
             }`}
             onClick={() => handleModuleSelect("hitting")}
           >
@@ -430,8 +432,14 @@ export default function Dashboard() {
                 </div>
               )}
               <Button 
-                className="w-full" 
-                variant={hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
+                className={`w-full ${
+                  !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin)
+                    ? selectedSport === 'softball'
+                      ? "bg-gradient-to-r from-pink-400 to-pink-300 hover:from-pink-500 hover:to-pink-400 text-white font-semibold shadow-lg hover:shadow-pink-400/30 transition-all"
+                      : "bg-gradient-to-r from-primary to-primary/70 hover:from-primary/90 hover:to-primary/60 text-white font-semibold shadow-lg hover:shadow-primary/30 transition-all"
+                    : ""
+                }`}
+                variant={hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "default" : undefined}
               >
                 {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
                   <>
@@ -441,8 +449,8 @@ export default function Dashboard() {
                   </>
                 ) : (
                   <>
-                    <Lock className="h-4 w-4 sm:mr-2" />
-                    {t('dashboard.subscribe')}
+                    <Sparkles className="h-4 w-4 sm:mr-2" />
+                    {t('dashboard.unlockModule')}
                   </>
                 )}
               </Button>
@@ -452,7 +460,9 @@ export default function Dashboard() {
           {/* Pitching Module */}
           <Card
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
-              !hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
+              !hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) 
+                ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
+                : ""
             }`}
             onClick={() => handleModuleSelect("pitching")}
           >
@@ -475,8 +485,14 @@ export default function Dashboard() {
                 </div>
               )}
               <Button 
-                className="w-full" 
-                variant={hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
+                className={`w-full ${
+                  !hasAccessForSport("pitching", selectedSport, isOwner || isAdmin)
+                    ? selectedSport === 'softball'
+                      ? "bg-gradient-to-r from-pink-400 to-pink-300 hover:from-pink-500 hover:to-pink-400 text-white font-semibold shadow-lg hover:shadow-pink-400/30 transition-all"
+                      : "bg-gradient-to-r from-primary to-primary/70 hover:from-primary/90 hover:to-primary/60 text-white font-semibold shadow-lg hover:shadow-primary/30 transition-all"
+                    : ""
+                }`}
+                variant={hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "default" : undefined}
               >
                 {hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? (
                   <>
@@ -486,8 +502,8 @@ export default function Dashboard() {
                   </>
                 ) : (
                   <>
-                    <Lock className="h-4 w-4 sm:mr-2" />
-                    {t('dashboard.subscribe')}
+                    <Sparkles className="h-4 w-4 sm:mr-2" />
+                    {t('dashboard.unlockModule')}
                   </>
                 )}
               </Button>
@@ -497,7 +513,9 @@ export default function Dashboard() {
           {/* Throwing Module */}
           <Card
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
-              !hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
+              !hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) 
+                ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
+                : ""
             }`}
             onClick={() => handleModuleSelect("throwing")}
           >
@@ -520,8 +538,14 @@ export default function Dashboard() {
                 </div>
               )}
               <Button 
-                className="w-full" 
-                variant={hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
+                className={`w-full ${
+                  !hasAccessForSport("throwing", selectedSport, isOwner || isAdmin)
+                    ? selectedSport === 'softball'
+                      ? "bg-gradient-to-r from-pink-400 to-pink-300 hover:from-pink-500 hover:to-pink-400 text-white font-semibold shadow-lg hover:shadow-pink-400/30 transition-all"
+                      : "bg-gradient-to-r from-primary to-primary/70 hover:from-primary/90 hover:to-primary/60 text-white font-semibold shadow-lg hover:shadow-primary/30 transition-all"
+                    : ""
+                }`}
+                variant={hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? "default" : undefined}
               >
                 {hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? (
                   <>
@@ -531,8 +555,8 @@ export default function Dashboard() {
                   </>
                 ) : (
                   <>
-                    <Lock className="h-4 w-4 sm:mr-2" />
-                    {t('dashboard.subscribe')}
+                    <Sparkles className="h-4 w-4 sm:mr-2" />
+                    {t('dashboard.unlockModule')}
                   </>
                 )}
               </Button>
