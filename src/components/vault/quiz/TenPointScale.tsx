@@ -67,21 +67,21 @@ export function TenPointScale({
 
   return (
     <div className={cn(
-      "space-y-3 bg-card/50 rounded-2xl border border-border/50",
-      compact ? "p-3" : "p-4"
+      "space-y-3 bg-card/50 rounded-2xl border border-border/50 overflow-hidden",
+      compact ? "p-2 sm:p-3" : "p-3 sm:p-4"
     )}>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 min-w-0">
         <Label className={cn(
-          "flex items-center gap-2 font-semibold",
-          compact ? "text-sm" : "text-base"
+          "flex items-center gap-2 font-semibold min-w-0",
+          compact ? "text-xs sm:text-sm" : "text-sm sm:text-base"
         )}>
           {icon}
-          {label}
+          <span className="truncate">{label}</span>
         </Label>
         {value > 0 && getLevelLabel && (
           <span className={cn(
-            "font-bold px-3 py-1 rounded-full bg-background",
-            compact ? "text-xs" : "text-sm",
+            "font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-background whitespace-nowrap flex-shrink-0",
+            compact ? "text-[10px] sm:text-xs" : "text-xs sm:text-sm",
             getLevelColor ? getLevelColor(value) : defaultGetLevelColor(value)
           )}>
             {getLevelLabel(value)}
@@ -90,15 +90,15 @@ export function TenPointScale({
       </div>
       
       {/* 5x2 grid for 10 buttons */}
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-5 gap-1 sm:gap-1.5 min-w-0">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
           <button
             key={num}
             type="button"
             onClick={() => handleClick(num)}
             className={cn(
-              "rounded-lg font-bold text-sm transition-all duration-200 border-2",
-              compact ? "min-h-[36px]" : "min-h-[40px]",
+              "w-full rounded-lg font-bold text-xs sm:text-sm transition-all duration-200 border-2",
+              compact ? "min-h-[32px] sm:min-h-[36px]" : "min-h-[36px] sm:min-h-[40px]",
               getButtonColor(num, value === num),
               value === num ? "scale-105 shadow-lg" : "scale-100 opacity-70 hover:opacity-90"
             )}
