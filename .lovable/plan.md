@@ -1,170 +1,270 @@
 
-
-# Implementation Plan: Make Unsubscribed Module Buttons More Appealing
+# Implementation Plan: Individual Pain Scales per Body Area
 
 ## Summary
 
-Transform the grey, inactive-looking "Subscribe" buttons for unsubscribed modules into vibrant, inviting call-to-action buttons that clearly communicate "available for purchase" rather than "unavailable."
+Transform the Pre-Workout Check-in pain tracking from a single global pain scale to individual pain scales for each selected body area. If a user selects "lower abs" and "head front", they will see two separate 1-10 pain scales - one for each area - with the data stored per entry for longitudinal tracking.
 
 ---
 
-## Current Problem
+## Current vs. New Design
 
-| Element | Current State | Problem |
-|---------|---------------|---------|
-| Button variant | `variant="outline"` | Grey border, white background - looks disabled/unavailable |
-| Card opacity | `opacity-60` | Dims the entire card, reinforcing "unavailable" feeling |
-| Icon | `Lock` icon | Suggests content is locked away, not inviting |
-| Button text | "Subscribe" | Functional but not exciting |
+| Aspect | Current | New |
+|--------|---------|-----|
+| Data structure | `pain_location: string[]`, `pain_scale: number` | `pain_location: string[]`, `pain_scales: { "area_id": level }` |
+| UI | One TenPointScale for all areas | One TenPointScale per selected area |
+| Display | "Pain: 7/10" globally | "Lower Abs: 3/10, Head: 7/10" |
+| Heat map potential | Frequency only | Frequency + intensity |
 
 ---
 
-## Proposed Solution
+## Database Changes
 
-### Design Philosophy
-- **From**: "This is locked, you can't access it"
-- **To**: "This is available! Unlock your potential now"
+### New Column
 
-### Visual Changes
+Add a new JSONB column to store pain levels per body area:
 
-#### 1. Remove Card Dimming
-Currently: `opacity-60` on unsubscribed cards
-Change to: Full opacity with a subtle "upgrade" visual treatment
+```sql
+ALTER TABLE vault_focus_quizzes
+ADD COLUMN pain_scales JSONB DEFAULT NULL;
 
-#### 2. Gradient Subscribe Button (Sport-Aware)
-**Baseball Mode:**
-- Gradient: `from-primary to-primary/70` (red gradient)
-- Hover: Brighter glow effect
-- Shadow: Subtle red glow
+COMMENT ON COLUMN vault_focus_quizzes.pain_scales IS 
+'Maps body area IDs to their pain levels (1-10). Example: {"lower_abs": 3, "head_front": 7}';
+```
 
-**Softball Mode:**
-- Gradient: `from-pink-400 to-pink-300` (pink gradient)
-- Hover: Brighter glow effect
-- Shadow: Subtle pink glow
+**Data Structure:**
+```json
+{
+  "lower_abs": 3,
+  "head_front": 7,
+  "left_knee_front": 5
+}
+```
 
-#### 3. Icon Change
-- Replace `Lock` with `Sparkles` icon for the subscribe button
-- Keeps `Lock` in the title for clarity that it requires subscription
-
-#### 4. Enhanced Button Styling
-- Add gradient background
-- Add glow shadow on hover
-- Add slight scale transform on hover
+**Backward Compatibility:**
+- Keep existing `pain_scale` column for legacy data
+- New entries will populate `pain_scales` JSONB
+- Reading code will check `pain_scales` first, fall back to `pain_scale`
 
 ---
 
 ## Files to Update
 
-| File | Changes |
+| File | Purpose |
 |------|---------|
-| `src/pages/Dashboard.tsx` | Update all 3 module cards (hitting, pitching, throwing) |
+| `src/components/vault/VaultFocusQuizDialog.tsx` | Individual pain scales UI |
+| `src/components/vault/quiz/TenPointScale.tsx` | Minor: add compact mode for multiple scales |
+| `src/hooks/useVault.ts` | Update interface and submission logic |
+| `src/components/vault/VaultDayRecapCard.tsx` | Display pain levels per area |
+| `src/components/vault/VaultPainPatternAlert.tsx` | Update to use new structure |
+| `src/components/vault/VaultPainHeatMapCard.tsx` | Optional: use intensity data |
+| `supabase/functions/generate-vault-recap/index.ts` | Update pain analysis |
+| Translation files (8 languages) | New translation keys |
 
 ---
 
-## Detailed Changes
+## UI/UX Design
 
-### Change 1: Remove Opacity from Unsubscribed Cards
+### Pre-Workout Check-in Pain Section
 
-**Before:**
-```tsx
-className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
-  !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "opacity-60" : ""
-}`}
+When user selects body areas, instead of one global pain scale, show stacked individual scales:
+
+```text
+┌─────────────────────────────────────────┐
+│ Section 3 - Pain or Limitation Check    │
+├─────────────────────────────────────────┤
+│ [Body Map Selector]                     │
+│                                         │
+│ Selected: Lower Abs, Head (Front)       │
+│                                         │
+│ ┌─────────────────────────────────────┐ │
+│ │ ⚠️ Lower Abs                    3/10│ │
+│ │ [1][2][3][4][5][6][7][8][9][10]     │ │
+│ │                 ▲                   │ │
+│ │             Mild                    │ │
+│ └─────────────────────────────────────┘ │
+│                                         │
+│ ┌─────────────────────────────────────┐ │
+│ │ ⚠️ Head (Front)                 7/10│ │
+│ │ [1][2][3][4][5][6][7][8][9][10]     │ │
+│ │                       ▲             │ │
+│ │                 Significant         │ │
+│ └─────────────────────────────────────┘ │
+│                                         │
+│ Does pain increase with movement?       │
+│ [Yes] [No]                              │
+└─────────────────────────────────────────┘
 ```
 
-**After:**
+### Key UX Considerations
+
+1. **Compact Mode**: Each pain scale card is slightly smaller to fit multiple
+2. **Area Labels**: Use readable labels from `getBodyAreaLabel()`
+3. **Haptic Feedback**: Maintain 10ms vibration on selection
+4. **Auto-remove**: When user deselects an area, remove its scale
+5. **Default Value**: New areas start at 0 (not rated yet)
+6. **Movement Question**: One global "increases with movement" still applies to all
+
+---
+
+## Detailed Component Changes
+
+### 1. VaultFocusQuizDialog.tsx
+
+**State Change:**
 ```tsx
-className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
-  !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) 
-    ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
-    : ""
-}`}
+// Before
+const [painScale, setPainScale] = useState(0);
+
+// After  
+const [painScales, setPainScales] = useState<Record<string, number>>({});
 ```
 
-### Change 2: Create Vibrant Subscribe Button
-
-**Before:**
+**Update Pain Scale Handler:**
 ```tsx
-<Button 
-  className="w-full" 
-  variant={hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
->
-  {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
-    <>
-      <Upload className="h-4 w-4 sm:mr-2" />
-      ...
-    </>
-  ) : (
-    <>
-      <Lock className="h-4 w-4 sm:mr-2" />
-      {t('dashboard.subscribe')}
-    </>
-  )}
-</Button>
+const handlePainScaleChange = (areaId: string, value: number) => {
+  setPainScales(prev => ({
+    ...prev,
+    [areaId]: value
+  }));
+};
 ```
 
-**After:**
+**Clean Up When Areas Deselected:**
 ```tsx
-<Button 
-  className={`w-full ${
-    !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin)
-      ? selectedSport === 'softball'
-        ? "bg-gradient-to-r from-pink-400 to-pink-300 hover:from-pink-500 hover:to-pink-400 text-white font-semibold shadow-lg hover:shadow-pink-400/30 transition-all"
-        : "bg-gradient-to-r from-primary to-primary/70 hover:from-primary/90 hover:to-primary/60 text-white font-semibold shadow-lg hover:shadow-primary/30 transition-all"
-      : ""
-  }`}
-  variant={hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "default" : undefined}
->
-  {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
-    <>
-      <Upload className="h-4 w-4 sm:mr-2" />
-      ...
-    </>
-  ) : (
-    <>
-      <Sparkles className="h-4 w-4 sm:mr-2" />
-      {t('dashboard.unlockModule')}
-    </>
-  )}
-</Button>
+const handlePainLocationsChange = (areas: string[]) => {
+  setPainLocations(areas);
+  // Remove scales for deselected areas
+  setPainScales(prev => {
+    const newScales: Record<string, number> = {};
+    areas.forEach(area => {
+      if (prev[area] !== undefined) {
+        newScales[area] = prev[area];
+      }
+    });
+    return newScales;
+  });
+};
 ```
 
-### Change 3: Add New Translation Key
+**Submit Data:**
+```tsx
+data.pain_location = painLocations.length > 0 ? painLocations : undefined;
+data.pain_scales = Object.keys(painScales).length > 0 ? painScales : undefined;
+// Keep legacy pain_scale as max value for backward compatibility
+data.pain_scale = Object.values(painScales).length > 0 
+  ? Math.max(...Object.values(painScales)) 
+  : undefined;
+```
 
-Add to translation files:
+### 2. TenPointScale.tsx - Add Compact Variant
+
+```tsx
+interface TenPointScaleProps {
+  // ... existing props
+  compact?: boolean; // New prop for stacked display
+  areaLabel?: string; // Optional area label for compact mode
+}
+```
+
+**Compact Styling:**
+- Reduced padding (p-3 instead of p-4)
+- Smaller buttons (min-h-[36px] instead of min-h-[40px])
+- Area label in header instead of generic label
+
+### 3. VaultDayRecapCard.tsx
+
+**Display per-area pain levels:**
+```tsx
+{preWorkoutQuiz.pain_location?.length > 0 && (
+  <div className="mt-2 space-y-1">
+    <span className="text-xs text-muted-foreground font-medium">
+      {t('vault.quiz.pain', 'Pain')}:
+    </span>
+    <div className="flex flex-wrap gap-1">
+      {preWorkoutQuiz.pain_location.map((loc, i) => {
+        const level = preWorkoutQuiz.pain_scales?.[loc] || preWorkoutQuiz.pain_scale || 0;
+        return (
+          <Badge key={i} variant="destructive" className="text-xs py-0">
+            {getBodyAreaLabel(loc)}: {level}/10
+          </Badge>
+        );
+      })}
+    </div>
+  </div>
+)}
+```
+
+### 4. VaultPainPatternAlert.tsx
+
+**Update to use per-area severity:**
+```tsx
+// Can now include severity in pattern detection
+// E.g., flag if same area has pain 5+ for 3 consecutive days
+```
+
+### 5. VaultPainHeatMapCard.tsx (Optional Enhancement)
+
+**Use intensity data for weighted heat map:**
+```tsx
+// Instead of just counting occurrences, weight by severity
+// Higher pain levels = more "heat" on the map
+```
+
+### 6. generate-vault-recap Edge Function
+
+**Update pain analysis:**
+```tsx
+// Analyze average pain levels per area over the cycle
+const painEntries = quizzes?.filter(q => q.pain_location?.length > 0) || [];
+const areaStats: Record<string, { count: number; totalLevel: number }> = {};
+
+painEntries.forEach(q => {
+  (q.pain_location as string[]).forEach((loc: string) => {
+    if (!areaStats[loc]) areaStats[loc] = { count: 0, totalLevel: 0 };
+    areaStats[loc].count++;
+    areaStats[loc].totalLevel += q.pain_scales?.[loc] || q.pain_scale || 5;
+  });
+});
+```
+
+---
+
+## Interface Updates
+
+### useVault.ts Interface
+
+```tsx
+interface QuizSubmitData {
+  // ... existing fields
+  pain_location?: string[];
+  pain_scale?: number; // Legacy, will store max value
+  pain_scales?: Record<string, number>; // New: per-area levels
+  pain_increases_with_movement?: boolean;
+}
+```
+
+---
+
+## Translation Keys
+
+Add to all 8 language files:
+
 ```json
-"unlockModule": "Unlock Now"
+{
+  "vault.quiz.pain.areaScaleLabel": "Rate pain for {{area}}",
+  "vault.quiz.pain.perAreaTitle": "Pain Level by Area"
+}
 ```
 
 ---
 
-## Visual Comparison
+## Migration Strategy
 
-| State | Current | New |
-|-------|---------|-----|
-| Card | Dimmed (60% opacity) | Full opacity, dashed border accent |
-| Button | Grey outline, "Subscribe" | Vibrant gradient, "Unlock Now" |
-| Icon | Lock (restrictive) | Sparkles (exciting) |
-| Hover | No special effect | Glow shadow, subtle scale |
-
----
-
-## Sport-Specific Colors
-
-| Sport | Button Gradient | Glow Color |
-|-------|----------------|------------|
-| Baseball | Red (`from-primary to-primary/70`) | Red glow |
-| Softball | Pink (`from-pink-400 to-pink-300`) | Pink glow |
-
----
-
-## Technical Notes
-
-1. **Import Sparkles icon** - Already imported in Dashboard.tsx (used by Merch card)
-2. **No new dependencies** - Uses existing Tailwind classes
-3. **Sport-aware styling** - Uses `selectedSport` state already available
-4. **Consistent with Merch card** - Similar gradient button pattern for visual consistency
-5. **Apply to all 3 modules** - Hitting, Pitching, Throwing cards all get updated
+1. **New column**: Add `pain_scales` JSONB column
+2. **Dual write**: New submissions write both `pain_scale` (max) and `pain_scales` (detailed)
+3. **Read with fallback**: UI checks `pain_scales` first, falls back to `pain_scale`
+4. **No data migration needed**: Historical data shows as single level per all areas
 
 ---
 
@@ -172,10 +272,18 @@ Add to translation files:
 
 | Check | Expected Behavior |
 |-------|-------------------|
-| Baseball hitting (unsubscribed) | Red gradient button with "Unlock Now" and Sparkles icon |
-| Softball pitching (unsubscribed) | Pink gradient button with "Unlock Now" and Sparkles icon |
-| Subscribed module | Normal default button with "Start Analysis" |
-| Card visibility | Full opacity, dashed border for unsubscribed |
-| Hover effect | Glow shadow appears, button scales slightly |
-| Click behavior | Still navigates to pricing page |
+| Select 1 area | Shows 1 pain scale |
+| Select 3 areas | Shows 3 stacked pain scales |
+| Deselect an area | Its pain scale disappears |
+| Submit with scales | `pain_scales` JSONB saved |
+| View past entry | Shows per-area levels |
+| Heat map | Works with new data |
+| Pain pattern alert | Works with new structure |
+| 6-week recap | Analyzes per-area data |
+| Backward compat | Old entries still display |
 
+---
+
+## Summary
+
+This implementation provides athletes with granular pain tracking - essential for identifying which specific areas need attention. The data structure supports future enhancements like severity-weighted heat maps and trend analysis per body area.
