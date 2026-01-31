@@ -176,21 +176,50 @@ serve(async (req) => {
     const secondHalfAvgSleep = secondHalfSleep.length ? secondHalfSleep.reduce((sum, s) => sum + s.hours, 0) / secondHalfSleep.length : 0;
     const sleepTrend = secondHalfAvgSleep > firstHalfAvgSleep + 0.25 ? 'Improving' : secondHalfAvgSleep < firstHalfAvgSleep - 0.25 ? 'Declining' : 'Stable';
 
-    // ========== PAIN PATTERN ANALYSIS ==========
+    // ========== PAIN PATTERN ANALYSIS (with per-area severity) ==========
     const painEntries = quizzes?.filter(q => q.pain_location && q.pain_location.length > 0) || [];
-    const painPatterns: Record<string, number> = {};
+    const painPatterns: Record<string, { count: number; totalLevel: number }> = {};
+    
     painEntries.forEach(q => {
-      (q.pain_location as string[]).forEach((loc: string) => {
-        painPatterns[loc] = (painPatterns[loc] || 0) + 1;
+      const locations = q.pain_location as string[];
+      const painScales = (q as any).pain_scales as Record<string, number> | null;
+      const globalPainScale = q.pain_scale || 5;
+      
+      locations.forEach((loc: string) => {
+        if (!painPatterns[loc]) {
+          painPatterns[loc] = { count: 0, totalLevel: 0 };
+        }
+        painPatterns[loc].count++;
+        // Use per-area level if available, else fall back to global
+        painPatterns[loc].totalLevel += painScales?.[loc] || globalPainScale;
       });
     });
+    
     const chronicPainAreas = Object.entries(painPatterns)
-      .filter(([_, count]) => count >= 3)
-      .map(([area, count]) => ({ area, occurrences: count }))
+      .filter(([_, data]) => data.count >= 3)
+      .map(([area, data]) => ({ 
+        area, 
+        occurrences: data.count,
+        avgLevel: Math.round(data.totalLevel / data.count)
+      }))
       .sort((a, b) => b.occurrences - a.occurrences);
-    const avgPainScale = painEntries.filter(p => p.pain_scale).length
-      ? painEntries.filter(p => p.pain_scale).reduce((sum, p) => sum + (p.pain_scale || 0), 0) / painEntries.filter(p => p.pain_scale).length
-      : 0;
+    
+    // Calculate weighted average pain (considers per-area severity)
+    let totalPainScore = 0;
+    let totalPainEntries = 0;
+    painEntries.forEach(p => {
+      const painScales = (p as any).pain_scales as Record<string, number> | null;
+      if (painScales && Object.keys(painScales).length > 0) {
+        Object.values(painScales).forEach(level => {
+          totalPainScore += level;
+          totalPainEntries++;
+        });
+      } else if (p.pain_scale) {
+        totalPainScore += p.pain_scale;
+        totalPainEntries++;
+      }
+    });
+    const avgPainScale = totalPainEntries > 0 ? totalPainScore / totalPainEntries : 0;
 
     // ========== BODY WEIGHT ANALYSIS ==========
     const weights = weightEntries?.map(w => ({ 

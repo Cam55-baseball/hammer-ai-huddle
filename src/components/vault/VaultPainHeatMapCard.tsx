@@ -81,7 +81,7 @@ export function VaultPainHeatMapCard() {
 
       let query = supabase
         .from('vault_focus_quizzes')
-        .select('entry_date, pain_location')
+        .select('entry_date, pain_location, pain_scale, pain_scales')
         .eq('user_id', user.id)
         .eq('quiz_type', 'pre_lift')
         .not('pain_location', 'is', null);
@@ -107,22 +107,36 @@ export function VaultPainHeatMapCard() {
 
   const { frequencies, topAreas, totalEntriesWithPain } = useMemo(() => {
     const freqMap: Record<string, number> = {};
+    const intensityMap: Record<string, { total: number; count: number }> = {};
 
     // Initialize all areas with 0
     ALL_BODY_AREAS_WITH_LEGACY.forEach(area => {
       freqMap[area.id] = 0;
+      intensityMap[area.id] = { total: 0, count: 0 };
     });
 
-    // Count frequencies
+    // Count frequencies and accumulate intensities
     (painData?.entries || []).forEach(entry => {
       const locations = entry.pain_location as string[] | null;
+      const painScales = (entry as any).pain_scales as Record<string, number> | null;
+      const globalPainScale = (entry as any).pain_scale as number | null;
+      
       if (locations && Array.isArray(locations)) {
         locations.forEach(loc => {
+          // Count frequency
           if (freqMap[loc] !== undefined) {
             freqMap[loc]++;
           } else {
             freqMap[loc] = 1;
           }
+          
+          // Track intensity for weighted display
+          const level = painScales?.[loc] || globalPainScale || 5;
+          if (!intensityMap[loc]) {
+            intensityMap[loc] = { total: 0, count: 0 };
+          }
+          intensityMap[loc].total += level;
+          intensityMap[loc].count++;
         });
       }
     });

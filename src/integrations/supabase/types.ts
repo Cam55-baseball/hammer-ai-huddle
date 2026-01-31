@@ -2885,6 +2885,7 @@ export type Database = {
           pain_increases_with_movement: boolean | null
           pain_location: string[] | null
           pain_scale: number | null
+          pain_scales: Json | null
           perceived_recovery: number | null
           physical_readiness: number
           quiz_type: string
@@ -2922,6 +2923,7 @@ export type Database = {
           pain_increases_with_movement?: boolean | null
           pain_location?: string[] | null
           pain_scale?: number | null
+          pain_scales?: Json | null
           perceived_recovery?: number | null
           physical_readiness: number
           quiz_type: string
@@ -2959,6 +2961,7 @@ export type Database = {
           pain_increases_with_movement?: boolean | null
           pain_location?: string[] | null
           pain_scale?: number | null
+          pain_scales?: Json | null
           perceived_recovery?: number | null
           physical_readiness?: number
           quiz_type?: string
