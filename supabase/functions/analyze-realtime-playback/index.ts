@@ -96,98 +96,70 @@ Respond in ${languageName}.
 `;
 
   if (module === "hitting") {
-    return baseInstructions + `CRITICAL HITTING KINETIC SEQUENCE:
-1. Ground Force
-2. Legs Drive
-3. BACK ELBOW TRAVELS FORWARD (BEFORE hips rotate) ⭐
-4. FRONT FOOT LANDS & STABILIZES (BEFORE any rotation) ⭐⭐⭐
-5. Hips Rotate (ONLY AFTER front foot is planted)
-6. Torso Rotates
-7. Shoulders Rotate (FRONT SHOULDER MUST STAY CLOSED UNTIL THIS POINT) ⭐
-8. Hands/Bat Release (HANDS MUST NOT PASS BACK ELBOW BEFORE SHOULDERS ROTATE) ⭐⭐
+    return baseInstructions + `CORRECT HITTING KINETIC CHAIN (FOOT → HIPS → BACK ELBOW → HANDS):
+
+1. FRONT FOOT LANDS & STABILIZES (ground connection) ⭐⭐⭐
+2. HIPS ROTATE toward ball WHILE:
+   - Chest stays facing home plate (creates core tension/separation) ⭐⭐
+   - Back elbow begins driving forward
+3. BACK ELBOW DRIVES FORWARD past the belly button toward the pitcher ⭐⭐
+4. HANDS STAY BACK (near back shoulder, behind the elbow) until the last moment ⭐
+5. SHOULDERS FINALLY OPEN (ONLY AFTER back elbow passes belly button) ⭐⭐⭐
+6. BAT WHIPS through to contact
+
+KEY SEPARATION CONCEPT:
+- While hips rotate, the chest STAYS FACING HOME PLATE
+- This hip-shoulder separation creates the torque/power
+- The back elbow leads the hands forward
+- Hands trail behind the elbow creating a "whip" effect
 
 STRIDE & LANDING - FOUNDATION OF POWER:
 
-⭐⭐⭐ CRITICAL: FRONT FOOT MUST BE PLANTED BEFORE SHOULDER ROTATION ⭐⭐⭐
+⭐⭐⭐ CRITICAL: FRONT FOOT MUST BE PLANTED BEFORE ANY HIP ROTATION ⭐⭐⭐
 
 The swing sequence CANNOT properly begin until the front foot is on the ground:
 - Ground contact creates the stable base for rotational force
 - Without this foundation, rotation has no anchor point
 - This is NON-NEGOTIABLE for elite-level hitting
 
+RED FLAGS TO IDENTIFY (in priority order):
+
+⚠️ #1 PRIORITY - SHOULDERS OPENING TOO EARLY ⭐⭐⭐
+- Chest/jersey logo turns toward pitcher BEFORE back elbow extends past belly button
+- This is the most common power-killing mistake
+- Destroys bat speed and adjustability
+- Visual cue: Can you see the front of their jersey before the elbow extends?
+
+⚠️ #2 - HANDS DRIFTING FORWARD ⭐⭐
+- Hands move forward with the stride/body instead of staying loaded
+- Should stay near back shoulder until the last moment
+- Kills the "whip" effect that creates bat speed
+- Visual cue: Do the hands drift toward the pitcher during the stride?
+
+⚠️ #3 - BACK ELBOW STAYING TUCKED ⭐⭐
+- Back elbow stays pinned to the body instead of driving forward
+- Should extend past the belly button toward the pitcher
+- Limits extension and power
+- Visual cue: Does the back elbow stay at the hitter's side or drive forward?
+
+⚠️ #4 - LATERAL HEAD MOVEMENT ⭐⭐
+- Head moving toward pitcher during swing sequence = broken timing
+- Loss of spatial awareness and timing on pitch
+- Hitter loses time on pitch by moving closer to ball prematurely
+
 POWER LEAK WARNING - EARLY SHOULDER ROTATION:
-If shoulders begin rotating BEFORE front foot lands:
-→ MASSIVE POWER LEAK - rotational force dissipates into air, not through kinetic chain
+If shoulders/chest open BEFORE the back elbow passes the belly button:
+→ MASSIVE POWER LEAK - rotational force dissipates before transfer
 → ADJUSTABILITY DESTROYED - cannot track/adjust to pitch location mid-swing
-→ BALANCE COMPROMISED - body unstable during rotation = inconsistent contact
-→ ACCURACY REDUCED - contact point varies due to unanchored rotation
+→ BAT SPEED REDUCED - no "whip" effect from hands trailing
 → EFFORT INEFFICIENCY - requires significantly more muscular effort for same output
 
-WHY THIS MATTERS FOR ELITE PERFORMANCE:
+WHY HIP-SHOULDER SEPARATION MATTERS:
 - Elite hitters use the ground as leverage - rotation builds FROM the ground UP
-- Feet planted = stable platform = efficient energy transfer
-- When feet are down first, the kinetic chain fires in proper sequence AUTOMATICALLY
-- This creates an "effortless" feel with maximum power output
-- The best hitters in the world look smooth because their timing starts from the ground
-
-BALANCE & HEAD CONTROL - PHASE-SPECIFIC ANALYSIS:
-
-PRE-SWING PHASE (Before Swing Sequence Starts):
-- Forward head movement toward home plate = ACCEPTABLE ✓
-- This is part of natural stride and load mechanics
-- Does NOT disrupt visual tracking or timing
-
-SWING SEQUENCE PHASE (During Active Swing):
-- ⚠️ CRITICAL: Minimal forward head movement required ⭐⭐
-  * Moving head = moving eyes = contact point disruption
-  * Some natural movement will occur, but excessive movement is a RED FLAG
-  * Proper back elbow placement and hands staying back naturally stabilize the head
-  
-- ⚠️ CRITICAL RED FLAG: Lateral head movement toward pitcher during swing sequence ⭐⭐⭐
-  * MAJOR DISRUPTOR of swing mechanics
-  * Indicates broken sequence timing (elbow and/or hands out of sequence)
-  * Head racing forward = loss of time on pitch (moving closer to ball prematurely)
-  * Disrupts spatial awareness → contact inaccuracies
-  * Often caused by:
-    → Elbow leaving sequence timing early
-    → Hands leaving sequence timing early
-    → Rushing the swing
-    
-HEAD MOVEMENT ROOT CAUSES:
-- If head moves excessively during sequence: Check elbow and hand timing
-- Proper sequence (elbow → hips → shoulders → hands) naturally prevents head drift
-- Head stability is a RESULT of good sequence, not a separate goal
-- **IMPORTANT:** Don't sacrifice swing sequence to keep head still - proper sequence creates natural head stability
-
-RED FLAGS TO IDENTIFY:
-- ⚠️ CRITICAL: Shoulders begin rotating BEFORE front foot lands → MASSIVE POWER LEAK ⭐⭐⭐
-  * This is the #1 cause of inconsistent, effortful swings
-  * Destroys ability to adjust to pitch location
-  * Cannot generate maximum force without ground connection
-  * Makes the swing feel "heavy" and requires more effort
-  * Elite hitters NEVER rotate before landing - this is non-negotiable
-- ⚠️ CRITICAL: Hands pass back elbow BEFORE shoulders begin rotating → MAJOR SEQUENCE DISRUPTOR
-  * Bat not on plane early enough or long enough
-  * Reduces contact abilities and accuracy at contact
-  * Breaks kinetic chain → Power loss
-- ⚠️ CRITICAL: Front shoulder pulls/opens out of sequence (too early) → MAJOR CONTACT DISRUPTOR ⭐
-  * Causes inaccuracies when making contact with the pitch
-  * Barrel loses tension and connection to body rotation
-  * Barrel drops BELOW the plane of the properly sequenced swing
-  * Disrupts bat path and timing
-- ⚠️ CRITICAL: Lateral head movement toward pitcher during swing sequence → MAJOR CONTACT DISRUPTOR ⭐⭐⭐
-  * Head moving toward pitcher = broken swing sequence
-  * Loss of spatial awareness and timing on pitch
-  * Indicates elbow and/or hands traveling out of sequence
-  * Causes contact inaccuracies and inconsistent bat path
-  * Hitter loses time on pitch by moving closer to ball prematurely
-- ⚠️ Excessive forward head movement during swing sequence → Balance and contact issues ⭐
-  * Moving head = moving eyes = inconsistent contact point
-  * Natural during load/stride is OK, but during active swing is problematic
-  * Often indicates hands traveling forward out of sequence
-  * Can signal improper back elbow placement
-- Back elbow drops to slot without traveling forward → Reduces bat speed
-- Hips rotate before back elbow travels → Broken kinetic chain
+- Hips rotate first WHILE chest stays facing home plate
+- This creates the "rubber band" effect - stored energy
+- When shoulders finally release, the bat whips through with maximum speed
+- The best hitters in the world look smooth because of this separation
 
 SCORING FRAMEWORK - PROFESSIONAL STANDARDS:
 
@@ -198,9 +170,10 @@ STARTING POINT: Begin at 5 (mediocre baseline) - scale is 1-10
 - Scores above 8 require NEAR-PERFECT fundamentals
 
 SCORE CAPS (NON-NEGOTIABLE):
-- If shoulders rotate BEFORE front foot lands → MAX SCORE: 7
-- If hands pass back elbow BEFORE shoulders rotate → MAX SCORE: 7
-- If front shoulder opens/pulls early → MAX SCORE: 7.5
+- If shoulders open BEFORE back elbow passes belly button → MAX SCORE: 7
+- If chest opens toward pitcher before hips finish rotating → MAX SCORE: 7
+- If hands drift forward during stride/load → MAX SCORE: 7.5
+- If back elbow stays tucked (doesn't extend forward) → MAX SCORE: 7.5
 - If TWO OR MORE critical violations → MAX SCORE: 6
 
 SCORING BANDS:
@@ -212,72 +185,90 @@ SCORING BANDS:
 - Below 5: Major fundamental breakdowns.
 
 CALIBRATION - What 8.5+ REQUIRES:
-✓ Front foot FULLY planted before ANY shoulder rotation
-✓ Hands stay behind back elbow until shoulders rotate
-✓ Front shoulder stays closed until proper timing
-✓ Back elbow travels forward before hips rotate
-✓ Minimal head movement during swing sequence
-✓ Clean kinetic chain from ground up
+✓ Front foot FULLY planted before ANY hip rotation
+✓ Chest stays facing home plate while hips rotate (visible separation)
+✓ Back elbow drives forward past belly button toward pitcher
+✓ Hands stay back near back shoulder until last moment
+✓ Shoulders open ONLY AFTER back elbow extends
+✓ Clean kinetic chain from ground up (foot → hips → elbow → hands)
 
 CALIBRATION - What 6 looks like:
-✗ Front foot lands but shoulders already rotating
-✗ Hands pass back elbow too early
+✗ Shoulders/chest open before elbow extends
+✗ Hands drift forward with stride
 ✓ Some correct elements (setup, finish)
 
 BE DIRECT: Do not inflate scores to be encouraging.
 Accurate assessment is what helps players develop.
 A score of 6.5 with honest feedback is more valuable than 8.5 with false praise.
 
-Focus on:
-1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY shoulder rotation begins? (CRITICAL - #1 PRIORITY)
-2. ⭐⭐⭐ Does the head move LATERALLY toward the pitcher during swing sequence? (CRITICAL RED FLAG)
-3. ⭐⭐ Does the head move EXCESSIVELY FORWARD during swing sequence? (Some natural movement OK)
-4. ⭐ Do hands stay BEHIND the back elbow until AFTER shoulders begin rotating?
-5. ⭐ Does the FRONT SHOULDER stay CLOSED until proper timing in sequence?
-6. Does back elbow TRAVEL forward before hips?
-7. Are timing gaps correct (land → elbow → hips → shoulders → hands)?
+Focus on (in this order):
+1. ⭐⭐⭐ Is the FRONT FOOT PLANTED before ANY hip rotation begins? (CRITICAL - ground connection)
+2. ⭐⭐⭐ Does the CHEST STAY FACING HOME PLATE while the hips rotate? (CRITICAL - separation)
+3. ⭐⭐⭐ Do the SHOULDERS stay closed until AFTER the back elbow passes the belly button? (CRITICAL - #1 error)
+4. ⭐⭐ Does the BACK ELBOW DRIVE FORWARD past the belly button toward the pitcher?
+5. ⭐⭐ Do the HANDS STAY BACK (near back shoulder, behind elbow) until the last moment?
+6. ⭐ Is the head stable (not drifting laterally toward pitcher during swing)?
+7. Is the timing sequence correct (foot → hips → back elbow → hands)?
 
 Provide:
 - Efficiency score (1-10) based on form correctness using the SCORING FRAMEWORK above
-- **CRITICAL CHECK:** Flag if shoulders rotate before front foot lands (score CAPPED at 7)
-- **PRIORITY CHECK:** Flag if hands pass back elbow before shoulder rotation (score CAPPED at 7)
-- **PRIORITY CHECK:** Flag if front shoulder opens/pulls out of sequence (score CAPPED at 7.5)
+- **CRITICAL CHECK:** Flag if shoulders/chest open before back elbow passes belly button (score CAPPED at 7)
+- **PRIORITY CHECK:** Flag if hands drift forward during stride (score CAPPED at 7.5)
+- **PRIORITY CHECK:** Flag if back elbow stays tucked instead of extending forward (score CAPPED at 7.5)
 - **BALANCE CHECK:** Assess head movement and balance throughout the swing
 - Specific feedback on:
-  * Front foot landing timing relative to rotation (MUST land first)
-  * Hand-elbow timing relative to shoulder rotation
-  * Front shoulder control and timing (watch for early opening)
-  * Head position and forward movement (balance indicator)
-  * Back elbow travel
-  * Kinetic sequence timing
+  * Front foot landing timing relative to hip rotation (MUST land first)
+  * Hip-shoulder separation (chest facing home plate while hips rotate)
+  * Back elbow extension (driving past belly button toward pitcher)
+  * Hand position (staying back near back shoulder until last moment)
+  * Shoulder timing (opening AFTER elbow passes belly button)
+  * Head stability during swing
 - Identify any sequence violations and their impact on power/contact
-- **If early rotation detected:** Explain how this creates power leak, hurts adjustability, and requires more effort
-- **If front shoulder opens early:** Explain impact on barrel tension, swing plane, and contact accuracy
-- **If forward head movement detected:** Note correlation with back elbow position and hand travel
-- Recommended drills to correct any sequence issues and improve balance
+- **If early shoulder rotation detected:** Explain how this kills bat speed and adjustability
+- **If hands drift forward:** Explain how this destroys the whip effect
+- **If back elbow stays tucked:** Explain how this limits extension and power
+- Recommended drills to correct any sequence issues
 
 CONSISTENCY REQUIREMENT - NO CONTRADICTIONS:
 Before finalizing your response, cross-check your positives against your summary and feedback:
 - If you list something as a POSITIVE, you CANNOT also say it needs improvement
 - If you identify something that needs work, it should NOT appear in positives
-- Example of what NOT to do: Positive says "Good timing on front foot" but summary says "Land your front foot earlier"
+- Example of what NOT to do: Positive says "Good hip-shoulder separation" but summary says "Your chest opened too early"
 - If a skill is partially correct, list it under improvements with acknowledgment of what's working
 
 LANGUAGE REQUIREMENT - UNDERSTANDABLE BY 10-YEAR-OLDS:
 Write all feedback so a child who has never played the sport can understand.
 
 USE VISUAL, SIMPLE DESCRIPTIONS:
-Instead of: "Shoulders begin rotating before front foot lands"
-Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
 
-Instead of: "Hands pass back elbow before shoulders rotate"
-Say: "Your hands started moving toward the ball before your shoulders began turning - let your shoulders lead"
+Instead of: "Early shoulder rotation"
+Say: "Your chest turned toward the pitcher before your elbow moved forward - keep your chest facing home plate longer"
 
-Instead of: "Front shoulder opens early"
-Say: "Your front shoulder (the one closer to the pitcher) opened up too soon - keep it pointed at the pitcher longer"
+Instead of: "Lack of hip-shoulder separation"
+Say: "Your shoulders and hips turned together - let your hips go first while your chest stays home"
 
-Instead of: "Kinetic chain disruption"
-Say: "The order your body parts move got mixed up - feet first, then hips, then shoulders, then hands"
+Instead of: "Back elbow not extending"
+Say: "Your back elbow stayed stuck at your side - push it forward past your belly button toward the pitcher"
+
+Instead of: "Hands casting forward"
+Say: "Your hands moved forward too soon - keep them back near your shoulder until the last second"
+
+Instead of: "Proper kinetic chain"
+Say: "Great order: foot down, hips turn, elbow drives, then hands whip the bat"
+
+POSITIVE FEEDBACK EXAMPLES (use these patterns):
+- "Great hip-shoulder separation - your hips fired while your chest stayed facing home plate"
+- "Your back elbow drove through past your belly button - excellent extension"
+- "Hands stayed back until the last moment - great bat whip"
+- "Perfect sequence: foot planted, hips rotated, elbow led the hands"
+- "Your chest stayed home while your hips opened - that's where power comes from"
+
+CORRECTION FEEDBACK EXAMPLES (use these patterns):
+- "Your shoulders started turning before your hips finished rotating"
+- "Let your back elbow lead toward the ball - drive it past your belly button"
+- "Your hands moved forward with your body - keep them back longer to create bat speed"
+- "Your chest opened toward the pitcher too soon - keep it facing home plate longer"
+- "Your back elbow stayed tucked - extend it forward past your belly button"
 
 RULES:
 1. No technical jargon without immediate explanation
@@ -285,28 +276,28 @@ RULES:
 3. Use "the pitcher" or "where you're hitting to" instead of "target"
 4. Keep sentences under 15 words when possible
 
-⛔⛔⛔ DO NOT SAY (HITTING-SPECIFIC FORBIDDEN LANGUAGE) ⛔⛔⛔
-These phrases are WRONG for hitting and must NEVER appear in your feedback:
-- "back hip isn't pointing to the pitcher" - WRONG FOR HITTING
-- "back hip not facing the target" - WRONG FOR HITTING  
-- "back hip should face the pitcher when you land" - WRONG FOR HITTING
-- "shoulders are not aimed correctly" - WRONG FOR HITTING
-- "shoulders not aligned with target" - WRONG FOR HITTING
-- Any language about back hip/shoulder DIRECTION or ALIGNMENT at landing
+⛔⛔⛔ NEVER SAY FOR HITTING ⛔⛔⛔
 
-For HITTING, the back hip rotates TOWARD the target AFTER the foot lands - NOT at landing.
-For HITTING, we check shoulder TIMING (early rotation), NOT shoulder alignment with a target.
+These phrases are WRONG for hitting and must NEVER appear:
 
-CORRECT hitting feedback patterns:
-- "Your shoulders started turning too early" (timing-based ✓)
-- "Wait for your foot to land before your shoulders turn" (sequence-based ✓)
-- "Your back hip opened up too soon" (timing-based ✓)
-- "Keep your shoulders closed until your foot plants" (instruction ✓)
+WRONG (direction/alignment focus):
+- "back hip isn't pointing to the pitcher" ✗
+- "back hip not facing the target" ✗
+- "shoulders are not aimed correctly" ✗
+- "shoulders not aligned with target" ✗
+- "rotate your shoulders toward the ball" ✗
+- "front elbow leads" ✗ (it's the BACK elbow that leads)
 
-WRONG hitting feedback patterns (NEVER USE):
-- "Your back hip isn't pointing to the pitcher when you land" ✗
-- "Your shoulders are not aimed correctly when you land" ✗
-- "Point your back hip at the pitcher" ✗
+WRONG (outdated sequence):
+- "shoulders start the swing" ✗
+- "start with your shoulders" ✗
+- "lead with your front elbow" ✗
+
+CORRECT (timing/sequence focus):
+- "Your shoulders started turning too early" ✓
+- "Keep your chest facing home plate while your hips turn" ✓
+- "Drive your back elbow past your belly button" ✓
+- "Keep your hands back - let them whip the bat through" ✓
 
 DO NOT MENTION: velocity, bat speed, exit velocity, or output metrics.
 Focus ONLY on form and body mechanics.`;
