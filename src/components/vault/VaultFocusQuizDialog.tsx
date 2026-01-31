@@ -26,6 +26,7 @@ import { BodyAreaSelector } from './quiz/BodyAreaSelector';
 import { TrainingIntentSelector } from './quiz/TrainingIntentSelector';
 import { MentalEnergyRating } from './quiz/MentalEnergyRating';
 import { WeightTrendMini } from './quiz/WeightTrendMini';
+import { FasciaInsightPanel } from './FasciaInsightPanel';
 
 interface VaultFocusQuizDialogProps {
   open: boolean;
@@ -900,7 +901,7 @@ export function VaultFocusQuizDialog({
                 onChange={handlePainLocationsChange}
               />
 
-              {/* Individual Pain Scales - one per selected area */}
+              {/* Individual Pain Scales - one per selected area with fascia insights */}
               {painLocations.length > 0 && (
                 <div className="space-y-3">
                   <Label className="text-sm font-medium flex items-center gap-2">
@@ -908,22 +909,25 @@ export function VaultFocusQuizDialog({
                     {t('vault.quiz.pain.perAreaTitle', 'Rate Pain by Area')}
                   </Label>
                   {painLocations.map((areaId) => (
-                    <TenPointScale
-                      key={areaId}
-                      value={painScales[areaId] || 0}
-                      onChange={(value) => handlePainScaleChange(areaId, value)}
-                      label={getBodyAreaLabel(areaId)}
-                      icon={<AlertTriangle className="h-4 w-4 text-orange-500" />}
-                      getLevelLabel={(val) => {
-                        if (val <= 2) return t('vault.quiz.pain.level1', 'Minimal');
-                        if (val <= 4) return t('vault.quiz.pain.level2', 'Mild');
-                        if (val <= 6) return t('vault.quiz.pain.level3', 'Moderate');
-                        if (val <= 8) return t('vault.quiz.pain.level4', 'Significant');
-                        return t('vault.quiz.pain.level5', 'Severe');
-                      }}
-                      inverted={true}
-                      compact={true}
-                    />
+                    <div key={areaId} className="space-y-2">
+                      <TenPointScale
+                        value={painScales[areaId] || 0}
+                        onChange={(value) => handlePainScaleChange(areaId, value)}
+                        label={getBodyAreaLabel(areaId)}
+                        icon={<AlertTriangle className="h-4 w-4 text-orange-500" />}
+                        getLevelLabel={(val) => {
+                          if (val <= 2) return t('vault.quiz.pain.level1', 'Minimal');
+                          if (val <= 4) return t('vault.quiz.pain.level2', 'Mild');
+                          if (val <= 6) return t('vault.quiz.pain.level3', 'Moderate');
+                          if (val <= 8) return t('vault.quiz.pain.level4', 'Significant');
+                          return t('vault.quiz.pain.level5', 'Severe');
+                        }}
+                        inverted={true}
+                        compact={true}
+                      />
+                      {/* Fascia Insight Panel for this pain area */}
+                      <FasciaInsightPanel areaId={areaId} />
+                    </div>
                   ))}
                 </div>
               )}
