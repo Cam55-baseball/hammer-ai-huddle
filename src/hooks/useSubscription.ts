@@ -237,7 +237,9 @@ export const useSubscription = () => {
     return () => clearInterval(interval);
   }, [checkSubscription, fastPolling]);
 
-  const refetch = () => checkSubscription(false);
+  // IMPORTANT: keep this stable so pages can safely depend on it in useEffect
+  // (otherwise it can cause a refetch->rerender->refetch loop).
+  const refetch = useCallback(() => checkSubscription(false), [checkSubscription]);
   
   const onModulesChange = useCallback((callback: (newModules: string[]) => void) => {
     setOnChangeCallbacks(prev => [...prev, callback]);
