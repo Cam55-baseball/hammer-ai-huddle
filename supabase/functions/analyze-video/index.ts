@@ -11,7 +11,7 @@ const requestSchema = z.object({
   sport: z.enum(["baseball", "softball"], { errorMap: () => ({ message: "Invalid sport" }) }),
   userId: z.string().uuid("Invalid user ID format"),
   language: z.string().optional(),
-  frames: z.array(z.string()).min(3, "At least 3 frames required for accurate analysis").optional(),
+  frames: z.array(z.string()).min(3, "At least 3 frames required for accurate analysis"),
   landingFrameIndex: z.number().optional(),
 });
 
@@ -1117,20 +1117,6 @@ Deno.serve(async (req) => {
     const { videoId, module, sport, userId, frames, landingFrameIndex } = requestSchema.parse(body);
 
     console.log(`[ANALYZE-VIDEO] Starting analysis for video ${videoId}`);
-
-    // Check if frames are provided (required for analysis)
-    // This graceful check handles version mismatch between frontend and edge function
-    if (!frames || frames.length < 3) {
-      console.error(`[ANALYZE-VIDEO] Missing frames - frontend may be outdated. Frames received: ${frames?.length ?? 0}`);
-      return new Response(
-        JSON.stringify({
-          error: "Video analysis temporarily unavailable. Please try again in a few minutes.",
-          code: "FRAMES_REQUIRED"
-        }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     console.log(`[ANALYZE-VIDEO] Received ${frames.length} frames for visual analysis`);
     console.log(`[ANALYZE-VIDEO] Landing frame index: ${landingFrameIndex ?? 'auto-detect'}`);
 

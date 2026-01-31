@@ -258,7 +258,6 @@ export default function Dashboard() {
 
   // Score display function removed - scores hidden from UI but still stored for 6-week recaps
   const getEfficiencyScoreDisplay = (_module: ModuleType) => {
-    // Efficiency score hidden from UI but still calculated for 6-week recap
     return null;
   };
 

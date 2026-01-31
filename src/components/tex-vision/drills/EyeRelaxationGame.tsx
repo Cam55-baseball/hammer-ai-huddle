@@ -248,7 +248,7 @@ export default function EyeRelaxationGame({ tier, onComplete, onExit, onInteract
           {/* Visual cue for breathing - expanding ring, not text */}
           {currentStep?.phase === 'breathe' && (
             <div 
-              className="absolute w-40 h-40 rounded-full border-2 border-[hsl(var(--tex-vision-feedback))]/30 transition-all [transition-duration:2000ms]"
+              className="absolute w-40 h-40 rounded-full border-2 border-[hsl(var(--tex-vision-feedback))]/30 transition-all duration-[2000ms]"
               style={{
                 transform: `scale(${breathPhase === 'in' ? 1.5 : 1})`,
                 opacity: breathPhase === 'in' ? 0.8 : 0.3,
