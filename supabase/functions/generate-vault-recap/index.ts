@@ -203,6 +203,83 @@ serve(async (req) => {
         avgLevel: Math.round(data.totalLevel / data.count)
       }))
       .sort((a, b) => b.occurrences - a.occurrences);
+
+    // ========== BODY CONNECTION (FASCIA) ANALYSIS ==========
+    // Mapping body areas to fascia lines for AI analysis
+    const BODY_LINE_AREAS: Record<string, string[]> = {
+      'Back Track (SBL)': ['neck_back', 'left_upper_back', 'right_upper_back', 
+        'lower_back_center', 'lower_back_left', 'lower_back_right', 
+        'left_glute', 'right_glute', 'left_hamstring_inner', 'left_hamstring_outer',
+        'right_hamstring_inner', 'right_hamstring_outer', 'left_calf_inner', 
+        'left_calf_outer', 'right_calf_inner', 'right_calf_outer', 
+        'left_achilles', 'right_achilles', 'left_heel', 'right_heel'],
+      'Front Track (SFL)': ['head_front', 'neck_front', 'sternum', 
+        'left_chest', 'right_chest', 'upper_abs', 'lower_abs',
+        'left_quad_inner', 'left_quad_outer', 'right_quad_inner', 'right_quad_outer',
+        'left_shin', 'right_shin', 'left_foot_top', 'right_foot_top'],
+      'Side Track (LL)': ['left_temple', 'right_temple', 'left_neck_side', 'right_neck_side',
+        'left_oblique', 'right_oblique', 'left_it_band', 'right_it_band',
+        'left_knee_side', 'right_knee_side'],
+      'Arm Tracks': ['left_shoulder_front', 'right_shoulder_front', 
+        'left_shoulder_back', 'right_shoulder_back', 'left_bicep', 'right_bicep',
+        'left_tricep', 'right_tricep', 'left_forearm_front', 'right_forearm_front',
+        'left_forearm_back', 'right_forearm_back', 'left_wrist', 'right_wrist',
+        'left_hand', 'right_hand'],
+      'Core Track (DFL)': ['neck_front', 'sternum', 'upper_abs', 'lower_abs',
+        'left_hip_flexor', 'right_hip_flexor', 'left_groin', 'right_groin'],
+      'Twist Track (SPL)': ['left_oblique', 'right_oblique', 'left_lat', 'right_lat',
+        'left_serratus', 'right_serratus'],
+    };
+
+    function getDominantBodyLine(areas: { area: string }[]): string {
+      const lineFrequency: Record<string, number> = {};
+      areas.forEach(({ area }) => {
+        for (const [line, lineAreas] of Object.entries(BODY_LINE_AREAS)) {
+          if (lineAreas.includes(area)) {
+            lineFrequency[line] = (lineFrequency[line] || 0) + 1;
+          }
+        }
+      });
+      const sorted = Object.entries(lineFrequency).sort((a, b) => b[1] - a[1]);
+      return sorted[0]?.[0] || 'Multiple lines';
+    }
+
+    function getConnectedAreasFromLine(areas: { area: string }[]): string[] {
+      const affectedAreas = new Set(areas.map(a => a.area));
+      const connectedAreas: Set<string> = new Set();
+      
+      for (const [line, lineAreas] of Object.entries(BODY_LINE_AREAS)) {
+        const hasAffectedArea = lineAreas.some(a => affectedAreas.has(a));
+        if (hasAffectedArea) {
+          lineAreas.forEach(a => {
+            if (!affectedAreas.has(a)) connectedAreas.add(a);
+          });
+        }
+      }
+      return Array.from(connectedAreas).slice(0, 6);
+    }
+
+    function generateBodyLinePainSummary(areas: { area: string; occurrences: number; avgLevel: number }[]): string {
+      const lineGroups: Record<string, { area: string; occurrences: number; avgLevel: number }[]> = {};
+      
+      areas.forEach(areaData => {
+        for (const [line, lineAreas] of Object.entries(BODY_LINE_AREAS)) {
+          if (lineAreas.includes(areaData.area)) {
+            if (!lineGroups[line]) lineGroups[line] = [];
+            lineGroups[line].push(areaData);
+          }
+        }
+      });
+
+      return Object.entries(lineGroups)
+        .map(([line, groupAreas]) => 
+          `${line}: ${groupAreas.map(a => `${a.area} (${a.occurrences}x, avg ${a.avgLevel}/10)`).join(', ')}`
+        ).join('\n    ') || 'No patterns detected';
+    }
+
+    const dominantBodyLine = chronicPainAreas.length > 0 ? getDominantBodyLine(chronicPainAreas) : 'None';
+    const connectedAreasToCheck = chronicPainAreas.length > 0 ? getConnectedAreasFromLine(chronicPainAreas) : [];
+    const bodyLinePainSummary = generateBodyLinePainSummary(chronicPainAreas);
     
     // Calculate weighted average pain (considers per-area severity)
     let totalPainScore = 0;
@@ -729,6 +806,37 @@ ATHLETE NOTES FROM ACTIVITIES:
 
 ═══════════════════════════════════════════════════════════════
 
+13. BODY CONNECTION PATTERN ANALYSIS (Based on Elite Fascia Research)
+═══════════════════════════════════════════════════════════════
+
+Using principles from world-leading fascia researchers (Schleip, Stecco, 
+Myers, Chong Xie's HFT), analyze body connection patterns:
+
+PAIN DATA BY BODY LINE:
+    ${bodyLinePainSummary}
+
+DETECTED PATTERNS:
+    • Areas affected: ${chronicPainAreas.map(p => p.area).join(', ') || 'None'}
+    • Most affected Body Line: ${dominantBodyLine}
+    • Connected areas to evaluate: ${connectedAreasToCheck.join(', ') || 'None identified'}
+
+FASCIA ANALYSIS REQUIREMENTS (if pain data exists):
+1. Identify if multiple pain areas fall on the SAME "Body Line" (fascia chain)
+2. Suggest connected areas the athlete should stretch/mobilize
+3. Frame all insights in SIMPLE LANGUAGE a 10-year-old can understand
+4. Include a "Pro Insight" showing what elite athletes do differently
+5. CRITICAL: Include disclaimer that this is educational only, not medical advice
+
+KID-FRIENDLY BODY LINE NAMES (use these):
+- "Back Track" = Superficial Back Line (heels to head, back of body)
+- "Front Track" = Superficial Front Line (toes to head, front of body)  
+- "Side Track" = Lateral Line (ankle to ear, side of body)
+- "Arm Tracks" = Arm lines (shoulder to fingertips)
+- "Core Track" = Deep Front Line (inner core, hip flexors)
+- "Twist Track" = Spiral Line (wraps around body)
+
+═══════════════════════════════════════════════════════════════
+
 ${isRecoveryPhase ? `
 SPECIAL INSTRUCTIONS FOR RECOVERY PHASE ANALYSIS:
 Generate an elite-level REHABILITATION & RECOVERY recap. Focus on:
@@ -826,6 +934,14 @@ REQUIRED SECTIONS (return as JSON):
 
 9. elite_insight (1 paragraph): A deeper analysis connecting multiple data points to reveal a pattern or insight the athlete may not have noticed. ${isRecoveryPhase ? 'Connect their mental data with recovery readiness. Show how their discipline and mindset during this down period will translate to a stronger return.' : 'This demonstrates elite-level coaching.'}
 
+10. body_connection_analysis (REQUIRED if pain data exists): Object containing kid-friendly fascia insights:
+    - kid_summary: Simple 1-2 sentence explanation of body connections found (use spider web / train track analogies)
+    - affected_body_line: The dominant "Body Track" name (e.g., "Back Track")
+    - connected_areas_to_stretch: Array of 3-5 connected areas the athlete should check/stretch
+    - pro_insight: What elite athletes do differently when this pattern appears
+    - self_care_tip: One simple thing the athlete can try
+    - disclaimer: "This is just for learning! Always talk to a coach, parent, or doctor about pain that doesn't go away."
+
 Return ONLY valid JSON with this exact structure:
 {
   "executive_summary": "...",
@@ -836,7 +952,15 @@ Return ONLY valid JSON with this exact structure:
   "nutrition_impact": ["...", "..."],
   "critical_focus_areas": ["...", "..."],
   "strategic_recommendations": ["...", "..."],
-  "elite_insight": "..."
+  "elite_insight": "...",
+  "body_connection_analysis": {
+    "kid_summary": "Your body is connected like a spider web! Most of your tight spots are on the 'Back Track' - a line from your feet to your head.",
+    "affected_body_line": "Back Track",
+    "connected_areas_to_stretch": ["Calves", "Hamstrings", "Low Back"],
+    "pro_insight": "Pro athletes work on the WHOLE chain, not just where it hurts.",
+    "self_care_tip": "Try stretching your calves - it might help your hamstrings feel better!",
+    "disclaimer": "This is just for learning! Always talk to a coach, parent, or doctor about pain that doesn't go away."
+  }
 }`;
 
         const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -873,6 +997,7 @@ Return ONLY valid JSON with this exact structure:
               critical_focus_areas: parsed.critical_focus_areas || [],
               strategic_recommendations: parsed.strategic_recommendations || [],
               elite_insight: parsed.elite_insight || '',
+              body_connection_analysis: parsed.body_connection_analysis || null,
               // Map to legacy fields for backward compatibility
               summary: parsed.executive_summary || '',
               highlights: parsed.training_analysis?.slice(0, 3) || [],

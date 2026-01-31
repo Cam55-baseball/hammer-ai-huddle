@@ -2,6 +2,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, subDays, parseISO, differenceInCalendarDays } from 'date-fns';
 import { getBodyAreaLabel } from './quiz/body-maps/bodyAreaDefinitions';
+import { 
+  getFasciaConnection, 
+  getConnectedAreas 
+} from './quiz/body-maps/fasciaConnectionMappings';
 
 interface QuizEntry {
   entry_date: string;
@@ -76,8 +80,35 @@ function findConsecutivePainAreas(quizData: QuizEntry[]): { area: string; avgLev
 }
 
 /**
+ * Builds a kid-friendly body connection description for a pain area
+ */
+function buildBodyConnectionContext(
+  areaId: string,
+  t: (key: string, options?: Record<string, unknown>) => string
+): { clue: string; connectedSpots: string; proTip: string; source: string } | null {
+  const connection = getFasciaConnection(areaId);
+  if (!connection) return null;
+
+  const connectedAreaLabels = getConnectedAreas(areaId)
+    .slice(0, 3)
+    .map(id => getBodyAreaLabel(id));
+
+  const lineName = t(`fascia.bodyLine.${connection.primaryLine.id.toLowerCase()}`, { defaultValue: connection.primaryLine.kidName });
+  
+  return {
+    clue: `${connection.primaryLine.emoji} ${t('fascia.patternAlert.clue', { defaultValue: 'Body Connection Clue' })}: ${connection.kidInsight} ("${lineName}")`,
+    connectedSpots: connectedAreaLabels.length > 0 
+      ? `${t('fascia.patternAlert.connectedToCheck', { defaultValue: 'Connected spots to check' })}: ${connectedAreaLabels.join(', ')}`
+      : '',
+    proTip: `🏆 ${t('fascia.patternAlert.proMove', { defaultValue: 'What the Pros Do' })}: ${connection.proTip}`,
+    source: `📚 ${t('fascia.research.basedOn', { defaultValue: 'Based on' })}: ${connection.researchSource}`
+  };
+}
+
+/**
  * Checks for pain patterns and notifies the user if any body area
- * has been logged with pain for 3+ consecutive days
+ * has been logged with pain for 3+ consecutive days.
+ * Now includes kid-friendly body connection insights based on elite fascia research.
  */
 export async function checkPainPatternAndNotify(
   userId: string,
@@ -106,20 +137,36 @@ export async function checkPainPatternAndNotify(
     const consecutivePainAreas = findConsecutivePainAreas(quizData as QuizEntry[]);
 
     if (consecutivePainAreas.length > 0) {
-      // Convert area IDs to display names with severity info
-      const areaDescriptions = consecutivePainAreas
-        .map(({ area, avgLevel }) => `${getBodyAreaLabel(area)} (avg ${avgLevel}/10)`)
-        .join(', ');
+      // Process the first (most significant) pain pattern
+      const primaryPain = consecutivePainAreas[0];
+      const areaLabel = getBodyAreaLabel(primaryPain.area);
+      const fasciaContext = buildBodyConnectionContext(primaryPain.area, t);
 
-      const title = t('vault.painAlert.title', { defaultValue: '⚠️ Pain Pattern Detected' });
-      const description = t('vault.painAlert.description', { 
-        defaultValue: `You've logged pain in ${areaDescriptions} for 3+ consecutive days. Consider consulting a professional to prevent injury.`,
-        areas: areaDescriptions 
+      // Build kid-friendly description with body connection context
+      let description = t('vault.painAlert.description', { 
+        defaultValue: `You've logged pain in ${areaLabel} (avg ${primaryPain.avgLevel}/10) for 3+ consecutive days.`,
+        areas: areaLabel,
+        level: primaryPain.avgLevel
       });
+
+      // Add fascia context if available
+      if (fasciaContext) {
+        description = `${description}\n\n${fasciaContext.clue}`;
+        if (fasciaContext.connectedSpots) {
+          description = `${description}\n${fasciaContext.connectedSpots}`;
+        }
+        description = `${description}\n\n${fasciaContext.proTip}`;
+        description = `${description}\n\n${fasciaContext.source}`;
+        description = `${description}\n\n⚕️ ${t('fascia.patternAlert.remember', { defaultValue: 'Remember: Talk to a coach, parent, or doctor about this.' })}`;
+      } else {
+        description = `${description}\n\n${t('vault.painAlert.consultPro', { defaultValue: 'Consider consulting a professional to prevent injury.' })}`;
+      }
+
+      const title = t('vault.painAlert.title', { defaultValue: '⚠️ Hey! We Noticed Something' });
 
       toast.error(title, {
         description,
-        duration: 8000,
+        duration: 10000, // Extended duration for more content
       });
     }
   } catch (err) {

@@ -17,6 +17,7 @@ import {
 } from '@/hooks/useVault';
 import { CustomActivityLog, MealData, Exercise, CustomField } from '@/types/customActivity';
 import { getBodyAreaLabel } from './quiz/body-maps/bodyAreaDefinitions';
+import { getFasciaConnection } from './quiz/body-maps/fasciaConnectionMappings';
 
 interface HistoryEntry {
   date: string;
@@ -381,9 +382,10 @@ export function VaultDayRecapCard({ historyData, isLoading }: VaultDayRecapCardP
                           // Use per-area pain_scales if available, fall back to global pain_scale
                           const painScales = (preWorkoutQuiz as any).pain_scales as Record<string, number> | undefined;
                           const level = painScales?.[loc] || preWorkoutQuiz.pain_scale || 0;
+                          const connection = getFasciaConnection(loc);
                           return (
                             <Badge key={i} variant="destructive" className="text-xs py-0">
-                              {getBodyAreaLabel(loc)}: {level}/10
+                              {connection?.primaryLine.emoji} {getBodyAreaLabel(loc)}: {level}/10
                             </Badge>
                           );
                         })}
