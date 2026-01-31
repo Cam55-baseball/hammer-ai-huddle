@@ -1102,13 +1102,13 @@ Write all feedback so a child who has never played the sport can understand.
 
 USE VISUAL, SIMPLE DESCRIPTIONS:
 Instead of: "Shoulders begin rotating before stride foot lands"
-Say: "Your shoulders started turning before your front foot touched the ground - wait for your foot to land first"
+Say: "Your shoulders started turning before your front foot touched the ground - allow your shoulders to turn only after your foot lands"
 
 Instead of: "Chest was already facing target at landing" (EARLY ROTATION)
-Say: "When your foot landed, your chest was already facing where you're throwing - stay sideways longer! Point your front shoulder at your target, and only turn your chest AFTER your foot lands"
+Say: "When your foot landed, your chest was already facing your target - keep your chest sideways until your foot is down, then let it turn"
 
 Instead of: "Shoulders should be lateral at landing"
-Say: "When your front foot lands, your front shoulder (glove side) should point straight at your target like an arrow - your chest should face the side, not your target yet"
+Say: "Keep your front shoulder pointed at your target when your foot lands - your chest should stay facing the side, not your target yet"
 
 Instead of: "Back leg not facing target"
 Say: "Your back knee (the one you push off from) should point toward where you're throwing when you land"
@@ -1130,11 +1130,12 @@ SUMMARY FORMAT:
 REQUIRED: Provide exactly 3-5 bullet points in plain, 10-year-old-friendly language (max 15 words per bullet).
 Focus on the most important actionable insights that a player or parent would understand immediately.
 Be honest about issues - accurate feedback helps development. Examples:
-- "Land your front foot before turning - this gives you power and accuracy"
-- "Your shoulders started turning too early - wait for your foot to land first"
-- "Great timing - your foot lands, then your body turns together"
-- "Stay sideways longer - point your front shoulder at your target when you land"
-- "Your chest turned too early - keep it facing the side until your foot is down"
+- "Allow your shoulders to turn only after your front foot hits the ground - this gives you power"
+- "Your shoulders started turning before your foot landed - wait for that foot to plant first"
+- "Great timing - your foot landed and then your body turned together"
+- "Keep your front shoulder pointed at your target when your foot lands - stay sideways longer"
+- "Have your chest stay sideways until your foot is down, then let it turn"
+- "Your chest was already facing your target when your foot landed - keep it closed longer"
 - "Nice strong step toward your target"
 - "Your back knee should point at your target earlier for better accuracy"
 - "Strong finish on your throw - great follow-through!"
