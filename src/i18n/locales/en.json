@@ -4622,6 +4622,61 @@
     "fireUnlocked": "Fire unlocks at 5 days!",
     "glowUnlocked": "Flame is glowing at 25 days!"
   },
+  "fascia": {
+    "bodyConnection": {
+      "title": "Body Connection Insight",
+      "subtitle": "How your body parts are connected"
+    },
+    "bodyLine": {
+      "sbl": "Back Track",
+      "sfl": "Front Track",
+      "ll": "Side Track",
+      "spl": "Twist Track",
+      "dfl": "Core Track",
+      "arm": "Arm Tracks"
+    },
+    "onBodyLine": "This is on your \"{{lineName}}\"",
+    "connectedSpots": "Connected Spots",
+    "proTip": "Pro Tip",
+    "whyItMightHurt": "Why It Might Hurt",
+    "whatProsDo": "What the Pros Do",
+    "selfCareTip": "Self-Care Tip",
+    "patternDetected": "Pattern detected on {{lineName}}",
+    "disclaimer": {
+      "title": "Just For Learning!",
+      "text": "This is educational information only. Always talk to a doctor, trainer, or trusted adult about pain that doesn't go away.",
+      "compact": "Educational only - always consult a professional"
+    },
+    "education": {
+      "title": "How Your Body Connects",
+      "webAnalogy": "Did you know your body has an invisible web inside?",
+      "whatIsFascia": "It's called fascia (fash-ee-uh), and it wraps around every muscle like a stretchy suit.",
+      "sheetAnalogy": "When one part gets tight, it can pull on other parts - like pulling one corner of a bedsheet!",
+      "whyProsCare": "Why Pros Care",
+      "prosCareExplanation": "Top athletes know that pain in one spot might come from tightness in a completely different spot. They stretch the WHOLE track, not just where it hurts!",
+      "realScience": "This comes from real science! Researchers like Thomas Myers and Dr. Robert Schleip study how our bodies connect.",
+      "important": "If something hurts a lot, ALWAYS talk to your coach, parent, or doctor!"
+    },
+    "recap": {
+      "title": "Body Connection Patterns",
+      "kidSummary": "Your body is connected like a spider web!",
+      "whatThisMeans": "What This Means",
+      "proMove": "Pro Move"
+    },
+    "patternAlert": {
+      "clue": "Body Connection Clue",
+      "proMove": "What the Pros Do",
+      "connectedToCheck": "Connected spots to check",
+      "remember": "Remember: Talk to a coach, parent, or doctor about this."
+    },
+    "heatMap": {
+      "showBodyLines": "Show Body Lines"
+    },
+    "research": {
+      "attribution": "Based on research by {{sources}}",
+      "basedOn": "Based on"
+    }
+  },
   "vault": {
     "title": "The Vault",
     "subtitle": "Your private performance journal",
