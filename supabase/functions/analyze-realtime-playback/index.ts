@@ -886,11 +886,13 @@ Use the analyze_mechanics tool to return your structured analysis.`
                       },
                       shoulders_not_aligned: {
                         type: 'boolean',
-                        description: 'TRUE if shoulders NOT aligned with target at moment of landing'
+                        description: 'TRUE if shoulders NOT aligned with target at moment of landing (pitching/throwing only)'
                       },
                       back_leg_not_facing_target: {
                         type: 'boolean',
-                        description: 'TRUE if back hip/leg (foot, knee, hip) NOT facing target at landing'
+                        description: module === 'hitting' 
+                          ? 'For HITTING: Always set FALSE - this check does not apply to hitting mechanics'
+                          : 'TRUE if back hip/leg (foot, knee, hip) NOT facing target at landing (pitching/throwing only)'
                       },
                       hands_pass_elbow_early: {
                         type: 'boolean',
@@ -901,7 +903,9 @@ Use the analyze_mechanics tool to return your structured analysis.`
                         description: 'TRUE if front shoulder opens/pulls out of sequence too early (hitting only)'
                       }
                     },
-                    required: ['early_shoulder_rotation', 'shoulders_not_aligned', 'back_leg_not_facing_target']
+                    required: module === 'hitting' 
+                      ? ['early_shoulder_rotation'] 
+                      : ['early_shoulder_rotation', 'shoulders_not_aligned', 'back_leg_not_facing_target']
                   },
                   quickSummary: {
                     type: 'string',
@@ -1058,17 +1062,19 @@ Use the analyze_mechanics tool to return your structured analysis.`
         let scoreWasAdjusted = false;
         
         // Count critical violations (after feedback override)
+        // NOTE: For hitting, back_leg_not_facing_target does NOT apply - back hip rotates AFTER foot landing
         let violationCount = 0;
         if (violations.early_shoulder_rotation) violationCount++;
-        if (violations.shoulders_not_aligned) violationCount++;
-        if (violations.back_leg_not_facing_target) violationCount++;
+        if (violations.shoulders_not_aligned && module !== 'hitting') violationCount++;
+        if (violations.back_leg_not_facing_target && module !== 'hitting') violationCount++;
         if (violations.hands_pass_elbow_early) violationCount++;
         if (violations.front_shoulder_opens_early) violationCount++;
         
-        console.log(`[VIOLATIONS] After feedback override: ${JSON.stringify(violations)}, count: ${violationCount}`);
+        console.log(`[VIOLATIONS] Module: ${module}, After feedback override: ${JSON.stringify(violations)}, count: ${violationCount}`);
         
         // Apply score caps (scaled to 1-10) - STRICTER ALIGNMENT ENFORCEMENT
         // Per user preference: Max 60 (6/10) if EITHER back leg or shoulders not aligned fails
+        // NOTE: back_leg check only applies to pitching/throwing, NOT hitting
         
         // MULTIPLE VIOLATIONS = MAX 5.5 (55/100)
         if (violationCount >= 2) {
@@ -1078,15 +1084,15 @@ Use the analyze_mechanics tool to return your structured analysis.`
             scoreWasAdjusted = true;
           }
         }
-        // CRITICAL ALIGNMENT VIOLATIONS = MAX 6 (60/100) - EITHER fails = max 60
-        else if (violations.back_leg_not_facing_target) {
+        // BACK LEG CHECK - Only applies to pitching/throwing, NOT hitting
+        else if (violations.back_leg_not_facing_target && module !== 'hitting') {
           cappedScore = Math.min(cappedScore, 6);
           if (cappedScore !== analysis.overallScore) {
             console.log(`[SCORE CAP] Back leg not facing target - capping from ${analysis.overallScore} to ${cappedScore}`);
             scoreWasAdjusted = true;
           }
         }
-        else if (violations.shoulders_not_aligned) {
+        else if (violations.shoulders_not_aligned && module !== 'hitting') {
           cappedScore = Math.min(cappedScore, 6);
           if (cappedScore !== analysis.overallScore) {
             console.log(`[SCORE CAP] Shoulders not aligned - capping from ${analysis.overallScore} to ${cappedScore}`);

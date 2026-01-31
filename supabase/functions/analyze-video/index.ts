@@ -20,7 +20,11 @@ const requestSchema = z.object({
 // NOTE: For baseball pitching and throwing, "shoulders_not_aligned" has been REMOVED as a separate violation.
 // If the chest is already facing home plate at landing, that IS early shoulder rotation (the root cause).
 // Correct mechanics: shoulders LATERAL (sideways) at landing, hips forward-facing, chest NOT facing target yet.
+// 
+// IMPORTANT: back_leg_not_facing_target does NOT apply to HITTING modules.
+// For hitting: back hip rotates AFTER front foot lands (not at landing like pitching/throwing).
 const VIOLATION_KEYWORDS: Record<string, string[]> = {
+  // NOTE: back_leg_not_facing_target keywords are only scanned for pitching/throwing, NOT hitting
   back_leg_not_facing_target: [
     "back leg not facing", "back hip not facing", "back foot not facing",
     "back leg still rotating", "back hip still rotating", "hips haven't reached",
@@ -49,11 +53,18 @@ const VIOLATION_KEYWORDS: Record<string, string[]> = {
 };
 
 // Scan feedback text for violation keywords and return detected violations
-function detectViolationsFromFeedback(feedback: string): Record<string, boolean> {
+// NOTE: module parameter used to skip back_leg check for hitting
+function detectViolationsFromFeedback(feedback: string, module?: string): Record<string, boolean> {
   const lowerFeedback = feedback.toLowerCase();
   const detected: Record<string, boolean> = {};
   
   for (const [violation, keywords] of Object.entries(VIOLATION_KEYWORDS)) {
+    // Skip back_leg_not_facing_target for hitting - this check doesn't apply
+    if (violation === 'back_leg_not_facing_target' && module === 'hitting') {
+      detected[violation] = false;
+      continue;
+    }
+    
     detected[violation] = keywords.some(keyword => lowerFeedback.includes(keyword));
     if (detected[violation]) {
       console.log(`[FEEDBACK SCAN] Detected "${violation}" via keyword match in feedback`);
@@ -1182,18 +1193,49 @@ Deno.serve(async (req) => {
       ? `\n\n⭐⭐⭐ USER HAS MARKED Frame ${landingFrameIndex + 1} as the EXACT MOMENT of front foot landing. Use this frame as the primary reference for all alignment checks. ⭐⭐⭐`
       : `\n\nIDENTIFY the landing frame yourself: Look for the frame where the front foot FIRST makes contact with the ground. This is your reference point for all alignment checks.`;
     
-    // Add text instruction first
-    userContent.push({
-      type: 'text',
-      text: `${historicalContext}
+    // Build module-specific alignment checks
+    let alignmentChecksInstruction = '';
+    
+    if (module === 'hitting') {
+      // HITTING: Back hip rotates AFTER foot landing, NOT at landing
+      alignmentChecksInstruction = `
+⭐⭐⭐ CRITICAL LANDING CHECKS FOR HITTING (at EXACT frame of front foot landing):
 
----
+1. FRONT FOOT CHECK: Is the front foot firmly planted and stable?
+   → Front foot MUST be down before ANY rotation begins
+   → This is NON-NEGOTIABLE for proper hitting mechanics
+   
+2. BACK HIP CHECK (DIFFERENT FROM PITCHING/THROWING!):
+   ⚠️ IMPORTANT: For HITTING, the back hip should NOT be facing the target yet at landing!
+   → Back hip rotates TOWARD target AFTER the foot lands and stabilizes
+   → If back hip is ALREADY facing target at landing → This often indicates excessive lateral head movement toward the pitcher
+   → Do NOT flag back_leg_not_facing_target for hitting - this check does not apply
+   
+3. SHOULDER CHECK: Are shoulders still CLOSED (not rotating yet)?
+   → Shoulders should NOT begin rotating until AFTER foot plants and stabilizes
+   → early_shoulder_rotation = TRUE if shoulders rotating at or before landing
 
-CURRENT VIDEO ANALYSIS - VISUAL FRAME ANALYSIS:
+4. HEAD STABILITY CHECK (CRITICAL FOR HITTING):
+   → Is head moving LATERALLY toward the pitcher during swing sequence?
+   → Lateral head movement is a MAJOR contact disruptor
+   → Often indicates rushed sequence timing or back hip firing too early
+   → Head should stay relatively stable - eyes track the ball, head doesn't chase it
 
-You are analyzing ${frames.length} sequential frames from a ${sport} ${module} motion.
-${landingInstruction}
+HITTING SEQUENCE REMINDER:
+1. Load phase (weight back)
+2. Stride toward pitcher  
+3. Front foot LANDS & STABILIZES ← Check alignment HERE
+4. THEN back hip rotates toward target (AFTER landing)
+5. Torso rotates
+6. Shoulders rotate
+7. Hands/bat release
 
+The score caps depend on accurate flags:
+- Early shoulder rotation (before foot lands) → MAX SCORE: 65
+- Multiple violations → MAX SCORE: 55`;
+    } else {
+      // PITCHING & THROWING: Back leg/hip should face target at landing
+      alignmentChecksInstruction = `
 ⭐⭐⭐ CRITICAL LANDING ALIGNMENT CHECKS (at the EXACT frame of front foot landing):
 
 1. BACK LEG CHECK: Is the back leg (foot, knee, AND hip) ALL facing the target?
@@ -1214,7 +1256,21 @@ THESE ARE PASS/FAIL CHECKPOINTS. No partial credit. Be BRUTALLY HONEST in your v
 The score caps depend on accurate flags:
 - Either alignment violation (back leg OR shoulders) → MAX SCORE: 60
 - Both alignment violations → MAX SCORE: 55
-- Early shoulder rotation → MAX SCORE: 65
+- Early shoulder rotation → MAX SCORE: 65`;
+    }
+    
+    // Add text instruction first
+    userContent.push({
+      type: 'text',
+      text: `${historicalContext}
+
+---
+
+CURRENT VIDEO ANALYSIS - VISUAL FRAME ANALYSIS:
+
+You are analyzing ${frames.length} sequential frames from a ${sport} ${module} motion.
+${landingInstruction}
+${alignmentChecksInstruction}
 
 ${hasHistory ? `Based on the historical data above and this current analysis, generate "The Scorecard" progress report comparing current performance to ALL previous uploads.` : `This is the player's first analysis - establish a baseline.`}`
     });
@@ -1263,7 +1319,7 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                     type: "number",
                     description: "Score from 0-100 based on form correctness"
                   },
-                  violations: {
+                    violations: {
                     type: "object",
                     description: "CRITICAL: Report ALL critical violations detected in the mechanics. Be HONEST - these flags directly determine score caps.",
                     properties: {
@@ -1273,11 +1329,13 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                       },
                       shoulders_not_aligned: {
                         type: "boolean",
-                        description: "TRUE if shoulders NOT aligned with target at moment of landing"
+                        description: "TRUE if shoulders NOT aligned with target at moment of landing (pitching/throwing only)"
                       },
                       back_leg_not_facing_target: {
                         type: "boolean",
-                        description: "TRUE if back hip/leg (foot, knee, hip) NOT facing target at landing"
+                        description: module === 'hitting' 
+                          ? "For HITTING: Always set FALSE - this check does not apply to hitting mechanics"
+                          : "TRUE if back hip/leg (foot, knee, hip) NOT facing target at landing (pitching/throwing only)"
                       },
                       hands_pass_elbow_early: {
                         type: "boolean",
@@ -1288,7 +1346,9 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
                         description: "TRUE if front shoulder opens/pulls out of sequence too early (hitting only)"
                       }
                     },
-                    required: ["early_shoulder_rotation", "shoulders_not_aligned", "back_leg_not_facing_target"]
+                    required: module === 'hitting' 
+                      ? ["early_shoulder_rotation"] 
+                      : ["early_shoulder_rotation", "shoulders_not_aligned", "back_leg_not_facing_target"]
                   },
                   summary: {
                     type: "array",
@@ -1467,7 +1527,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         
         // ============ FEEDBACK-BASED VIOLATION OVERRIDE (FAILSAFE) ============
         // Scan feedback text for violation keywords - override AI flags if needed
-        const feedbackViolations = detectViolationsFromFeedback(feedback);
+        // NOTE: Pass module so back_leg check is skipped for hitting
+        const feedbackViolations = detectViolationsFromFeedback(feedback, module);
         
         for (const [key, detected] of Object.entries(feedbackViolations)) {
           if (detected && !violations[key]) {
@@ -1479,14 +1540,15 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
         
         // ============ PROGRAMMATIC SCORE CAP ENFORCEMENT ============
         // Count critical violations (after feedback override)
+        // NOTE: For hitting, back_leg_not_facing_target does NOT apply - back hip rotates AFTER foot landing
         let violationCount = 0;
         if (violations.early_shoulder_rotation) violationCount++;
-        if (violations.shoulders_not_aligned) violationCount++;
-        if (violations.back_leg_not_facing_target) violationCount++;
+        if (violations.shoulders_not_aligned && module !== 'hitting') violationCount++;
+        if (violations.back_leg_not_facing_target && module !== 'hitting') violationCount++;
         if (violations.hands_pass_elbow_early) violationCount++;
         if (violations.front_shoulder_opens_early) violationCount++;
         
-        console.log(`[VIOLATIONS] After feedback override: ${JSON.stringify(violations)}, count: ${violationCount}`);
+        console.log(`[VIOLATIONS] Module: ${module}, After feedback override: ${JSON.stringify(violations)}, count: ${violationCount}`);
         
         // ============ STRICT SCORE CAPS - MAX 60 FOR EITHER ALIGNMENT VIOLATION ============
         // Apply score caps - MULTIPLE VIOLATIONS FIRST (most restrictive)
@@ -1498,8 +1560,8 @@ ${hasHistory ? `Based on the historical data above and this current analysis, ge
             scoreWasAdjusted = true;
           }
         }
-        // EITHER back leg OR shoulders not aligned = MAX 60 (user requirement)
-        else if (violations.back_leg_not_facing_target) {
+        // BACK LEG CHECK - Only applies to pitching/throwing, NOT hitting
+        else if (violations.back_leg_not_facing_target && module !== 'hitting') {
           const cappedScore = Math.min(efficiency_score, 60);
           if (cappedScore !== efficiency_score) {
             console.log(`[SCORE CAP] Back leg not facing target - capping score from ${efficiency_score} to ${cappedScore}`);
