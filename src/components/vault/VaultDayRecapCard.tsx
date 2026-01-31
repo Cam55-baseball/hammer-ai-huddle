@@ -16,6 +16,7 @@ import {
   VaultPerformanceTest, VaultProgressPhoto, VaultScoutGrade, VaultNutritionLog 
 } from '@/hooks/useVault';
 import { CustomActivityLog, MealData, Exercise, CustomField } from '@/types/customActivity';
+import { getBodyAreaLabel } from './quiz/body-maps/bodyAreaDefinitions';
 
 interface HistoryEntry {
   date: string;
@@ -371,13 +372,22 @@ export function VaultDayRecapCard({ historyData, isLoading }: VaultDayRecapCardP
                     </div>
                   </div>
                   {preWorkoutQuiz.pain_location && preWorkoutQuiz.pain_location.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      <span className="text-xs text-muted-foreground">{t('vault.quiz.pain', 'Pain')}:</span>
-                      {preWorkoutQuiz.pain_location.map((loc, i) => (
-                        <Badge key={i} variant="destructive" className="text-xs py-0">
-                          {loc}
-                        </Badge>
-                      ))}
+                    <div className="mt-2 space-y-1">
+                      <span className="text-xs text-muted-foreground font-medium">
+                        {t('vault.quiz.pain', 'Pain')}:
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {preWorkoutQuiz.pain_location.map((loc, i) => {
+                          // Use per-area pain_scales if available, fall back to global pain_scale
+                          const painScales = (preWorkoutQuiz as any).pain_scales as Record<string, number> | undefined;
+                          const level = painScales?.[loc] || preWorkoutQuiz.pain_scale || 0;
+                          return (
+                            <Badge key={i} variant="destructive" className="text-xs py-0">
+                              {getBodyAreaLabel(loc)}: {level}/10
+                            </Badge>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </CardContent>

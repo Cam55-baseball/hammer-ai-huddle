@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getBodyAreaLabel } from './quiz/body-maps/bodyAreaDefinitions';
 import {
   Dialog,
   DialogContent,
@@ -286,10 +287,33 @@ export function VaultFocusQuizDialog({
   const [balanceLeftSeconds, setBalanceLeftSeconds] = useState<number | null>(null);
   const [balanceRightSeconds, setBalanceRightSeconds] = useState<number | null>(null);
 
-  // NEW: Pre-workout Pain section
+  // NEW: Pre-workout Pain section - now with per-area pain scales
   const [painLocations, setPainLocations] = useState<string[]>([]);
-  const [painScale, setPainScale] = useState(0);
+  const [painScales, setPainScales] = useState<Record<string, number>>({});
   const [painIncreasesWithMovement, setPainIncreasesWithMovement] = useState<boolean | null>(null);
+
+  // Handler to update pain scale for a specific area
+  const handlePainScaleChange = (areaId: string, value: number) => {
+    setPainScales(prev => ({
+      ...prev,
+      [areaId]: value
+    }));
+  };
+
+  // Handler for pain location changes - cleans up scales for deselected areas
+  const handlePainLocationsChange = (areas: string[]) => {
+    setPainLocations(areas);
+    // Remove scales for deselected areas, keep scales for still-selected areas
+    setPainScales(prev => {
+      const newScales: Record<string, number> = {};
+      areas.forEach(area => {
+        if (prev[area] !== undefined) {
+          newScales[area] = prev[area];
+        }
+      });
+      return newScales;
+    });
+  };
 
   // NEW: Pre-workout Intent & Focus section
   const [trainingIntents, setTrainingIntents] = useState<string[]>([]);
@@ -387,9 +411,13 @@ export function VaultFocusQuizDialog({
       data.reaction_time_score = reactionTimeScore || undefined;
       data.balance_left_seconds = balanceLeftSeconds || undefined;
       data.balance_right_seconds = balanceRightSeconds || undefined;
-      // NEW: Pain section
+      // NEW: Pain section - per-area pain scales
       data.pain_location = painLocations.length > 0 ? painLocations : undefined;
-      data.pain_scale = painLocations.length > 0 ? painScale : undefined;
+      data.pain_scales = Object.keys(painScales).length > 0 ? painScales : undefined;
+      // Keep legacy pain_scale as max value for backward compatibility
+      data.pain_scale = Object.values(painScales).length > 0 
+        ? Math.max(...Object.values(painScales)) 
+        : undefined;
       data.pain_increases_with_movement = painLocations.length > 0 ? painIncreasesWithMovement : undefined;
       // NEW: Intent & Focus section
       data.training_intent = trainingIntents.length > 0 ? trainingIntents : undefined;
@@ -440,7 +468,7 @@ export function VaultFocusQuizDialog({
       setBalanceLeftSeconds(null);
       setBalanceRightSeconds(null);
       setPainLocations([]);
-      setPainScale(0);
+      setPainScales({});
       setPainIncreasesWithMovement(null);
       setTrainingIntents([]);
       setMentalEnergy(3);
@@ -869,25 +897,35 @@ export function VaultFocusQuizDialog({
               {/* Body Area Selector */}
               <BodyAreaSelector
                 selectedAreas={painLocations}
-                onChange={setPainLocations}
+                onChange={handlePainLocationsChange}
               />
 
-              {/* Pain Scale - only shown if areas selected */}
+              {/* Individual Pain Scales - one per selected area */}
               {painLocations.length > 0 && (
-                <TenPointScale
-                  value={painScale}
-                  onChange={setPainScale}
-                  label={t('vault.quiz.pain.scaleLabel', 'Pain Scale')}
-                  icon={<AlertTriangle className="h-5 w-5 text-orange-500" />}
-                  getLevelLabel={(val) => {
-                    if (val <= 2) return t('vault.quiz.pain.level1', 'Minimal');
-                    if (val <= 4) return t('vault.quiz.pain.level2', 'Mild');
-                    if (val <= 6) return t('vault.quiz.pain.level3', 'Moderate');
-                    if (val <= 8) return t('vault.quiz.pain.level4', 'Significant');
-                    return t('vault.quiz.pain.level5', 'Severe');
-                  }}
-                  inverted={true}
-                />
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-orange-500" />
+                    {t('vault.quiz.pain.perAreaTitle', 'Rate Pain by Area')}
+                  </Label>
+                  {painLocations.map((areaId) => (
+                    <TenPointScale
+                      key={areaId}
+                      value={painScales[areaId] || 0}
+                      onChange={(value) => handlePainScaleChange(areaId, value)}
+                      label={getBodyAreaLabel(areaId)}
+                      icon={<AlertTriangle className="h-4 w-4 text-orange-500" />}
+                      getLevelLabel={(val) => {
+                        if (val <= 2) return t('vault.quiz.pain.level1', 'Minimal');
+                        if (val <= 4) return t('vault.quiz.pain.level2', 'Mild');
+                        if (val <= 6) return t('vault.quiz.pain.level3', 'Moderate');
+                        if (val <= 8) return t('vault.quiz.pain.level4', 'Significant');
+                        return t('vault.quiz.pain.level5', 'Severe');
+                      }}
+                      inverted={true}
+                      compact={true}
+                    />
+                  ))}
+                </div>
               )}
 
               {/* Pain increases with movement */}

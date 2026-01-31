@@ -9,6 +9,7 @@ interface TenPointScaleProps {
   getLevelLabel?: (value: number) => string;
   getLevelColor?: (value: number) => string;
   inverted?: boolean; // For pain scales where higher is worse
+  compact?: boolean; // For stacked display of multiple scales
 }
 
 export function TenPointScale({ 
@@ -18,7 +19,8 @@ export function TenPointScale({
   icon, 
   getLevelLabel,
   getLevelColor,
-  inverted = false 
+  inverted = false,
+  compact = false
 }: TenPointScaleProps) {
   const getButtonColor = (num: number, isSelected: boolean) => {
     // For inverted scales (like pain), 1-2 is green, 9-10 is red
@@ -64,15 +66,22 @@ export function TenPointScale({
   };
 
   return (
-    <div className="space-y-3 p-4 bg-card/50 rounded-2xl border border-border/50">
+    <div className={cn(
+      "space-y-3 bg-card/50 rounded-2xl border border-border/50",
+      compact ? "p-3" : "p-4"
+    )}>
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2 text-base font-semibold">
+        <Label className={cn(
+          "flex items-center gap-2 font-semibold",
+          compact ? "text-sm" : "text-base"
+        )}>
           {icon}
           {label}
         </Label>
         {value > 0 && getLevelLabel && (
           <span className={cn(
-            "text-sm font-bold px-3 py-1 rounded-full bg-background",
+            "font-bold px-3 py-1 rounded-full bg-background",
+            compact ? "text-xs" : "text-sm",
             getLevelColor ? getLevelColor(value) : defaultGetLevelColor(value)
           )}>
             {getLevelLabel(value)}
@@ -88,7 +97,8 @@ export function TenPointScale({
             type="button"
             onClick={() => handleClick(num)}
             className={cn(
-              "min-h-[40px] rounded-lg font-bold text-sm transition-all duration-200 border-2",
+              "rounded-lg font-bold text-sm transition-all duration-200 border-2",
+              compact ? "min-h-[36px]" : "min-h-[40px]",
               getButtonColor(num, value === num),
               value === num ? "scale-105 shadow-lg" : "scale-100 opacity-70 hover:opacity-90"
             )}
