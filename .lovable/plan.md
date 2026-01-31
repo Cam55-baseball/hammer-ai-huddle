@@ -1,109 +1,78 @@
 
-# Hide Efficiency Score Display Across All Modules
+# Fix: Video Analysis Failure Due to Version Mismatch
 
-## Problem Summary
+## Problem Identified
 
-Users are complaining that players receive repetitive scores. To address this, the numeric efficiency score needs to be hidden from the analysis results display across all modules while keeping the score data available for 6-week recap generation.
-
-## Files to Modify
-
-| File | Location | What to Remove |
-|------|----------|----------------|
-| `src/pages/AnalyzeVideo.tsx` | Lines 754-759 | Large "Efficiency Score: XX/100" heading |
-| `src/components/SessionDetailDialog.tsx` | Lines 415-417 | "Efficiency: XX%" badge |
-| `src/components/RealTimePlayback.tsx` | Lines 2436-2439 | Score pill showing "X/10" |
-| `src/pages/PlayersClub.tsx` | Lines 320-324 | Score badge in mobile session cards |
-| `src/pages/PlayersClub.tsx` | Lines 440-442 | Score badge in desktop session cards |
-| `src/pages/OwnerDashboard.tsx` | Lines 607-609 | "Score: XX/100" text in video list |
-| `src/pages/Dashboard.tsx` | Lines 267-280 | "Average Score" card display |
-| `src/components/VideoComparisonView.tsx` | Lines 275-277 | Score badge for video 1 |
-| `src/components/VideoComparisonView.tsx` | Lines 348-350 | Score badge for video 2 |
-| `src/pages/AdminDashboard.tsx` | Lines 213-215 | "Score: XX/100" text in video list |
-| `src/pages/AdminDashboard.tsx` | Lines 360-372 | "Avg Score" statistics card |
-
-## What Will Remain Intact
-
-- Score data continues to be calculated and stored in the database
-- 6-week recap system will still have full access to efficiency scores for AI analysis
-- `TheScorecard` component still receives `currentScore` for internal trend calculations
-- All qualitative feedback (summary, positives, negatives, recommendations) remains visible
-- Decision efficiency scores in S2 Cognition diagnostics (separate system, not affected)
-
-## Detailed Changes
-
-### 1. AnalyzeVideo.tsx (Lines 754-759)
-Remove the prominent score display block:
-```tsx
-// DELETE THIS BLOCK
-<div>
-  <h4 className="text-lg font-semibold">{t('videoAnalysis.efficiencyScore')}</h4>
-  <div className="text-4xl font-bold text-primary">
-    {analysis.efficiency_score}/100
-  </div>
-</div>
+Video analysis is failing for all users with this error in the edge function logs:
+```
+ZodError: frames - Required (expected: array, received: undefined)
 ```
 
-### 2. SessionDetailDialog.tsx (Lines 415-417)
-Remove the efficiency badge:
-```tsx
-// DELETE THIS BLOCK
-{session.efficiency_score !== undefined && (
-  <Badge>{t('sessionDetail.efficiency')}: {session.efficiency_score}%</Badge>
-)}
+**Root cause**: There's a version mismatch between the deployed components:
+- **Edge function** (deployed): Now requires `frames` array as mandatory input
+- **Frontend** (NOT deployed): Still running old code that doesn't send `frames`
+
+This happened because:
+1. Edge functions deploy automatically and independently
+2. Frontend publishing has been failing repeatedly with "Publishing failed" errors
+3. Production users are using the old frontend which doesn't include the frame extraction code
+
+## Solution
+
+Since the build is completing successfully (logs show "5116 modules transformed" and all chunks rendering), the publishing failure appears to be a transient platform issue. To resolve:
+
+### Immediate Fix: Redeploy Edge Function
+
+Make the `frames` field optional in the edge function schema to restore compatibility with the currently-deployed frontend while we resolve the publishing issue.
+
+**File: `supabase/functions/analyze-video/index.ts`**
+
+Change line 14 from:
+```typescript
+frames: z.array(z.string()).min(3, "At least 3 frames required for accurate analysis"),
 ```
 
-### 3. RealTimePlayback.tsx (Lines 2436-2439)
-Remove the score pill from the Quick Analysis header:
-```tsx
-// DELETE THIS BLOCK
-<div className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10">
-  <span className="text-lg font-bold text-primary">{analysis.overallScore}</span>
-  <span className="text-sm text-muted-foreground">/10</span>
-</div>
+To:
+```typescript
+frames: z.array(z.string()).min(3, "At least 3 frames required for accurate analysis").optional(),
 ```
 
-### 4. PlayersClub.tsx (Lines 320-324 & 440-442)
-Remove both score badges (mobile and desktop views):
-```tsx
-// DELETE BOTH BLOCKS
-{session.efficiency_score !== undefined && (
-  <Badge variant="secondary" className="text-xs">
-    {session.efficiency_score}%
-  </Badge>
-)}
+Then add fallback logic in the handler to detect when frames aren't provided and return a user-friendly error message instead of a Zod validation crash.
+
+### Handler Update
+
+Add a check after schema validation:
+```typescript
+if (!validatedData.frames || validatedData.frames.length < 3) {
+  return new Response(
+    JSON.stringify({
+      error: "Video analysis temporarily unavailable. Please try again in a few minutes.",
+      code: "FRAMES_REQUIRED"
+    }),
+    { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
 ```
 
-### 5. OwnerDashboard.tsx (Lines 607-609)
-Remove the score text:
-```tsx
-// DELETE THIS BLOCK
-{video.efficiency_score && (
-  <p className="text-sm">Score: {video.efficiency_score}/100</p>
-)}
-```
+### Long-term: Resolve Publishing Issue
 
-### 6. Dashboard.tsx (Lines 267-280)
-Replace the average score display with a placeholder - the entire block showing `average_efficiency_score` will be removed, leaving only the "No data yet" placeholder state.
+The publishing failure needs to be resolved so the frontend with frame extraction can be deployed. This appears to be a platform-level issue since:
+- Build completes successfully
+- No code errors are shown
+- Failure happens immediately (before build processing)
 
-### 7. VideoComparisonView.tsx (Lines 275-277 & 348-350)
-Remove score badges from both video comparison panels:
-```tsx
-// DELETE BOTH BLOCKS
-{video1.efficiency_score !== undefined && (
-  <Badge variant="secondary">{video1.efficiency_score}%</Badge>
-)}
-```
+## Technical Details
 
-### 8. AdminDashboard.tsx (Lines 213-215 & 360-372)
-Remove the score text from video list and the entire "Avg Score" statistics card.
+| Component | Status | Version |
+|-----------|--------|---------|
+| Edge Function | Deployed | Requires `frames` |
+| Frontend (Preview) | Working | Sends `frames` |
+| Frontend (Production) | Outdated | Does NOT send `frames` |
 
-## Impact Summary
+## Why This Fix Works
 
-| Area | Before | After |
-|------|--------|-------|
-| Analysis Results | Shows "Efficiency Score: 85/100" prominently | Qualitative feedback only |
-| Session Cards | Shows percentage badges | Sport/module badges only |
-| Owner/Admin Dashboards | Shows scores in lists | Status and date only |
-| Video Comparison | Shows score badges | Sport/module badges only |
-| 6-Week Recaps | Uses scores for AI analysis | **Unchanged** - still works |
-| Database | Stores efficiency scores | **Unchanged** - still stored |
+Making `frames` optional with a graceful fallback will:
+1. Stop the Zod validation crash
+2. Return a clear error message to users instead of a cryptic failure
+3. Allow the system to function once publishing is resolved
+4. Edge functions deploy automatically, so this fix will take effect immediately
