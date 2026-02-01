@@ -153,7 +153,7 @@ export function FatigueIndicator({
                   size="sm"
                   variant="outline"
                   onClick={onEndSession}
-                  className="h-8 text-xs border-tex-vision-text/50 text-tex-vision-text hover:bg-tex-vision-text/10"
+                  className="h-8 text-xs border-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
                   <Moon className="h-3 w-3 mr-1" />
                   {t('texVision.fatigue.actions.endSession')}

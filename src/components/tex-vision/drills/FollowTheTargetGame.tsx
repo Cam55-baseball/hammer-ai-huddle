@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
 import { DrillMetricsDisplay } from '../shared/DrillMetricsDisplay';
-import { Target } from 'lucide-react';
+import { Target, CheckCircle } from 'lucide-react';
 import { DrillResult } from '@/hooks/useTexVisionSession';
 
 interface FollowTheTargetGameProps {
@@ -26,7 +26,9 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit, isPaused
   const [cursorPosition, setCursorPosition] = useState<Position>({ x: 50, y: 50 });
   const [trackingScore, setTrackingScore] = useState<number[]>([]);
   const [isComplete, setIsComplete] = useState(false);
+  const [showCompletionOverlay, setShowCompletionOverlay] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [finalAccuracy, setFinalAccuracy] = useState(0);
   
   // Use refs for stable callback access
   const trackingScoreRef = useRef<number[]>([]);
@@ -120,6 +122,7 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit, isPaused
     if (isComplete) return;
     
     setIsComplete(true);
+    setShowCompletionOverlay(true);
     
     // Use ref for stable access to latest scores
     const scores = trackingScoreRef.current;
@@ -127,14 +130,19 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit, isPaused
       ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
       : 0;
     
-    onComplete({
-      accuracyPercent: avgAccuracy,
-      difficultyLevel: tier === 'beginner' ? 4 : tier === 'advanced' ? 6 : 9,
-      drillMetrics: {
-        trackingSamples: scores.length,
-        duration: initialSeconds,
-      },
-    });
+    setFinalAccuracy(avgAccuracy);
+    
+    // Delay transition to show completion overlay
+    setTimeout(() => {
+      onComplete({
+        accuracyPercent: avgAccuracy,
+        difficultyLevel: tier === 'beginner' ? 4 : tier === 'advanced' ? 6 : 9,
+        drillMetrics: {
+          trackingSamples: scores.length,
+          duration: initialSeconds,
+        },
+      });
+    }, 1500);
   }, [isComplete, tier, initialSeconds, onComplete]);
 
   const currentAccuracy = trackingScore.length > 0
@@ -230,6 +238,19 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit, isPaused
             {hasInteracted ? `${currentAccuracy}%` : '—'}
           </span>
         </div>
+
+        {/* Completion Overlay */}
+        {showCompletionOverlay && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--tex-vision-primary-dark))]/95 rounded-xl z-10">
+            <CheckCircle className="h-16 w-16 text-[hsl(var(--tex-vision-success))] mb-4 animate-pulse" />
+            <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
+              {t('texVision.drills.complete', 'Complete!')}
+            </h2>
+            <p className="text-lg text-[hsl(var(--tex-vision-success))]">
+              {finalAccuracy}% {t('texVision.drills.accuracy', 'Accuracy')}
+            </p>
+          </div>
+        )}
       </div>
     </DrillContainer>
   );
