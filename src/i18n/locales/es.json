@@ -4148,6 +4148,66 @@
     "fireUnlocked": "¡El fuego se desbloquea a los 5 días!",
     "glowUnlocked": "¡La llama brilla a los 25 días!"
   },
+  "fascia": {
+    "bodyConnection": {
+      "title": "Conexión Corporal",
+      "subtitle": "Cómo están conectadas las partes de tu cuerpo"
+    },
+    "bodyLine": {
+      "sbl": "Vía de la Espalda",
+      "sfl": "Vía Frontal",
+      "ll": "Vía Lateral",
+      "spl": "Vía en Espiral",
+      "dfl": "Vía del Core",
+      "arm": "Vías de los Brazos"
+    },
+    "onBodyLine": "Esto está en tu \"{{lineName}}\"",
+    "connectedSpots": "Puntos Conectados",
+    "proTip": "Consejo Pro",
+    "whyItMightHurt": "Por Qué Podría Doler",
+    "whatProsDo": "Lo Que Hacen los Pros",
+    "selfCareTip": "Consejo de Autocuidado",
+    "patternDetected": "Patrón detectado en {{lineName}}",
+    "disclaimer": {
+      "title": "¡Solo Para Aprender!",
+      "text": "Esta es información educativa solamente. Siempre habla con un médico, entrenador o adulto de confianza sobre el dolor que no desaparece.",
+      "compact": "Solo educativo - siempre consulta a un profesional",
+      "bullet1": "Dile a tu entrenador o padre si algo te duele",
+      "bullet2": "Consulta a un médico o entrenador para dolor real",
+      "bullet3": "No entrenes con dolor serio"
+    },
+    "education": {
+      "title": "Cómo Se Conecta Tu Cuerpo",
+      "subtitle": "¡Toca para aprender como un pro!",
+      "webAnalogy": "¿Sabías que tu cuerpo tiene una red invisible por dentro?",
+      "whatIsFascia": "Se llama fascia (fash-ee-ah), y envuelve cada músculo como un traje elástico.",
+      "sheetAnalogy": "Cuando una parte se tensa, puede jalar otras partes - ¡como jalar una esquina de una sábana!",
+      "mainTracksTitle": "Las \"Vías Corporales\" Principales",
+      "whyProsCare": "Por Qué Les Importa a los Pros",
+      "proExplanation": "Los mejores atletas saben que el dolor en un lugar puede venir de tensión en un lugar completamente diferente. ¡Estiran TODA la vía, no solo donde duele!",
+      "researchTitle": "¡Esto viene de ciencia real!",
+      "researchers": "Investigadores como Thomas Myers (Anatomy Trains), Dr. Robert Schleip, y Carla & Antonio Stecco estudian cómo se conectan nuestros cuerpos. ¿Genial, verdad?"
+    },
+    "recap": {
+      "title": "Patrones de Conexión Corporal",
+      "kidSummary": "¡Tu cuerpo está conectado como una telaraña!",
+      "whatThisMeans": "Qué Significa Esto",
+      "proMove": "Movimiento Pro"
+    },
+    "patternAlert": {
+      "clue": "Pista de Conexión Corporal",
+      "proMove": "Lo Que Hacen los Pros",
+      "connectedToCheck": "Puntos conectados para revisar",
+      "remember": "Recuerda: Habla con un entrenador, padre o médico sobre esto."
+    },
+    "heatMap": {
+      "showBodyLines": "Mostrar Líneas Corporales"
+    },
+    "research": {
+      "attribution": "Basado en investigación de {{sources}}",
+      "basedOn": "Basado en"
+    }
+  },
   "vault": {
     "title": "La Bóveda",
     "subtitle": "Tu diario privado de rendimiento",

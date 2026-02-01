@@ -4645,17 +4645,22 @@
     "disclaimer": {
       "title": "Just For Learning!",
       "text": "This is educational information only. Always talk to a doctor, trainer, or trusted adult about pain that doesn't go away.",
-      "compact": "Educational only - always consult a professional"
+      "compact": "Educational only - always consult a professional",
+      "bullet1": "Tell your coach or parent if something hurts",
+      "bullet2": "See a doctor or athletic trainer for real pain",
+      "bullet3": "Don't train through serious pain"
     },
     "education": {
       "title": "How Your Body Connects",
+      "subtitle": "Tap to learn like a pro!",
       "webAnalogy": "Did you know your body has an invisible web inside?",
       "whatIsFascia": "It's called fascia (fash-ee-uh), and it wraps around every muscle like a stretchy suit.",
       "sheetAnalogy": "When one part gets tight, it can pull on other parts - like pulling one corner of a bedsheet!",
+      "mainTracksTitle": "The Main \"Body Tracks\"",
       "whyProsCare": "Why Pros Care",
-      "prosCareExplanation": "Top athletes know that pain in one spot might come from tightness in a completely different spot. They stretch the WHOLE track, not just where it hurts!",
-      "realScience": "This comes from real science! Researchers like Thomas Myers and Dr. Robert Schleip study how our bodies connect.",
-      "important": "If something hurts a lot, ALWAYS talk to your coach, parent, or doctor!"
+      "proExplanation": "Top athletes know that pain in one spot might come from tightness in a completely different spot. They stretch the WHOLE track, not just where it hurts!",
+      "researchTitle": "This comes from real science!",
+      "researchers": "Researchers like Thomas Myers (Anatomy Trains), Dr. Robert Schleip, and Carla & Antonio Stecco study how our bodies connect. Pretty cool, right?"
     },
     "recap": {
       "title": "Body Connection Patterns",
