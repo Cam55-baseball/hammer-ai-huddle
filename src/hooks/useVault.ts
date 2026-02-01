@@ -1162,7 +1162,8 @@ export function useVault() {
         *, 
         template:custom_activity_templates (
           id, title, activity_type, icon, color, description,
-          exercises, meals, custom_fields, duration_minutes, intensity
+          exercises, meals, custom_fields, duration_minutes, intensity,
+          intervals, distance_value, distance_unit, pace_value
         )
       `).eq('user_id', user.id).eq('entry_date', date).eq('completed', true),
     ]);

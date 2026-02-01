@@ -8,14 +8,14 @@ import {
   Sun, Moon, Dumbbell, Apple, NotebookPen, 
   Sparkles, Activity, Camera, Star, Droplets,
   Zap, Heart, Brain, Target, Clock, ChevronDown,
-  Pill, Coffee, Utensils, CheckSquare, Timer
+  Pill, Coffee, Utensils, CheckSquare, Timer, Footprints
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { 
   VaultFocusQuiz, VaultFreeNote, VaultWorkoutNote, 
   VaultPerformanceTest, VaultProgressPhoto, VaultScoutGrade, VaultNutritionLog 
 } from '@/hooks/useVault';
-import { CustomActivityLog, MealData, Exercise, CustomField } from '@/types/customActivity';
+import { CustomActivityLog, MealData, Exercise, CustomField, RunningInterval } from '@/types/customActivity';
 import { getBodyAreaLabel } from './quiz/body-maps/bodyAreaDefinitions';
 import { getFasciaConnection } from './quiz/body-maps/fasciaConnectionMappings';
 
@@ -48,6 +48,8 @@ function ActivityDetailCard({ activity }: { activity: CustomActivityLog }) {
   const meals = template.meals as MealData | null;
   const exercises = (template.exercises as Exercise[]) || [];
   const customFields = (template.custom_fields as CustomField[]) || [];
+  const intervals = (template.intervals as RunningInterval[]) || [];
+  const performanceData = activity.performance_data as Record<string, any> | null;
   
   const hasDetails = 
     (meals?.items && meals.items.length > 0) ||
@@ -55,7 +57,13 @@ function ActivityDetailCard({ activity }: { activity: CustomActivityLog }) {
     (meals?.vitamins && meals.vitamins.length > 0) ||
     (meals?.hydration) ||
     exercises.length > 0 ||
-    customFields.length > 0;
+    customFields.length > 0 ||
+    activity.notes ||
+    template.description ||
+    (performanceData && Object.keys(performanceData).length > 0) ||
+    (intervals.length > 0) ||
+    template.distance_value ||
+    template.pace_value;
 
   const activityColor = template.color || '#6366f1';
 
@@ -71,20 +79,37 @@ function ActivityDetailCard({ activity }: { activity: CustomActivityLog }) {
         <CollapsibleTrigger className="w-full">
           <CardHeader className="pb-2 pt-3 px-4">
             <CardTitle className="text-sm flex items-center gap-2 justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
                 <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center"
+                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${activityColor}20` }}
                 >
                   <Target className="h-3.5 w-3.5" style={{ color: activityColor }} />
                 </div>
-                <span>{template.title}</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate">{template.title}</span>
+                  {template.description && (
+                    <span className="text-xs text-muted-foreground font-normal truncate">
+                      {template.description}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
                 {activity.actual_duration_minutes && (
                   <Badge variant="outline" className="text-xs">
                     <Timer className="h-3 w-3 mr-1" />
                     {activity.actual_duration_minutes}m
+                  </Badge>
+                )}
+                {template.intensity && (
+                  <Badge variant="outline" className="text-xs capitalize">
+                    {template.intensity}
+                  </Badge>
+                )}
+                {activity.completed_at && (
+                  <Badge variant="outline" className="text-xs text-muted-foreground">
+                    {format(new Date(activity.completed_at), 'h:mm a')}
                   </Badge>
                 )}
                 {hasDetails && (
@@ -214,31 +239,85 @@ function ActivityDetailCard({ activity }: { activity: CustomActivityLog }) {
                     <Dumbbell className="h-3 w-3" />
                     <span>{t('vault.pastDays.exercises', 'Exercises')}</span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {exercises.slice(0, 8).map((ex) => (
-                      <Badge 
-                        key={ex.id} 
-                        variant="secondary" 
-                        className="text-xs py-0.5 px-2 bg-orange-500/10 text-orange-700 dark:text-orange-300"
-                      >
-                        {ex.name}
-                        {ex.sets && ex.reps && (
-                          <span className="text-muted-foreground ml-1">
-                            ({ex.sets}×{ex.reps})
+                  <div className="space-y-1">
+                    {exercises.map((ex) => (
+                      <div key={ex.id} className="flex flex-col">
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs py-0.5 px-2 bg-orange-500/10 text-orange-700 dark:text-orange-300 w-fit"
+                        >
+                          {ex.name}
+                          {ex.sets && ex.reps && (
+                            <span className="text-muted-foreground ml-1">
+                              ({ex.sets}×{ex.reps})
+                            </span>
+                          )}
+                          {ex.duration && !ex.sets && (
+                            <span className="text-muted-foreground ml-1">
+                              ({Math.floor(ex.duration / 60)}:{String(ex.duration % 60).padStart(2, '0')})
+                            </span>
+                          )}
+                          {ex.weight && (
+                            <span className="text-muted-foreground ml-1">
+                              @ {ex.weight}{ex.weightUnit || 'lbs'}
+                            </span>
+                          )}
+                        </Badge>
+                        {ex.notes && (
+                          <span className="text-muted-foreground text-[10px] italic ml-2 mt-0.5">
+                            "{ex.notes}"
                           </span>
                         )}
-                        {ex.duration && !ex.sets && (
-                          <span className="text-muted-foreground ml-1">
-                            ({Math.floor(ex.duration / 60)}:{String(ex.duration % 60).padStart(2, '0')})
-                          </span>
-                        )}
-                      </Badge>
+                      </div>
                     ))}
-                    {exercises.length > 8 && (
-                      <Badge variant="outline" className="text-xs py-0.5 px-2">
-                        +{exercises.length - 8} more
-                      </Badge>
-                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Running Details */}
+              {template.activity_type === 'running' && (template.distance_value || template.pace_value || intervals.length > 0) && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Footprints className="h-3 w-3" />
+                    <span>{t('vault.pastDays.runningDetails', 'Running Details')}</span>
+                  </div>
+                  {template.distance_value && (
+                    <div className="text-xs">
+                      {t('vault.pastDays.distance', 'Distance')}: {template.distance_value} {template.distance_unit || 'miles'}
+                    </div>
+                  )}
+                  {template.pace_value && (
+                    <div className="text-xs">
+                      {t('vault.pastDays.paceGoal', 'Pace Goal')}: {template.pace_value}
+                    </div>
+                  )}
+                  {intervals.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {intervals.map((interval, i) => (
+                        <Badge key={i} variant="secondary" className="text-xs capitalize">
+                          {interval.type}
+                          {interval.duration && ` - ${Math.floor(interval.duration / 60)}:${String(interval.duration % 60).padStart(2, '0')}`}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Performance Data Logged */}
+              {performanceData && Object.keys(performanceData).length > 0 && (
+                <div className="space-y-1 border-t pt-2 mt-2">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <Activity className="h-3 w-3" />
+                    <span>{t('vault.pastDays.performanceLogged', 'Performance Logged')}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {Object.entries(performanceData).map(([key, value]) => (
+                      <div key={key} className="flex justify-between bg-muted/50 rounded p-1.5">
+                        <span className="text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</span>
+                        <span className="font-medium">{String(value)}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
