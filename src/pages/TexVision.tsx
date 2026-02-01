@@ -30,7 +30,8 @@ export default function TexVision() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { hasAccess, hasHittingAccess } = useTexVisionAccess();
+  // CRITICAL FIX: Include loading state to prevent premature "locked" state display
+  const { hasAccess, hasHittingAccess, loading: accessLoading } = useTexVisionAccess();
   const [currentSport, setCurrentSport] = useState<string>('baseball');
   
   const {
@@ -130,24 +131,33 @@ export default function TexVision() {
     }
   }, [getOrCreateTodaySession]);
 
+  // CRITICAL FIX: Wrap in try/catch with finally to ALWAYS clear activeDrill
+  // This prevents stuck drill screens even if backend updates fail
   const handleDrillComplete = useCallback(async (result: DrillResult) => {
-    if (sessionId) {
-      await saveDrillResult(sessionId, result);
-      await updateChecklist(result.drillType, true);
-      await updateStreak();
-      
-      // Check for tier progression after drill completion
-      const newTier = await checkAndUpdateTierProgression();
-      if (newTier) {
-        toast.success(`🎉 Tier Unlocked: ${newTier.charAt(0).toUpperCase() + newTier.slice(1)}!`, {
-          description: `You've earned access to ${newTier} level drills. Keep training!`,
-          duration: 5000,
-        });
+    try {
+      if (sessionId) {
+        await saveDrillResult(sessionId, result);
+        await updateChecklist(result.drillType, true);
+        await updateStreak();
+        
+        // Check for tier progression after drill completion
+        const newTier = await checkAndUpdateTierProgression();
+        if (newTier) {
+          toast.success(`🎉 Tier Unlocked: ${newTier.charAt(0).toUpperCase() + newTier.slice(1)}!`, {
+            description: `You've earned access to ${newTier} level drills. Keep training!`,
+            duration: 5000,
+          });
+        }
+        
+        await refetch();
       }
-      
-      await refetch();
+    } catch (error) {
+      console.error('Error completing drill:', error);
+      toast.error('Failed to save drill results. Please try again.');
+    } finally {
+      // ALWAYS clear the active drill to prevent stuck state
+      setActiveDrill(null);
     }
-    setActiveDrill(null);
   }, [sessionId, saveDrillResult, updateChecklist, updateStreak, checkAndUpdateTierProgression, refetch]);
 
   const handleDrillExit = useCallback(() => {
@@ -166,7 +176,9 @@ export default function TexVision() {
     }
   }, [hasAccess, progressLoading, progress, user, initializeProgress]);
 
-  if (authLoading) {
+  // CRITICAL FIX: Wait for BOTH auth AND access loading to complete
+  // This prevents showing "locked" state while roles/subscriptions are being fetched
+  if (authLoading || accessLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
