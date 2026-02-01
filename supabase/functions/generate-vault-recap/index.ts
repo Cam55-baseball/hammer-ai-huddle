@@ -77,7 +77,7 @@ serve(async (req) => {
       });
     }
 
-    // Fetch ALL vault data for comprehensive analysis
+    // Fetch ALL vault data for comprehensive analysis (E2E Integration)
     const [
       { data: workouts },
       { data: quizzes },
@@ -90,6 +90,22 @@ serve(async (req) => {
       { data: freeNotes },
       { data: weightEntries },
       { data: customActivityLogs },
+      // NEW E2E INTEGRATIONS
+      { data: texVisionDrills },
+      { data: texVisionMetrics },
+      { data: texVisionProgress },
+      { data: videoAnalysisData },
+      { data: mindfulnessData },
+      { data: emotionData },
+      { data: journalData },
+      { data: mindFuelStreak },
+      { data: stressData },
+      { data: hydrationLogs },
+      { data: hydrationSettings },
+      { data: viewedTips },
+      { data: viewedLessons },
+      { data: nutritionStreak },
+      { data: subModuleProgress },
     ] = await Promise.all([
       supabase.from("vault_workout_notes").select("*").eq("user_id", user.id)
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr),
@@ -109,7 +125,7 @@ serve(async (req) => {
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr),
       supabase.from("weight_entries").select("*").eq("user_id", user.id)
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr).order("entry_date", { ascending: true }),
-      // Fetch custom activities with FULL template details (exercises, meals, custom_fields)
+      // Fetch custom activities with FULL template details
       supabase.from("custom_activity_logs").select(`
         id, entry_date, completed, completed_at, 
         actual_duration_minutes, notes, performance_data,
@@ -120,6 +136,37 @@ serve(async (req) => {
         )
       `).eq("user_id", user.id).eq("completed", true)
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr),
+      // TEX VISION DATA
+      supabase.from("tex_vision_drill_results").select("*").eq("user_id", user.id)
+        .gte("completed_at", startDateStr).lte("completed_at", endDateStr),
+      supabase.from("tex_vision_metrics").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("tex_vision_progress").select("*").eq("user_id", user.id).maybeSingle(),
+      // VIDEO ANALYSIS DATA
+      supabase.from("videos").select("id, module, sport, efficiency_score, created_at, analysis_result")
+        .eq("user_id", user.id)
+        .gte("created_at", startDateStr).lte("created_at", endDateStr),
+      // MIND FUEL DATA
+      supabase.from("mindfulness_sessions").select("*").eq("user_id", user.id)
+        .gte("session_date", startDateStr).lte("session_date", endDateStr),
+      supabase.from("emotion_tracking").select("*").eq("user_id", user.id)
+        .gte("entry_date", startDateStr).lte("entry_date", endDateStr),
+      supabase.from("mental_health_journal").select("id, mood_level, created_at, entry_type").eq("user_id", user.id)
+        .gte("created_at", startDateStr).lte("created_at", endDateStr),
+      supabase.from("mind_fuel_streaks").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("stress_assessments").select("*").eq("user_id", user.id)
+        .gte("assessment_date", startDateStr).lte("assessment_date", endDateStr),
+      // HYDRATION DATA
+      supabase.from("hydration_logs").select("*").eq("user_id", user.id)
+        .gte("log_date", startDateStr).lte("log_date", endDateStr),
+      supabase.from("hydration_settings").select("*").eq("user_id", user.id).maybeSingle(),
+      // EDUCATION ENGAGEMENT
+      supabase.from("user_viewed_tips").select("tip_id, viewed_at").eq("user_id", user.id)
+        .gte("viewed_at", startDateStr).lte("viewed_at", endDateStr),
+      supabase.from("user_viewed_lessons").select("lesson_id, viewed_at").eq("user_id", user.id)
+        .gte("viewed_at", startDateStr).lte("viewed_at", endDateStr),
+      supabase.from("nutrition_streaks").select("*").eq("user_id", user.id).maybeSingle(),
+      // PROGRAM PROGRESS
+      supabase.from("sub_module_progress").select("*").eq("user_id", user.id),
     ]);
 
     // ========== WORKOUT ANALYSIS ==========
@@ -625,7 +672,139 @@ serve(async (req) => {
     console.log(`Exercise analysis: ${totalSets} sets, ${totalReps} total reps, variety score ${trainingVarietyScore}/10`);
     console.log(`Supplements: ${Object.keys(supplementsTracked).length} types, Vitamins: ${Object.keys(vitaminsTracked).length} types`);
     console.log(`Custom activity is primary training source: ${customActivityIsPrimary}`);
-    console.log("Comprehensive data collected for AI analysis");
+
+    // ========== TEX VISION ANALYSIS (E2E Integration) ==========
+    const texDrillResults = texVisionDrills || [];
+    const totalTexSessions = texDrillResults.length;
+    const texWithAccuracy = texDrillResults.filter((d: any) => d.accuracy_percent !== null);
+    const avgTexAccuracy = texWithAccuracy.length > 0
+      ? texWithAccuracy.reduce((sum: number, d: any) => sum + (d.accuracy_percent || 0), 0) / texWithAccuracy.length
+      : 0;
+    const texWithReaction = texDrillResults.filter((d: any) => d.reaction_time_ms !== null);
+    const avgReactionTime = texWithReaction.length > 0
+      ? texWithReaction.reduce((sum: number, d: any) => sum + (d.reaction_time_ms || 0), 0) / texWithReaction.length
+      : 0;
+
+    // Drill type distribution
+    const drillTypeBreakdown: Record<string, { count: number; totalAccuracy: number }> = {};
+    texDrillResults.forEach((d: any) => {
+      const drillType = d.drill_type || 'Unknown';
+      if (!drillTypeBreakdown[drillType]) {
+        drillTypeBreakdown[drillType] = { count: 0, totalAccuracy: 0 };
+      }
+      drillTypeBreakdown[drillType].count++;
+      drillTypeBreakdown[drillType].totalAccuracy += d.accuracy_percent || 0;
+    });
+
+    // Calculate tier progression
+    const tierCounts = { beginner: 0, advanced: 0, chaos: 0 };
+    texDrillResults.forEach((d: any) => {
+      const tier = d.tier as keyof typeof tierCounts;
+      if (tier && tierCounts[tier] !== undefined) {
+        tierCounts[tier]++;
+      }
+    });
+
+    console.log(`Tex Vision: ${totalTexSessions} sessions, avg accuracy ${avgTexAccuracy.toFixed(1)}%, avg reaction ${avgReactionTime.toFixed(0)}ms`);
+
+    // ========== VIDEO ANALYSIS SUMMARY (E2E Integration) ==========
+    const videos = videoAnalysisData || [];
+    const videosByModule: Record<string, { count: number; avgScore: number; totalScore: number }> = {};
+    videos.forEach((v: any) => {
+      const mod = v.module || 'unknown';
+      if (!videosByModule[mod]) {
+        videosByModule[mod] = { count: 0, avgScore: 0, totalScore: 0 };
+      }
+      videosByModule[mod].count++;
+      videosByModule[mod].totalScore += v.efficiency_score || 0;
+    });
+    Object.keys(videosByModule).forEach(m => {
+      videosByModule[m].avgScore = videosByModule[m].count > 0 
+        ? videosByModule[m].totalScore / videosByModule[m].count 
+        : 0;
+    });
+
+    // Extract recurring feedback themes from analysis_result
+    const feedbackThemes: Record<string, number> = {};
+    videos.forEach((v: any) => {
+      const analysis = v.analysis_result as any;
+      if (analysis?.recommendations && Array.isArray(analysis.recommendations)) {
+        analysis.recommendations.forEach((rec: string) => {
+          const theme = rec.slice(0, 50);
+          feedbackThemes[theme] = (feedbackThemes[theme] || 0) + 1;
+        });
+      }
+    });
+    const topFeedbackThemes = Object.entries(feedbackThemes)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    const totalVideosAnalyzed = Object.values(videosByModule).reduce((sum, m) => sum + m.count, 0);
+    console.log(`Video Analysis: ${totalVideosAnalyzed} videos across ${Object.keys(videosByModule).length} modules`);
+
+    // ========== MIND FUEL COMPREHENSIVE (E2E Integration) ==========
+    const mindfulnessSessions = mindfulnessData?.length || 0;
+    const avgMindfulnessMinutes = mindfulnessData && mindfulnessData.length > 0
+      ? mindfulnessData.reduce((sum: number, s: any) => sum + ((s.duration_seconds || 0) / 60), 0) / mindfulnessData.length
+      : 0;
+
+    const emotionEntries = emotionData?.length || 0;
+    const dominantEmotions: Record<string, number> = {};
+    emotionData?.forEach((e: any) => {
+      const emotion = e.emotion || 'Unknown';
+      dominantEmotions[emotion] = (dominantEmotions[emotion] || 0) + 1;
+    });
+
+    const journalEntries = journalData?.length || 0;
+    const journalWithMood = journalData?.filter((j: any) => j.mood_level) || [];
+    const avgJournalMood = journalWithMood.length > 0
+      ? journalWithMood.reduce((sum: number, j: any) => sum + (j.mood_level || 0), 0) / journalWithMood.length
+      : 0;
+
+    const stressAssessments = stressData?.length || 0;
+    const avgStressScore = stressData && stressData.length > 0
+      ? stressData.reduce((sum: number, s: any) => sum + (s.score || 0), 0) / stressData.length
+      : 0;
+
+    console.log(`Mind Fuel: ${mindfulnessSessions} mindfulness sessions, ${emotionEntries} emotion entries, ${journalEntries} journal entries`);
+
+    // ========== HYDRATION ANALYSIS (E2E Integration) ==========
+    const hydrationDays = new Set(hydrationLogs?.map((h: any) => h.log_date?.split('T')[0]) || []);
+    const totalHydrationOz = hydrationLogs?.reduce((sum: number, h: any) => sum + (h.amount_oz || 0), 0) || 0;
+    const avgDailyHydration = hydrationDays.size > 0 ? totalHydrationOz / hydrationDays.size : 0;
+    const hydrationGoal = hydrationSettings?.daily_goal_oz || 100;
+    const hydrationAdherence = Math.round((avgDailyHydration / hydrationGoal) * 100);
+
+    console.log(`Hydration: ${hydrationDays.size} days tracked, avg ${avgDailyHydration.toFixed(0)}oz/day, ${hydrationAdherence}% of goal`);
+
+    // ========== EDUCATION ENGAGEMENT (E2E Integration) ==========
+    const tipsViewed = viewedTips?.length || 0;
+    const lessonsCompleted = viewedLessons?.length || 0;
+    const nutritionStreakDays = nutritionStreak?.current_streak || 0;
+    const nutritionBadges = nutritionStreak?.badges_earned || [];
+
+    console.log(`Education: ${tipsViewed} tips viewed, ${lessonsCompleted} lessons completed, ${nutritionStreakDays} day nutrition streak`);
+
+    // ========== PROGRAM PROGRESS (E2E Integration) ==========
+    const programProgress: Record<string, any> = {};
+    subModuleProgress?.forEach((p: any) => {
+      const key = `${p.module}_${p.sub_module}`;
+      const weekProgress = p.week_progress || {};
+      const weeksCompleted = Object.values(weekProgress).filter((days: any) => 
+        Array.isArray(days) && days.every((d: boolean) => d)
+      ).length;
+      
+      programProgress[key] = {
+        currentWeek: p.current_week || 1,
+        weeksCompleted,
+        lastWorkoutDate: p.last_workout_date,
+        totalCycles: p.current_cycle || 1,
+      };
+    });
+
+    console.log(`Program Progress: ${Object.keys(programProgress).length} active programs`);
+    console.log("Comprehensive E2E data collected for AI analysis");
+
 
     // ========== ELITE AI PROMPT ==========
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -834,6 +1013,91 @@ KID-FRIENDLY BODY LINE NAMES (use these):
 - "Arm Tracks" = Arm lines (shoulder to fingertips)
 - "Core Track" = Deep Front Line (inner core, hip flexors)
 - "Twist Track" = Spiral Line (wraps around body)
+
+═══════════════════════════════════════════════════════════════
+
+14. TEX VISION - VISUAL TRAINING ANALYSIS (E2E Integration)
+═══════════════════════════════════════════════════════════════
+    • Total Visual Training Sessions: ${totalTexSessions}
+    • Average Accuracy: ${avgTexAccuracy.toFixed(1)}%
+    • Average Reaction Time: ${avgReactionTime.toFixed(0)}ms
+    • Tier Distribution: Beginner=${tierCounts.beginner}, Advanced=${tierCounts.advanced}, Chaos=${tierCounts.chaos}
+    • Current Tier: ${texVisionProgress?.current_tier || 'beginner'}
+    • Visual Processing Speed: ${(texVisionMetrics as any)?.visual_processing_speed?.toFixed(1) || 'N/A'}
+    • Neuro Reaction Index: ${(texVisionMetrics as any)?.neuro_reaction_index?.toFixed(1) || 'N/A'}
+    • Stress Resilience Score: ${(texVisionMetrics as any)?.stress_resilience_score?.toFixed(1) || 'N/A'}
+    • Drill Types Practiced: ${Object.entries(drillTypeBreakdown).map(([type, data]) => `${type} (${data.count}x)`).join(', ') || 'None'}
+
+CORRELATION NOTE: Compare reaction time trends with sleep quality and mental readiness scores.
+Low sleep + declining reaction time = CNS fatigue indicator.
+
+15. VIDEO ANALYSIS - MECHANICAL PROGRESSION (E2E Integration)
+═══════════════════════════════════════════════════════════════
+    • Total Videos Analyzed: ${totalVideosAnalyzed}
+    ${Object.entries(videosByModule).map(([mod, data]) => 
+      `• ${mod.charAt(0).toUpperCase() + mod.slice(1)}: ${data.count} videos, avg efficiency ${data.avgScore.toFixed(1)}%`).join('\n    ') || '• No videos analyzed'}
+    • Top Recurring Feedback: ${topFeedbackThemes.map(([theme, count]) => `"${theme}..." (${count}x)`).join(', ') || 'None'}
+
+CORRELATION NOTE: Compare video efficiency scores with physical readiness from check-ins.
+Higher physical readiness should correlate with better mechanics.
+
+16. MIND FUEL - MENTAL WELLNESS ENGAGEMENT (E2E Integration)
+═══════════════════════════════════════════════════════════════
+    • Mindfulness Sessions: ${mindfulnessSessions} (avg ${avgMindfulnessMinutes.toFixed(0)} min)
+    • Emotion Check-Ins: ${emotionEntries}
+    • Dominant Emotions: ${Object.entries(dominantEmotions).sort((a,b) => b[1]-a[1]).slice(0,3).map(([e,c]) => `${e} (${c}x)`).join(', ') || 'None tracked'}
+    • Journal Entries: ${journalEntries}
+    • Average Journal Mood: ${avgJournalMood.toFixed(1)}/5
+    • Stress Assessments: ${stressAssessments}
+    • Average Stress Score: ${avgStressScore.toFixed(1)}/10
+    • Mind Fuel Streak: ${mindFuelStreak?.current_streak || 0} days
+
+CORRELATION NOTE: Cross-reference dominant emotions with pain patterns and training performance.
+Anxiety spikes often precede muscle tension.
+
+17. HEALTH EDUCATION ENGAGEMENT (E2E Integration)
+═══════════════════════════════════════════════════════════════
+    • Daily Tips Viewed: ${tipsViewed}
+    • Lessons Completed: ${lessonsCompleted}
+    • Nutrition Streak: ${nutritionStreakDays} days
+    • Badges Earned: ${nutritionBadges.join(', ') || 'None'}
+
+18. HYDRATION CONSISTENCY (E2E Integration)
+═══════════════════════════════════════════════════════════════
+    • Days Tracked: ${hydrationDays.size}
+    • Average Daily Intake: ${avgDailyHydration.toFixed(0)} oz
+    • Daily Goal: ${hydrationGoal} oz
+    • Adherence: ${hydrationAdherence}%
+
+CORRELATION NOTE: Compare hydration with energy levels and physical readiness.
+Dehydration directly impacts CNS function and recovery.
+
+19. PROGRAM PROGRESS - Structured Training (E2E Integration)
+═══════════════════════════════════════════════════════════════
+    ${Object.entries(programProgress).map(([prog, data]: [string, any]) => 
+      `• ${prog}: Week ${data.currentWeek}, ${data.weeksCompleted} weeks completed, Cycle ${data.totalCycles}`).join('\n    ') || '• No program progress tracked'}
+
+20. CROSS-SYSTEM CORRELATION ANALYSIS (CRITICAL - E2E KEY INSIGHT)
+═══════════════════════════════════════════════════════════════
+CONTEXT-ADAPTIVE PRIORITY: Analyze correlations with highest data volume first.
+
+Data volumes for prioritization:
+- Sleep/Check-in entries: ${quizzes?.length || 0}
+- Training sessions (program + custom): ${totalWorkouts + totalCustomActivities}
+- Tex Vision drills: ${totalTexSessions}
+- Video analyses: ${totalVideosAnalyzed}
+- Mind Fuel entries: ${mindfulnessSessions + emotionEntries + journalEntries}
+- Hydration logs: ${hydrationDays.size}
+
+REQUIRED CORRELATIONS TO ANALYZE:
+1. Sleep-Performance Link: How does sleep quality correlate with next-day training volume/intensity?
+2. Pain-Emotion Connection: Do emotional states (stress, anxiety) precede pain reports?
+3. Nutrition-Energy Impact: How do caloric intake patterns affect check-in energy levels?
+4. Visual Training-Mechanics: Do Tex Vision reaction times correlate with video analysis efficiency?
+5. Recovery-Training Volume: Is there a balance or imbalance between training load and recovery indicators?
+6. Hydration-Cognitive: Link between hydration adherence and reaction time/visual processing?
+7. Mindfulness-Stress: Effect of mindfulness practice frequency on stress levels?
+8. KEY INSIGHT: Identify the single most impactful cross-system correlation discovered.
 
 ═══════════════════════════════════════════════════════════════
 
@@ -1097,6 +1361,44 @@ Return ONLY valid JSON with this exact structure:
         top_routines: topRoutines,
         custom_fields_count: customFieldsCount,
       },
+      // NEW E2E INTEGRATION STATS
+      tex_vision_stats: {
+        total_sessions: totalTexSessions,
+        avg_accuracy: parseFloat(avgTexAccuracy.toFixed(1)),
+        avg_reaction_time: parseFloat(avgReactionTime.toFixed(0)),
+        tier_distribution: tierCounts,
+        current_tier: (texVisionProgress as any)?.current_tier || 'beginner',
+        drill_breakdown: drillTypeBreakdown,
+      },
+      video_analysis_stats: {
+        total_videos: totalVideosAnalyzed,
+        by_module: videosByModule,
+        recurring_feedback: topFeedbackThemes,
+      },
+      mind_fuel_stats: {
+        mindfulness_sessions: mindfulnessSessions,
+        avg_mindfulness_minutes: parseFloat(avgMindfulnessMinutes.toFixed(1)),
+        emotion_entries: emotionEntries,
+        dominant_emotions: dominantEmotions,
+        journal_entries: journalEntries,
+        avg_journal_mood: parseFloat(avgJournalMood.toFixed(1)),
+        stress_assessments: stressAssessments,
+        avg_stress_score: parseFloat(avgStressScore.toFixed(1)),
+        streak: (mindFuelStreak as any)?.current_streak || 0,
+      },
+      hydration_stats: {
+        days_tracked: hydrationDays.size,
+        avg_daily_intake: parseFloat(avgDailyHydration.toFixed(0)),
+        goal: hydrationGoal,
+        adherence_percent: hydrationAdherence,
+      },
+      education_stats: {
+        tips_viewed: tipsViewed,
+        lessons_completed: lessonsCompleted,
+        nutrition_streak: nutritionStreakDays,
+        badges: nutritionBadges,
+      },
+      program_progress: programProgress,
     };
 
     // Save recap to database with unlocked_progress_reports_at set immediately
