@@ -2,63 +2,85 @@
 # Fix Vertical Scrolling for Past Days in Vault
 
 ## Problem
-When checking past days in the Vault, users cannot scroll vertically to see the whole day's content. The `VaultDayRecapCard` component has a fixed `max-h-[500px]` on its `ScrollArea`, which is too restrictive for days with many entries (quizzes, workouts, nutrition, custom activities, notes, etc.).
+When viewing past days in the Vault, users cannot scroll vertically to see all the day's content. The current implementation uses Radix UI's `ScrollArea` component, but this has known touch scrolling issues on mobile devices.
 
-## Root Cause
+## Root Cause Analysis
 
 **File:** `src/components/vault/VaultDayRecapCard.tsx` (Line 296)
-```tsx
-<ScrollArea className="max-h-[500px]">
-```
-
-This fixed height of 500px is problematic because:
-- On mobile, 500px may be the entire viewport, leaving no room for the header or action buttons
-- Days with many entries (10+ items) can easily exceed 500px of content
-- The parent `CollapsibleContent` in `VaultPastDaysDropdown.tsx` doesn't have any height constraints or overflow handling
-
-## Solution
-
-### Approach: Dynamic Height with Mobile Optimization
-
-Change the `ScrollArea` to use a dynamic viewport-based height that adapts to the screen size, ensuring users can always scroll to see all content.
-
-**Updated height calculation:**
-- Mobile: `max-h-[60vh]` - Uses 60% of viewport height, leaving room for header/actions
-- Desktop: `max-h-[70vh]` - Uses 70% of viewport height for more content visibility
-
-### Changes
-
-**File: `src/components/vault/VaultDayRecapCard.tsx`**
-
-Change line 296 from:
-```tsx
-<ScrollArea className="max-h-[500px]">
-```
-
-To:
 ```tsx
 <ScrollArea className="max-h-[60vh] sm:max-h-[70vh]">
 ```
 
-This change:
-1. Uses viewport-relative heights instead of fixed pixels
-2. Provides responsive behavior (smaller on mobile, larger on desktop)
-3. Ensures content is always scrollable within the visible area
-4. Leaves adequate space for the date header and action buttons above/below
+The Radix UI `ScrollArea` component has limitations:
+- Touch scrolling on mobile can be unreliable
+- The `ScrollAreaPrimitive.Viewport` doesn't enable native scroll behavior
+- Parent container context (inside `CollapsibleContent`) may conflict with the scrolling mechanism
 
-## Technical Details
+## Evidence from Codebase
 
-| Screen Size | Old Height | New Height | Benefit |
-|-------------|------------|------------|---------|
-| Mobile (375px) | 500px (133% of screen!) | ~225px (60% of screen) | Fits in viewport |
-| Tablet (768px) | 500px (65% of screen) | ~460px (60% of screen) | Similar |
-| Desktop (900px+) | 500px (55% of screen) | ~630px (70% of screen) | More visible |
+Other Vault components successfully use native `overflow-y-auto` for scrolling:
 
-## Validation
+| Component | Implementation |
+|-----------|---------------|
+| `VaultFocusQuizDialog.tsx` | `overflow-y-auto max-h-[90vh]` |
+| `VaultRecapCard.tsx` | `max-h-[85vh] overflow-y-auto` |
+| `VaultStreakRecapCard.tsx` | `max-h-[85vh] overflow-y-auto` |
+| `VaultWorkoutNotesDialog.tsx` | `overflow-y-auto max-h-[90vh]` |
 
-After this change:
-- Open the Vault on mobile
-- Tap "Past Days"
-- Select a date with multiple entries
-- Scroll vertically through all entries
-- Action buttons (Save, Export PDF, Close) remain visible below the scrollable area
+## Solution
+
+Replace `ScrollArea` with a native scrollable `div` using the established pattern in this codebase.
+
+### Changes Required
+
+**File: `src/components/vault/VaultDayRecapCard.tsx`**
+
+1. **Remove ScrollArea import** (line 5):
+   - Remove: `import { ScrollArea } from '@/components/ui/scroll-area';`
+
+2. **Replace ScrollArea with native div** (lines 296 and 615):
+
+   Change from:
+   ```tsx
+   <ScrollArea className="max-h-[60vh] sm:max-h-[70vh]">
+     <div className="space-y-4 p-1">
+       {/* content */}
+     </div>
+   </ScrollArea>
+   ```
+
+   Change to:
+   ```tsx
+   <div className="max-h-[60vh] sm:max-h-[70vh] overflow-y-auto">
+     <div className="space-y-4 p-1">
+       {/* content */}
+     </div>
+   </div>
+   ```
+
+## Why This Works
+
+1. **Native scrolling**: Uses browser-native `overflow-y-auto` which has reliable touch support across all devices
+2. **Proven pattern**: Matches the implementation used successfully in 4+ other Vault components
+3. **Responsive heights**: Maintains the viewport-relative heights for proper sizing on different screen sizes
+4. **Mobile-first**: Native scroll behavior works consistently on iOS Safari, Chrome for Android, and all desktop browsers
+
+## Technical Summary
+
+```text
+Before:
+  ScrollArea (Radix) → may block touch scroll on mobile
+  
+After:
+  div + overflow-y-auto → native browser scrolling, reliable touch support
+```
+
+## Validation Steps
+
+After implementation:
+1. Open the Vault on a mobile device
+2. Tap "Past Days" to expand the dropdown
+3. Select a date with multiple entries
+4. **Touch and swipe up/down** within the content area
+5. Verify smooth scrolling through all entries (quizzes, workouts, nutrition, notes, etc.)
+6. Confirm action buttons (Save, Export PDF, Close) remain visible below the scrollable area
