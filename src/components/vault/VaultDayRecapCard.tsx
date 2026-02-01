@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Sun, Moon, Dumbbell, Apple, NotebookPen, 
@@ -293,7 +293,7 @@ export function VaultDayRecapCard({ historyData, isLoading }: VaultDayRecapCardP
   const nightQuiz = historyData.quizzes.find(q => q.quiz_type === 'night');
 
   return (
-    <ScrollArea className="max-h-[500px]">
+    <div className="max-h-[60vh] sm:max-h-[70vh] overflow-y-auto">
       <div className="space-y-4 p-1">
         {/* Daily Wellness Overview */}
         {(morningQuiz || preWorkoutQuiz || nightQuiz) && (
@@ -612,6 +612,6 @@ export function VaultDayRecapCard({ historyData, isLoading }: VaultDayRecapCardP
           </div>
         )}
       </div>
-    </ScrollArea>
+    </div>
   );
 }
