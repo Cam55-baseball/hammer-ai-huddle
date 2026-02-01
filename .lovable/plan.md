@@ -1,94 +1,109 @@
 
-# Fix Plan: Tex Vision Drill Issues
+# Follow the Target – Trackpad Control Area
 
-## Problems Identified
+## Problem Statement
+Currently, the Follow the Target drill requires users to place their finger directly on the moving target. On touch devices, this causes the finger to obscure the target, degrading the visual training experience and making accurate tracking difficult.
 
-### 1. Near-Far Sight Drill - Taps Not Being Registered
-**Root Cause**: Race condition between auto-hide timeout and user click handler
-- When `generateNewTarget()` runs, it schedules an auto-hide timeout (line 42-55)
-- When user taps, `handleFocusClick()` also tries to hide the target and generate a new one
-- The original timeout continues running in the background, causing double-counting and state corruption
-- No timeout cancellation mechanism exists
+## Solution: Decoupled Trackpad Control
 
-### 2. Near-Far Sight & Follow the Target - No Completion Indication
-**Root Cause**: Drills transition directly to conclusion phase without visual feedback
-- Both drills call `onComplete()` which transitions to the conclusion phase in ActiveDrillView
-- There's no in-drill "Complete!" message or animation before the transition
-- Users see the timer hit 0 but get no immediate feedback within the drill area
-
-### 3. Critical Fatigue Warning - End Session Button Hard to Read
-**Root Cause**: Light text color on light background
-- `text-tex-vision-text` class uses HSL(40, 25%, 95%) which is nearly white
-- The critical state uses a dark background, but the button border/text color appears light green/cream
-- Need to use a darker, higher-contrast text color for the End Session button
+Introduce a dedicated "trackpad" control zone at the bottom of the drill that translates finger movements into cursor position in the main viewing area above. This mirrors how a laptop trackpad controls cursor position without the finger being on the screen itself.
 
 ---
 
-## Technical Solution
+## Technical Architecture
 
-### File 1: `src/components/tex-vision/drills/NearFarSightGame.tsx`
-
-**Changes:**
-1. Add a `useRef` to track the current timeout ID
-2. Cancel pending timeout when user taps a target
-3. Add a completion overlay that shows "Complete!" before transitioning
-4. Fix the `isPaused` prop not being respected in the auto-hide timeout
-5. Add a brief completion state visual before calling `onComplete`
+### Layout Structure
 
 ```text
-Key code changes:
-- Add: const autoHideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-- In generateNewTarget(): Store timeout ID and respect isPaused
-- In handleFocusClick(): Clear pending timeout with clearTimeout
-- Add completion overlay that shows when isComplete = true
-- Add 1.5s delay before calling onComplete to show visual feedback
+┌─────────────────────────────────────┐
+│           VIEWING AREA              │
+│   (Target moves here - read-only)   │
+│                                     │
+│       ●  ← Moving Target            │
+│              ○ ← Cursor indicator   │
+│                                     │
+├─────────────────────────────────────┤
+│         TRACKPAD CONTROL            │
+│   (Finger moves here to control)    │
+│                                     │
+│        Touch/drag to track          │
+└─────────────────────────────────────┘
 ```
 
-### File 2: `src/components/tex-vision/drills/FollowTheTargetGame.tsx`
+### Key Implementation Details
 
-**Changes:**
-1. Add completion overlay that shows when `isComplete = true`
-2. Add a brief delay before calling `onComplete` to show visual feedback
-3. Ensure the completion message is clearly visible to the user
+1. **Dual-zone layout**: 
+   - Top ~65%: Viewing area where target and cursor are displayed
+   - Bottom ~35%: Trackpad control zone for touch input
 
-```text
-Key code changes:
-- Add completion state visual overlay
-- Show "Complete!" message with accuracy when timer ends
-- Add 1.5s delay before calling onComplete
-```
+2. **Movement mapping**: 
+   - Finger position within trackpad zone maps to cursor position in viewing area
+   - Uses percentage-based coordinates for responsive sizing
+   - Both zones use the same 0-100% coordinate system
 
-### File 3: `src/components/tex-vision/shared/FatigueIndicator.tsx`
+3. **Visual feedback in trackpad**:
+   - Subtle finger indicator dot where user is touching
+   - Border/background treatment to clearly delineate the control zone
+   - "Touch here to track" prompt when not interacting
 
-**Changes:**
-1. Change the End Session button text color from light cream to a dark, high-contrast color
-2. Use a dedicated dark color class for critical state buttons to ensure readability
-3. Update border color to match for consistency
+4. **Desktop fallback**:
+   - Mouse users can still interact with the full area (existing behavior preserved)
+   - Trackpad zone also responds to mouse for consistency
 
-```text
-Key code changes (lines 152-160):
-- Change: text-tex-vision-text → text-gray-900 dark:text-gray-100
-- Change: border-tex-vision-text/50 → border-gray-800 dark:border-gray-200
-- This ensures the "End Session" text is dark on light backgrounds and readable
-```
+5. **Accuracy calculation unchanged**:
+   - Distance between cursor position and target position still determines score
+   - Same formula: `accuracy = max(0, 100 - distance * 2)`
 
 ---
 
-## Summary of Changes
+## File Changes
 
-| File | Issue | Fix |
-|------|-------|-----|
-| `NearFarSightGame.tsx` | Taps not registering | Add timeout ref, cancel on tap, fix race condition |
-| `NearFarSightGame.tsx` | No completion feedback | Add completion overlay before transitioning |
-| `FollowTheTargetGame.tsx` | No completion feedback | Add completion overlay before transitioning |
-| `FatigueIndicator.tsx` | Button text hard to read | Use dark text color (gray-900) instead of tex-vision-text |
+### `src/components/tex-vision/drills/FollowTheTargetGame.tsx`
+
+**Changes:**
+
+1. Add a `trackpadRef` for the control zone
+2. Split the container into two zones:
+   - Viewing zone: Displays target + cursor indicator (touch events disabled)
+   - Trackpad zone: Captures all touch/mouse input
+3. Update touch/mouse handlers to use `trackpadRef` for coordinate calculation
+4. Add trackpad visual styling with clear borders and hint text
+5. Add a small finger indicator dot in the trackpad zone showing where user is touching
+6. Preserve existing completion overlay, timer, and accuracy logic
+
+**New state:**
+- `fingerPosition`: Track finger position within trackpad for visual feedback
+
+**Handler updates:**
+- `handleTrackpadTouch`: Maps trackpad coordinates to viewing area coordinates
+- Existing `handleMouseMove` updated to work with full area (desktop) or trackpad (touch)
+
+**Visual updates:**
+- Viewing area: Clean display of target and cursor, no touch interaction
+- Trackpad area: Rounded rectangle with subtle grid pattern, border, and "Touch here" hint
+- Finger indicator: Small dot showing current touch position in trackpad
 
 ---
 
-## Expected Outcome
+## User Experience Flow
 
-1. **Near-Far Sight**: Every tap on a glowing target will be immediately registered, score will increment, and new targets will appear predictably without double-counting
+1. User opens Follow the Target drill
+2. Target begins moving in the **viewing area** (top section)
+3. User places finger on the **trackpad zone** (bottom section)
+4. Finger movements in trackpad translate to cursor movements in viewing area
+5. Cursor indicator follows finger movement proportionally
+6. Target remains fully visible since finger is never on top of it
+7. Accuracy calculated as before; completion overlay shows at timer end
 
-2. **Both Drills**: When timer reaches 0, users will see a clear "Complete!" overlay with their final accuracy for 1.5 seconds before transitioning to the conclusion screen
+---
 
-3. **Fatigue Warning**: The "End Session" button will have dark, easily readable text regardless of the background color
+## Technical Specifications
+
+| Aspect | Value |
+|--------|-------|
+| Viewing area height | ~280px (65% of container) |
+| Trackpad height | ~150px (35% of container) |
+| Coordinate system | Percentage-based (0-100) |
+| Touch handling | Prevent default to avoid scroll |
+| Finger indicator | 20px semi-transparent dot |
+| Trackpad border | 2px dashed with tex-vision-primary color |
