@@ -21,9 +21,11 @@ interface Position {
 
 export default function FollowTheTargetGame({ tier, onComplete, onExit, isPaused }: FollowTheTargetGameProps) {
   const { t } = useTranslation();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const viewingAreaRef = useRef<HTMLDivElement>(null);
+  const trackpadRef = useRef<HTMLDivElement>(null);
   const [targetPosition, setTargetPosition] = useState<Position>({ x: 50, y: 50 });
   const [cursorPosition, setCursorPosition] = useState<Position>({ x: 50, y: 50 });
+  const [fingerPosition, setFingerPosition] = useState<Position | null>(null);
   const [trackingScore, setTrackingScore] = useState<number[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [showCompletionOverlay, setShowCompletionOverlay] = useState(false);
@@ -80,43 +82,78 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit, isPaused
     setTrackingScore(prev => [...prev.slice(-100), accuracy]); // Keep last 100 samples
   }, [targetPosition, cursorPosition, isComplete]);
 
+  // Desktop mouse handler - works on viewing area
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || isComplete) return;
+    if (!viewingAreaRef.current || isComplete) return;
 
     if (!hasInteracted) setHasInteracted(true);
     
-    const rect = containerRef.current.getBoundingClientRect();
+    const rect = viewingAreaRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     
     setCursorPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
   }, [isComplete, hasInteracted]);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-    if (!containerRef.current || isComplete) return;
+  // Trackpad touch handlers - map trackpad position to viewing area cursor
+  const handleTrackpadTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!trackpadRef.current || isComplete) return;
     
     if (!hasInteracted) setHasInteracted(true);
     
     const touch = e.touches[0];
-    const rect = containerRef.current.getBoundingClientRect();
+    const rect = trackpadRef.current.getBoundingClientRect();
     const x = ((touch.clientX - rect.left) / rect.width) * 100;
     const y = ((touch.clientY - rect.top) / rect.height) * 100;
     
-    setCursorPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+    const clampedX = Math.max(0, Math.min(100, x));
+    const clampedY = Math.max(0, Math.min(100, y));
+    
+    setFingerPosition({ x: clampedX, y: clampedY });
+    setCursorPosition({ x: clampedX, y: clampedY });
   }, [isComplete, hasInteracted]);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-    if (!containerRef.current || isComplete) return;
+  const handleTrackpadTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!trackpadRef.current || isComplete) return;
     
     e.preventDefault(); // Prevent scrolling while tracking
     
     const touch = e.touches[0];
-    const rect = containerRef.current.getBoundingClientRect();
+    const rect = trackpadRef.current.getBoundingClientRect();
     const x = ((touch.clientX - rect.left) / rect.width) * 100;
     const y = ((touch.clientY - rect.top) / rect.height) * 100;
     
-    setCursorPosition({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+    const clampedX = Math.max(0, Math.min(100, x));
+    const clampedY = Math.max(0, Math.min(100, y));
+    
+    setFingerPosition({ x: clampedX, y: clampedY });
+    setCursorPosition({ x: clampedX, y: clampedY });
   }, [isComplete]);
+
+  const handleTrackpadTouchEnd = useCallback(() => {
+    setFingerPosition(null);
+  }, []);
+
+  // Trackpad mouse handler for desktop consistency
+  const handleTrackpadMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!trackpadRef.current || isComplete) return;
+
+    if (!hasInteracted) setHasInteracted(true);
+    
+    const rect = trackpadRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    const clampedX = Math.max(0, Math.min(100, x));
+    const clampedY = Math.max(0, Math.min(100, y));
+    
+    setFingerPosition({ x: clampedX, y: clampedY });
+    setCursorPosition({ x: clampedX, y: clampedY });
+  }, [isComplete, hasInteracted]);
+
+  const handleTrackpadMouseLeave = useCallback(() => {
+    setFingerPosition(null);
+  }, []);
 
   const handleTimerComplete = useCallback(() => {
     if (isComplete) return;
@@ -170,87 +207,128 @@ export default function FollowTheTargetGame({ tier, onComplete, onExit, isPaused
         />
       }
     >
-      <div 
-        ref={containerRef}
-        className="relative w-full h-full min-h-[400px] cursor-none select-none"
-        style={{ touchAction: 'manipulation' }}
-        onMouseMove={handleMouseMove}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-      >
-        {/* Trail effect */}
-        <div
-          className="absolute w-8 h-8 rounded-full bg-[hsl(var(--tex-vision-feedback))]/20 transition-all duration-100"
-          style={{
-            left: `${targetPosition.x}%`,
-            top: `${targetPosition.y}%`,
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
-
-        {/* Moving target */}
-        <div
-          className="absolute w-6 h-6 rounded-full bg-[hsl(var(--tex-vision-feedback))] transition-none"
-          style={{
-            left: `${targetPosition.x}%`,
-            top: `${targetPosition.y}%`,
-            transform: 'translate(-50%, -50%)',
-            boxShadow: '0 0 15px hsl(var(--tex-vision-feedback) / 0.6)',
-          }}
-        />
-
-        {/* User cursor/finger indicator */}
-        {hasInteracted && (
+      <div className="flex flex-col w-full h-full min-h-[450px]">
+        {/* Viewing Area - Target and cursor displayed here */}
+        <div 
+          ref={viewingAreaRef}
+          className="relative flex-[2] min-h-[280px] cursor-none select-none"
+          onMouseMove={handleMouseMove}
+        >
+          {/* Trail effect */}
           <div
-            className={`absolute w-10 h-10 rounded-full border-2 transition-colors duration-150 ${
-              currentAccuracy > 80
-                ? 'border-[hsl(var(--tex-vision-success))] bg-[hsl(var(--tex-vision-success))]/10'
-                : currentAccuracy > 50
-                  ? 'border-[hsl(var(--tex-vision-timing))] bg-[hsl(var(--tex-vision-timing))]/10'
-                  : 'border-[hsl(var(--tex-vision-text-muted))] bg-[hsl(var(--tex-vision-text-muted))]/10'
-            }`}
+            className="absolute w-8 h-8 rounded-full bg-[hsl(var(--tex-vision-feedback))]/20 transition-all duration-100"
             style={{
-              left: `${cursorPosition.x}%`,
-              top: `${cursorPosition.y}%`,
+              left: `${targetPosition.x}%`,
+              top: `${targetPosition.y}%`,
               transform: 'translate(-50%, -50%)',
             }}
           />
-        )}
 
-        {/* Tracking status indicator - shows when user hasn't started interacting */}
-        {!hasInteracted && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-            <p className="text-lg text-[hsl(var(--tex-vision-text))] animate-pulse">
-              {t('texVision.drills.smoothPursuit.placeFingerDesktop', 'Move your cursor to the target')}
-            </p>
+          {/* Moving target */}
+          <div
+            className="absolute w-6 h-6 rounded-full bg-[hsl(var(--tex-vision-feedback))] transition-none"
+            style={{
+              left: `${targetPosition.x}%`,
+              top: `${targetPosition.y}%`,
+              transform: 'translate(-50%, -50%)',
+              boxShadow: '0 0 15px hsl(var(--tex-vision-feedback) / 0.6)',
+            }}
+          />
+
+          {/* User cursor indicator in viewing area */}
+          {hasInteracted && (
+            <div
+              className={`absolute w-10 h-10 rounded-full border-2 transition-colors duration-150 ${
+                currentAccuracy > 80
+                  ? 'border-[hsl(var(--tex-vision-success))] bg-[hsl(var(--tex-vision-success))]/10'
+                  : currentAccuracy > 50
+                    ? 'border-[hsl(var(--tex-vision-timing))] bg-[hsl(var(--tex-vision-timing))]/10'
+                    : 'border-[hsl(var(--tex-vision-text-muted))] bg-[hsl(var(--tex-vision-text-muted))]/10'
+              }`}
+              style={{
+                left: `${cursorPosition.x}%`,
+                top: `${cursorPosition.y}%`,
+                transform: 'translate(-50%, -50%)',
+              }}
+            />
+          )}
+
+          {/* Accuracy indicator */}
+          <div className="absolute top-4 right-4 text-sm">
+            <span className={`font-medium ${
+              currentAccuracy > 80
+                ? 'text-[hsl(var(--tex-vision-success))]'
+                : currentAccuracy > 50
+                  ? 'text-[hsl(var(--tex-vision-timing))]'
+                  : 'text-[hsl(var(--tex-vision-text-muted))]'
+            }`}>
+              {hasInteracted ? `${currentAccuracy}%` : '—'}
+            </span>
           </div>
-        )}
 
-        {/* Accuracy indicator */}
-        <div className="absolute top-4 right-4 text-sm">
-          <span className={`font-medium ${
-            currentAccuracy > 80
-              ? 'text-[hsl(var(--tex-vision-success))]'
-              : currentAccuracy > 50
-                ? 'text-[hsl(var(--tex-vision-timing))]'
-                : 'text-[hsl(var(--tex-vision-text-muted))]'
-          }`}>
-            {hasInteracted ? `${currentAccuracy}%` : '—'}
-          </span>
+          {/* Completion Overlay */}
+          {showCompletionOverlay && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--tex-vision-primary-dark))]/95 rounded-xl z-10">
+              <CheckCircle className="h-16 w-16 text-[hsl(var(--tex-vision-success))] mb-4 animate-pulse" />
+              <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
+                {t('texVision.drills.complete', 'Complete!')}
+              </h2>
+              <p className="text-lg text-[hsl(var(--tex-vision-success))]">
+                {finalAccuracy}% {t('texVision.drills.accuracy', 'Accuracy')}
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Completion Overlay */}
-        {showCompletionOverlay && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--tex-vision-primary-dark))]/95 rounded-xl z-10">
-            <CheckCircle className="h-16 w-16 text-[hsl(var(--tex-vision-success))] mb-4 animate-pulse" />
-            <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
-              {t('texVision.drills.complete', 'Complete!')}
-            </h2>
-            <p className="text-lg text-[hsl(var(--tex-vision-success))]">
-              {finalAccuracy}% {t('texVision.drills.accuracy', 'Accuracy')}
-            </p>
+        {/* Trackpad Control Zone */}
+        <div 
+          ref={trackpadRef}
+          className="relative flex-1 min-h-[150px] mt-3 rounded-xl border-2 border-dashed border-[hsl(var(--tex-vision-primary))]/50 bg-[hsl(var(--tex-vision-primary-dark))]/30 select-none"
+          style={{ touchAction: 'none' }}
+          onTouchStart={handleTrackpadTouchStart}
+          onTouchMove={handleTrackpadTouchMove}
+          onTouchEnd={handleTrackpadTouchEnd}
+          onMouseMove={handleTrackpadMouseMove}
+          onMouseLeave={handleTrackpadMouseLeave}
+        >
+          {/* Grid pattern for visual feedback */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, hsl(var(--tex-vision-primary)) 1px, transparent 1px),
+                linear-gradient(to bottom, hsl(var(--tex-vision-primary)) 1px, transparent 1px)
+              `,
+              backgroundSize: '20% 25%',
+            }}
+          />
+
+          {/* Finger indicator dot */}
+          {fingerPosition && (
+            <div
+              className="absolute w-5 h-5 rounded-full bg-[hsl(var(--tex-vision-primary-light))]/60 border-2 border-[hsl(var(--tex-vision-primary-light))] pointer-events-none"
+              style={{
+                left: `${fingerPosition.x}%`,
+                top: `${fingerPosition.y}%`,
+                transform: 'translate(-50%, -50%)',
+                boxShadow: '0 0 10px hsl(var(--tex-vision-primary-light) / 0.4)',
+              }}
+            />
+          )}
+
+          {/* Touch here prompt */}
+          {!hasInteracted && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <p className="text-sm text-[hsl(var(--tex-vision-text-muted))] animate-pulse">
+                {t('texVision.drills.smoothPursuit.touchHere', 'Touch here to track')}
+              </p>
+            </div>
+          )}
+
+          {/* Trackpad label */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-[hsl(var(--tex-vision-text-muted))]/60 pointer-events-none">
+            {t('texVision.drills.smoothPursuit.trackpad', 'Trackpad')}
           </div>
-        )}
+        </div>
       </div>
     </DrillContainer>
   );
