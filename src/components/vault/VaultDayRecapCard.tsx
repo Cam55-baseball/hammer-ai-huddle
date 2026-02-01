@@ -215,18 +215,24 @@ function ActivityDetailCard({ activity }: { activity: CustomActivityLog }) {
                     <CheckSquare className="h-3 w-3" />
                     <span>{t('vault.pastDays.customFields', 'Logged')}</span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="space-y-1">
                     {customFields.map((field) => (
-                      <Badge 
-                        key={field.id} 
-                        variant="outline" 
-                        className="text-xs py-0.5 px-2"
-                      >
-                        {field.label}
-                        {field.value && field.type !== 'checkbox' && (
-                          <span className="text-muted-foreground ml-1">: {field.value}</span>
+                      <div key={field.id} className="flex flex-col">
+                        <Badge 
+                          variant="outline" 
+                          className="text-xs py-0.5 px-2 w-fit"
+                        >
+                          {field.label}
+                          {field.value && field.type !== 'checkbox' && (
+                            <span className="text-muted-foreground ml-1">: {field.value}</span>
+                          )}
+                        </Badge>
+                        {field.notes && (
+                          <span className="text-muted-foreground text-[10px] italic ml-2 mt-0.5 whitespace-pre-line">
+                            "{field.notes}"
+                          </span>
                         )}
-                      </Badge>
+                      </div>
                     ))}
                   </div>
                 </div>
