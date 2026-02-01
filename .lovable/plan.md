@@ -1,131 +1,97 @@
 
 
-# Show Custom Field Notes in Past Days Viewer
+# Show Full Activity Details Without Abbreviation
 
 ## Problem
 
-When viewing past days in the Vault, the notes attached to custom fields (like "Fascia Toe Raises" with notes "8SL Toe raises - Marble in second two Or foot Toss (20) 135lbs") are not being displayed. The current implementation only shows the field label and value, ignoring the crucial `notes` field.
+When viewing custom activity cards in the Past Days section, the activity description is truncated (cut off) in the header. Users cannot see the full description text even when the card is expanded.
 
 ---
 
-## Evidence
+## Root Cause
 
-### Database Data Example
-The user's "Hammers Return to Form" activity has custom fields with detailed notes:
+**File:** `src/components/vault/VaultDayRecapCard.tsx` (Lines 89-96)
 
-| Field Label | Notes |
-|-------------|-------|
-| Fascia Toe Raises | 8SL Toe raises - Marble in second two Or foot Toss (20) 135lbs |
-| Ankle Tens Unit | Over Top of ankle, Behind scar above ankle, 10Mins |
-| Hanging | 45Secs - X2 Twist toward right side glide rolling |
-| Nerve Glides | Brachial nerve glides, UCL nerve & Eye glass stretch, etc. |
-
-### Type Definition
-```typescript
-// src/types/customActivity.ts (line 82-88)
-export interface CustomField {
-  id: string;
-  label: string;
-  value: string;
-  type: 'text' | 'number' | 'time' | 'checkbox';
-  notes?: string;  // <-- This exists but is NOT displayed!
-}
-```
-
-### Current UI Code (Problem)
 ```tsx
-// VaultDayRecapCard.tsx (lines 218-231)
-{customFields.map((field) => (
-  <Badge key={field.id} variant="outline" className="text-xs py-0.5 px-2">
-    {field.label}
-    {field.value && field.type !== 'checkbox' && (
-      <span className="text-muted-foreground ml-1">: {field.value}</span>
-    )}
-  </Badge>  // <-- Notes are completely ignored!
-))}
+<div className="flex flex-col min-w-0">
+  <span className="truncate">{template.title}</span>
+  {template.description && (
+    <span className="text-xs text-muted-foreground font-normal truncate">
+      {template.description}  // <-- TRUNCATED!
+    </span>
+  )}
+</div>
 ```
+
+The `truncate` CSS class forces text to a single line with ellipsis (...), hiding any content that doesn't fit.
 
 ---
 
 ## Solution
 
-Update the custom fields display to show notes, following the same pattern used for exercise notes (which already works).
+Show the full description inside the expanded card content area, where there's room to display it without truncation.
 
-### File: `src/components/vault/VaultDayRecapCard.tsx`
+### Changes to `src/components/vault/VaultDayRecapCard.tsx`
 
-#### Change Custom Fields Display (lines 218-231)
+#### 1. Keep Header Preview (Truncated)
+Leave the header as-is for a compact collapsed view - this is good UX for scanning multiple activities.
 
-Replace the current Badge-only display with a structure that shows notes below each field:
+#### 2. Add Full Description in Expanded Content
+Add a new section at the start of the `CollapsibleContent` that shows the complete, untruncated description.
 
-**From:**
+**Insert after line 127** (inside CardContent, before Meal Items):
+
 ```tsx
-<div className="flex flex-wrap gap-1.5">
-  {customFields.map((field) => (
-    <Badge 
-      key={field.id} 
-      variant="outline" 
-      className="text-xs py-0.5 px-2"
-    >
-      {field.label}
-      {field.value && field.type !== 'checkbox' && (
-        <span className="text-muted-foreground ml-1">: {field.value}</span>
-      )}
-    </Badge>
-  ))}
-</div>
-```
-
-**To:**
-```tsx
-<div className="space-y-1">
-  {customFields.map((field) => (
-    <div key={field.id} className="flex flex-col">
-      <Badge 
-        variant="outline" 
-        className="text-xs py-0.5 px-2 w-fit"
-      >
-        {field.label}
-        {field.value && field.type !== 'checkbox' && (
-          <span className="text-muted-foreground ml-1">: {field.value}</span>
-        )}
-      </Badge>
-      {field.notes && (
-        <span className="text-muted-foreground text-[10px] italic ml-2 mt-0.5 whitespace-pre-line">
-          "{field.notes}"
-        </span>
-      )}
+{/* Full Description */}
+{template.description && (
+  <div className="space-y-1">
+    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+      <NotebookPen className="h-3 w-3" />
+      <span>Description</span>
     </div>
-  ))}
-</div>
+    <p className="text-xs text-foreground whitespace-pre-line bg-muted/30 rounded-md p-2">
+      {template.description}
+    </p>
+  </div>
+)}
 ```
 
 ---
 
-## Visual Change
+## Visual Result
 
-### Before
+### Collapsed Card (Header)
 ```
-Logged
-[Fascia Toe Raises] [Ankle Tens Unit] [Hanging]
+🎯 Activity Title
+   "Activity description..."  ← truncated preview
 ```
 
-### After
+### Expanded Card (Full View)
 ```
-Logged
-[Fascia Toe Raises]
-  "8SL Toe raises - Marble in second two Or foot Toss (20) 135lbs"
-[Ankle Tens Unit]
-  "Over Top of ankle, Behind scar above ankle, 10Mins"
-[Hanging]
-  "45Secs - X2 Twist toward right side glide rolling"
+🎯 Activity Title
+   "Activity description..."  ← truncated preview (header)
+   
+📝 Description
+┌─────────────────────────────────────────────────┐
+│ Full activity description text displayed here   │
+│ including all details, multiple lines, and any  │
+│ special instructions the user has written.      │
+└─────────────────────────────────────────────────┘
+
+🍽️ Items
+[Chicken] [Rice]
+
+💊 Supplements
+[Creatine (5g)]
+...
 ```
 
 ---
 
 ## Technical Notes
 
-- Uses `whitespace-pre-line` to preserve line breaks in multi-line notes
-- Matches the existing exercise notes styling (italic, muted, 10px font)
-- Adds `w-fit` to Badge so it doesn't stretch to full width
-- Changes container from `flex flex-wrap` to `space-y-1` for vertical layout with notes
+- Uses `whitespace-pre-line` to preserve line breaks in multi-line descriptions
+- Uses `bg-muted/30` for a subtle background to visually separate the description from other content
+- Places description at the top of expanded content since it provides context for the activity
+- Uses the existing `NotebookPen` icon that's already imported in the file
 
