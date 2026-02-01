@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DrillContainer } from '../shared/DrillContainer';
 import { DrillTimer } from '../shared/DrillTimer';
 import { DrillMetricsDisplay } from '../shared/DrillMetricsDisplay';
-import { Glasses } from 'lucide-react';
+import { Glasses, CheckCircle } from 'lucide-react';
 import { DrillResult } from '@/hooks/useTexVisionSession';
 
 interface NearFarSightGameProps {
@@ -26,47 +26,86 @@ export default function NearFarSightGame({ tier, onComplete, onExit, isPaused }:
   const [reactionTimes, setReactionTimes] = useState<number[]>([]);
   const [targetShowTime, setTargetShowTime] = useState(Date.now());
   const [isComplete, setIsComplete] = useState(false);
+  const [showCompletionOverlay, setShowCompletionOverlay] = useState(false);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+
+  // Refs for stable timeout management
+  const autoHideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const nextTargetTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scoreRef = useRef(0);
+  const attemptsRef = useRef(0);
+  const reactionTimesRef = useRef<number[]>([]);
 
   const totalAttempts = tier === 'beginner' ? 15 : tier === 'advanced' ? 20 : 25;
   const displayDuration = tier === 'beginner' ? 2500 : tier === 'advanced' ? 2000 : 1500;
 
+  // Keep refs in sync
+  useEffect(() => {
+    scoreRef.current = score;
+    attemptsRef.current = attempts;
+    reactionTimesRef.current = reactionTimes;
+  }, [score, attempts, reactionTimes]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (autoHideTimeoutRef.current) clearTimeout(autoHideTimeoutRef.current);
+      if (nextTargetTimeoutRef.current) clearTimeout(nextTargetTimeoutRef.current);
+    };
+  }, []);
+
   const generateNewTarget = useCallback(() => {
+    if (isComplete || isPaused) return;
+
+    // Clear any existing timeouts
+    if (autoHideTimeoutRef.current) clearTimeout(autoHideTimeoutRef.current);
+
     const distances: FocusDistance[] = ['near', 'mid', 'far'];
     const newTarget = distances[Math.floor(Math.random() * distances.length)];
     setTargetFocus(newTarget);
     setShowTarget(true);
     setTargetShowTime(Date.now());
 
-    // Auto-hide after duration
-    setTimeout(() => {
-      if (!isComplete) {
-        setShowTarget(false);
-        setAttempts(prev => {
-          const next = prev + 1;
-          if (next >= totalAttempts) {
-            setIsComplete(true);
-          }
-          return next;
-        });
-        // Generate new target after brief pause
-        setTimeout(() => generateNewTarget(), 500);
-      }
+    // Auto-hide after duration (only if not paused)
+    autoHideTimeoutRef.current = setTimeout(() => {
+      if (isComplete) return;
+      
+      setShowTarget(false);
+      setAttempts(prev => {
+        const next = prev + 1;
+        if (next >= totalAttempts) {
+          setIsComplete(true);
+        }
+        return next;
+      });
+      
+      // Generate new target after brief pause
+      nextTargetTimeoutRef.current = setTimeout(() => generateNewTarget(), 500);
     }, displayDuration);
-  }, [displayDuration, isComplete, totalAttempts]);
+  }, [displayDuration, isComplete, isPaused, totalAttempts]);
 
   useEffect(() => {
     generateNewTarget();
-    return () => {};
   }, []);
 
   const handleFocusClick = (distance: FocusDistance) => {
     if (!showTarget || isComplete) return;
 
+    // Cancel the auto-hide timeout since user responded
+    if (autoHideTimeoutRef.current) {
+      clearTimeout(autoHideTimeoutRef.current);
+      autoHideTimeoutRef.current = null;
+    }
+    if (nextTargetTimeoutRef.current) {
+      clearTimeout(nextTargetTimeoutRef.current);
+      nextTargetTimeoutRef.current = null;
+    }
+
     const reactionTime = Date.now() - targetShowTime;
     setCurrentFocus(distance);
 
-    if (distance === targetFocus) {
+    const isCorrect = distance === targetFocus;
+    if (isCorrect) {
       setScore(prev => prev + 1);
       setReactionTimes(prev => [...prev, reactionTime]);
       setFeedback('correct');
@@ -75,51 +114,69 @@ export default function NearFarSightGame({ tier, onComplete, onExit, isPaused }:
     }
 
     setShowTarget(false);
-    setAttempts(prev => {
-      const next = prev + 1;
-      if (next >= totalAttempts) {
-        setIsComplete(true);
-        const avgReaction = reactionTimes.length > 0 
-          ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
-          : 0;
-        
-        onComplete({
-          accuracyPercent: Math.round((score / Math.max(next, 1)) * 100),
-          reactionTimeMs: avgReaction,
-          difficultyLevel: tier === 'beginner' ? 4 : tier === 'advanced' ? 6 : 9,
-          drillMetrics: {
-            totalAttempts: next,
-            avgReactionTime: avgReaction,
-          },
-        });
-      }
-      return next;
-    });
+    
+    const nextAttempts = attempts + 1;
+    setAttempts(nextAttempts);
 
     setTimeout(() => setFeedback(null), 300);
 
-    if (!isComplete && attempts + 1 < totalAttempts) {
-      setTimeout(() => generateNewTarget(), 500);
+    if (nextAttempts >= totalAttempts) {
+      // Complete - show overlay then transition
+      setIsComplete(true);
+      setShowCompletionOverlay(true);
+      
+      const finalScore = isCorrect ? score + 1 : score;
+      const finalReactionTimes = isCorrect ? [...reactionTimes, reactionTime] : reactionTimes;
+      const avgReaction = finalReactionTimes.length > 0 
+        ? Math.round(finalReactionTimes.reduce((a, b) => a + b, 0) / finalReactionTimes.length)
+        : 0;
+      
+      setTimeout(() => {
+        onComplete({
+          accuracyPercent: Math.round((finalScore / nextAttempts) * 100),
+          reactionTimeMs: avgReaction,
+          difficultyLevel: tier === 'beginner' ? 4 : tier === 'advanced' ? 6 : 9,
+          drillMetrics: {
+            totalAttempts: nextAttempts,
+            avgReactionTime: avgReaction,
+          },
+        });
+      }, 1500);
+    } else {
+      // Generate next target after brief pause
+      nextTargetTimeoutRef.current = setTimeout(() => generateNewTarget(), 500);
     }
   };
 
   const handleTimerComplete = useCallback(() => {
-    if (!isComplete) {
-      setIsComplete(true);
-      const avgReaction = reactionTimes.length > 0 
-        ? Math.round(reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length)
-        : 0;
-      
+    if (isComplete) return;
+    
+    // Clear any pending timeouts
+    if (autoHideTimeoutRef.current) clearTimeout(autoHideTimeoutRef.current);
+    if (nextTargetTimeoutRef.current) clearTimeout(nextTargetTimeoutRef.current);
+    
+    setIsComplete(true);
+    setShowCompletionOverlay(true);
+    
+    const currentScore = scoreRef.current;
+    const currentAttempts = attemptsRef.current;
+    const currentReactionTimes = reactionTimesRef.current;
+    
+    const avgReaction = currentReactionTimes.length > 0 
+      ? Math.round(currentReactionTimes.reduce((a, b) => a + b, 0) / currentReactionTimes.length)
+      : 0;
+    
+    setTimeout(() => {
       onComplete({
-        accuracyPercent: Math.round((score / Math.max(attempts, 1)) * 100),
+        accuracyPercent: Math.round((currentScore / Math.max(currentAttempts, 1)) * 100),
         reactionTimeMs: avgReaction,
         difficultyLevel: tier === 'beginner' ? 4 : tier === 'advanced' ? 6 : 9,
         drillMetrics: {
-          totalAttempts: attempts,
+          totalAttempts: currentAttempts,
         },
       });
-    }
-  }, [isComplete, score, attempts, reactionTimes, tier, onComplete]);
+    }, 1500);
+  }, [isComplete, tier, onComplete]);
 
   const getDistanceStyles = (distance: FocusDistance) => {
     const isTarget = showTarget && targetFocus === distance;
@@ -225,6 +282,19 @@ export default function NearFarSightGame({ tier, onComplete, onExit, isPaused }:
         <p className="mt-4 text-sm text-[hsl(var(--tex-vision-text-muted))] text-center">
           {t('texVision.drills.nearFar.instruction', 'Tap the glowing target')}
         </p>
+
+        {/* Completion Overlay */}
+        {showCompletionOverlay && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--tex-vision-primary-dark))]/95 rounded-xl z-10">
+            <CheckCircle className="h-16 w-16 text-[hsl(var(--tex-vision-success))] mb-4 animate-pulse" />
+            <h2 className="text-2xl font-bold text-[hsl(var(--tex-vision-text))] mb-2">
+              {t('texVision.drills.complete', 'Complete!')}
+            </h2>
+            <p className="text-lg text-[hsl(var(--tex-vision-success))]">
+              {Math.round((score / Math.max(attempts, 1)) * 100)}% {t('texVision.drills.accuracy', 'Accuracy')}
+            </p>
+          </div>
+        )}
       </div>
     </DrillContainer>
   );
