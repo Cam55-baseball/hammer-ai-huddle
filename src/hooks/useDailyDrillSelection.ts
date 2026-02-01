@@ -255,7 +255,7 @@ export const useDailyDrillSelection = (
     return selected;
   }, []);
 
-  // Save selection to database
+  // Save selection to database with proper upsert to prevent race conditions
   const saveSelection = useCallback(async (
     userId: string,
     drills: ScoredDrill[],
@@ -266,43 +266,38 @@ export const useDailyDrillSelection = (
       selectionReasons[d.id] = d.reason;
     });
 
-    // Check if selection already exists
-    const { data: existing } = await supabase
-      .from('tex_vision_daily_drill_selection')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('sport', sport)
-      .eq('selection_date', date)
-      .maybeSingle();
-
-    if (existing) {
-      // Update existing
-      const { error: updateError } = await supabase
+    try {
+      // CRITICAL FIX: Use upsert with proper conflict resolution to prevent 23505 errors
+      // This handles race conditions where multiple calls try to insert the same record
+      const { error } = await supabase
         .from('tex_vision_daily_drill_selection')
-        .update({
-          selected_drills: JSON.parse(JSON.stringify(drills)),
-          selection_reasons: JSON.parse(JSON.stringify(selectionReasons)),
-        })
-        .eq('id', existing.id);
-
-      if (updateError) {
-        console.error('Error updating daily drill selection:', updateError);
-      }
-    } else {
-      // Insert new
-      const { error: insertError } = await supabase
-        .from('tex_vision_daily_drill_selection')
-        .insert({
+        .upsert({
           user_id: userId,
           sport,
           selection_date: date,
           selected_drills: JSON.parse(JSON.stringify(drills)),
           selection_reasons: JSON.parse(JSON.stringify(selectionReasons)),
+        }, {
+          onConflict: 'user_id,sport,selection_date',
         });
 
-      if (insertError) {
-        console.error('Error inserting daily drill selection:', insertError);
+      if (error) {
+        // Handle duplicate key gracefully (shouldn't happen with upsert, but defensive)
+        const errorCode = (error as { code?: string })?.code;
+        if (errorCode === '23505') {
+          console.log('[useDailyDrillSelection] Selection already exists, using existing');
+          return;
+        }
+        console.error('Error saving daily drill selection:', error);
       }
+    } catch (error: unknown) {
+      // Handle duplicate key gracefully at catch level too
+      const errorCode = (error as { code?: string })?.code;
+      if (errorCode === '23505') {
+        console.log('[useDailyDrillSelection] Selection already exists (caught), using existing');
+        return;
+      }
+      console.error('Error in saveSelection:', error);
     }
   }, [sport]);
 

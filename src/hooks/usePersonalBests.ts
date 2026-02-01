@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -22,6 +22,10 @@ export function usePersonalBests() {
   const { user } = useAuth();
   const [personalBests, setPersonalBests] = useState<Record<string, PersonalBest>>({});
   const [isLoading, setIsLoading] = useState(true);
+  
+  // CRITICAL FIX: Guard to prevent concurrent calls for the same drill/tier
+  // This prevents race conditions that cause duplicate key errors (23505)
+  const completionInProgressRef = useRef<Set<string>>(new Set());
 
   // Fetch all personal bests for the user
   const fetchAllPersonalBests = useCallback(async () => {
@@ -83,6 +87,19 @@ export function usePersonalBests() {
         streak?: number;
       }
     ): Promise<PersonalBestResult> => {
+      const key = `${drillType}_${tier}`;
+      
+      // CRITICAL FIX: Prevent concurrent calls for same drill/tier (race condition guard)
+      if (completionInProgressRef.current.has(key)) {
+        console.log('[usePersonalBests] Skipping duplicate call for:', key);
+        return {
+          isNewAccuracyRecord: false,
+          isNewReactionRecord: false,
+          isNewStreakRecord: false,
+          previousBest: personalBests[key] || null,
+        };
+      }
+      
       if (!user?.id) {
         return {
           isNewAccuracyRecord: false,
@@ -92,7 +109,8 @@ export function usePersonalBests() {
         };
       }
 
-      const key = `${drillType}_${tier}`;
+      // Mark this drill/tier as in-progress
+      completionInProgressRef.current.add(key);
       const currentPB = personalBests[key];
 
       let isNewAccuracyRecord = false;
@@ -209,9 +227,27 @@ export function usePersonalBests() {
               achieved_at: updateData.achieved_at as string,
             },
           }));
-        } catch (error) {
+        } catch (error: unknown) {
+          // CRITICAL FIX: Handle duplicate key errors gracefully (23505)
+          const errorCode = (error as { code?: string })?.code;
+          if (errorCode === '23505') {
+            console.log('[usePersonalBests] Personal best already recorded, skipping duplicate');
+            // Return as if no new record - data already exists
+            return {
+              isNewAccuracyRecord: false,
+              isNewReactionRecord: false,
+              isNewStreakRecord: false,
+              previousBest: currentPB || null,
+            };
+          }
           console.error('Error updating personal best:', error);
+        } finally {
+          // Always release the lock
+          completionInProgressRef.current.delete(key);
         }
+      } else {
+        // No new records - still release the lock
+        completionInProgressRef.current.delete(key);
       }
 
       return {

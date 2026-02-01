@@ -5,6 +5,26 @@
 
 // Global lock to prevent multiple simultaneous confetti bursts
 let isConfettiActive = false;
+let currentCleanupTimeout: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Force stop any active confetti - clears all containers and resets state
+ */
+export function stopConfetti() {
+  // Clear any pending cleanup timeout
+  if (currentCleanupTimeout) {
+    clearTimeout(currentCleanupTimeout);
+    currentCleanupTimeout = null;
+  }
+  
+  // Remove ALL confetti containers (handles edge case of multiple containers)
+  const containers = document.querySelectorAll('[data-confetti-container]');
+  containers.forEach(container => {
+    container.remove();
+  });
+  
+  isConfettiActive = false;
+}
 
 export function triggerConfetti() {
   // Prevent multiple simultaneous confetti bursts
@@ -14,6 +34,9 @@ export function triggerConfetti() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     return;
   }
+
+  // Force cleanup any stale containers first (defensive)
+  stopConfetti();
 
   isConfettiActive = true;
 
@@ -88,23 +111,15 @@ export function triggerConfetti() {
     document.head.appendChild(style);
   }
 
-  // Clean up after longest animation completes (add 500ms buffer)
-  const cleanupTime = Math.max(maxAnimationEnd + 500, 5000);
-  setTimeout(() => {
+  // CRITICAL FIX: Cap maximum duration at 5 seconds to prevent runaway confetti
+  // Previously used Math.max which could allow longer durations
+  const cleanupTime = Math.min(maxAnimationEnd + 500, 5000);
+  
+  currentCleanupTimeout = setTimeout(() => {
     container.remove();
     isConfettiActive = false;
+    currentCleanupTimeout = null;
   }, cleanupTime);
-}
-
-/**
- * Force stop any active confetti
- */
-export function stopConfetti() {
-  const container = document.querySelector('[data-confetti-container]');
-  if (container) {
-    container.remove();
-  }
-  isConfettiActive = false;
 }
 
 /**

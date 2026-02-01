@@ -13,7 +13,7 @@ import { DRILL_REFLECTIONS } from './drillReflections';
 import { getDrillBenefit } from '@/constants/drillBenefits';
 import { validateDrillCompletion } from '@/constants/drillCompletionRequirements';
 import DrillReflectionPhase from './shared/DrillReflectionPhase';
-import { triggerCelebration } from '@/lib/confetti';
+import { triggerCelebration, stopConfetti } from '@/lib/confetti';
 
 // Import all drill components
 import SoftFocusGame from './drills/SoftFocusGame';
@@ -124,6 +124,9 @@ export default function ActiveDrillView({
   const [hasSeenDrill, setHasSeenDrill] = useState<Set<string>>(new Set());
   const drillStartTime = useRef<number>(0);
   const interactionCount = useRef<number>(0);
+  
+  // CRITICAL FIX: Guard to prevent multiple drill completions (race condition)
+  const hasCompletedRef = useRef(false);
 
   // Adaptive difficulty hook
   const { 
@@ -192,6 +195,13 @@ export default function ActiveDrillView({
 
   // Handle drill completion with fatigue tracking, validation, and personal bests
   const handleDrillComplete = useCallback(async (partialResult: Omit<DrillResult, 'drillType' | 'tier'>) => {
+    // CRITICAL FIX: Prevent multiple completions (race condition guard)
+    if (hasCompletedRef.current) {
+      console.log('[ActiveDrillView] Ignoring duplicate drill completion call');
+      return;
+    }
+    hasCompletedRef.current = true;
+    
     // Calculate drill duration
     const durationSeconds = drillStartTime.current > 0 
       ? Math.floor((Date.now() - drillStartTime.current) / 1000) 
@@ -303,6 +313,7 @@ export default function ActiveDrillView({
 
   // Handle taking a break
   const handleTakeBreak = useCallback(() => {
+    stopConfetti(); // Clean up any active confetti
     setIsPaused(false); // Reset pause when taking break
     setPhase('break');
     setBreakTimer(30); // 30 second break
@@ -310,6 +321,7 @@ export default function ActiveDrillView({
 
   // Handle ending session due to critical fatigue
   const handleEndSessionFatigue = useCallback(() => {
+    stopConfetti(); // Clean up any active confetti
     onExit();
   }, [onExit]);
 
@@ -326,12 +338,31 @@ export default function ActiveDrillView({
     }
   }, [fatigueLevel, phase, isPaused, criticalFatigueAcknowledged]);
 
-  // NEW: Reset fatigue acknowledgment when starting new drill
+  // NEW: Reset fatigue acknowledgment and completion guard when starting new drill
   useEffect(() => {
     if (phase === 'countdown') {
       setCriticalFatigueAcknowledged(false);
+      hasCompletedRef.current = false; // Reset completion guard for new drill
     }
   }, [phase]);
+  
+  // CRITICAL FIX: Reset completion guard when drill changes
+  useEffect(() => {
+    hasCompletedRef.current = false;
+  }, [drillId]);
+  
+  // CRITICAL FIX: Timeout failsafe for stuck conclusion phase
+  // If the Done button callback hangs, force exit after 10 seconds
+  useEffect(() => {
+    if (phase === 'conclusion' && isCompletingDrill) {
+      const timeout = setTimeout(() => {
+        console.warn('[ActiveDrillView] Drill completion timed out, forcing exit');
+        stopConfetti();
+        onExit();
+      }, 10000); // 10 second failsafe
+      return () => clearTimeout(timeout);
+    }
+  }, [phase, isCompletingDrill, onExit]);
 
   const DrillComponent = DRILL_COMPONENTS[drillId];
 
