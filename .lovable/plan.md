@@ -1,220 +1,131 @@
 
-# Show Full Activity Details in Past Days Viewer
 
-## Overview
+# Show Custom Field Notes in Past Days Viewer
 
-When looking at past days in the Vault, users need to see the complete details of completed activities - not just a summary. This includes all exercises (not just the first 8), exercise-level notes, activity descriptions, performance data logged during completion, running intervals, and distance/pace information.
+## Problem
 
----
-
-## Current Limitations
-
-| What's Missing | Where It Should Show |
-|----------------|---------------------|
-| Template description | Below title |
-| All exercises (currently capped at 8) | Exercise section |
-| Exercise notes | Each exercise badge |
-| Performance data (logged during completion) | New section |
-| Running intervals | Running activities |
-| Distance/pace goals | Running activities |
-| Intensity level | Activity header |
-| Completed timestamp | Activity header |
+When viewing past days in the Vault, the notes attached to custom fields (like "Fascia Toe Raises" with notes "8SL Toe raises - Marble in second two Or foot Toss (20) 135lbs") are not being displayed. The current implementation only shows the field label and value, ignoring the crucial `notes` field.
 
 ---
 
-## Implementation Plan
+## Evidence
+
+### Database Data Example
+The user's "Hammers Return to Form" activity has custom fields with detailed notes:
+
+| Field Label | Notes |
+|-------------|-------|
+| Fascia Toe Raises | 8SL Toe raises - Marble in second two Or foot Toss (20) 135lbs |
+| Ankle Tens Unit | Over Top of ankle, Behind scar above ankle, 10Mins |
+| Hanging | 45Secs - X2 Twist toward right side glide rolling |
+| Nerve Glides | Brachial nerve glides, UCL nerve & Eye glass stretch, etc. |
+
+### Type Definition
+```typescript
+// src/types/customActivity.ts (line 82-88)
+export interface CustomField {
+  id: string;
+  label: string;
+  value: string;
+  type: 'text' | 'number' | 'time' | 'checkbox';
+  notes?: string;  // <-- This exists but is NOT displayed!
+}
+```
+
+### Current UI Code (Problem)
+```tsx
+// VaultDayRecapCard.tsx (lines 218-231)
+{customFields.map((field) => (
+  <Badge key={field.id} variant="outline" className="text-xs py-0.5 px-2">
+    {field.label}
+    {field.value && field.type !== 'checkbox' && (
+      <span className="text-muted-foreground ml-1">: {field.value}</span>
+    )}
+  </Badge>  // <-- Notes are completely ignored!
+))}
+```
+
+---
+
+## Solution
+
+Update the custom fields display to show notes, following the same pattern used for exercise notes (which already works).
 
 ### File: `src/components/vault/VaultDayRecapCard.tsx`
 
-#### 1. Show Template Description
-Add description text below the title when available.
+#### Change Custom Fields Display (lines 218-231)
 
+Replace the current Badge-only display with a structure that shows notes below each field:
+
+**From:**
 ```tsx
-// After line 81 (title display)
-{template.description && (
-  <p className="text-xs text-muted-foreground mt-1">{template.description}</p>
-)}
+<div className="flex flex-wrap gap-1.5">
+  {customFields.map((field) => (
+    <Badge 
+      key={field.id} 
+      variant="outline" 
+      className="text-xs py-0.5 px-2"
+    >
+      {field.label}
+      {field.value && field.type !== 'checkbox' && (
+        <span className="text-muted-foreground ml-1">: {field.value}</span>
+      )}
+    </Badge>
+  ))}
+</div>
 ```
 
-#### 2. Show Intensity Level Badge
-Display the activity intensity in the header area.
-
+**To:**
 ```tsx
-// In header area, alongside duration badge
-{template.intensity && (
-  <Badge variant="outline" className="text-xs capitalize">
-    {template.intensity}
-  </Badge>
-)}
-```
-
-#### 3. Show Completed Timestamp
-Display when the activity was completed.
-
-```tsx
-// In header area
-{activity.completed_at && (
-  <Badge variant="outline" className="text-xs text-muted-foreground">
-    {format(new Date(activity.completed_at), 'h:mm a')}
-  </Badge>
-)}
-```
-
-#### 4. Remove Exercise Limit (Show All)
-Currently exercises are limited to 8. Remove the slice to show all exercises.
-
-```tsx
-// Change line 218 from:
-{exercises.slice(0, 8).map((ex) => (
-
-// To:
-{exercises.map((ex) => (
-
-// Remove the "+X more" badge (lines 237-240)
-```
-
-#### 5. Show Exercise Notes
-Each exercise can have notes. Display them in an expandable format.
-
-```tsx
-// For each exercise badge, if ex.notes exists, show it
-{ex.notes && (
-  <span className="text-muted-foreground block text-[10px] italic">
-    {ex.notes}
-  </span>
-)}
-```
-
-#### 6. Show Running Activity Details
-For running activities, display distance, pace, and intervals.
-
-```tsx
-// New section for running activities
-{(template.activity_type === 'running' && (template.distance_value || template.pace_value || template.intervals?.length > 0)) && (
-  <div className="space-y-1">
-    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-      <Footprints className="h-3 w-3" />
-      <span>Running Details</span>
+<div className="space-y-1">
+  {customFields.map((field) => (
+    <div key={field.id} className="flex flex-col">
+      <Badge 
+        variant="outline" 
+        className="text-xs py-0.5 px-2 w-fit"
+      >
+        {field.label}
+        {field.value && field.type !== 'checkbox' && (
+          <span className="text-muted-foreground ml-1">: {field.value}</span>
+        )}
+      </Badge>
+      {field.notes && (
+        <span className="text-muted-foreground text-[10px] italic ml-2 mt-0.5 whitespace-pre-line">
+          "{field.notes}"
+        </span>
+      )}
     </div>
-    {template.distance_value && (
-      <div className="text-xs">
-        Distance: {template.distance_value} {template.distance_unit}
-      </div>
-    )}
-    {template.pace_value && (
-      <div className="text-xs">
-        Pace Goal: {template.pace_value}
-      </div>
-    )}
-    {template.intervals && template.intervals.length > 0 && (
-      <div className="flex flex-wrap gap-1">
-        {template.intervals.map((interval, i) => (
-          <Badge key={i} variant="secondary" className="text-xs capitalize">
-            {interval.type}
-            {interval.duration && ` - ${Math.floor(interval.duration / 60)}:${String(interval.duration % 60).padStart(2, '0')}`}
-          </Badge>
-        ))}
-      </div>
-    )}
-  </div>
-)}
-```
-
-#### 7. Show Performance Data Logged During Completion
-Display any performance data that was logged when the activity was completed.
-
-```tsx
-// New section for performance data
-{activity.performance_data && Object.keys(activity.performance_data).length > 0 && (
-  <div className="space-y-1 border-t pt-2 mt-2">
-    <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-      <Activity className="h-3 w-3" />
-      <span>Performance Logged</span>
-    </div>
-    <div className="grid grid-cols-2 gap-2 text-xs">
-      {Object.entries(activity.performance_data).map(([key, value]) => (
-        <div key={key} className="flex justify-between bg-muted/50 rounded p-1.5">
-          <span className="text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</span>
-          <span className="font-medium">{String(value)}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-```
-
-#### 8. Update hasDetails Check
-Include new fields in the check for expandable content.
-
-```tsx
-const hasDetails = 
-  (meals?.items && meals.items.length > 0) ||
-  (meals?.supplements && meals.supplements.length > 0) ||
-  (meals?.vitamins && meals.vitamins.length > 0) ||
-  (meals?.hydration) ||
-  exercises.length > 0 ||
-  customFields.length > 0 ||
-  activity.notes ||
-  template.description ||
-  (activity.performance_data && Object.keys(activity.performance_data).length > 0) ||
-  (template.intervals && template.intervals.length > 0) ||
-  template.distance_value ||
-  template.pace_value;
-```
-
-#### 9. Update Template Query (Minor)
-Ensure the query includes all needed fields. Current query already includes:
-- `exercises, meals, custom_fields, duration_minutes, intensity`
-
-Need to add:
-- `intervals, distance_value, distance_unit, pace_value, description`
-
-**File: `src/hooks/useVault.ts` (line 1164)**
-
-```tsx
-template:custom_activity_templates (
-  id, title, activity_type, icon, color, description,
-  exercises, meals, custom_fields, duration_minutes, intensity,
-  intervals, distance_value, distance_unit, pace_value
-)
+  ))}
+</div>
 ```
 
 ---
 
-## Visual Layout (Updated ActivityDetailCard)
+## Visual Change
 
+### Before
 ```
-┌─────────────────────────────────────────────────┐
-│ 🎯 Activity Title                  ⏱️ 30m  🟢 │
-│ "Optional description text here"    High  2:30p│
-├─────────────────────────────────────────────────┤
-│ 🍽️ Items                                       │
-│ [Chicken] [Rice] [Broccoli]                    │
-│                                                 │
-│ 💊 Supplements                                  │
-│ [Creatine (5g)] [Fish Oil]                     │
-│                                                 │
-│ 🏋️ Exercises                                   │
-│ [Squats (3×10)] [Deadlifts (4×8)]              │
-│ [Bench Press (3×8)]                            │
-│   Note: "Felt strong, increased weight"        │
-│                                                 │
-│ 🏃 Running Details (if applicable)              │
-│ Distance: 2 miles                              │
-│ [Run - 5:00] [Walk - 2:00] [Sprint - 1:00]     │
-│                                                 │
-│ 📊 Performance Logged                           │
-│ ┌──────────────┬───────────────┐               │
-│ │ Weight       │ 185 lbs       │               │
-│ │ Sets Done    │ 12            │               │
-│ └──────────────┴───────────────┘               │
-│                                                 │
-│ 💭 "Great session, pushed through fatigue"     │
-└─────────────────────────────────────────────────┘
+Logged
+[Fascia Toe Raises] [Ankle Tens Unit] [Hanging]
+```
+
+### After
+```
+Logged
+[Fascia Toe Raises]
+  "8SL Toe raises - Marble in second two Or foot Toss (20) 135lbs"
+[Ankle Tens Unit]
+  "Over Top of ankle, Behind scar above ankle, 10Mins"
+[Hanging]
+  "45Secs - X2 Twist toward right side glide rolling"
 ```
 
 ---
 
-## Summary
+## Technical Notes
 
-This update transforms the Past Days activity cards from a brief summary to a complete journal entry view, ensuring users can review exactly what happened during each activity - including all exercises, their notes, performance data logged during completion, and running-specific details.
+- Uses `whitespace-pre-line` to preserve line breaks in multi-line notes
+- Matches the existing exercise notes styling (italic, muted, 10px font)
+- Adds `w-fit` to Badge so it doesn't stretch to full width
+- Changes container from `flex flex-wrap` to `space-y-1` for vertical layout with notes
+
