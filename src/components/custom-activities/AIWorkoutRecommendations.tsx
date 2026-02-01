@@ -1,14 +1,32 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Sparkles, Clock, Dumbbell, Heart, Loader2, RefreshCw, Lightbulb } from 'lucide-react';
-import { useWorkoutRecommendations } from '@/hooks/useWorkoutRecommendations';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { 
+  Sparkles, 
+  Clock, 
+  Dumbbell, 
+  Heart, 
+  Loader2, 
+  RefreshCw, 
+  Lightbulb, 
+  AlertTriangle,
+  ShieldAlert,
+  Zap
+} from 'lucide-react';
+import { useWorkoutRecommendations, RecoveryWarning } from '@/hooks/useWorkoutRecommendations';
 import { Exercise } from '@/types/customActivity';
-import { WorkoutRecommendation } from '@/types/workoutRecommendation';
+import { WorkoutRecommendation, ExerciseWithWarning } from '@/types/workoutRecommendation';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AIWorkoutRecommendationsProps {
   onUseWorkout: (exercises: Exercise[]) => void;
@@ -28,22 +46,137 @@ const FOCUS_COLORS: Record<string, string> = {
   balanced: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
 };
 
+/**
+ * Recovery warning banner component
+ */
+function RecoveryWarningBanner({ 
+  warning, 
+  onShowAlternatives 
+}: { 
+  warning: RecoveryWarning; 
+  onShowAlternatives?: () => void;
+}) {
+  const { t } = useTranslation();
+  const isHigh = warning.severity === 'high';
+
+  return (
+    <Alert 
+      variant={isHigh ? "destructive" : "default"} 
+      className={cn(
+        "mb-4",
+        isHigh 
+          ? "border-destructive/50 bg-destructive/10" 
+          : "border-amber-500/50 bg-amber-500/10"
+      )}
+    >
+      <ShieldAlert className={cn("h-4 w-4", isHigh ? "text-destructive" : "text-amber-500")} />
+      <AlertTitle className={cn(
+        "font-bold",
+        isHigh ? "text-destructive" : "text-amber-600 dark:text-amber-400"
+      )}>
+        {isHigh ? t('aiRecommendations.recoveryAlertHigh', 'Recovery Alert') : t('aiRecommendations.recoveryAlertModerate', 'Recovery Notice')}
+      </AlertTitle>
+      <AlertDescription className="mt-2 space-y-2">
+        <p className="text-sm">{warning.reason}</p>
+        {warning.suggestions.length > 0 && (
+          <ul className="text-xs list-disc list-inside opacity-80 space-y-1">
+            {warning.suggestions.map((suggestion, i) => (
+              <li key={i}>{suggestion}</li>
+            ))}
+          </ul>
+        )}
+        {onShowAlternatives && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onShowAlternatives}
+            className="mt-2 gap-2"
+          >
+            <Zap className="h-3 w-3" />
+            {t('aiRecommendations.viewLighterOptions', 'View Lighter Options')}
+          </Button>
+        )}
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+/**
+ * Exercise badge with optional pain warning tooltip
+ */
+function ExerciseBadge({ exercise }: { exercise: ExerciseWithWarning }) {
+  const hasWarning = !!exercise.painWarning;
+  const isHighSeverity = exercise.painWarning?.severity === 'high';
+
+  const badge = (
+    <Badge 
+      variant="secondary" 
+      className={cn(
+        "text-xs font-normal gap-1",
+        hasWarning && (isHighSeverity 
+          ? "border-destructive/50 bg-destructive/10" 
+          : "border-amber-500/50 bg-amber-500/10")
+      )}
+    >
+      {hasWarning && (
+        <AlertTriangle className={cn(
+          "h-3 w-3",
+          isHighSeverity ? "text-destructive" : "text-amber-500"
+        )} />
+      )}
+      {exercise.name}
+    </Badge>
+  );
+
+  if (!hasWarning) return badge;
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {badge}
+        </TooltipTrigger>
+        <TooltipContent className="max-w-[250px]">
+          <p className="font-medium text-sm">{exercise.painWarning?.message}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Affected areas: {exercise.painWarning?.affectedAreas.join(', ')}
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 function RecommendationCard({ 
   recommendation, 
-  onUse 
+  onUse,
+  isLighterAlternative = false,
 }: { 
   recommendation: WorkoutRecommendation; 
   onUse: () => void;
+  isLighterAlternative?: boolean;
 }) {
   const { t } = useTranslation();
+  const exercises = recommendation.exercises as ExerciseWithWarning[];
+  const warningCount = exercises.filter(ex => ex.painWarning).length;
 
   return (
-    <Card className="group hover:shadow-md transition-all">
+    <Card className={cn(
+      "group hover:shadow-md transition-all",
+      isLighterAlternative && "border-green-500/30 bg-green-500/5"
+    )}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1">
-            <CardTitle className="text-base font-bold">{recommendation.name}</CardTitle>
             <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-bold">{recommendation.name}</CardTitle>
+              {isLighterAlternative && (
+                <Badge variant="outline" className="text-xs bg-green-500/20 text-green-500 border-green-500/30">
+                  Lighter Option
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge 
                 variant="outline" 
                 className={cn("text-xs", FOCUS_COLORS[recommendation.focus])}
@@ -55,6 +188,12 @@ function RecommendationCard({
                 <Clock className="h-3 w-3" />
                 {recommendation.estimatedDuration} min
               </span>
+              {warningCount > 0 && (
+                <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-500">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  {warningCount} {warningCount === 1 ? 'warning' : 'warnings'}
+                </Badge>
+              )}
             </div>
           </div>
           <Button size="sm" onClick={onUse} className="shrink-0">
@@ -64,14 +203,12 @@ function RecommendationCard({
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         <div className="flex flex-wrap gap-1">
-          {recommendation.exercises.slice(0, 5).map((ex, i) => (
-            <Badge key={i} variant="secondary" className="text-xs font-normal">
-              {ex.name}
-            </Badge>
+          {exercises.slice(0, 5).map((ex, i) => (
+            <ExerciseBadge key={i} exercise={ex} />
           ))}
-          {recommendation.exercises.length > 5 && (
+          {exercises.length > 5 && (
             <Badge variant="secondary" className="text-xs font-normal">
-              +{recommendation.exercises.length - 5} more
+              +{exercises.length - 5} more
             </Badge>
           )}
         </div>
@@ -120,8 +257,12 @@ function LoadingSkeleton() {
 
 export function AIWorkoutRecommendations({ onUseWorkout }: AIWorkoutRecommendationsProps) {
   const { t } = useTranslation();
+  const [showAlternatives, setShowAlternatives] = useState(false);
+  
   const { 
     recommendations, 
+    lighterAlternatives,
+    recoveryWarning,
     isLoading, 
     error, 
     generateRecommendations,
@@ -132,8 +273,14 @@ export function AIWorkoutRecommendations({ onUseWorkout }: AIWorkoutRecommendati
   }, [generateRecommendations]);
 
   const handleUseWorkout = (recommendation: WorkoutRecommendation) => {
-    onUseWorkout(recommendation.exercises);
+    // Strip pain warnings when passing to workout builder
+    const cleanExercises = recommendation.exercises.map(({ painWarning, ...ex }) => ex);
+    onUseWorkout(cleanExercises as Exercise[]);
   };
+
+  const displayedRecommendations = showAlternatives && lighterAlternatives.length > 0 
+    ? lighterAlternatives 
+    : recommendations;
 
   return (
     <div className="border rounded-lg p-4 bg-gradient-to-br from-primary/5 to-transparent">
@@ -142,38 +289,60 @@ export function AIWorkoutRecommendations({ onUseWorkout }: AIWorkoutRecommendati
           <Sparkles className="h-5 w-5 text-primary" />
           <h3 className="font-bold text-sm">{t('aiRecommendations.title')}</h3>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={generateRecommendations}
-          disabled={isLoading}
-          className="gap-2"
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          {lighterAlternatives.length > 0 && (
+            <Button
+              variant={showAlternatives ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setShowAlternatives(!showAlternatives)}
+              className="gap-1"
+            >
+              <Zap className="h-3 w-3" />
+              {showAlternatives ? 'Main' : 'Lighter'}
+            </Button>
           )}
-          {isLoading ? t('aiRecommendations.generating') : t('aiRecommendations.generate')}
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={generateRecommendations}
+            disabled={isLoading}
+            className="gap-2"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            {isLoading ? t('aiRecommendations.generating') : t('aiRecommendations.generate')}
+          </Button>
+        </div>
       </div>
+
+      {/* Recovery warning banner */}
+      {recoveryWarning && recoveryWarning.show && !isLoading && (
+        <RecoveryWarningBanner 
+          warning={recoveryWarning}
+          onShowAlternatives={lighterAlternatives.length > 0 ? () => setShowAlternatives(true) : undefined}
+        />
+      )}
 
       {isLoading && <LoadingSkeleton />}
 
-      {!isLoading && recommendations.length === 0 && !error && (
+      {!isLoading && displayedRecommendations.length === 0 && !error && (
         <div className="text-center py-8 text-muted-foreground">
           <Dumbbell className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">{t('aiRecommendations.noHistory')}</p>
         </div>
       )}
 
-      {!isLoading && recommendations.length > 0 && (
+      {!isLoading && displayedRecommendations.length > 0 && (
         <div className="space-y-3">
-          {recommendations.map((rec) => (
+          {displayedRecommendations.map((rec) => (
             <RecommendationCard
               key={rec.id}
               recommendation={rec}
               onUse={() => handleUseWorkout(rec)}
+              isLighterAlternative={showAlternatives}
             />
           ))}
         </div>
