@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ZoomOut } from 'lucide-react';
+import { ZoomOut, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -22,13 +22,21 @@ const VIEW_LABELS: Record<BodyView, string> = {
   right: 'R Side',
 };
 
+interface TouchState {
+  initialDistance: number;
+  initialZoom: number;
+  center: { x: number; y: number };
+  isPinching: boolean;
+}
+
 export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
   const [activeView, setActiveView] = useState<BodyView>('front');
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-  const touchRef = useRef<{ distance: number; center: { x: number; y: number } } | null>(null);
+  const [isPinching, setIsPinching] = useState(false);
+  const touchRef = useRef<TouchState | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const getDistance = (t1: React.Touch, t2: React.Touch) =>
@@ -41,31 +49,58 @@ export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProp
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
+      e.preventDefault();
       const distance = getDistance(e.touches[0], e.touches[1]);
       const center = getCenter(e.touches[0], e.touches[1]);
-      touchRef.current = { distance, center };
+      touchRef.current = {
+        initialDistance: distance,
+        initialZoom: zoomLevel,
+        center,
+        isPinching: true,
+      };
+      setIsPinching(true);
+      if (navigator.vibrate) navigator.vibrate(10);
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length === 2 && touchRef.current) {
+    if (e.touches.length === 2 && touchRef.current?.isPinching) {
+      e.preventDefault();
       const newDistance = getDistance(e.touches[0], e.touches[1]);
-      const scale = newDistance / touchRef.current.distance;
-      setZoomLevel((prev) => Math.min(Math.max(prev * scale, 1), 3));
-      touchRef.current = {
-        distance: newDistance,
-        center: getCenter(e.touches[0], e.touches[1]),
-      };
+      // Calculate scale relative to INITIAL distance, not previous frame
+      const scale = newDistance / touchRef.current.initialDistance;
+      // Apply scale to INITIAL zoom level, clamped 1-3x
+      const newZoom = Math.min(Math.max(touchRef.current.initialZoom * scale, 1), 3);
+      setZoomLevel(newZoom);
+      
+      // Haptic feedback at zoom thresholds
+      if (navigator.vibrate) {
+        const oldZoom = zoomLevel;
+        if ((oldZoom < 2 && newZoom >= 2) || (oldZoom >= 2 && newZoom < 2) ||
+            (oldZoom < 3 && newZoom >= 3) || (oldZoom >= 3 && newZoom < 3) ||
+            (oldZoom > 1 && newZoom <= 1.05)) {
+          navigator.vibrate(15);
+        }
+      }
     }
   };
 
   const handleTouchEnd = () => {
-    touchRef.current = null;
+    if (touchRef.current) {
+      touchRef.current = null;
+      setIsPinching(false);
+    }
   };
 
   const resetZoom = () => {
     setZoomLevel(1);
     setPanOffset({ x: 0, y: 0 });
+    if (navigator.vibrate) navigator.vibrate(20);
+  };
+
+  const zoomOut = () => {
+    setZoomLevel((prev) => Math.max(prev - 0.5, 1));
+    if (navigator.vibrate) navigator.vibrate(15);
   };
 
   const toggleArea = (areaId: string) => {
@@ -76,6 +111,8 @@ export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProp
       onChange([...selectedAreas, areaId]);
     }
   };
+
+  const zoomPercent = Math.round(zoomLevel * 100);
 
   return (
     <div className="space-y-3">
@@ -112,18 +149,28 @@ export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProp
         </div>
       </div>
 
-      {/* Zoom Controls - Mobile only */}
+      {/* Zoom Controls - Mobile only, enhanced visibility */}
       {isMobile && zoomLevel > 1 && (
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={resetZoom}
-            className="text-xs gap-1"
+            onClick={zoomOut}
+            className="text-xs gap-1 min-h-[40px] px-3"
             type="button"
           >
-            <ZoomOut className="h-3 w-3" />
-            Reset Zoom
+            <Minus className="h-4 w-4" />
+            Zoom Out
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={resetZoom}
+            className="text-xs gap-1 min-h-[40px] px-3 font-medium"
+            type="button"
+          >
+            <ZoomOut className="h-4 w-4" />
+            Reset ({zoomPercent}%)
           </Button>
         </div>
       )}
@@ -132,13 +179,20 @@ export function BodyMapSelector({ selectedAreas, onChange }: BodyMapSelectorProp
       <div
         ref={containerRef}
         className={cn(
-          'flex justify-center overflow-hidden rounded-lg',
+          'relative flex justify-center overflow-hidden rounded-lg',
           isMobile && 'touch-manipulation bg-muted/20 p-2'
         )}
         onTouchStart={isMobile ? handleTouchStart : undefined}
         onTouchMove={isMobile ? handleTouchMove : undefined}
         onTouchEnd={isMobile ? handleTouchEnd : undefined}
       >
+        {/* Zoom indicator during pinch */}
+        {isMobile && isPinching && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-foreground/80 text-background px-3 py-1 rounded-full text-sm font-medium">
+            {zoomPercent}%
+          </div>
+        )}
+        
         <div
           style={{
             transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`,
