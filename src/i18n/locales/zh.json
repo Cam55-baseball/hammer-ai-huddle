@@ -4371,6 +4371,66 @@
     "fireUnlocked": "5天解锁火焰！",
     "glowUnlocked": "25天火焰发光！"
   },
+  "fascia": {
+    "bodyConnection": {
+      "title": "身体连接",
+      "subtitle": "你的身体部位如何连接"
+    },
+    "bodyLine": {
+      "sbl": "背部轨道",
+      "sfl": "前部轨道",
+      "ll": "侧面轨道",
+      "spl": "螺旋轨道",
+      "dfl": "核心轨道",
+      "arm": "手臂轨道"
+    },
+    "onBodyLine": "这在你的\"{{lineName}}\"上",
+    "connectedSpots": "连接的部位",
+    "proTip": "专业提示",
+    "whyItMightHurt": "为什么可能会痛",
+    "whatProsDo": "专业人士怎么做",
+    "selfCareTip": "自我护理提示",
+    "patternDetected": "在{{lineName}}检测到模式",
+    "disclaimer": {
+      "title": "仅供学习！",
+      "text": "这仅是教育信息。对于持续的疼痛，请务必咨询医生、教练或信任的成年人。",
+      "compact": "仅供教育 - 请始终咨询专业人士",
+      "bullet1": "如果有什么地方痛，告诉你的教练或父母",
+      "bullet2": "真正的疼痛要看医生或运动教练",
+      "bullet3": "不要忍着严重的疼痛训练"
+    },
+    "education": {
+      "title": "你的身体如何连接",
+      "subtitle": "点击像专业人士一样学习！",
+      "webAnalogy": "你知道你的身体里有一张看不见的网吗？",
+      "whatIsFascia": "它叫做筋膜（jīn mó），像一件弹性紧身衣一样包裹着每块肌肉。",
+      "sheetAnalogy": "当一个部分变紧时，它可以拉动其他部分 - 就像拉床单的一角一样！",
+      "mainTracksTitle": "主要\"身体轨道\"",
+      "whyProsCare": "为什么专业人士关心这个",
+      "proExplanation": "顶级运动员知道一个地方的疼痛可能来自完全不同地方的紧张。他们拉伸整条轨道，而不仅仅是疼痛的地方！",
+      "researchTitle": "这来自真正的科学！",
+      "researchers": "像Thomas Myers（解剖列车）、Robert Schleip博士、Carla和Antonio Stecco这样的研究人员研究我们的身体如何连接。很酷吧？"
+    },
+    "recap": {
+      "title": "身体连接模式",
+      "kidSummary": "你的身体像蜘蛛网一样连接！",
+      "whatThisMeans": "这意味着什么",
+      "proMove": "专业动作"
+    },
+    "patternAlert": {
+      "clue": "身体连接线索",
+      "proMove": "专业人士怎么做",
+      "connectedToCheck": "要检查的连接部位",
+      "remember": "记住：和教练、父母或医生谈谈这个。"
+    },
+    "heatMap": {
+      "showBodyLines": "显示身体线条"
+    },
+    "research": {
+      "attribution": "基于{{sources}}的研究",
+      "basedOn": "基于"
+    }
+  },
   "texVision": {
     "title": "Tex Vision",
     "subtitle": "神经视觉训练系统",

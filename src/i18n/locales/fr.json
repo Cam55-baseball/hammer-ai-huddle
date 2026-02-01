@@ -4097,6 +4097,66 @@
     "fireUnlocked": "Le feu se débloque à 5 jours!",
     "glowUnlocked": "La flamme brille à 25 jours!"
   },
+  "fascia": {
+    "bodyConnection": {
+      "title": "Connexion Corporelle",
+      "subtitle": "Comment tes parties du corps sont connectées"
+    },
+    "bodyLine": {
+      "sbl": "Ligne du Dos",
+      "sfl": "Ligne Frontale",
+      "ll": "Ligne Latérale",
+      "spl": "Ligne en Spirale",
+      "dfl": "Ligne du Centre",
+      "arm": "Lignes des Bras"
+    },
+    "onBodyLine": "C'est sur ta \"{{lineName}}\"",
+    "connectedSpots": "Points Connectés",
+    "proTip": "Astuce Pro",
+    "whyItMightHurt": "Pourquoi Ça Pourrait Faire Mal",
+    "whatProsDo": "Ce Que Font les Pros",
+    "selfCareTip": "Conseil d'Auto-Soin",
+    "patternDetected": "Motif détecté sur {{lineName}}",
+    "disclaimer": {
+      "title": "Juste Pour Apprendre!",
+      "text": "Ceci est une information éducative uniquement. Parle toujours à un médecin, entraîneur ou adulte de confiance pour une douleur qui ne part pas.",
+      "compact": "Éducatif uniquement - consulte toujours un professionnel",
+      "bullet1": "Dis à ton entraîneur ou parent si quelque chose fait mal",
+      "bullet2": "Consulte un médecin ou entraîneur pour une vraie douleur",
+      "bullet3": "Ne t'entraîne pas avec une douleur sérieuse"
+    },
+    "education": {
+      "title": "Comment Ton Corps Se Connecte",
+      "subtitle": "Touche pour apprendre comme un pro!",
+      "webAnalogy": "Savais-tu que ton corps a une toile invisible à l'intérieur?",
+      "whatIsFascia": "Ça s'appelle le fascia (fash-ee-ah), et ça enveloppe chaque muscle comme un costume élastique.",
+      "sheetAnalogy": "Quand une partie devient tendue, elle peut tirer sur d'autres parties - comme tirer sur un coin de drap!",
+      "mainTracksTitle": "Les \"Lignes Corporelles\" Principales",
+      "whyProsCare": "Pourquoi Les Pros S'en Soucient",
+      "proExplanation": "Les meilleurs athlètes savent que la douleur à un endroit peut venir de tension dans un endroit complètement différent. Ils étirent TOUTE la ligne, pas seulement là où ça fait mal!",
+      "researchTitle": "Ça vient de vraie science!",
+      "researchers": "Des chercheurs comme Thomas Myers (Anatomy Trains), Dr. Robert Schleip, et Carla & Antonio Stecco étudient comment nos corps se connectent. Plutôt cool, non?"
+    },
+    "recap": {
+      "title": "Motifs de Connexion Corporelle",
+      "kidSummary": "Ton corps est connecté comme une toile d'araignée!",
+      "whatThisMeans": "Ce Que Ça Veut Dire",
+      "proMove": "Mouvement Pro"
+    },
+    "patternAlert": {
+      "clue": "Indice de Connexion Corporelle",
+      "proMove": "Ce Que Font les Pros",
+      "connectedToCheck": "Points connectés à vérifier",
+      "remember": "Rappel: Parle à un entraîneur, parent ou médecin à ce sujet."
+    },
+    "heatMap": {
+      "showBodyLines": "Afficher les Lignes Corporelles"
+    },
+    "research": {
+      "attribution": "Basé sur les recherches de {{sources}}",
+      "basedOn": "Basé sur"
+    }
+  },
   "vault": {
     "title": "Le Coffre-Fort",
     "subtitle": "Votre journal de performance privé",

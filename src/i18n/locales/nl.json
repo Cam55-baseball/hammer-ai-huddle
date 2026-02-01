@@ -4400,6 +4400,66 @@
     "fireUnlocked": "Vuur ontgrendelt bij 5 dagen!",
     "glowUnlocked": "Vlam gloeit bij 25 dagen!"
   },
+  "fascia": {
+    "bodyConnection": {
+      "title": "Lichaamsverbinding",
+      "subtitle": "Hoe je lichaamsdelen verbonden zijn"
+    },
+    "bodyLine": {
+      "sbl": "Rugbaan",
+      "sfl": "Voorkantbaan",
+      "ll": "Zijkantbaan",
+      "spl": "Spiraalbaan",
+      "dfl": "Kernbaan",
+      "arm": "Armbanen"
+    },
+    "onBodyLine": "Dit is op je \"{{lineName}}\"",
+    "connectedSpots": "Verbonden Plekken",
+    "proTip": "Pro Tip",
+    "whyItMightHurt": "Waarom Het Pijn Kan Doen",
+    "whatProsDo": "Wat de Profs Doen",
+    "selfCareTip": "Zelfzorg Tip",
+    "patternDetected": "Patroon gedetecteerd op {{lineName}}",
+    "disclaimer": {
+      "title": "Alleen Om Te Leren!",
+      "text": "Dit is alleen educatieve informatie. Praat altijd met een dokter, trainer of betrouwbare volwassene over pijn die niet weggaat.",
+      "compact": "Alleen educatief - raadpleeg altijd een professional",
+      "bullet1": "Vertel je coach of ouder als iets pijn doet",
+      "bullet2": "Ga naar een dokter of trainer voor echte pijn",
+      "bullet3": "Train niet door met serieuze pijn"
+    },
+    "education": {
+      "title": "Hoe Je Lichaam Verbonden Is",
+      "subtitle": "Tik om te leren als een pro!",
+      "webAnalogy": "Wist je dat je lichaam een onzichtbaar web van binnen heeft?",
+      "whatIsFascia": "Het heet fascia (fash-ee-ah), en het omhult elke spier als een rekbaar pak.",
+      "sheetAnalogy": "Als één deel strak wordt, kan het aan andere delen trekken - net als aan een hoek van een laken trekken!",
+      "mainTracksTitle": "De Belangrijkste \"Lichaamsbanen\"",
+      "whyProsCare": "Waarom Profs Het Belangrijk Vinden",
+      "proExplanation": "Topatleten weten dat pijn op één plek kan komen van spanning op een heel andere plek. Ze strekken de HELE baan, niet alleen waar het pijn doet!",
+      "researchTitle": "Dit komt van echte wetenschap!",
+      "researchers": "Onderzoekers zoals Thomas Myers (Anatomy Trains), Dr. Robert Schleip, en Carla & Antonio Stecco bestuderen hoe onze lichamen verbonden zijn. Best cool, toch?"
+    },
+    "recap": {
+      "title": "Lichaamsverbindingspatronen",
+      "kidSummary": "Je lichaam is verbonden als een spinnenweb!",
+      "whatThisMeans": "Wat Dit Betekent",
+      "proMove": "Pro Beweging"
+    },
+    "patternAlert": {
+      "clue": "Lichaamsverbinding Aanwijzing",
+      "proMove": "Wat de Profs Doen",
+      "connectedToCheck": "Verbonden plekken om te checken",
+      "remember": "Onthoud: Praat met een coach, ouder of dokter hierover."
+    },
+    "heatMap": {
+      "showBodyLines": "Lichaamslijnen Tonen"
+    },
+    "research": {
+      "attribution": "Gebaseerd op onderzoek van {{sources}}",
+      "basedOn": "Gebaseerd op"
+    }
+  },
   "texVision": {
     "title": "Tex Vision",
     "subtitle": "Neuro-Visueel Trainingssysteem",

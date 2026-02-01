@@ -4097,6 +4097,66 @@
     "fireUnlocked": "Feuer wird bei 5 Tagen freigeschaltet!",
     "glowUnlocked": "Flamme glüht bei 25 Tagen!"
   },
+  "fascia": {
+    "bodyConnection": {
+      "title": "Körperverbindung",
+      "subtitle": "Wie deine Körperteile verbunden sind"
+    },
+    "bodyLine": {
+      "sbl": "Rückenbahn",
+      "sfl": "Vorderbahn",
+      "ll": "Seitenbahn",
+      "spl": "Spiralbahn",
+      "dfl": "Kernbahn",
+      "arm": "Armbahnen"
+    },
+    "onBodyLine": "Das ist auf deiner \"{{lineName}}\"",
+    "connectedSpots": "Verbundene Stellen",
+    "proTip": "Profi-Tipp",
+    "whyItMightHurt": "Warum Es Wehtun Könnte",
+    "whatProsDo": "Was die Profis Tun",
+    "selfCareTip": "Selbstpflege-Tipp",
+    "patternDetected": "Muster erkannt auf {{lineName}}",
+    "disclaimer": {
+      "title": "Nur Zum Lernen!",
+      "text": "Dies ist nur Bildungsinformation. Sprich immer mit einem Arzt, Trainer oder vertrauenswürdigen Erwachsenen über Schmerzen, die nicht weggehen.",
+      "compact": "Nur zur Bildung - konsultiere immer einen Fachmann",
+      "bullet1": "Sag deinem Trainer oder Elternteil, wenn etwas wehtut",
+      "bullet2": "Geh zum Arzt oder Trainer bei echten Schmerzen",
+      "bullet3": "Trainiere nicht mit starken Schmerzen"
+    },
+    "education": {
+      "title": "Wie Dein Körper Verbunden Ist",
+      "subtitle": "Tippe um wie ein Profi zu lernen!",
+      "webAnalogy": "Wusstest du, dass dein Körper ein unsichtbares Netz im Inneren hat?",
+      "whatIsFascia": "Es heißt Faszie (fash-ee-eh), und es umhüllt jeden Muskel wie ein dehnbarer Anzug.",
+      "sheetAnalogy": "Wenn ein Teil angespannt wird, kann es an anderen Teilen ziehen - wie wenn man an einer Ecke eines Bettlakens zieht!",
+      "mainTracksTitle": "Die Wichtigsten \"Körperbahnen\"",
+      "whyProsCare": "Warum Profis Es Wichtig Finden",
+      "proExplanation": "Top-Athleten wissen, dass Schmerzen an einer Stelle von Verspannungen an einer ganz anderen Stelle kommen können. Sie dehnen die GANZE Bahn, nicht nur wo es wehtut!",
+      "researchTitle": "Das kommt von echter Wissenschaft!",
+      "researchers": "Forscher wie Thomas Myers (Anatomy Trains), Dr. Robert Schleip und Carla & Antonio Stecco untersuchen, wie unsere Körper verbunden sind. Ziemlich cool, oder?"
+    },
+    "recap": {
+      "title": "Körperverbindungsmuster",
+      "kidSummary": "Dein Körper ist wie ein Spinnennetz verbunden!",
+      "whatThisMeans": "Was Das Bedeutet",
+      "proMove": "Profi-Zug"
+    },
+    "patternAlert": {
+      "clue": "Körperverbindungs-Hinweis",
+      "proMove": "Was die Profis Tun",
+      "connectedToCheck": "Verbundene Stellen zum Prüfen",
+      "remember": "Denk dran: Sprich mit einem Trainer, Elternteil oder Arzt darüber."
+    },
+    "heatMap": {
+      "showBodyLines": "Körperlinien Anzeigen"
+    },
+    "research": {
+      "attribution": "Basierend auf Forschung von {{sources}}",
+      "basedOn": "Basierend auf"
+    }
+  },
   "vault": {
     "title": "Der Tresor",
     "subtitle": "Dein privates Leistungstagebuch",

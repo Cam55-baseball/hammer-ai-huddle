@@ -4500,6 +4500,66 @@
     "fireUnlocked": "5日で炎が解除されます！",
     "glowUnlocked": "25日で炎が輝きます！"
   },
+  "fascia": {
+    "bodyConnection": {
+      "title": "体のつながり",
+      "subtitle": "体の部分がどうつながっているか"
+    },
+    "bodyLine": {
+      "sbl": "背中ライン",
+      "sfl": "前面ライン",
+      "ll": "横ライン",
+      "spl": "らせんライン",
+      "dfl": "コアライン",
+      "arm": "腕ライン"
+    },
+    "onBodyLine": "これは「{{lineName}}」にあります",
+    "connectedSpots": "つながっている場所",
+    "proTip": "プロのヒント",
+    "whyItMightHurt": "なぜ痛むかもしれないか",
+    "whatProsDo": "プロがやること",
+    "selfCareTip": "セルフケアのヒント",
+    "patternDetected": "{{lineName}}でパターンを検出",
+    "disclaimer": {
+      "title": "学習用だけ！",
+      "text": "これは教育情報のみです。消えない痛みについては、必ず医者、トレーナー、または信頼できる大人に相談してください。",
+      "compact": "教育目的のみ - 必ず専門家に相談",
+      "bullet1": "何か痛いときはコーチや親に伝えて",
+      "bullet2": "本当の痛みは医者やトレーナーに診てもらって",
+      "bullet3": "ひどい痛みを我慢してトレーニングしないで"
+    },
+    "education": {
+      "title": "体のつながり方",
+      "subtitle": "タップしてプロみたいに学ぼう！",
+      "webAnalogy": "体の中に見えない網があるって知ってた？",
+      "whatIsFascia": "筋膜（きんまく）っていうんだ。すべての筋肉を伸びるスーツみたいに包んでいるよ。",
+      "sheetAnalogy": "一か所が硬くなると、他の場所を引っ張ることがあるんだ - ベッドシーツの角を引っ張るみたいに！",
+      "mainTracksTitle": "主要な「ボディライン」",
+      "whyProsCare": "なぜプロは気にするのか",
+      "proExplanation": "トップアスリートは、ある場所の痛みが全然違う場所の硬さから来ることがあると知っています。痛いところだけじゃなく、ライン全体をストレッチします！",
+      "researchTitle": "これは本当の科学から来ています！",
+      "researchers": "トーマス・マイヤーズ（アナトミートレイン）、ロバート・シュライプ博士、カーラ＆アントニオ・ステッコなどの研究者が体のつながりを研究しています。すごいでしょ？"
+    },
+    "recap": {
+      "title": "体のつながりパターン",
+      "kidSummary": "体はクモの巣みたいにつながっています！",
+      "whatThisMeans": "これが意味すること",
+      "proMove": "プロの動き"
+    },
+    "patternAlert": {
+      "clue": "体のつながりヒント",
+      "proMove": "プロがやること",
+      "connectedToCheck": "チェックすべきつながった場所",
+      "remember": "覚えておいて：コーチ、親、または医者に相談してね。"
+    },
+    "heatMap": {
+      "showBodyLines": "ボディラインを表示"
+    },
+    "research": {
+      "attribution": "{{sources}}の研究に基づく",
+      "basedOn": "基づく"
+    }
+  },
   "texVision": {
     "title": "テックスビジョン",
     "subtitle": "神経視覚トレーニングシステム",
