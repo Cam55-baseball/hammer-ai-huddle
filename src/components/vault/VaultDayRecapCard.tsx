@@ -125,6 +125,19 @@ function ActivityDetailCard({ activity }: { activity: CustomActivityLog }) {
         {hasDetails && (
           <CollapsibleContent>
             <CardContent className="pb-3 px-4 pt-0 space-y-3">
+              {/* Full Description */}
+              {template.description && (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <NotebookPen className="h-3 w-3" />
+                    <span>Description</span>
+                  </div>
+                  <p className="text-xs text-foreground whitespace-pre-line bg-muted/30 rounded-md p-2">
+                    {template.description}
+                  </p>
+                </div>
+              )}
+
               {/* Meal Items */}
               {meals?.items && meals.items.length > 0 && (
                 <div className="space-y-1">
