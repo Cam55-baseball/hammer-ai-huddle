@@ -4660,6 +4660,7 @@
       "rightSide": "Rechte Seite",
       "leftHand": "Linke Hand",
       "rightHand": "Rechte Hand",
+      "medicineBallHint": "Verwenden Sie einen 5 lb Medizinball für den MB Sit-Up Wurf und den Brustpass Sitzend.",
       "handedness": {
         "right": "Rechts (R)",
         "left": "Links (L)",

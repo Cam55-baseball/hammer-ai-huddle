@@ -4660,6 +4660,7 @@
       "rightSide": "Côté Droit",
       "leftHand": "Main Gauche",
       "rightHand": "Main Droite",
+      "medicineBallHint": "Utilisez un ballon médicinal de 5 lb pour le Lancer Abdominal MB et la Passe Poitrine Assise.",
       "handedness": {
         "right": "Droite (D)",
         "left": "Gauche (G)",
