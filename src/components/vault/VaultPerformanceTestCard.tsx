@@ -163,6 +163,9 @@ const BOTH_HANDS_THROWING_GROUPS: Record<string, [string, string]> = {
   velocity: ['velocity_left', 'velocity_right'],
 };
 
+// Medicine ball metrics that require 5lb ball hint
+const MEDICINE_BALL_METRICS = ['mb_situp_throw', 'seated_chest_pass'];
+
 export function VaultPerformanceTestCard({ 
   tests, 
   onSave, 
@@ -535,6 +538,16 @@ export function VaultPerformanceTestCard({
                         </div>
                       );
                     })}
+                    
+                    {/* Medicine Ball hint - show when MB metrics are present */}
+                    {regularMetrics.some(m => MEDICINE_BALL_METRICS.includes(m)) && (
+                      <Alert className="bg-blue-500/10 border-blue-500/30">
+                        <AlertCircle className="h-4 w-4 text-blue-500" />
+                        <AlertDescription className="text-sm text-blue-700 dark:text-blue-400">
+                          {t('vault.performance.medicineBallHint')}
+                        </AlertDescription>
+                      </Alert>
+                    )}
                     
                     {/* Regular metrics */}
                     <div className="grid grid-cols-2 gap-2">

@@ -4711,6 +4711,7 @@
       "rightSide": "Lado Derecho",
       "leftHand": "Mano Izquierda",
       "rightHand": "Mano Derecha",
+      "medicineBallHint": "Usa un balón medicinal de 5 libras para el Lanzamiento MB Abdominal y el Pase de Pecho Sentado.",
       "handedness": {
         "right": "Derecha (D)",
         "left": "Izquierda (I)",

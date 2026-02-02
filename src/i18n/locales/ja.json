@@ -3878,6 +3878,7 @@
       "rightSide": "右サイド",
       "leftHand": "左手",
       "rightHand": "右手",
+      "medicineBallHint": "MBシットアップスローとシーテッドチェストパスには5ポンドのメディシンボールを使用してください。",
       "handedness": {
         "right": "右 (R)",
         "left": "左 (L)",

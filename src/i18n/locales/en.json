@@ -5202,6 +5202,7 @@
       "rightSide": "Right Side",
       "leftHand": "Left Hand",
       "rightHand": "Right Hand",
+      "medicineBallHint": "Use a 5lb medicine ball for MB Sit-Up Throw and Seated Chest Pass.",
       "handedness": {
         "right": "Right (R)",
         "left": "Left (L)",

@@ -3749,6 +3749,7 @@
       "rightSide": "右侧",
       "leftHand": "左手",
       "rightHand": "右手",
+      "medicineBallHint": "药球仰卧起坐抛和坐姿胸前传球请使用5磅药球。",
       "handedness": {
         "right": "右 (R)",
         "left": "左 (L)",

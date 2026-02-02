@@ -3765,6 +3765,7 @@
       "rightSide": "오른쪽",
       "leftHand": "왼손",
       "rightHand": "오른손",
+      "medicineBallHint": "MB 윗몸일으키기 던지기와 앉아서 가슴 패스에는 5파운드 메디신볼을 사용하세요.",
       "handedness": {
         "right": "오른쪽 (R)",
         "left": "왼쪽 (L)",
