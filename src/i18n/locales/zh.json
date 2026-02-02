@@ -3483,7 +3483,9 @@
       "disciplineAlert": "自律提醒",
       "disciplineAlertDesc": "您的自律正趋向低于目标",
       "goalsSet": "本周目标已设定",
-      "lockedUntil": "锁定至"
+      "lockedUntil": "锁定至",
+      "alreadySet": "目标已设定",
+      "lockedMessage": "您的每周健康目标已锁定至下周一。"
     },
     "quiz": {
       "night": {

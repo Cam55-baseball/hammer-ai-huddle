@@ -4944,7 +4944,9 @@
       "disciplineAlert": "Discipline Alert",
       "disciplineAlertDesc": "Your discipline is trending below goal",
       "goalsSet": "Goals Set for This Week",
-      "lockedUntil": "Locked until"
+      "lockedUntil": "Locked until",
+      "alreadySet": "Goals Already Set",
+      "lockedMessage": "Your weekly wellness goals are locked until next Monday."
     },
     "freeNote": {
       "title": "Quick Note",

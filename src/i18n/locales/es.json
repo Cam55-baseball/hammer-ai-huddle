@@ -4453,7 +4453,9 @@
       "disciplineAlert": "Alerta de Disciplina",
       "disciplineAlertDesc": "Tu disciplina está tendiendo por debajo del objetivo",
       "goalsSet": "Metas Establecidas para Esta Semana",
-      "lockedUntil": "Bloqueado hasta"
+      "lockedUntil": "Bloqueado hasta",
+      "alreadySet": "Metas Ya Establecidas",
+      "lockedMessage": "Tus metas de bienestar semanal están bloqueadas hasta el próximo lunes."
     },
     "freeNote": {
       "title": "Nota Rápida",

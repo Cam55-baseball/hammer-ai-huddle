@@ -3499,7 +3499,9 @@
       "disciplineAlert": "규율 알림",
       "disciplineAlertDesc": "규율이 목표 이하로 향하고 있습니다",
       "goalsSet": "이번 주 목표 설정 완료",
-      "lockedUntil": "잠금 해제 날짜"
+      "lockedUntil": "잠금 해제 날짜",
+      "alreadySet": "목표 이미 설정됨",
+      "lockedMessage": "주간 웰니스 목표는 다음 월요일까지 잠겨 있습니다."
     },
     "quiz": {
       "night": {

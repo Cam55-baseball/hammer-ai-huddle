@@ -4402,7 +4402,9 @@
       "disciplineAlert": "Alerte Discipline",
       "disciplineAlertDesc": "Votre discipline tend en dessous de l'objectif",
       "goalsSet": "Objectifs définis pour cette semaine",
-      "lockedUntil": "Verrouillé jusqu'à"
+      "lockedUntil": "Verrouillé jusqu'à",
+      "alreadySet": "Objectifs Déjà Définis",
+      "lockedMessage": "Vos objectifs de bien-être hebdomadaires sont verrouillés jusqu'à lundi prochain."
     },
     "freeNote": {
       "title": "Note Rapide",

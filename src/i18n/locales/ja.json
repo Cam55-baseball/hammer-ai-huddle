@@ -3612,7 +3612,9 @@
       "disciplineAlert": "規律アラート",
       "disciplineAlertDesc": "規律が目標を下回る傾向です",
       "goalsSet": "今週の目標設定済み",
-      "lockedUntil": "ロック解除日"
+      "lockedUntil": "ロック解除日",
+      "alreadySet": "目標は既に設定済み",
+      "lockedMessage": "週間ウェルネス目標は次の月曜日までロックされています。"
     },
     "quiz": {
       "night": {

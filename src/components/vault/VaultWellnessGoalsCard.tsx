@@ -107,6 +107,28 @@ export function VaultWellnessGoalsCard() {
 
   const handleSave = async () => {
     if (!user) return;
+    
+    // Re-check if goals already exist (handles race conditions/multiple tabs)
+    const { data: existing } = await supabase
+      .from('vault_wellness_goals')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('week_start_date', weekStartStr)
+      .maybeSingle();
+    
+    if (existing) {
+      // Goals already set - update local state and show locked
+      setHasExistingGoals(true);
+      const nextWeek = addDays(weekStart, 7);
+      setGoalsLockedUntil(nextWeek);
+      toast({
+        title: t('vault.wellnessGoals.alreadySet'),
+        description: t('vault.wellnessGoals.lockedMessage'),
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     setSaving(true);
 
     const payload = {
@@ -118,13 +140,27 @@ export function VaultWellnessGoalsCard() {
       notification_enabled: goals.notification_enabled
     };
 
+    // Use INSERT only - not upsert (enforce once-per-week)
     const { error } = await supabase
       .from('vault_wellness_goals')
-      .upsert(payload, { onConflict: 'user_id,week_start_date' });
+      .insert(payload);
 
     setSaving(false);
 
     if (error) {
+      // Handle duplicate key constraint (unique on user_id + week_start_date)
+      if (error.code === '23505') {
+        setHasExistingGoals(true);
+        const nextWeek = addDays(weekStart, 7);
+        setGoalsLockedUntil(nextWeek);
+        toast({
+          title: t('vault.wellnessGoals.alreadySet'),
+          description: t('vault.wellnessGoals.lockedMessage'),
+          variant: 'destructive'
+        });
+        return;
+      }
+      
       toast({
         title: t('common.error'),
         description: error.message,
@@ -391,7 +427,7 @@ export function VaultWellnessGoalsCard() {
           disabled={saving}
           className="w-full"
         >
-          {saving ? t('common.loading') : hasExistingGoals ? t('vault.wellnessGoals.updateGoals') : t('vault.wellnessGoals.setGoals')}
+          {saving ? t('common.loading') : t('vault.wellnessGoals.setGoals')}
         </Button>
       </CardContent>
     </Card>
