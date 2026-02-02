@@ -1,155 +1,216 @@
 
-# Fix: Pre-Lift Check-in Body Map Zoom-Out Issue
 
-## Problem Summary
+# Performance Test Bilateral Metrics for Switch Hitters & Both-Handed Throwers
 
-Users are unable to zoom out on the body map during the pre-workout check-in on mobile devices. Once zoomed in, they're stuck and cannot zoom back out.
+## Overview
 
-## Root Cause Analysis
-
-The current implementation has multiple issues:
-
-1. **Global viewport restriction** (`index.html` line 6): The meta tag `user-scalable=no` and `maximum-scale=1.0` completely blocks native browser zoom - this is intentional for the app overall but requires custom zoom handling in specific components
-
-2. **Pinch-to-zoom math issue** (`BodyMapSelector.tsx` lines 50-59): The current implementation updates `touchRef.current.distance` on every `touchmove` event, making the zoom calculation multiplicative/incremental. While this mostly works, it can cause erratic behavior when quickly pinching out
-
-3. **Missing zoom reset on dialog open**: When the dialog opens, the `zoomLevel` state doesn't reset to 1, so if a user closed the dialog while zoomed in, they reopen it still zoomed
-
-4. **No visible zoom-out UI when stuck**: The "Reset Zoom" button correctly appears when zoomed (line 116-129), but users may not notice it or it may not be responsive enough
+Update the Performance Tests to handle switch hitters and both-handed throwers by dynamically showing bilateral inputs for specific metrics based on handedness selection.
 
 ---
 
-## Technical Solution
+## Changes Required
 
-### File 1: `src/components/vault/quiz/BodyMapSelector.tsx`
+### 1. Rename Exit Velocity to Tee Exit Velocity
 
-**Changes:**
+**Current:** "Exit Velocity"
+**New:** "Tee Exit Velocity"
 
-1. **Fix pinch-to-zoom calculation** - Store the initial distance at pinch start and calculate zoom relative to it, rather than updating on every move. This provides smoother, more predictable zoom behavior
-
-2. **Add zoom out visual feedback** - Make the Reset Zoom button more prominent and always visible when zoomed
-
-3. **Add pinch visual indicator** - Show current zoom level during pinch gesture
-
-4. **Improve touch handling** - Ensure touchEnd properly resets the touch tracking state
-
-```typescript
-// Current problematic code:
-const handleTouchMove = (e: React.TouchEvent) => {
-  if (e.touches.length === 2 && touchRef.current) {
-    const newDistance = getDistance(e.touches[0], e.touches[1]);
-    const scale = newDistance / touchRef.current.distance;
-    setZoomLevel((prev) => Math.min(Math.max(prev * scale, 1), 3));
-    // BUG: Updating distance makes it multiplicative
-    touchRef.current = {
-      distance: newDistance,
-      center: getCenter(e.touches[0], e.touches[1]),
-    };
-  }
-};
-
-// Fixed code:
-const handleTouchMove = (e: React.TouchEvent) => {
-  if (e.touches.length === 2 && touchRef.current) {
-    const newDistance = getDistance(e.touches[0], e.touches[1]);
-    // Calculate scale relative to INITIAL distance, not previous frame
-    const scale = newDistance / touchRef.current.initialDistance;
-    // Apply scale to INITIAL zoom level, not current
-    const newZoom = Math.min(Math.max(touchRef.current.initialZoom * scale, 1), 3);
-    setZoomLevel(newZoom);
-  }
-};
-```
-
-5. **Store initial zoom at pinch start** - Capture both initial distance AND initial zoom level when pinch begins
-
-6. **Add zoom indicator overlay** - Show zoom percentage during active pinch for user feedback
-
-### File 2: `src/components/vault/VaultFocusQuizDialog.tsx`
-
-**Changes:**
-
-1. No direct changes needed - the BodyMapSelector is already a controlled component that resets when the dialog closes (form state resets in handleSubmit)
+The metric key `exit_velocity` will be renamed to `tee_exit_velocity` throughout the codebase to match the naming convention of `max_tee_distance`.
 
 ---
 
-## Implementation Details
+### 2. Switch Hitter Bilateral Metrics (Batting Side = "B")
 
-### Updated State & Refs
+When a user selects "Switch" for batting side in the **Hitting** module, the following metrics become bilateral:
 
-```typescript
-// Before
-const touchRef = useRef<{ distance: number; center: { x: number; y: number } } | null>(null);
+| Single Metric | Becomes |
+|---------------|---------|
+| Tee Exit Velocity | Left Side: Tee Exit Velocity + Right Side: Tee Exit Velocity |
+| Max Tee Distance | Left Side: Max Tee Distance + Right Side: Max Tee Distance |
 
-// After - include initial zoom state
-const touchRef = useRef<{ 
-  initialDistance: number; 
-  initialZoom: number; 
-  center: { x: number; y: number };
-  isPinching: boolean;
-} | null>(null);
+**New metric keys:**
+- `tee_exit_velocity_left` / `tee_exit_velocity_right`
+- `max_tee_distance_left` / `max_tee_distance_right`
+
+---
+
+### 3. Both-Handed Thrower Bilateral Metrics (Throwing Hand = "B")
+
+When a user selects "Both" for throwing hand:
+
+**For Pitching module:**
+| Single Metric | Becomes |
+|---------------|---------|
+| Long Toss Distance | Left Hand: Long Toss Distance + Right Hand: Long Toss Distance |
+| Velocity | Left Hand: Velocity + Right Hand: Velocity |
+
+**For Throwing module:**
+| Single Metric | Becomes |
+|---------------|---------|
+| Long Toss Distance | Left Hand: Long Toss Distance + Right Hand: Long Toss Distance |
+
+**New metric keys:**
+- `long_toss_distance_left` / `long_toss_distance_right`
+- `velocity_left` / `velocity_right`
+
+---
+
+## Technical Implementation
+
+### File 1: `src/components/vault/VaultPerformanceTestCard.tsx`
+
+**Changes:**
+
+1. **Rename `exit_velocity` to `tee_exit_velocity`** in `TEST_TYPES_BY_SPORT` arrays (lines 40-88)
+
+2. **Update `TEST_METRICS` config** (lines 116-137) to include new bilateral metric definitions:
+   ```typescript
+   tee_exit_velocity: { unit: 'mph', higher_better: true },
+   tee_exit_velocity_left: { unit: 'mph', higher_better: true },
+   tee_exit_velocity_right: { unit: 'mph', higher_better: true },
+   max_tee_distance_left: { unit: 'ft', higher_better: true },
+   max_tee_distance_right: { unit: 'ft', higher_better: true },
+   long_toss_distance_left: { unit: 'ft', higher_better: true },
+   long_toss_distance_right: { unit: 'ft', higher_better: true },
+   velocity_left: { unit: 'mph', higher_better: true },
+   velocity_right: { unit: 'mph', higher_better: true },
+   ```
+
+3. **Add new bilateral groups for handedness** (after line 144):
+   ```typescript
+   // Batting side bilateral groups (for switch hitters)
+   const SWITCH_HITTER_BILATERAL_GROUPS: Record<string, [string, string]> = {
+     tee_exit_velocity: ['tee_exit_velocity_left', 'tee_exit_velocity_right'],
+     max_tee_distance: ['max_tee_distance_left', 'max_tee_distance_right'],
+   };
+   
+   // Throwing hand bilateral groups (for both-handed throwers)
+   const BOTH_HANDS_THROWING_GROUPS: Record<string, [string, string]> = {
+     long_toss_distance: ['long_toss_distance_left', 'long_toss_distance_right'],
+     velocity: ['velocity_left', 'velocity_right'],
+   };
+   ```
+
+4. **Add dynamic metric computation** based on handedness state:
+   ```typescript
+   // Compute which metrics need bilateral UI based on handedness
+   const switchHitterMetrics = battingSide === 'B' && selectedModule === 'hitting' 
+     ? Object.keys(SWITCH_HITTER_BILATERAL_GROUPS) 
+     : [];
+   
+   const bothHandsMetrics = throwingHand === 'B' && (selectedModule === 'pitching' || selectedModule === 'throwing')
+     ? Object.keys(BOTH_HANDS_THROWING_GROUPS).filter(m => 
+         selectedModule === 'pitching' || m === 'long_toss_distance'
+       )
+     : [];
+   ```
+
+5. **Render handedness bilateral groups** similar to existing jump bilateral groups (lines 377-415):
+   - For switch hitters: Show "Left Side" / "Right Side" labels
+   - For both-handed throwers: Show "Left Hand" / "Right Hand" labels
+   - Filter these metrics from `regularMetrics` when bilateral mode is active
+
+6. **Update history display** to show bilateral metrics with proper labels
+
+---
+
+### File 2: `src/i18n/locales/en.json` (and other locale files)
+
+**Add new translation keys** in the `vault.performance.metrics` section:
+
+```json
+"tee_exit_velocity": "Tee Exit Velocity",
+"tee_exit_velocity_left": "Tee Exit Velocity (L)",
+"tee_exit_velocity_right": "Tee Exit Velocity (R)",
+"max_tee_distance_left": "Max Tee Distance (L)",
+"max_tee_distance_right": "Max Tee Distance (R)",
+"long_toss_distance_left": "Long Toss Distance (L)",
+"long_toss_distance_right": "Long Toss Distance (R)",
+"velocity_left": "Velocity (L)",
+"velocity_right": "Velocity (R)"
 ```
 
-### Updated Touch Handlers
+**Add new labels** for the bilateral UI sections:
 
-```typescript
-const handleTouchStart = (e: React.TouchEvent) => {
-  if (e.touches.length === 2) {
-    e.preventDefault(); // Prevent page scroll during pinch
-    const distance = getDistance(e.touches[0], e.touches[1]);
-    const center = getCenter(e.touches[0], e.touches[1]);
-    touchRef.current = { 
-      initialDistance: distance, 
-      initialZoom: zoomLevel,  // Capture current zoom at pinch start
-      center,
-      isPinching: true 
-    };
-  }
-};
-
-const handleTouchMove = (e: React.TouchEvent) => {
-  if (e.touches.length === 2 && touchRef.current?.isPinching) {
-    e.preventDefault();
-    const newDistance = getDistance(e.touches[0], e.touches[1]);
-    const scale = newDistance / touchRef.current.initialDistance;
-    // Apply to initial zoom, clamped 1-3x
-    const newZoom = Math.min(Math.max(touchRef.current.initialZoom * scale, 1), 3);
-    setZoomLevel(newZoom);
-  }
-};
-
-const handleTouchEnd = () => {
-  if (touchRef.current) {
-    touchRef.current = null;
-  }
-};
+```json
+"leftSide": "Left Side",
+"rightSide": "Right Side",
+"leftHand": "Left Hand",
+"rightHand": "Right Hand"
 ```
 
-### Enhanced UI
+---
 
-1. **Always-visible zoom controls when zoomed**:
-   - Show current zoom level percentage (e.g., "150%")
-   - More prominent "Reset Zoom" button with larger touch target
-   - Add a "−" button for manual zoom-out steps
+## UI Layout Examples
 
-2. **Zoom indicator during pinch**:
-   - Floating badge showing current zoom level while pinching
-   - Haptic feedback at 1x, 2x, and 3x thresholds
+### Switch Hitter - Hitting Module
+
+```text
+┌─────────────────────────────────────────┐
+│ Tee Exit Velocity (mph)                 │
+│ ┌─────────────┬─────────────┐           │
+│ │ Left Side   │ Right Side  │           │
+│ │ [____]      │ [____]      │           │
+│ └─────────────┴─────────────┘           │
+├─────────────────────────────────────────┤
+│ Max Tee Distance (ft)                   │
+│ ┌─────────────┬─────────────┐           │
+│ │ Left Side   │ Right Side  │           │
+│ │ [____]      │ [____]      │           │
+│ └─────────────┴─────────────┘           │
+└─────────────────────────────────────────┘
+```
+
+### Both-Handed Thrower - Pitching Module
+
+```text
+┌─────────────────────────────────────────┐
+│ Long Toss Distance (ft)                 │
+│ ┌─────────────┬─────────────┐           │
+│ │ Left Hand   │ Right Hand  │           │
+│ │ [____]      │ [____]      │           │
+│ └─────────────┴─────────────┘           │
+├─────────────────────────────────────────┤
+│ Velocity (mph)                          │
+│ ┌─────────────┬─────────────┐           │
+│ │ Left Hand   │ Right Hand  │           │
+│ │ [____]      │ [____]      │           │
+│ └─────────────┴─────────────┘           │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## Data Flow
+
+1. User selects handedness (throwing hand / batting side)
+2. Component dynamically computes which metrics need bilateral input
+3. Regular metrics filtered to exclude those with bilateral overrides
+4. Bilateral metrics rendered in grouped format with Left/Right inputs
+5. On save, all bilateral values stored with `_left` / `_right` suffixes
+6. History display shows bilateral values with proper labels
+
+---
+
+## Files to Update
+
+| File | Changes |
+|------|---------|
+| `src/components/vault/VaultPerformanceTestCard.tsx` | Rename metric, add bilateral groups, dynamic rendering logic |
+| `src/i18n/locales/en.json` | Add new metric translation keys |
+| `src/i18n/locales/es.json` | Add new metric translation keys |
+| `src/i18n/locales/fr.json` | Add new metric translation keys |
+| `src/i18n/locales/ja.json` | Add new metric translation keys |
+| `src/i18n/locales/ko.json` | Add new metric translation keys |
+| `src/i18n/locales/nl.json` | Add new metric translation keys |
+| `src/i18n/locales/zh.json` | Add new metric translation keys |
 
 ---
 
 ## Expected Outcome
 
-1. **Reliable zoom in/out**: Pinch-to-zoom will work smoothly in both directions, calculating relative to the initial pinch distance and zoom level
+1. Exit velocity renamed to "Tee Exit Velocity" to match max tee distance naming
+2. Switch hitters see bilateral inputs for tee exit velocity and max tee distance
+3. Both-handed throwers see bilateral inputs for long toss distance (pitching & throwing) and velocity (pitching only)
+4. All data properly stored and displayed in history with correct labels
 
-2. **Clear visual feedback**: Users will see their current zoom level and have multiple ways to zoom out (pinch, reset button, manual step button)
-
-3. **No stuck states**: The pinch gesture properly terminates on touch end, and the reset button provides a guaranteed escape hatch
-
----
-
-## Files Changed
-
-| File | Changes |
-|------|---------|
-| `src/components/vault/quiz/BodyMapSelector.tsx` | Fix pinch math, add zoom indicator, enhance UI |
