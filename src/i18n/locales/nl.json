@@ -3512,7 +3512,9 @@
       "disciplineAlert": "Discipline Waarschuwing",
       "disciplineAlertDesc": "Je discipline neigt onder het doel",
       "goalsSet": "Doelen ingesteld voor deze week",
-      "lockedUntil": "Vergrendeld tot"
+      "lockedUntil": "Vergrendeld tot",
+      "alreadySet": "Doelen Al Ingesteld",
+      "lockedMessage": "Je wekelijkse welzijn doelen zijn vergrendeld tot volgende maandag."
     },
     "quiz": {
       "night": {

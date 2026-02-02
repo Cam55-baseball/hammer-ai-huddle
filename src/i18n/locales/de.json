@@ -4402,7 +4402,9 @@
       "disciplineAlert": "Disziplin-Warnung",
       "disciplineAlertDesc": "Deine Disziplin tendiert unter dem Ziel",
       "goalsSet": "Ziele für diese Woche gesetzt",
-      "lockedUntil": "Gesperrt bis"
+      "lockedUntil": "Gesperrt bis",
+      "alreadySet": "Ziele Bereits Gesetzt",
+      "lockedMessage": "Deine wöchentlichen Wellness-Ziele sind bis nächsten Montag gesperrt."
     },
     "freeNote": {
       "title": "Schnelle Notiz",
