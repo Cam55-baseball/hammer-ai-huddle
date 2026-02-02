@@ -39,7 +39,7 @@ const TEST_TYPES_BY_SPORT = {
   baseball: {
     hitting: [
       'ten_yard_dash',
-      'exit_velocity',
+      'tee_exit_velocity',
       'max_tee_distance',
       'sl_broad_jump_left',
       'sl_broad_jump_right',
@@ -75,7 +75,7 @@ const TEST_TYPES_BY_SPORT = {
   softball: {
     hitting: [
       'ten_yard_dash',
-      'exit_velocity',
+      'tee_exit_velocity',
       'max_tee_distance',
       'sl_broad_jump_left',
       'sl_broad_jump_right',
@@ -116,7 +116,11 @@ const TEST_TYPES_BY_SPORT = {
 const TEST_METRICS: Record<string, { unit: string; higher_better: boolean }> = {
   // Distance metrics (feet)
   long_toss_distance: { unit: 'ft', higher_better: true },
+  long_toss_distance_left: { unit: 'ft', higher_better: true },
+  long_toss_distance_right: { unit: 'ft', higher_better: true },
   max_tee_distance: { unit: 'ft', higher_better: true },
+  max_tee_distance_left: { unit: 'ft', higher_better: true },
+  max_tee_distance_right: { unit: 'ft', higher_better: true },
   mb_situp_throw: { unit: 'ft', higher_better: true },
   seated_chest_pass: { unit: 'ft', higher_better: true },
   
@@ -133,14 +137,30 @@ const TEST_METRICS: Record<string, { unit: string; higher_better: boolean }> = {
   
   // Velocity metrics (mph)
   velocity: { unit: 'mph', higher_better: true },
-  exit_velocity: { unit: 'mph', higher_better: true },
+  velocity_left: { unit: 'mph', higher_better: true },
+  velocity_right: { unit: 'mph', higher_better: true },
+  tee_exit_velocity: { unit: 'mph', higher_better: true },
+  tee_exit_velocity_left: { unit: 'mph', higher_better: true },
+  tee_exit_velocity_right: { unit: 'mph', higher_better: true },
 };
 
-// Define all bilateral metric groups for grouped UI rendering
+// Define all bilateral metric groups for grouped UI rendering (leg-based)
 const BILATERAL_METRIC_GROUPS: Record<string, [string, string]> = {
   sl_broad_jump: ['sl_broad_jump_left', 'sl_broad_jump_right'],
   sl_lateral_broad_jump: ['sl_lateral_broad_jump_left', 'sl_lateral_broad_jump_right'],
   sl_vert_jump: ['sl_vert_jump_left', 'sl_vert_jump_right'],
+};
+
+// Switch hitter bilateral groups (batting side = "B")
+const SWITCH_HITTER_BILATERAL_GROUPS: Record<string, [string, string]> = {
+  tee_exit_velocity: ['tee_exit_velocity_left', 'tee_exit_velocity_right'],
+  max_tee_distance: ['max_tee_distance_left', 'max_tee_distance_right'],
+};
+
+// Both-handed thrower bilateral groups (throwing hand = "B")
+const BOTH_HANDS_THROWING_GROUPS: Record<string, [string, string]> = {
+  long_toss_distance: ['long_toss_distance_left', 'long_toss_distance_right'],
+  velocity: ['velocity_left', 'velocity_right'],
 };
 
 export function VaultPerformanceTestCard({ 
@@ -197,18 +217,38 @@ export function VaultPerformanceTestCard({
   const testTypes = TEST_TYPES_BY_SPORT[sport] || TEST_TYPES_BY_SPORT.baseball;
   const metrics = selectedModule ? (testTypes[selectedModule as keyof typeof testTypes] || []) : [];
   
-  // Get all bilateral metric keys for filtering
+  // Get all bilateral metric keys for filtering (leg-based)
   const allBilateralMetrics = Object.values(BILATERAL_METRIC_GROUPS).flat();
   
-  // Identify which bilateral groups are present in current metrics
+  // Identify which leg-based bilateral groups are present in current metrics
   const presentBilateralGroups = Object.entries(BILATERAL_METRIC_GROUPS)
     .filter(([_, [left, right]]) => metrics.includes(left) || metrics.includes(right))
     .map(([groupName]) => groupName);
   
-  // Filter out bilateral metrics for regular rendering (they get grouped UI)
+  // Determine which handedness-based bilateral metrics apply
+  const isSwitchHitter = battingSide === 'B' && selectedModule === 'hitting';
+  const isBothHandsThrower = throwingHand === 'B' && (selectedModule === 'pitching' || selectedModule === 'throwing');
+  
+  // Get active switch hitter metrics (only if hitting and switch)
+  const activeSwitchHitterMetrics = isSwitchHitter 
+    ? Object.keys(SWITCH_HITTER_BILATERAL_GROUPS).filter(m => metrics.includes(m))
+    : [];
+    
+  // Get active both-hands thrower metrics
+  const activeBothHandsMetrics = isBothHandsThrower
+    ? Object.keys(BOTH_HANDS_THROWING_GROUPS).filter(m => {
+        // For throwing module, only long_toss_distance applies (no velocity)
+        if (selectedModule === 'throwing' && m === 'velocity') return false;
+        return metrics.includes(m);
+      })
+    : [];
+  
+  // Filter out bilateral metrics for regular rendering
   const bilateralMetrics = metrics.filter(m => allBilateralMetrics.includes(m));
-  const regularMetrics = metrics.filter(m => !allBilateralMetrics.includes(m));
-  const hasBilateralMetrics = presentBilateralGroups.length > 0;
+  const handednessMetrics = [...activeSwitchHitterMetrics, ...activeBothHandsMetrics];
+  const regularMetrics = metrics.filter(m => 
+    !allBilateralMetrics.includes(m) && !handednessMetrics.includes(m)
+  );
 
   // Check if entry is locked
   // Recap-unlock override: If recap was generated and no entry exists after that date, unlock the card
@@ -374,7 +414,7 @@ export function VaultPerformanceTestCard({
 
                 {selectedModule && metrics.length > 0 && (
                   <div className="space-y-3">
-                    {/* Bilateral jump metrics - Special grouped rendering */}
+                    {/* Leg-based bilateral jump metrics - Special grouped rendering */}
                     {presentBilateralGroups.map((groupName) => {
                       const [leftKey, rightKey] = BILATERAL_METRIC_GROUPS[groupName];
                       return (
@@ -399,6 +439,88 @@ export function VaultPerformanceTestCard({
                             <div className="space-y-1">
                               <Label className="text-xs text-muted-foreground">
                                 {t('vault.performance.rightLeg')}
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={testResults[rightKey] || ''}
+                                onChange={(e) => setTestResults({ ...testResults, [rightKey]: e.target.value })}
+                                placeholder="0"
+                                className="h-8"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    
+                    {/* Switch Hitter bilateral metrics (Left Side / Right Side) */}
+                    {activeSwitchHitterMetrics.map((metricName) => {
+                      const [leftKey, rightKey] = SWITCH_HITTER_BILATERAL_GROUPS[metricName];
+                      const metricInfo = TEST_METRICS[metricName];
+                      return (
+                        <div key={metricName} className="p-2 rounded-lg bg-background/50 border border-border/50">
+                          <Label className="text-xs font-medium mb-2 block">
+                            {t(`vault.performance.metrics.${metricName}`)} ({metricInfo?.unit})
+                          </Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">
+                                {t('vault.performance.leftSide')}
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={testResults[leftKey] || ''}
+                                onChange={(e) => setTestResults({ ...testResults, [leftKey]: e.target.value })}
+                                placeholder="0"
+                                className="h-8"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">
+                                {t('vault.performance.rightSide')}
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={testResults[rightKey] || ''}
+                                onChange={(e) => setTestResults({ ...testResults, [rightKey]: e.target.value })}
+                                placeholder="0"
+                                className="h-8"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    
+                    {/* Both-Handed Thrower bilateral metrics (Left Hand / Right Hand) */}
+                    {activeBothHandsMetrics.map((metricName) => {
+                      const [leftKey, rightKey] = BOTH_HANDS_THROWING_GROUPS[metricName];
+                      const metricInfo = TEST_METRICS[metricName];
+                      return (
+                        <div key={metricName} className="p-2 rounded-lg bg-background/50 border border-border/50">
+                          <Label className="text-xs font-medium mb-2 block">
+                            {t(`vault.performance.metrics.${metricName}`)} ({metricInfo?.unit})
+                          </Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">
+                                {t('vault.performance.leftHand')}
+                              </Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={testResults[leftKey] || ''}
+                                onChange={(e) => setTestResults({ ...testResults, [leftKey]: e.target.value })}
+                                placeholder="0"
+                                className="h-8"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">
+                                {t('vault.performance.rightHand')}
                               </Label>
                               <Input
                                 type="number"
