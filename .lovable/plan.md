@@ -1,78 +1,141 @@
 
 
-# Add 5lb Medicine Ball Prompt for MB Sit-Up Throw and Seated Chest Pass
+# Weekly Wellness Goals - Strict Once-Per-Week Lock
 
-## Overview
+## Problem Summary
 
-Add an informational hint in the Performance Tests section that prompts users to use a 5lb medicine ball (MB) when performing the MB Sit-Up Throw and Seated Chest Pass tests.
+The Weekly Wellness Goals card in The Vault currently uses `upsert` which allows users to update their goals after setting them. While the UI shows a locked state, users could potentially bypass this by re-triggering the save action. The requirement is to strictly enforce one submission per week, with the card resetting every Monday.
+
+## Current Implementation Issues
+
+1. **`handleSave` uses `upsert`** (line 121-123): This allows updating existing records instead of only inserting new ones
+2. **Frontend-only lock**: The lock state (`isGoalsLocked`) is based on local state that resets on page reload until refetched from DB
+3. **RLS allows updates**: The policy `Users can update own wellness goals` permits modifications after initial submission
+4. **No "Update Goals" button should exist**: Line 394 shows an "Update Goals" text option when `hasExistingGoals` is true
 
 ---
 
-## Technical Implementation
+## Technical Solution
 
-### File 1: `src/components/vault/VaultPerformanceTestCard.tsx`
+### File 1: `src/components/vault/VaultWellnessGoalsCard.tsx`
 
 **Changes:**
 
-1. **Add a helper constant** to identify medicine ball metrics:
-   ```typescript
-   const MEDICINE_BALL_METRICS = ['mb_situp_throw', 'seated_chest_pass'];
-   ```
+1. **Replace `upsert` with `insert` only** - Prevent any updates after initial submission
 
-2. **Add a conditional hint** that displays when the current module includes medicine ball metrics:
-   - Place it above the regular metrics grid
-   - Only show when `mb_situp_throw` or `seated_chest_pass` are in the active `regularMetrics` array
-   - Use a subtle info-style Alert component with an icon
+2. **Check for existing goals BEFORE save** - Re-verify from database that no goals exist for this week before allowing insert
 
-**UI Placement:**
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│ [Module selector]                                                │
-├─────────────────────────────────────────────────────────────────┤
-│ ℹ️ Use a 5lb medicine ball for MB Sit-Up Throw and              │
-│    Seated Chest Pass measurements.                               │
-├─────────────────────────────────────────────────────────────────┤
-│ [Metric inputs...]                                               │
-└─────────────────────────────────────────────────────────────────┘
-```
+3. **Handle duplicate key error gracefully** - If race condition occurs (user opens two tabs), catch the unique constraint violation and show appropriate message
 
-**Code Addition** (after line 537, before regular metrics grid):
+4. **Remove "Update Goals" button text** - Since goals cannot be updated once set, only show "Set Goals"
+
+5. **Add secondary database check in handleSave** - Double-check before insert to prevent race conditions
+
+**Code Changes:**
+
 ```typescript
-{/* Medicine Ball hint - show when MB metrics are present */}
-{regularMetrics.some(m => MEDICINE_BALL_METRICS.includes(m)) && (
-  <Alert className="bg-blue-500/10 border-blue-500/30">
-    <AlertCircle className="h-4 w-4 text-blue-500" />
-    <AlertDescription className="text-sm text-blue-700 dark:text-blue-400">
-      {t('vault.performance.medicineBallHint')}
-    </AlertDescription>
-  </Alert>
-)}
+const handleSave = async () => {
+  if (!user) return;
+  
+  // Re-check if goals already exist (handles race conditions/multiple tabs)
+  const { data: existing } = await supabase
+    .from('vault_wellness_goals')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('week_start_date', weekStartStr)
+    .maybeSingle();
+  
+  if (existing) {
+    // Goals already set - update local state and show locked
+    setHasExistingGoals(true);
+    const nextWeek = addDays(weekStart, 7);
+    setGoalsLockedUntil(nextWeek);
+    toast({
+      title: t('vault.wellnessGoals.alreadySet'),
+      description: t('vault.wellnessGoals.lockedMessage'),
+      variant: 'destructive'
+    });
+    return;
+  }
+  
+  setSaving(true);
+
+  const payload = {
+    user_id: user.id,
+    week_start_date: weekStartStr,
+    target_mood_level: goals.target_mood_level,
+    target_stress_level: goals.target_stress_level,
+    target_discipline_level: goals.target_discipline_level,
+    notification_enabled: goals.notification_enabled
+  };
+
+  // Use INSERT only - not upsert
+  const { error } = await supabase
+    .from('vault_wellness_goals')
+    .insert(payload);
+
+  setSaving(false);
+
+  if (error) {
+    // Handle duplicate key constraint (unique on user_id + week_start_date)
+    if (error.code === '23505') {
+      setHasExistingGoals(true);
+      const nextWeek = addDays(weekStart, 7);
+      setGoalsLockedUntil(nextWeek);
+      toast({
+        title: t('vault.wellnessGoals.alreadySet'),
+        description: t('vault.wellnessGoals.lockedMessage'),
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    toast({
+      title: t('common.error'),
+      description: error.message,
+      variant: 'destructive'
+    });
+  } else {
+    setHasExistingGoals(true);
+    const nextWeek = addDays(weekStart, 7);
+    setGoalsLockedUntil(nextWeek);
+    
+    toast({
+      title: t('vault.wellnessGoals.savedSuccess'),
+      description: t('vault.wellnessGoals.goalsUpdated')
+    });
+  }
+};
+```
+
+6. **Update button text** - Remove "Update Goals" option since updates are not allowed:
+
+```typescript
+// Change from:
+{saving ? t('common.loading') : hasExistingGoals ? t('vault.wellnessGoals.updateGoals') : t('vault.wellnessGoals.setGoals')}
+
+// Change to:
+{saving ? t('common.loading') : t('vault.wellnessGoals.setGoals')}
 ```
 
 ---
 
-### File 2: `src/i18n/locales/en.json`
+### File 2: `src/i18n/locales/en.json` (and other locales)
 
-**Add translation key** in the `vault.performance` section:
+**Add new translation keys:**
+
 ```json
-"medicineBallHint": "Use a 5lb medicine ball for MB Sit-Up Throw and Seated Chest Pass."
+"alreadySet": "Goals Already Set",
+"lockedMessage": "Your weekly wellness goals are locked until next Monday."
 ```
 
 ---
 
-### Files 3-9: Other locale files
+## Database Considerations
 
-Add translated versions of the hint:
+The table already has a unique constraint on `(user_id, week_start_date)` which enforces one entry per user per week at the database level. By switching from `upsert` to `insert`, we leverage this constraint to prevent any modifications.
 
-| File | Translation |
-|------|-------------|
-| `es.json` | "Usa un balón medicinal de 5 libras para el Lanzamiento MB Abdominal y el Pase de Pecho Sentado." |
-| `fr.json` | "Utilisez un ballon médicinal de 5 lb pour le Lancer Abdominal MB et la Passe Poitrine Assise." |
-| `de.json` | "Verwenden Sie einen 5 lb Medizinball für den MB Sit-Up Wurf und den Brustpass Sitzend." |
-| `ja.json` | "MBシットアップスローとシーテッドチェストパスには5ポンドのメディシンボールを使用してください。" |
-| `ko.json` | "MB 윗몸일으키기 던지기와 앉아서 가슴 패스에는 5파운드 메디신볼을 사용하세요." |
-| `zh.json` | "药球仰卧起坐抛和坐姿胸前传球请使用5磅药球。" |
-| `nl.json` | "Gebruik een 5 lb medicijnbal voor de MB Sit-Up Worp en Zittende Borstpass." |
+No database migration is needed - the existing unique constraint provides the backend enforcement.
 
 ---
 
@@ -80,19 +143,23 @@ Add translated versions of the hint:
 
 | File | Changes |
 |------|---------|
-| `src/components/vault/VaultPerformanceTestCard.tsx` | Add medicine ball constant and conditional hint Alert |
-| `src/i18n/locales/en.json` | Add `medicineBallHint` translation |
-| `src/i18n/locales/es.json` | Add `medicineBallHint` translation |
-| `src/i18n/locales/fr.json` | Add `medicineBallHint` translation |
-| `src/i18n/locales/de.json` | Add `medicineBallHint` translation |
-| `src/i18n/locales/ja.json` | Add `medicineBallHint` translation |
-| `src/i18n/locales/ko.json` | Add `medicineBallHint` translation |
-| `src/i18n/locales/zh.json` | Add `medicineBallHint` translation |
-| `src/i18n/locales/nl.json` | Add `medicineBallHint` translation |
+| `src/components/vault/VaultWellnessGoalsCard.tsx` | Replace `upsert` with `insert`, add pre-save check, handle duplicate error, remove update button text |
+| `src/i18n/locales/en.json` | Add `alreadySet` and `lockedMessage` translation keys |
+| `src/i18n/locales/es.json` | Add translations |
+| `src/i18n/locales/fr.json` | Add translations |
+| `src/i18n/locales/de.json` | Add translations |
+| `src/i18n/locales/ja.json` | Add translations |
+| `src/i18n/locales/ko.json` | Add translations |
+| `src/i18n/locales/zh.json` | Add translations |
+| `src/i18n/locales/nl.json` | Add translations |
 
 ---
 
 ## Expected Outcome
 
-When users select any module that includes the MB Sit-Up Throw or Seated Chest Pass metrics (Hitting, Pitching, or Throwing for both baseball and softball), they will see a clear blue info banner reminding them to use a 5lb medicine ball for accurate measurements.
+1. Users can only set wellness goals **once per week**
+2. After setting goals, the card displays a locked state showing current goals and progress tracking
+3. The card resets every Monday at midnight (based on week_start_date calculation)
+4. Multiple tab scenarios are handled gracefully - duplicate key errors show appropriate message
+5. Backend enforcement via unique constraint prevents any bypass attempts
 
