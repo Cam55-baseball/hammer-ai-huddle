@@ -3545,6 +3545,39 @@
         "stressLevel3": "보통",
         "stressLevel4": "높음",
         "stressLevel5": "매우 높음"
+      },
+      "nightSuccess": {
+        "title": "하루 완료!",
+        "todayHighlights": "오늘의 하이라이트",
+        "checkinsCompleted": "{{count}}/3 체크인 완료",
+        "workoutsLogged": "{{count}} 운동 기록",
+        "sleepGoalSet": "{{hours}} 시간 수면 목표 설정",
+        "weightTracked": "{{weight}} lbs 기록",
+        "currentStreak": "현재 연속 기록",
+        "days": "일",
+        "tomorrowAwaits": "내일이 기다립니다",
+        "tomorrowIncludes": "내일 아침 일정:",
+        "morningCheckin": "아침 체크인",
+        "scheduledWorkout": "예정된 운동",
+        "mindFuelLesson": "새로운 마인드 연료 레슨",
+        "nutritionTip": "맞춤 영양 팁",
+        "goodnightMessages": {
+          "great": "멋진 하루였어요! 달콤한 꿈 꾸세요, 챔피언.",
+          "stressed": "내일은 새로운 시작입니다. 오늘 밤 푹 쉬세요.",
+          "lowMood": "매일의 해돋이는 새로운 기회를 가져옵니다. 잘 자요.",
+          "perfect": "오늘 정말 잘 했어요! 내일 아침에 만나요!"
+        },
+        "morningBonus": {
+          "title": "아침 체크인 보너스",
+          "subtitle": "기상 후 15분 이내 완료 시:",
+          "keepStreak": "연속 기록 유지하기",
+          "trackWeight": "정확한 아침 체중 기록",
+          "getDailyFocus": "맞춤 일일 집중 받기",
+          "unlockMotivation": "오늘의 동기 잠금 해제"
+        },
+        "sleepCountdown": "{{time}} 후 취침하면 목표 달성",
+        "recapCountdown": "6주 리캡까지 {{days}}일 남음!",
+        "closeButton": "닫고 쉬기"
       }
     },
     "freeNote": {

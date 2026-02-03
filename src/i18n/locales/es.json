@@ -4411,6 +4411,39 @@
         "stressLevel3": "Moderado",
         "stressLevel4": "Alto",
         "stressLevel5": "Muy Alto"
+      },
+      "nightSuccess": {
+        "title": "¡Día Completo!",
+        "todayHighlights": "Logros de Hoy",
+        "checkinsCompleted": "{{count}}/3 Check-ins completados",
+        "workoutsLogged": "{{count}} entrenamiento registrado",
+        "sleepGoalSet": "{{hours}} horas de sueño planificadas",
+        "weightTracked": "{{weight}} lbs registrados",
+        "currentStreak": "Racha Actual",
+        "days": "días",
+        "tomorrowAwaits": "Mañana Te Espera",
+        "tomorrowIncludes": "Tu mañana incluye:",
+        "morningCheckin": "Check-in Matutino",
+        "scheduledWorkout": "Entrenamiento Programado",
+        "mindFuelLesson": "Nueva lección de Mind Fuel",
+        "nutritionTip": "Consejo de nutrición personalizado",
+        "goodnightMessages": {
+          "great": "¡Qué gran día! Dulces sueños, campeón.",
+          "stressed": "Mañana es un nuevo comienzo. Descansa profundamente.",
+          "lowMood": "Cada amanecer trae nuevas oportunidades. Duerme bien.",
+          "perfect": "¡Lo lograste hoy! ¡Nos vemos mañana por la mañana!"
+        },
+        "morningBonus": {
+          "title": "Bonus del Check-in Matutino",
+          "subtitle": "Completa dentro de 15 min de despertar para:",
+          "keepStreak": "Mantener tu racha activa",
+          "trackWeight": "Registrar peso preciso por la mañana",
+          "getDailyFocus": "Obtener tu enfoque diario personalizado",
+          "unlockMotivation": "Desbloquear la motivación de hoy"
+        },
+        "sleepCountdown": "Duerme en {{time}} para alcanzar tu meta",
+        "recapCountdown": "¡Tu resumen de 6 semanas está en {{days}} días!",
+        "closeButton": "Cerrar y Descansar"
       }
     },
     "disciplineTrend": {

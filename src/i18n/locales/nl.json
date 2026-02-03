@@ -3558,6 +3558,39 @@
         "stressLevel3": "Matig",
         "stressLevel4": "Hoog",
         "stressLevel5": "Zeer Hoog"
+      },
+      "nightSuccess": {
+        "title": "Dag Voltooid!",
+        "todayHighlights": "Hoogtepunten van Vandaag",
+        "checkinsCompleted": "{{count}}/3 Check-ins voltooid",
+        "workoutsLogged": "{{count}} training gelogd",
+        "sleepGoalSet": "{{hours}} uur slaapdoel ingesteld",
+        "weightTracked": "{{weight}} lbs bijgehouden",
+        "currentStreak": "Huidige Reeks",
+        "days": "dagen",
+        "tomorrowAwaits": "Morgen Wacht",
+        "tomorrowIncludes": "Je ochtend bevat:",
+        "morningCheckin": "Ochtend Check-in",
+        "scheduledWorkout": "Geplande Training",
+        "mindFuelLesson": "Nieuwe Mind Fuel les",
+        "nutritionTip": "Gepersonaliseerde voedingstip",
+        "goodnightMessages": {
+          "great": "Wat een geweldige dag! Slaap lekker, kampioen.",
+          "stressed": "Morgen is een nieuwe start. Rust diep vannacht.",
+          "lowMood": "Elke zonsopgang brengt nieuwe kansen. Slaap lekker.",
+          "perfect": "Je hebt het vandaag geweldig gedaan! Tot morgenochtend!"
+        },
+        "morningBonus": {
+          "title": "Ochtend Check-in Bonus",
+          "subtitle": "Voltooi binnen 15 min na ontwaken om:",
+          "keepStreak": "Je reeks levend te houden",
+          "trackWeight": "Nauwkeurig ochtendgewicht bij te houden",
+          "getDailyFocus": "Je gepersonaliseerde dagelijkse focus te krijgen",
+          "unlockMotivation": "De motivatie van vandaag te ontgrendelen"
+        },
+        "sleepCountdown": "Slaap over {{time}} om je doel te halen",
+        "recapCountdown": "Je 6-weken recap is over {{days}} dagen!",
+        "closeButton": "Sluiten & Lekker Slapen"
       }
     },
     "freeNote": {

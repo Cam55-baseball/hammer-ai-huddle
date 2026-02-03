@@ -3658,6 +3658,39 @@
         "stressLevel3": "中程度",
         "stressLevel4": "高い",
         "stressLevel5": "とても高い"
+      },
+      "nightSuccess": {
+        "title": "本日完了！",
+        "todayHighlights": "今日のハイライト",
+        "checkinsCompleted": "{{count}}/3 チェックイン完了",
+        "workoutsLogged": "{{count}} ワークアウト記録",
+        "sleepGoalSet": "{{hours}} 時間の睡眠目標設定",
+        "weightTracked": "{{weight}} lbs を記録",
+        "currentStreak": "現在の連続記録",
+        "days": "日",
+        "tomorrowAwaits": "明日が待っています",
+        "tomorrowIncludes": "明日の予定:",
+        "morningCheckin": "朝のチェックイン",
+        "scheduledWorkout": "予定されたワークアウト",
+        "mindFuelLesson": "新しいマインドフュールレッスン",
+        "nutritionTip": "パーソナライズされた栄養アドバイス",
+        "goodnightMessages": {
+          "great": "素晴らしい一日でした！おやすみなさい、チャンピオン。",
+          "stressed": "明日は新たな始まりです。今夜はぐっすり休んでください。",
+          "lowMood": "毎日の日の出は新しい機会をもたらします。よく眠ってください。",
+          "perfect": "今日は頑張りました！明日の朝お会いしましょう！"
+        },
+        "morningBonus": {
+          "title": "朝のチェックインボーナス",
+          "subtitle": "起床後15分以内に完了すると:",
+          "keepStreak": "連続記録を維持する",
+          "trackWeight": "正確な朝の体重を記録",
+          "getDailyFocus": "パーソナライズされた日課を取得",
+          "unlockMotivation": "今日のモチベーションを解除"
+        },
+        "sleepCountdown": "{{time}} で就寝すると目標達成",
+        "recapCountdown": "6週間レキャップまであと {{days}} 日！",
+        "closeButton": "閉じて休む"
       }
     },
     "freeNote": {

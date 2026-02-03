@@ -27,6 +27,9 @@ import { TrainingIntentSelector } from './quiz/TrainingIntentSelector';
 import { MentalEnergyRating } from './quiz/MentalEnergyRating';
 import { WeightTrendMini } from './quiz/WeightTrendMini';
 import { FasciaInsightPanel } from './FasciaInsightPanel';
+import { NightCheckInSuccess } from './quiz/NightCheckInSuccess';
+import { useNightCheckInStats } from '@/hooks/useNightCheckInStats';
+import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 
 interface VaultFocusQuizDialogProps {
   open: boolean;
@@ -241,6 +244,11 @@ export function VaultFocusQuizDialog({
 }: VaultFocusQuizDialogProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [showNightSuccess, setShowNightSuccess] = useState(false);
+  
+  // Fetch night check-in stats for success screen
+  const nightStats = useNightCheckInStats();
+  const { daysUntilRecap } = useRecapCountdown();
   
   const [mentalReadiness, setMentalReadiness] = useState(3);
   const [emotionalState, setEmotionalState] = useState(3);
@@ -439,63 +447,112 @@ export function VaultFocusQuizDialog({
     setLoading(false);
     
     if (result.success) {
-      // Reset form
-      setMentalReadiness(3);
-      setEmotionalState(3);
-      setPhysicalReadiness(3);
-      setDidWell('');
-      setCouldImprove('');
-      setLearned('');
-      setMotivation('');
-      setNightMoodLevel(3);
-      setNightStressLevel(3);
-      setBedtimeActual('');
-      setWakeTimeActual('');
-      setSleepQuality(3);
-      setBedtimeGoal('');
-      setWakeTimeGoal('');
-      setDailyMotivation('');
-      setDailyIntentions('');
-      setDisciplineLevel(3);
-      setMoodLevel(3);
-      setStressLevel(3);
-      // NEW: Reset new fields
-      setWeightLbs('');
-      setPerceivedRecovery(5);
-      setPreLiftWeightLbs('');
-      setNightWeightLbs('');
-      setReactionTimeMs(null);
-      setReactionTimeScore(null);
-      setBalanceLeftSeconds(null);
-      setBalanceRightSeconds(null);
-      setPainLocations([]);
-      setPainScales({});
-      setPainIncreasesWithMovement(null);
-      setTrainingIntents([]);
-      setMentalEnergy(3);
-      onOpenChange(false);
+      // For night check-in, show success screen instead of closing
+      if (quizType === 'night') {
+        // Refetch stats to get updated data
+        nightStats.refetch();
+        setShowNightSuccess(true);
+        return;
+      }
+      
+      // Reset form and close for other quiz types
+      resetFormAndClose();
     }
   };
 
+  const resetFormAndClose = () => {
+    setMentalReadiness(3);
+    setEmotionalState(3);
+    setPhysicalReadiness(3);
+    setDidWell('');
+    setCouldImprove('');
+    setLearned('');
+    setMotivation('');
+    setNightMoodLevel(3);
+    setNightStressLevel(3);
+    setBedtimeActual('');
+    setWakeTimeActual('');
+    setSleepQuality(3);
+    setBedtimeGoal('');
+    setWakeTimeGoal('');
+    setDailyMotivation('');
+    setDailyIntentions('');
+    setDisciplineLevel(3);
+    setMoodLevel(3);
+    setStressLevel(3);
+    setWeightLbs('');
+    setPerceivedRecovery(5);
+    setPreLiftWeightLbs('');
+    setNightWeightLbs('');
+    setReactionTimeMs(null);
+    setReactionTimeScore(null);
+    setBalanceLeftSeconds(null);
+    setBalanceRightSeconds(null);
+    setPainLocations([]);
+    setPainScales({});
+    setPainIncreasesWithMovement(null);
+    setTrainingIntents([]);
+    setMentalEnergy(3);
+    setShowNightSuccess(false);
+    onOpenChange(false);
+  };
+
+  const handleNightSuccessClose = () => {
+    resetFormAndClose();
+  };
+
+  // Calculate sleep goal hours from form
+  const nightSleepGoalHours = useMemo(() => {
+    if (bedtimeGoal && wakeTimeGoal) {
+      return calculateSleepDuration(bedtimeGoal, wakeTimeGoal);
+    }
+    return null;
+  }, [bedtimeGoal, wakeTimeGoal]);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen && showNightSuccess) {
+        handleNightSuccessClose();
+      } else {
+        onOpenChange(isOpen);
+      }
+    }}>
       <DialogContent className="max-w-full sm:max-w-lg p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
-        <DialogHeader className="space-y-3 pb-2">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-primary/10">
-              {getQuizIcon()}
-            </div>
-            <div>
-              <DialogTitle className="text-xl sm:text-2xl font-bold">{getQuizTitle()}</DialogTitle>
-              <DialogDescription className="text-sm mt-1">
-                {quizType === 'morning' 
-                  ? t('vault.quiz.morning.subtitle')
-                  : t('vault.quiz.description')
-                }
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
+        {/* Night Check-in Success Screen */}
+        {showNightSuccess && quizType === 'night' ? (
+          <NightCheckInSuccess
+            streakDays={nightStats.streakDays}
+            todayStats={{
+              ...nightStats.todayStats,
+              checkinsCompleted: nightStats.todayStats.checkinsCompleted + 1, // Include this check-in
+              sleepGoalHours: nightSleepGoalHours,
+              weightTracked: nightWeightLbs ? parseFloat(nightWeightLbs) : nightStats.todayStats.weightTracked,
+            }}
+            tomorrowPreview={nightStats.tomorrowPreview}
+            moodLevel={nightMoodLevel}
+            stressLevel={nightStressLevel}
+            sleepGoalTime={bedtimeGoal}
+            daysUntilRecap={daysUntilRecap}
+            onClose={handleNightSuccessClose}
+          />
+        ) : (
+          <>
+            <DialogHeader className="space-y-3 pb-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10">
+                  {getQuizIcon()}
+                </div>
+                <div>
+                  <DialogTitle className="text-xl sm:text-2xl font-bold">{getQuizTitle()}</DialogTitle>
+                  <DialogDescription className="text-sm mt-1">
+                    {quizType === 'morning' 
+                      ? t('vault.quiz.morning.subtitle')
+                      : t('vault.quiz.description')
+                    }
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
 
         {/* Tips Section - NOW AT TOP */}
         <div className="space-y-3 mt-4">
@@ -1371,6 +1428,8 @@ export function VaultFocusQuizDialog({
             </Button>
           </div>
         </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
