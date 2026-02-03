@@ -1,72 +1,60 @@
 
-# Add Glowing Effect to Important Message Box
+# Fix Glowing Animation Not Showing on Important Message
 
-## Overview
+## Problem Identified
 
-Add a glowing animation to the yellow/amber "Important" message box on the Checkout page to draw more attention to the critical post-purchase instructions.
+The glowing animation on the "Important" message box is **not visible** because `App.css` is never imported in the application.
+
+| File | Status |
+|------|--------|
+| `src/App.css` | Contains the animation ✓ |
+| `src/pages/Checkout.tsx` | Uses the class ✓ |
+| `src/main.tsx` | Only imports `index.css` ✗ |
+| `src/App.tsx` | Does NOT import `App.css` ✗ |
+
+The CSS file with the animation exists but is orphaned - never loaded by the application.
 
 ---
 
 ## Solution
 
-Create an amber-colored glow animation and apply it to the "Important" message box.
+Import `App.css` in `App.tsx` to load the custom animation styles.
 
-### Files to Modify
+### File to Modify
 
 | File | Change |
 |------|--------|
-| `src/App.css` | Add new amber glow keyframes and utility class |
-| `src/pages/Checkout.tsx` | Apply the glow animation class to the Important box |
+| `src/App.tsx` | Add `import "./App.css";` near the top of the file |
 
 ---
 
 ## Technical Implementation
 
-### 1. Add Amber Glow Animation (App.css)
+Add this import near line 2 of `src/App.tsx`:
 
-Add a new keyframe animation that uses amber colors instead of the primary pink:
-
-```css
-@keyframes glow-pulse-amber {
-  0%, 100% { 
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
-  }
-  50% { 
-    box-shadow: 0 0 16px 6px rgba(245, 158, 11, 0.35);
-  }
-}
-
-.animate-glow-pulse-amber {
-  animation: glow-pulse-amber 2s ease-in-out infinite;
-}
-```
-
-### 2. Apply Animation to Important Box (Checkout.tsx)
-
-Update the amber "Important" box div (currently at line 322):
-
-**Before:**
-```tsx
-<div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
-```
-
-**After:**
-```tsx
-<div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6 animate-glow-pulse-amber">
+```typescript
+// Line 1
+// Force rebuild to clear stale module references - Dec 2025
+import { Suspense, lazy, useEffect, ComponentType } from "react";
+import "./App.css"; // <-- Add this import
+import { Toaster } from "@/components/ui/toaster";
+// ... rest of imports
 ```
 
 ---
 
-## Visual Effect
+## Why This Fixes the Issue
 
-The animation will:
-- Create a soft amber/orange glow around the box
-- Pulse continuously to attract user attention
-- Fade smoothly between no glow and full glow every 2 seconds
-- Work in both light and dark modes
+1. The `animate-glow-pulse-amber` class is defined in `App.css`
+2. Without importing `App.css`, those styles never reach the browser
+3. Once imported, the keyframes and animation class become available
+4. The Important box will display the amber glowing pulse effect
 
 ---
 
 ## Expected Outcome
 
-The yellow "Important" message box will have a subtle but noticeable glowing animation that draws users' attention to the critical instruction about clicking "Back to dashboard" or signing back in after purchase.
+After this fix:
+- The amber "Important" message box will have a visible glowing pulse animation
+- The glow will pulse every 2 seconds with a soft amber/orange color
+- Works in both light and dark modes
