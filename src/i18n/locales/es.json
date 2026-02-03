@@ -1038,6 +1038,32 @@
       "pre_workout": "Pre-Entrenamiento",
       "post_workout": "Post-Entrenamiento"
     },
+    "goalTypes": {
+      "lose_weight": "Perder Peso",
+      "lose_fat": "Perder Grasa",
+      "maintain": "Mantener",
+      "gain_lean_muscle": "Ganar Músculo",
+      "gain_weight": "Aumentar Peso"
+    },
+    "dayTypes": {
+      "rest": "Descanso",
+      "training": "Entrenamiento",
+      "practice": "Práctica",
+      "game": "Juego",
+      "travel": "Viaje"
+    },
+    "settings": {
+      "title": "Ajustes de Nutrición",
+      "currentGoal": "Meta Actual",
+      "selectGoal": "Selecciona Tu Meta",
+      "updateGoal": "Actualizar Meta",
+      "goalUpdated": "Meta actualizada exitosamente",
+      "editProfile": "Editar Perfil",
+      "profileSettingsNote": "¿Necesitas actualizar tu información de perfil?",
+      "calorieAdjustment": "Ajuste de Calorías",
+      "deficit": "déficit",
+      "surplus": "superávit"
+    },
     "quickActions": "Acciones Rápidas",
     "hydration": "Hidratación",
     "logMeal": "Registrar Comida",

@@ -987,6 +987,32 @@
     "allModules": "Alle Modules"
   },
   "nutrition": {
+    "goalTypes": {
+      "lose_weight": "Afvallen",
+      "lose_fat": "Vetverbranding",
+      "maintain": "Handhaven",
+      "gain_lean_muscle": "Spieropbouw",
+      "gain_weight": "Aankomen"
+    },
+    "dayTypes": {
+      "rest": "Rust",
+      "training": "Training",
+      "practice": "Oefening",
+      "game": "Wedstrijd",
+      "travel": "Reis"
+    },
+    "settings": {
+      "title": "Voedingsinstellingen",
+      "currentGoal": "Huidig Doel",
+      "selectGoal": "Selecteer Je Doel",
+      "updateGoal": "Doel Bijwerken",
+      "goalUpdated": "Doel succesvol bijgewerkt",
+      "editProfile": "Profiel Bewerken",
+      "profileSettingsNote": "Profielinformatie bijwerken?",
+      "calorieAdjustment": "Calorieaanpassing",
+      "deficit": "tekort",
+      "surplus": "overschot"
+    },
     "saveTip": "Tip Opslaan",
     "tipSaved": "Opgeslagen",
     "tipSavedSuccess": "Tip opgeslagen in je Kluis!",

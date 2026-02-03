@@ -1382,6 +1382,32 @@
       "pre_workout": "Pre-Workout",
       "post_workout": "Post-Workout"
     },
+    "goalTypes": {
+      "lose_weight": "Lose Weight",
+      "lose_fat": "Lose Fat",
+      "maintain": "Maintain",
+      "gain_lean_muscle": "Gain Lean Muscle",
+      "gain_weight": "Gain Weight"
+    },
+    "dayTypes": {
+      "rest": "Rest",
+      "training": "Training",
+      "practice": "Practice",
+      "game": "Game",
+      "travel": "Travel"
+    },
+    "settings": {
+      "title": "Nutrition Settings",
+      "currentGoal": "Current Goal",
+      "selectGoal": "Select Your Goal",
+      "updateGoal": "Update Goal",
+      "goalUpdated": "Goal updated successfully",
+      "editProfile": "Edit Profile Settings",
+      "profileSettingsNote": "Need to update your profile info?",
+      "calorieAdjustment": "Calorie Adjustment",
+      "deficit": "deficit",
+      "surplus": "surplus"
+    },
     "quickActions": "Quick Actions",
     "hydration": "Hydration",
     "logMeal": "Log Meal",
