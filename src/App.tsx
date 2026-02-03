@@ -1,6 +1,5 @@
 // Force rebuild to clear stale module references - Dec 2025
 import { Suspense, lazy, useEffect, ComponentType } from "react";
-import "./App.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";

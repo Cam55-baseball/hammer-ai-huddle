@@ -1,60 +1,152 @@
 
-# Fix Glowing Animation Not Showing on Important Message
+
+# Fix Flickering Toast Messages After Payment Success
 
 ## Problem Identified
 
-The glowing animation on the "Important" message box is **not visible** because `App.css` is never imported in the application.
+When users return from Stripe checkout with `?status=success`, the toast notifications ("Payment Successful!" / "Verifying your session...") flicker repeatedly because:
 
-| File | Status |
-|------|--------|
-| `src/App.css` | Contains the animation ✓ |
-| `src/pages/Checkout.tsx` | Uses the class ✓ |
-| `src/main.tsx` | Only imports `index.css` ✗ |
-| `src/App.tsx` | Does NOT import `App.css` ✗ |
+### Root Cause Analysis
 
-The CSS file with the animation exists but is orphaned - never loaded by the application.
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                    CURRENT BROKEN FLOW                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  User returns from Stripe with ?status=success                  │
+│                         │                                       │
+│                         ▼                                       │
+│  ┌──────────────────────────────────────────────────────┐      │
+│  │  useEffect runs (status === 'success')               │      │
+│  │  → toast("Payment Successful! Verifying...")         │      │
+│  │  → Creates setInterval(200ms)                        │      │
+│  └──────────────────────────────────────────────────────┘      │
+│                         │                                       │
+│     Dependencies change (user/session update)                   │
+│                         │                                       │
+│                         ▼                                       │
+│  ┌──────────────────────────────────────────────────────┐      │
+│  │  useEffect runs AGAIN (same status === 'success')    │      │
+│  │  → toast("Payment Successful! Verifying...") AGAIN   │◀─┐  │
+│  │  → Creates ANOTHER setInterval(200ms)                │  │  │
+│  └──────────────────────────────────────────────────────┘  │  │
+│                         │                                  │  │
+│     Dependencies change again...                           │  │
+│                         └──────────────────────────────────┘  │
+│                                                                 │
+│  Result: Multiple overlapping intervals, repeated toasts        │
+│          causing flickering UI                                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Specific Issues:
+
+| Issue | Location | Problem |
+|-------|----------|---------|
+| 1. No guard for success handling | Line 61-149 | Each useEffect re-run triggers a new toast + interval |
+| 2. Stale closure in interval | Line 74-146 | `user` and `session` are captured at creation, but interval checks them each tick |
+| 3. `toast` in dependency array | Line 160 | Can trigger unnecessary re-runs |
+| 4. Multiple toasts without ID tracking | Lines 65-68, 82-85, 118-121 | Each toast is a new instance, causing visual flickering |
 
 ---
 
 ## Solution
 
-Import `App.css` in `App.tsx` to load the custom animation styles.
+Add a **`useRef` guard** to ensure the success flow only executes once, regardless of how many times the useEffect re-runs.
 
-### File to Modify
+### Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/App.tsx` | Add `import "./App.css";` near the top of the file |
+| `src/pages/Checkout.tsx` | Add success-handled ref, show single toast, remove interval polling |
 
 ---
 
 ## Technical Implementation
 
-Add this import near line 2 of `src/App.tsx`:
+### 1. Add Success-Handled Ref Guard
 
 ```typescript
-// Line 1
-// Force rebuild to clear stale module references - Dec 2025
-import { Suspense, lazy, useEffect, ComponentType } from "react";
-import "./App.css"; // <-- Add this import
-import { Toaster } from "@/components/ui/toaster";
-// ... rest of imports
+// Add near other refs (line 32)
+const successHandledRef = useRef(false);
+```
+
+### 2. Simplify Success Flow (Remove Interval Polling)
+
+**Before:** Complex interval polling with multiple toast calls
+**After:** Single toast, immediate redirect
+
+```typescript
+if (status === 'success') {
+  // Guard: Only handle success once
+  if (successHandledRef.current) {
+    return;
+  }
+  successHandledRef.current = true;
+  
+  console.log('Checkout: Payment successful, redirecting...');
+  
+  // Single toast notification
+  toast({
+    title: "Payment Successful!",
+    description: "Redirecting to sign in...",
+  });
+  
+  // Store pending module activation
+  if (isAddMode && selectedModule && selectedSport) {
+    localStorage.setItem('pendingModuleActivation', JSON.stringify({
+      module: selectedModule,
+      sport: selectedSport,
+      timestamp: Date.now()
+    }));
+  }
+  
+  // Trigger subscription refetch
+  refetch();
+  
+  // Redirect immediately (no polling needed)
+  navigate("/auth", { 
+    replace: true,
+    state: {
+      fromPayment: true,
+      message: "Payment successful! Please sign in to access your new module.",
+      module: selectedModule,
+      sport: selectedSport
+    }
+  });
+  
+  return;
+}
+```
+
+### 3. Remove Problematic Dependencies
+
+Remove `toast` from dependency array to prevent unnecessary re-runs:
+
+```typescript
+}, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, refetch, isAddMode]);
+// Note: removed 'toast' - it's stable and doesn't need to trigger re-runs
 ```
 
 ---
 
-## Why This Fixes the Issue
+## Why Polling is Unnecessary
 
-1. The `animate-glow-pulse-amber` class is defined in `App.css`
-2. Without importing `App.css`, those styles never reach the browser
-3. Once imported, the keyframes and animation class become available
-4. The Important box will display the amber glowing pulse effect
+The original code polled for `user && session` to be truthy, but:
+
+1. **User is already authenticated** when returning from Stripe (they logged in before checkout)
+2. **The redirect to `/auth` page** will handle any session edge cases
+3. **Webhook processing** happens independently of this flow
+
+Removing the interval eliminates the source of flickering entirely.
 
 ---
 
-## Expected Outcome
+## Expected Behavior After Fix
 
-After this fix:
-- The amber "Important" message box will have a visible glowing pulse animation
-- The glow will pulse every 2 seconds with a soft amber/orange color
-- Works in both light and dark modes
+1. User returns from Stripe with `?status=success`
+2. **Single toast** appears: "Payment Successful! Redirecting to sign in..."
+3. **Immediate redirect** to `/auth` page with success state
+4. No flickering, no repeated toasts
+
