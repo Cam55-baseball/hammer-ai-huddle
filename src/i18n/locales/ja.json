@@ -958,6 +958,32 @@
     "allModules": "全てのモジュール"
   },
   "nutrition": {
+    "goalTypes": {
+      "lose_weight": "減量",
+      "lose_fat": "脂肪を落とす",
+      "maintain": "維持",
+      "gain_lean_muscle": "筋肉増量",
+      "gain_weight": "増量"
+    },
+    "dayTypes": {
+      "rest": "休息",
+      "training": "トレーニング",
+      "practice": "練習",
+      "game": "試合",
+      "travel": "移動"
+    },
+    "settings": {
+      "title": "栄養設定",
+      "currentGoal": "現在の目標",
+      "selectGoal": "目標を選択",
+      "updateGoal": "目標を更新",
+      "goalUpdated": "目標が正常に更新されました",
+      "editProfile": "プロフィールを編集",
+      "profileSettingsNote": "プロフィール情報を更新しますか？",
+      "calorieAdjustment": "カロリー調整",
+      "deficit": "不足",
+      "surplus": "余剰"
+    },
     "saveTip": "ヒントを保存",
     "tipSaved": "保存済み",
     "tipSavedSuccess": "ヒントをVaultに保存しました！",

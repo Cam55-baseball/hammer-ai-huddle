@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Flame, Beef, Wheat, Droplets, Cookie } from 'lucide-react';
@@ -63,7 +64,24 @@ export function MacroTargetDisplay({
   showHydration = true,
   className 
 }: MacroTargetDisplayProps) {
+  const { t } = useTranslation();
   const { targets, loading, isProfileComplete, hasActiveGoal } = useDailyNutritionTargets(consumed);
+
+  // Helper to get translated goal type
+  const getGoalTypeLabel = (goalType: string) => {
+    const key = `nutrition.goalTypes.${goalType}`;
+    const translated = t(key);
+    // Fallback to formatted string if translation key doesn't exist
+    return translated === key ? goalType.replace(/_/g, ' ') : translated;
+  };
+
+  // Helper to get translated day type
+  const getDayTypeLabel = (dayType: string) => {
+    const key = `nutrition.dayTypes.${dayType}`;
+    const translated = t(key);
+    // Fallback to formatted string if translation key doesn't exist
+    return translated === key ? dayType.replace(/_/g, ' ') : translated;
+  };
 
   if (loading) {
     return (
@@ -179,11 +197,11 @@ export function MacroTargetDisplay({
         {/* Day Type Badge */}
         <div className="flex justify-center gap-2">
           <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full capitalize">
-            {targets.dayType} Day
+            {getDayTypeLabel(targets.dayType)} Day
           </span>
           {hasActiveGoal && (
             <span className="text-xs bg-accent text-accent-foreground px-2 py-1 rounded-full capitalize">
-              {targets.goalType.replace('_', ' ')}
+              {getGoalTypeLabel(targets.goalType)}
             </span>
           )}
         </div>

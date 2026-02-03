@@ -958,6 +958,32 @@
     "allModules": "모든 모듈"
   },
   "nutrition": {
+    "goalTypes": {
+      "lose_weight": "체중 감량",
+      "lose_fat": "체지방 감량",
+      "maintain": "유지",
+      "gain_lean_muscle": "근육 증가",
+      "gain_weight": "체중 증가"
+    },
+    "dayTypes": {
+      "rest": "휴식",
+      "training": "훈련",
+      "practice": "연습",
+      "game": "경기",
+      "travel": "이동"
+    },
+    "settings": {
+      "title": "영양 설정",
+      "currentGoal": "현재 목표",
+      "selectGoal": "목표 선택",
+      "updateGoal": "목표 업데이트",
+      "goalUpdated": "목표가 성공적으로 업데이트되었습니다",
+      "editProfile": "프로필 편집",
+      "profileSettingsNote": "프로필 정보를 업데이트해야 하나요?",
+      "calorieAdjustment": "칼로리 조정",
+      "deficit": "부족",
+      "surplus": "잉여"
+    },
     "saveTip": "팁 저장",
     "tipSaved": "저장됨",
     "tipSavedSuccess": "팁이 보관함에 저장되었습니다!",

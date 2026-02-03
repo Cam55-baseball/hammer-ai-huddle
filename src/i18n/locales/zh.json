@@ -958,6 +958,32 @@
     "allModules": "所有模块"
   },
   "nutrition": {
+    "goalTypes": {
+      "lose_weight": "减重",
+      "lose_fat": "减脂",
+      "maintain": "维持",
+      "gain_lean_muscle": "增肌",
+      "gain_weight": "增重"
+    },
+    "dayTypes": {
+      "rest": "休息",
+      "training": "训练",
+      "practice": "练习",
+      "game": "比赛",
+      "travel": "出行"
+    },
+    "settings": {
+      "title": "营养设置",
+      "currentGoal": "当前目标",
+      "selectGoal": "选择您的目标",
+      "updateGoal": "更新目标",
+      "goalUpdated": "目标更新成功",
+      "editProfile": "编辑个人资料",
+      "profileSettingsNote": "需要更新个人资料信息吗？",
+      "calorieAdjustment": "热量调整",
+      "deficit": "赤字",
+      "surplus": "盈余"
+    },
     "saveTip": "保存提示",
     "tipSaved": "已保存",
     "tipSavedSuccess": "提示已保存到您的保险库！",

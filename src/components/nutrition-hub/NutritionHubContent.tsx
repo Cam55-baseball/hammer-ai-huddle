@@ -23,6 +23,7 @@ import { RecipeImportDialog } from './RecipeImportDialog';
 import { AIMealSuggestions } from './AIMealSuggestions';
 import { FavoriteFoodsWidget } from './FavoriteFoodsWidget';
 import { CommonFoodsGallery } from './CommonFoodsGallery';
+import { NutritionHubSettings } from './NutritionHubSettings';
 import { useRecipes, RecipeIngredient, CreateRecipeInput } from '@/hooks/useRecipes';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -83,6 +84,9 @@ export function NutritionHubContent() {
   const [prefilledItems, setPrefilledItems] = useState<PrefilledItem[] | undefined>();
   const [dailyLogRefreshTrigger, setDailyLogRefreshTrigger] = useState(0);
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
+  
+  // Settings dialog state
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Get nutrition targets
   const { targets } = useDailyNutritionTargets({
@@ -429,12 +433,20 @@ export function NutritionHubContent() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setShowTDEESetup(true)}
+            onClick={() => setSettingsOpen(true)}
           >
             <Settings className="h-4 w-4" />
           </Button>
         </div>
       </div>
+      
+      {/* Nutrition Settings Dialog */}
+      <NutritionHubSettings
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        onGoalChanged={refetchTDEE}
+        onEditProfile={() => setShowTDEESetup(true)}
+      />
 
       {/* Macro Targets Display */}
       <MacroTargetDisplay 

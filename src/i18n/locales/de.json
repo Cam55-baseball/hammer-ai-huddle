@@ -987,6 +987,32 @@
     "allModules": "Alle Module"
   },
   "nutrition": {
+    "goalTypes": {
+      "lose_weight": "Gewicht Verlieren",
+      "lose_fat": "Fett Verlieren",
+      "maintain": "Halten",
+      "gain_lean_muscle": "Muskeln Aufbauen",
+      "gain_weight": "Gewicht Zunehmen"
+    },
+    "dayTypes": {
+      "rest": "Ruhe",
+      "training": "Training",
+      "practice": "Übung",
+      "game": "Spiel",
+      "travel": "Reise"
+    },
+    "settings": {
+      "title": "Ernährungseinstellungen",
+      "currentGoal": "Aktuelles Ziel",
+      "selectGoal": "Wähle Dein Ziel",
+      "updateGoal": "Ziel Aktualisieren",
+      "goalUpdated": "Ziel erfolgreich aktualisiert",
+      "editProfile": "Profil Bearbeiten",
+      "profileSettingsNote": "Profilinformationen aktualisieren?",
+      "calorieAdjustment": "Kalorienanpassung",
+      "deficit": "Defizit",
+      "surplus": "Überschuss"
+    },
     "saveTip": "Tipp Speichern",
     "tipSaved": "Gespeichert",
     "tipSavedSuccess": "Tipp in deinem Tresor gespeichert!",
