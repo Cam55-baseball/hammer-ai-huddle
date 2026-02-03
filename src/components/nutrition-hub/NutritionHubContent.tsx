@@ -254,6 +254,11 @@ export function NutritionHubContent() {
     setShowGoalSetup(false);
   };
 
+  // Handler to sync goal changes from settings dialog to parent
+  const handleSettingsGoalChanged = useCallback(async () => {
+    await refetchTDEE();
+  }, [refetchTDEE]);
+
   // Handle recipe import - save to database
   const handleRecipeImport = async (recipe: ParsedRecipe) => {
     // Convert parsed recipe to CreateRecipeInput format
@@ -444,7 +449,7 @@ export function NutritionHubContent() {
       <NutritionHubSettings
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
-        onGoalChanged={refetchTDEE}
+        onGoalChanged={handleSettingsGoalChanged}
         onEditProfile={() => setShowTDEESetup(true)}
       />
 
