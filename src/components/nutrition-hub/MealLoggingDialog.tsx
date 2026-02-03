@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,7 @@ export function MealLoggingDialog({
   prefilledItems,
 }: MealLoggingDialogProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const { syncMealToVault } = useMealVaultSync();
   
   const [mode, setMode] = useState<'quick' | 'detailed'>('quick');
@@ -168,6 +170,10 @@ export function MealLoggingDialog({
       });
 
       if (result.success) {
+        // Invalidate all nutrition-related queries for E2E sync
+        queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+        queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+        
         toast.success('Meal logged successfully');
         resetForm();
         onOpenChange(false);
@@ -198,6 +204,10 @@ export function MealLoggingDialog({
       });
 
       if (result.success) {
+        // Invalidate all nutrition-related queries for E2E sync
+        queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+        queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+        
         toast.success('Meal logged successfully');
         resetForm();
         onOpenChange(false);

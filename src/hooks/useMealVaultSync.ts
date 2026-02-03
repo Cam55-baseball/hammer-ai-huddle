@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useHydration } from '@/hooks/useHydration';
@@ -19,6 +20,7 @@ interface MealVaultSyncOptions {
 export function useMealVaultSync() {
   const { user } = useAuth();
   const { addWater } = useHydration();
+  const queryClient = useQueryClient();
 
   /**
    * Sync hydration entries from MealBuilder to hydration_logs table
@@ -164,12 +166,16 @@ export function useMealVaultSync() {
 
       if (error) throw error;
 
+      // Invalidate all nutrition-related queries for E2E sync
+      queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+      queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+
       return { success: true };
     } catch (error) {
       console.error('Error syncing meal to vault:', error);
       return { success: false, error: 'Failed to sync meal' };
     }
-  }, [user]);
+  }, [user, queryClient]);
 
   /**
    * Full sync - sync all data from MealBuilder to respective tables

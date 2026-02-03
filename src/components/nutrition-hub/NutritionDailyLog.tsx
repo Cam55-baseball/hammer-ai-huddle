@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,23 +15,21 @@ interface NutritionDailyLogProps {
   date?: Date;
   onDateChange?: (date: Date) => void;
   onEditMeal?: (mealId: string) => void;
-  refreshTrigger?: number;
 }
 
 export function NutritionDailyLog({ 
   date: controlledDate, 
   onDateChange,
   onEditMeal,
-  refreshTrigger 
 }: NutritionDailyLogProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   const [internalDate, setInternalDate] = useState(new Date());
-  const [meals, setMeals] = useState<MealLogData[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const currentDate = controlledDate ?? internalDate;
+  const dateStr = format(currentDate, 'yyyy-MM-dd');
 
   const handleDateChange = (newDate: Date) => {
     if (onDateChange) {
@@ -40,12 +39,11 @@ export function NutritionDailyLog({
     }
   };
 
-  const fetchMeals = useCallback(async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    try {
-      const dateStr = format(currentDate, 'yyyy-MM-dd');
+  // Use React Query for automatic cache synchronization
+  const { data: meals = [], isLoading: loading } = useQuery({
+    queryKey: ['nutritionLogs', dateStr, user?.id],
+    queryFn: async () => {
+      if (!user) return [];
       
       const { data, error } = await supabase
         .from('vault_nutrition_logs')
@@ -56,7 +54,7 @@ export function NutritionDailyLog({
 
       if (error) throw error;
 
-      const mappedMeals: MealLogData[] = (data || []).map(log => ({
+      return (data || []).map(log => ({
         id: log.id,
         mealType: log.meal_type,
         mealTitle: log.meal_title,
@@ -66,19 +64,10 @@ export function NutritionDailyLog({
         carbsG: log.carbs_g,
         fatsG: log.fats_g,
         supplements: Array.isArray(log.supplements) ? log.supplements as string[] : null,
-      }));
-
-      setMeals(mappedMeals);
-    } catch (error) {
-      console.error('Error fetching meals:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, currentDate]);
-
-  useEffect(() => {
-    fetchMeals();
-  }, [fetchMeals, refreshTrigger]);
+      })) as MealLogData[];
+    },
+    enabled: !!user,
+  });
 
   const handleDeleteMeal = async (mealId: string) => {
     try {
@@ -89,7 +78,9 @@ export function NutritionDailyLog({
 
       if (error) throw error;
 
-      setMeals(prev => prev.filter(m => m.id !== mealId));
+      // Invalidate to refresh list and macro totals
+      queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+      queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
       toast.success('Meal deleted');
     } catch (error) {
       console.error('Error deleting meal:', error);
