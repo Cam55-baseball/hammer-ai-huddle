@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,7 @@ const MACRO_PRESETS = [
 export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: QuickNutritionLogDialogProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   
   // Form state
@@ -88,6 +90,10 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
         });
 
       if (error) throw error;
+
+      // Invalidate all nutrition-related queries for E2E sync
+      queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+      queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
 
       toast.success(t('vault.nutrition.mealLogged'));
       resetForm();

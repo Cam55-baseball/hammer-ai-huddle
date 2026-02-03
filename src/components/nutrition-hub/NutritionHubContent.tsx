@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Apple, Settings, Sparkles, Link } from 'lucide-react';
@@ -63,46 +64,30 @@ export function NutritionHubContent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { createRecipe } = useRecipes();
   
   const { isProfileComplete, hasActiveGoal, loading: tdeeLoading, biometrics, refetch: refetchTDEE } = useTDEE();
   
   const [showTDEESetup, setShowTDEESetup] = useState(false);
   const [showGoalSetup, setShowGoalSetup] = useState(false);
-  const [consumedTotals, setConsumedTotals] = useState<ConsumedTotals>({
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fats: 0,
-    fiber: 0,
-  });
-  const [loadingConsumed, setLoadingConsumed] = useState(true);
   
   // Meal logging dialog state
   const [mealLoggingOpen, setMealLoggingOpen] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState('');
   const [prefilledItems, setPrefilledItems] = useState<PrefilledItem[] | undefined>();
-  const [dailyLogRefreshTrigger, setDailyLogRefreshTrigger] = useState(0);
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
   
   // Settings dialog state
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // Get nutrition targets
-  const { targets } = useDailyNutritionTargets({
-    calories: consumedTotals.calories,
-    protein: consumedTotals.protein,
-    carbs: consumedTotals.carbs,
-    fats: consumedTotals.fats,
-  });
+  const today = format(new Date(), 'yyyy-MM-dd');
 
-  // Fetch today's consumed totals
-  const fetchConsumed = useCallback(async () => {
-    if (!user) return;
-    
-    setLoadingConsumed(true);
-    try {
-      const today = format(new Date(), 'yyyy-MM-dd');
+  // Use React Query for macro progress - auto-syncs with all logging entry points
+  const { data: consumedTotals = { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 }, isLoading: loadingConsumed } = useQuery({
+    queryKey: ['macroProgress', today, user?.id],
+    queryFn: async () => {
+      if (!user) return { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 };
       
       const { data, error } = await supabase
         .from('vault_nutrition_logs')
@@ -112,25 +97,24 @@ export function NutritionHubContent() {
 
       if (error) throw error;
 
-      const totals = (data || []).reduce((acc, log) => ({
+      return (data || []).reduce((acc, log) => ({
         calories: acc.calories + (log.calories || 0),
         protein: acc.protein + (log.protein_g || 0),
         carbs: acc.carbs + (log.carbs_g || 0),
         fats: acc.fats + (log.fats_g || 0),
         fiber: acc.fiber,
       }), { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 });
+    },
+    enabled: !!user,
+  });
 
-      setConsumedTotals(totals);
-    } catch (error) {
-      console.error('Error fetching consumed totals:', error);
-    } finally {
-      setLoadingConsumed(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    fetchConsumed();
-  }, [fetchConsumed]);
+  // Get nutrition targets
+  const { targets } = useDailyNutritionTargets({
+    calories: consumedTotals.calories,
+    protein: consumedTotals.protein,
+    carbs: consumedTotals.carbs,
+    fats: consumedTotals.fats,
+  });
 
   // Deterministically set wizard visibility based on profile completeness
   useEffect(() => {
@@ -239,8 +223,10 @@ export function NutritionHubContent() {
     setMealLoggingOpen(false);
     setPrefilledItems(undefined);
     setEditingMealId(null);
-    fetchConsumed();
-    setDailyLogRefreshTrigger(prev => prev + 1);
+    
+    // Invalidate queries to refresh all nutrition displays
+    queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+    queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
   };
 
   const handleTDEEComplete = () => {
@@ -482,7 +468,7 @@ export function NutritionHubContent() {
         </TabsList>
         
         <TabsContent value="today" className="space-y-4 mt-4">
-          <NutritionDailyLog onEditMeal={handleEditMeal} refreshTrigger={dailyLogRefreshTrigger} />
+          <NutritionDailyLog onEditMeal={handleEditMeal} />
           
           {/* AI Meal Suggestions - shows after user has logged food */}
           <AIMealSuggestions
