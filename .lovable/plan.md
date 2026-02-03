@@ -1,152 +1,72 @@
 
+# Add Glowing Effect to Important Message Box
 
-# Fix Flickering Toast Messages After Payment Success
+## Overview
 
-## Problem Identified
-
-When users return from Stripe checkout with `?status=success`, the toast notifications ("Payment Successful!" / "Verifying your session...") flicker repeatedly because:
-
-### Root Cause Analysis
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    CURRENT BROKEN FLOW                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  User returns from Stripe with ?status=success                  │
-│                         │                                       │
-│                         ▼                                       │
-│  ┌──────────────────────────────────────────────────────┐      │
-│  │  useEffect runs (status === 'success')               │      │
-│  │  → toast("Payment Successful! Verifying...")         │      │
-│  │  → Creates setInterval(200ms)                        │      │
-│  └──────────────────────────────────────────────────────┘      │
-│                         │                                       │
-│     Dependencies change (user/session update)                   │
-│                         │                                       │
-│                         ▼                                       │
-│  ┌──────────────────────────────────────────────────────┐      │
-│  │  useEffect runs AGAIN (same status === 'success')    │      │
-│  │  → toast("Payment Successful! Verifying...") AGAIN   │◀─┐  │
-│  │  → Creates ANOTHER setInterval(200ms)                │  │  │
-│  └──────────────────────────────────────────────────────┘  │  │
-│                         │                                  │  │
-│     Dependencies change again...                           │  │
-│                         └──────────────────────────────────┘  │
-│                                                                 │
-│  Result: Multiple overlapping intervals, repeated toasts        │
-│          causing flickering UI                                  │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Specific Issues:
-
-| Issue | Location | Problem |
-|-------|----------|---------|
-| 1. No guard for success handling | Line 61-149 | Each useEffect re-run triggers a new toast + interval |
-| 2. Stale closure in interval | Line 74-146 | `user` and `session` are captured at creation, but interval checks them each tick |
-| 3. `toast` in dependency array | Line 160 | Can trigger unnecessary re-runs |
-| 4. Multiple toasts without ID tracking | Lines 65-68, 82-85, 118-121 | Each toast is a new instance, causing visual flickering |
+Add a glowing animation to the yellow/amber "Important" message box on the Checkout page to draw more attention to the critical post-purchase instructions.
 
 ---
 
 ## Solution
 
-Add a **`useRef` guard** to ensure the success flow only executes once, regardless of how many times the useEffect re-runs.
+Create an amber-colored glow animation and apply it to the "Important" message box.
 
 ### Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/pages/Checkout.tsx` | Add success-handled ref, show single toast, remove interval polling |
+| `src/App.css` | Add new amber glow keyframes and utility class |
+| `src/pages/Checkout.tsx` | Apply the glow animation class to the Important box |
 
 ---
 
 ## Technical Implementation
 
-### 1. Add Success-Handled Ref Guard
+### 1. Add Amber Glow Animation (App.css)
 
-```typescript
-// Add near other refs (line 32)
-const successHandledRef = useRef(false);
-```
+Add a new keyframe animation that uses amber colors instead of the primary pink:
 
-### 2. Simplify Success Flow (Remove Interval Polling)
-
-**Before:** Complex interval polling with multiple toast calls
-**After:** Single toast, immediate redirect
-
-```typescript
-if (status === 'success') {
-  // Guard: Only handle success once
-  if (successHandledRef.current) {
-    return;
+```css
+@keyframes glow-pulse-amber {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
   }
-  successHandledRef.current = true;
-  
-  console.log('Checkout: Payment successful, redirecting...');
-  
-  // Single toast notification
-  toast({
-    title: "Payment Successful!",
-    description: "Redirecting to sign in...",
-  });
-  
-  // Store pending module activation
-  if (isAddMode && selectedModule && selectedSport) {
-    localStorage.setItem('pendingModuleActivation', JSON.stringify({
-      module: selectedModule,
-      sport: selectedSport,
-      timestamp: Date.now()
-    }));
+  50% { 
+    box-shadow: 0 0 16px 6px rgba(245, 158, 11, 0.35);
   }
-  
-  // Trigger subscription refetch
-  refetch();
-  
-  // Redirect immediately (no polling needed)
-  navigate("/auth", { 
-    replace: true,
-    state: {
-      fromPayment: true,
-      message: "Payment successful! Please sign in to access your new module.",
-      module: selectedModule,
-      sport: selectedSport
-    }
-  });
-  
-  return;
+}
+
+.animate-glow-pulse-amber {
+  animation: glow-pulse-amber 2s ease-in-out infinite;
 }
 ```
 
-### 3. Remove Problematic Dependencies
+### 2. Apply Animation to Important Box (Checkout.tsx)
 
-Remove `toast` from dependency array to prevent unnecessary re-runs:
+Update the amber "Important" box div (currently at line 322):
 
-```typescript
-}, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, refetch, isAddMode]);
-// Note: removed 'toast' - it's stable and doesn't need to trigger re-runs
+**Before:**
+```tsx
+<div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+```
+
+**After:**
+```tsx
+<div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6 animate-glow-pulse-amber">
 ```
 
 ---
 
-## Why Polling is Unnecessary
+## Visual Effect
 
-The original code polled for `user && session` to be truthy, but:
-
-1. **User is already authenticated** when returning from Stripe (they logged in before checkout)
-2. **The redirect to `/auth` page** will handle any session edge cases
-3. **Webhook processing** happens independently of this flow
-
-Removing the interval eliminates the source of flickering entirely.
+The animation will:
+- Create a soft amber/orange glow around the box
+- Pulse continuously to attract user attention
+- Fade smoothly between no glow and full glow every 2 seconds
+- Work in both light and dark modes
 
 ---
 
-## Expected Behavior After Fix
+## Expected Outcome
 
-1. User returns from Stripe with `?status=success`
-2. **Single toast** appears: "Payment Successful! Redirecting to sign in..."
-3. **Immediate redirect** to `/auth` page with success state
-4. No flickering, no repeated toasts
-
+The yellow "Important" message box will have a subtle but noticeable glowing animation that draws users' attention to the critical instruction about clicking "Back to dashboard" or signing back in after purchase.
