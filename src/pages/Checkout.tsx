@@ -30,6 +30,7 @@ const Checkout = () => {
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [showManualLink, setShowManualLink] = useState(false);
   const popupRef = useRef<Window | null>(null);
+  const successHandledRef = useRef(false);
 
   useEffect(() => {
     // CRITICAL: Wait for ALL loading states to complete before making any decisions
@@ -59,94 +60,44 @@ const Checkout = () => {
     // Check for both 'status' (new) and 'checkout' (old) parameters for backward compatibility
     const status = searchParams.get('status') || searchParams.get('checkout');
     if (status === 'success') {
-      console.log('Checkout: Payment successful, verifying session...');
+      // Guard: Only handle success once to prevent flickering
+      if (successHandledRef.current) {
+        return;
+      }
+      successHandledRef.current = true;
       
-      // Show loading state while verifying session
+      console.log('Checkout: Payment successful, redirecting...');
+      
+      // Single toast notification
       toast({
         title: "Payment Successful!",
-        description: "Verifying your session...",
+        description: "Redirecting to sign in...",
       });
       
-      // Wait for auth to stabilize (max 3 seconds)
-      let attempts = 0;
-      const maxAttempts = 15; // 3 seconds (15 * 200ms)
+      // Store pending module activation for notification system
+      if (isAddMode && selectedModule && selectedSport) {
+        localStorage.setItem('pendingModuleActivation', JSON.stringify({
+          module: selectedModule,
+          sport: selectedSport,
+          timestamp: Date.now()
+        }));
+      }
       
-      const verifyAndRedirect = setInterval(() => {
-        attempts++;
-        
-        // Check if user is authenticated
-        if (user && session) {
-          clearInterval(verifyAndRedirect);
-          console.log('Checkout: Session verified, redirecting to dashboard');
-          
-          toast({
-            title: "Payment Successful!",
-            description: "Redirecting to your dashboard...",
-          });
-          
-          // Store pending module activation for notification system
-          if (isAddMode && selectedModule && selectedSport) {
-            localStorage.setItem('pendingModuleActivation', JSON.stringify({
-              module: selectedModule,
-              sport: selectedSport,
-              timestamp: Date.now()
-            }));
-          }
-          
-          // Trigger immediate refetch
-          refetch();
-          
-          // Redirect to sign-in page with success message
-          navigate("/auth", { 
-            replace: true,
-            state: {
-              fromPayment: true,
-              message: "Payment successful! Please sign in to access your new module.",
-              module: selectedModule,
-              sport: selectedSport
-            }
-          });
-          
-          return;
-        }
-        
-        // Timeout after max attempts
-        if (attempts >= maxAttempts) {
-          clearInterval(verifyAndRedirect);
-          console.log('Checkout: Session verification timeout, redirecting anyway');
-          
-          toast({
-            title: "Payment Successful!",
-            description: "Redirecting to your dashboard...",
-          });
-          
-          // Store pending module activation for notification system
-          if (isAddMode && selectedModule && selectedSport) {
-            localStorage.setItem('pendingModuleActivation', JSON.stringify({
-              module: selectedModule,
-              sport: selectedSport,
-              timestamp: Date.now()
-            }));
-          }
-          
-          // Trigger refetch
-          refetch();
-          
-          // Redirect to sign-in page
-          navigate("/auth", { 
-            replace: true,
-            state: {
-              fromPayment: true,
-              message: "Payment successful! Please sign in to access your new module.",
-              module: selectedModule,
-              sport: selectedSport
-            }
-          });
-        }
-      }, 200); // Check every 200ms
+      // Trigger subscription refetch
+      refetch();
       
-      // Clean up interval on unmount
-      return () => clearInterval(verifyAndRedirect);
+      // Redirect immediately (no polling needed)
+      navigate("/auth", { 
+        replace: true,
+        state: {
+          fromPayment: true,
+          message: "Payment successful! Please sign in to access your new module.",
+          module: selectedModule,
+          sport: selectedSport
+        }
+      });
+      
+      return;
     } else if (status === 'cancel' || status === 'cancelled') {
       console.log('Checkout: Payment cancelled');
       // Clear any pending module activation
@@ -157,7 +108,7 @@ const Checkout = () => {
         variant: "destructive",
       });
     }
-  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, toast, refetch, isAddMode]);
+  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, refetch, isAddMode, selectedModule, selectedSport]);
 
   const redirectToStripe = (url: string) => {
     console.log('Checkout: Redirecting to Stripe URL', url);
