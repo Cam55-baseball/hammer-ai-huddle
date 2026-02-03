@@ -1,15 +1,20 @@
 
-# Enable Scrolling in Nutrition Hub Settings Dialog
+# Fix Goal Sync Between Settings and Main Display
 
-## Problem
+## Problem Analysis
 
-The Nutrition Hub Settings dialog (`NutritionHubSettings.tsx`) doesn't allow scrolling on smaller screens or when content exceeds the viewport height. This makes the dialog content inaccessible on mobile devices.
+When you change your goal to "Maintain" in the Nutrition Hub Settings dialog, the main page still shows "Gain Lean Muscle" because there are **two separate instances** of the `useTDEE()` hook:
+
+1. **Settings Dialog** - Uses its own `useTDEE()` and calls `refetchTDEE()` after saving
+2. **Main Page** - Uses a different instance of `useTDEE()` through `useDailyNutritionTargets()` which never gets refreshed
+
+The `MacroTargetDisplay` component receives `targets.goalType` from `useDailyNutritionTargets()`, which internally calls `useTDEE()`. When the settings dialog updates the goal and calls its own `refetchTDEE()`, the main page's separate hook instance still has stale data.
 
 ---
 
 ## Solution
 
-Add `max-h-[90vh]` and `overflow-y-auto` to the `DialogContent` component to enable vertical scrolling when content exceeds the available space.
+Trigger a refetch of the `useTDEE()` data in `NutritionHubContent` when `onGoalChanged` is called from the settings dialog. This ensures the `MacroTargetDisplay` receives the updated goal type.
 
 ---
 
@@ -17,32 +22,52 @@ Add `max-h-[90vh]` and `overflow-y-auto` to the `DialogContent` component to ena
 
 | File | Changes |
 |------|---------|
-| `src/components/nutrition-hub/NutritionHubSettings.tsx` | Add scrolling classes to DialogContent |
+| `src/components/nutrition-hub/NutritionHubContent.tsx` | Update `onGoalChanged` callback to refetch TDEE data |
 
 ---
 
 ## Technical Implementation
 
-### `src/components/nutrition-hub/NutritionHubSettings.tsx`
+### `src/components/nutrition-hub/NutritionHubContent.tsx`
 
-**Line 97 - Update DialogContent className:**
-
+**Current code (line 447):**
 ```typescript
-// Before:
-<DialogContent className="sm:max-w-md">
-
-// After:
-<DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+<NutritionHubSettings
+  open={settingsOpen}
+  onOpenChange={setSettingsOpen}
+  onGoalChanged={refetchTDEE}
+  onEditProfile={() => setShowTDEESetup(true)}
+/>
 ```
 
-This applies:
-- `max-h-[90vh]` - Limits dialog height to 90% of viewport
-- `overflow-y-auto` - Enables vertical scrollbar when content overflows
+This is already correctly passing `refetchTDEE` - however, the issue is that the settings dialog is **also** calling its own `refetchTDEE` from its own `useTDEE()` instance. The parent's `refetchTDEE` should handle the refresh.
+
+**The actual issue**: The settings dialog calls `refetchTDEE()` from its internal `useTDEE()` but that's a different instance. We need to ensure the `onGoalChanged` callback is properly awaited and the parent's data is refreshed.
+
+**Fix: Wrap the callback to ensure proper refresh sequence:**
+
+```typescript
+// Create a handler that properly refreshes all data
+const handleGoalChanged = useCallback(async () => {
+  await refetchTDEE();
+}, [refetchTDEE]);
+
+// In the JSX:
+<NutritionHubSettings
+  open={settingsOpen}
+  onOpenChange={setSettingsOpen}
+  onGoalChanged={handleGoalChanged}
+  onEditProfile={() => setShowTDEESetup(true)}
+/>
+```
 
 ---
 
 ## Expected Outcome
 
-- Dialog content will be scrollable on all screen sizes
-- Works seamlessly on mobile devices with limited viewport height
-- Consistent with the Weekly Wellness Goals dialog scroll fix pattern
+1. User opens Nutrition Hub Settings
+2. User changes goal from "Gain Lean Muscle" to "Maintain"
+3. User clicks "Update Goal"
+4. The `onGoalChanged` callback triggers `refetchTDEE()` in the parent component
+5. `MacroTargetDisplay` receives updated data showing "Maintain"
+6. Both settings dialog and main page display the same goal
