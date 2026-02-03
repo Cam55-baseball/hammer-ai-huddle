@@ -50,10 +50,21 @@ Deno.serve(async (req) => {
 
     const bearer = authHeader.replace(/^Bearer\s+/i, '');
     const claims = decodeJwt(bearer);
+    
+    // Validate JWT claims exist
     if (!claims || !claims.sub) {
       logStep("ERROR: Authentication failed while decoding JWT");
       return new Response(
         JSON.stringify({ error: "Authentication failed", message: "Invalid or expired token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    // Check if token is expired
+    if (claims.exp && claims.exp < Math.floor(Date.now() / 1000)) {
+      logStep("ERROR: Token has expired", { exp: claims.exp, now: Math.floor(Date.now() / 1000) });
+      return new Response(
+        JSON.stringify({ error: "Authentication failed", message: "Token has expired" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

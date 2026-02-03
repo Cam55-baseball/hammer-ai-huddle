@@ -67,9 +67,10 @@ export const useSubscription = () => {
 
       // First attempt: Call edge function with current session
       let { data, error } = await supabase.functions.invoke('check-subscription');
+      let authFailed = false;
 
       // If we get an auth error (401), try refreshing the session and retry once
-      if (error && (error.message?.includes('Authentication') || error.message?.includes('401'))) {
+      if (error && (error.message?.includes('Authentication') || error.message?.includes('401') || error.message?.includes('Invalid or expired token'))) {
         console.log('[useSubscription] Auth error detected, attempting token refresh...');
         
         try {
@@ -83,11 +84,18 @@ export const useSubscription = () => {
             
             data = retryResult.data;
             error = retryResult.error;
+            
+            // If still auth error after refresh, mark as failed
+            if (error && (error.message?.includes('Authentication') || error.message?.includes('401'))) {
+              authFailed = true;
+            }
           } else {
-            console.error('[useSubscription] Token refresh failed:', refreshError);
+            console.warn('[useSubscription] Token refresh failed, will use database fallback:', refreshError?.message);
+            authFailed = true;
           }
         } catch (refreshError) {
           console.error('[useSubscription] Error during token refresh:', refreshError);
+          authFailed = true;
         }
       }
 
@@ -140,9 +148,9 @@ export const useSubscription = () => {
         }
         setPrevModules(newModules);
       } else {
-        // Log as warning for 404s (transient), error for other issues
-        if (is404Error) {
-          console.warn('[useSubscription] Edge function unavailable, falling back to database');
+        // Log as warning for 404s and auth failures (transient), error for other issues
+        if (is404Error || authFailed) {
+          console.warn('[useSubscription] Edge function unavailable or auth failed, falling back to database');
         } else if (error) {
           console.error('Error fetching subscription:', error);
         }
