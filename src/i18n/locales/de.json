@@ -4360,6 +4360,39 @@
         "stressLevel3": "Mäßig",
         "stressLevel4": "Hoch",
         "stressLevel5": "Sehr Hoch"
+      },
+      "nightSuccess": {
+        "title": "Tag Abgeschlossen!",
+        "todayHighlights": "Heutige Highlights",
+        "checkinsCompleted": "{{count}}/3 Check-ins abgeschlossen",
+        "workoutsLogged": "{{count}} Training protokolliert",
+        "sleepGoalSet": "{{hours}} Stunden Schlafziel gesetzt",
+        "weightTracked": "{{weight}} lbs erfasst",
+        "currentStreak": "Aktuelle Streak",
+        "days": "Tage",
+        "tomorrowAwaits": "Morgen Wartet",
+        "tomorrowIncludes": "Dein Morgen beinhaltet:",
+        "morningCheckin": "Morgen Check-in",
+        "scheduledWorkout": "Geplantes Training",
+        "mindFuelLesson": "Neue Mind Fuel Lektion",
+        "nutritionTip": "Personalisierter Ernährungstipp",
+        "goodnightMessages": {
+          "great": "Was für ein toller Tag! Süße Träume, Champion.",
+          "stressed": "Morgen ist ein neuer Start. Schlaf tief heute Nacht.",
+          "lowMood": "Jeder Sonnenaufgang bringt neue Möglichkeiten. Schlaf gut.",
+          "perfect": "Du hast es heute geschafft! Wir sehen uns morgen früh!"
+        },
+        "morningBonus": {
+          "title": "Morgen Check-in Bonus",
+          "subtitle": "Abschließen innerhalb von 15 Min nach dem Aufwachen:",
+          "keepStreak": "Halte deine Streak am Leben",
+          "trackWeight": "Erfasse genaues Morgengewicht",
+          "getDailyFocus": "Erhalte deinen personalisierten Tagesfokus",
+          "unlockMotivation": "Schalte die heutige Motivation frei"
+        },
+        "sleepCountdown": "Schlaf in {{time}} um dein Ziel zu erreichen",
+        "recapCountdown": "Dein 6-Wochen-Rückblick ist in {{days}} Tagen!",
+        "closeButton": "Schließen & Gut Schlafen"
       }
     },
     "disciplineTrend": {

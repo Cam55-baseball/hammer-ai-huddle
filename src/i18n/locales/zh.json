@@ -3529,6 +3529,39 @@
         "stressLevel3": "中等",
         "stressLevel4": "高",
         "stressLevel5": "非常高"
+      },
+      "nightSuccess": {
+        "title": "今日完成！",
+        "todayHighlights": "今日亮点",
+        "checkinsCompleted": "{{count}}/3 签到已完成",
+        "workoutsLogged": "{{count}} 次锻炼已记录",
+        "sleepGoalSet": "{{hours}} 小时睡眠目标已设定",
+        "weightTracked": "已记录 {{weight}} 磅",
+        "currentStreak": "当前连续记录",
+        "days": "天",
+        "tomorrowAwaits": "明天等着您",
+        "tomorrowIncludes": "您的早晨包括：",
+        "morningCheckin": "晨间签到",
+        "scheduledWorkout": "计划锻炼",
+        "mindFuelLesson": "新的心灵燃料课程",
+        "nutritionTip": "个性化营养建议",
+        "goodnightMessages": {
+          "great": "美好的一天！好梦，冠军。",
+          "stressed": "明天是新的开始。今晚好好休息。",
+          "lowMood": "每一个日出都带来新的机会。睡个好觉。",
+          "perfect": "今天太棒了！明早见！"
+        },
+        "morningBonus": {
+          "title": "晨间签到奖励",
+          "subtitle": "醒来15分钟内完成可以：",
+          "keepStreak": "保持您的连续记录",
+          "trackWeight": "记录准确的晨间体重",
+          "getDailyFocus": "获得您的个性化日常重点",
+          "unlockMotivation": "解锁今天的动力"
+        },
+        "sleepCountdown": "{{time}} 后睡觉可达成目标",
+        "recapCountdown": "您的6周回顾还有 {{days}} 天！",
+        "closeButton": "关闭并休息"
       }
     },
     "freeNote": {

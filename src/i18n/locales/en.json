@@ -4902,6 +4902,39 @@
         "stressLevel3": "Moderate",
         "stressLevel4": "High",
         "stressLevel5": "Very High"
+      },
+      "nightSuccess": {
+        "title": "Day Complete!",
+        "todayHighlights": "Today's Highlights",
+        "checkinsCompleted": "{{count}}/3 Check-ins completed",
+        "workoutsLogged": "{{count}} workout logged",
+        "sleepGoalSet": "{{hours}} hours sleep goal set",
+        "weightTracked": "{{weight}} lbs tracked",
+        "currentStreak": "Current Streak",
+        "days": "days",
+        "tomorrowAwaits": "Tomorrow Awaits",
+        "tomorrowIncludes": "Your morning includes:",
+        "morningCheckin": "Morning Check-in",
+        "scheduledWorkout": "Scheduled Workout",
+        "mindFuelLesson": "New Mind Fuel lesson",
+        "nutritionTip": "Personalized nutrition tip",
+        "goodnightMessages": {
+          "great": "What a great day! Sweet dreams, champion.",
+          "stressed": "Tomorrow is a fresh start. Rest deeply tonight.",
+          "lowMood": "Every sunrise brings new opportunities. Sleep well.",
+          "perfect": "You crushed it today! See you tomorrow morning!"
+        },
+        "morningBonus": {
+          "title": "Morning Check-in Bonus",
+          "subtitle": "Complete within 15 min of waking to:",
+          "keepStreak": "Keep your streak alive",
+          "trackWeight": "Track accurate morning weight",
+          "getDailyFocus": "Get your personalized daily focus",
+          "unlockMotivation": "Unlock today's motivation"
+        },
+        "sleepCountdown": "Sleep in {{time}} to hit your goal",
+        "recapCountdown": "Your 6-week recap is in {{days}} days!",
+        "closeButton": "Close & Rest Well"
       }
     },
     "disciplineTrend": {
