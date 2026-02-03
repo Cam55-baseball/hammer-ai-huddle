@@ -199,7 +199,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">{t('vault.nutrition.protein')} (g)</Label>
+              <Label className="text-xs text-muted-foreground">{t('vault.nutrition.protein')}</Label>
               <Input
                 type="number"
                 placeholder="0"
@@ -209,7 +209,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">{t('vault.nutrition.carbs')} (g)</Label>
+              <Label className="text-xs text-muted-foreground">{t('vault.nutrition.carbs')}</Label>
               <Input
                 type="number"
                 placeholder="0"
@@ -219,7 +219,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">{t('vault.nutrition.fats')} (g)</Label>
+              <Label className="text-xs text-muted-foreground">{t('vault.nutrition.fats')}</Label>
               <Input
                 type="number"
                 placeholder="0"
@@ -232,7 +232,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
 
           {/* Hydration */}
           <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">{t('vault.nutrition.hydration')} (oz)</Label>
+            <Label className="text-xs text-muted-foreground">{t('vault.nutrition.hydration')}</Label>
             <Input
               type="number"
               placeholder="0"
@@ -248,20 +248,18 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
               {t('vault.nutrition.energyLevel')}
             </Label>
             <div className="flex gap-1">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+              {[1, 2, 3, 4, 5].map((level) => (
                 <button
                   key={level}
                   type="button"
                   onClick={() => setEnergyLevel(level)}
                   className={`flex-1 h-8 rounded text-xs font-bold transition-all ${
                     energyLevel === level
-                      ? level <= 3
+                      ? level <= 2
                         ? 'bg-red-500 text-white'
-                        : level <= 5
-                          ? 'bg-orange-500 text-white'
-                          : level <= 7
-                            ? 'bg-amber-500 text-secondary'
-                            : 'bg-green-500 text-white'
+                        : level === 3
+                          ? 'bg-amber-500 text-secondary'
+                          : 'bg-green-500 text-white'
                       : 'bg-muted hover:bg-muted/80 text-muted-foreground'
                   }`}
                 >
