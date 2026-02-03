@@ -1,265 +1,95 @@
 
-# React Query Cache Invalidation for Seamless Nutrition Sync
 
-## Overview
+# Fix Quick Nutrition Log: Double Units and Energy Level Error
 
-This plan implements centralized cache invalidation so all nutrition logging entry points (Game Plan Quick Log, Nutrition Hub dialogs, meal editing) automatically update macro displays across all views in real-time.
+## Problems Identified
 
----
+### Issue 1: Double Unit Labels
+The labels display units twice (e.g., "Protein (g) (g)") because:
+- **Translation strings already include units**: 
+  - `vault.nutrition.protein` = "Protein (g)"
+  - `vault.nutrition.carbs` = "Carbs (g)"
+  - `vault.nutrition.fats` = "Fats (g)"
+  - `vault.nutrition.hydration` = "Hydration (oz)"
+- **Code adds units again** on lines 202, 212, 221, and 235
 
-## Current Problem
-
-| Entry Point | Saves To | Refreshes |
-|-------------|----------|-----------|
-| Game Plan → Quick Log | `vault_nutrition_logs` | Only Game Plan's own `refetch()` |
-| Nutrition Hub → MealLoggingDialog | `vault_nutrition_logs` | Only local `handleMealSaved()` |
-| NutritionDailyLog delete | `vault_nutrition_logs` | Only local state |
-
-**Result**: Changes from one module don't propagate to others. Macros (calories, carbs, fats, protein) stay stale until manual navigation.
-
----
-
-## Solution Architecture
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                     MEAL LOGGING ENTRY POINTS                   │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Game Plan                    Nutrition Hub                     │
-│  ┌────────────────┐          ┌──────────────────────┐          │
-│  │QuickNutrition  │          │ MealLoggingDialog    │          │
-│  │LogDialog       │          │ CommonFoodsGallery   │          │
-│  │                │          │ FavoriteFoodsWidget  │          │
-│  └───────┬────────┘          └──────────┬───────────┘          │
-│          │                              │                       │
-│          └──────────────┬───────────────┘                       │
-│                         ▼                                       │
-│            ┌────────────────────────┐                          │
-│            │  vault_nutrition_logs  │                          │
-│            │     (Supabase)         │                          │
-│            └───────────┬────────────┘                          │
-│                        │                                        │
-│                        ▼                                        │
-│   ┌────────────────────────────────────────────────┐           │
-│   │     queryClient.invalidateQueries()            │           │
-│   │  • ['nutritionLogs', dateStr]                  │           │
-│   │  • ['macroProgress', dateStr]                  │           │
-│   └────────────────────────────────────────────────┘           │
-│                        │                                        │
-│         ┌──────────────┼──────────────┐                        │
-│         ▼              ▼              ▼                        │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐              │
-│  │ GamePlan   │ │ MacroTarget │ │ DailyLog    │              │
-│  │ (status ✓) │ │ Display     │ │ (meal list) │              │
-│  └─────────────┘ └─────────────┘ └─────────────┘              │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+### Issue 2: Energy Level Constraint Violation
+When clicking "Log Meal", the error occurs because:
+- **Database constraint**: `energy_level` must be between 1 and 5
+  ```sql
+  CHECK ((energy_level >= 1) AND (energy_level <= 5))
+  ```
+- **UI offers values 1-10**: Default is 5 (works), but selecting 6-10 violates the constraint
 
 ---
 
-## Files to Modify
+## Solution
 
-| File | Purpose |
-|------|---------|
-| `src/components/QuickNutritionLogDialog.tsx` | Add query invalidation after save |
-| `src/components/nutrition-hub/MealLoggingDialog.tsx` | Add query invalidation after save |
-| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Convert to React Query with cache key |
-| `src/components/nutrition-hub/NutritionHubContent.tsx` | Convert fetchConsumed to React Query |
-| `src/hooks/useMealVaultSync.ts` | Add query invalidation after vault sync |
+| File | Change |
+|------|--------|
+| `src/components/QuickNutritionLogDialog.tsx` | Remove duplicate "(g)" and "(oz)" from labels; Change energy level scale to 1-5 |
 
 ---
 
 ## Technical Implementation
 
-### 1. QuickNutritionLogDialog.tsx
+### 1. Fix Double Unit Labels (Lines 202, 212, 221, 235)
 
-Add `useQueryClient` and invalidate nutrition queries after successful save:
-
+**Before:**
 ```typescript
-// Add import
-import { useQueryClient } from '@tanstack/react-query';
-
-// Inside component
-const queryClient = useQueryClient();
-
-// After successful save (line ~92):
-const { error } = await supabase.from('vault_nutrition_logs').insert({...});
-if (error) throw error;
-
-// ADD: Invalidate all nutrition-related queries
-queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
-queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
-
-toast.success(t('vault.nutrition.mealLogged'));
+<Label>{t('vault.nutrition.protein')} (g)</Label>  // "Protein (g) (g)"
+<Label>{t('vault.nutrition.carbs')} (g)</Label>    // "Carbs (g) (g)"
+<Label>{t('vault.nutrition.fats')} (g)</Label>     // "Fats (g) (g)"
+<Label>{t('vault.nutrition.hydration')} (oz)</Label> // "Hydration (oz) (oz)"
 ```
 
-### 2. MealLoggingDialog.tsx
-
-Add query invalidation after meal sync:
-
+**After:**
 ```typescript
-// Add import
-import { useQueryClient } from '@tanstack/react-query';
-
-// Inside component
-const queryClient = useQueryClient();
-
-// After syncMealToVault succeeds (both quick and detailed handlers):
-if (result.success) {
-  queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
-  queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
-  toast.success('Meal logged successfully');
-  // ...rest of success handling
-}
+<Label>{t('vault.nutrition.protein')}</Label>   // "Protein (g)"
+<Label>{t('vault.nutrition.carbs')}</Label>     // "Carbs (g)"
+<Label>{t('vault.nutrition.fats')}</Label>      // "Fats (g)"
+<Label>{t('vault.nutrition.hydration')}</Label> // "Hydration (oz)"
 ```
 
-### 3. NutritionDailyLog.tsx
+### 2. Fix Energy Level Scale (Lines 251-271)
 
-Convert to React Query for automatic cache synchronization:
-
+**Before:**
 ```typescript
-// Add import
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-
-// Replace useState + fetchMeals with useQuery:
-const dateStr = format(currentDate, 'yyyy-MM-dd');
-
-const { data: meals = [], isLoading: loading, refetch } = useQuery({
-  queryKey: ['nutritionLogs', dateStr, user?.id],
-  queryFn: async () => {
-    if (!user) return [];
-    
-    const { data, error } = await supabase
-      .from('vault_nutrition_logs')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('entry_date', dateStr)
-      .order('logged_at', { ascending: true });
-
-    if (error) throw error;
-
-    return (data || []).map(log => ({
-      id: log.id,
-      mealType: log.meal_type,
-      mealTitle: log.meal_title,
-      loggedAt: log.logged_at || log.created_at || new Date().toISOString(),
-      calories: log.calories,
-      proteinG: log.protein_g,
-      carbsG: log.carbs_g,
-      fatsG: log.fats_g,
-      supplements: Array.isArray(log.supplements) ? log.supplements : null,
-    })) as MealLogData[];
-  },
-  enabled: !!user,
-});
-
-// Update handleDeleteMeal to invalidate cache:
-const handleDeleteMeal = async (mealId: string) => {
-  try {
-    const { error } = await supabase.from('vault_nutrition_logs').delete().eq('id', mealId);
-    if (error) throw error;
-    
-    // Invalidate to refresh list
-    queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
-    queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
-    toast.success('Meal deleted');
-  } catch (error) {
-    console.error('Error deleting meal:', error);
-    toast.error('Failed to delete meal');
-  }
-};
+{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+  <button
+    // Styling for 10 levels with different color thresholds
+    className={`... ${
+      energyLevel === level
+        ? level <= 3 ? 'bg-red-500' 
+          : level <= 5 ? 'bg-orange-500'
+            : level <= 7 ? 'bg-amber-500' 
+              : 'bg-green-500'
+        : 'bg-muted'
+    }`}
+  >
 ```
 
-### 4. NutritionHubContent.tsx
-
-Convert `fetchConsumed` to React Query:
-
+**After:**
 ```typescript
-// Add import
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-
-// Replace useState + fetchConsumed with useQuery:
-const today = format(new Date(), 'yyyy-MM-dd');
-
-const { data: consumedTotals = { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 }, isLoading: loadingConsumed } = useQuery({
-  queryKey: ['macroProgress', today, user?.id],
-  queryFn: async () => {
-    if (!user) return { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 };
-    
-    const { data, error } = await supabase
-      .from('vault_nutrition_logs')
-      .select('calories, protein_g, carbs_g, fats_g')
-      .eq('user_id', user.id)
-      .eq('entry_date', today);
-
-    if (error) throw error;
-
-    return (data || []).reduce((acc, log) => ({
-      calories: acc.calories + (log.calories || 0),
-      protein: acc.protein + (log.protein_g || 0),
-      carbs: acc.carbs + (log.carbs_g || 0),
-      fats: acc.fats + (log.fats_g || 0),
-      fiber: acc.fiber,
-    }), { calories: 0, protein: 0, carbs: 0, fats: 0, fiber: 0 });
-  },
-  enabled: !!user,
-});
-
-// Remove dailyLogRefreshTrigger state and related logic
-// Remove refreshTrigger prop from NutritionDailyLog usage
-```
-
-### 5. useMealVaultSync.ts
-
-Add query invalidation after vault operations:
-
-```typescript
-// Add import
-import { useQueryClient } from '@tanstack/react-query';
-
-// Inside hook
-const queryClient = useQueryClient();
-
-// At end of syncMealToVault (after successful insert):
-if (!error) {
-  queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
-  queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
-}
-
-return { success: true };
+{[1, 2, 3, 4, 5].map((level) => (
+  <button
+    // Styling adjusted for 5 levels
+    className={`... ${
+      energyLevel === level
+        ? level <= 2 ? 'bg-red-500 text-white'     // Low (1-2)
+          : level === 3 ? 'bg-amber-500 text-secondary'  // Medium (3)
+            : 'bg-green-500 text-white'             // High (4-5)
+        : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+    }`}
+  >
 ```
 
 ---
 
-## Query Key Strategy
+## Expected Outcome
 
-| Query Key | Used By | Purpose |
-|-----------|---------|---------|
-| `['nutritionLogs', dateStr, userId]` | NutritionDailyLog | Meal list for specific date |
-| `['macroProgress', dateStr, userId]` | NutritionHubContent | Day's macro totals |
+After these fixes:
+1. Labels will display correctly: "Protein (g)", "Carbs (g)", "Fats (g)", "Hydration (oz)"
+2. Energy level selector will show 1-5 only, matching the database constraint
+3. "Log Meal" button will successfully save entries without constraint violations
 
-Invalidating the parent key (e.g., `['nutritionLogs']`) will invalidate all child queries.
-
----
-
-## Expected Behavior After Implementation
-
-1. **Log meal from Game Plan** → Nutrition Hub's MacroTargetDisplay and DailyLog update instantly
-2. **Log meal from Nutrition Hub** → Game Plan's nutrition status updates
-3. **Delete meal in Daily Log** → Macro totals recalculate automatically
-4. **Edit existing meal** → All displays reflect changes immediately
-5. **No manual navigation needed** → React Query handles all synchronization
-
----
-
-## Cleanup
-
-Remove deprecated patterns:
-- `dailyLogRefreshTrigger` state in NutritionHubContent
-- `refreshTrigger` prop from NutritionDailyLog
-- Manual `fetchConsumed()` calls
-- Manual `fetchMeals()` calls
-
-This aligns with the "Full Loop Integration Philosophy" where every module feeds data bidirectionally.
