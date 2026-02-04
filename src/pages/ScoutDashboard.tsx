@@ -28,6 +28,7 @@ interface Player {
   full_name: string;
   avatar_url: string | null;
   followStatus?: 'none' | 'pending' | 'accepted';
+  sport?: 'baseball' | 'softball' | 'both' | null;
 }
 
 export default function ScoutDashboard() {
@@ -402,7 +403,23 @@ export default function ScoutDashboard() {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold truncate">{player.full_name}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold truncate">{player.full_name}</p>
+                          {player.sport && (
+                            <Badge 
+                              variant="outline" 
+                              className={
+                                player.sport === 'baseball' ? "border-blue-500 text-blue-600 text-xs" :
+                                player.sport === 'softball' ? "border-pink-500 text-pink-600 text-xs" :
+                                "border-purple-500 text-purple-600 text-xs"
+                              }
+                            >
+                              {player.sport === 'baseball' && '⚾ Baseball'}
+                              {player.sport === 'softball' && '🥎 Softball'}
+                              {player.sport === 'both' && '⚾🥎 Both'}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 items-center">
