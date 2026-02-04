@@ -71,7 +71,7 @@ const Checkout = () => {
       // Single toast notification
       toast({
         title: "Payment Successful!",
-        description: "Redirecting to sign in...",
+        description: "Your new module is now active. Redirecting to dashboard...",
       });
       
       // Store pending module activation for notification system
@@ -86,13 +86,12 @@ const Checkout = () => {
       // Trigger subscription refetch
       refetch();
       
-      // Redirect immediately (no polling needed)
-      navigate("/auth", { 
+      // Redirect to dashboard (user stays logged in)
+      navigate("/dashboard", { 
         replace: true,
         state: {
           fromPayment: true,
-          message: "Payment successful! Please sign in to access your new module.",
-          module: selectedModule,
+          newModule: selectedModule,
           sport: selectedSport
         }
       });
@@ -319,7 +318,7 @@ const Checkout = () => {
             </p>
           </div>
 
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6 animate-glow-pulse-amber">
             <p className="text-sm text-amber-800 dark:text-amber-200">
               📌 <strong>Important:</strong> After purchasing your module click 'Back to dashboard' button or sign back in to access your new modules.
             </p>

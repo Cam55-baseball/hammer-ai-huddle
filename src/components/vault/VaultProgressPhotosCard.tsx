@@ -48,6 +48,7 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(autoOpen);
   const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Handle autoOpen changes with delay for smooth animation
@@ -73,7 +74,7 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
   const latestPhotoDate = latestPhoto?.photo_date ? new Date(latestPhoto.photo_date) : null;
   const unlockedByRecap = recapUnlockedAt && (!latestPhotoDate || latestPhotoDate < recapUnlockedAt);
   
-  const isLocked = !unlockedByRecap && latestPhoto?.next_entry_date && new Date(latestPhoto.next_entry_date) > new Date();
+  const isLocked = justSaved || (!unlockedByRecap && latestPhoto?.next_entry_date && new Date(latestPhoto.next_entry_date) > new Date());
   const daysRemaining = latestPhoto?.next_entry_date 
     ? Math.max(0, Math.ceil((new Date(latestPhoto.next_entry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
@@ -103,6 +104,7 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
     });
     
     if (result.success) {
+      setJustSaved(true); // Immediately show as locked
       setSelectedFiles([]);
       setWeight('');
       setBodyFat('');

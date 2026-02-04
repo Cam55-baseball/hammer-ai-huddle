@@ -178,6 +178,7 @@ export function VaultPerformanceTestCard({
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(autoOpen);
   const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [selectedModule, setSelectedModule] = useState<string>('');
   const [testResults, setTestResults] = useState<Record<string, string>>({});
   
@@ -259,7 +260,7 @@ export function VaultPerformanceTestCard({
   const latestTestDate = latestTest?.test_date ? new Date(latestTest.test_date) : null;
   const unlockedByRecap = recapUnlockedAt && (!latestTestDate || latestTestDate < recapUnlockedAt);
   
-  const isLocked = !unlockedByRecap && latestTest?.next_entry_date && new Date(latestTest.next_entry_date) > new Date();
+  const isLocked = justSaved || (!unlockedByRecap && latestTest?.next_entry_date && new Date(latestTest.next_entry_date) > new Date());
   const daysRemaining = latestTest?.next_entry_date 
     ? Math.max(0, Math.ceil((new Date(latestTest.next_entry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
@@ -278,7 +279,10 @@ export function VaultPerformanceTestCard({
       : undefined;
     
     setSaving(true);
-    await onSave(selectedModule, results, handedness);
+    const result = await onSave(selectedModule, results, handedness);
+    if (result.success) {
+      setJustSaved(true); // Immediately show as locked
+    }
     setTestResults({});
     setSaving(false);
   };
