@@ -1,120 +1,65 @@
 
-# Add Sport Badge to Following List for Coaches/Scouts
+# Fix: Double X Buttons in Real-Time Playback During Recording
 
-## Overview
-Add a visual sport indicator (Baseball ⚾ / Softball 🥎) next to each player's name in the "My Players" or "Following" list on both the Coach Dashboard and Scout Dashboard. This helps coaches/scouts quickly identify which sport each player practices.
+## Problem
+When starting recording in the Real-Time Playback feature, two X buttons appear in the top right corner. This happens because:
 
-## Current State
-- **Edge Function**: `get-following-players` returns only `id`, `full_name`, `avatar_url`
-- **Sport Data Source**: Player sport is determined by their `subscriptions.subscribed_modules` array (e.g., `baseball_hitting`, `softball_pitching`)
-- **No sport field** exists directly on the `profiles` table
+1. The Dialog component has a built-in close button (X) that's always visible
+2. There's a custom X button in the header section
+3. During fullscreen recording mode, both buttons become visible simultaneously
 
-## Implementation Plan
+## Root Cause
 
-### Step 1: Update Edge Function
-**File**: `supabase/functions/get-following-players/index.ts`
-
-Modify the edge function to:
-1. Join with the `subscriptions` table to get each player's `subscribed_modules`
-2. Determine sport from module prefix (`baseball_*` or `softball_*`)
-3. Return a `sport` field for each player (`'baseball'`, `'softball'`, or `'both'`)
-
-```text
-Current response:
-{ id, full_name, avatar_url, followStatus }
-
-New response:
-{ id, full_name, avatar_url, followStatus, sport }
-```
-
-### Step 2: Update Player Interface
-**Files**: 
-- `src/pages/CoachDashboard.tsx`
-- `src/pages/ScoutDashboard.tsx`
-
-Update the `Player` interface to include sport:
-```typescript
-interface Player {
-  id: string;
-  full_name: string;
-  avatar_url: string | null;
-  followStatus?: 'none' | 'pending' | 'accepted';
-  sport?: 'baseball' | 'softball' | 'both' | null;
-}
-```
-
-### Step 3: Add Sport Badge UI
-**Files**: 
-- `src/pages/CoachDashboard.tsx`
-- `src/pages/ScoutDashboard.tsx`
-
-Add a badge next to each player's name showing their sport:
-
-| Sport | Badge Style |
-|-------|-------------|
-| Baseball | Blue badge with "⚾ Baseball" |
-| Softball | Pink badge with "🥎 Softball" |
-| Both | Purple badge with "⚾🥎 Both" |
-| Unknown | No badge shown |
-
----
-
-## Technical Details
-
-### Edge Function SQL Logic
-```sql
--- Get subscribed modules for each player
-SELECT p.id, p.full_name, p.avatar_url, s.subscribed_modules
-FROM profiles p
-LEFT JOIN subscriptions s ON s.user_id = p.id
-WHERE p.id IN (player_ids...)
-```
-
-Then in TypeScript:
-```typescript
-function determineSport(modules: string[] | null): string | null {
-  if (!modules || modules.length === 0) return null;
-  
-  const hasBaseball = modules.some(m => m.startsWith('baseball'));
-  const hasSoftball = modules.some(m => m.startsWith('softball'));
-  
-  if (hasBaseball && hasSoftball) return 'both';
-  if (hasBaseball) return 'baseball';
-  if (hasSoftball) return 'softball';
-  return null;
-}
-```
-
-### Badge Component Example
+The `DialogContent` component (from `src/components/ui/dialog.tsx`) automatically includes a close button:
 ```tsx
-{player.sport && (
-  <Badge 
-    variant="outline" 
-    className={cn(
-      "ml-2 text-xs",
-      player.sport === 'baseball' && "border-blue-500 text-blue-600",
-      player.sport === 'softball' && "border-pink-500 text-pink-600",
-      player.sport === 'both' && "border-purple-500 text-purple-600"
-    )}
-  >
-    {player.sport === 'baseball' && '⚾ Baseball'}
-    {player.sport === 'softball' && '🥎 Softball'}
-    {player.sport === 'both' && '⚾🥎 Both'}
-  </Badge>
-)}
+<DialogPrimitive.Close className="absolute right-4 top-4...">
+  <X className="h-4 w-4" />
+</DialogPrimitive.Close>
 ```
 
----
+Meanwhile, `RealTimePlayback.tsx` adds its own close button in the header:
+```tsx
+<Button variant="ghost" size="icon" onClick={handleClose}>
+  <X className="h-5 w-5" />
+</Button>
+```
 
-## Files to Modify
+When fullscreen mode activates (during countdown/recording), the camera container uses `fixed inset-0 z-[9999]`, but the Dialog's built-in X button at `z-50` still shows through because the container only covers the camera area, not the dialog's close button.
+
+## Solution
+
+Hide the Dialog's built-in close button since the component already has its own custom close button in the header. This can be done by adding a CSS class to hide the default close button.
+
+### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `supabase/functions/get-following-players/index.ts` | Join subscriptions table, add sport detection logic |
-| `src/pages/CoachDashboard.tsx` | Update Player interface, add sport badge to player list |
-| `src/pages/ScoutDashboard.tsx` | Update Player interface, add sport badge to player list |
+| `src/components/RealTimePlayback.tsx` | Add `[&>button]:hidden` class to DialogContent to hide the built-in X button |
 
----
+### Implementation
 
-## Summary
-This feature adds clear visual indicators showing each player's sport (Baseball, Softball, or Both) next to their name in the Following list. Coaches and scouts can immediately see which sport each player trains, making it easier to manage mixed rosters of baseball and softball players.
+Add the class `[&>button]:hidden` to the DialogContent which hides the auto-generated close button while keeping the custom header close button:
+
+```tsx
+<DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col bg-gradient-to-br from-background via-background to-muted/30 [&>button]:hidden">
+```
+
+The `[&>button]:hidden` selector targets direct child buttons of the DialogContent, which is where the default Radix close button is rendered.
+
+## Why This Works
+
+- The custom header with the X button provides the close functionality in a more appropriate location
+- The built-in Dialog close button is redundant and causes visual duplication
+- Hiding it with CSS is cleaner than modifying the shared Dialog component
+
+## Alternative Considered
+
+Another option would be to modify the Dialog component to accept a prop like `showCloseButton={false}`, but that would affect the shared component and require updating other usages. The CSS approach is more targeted.
+
+## Testing
+
+After the fix, verify:
+1. Only one X button appears in the header at all times
+2. Recording phase shows no stray X buttons
+3. The remaining X button correctly closes the dialog
+4. Fullscreen mode during countdown/recording has no floating X buttons
