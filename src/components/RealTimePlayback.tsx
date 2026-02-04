@@ -2,6 +2,15 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -118,9 +127,11 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const [localOnlyMode, setLocalOnlyMode] = useState<boolean>(() => 
     localStorage.getItem('rtPlayback_localOnly') === 'true'
   );
-  const [autoRecordEnabled, setAutoRecordEnabled] = useState<boolean>(() => 
-    localStorage.getItem('rtPlayback_autoRecord') === 'true'
-  );
+  // Always start with auto-record OFF - user must enable it each session
+  const [autoRecordEnabled, setAutoRecordEnabled] = useState<boolean>(false);
+  
+  // Analysis issue alert state
+  const [showAnalysisIssueAlert, setShowAnalysisIssueAlert] = useState(false);
   
   // State
   const [phase, setPhase] = useState<Phase>('setup');
@@ -178,7 +189,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
   const cameraContainerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   
-  // Persist settings
+  // Persist settings (NOTE: autoRecordEnabled is NOT persisted - it resets each session)
   useEffect(() => {
     localStorage.setItem('rtPlayback_recordingDuration', String(recordingDuration));
     localStorage.setItem('rtPlayback_playbackDelay', String(playbackDelay));
@@ -189,11 +200,10 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
     localStorage.setItem('rtPlayback_gridOverlay', String(gridOverlayEnabled));
     localStorage.setItem('rtPlayback_audioCues', String(audioCuesEnabled));
     localStorage.setItem('rtPlayback_localOnly', String(localOnlyMode));
-    localStorage.setItem('rtPlayback_autoRecord', String(autoRecordEnabled));
     localStorage.setItem('rtPlayback_frameCount', String(frameCountForAnalysis));
     localStorage.setItem('rtPlayback_autoCapture', autoCaptureSetting);
     localStorage.setItem('rtPlayback_autoCaptureInterval', String(autoCaptureInterval));
-  }, [recordingDuration, playbackDelay, repeatDuration, playbackSpeed, facingMode, analysisEnabled, gridOverlayEnabled, audioCuesEnabled, localOnlyMode, autoRecordEnabled, frameCountForAnalysis, autoCaptureSetting, autoCaptureInterval]);
+  }, [recordingDuration, playbackDelay, repeatDuration, playbackSpeed, facingMode, analysisEnabled, gridOverlayEnabled, audioCuesEnabled, localOnlyMode, frameCountForAnalysis, autoCaptureSetting, autoCaptureInterval]);
   
   // Speed control during playback
   useEffect(() => {
@@ -973,50 +983,98 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
         setAnalysisStatus('extracting');
         setIsAnalyzing(true);
         
-        // Extract key frames for vision analysis
-        const frames = await extractKeyFrames(blob);
-        console.log(`Extracted ${frames.length} key frames for analysis`);
-        
-        if (frames.length === 0) {
-          setAnalysisStatus('failed');
-          setAnalysisError(t('realTimePlayback.frameExtractionFailed', 'Failed to extract video frames'));
+        // Set up 20-second timeout for analysis
+        let analysisTimedOut = false;
+        const analysisTimeout = setTimeout(() => {
+          analysisTimedOut = true;
+          console.warn('Analysis timeout - unable to gather information within 20 seconds');
+          setShowAnalysisIssueAlert(true);
           setIsAnalyzing(false);
-          return;
-        }
-        
-        setAnalysisStatus('analyzing');
-        
-        const { data, error } = await supabase.functions.invoke('analyze-realtime-playback', {
-          body: { 
-            videoId: videoData.id, 
-            module, 
-            sport, 
-            language: i18n.language,
-            frames // Send frames for vision analysis
-          }
-        });
-        
-        if (error) {
-          console.error('Analysis error:', error);
           setAnalysisStatus('failed');
-          setAnalysisError(t('realTimePlayback.analysisFailed', 'AI analysis failed'));
-          // Provide fallback analysis with mechanics breakdown
-          setAnalysis({
-            overallScore: 7.5,
-            quickSummary: t('realTimePlayback.defaultSummary', 'Good effort! Review your mechanics in slow motion.'),
-            mechanicsBreakdown: [
-              { category: 'Setup', score: 7, observation: t('realTimePlayback.defaultObservation', 'Solid foundation'), tip: t('realTimePlayback.defaultMechanicTip', 'Continue practicing') }
-            ],
-            keyStrength: t('realTimePlayback.defaultStrength', 'Good effort and consistency'),
-            priorityFix: t('realTimePlayback.defaultPriority', 'Review slow-motion footage'),
-            drillRecommendation: t('realTimePlayback.defaultDrill', 'Tee work for consistency')
-          });
-        } else if (data) {
-          setAnalysis(data);
-          setAnalysisStatus('complete');
-        }
+        }, 20000);
         
-        setIsAnalyzing(false);
+        try {
+          // Extract key frames for vision analysis
+          const frames = await extractKeyFrames(blob);
+          console.log(`Extracted ${frames.length} key frames for analysis`);
+          
+          if (analysisTimedOut) {
+            clearTimeout(analysisTimeout);
+            return;
+          }
+          
+          if (frames.length === 0) {
+            clearTimeout(analysisTimeout);
+            setAnalysisStatus('failed');
+            setAnalysisError(t('realTimePlayback.frameExtractionFailed', 'Failed to extract video frames'));
+            setIsAnalyzing(false);
+            return;
+          }
+          
+          setAnalysisStatus('analyzing');
+          
+          const { data, error } = await supabase.functions.invoke('analyze-realtime-playback', {
+            body: { 
+              videoId: videoData.id, 
+              module, 
+              sport, 
+              language: i18n.language,
+              frames // Send frames for vision analysis
+            }
+          });
+          
+          // Clear timeout since analysis completed
+          clearTimeout(analysisTimeout);
+          
+          if (analysisTimedOut) return; // Exit if timeout already triggered
+          
+          if (error) {
+            console.error('Analysis error:', error);
+            setAnalysisStatus('failed');
+            setAnalysisError(t('realTimePlayback.analysisFailed', 'AI analysis failed'));
+            // Provide fallback analysis with mechanics breakdown
+            setAnalysis({
+              overallScore: 7.5,
+              quickSummary: t('realTimePlayback.defaultSummary', 'Good effort! Review your mechanics in slow motion.'),
+              mechanicsBreakdown: [
+                { category: 'Setup', score: 7, observation: t('realTimePlayback.defaultObservation', 'Solid foundation'), tip: t('realTimePlayback.defaultMechanicTip', 'Continue practicing') }
+              ],
+              keyStrength: t('realTimePlayback.defaultStrength', 'Good effort and consistency'),
+              priorityFix: t('realTimePlayback.defaultPriority', 'Review slow-motion footage'),
+              drillRecommendation: t('realTimePlayback.defaultDrill', 'Tee work for consistency')
+            });
+          } else if (data) {
+            // Check for low-quality analysis results indicating athlete wasn't visible
+            const isLowQualityAnalysis = (analysis: Analysis): boolean => {
+              const genericPhrases = [
+                'unable to observe', 'cannot see', 'not visible', 
+                'obscured', 'out of frame', 'difficult to analyze',
+                'unable to detect', 'no athlete', 'not detected'
+              ];
+              
+              const textToCheck = [
+                analysis.quickSummary || '',
+                analysis.keyStrength || '',
+                analysis.priorityFix || ''
+              ].join(' ').toLowerCase();
+              
+              return genericPhrases.some(phrase => textToCheck.includes(phrase));
+            };
+            
+            if (isLowQualityAnalysis(data)) {
+              console.warn('Low-quality analysis detected - athlete may not be visible');
+              setShowAnalysisIssueAlert(true);
+            }
+            
+            setAnalysis(data);
+            setAnalysisStatus('complete');
+          }
+          
+          setIsAnalyzing(false);
+        } catch (analysisError) {
+          clearTimeout(analysisTimeout);
+          throw analysisError;
+        }
       } else {
         setAnalysisStatus('skipped-disabled');
       }
@@ -1383,7 +1441,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                     <div 
                       ref={cameraContainerRef}
                       className={`relative overflow-hidden bg-black ${
-                        isFullscreen 
+                        (isFullscreen || phase === 'countdown' || phase === 'recording')
                           ? 'fixed inset-0 z-[9999] rounded-none' 
                           : (phase === 'setup' || showAutoRecordPreview)
                             ? 'rounded-xl min-h-[55vh] sm:min-h-[60vh] aspect-auto'
@@ -2676,6 +2734,38 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
         frames={selectedFramesForCompare}
         onDownload={(frame, index) => handleDownloadFrame(frame.dataUrl, index)}
       />
+      
+      {/* Analysis Issue Alert Dialog */}
+      <AlertDialog open={showAnalysisIssueAlert} onOpenChange={setShowAnalysisIssueAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t('realTimePlayback.analysisIssueTitle', 'Unable to Analyze Recording')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('realTimePlayback.analysisIssueDescription', 
+                "We couldn't gather enough information from your recording for an accurate analysis. This usually happens when the athlete isn't fully visible in the frame."
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">
+              {t('realTimePlayback.tipsForBetterRecording', 'Tips for a better recording:')}
+            </p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>{t('realTimePlayback.tip1', 'Stand 6-10 feet from the camera')}</li>
+              <li>{t('realTimePlayback.tip2', 'Ensure your full body is visible in frame')}</li>
+              <li>{t('realTimePlayback.tip3', 'Use good lighting (avoid backlight)')}</li>
+              <li>{t('realTimePlayback.tip4', 'Position camera at waist height for best angle')}</li>
+            </ul>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowAnalysisIssueAlert(false)}>
+              {t('realTimePlayback.gotIt', "Got it, I'll try again")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
