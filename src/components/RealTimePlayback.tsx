@@ -1345,7 +1345,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col bg-gradient-to-br from-background via-background to-muted/30">
+        <DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col bg-gradient-to-br from-background via-background to-muted/30 [&>button]:hidden">
           <VisuallyHidden.Root>
             <DialogTitle>{t('realTimePlayback.title', 'Real-Time Playback')}</DialogTitle>
           </VisuallyHidden.Root>
