@@ -92,6 +92,7 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
 
   const handleSave = async () => {
     setSaving(true);
+    console.log('[VaultProgressPhotosCard] Saving progress photos...');
     const result = await onSave({
       photos: selectedFiles,
       weight_lbs: weight ? parseFloat(weight) : null,
@@ -102,8 +103,10 @@ export function VaultProgressPhotosCard({ photos, onSave, recapUnlockedAt = null
       leg_measurement: leg ? parseFloat(leg) : null,
       notes: notes || null,
     });
+    console.log('[VaultProgressPhotosCard] Save result:', result);
     
     if (result.success) {
+      console.log('[VaultProgressPhotosCard] Setting justSaved to true');
       setJustSaved(true); // Immediately show as locked
       setSelectedFiles([]);
       setWeight('');
