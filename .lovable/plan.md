@@ -1,87 +1,38 @@
 
 
-# Fix: Progress Report Locking, Checkout Glow Effect, and Post-Purchase Session Handling
+# Fix: Amber Glow Animation and Performance Test Locking
 
-## Issues Identified
+## Issues Found
 
-### Issue 1: 6-Week Progress Tests and Photos Not Locking After Input (for Owner)
+### Issue 1: Amber Glow Animation Not Displaying
 
-**Root Cause Analysis:**
+**Root Cause:** The `App.css` file containing the `animate-glow-pulse-amber` animation is **NOT IMPORTED** anywhere in the application.
 
-Looking at the locking logic in `VaultPerformanceTestCard.tsx` (lines 258-265) and `VaultProgressPhotosCard.tsx` (lines 72-79):
+- `src/main.tsx` only imports `./index.css`
+- `src/App.tsx` has no CSS import
+- The animation definition exists in `App.css` (lines 85-96) but is never loaded
 
-```typescript
-// VaultPerformanceTestCard.tsx
-const latestTest = tests[0];
-const latestTestDate = latestTest?.test_date ? new Date(latestTest.test_date) : null;
-const unlockedByRecap = recapUnlockedAt && (!latestTestDate || latestTestDate < recapUnlockedAt);
-
-const isLocked = !unlockedByRecap && latestTest?.next_entry_date && new Date(latestTest.next_entry_date) > new Date();
-```
-
-The **locking mechanism works correctly**. The issue is that **after the owner (Cam Williams) saves a performance test or progress photo, the data is not being refetched immediately** to update the UI with the new `next_entry_date`.
-
-Checking `useVault.ts` lines 971-977:
-```typescript
-const { error } = await supabase.from('vault_performance_tests').insert({
-  user_id: user.id, test_type: testType, sport: 'baseball', module: testType, 
-  results: enhancedResults, previous_results: lastTest?.results || null,
-  next_entry_date: nextEntryDate.toISOString().split('T')[0],
-});
-if (!error) await fetchPerformanceTests(); // This SHOULD refetch
-```
-
-The refetch is happening, but the **UI component receives the old array** until the state update propagates. The likely issue is that:
-
-1. **After saving, the tests array in the component shows the OLD data** - the fetch happens but the component doesn't re-render with the new data containing `next_entry_date`
-2. The `performanceTests` and `progressPhotos` arrays passed to the cards may be stale references
-
-**Solution:** The refetch is working, but there's a timing issue. After a successful save, we need to ensure the parent component's state is updated and the cards receive the new data. The fix is to:
-1. After save, explicitly refetch and update the local state
-2. Use the latest fetched data that includes the `next_entry_date`
-
-The actual fix requires examining why the UI doesn't show the locked state after save - it appears the card component needs to be forced to re-evaluate the `isLocked` condition after new data arrives.
+**Solution:** Move the amber glow animation from `App.css` to `index.css`, which is the main stylesheet that is actually imported.
 
 ---
 
-### Issue 2: Make "Important" Message Glow on Checkout Page
+### Issue 2: Performance Tests Not Locking After Save
 
-**Current State:**
-The amber message box at lines 322-326 of `Checkout.tsx`:
-```tsx
-<div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
-  <p className="text-sm text-amber-800 dark:text-amber-200">
-    📌 <strong>Important:</strong> After purchasing your module click 'Back to dashboard' button or sign back in to access your new modules.
-  </p>
-</div>
-```
+**Root Cause:** The `justSaved` state fix was correctly implemented, but there may be an issue with how the result is being evaluated OR the CSS import issue is masking a UI problem. However, looking at the code:
 
-**Solution:**
-Add a persistent amber glow animation to the "Important" box using CSS keyframes. Create a new animation `glow-pulse-amber` in `App.css` and apply it.
-
----
-
-### Issue 3: Users Logged Out After Purchase Completion
-
-**Root Cause:**
-Looking at `Checkout.tsx` lines 88-98:
 ```typescript
-// Redirect immediately (no polling needed)
-navigate("/auth", { 
-  replace: true,
-  state: {
-    fromPayment: true,
-    message: "Payment successful! Please sign in to access your new module.",
-    module: selectedModule,
-    sport: selectedSport
-  }
-});
+// VaultPerformanceTestCard.tsx line 282-285
+const result = await onSave(selectedModule, results, handedness);
+if (result.success) {
+  setJustSaved(true); // Immediately show as locked
+}
 ```
 
-**The code explicitly redirects to `/auth` page** with a message telling users to "sign in". This is the bug - users are already logged in when they return from Stripe (they had to be logged in to start the checkout).
+The logic appears correct. The issue could be:
+1. The save is failing silently (result.success is false)
+2. The component is unmounting/remounting after save
 
-**Solution:**
-After successful payment, redirect back to `/checkout` (the current page) or `/dashboard` instead of `/auth`. The user should remain logged in and see their new module activated.
+**Debug + Solution:** Add console logging to verify the save flow, but also ensure the `justSaved` state persists correctly.
 
 ---
 
@@ -91,18 +42,21 @@ After successful payment, redirect back to `/checkout` (the current page) or `/d
 
 | File | Changes |
 |------|---------|
-| `src/pages/Checkout.tsx` | 1. Add amber glow animation class to "Important" box. 2. Change success redirect from `/auth` to `/dashboard` with success state. |
-| `src/App.css` | Add `animate-glow-pulse-amber` keyframe animation |
-| `src/components/vault/VaultPerformanceTestCard.tsx` | Force re-evaluation of lock state after data update |
-| `src/components/vault/VaultProgressPhotosCard.tsx` | Same fix as above |
+| `src/index.css` | Add the amber glow animation keyframes and utility class |
+| `src/App.css` | Remove the amber glow animation (to avoid duplication) |
+| `src/components/vault/VaultPerformanceTestCard.tsx` | Add debug logging to verify save success |
+| `src/components/vault/VaultProgressPhotosCard.tsx` | Add debug logging to verify save success |
 
 ---
 
-## Technical Implementation Details
+## Technical Details
 
-### 1. Add Amber Glow Animation (App.css)
+### 1. Move Animation to index.css
+
+Add at the end of `src/index.css`:
 
 ```css
+/* Amber glow pulse animation for checkout Important message */
 @keyframes glow-pulse-amber {
   0%, 100% { 
     box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
@@ -117,76 +71,35 @@ After successful payment, redirect back to `/checkout` (the current page) or `/d
 }
 ```
 
-### 2. Apply Glow to Important Box (Checkout.tsx)
+### 2. Add Debug Logging to Performance Test Card
 
-Update the amber message container:
-```tsx
-<div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6 animate-glow-pulse-amber">
-```
-
-### 3. Fix Post-Purchase Redirect (Checkout.tsx)
-
-Change the success handling to redirect to dashboard instead of auth:
 ```typescript
-if (status === 'success') {
-  if (successHandledRef.current) return;
-  successHandledRef.current = true;
-  
-  toast({
-    title: "Payment Successful!",
-    description: "Your new module is now active. Redirecting to dashboard...",
-  });
-  
-  // Trigger subscription refetch
-  refetch();
-  
-  // Redirect to dashboard (user stays logged in)
-  navigate("/dashboard", { 
-    replace: true,
-    state: {
-      fromPayment: true,
-      newModule: selectedModule,
-      sport: selectedSport
-    }
-  });
-}
-```
-
-### 4. Fix Performance Test & Progress Photo Lock Display
-
-The lock state calculation depends on `next_entry_date` from the latest entry. The issue is that after saving, the component uses the old `tests` array before the refetch completes.
-
-**Solution:** Add a local "just saved" state that forces the locked view immediately after save:
-
-In `VaultPerformanceTestCard.tsx`:
-```typescript
-const [justSaved, setJustSaved] = useState(false);
-
-// When saving:
 const handleSave = async () => {
-  // ... existing save logic ...
+  // ... existing code ...
+  
   setSaving(true);
+  console.log('[VaultPerformanceTestCard] Saving performance test...');
   const result = await onSave(selectedModule, results, handedness);
+  console.log('[VaultPerformanceTestCard] Save result:', result);
   if (result.success) {
-    setJustSaved(true); // Immediately show as locked
+    console.log('[VaultPerformanceTestCard] Setting justSaved to true');
+    setJustSaved(true);
   }
   setTestResults({});
   setSaving(false);
 };
-
-// Modified lock check:
-const isLocked = justSaved || (!unlockedByRecap && latestTest?.next_entry_date && new Date(latestTest.next_entry_date) > new Date());
 ```
+
+### 3. Add Debug Logging to Progress Photos Card
 
 Same pattern for `VaultProgressPhotosCard.tsx`.
 
 ---
 
-## Summary of Changes
+## Summary
 
-| Issue | Fix | User Impact |
-|-------|-----|-------------|
-| Progress reports not locking | Add `justSaved` state flag that immediately shows locked state after save | Owner/users see cards locked immediately after submitting |
-| Important text not glowing | Add amber glow animation CSS class | Visual emphasis on important post-purchase instructions |
-| Logout after purchase | Change success redirect from `/auth` to `/dashboard` | Users stay logged in after Stripe payment |
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Amber glow not showing | `App.css` not imported | Move animation to `index.css` |
+| Tests not locking | Need debug verification | Add console logging + verify justSaved state |
 
