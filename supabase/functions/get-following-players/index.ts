@@ -6,6 +6,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Determine sport from subscribed modules
+function determineSport(modules: string[] | null): 'baseball' | 'softball' | 'both' | null {
+  if (!modules || modules.length === 0) return null;
+  
+  const hasBaseball = modules.some(m => m.startsWith('baseball'));
+  const hasSoftball = modules.some(m => m.startsWith('softball'));
+  
+  if (hasBaseball && hasSoftball) return 'both';
+  if (hasBaseball) return 'baseball';
+  if (hasSoftball) return 'softball';
+  return null;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -75,11 +88,31 @@ serve(async (req) => {
       throw profilesError;
     }
 
+    // Get subscriptions to determine sport for each player
+    const { data: subscriptions, error: subscriptionsError } = await supabaseAdmin
+      .from('subscriptions')
+      .select('user_id, subscribed_modules')
+      .in('user_id', playerIds);
+
+    if (subscriptionsError) {
+      console.error('Error fetching subscriptions:', subscriptionsError);
+      // Continue without sport data if subscriptions fail
+    }
+
+    // Create a map of user_id to subscribed_modules
+    const subscriptionMap = new Map<string, string[]>();
+    if (subscriptions) {
+      for (const sub of subscriptions) {
+        subscriptionMap.set(sub.user_id, sub.subscribed_modules || []);
+      }
+    }
+
     const results = (profiles || []).map(profile => ({
       id: profile.id,
       full_name: profile.full_name,
       avatar_url: profile.avatar_url,
-      followStatus: 'accepted' as const
+      followStatus: 'accepted' as const,
+      sport: determineSport(subscriptionMap.get(profile.id) || null)
     }));
 
     return new Response(
