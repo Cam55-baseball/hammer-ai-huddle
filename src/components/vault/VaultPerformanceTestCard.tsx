@@ -279,8 +279,11 @@ export function VaultPerformanceTestCard({
       : undefined;
     
     setSaving(true);
+    console.log('[VaultPerformanceTestCard] Saving performance test...');
     const result = await onSave(selectedModule, results, handedness);
+    console.log('[VaultPerformanceTestCard] Save result:', result);
     if (result.success) {
+      console.log('[VaultPerformanceTestCard] Setting justSaved to true');
       setJustSaved(true); // Immediately show as locked
     }
     setTestResults({});

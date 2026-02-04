@@ -383,3 +383,17 @@ All colors MUST be HSL.
     animation: mobile-collapsible-expand 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 }
+
+/* Amber glow pulse animation for checkout Important message */
+@keyframes glow-pulse-amber {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 16px 6px rgba(251, 191, 36, 0.3);
+  }
+}
+
+.animate-glow-pulse-amber {
+  animation: glow-pulse-amber 2s ease-in-out infinite;
+}
