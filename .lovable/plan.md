@@ -1,255 +1,192 @@
 
-# Enhance Night Check-in: Create Tomorrow Anticipation
 
-## Current State Analysis
+# Fix: Progress Report Locking, Checkout Glow Effect, and Post-Purchase Session Handling
 
-The night check-in currently includes:
-- Mental/Emotional/Physical readiness ratings (1-5)
-- Evening weight tracking with 7-day trend
-- Sleep goals (bedtime goal, wake time goal)
-- Mood and stress ratings
-- Reflections (what went well, what to improve, what learned, motivation)
-- Phone-free sleep tips (collapsible educational content)
-- A simple morning reminder alert
+## Issues Identified
 
-**What's Missing**: A compelling "end of day celebration" and forward-looking anticipation system that emotionally connects tonight's effort to tomorrow's reward.
+### Issue 1: 6-Week Progress Tests and Photos Not Locking After Input (for Owner)
+
+**Root Cause Analysis:**
+
+Looking at the locking logic in `VaultPerformanceTestCard.tsx` (lines 258-265) and `VaultProgressPhotosCard.tsx` (lines 72-79):
+
+```typescript
+// VaultPerformanceTestCard.tsx
+const latestTest = tests[0];
+const latestTestDate = latestTest?.test_date ? new Date(latestTest.test_date) : null;
+const unlockedByRecap = recapUnlockedAt && (!latestTestDate || latestTestDate < recapUnlockedAt);
+
+const isLocked = !unlockedByRecap && latestTest?.next_entry_date && new Date(latestTest.next_entry_date) > new Date();
+```
+
+The **locking mechanism works correctly**. The issue is that **after the owner (Cam Williams) saves a performance test or progress photo, the data is not being refetched immediately** to update the UI with the new `next_entry_date`.
+
+Checking `useVault.ts` lines 971-977:
+```typescript
+const { error } = await supabase.from('vault_performance_tests').insert({
+  user_id: user.id, test_type: testType, sport: 'baseball', module: testType, 
+  results: enhancedResults, previous_results: lastTest?.results || null,
+  next_entry_date: nextEntryDate.toISOString().split('T')[0],
+});
+if (!error) await fetchPerformanceTests(); // This SHOULD refetch
+```
+
+The refetch is happening, but the **UI component receives the old array** until the state update propagates. The likely issue is that:
+
+1. **After saving, the tests array in the component shows the OLD data** - the fetch happens but the component doesn't re-render with the new data containing `next_entry_date`
+2. The `performanceTests` and `progressPhotos` arrays passed to the cards may be stale references
+
+**Solution:** The refetch is working, but there's a timing issue. After a successful save, we need to ensure the parent component's state is updated and the cards receive the new data. The fix is to:
+1. After save, explicitly refetch and update the local state
+2. Use the latest fetched data that includes the `next_entry_date`
+
+The actual fix requires examining why the UI doesn't show the locked state after save - it appears the card component needs to be forced to re-evaluate the `isLocked` condition after new data arrives.
 
 ---
 
-## Enhancement Strategy: "Night → Morning Connection Loop"
+### Issue 2: Make "Important" Message Glow on Checkout Page
 
-Transform the night check-in into a rewarding closure experience that plants seeds for tomorrow's return.
+**Current State:**
+The amber message box at lines 322-326 of `Checkout.tsx`:
+```tsx
+<div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+  <p className="text-sm text-amber-800 dark:text-amber-200">
+    📌 <strong>Important:</strong> After purchasing your module click 'Back to dashboard' button or sign back in to access your new modules.
+  </p>
+</div>
+```
+
+**Solution:**
+Add a persistent amber glow animation to the "Important" box using CSS keyframes. Create a new animation `glow-pulse-amber` in `App.css` and apply it.
 
 ---
 
-## New Components to Add
+### Issue 3: Users Logged Out After Purchase Completion
 
-### 1. Day Summary Card (Post-Submission)
-After submitting the night check-in, show a celebratory summary:
-
-```text
-┌─────────────────────────────────────────────┐
-│  ✨ Day Complete! ✨                        │
-│                                             │
-│  📊 Today's Highlights:                     │
-│  • 3/3 Check-ins completed                  │
-│  • 1 workout logged                         │
-│  • 8.5 hours sleep goal set                 │
-│  • 142 lbs tracked                          │
-│                                             │
-│  🔥 Current Streak: 7 days                  │
-│                                             │
-│  💤 Sleep Countdown: 1h 23m until goal      │
-└─────────────────────────────────────────────┘
+**Root Cause:**
+Looking at `Checkout.tsx` lines 88-98:
+```typescript
+// Redirect immediately (no polling needed)
+navigate("/auth", { 
+  replace: true,
+  state: {
+    fromPayment: true,
+    message: "Payment successful! Please sign in to access your new module.",
+    module: selectedModule,
+    sport: selectedSport
+  }
+});
 ```
 
-### 2. Tomorrow Preview Card
-Show a teaser of what awaits tomorrow:
+**The code explicitly redirects to `/auth` page** with a message telling users to "sign in". This is the bug - users are already logged in when they return from Stripe (they had to be logged in to start the checkout).
 
-```text
-┌─────────────────────────────────────────────┐
-│  🌅 Tomorrow Awaits                         │
-│                                             │
-│  Your morning includes:                     │
-│  • ☀️ Morning Check-in                     │
-│  • 💪 Iron Bambino Day 3                    │
-│  • 🧠 New Mind Fuel lesson                  │
-│  • 🥗 Personalized nutrition tip            │
-│                                             │
-│  "Great sleep = Great performance"          │
-│                                             │
-│  [Set Wake-Up Reminder]                     │
-└─────────────────────────────────────────────┘
-```
-
-### 3. Check-in Streak Display
-Add a visual streak counter in the night check-in header:
-
-```text
-┌───────────────────────────────────────┐
-│  🌙 Night Check-in          🔥 7      │
-│  Day 7 of your wellness streak        │
-└───────────────────────────────────────┘
-```
-
-### 4. Personalized Goodnight Message
-Based on mood/stress ratings, show a tailored message:
-
-| Mood/Stress | Message |
-|-------------|---------|
-| Low stress, high mood | "What a great day! Sweet dreams, champion." |
-| High stress | "Tomorrow is a fresh start. Rest deeply tonight." |
-| Low mood | "Every sunrise brings new opportunities. Sleep well." |
-| Perfect day | "You crushed it today! Can't wait to see you tomorrow morning." |
-
-### 5. Morning Anticipation Hook
-Enhanced morning reminder with specific incentive:
-
-```text
-┌─────────────────────────────────────────────┐
-│  ☀️ Morning Check-in Bonus                  │
-│                                             │
-│  Complete your morning check-in within      │
-│  15 minutes of waking to:                   │
-│                                             │
-│  • 🔥 Keep your streak alive                │
-│  • 📈 Track accurate morning weight         │
-│  • 🧠 Get your personalized daily focus     │
-│  • 💪 Unlock today's motivation             │
-│                                             │
-│  Your 6-week recap is in 23 days!           │
-└─────────────────────────────────────────────┘
-```
+**Solution:**
+After successful payment, redirect back to `/checkout` (the current page) or `/dashboard` instead of `/auth`. The user should remain logged in and see their new module activated.
 
 ---
 
-## Implementation Details
+## Implementation Plan
 
-### Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/components/vault/quiz/NightCheckInSuccess.tsx` | Post-submission celebration screen with day summary, streak, and tomorrow preview |
-
-### Files to Modify
+### File Changes
 
 | File | Changes |
 |------|---------|
-| `src/components/vault/VaultFocusQuizDialog.tsx` | Add success state with NightCheckInSuccess component after submission |
-| `src/hooks/useVault.ts` | Add function to fetch user's daily activity summary |
-| `src/i18n/locales/en.json` (+ 7 other languages) | Add all new translation keys |
+| `src/pages/Checkout.tsx` | 1. Add amber glow animation class to "Important" box. 2. Change success redirect from `/auth` to `/dashboard` with success state. |
+| `src/App.css` | Add `animate-glow-pulse-amber` keyframe animation |
+| `src/components/vault/VaultPerformanceTestCard.tsx` | Force re-evaluation of lock state after data update |
+| `src/components/vault/VaultProgressPhotosCard.tsx` | Same fix as above |
 
 ---
 
-## Component Architecture
+## Technical Implementation Details
 
-### NightCheckInSuccess.tsx Structure
+### 1. Add Amber Glow Animation (App.css)
 
-```tsx
-interface NightCheckInSuccessProps {
-  streakDays: number;
-  todayStats: {
-    checkinsCompleted: number;
-    workoutsLogged: number;
-    sleepGoalHours: number;
-    weightTracked: number | null;
-  };
-  tomorrowPreview: {
-    hasWorkout: boolean;
-    workoutName?: string;
-    hasMindFuel: boolean;
-    hasNutritionTip: boolean;
-  };
-  moodLevel: number;
-  stressLevel: number;
-  sleepGoalTime: string;
-  daysUntilRecap: number;
-  onClose: () => void;
-}
-
-// Shows confetti on mount
-// Displays day summary with animations
-// Shows tomorrow preview with scheduled items
-// Personalized goodnight message based on mood/stress
-// Enhanced morning reminder with streak incentive
-// Countdown to sleep goal time
-// "Close & Rest Well" button
-```
-
-### Flow Change in VaultFocusQuizDialog
-
-```text
-Current:
-  Submit → Reset form → Close dialog
-
-Enhanced:
-  Submit → Show NightCheckInSuccess → User clicks "Close" → Reset form → Close dialog
-```
-
----
-
-## New Translation Keys
-
-```json
-{
-  "vault.quiz.nightSuccess": {
-    "title": "Day Complete!",
-    "todayHighlights": "Today's Highlights",
-    "checkinsCompleted": "{{count}}/3 Check-ins completed",
-    "workoutsLogged": "{{count}} workout logged",
-    "sleepGoalSet": "{{hours}} hours sleep goal set",
-    "weightTracked": "{{weight}} lbs tracked",
-    "currentStreak": "Current Streak",
-    "days": "days",
-    
-    "tomorrowAwaits": "Tomorrow Awaits",
-    "tomorrowIncludes": "Your morning includes:",
-    "morningCheckin": "Morning Check-in",
-    "mindFuelLesson": "New Mind Fuel lesson",
-    "nutritionTip": "Personalized nutrition tip",
-    
-    "goodnightMessages": {
-      "great": "What a great day! Sweet dreams, champion.",
-      "stressed": "Tomorrow is a fresh start. Rest deeply tonight.",
-      "lowMood": "Every sunrise brings new opportunities. Sleep well.",
-      "perfect": "You crushed it today! See you tomorrow morning!"
-    },
-    
-    "morningBonus": {
-      "title": "Morning Check-in Bonus",
-      "subtitle": "Complete within 15 min of waking to:",
-      "keepStreak": "Keep your streak alive",
-      "trackWeight": "Track accurate morning weight",
-      "getDailyFocus": "Get your personalized daily focus",
-      "unlockMotivation": "Unlock today's motivation"
-    },
-    
-    "sleepCountdown": "Sleep in {{time}} to hit your goal",
-    "recapCountdown": "Your 6-week recap is in {{days}} days!",
-    "closeButton": "Close & Rest Well"
+```css
+@keyframes glow-pulse-amber {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 16px 6px rgba(251, 191, 36, 0.3);
   }
 }
+
+.animate-glow-pulse-amber {
+  animation: glow-pulse-amber 2s ease-in-out infinite;
+}
 ```
 
+### 2. Apply Glow to Important Box (Checkout.tsx)
+
+Update the amber message container:
+```tsx
+<div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6 animate-glow-pulse-amber">
+```
+
+### 3. Fix Post-Purchase Redirect (Checkout.tsx)
+
+Change the success handling to redirect to dashboard instead of auth:
+```typescript
+if (status === 'success') {
+  if (successHandledRef.current) return;
+  successHandledRef.current = true;
+  
+  toast({
+    title: "Payment Successful!",
+    description: "Your new module is now active. Redirecting to dashboard...",
+  });
+  
+  // Trigger subscription refetch
+  refetch();
+  
+  // Redirect to dashboard (user stays logged in)
+  navigate("/dashboard", { 
+    replace: true,
+    state: {
+      fromPayment: true,
+      newModule: selectedModule,
+      sport: selectedSport
+    }
+  });
+}
+```
+
+### 4. Fix Performance Test & Progress Photo Lock Display
+
+The lock state calculation depends on `next_entry_date` from the latest entry. The issue is that after saving, the component uses the old `tests` array before the refetch completes.
+
+**Solution:** Add a local "just saved" state that forces the locked view immediately after save:
+
+In `VaultPerformanceTestCard.tsx`:
+```typescript
+const [justSaved, setJustSaved] = useState(false);
+
+// When saving:
+const handleSave = async () => {
+  // ... existing save logic ...
+  setSaving(true);
+  const result = await onSave(selectedModule, results, handedness);
+  if (result.success) {
+    setJustSaved(true); // Immediately show as locked
+  }
+  setTestResults({});
+  setSaving(false);
+};
+
+// Modified lock check:
+const isLocked = justSaved || (!unlockedByRecap && latestTest?.next_entry_date && new Date(latestTest.next_entry_date) > new Date());
+```
+
+Same pattern for `VaultProgressPhotosCard.tsx`.
+
 ---
 
-## Visual Design
+## Summary of Changes
 
-- Indigo/purple gradient background (matches night theme)
-- Confetti animation on mount (using existing ConfettiEffect)
-- Smooth fade-in animations for each section
-- Glowing streak counter with flame icon
-- Pulsing tomorrow preview items
-- Sleep countdown timer that updates in real-time
-- Large, friendly "Close & Rest Well" button
-
----
-
-## Gamification Elements
-
-1. **Streak Visibility**: Show streak prominently with fire emoji
-2. **Daily Completion Badge**: Visual checkmark animations
-3. **Tomorrow Tease**: Create FOMO for skipping morning check-in
-4. **Personalization**: Mood-based messages feel individually crafted
-5. **Progress Tracking**: Days until 6-week recap countdown
-6. **Time Pressure**: Sleep countdown creates gentle urgency to rest
-
----
-
-## Database Considerations
-
-No new tables required. Uses existing:
-- `vault_focus_quizzes` for streak calculation
-- `calendar_events` for tomorrow's scheduled items
-- User's subscription modules for feature availability
-
----
-
-## Expected Impact
-
-- **Emotional Closure**: Users feel accomplished completing their day
-- **Morning Pull**: Specific preview of tomorrow creates anticipation
-- **Streak Psychology**: Visible streak motivates return
-- **Personalization**: Mood-aware messages feel caring
-- **Loop Completion**: Night → Morning connection is explicit
+| Issue | Fix | User Impact |
+|-------|-----|-------------|
+| Progress reports not locking | Add `justSaved` state flag that immediately shows locked state after save | Owner/users see cards locked immediately after submitting |
+| Important text not glowing | Add amber glow animation CSS class | Visual emphasis on important post-purchase instructions |
+| Logout after purchase | Change success redirect from `/auth` to `/dashboard` | Users stay logged in after Stripe payment |
 
