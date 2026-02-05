@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText } from "lucide-react";
+import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText, ArrowLeft, Clock, XCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
@@ -209,6 +209,17 @@ const OwnerDashboard = () => {
     return userRole?.role === 'admin' && userRole?.status === 'active';
   };
 
+  // Check if user has ANY admin role entry (any status - active, pending, rejected)
+  const hasAdminRole = (userId: string) => {
+    return userRoles.some((r) => r.user_id === userId && r.role === 'admin');
+  };
+
+  // Get the admin role status (active, pending, rejected, or null)
+  const getAdminStatus = (userId: string) => {
+    const role = userRoles.find((r) => r.user_id === userId && r.role === 'admin');
+    return role?.status || null;
+  };
+
   const handleApproveAdmin = async (userId: string) => {
     try {
       const { error } = await supabase
@@ -403,9 +414,16 @@ const OwnerDashboard = () => {
               </Button>
             )}
             <div className="flex items-center gap-2 min-w-0">
-              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-                <span className="text-primary-foreground font-bold text-sm">H</span>
-              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/dashboard')}
+                className="gap-2 shrink-0"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Back</span>
+              </Button>
+              <div className="h-6 w-px bg-border hidden sm:block" />
               <div className="min-w-0">
                 <h1 className="font-semibold text-sm md:text-base truncate">Owner Dashboard</h1>
                 <p className="text-xs text-muted-foreground hidden md:block">
@@ -535,7 +553,8 @@ const OwnerDashboard = () => {
                       key={user.id}
                       className={cn(
                         "flex items-center justify-between p-4 transition-colors",
-                        isActiveAdmin(user.id) && "bg-success/5"
+                        isActiveAdmin(user.id) && "bg-success/5",
+                        getAdminStatus(user.id) === 'pending' && "bg-amber-50/50 dark:bg-amber-950/20"
                       )}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -563,7 +582,8 @@ const OwnerDashboard = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-2">
-                        {isActiveAdmin(user.id) ? (
+                        {/* Active Admin: Show badge + revoke button */}
+                        {isActiveAdmin(user.id) && (
                           <>
                             <Badge className="bg-success hover:bg-success text-success-foreground gap-1 hidden sm:flex">
                               <ShieldCheck className="h-3 w-3" />
@@ -578,7 +598,48 @@ const OwnerDashboard = () => {
                               Revoke
                             </Button>
                           </>
-                        ) : (
+                        )}
+                        
+                        {/* Pending Admin: Show pending badge + approve/reject */}
+                        {getAdminStatus(user.id) === 'pending' && (
+                          <>
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 gap-1 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-700">
+                              <Clock className="h-3 w-3" />
+                              Pending
+                            </Badge>
+                            <Button size="sm" onClick={() => handleApproveAdmin(user.id)}>
+                              Approve
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="text-destructive hover:bg-destructive/10"
+                              onClick={() => handleRejectAdmin(user.id)}
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        )}
+                        
+                        {/* Rejected Admin: Show rejected badge + reinstate option */}
+                        {getAdminStatus(user.id) === 'rejected' && (
+                          <>
+                            <Badge variant="outline" className="text-muted-foreground gap-1">
+                              <XCircle className="h-3 w-3" />
+                              Rejected
+                            </Badge>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleApproveAdmin(user.id)}
+                            >
+                              Reinstate
+                            </Button>
+                          </>
+                        )}
+                        
+                        {/* Regular User (no admin role at all): Show Make Admin button */}
+                        {!hasAdminRole(user.id) && (
                           <Button
                             size="sm"
                             variant="outline"
