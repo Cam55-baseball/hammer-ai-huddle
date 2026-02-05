@@ -21,6 +21,7 @@ interface EnhancedExerciseCardProps {
   viewMode: ViewMode;
   onUpdate: (exercise: EnhancedExercise) => void;
   onDelete: () => void;
+  isLocked?: boolean;
 }
 
 export function EnhancedExerciseCard({ 
@@ -28,7 +29,8 @@ export function EnhancedExerciseCard({
   index, 
   viewMode, 
   onUpdate, 
-  onDelete 
+  onDelete,
+  isLocked = false,
 }: EnhancedExerciseCardProps) {
   const { t } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -43,7 +45,7 @@ export function EnhancedExerciseCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: exercise.id });
+  } = useSortable({ id: exercise.id, disabled: isLocked });
   
   const style = {
     transform: CSS.Transform.toString(transform),

@@ -14,10 +14,25 @@ import {
 } from '@/types/eliteWorkout';
 
 // =====================================================
+// INPUT VALIDATION HELPERS
+// =====================================================
+
+function safeNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && !isNaN(value) && isFinite(value)) return value;
+  return fallback;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+// =====================================================
 // CNS LOAD CALCULATION
 // =====================================================
 
 export function calculateExerciseCNS(exercise: EnhancedExercise): number {
+  if (!exercise) return 0;
+  
   let cns = 0;
   
   // Base by exercise type
@@ -53,9 +68,11 @@ export function calculateExerciseCNS(exercise: EnhancedExercise): number {
     cns *= 0.75;
   }
   
-  // Volume modifier (sets × reps)
-  const sets = exercise.sets || 1;
-  const reps = typeof exercise.reps === 'number' ? exercise.reps : 10;
+  // Volume modifier (sets × reps) with bounds
+  const sets = clamp(safeNumber(exercise.sets, 1), 1, 20);
+  const reps = typeof exercise.reps === 'number' 
+    ? clamp(exercise.reps, 1, 100) 
+    : 10;
   const volume = sets * reps;
   cns += volume * 0.5;
   
@@ -75,19 +92,27 @@ export function calculateExerciseCNS(exercise: EnhancedExercise): number {
 }
 
 export function calculateBlockCNS(block: WorkoutBlock): number {
+  if (!block?.exercises || !Array.isArray(block.exercises)) return 0;
+  
   return block.exercises.reduce((total, exercise) => {
     return total + calculateExerciseCNS(exercise);
   }, 0);
 }
 
 export function calculateWorkoutCNS(blocks: WorkoutBlock[]): number {
+  if (!blocks || !Array.isArray(blocks)) return 0;
+  
   return blocks.reduce((total, block) => {
     return total + calculateBlockCNS(block);
   }, 0);
 }
 
 export function calculateRunningCNS(session: RunningSession): number {
+  if (!session) return 0;
+  
   const config = RUN_TYPE_CONFIGS[session.runType];
+  if (!config) return 30; // Default fallback
+  
   let baseCNS = 0;
   
   // Base by run type
@@ -101,6 +126,8 @@ export function calculateRunningCNS(session: RunningSession): number {
     case 'low':
       baseCNS = 15;
       break;
+    default:
+      baseCNS = 30;
   }
   
   // Intent modifier
@@ -110,13 +137,14 @@ export function calculateRunningCNS(session: RunningSession): number {
     baseCNS *= 0.5;
   }
   
-  // Volume modifier (reps or distance)
-  const reps = session.reps || 1;
+  // Volume modifier (reps or distance) with bounds
+  const reps = clamp(safeNumber(session.reps, 1), 1, 50);
   baseCNS += reps * 5;
   
   // Ground contacts add CNS load
   if (session.contacts) {
-    baseCNS += session.contacts * 0.2;
+    const contacts = clamp(safeNumber(session.contacts), 0, 500);
+    baseCNS += contacts * 0.2;
   }
   
   // Fatigue state modifier
@@ -135,6 +163,8 @@ export function calculateRunningCNS(session: RunningSession): number {
 
 export function calculateExerciseFasciaBias(exercise: EnhancedExercise): FascialBias {
   const bias: FascialBias = { compression: 0, elastic: 0, glide: 0 };
+  
+  if (!exercise) return bias;
   
   // If explicitly set, use that
   if (exercise.fascia_bias) {
@@ -201,7 +231,7 @@ export function calculateExerciseFasciaBias(exercise: EnhancedExercise): Fascial
 }
 
 export function calculateBlockFasciaBias(block: WorkoutBlock): FascialBias {
-  if (block.exercises.length === 0) {
+  if (!block?.exercises || block.exercises.length === 0) {
     return { compression: 0, elastic: 0, glide: 0 };
   }
   
@@ -226,7 +256,7 @@ export function calculateBlockFasciaBias(block: WorkoutBlock): FascialBias {
 }
 
 export function calculateWorkoutFasciaBias(blocks: WorkoutBlock[]): FascialBias {
-  if (blocks.length === 0) {
+  if (!blocks || blocks.length === 0) {
     return { compression: 0, elastic: 0, glide: 0 };
   }
   
@@ -260,15 +290,19 @@ export function detectOverlaps(
 ): OverlapWarning[] {
   const warnings: OverlapWarning[] = [];
   
+  if (!dayMetrics) return warnings;
+  
+  const cnsLoad = safeNumber(dayMetrics.cnsLoad);
+  
   // High CNS load warning (> 150 is concerning)
-  if (dayMetrics.cnsLoad > 150) {
+  if (cnsLoad > 150) {
     warnings.push({
       type: 'cns',
       severity: 'warning',
       message: 'High CNS load today - consider spacing explosive work',
       suggestion: 'Move one high-intensity session to tomorrow',
     });
-  } else if (dayMetrics.cnsLoad > 100) {
+  } else if (cnsLoad > 100) {
     warnings.push({
       type: 'cns',
       severity: 'advisory',
@@ -277,7 +311,8 @@ export function detectOverlaps(
   }
   
   // Elastic overload (> 100 is high)
-  if (dayMetrics.fascialLoad.elastic > 100) {
+  const elasticLoad = safeNumber(dayMetrics.fascialLoad?.elastic);
+  if (elasticLoad > 100) {
     warnings.push({
       type: 'elastic',
       severity: 'advisory',
@@ -286,7 +321,9 @@ export function detectOverlaps(
   }
   
   // Load spike compared to weekly average
-  if (weeklyAverage && dayMetrics.volumeLoad > weeklyAverage.volumeLoad * 1.5) {
+  const volumeLoad = safeNumber(dayMetrics.volumeLoad);
+  const weeklyVolume = safeNumber(weeklyAverage?.volumeLoad);
+  if (weeklyAverage && weeklyVolume > 0 && volumeLoad > weeklyVolume * 1.5) {
     warnings.push({
       type: 'load_spike',
       severity: 'warning',
@@ -296,7 +333,8 @@ export function detectOverlaps(
   }
   
   // Recovery debt check
-  if (dayMetrics.recoveryDebt > 50) {
+  const recoveryDebt = safeNumber(dayMetrics.recoveryDebt);
+  if (recoveryDebt > 50) {
     warnings.push({
       type: 'recovery',
       severity: 'warning',
@@ -344,7 +382,7 @@ export function generateAdaptationSuggestions(
   }
   
   // Pain area suggestions
-  if (painAreas.length > 0) {
+  if (painAreas && painAreas.length > 0) {
     suggestions.push({
       type: 'swap_recovery',
       title: 'Modify for sore areas',
@@ -354,7 +392,8 @@ export function generateAdaptationSuggestions(
   }
   
   // High load suggestions
-  if (dayMetrics.cnsLoad > 120) {
+  const cnsLoad = safeNumber(dayMetrics?.cnsLoad);
+  if (cnsLoad > 120) {
     suggestions.push({
       type: 'reduce_volume',
       title: 'Reduce total volume',
@@ -364,7 +403,8 @@ export function generateAdaptationSuggestions(
   }
   
   // Recovery debt
-  if (dayMetrics.recoveryDebt > 30) {
+  const recoveryDebt = safeNumber(dayMetrics?.recoveryDebt);
+  if (recoveryDebt > 30) {
     suggestions.push({
       type: 'rest_day',
       title: 'Consider a recovery day',
@@ -381,23 +421,31 @@ export function generateAdaptationSuggestions(
 // =====================================================
 
 export function calculateWorkoutVolume(blocks: WorkoutBlock[]): number {
+  if (!blocks || !Array.isArray(blocks)) return 0;
+  
   return blocks.reduce((total, block) => {
+    if (!block?.exercises) return total;
+    
     return total + block.exercises.reduce((blockTotal, exercise) => {
-      const sets = exercise.sets || 1;
-      const reps = typeof exercise.reps === 'number' ? exercise.reps : 10;
+      const sets = clamp(safeNumber(exercise.sets, 1), 1, 20);
+      const reps = typeof exercise.reps === 'number' 
+        ? clamp(exercise.reps, 1, 100) 
+        : 10;
       return blockTotal + (sets * reps);
     }, 0);
   }, 0);
 }
 
 export function calculateRunningVolume(session: RunningSession): number {
+  if (!session) return 0;
+  
   // Calculate based on contacts or reps × estimated contacts
   if (session.groundContactsTotal) {
-    return session.groundContactsTotal;
+    return clamp(safeNumber(session.groundContactsTotal), 0, 10000);
   }
   
-  const reps = session.reps || 1;
-  const distance = session.distanceValue || 0;
+  const reps = clamp(safeNumber(session.reps, 1), 1, 50);
+  const distance = clamp(safeNumber(session.distanceValue), 0, 10000);
   
   // Estimate contacts based on distance and unit
   let contactsPerRep = 0;
@@ -427,13 +475,13 @@ export function calculateDayLoadMetrics(
   runningSessions: RunningSession[]
 ): LoadMetrics {
   const workoutCNS = calculateWorkoutCNS(blocks);
-  const runningCNS = runningSessions.reduce((total, session) => {
+  const runningCNS = (runningSessions || []).reduce((total, session) => {
     return total + calculateRunningCNS(session);
   }, 0);
   
   const workoutFascia = calculateWorkoutFasciaBias(blocks);
   const workoutVolume = calculateWorkoutVolume(blocks);
-  const runningVolume = runningSessions.reduce((total, session) => {
+  const runningVolume = (runningSessions || []).reduce((total, session) => {
     return total + calculateRunningVolume(session);
   }, 0);
   
@@ -450,21 +498,29 @@ export function calculateDayLoadMetrics(
 // =====================================================
 
 export function formatCNSLoad(load: number): { label: string; color: string } {
-  if (load > 150) {
+  const safeLoad = safeNumber(load);
+  
+  if (safeLoad > 150) {
     return { label: 'Very High', color: 'text-red-500' };
-  } else if (load > 100) {
+  } else if (safeLoad > 100) {
     return { label: 'High', color: 'text-orange-500' };
-  } else if (load > 60) {
+  } else if (safeLoad > 60) {
     return { label: 'Moderate', color: 'text-amber-500' };
-  } else if (load > 30) {
+  } else if (safeLoad > 30) {
     return { label: 'Low', color: 'text-green-500' };
   }
   return { label: 'Minimal', color: 'text-muted-foreground' };
 }
 
 export function formatFasciaBias(bias: FascialBias): string {
-  const max = Math.max(bias.compression, bias.elastic, bias.glide);
-  if (max === bias.compression) return 'Compression';
-  if (max === bias.elastic) return 'Elastic';
+  if (!bias) return 'Balanced';
+  
+  const compression = safeNumber(bias.compression);
+  const elastic = safeNumber(bias.elastic);
+  const glide = safeNumber(bias.glide);
+  
+  const max = Math.max(compression, elastic, glide);
+  if (max === compression) return 'Compression';
+  if (max === elastic) return 'Elastic';
   return 'Glide';
 }

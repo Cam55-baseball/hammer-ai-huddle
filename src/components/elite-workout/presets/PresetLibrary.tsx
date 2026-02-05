@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useWorkoutPresets, WorkoutPreset } from '@/hooks/useWorkoutPresets';
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Dumbbell, Lock, User } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface PresetLibraryProps {
   selectedSport: 'baseball' | 'softball';
@@ -36,14 +37,15 @@ const DIFFICULTIES = [
 
 export function PresetLibrary({ selectedSport, onSelectPreset }: PresetLibraryProps) {
   const { t } = useTranslation();
-  const { presets, systemPresets, userPresets, loading } = useWorkoutPresets(selectedSport);
+  const { presets, systemPresets, userPresets, loading, error } = useWorkoutPresets(selectedSport);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [activeTab, setActiveTab] = useState<'hammers' | 'mine'>('hammers');
 
-  const filterPresets = (presetList: WorkoutPreset[]) => {
+  // Memoized filter function
+  const filterPresets = useCallback((presetList: WorkoutPreset[]) => {
     return presetList.filter(preset => {
       const matchesSearch = !searchQuery || 
         preset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -56,27 +58,76 @@ export function PresetLibrary({ selectedSport, onSelectPreset }: PresetLibraryPr
       
       return matchesSearch && matchesCategory && matchesDifficulty;
     });
-  };
+  }, [searchQuery, categoryFilter, difficultyFilter]);
 
-  const handleUsePreset = (preset: WorkoutPreset) => {
-    onSelectPreset(preset.blocks, preset.name);
-  };
+  // Memoized filtered lists
+  const filteredSystemPresets = useMemo(
+    () => filterPresets(systemPresets),
+    [filterPresets, systemPresets]
+  );
+  
+  const filteredUserPresets = useMemo(
+    () => filterPresets(userPresets),
+    [filterPresets, userPresets]
+  );
 
-  const handleDuplicatePreset = (preset: WorkoutPreset) => {
-    // For now, just use it - the builder will handle saving as new
-    onSelectPreset(preset.blocks, `${preset.name} (Copy)`);
-  };
+  const handleUsePreset = useCallback((preset: WorkoutPreset) => {
+    try {
+      onSelectPreset(preset.blocks, preset.name);
+      toast({
+        title: t('eliteWorkout.presets.loaded', 'Preset Loaded'),
+        description: t('eliteWorkout.presets.loadedDescription', '{{name}} has been applied', { name: preset.name }),
+      });
+    } catch (err) {
+      toast({
+        title: t('common.error', 'Error'),
+        description: t('eliteWorkout.presets.loadError', 'Failed to load preset'),
+        variant: 'destructive',
+      });
+    }
+  }, [onSelectPreset, t]);
 
-  const filteredSystemPresets = filterPresets(systemPresets);
-  const filteredUserPresets = filterPresets(userPresets);
+  const handleDuplicatePreset = useCallback((preset: WorkoutPreset) => {
+    try {
+      // For now, just use it - the builder will handle saving as new
+      onSelectPreset(preset.blocks, `${preset.name} (Copy)`);
+      toast({
+        title: t('eliteWorkout.presets.duplicated', 'Preset Duplicated'),
+        description: t('eliteWorkout.presets.duplicatedDescription', 'Editing a copy of {{name}}', { name: preset.name }),
+      });
+    } catch (err) {
+      toast({
+        title: t('common.error', 'Error'),
+        description: t('eliteWorkout.presets.duplicateError', 'Failed to duplicate preset'),
+        variant: 'destructive',
+      });
+    }
+  }, [onSelectPreset, t]);
+
+  // Handle error state
+  if (error) {
+    return (
+      <Card className="py-12 text-center">
+        <CardContent>
+          <Dumbbell className="h-12 w-12 mx-auto text-destructive/50 mb-4" />
+          <p className="text-destructive mb-2">
+            {t('eliteWorkout.presets.loadError', 'Failed to load presets')}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {t('common.tryAgain', 'Please try again later')}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Skeleton className="h-10 flex-1" />
-          <Skeleton className="h-10 w-40" />
-          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-10 w-full sm:w-40" />
+          <Skeleton className="h-10 w-full sm:w-40" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
@@ -92,7 +143,7 @@ export function PresetLibrary({ selectedSport, onSelectPreset }: PresetLibraryPr
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-          <Dumbbell className="h-6 w-6 text-primary" />
+          <Dumbbell className="h-6 w-6 text-primary" aria-hidden="true" />
         </div>
         <div>
           <h2 className="text-xl font-bold">
@@ -107,17 +158,18 @@ export function PresetLibrary({ selectedSport, onSelectPreset }: PresetLibraryPr
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
             placeholder={t('common.search', 'Search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
+            aria-label={t('eliteWorkout.presets.searchPresets', 'Search presets')}
           />
         </div>
         
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-full sm:w-48">
+          <SelectTrigger className="w-full sm:w-48" aria-label={t('eliteWorkout.presets.filterByCategory', 'Filter by category')}>
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
@@ -130,7 +182,7 @@ export function PresetLibrary({ selectedSport, onSelectPreset }: PresetLibraryPr
         </Select>
         
         <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-          <SelectTrigger className="w-full sm:w-40">
+          <SelectTrigger className="w-full sm:w-40" aria-label={t('eliteWorkout.presets.filterByDifficulty', 'Filter by difficulty')}>
             <SelectValue placeholder="Difficulty" />
           </SelectTrigger>
           <SelectContent>
@@ -146,16 +198,18 @@ export function PresetLibrary({ selectedSport, onSelectPreset }: PresetLibraryPr
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'hammers' | 'mine')}>
         <TabsList className="grid w-full max-w-sm grid-cols-2">
-          <TabsTrigger value="hammers" className="gap-2">
-            <Lock className="h-4 w-4" />
-            {t('eliteWorkout.presets.systemPresets', 'Hammers Presets')}
+          <TabsTrigger value="hammers" className="gap-2 min-h-[44px]">
+            <Lock className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">{t('eliteWorkout.presets.systemPresets', 'Hammers Presets')}</span>
+            <span className="sm:hidden">{t('eliteWorkout.presets.hammers', 'Hammers')}</span>
             <Badge variant="secondary" className="ml-1">
               {filteredSystemPresets.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="mine" className="gap-2">
-            <User className="h-4 w-4" />
-            {t('eliteWorkout.presets.myPresets', 'My Presets')}
+          <TabsTrigger value="mine" className="gap-2 min-h-[44px]">
+            <User className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">{t('eliteWorkout.presets.myPresets', 'My Presets')}</span>
+            <span className="sm:hidden">{t('eliteWorkout.presets.mine', 'Mine')}</span>
             <Badge variant="secondary" className="ml-1">
               {filteredUserPresets.length}
             </Badge>
@@ -166,14 +220,16 @@ export function PresetLibrary({ selectedSport, onSelectPreset }: PresetLibraryPr
           {filteredSystemPresets.length === 0 ? (
             <Card className="py-12 text-center">
               <CardContent>
-                <Dumbbell className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <Dumbbell className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" aria-hidden="true" />
                 <p className="text-muted-foreground">
-                  {t('eliteWorkout.presets.noPresets', 'No presets match your filters')}
+                  {searchQuery || categoryFilter !== 'all' || difficultyFilter !== 'all'
+                    ? t('eliteWorkout.presets.noMatchingPresets', 'No presets match your filters')
+                    : t('eliteWorkout.presets.noPresets', 'No presets available')}
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
               {filteredSystemPresets.map(preset => (
                 <PresetCard
                   key={preset.id}
@@ -190,17 +246,21 @@ export function PresetLibrary({ selectedSport, onSelectPreset }: PresetLibraryPr
           {filteredUserPresets.length === 0 ? (
             <Card className="py-12 text-center">
               <CardContent>
-                <User className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <User className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" aria-hidden="true" />
                 <p className="text-muted-foreground mb-2">
-                  {t('eliteWorkout.presets.noUserPresets', 'You haven\'t saved any presets yet')}
+                  {searchQuery || categoryFilter !== 'all' || difficultyFilter !== 'all'
+                    ? t('eliteWorkout.presets.noMatchingPresets', 'No presets match your filters')
+                    : t('eliteWorkout.presets.noUserPresets', 'You haven\'t saved any presets yet')}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {t('eliteWorkout.presets.saveHint', 'Create a workout and save it as a preset to reuse later')}
-                </p>
+                {!searchQuery && categoryFilter === 'all' && difficultyFilter === 'all' && (
+                  <p className="text-sm text-muted-foreground">
+                    {t('eliteWorkout.presets.saveHint', 'Create a workout and save it as a preset to reuse later')}
+                  </p>
+                )}
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
               {filteredUserPresets.map(preset => (
                 <PresetCard
                   key={preset.id}
