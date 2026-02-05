@@ -6325,5 +6325,152 @@
     "copied": "¡Copiado!",
     "listName": "Nombre de Lista",
     "listNamePlaceholder": "Mi lista de compras..."
+  },
+  "eliteWorkout": {
+    "title": "Entrenamiento Elite",
+    "blocks": {
+      "title": "Bloques de Entrenamiento",
+      "count": "bloques",
+      "activation": "Activación",
+      "elastic_prep": "Preparación Elástica",
+      "cns_primer": "Preparación SNC",
+      "strength_output": "Salida de Fuerza",
+      "power_speed": "Potencia/Velocidad",
+      "capacity": "Capacidad",
+      "skill_transfer": "Transferencia de Habilidad",
+      "decompression": "Descompresión",
+      "recovery": "Recuperación",
+      "custom": "Bloque Personalizado"
+    },
+    "intent": {
+      "elastic": "Elástico/Rebote",
+      "max_output": "Máxima Salida",
+      "submax_technical": "Submáximo Técnico",
+      "accumulation": "Acumulación",
+      "glide_restoration": "Restauración de Deslizamiento",
+      "cns_downregulation": "Bajada del SNC",
+      "custom": "Personalizado"
+    },
+    "running": {
+      "title": "Sesión de Carrera",
+      "types": {
+        "linear_sprint": "Sprint",
+        "tempo": "Tempo",
+        "conditioning": "Acondicionamiento",
+        "elastic": "Elástico/Rebote",
+        "accel_decel": "Acel/Decel",
+        "curve": "Carrera en Curva",
+        "cod": "Cambio de Dirección",
+        "gait": "Trabajo de Marcha"
+      },
+      "intent": {
+        "max": "Intención Máxima",
+        "submax": "Submáximo",
+        "elastic": "Elástico",
+        "technical": "Técnico",
+        "recovery": "Recuperación"
+      },
+      "surface": "Superficie",
+      "shoeType": "Tipo de Calzado",
+      "fatigueState": "Estado de Fatiga",
+      "contacts": "Contactos con el Suelo"
+    },
+    "viewModes": {
+      "execute": "Hazlo",
+      "coach": "Datos Completos",
+      "parent": "Resumen",
+      "switchMode": "Cambiar Vista"
+    },
+    "load": {
+      "cns": "Carga SNC",
+      "fascial": "Sesgo Fascial",
+      "compression": "Compresión",
+      "elastic": "Elástico",
+      "glide": "Deslizamiento",
+      "volume": "Volumen",
+      "recoveryDebt": "Deuda de Recuperación",
+      "dashboard": "Panel de Carga",
+      "weeklyOverview": "Resumen de carga de 7 días",
+      "todayCNS": "SNC de Hoy",
+      "weeklyAvg": "Promedio Semanal",
+      "vsAverage": "vs Promedio",
+      "cnsHistory": "Historial de Carga SNC",
+      "fascialBreakdown": "Desglose de Carga Fascial",
+      "noData": "Sin datos de carga aún",
+      "noFascialData": "Completa entrenamientos para ver datos de carga fascial"
+    },
+    "warnings": {
+      "cns_overlap": "Alta carga SNC detectada",
+      "load_spike": "Pico de carga - tómalo con calma",
+      "elastic_overload": "Muchos saltos hoy",
+      "recovery_needed": "Se recomienda día de recuperación"
+    },
+    "presets": {
+      "title": "Presets Elite",
+      "description": "Plantillas de entrenamiento profesional listas para usar",
+      "systemPresets": "Presets Hammers",
+      "myPresets": "Mis Presets",
+      "usePreset": "Usar Preset",
+      "locked": "Bloqueado",
+      "hammers": "Hammers",
+      "difficulty": "Dificultad",
+      "duration": "Duración",
+      "cnsLoad": "Carga SNC",
+      "noPresets": "Ningún preset coincide con tus filtros",
+      "noUserPresets": "Aún no has guardado ningún preset",
+      "saveHint": "Crea un entrenamiento y guárdalo como preset para reutilizarlo",
+      "loaded": "¡Preset cargado! Crea una nueva actividad para usarlo.",
+      "categories": {
+        "all": "Todas las Categorías",
+        "explosive_lower": "Tren Inferior Explosivo",
+        "elastic_day": "Día Elástico",
+        "game_day_prime": "Preparación Día de Juego",
+        "fascial_recovery": "Recuperación Fascial",
+        "upper_power": "Potencia Superior",
+        "speed_development": "Desarrollo de Velocidad"
+      }
+    },
+    "addBlock": "Agregar Bloque",
+    "addExercise": "Agregar Ejercicio",
+    "chooseBlockType": "Elegir Tipo de Bloque",
+    "noBlocks": "Sin bloques aún",
+    "noBlocksDescription": "Agrega bloques para estructurar tu entrenamiento. Cada bloque agrupa ejercicios por propósito.",
+    "addFirstBlock": "Agrega Tu Primer Bloque",
+    "noExercises": "Sin ejercicios aún",
+    "cnsLoad": "Carga SNC",
+    "cnsWarning": "Considera reducir la intensidad",
+    "cnsElevated": "Monitorear recuperación",
+    "cnsGood": "Buena carga de entrenamiento",
+    "readiness": {
+      "title": "Chequeo Rápido de Preparación",
+      "sleep": "Calidad de Sueño",
+      "energy": "Nivel de Energía",
+      "soreness": "Dolor Muscular",
+      "skip": "Omitir Chequeo",
+      "continue": "Continuar",
+      "fromVault": "Desde el Vault",
+      "lastCheckin": "Último check-in",
+      "score": "Puntuación de Preparación",
+      "recommendation": "Recomendación",
+      "fullSend": "¡A toda máquina!",
+      "modifyVolume": "Modifica el volumen",
+      "recoveryFocus": "Enfócate en recuperación"
+    },
+    "advanced": {
+      "title": "Configuración Avanzada",
+      "tempo": "Tempo",
+      "velocity": "Intención de Velocidad",
+      "fasciaBias": "Sesgo Fascial",
+      "cnsDemand": "Demanda SNC",
+      "loadType": "Tipo de Carga"
+    },
+    "useBlockSystem": "Usar Constructor por Bloques",
+    "useBlockSystemDesc": "Organiza ejercicios en bloques estructurados con seguimiento inteligente de carga"
+  },
+  "myCustomActivities": {
+    "tabs": {
+      "elitePresets": "Presets Elite",
+      "loadDashboard": "Panel de Carga"
+    }
   }
 }

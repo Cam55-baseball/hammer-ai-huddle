@@ -5159,5 +5159,152 @@
       "fullyEditable": "完全可编辑",
       "coachMessage": "教练留言"
     }
+  },
+  "eliteWorkout": {
+    "title": "精英训练",
+    "blocks": {
+      "title": "训练区块",
+      "count": "区块",
+      "activation": "激活",
+      "elastic_prep": "弹性准备",
+      "cns_primer": "中枢神经预备",
+      "strength_output": "力量输出",
+      "power_speed": "爆发力/速度",
+      "capacity": "容量",
+      "skill_transfer": "技能转移",
+      "decompression": "减压",
+      "recovery": "恢复",
+      "custom": "自定义区块"
+    },
+    "intent": {
+      "elastic": "弹性/反弹",
+      "max_output": "最大输出",
+      "submax_technical": "次最大技术",
+      "accumulation": "积累",
+      "glide_restoration": "滑动恢复",
+      "cns_downregulation": "中枢神经下调",
+      "custom": "自定义"
+    },
+    "running": {
+      "title": "跑步训练",
+      "types": {
+        "linear_sprint": "冲刺",
+        "tempo": "节奏跑",
+        "conditioning": "体能训练",
+        "elastic": "弹性/反弹",
+        "accel_decel": "加速/减速",
+        "curve": "弯道跑",
+        "cod": "变向",
+        "gait": "步态训练"
+      },
+      "intent": {
+        "max": "最大意图",
+        "submax": "次最大",
+        "elastic": "弹性",
+        "technical": "技术",
+        "recovery": "恢复"
+      },
+      "surface": "场地",
+      "shoeType": "鞋类",
+      "fatigueState": "疲劳状态",
+      "contacts": "地面接触"
+    },
+    "viewModes": {
+      "execute": "执行",
+      "coach": "完整数据",
+      "parent": "概览",
+      "switchMode": "切换视图"
+    },
+    "load": {
+      "cns": "中枢神经负荷",
+      "fascial": "筋膜偏向",
+      "compression": "压缩",
+      "elastic": "弹性",
+      "glide": "滑动",
+      "volume": "训练量",
+      "recoveryDebt": "恢复债务",
+      "dashboard": "负荷仪表板",
+      "weeklyOverview": "7天训练负荷概览",
+      "todayCNS": "今日CNS",
+      "weeklyAvg": "周平均",
+      "vsAverage": "vs 平均",
+      "cnsHistory": "CNS负荷历史",
+      "fascialBreakdown": "筋膜负荷分解",
+      "noData": "暂无负荷数据",
+      "noFascialData": "完成训练后查看筋膜负荷数据"
+    },
+    "warnings": {
+      "cns_overlap": "检测到高CNS负荷",
+      "load_spike": "负荷激增 - 放慢节奏",
+      "elastic_overload": "今天跳跃较多",
+      "recovery_needed": "建议恢复日"
+    },
+    "presets": {
+      "title": "精英预设",
+      "description": "专业训练模板，即用即取",
+      "systemPresets": "Hammers预设",
+      "myPresets": "我的预设",
+      "usePreset": "使用预设",
+      "locked": "已锁定",
+      "hammers": "Hammers",
+      "difficulty": "难度",
+      "duration": "时长",
+      "cnsLoad": "CNS负荷",
+      "noPresets": "没有匹配您筛选条件的预设",
+      "noUserPresets": "您还没有保存任何预设",
+      "saveHint": "创建训练并保存为预设以便重复使用",
+      "loaded": "预设已加载！创建新活动来使用它。",
+      "categories": {
+        "all": "所有类别",
+        "explosive_lower": "爆发力下肢",
+        "elastic_day": "弹性日",
+        "game_day_prime": "比赛日准备",
+        "fascial_recovery": "筋膜恢复",
+        "upper_power": "上肢力量",
+        "speed_development": "速度发展"
+      }
+    },
+    "addBlock": "添加区块",
+    "addExercise": "添加练习",
+    "chooseBlockType": "选择区块类型",
+    "noBlocks": "暂无区块",
+    "noBlocksDescription": "添加区块来构建您的训练。每个区块按目的对练习进行分组。",
+    "addFirstBlock": "添加您的第一个区块",
+    "noExercises": "暂无练习",
+    "cnsLoad": "CNS负荷",
+    "cnsWarning": "考虑降低强度",
+    "cnsElevated": "监测恢复情况",
+    "cnsGood": "良好的训练负荷",
+    "readiness": {
+      "title": "快速准备检查",
+      "sleep": "睡眠质量",
+      "energy": "能量水平",
+      "soreness": "肌肉酸痛",
+      "skip": "跳过检查",
+      "continue": "继续",
+      "fromVault": "从Vault获取",
+      "lastCheckin": "上次签到",
+      "score": "准备分数",
+      "recommendation": "建议",
+      "fullSend": "全力以赴！",
+      "modifyVolume": "调整训练量",
+      "recoveryFocus": "专注恢复"
+    },
+    "advanced": {
+      "title": "高级设置",
+      "tempo": "节奏",
+      "velocity": "速度意图",
+      "fasciaBias": "筋膜偏向",
+      "cnsDemand": "CNS需求",
+      "loadType": "负荷类型"
+    },
+    "useBlockSystem": "使用区块构建器",
+    "useBlockSystemDesc": "通过智能负荷追踪将练习组织成结构化区块"
+  },
+  "myCustomActivities": {
+    "tabs": {
+      "elitePresets": "精英预设",
+      "loadDashboard": "负荷仪表板"
+    }
   }
 }

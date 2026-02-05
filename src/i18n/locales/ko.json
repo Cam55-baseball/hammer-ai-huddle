@@ -5200,5 +5200,152 @@
       "fullyEditable": "완전 편집 가능",
       "coachMessage": "코치 메시지"
     }
+  },
+  "eliteWorkout": {
+    "title": "엘리트 운동",
+    "blocks": {
+      "title": "운동 블록",
+      "count": "블록",
+      "activation": "활성화",
+      "elastic_prep": "탄성 준비",
+      "cns_primer": "CNS 프라이머",
+      "strength_output": "근력 출력",
+      "power_speed": "파워/스피드",
+      "capacity": "용량",
+      "skill_transfer": "기술 전이",
+      "decompression": "감압",
+      "recovery": "회복",
+      "custom": "커스텀 블록"
+    },
+    "intent": {
+      "elastic": "탄성/바운스",
+      "max_output": "최대 출력",
+      "submax_technical": "서브맥스 기술",
+      "accumulation": "축적",
+      "glide_restoration": "글라이드 복원",
+      "cns_downregulation": "CNS 다운레귤레이션",
+      "custom": "커스텀"
+    },
+    "running": {
+      "title": "달리기 세션",
+      "types": {
+        "linear_sprint": "스프린트",
+        "tempo": "템포",
+        "conditioning": "컨디셔닝",
+        "elastic": "탄성/바운스",
+        "accel_decel": "가속/감속",
+        "curve": "커브 런",
+        "cod": "방향 전환",
+        "gait": "보행 훈련"
+      },
+      "intent": {
+        "max": "최대 의도",
+        "submax": "서브맥스",
+        "elastic": "탄성",
+        "technical": "기술적",
+        "recovery": "회복"
+      },
+      "surface": "표면",
+      "shoeType": "신발 종류",
+      "fatigueState": "피로 상태",
+      "contacts": "지면 접촉"
+    },
+    "viewModes": {
+      "execute": "실행",
+      "coach": "전체 데이터",
+      "parent": "개요",
+      "switchMode": "보기 전환"
+    },
+    "load": {
+      "cns": "CNS 부하",
+      "fascial": "근막 편향",
+      "compression": "압축",
+      "elastic": "탄성",
+      "glide": "글라이드",
+      "volume": "볼륨",
+      "recoveryDebt": "회복 부채",
+      "dashboard": "부하 대시보드",
+      "weeklyOverview": "7일 훈련 부하 개요",
+      "todayCNS": "오늘 CNS",
+      "weeklyAvg": "주간 평균",
+      "vsAverage": "vs 평균",
+      "cnsHistory": "CNS 부하 이력",
+      "fascialBreakdown": "근막 부하 분석",
+      "noData": "아직 부하 데이터 없음",
+      "noFascialData": "근막 부하 데이터를 보려면 운동을 완료하세요"
+    },
+    "warnings": {
+      "cns_overlap": "높은 CNS 부하 감지",
+      "load_spike": "부하 급증 - 천천히",
+      "elastic_overload": "오늘 점프가 많습니다",
+      "recovery_needed": "회복일 권장"
+    },
+    "presets": {
+      "title": "엘리트 프리셋",
+      "description": "바로 사용 가능한 전문 훈련 템플릿",
+      "systemPresets": "Hammers 프리셋",
+      "myPresets": "내 프리셋",
+      "usePreset": "프리셋 사용",
+      "locked": "잠금",
+      "hammers": "Hammers",
+      "difficulty": "난이도",
+      "duration": "시간",
+      "cnsLoad": "CNS 부하",
+      "noPresets": "필터와 일치하는 프리셋이 없습니다",
+      "noUserPresets": "아직 저장한 프리셋이 없습니다",
+      "saveHint": "운동을 만들고 프리셋으로 저장하여 재사용하세요",
+      "loaded": "프리셋이 로드되었습니다! 새 활동을 만들어 사용하세요.",
+      "categories": {
+        "all": "모든 카테고리",
+        "explosive_lower": "폭발적 하체",
+        "elastic_day": "탄성의 날",
+        "game_day_prime": "경기일 준비",
+        "fascial_recovery": "근막 회복",
+        "upper_power": "상체 파워",
+        "speed_development": "스피드 개발"
+      }
+    },
+    "addBlock": "블록 추가",
+    "addExercise": "운동 추가",
+    "chooseBlockType": "블록 유형 선택",
+    "noBlocks": "아직 블록이 없습니다",
+    "noBlocksDescription": "블록을 추가하여 운동을 구성하세요. 각 블록은 목적별로 운동을 그룹화합니다.",
+    "addFirstBlock": "첫 번째 블록 추가",
+    "noExercises": "아직 운동이 없습니다",
+    "cnsLoad": "CNS 부하",
+    "cnsWarning": "강도 감소 고려",
+    "cnsElevated": "회복 모니터링",
+    "cnsGood": "좋은 훈련 부하",
+    "readiness": {
+      "title": "빠른 준비도 체크",
+      "sleep": "수면 품질",
+      "energy": "에너지 레벨",
+      "soreness": "근육통",
+      "skip": "체크 건너뛰기",
+      "continue": "계속",
+      "fromVault": "Vault에서",
+      "lastCheckin": "마지막 체크인",
+      "score": "준비도 점수",
+      "recommendation": "권장",
+      "fullSend": "전력으로!",
+      "modifyVolume": "볼륨 수정",
+      "recoveryFocus": "회복에 집중"
+    },
+    "advanced": {
+      "title": "고급 설정",
+      "tempo": "템포",
+      "velocity": "속도 의도",
+      "fasciaBias": "근막 편향",
+      "cnsDemand": "CNS 요구",
+      "loadType": "부하 유형"
+    },
+    "useBlockSystem": "블록 빌더 사용",
+    "useBlockSystemDesc": "스마트 부하 추적으로 구조화된 블록에 운동 구성"
+  },
+  "myCustomActivities": {
+    "tabs": {
+      "elitePresets": "엘리트 프리셋",
+      "loadDashboard": "부하 대시보드"
+    }
   }
 }
