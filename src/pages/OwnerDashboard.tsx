@@ -8,14 +8,17 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked, User, Settings } from "lucide-react";
+import { Target, CircleDot, Zap, Search, BookMarked, User, Settings, ShieldCheck } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-
+import { Badge } from "@/components/ui/badge";
+import { OwnerSidebar, type OwnerSection } from "@/components/owner/OwnerSidebar";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 interface User {
   id: string;
   full_name: string | null;
@@ -55,7 +58,8 @@ const OwnerDashboard = () => {
   const [playerSearch, setPlayerSearch] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [rankingsVisible, setRankingsVisible] = useState(true);
-
+  const [activeSection, setActiveSection] = useState<OwnerSection>('overview');
+  const isMobile = useIsMobile();
   useEffect(() => {
     if (!loading && !isOwner) {
       navigate("/");
@@ -162,8 +166,10 @@ const OwnerDashboard = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: `Role ${role} assigned successfully`,
+        title: role === 'admin' ? "Admin Appointed" : "Role Assigned",
+        description: role === 'admin' 
+          ? "Admin privileges granted successfully. User now has admin access."
+          : `Role ${role} assigned successfully`,
       });
 
       await loadDashboardData();
@@ -256,8 +262,8 @@ const OwnerDashboard = () => {
       if (error) throw error;
 
       toast({
-        title: "Admin Removed",
-        description: "User's admin access has been revoked",
+        title: "Admin Revoked",
+        description: "Admin privileges have been removed from this user",
       });
 
       await loadDashboardData();
@@ -362,71 +368,85 @@ const OwnerDashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">H</span>
+      <div className="flex min-h-[calc(100vh-4rem)]">
+        {/* Sidebar */}
+        <OwnerSidebar
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          pendingAdminRequests={adminRequests.length}
+          pendingScoutApplications={scoutApplications.filter(a => a.status === 'pending').length}
+        />
+        
+        {/* Main content */}
+        <div className="flex-1 p-6 overflow-auto">
+          {/* Mobile menu trigger */}
+          {isMobile && (
+            <div className="mb-4 flex items-center gap-3">
+              <OwnerSidebar
+                activeSection={activeSection}
+                onSectionChange={setActiveSection}
+                pendingAdminRequests={adminRequests.length}
+                pendingScoutApplications={scoutApplications.filter(a => a.status === 'pending').length}
+              />
+              <h1 className="text-xl font-bold">Owner Dashboard</h1>
             </div>
-            <h1 className="text-xl font-bold">Owner Dashboard</h1>
+          )}
+
+          {/* Header - Desktop only */}
+          {!isMobile && (
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-xl">H</span>
+                </div>
+                <h1 className="text-xl font-bold">Owner Dashboard</h1>
+              </div>
+              <Button variant="outline" onClick={handleSignOut}>
+                Sign Out
+              </Button>
+            </div>
+          )}
+
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold mb-2">Welcome, Owner</h2>
+            <p className="text-muted-foreground">Comprehensive oversight and management of all app modules</p>
           </div>
-          <Button variant="outline" onClick={handleSignOut}>
-            Sign Out
-          </Button>
-        </div>
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Welcome, Owner</h2>
-          <p className="text-muted-foreground">Comprehensive oversight and management of all app modules</p>
-        </div>
 
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
-          <Card className="p-6">
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Users</p>
-              <p className="text-3xl font-bold">{totalUsers}</p>
+          {/* Overview Section - Analytics Cards */}
+          {activeSection === 'overview' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              <Card className="p-6">
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Users</p>
+                  <p className="text-3xl font-bold">{totalUsers}</p>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Subscriptions</p>
+                  <p className="text-3xl font-bold">{activeSubscriptions}</p>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Videos</p>
+                  <p className="text-3xl font-bold">{totalVideosAnalyzed}</p>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Efficiency</p>
+                  <p className="text-3xl font-bold">{avgScore}%</p>
+                </div>
+              </Card>
             </div>
-          </Card>
+          )}
 
-          <Card className="p-6">
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Subscriptions</p>
-              <p className="text-3xl font-bold">{activeSubscriptions}</p>
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Videos</p>
-              <p className="text-3xl font-bold">{totalVideosAnalyzed}</p>
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Efficiency</p>
-              <p className="text-3xl font-bold">{avgScore}%</p>
-            </div>
-          </Card>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="users" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="users">User Management</TabsTrigger>
-            <TabsTrigger value="admin-requests">
-              Admin Requests {adminRequests.length > 0 && `(${adminRequests.length})`}
-            </TabsTrigger>
-            <TabsTrigger value="scout-applications">
-              Scout Applications {scoutApplications.filter(a => a.status === 'pending').length > 0 && `(${scoutApplications.filter(a => a.status === 'pending').length})`}
-            </TabsTrigger>
-            <TabsTrigger value="videos">Recent Videos</TabsTrigger>
-            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-            <TabsTrigger value="player-search">Player Profile Search</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="users" className="space-y-4">
+          {/* User Management Section */}
+          {activeSection === 'users' && (
             <Card className="p-6">
               <h3 className="text-2xl font-bold mb-4">All Users</h3>
               <div className="space-y-2">
@@ -436,14 +456,20 @@ const OwnerDashboard = () => {
                   users.map((user) => (
                     <div
                       key={user.id}
-                      className="p-4 border rounded-lg hover:bg-muted/50 transition-colors flex justify-between items-center"
+                      className={cn(
+                        "p-4 border rounded-lg transition-colors flex justify-between items-center",
+                        isActiveAdmin(user.id) 
+                          ? "bg-success-muted border-success/30" 
+                          : "hover:bg-muted/50"
+                      )}
                     >
                       <div>
                         <p className="font-semibold">{user.full_name || "No name"}</p>
                         <p className="text-sm text-muted-foreground">
                           Role: <span className="capitalize">{getUserRole(user.id)}</span>
                           {isActiveAdmin(user.id) && (
-                            <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            <span className="ml-2 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-success-muted text-success-muted-foreground">
+                              <ShieldCheck className="h-3 w-3" />
                               Active Admin
                             </span>
                           )}
@@ -452,22 +478,29 @@ const OwnerDashboard = () => {
                           Joined: {new Date(user.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        {!isActiveAdmin(user.id) ? (
+                      <div className="flex items-center gap-2">
+                        {isActiveAdmin(user.id) ? (
+                          <>
+                            <Badge className="bg-success hover:bg-success text-success-foreground gap-1">
+                              <ShieldCheck className="h-3 w-3" />
+                              Admin
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                              onClick={() => handleRemoveAdmin(user.id)}
+                            >
+                              Revoke
+                            </Button>
+                          </>
+                        ) : (
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleAssignRole(user.id, "admin")}
                           >
                             Make Admin
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleRemoveAdmin(user.id)}
-                          >
-                            Remove Admin
                           </Button>
                         )}
                       </div>
@@ -476,9 +509,10 @@ const OwnerDashboard = () => {
                 )}
               </div>
             </Card>
-          </TabsContent>
+          )}
 
-          <TabsContent value="admin-requests" className="space-y-4">
+          {/* Admin Requests Section */}
+          {activeSection === 'admin-requests' && (
             <Card className="p-6">
               <h3 className="text-2xl font-bold mb-4">Pending Admin Requests</h3>
               <div className="space-y-2">
@@ -509,9 +543,10 @@ const OwnerDashboard = () => {
                 )}
               </div>
             </Card>
-          </TabsContent>
+          )}
 
-          <TabsContent value="scout-applications" className="space-y-4">
+          {/* Scout Applications Section */}
+          {activeSection === 'scout-applications' && (
             <Card className="p-6">
               <h3 className="text-2xl font-bold mb-4">Scout/Coach Applications</h3>
               <Tabs defaultValue="pending" className="space-y-4">
@@ -587,9 +622,10 @@ const OwnerDashboard = () => {
                 </TabsContent>
               </Tabs>
             </Card>
-          </TabsContent>
+          )}
 
-          <TabsContent value="videos" className="space-y-4">
+          {/* Videos Section */}
+          {activeSection === 'videos' && (
             <Card className="p-6">
               <h3 className="text-2xl font-bold mb-4">Recent Video Analyses</h3>
               <div className="space-y-2">
@@ -617,10 +653,10 @@ const OwnerDashboard = () => {
                 )}
               </div>
             </Card>
-          </TabsContent>
+          )}
 
-          <TabsContent value="subscriptions" className="space-y-4">
-            {/* Module Subscriptions Card */}
+          {/* Subscriptions Section */}
+          {activeSection === 'subscriptions' && (
             <Card className="p-6">
               <h3 className="text-2xl font-bold mb-4">Module Subscriptions</h3>
               <p className="text-muted-foreground mb-6">
@@ -667,9 +703,10 @@ const OwnerDashboard = () => {
                 </div>
               </div>
             </Card>
-          </TabsContent>
+          )}
 
-          <TabsContent value="settings" className="space-y-4">
+          {/* Settings Section */}
+          {activeSection === 'settings' && (
             <Card className="p-6">
               <h3 className="text-2xl font-bold mb-4">App Settings</h3>
               <div className="space-y-6">
@@ -690,9 +727,10 @@ const OwnerDashboard = () => {
                 </div>
               </div>
             </Card>
-          </TabsContent>
+          )}
 
-          <TabsContent value="player-search" className="space-y-4">
+          {/* Player Search Section */}
+          {activeSection === 'player-search' && (
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Search Player Profiles & Libraries</h3>
               <div className="space-y-4">
@@ -746,8 +784,8 @@ const OwnerDashboard = () => {
                 )}
               </div>
             </Card>
-          </TabsContent>
-        </Tabs>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );

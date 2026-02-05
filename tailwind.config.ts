@@ -90,6 +90,12 @@ export default {
           timing: "hsl(var(--tex-vision-timing))",
           feedback: "hsl(var(--tex-vision-feedback))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+          muted: "hsl(var(--success-muted))",
+          "muted-foreground": "hsl(var(--success-muted-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
