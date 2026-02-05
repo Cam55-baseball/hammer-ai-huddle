@@ -1,152 +1,220 @@
 
 
-# Fix Missing Translations and Add Sport Filter to Advanced Search
+# Comprehensive Application Audit: Issue Identification and Fixes
 
-## Overview
-This plan addresses two issues:
-1. Missing translation keys causing raw text like "scout.players" and "scout.typeToSearch" to display
-2. Adding a sport filter option to the advanced search filters for scouts and coaches
+## Executive Summary
+
+After an exhaustive analysis of the codebase, I've identified several categories of issues that need to be addressed. The good news is that the application is largely well-structured, but there are specific areas requiring attention to ensure stability, accessibility, and optimal performance.
 
 ---
 
-## Problem 1: Missing Translation Keys
+## Issues Identified
 
-### Current Behavior
-The following translation keys are used but not defined, causing raw key names to display:
-- `scout.players` (ScoutDashboard.tsx line 510) - Shows as "scout.players"
-- `scout.typeToSearch` (ScoutDashboard.tsx line 547) - Shows as "scout.typeToSearch"
-- `coach.players` (CoachDashboard.tsx line 546) - Exists but as a fallback
+### Category 1: Accessibility - DialogContent Missing Required Elements
 
-### Solution
-Add the missing translation keys to the English locale file and replace the raw text with proper translations.
+**Severity: Medium (Console Warnings)**
 
-### Files to Modify
+The console logs show repeated warnings about `DialogContent` requiring `DialogTitle` for screen reader accessibility. While many dialogs in the codebase properly include titles, some components may be triggering this warning.
+
+**Root Cause Analysis:**
+- The `RealTimePlayback.tsx` component correctly uses `VisuallyHidden.Root` wrapper around `DialogTitle` (line 1407-1409)
+- Other dialog components like `WeeklyWellnessQuizDialog` use the `sr-only` class approach which is also valid
+- The warning may be coming from a dialog that doesn't include any title at all
+
+**Files to Check:**
+| Component | Status | Action Needed |
+|-----------|--------|---------------|
+| `RealTimePlayback.tsx` | Uses VisuallyHidden correctly | None |
+| `WeeklyWellnessQuizDialog.tsx` | Uses sr-only correctly | None |
+| `DrillDetailDialog.tsx` | Has DialogHeader | Verify DialogDescription |
+| `VaultFocusQuizDialog.tsx` | Has DialogHeader | None |
+
+**Fix Required:**
+Search all dialog usages and ensure every `DialogContent` has either:
+1. A visible `DialogTitle` inside `DialogHeader`, OR
+2. A `DialogTitle` with `className="sr-only"`, OR
+3. A `DialogTitle` wrapped in `VisuallyHidden.Root`
+
+Additionally, add `aria-describedby={undefined}` to dialogs that intentionally have no description.
+
+---
+
+### Category 2: Role Access Hook Inconsistency
+
+**Severity: Low-Medium**
+
+**Issue:** The `useOwnerAccess` and `useAdminAccess` hooks have inconsistent status checking:
+
+| Hook | Status Check |
+|------|--------------|
+| `useOwnerAccess.ts` | Does NOT filter by `status = 'active'` |
+| `useAdminAccess.ts` | Filters by `status = 'active'` |
+| `useScoutAccess.ts` | Does NOT filter by `status` |
+
+**Impact:** An owner or scout with a non-active role status could still have access privileges.
+
+**File:** `src/hooks/useOwnerAccess.ts` (lines 35-39)
+
+**Fix Required:**
+Update `useOwnerAccess.ts` to include `.eq('status', 'active')` in the query to match the pattern used in `useAdminAccess.ts`.
+
+---
+
+### Category 3: Missing Translation Keys in Other Languages
+
+**Severity: Low**
+
+The recently added translation keys (`scout.players`, `scout.typeToSearch`, `playerFilters.sport`) are present in `en.json` but need to be added to other locale files:
+- `es.json` (Spanish)
+- `fr.json` (French)
+- `de.json` (German)
+- `ja.json` (Japanese)
+- `zh.json` (Chinese)
+- `nl.json` (Dutch)
+
+**Files to Update:**
+All files in `src/i18n/locales/` except `en.json`
+
+---
+
+### Category 4: Potential Memory Leak in SportThemeContext
+
+**Severity: Low**
+
+The `SportThemeContext.tsx` uses a `setInterval` polling mechanism (every 500ms) to detect localStorage changes. While not a critical issue, this is an unnecessary CPU drain.
+
+**File:** `src/contexts/SportThemeContext.tsx` (lines 41-47)
+
+**Better Approach:**
+Use a `CustomEvent` dispatched when sport changes instead of polling, or use the `storage` event more effectively.
+
+---
+
+### Category 5: Edge Function CORS Headers
+
+**Severity: Low**
+
+The edge functions use a simplified CORS header set. While functional, the headers should include the full set of Supabase client headers for maximum compatibility:
+
+**Current Pattern:**
+```typescript
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+```
+
+**Recommended Pattern:**
+```typescript
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+};
+```
+
+**Files Affected:** All edge functions in `supabase/functions/`
+
+---
+
+## Implementation Plan
+
+### Phase 1: Critical Fixes (Immediate)
+
+1. **Fix Dialog Accessibility Warnings**
+   - Audit all `DialogContent` usages
+   - Add missing `DialogTitle` elements (hidden for screen readers if not visible)
+   - Add `aria-describedby={undefined}` where appropriate
+
+2. **Standardize Role Access Hooks**
+   - Update `useOwnerAccess.ts` to check `status = 'active'`
+   - Update `useScoutAccess.ts` to check `status = 'active'` (optional based on business logic)
+
+### Phase 2: Consistency Improvements
+
+3. **Add Missing Translations**
+   - Add `scout.players` and `scout.typeToSearch` to all non-English locale files
+   - Add `playerFilters.sport` to all non-English locale files
+
+4. **Update Edge Function CORS Headers**
+   - Update CORS headers in all edge functions to include full Supabase client header list
+
+### Phase 3: Performance Optimization
+
+5. **Optimize SportThemeContext**
+   - Replace 500ms polling with event-based approach
+   - Use `BroadcastChannel` API or custom events for cross-tab communication
+
+---
+
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/i18n/locales/en.json` | Add missing `scout.players` and `scout.typeToSearch` keys |
-| `src/pages/ScoutDashboard.tsx` | Already uses `t()` function, will work once keys exist |
-| `src/pages/CoachDashboard.tsx` | Already uses `t()` function with fallbacks |
+| `src/hooks/useOwnerAccess.ts` | Add `.eq('status', 'active')` to query |
+| `src/hooks/useScoutAccess.ts` | Consider adding status filter |
+| `src/i18n/locales/es.json` | Add missing scout/filter translations |
+| `src/i18n/locales/fr.json` | Add missing scout/filter translations |
+| `src/i18n/locales/de.json` | Add missing scout/filter translations |
+| `src/i18n/locales/ja.json` | Add missing scout/filter translations |
+| `src/i18n/locales/zh.json` | Add missing scout/filter translations |
+| `src/i18n/locales/nl.json` | Add missing scout/filter translations |
+| `src/contexts/SportThemeContext.tsx` | Replace polling with event-based approach |
+| `supabase/functions/*/index.ts` | Update CORS headers (multiple files) |
 
 ---
 
-## Problem 2: Sport Filter in Advanced Search
+## Technical Details
 
-### Current Behavior
-- The dashboard has a sport filter tab at the top ("All Sports", "Baseball", "Softball") that filters the "Following" list
-- However, the advanced filters for searching players don't include a sport filter
-- Players' sports are determined by their `subscribed_modules` (prefixes like `baseball_` or `softball_`)
-
-### Solution
-Add a "Sport" filter option to the PlayerSearchFilters component that allows scouts/coaches to filter search results by sport. This requires:
-
-1. **Update PlayerSearchFilters component** to include a sport selector
-2. **Update the filter state** in both dashboards to include sport
-3. **Update the search-players edge function** to filter by sport using the subscriptions table
-
-### Technical Details
-
-#### 1. FilterState Interface Update
-Add `sportPreference` to the filter state:
-```typescript
-interface FilterState {
-  // ... existing fields
-  sportPreference: 'all' | 'baseball' | 'softball' | null;
-}
-```
-
-#### 2. PlayerSearchFilters Component Update
-Add a sport selection dropdown in the advanced filters panel:
-```tsx
-{/* Sport Filter */}
-<div>
-  <Label className="text-sm font-semibold mb-2 block">
-    {t('playerFilters.sport')}
-  </Label>
-  <Select
-    value={filters.sportPreference || ""}
-    onValueChange={(value) =>
-      onFilterChange({
-        ...filters,
-        sportPreference: value === "" ? null : value as 'baseball' | 'softball',
-      })
-    }
-  >
-    <SelectTrigger>
-      <SelectValue placeholder={t('playerFilters.any')} />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="baseball">{t('dashboard.baseball')}</SelectItem>
-      <SelectItem value="softball">{t('dashboard.softball')}</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
-```
-
-#### 3. Edge Function Update
-The `search-players` edge function needs to:
-1. Accept a new `sport` parameter
-2. Join with the `subscriptions` table to filter by `subscribed_modules`
-3. Filter players whose modules contain the appropriate prefix
+### Fix 1: useOwnerAccess Status Check
 
 ```typescript
-// In search-players/index.ts
-const { sport, ...otherParams } = await req.json();
+// Current (line 35-39)
+const { data, error } = await supabase
+  .from('user_roles')
+  .select('role, status')
+  .eq('user_id', user.id)
+  .eq('role', 'owner');
 
-// After getting profiles, filter by sport if specified
-if (sport && (sport === 'baseball' || sport === 'softball')) {
-  // Get subscriptions for the profile IDs
-  const { data: subs } = await supabaseAdmin
-    .from('subscriptions')
-    .select('user_id, subscribed_modules')
-    .in('user_id', profiles.map(p => p.id));
-  
-  // Filter to only include users with matching sport modules
-  const sportPrefix = sport + '_';
-  const matchingUserIds = new Set(
-    subs?.filter(s => 
-      s.subscribed_modules?.some(m => m.startsWith(sportPrefix))
-    ).map(s => s.user_id) || []
-  );
-  
-  filteredProfiles = filteredProfiles.filter(p => matchingUserIds.has(p.id));
-}
+// Fixed
+const { data, error } = await supabase
+  .from('user_roles')
+  .select('role, status')
+  .eq('user_id', user.id)
+  .eq('role', 'owner')
+  .eq('status', 'active');
 ```
 
-### Files to Modify
+### Fix 2: SportThemeContext Optimization
 
-| File | Changes |
-|------|---------|
-| `src/i18n/locales/en.json` | Add `playerFilters.sport` translation key |
-| `src/components/PlayerSearchFilters.tsx` | Add sport filter dropdown, update FilterState interface |
-| `src/pages/ScoutDashboard.tsx` | Add `sportPreference` to filter state initialization and reset |
-| `src/pages/CoachDashboard.tsx` | Add `sportPreference` to filter state initialization and reset |
-| `supabase/functions/search-players/index.ts` | Add sport parameter handling and subscription-based filtering |
+```typescript
+// Replace polling with custom event
+useEffect(() => {
+  const handleSportChange = (e: CustomEvent) => {
+    setSport(e.detail.sport);
+  };
+  
+  window.addEventListener('sportChanged', handleSportChange as EventListener);
+  
+  return () => {
+    window.removeEventListener('sportChanged', handleSportChange as EventListener);
+  };
+}, []);
 
----
-
-## Translation Keys to Add
-
-```json
-{
-  "scout": {
-    "players": "Players",
-    "typeToSearch": "Start typing to search for players..."
-  },
-  "playerFilters": {
-    "sport": "Sport"
-  }
-}
+// When changing sport elsewhere, dispatch event:
+window.dispatchEvent(new CustomEvent('sportChanged', { detail: { sport: newSport } }));
 ```
 
 ---
 
-## Summary of Changes
+## Summary
 
-1. **Translation fixes** - Add missing keys to prevent raw text display
-2. **Sport filter UI** - New dropdown in advanced filters for baseball/softball selection
-3. **Backend filtering** - Edge function updated to filter players by their subscribed sport modules
-4. **Filter state updates** - Both dashboard components updated to track sport preference in filter state
+The application is well-structured overall. The main areas requiring attention are:
 
-This allows scouts and coaches to narrow their player search by sport, complementing the existing tab-based filtering for their followed players list.
+1. **Dialog accessibility** - Add missing titles for screen readers
+2. **Role access consistency** - Standardize active status filtering
+3. **Translation completeness** - Add missing keys to non-English locales
+4. **Performance optimization** - Replace polling with events in SportThemeContext
+5. **CORS header completeness** - Update edge functions with full header set
+
+These fixes will improve accessibility compliance, ensure consistent access control, and optimize performance across the application.
 
