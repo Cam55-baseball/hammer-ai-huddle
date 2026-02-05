@@ -7088,7 +7088,145 @@
       "appointed": "Admin privileges granted",
       "revoked": "Admin privileges revoked",
       "makeAdmin": "Make Admin",
-      "activeAdmin": "Active Admin"
+    "activeAdmin": "Active Admin"
+    }
+  },
+  "eliteWorkout": {
+    "title": "Elite Workout",
+    "blocks": {
+      "title": "Workout Blocks",
+      "count": "blocks",
+      "activation": "Activation",
+      "elastic_prep": "Elastic Prep",
+      "cns_primer": "CNS Primer",
+      "strength_output": "Strength Output",
+      "power_speed": "Power/Speed",
+      "capacity": "Capacity",
+      "skill_transfer": "Skill Transfer",
+      "decompression": "Decompression",
+      "recovery": "Recovery",
+      "custom": "Custom Block"
+    },
+    "intent": {
+      "elastic": "Elastic/Bounce",
+      "max_output": "Max Output",
+      "submax_technical": "Submax Technical",
+      "accumulation": "Accumulation",
+      "glide_restoration": "Glide Restoration",
+      "cns_downregulation": "CNS Downregulation",
+      "custom": "Custom"
+    },
+    "running": {
+      "title": "Running Session",
+      "types": {
+        "linear_sprint": "Sprint",
+        "tempo": "Tempo",
+        "conditioning": "Conditioning",
+        "elastic": "Elastic/Bounce",
+        "accel_decel": "Accel/Decel",
+        "curve": "Curve Run",
+        "cod": "Change of Direction",
+        "gait": "Gait Work"
+      },
+      "intent": {
+        "max": "Max Intent",
+        "submax": "Submax",
+        "elastic": "Elastic",
+        "technical": "Technical",
+        "recovery": "Recovery"
+      },
+      "surface": "Surface",
+      "shoeType": "Shoe Type",
+      "fatigueState": "Fatigue State",
+      "contacts": "Ground Contacts"
+    },
+    "viewModes": {
+      "execute": "Do It",
+      "coach": "Full Data",
+      "parent": "Overview",
+      "switchMode": "Switch View"
+    },
+    "load": {
+      "cns": "CNS Load",
+      "fascial": "Fascial Bias",
+      "compression": "Compression",
+      "elastic": "Elastic",
+      "glide": "Glide",
+      "volume": "Volume",
+      "recoveryDebt": "Recovery Debt",
+      "dashboard": "Load Dashboard",
+      "weeklyOverview": "7-day training load overview",
+      "todayCNS": "Today's CNS",
+      "weeklyAvg": "Weekly Avg",
+      "vsAverage": "vs Average",
+      "cnsHistory": "CNS Load History",
+      "fascialBreakdown": "Fascial Load Breakdown",
+      "noData": "No load data yet",
+      "noFascialData": "Complete workouts to see fascial load data"
+    },
+    "warnings": {
+      "cns_overlap": "High CNS load detected",
+      "load_spike": "Load spike - take it easy",
+      "elastic_overload": "Lots of jumping today",
+      "recovery_needed": "Recovery day recommended"
+    },
+    "presets": {
+      "title": "Elite Presets",
+      "description": "Professional training templates ready to use",
+      "systemPresets": "Hammers Presets",
+      "myPresets": "My Presets",
+      "usePreset": "Use Preset",
+      "locked": "Locked",
+      "hammers": "Hammers",
+      "difficulty": "Difficulty",
+      "duration": "Duration",
+      "cnsLoad": "CNS Load",
+      "noPresets": "No presets match your filters",
+      "noUserPresets": "You haven't saved any presets yet",
+      "saveHint": "Create a workout and save it as a preset to reuse later",
+      "loaded": "Preset loaded! Create a new activity to use it.",
+      "categories": {
+        "all": "All Categories",
+        "explosive_lower": "Explosive Lower",
+        "elastic_day": "Elastic Day",
+        "game_day_prime": "Game Day Prime",
+        "fascial_recovery": "Fascial Recovery",
+        "upper_power": "Upper Power",
+        "speed_development": "Speed Development"
+      }
+    },
+    "addBlock": "Add Block",
+    "addExercise": "Add Exercise",
+    "chooseBlockType": "Choose Block Type",
+    "noBlocks": "No blocks yet",
+    "noBlocksDescription": "Add blocks to structure your workout. Each block groups exercises by purpose.",
+    "addFirstBlock": "Add Your First Block",
+    "noExercises": "No exercises yet",
+    "cnsLoad": "CNS Load",
+    "cnsWarning": "Consider reducing intensity",
+    "cnsElevated": "Monitor recovery",
+    "cnsGood": "Good training load",
+    "readiness": {
+      "title": "Quick Readiness Check",
+      "sleep": "Sleep Quality",
+      "energy": "Energy Level",
+      "soreness": "Soreness",
+      "skip": "Skip Check",
+      "continue": "Continue"
+    },
+    "advanced": {
+      "title": "Advanced Settings",
+      "tempo": "Tempo",
+      "velocity": "Velocity Intent",
+      "fasciaBias": "Fascia Bias",
+      "cnsDemand": "CNS Demand",
+      "loadType": "Load Type"
+    }
+  },
+  "myCustomActivities": {
+    "tabs": {
+      "elitePresets": "Elite Presets",
+      "loadDashboard": "Load Dashboard"
     }
   }
 }
