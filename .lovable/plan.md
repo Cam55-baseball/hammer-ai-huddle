@@ -1,506 +1,204 @@
 
 
-# Elite Workout & Running Card System - Complete E2E Implementation Plan
+# Elite Workout & Running Card System - Complete E2E Integration Plan
 
-## Executive Summary
+## Overview
 
-This plan delivers Hammers Modality's Elite Workout & Running Card System as a complete, production-ready feature. The system transforms how athletes from age 5 to MLB/AUSL professionals create, execute, and track training by introducing a **Block-Based Architecture** with intelligent load management, fascial tracking, and context-aware warnings—all while maintaining the app's signature "action-first" simplicity.
+This plan completes the Elite Workout & Running Card System by integrating the block-based architecture into existing components, adding the Preset Library, seeding Hammers IP presets, implementing edge functions for load calculation, and adding full i18n translations for all 8 languages. Coaches and scouts retain full ability to send custom workouts with block-based data.
 
 ---
 
-## Architecture Overview
+## Phase 1: Integrate Block System into CustomActivityBuilderDialog
 
+### Changes to `CustomActivityBuilderDialog.tsx`
+
+**What we're adding:**
+1. **View Mode Toggle** - Add Execute/Coach/Parent mode selector at the top
+2. **Block-Based Workout Builder** - Replace flat exercise list with BlockContainer when activity type is 'workout'
+3. **Enhanced Running Card Builder** - Replace embedded running sessions with the new RunningCardBuilder
+4. **CNS Load Preview** - Show real-time CNS load calculation in Coach mode
+5. **Preset Quick-Load** - Button to load from preset library
+
+**Key additions:**
+- Import `BlockContainer`, `RunningCardBuilder`, `ViewModeToggle`, `CNSLoadIndicator`
+- Add state for `workoutBlocks`, `runningSessions`, and `viewMode`
+- Conditional rendering: show BlockContainer for 'workout' type, RunningCardBuilder for 'running' type
+- Convert blocks/sessions to/from JSONB format for database storage
+- Keep backward compatibility with existing flat exercise data
+
+**Coach/Scout sending preserved:**
+- The `SendToPlayerDialog` already handles template snapshots as JSONB
+- Block data will be included in `template_snapshot` automatically
+- Locked fields logic remains unchanged
+- No disruption to existing scout_follows or sent_activity_templates flow
+
+---
+
+## Phase 2: Enhance My Activities Page with Preset Library
+
+### Changes to `MyCustomActivities.tsx`
+
+**Add new tab: "Elite Presets"**
 ```text
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                               ELITE WORKOUT & RUNNING CARD SYSTEM                           │
-├─────────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                             │
-│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐                        │
-│  │   VIEW MODES    │     │   DATA LAYER    │     │  INTELLIGENCE   │                        │
-│  │                 │     │                 │     │                 │                        │
-│  │  • Execute      │     │  • Blocks       │     │  • CNS Tracking │                        │
-│  │  • Coach        │     │  • Exercises    │     │  • Load Mgmt    │                        │
-│  │  • Parent       │     │  • Running      │     │  • Overlap Warn │                        │
-│  │                 │     │  • Presets      │     │  • Auto-Adapt   │                        │
-│  └────────┬────────┘     └────────┬────────┘     └────────┬────────┘                        │
-│           │                       │                       │                                 │
-│           └───────────────────────┴───────────────────────┘                                 │
-│                                   │                                                         │
-│                       ┌───────────▼───────────┐                                             │
-│                       │   UNIFIED TEMPLATE    │                                             │
-│                       │   SYSTEM              │                                             │
-│                       └───────────┬───────────┘                                             │
-│                                   │                                                         │
-│           ┌───────────────────────┼───────────────────────┐                                 │
-│           │                       │                       │                                 │
-│  ┌────────▼────────┐     ┌────────▼────────┐     ┌────────▼────────┐                        │
-│  │ Custom Activity │     │   My Activities │     │    Game Plan    │                        │
-│  │    Builder      │     │      Page       │     │     Display     │                        │
-│  └─────────────────┘     └─────────────────┘     └─────────────────┘                        │
-│                                                                                             │
-└─────────────────────────────────────────────────────────────────────────────────────────────┘
+tabs = [
+  ...existing tabs,
+  { value: 'elite-presets', icon: Dumbbell, label: 'Elite Presets' }
+]
 ```
+
+**New component: `PresetLibrary.tsx`**
+- Display grid of system presets (Hammers IP - locked) and user presets
+- Filter by category: Explosive Lower, Elastic Day, Game Day Prime, etc.
+- Filter by difficulty: Beginner, Intermediate, Advanced
+- Preview modal showing block structure and CNS load estimate
+- "Use This Preset" button that loads blocks into activity builder
+- "Duplicate & Edit" for user presets
+
+**New component: `PresetCard.tsx`**
+- Visual card with category color coding
+- Lock icon for system presets (Hammers IP)
+- CNS load badge
+- Duration estimate
+- Sport indicator (baseball/softball/both)
 
 ---
 
-## Phase 1: Database Schema Extension
+## Phase 3: Create Load Dashboard Component
 
-### New Tables
+### New component: `LoadDashboard.tsx`
 
-**1. workout_blocks (Block Definitions)**
-```sql
-CREATE TABLE public.workout_blocks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  template_id UUID REFERENCES custom_activity_templates(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  intent TEXT NOT NULL, -- 'elastic', 'max_output', 'submax_technical', 'accumulation', etc.
-  order_index INTEGER NOT NULL DEFAULT 0,
-  block_type TEXT NOT NULL, -- 'activation', 'elastic_prep', 'cns_primer', 'strength_output', etc.
-  is_custom BOOLEAN DEFAULT false,
-  exercises JSONB DEFAULT '[]',
-  metadata JSONB DEFAULT '{}', -- CNS contribution, fascia bias, etc.
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-```
+**Purpose:** Weekly CNS/fascial load visualization
 
-**2. workout_presets (System IP + User Presets)**
-```sql
-CREATE TABLE public.workout_presets (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID, -- NULL for system presets (Hammers IP)
-  name TEXT NOT NULL,
-  description TEXT,
-  category TEXT NOT NULL, -- 'explosive_lower', 'elastic_day', 'game_day_prime', etc.
-  difficulty TEXT, -- 'beginner', 'intermediate', 'advanced'
-  sport TEXT, -- 'baseball', 'softball', 'both'
-  preset_data JSONB NOT NULL, -- Full block structure
-  estimated_duration_minutes INTEGER,
-  cns_load_estimate INTEGER, -- 1-100
-  fascial_bias JSONB, -- { compression: 30, elastic: 50, glide: 20 }
-  is_system BOOLEAN DEFAULT false,
-  is_locked BOOLEAN DEFAULT false, -- true for Hammers IP
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
+**Features:**
+- 7-day CNS load chart using Recharts
+- Daily breakdown: workout vs running contribution
+- Current recovery debt indicator
+- Weekly average vs today comparison
+- Overlap warnings for the current day
 
-**3. athlete_load_tracking (Daily/Weekly Load)**
-```sql
-CREATE TABLE public.athlete_load_tracking (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  entry_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  cns_load_total INTEGER DEFAULT 0,
-  fascial_load JSONB DEFAULT '{"compression": 0, "elastic": 0, "glide": 0}',
-  volume_load INTEGER DEFAULT 0, -- total reps/contacts
-  intensity_avg DECIMAL(5,2),
-  recovery_debt INTEGER DEFAULT 0,
-  workout_ids UUID[] DEFAULT '{}',
-  running_ids UUID[] DEFAULT '{}',
-  overlap_warnings JSONB DEFAULT '[]',
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(user_id, entry_date)
-);
-```
-
-**4. running_sessions (Rebuilt Running Card)**
-```sql
-CREATE TABLE public.running_sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  template_id UUID REFERENCES custom_activity_templates(id) ON DELETE SET NULL,
-  
-  -- Core Fields
-  run_type TEXT NOT NULL, -- 'sprint', 'tempo', 'conditioning', 'elastic', 'accel_decel', 'curve', 'cod', 'gait'
-  intent TEXT NOT NULL, -- 'max', 'submax', 'elastic', 'technical', 'recovery'
-  title TEXT,
-  
-  -- Structure (choose one primary metric)
-  distance_value DECIMAL(10,2),
-  distance_unit TEXT, -- 'yards', 'meters', 'feet', 'miles', 'km'
-  time_goal TEXT, -- 'H:MM:SS.T' format
-  reps INTEGER,
-  contacts INTEGER, -- for advanced ground contact tracking
-  
-  -- Context Toggles
-  surface TEXT, -- 'turf', 'grass', 'dirt', 'concrete', 'sand', 'track'
-  shoe_type TEXT, -- 'barefoot', 'barefoot_shoe', 'flats', 'cross_trainer', 'cushion', 'plastic_cleat', 'metal_cleat'
-  fatigue_state TEXT, -- 'fresh', 'accumulated', 'game_day'
-  environment_notes TEXT,
-  pre_run_stiffness INTEGER, -- 1-5 scale
-  
-  -- Intervals (for structured workouts)
-  intervals JSONB DEFAULT '[]',
-  
-  -- Load Metrics (calculated)
-  cns_load INTEGER,
-  ground_contacts_total INTEGER,
-  
-  -- Metadata
-  completed BOOLEAN DEFAULT false,
-  completed_at TIMESTAMPTZ,
-  actual_time TEXT,
-  notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-```
-
-### Extended Exercise Schema (JSONB within blocks)
-
-```typescript
-interface EnhancedExercise {
-  id: string;
-  name: string;
-  type: 'strength' | 'cardio' | 'flexibility' | 'plyometric' | 'baseball' | 'core' | 'other';
-  
-  // Base Fields (Child Safe)
-  sets?: number;
-  reps?: number | string;
-  duration?: number; // seconds
-  rest?: number; // seconds
-  
-  // Advanced Fields (Hidden by default)
-  tempo?: string; // e.g., "3-1-2-0" (eccentric-pause-concentric-pause)
-  velocity_intent?: 'slow' | 'moderate' | 'fast' | 'ballistic';
-  external_load?: number;
-  load_type?: 'barbell' | 'dumbbell' | 'band' | 'bodyweight' | 'cable' | 'machine' | 'kettlebell';
-  surface?: string;
-  
-  // Fascia & CNS (Coach Mode)
-  fascia_bias?: 'compression' | 'elastic' | 'glide';
-  breathing_pattern?: string;
-  cns_demand?: 'low' | 'medium' | 'high';
-  is_unilateral?: boolean;
-  
-  // Tracking
-  weight?: number;
-  weight_unit?: 'lbs' | 'kg';
-  notes?: string;
-  video_reference?: string;
-  
-  // Warnings (system-generated)
-  pain_warning?: {
-    severity: 'moderate' | 'high';
-    message: string;
-    affectedAreas: string[];
-  };
-}
-```
+**Data source:**
+- Uses `useLoadTracking` hook
+- Queries `athlete_load_tracking` table
+- Real-time updates on workout completion
 
 ---
 
-## Phase 2: TypeScript Type Definitions
+## Phase 4: Seed Hammers IP System Presets
 
-### New Types File: `src/types/eliteWorkout.ts`
+### Database insert via migration
 
-```typescript
-// Block Types
-export type BlockType = 
-  | 'activation'
-  | 'elastic_prep' 
-  | 'cns_primer'
-  | 'strength_output'
-  | 'power_speed'
-  | 'capacity'
-  | 'skill_transfer'
-  | 'decompression'
-  | 'recovery'
-  | 'custom';
+**Presets to seed:**
 
-export type BlockIntent =
-  | 'elastic'
-  | 'max_output'
-  | 'submax_technical'
-  | 'accumulation'
-  | 'glide_restoration'
-  | 'cns_downregulation'
-  | 'custom';
+1. **Explosive Lower Day**
+   - Blocks: Activation → Elastic Prep → CNS Primer → Power/Speed → Strength Output → Decompression
+   - CNS Load Estimate: 120
+   - Fascial Bias: Compression-heavy
+   - Difficulty: Intermediate
 
-export interface WorkoutBlock {
-  id: string;
-  name: string;
-  blockType: BlockType;
-  intent: BlockIntent;
-  orderIndex: number;
-  isCustom: boolean;
-  exercises: EnhancedExercise[];
-  metadata: {
-    cnsContribution?: number; // 0-100
-    fasciaBias?: { compression: number; elastic: number; glide: number };
-    estimatedDuration?: number; // minutes
-  };
-}
+2. **Elastic Day**
+   - Blocks: Activation → Elastic Prep → Power/Speed → Skill Transfer → Recovery
+   - CNS Load Estimate: 85
+   - Fascial Bias: Elastic-heavy
+   - Difficulty: Intermediate
 
-// Running Types
-export type RunType = 
-  | 'linear_sprint' 
-  | 'tempo' 
-  | 'conditioning' 
-  | 'elastic' 
-  | 'accel_decel' 
-  | 'curve' 
-  | 'cod' 
-  | 'gait';
+3. **Game Day Prime**
+   - Blocks: Activation → CNS Primer → Skill Transfer → Decompression
+   - CNS Load Estimate: 45
+   - Fascial Bias: Balanced
+   - Difficulty: All levels
 
-export type RunIntent = 'max' | 'submax' | 'elastic' | 'technical' | 'recovery';
+4. **Fascial Recovery**
+   - Blocks: Activation → Decompression → Recovery
+   - CNS Load Estimate: 25
+   - Fascial Bias: Glide-heavy
+   - Difficulty: Beginner
 
-export interface RunningSession {
-  id: string;
-  runType: RunType;
-  intent: RunIntent;
-  title?: string;
-  distanceValue?: number;
-  distanceUnit?: 'yards' | 'meters' | 'feet' | 'miles' | 'km';
-  timeGoal?: string;
-  reps?: number;
-  contacts?: number;
-  surface?: string;
-  shoeType?: string;
-  fatigueState?: 'fresh' | 'accumulated' | 'game_day';
-  intervals?: RunningInterval[];
-  cnsLoad?: number;
-}
-
-// View Modes
-export type ViewMode = 'execute' | 'coach' | 'parent';
-
-// Load Tracking
-export interface LoadMetrics {
-  cnsLoad: number;
-  fascialLoad: { compression: number; elastic: number; glide: number };
-  volumeLoad: number;
-  recoveryDebt: number;
-}
-
-export interface OverlapWarning {
-  type: 'cns' | 'elastic' | 'load_spike' | 'recovery';
-  severity: 'advisory' | 'warning';
-  message: string;
-  suggestion?: string;
-}
-```
+Each preset includes 3-5 sample exercises per block with:
+- Sets/reps/rest
+- Velocity intent
+- Fascia bias
+- CNS demand rating
 
 ---
 
-## Phase 3: UI Components
-
-### Component Hierarchy
-
-```text
-src/components/elite-workout/
-├── blocks/
-│   ├── BlockContainer.tsx          # Drag-drop container for blocks
-│   ├── BlockCard.tsx               # Individual block with exercises
-│   ├── BlockTypeSelector.tsx       # Grid of block type options
-│   ├── BlockIntentPicker.tsx       # Intent selection with icons
-│   └── SystemBlocksLibrary.tsx     # Hammers IP preset blocks
-│
-├── exercises/
-│   ├── EnhancedExerciseCard.tsx    # Exercise with advanced fields
-│   ├── AdvancedFieldsToggle.tsx    # Toggle for tempo/velocity/fascia
-│   ├── ExerciseQuickAdd.tsx        # Rapid exercise addition
-│   └── ExercisePainWarning.tsx     # Warning badge display
-│
-├── running/
-│   ├── RunningCardBuilder.tsx      # Complete running session builder
-│   ├── RunTypeSelector.tsx         # Visual run type picker
-│   ├── IntentSelector.tsx          # Intent with descriptions
-│   ├── ContextToggles.tsx          # Surface, shoes, fatigue
-│   └── RunningExecutionView.tsx    # Big start/finish for execution
-│
-├── readiness/
-│   ├── QuickReadinessCheck.tsx     # 3-tap pre-workout check
-│   ├── ReadinessIndicator.tsx      # Visual readiness display
-│   └── ReadinessFromVault.tsx      # Import from latest Vault check-in
-│
-├── intelligence/
-│   ├── CNSLoadIndicator.tsx        # Visual CNS meter
-│   ├── OverlapWarningBanner.tsx    # Yellow advisory banners
-│   ├── AutoAdaptSuggestion.tsx     # Suggestion cards
-│   └── LoadTrendChart.tsx          # Weekly load visualization
-│
-├── presets/
-│   ├── PresetLibrary.tsx           # Browse system + user presets
-│   ├── PresetCard.tsx              # Preset preview card
-│   └── SaveAsPresetDialog.tsx      # Save current workout as preset
-│
-├── execution/
-│   ├── WorkoutExecutionMode.tsx    # Full-screen workout runner
-│   ├── BlockProgressIndicator.tsx  # Current block/exercise position
-│   └── CompletionFeedbackDialog.tsx # Post-workout feedback
-│
-└── views/
-    ├── ViewModeToggle.tsx          # Execute/Coach/Parent switcher
-    ├── ExecuteView.tsx             # Simple "do this" view
-    ├── CoachView.tsx               # Full data + trends
-    └── ParentView.tsx              # Compliance + safety focused
-```
-
----
-
-## Phase 4: Integration Points
-
-### A. Custom Activity Builder Enhancement
-
-Modify `CustomActivityBuilderDialog.tsx` to include:
-
-1. **Block System Toggle** - When activity_type is 'workout', show block builder instead of flat exercise list
-2. **Enhanced Exercise Fields** - Add collapsible advanced fields section
-3. **Running Card Rebuild** - Replace EmbeddedRunningSession with full RunningCardBuilder
-4. **View Mode Selector** - Toggle between Execute/Coach/Parent preview
-
-### B. My Activities Page Enhancement
-
-Modify `MyCustomActivities.tsx` to include:
-
-1. **Preset Library Tab** - New tab for browsing system and user presets
-2. **Load Dashboard** - Weekly CNS/load visualization
-3. **Warning Indicators** - Show overlap warnings on activity cards
-
-### C. Game Plan Integration
-
-Modify `GamePlanCard.tsx` to:
-
-1. **Display Load Metrics** - Show daily CNS total in header
-2. **Warning Banners** - Display overlap warnings
-3. **Readiness Prompt** - Offer quick check before workout tasks
-
----
-
-## Phase 5: Intelligence Engine
-
-### Load Calculation Logic
-
-```typescript
-// src/utils/loadCalculation.ts
-
-export function calculateExerciseCNS(exercise: EnhancedExercise): number {
-  let cns = 0;
-  
-  // Base by type
-  if (exercise.type === 'plyometric') cns += 40;
-  else if (exercise.type === 'strength') cns += 30;
-  else if (exercise.type === 'baseball') cns += 25;
-  else cns += 15;
-  
-  // Velocity modifier
-  if (exercise.velocity_intent === 'ballistic') cns *= 1.5;
-  else if (exercise.velocity_intent === 'fast') cns *= 1.25;
-  
-  // Volume modifier
-  const volume = (exercise.sets || 1) * (typeof exercise.reps === 'number' ? exercise.reps : 10);
-  cns += volume * 0.5;
-  
-  // Explicit CNS demand override
-  if (exercise.cns_demand === 'high') cns *= 1.3;
-  else if (exercise.cns_demand === 'low') cns *= 0.7;
-  
-  return Math.round(cns);
-}
-
-export function detectOverlaps(
-  workouts: LoadMetrics[],
-  running: LoadMetrics[],
-  date: Date
-): OverlapWarning[] {
-  const warnings: OverlapWarning[] = [];
-  const dayLoad = calculateDayLoad(workouts, running, date);
-  
-  // CNS overlap detection
-  if (dayLoad.cnsLoad > 150) {
-    warnings.push({
-      type: 'cns',
-      severity: 'warning',
-      message: 'High CNS load today - consider spacing explosive work',
-      suggestion: 'Move one high-intensity session to tomorrow'
-    });
-  }
-  
-  // Elastic overload
-  if (dayLoad.fascialLoad.elastic > 100) {
-    warnings.push({
-      type: 'elastic',
-      severity: 'advisory',
-      message: 'High elastic demand - ensure adequate warmup',
-    });
-  }
-  
-  // Load spike (compared to 7-day average)
-  const weekAvg = calculateWeekAverage(date);
-  if (dayLoad.volumeLoad > weekAvg * 1.5) {
-    warnings.push({
-      type: 'load_spike',
-      severity: 'warning',
-      message: 'Load spike detected - risk of overtraining',
-      suggestion: 'Consider reducing volume by 20%'
-    });
-  }
-  
-  return warnings;
-}
-```
-
----
-
-## Phase 6: Hammers IP System Presets
-
-### Seed Data for `workout_presets`
-
-```sql
--- Explosive Lower Day
-INSERT INTO workout_presets (name, category, difficulty, sport, is_system, is_locked, preset_data) VALUES
-('Explosive Lower', 'explosive_lower', 'intermediate', 'both', true, true, '{
-  "blocks": [
-    {"blockType": "activation", "intent": "cns_downregulation", "exercises": [...]},
-    {"blockType": "elastic_prep", "intent": "elastic", "exercises": [...]},
-    {"blockType": "power_speed", "intent": "max_output", "exercises": [...]},
-    {"blockType": "strength_output", "intent": "accumulation", "exercises": [...]},
-    {"blockType": "decompression", "intent": "glide_restoration", "exercises": [...]}
-  ]
-}'::jsonb);
-
--- Elastic Day
-INSERT INTO workout_presets (name, category, difficulty, sport, is_system, is_locked, preset_data) VALUES
-('Elastic Day', 'elastic_day', 'intermediate', 'both', true, true, '...');
-
--- Game Day Prime
-INSERT INTO workout_presets (name, category, difficulty, sport, is_system, is_locked, preset_data) VALUES
-('Game Day Prime', 'game_day_prime', 'all', 'both', true, true, '...');
-
--- Fascial Recovery
-INSERT INTO workout_presets (name, category, difficulty, sport, is_system, is_locked, preset_data) VALUES
-('Fascial Recovery', 'fascial_recovery', 'beginner', 'both', true, true, '...');
-```
-
----
-
-## Phase 7: Edge Functions
+## Phase 5: Edge Functions for Load Calculation
 
 ### 1. `calculate-load` Edge Function
 
-Calculates and stores daily load metrics after workout completion.
+**Purpose:** Calculate and store daily load metrics after workout/running completion
+
+**Endpoint:** POST `/functions/v1/calculate-load`
+
+**Input:**
+```json
+{
+  "workout_blocks": [...],
+  "running_sessions": [...],
+  "entry_date": "2026-02-05"
+}
+```
+
+**Logic:**
+- Uses same algorithms as `loadCalculation.ts`
+- Calculates CNS total, fascial bias, volume
+- Upserts into `athlete_load_tracking` table
+- Returns updated metrics and any warnings
 
 ### 2. `detect-overlaps` Edge Function
 
-Analyzes upcoming schedule for potential overlap warnings.
+**Purpose:** Analyze upcoming schedule for potential issues
+
+**Endpoint:** POST `/functions/v1/detect-overlaps`
+
+**Input:**
+```json
+{
+  "target_date": "2026-02-06",
+  "planned_activities": [...]
+}
+```
+
+**Logic:**
+- Fetches recent load history (7 days)
+- Compares planned load vs average
+- Detects CNS overlap, elastic overload, load spikes
+- Returns array of `OverlapWarning` objects
 
 ### 3. `suggest-adaptation` Edge Function
 
-AI-powered suggestions for workout modifications based on recovery context.
+**Purpose:** AI-powered workout modification suggestions
+
+**Endpoint:** POST `/functions/v1/suggest-adaptation`
+
+**Input:**
+```json
+{
+  "readiness_score": 65,
+  "pain_areas": ["lower back"],
+  "planned_workout": {...}
+}
+```
+
+**Logic:**
+- Uses Lovable AI (Gemini) for intelligent suggestions
+- Analyzes readiness + pain + planned load
+- Returns adaptation suggestions with priorities
 
 ---
 
-## Phase 8: Internationalization
+## Phase 6: i18n Translations (All 8 Languages)
 
-Add translation keys to all 8 language files:
+### Add `eliteWorkout` namespace to all locale files
+
+**Keys to add:**
 
 ```json
 {
   "eliteWorkout": {
+    "title": "Elite Workout",
     "blocks": {
+      "title": "Workout Blocks",
+      "count": "blocks",
       "activation": "Activation",
       "elastic_prep": "Elastic Prep",
       "cns_primer": "CNS Primer",
@@ -509,7 +207,8 @@ Add translation keys to all 8 language files:
       "capacity": "Capacity",
       "skill_transfer": "Skill Transfer",
       "decompression": "Decompression",
-      "recovery": "Recovery"
+      "recovery": "Recovery",
+      "custom": "Custom Block"
     },
     "intent": {
       "elastic": "Elastic/Bounce",
@@ -517,9 +216,11 @@ Add translation keys to all 8 language files:
       "submax_technical": "Submax Technical",
       "accumulation": "Accumulation",
       "glide_restoration": "Glide Restoration",
-      "cns_downregulation": "CNS Downregulation"
+      "cns_downregulation": "CNS Downregulation",
+      "custom": "Custom"
     },
     "running": {
+      "title": "Running Session",
       "types": {
         "linear_sprint": "Sprint",
         "tempo": "Tempo",
@@ -529,63 +230,213 @@ Add translation keys to all 8 language files:
         "curve": "Curve Run",
         "cod": "Change of Direction",
         "gait": "Gait Work"
-      }
+      },
+      "intent": {
+        "max": "Max Intent",
+        "submax": "Submax",
+        "elastic": "Elastic",
+        "technical": "Technical",
+        "recovery": "Recovery"
+      },
+      "surface": "Surface",
+      "shoeType": "Shoe Type",
+      "fatigueState": "Fatigue State",
+      "contacts": "Ground Contacts"
     },
     "viewModes": {
       "execute": "Do It",
       "coach": "Full Data",
-      "parent": "Overview"
+      "parent": "Overview",
+      "switchMode": "Switch View"
+    },
+    "load": {
+      "cns": "CNS Load",
+      "fascial": "Fascial Bias",
+      "compression": "Compression",
+      "elastic": "Elastic",
+      "glide": "Glide",
+      "volume": "Volume",
+      "recoveryDebt": "Recovery Debt"
     },
     "warnings": {
       "cns_overlap": "High CNS load detected",
       "load_spike": "Load spike - take it easy",
-      "elastic_overload": "Lots of jumping today"
+      "elastic_overload": "Lots of jumping today",
+      "recovery_needed": "Recovery day recommended"
+    },
+    "presets": {
+      "title": "Elite Presets",
+      "systemPresets": "Hammers Presets",
+      "myPresets": "My Presets",
+      "usePreset": "Use This Preset",
+      "locked": "Locked",
+      "difficulty": "Difficulty",
+      "duration": "Duration",
+      "cnsLoad": "CNS Load"
+    },
+    "addBlock": "Add Block",
+    "addExercise": "Add Exercise",
+    "chooseBlockType": "Choose Block Type",
+    "noBlocks": "No blocks yet",
+    "noBlocksDescription": "Add blocks to structure your workout. Each block groups exercises by purpose.",
+    "addFirstBlock": "Add Your First Block",
+    "noExercises": "No exercises yet",
+    "readiness": {
+      "title": "Quick Readiness Check",
+      "sleep": "Sleep Quality",
+      "energy": "Energy Level",
+      "soreness": "Soreness",
+      "skip": "Skip Check",
+      "continue": "Continue"
+    },
+    "advanced": {
+      "title": "Advanced Settings",
+      "tempo": "Tempo",
+      "velocity": "Velocity Intent",
+      "fasciaBias": "Fascia Bias",
+      "cnsDemand": "CNS Demand",
+      "loadType": "Load Type"
     }
   }
 }
 ```
 
+**Languages to update:**
+- `en.json` (English)
+- `es.json` (Spanish)
+- `fr.json` (French)
+- `de.json` (German)
+- `ja.json` (Japanese)
+- `zh.json` (Chinese)
+- `nl.json` (Dutch)
+- `ko.json` (Korean)
+
+---
+
+## Phase 7: Integration Points
+
+### A. Game Plan Integration
+
+**Modify `GamePlanCard.tsx`:**
+- Show daily CNS total in header badge
+- Display overlap warning banners when detected
+- Add quick readiness check prompt before starting workout tasks
+
+### B. Vault Integration
+
+**Modify Readiness System:**
+- `ReadinessFromVault.tsx` component fetches latest Vault check-in data
+- Pre-populates readiness layer with sleep quality, stress, pain areas
+- Enables smarter adaptation suggestions
+
+### C. Template Sharing
+
+**Ensure block data flows through:**
+- `SendToPlayerDialog` already snapshots full template
+- Block data included in `template_snapshot` JSONB
+- Recipients see full block structure when accepting
+- Locked fields apply to block-level edits
+
 ---
 
 ## File Changes Summary
 
-| Category | Files | Action |
-|----------|-------|--------|
-| Database | 4 new tables + migrations | Create |
-| Types | `src/types/eliteWorkout.ts` | Create |
-| Components | 25+ new components in `src/components/elite-workout/` | Create |
-| Hooks | `useEliteWorkout.ts`, `useLoadTracking.ts`, `useOverlapDetection.ts` | Create |
-| Existing | `CustomActivityBuilderDialog.tsx` | Modify |
-| Existing | `MyCustomActivities.tsx` | Modify |
-| Existing | `GamePlanCard.tsx` | Modify |
-| Existing | `ExerciseBuilder.tsx` | Modify |
-| Existing | `DragDropExerciseBuilder.tsx` | Modify |
-| Edge Functions | `calculate-load`, `detect-overlaps`, `suggest-adaptation` | Create |
-| i18n | All 8 language files | Modify |
+| Category | File | Action |
+|----------|------|--------|
+| **Builder** | `CustomActivityBuilderDialog.tsx` | Modify - add block system, view modes |
+| **My Activities** | `MyCustomActivities.tsx` | Modify - add Elite Presets tab, Load Dashboard |
+| **New Components** | `PresetLibrary.tsx` | Create |
+| **New Components** | `PresetCard.tsx` | Create |
+| **New Components** | `LoadDashboard.tsx` | Create |
+| **New Components** | `ReadinessFromVault.tsx` | Create |
+| **Existing Elite** | `BlockContainer.tsx` | Enhance - add preset loading |
+| **Edge Functions** | `calculate-load/index.ts` | Create |
+| **Edge Functions** | `detect-overlaps/index.ts` | Create |
+| **Edge Functions** | `suggest-adaptation/index.ts` | Create |
+| **Config** | `supabase/config.toml` | Modify - add new functions |
+| **i18n** | All 8 locale files | Modify - add eliteWorkout namespace |
+| **Database** | Migration for preset seed data | Create |
+| **Hooks** | `useWorkoutPresets.ts` | Create |
 
 ---
 
-## Kid-Friendly UX Principles
+## Technical Details
 
-Throughout implementation:
+### Block Data Storage in Custom Activities
 
-1. **Default Simple** - Advanced fields hidden until toggled
-2. **Big Tap Targets** - All buttons minimum 44x44px
-3. **Visual Progress** - Clear indicators of where they are in workout
-4. **Encouraging Language** - "Great job!" not "Exercise completed"
-5. **No Cognitive Load** - "What's next?" always obvious
-6. **Soft Guardrails** - Warnings never block, only inform
-7. **Sport-Colored** - Baseball orange, softball pink theming continues
+**Field:** `exercises` JSONB column in `custom_activity_templates`
+
+**Structure when using blocks:**
+```json
+{
+  "_useBlocks": true,
+  "blocks": [
+    {
+      "id": "block-123",
+      "name": "Activation",
+      "blockType": "activation",
+      "intent": "submax_technical",
+      "exercises": [...]
+    }
+  ]
+}
+```
+
+**Backward compatibility:**
+- If `_useBlocks` is not present or false, treat as flat exercise array
+- Migration path: existing templates continue working as-is
+- Users can upgrade to blocks by editing template
+
+### Running Session Storage
+
+**Field:** `embedded_running_sessions` JSONB column
+
+**Structure with new fields:**
+```json
+[
+  {
+    "id": "run-123",
+    "runType": "linear_sprint",
+    "intent": "max",
+    "distanceValue": 40,
+    "distanceUnit": "yards",
+    "reps": 6,
+    "surface": "turf",
+    "shoeType": "plastic_cleat",
+    "fatigueState": "fresh"
+  }
+]
+```
+
+---
+
+## Coach/Scout Flow Verification
+
+### Unchanged Workflows:
+
+1. **Creating activities** - Coaches create templates normally, now with blocks
+2. **Sending to players** - `SendToPlayerDialog` snapshots include block data
+3. **Player receiving** - `ReceivedActivitiesList` displays block-based workouts
+4. **Locked fields** - Apply at block and exercise level
+5. **Acceptance flow** - Player can accept/customize within lock constraints
+
+### Testing Points:
+
+- Coach creates block-based workout → sends to player → player accepts
+- Locked 'exercises' field prevents block modification
+- Preset usage flows from library to builder to player
 
 ---
 
 ## Success Criteria
 
-1. A 5-year-old can start and complete a workout without help
-2. MLB-level athletes have access to CNS/fascial tracking
-3. Coaches can see full system visibility with one toggle
-4. Parents can monitor compliance without complexity
-5. Zero overlap errors or database constraint violations
-6. Full 8-language support
-7. No performance degradation on mobile
+1. ✅ Coaches can create and send block-based workouts
+2. ✅ Players receive and execute workouts with full block structure
+3. ✅ View mode toggle works in Execute/Coach/Parent modes
+4. ✅ CNS load displays correctly in Coach mode
+5. ✅ Preset library loads and applies presets
+6. ✅ Edge functions calculate and store load metrics
+7. ✅ All 8 languages have complete translations
+8. ✅ No regression in existing custom activity workflows
+9. ✅ Mobile-responsive across all new components
 
