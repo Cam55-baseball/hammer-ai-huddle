@@ -1520,8 +1520,10 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                                     </div>
                                   )}
                                   
-                                  {/* Main countdown display */}
-                                  {!autoRecordPaused && !(analysisEnabled && isAnalyzing) && (
+                                  {/* Main countdown display - shows PAUSED when paused */}
+                                  {autoRecordPaused ? (
+                                    <p className="text-2xl font-bold text-yellow-300 mb-2 animate-pulse">PAUSED</p>
+                                  ) : !(analysisEnabled && isAnalyzing) && (
                                     <p className="text-lg text-white mb-2">{t('realTimePlayback.nextRecordingIn', 'Next recording in...')}</p>
                                   )}
                                   
@@ -1538,9 +1540,12 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                                   <div className="mt-6 flex flex-wrap gap-3 justify-center">
                                     {/* Pause/Resume button */}
                                     <Button
-                                      variant="outline"
+                                      variant={autoRecordPaused ? "default" : "outline"}
                                       onClick={handleToggleAutoRecordPause}
-                                      className="bg-white/10 border-white/30 text-white hover:bg-white/20 gap-2"
+                                      className={autoRecordPaused 
+                                        ? "bg-primary hover:bg-primary/90 text-primary-foreground gap-2 animate-pulse font-semibold"
+                                        : "bg-white/10 border-white/30 text-white hover:bg-white/20 gap-2"
+                                      }
                                     >
                                       {autoRecordPaused ? (
                                         <>
@@ -1798,17 +1803,17 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
 
                         {/* Feature Toggles */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {/* AI Analysis Toggle */}
+                          {/* Hammer Analysis Toggle */}
                           <Card className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                <Brain className="h-5 w-5 text-primary" />
+                                <Sparkles className="h-5 w-5 text-primary" />
                                 <div>
                                   <Label htmlFor="analysis-toggle" className="font-medium">
-                                    {t('realTimePlayback.aiAnalysis', 'AI Analysis')}
+                                    {t('realTimePlayback.aiAnalysis', 'Hammer Analysis')}
                                   </Label>
                                   <p className="text-xs text-muted-foreground">
-                                    {t('realTimePlayback.aiAnalysisDescription', 'Get AI-powered feedback on your form')}
+                                    {t('realTimePlayback.aiAnalysisDescription', 'Get expert coaching feedback on your mechanics')}
                                   </p>
                                 </div>
                               </div>
@@ -2025,7 +2030,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                               )}
                               {analysisStatus === 'failed' && <AlertCircle className="h-3 w-3" />}
                               {analysisStatus === 'skipped-local' && <WifiOff className="h-3 w-3" />}
-                              {analysisStatus === 'skipped-disabled' && <Brain className="h-3 w-3" />}
+                              {analysisStatus === 'skipped-disabled' && <Sparkles className="h-3 w-3" />}
                               <span className="truncate max-w-[80px]">
                                 {analysisStatus === 'uploading' && t('realTimePlayback.uploading', 'Uploading')}
                                 {analysisStatus === 'extracting' && t('realTimePlayback.extracting', 'Extracting')}
@@ -2222,12 +2227,15 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                           
                           {/* Control Buttons */}
                           <div className="flex gap-2 flex-wrap justify-center">
-                            {/* Pause/Resume button */}
+                            {/* Pause/Resume button - enhanced styling when paused */}
                             <Button 
                               onClick={handleToggleAutoRecordPause} 
-                              variant="outline" 
+                              variant={autoRecordPaused ? "default" : "outline"}
                               size="sm"
-                              className="gap-2"
+                              className={autoRecordPaused 
+                                ? "gap-2 bg-primary hover:bg-primary/90 text-primary-foreground animate-pulse" 
+                                : "gap-2"
+                              }
                             >
                               {autoRecordPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
                               {autoRecordPaused 
@@ -2627,11 +2635,11 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                     ) : (
                       <Card className="p-4 border-muted bg-muted/30">
                         <div className="flex items-center gap-3 text-muted-foreground">
-                          <Brain className="h-5 w-5" />
+                          <Sparkles className="h-5 w-5" />
                           <p className="text-sm">
                             {localOnlyMode 
                               ? t('realTimePlayback.localOnlyNote', 'Local only mode - video will be uploaded when you save to library.')
-                              : t('realTimePlayback.analysisDisabled', 'AI analysis is turned off. Your video has been saved.')
+                              : t('realTimePlayback.analysisDisabled', 'Hammer Analysis is turned off. Your video has been saved.')
                             }
                           </p>
                         </div>
