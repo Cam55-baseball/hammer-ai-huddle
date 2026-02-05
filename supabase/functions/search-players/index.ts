@@ -61,6 +61,7 @@ serve(async (req) => {
       mlbAffiliate,
       independentLeague,
       isForeignPlayer,
+      sport,
     } = await req.json();
 
     // Helper to parse height strings like "6'2"" to inches
@@ -87,7 +88,8 @@ serve(async (req) => {
       (typeof isProfessional === 'boolean') ||
       (typeof isFreeAgent === 'boolean') ||
       mlbAffiliate || independentLeague ||
-      (typeof isForeignPlayer === 'boolean');
+      (typeof isForeignPlayer === 'boolean') ||
+      (sport === 'baseball' || sport === 'softball');
 
     // If no query and no filters, return empty
     if ((!query || query.trim().length < 2) && !hasFilters) {
@@ -236,6 +238,26 @@ serve(async (req) => {
         if (maxPounds && weightPounds > maxPounds) return false;
         return true;
       });
+    }
+
+    // Apply sport filter by checking subscriptions
+    if (sport && (sport === 'baseball' || sport === 'softball')) {
+      const profileIds = filteredProfiles.map(p => p.id);
+      if (profileIds.length > 0) {
+        const { data: subs } = await supabaseAdmin
+          .from('subscriptions')
+          .select('user_id, subscribed_modules')
+          .in('user_id', profileIds);
+
+        const sportPrefix = sport + '_';
+        const matchingUserIds = new Set(
+          subs?.filter(s => 
+            s.subscribed_modules?.some((m: string) => m.startsWith(sportPrefix))
+          ).map(s => s.user_id) || []
+        );
+
+        filteredProfiles = filteredProfiles.filter(p => matchingUserIds.has(p.id));
+      }
     }
 
     const results = filteredProfiles.map(profile => ({

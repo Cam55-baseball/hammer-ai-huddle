@@ -29,6 +29,7 @@ interface FilterState {
   mlbAffiliate: string;
   independentLeague: string;
   isForeignPlayer: boolean | null;
+  sportPreference: 'baseball' | 'softball' | null;
 }
 
 interface PlayerSearchFiltersProps {
@@ -84,6 +85,7 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
     if (filters.mlbAffiliate) count++;
     if (filters.independentLeague) count++;
     if (filters.isForeignPlayer !== null) count++;
+    if (filters.sportPreference !== null) count++;
     return count;
   };
 
@@ -122,6 +124,28 @@ export function PlayerSearchFilters({ filters, sportFilter, onFilterChange, onCl
 
       <CollapsibleContent className="mt-4">
         <div className="space-y-6 rounded-lg border border-border bg-card p-4">
+          {/* Sport Preference */}
+          <div>
+            <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.sport')}</Label>
+            <Select
+              value={filters.sportPreference || ""}
+              onValueChange={(value) =>
+                onFilterChange({
+                  ...filters,
+                  sportPreference: value === "" ? null : value as 'baseball' | 'softball',
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('playerFilters.any')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="baseball">{t('dashboard.baseball')}</SelectItem>
+                <SelectItem value="softball">{t('dashboard.softball')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Position */}
           <div>
             <Label className="text-sm font-semibold mb-2 block">{t('playerFilters.primaryPosition')}</Label>
