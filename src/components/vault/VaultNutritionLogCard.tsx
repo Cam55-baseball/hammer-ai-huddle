@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie, Zap, Dumbbell, Trash2, Clock, Settings, Flame, FlameKindling, AlertTriangle, Heart, Star, Lightbulb, Check } from 'lucide-react';
+import { Apple, Droplets, Pill, ChevronDown, CheckCircle, Plus, X, Coffee, Salad, UtensilsCrossed, Cookie, Zap, Dumbbell, Trash2, Clock, Settings, Flame, FlameKindling, AlertTriangle, Heart, Star, Lightbulb, Check, Loader2, Sparkles, Database } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { VaultFavoriteMeal } from '@/hooks/useVault';
+import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
 
 interface NutritionLog {
   id: string;
@@ -124,6 +125,10 @@ export function VaultNutritionLogCard({
   const [supplements, setSupplements] = useState<string[]>([]);
   const [newSupplement, setNewSupplement] = useState('');
   
+  // Smart food lookup
+  const { status: lookupStatus, result: lookupResult, error: lookupError, trigger: triggerLookup, clear: clearLookup } = useSmartFoodLookup();
+  const touchedFields = useRef<Set<string>>(new Set());
+  
   // Favorite meal name
   const [favoriteMealName, setFavoriteMealName] = useState('');
 
@@ -148,6 +153,41 @@ export function VaultNutritionLogCard({
       setGoalSupplements(goals.supplement_goals || []);
     }
   }, [goals]);
+
+  // Trigger smart lookup when meal title changes
+  useEffect(() => {
+    if (mealTitle.length >= 3) {
+      triggerLookup(mealTitle);
+    } else {
+      clearLookup();
+    }
+  }, [mealTitle, triggerLookup, clearLookup]);
+
+  // Auto-fill macros when lookup result arrives (only untouched fields)
+  useEffect(() => {
+    if (lookupResult && lookupStatus === 'ready') {
+      const { totals } = lookupResult;
+      if (!touchedFields.current.has('calories') && totals.calories > 0) {
+        setCalories(Math.round(totals.calories).toString());
+      }
+      if (!touchedFields.current.has('protein') && totals.protein_g > 0) {
+        setProtein(Math.round(totals.protein_g).toString());
+      }
+      if (!touchedFields.current.has('carbs') && totals.carbs_g > 0) {
+        setCarbs(Math.round(totals.carbs_g).toString());
+      }
+      if (!touchedFields.current.has('fats') && totals.fats_g > 0) {
+        setFats(Math.round(totals.fats_g).toString());
+      }
+    }
+  }, [lookupResult, lookupStatus]);
+
+  // Show toast for lookup errors
+  useEffect(() => {
+    if (lookupError) {
+      toast.error(lookupError);
+    }
+  }, [lookupError]);
 
   // Calculate daily totals
   const dailyTotals = useMemo(() => {
@@ -179,6 +219,13 @@ export function VaultNutritionLogCard({
     return 'bg-destructive';
   };
 
+  const handleMacroChange = (field: string, value: string, setter: (v: string) => void) => {
+    setter(value);
+    if (value) {
+      touchedFields.current.add(field);
+    }
+  };
+
   const resetForm = () => {
     setMealType('');
     setMealTitle('');
@@ -191,6 +238,8 @@ export function VaultNutritionLogCard({
     setDigestionNotes('');
     setSupplements([]);
     setNewSupplement('');
+    touchedFields.current.clear();
+    clearLookup();
   };
 
   const applyPreset = (preset: typeof MACRO_PRESETS[0]) => {
@@ -594,7 +643,7 @@ export function VaultNutritionLogCard({
               </ToggleGroup>
             </div>
 
-            {/* Meal Title */}
+            {/* What did you eat? with Smart Lookup */}
             <div className="space-y-1">
               <Label className="text-xs">{t('vault.nutrition.mealTitle')}</Label>
               <Input
@@ -603,6 +652,34 @@ export function VaultNutritionLogCard({
                 placeholder={t('vault.nutrition.mealTitlePlaceholder')}
                 className="h-9"
               />
+              <div className="min-h-[20px]">
+                {(lookupStatus === 'searching_db' || lookupStatus === 'calling_ai') && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>{lookupStatus === 'searching_db' ? t('common.searching') : t('smartFood.aiAnalyzing')}</span>
+                  </div>
+                )}
+                {lookupStatus === 'ready' && lookupResult && (
+                  <div className="flex items-center gap-2">
+                    {lookupResult.source === 'database' ? (
+                      <Badge variant="secondary" className="text-xs gap-1">
+                        <Database className="h-3 w-3" />
+                        {t('smartFood.matchedDatabase')}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        {t('smartFood.aiEstimate')} • {lookupResult.confidenceSummary} {t('smartFood.confidence')}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                {lookupStatus === 'error' && (
+                  <div className="text-xs text-muted-foreground">
+                    {t('smartFood.enterManually')}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Macros */}
@@ -612,7 +689,7 @@ export function VaultNutritionLogCard({
                 <Input
                   type="number"
                   value={calories}
-                  onChange={(e) => setCalories(e.target.value)}
+                  onChange={(e) => handleMacroChange('calories', e.target.value, setCalories)}
                   placeholder="2000"
                   className="h-9"
                 />
@@ -622,7 +699,7 @@ export function VaultNutritionLogCard({
                 <Input
                   type="number"
                   value={protein}
-                  onChange={(e) => setProtein(e.target.value)}
+                  onChange={(e) => handleMacroChange('protein', e.target.value, setProtein)}
                   placeholder="150g"
                   className="h-9"
                 />
@@ -632,7 +709,7 @@ export function VaultNutritionLogCard({
                 <Input
                   type="number"
                   value={carbs}
-                  onChange={(e) => setCarbs(e.target.value)}
+                  onChange={(e) => handleMacroChange('carbs', e.target.value, setCarbs)}
                   placeholder="250g"
                   className="h-9"
                 />
@@ -642,7 +719,7 @@ export function VaultNutritionLogCard({
                 <Input
                   type="number"
                   value={fats}
-                  onChange={(e) => setFats(e.target.value)}
+                  onChange={(e) => handleMacroChange('fats', e.target.value, setFats)}
                   placeholder="70g"
                   className="h-9"
                 />
