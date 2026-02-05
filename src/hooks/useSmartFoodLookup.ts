@@ -19,6 +19,7 @@ export interface SmartFoodResult {
     protein_g: number;
     carbs_g: number;
     fats_g: number;
+    hydration_oz: number;
   };
   source: 'database' | 'ai';
   confidenceSummary?: 'high' | 'medium' | 'low';
@@ -144,6 +145,7 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
               protein_g: bestMatch.protein_g || 0,
               carbs_g: bestMatch.carbs_g || 0,
               fats_g: bestMatch.fats_g || 0,
+              hydration_oz: 0,
             },
             source: 'database',
             confidenceSummary: 'high',
@@ -199,7 +201,7 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
 
         const aiResult: SmartFoodResult = {
           foods: data.foods || [],
-          totals: data.totals || { calories: 0, protein_g: 0, carbs_g: 0, fats_g: 0 },
+          totals: data.totals || { calories: 0, protein_g: 0, carbs_g: 0, fats_g: 0, hydration_oz: 0 },
           source: 'ai',
           confidenceSummary,
           mealDescription: data.mealDescription,

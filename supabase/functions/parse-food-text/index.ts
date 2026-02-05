@@ -50,7 +50,8 @@ Deno.serve(async (req) => {
             content: `You are a nutrition expert. Parse food descriptions and return accurate nutritional estimates.
 Use USDA standard values. For compound foods, break them into individual items.
 Be conservative with estimates - use typical serving sizes unless specified.
-Confidence levels: "high" for common foods with known values, "medium" for estimates, "low" for unusual items.`,
+Confidence levels: "high" for common foods with known values, "medium" for estimates, "low" for unusual items.
+For beverages (water, juice, coffee, tea, milk, soda, etc.), estimate fluid ounces. One glass = 8oz, one bottle = 16oz.`,
           },
           {
             role: "user",
@@ -92,8 +93,9 @@ Confidence levels: "high" for common foods with known values, "medium" for estim
                       protein_g: { type: "number" },
                       carbs_g: { type: "number" },
                       fats_g: { type: "number" },
+                      hydration_oz: { type: "number", description: "Total fluid ounces if beverages mentioned (water, juice, coffee, tea, milk, soda, etc.)" },
                     },
-                    required: ["calories", "protein_g", "carbs_g", "fats_g"],
+                    required: ["calories", "protein_g", "carbs_g", "fats_g", "hydration_oz"],
                   },
                   mealDescription: { type: "string", description: "Brief description of the meal" },
                 },

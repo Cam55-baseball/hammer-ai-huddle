@@ -84,6 +84,9 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
       if (!touchedFields.current.has('fats') && totals.fats_g > 0) {
         setFats(Math.round(totals.fats_g).toString());
       }
+      if (!touchedFields.current.has('hydration') && totals.hydration_oz > 0) {
+        setHydration(Math.round(totals.hydration_oz).toString());
+      }
     }
   }, [lookupResult, lookupStatus]);
 
@@ -171,7 +174,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
       return (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Loader2 className="h-3 w-3 animate-spin" />
-          <span>{lookupStatus === 'searching_db' ? 'Searching...' : 'AI analyzing...'}</span>
+          <span>{lookupStatus === 'searching_db' ? t('common.searching') : t('vault.smartFood.aiAnalyzing')}</span>
         </div>
       );
     }
@@ -182,12 +185,12 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
           {lookupResult.source === 'database' ? (
             <Badge variant="secondary" className="text-xs gap-1">
               <Database className="h-3 w-3" />
-              Matched food database
+              {t('vault.smartFood.matchedDatabase')}
             </Badge>
           ) : (
             <Badge variant="outline" className="text-xs gap-1">
               <Sparkles className="h-3 w-3" />
-              AI estimate • {lookupResult.confidenceSummary} confidence
+              {t('vault.smartFood.aiEstimate')} • {t(`vault.smartFood.${lookupResult.confidenceSummary}`)} {t('vault.smartFood.confidence')}
             </Badge>
           )}
         </div>
@@ -197,7 +200,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
     if (lookupStatus === 'error') {
       return (
         <div className="text-xs text-muted-foreground">
-          Enter values manually
+          {t('vault.smartFood.enterManually')}
         </div>
       );
     }
@@ -338,7 +341,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
               type="number"
               placeholder="0"
               value={hydration}
-              onChange={(e) => setHydration(e.target.value)}
+              onChange={(e) => handleMacroChange('hydration', e.target.value, setHydration)}
               className="h-9"
             />
           </div>

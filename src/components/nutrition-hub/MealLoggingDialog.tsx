@@ -84,6 +84,7 @@ export function MealLoggingDialog({
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fats, setFats] = useState('');
+  const [hydration, setHydration] = useState('');
   
   // Detailed entry state (MealBuilder)
   const [mealData, setMealData] = useState<MealData>(() => {
@@ -155,6 +156,9 @@ export function MealLoggingDialog({
       if (!touchedFields.current.has('fats') && totals.fats_g > 0) {
         setFats(Math.round(totals.fats_g).toString());
       }
+      if (!touchedFields.current.has('hydration') && totals.hydration_oz > 0) {
+        setHydration(Math.round(totals.hydration_oz).toString());
+      }
     }
   }, [lookupResult, lookupStatus, mode]);
 
@@ -173,6 +177,7 @@ export function MealLoggingDialog({
     setProtein('');
     setCarbs('');
     setFats('');
+    setHydration('');
     setMealData(getDefaultMealData());
     setMode('quick');
     touchedFields.current.clear();
@@ -311,7 +316,7 @@ export function MealLoggingDialog({
       return (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Loader2 className="h-3 w-3 animate-spin" />
-          <span>{lookupStatus === 'searching_db' ? 'Searching...' : 'AI analyzing...'}</span>
+          <span>{lookupStatus === 'searching_db' ? t('common.searching') : t('vault.smartFood.aiAnalyzing')}</span>
         </div>
       );
     }
@@ -323,12 +328,12 @@ export function MealLoggingDialog({
             {lookupResult.source === 'database' ? (
               <Badge variant="secondary" className="text-xs gap-1">
                 <Database className="h-3 w-3" />
-                Matched food database
+                {t('vault.smartFood.matchedDatabase')}
               </Badge>
             ) : (
               <Badge variant="outline" className="text-xs gap-1">
                 <Sparkles className="h-3 w-3" />
-                AI estimate • {lookupResult.confidenceSummary} confidence
+                {t('vault.smartFood.aiEstimate')} • {t(`vault.smartFood.${lookupResult.confidenceSummary}`)} {t('vault.smartFood.confidence')}
               </Badge>
             )}
           </div>
@@ -343,7 +348,7 @@ export function MealLoggingDialog({
               className="text-xs h-7 gap-1 justify-start px-0 text-primary hover:text-primary/80"
             >
               <ArrowRight className="h-3 w-3" />
-              Use detailed breakdown ({lookupResult.foods.length} items)
+              {t('nutritionHub.useDetailedBreakdown', { count: lookupResult.foods.length })}
             </Button>
           )}
         </div>
@@ -353,7 +358,7 @@ export function MealLoggingDialog({
     if (lookupStatus === 'error') {
       return (
         <div className="text-xs text-muted-foreground">
-          Enter values manually
+          {t('vault.smartFood.enterManually')}
         </div>
       );
     }
