@@ -24,6 +24,7 @@ export interface SmartFoodResult {
   source: 'database' | 'ai';
   confidenceSummary?: 'high' | 'medium' | 'low';
   mealDescription?: string;
+  suggestedMealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'hydration';
 }
 
 export type SmartFoodStatus = 'idle' | 'searching_db' | 'calling_ai' | 'ready' | 'error';
@@ -39,6 +40,11 @@ interface UseSmartFoodLookupReturn {
 const DB_MATCH_THRESHOLD = 0.6;
 const DEBOUNCE_MS = 800;
 const resultCache = new Map<string, SmartFoodResult>();
+
+// Sanitize query for safe PostgREST ilike search
+function sanitizeForDbQuery(input: string): string {
+  return input.replace(/[%,*()'"]/g, ' ').replace(/\s+/g, ' ').trim();
+}
 
 function calculateSimilarity(query: string, target: string): number {
   const q = query.toLowerCase().trim();
@@ -97,10 +103,13 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
         // Phase 1: Search local database
         setStatus('searching_db');
         
+        // Sanitize for safe PostgREST query (removes commas, %, etc.)
+        const sanitized = sanitizeForDbQuery(trimmed);
+        
         const { data: dbResults, error: dbError } = await supabase
           .from('nutrition_food_database')
           .select('*')
-          .or(`name.ilike.%${trimmed}%,brand.ilike.%${trimmed}%`)
+          .or(`name.ilike.%${sanitized}%,brand.ilike.%${sanitized}%`)
           .limit(10);
 
         if (dbError) {
@@ -205,6 +214,7 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
           source: 'ai',
           confidenceSummary,
           mealDescription: data.mealDescription,
+          suggestedMealType: data.suggested_meal_type,
         };
 
         resultCache.set(cacheKey, aiResult);

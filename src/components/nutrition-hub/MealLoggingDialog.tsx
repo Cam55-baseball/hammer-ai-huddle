@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Zap, List, Sparkles, Database, ArrowRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Loader2, Zap, List, Sparkles, Database, ArrowRight, ChevronDown } from 'lucide-react';
 import { MealBuilder } from '@/components/custom-activities/MealBuilder';
 import { useMealVaultSync } from '@/hooks/useMealVaultSync';
 import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
@@ -139,24 +140,25 @@ export function MealLoggingDialog({
     }
   }, [mealTitle, mode, triggerLookup, clearLookup]);
 
-  // Auto-fill macros when lookup result arrives (only untouched fields)
+  // Auto-fill macros when lookup result arrives (only untouched fields, including zeros)
   useEffect(() => {
     if (lookupResult && lookupStatus === 'ready' && mode === 'quick') {
       const { totals } = lookupResult;
       
-      if (!touchedFields.current.has('calories') && totals.calories > 0) {
+      // Auto-fill all macro fields including zeros
+      if (!touchedFields.current.has('calories') && typeof totals.calories === 'number') {
         setCalories(Math.round(totals.calories).toString());
       }
-      if (!touchedFields.current.has('protein') && totals.protein_g > 0) {
+      if (!touchedFields.current.has('protein') && typeof totals.protein_g === 'number') {
         setProtein(Math.round(totals.protein_g).toString());
       }
-      if (!touchedFields.current.has('carbs') && totals.carbs_g > 0) {
+      if (!touchedFields.current.has('carbs') && typeof totals.carbs_g === 'number') {
         setCarbs(Math.round(totals.carbs_g).toString());
       }
-      if (!touchedFields.current.has('fats') && totals.fats_g > 0) {
+      if (!touchedFields.current.has('fats') && typeof totals.fats_g === 'number') {
         setFats(Math.round(totals.fats_g).toString());
       }
-      if (!touchedFields.current.has('hydration') && totals.hydration_oz > 0) {
+      if (!touchedFields.current.has('hydration') && typeof totals.hydration_oz === 'number') {
         setHydration(Math.round(totals.hydration_oz).toString());
       }
     }
@@ -337,6 +339,25 @@ export function MealLoggingDialog({
               </Badge>
             )}
           </div>
+          
+          {/* Recognized Foods Preview */}
+          {lookupResult.foods && lookupResult.foods.length > 0 && (
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronDown className="h-3 w-3" />
+                {t('vault.smartFood.recognizedFoods')} ({lookupResult.foods.length})
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <div className="space-y-1 pl-4 border-l-2 border-muted">
+                  {lookupResult.foods.map((food, idx) => (
+                    <div key={idx} className="text-xs text-muted-foreground">
+                      • {food.name} ({food.quantity} {food.unit}) - {food.calories} {t('vault.smartFood.calories')}
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
           
           {/* Show "Use detailed breakdown" button if AI returned multiple foods */}
           {lookupResult.source === 'ai' && lookupResult.foods.length > 1 && (

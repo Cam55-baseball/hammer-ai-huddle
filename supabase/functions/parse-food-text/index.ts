@@ -51,7 +51,14 @@ Deno.serve(async (req) => {
 Use USDA standard values. For compound foods, break them into individual items.
 Be conservative with estimates - use typical serving sizes unless specified.
 Confidence levels: "high" for common foods with known values, "medium" for estimates, "low" for unusual items.
-For beverages (water, juice, coffee, tea, milk, soda, etc.), estimate fluid ounces. One glass = 8oz, one bottle = 16oz.`,
+For beverages (water, juice, coffee, tea, milk, soda, etc.), estimate fluid ounces. One glass = 8oz, one bottle = 16oz.
+
+MEAL TYPE INFERENCE - Infer suggested_meal_type from context:
+- Morning items (eggs, bacon, oatmeal, cereal, toast, pancakes, waffles, coffee, orange juice) → "breakfast"
+- Midday items (sandwich, salad, soup, burger, wrap, lunch) → "lunch"  
+- Evening items (steak, pasta, casserole, dinner plate, roast, grilled fish) → "dinner"
+- Small items (bar, nuts, fruit, chips, yogurt, crackers) → "snack"
+- ONLY beverages with zero or minimal calories (water, black coffee, unsweetened tea) → "hydration"`,
           },
           {
             role: "user",
@@ -97,9 +104,14 @@ For beverages (water, juice, coffee, tea, milk, soda, etc.), estimate fluid ounc
                     },
                     required: ["calories", "protein_g", "carbs_g", "fats_g", "hydration_oz"],
                   },
+                  suggested_meal_type: {
+                    type: "string",
+                    enum: ["breakfast", "lunch", "dinner", "snack", "hydration"],
+                    description: "Inferred meal type: breakfast (morning items), lunch (midday), dinner (evening), snack (small items), hydration (beverages only with no/minimal calories)",
+                  },
                   mealDescription: { type: "string", description: "Brief description of the meal" },
                 },
-                required: ["foods", "totals"],
+                required: ["foods", "totals", "suggested_meal_type"],
               },
             },
           },
