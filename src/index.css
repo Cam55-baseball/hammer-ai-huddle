@@ -87,6 +87,12 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 0 0% 5%;
     --sidebar-border: 0 0% 90%;
     --sidebar-ring: 0 100% 50%;
+    
+    /* Status Colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --success-muted: 142 50% 95%;
+    --success-muted-foreground: 142 50% 30%;
   }
 
   .dark {
@@ -156,6 +162,12 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 18%;
     --sidebar-ring: 0 100% 50%;
+    
+    /* Status Colors - Dark */
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-muted: 142 30% 15%;
+    --success-muted-foreground: 142 50% 70%;
   }
 
   /* ============================================

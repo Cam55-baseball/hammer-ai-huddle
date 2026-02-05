@@ -7070,5 +7070,25 @@
     "copied": "Copied!",
     "listName": "List Name",
     "listNamePlaceholder": "My shopping list..."
+  },
+  "ownerDashboard": {
+    "sidebar": {
+      "overview": "Overview",
+      "userManagement": "User Management",
+      "adminRequests": "Admin Requests",
+      "scoutApplications": "Scout Applications",
+      "recentVideos": "Recent Videos",
+      "subscriptions": "Subscriptions",
+      "settings": "Settings",
+      "playerSearch": "Player Search"
+    },
+    "admin": {
+      "badge": "Admin",
+      "revoke": "Revoke",
+      "appointed": "Admin privileges granted",
+      "revoked": "Admin privileges revoked",
+      "makeAdmin": "Make Admin",
+      "activeAdmin": "Active Admin"
+    }
   }
 }
