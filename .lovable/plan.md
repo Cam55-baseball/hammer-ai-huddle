@@ -1,230 +1,318 @@
 
-# Elite Workout & Running Card System - Complete E2E Masterpiece Implementation
+# Extreme Polish Work & Testing Plan
+## Elite Workout & Running Card System - Final Phase
 
-## Executive Summary
-
-This plan completes the Elite Workout & Running Card System as a masterpiece by finishing ALL remaining items from the approved plan. This includes full i18n for 7 languages, deep integration with `CustomActivityBuilderDialog`, Vault readiness integration, and ensuring coaches/scouts can seamlessly send block-based workouts.
-
----
-
-## Current State Assessment
-
-### Already Completed:
-- Database schema (4 tables: `workout_blocks`, `workout_presets`, `athlete_load_tracking`, `running_sessions`)
-- TypeScript types (`src/types/eliteWorkout.ts`)
-- Core UI components (BlockContainer, BlockCard, BlockTypeSelector, ViewModeToggle, etc.)
-- Hooks (`useEliteWorkout`, `useLoadTracking`, `useWorkoutPresets`)
-- Load calculation utilities (`src/utils/loadCalculation.ts`)
-- Edge functions (calculate-load, detect-overlaps, suggest-adaptation)
-- Hammers IP system presets seeded
-- English translations added to `en.json`
-- PresetLibrary and LoadDashboard components created
-- MyCustomActivities.tsx updated with new tabs
-
-### Remaining Work:
-1. i18n translations for 7 languages (ES, FR, DE, JA, ZH, NL, KO)
-2. Integrate block system into `CustomActivityBuilderDialog`
-3. Create `ReadinessFromVault` component for Vault integration
-4. Ensure coach/scout sending works with block data
-5. Test and polish all integration points
+This plan focuses on ensuring production-ready quality through comprehensive polishing, testing, and verification of the complete Elite Workout & Running Card System.
 
 ---
 
-## Phase 1: Complete i18n Translations (7 Languages)
+## Current Implementation Status
 
-### Translation Structure
-
-The `eliteWorkout` namespace needs to be added to all 7 remaining language files with professionally translated content:
-
-**Spanish (es.json)**:
-```json
-"eliteWorkout": {
-  "title": "Entrenamiento Elite",
-  "blocks": {
-    "title": "Bloques de Entrenamiento",
-    "count": "bloques",
-    "activation": "Activación",
-    "elastic_prep": "Preparación Elástica",
-    "cns_primer": "Preparación SNC",
-    "strength_output": "Salida de Fuerza",
-    "power_speed": "Potencia/Velocidad",
-    "capacity": "Capacidad",
-    "skill_transfer": "Transferencia de Habilidad",
-    "decompression": "Descompresión",
-    "recovery": "Recuperación",
-    "custom": "Bloque Personalizado"
-  },
-  "intent": {
-    "elastic": "Elástico/Rebote",
-    "max_output": "Máxima Salida",
-    "submax_technical": "Submáximo Técnico",
-    "accumulation": "Acumulación",
-    "glide_restoration": "Restauración de Deslizamiento",
-    "cns_downregulation": "Bajada del SNC",
-    "custom": "Personalizado"
-  },
-  ...
-}
-```
-
-**Similar structure for:**
-- French (fr.json)
-- German (de.json)
-- Japanese (ja.json)
-- Chinese (zh.json)
-- Dutch (nl.json)
-- Korean (ko.json)
-
-Each language will receive the complete `eliteWorkout` namespace with all nested keys including: blocks, intent, running, viewModes, load, warnings, presets, readiness, and advanced.
+### Components Verified Complete:
+- BlockContainer, BlockCard, BlockTypeSelector with drag-and-drop
+- EnhancedExerciseCard with advanced fields panel
+- CNSLoadIndicator and ViewModeToggle
+- RunningCardBuilder with intent-driven architecture
+- PresetLibrary and PresetCard for Hammers IP presets
+- LoadDashboard with Recharts visualizations
+- ReadinessFromVault with Vault integration
+- CustomActivityBuilderDialog with block system integration
+- Edge functions: calculate-load, detect-overlaps, suggest-adaptation
+- i18n translations for all 8 languages
 
 ---
 
-## Phase 2: Integrate Block System into CustomActivityBuilderDialog
+## Phase 1: Mobile Responsiveness Polish
 
-### Key Changes to `CustomActivityBuilderDialog.tsx`
+### Target Areas:
 
-**1. New Imports:**
+**1.1 BlockCard Mobile Optimization**
+- Ensure block cards collapse cleanly on screens < 375px
+- Add horizontal scroll prevention for exercise grids
+- Verify drag handles have 44x44px minimum touch targets
+- Test collapsible sections open/close smoothly on touch
+
+**1.2 ViewModeToggle Touch Targets**
+- Already has `min-w-[44px] min-h-[44px]` - verify renders correctly
+- Ensure mode labels hide gracefully on mobile (`hidden sm:inline` verified)
+- Test toggle functionality on touch devices
+
+**1.3 PresetLibrary Grid Layout**
+- Verify responsive grid (1 col mobile, 2 col tablet, 3 col desktop)
+- Test filter dropdowns are tap-friendly on mobile
+- Ensure horizontal scroll tabs work on narrow screens
+
+**1.4 LoadDashboard Charts**
+- Charts use ResponsiveContainer - verify 100% width fills correctly
+- Test tooltip touch interactions on mobile
+- Ensure summary cards stack properly on mobile (grid-cols-1 sm:grid-cols-3)
+
+---
+
+## Phase 2: Empty States & Edge Cases
+
+### 2.1 Empty State Verification
+
+| Component | Empty State Location | Status |
+|-----------|---------------------|--------|
+| BlockContainer | No blocks - shows dashed border CTA | Implemented |
+| PresetLibrary | No matching presets filter | Implemented |
+| LoadDashboard | No load data recorded | Implemented |
+| ReadinessFromVault | No recent Vault check-in | Implemented |
+| ReceivedActivitiesList | No pending activities | Implemented |
+
+### 2.2 Edge Cases to Test
+
+**Block System:**
+- Empty block (no exercises) - displays "No exercises yet" message
+- Block with only one exercise - renders correctly
+- Maximum exercises per block (test with 20+ exercises)
+- Rapid block reordering - no state corruption
+
+**Running Sessions:**
+- Zero distance/reps - calculation handles gracefully
+- Missing optional fields (surface, shoe type) - no errors
+- Time goal edge formats (0:00:00 vs empty)
+
+**Presets:**
+- System presets (locked) - verify lock icon displays
+- User presets empty list - shows empty state message
+- Preset with empty blocks array
+
+---
+
+## Phase 3: Error Handling & Resilience
+
+### 3.1 Edge Function Error Handling
+
+**calculate-load:**
+- Handles missing workout_blocks gracefully (returns 0)
+- Handles missing running_sessions gracefully (returns 0)
+- Returns meaningful error message on auth failure
+- Logs calculation steps for debugging
+
+**detect-overlaps:**
+- Returns empty warnings array if no history data
+- Handles missing target_date parameter
+- Gracefully handles database query failures
+
+**suggest-adaptation:**
+- Returns empty suggestions if no readiness data provided
+- Handles undefined pain_areas without crashing
+- Provides sensible defaults for all optional params
+
+### 3.2 Client-Side Error Handling
+
+**Add toast notifications for:**
+- Edge function call failures with retry option
+- Network connectivity issues
+- Invalid block data loading (corrupted JSONB)
+- Missing required fields on save attempt
+
+**Graceful degradation:**
+- If CNS calculation fails, show "N/A" instead of crashing
+- If preset loading fails, show error toast and close modal
+- If Vault fetch fails, allow skipping readiness check
+
+---
+
+## Phase 4: Performance Optimization
+
+### 4.1 Component Memoization
+
+**High-priority memoization:**
+- `calculateWorkoutCNS` - called on every block change
+- `calculateWorkoutFasciaBias` - expensive aggregation
+- Chart data generation in LoadDashboard
+
+**React optimization:**
+- Add `useMemo` for filtered preset lists in PresetLibrary
+- Add `useCallback` for block update handlers
+- Debounce CNS calculation updates (300ms delay)
+
+### 4.2 Lazy Loading
+
+**Implement lazy loading for:**
+- Preset library content (only load when tab active)
+- Load dashboard charts (defer initial render)
+- Advanced fields panel (already collapsible)
+
+### 4.3 Query Optimization
+
+**React Query settings:**
+- Preset data: `staleTime: 5 * 60 * 1000` (5 minutes)
+- Load tracking: `refetchInterval: 60000` (1 minute)
+- Vault readiness: `staleTime: 30000` (30 seconds)
+
+---
+
+## Phase 5: Coach/Scout Flow Verification
+
+### 5.1 Block Data Persistence
+
+**Verify JSONB serialization:**
 ```typescript
-import { BlockContainer } from '@/components/elite-workout/blocks/BlockContainer';
-import { ViewModeToggle } from '@/components/elite-workout/views/ViewModeToggle';
-import { CNSLoadIndicator } from '@/components/elite-workout/intelligence/CNSLoadIndicator';
-import { RunningCardBuilder } from '@/components/elite-workout/running/RunningCardBuilder';
-import { ReadinessFromVault } from '@/components/elite-workout/readiness/ReadinessFromVault';
-import { WorkoutBlock, ViewMode, createEmptyBlock } from '@/types/eliteWorkout';
-import { calculateWorkoutCNS } from '@/utils/loadCalculation';
-```
-
-**2. New State Variables:**
-```typescript
-const [viewMode, setViewMode] = useState<ViewMode>('execute');
-const [useBlockSystem, setUseBlockSystem] = useState(false);
-const [workoutBlocks, setWorkoutBlocks] = useState<WorkoutBlock[]>([]);
-const [showReadinessCheck, setShowReadinessCheck] = useState(false);
-```
-
-**3. Block System Toggle (for workout type):**
-- Add a toggle switch in the workout section: "Use Block-Based Builder"
-- When enabled, show `BlockContainer` instead of `DragDropExerciseBuilder`
-- When disabled, keep legacy flat exercise list for backward compatibility
-
-**4. View Mode Toggle:**
-- Add `ViewModeToggle` component at the top of the dialog (after DialogHeader)
-- Only visible when `useBlockSystem` is true
-- Controls which fields are visible in BlockCard and EnhancedExerciseCard
-
-**5. CNS Load Preview:**
-- When `viewMode === 'coach'` and blocks exist, show real-time CNS load
-- Display using `CNSLoadIndicator` component
-- Update automatically as exercises are added/modified
-
-**6. Data Serialization:**
-- When saving with blocks, serialize to JSONB format:
-```typescript
+// In CustomActivityBuilderDialog handleSave
 const exercisesData = useBlockSystem 
   ? { _useBlocks: true, blocks: workoutBlocks }
   : exercises;
 ```
 
-**7. Template Loading:**
-- On edit, detect `_useBlocks` flag in exercises field
-- Parse and hydrate workoutBlocks state
-- Set `useBlockSystem` to true if blocks detected
+**Ensure data integrity through:**
+1. Coach creates workout with blocks in builder
+2. Template saves to `custom_activity_templates.exercises` as JSONB
+3. Coach opens SendToPlayerDialog
+4. `template_snapshot` captures full block data automatically
+5. Entry created in `sent_activity_templates`
+6. Player receives in ReceivedActivitiesList
+7. Player accepts - blocks render in edit dialog
 
-**8. Running Card Integration:**
-- Replace legacy embedded running section with `RunningCardBuilder`
-- Enhanced with surface, shoe type, fatigue state, intent fields
+### 5.2 Locked Fields Verification
 
-**9. Readiness Quick Check:**
-- Add "Quick Readiness Check" button that opens a lightweight modal
-- Pre-populates from latest Vault check-in data
-- Influences load recommendations shown in Coach mode
+**Test scenarios:**
+- Lock `exercises` field - BlockContainer becomes read-only
+- Verify `pointer-events-none` class applied when locked
+- Visual lock indicators display on locked fields
+- Block reordering disabled when locked
+- Add exercise button hidden when locked
 
-### Locked Fields Compatibility
+### 5.3 ReceivedActivitiesList Block Rendering
 
-The existing `lockedFields` system remains fully functional:
-- When `exercises` is locked, BlockContainer becomes read-only
-- Block-level edits are prevented
-- Exercise-level edits within blocks are prevented
-- Visual lock indicators shown on locked blocks
+**Current flow (verified):**
+- ReceivedActivityCard displays template preview
+- On accept, creates template via `createTemplate`
+- Opens CustomActivityBuilderDialog with template
+- Block system toggle auto-enabled if `_useBlocks` detected
 
 ---
 
-## Phase 3: Create ReadinessFromVault Component
+## Phase 6: Testing Setup & Test Cases
 
-### New Component: `src/components/elite-workout/readiness/ReadinessFromVault.tsx`
+### 6.1 Testing Infrastructure Setup
 
-**Purpose:** Fetches latest Vault check-in data to pre-populate readiness layer
+**Create testing configuration:**
+- Add vitest.config.ts with jsdom environment
+- Create src/test/setup.ts with matchMedia mock
+- Update tsconfig.app.json with vitest globals
 
-**Features:**
-- Queries `vault_focus_quizzes` for today's or most recent check-in
-- Extracts: sleep_quality, physical_readiness, perceived_recovery, pain_location
-- Displays summary card with readiness score
-- One-tap "Refresh from Vault" button
-- Calculates overall readiness score (0-100)
-- Provides recommendation: 'full_send' | 'modify_volume' | 'recovery_focus'
+### 6.2 Unit Tests to Create
 
-**Integration Points:**
-- Used in CustomActivityBuilderDialog when starting a workout
-- Shown in GamePlanCard before workout tasks
-- Feeds into suggest-adaptation edge function
-
-**Data Flow:**
+**Load Calculation Tests (`loadCalculation.test.ts`):**
 ```text
-vault_focus_quizzes → ReadinessFromVault → QuickReadinessCheck → LoadRecommendation
+- calculateExerciseCNS returns correct base values by type
+- calculateExerciseCNS applies velocity intent multipliers
+- calculateBlockCNS sums exercise CNS correctly
+- calculateWorkoutCNS aggregates block CNS
+- calculateRunningCNS handles all run types
+- formatCNSLoad returns correct severity labels
+- formatFasciaBias identifies dominant bias
+```
+
+**Block Operations Tests (`blocks.test.ts`):**
+```text
+- createEmptyBlock generates valid block structure
+- Block reordering updates orderIndex correctly
+- Exercise add/remove within block works
+- Block type configs have all required fields
+```
+
+### 6.3 Integration Tests to Create
+
+**CustomActivityBuilderDialog Tests:**
+```text
+- Renders block system toggle for workout type
+- Block system toggle hidden for non-workout types
+- View mode toggle appears when block system enabled
+- CNS indicator shows in coach mode
+- Block data serializes correctly on save
+- Template loads block data correctly on edit
+```
+
+**Edge Function Tests:**
+```text
+- calculate-load returns metrics for valid input
+- detect-overlaps returns warnings for high load
+- suggest-adaptation provides readiness-based suggestions
 ```
 
 ---
 
-## Phase 4: Coach/Scout Sending Verification
+## Phase 7: End-to-End User Flows
 
-### Ensuring Block Data Flows Through SendToPlayerDialog
+### 7.1 Core User Journeys to Verify
 
-**Current Flow (preserved):**
-1. Coach creates template with blocks in CustomActivityBuilderDialog
-2. Template saved to `custom_activity_templates` with exercises as JSONB
-3. Coach opens SendToPlayerDialog, selects players
-4. `template_snapshot` includes full exercises field (with blocks)
-5. Entry created in `sent_activity_templates`
-6. Player receives in `ReceivedActivitiesList`
+**Journey 1: Coach Creates Block-Based Workout**
+1. Open My Custom Activities > Templates
+2. Click "Create Activity"
+3. Select "Workout" type
+4. Enable "Use Block-Based Builder"
+5. Add Activation block with 2 exercises
+6. Add Strength Output block with 3 exercises
+7. Switch to Coach mode - verify CNS displays
+8. Save workout
+9. Open SendToPlayerDialog
+10. Send to a player
+11. Verify player receives in Received tab
 
-**Verification Points:**
-- `template_snapshot` automatically captures `{ _useBlocks: true, blocks: [...] }`
-- Locked fields apply at block/exercise level
-- ReceivedActivitiesList renders blocks via BlockContainer
-- Player can accept/customize within lock constraints
+**Journey 2: Player Receives and Executes Workout**
+1. Open My Custom Activities > Received
+2. See pending activity from coach
+3. Click Accept
+4. View workout in edit dialog
+5. Verify blocks render correctly
+6. Verify locked fields are non-editable
+7. Switch to Execute mode
+8. Complete workout (simplified view)
 
-**No Changes Required to:**
-- SendToPlayerDialog.tsx (JSONB snapshot works automatically)
-- ReceivedActivitiesList.tsx (update to render blocks)
-- scout_follows flow (unchanged)
+**Journey 3: Load Dashboard Review**
+1. Complete a workout (logs to athlete_load_tracking)
+2. Open My Custom Activities > Load Dashboard
+3. Verify today's CNS displays
+4. Verify weekly average calculates
+5. Verify charts render with data
+6. Verify fascial breakdown shows
 
-**Update Required:**
-- `ReceivedActivitiesList.tsx`: Add block rendering when `_useBlocks` detected
-- Display blocks using read-only BlockContainer variant
+**Journey 4: Preset Usage Flow**
+1. Open My Custom Activities > Elite Presets
+2. Filter by category (e.g., "Explosive Lower")
+3. Click "Use Preset" on a Hammers preset
+4. Verify blocks load into session storage
+5. Create new workout
+6. Verify blocks pre-populate
+
+**Journey 5: Readiness Integration**
+1. Complete a Vault check-in (sleep, energy, soreness)
+2. Open workout builder
+3. Verify ReadinessFromVault shows score
+4. Verify recommendation displays (Full Send / Modify / Recovery)
+5. Create workout - readiness influences suggestions
 
 ---
 
-## Phase 5: Polish and Edge Cases
+## Phase 8: Accessibility & Internationalization
 
-### A. Mobile Responsiveness
-- Ensure all new components work on 320px width
-- BlockCard collapse behavior on mobile
-- Touch-friendly tap targets (min 44x44px)
+### 8.1 Accessibility Checks
 
-### B. Empty States
-- No presets in category
-- No blocks in workout
-- No load history data
+**Dialog accessibility:**
+- All dialogs have `DialogTitle` (verified for BlockTypeSelector)
+- Screen readers announce block type selections
+- Focus management on block add/delete
 
-### C. Error Handling
-- Edge function failures gracefully degrade
-- Network issues show toast with retry option
-- Invalid block data handled gracefully
+**Keyboard navigation:**
+- Tab through blocks and exercises
+- Enter/Space to expand/collapse blocks
+- Arrow keys work in dropdown menus
 
-### D. Performance
-- Lazy load preset library content
-- Debounce CNS calculation updates
-- Memoize expensive calculations
+### 8.2 i18n Verification
+
+**Verify translations render for:**
+- All 8 languages (EN, ES, FR, DE, JA, ZH, NL, KO)
+- Block type names in BlockTypeSelector
+- View mode labels in ViewModeToggle
+- CNS load descriptors in tooltips
+- Preset category and difficulty labels
+- Running session fields and labels
+- All empty state messages
 
 ---
 
@@ -232,114 +320,62 @@ vault_focus_quizzes → ReadinessFromVault → QuickReadinessCheck → LoadRecom
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/i18n/locales/es.json` | Modify | Add eliteWorkout namespace (Spanish) |
-| `src/i18n/locales/fr.json` | Modify | Add eliteWorkout namespace (French) |
-| `src/i18n/locales/de.json` | Modify | Add eliteWorkout namespace (German) |
-| `src/i18n/locales/ja.json` | Modify | Add eliteWorkout namespace (Japanese) |
-| `src/i18n/locales/zh.json` | Modify | Add eliteWorkout namespace (Chinese) |
-| `src/i18n/locales/nl.json` | Modify | Add eliteWorkout namespace (Dutch) |
-| `src/i18n/locales/ko.json` | Modify | Add eliteWorkout namespace (Korean) |
-| `CustomActivityBuilderDialog.tsx` | Modify | Integrate block system, view modes, CNS preview |
-| `ReadinessFromVault.tsx` | Create | Vault integration for readiness data |
-| `ReceivedActivitiesList.tsx` | Modify | Render block-based activities from coaches |
+| vitest.config.ts | Create | Testing configuration |
+| src/test/setup.ts | Create | Test setup with mocks |
+| src/test/loadCalculation.test.ts | Create | Unit tests for load utils |
+| src/test/blocks.test.ts | Create | Unit tests for block operations |
+| tsconfig.app.json | Modify | Add vitest globals type |
+| src/components/elite-workout/blocks/BlockCard.tsx | Polish | Add ARIA labels, memoize handlers |
+| src/components/elite-workout/presets/PresetLibrary.tsx | Polish | Add useMemo for filtered lists |
+| src/hooks/useLoadTracking.ts | Polish | Add error boundary logic |
+| src/utils/loadCalculation.ts | Polish | Add input validation, memoization hints |
 
 ---
 
-## Technical Implementation Details
+## Success Metrics
 
-### Block Data Storage Format
+1. All mobile views render without horizontal scroll
+2. Empty states display user-friendly messages
+3. Edge function errors show toast with retry option
+4. CNS calculation debounced (no jank on rapid editing)
+5. All 8 i18n language files have complete translations
+6. Coach-to-player flow works with block data intact
+7. Locked fields prevent editing at block/exercise level
+8. Vitest runs with 90%+ coverage on core utilities
+9. All accessibility checks pass
+10. No console errors during normal usage
 
+---
+
+## Technical Notes
+
+### Block Data Format (JSONB)
+The `exercises` column stores either flat array (legacy) or block structure:
 ```typescript
-// In custom_activity_templates.exercises (JSONB)
+// Block-based format
 {
-  "_useBlocks": true,
-  "blocks": [
-    {
-      "id": "block-abc123",
-      "name": "Activation",
-      "blockType": "activation",
-      "intent": "submax_technical",
-      "orderIndex": 0,
-      "isCustom": false,
-      "exercises": [
-        {
-          "id": "ex-def456",
-          "name": "Hip Circles",
-          "type": "flexibility",
-          "sets": 2,
-          "reps": 10,
-          "rest": 30
-        }
-      ],
-      "metadata": {
-        "cnsContribution": 15,
-        "fasciaBias": { "compression": 20, "elastic": 60, "glide": 20 },
-        "estimatedDuration": 5
-      }
-    }
-  ]
+  _useBlocks: true,
+  blocks: WorkoutBlock[]
 }
+
+// Legacy flat format (backward compatible)
+Exercise[]
 ```
 
-### Backward Compatibility
-
+### Edge Function Authentication
+All three functions use standardized auth flow:
 ```typescript
-// In CustomActivityBuilderDialog - loading template
-useEffect(() => {
-  if (template?.exercises) {
-    if (typeof template.exercises === 'object' && '_useBlocks' in template.exercises) {
-      setUseBlockSystem(true);
-      setWorkoutBlocks(template.exercises.blocks || []);
-    } else {
-      setUseBlockSystem(false);
-      setExercises(template.exercises as Exercise[]);
-    }
-  }
-}, [template]);
+const token = authHeader.replace('Bearer ', '');
+const { data: claimsData } = await supabase.auth.getClaims(token);
+const userId = claimsData.claims.sub;
 ```
 
-### Readiness Integration
+### Load Calculation Algorithm
+CNS load aggregates from:
+- Exercise type base (5-40 points)
+- Velocity intent multiplier (0.75x - 1.5x)
+- Volume modifier (sets × reps × 0.5)
+- CNS demand override (0.7x - 1.3x)
+- Unilateral modifier (1.1x)
 
-```typescript
-// In ReadinessFromVault - fetching latest check-in
-const { data: latestCheckin } = await supabase
-  .from('vault_focus_quizzes')
-  .select('sleep_quality, physical_readiness, perceived_recovery, pain_location, pain_scales')
-  .eq('user_id', userId)
-  .gte('entry_date', format(subDays(new Date(), 1), 'yyyy-MM-dd'))
-  .order('created_at', { ascending: false })
-  .limit(1)
-  .single();
-
-const readinessScore = calculateReadinessScore(latestCheckin);
-const recommendation = getReadinessRecommendation(readinessScore);
-```
-
----
-
-## Success Criteria
-
-1. All 8 languages have complete eliteWorkout translations
-2. CustomActivityBuilderDialog shows block builder for workout type
-3. View mode toggle switches between Execute/Coach/Parent views
-4. CNS load displays in real-time in Coach mode
-5. Readiness data imports from Vault check-ins
-6. Coaches can send block-based workouts to players
-7. Players receive and execute workouts with full block structure
-8. Locked fields work correctly at block level
-9. Preset library loads and applies presets correctly
-10. Mobile-responsive across all components
-11. No regressions in existing custom activity workflows
-12. Edge functions handle load calculation and overlap detection
-
----
-
-## Implementation Order
-
-1. **i18n Translations** (7 files) - Highest impact for global users
-2. **ReadinessFromVault Component** - Foundation for integration
-3. **CustomActivityBuilderDialog Integration** - Core feature completion
-4. **ReceivedActivitiesList Update** - Complete coach/player flow
-5. **Testing & Polish** - End-to-end verification
-
-This implementation will deliver a complete, production-ready Elite Workout & Running Card System that serves athletes from age 5 to MLB professionals with the intelligence and simplicity that defines Hammers Modality.
+This polish plan ensures the Elite Workout & Running Card System meets production quality standards with robust testing, excellent mobile UX, and comprehensive error handling.
