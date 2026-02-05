@@ -5215,5 +5215,152 @@
       "fullyEditable": "Volledig Bewerkbaar",
       "coachMessage": "Coach Bericht"
     }
+  },
+  "eliteWorkout": {
+    "title": "Elite Training",
+    "blocks": {
+      "title": "Trainingsblokken",
+      "count": "blokken",
+      "activation": "Activatie",
+      "elastic_prep": "Elastische Voorbereiding",
+      "cns_primer": "ZS Voorbereiding",
+      "strength_output": "Kracht Output",
+      "power_speed": "Power/Snelheid",
+      "capacity": "Capaciteit",
+      "skill_transfer": "Vaardigheidstransfer",
+      "decompression": "Decompressie",
+      "recovery": "Herstel",
+      "custom": "Aangepast Blok"
+    },
+    "intent": {
+      "elastic": "Elastisch/Bounce",
+      "max_output": "Maximale Output",
+      "submax_technical": "Submax Technisch",
+      "accumulation": "Accumulatie",
+      "glide_restoration": "Glidherstel",
+      "cns_downregulation": "ZS Downregulatie",
+      "custom": "Aangepast"
+    },
+    "running": {
+      "title": "Loopsessie",
+      "types": {
+        "linear_sprint": "Sprint",
+        "tempo": "Tempo",
+        "conditioning": "Conditioning",
+        "elastic": "Elastisch/Bounce",
+        "accel_decel": "Versnelling/Vertraging",
+        "curve": "Bocht Lopen",
+        "cod": "Richtingsverandering",
+        "gait": "Gangwerk"
+      },
+      "intent": {
+        "max": "Max Intentie",
+        "submax": "Submax",
+        "elastic": "Elastisch",
+        "technical": "Technisch",
+        "recovery": "Herstel"
+      },
+      "surface": "Ondergrond",
+      "shoeType": "Schoentype",
+      "fatigueState": "Vermoeidheidsstatus",
+      "contacts": "Grondcontacten"
+    },
+    "viewModes": {
+      "execute": "Doen",
+      "coach": "Alle Data",
+      "parent": "Overzicht",
+      "switchMode": "Weergave Wisselen"
+    },
+    "load": {
+      "cns": "ZS Belasting",
+      "fascial": "Fasciale Bias",
+      "compression": "Compressie",
+      "elastic": "Elastisch",
+      "glide": "Glijd",
+      "volume": "Volume",
+      "recoveryDebt": "Herstelschuld",
+      "dashboard": "Belasting Dashboard",
+      "weeklyOverview": "7-daags trainingsbelasting overzicht",
+      "todayCNS": "ZS Vandaag",
+      "weeklyAvg": "Wekelijks Gem.",
+      "vsAverage": "vs Gemiddelde",
+      "cnsHistory": "ZS Belasting Geschiedenis",
+      "fascialBreakdown": "Fasciale Belasting Verdeling",
+      "noData": "Nog geen belastingsdata",
+      "noFascialData": "Voltooi trainingen om fasciale belastingsdata te zien"
+    },
+    "warnings": {
+      "cns_overlap": "Hoge ZS belasting gedetecteerd",
+      "load_spike": "Belastingspiek - rustig aan",
+      "elastic_overload": "Veel sprongen vandaag",
+      "recovery_needed": "Hersteldag aanbevolen"
+    },
+    "presets": {
+      "title": "Elite Presets",
+      "description": "Professionele trainingssjablonen klaar voor gebruik",
+      "systemPresets": "Hammers Presets",
+      "myPresets": "Mijn Presets",
+      "usePreset": "Preset Gebruiken",
+      "locked": "Vergrendeld",
+      "hammers": "Hammers",
+      "difficulty": "Moeilijkheid",
+      "duration": "Duur",
+      "cnsLoad": "ZS Belasting",
+      "noPresets": "Geen presets komen overeen met uw filters",
+      "noUserPresets": "U heeft nog geen presets opgeslagen",
+      "saveHint": "Maak een training en sla het op als preset om te hergebruiken",
+      "loaded": "Preset geladen! Maak een nieuwe activiteit om het te gebruiken.",
+      "categories": {
+        "all": "Alle Categorieën",
+        "explosive_lower": "Explosief Onderlichaam",
+        "elastic_day": "Elastische Dag",
+        "game_day_prime": "Wedstrijddag Voorbereiding",
+        "fascial_recovery": "Fasciaal Herstel",
+        "upper_power": "Bovenlichaam Power",
+        "speed_development": "Snelheidsontwikkeling"
+      }
+    },
+    "addBlock": "Blok Toevoegen",
+    "addExercise": "Oefening Toevoegen",
+    "chooseBlockType": "Bloktype Kiezen",
+    "noBlocks": "Nog geen blokken",
+    "noBlocksDescription": "Voeg blokken toe om uw training te structureren. Elk blok groepeert oefeningen op doel.",
+    "addFirstBlock": "Voeg Uw Eerste Blok Toe",
+    "noExercises": "Nog geen oefeningen",
+    "cnsLoad": "ZS Belasting",
+    "cnsWarning": "Overweeg intensiteit te verlagen",
+    "cnsElevated": "Monitor herstel",
+    "cnsGood": "Goede trainingsbelasting",
+    "readiness": {
+      "title": "Snelle Gereedheidscheck",
+      "sleep": "Slaapkwaliteit",
+      "energy": "Energieniveau",
+      "soreness": "Spierpijn",
+      "skip": "Check Overslaan",
+      "continue": "Doorgaan",
+      "fromVault": "Uit de Vault",
+      "lastCheckin": "Laatste check-in",
+      "score": "Gereedheidsscore",
+      "recommendation": "Aanbeveling",
+      "fullSend": "Volle kracht!",
+      "modifyVolume": "Volume aanpassen",
+      "recoveryFocus": "Focus op herstel"
+    },
+    "advanced": {
+      "title": "Geavanceerde Instellingen",
+      "tempo": "Tempo",
+      "velocity": "Snelheidsintentie",
+      "fasciaBias": "Fasciale Bias",
+      "cnsDemand": "ZS Vraag",
+      "loadType": "Belastingstype"
+    },
+    "useBlockSystem": "Blok Builder Gebruiken",
+    "useBlockSystemDesc": "Organiseer oefeningen in gestructureerde blokken met slimme belastingstracking"
+  },
+  "myCustomActivities": {
+    "tabs": {
+      "elitePresets": "Elite Presets",
+      "loadDashboard": "Belasting Dashboard"
+    }
   }
 }

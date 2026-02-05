@@ -5315,5 +5315,152 @@
       "fullyEditable": "完全編集可能",
       "coachMessage": "コーチからのメッセージ"
     }
+  },
+  "eliteWorkout": {
+    "title": "エリートワークアウト",
+    "blocks": {
+      "title": "ワークアウトブロック",
+      "count": "ブロック",
+      "activation": "アクティベーション",
+      "elastic_prep": "弾性準備",
+      "cns_primer": "CNSプライマー",
+      "strength_output": "筋力アウトプット",
+      "power_speed": "パワー/スピード",
+      "capacity": "キャパシティ",
+      "skill_transfer": "スキル転移",
+      "decompression": "減圧",
+      "recovery": "リカバリー",
+      "custom": "カスタムブロック"
+    },
+    "intent": {
+      "elastic": "弾性/バウンス",
+      "max_output": "最大出力",
+      "submax_technical": "サブマックス技術",
+      "accumulation": "蓄積",
+      "glide_restoration": "グライド回復",
+      "cns_downregulation": "CNSダウンレギュレーション",
+      "custom": "カスタム"
+    },
+    "running": {
+      "title": "ランニングセッション",
+      "types": {
+        "linear_sprint": "スプリント",
+        "tempo": "テンポ",
+        "conditioning": "コンディショニング",
+        "elastic": "弾性/バウンス",
+        "accel_decel": "加速/減速",
+        "curve": "カーブラン",
+        "cod": "方向転換",
+        "gait": "歩行ワーク"
+      },
+      "intent": {
+        "max": "最大インテント",
+        "submax": "サブマックス",
+        "elastic": "弾性",
+        "technical": "技術的",
+        "recovery": "リカバリー"
+      },
+      "surface": "サーフェス",
+      "shoeType": "シューズタイプ",
+      "fatigueState": "疲労状態",
+      "contacts": "地面接触"
+    },
+    "viewModes": {
+      "execute": "実行",
+      "coach": "全データ",
+      "parent": "概要",
+      "switchMode": "ビュー切替"
+    },
+    "load": {
+      "cns": "CNS負荷",
+      "fascial": "筋膜バイアス",
+      "compression": "圧縮",
+      "elastic": "弾性",
+      "glide": "グライド",
+      "volume": "ボリューム",
+      "recoveryDebt": "リカバリー負債",
+      "dashboard": "負荷ダッシュボード",
+      "weeklyOverview": "7日間のトレーニング負荷概要",
+      "todayCNS": "今日のCNS",
+      "weeklyAvg": "週平均",
+      "vsAverage": "vs 平均",
+      "cnsHistory": "CNS負荷履歴",
+      "fascialBreakdown": "筋膜負荷内訳",
+      "noData": "負荷データなし",
+      "noFascialData": "筋膜負荷データを見るにはワークアウトを完了してください"
+    },
+    "warnings": {
+      "cns_overlap": "高CNS負荷検出",
+      "load_spike": "負荷スパイク - ペースダウン",
+      "elastic_overload": "今日はジャンプが多い",
+      "recovery_needed": "リカバリーデー推奨"
+    },
+    "presets": {
+      "title": "エリートプリセット",
+      "description": "すぐに使えるプロトレーニングテンプレート",
+      "systemPresets": "Hammersプリセット",
+      "myPresets": "マイプリセット",
+      "usePreset": "プリセットを使用",
+      "locked": "ロック済み",
+      "hammers": "Hammers",
+      "difficulty": "難易度",
+      "duration": "時間",
+      "cnsLoad": "CNS負荷",
+      "noPresets": "フィルターに一致するプリセットがありません",
+      "noUserPresets": "まだプリセットを保存していません",
+      "saveHint": "ワークアウトを作成してプリセットとして保存し、再利用できます",
+      "loaded": "プリセットがロードされました！新しいアクティビティを作成して使用してください。",
+      "categories": {
+        "all": "すべてのカテゴリー",
+        "explosive_lower": "爆発的下半身",
+        "elastic_day": "弾性デー",
+        "game_day_prime": "試合日準備",
+        "fascial_recovery": "筋膜リカバリー",
+        "upper_power": "上半身パワー",
+        "speed_development": "スピード開発"
+      }
+    },
+    "addBlock": "ブロックを追加",
+    "addExercise": "エクササイズを追加",
+    "chooseBlockType": "ブロックタイプを選択",
+    "noBlocks": "まだブロックがありません",
+    "noBlocksDescription": "ブロックを追加してワークアウトを構成します。各ブロックは目的別にエクササイズをグループ化します。",
+    "addFirstBlock": "最初のブロックを追加",
+    "noExercises": "まだエクササイズがありません",
+    "cnsLoad": "CNS負荷",
+    "cnsWarning": "強度を下げることを検討",
+    "cnsElevated": "リカバリーを監視",
+    "cnsGood": "良好なトレーニング負荷",
+    "readiness": {
+      "title": "クイック準備チェック",
+      "sleep": "睡眠品質",
+      "energy": "エネルギーレベル",
+      "soreness": "筋肉痛",
+      "skip": "チェックをスキップ",
+      "continue": "続行",
+      "fromVault": "Vaultから",
+      "lastCheckin": "最後のチェックイン",
+      "score": "準備スコア",
+      "recommendation": "推奨",
+      "fullSend": "全力で！",
+      "modifyVolume": "ボリュームを調整",
+      "recoveryFocus": "リカバリーに集中"
+    },
+    "advanced": {
+      "title": "詳細設定",
+      "tempo": "テンポ",
+      "velocity": "速度インテント",
+      "fasciaBias": "筋膜バイアス",
+      "cnsDemand": "CNS要求",
+      "loadType": "負荷タイプ"
+    },
+    "useBlockSystem": "ブロックビルダーを使用",
+    "useBlockSystemDesc": "スマートな負荷追跡で構造化されたブロックにエクササイズを整理"
+  },
+  "myCustomActivities": {
+    "tabs": {
+      "elitePresets": "エリートプリセット",
+      "loadDashboard": "負荷ダッシュボード"
+    }
   }
 }

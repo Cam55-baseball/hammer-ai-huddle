@@ -5916,5 +5916,152 @@
       "fullyEditable": "Vollständig bearbeitbar",
       "coachMessage": "Trainer-Nachricht"
     }
+  },
+  "eliteWorkout": {
+    "title": "Elite-Training",
+    "blocks": {
+      "title": "Trainingsblöcke",
+      "count": "Blöcke",
+      "activation": "Aktivierung",
+      "elastic_prep": "Elastische Vorbereitung",
+      "cns_primer": "ZNS-Vorbereitung",
+      "strength_output": "Kraftausgabe",
+      "power_speed": "Power/Geschwindigkeit",
+      "capacity": "Kapazität",
+      "skill_transfer": "Skill-Transfer",
+      "decompression": "Dekompression",
+      "recovery": "Erholung",
+      "custom": "Benutzerdefinierter Block"
+    },
+    "intent": {
+      "elastic": "Elastisch/Bounce",
+      "max_output": "Maximale Ausgabe",
+      "submax_technical": "Submax Technisch",
+      "accumulation": "Akkumulation",
+      "glide_restoration": "Gleitwiederherstellung",
+      "cns_downregulation": "ZNS-Herunterregulierung",
+      "custom": "Benutzerdefiniert"
+    },
+    "running": {
+      "title": "Laufsession",
+      "types": {
+        "linear_sprint": "Sprint",
+        "tempo": "Tempo",
+        "conditioning": "Konditionierung",
+        "elastic": "Elastisch/Bounce",
+        "accel_decel": "Beschl/Verzög",
+        "curve": "Kurvenlauf",
+        "cod": "Richtungswechsel",
+        "gait": "Gangarbeit"
+      },
+      "intent": {
+        "max": "Maximale Absicht",
+        "submax": "Submax",
+        "elastic": "Elastisch",
+        "technical": "Technisch",
+        "recovery": "Erholung"
+      },
+      "surface": "Oberfläche",
+      "shoeType": "Schuhtyp",
+      "fatigueState": "Erschöpfungszustand",
+      "contacts": "Bodenkontakte"
+    },
+    "viewModes": {
+      "execute": "Machen",
+      "coach": "Alle Daten",
+      "parent": "Übersicht",
+      "switchMode": "Ansicht wechseln"
+    },
+    "load": {
+      "cns": "ZNS-Last",
+      "fascial": "Fasziale Tendenz",
+      "compression": "Kompression",
+      "elastic": "Elastisch",
+      "glide": "Gleiten",
+      "volume": "Volumen",
+      "recoveryDebt": "Erholungsschuld",
+      "dashboard": "Last-Dashboard",
+      "weeklyOverview": "7-Tage-Trainingsbelastung",
+      "todayCNS": "Heutige ZNS",
+      "weeklyAvg": "Wochendurchschnitt",
+      "vsAverage": "vs Durchschnitt",
+      "cnsHistory": "ZNS-Lastverlauf",
+      "fascialBreakdown": "Fasziale Lastverteilung",
+      "noData": "Noch keine Lastdaten",
+      "noFascialData": "Trainings abschließen um fasziale Lastdaten zu sehen"
+    },
+    "warnings": {
+      "cns_overlap": "Hohe ZNS-Last erkannt",
+      "load_spike": "Lastspitze - mach langsam",
+      "elastic_overload": "Viele Sprünge heute",
+      "recovery_needed": "Erholungstag empfohlen"
+    },
+    "presets": {
+      "title": "Elite-Presets",
+      "description": "Professionelle Trainingsvorlagen einsatzbereit",
+      "systemPresets": "Hammers-Presets",
+      "myPresets": "Meine Presets",
+      "usePreset": "Preset verwenden",
+      "locked": "Gesperrt",
+      "hammers": "Hammers",
+      "difficulty": "Schwierigkeit",
+      "duration": "Dauer",
+      "cnsLoad": "ZNS-Last",
+      "noPresets": "Keine Presets entsprechen Ihren Filtern",
+      "noUserPresets": "Sie haben noch keine Presets gespeichert",
+      "saveHint": "Erstellen Sie ein Training und speichern Sie es als Preset zur Wiederverwendung",
+      "loaded": "Preset geladen! Erstellen Sie eine neue Aktivität um es zu verwenden.",
+      "categories": {
+        "all": "Alle Kategorien",
+        "explosive_lower": "Explosiver Unterkörper",
+        "elastic_day": "Elastischer Tag",
+        "game_day_prime": "Spieltag-Vorbereitung",
+        "fascial_recovery": "Fasziale Erholung",
+        "upper_power": "Oberkörper-Power",
+        "speed_development": "Geschwindigkeitsentwicklung"
+      }
+    },
+    "addBlock": "Block hinzufügen",
+    "addExercise": "Übung hinzufügen",
+    "chooseBlockType": "Blocktyp wählen",
+    "noBlocks": "Noch keine Blöcke",
+    "noBlocksDescription": "Fügen Sie Blöcke hinzu um Ihr Training zu strukturieren. Jeder Block gruppiert Übungen nach Zweck.",
+    "addFirstBlock": "Ersten Block hinzufügen",
+    "noExercises": "Noch keine Übungen",
+    "cnsLoad": "ZNS-Last",
+    "cnsWarning": "Intensität reduzieren empfohlen",
+    "cnsElevated": "Erholung überwachen",
+    "cnsGood": "Gute Trainingsbelastung",
+    "readiness": {
+      "title": "Schnelle Bereitschaftsprüfung",
+      "sleep": "Schlafqualität",
+      "energy": "Energielevel",
+      "soreness": "Muskelkater",
+      "skip": "Prüfung überspringen",
+      "continue": "Weiter",
+      "fromVault": "Aus dem Vault",
+      "lastCheckin": "Letzter Check-in",
+      "score": "Bereitschaftswert",
+      "recommendation": "Empfehlung",
+      "fullSend": "Vollgas!",
+      "modifyVolume": "Volumen anpassen",
+      "recoveryFocus": "Auf Erholung konzentrieren"
+    },
+    "advanced": {
+      "title": "Erweiterte Einstellungen",
+      "tempo": "Tempo",
+      "velocity": "Geschwindigkeitsabsicht",
+      "fasciaBias": "Fasziale Tendenz",
+      "cnsDemand": "ZNS-Anforderung",
+      "loadType": "Lasttyp"
+    },
+    "useBlockSystem": "Block-Builder verwenden",
+    "useBlockSystemDesc": "Organisieren Sie Übungen in strukturierten Blöcken mit intelligentem Last-Tracking"
+  },
+  "myCustomActivities": {
+    "tabs": {
+      "elitePresets": "Elite-Presets",
+      "loadDashboard": "Last-Dashboard"
+    }
   }
 }

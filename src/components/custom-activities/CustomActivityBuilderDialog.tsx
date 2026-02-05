@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image, CalendarPlus, Loader2, Lock } from 'lucide-react';
+import { Star, Save, Trash2, ChevronDown, Footprints, Plus, X, Bell, Image, CalendarPlus, Loader2, Lock, Layers } from 'lucide-react';
 import { LogoUploadButton } from './LogoUploadButton';
 import { ActivityTypeSelector } from './ActivityTypeSelector';
 import { IconPicker } from './IconPicker';
@@ -21,6 +21,11 @@ import { ExerciseBuilder } from './ExerciseBuilder';
 import { DragDropExerciseBuilder } from './DragDropExerciseBuilder';
 import { MealBuilder } from './MealBuilder';
 import { CustomFieldsBuilder } from './CustomFieldsBuilder';
+import { BlockContainer } from '@/components/elite-workout/blocks/BlockContainer';
+import { ViewModeToggle } from '@/components/elite-workout/views/ViewModeToggle';
+import { CNSLoadIndicator } from '@/components/elite-workout/intelligence/CNSLoadIndicator';
+import { WorkoutBlock, ViewMode } from '@/types/eliteWorkout';
+import { calculateWorkoutCNS } from '@/utils/loadCalculation';
 import { CustomActivityTemplate, ActivityType, IntensityLevel, Exercise, MealData, CustomField, RunningInterval, EmbeddedRunningSession } from '@/types/customActivity';
 import { cn } from '@/lib/utils';
 
@@ -117,6 +122,11 @@ export function CustomActivityBuilderDialog({
   
   // Schedule for today toggle (only for new activities)
   const [scheduleForToday, setScheduleForToday] = useState(false);
+  
+  // Elite Workout Block System state
+  const [useBlockSystem, setUseBlockSystem] = useState(false);
+  const [workoutBlocks, setWorkoutBlocks] = useState<WorkoutBlock[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>('execute');
 
   useEffect(() => {
     if (template) {
@@ -168,6 +178,15 @@ export function CustomActivityBuilderDialog({
         setShowRunningSessions(false);
         setEmbeddedRunningSessions([]);
       }
+      // Parse block-based exercises
+      if (template.exercises && typeof template.exercises === 'object' && '_useBlocks' in (template.exercises as any)) {
+        const exercisesData = template.exercises as any;
+        setUseBlockSystem(true);
+        setWorkoutBlocks(exercisesData.blocks || []);
+      } else {
+        setUseBlockSystem(false);
+        setWorkoutBlocks([]);
+      }
     } else if (presetActivityType) {
       setActivityType(presetActivityType);
       setTitle('');
@@ -196,6 +215,9 @@ export function CustomActivityBuilderDialog({
       setShowRunningSessions(false);
       setEmbeddedRunningSessions([]);
       setScheduleForToday(false);
+      setUseBlockSystem(false);
+      setWorkoutBlocks([]);
+      setViewMode('execute');
     } else {
       setActivityType(null);
       setTitle('');
@@ -224,6 +246,9 @@ export function CustomActivityBuilderDialog({
       setShowRunningSessions(false);
       setEmbeddedRunningSessions([]);
       setScheduleForToday(false);
+      setUseBlockSystem(false);
+      setWorkoutBlocks([]);
+      setViewMode('execute');
     }
   }, [template, presetActivityType, open]);
 
@@ -264,8 +289,13 @@ export function CustomActivityBuilderDialog({
       ? embeddedRunningSessions 
       : undefined;
     
+    // Build exercises data with block system support
+    const exercisesData = useBlockSystem 
+      ? { _useBlocks: true, blocks: workoutBlocks } as any
+      : exercises;
+    
     try {
-      console.log('[CustomActivityBuilderDialog] Saving activity...', { activityType, title, scheduleForToday });
+      console.log('[CustomActivityBuilderDialog] Saving activity...', { activityType, title, scheduleForToday, useBlockSystem });
       
       const result = await onSave({
         activity_type: activityType,
@@ -273,7 +303,7 @@ export function CustomActivityBuilderDialog({
         description: description.trim() || undefined,
         icon,
         color,
-        exercises,
+        exercises: exercisesData,
         meals,
         custom_fields: customFields,
         duration_minutes: durationMinutes,
@@ -321,6 +351,8 @@ export function CustomActivityBuilderDialog({
   const showMealBuilder = activityType === 'meal';
   const showRunningFields = activityType === 'running';
   const showEmbeddedRunningOption = activityType && !showRunningFields && activityType !== 'meal';
+  const showBlockSystemToggle = activityType === 'workout';
+  const totalCNS = useBlockSystem ? calculateWorkoutCNS(workoutBlocks) : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -667,15 +699,57 @@ export function CustomActivityBuilderDialog({
 
                 <Separator className="my-4" />
                 
+                {/* Block System Toggle - Only for workout type */}
+                {showBlockSystemToggle && (
+                  <div className="p-4 rounded-lg border-2 border-dashed bg-muted/30 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="useBlockSystem" className="flex items-center gap-2 cursor-pointer">
+                        <Layers className="h-4 w-4 text-primary" />
+                        <div>
+                          <span className="font-bold">{t('eliteWorkout.useBlockSystem', 'Use Block-Based Builder')}</span>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {t('eliteWorkout.useBlockSystemDesc', 'Organize exercises into structured blocks with intelligent load tracking')}
+                          </p>
+                        </div>
+                      </Label>
+                      <Switch 
+                        id="useBlockSystem" 
+                        checked={useBlockSystem} 
+                        onCheckedChange={setUseBlockSystem}
+                        disabled={isFieldLocked('exercises')}
+                      />
+                    </div>
+                    
+                    {/* View Mode Toggle & CNS Preview - Only when block system active */}
+                    {useBlockSystem && (
+                      <div className="flex items-center justify-between pt-2 border-t">
+                        <ViewModeToggle value={viewMode} onChange={setViewMode} />
+                        {viewMode === 'coach' && totalCNS > 0 && (
+                          <CNSLoadIndicator load={totalCNS} size="sm" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 {/* Universal sections - Available for ALL activity types */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
                     {t('customActivity.universal.additionalOptions')}
                   </h3>
                   
-                  {/* Exercise Builder - Drag-and-drop for workout type, standard for others */}
-                  {activityType === 'workout' ? (
-                    <DragDropExerciseBuilder 
+                  {/* Exercise Builder - Block system for workout when enabled, Drag-and-drop for workout type, standard for others */}
+                  {activityType === 'workout' && useBlockSystem ? (
+                    <BlockContainer
+                      blocks={workoutBlocks}
+                      onChange={setWorkoutBlocks}
+                      viewMode={viewMode}
+                      onViewModeChange={setViewMode}
+                      showViewModeToggle={false}
+                      className={isFieldLocked('exercises') ? 'opacity-60 pointer-events-none' : ''}
+                    />
+                  ) : activityType === 'workout' ? (
+                    <DragDropExerciseBuilder
                       exercises={exercises} 
                       onExercisesChange={setExercises} 
                     />
