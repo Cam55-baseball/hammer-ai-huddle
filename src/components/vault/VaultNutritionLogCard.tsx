@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,6 +99,7 @@ export function VaultNutritionLogCard({
   isLoading = false 
 }: VaultNutritionLogCardProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   const [isOpen, setIsOpen] = useState(false);
   const [favoritesOpen, setFavoritesOpen] = useState(false);
@@ -178,6 +180,9 @@ export function VaultNutritionLogCard({
       }
       if (!touchedFields.current.has('fats') && totals.fats_g > 0) {
         setFats(Math.round(totals.fats_g).toString());
+      }
+      if (!touchedFields.current.has('hydration') && totals.hydration_oz > 0) {
+        setHydration(Math.round(totals.hydration_oz).toString());
       }
     }
   }, [lookupResult, lookupStatus]);
@@ -279,6 +284,9 @@ export function VaultNutritionLogCard({
     });
     setSaving(false);
     if (result.success) {
+      // Invalidate all nutrition-related queries for E2E sync to Nutrition Hub
+      queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+      queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
       toast.success(t('vault.nutrition.mealLogged'));
       resetForm();
     }
@@ -604,7 +612,7 @@ export function VaultNutritionLogCard({
             )}
             {/* Quick Presets */}
             <div className="space-y-2">
-              <Label className="text-xs font-medium">{t('vault.nutrition.presets')}</Label>
+              <Label className="text-xs font-medium">{t('vault.nutrition.quickPresets')}</Label>
               <div className="flex flex-wrap gap-1.5">
                 {MACRO_PRESETS.map((preset) => (
                   <Button
@@ -656,7 +664,7 @@ export function VaultNutritionLogCard({
                 {(lookupStatus === 'searching_db' || lookupStatus === 'calling_ai') && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    <span>{lookupStatus === 'searching_db' ? t('common.searching') : t('smartFood.aiAnalyzing')}</span>
+                    <span>{lookupStatus === 'searching_db' ? t('common.searching') : t('vault.smartFood.aiAnalyzing')}</span>
                   </div>
                 )}
                 {lookupStatus === 'ready' && lookupResult && (
@@ -664,19 +672,19 @@ export function VaultNutritionLogCard({
                     {lookupResult.source === 'database' ? (
                       <Badge variant="secondary" className="text-xs gap-1">
                         <Database className="h-3 w-3" />
-                        {t('smartFood.matchedDatabase')}
+                        {t('vault.smartFood.matchedDatabase')}
                       </Badge>
                     ) : (
                       <Badge variant="outline" className="text-xs gap-1">
                         <Sparkles className="h-3 w-3" />
-                        {t('smartFood.aiEstimate')} • {lookupResult.confidenceSummary} {t('smartFood.confidence')}
+                        {t('vault.smartFood.aiEstimate')} • {t(`vault.smartFood.${lookupResult.confidenceSummary}`)} {t('vault.smartFood.confidence')}
                       </Badge>
                     )}
                   </div>
                 )}
                 {lookupStatus === 'error' && (
                   <div className="text-xs text-muted-foreground">
-                    {t('smartFood.enterManually')}
+                    {t('vault.smartFood.enterManually')}
                   </div>
                 )}
               </div>
@@ -734,7 +742,7 @@ export function VaultNutritionLogCard({
                 <Input
                   type="number"
                   value={hydration}
-                  onChange={(e) => setHydration(e.target.value)}
+                  onChange={(e) => handleMacroChange('hydration', e.target.value, setHydration)}
                   placeholder="100 oz"
                   className="h-9"
                 />
