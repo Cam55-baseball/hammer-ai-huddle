@@ -246,13 +246,13 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
             </ToggleGroup>
           </div>
 
-          {/* Meal Title with Smart Lookup */}
+          {/* What did you eat? with Smart Lookup */}
           <div className="space-y-1">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t('vault.nutrition.mealTitle')}
             </Label>
             <Input
-              placeholder="e.g., 2 eggs with toast, greek yogurt..."
+              placeholder={t('vault.nutrition.mealTitlePlaceholder')}
               value={mealTitle}
               onChange={(e) => setMealTitle(e.target.value)}
               className="h-9"
