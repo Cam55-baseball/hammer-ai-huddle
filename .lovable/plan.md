@@ -2,51 +2,54 @@
 
 ## Overview
 
-Fix the duplicate navigation issue on the Owner Dashboard and create a clean, professional, polished UI across all sections. The current implementation has confusing navigation with multiple menu buttons and inconsistent styling.
+Two improvements to the Owner Dashboard for a seamless experience:
+
+1. **Admin Status Reflection** - Users who are already admins should be clearly distinguished so the owner doesn't accidentally try to make them admin again (which causes a database error due to unique constraint)
+
+2. **Return to Regular Dashboard** - Add navigation to return to the main app dashboard without logging out
 
 ---
 
-## Problems Identified
+## Current State Analysis
 
-### 1. Duplicate Navigation (Critical)
-| Issue | Location | Problem |
-|-------|----------|---------|
-| AppSidebar + Menu button | `DashboardLayout.tsx` | Main app navigation always present |
-| Desktop OwnerSidebar | `OwnerDashboard.tsx` line 373-378 | Second navigation system |
-| Mobile OwnerSidebar | `OwnerDashboard.tsx` line 383-392 | **Third** menu button rendered |
+### Admin Status Issue
+- The `isActiveAdmin()` function correctly identifies active admins (line 207-210)
+- The UI already shows "Admin" badge + "Revoke" for active admins (lines 566-579)
+- The "Make Admin" button only shows for non-admins (lines 581-589)
+- **BUT**: The error occurs because there may be users with admin role in `pending` or `rejected` status who are NOT active admins, yet clicking "Make Admin" fails due to the unique constraint on `(user_id, role)`
 
-Result: Users see 2-3 menu buttons on screen simultaneously.
-
-### 2. Messy UI Issues
-- Inconsistent card padding and spacing
-- No unified header design for sections
-- Cramped list items in User Management
-- Player Search section lacks visual hierarchy
-- Admin Request cards too basic
-- Mobile layout has competing headers
+### Missing Navigation
+- Header only has "Sign Out" button (line 417)
+- No way to return to `/dashboard` without logging out
 
 ---
 
 ## Solution
 
-### Architecture: Single Owner Sidebar (Remove DashboardLayout wrapper)
+### 1. Fix Admin Detection Logic
 
-The Owner Dashboard should **not** use `DashboardLayout` since it has its own navigation needs. Instead, create a dedicated layout:
+The problem is that `isActiveAdmin()` only returns true for `status: 'active'`, but users can have an admin role entry with `pending` or `rejected` status. When the owner tries to "Make Admin", the INSERT fails due to unique constraint.
 
-```text
-OwnerDashboard (NO DashboardLayout wrapper)
-├── OwnerHeader (new - minimal, clean)
-├── OwnerSidebar (single instance - desktop fixed, mobile sheet)
-└── Main Content (polished sections)
+**Fix**: Check if user has ANY admin role entry (any status), not just active:
+
+```typescript
+// New helper function
+const hasAdminRole = (userId: string) => {
+  return userRoles.some((r) => r.user_id === userId && r.role === 'admin');
+};
 ```
 
-### Key Changes
+Then update the UI logic:
+- If `isActiveAdmin()` → Show "Admin" badge + "Revoke" 
+- Else if `hasAdminRole()` (pending/rejected) → Show status badge + action to reactivate or clear
+- Else → Show "Make Admin" button
 
-1. **Remove DashboardLayout wrapper** - Owner Dashboard gets its own layout
-2. **Single OwnerSidebar instance** - Handle mobile/desktop internally
-3. **Clean header with sign out and page title only**
-4. **Polished card components** - Consistent spacing, better hierarchy
-5. **Professional list items** - Better user cards, admin cards, etc.
+### 2. Add "Back to Dashboard" Navigation
+
+Add a button in the header and sidebar to return to the main app:
+
+**Header**: Add a "Back to App" link next to the logo
+**Sidebar**: Add a "Return to Dashboard" item at the bottom
 
 ---
 
@@ -54,233 +57,197 @@ OwnerDashboard (NO DashboardLayout wrapper)
 
 | File | Changes |
 |------|---------|
-| `src/pages/OwnerDashboard.tsx` | Remove DashboardLayout, fix sidebar rendering, polish all sections |
-| `src/components/owner/OwnerSidebar.tsx` | Fix to render only once with internal mobile/desktop logic |
+| `src/pages/OwnerDashboard.tsx` | Add `hasAdminRole` helper, update UI logic, add navigation button |
+| `src/components/owner/OwnerSidebar.tsx` | Add "Return to Dashboard" link at bottom |
 
 ---
 
-## Technical Details
+## Technical Implementation
 
-### 1. Remove DashboardLayout Wrapper
-
-```typescript
-// BEFORE
-return (
-  <DashboardLayout>
-    <div className="flex min-h-[calc(100vh-4rem)]">
-      <OwnerSidebar ... />
-      ...
-    </div>
-  </DashboardLayout>
-);
-
-// AFTER
-return (
-  <div className="flex min-h-screen bg-background">
-    <OwnerSidebar ... />
-    <main className="flex-1 flex flex-col overflow-hidden">
-      <OwnerHeader />
-      <div className="flex-1 overflow-auto p-4 md:p-6">
-        {/* Content */}
-      </div>
-    </main>
-  </div>
-);
-```
-
-### 2. Fix OwnerSidebar - Single Render with Mobile Detection
-
-The sidebar will handle its own mobile/desktop rendering internally. Remove the duplicate mobile block in OwnerDashboard.
+### 1. Enhanced Admin Detection (OwnerDashboard.tsx)
 
 ```typescript
-// OwnerDashboard.tsx - SINGLE sidebar render
-<OwnerSidebar
-  activeSection={activeSection}
-  onSectionChange={setActiveSection}
-  pendingAdminRequests={adminRequests.length}
-  pendingScoutApplications={scoutApplications.filter(a => a.status === 'pending').length}
-/>
+// New helper - checks for any admin role entry (any status)
+const hasAdminRole = (userId: string) => {
+  return userRoles.some((r) => r.user_id === userId && r.role === 'admin');
+};
+
+// Get admin role status (active, pending, rejected)
+const getAdminStatus = (userId: string) => {
+  const role = userRoles.find((r) => r.user_id === userId && r.role === 'admin');
+  return role?.status || null;
+};
 ```
 
-### 3. Create OwnerHeader Component
-
-Clean header with:
-- Mobile menu trigger (only on mobile)
-- Page title showing current section
-- Sign out button (right side)
-
-```typescript
-function OwnerHeader({ 
-  activeSection, 
-  onMobileMenuOpen, 
-  onSignOut 
-}: OwnerHeaderProps) {
-  const isMobile = useIsMobile();
-  
-  return (
-    <header className="h-14 border-b bg-card px-4 flex items-center justify-between shrink-0">
-      <div className="flex items-center gap-3">
-        {isMobile && (
-          <Button variant="ghost" size="icon" onClick={onMobileMenuOpen}>
-            <Menu className="h-5 w-5" />
-          </Button>
-        )}
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold">H</span>
-          </div>
-          <div>
-            <h1 className="font-semibold text-sm md:text-base">Owner Dashboard</h1>
-            <p className="text-xs text-muted-foreground capitalize hidden md:block">
-              {sectionLabels[activeSection]}
-            </p>
-          </div>
-        </div>
-      </div>
-      <Button variant="outline" size="sm" onClick={onSignOut}>
-        Sign Out
-      </Button>
-    </header>
-  );
-}
-```
-
-### 4. Polish All Content Sections
-
-#### Overview Cards - Clean grid with proper spacing
-```typescript
-<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-  <Card className="p-5">
-    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-      Total Users
-    </p>
-    <p className="text-3xl font-bold mt-2">{totalUsers}</p>
-  </Card>
-  ...
-</div>
-```
-
-#### User Management - Professional list items
-```typescript
-<div className="divide-y">
-  {users.map((user) => (
-    <div
-      key={user.id}
-      className={cn(
-        "flex items-center justify-between py-4 px-2 first:pt-0 last:pb-0",
-        isActiveAdmin(user.id) && "bg-success-muted/50 -mx-2 px-4 rounded-lg"
-      )}
-    >
-      <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10">
-          <AvatarFallback>{user.full_name?.charAt(0) || 'U'}</AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="font-medium">{user.full_name || "No name"}</p>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="capitalize">{getUserRole(user.id)}</span>
-            {isActiveAdmin(user.id) && (
-              <Badge variant="outline" className="text-success border-success/50 gap-1">
-                <ShieldCheck className="h-3 w-3" />
-                Active
-              </Badge>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {/* Admin buttons */}
-      </div>
-    </div>
-  ))}
-</div>
-```
-
-#### Section Headers - Consistent pattern
-```typescript
-<div className="mb-6">
-  <h2 className="text-xl font-semibold">{sectionTitle}</h2>
-  <p className="text-sm text-muted-foreground mt-1">{sectionDescription}</p>
-</div>
-```
-
-### 5. Mobile Sidebar Controlled from Parent
-
-The OwnerSidebar will expose an `open` and `onOpenChange` prop for mobile sheet control:
-
-```typescript
-// OwnerSidebar.tsx - Updated props
-interface OwnerSidebarProps {
-  activeSection: OwnerSection;
-  onSectionChange: (section: OwnerSection) => void;
-  pendingAdminRequests?: number;
-  pendingScoutApplications?: number;
-  mobileOpen?: boolean;
-  onMobileOpenChange?: (open: boolean) => void;
-}
-
-// Component uses mobileOpen and onMobileOpenChange for Sheet
-```
-
----
-
-## Visual Improvements Summary
-
-| Section | Improvements |
-|---------|-------------|
-| Header | Clean, minimal, section-aware title |
-| Overview | Tighter grid, better card proportions |
-| User Management | Avatar-based list, divide lines, subtle admin highlight |
-| Admin Requests | Card-based design matching User Management |
-| Scout Applications | Existing cards are good, just better spacing |
-| Videos | Compact list with status badges |
-| Subscriptions | Visual progress bars with icons, clean grid |
-| Settings | Toggle cards with proper descriptions |
-| Player Search | Search input with results grid |
-
----
-
-## Layout Structure
+### 2. Updated User Management UI
 
 ```text
-+--------------------------------------------------+
-| OwnerHeader (h-14)                               |
-| [Menu] Owner Dashboard              [Sign Out]   |
-+--------+-----------------------------------------+
-| Sidebar|  Main Content Area (scrollable)         |
-| (w-64) |                                         |
-|        |  Section Title                          |
-| [Nav]  |  Section Description                    |
-|        |                                         |
-|        |  +----------------------------------+   |
-|        |  |  Content Cards / Lists          |   |
-|        |  +----------------------------------+   |
-|        |                                         |
-+--------+-----------------------------------------+
+User Row States:
+┌────────────────────────────────────────────────────────────────┐
+│ Active Admin:                                                  │
+│ [Avatar] John Doe                         [✓ Admin] [Revoke]   │
+│          admin · Active · Joined Jan 1                         │
+│          (green highlight)                                     │
+├────────────────────────────────────────────────────────────────┤
+│ Pending Admin (requested but not approved):                    │
+│ [Avatar] Jane Doe                         [⏳ Pending] [Approve]│
+│          admin · Pending · Joined Jan 2                        │
+│          (yellow highlight)                                    │
+├────────────────────────────────────────────────────────────────┤
+│ Rejected Admin (was rejected):                                 │
+│ [Avatar] Bob Smith                        [Reinstate Admin]    │
+│          player · Rejected · Joined Jan 3                      │
+│          (no highlight)                                        │
+├────────────────────────────────────────────────────────────────┤
+│ Regular User (never was admin):                                │
+│ [Avatar] Alice User                       [Make Admin]         │
+│          player · Joined Jan 4                                 │
+│          (no highlight)                                        │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-On mobile, the sidebar becomes a Sheet drawer triggered from the header menu button.
+### 3. Handle Different Admin Statuses
+
+```typescript
+// For pending admins - show Approve/Reject inline
+{getAdminStatus(user.id) === 'pending' && (
+  <>
+    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 gap-1">
+      <Clock className="h-3 w-3" />
+      Pending
+    </Badge>
+    <Button size="sm" onClick={() => handleApproveAdmin(user.id)}>
+      Approve
+    </Button>
+    <Button size="sm" variant="ghost" onClick={() => handleRejectAdmin(user.id)}>
+      Reject
+    </Button>
+  </>
+)}
+
+// For rejected admins - show option to reinstate
+{getAdminStatus(user.id) === 'rejected' && (
+  <>
+    <Badge variant="outline" className="text-muted-foreground gap-1">
+      <XCircle className="h-3 w-3" />
+      Rejected
+    </Badge>
+    <Button size="sm" variant="outline" onClick={() => handleApproveAdmin(user.id)}>
+      Reinstate
+    </Button>
+  </>
+)}
+
+// For users with no admin role at all
+{!hasAdminRole(user.id) && (
+  <Button size="sm" variant="outline" onClick={() => handleAssignRole(user.id, "admin")}>
+    Make Admin
+  </Button>
+)}
+```
+
+### 4. Add "Return to Dashboard" Navigation
+
+**In Header (OwnerDashboard.tsx):**
+```typescript
+<header className="h-14 border-b bg-card px-4 flex items-center justify-between shrink-0">
+  <div className="flex items-center gap-3">
+    {/* Mobile menu button */}
+    
+    {/* Logo and title */}
+    <div className="flex items-center gap-2 min-w-0">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={() => navigate('/dashboard')}
+        className="gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        <span className="hidden sm:inline">Back</span>
+      </Button>
+      <div className="h-6 w-px bg-border hidden sm:block" />
+      <div className="min-w-0">
+        <h1 className="font-semibold text-sm md:text-base truncate">Owner Dashboard</h1>
+      </div>
+    </div>
+  </div>
+  
+  <Button variant="outline" size="sm" onClick={handleSignOut}>
+    Sign Out
+  </Button>
+</header>
+```
+
+**In Sidebar (OwnerSidebar.tsx):**
+Add a "Return to Dashboard" link at the bottom of the sidebar, visually separated from the main navigation items.
+
+---
+
+## Visual Design
+
+### Admin Status Indicators
+
+| Status | Background | Badge | Actions |
+|--------|------------|-------|---------|
+| Active Admin | `bg-success/5` (green tint) | Green "Admin" with check | "Revoke" button |
+| Pending Admin | `bg-amber-50` (yellow tint) | Amber "Pending" with clock | "Approve" / "Reject" buttons |
+| Rejected Admin | None | Muted "Rejected" with X | "Reinstate" button |
+| Regular User | None | None | "Make Admin" button |
+
+### Back Navigation Button
+
+- Position: Left side of header, before the logo/title
+- Style: Ghost button with ArrowLeft icon
+- Text: "Back" (hidden on mobile, just icon shown)
+- Destination: `/dashboard`
+
+---
+
+## Sidebar Addition
+
+Add a footer section to the sidebar with navigation back to the main app:
+
+```typescript
+// Bottom of sidebar, after the main navigation items
+<div className="border-t p-3 mt-auto">
+  <button
+    onClick={() => navigate('/dashboard')}
+    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+  >
+    <ArrowLeft className="h-4 w-4 shrink-0" />
+    <span className="flex-1 text-left">Return to App</span>
+  </button>
+</div>
+```
+
+---
+
+## Edge Cases Handled
+
+1. **User already has admin role (any status)**: UI shows appropriate status and actions, prevents duplicate INSERT errors
+2. **Pending admin in Admin Requests vs User Management**: Both views allow approve/reject actions
+3. **Mobile navigation**: Both header back button and sidebar drawer have return navigation
+4. **Owner's own entry**: Should not show admin actions for the owner themselves (they're already owner)
 
 ---
 
 ## QA Checklist
 
-1. **Navigation**
-   - Verify only ONE menu button visible on mobile
-   - Verify sidebar is persistent on desktop (no menu button in sidebar area)
-   - All section navigation works correctly
-   - Badge counts display for Admin Requests and Scout Applications
+1. **Admin Status Reflection**
+   - Active admins show green badge + Revoke button
+   - Pending admins show amber badge + Approve/Reject buttons
+   - Rejected admins show muted badge + Reinstate button
+   - Regular users show Make Admin button
+   - No duplicate INSERT errors when clicking buttons
 
-2. **Visual Polish**
-   - Cards have consistent padding
-   - Lists have proper spacing and dividers
-   - Admin users clearly highlighted with green accent
-   - Mobile view looks clean and professional
+2. **Navigation**
+   - "Back" button in header returns to /dashboard
+   - "Return to App" in sidebar returns to /dashboard
+   - Mobile: Back button visible in header
+   - Mobile: Return to App visible in sidebar drawer
 
-3. **Functionality**
-   - Sign out works
-   - Make Admin / Revoke Admin works
-   - Admin request approve/reject works
-   - Player search works
-   - All sections render correctly
+3. **No Regressions**
+   - All existing functionality still works
+   - Admin requests section still shows pending requests
+   - Approve/Reject/Revoke still function correctly
 
