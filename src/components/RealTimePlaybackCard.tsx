@@ -2,8 +2,11 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Video, Play } from "lucide-react";
+import { Video, Play, Construction, Sparkles } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RealTimePlayback } from "./RealTimePlayback";
+import { useOwnerAccess } from "@/hooks/useOwnerAccess";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 interface RealTimePlaybackCardProps {
   module: string;
@@ -13,7 +16,55 @@ interface RealTimePlaybackCardProps {
 export const RealTimePlaybackCard = ({ module, sport }: RealTimePlaybackCardProps) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const { isOwner, loading: ownerLoading } = useOwnerAccess();
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
 
+  // Show loading skeleton while checking roles
+  if (ownerLoading || adminLoading) {
+    return (
+      <Card className="p-4 sm:p-6 border-dashed border-2 border-muted">
+        <div className="flex flex-col items-center space-y-3">
+          <Skeleton className="h-16 w-16 rounded-full" />
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-56" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+      </Card>
+    );
+  }
+
+  // Only owners and admins can access the full feature
+  const hasAccess = isOwner || isAdmin;
+
+  // Show Under Construction card for regular users
+  if (!hasAccess) {
+    return (
+      <Card className="p-4 sm:p-6 border-2 border-destructive/50 bg-gradient-to-br from-destructive/5 via-background to-destructive/10">
+        <div className="flex flex-col items-center space-y-3 text-center">
+          <div className="relative p-3 sm:p-4 rounded-full bg-destructive/10">
+            <Construction className="h-8 w-8 sm:h-10 sm:w-10 text-destructive animate-pulse" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-destructive" />
+            <h3 className="text-lg sm:text-xl font-semibold text-destructive">
+              {t('realTimePlayback.underConstructionTitle', 'Real-Time Playback Coming Soon!')}
+            </h3>
+          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-xs leading-relaxed">
+            {t('realTimePlayback.underConstructionDescription', "We're polishing this feature for the best training experience. Stay tuned!")}
+          </p>
+          <div className="flex items-center gap-2 pt-1">
+            <div className="h-2 w-2 bg-destructive rounded-full animate-pulse" />
+            <span className="text-xs text-destructive font-medium">
+              {t('realTimePlayback.activeDevelopment', 'Active Development')}
+            </span>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  // Full feature for owners and admins
   return (
     <>
       <Card className="p-4 sm:p-6 text-center border-dashed border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-background to-accent/5 hover:border-primary/50 transition-all duration-300 group">
