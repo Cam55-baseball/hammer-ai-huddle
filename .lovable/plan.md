@@ -1,442 +1,345 @@
 
+# Elite Workout & Running Card System - Complete E2E Masterpiece Implementation
 
-# Elite Workout & Running Card System - Complete E2E Integration Plan
+## Executive Summary
 
-## Overview
-
-This plan completes the Elite Workout & Running Card System by integrating the block-based architecture into existing components, adding the Preset Library, seeding Hammers IP presets, implementing edge functions for load calculation, and adding full i18n translations for all 8 languages. Coaches and scouts retain full ability to send custom workouts with block-based data.
-
----
-
-## Phase 1: Integrate Block System into CustomActivityBuilderDialog
-
-### Changes to `CustomActivityBuilderDialog.tsx`
-
-**What we're adding:**
-1. **View Mode Toggle** - Add Execute/Coach/Parent mode selector at the top
-2. **Block-Based Workout Builder** - Replace flat exercise list with BlockContainer when activity type is 'workout'
-3. **Enhanced Running Card Builder** - Replace embedded running sessions with the new RunningCardBuilder
-4. **CNS Load Preview** - Show real-time CNS load calculation in Coach mode
-5. **Preset Quick-Load** - Button to load from preset library
-
-**Key additions:**
-- Import `BlockContainer`, `RunningCardBuilder`, `ViewModeToggle`, `CNSLoadIndicator`
-- Add state for `workoutBlocks`, `runningSessions`, and `viewMode`
-- Conditional rendering: show BlockContainer for 'workout' type, RunningCardBuilder for 'running' type
-- Convert blocks/sessions to/from JSONB format for database storage
-- Keep backward compatibility with existing flat exercise data
-
-**Coach/Scout sending preserved:**
-- The `SendToPlayerDialog` already handles template snapshots as JSONB
-- Block data will be included in `template_snapshot` automatically
-- Locked fields logic remains unchanged
-- No disruption to existing scout_follows or sent_activity_templates flow
+This plan completes the Elite Workout & Running Card System as a masterpiece by finishing ALL remaining items from the approved plan. This includes full i18n for 7 languages, deep integration with `CustomActivityBuilderDialog`, Vault readiness integration, and ensuring coaches/scouts can seamlessly send block-based workouts.
 
 ---
 
-## Phase 2: Enhance My Activities Page with Preset Library
+## Current State Assessment
 
-### Changes to `MyCustomActivities.tsx`
+### Already Completed:
+- Database schema (4 tables: `workout_blocks`, `workout_presets`, `athlete_load_tracking`, `running_sessions`)
+- TypeScript types (`src/types/eliteWorkout.ts`)
+- Core UI components (BlockContainer, BlockCard, BlockTypeSelector, ViewModeToggle, etc.)
+- Hooks (`useEliteWorkout`, `useLoadTracking`, `useWorkoutPresets`)
+- Load calculation utilities (`src/utils/loadCalculation.ts`)
+- Edge functions (calculate-load, detect-overlaps, suggest-adaptation)
+- Hammers IP system presets seeded
+- English translations added to `en.json`
+- PresetLibrary and LoadDashboard components created
+- MyCustomActivities.tsx updated with new tabs
 
-**Add new tab: "Elite Presets"**
-```text
-tabs = [
-  ...existing tabs,
-  { value: 'elite-presets', icon: Dumbbell, label: 'Elite Presets' }
-]
+### Remaining Work:
+1. i18n translations for 7 languages (ES, FR, DE, JA, ZH, NL, KO)
+2. Integrate block system into `CustomActivityBuilderDialog`
+3. Create `ReadinessFromVault` component for Vault integration
+4. Ensure coach/scout sending works with block data
+5. Test and polish all integration points
+
+---
+
+## Phase 1: Complete i18n Translations (7 Languages)
+
+### Translation Structure
+
+The `eliteWorkout` namespace needs to be added to all 7 remaining language files with professionally translated content:
+
+**Spanish (es.json)**:
+```json
+"eliteWorkout": {
+  "title": "Entrenamiento Elite",
+  "blocks": {
+    "title": "Bloques de Entrenamiento",
+    "count": "bloques",
+    "activation": "Activación",
+    "elastic_prep": "Preparación Elástica",
+    "cns_primer": "Preparación SNC",
+    "strength_output": "Salida de Fuerza",
+    "power_speed": "Potencia/Velocidad",
+    "capacity": "Capacidad",
+    "skill_transfer": "Transferencia de Habilidad",
+    "decompression": "Descompresión",
+    "recovery": "Recuperación",
+    "custom": "Bloque Personalizado"
+  },
+  "intent": {
+    "elastic": "Elástico/Rebote",
+    "max_output": "Máxima Salida",
+    "submax_technical": "Submáximo Técnico",
+    "accumulation": "Acumulación",
+    "glide_restoration": "Restauración de Deslizamiento",
+    "cns_downregulation": "Bajada del SNC",
+    "custom": "Personalizado"
+  },
+  ...
+}
 ```
 
-**New component: `PresetLibrary.tsx`**
-- Display grid of system presets (Hammers IP - locked) and user presets
-- Filter by category: Explosive Lower, Elastic Day, Game Day Prime, etc.
-- Filter by difficulty: Beginner, Intermediate, Advanced
-- Preview modal showing block structure and CNS load estimate
-- "Use This Preset" button that loads blocks into activity builder
-- "Duplicate & Edit" for user presets
+**Similar structure for:**
+- French (fr.json)
+- German (de.json)
+- Japanese (ja.json)
+- Chinese (zh.json)
+- Dutch (nl.json)
+- Korean (ko.json)
 
-**New component: `PresetCard.tsx`**
-- Visual card with category color coding
-- Lock icon for system presets (Hammers IP)
-- CNS load badge
-- Duration estimate
-- Sport indicator (baseball/softball/both)
+Each language will receive the complete `eliteWorkout` namespace with all nested keys including: blocks, intent, running, viewModes, load, warnings, presets, readiness, and advanced.
 
 ---
 
-## Phase 3: Create Load Dashboard Component
+## Phase 2: Integrate Block System into CustomActivityBuilderDialog
 
-### New component: `LoadDashboard.tsx`
+### Key Changes to `CustomActivityBuilderDialog.tsx`
 
-**Purpose:** Weekly CNS/fascial load visualization
+**1. New Imports:**
+```typescript
+import { BlockContainer } from '@/components/elite-workout/blocks/BlockContainer';
+import { ViewModeToggle } from '@/components/elite-workout/views/ViewModeToggle';
+import { CNSLoadIndicator } from '@/components/elite-workout/intelligence/CNSLoadIndicator';
+import { RunningCardBuilder } from '@/components/elite-workout/running/RunningCardBuilder';
+import { ReadinessFromVault } from '@/components/elite-workout/readiness/ReadinessFromVault';
+import { WorkoutBlock, ViewMode, createEmptyBlock } from '@/types/eliteWorkout';
+import { calculateWorkoutCNS } from '@/utils/loadCalculation';
+```
+
+**2. New State Variables:**
+```typescript
+const [viewMode, setViewMode] = useState<ViewMode>('execute');
+const [useBlockSystem, setUseBlockSystem] = useState(false);
+const [workoutBlocks, setWorkoutBlocks] = useState<WorkoutBlock[]>([]);
+const [showReadinessCheck, setShowReadinessCheck] = useState(false);
+```
+
+**3. Block System Toggle (for workout type):**
+- Add a toggle switch in the workout section: "Use Block-Based Builder"
+- When enabled, show `BlockContainer` instead of `DragDropExerciseBuilder`
+- When disabled, keep legacy flat exercise list for backward compatibility
+
+**4. View Mode Toggle:**
+- Add `ViewModeToggle` component at the top of the dialog (after DialogHeader)
+- Only visible when `useBlockSystem` is true
+- Controls which fields are visible in BlockCard and EnhancedExerciseCard
+
+**5. CNS Load Preview:**
+- When `viewMode === 'coach'` and blocks exist, show real-time CNS load
+- Display using `CNSLoadIndicator` component
+- Update automatically as exercises are added/modified
+
+**6. Data Serialization:**
+- When saving with blocks, serialize to JSONB format:
+```typescript
+const exercisesData = useBlockSystem 
+  ? { _useBlocks: true, blocks: workoutBlocks }
+  : exercises;
+```
+
+**7. Template Loading:**
+- On edit, detect `_useBlocks` flag in exercises field
+- Parse and hydrate workoutBlocks state
+- Set `useBlockSystem` to true if blocks detected
+
+**8. Running Card Integration:**
+- Replace legacy embedded running section with `RunningCardBuilder`
+- Enhanced with surface, shoe type, fatigue state, intent fields
+
+**9. Readiness Quick Check:**
+- Add "Quick Readiness Check" button that opens a lightweight modal
+- Pre-populates from latest Vault check-in data
+- Influences load recommendations shown in Coach mode
+
+### Locked Fields Compatibility
+
+The existing `lockedFields` system remains fully functional:
+- When `exercises` is locked, BlockContainer becomes read-only
+- Block-level edits are prevented
+- Exercise-level edits within blocks are prevented
+- Visual lock indicators shown on locked blocks
+
+---
+
+## Phase 3: Create ReadinessFromVault Component
+
+### New Component: `src/components/elite-workout/readiness/ReadinessFromVault.tsx`
+
+**Purpose:** Fetches latest Vault check-in data to pre-populate readiness layer
 
 **Features:**
-- 7-day CNS load chart using Recharts
-- Daily breakdown: workout vs running contribution
-- Current recovery debt indicator
-- Weekly average vs today comparison
-- Overlap warnings for the current day
+- Queries `vault_focus_quizzes` for today's or most recent check-in
+- Extracts: sleep_quality, physical_readiness, perceived_recovery, pain_location
+- Displays summary card with readiness score
+- One-tap "Refresh from Vault" button
+- Calculates overall readiness score (0-100)
+- Provides recommendation: 'full_send' | 'modify_volume' | 'recovery_focus'
 
-**Data source:**
-- Uses `useLoadTracking` hook
-- Queries `athlete_load_tracking` table
-- Real-time updates on workout completion
+**Integration Points:**
+- Used in CustomActivityBuilderDialog when starting a workout
+- Shown in GamePlanCard before workout tasks
+- Feeds into suggest-adaptation edge function
+
+**Data Flow:**
+```text
+vault_focus_quizzes → ReadinessFromVault → QuickReadinessCheck → LoadRecommendation
+```
 
 ---
 
-## Phase 4: Seed Hammers IP System Presets
+## Phase 4: Coach/Scout Sending Verification
 
-### Database insert via migration
+### Ensuring Block Data Flows Through SendToPlayerDialog
 
-**Presets to seed:**
+**Current Flow (preserved):**
+1. Coach creates template with blocks in CustomActivityBuilderDialog
+2. Template saved to `custom_activity_templates` with exercises as JSONB
+3. Coach opens SendToPlayerDialog, selects players
+4. `template_snapshot` includes full exercises field (with blocks)
+5. Entry created in `sent_activity_templates`
+6. Player receives in `ReceivedActivitiesList`
 
-1. **Explosive Lower Day**
-   - Blocks: Activation → Elastic Prep → CNS Primer → Power/Speed → Strength Output → Decompression
-   - CNS Load Estimate: 120
-   - Fascial Bias: Compression-heavy
-   - Difficulty: Intermediate
+**Verification Points:**
+- `template_snapshot` automatically captures `{ _useBlocks: true, blocks: [...] }`
+- Locked fields apply at block/exercise level
+- ReceivedActivitiesList renders blocks via BlockContainer
+- Player can accept/customize within lock constraints
 
-2. **Elastic Day**
-   - Blocks: Activation → Elastic Prep → Power/Speed → Skill Transfer → Recovery
-   - CNS Load Estimate: 85
-   - Fascial Bias: Elastic-heavy
-   - Difficulty: Intermediate
+**No Changes Required to:**
+- SendToPlayerDialog.tsx (JSONB snapshot works automatically)
+- ReceivedActivitiesList.tsx (update to render blocks)
+- scout_follows flow (unchanged)
 
-3. **Game Day Prime**
-   - Blocks: Activation → CNS Primer → Skill Transfer → Decompression
-   - CNS Load Estimate: 45
-   - Fascial Bias: Balanced
-   - Difficulty: All levels
-
-4. **Fascial Recovery**
-   - Blocks: Activation → Decompression → Recovery
-   - CNS Load Estimate: 25
-   - Fascial Bias: Glide-heavy
-   - Difficulty: Beginner
-
-Each preset includes 3-5 sample exercises per block with:
-- Sets/reps/rest
-- Velocity intent
-- Fascia bias
-- CNS demand rating
+**Update Required:**
+- `ReceivedActivitiesList.tsx`: Add block rendering when `_useBlocks` detected
+- Display blocks using read-only BlockContainer variant
 
 ---
 
-## Phase 5: Edge Functions for Load Calculation
+## Phase 5: Polish and Edge Cases
 
-### 1. `calculate-load` Edge Function
+### A. Mobile Responsiveness
+- Ensure all new components work on 320px width
+- BlockCard collapse behavior on mobile
+- Touch-friendly tap targets (min 44x44px)
 
-**Purpose:** Calculate and store daily load metrics after workout/running completion
+### B. Empty States
+- No presets in category
+- No blocks in workout
+- No load history data
 
-**Endpoint:** POST `/functions/v1/calculate-load`
+### C. Error Handling
+- Edge function failures gracefully degrade
+- Network issues show toast with retry option
+- Invalid block data handled gracefully
 
-**Input:**
-```json
-{
-  "workout_blocks": [...],
-  "running_sessions": [...],
-  "entry_date": "2026-02-05"
-}
-```
-
-**Logic:**
-- Uses same algorithms as `loadCalculation.ts`
-- Calculates CNS total, fascial bias, volume
-- Upserts into `athlete_load_tracking` table
-- Returns updated metrics and any warnings
-
-### 2. `detect-overlaps` Edge Function
-
-**Purpose:** Analyze upcoming schedule for potential issues
-
-**Endpoint:** POST `/functions/v1/detect-overlaps`
-
-**Input:**
-```json
-{
-  "target_date": "2026-02-06",
-  "planned_activities": [...]
-}
-```
-
-**Logic:**
-- Fetches recent load history (7 days)
-- Compares planned load vs average
-- Detects CNS overlap, elastic overload, load spikes
-- Returns array of `OverlapWarning` objects
-
-### 3. `suggest-adaptation` Edge Function
-
-**Purpose:** AI-powered workout modification suggestions
-
-**Endpoint:** POST `/functions/v1/suggest-adaptation`
-
-**Input:**
-```json
-{
-  "readiness_score": 65,
-  "pain_areas": ["lower back"],
-  "planned_workout": {...}
-}
-```
-
-**Logic:**
-- Uses Lovable AI (Gemini) for intelligent suggestions
-- Analyzes readiness + pain + planned load
-- Returns adaptation suggestions with priorities
-
----
-
-## Phase 6: i18n Translations (All 8 Languages)
-
-### Add `eliteWorkout` namespace to all locale files
-
-**Keys to add:**
-
-```json
-{
-  "eliteWorkout": {
-    "title": "Elite Workout",
-    "blocks": {
-      "title": "Workout Blocks",
-      "count": "blocks",
-      "activation": "Activation",
-      "elastic_prep": "Elastic Prep",
-      "cns_primer": "CNS Primer",
-      "strength_output": "Strength Output",
-      "power_speed": "Power/Speed",
-      "capacity": "Capacity",
-      "skill_transfer": "Skill Transfer",
-      "decompression": "Decompression",
-      "recovery": "Recovery",
-      "custom": "Custom Block"
-    },
-    "intent": {
-      "elastic": "Elastic/Bounce",
-      "max_output": "Max Output",
-      "submax_technical": "Submax Technical",
-      "accumulation": "Accumulation",
-      "glide_restoration": "Glide Restoration",
-      "cns_downregulation": "CNS Downregulation",
-      "custom": "Custom"
-    },
-    "running": {
-      "title": "Running Session",
-      "types": {
-        "linear_sprint": "Sprint",
-        "tempo": "Tempo",
-        "conditioning": "Conditioning",
-        "elastic": "Elastic/Bounce",
-        "accel_decel": "Accel/Decel",
-        "curve": "Curve Run",
-        "cod": "Change of Direction",
-        "gait": "Gait Work"
-      },
-      "intent": {
-        "max": "Max Intent",
-        "submax": "Submax",
-        "elastic": "Elastic",
-        "technical": "Technical",
-        "recovery": "Recovery"
-      },
-      "surface": "Surface",
-      "shoeType": "Shoe Type",
-      "fatigueState": "Fatigue State",
-      "contacts": "Ground Contacts"
-    },
-    "viewModes": {
-      "execute": "Do It",
-      "coach": "Full Data",
-      "parent": "Overview",
-      "switchMode": "Switch View"
-    },
-    "load": {
-      "cns": "CNS Load",
-      "fascial": "Fascial Bias",
-      "compression": "Compression",
-      "elastic": "Elastic",
-      "glide": "Glide",
-      "volume": "Volume",
-      "recoveryDebt": "Recovery Debt"
-    },
-    "warnings": {
-      "cns_overlap": "High CNS load detected",
-      "load_spike": "Load spike - take it easy",
-      "elastic_overload": "Lots of jumping today",
-      "recovery_needed": "Recovery day recommended"
-    },
-    "presets": {
-      "title": "Elite Presets",
-      "systemPresets": "Hammers Presets",
-      "myPresets": "My Presets",
-      "usePreset": "Use This Preset",
-      "locked": "Locked",
-      "difficulty": "Difficulty",
-      "duration": "Duration",
-      "cnsLoad": "CNS Load"
-    },
-    "addBlock": "Add Block",
-    "addExercise": "Add Exercise",
-    "chooseBlockType": "Choose Block Type",
-    "noBlocks": "No blocks yet",
-    "noBlocksDescription": "Add blocks to structure your workout. Each block groups exercises by purpose.",
-    "addFirstBlock": "Add Your First Block",
-    "noExercises": "No exercises yet",
-    "readiness": {
-      "title": "Quick Readiness Check",
-      "sleep": "Sleep Quality",
-      "energy": "Energy Level",
-      "soreness": "Soreness",
-      "skip": "Skip Check",
-      "continue": "Continue"
-    },
-    "advanced": {
-      "title": "Advanced Settings",
-      "tempo": "Tempo",
-      "velocity": "Velocity Intent",
-      "fasciaBias": "Fascia Bias",
-      "cnsDemand": "CNS Demand",
-      "loadType": "Load Type"
-    }
-  }
-}
-```
-
-**Languages to update:**
-- `en.json` (English)
-- `es.json` (Spanish)
-- `fr.json` (French)
-- `de.json` (German)
-- `ja.json` (Japanese)
-- `zh.json` (Chinese)
-- `nl.json` (Dutch)
-- `ko.json` (Korean)
-
----
-
-## Phase 7: Integration Points
-
-### A. Game Plan Integration
-
-**Modify `GamePlanCard.tsx`:**
-- Show daily CNS total in header badge
-- Display overlap warning banners when detected
-- Add quick readiness check prompt before starting workout tasks
-
-### B. Vault Integration
-
-**Modify Readiness System:**
-- `ReadinessFromVault.tsx` component fetches latest Vault check-in data
-- Pre-populates readiness layer with sleep quality, stress, pain areas
-- Enables smarter adaptation suggestions
-
-### C. Template Sharing
-
-**Ensure block data flows through:**
-- `SendToPlayerDialog` already snapshots full template
-- Block data included in `template_snapshot` JSONB
-- Recipients see full block structure when accepting
-- Locked fields apply to block-level edits
+### D. Performance
+- Lazy load preset library content
+- Debounce CNS calculation updates
+- Memoize expensive calculations
 
 ---
 
 ## File Changes Summary
 
-| Category | File | Action |
-|----------|------|--------|
-| **Builder** | `CustomActivityBuilderDialog.tsx` | Modify - add block system, view modes |
-| **My Activities** | `MyCustomActivities.tsx` | Modify - add Elite Presets tab, Load Dashboard |
-| **New Components** | `PresetLibrary.tsx` | Create |
-| **New Components** | `PresetCard.tsx` | Create |
-| **New Components** | `LoadDashboard.tsx` | Create |
-| **New Components** | `ReadinessFromVault.tsx` | Create |
-| **Existing Elite** | `BlockContainer.tsx` | Enhance - add preset loading |
-| **Edge Functions** | `calculate-load/index.ts` | Create |
-| **Edge Functions** | `detect-overlaps/index.ts` | Create |
-| **Edge Functions** | `suggest-adaptation/index.ts` | Create |
-| **Config** | `supabase/config.toml` | Modify - add new functions |
-| **i18n** | All 8 locale files | Modify - add eliteWorkout namespace |
-| **Database** | Migration for preset seed data | Create |
-| **Hooks** | `useWorkoutPresets.ts` | Create |
+| File | Action | Description |
+|------|--------|-------------|
+| `src/i18n/locales/es.json` | Modify | Add eliteWorkout namespace (Spanish) |
+| `src/i18n/locales/fr.json` | Modify | Add eliteWorkout namespace (French) |
+| `src/i18n/locales/de.json` | Modify | Add eliteWorkout namespace (German) |
+| `src/i18n/locales/ja.json` | Modify | Add eliteWorkout namespace (Japanese) |
+| `src/i18n/locales/zh.json` | Modify | Add eliteWorkout namespace (Chinese) |
+| `src/i18n/locales/nl.json` | Modify | Add eliteWorkout namespace (Dutch) |
+| `src/i18n/locales/ko.json` | Modify | Add eliteWorkout namespace (Korean) |
+| `CustomActivityBuilderDialog.tsx` | Modify | Integrate block system, view modes, CNS preview |
+| `ReadinessFromVault.tsx` | Create | Vault integration for readiness data |
+| `ReceivedActivitiesList.tsx` | Modify | Render block-based activities from coaches |
 
 ---
 
-## Technical Details
+## Technical Implementation Details
 
-### Block Data Storage in Custom Activities
+### Block Data Storage Format
 
-**Field:** `exercises` JSONB column in `custom_activity_templates`
-
-**Structure when using blocks:**
-```json
+```typescript
+// In custom_activity_templates.exercises (JSONB)
 {
   "_useBlocks": true,
   "blocks": [
     {
-      "id": "block-123",
+      "id": "block-abc123",
       "name": "Activation",
       "blockType": "activation",
       "intent": "submax_technical",
-      "exercises": [...]
+      "orderIndex": 0,
+      "isCustom": false,
+      "exercises": [
+        {
+          "id": "ex-def456",
+          "name": "Hip Circles",
+          "type": "flexibility",
+          "sets": 2,
+          "reps": 10,
+          "rest": 30
+        }
+      ],
+      "metadata": {
+        "cnsContribution": 15,
+        "fasciaBias": { "compression": 20, "elastic": 60, "glide": 20 },
+        "estimatedDuration": 5
+      }
     }
   ]
 }
 ```
 
-**Backward compatibility:**
-- If `_useBlocks` is not present or false, treat as flat exercise array
-- Migration path: existing templates continue working as-is
-- Users can upgrade to blocks by editing template
+### Backward Compatibility
 
-### Running Session Storage
-
-**Field:** `embedded_running_sessions` JSONB column
-
-**Structure with new fields:**
-```json
-[
-  {
-    "id": "run-123",
-    "runType": "linear_sprint",
-    "intent": "max",
-    "distanceValue": 40,
-    "distanceUnit": "yards",
-    "reps": 6,
-    "surface": "turf",
-    "shoeType": "plastic_cleat",
-    "fatigueState": "fresh"
+```typescript
+// In CustomActivityBuilderDialog - loading template
+useEffect(() => {
+  if (template?.exercises) {
+    if (typeof template.exercises === 'object' && '_useBlocks' in template.exercises) {
+      setUseBlockSystem(true);
+      setWorkoutBlocks(template.exercises.blocks || []);
+    } else {
+      setUseBlockSystem(false);
+      setExercises(template.exercises as Exercise[]);
+    }
   }
-]
+}, [template]);
 ```
 
----
+### Readiness Integration
 
-## Coach/Scout Flow Verification
+```typescript
+// In ReadinessFromVault - fetching latest check-in
+const { data: latestCheckin } = await supabase
+  .from('vault_focus_quizzes')
+  .select('sleep_quality, physical_readiness, perceived_recovery, pain_location, pain_scales')
+  .eq('user_id', userId)
+  .gte('entry_date', format(subDays(new Date(), 1), 'yyyy-MM-dd'))
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .single();
 
-### Unchanged Workflows:
-
-1. **Creating activities** - Coaches create templates normally, now with blocks
-2. **Sending to players** - `SendToPlayerDialog` snapshots include block data
-3. **Player receiving** - `ReceivedActivitiesList` displays block-based workouts
-4. **Locked fields** - Apply at block and exercise level
-5. **Acceptance flow** - Player can accept/customize within lock constraints
-
-### Testing Points:
-
-- Coach creates block-based workout → sends to player → player accepts
-- Locked 'exercises' field prevents block modification
-- Preset usage flows from library to builder to player
+const readinessScore = calculateReadinessScore(latestCheckin);
+const recommendation = getReadinessRecommendation(readinessScore);
+```
 
 ---
 
 ## Success Criteria
 
-1. ✅ Coaches can create and send block-based workouts
-2. ✅ Players receive and execute workouts with full block structure
-3. ✅ View mode toggle works in Execute/Coach/Parent modes
-4. ✅ CNS load displays correctly in Coach mode
-5. ✅ Preset library loads and applies presets
-6. ✅ Edge functions calculate and store load metrics
-7. ✅ All 8 languages have complete translations
-8. ✅ No regression in existing custom activity workflows
-9. ✅ Mobile-responsive across all new components
+1. All 8 languages have complete eliteWorkout translations
+2. CustomActivityBuilderDialog shows block builder for workout type
+3. View mode toggle switches between Execute/Coach/Parent views
+4. CNS load displays in real-time in Coach mode
+5. Readiness data imports from Vault check-ins
+6. Coaches can send block-based workouts to players
+7. Players receive and execute workouts with full block structure
+8. Locked fields work correctly at block level
+9. Preset library loads and applies presets correctly
+10. Mobile-responsive across all components
+11. No regressions in existing custom activity workflows
+12. Edge functions handle load calculation and overlap detection
 
+---
+
+## Implementation Order
+
+1. **i18n Translations** (7 files) - Highest impact for global users
+2. **ReadinessFromVault Component** - Foundation for integration
+3. **CustomActivityBuilderDialog Integration** - Core feature completion
+4. **ReceivedActivitiesList Update** - Complete coach/player flow
+5. **Testing & Polish** - End-to-end verification
+
+This implementation will deliver a complete, production-ready Elite Workout & Running Card System that serves athletes from age 5 to MLB professionals with the intelligence and simplicity that defines Hammers Modality.
