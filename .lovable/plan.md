@@ -1,60 +1,120 @@
 
 
-## Root Cause: Duplicate `realTimePlayback` Namespace in en.json
-
-The English translation file (`src/i18n/locales/en.json`) contains **two separate `realTimePlayback` objects**:
-
-| Location | aiAnalysis Value | Issue |
-|----------|------------------|-------|
-| Line 12 | "Hammer Analysis" ✅ | Correctly updated |
-| Line 6388 | "AI Analysis" ❌ | **OVERRIDES the correct one** |
-
-In JSON, when duplicate keys exist at the same object level, **the last definition wins**. So the old values at line ~6388 override the corrected values at line ~12.
+## Overview
+Lock the Real-Time Playback feature for all users **except owners and admins**. Regular users will see an "Under Construction" message instead of the feature. Owners and admins can continue to access it for testing and development.
 
 ---
 
-## Keys Still Showing Old Text
+## Current State
 
-| Key | Line 12-100 (Ignored) | Line 6388+ (Active) |
-|-----|----------------------|---------------------|
-| `aiAnalysis` | "Hammer Analysis" | "AI Analysis" ❌ |
-| `aiAnalysisDescription` | "Get expert coaching feedback..." | "Get AI-powered feedback on your form" ❌ |
-| `analysisDisabled` | "Hammer Analysis is turned off..." | "AI analysis is turned off..." ❌ |
-| `analysisFailed` | "Analysis failed. Please try again." | "AI analysis failed" ❌ |
-| `frameCount` | "Frames for Analysis" | "Frames for AI Analysis" ❌ |
+The `RealTimePlaybackCard` component is used in `AnalyzeVideo.tsx` (line 569) and displays for all users who have access to the analyze page. There is no role-based gating on this feature.
+
+The project already has:
+- `useOwnerAccess` hook → returns `{ isOwner, loading }`
+- `useAdminAccess` hook → returns `{ isAdmin, loading }`
+- "Under Construction" UI pattern used in `ComingSoon.tsx` and `Index.tsx`
+- Translation keys for construction messages in `en.json`
 
 ---
 
 ## Solution
 
-Remove the duplicate `realTimePlayback` namespace at lines ~6374-6470 and keep only the correctly updated one at lines 2-100.
+Modify `RealTimePlaybackCard.tsx` to:
+1. Import and use `useOwnerAccess` and `useAdminAccess` hooks
+2. Show a loading skeleton while checking roles
+3. If user is **owner OR admin** → show the full Real-Time Playback feature
+4. If user is **neither** → show an "Under Construction" card with a friendly message
 
-**File to modify:** `src/i18n/locales/en.json`
+---
 
-### Steps:
-1. Delete the entire duplicate `realTimePlayback` object (lines ~6374 to ~6470)
-2. Verify no duplicate keys remain in the file
-3. Confirm the component uses the correct translations
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/components/RealTimePlaybackCard.tsx` | Add role checks and conditional rendering |
+| `src/i18n/locales/en.json` | Add translation key for the locked feature message |
 
 ---
 
 ## Technical Details
 
-The duplicate exists because the file accumulated translations over time without proper deduplication. The component (`RealTimePlayback.tsx`) correctly references the translation keys with fallback values:
+### RealTimePlaybackCard.tsx Changes
 
-```typescript
-{t('realTimePlayback.aiAnalysis', 'Hammer Analysis')}
+```text
+Current flow:
+  User clicks → Opens RealTimePlayback dialog
+
+New flow:
+  Check isOwner OR isAdmin
+    ├─ Yes → Show full feature (current behavior)
+    └─ No → Show "Under Construction" card
 ```
 
-The fallback shows "Hammer Analysis" but since the duplicate JSON entry exists and loads last, users see "AI Analysis" from line 6388.
+The component will:
+1. Import hooks: `useOwnerAccess`, `useAdminAccess`
+2. Import icons: `Construction`, `Sparkles`
+3. Wait for both loading states before rendering
+4. Conditionally render based on role
+
+### Under Construction Card Design
+Following the existing pattern from `ComingSoon.tsx`:
+- Red/orange construction styling
+- `Construction` icon with pulse animation
+- Clear messaging: "Real-Time Playback is under development"
+- "We're polishing this feature for the best training experience"
+- "Active Development" indicator
+
+### Translation Keys to Add
+```json
+{
+  "realTimePlayback": {
+    "underConstruction": "Under Construction",
+    "underConstructionTitle": "Real-Time Playback Coming Soon!",
+    "underConstructionDescription": "We're polishing this feature for the best training experience. Stay tuned!",
+    "activeDevelopment": "Active Development"
+  }
+}
+```
+
+---
+
+## Access Control Logic
+
+```typescript
+const { isOwner, loading: ownerLoading } = useOwnerAccess();
+const { isAdmin, loading: adminLoading } = useAdminAccess();
+
+// Wait for role checks to complete
+if (ownerLoading || adminLoading) {
+  return <LoadingSkeleton />;
+}
+
+// Only owners and admins can access
+const hasAccess = isOwner || isAdmin;
+
+if (!hasAccess) {
+  return <UnderConstructionCard />;
+}
+
+// Show full feature
+return <FullRealTimePlaybackCard />;
+```
+
+---
+
+## Security Considerations
+
+- Role verification happens via `user_roles` table with `status = 'active'` check
+- Both hooks use server-side Supabase queries (not localStorage)
+- Loading states prevent flash of unauthorized content
 
 ---
 
 ## QA Checklist
 
-1. Open Real-Time Playback → Toggle should show **"Hammer Analysis"** (not "AI Analysis")
-2. Toggle description should show **"Get expert coaching feedback on your mechanics"**
-3. Disable analysis and record → Message should say **"Hammer Analysis is turned off..."**
-4. Frame count label should show **"Frames for Analysis"** (not "Frames for AI Analysis")
-5. If analysis fails → Error should say **"Analysis failed. Please try again."**
+1. Log in as **owner** → Real-Time Playback card should be fully functional
+2. Log in as **admin** → Real-Time Playback card should be fully functional  
+3. Log in as **regular user** → Should see "Under Construction" card instead
+4. Log out → Real-Time Playback should not appear (parent page likely redirects anyway)
+5. Check loading state → Brief skeleton while roles are checked, no flash of wrong content
 
