@@ -1,173 +1,166 @@
 
-# Smart Food Recognition: AI-Powered Nutrition Auto-Fill
+## Diagnosis (what’s actually causing the 404)
+- The error `{"code":"NOT_FOUND","message":"Requested function was not found"}` means the app is calling a backend function endpoint that **does not exist in the backend environment**.
+- I verified from the codebase that there is **no** `supabase/functions/parse-food-text/` folder at all (it’s missing from `supabase/functions`), and there is **no** `parse-food-text` entry in `supabase/config.toml`.
+- I also verified by directly calling the backend:
+  - `POST /check-subscription` returns **200 OK** (so **check-subscription is deployed and working**).
+  - `POST /parse-food-text` returns **404 NOT_FOUND** (so **parse-food-text is not deployed**).
 
-## Overview
-
-When you type a food name (like "chicken breast" or "apple"), the system will use AI to recognize the food and automatically fill in the nutritional information (calories, protein, carbs, fats) for your daily intake tracking.
-
-## Current Behavior
-
-Right now, when logging meals in the Nutrition Hub, you have these options:
-1. **Quick Entry** - Manually type food name AND manually enter all macro values
-2. **Detailed Entry** - Search a food database by name (requires exact matches)
-3. **Photo Log** - Take a photo and AI identifies the food
-4. **Barcode Scanner** - Scan packaged foods
-
-**The Gap**: Quick Entry requires you to know and manually type all nutritional values. There's no "smart recognition" that automatically fills macros when you just type "grilled chicken" or "PB&J sandwich".
-
-## Solution
-
-Add **AI-Powered Smart Food Recognition** that:
-1. Watches what you type in the meal title/name field
-2. After you stop typing for ~1 second, calls AI to recognize the food
-3. Auto-fills calories, protein, carbs, and fats based on the recognized food
-4. Shows a confidence indicator and allows you to adjust values
-5. First checks the local food database, then falls back to AI if no match
+**Conclusion:** the 404 you keep hitting is because the Smart Food Recognition feature (which should call `parse-food-text`) is trying to invoke a backend function that isn’t present/deployed.
 
 ---
 
-## Technical Implementation
+## Goal
+1. Eliminate the 404 immediately by actually adding the missing backend function (`parse-food-text`) so the endpoint exists.
+2. Implement the “finest work” version of Smart Food Recognition:
+   - Local food DB match first (fast + accurate).
+   - AI fallback when no match.
+   - Safe auto-fill (never overwrites fields the user already edited).
+   - Clear “AI estimate” / confidence UI.
+   - Never blank-screen even if AI is rate-limited/unavailable.
 
-### 1. New Edge Function: `parse-food-text`
+---
 
-Creates a new backend function that takes a text food description and returns estimated nutrition.
+## Phase 1 — Fix the 404 at the source (create the missing backend function)
+### 1) Add the backend function folder and entrypoint
+Create:
+- `supabase/functions/parse-food-text/index.ts`
 
-**Location**: `supabase/functions/parse-food-text/index.ts`
+Behavior:
+- Accept JSON: `{ "text": string }`
+- Require auth (consistent with the rest of your app)
+- Return structured data:
+  - `foods[]` (each item: name, quantity, unit, calories, protein_g, carbs_g, fats_g, confidence)
+  - `totals` (calories, protein_g, carbs_g, fats_g)
+  - `mealDescription` (optional)
 
-**Capabilities**:
-- Accepts free-form text like "2 eggs with toast" or "chicken caesar salad"
-- Uses Lovable AI (Gemini 2.5 Flash) for recognition
-- Returns structured nutrition data with confidence levels
-- Handles compound meals (e.g., "burger with fries")
-- Uses USDA-reference nutrition values
+Implementation details:
+- Use Lovable AI Gateway from this function (server-side) with model `google/gemini-3-flash-preview`.
+- Use **tool-calling** so the AI returns validated structured output (not “best-effort JSON”).
+- Add robust error mapping:
+  - `429` → return `{ error: "Rate limit…" }` with HTTP 429
+  - `402` → return `{ error: "AI credits required…" }` with HTTP 402
+  - Anything else → HTTP 500 with a safe error message
+- Include full CORS headers (you already standardized these in other functions).
 
-```text
-Input: "grilled chicken breast 6oz"
-Output: {
-  foods: [
-    {
-      name: "Grilled Chicken Breast",
-      quantity: 6,
-      unit: "oz",
-      calories: 248,
-      protein: 47,
-      carbs: 0,
-      fats: 5,
-      confidence: "high"
-    }
-  ],
-  totalCalories: 248,
-  totalProtein: 47,
-  totalCarbs: 0,
-  totalFats: 5
-}
-```
+### 2) Register the function in backend config
+Update:
+- `supabase/config.toml`
 
-### 2. New Hook: `useSmartFoodLookup`
+Add:
+- `[functions.parse-food-text]`
+- `verify_jwt = true`
 
-Creates a React hook that manages the AI food recognition workflow.
+This aligns with how your other authenticated functions are configured and prevents accidental public access.
 
-**Location**: `src/hooks/useSmartFoodLookup.ts`
+### 3) Verification steps (fast, deterministic)
+After implementation:
+- Call `POST /parse-food-text` with `{ "text": "2 eggs and toast" }`
+- Confirm response is 200 and includes totals + foods.
+- Confirm no 404 anywhere.
 
-**Features**:
-- Debounced input (waits 800ms after typing stops)
-- First checks local `nutrition_food_database` for exact/fuzzy matches
-- Falls back to AI recognition only if no database match
-- Returns loading state, results, and error handling
-- Caches recent lookups to avoid redundant API calls
+---
 
-### 3. Update Quick Entry Components
+## Phase 2 — Implement the frontend smart lookup (local DB first, then AI)
+### 4) Add a dedicated hook for this workflow
+Create:
+- `src/hooks/useSmartFoodLookup.ts`
 
-Enhance the existing Quick Entry UI in both logging dialogs:
+Responsibilities:
+1. Debounce user input (800–1000ms).
+2. **Try local match first**:
+   - Query `nutrition_food_database` using `ilike` on `name` and `brand`.
+   - Choose best match via lightweight scoring (exact match, starts-with, token overlap).
+   - If score is above a threshold → return “database” result and skip AI call.
+3. If no good DB match → call:
+   - `supabase.functions.invoke('parse-food-text', { body: { text } })`
+4. Cache results in-memory (Map) to avoid repeated calls for the same text.
+5. Never throw uncaught errors—always return `{ error }` and let UI decide.
 
-**Files to Modify**:
-- `src/components/nutrition-hub/MealLoggingDialog.tsx`
+Return shape example:
+- `status: 'idle' | 'searching_db' | 'calling_ai' | 'ready' | 'error'`
+- `result?: { totals, foods, source, confidenceSummary }`
+- `error?: string`
+- `trigger(text)` and `clear()`
+
+### 5) Add “safe autofill” rules (prevents annoying overwrites)
+Both dialogs will track “touched” state:
+- If the user manually edits calories/protein/carbs/fats, we will NOT overwrite that field on subsequent auto-fill unless they press an explicit “Apply” button.
+- This is critical to make the feature feel premium, not intrusive.
+
+---
+
+## Phase 3 — Wire Smart Food Recognition into the two logging UIs
+### 6) Update Game Plan quick logger
+Modify:
 - `src/components/QuickNutritionLogDialog.tsx`
 
-**UI Changes**:
-1. Add a "magic wand" icon next to the meal title input
-2. Show a subtle loading indicator while AI processes
-3. Display recognized food(s) with a "confidence" badge (high/medium/low)
-4. Auto-fill the macro fields with recognized values
-5. Allow manual override of any auto-filled value
-6. Show a "Not what you expected? Search database →" fallback link
+Changes:
+- When `mealTitle` changes and length >= 3:
+  - trigger `useSmartFoodLookup(mealTitle)`
+- Show a small inline status row under the meal title:
+  - “Searching…” (spinner)
+  - “Matched food database” (badge)
+  - “AI estimate • High/Medium/Low confidence”
+  - “Auto-fill unavailable” (if 402/429/other)
+- When result arrives:
+  - If macros not touched → fill calories/protein/carbs/fats
+  - Optionally show a small “What I recognized:” expandable list of foods
+- If the backend ever returns 404/402/429:
+  - show a toast and keep the form usable (no blank screen)
 
-### 4. Hybrid Lookup Strategy
+### 7) Update Nutrition Hub quick entry
+Modify:
+- `src/components/nutrition-hub/MealLoggingDialog.tsx` (Quick Entry tab)
 
-The system uses a tiered approach for maximum accuracy:
-
-```text
-┌─────────────────────────────────────────┐
-│  User types: "greek yogurt"             │
-└─────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────┐
-│ Step 1: Search local food database      │
-│ (nutrition_food_database table)         │
-│ → If match found with >80% confidence   │
-│   → Use database values (most accurate) │
-└─────────────────────────────────────────┘
-                    ↓ No match
-┌─────────────────────────────────────────┐
-│ Step 2: Call AI (parse-food-text)       │
-│ → Gemini estimates nutrition            │
-│ → Returns with confidence indicator     │
-└─────────────────────────────────────────┘
-                    ↓
-┌─────────────────────────────────────────┐
-│ Step 3: Auto-fill form fields           │
-│ → User can adjust before saving         │
-└─────────────────────────────────────────┘
-```
+Same behavior as above, plus one “pro” enhancement:
+- If AI returns multiple foods, offer a one-click option:
+  - “Use detailed breakdown” → switches to Detailed tab and pre-fills MealBuilder items
+  - (This makes compound meals feel significantly more accurate and “premium.”)
 
 ---
 
-## Files to Create
+## Phase 4 — Add translations (so UI doesn’t show raw keys)
+Update:
+- `src/i18n/locales/en.json` (and optionally mirror into other locales later)
 
-| File | Purpose |
-|------|---------|
-| `supabase/functions/parse-food-text/index.ts` | AI-powered food text parsing |
-| `src/hooks/useSmartFoodLookup.ts` | React hook for smart lookup logic |
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/components/nutrition-hub/MealLoggingDialog.tsx` | Add smart lookup to Quick Entry tab |
-| `src/components/QuickNutritionLogDialog.tsx` | Add smart lookup to meal title field |
-| `supabase/config.toml` | Register new edge function |
-| `src/i18n/locales/en.json` | Add translation keys for new UI elements |
+Add keys for:
+- Smart lookup placeholder/help text
+- “Searching…”
+- “AI estimate”
+- “Matched in food database”
+- “Apply”
+- “Not what you expected?”
 
 ---
 
-## User Experience Flow
-
-1. User opens Quick Log dialog
-2. Selects meal type (Breakfast, Lunch, etc.)
-3. Types food name: "2 scrambled eggs with bacon"
-4. After 800ms pause, sees a subtle shimmer/loading indicator
-5. Fields auto-populate:
-   - Calories: 340
-   - Protein: 22g
-   - Carbs: 2g
-   - Fats: 27g
-6. Small badge shows "AI Estimated • High Confidence"
-7. User can adjust any value if needed
-8. Taps "Save Meal" → Done!
+## QA checklist (end-to-end)
+1. Open Nutrition Hub → Quick Entry:
+   - Type “greek yogurt” → should match local DB when possible.
+2. Type “2 eggs with toast”:
+   - DB likely won’t match perfectly → AI fills totals + shows recognized items.
+3. Manually edit protein, then type more text:
+   - Protein should NOT get overwritten.
+4. Save meal:
+   - Confirms your existing React Query invalidation updates macro totals everywhere.
+5. Force AI failure simulation:
+   - If 429/402 happens, UI shows toast and remains usable (no blank screen).
 
 ---
 
-## Edge Cases Handled
-
-- **Ambiguous foods**: "Sandwich" → Shows "Medium Confidence" and estimates a generic sandwich
-- **Compound meals**: "Burger with fries and soda" → Breaks down into 3 items, sums totals
-- **Branded foods**: "Big Mac" → Recognizes and uses known nutritional data
-- **Portions**: "Half cup of rice" → Adjusts serving size accordingly
-- **Misspellings**: "chiken brest" → Fuzzy matching corrects to "Chicken Breast"
-- **No match**: Shows "Unable to recognize. Please enter values manually or search database."
+## Rollback / safety
+- All changes are additive (new function + new hook + UI enhancements).
+- If anything unexpected occurs, we can temporarily disable auto-triggering and keep only a manual “Auto-fill” button while preserving the backend function.
 
 ---
 
-## Summary
+## Files that will be created/modified
+**Create**
+- `supabase/functions/parse-food-text/index.ts`
+- `src/hooks/useSmartFoodLookup.ts`
 
-This enhancement transforms the Quick Entry experience from manual data entry to intelligent food recognition. Users simply type what they ate, and the system fills in the nutritional details automatically using a combination of database lookup and AI estimation.
+**Modify**
+- `supabase/config.toml`
+- `src/components/QuickNutritionLogDialog.tsx`
+- `src/components/nutrition-hub/MealLoggingDialog.tsx`
+- `src/i18n/locales/en.json`
