@@ -12,10 +12,13 @@ import { RunningPresetLibrary } from '@/components/custom-activities/RunningPres
 import { WorkoutTemplatesLibrary } from '@/components/custom-activities/WorkoutTemplatesLibrary';
 import { ReceivedActivitiesList } from '@/components/custom-activities/ReceivedActivitiesList';
 import { RecentlyDeletedList } from '@/components/custom-activities/RecentlyDeletedList';
+import { PresetLibrary } from '@/components/elite-workout/presets/PresetLibrary';
+import { LoadDashboard } from '@/components/elite-workout/intelligence/LoadDashboard';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { useDeletedActivities } from '@/hooks/useDeletedActivities';
-import { LayoutGrid, History, BarChart3, Droplets, Footprints, BookOpen, Inbox, Sparkles, Trash2 } from 'lucide-react';
+import { WorkoutBlock } from '@/types/eliteWorkout';
+import { LayoutGrid, History, BarChart3, Droplets, Footprints, BookOpen, Inbox, Sparkles, Trash2, Dumbbell, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
@@ -51,8 +54,17 @@ export default function MyCustomActivities() {
     refetch();
   };
 
+  const handleUsePreset = (blocks: WorkoutBlock[], presetName: string) => {
+    toast.success(t('eliteWorkout.presets.loaded', `Preset "${presetName}" loaded! Create a new activity to use it.`));
+    // Store in session for the activity builder to pick up
+    sessionStorage.setItem('pendingWorkoutBlocks', JSON.stringify(blocks));
+    sessionStorage.setItem('pendingWorkoutName', presetName);
+  };
+
   const tabs = [
     { value: 'templates', icon: LayoutGrid, label: t('myCustomActivities.tabs.templates', 'Templates') },
+    { value: 'elite-presets', icon: Dumbbell, label: t('myCustomActivities.tabs.elitePresets', 'Elite Presets') },
+    { value: 'load-dashboard', icon: Activity, label: t('myCustomActivities.tabs.loadDashboard', 'Load Dashboard') },
     { value: 'received', icon: Inbox, label: t('myCustomActivities.tabs.received', 'Received'), badge: pendingCount },
     { value: 'deleted', icon: Trash2, label: t('myCustomActivities.tabs.deleted', 'Recently Deleted'), badge: deletedCount },
     { value: 'library', icon: BookOpen, label: t('myCustomActivities.tabs.library', 'Library') },
@@ -127,6 +139,17 @@ export default function MyCustomActivities() {
 
             <TabsContent value="received" className="mt-0 animate-fade-in">
               <ReceivedActivitiesList selectedSport={selectedSport} />
+            </TabsContent>
+
+            <TabsContent value="elite-presets" className="mt-0 animate-fade-in">
+              <PresetLibrary 
+                selectedSport={selectedSport}
+                onSelectPreset={handleUsePreset}
+              />
+            </TabsContent>
+
+            <TabsContent value="load-dashboard" className="mt-0 animate-fade-in">
+              <LoadDashboard />
             </TabsContent>
 
             <TabsContent value="deleted" className="mt-0 animate-fade-in">
