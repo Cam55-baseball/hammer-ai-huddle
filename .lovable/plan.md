@@ -1,220 +1,173 @@
 
+# Smart Food Recognition: AI-Powered Nutrition Auto-Fill
 
-# Comprehensive Application Audit: Issue Identification and Fixes
+## Overview
 
-## Executive Summary
+When you type a food name (like "chicken breast" or "apple"), the system will use AI to recognize the food and automatically fill in the nutritional information (calories, protein, carbs, fats) for your daily intake tracking.
 
-After an exhaustive analysis of the codebase, I've identified several categories of issues that need to be addressed. The good news is that the application is largely well-structured, but there are specific areas requiring attention to ensure stability, accessibility, and optimal performance.
+## Current Behavior
 
----
+Right now, when logging meals in the Nutrition Hub, you have these options:
+1. **Quick Entry** - Manually type food name AND manually enter all macro values
+2. **Detailed Entry** - Search a food database by name (requires exact matches)
+3. **Photo Log** - Take a photo and AI identifies the food
+4. **Barcode Scanner** - Scan packaged foods
 
-## Issues Identified
+**The Gap**: Quick Entry requires you to know and manually type all nutritional values. There's no "smart recognition" that automatically fills macros when you just type "grilled chicken" or "PB&J sandwich".
 
-### Category 1: Accessibility - DialogContent Missing Required Elements
+## Solution
 
-**Severity: Medium (Console Warnings)**
-
-The console logs show repeated warnings about `DialogContent` requiring `DialogTitle` for screen reader accessibility. While many dialogs in the codebase properly include titles, some components may be triggering this warning.
-
-**Root Cause Analysis:**
-- The `RealTimePlayback.tsx` component correctly uses `VisuallyHidden.Root` wrapper around `DialogTitle` (line 1407-1409)
-- Other dialog components like `WeeklyWellnessQuizDialog` use the `sr-only` class approach which is also valid
-- The warning may be coming from a dialog that doesn't include any title at all
-
-**Files to Check:**
-| Component | Status | Action Needed |
-|-----------|--------|---------------|
-| `RealTimePlayback.tsx` | Uses VisuallyHidden correctly | None |
-| `WeeklyWellnessQuizDialog.tsx` | Uses sr-only correctly | None |
-| `DrillDetailDialog.tsx` | Has DialogHeader | Verify DialogDescription |
-| `VaultFocusQuizDialog.tsx` | Has DialogHeader | None |
-
-**Fix Required:**
-Search all dialog usages and ensure every `DialogContent` has either:
-1. A visible `DialogTitle` inside `DialogHeader`, OR
-2. A `DialogTitle` with `className="sr-only"`, OR
-3. A `DialogTitle` wrapped in `VisuallyHidden.Root`
-
-Additionally, add `aria-describedby={undefined}` to dialogs that intentionally have no description.
+Add **AI-Powered Smart Food Recognition** that:
+1. Watches what you type in the meal title/name field
+2. After you stop typing for ~1 second, calls AI to recognize the food
+3. Auto-fills calories, protein, carbs, and fats based on the recognized food
+4. Shows a confidence indicator and allows you to adjust values
+5. First checks the local food database, then falls back to AI if no match
 
 ---
 
-### Category 2: Role Access Hook Inconsistency
+## Technical Implementation
 
-**Severity: Low-Medium**
+### 1. New Edge Function: `parse-food-text`
 
-**Issue:** The `useOwnerAccess` and `useAdminAccess` hooks have inconsistent status checking:
+Creates a new backend function that takes a text food description and returns estimated nutrition.
 
-| Hook | Status Check |
-|------|--------------|
-| `useOwnerAccess.ts` | Does NOT filter by `status = 'active'` |
-| `useAdminAccess.ts` | Filters by `status = 'active'` |
-| `useScoutAccess.ts` | Does NOT filter by `status` |
+**Location**: `supabase/functions/parse-food-text/index.ts`
 
-**Impact:** An owner or scout with a non-active role status could still have access privileges.
+**Capabilities**:
+- Accepts free-form text like "2 eggs with toast" or "chicken caesar salad"
+- Uses Lovable AI (Gemini 2.5 Flash) for recognition
+- Returns structured nutrition data with confidence levels
+- Handles compound meals (e.g., "burger with fries")
+- Uses USDA-reference nutrition values
 
-**File:** `src/hooks/useOwnerAccess.ts` (lines 35-39)
-
-**Fix Required:**
-Update `useOwnerAccess.ts` to include `.eq('status', 'active')` in the query to match the pattern used in `useAdminAccess.ts`.
-
----
-
-### Category 3: Missing Translation Keys in Other Languages
-
-**Severity: Low**
-
-The recently added translation keys (`scout.players`, `scout.typeToSearch`, `playerFilters.sport`) are present in `en.json` but need to be added to other locale files:
-- `es.json` (Spanish)
-- `fr.json` (French)
-- `de.json` (German)
-- `ja.json` (Japanese)
-- `zh.json` (Chinese)
-- `nl.json` (Dutch)
-
-**Files to Update:**
-All files in `src/i18n/locales/` except `en.json`
-
----
-
-### Category 4: Potential Memory Leak in SportThemeContext
-
-**Severity: Low**
-
-The `SportThemeContext.tsx` uses a `setInterval` polling mechanism (every 500ms) to detect localStorage changes. While not a critical issue, this is an unnecessary CPU drain.
-
-**File:** `src/contexts/SportThemeContext.tsx` (lines 41-47)
-
-**Better Approach:**
-Use a `CustomEvent` dispatched when sport changes instead of polling, or use the `storage` event more effectively.
-
----
-
-### Category 5: Edge Function CORS Headers
-
-**Severity: Low**
-
-The edge functions use a simplified CORS header set. While functional, the headers should include the full set of Supabase client headers for maximum compatibility:
-
-**Current Pattern:**
-```typescript
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+```text
+Input: "grilled chicken breast 6oz"
+Output: {
+  foods: [
+    {
+      name: "Grilled Chicken Breast",
+      quantity: 6,
+      unit: "oz",
+      calories: 248,
+      protein: 47,
+      carbs: 0,
+      fats: 5,
+      confidence: "high"
+    }
+  ],
+  totalCalories: 248,
+  totalProtein: 47,
+  totalCarbs: 0,
+  totalFats: 5
+}
 ```
 
-**Recommended Pattern:**
-```typescript
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+### 2. New Hook: `useSmartFoodLookup`
+
+Creates a React hook that manages the AI food recognition workflow.
+
+**Location**: `src/hooks/useSmartFoodLookup.ts`
+
+**Features**:
+- Debounced input (waits 800ms after typing stops)
+- First checks local `nutrition_food_database` for exact/fuzzy matches
+- Falls back to AI recognition only if no database match
+- Returns loading state, results, and error handling
+- Caches recent lookups to avoid redundant API calls
+
+### 3. Update Quick Entry Components
+
+Enhance the existing Quick Entry UI in both logging dialogs:
+
+**Files to Modify**:
+- `src/components/nutrition-hub/MealLoggingDialog.tsx`
+- `src/components/QuickNutritionLogDialog.tsx`
+
+**UI Changes**:
+1. Add a "magic wand" icon next to the meal title input
+2. Show a subtle loading indicator while AI processes
+3. Display recognized food(s) with a "confidence" badge (high/medium/low)
+4. Auto-fill the macro fields with recognized values
+5. Allow manual override of any auto-filled value
+6. Show a "Not what you expected? Search database →" fallback link
+
+### 4. Hybrid Lookup Strategy
+
+The system uses a tiered approach for maximum accuracy:
+
+```text
+┌─────────────────────────────────────────┐
+│  User types: "greek yogurt"             │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│ Step 1: Search local food database      │
+│ (nutrition_food_database table)         │
+│ → If match found with >80% confidence   │
+│   → Use database values (most accurate) │
+└─────────────────────────────────────────┘
+                    ↓ No match
+┌─────────────────────────────────────────┐
+│ Step 2: Call AI (parse-food-text)       │
+│ → Gemini estimates nutrition            │
+│ → Returns with confidence indicator     │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│ Step 3: Auto-fill form fields           │
+│ → User can adjust before saving         │
+└─────────────────────────────────────────┘
 ```
 
-**Files Affected:** All edge functions in `supabase/functions/`
-
 ---
 
-## Implementation Plan
+## Files to Create
 
-### Phase 1: Critical Fixes (Immediate)
-
-1. **Fix Dialog Accessibility Warnings**
-   - Audit all `DialogContent` usages
-   - Add missing `DialogTitle` elements (hidden for screen readers if not visible)
-   - Add `aria-describedby={undefined}` where appropriate
-
-2. **Standardize Role Access Hooks**
-   - Update `useOwnerAccess.ts` to check `status = 'active'`
-   - Update `useScoutAccess.ts` to check `status = 'active'` (optional based on business logic)
-
-### Phase 2: Consistency Improvements
-
-3. **Add Missing Translations**
-   - Add `scout.players` and `scout.typeToSearch` to all non-English locale files
-   - Add `playerFilters.sport` to all non-English locale files
-
-4. **Update Edge Function CORS Headers**
-   - Update CORS headers in all edge functions to include full Supabase client header list
-
-### Phase 3: Performance Optimization
-
-5. **Optimize SportThemeContext**
-   - Replace 500ms polling with event-based approach
-   - Use `BroadcastChannel` API or custom events for cross-tab communication
-
----
+| File | Purpose |
+|------|---------|
+| `supabase/functions/parse-food-text/index.ts` | AI-powered food text parsing |
+| `src/hooks/useSmartFoodLookup.ts` | React hook for smart lookup logic |
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/hooks/useOwnerAccess.ts` | Add `.eq('status', 'active')` to query |
-| `src/hooks/useScoutAccess.ts` | Consider adding status filter |
-| `src/i18n/locales/es.json` | Add missing scout/filter translations |
-| `src/i18n/locales/fr.json` | Add missing scout/filter translations |
-| `src/i18n/locales/de.json` | Add missing scout/filter translations |
-| `src/i18n/locales/ja.json` | Add missing scout/filter translations |
-| `src/i18n/locales/zh.json` | Add missing scout/filter translations |
-| `src/i18n/locales/nl.json` | Add missing scout/filter translations |
-| `src/contexts/SportThemeContext.tsx` | Replace polling with event-based approach |
-| `supabase/functions/*/index.ts` | Update CORS headers (multiple files) |
+| `src/components/nutrition-hub/MealLoggingDialog.tsx` | Add smart lookup to Quick Entry tab |
+| `src/components/QuickNutritionLogDialog.tsx` | Add smart lookup to meal title field |
+| `supabase/config.toml` | Register new edge function |
+| `src/i18n/locales/en.json` | Add translation keys for new UI elements |
 
 ---
 
-## Technical Details
+## User Experience Flow
 
-### Fix 1: useOwnerAccess Status Check
+1. User opens Quick Log dialog
+2. Selects meal type (Breakfast, Lunch, etc.)
+3. Types food name: "2 scrambled eggs with bacon"
+4. After 800ms pause, sees a subtle shimmer/loading indicator
+5. Fields auto-populate:
+   - Calories: 340
+   - Protein: 22g
+   - Carbs: 2g
+   - Fats: 27g
+6. Small badge shows "AI Estimated • High Confidence"
+7. User can adjust any value if needed
+8. Taps "Save Meal" → Done!
 
-```typescript
-// Current (line 35-39)
-const { data, error } = await supabase
-  .from('user_roles')
-  .select('role, status')
-  .eq('user_id', user.id)
-  .eq('role', 'owner');
+---
 
-// Fixed
-const { data, error } = await supabase
-  .from('user_roles')
-  .select('role, status')
-  .eq('user_id', user.id)
-  .eq('role', 'owner')
-  .eq('status', 'active');
-```
+## Edge Cases Handled
 
-### Fix 2: SportThemeContext Optimization
-
-```typescript
-// Replace polling with custom event
-useEffect(() => {
-  const handleSportChange = (e: CustomEvent) => {
-    setSport(e.detail.sport);
-  };
-  
-  window.addEventListener('sportChanged', handleSportChange as EventListener);
-  
-  return () => {
-    window.removeEventListener('sportChanged', handleSportChange as EventListener);
-  };
-}, []);
-
-// When changing sport elsewhere, dispatch event:
-window.dispatchEvent(new CustomEvent('sportChanged', { detail: { sport: newSport } }));
-```
+- **Ambiguous foods**: "Sandwich" → Shows "Medium Confidence" and estimates a generic sandwich
+- **Compound meals**: "Burger with fries and soda" → Breaks down into 3 items, sums totals
+- **Branded foods**: "Big Mac" → Recognizes and uses known nutritional data
+- **Portions**: "Half cup of rice" → Adjusts serving size accordingly
+- **Misspellings**: "chiken brest" → Fuzzy matching corrects to "Chicken Breast"
+- **No match**: Shows "Unable to recognize. Please enter values manually or search database."
 
 ---
 
 ## Summary
 
-The application is well-structured overall. The main areas requiring attention are:
-
-1. **Dialog accessibility** - Add missing titles for screen readers
-2. **Role access consistency** - Standardize active status filtering
-3. **Translation completeness** - Add missing keys to non-English locales
-4. **Performance optimization** - Replace polling with events in SportThemeContext
-5. **CORS header completeness** - Update edge functions with full header set
-
-These fixes will improve accessibility compliance, ensure consistent access control, and optimize performance across the application.
-
+This enhancement transforms the Quick Entry experience from manual data entry to intelligent food recognition. Users simply type what they ate, and the system fills in the nutritional details automatically using a combination of database lookup and AI estimation.
