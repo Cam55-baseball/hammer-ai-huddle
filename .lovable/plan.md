@@ -1,166 +1,129 @@
 
-## Diagnosis (what’s actually causing the 404)
-- The error `{"code":"NOT_FOUND","message":"Requested function was not found"}` means the app is calling a backend function endpoint that **does not exist in the backend environment**.
-- I verified from the codebase that there is **no** `supabase/functions/parse-food-text/` folder at all (it’s missing from `supabase/functions`), and there is **no** `parse-food-text` entry in `supabase/config.toml`.
-- I also verified by directly calling the backend:
-  - `POST /check-subscription` returns **200 OK** (so **check-subscription is deployed and working**).
-  - `POST /parse-food-text` returns **404 NOT_FOUND** (so **parse-food-text is not deployed**).
-
-**Conclusion:** the 404 you keep hitting is because the Smart Food Recognition feature (which should call `parse-food-text`) is trying to invoke a backend function that isn’t present/deployed.
+## Overview
+Make the nutrition logging experience intuitive for users as young as 10 years old by:
+1. Replacing the confusing "Meal Title" label with a simple, action-oriented phrase
+2. Adding Smart Food Recognition to the Vault's nutrition log form (VaultNutritionLogCard)
 
 ---
 
-## Goal
-1. Eliminate the 404 immediately by actually adding the missing backend function (`parse-food-text`) so the endpoint exists.
-2. Implement the “finest work” version of Smart Food Recognition:
-   - Local food DB match first (fast + accurate).
-   - AI fallback when no match.
-   - Safe auto-fill (never overwrites fields the user already edited).
-   - Clear “AI estimate” / confidence UI.
-   - Never blank-screen even if AI is rate-limited/unavailable.
+## Change 1: Kid-Friendly Label Rename
+
+### Current State
+- Label: "Meal Title"
+- Placeholder: "e.g., Protein Shake, Power Breakfast..."
+
+### New State (optimized for 10-year-olds)
+- Label: **"What did you eat?"**
+- Placeholder: **"Type what you ate (e.g., 2 eggs, pizza, apple...)"**
+
+This wording:
+- Uses simple, direct language a child understands
+- Frames it as a question (conversational)
+- Gives concrete, relatable food examples kids recognize
+
+### Files to Update
+
+| File | Change |
+|------|--------|
+| `src/i18n/locales/en.json` | Update `vault.nutrition.mealTitle` and `vault.nutrition.mealTitlePlaceholder` |
+| `src/components/QuickNutritionLogDialog.tsx` | Use translation key for label |
+| `src/components/nutrition-hub/MealLoggingDialog.tsx` | Use translation key for label |
+| `src/components/vault/VaultNutritionLogCard.tsx` | Already uses translation keys |
 
 ---
 
-## Phase 1 — Fix the 404 at the source (create the missing backend function)
-### 1) Add the backend function folder and entrypoint
-Create:
-- `supabase/functions/parse-food-text/index.ts`
+## Change 2: Add Smart Food Recognition to Vault Nutrition Log
 
-Behavior:
-- Accept JSON: `{ "text": string }`
-- Require auth (consistent with the rest of your app)
-- Return structured data:
-  - `foods[]` (each item: name, quantity, unit, calories, protein_g, carbs_g, fats_g, confidence)
-  - `totals` (calories, protein_g, carbs_g, fats_g)
-  - `mealDescription` (optional)
+### Current State
+`VaultNutritionLogCard.tsx` has a meal title input field but **no** smart lookup integration. Users must manually enter all macro values.
 
-Implementation details:
-- Use Lovable AI Gateway from this function (server-side) with model `google/gemini-3-flash-preview`.
-- Use **tool-calling** so the AI returns validated structured output (not “best-effort JSON”).
-- Add robust error mapping:
-  - `429` → return `{ error: "Rate limit…" }` with HTTP 429
-  - `402` → return `{ error: "AI credits required…" }` with HTTP 402
-  - Anything else → HTTP 500 with a safe error message
-- Include full CORS headers (you already standardized these in other functions).
+### New State
+Wire up the same `useSmartFoodLookup` hook that powers QuickNutritionLogDialog and MealLoggingDialog:
+- When user types 3+ characters in "What did you eat?" field → trigger smart lookup
+- Auto-fill calories/protein/carbs/fats (respecting touched fields)
+- Show inline status: "Searching...", "Matched food database", or "AI estimate"
 
-### 2) Register the function in backend config
-Update:
-- `supabase/config.toml`
+### Implementation Details
 
-Add:
-- `[functions.parse-food-text]`
-- `verify_jwt = true`
+1. **Import the hook**
+```typescript
+import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
+```
 
-This aligns with how your other authenticated functions are configured and prevents accidental public access.
+2. **Add touched fields tracking** (same pattern as other dialogs)
+```typescript
+const touchedFields = useRef<Set<string>>(new Set());
+```
 
-### 3) Verification steps (fast, deterministic)
-After implementation:
-- Call `POST /parse-food-text` with `{ "text": "2 eggs and toast" }`
-- Confirm response is 200 and includes totals + foods.
-- Confirm no 404 anywhere.
+3. **Wire up useEffect for lookup trigger**
+```typescript
+useEffect(() => {
+  if (mealTitle.length >= 3) {
+    triggerLookup(mealTitle);
+  } else {
+    clearLookup();
+  }
+}, [mealTitle, triggerLookup, clearLookup]);
+```
 
----
+4. **Auto-fill macros when result arrives**
+```typescript
+useEffect(() => {
+  if (lookupResult && lookupStatus === 'ready') {
+    const { totals } = lookupResult;
+    if (!touchedFields.current.has('calories') && totals.calories > 0) {
+      setCalories(Math.round(totals.calories).toString());
+    }
+    // ... same for protein, carbs, fats
+  }
+}, [lookupResult, lookupStatus]);
+```
 
-## Phase 2 — Implement the frontend smart lookup (local DB first, then AI)
-### 4) Add a dedicated hook for this workflow
-Create:
-- `src/hooks/useSmartFoodLookup.ts`
+5. **Add status indicator below the input field**
+- Show spinner during "searching_db" or "calling_ai"
+- Show "Matched food database" badge on DB match
+- Show "AI estimate • X confidence" badge on AI result
+- Show "Enter values manually" on error
 
-Responsibilities:
-1. Debounce user input (800–1000ms).
-2. **Try local match first**:
-   - Query `nutrition_food_database` using `ilike` on `name` and `brand`.
-   - Choose best match via lightweight scoring (exact match, starts-with, token overlap).
-   - If score is above a threshold → return “database” result and skip AI call.
-3. If no good DB match → call:
-   - `supabase.functions.invoke('parse-food-text', { body: { text } })`
-4. Cache results in-memory (Map) to avoid repeated calls for the same text.
-5. Never throw uncaught errors—always return `{ error }` and let UI decide.
-
-Return shape example:
-- `status: 'idle' | 'searching_db' | 'calling_ai' | 'ready' | 'error'`
-- `result?: { totals, foods, source, confidenceSummary }`
-- `error?: string`
-- `trigger(text)` and `clear()`
-
-### 5) Add “safe autofill” rules (prevents annoying overwrites)
-Both dialogs will track “touched” state:
-- If the user manually edits calories/protein/carbs/fats, we will NOT overwrite that field on subsequent auto-fill unless they press an explicit “Apply” button.
-- This is critical to make the feature feel premium, not intrusive.
+6. **Update macro input handlers** to track touched state
+```typescript
+const handleMacroChange = (field: string, value: string, setter: (v: string) => void) => {
+  setter(value);
+  if (value) touchedFields.current.add(field);
+};
+```
 
 ---
 
-## Phase 3 — Wire Smart Food Recognition into the two logging UIs
-### 6) Update Game Plan quick logger
-Modify:
-- `src/components/QuickNutritionLogDialog.tsx`
+## Translation Updates
 
-Changes:
-- When `mealTitle` changes and length >= 3:
-  - trigger `useSmartFoodLookup(mealTitle)`
-- Show a small inline status row under the meal title:
-  - “Searching…” (spinner)
-  - “Matched food database” (badge)
-  - “AI estimate • High/Medium/Low confidence”
-  - “Auto-fill unavailable” (if 402/429/other)
-- When result arrives:
-  - If macros not touched → fill calories/protein/carbs/fats
-  - Optionally show a small “What I recognized:” expandable list of foods
-- If the backend ever returns 404/402/429:
-  - show a toast and keep the form usable (no blank screen)
-
-### 7) Update Nutrition Hub quick entry
-Modify:
-- `src/components/nutrition-hub/MealLoggingDialog.tsx` (Quick Entry tab)
-
-Same behavior as above, plus one “pro” enhancement:
-- If AI returns multiple foods, offer a one-click option:
-  - “Use detailed breakdown” → switches to Detailed tab and pre-fills MealBuilder items
-  - (This makes compound meals feel significantly more accurate and “premium.”)
+```json
+{
+  "vault": {
+    "nutrition": {
+      "mealTitle": "What did you eat?",
+      "mealTitlePlaceholder": "Type what you ate (e.g., 2 eggs, pizza, apple...)"
+    }
+  }
+}
+```
 
 ---
 
-## Phase 4 — Add translations (so UI doesn’t show raw keys)
-Update:
-- `src/i18n/locales/en.json` (and optionally mirror into other locales later)
+## Files to Modify
 
-Add keys for:
-- Smart lookup placeholder/help text
-- “Searching…”
-- “AI estimate”
-- “Matched in food database”
-- “Apply”
-- “Not what you expected?”
+| File | Changes |
+|------|---------|
+| `src/i18n/locales/en.json` | Update `mealTitle` and `mealTitlePlaceholder` translations |
+| `src/components/vault/VaultNutritionLogCard.tsx` | Add `useSmartFoodLookup` integration with touched field tracking and status UI |
+| `src/components/QuickNutritionLogDialog.tsx` | Use translation key for label (already uses key, just verify) |
+| `src/components/nutrition-hub/MealLoggingDialog.tsx` | Update hardcoded "Meal Title" to translation key |
 
 ---
 
-## QA checklist (end-to-end)
-1. Open Nutrition Hub → Quick Entry:
-   - Type “greek yogurt” → should match local DB when possible.
-2. Type “2 eggs with toast”:
-   - DB likely won’t match perfectly → AI fills totals + shows recognized items.
-3. Manually edit protein, then type more text:
-   - Protein should NOT get overwritten.
-4. Save meal:
-   - Confirms your existing React Query invalidation updates macro totals everywhere.
-5. Force AI failure simulation:
-   - If 429/402 happens, UI shows toast and remains usable (no blank screen).
-
----
-
-## Rollback / safety
-- All changes are additive (new function + new hook + UI enhancements).
-- If anything unexpected occurs, we can temporarily disable auto-triggering and keep only a manual “Auto-fill” button while preserving the backend function.
-
----
-
-## Files that will be created/modified
-**Create**
-- `supabase/functions/parse-food-text/index.ts`
-- `src/hooks/useSmartFoodLookup.ts`
-
-**Modify**
-- `supabase/config.toml`
-- `src/components/QuickNutritionLogDialog.tsx`
-- `src/components/nutrition-hub/MealLoggingDialog.tsx`
-- `src/i18n/locales/en.json`
+## QA Checklist
+1. Open Vault → Nutrition Log → type "banana" → macros auto-fill
+2. Open Nutrition Hub → Quick Entry → type "chicken sandwich" → macros auto-fill
+3. Open Game Plan → Quick Log → type "oatmeal" → macros auto-fill
+4. Verify label reads "What did you eat?" across all three locations
+5. Manually edit protein, then type more → protein should NOT be overwritten
