@@ -1692,6 +1692,8 @@
   },
   "scout": {
     "dashboard": "Panel de Scout",
+     "players": "Jugadores",
+     "typeToSearch": "Empieza a escribir para buscar jugadores...",
     "searchPlayers": "Buscar Jugadores",
     "followedPlayers": "Jugadores Seguidos",
     "pendingRequests": "Solicitudes Pendientes",

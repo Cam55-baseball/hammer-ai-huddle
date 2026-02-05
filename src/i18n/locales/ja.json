@@ -1256,6 +1256,8 @@
   },
   "scout": {
     "dashboard": "スカウトダッシュボード",
+     "players": "選手",
+     "typeToSearch": "選手を検索するには入力を開始してください...",
     "searchPlayers": "選手を検索",
     "followedPlayers": "フォロー中の選手",
     "pendingRequests": "保留中のリクエスト",
