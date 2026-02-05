@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Apple, Coffee, Salad, UtensilsCrossed, Cookie, Droplets, Zap, Dumbbell, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Apple, Coffee, Salad, UtensilsCrossed, Cookie, Droplets, Zap, Dumbbell, Loader2, Sparkles, Database } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
 import { toast } from 'sonner';
 
 interface QuickNutritionLogDialogProps {
@@ -32,6 +34,12 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   
+  // Smart food lookup
+  const { status: lookupStatus, result: lookupResult, error: lookupError, trigger: triggerLookup, clear: clearLookup } = useSmartFoodLookup();
+  
+  // Track which fields user has manually edited
+  const touchedFields = useRef<Set<string>>(new Set());
+  
   // Form state
   const [mealType, setMealType] = useState<string>('');
   const [mealTitle, setMealTitle] = useState<string>('');
@@ -50,6 +58,42 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
     { value: 'hydration', icon: Droplets, label: t('vault.nutrition.hydrationOnly') },
   ];
 
+  // Trigger smart lookup when meal title changes
+  useEffect(() => {
+    if (mealTitle.length >= 3) {
+      triggerLookup(mealTitle);
+    } else {
+      clearLookup();
+    }
+  }, [mealTitle, triggerLookup, clearLookup]);
+
+  // Auto-fill macros when lookup result arrives (only untouched fields)
+  useEffect(() => {
+    if (lookupResult && lookupStatus === 'ready') {
+      const { totals } = lookupResult;
+      
+      if (!touchedFields.current.has('calories') && totals.calories > 0) {
+        setCalories(Math.round(totals.calories).toString());
+      }
+      if (!touchedFields.current.has('protein') && totals.protein_g > 0) {
+        setProtein(Math.round(totals.protein_g).toString());
+      }
+      if (!touchedFields.current.has('carbs') && totals.carbs_g > 0) {
+        setCarbs(Math.round(totals.carbs_g).toString());
+      }
+      if (!touchedFields.current.has('fats') && totals.fats_g > 0) {
+        setFats(Math.round(totals.fats_g).toString());
+      }
+    }
+  }, [lookupResult, lookupStatus]);
+
+  // Show toast for lookup errors
+  useEffect(() => {
+    if (lookupError) {
+      toast.error(lookupError);
+    }
+  }, [lookupError]);
+
   const resetForm = () => {
     setMealType('');
     setMealTitle('');
@@ -59,6 +103,8 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
     setFats('');
     setHydration('');
     setEnergyLevel(5);
+    touchedFields.current.clear();
+    clearLookup();
   };
 
   const applyPreset = (preset: typeof MACRO_PRESETS[0]) => {
@@ -66,6 +112,18 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
     setProtein(preset.protein.toString());
     setCarbs(preset.carbs.toString());
     setFats(preset.fats.toString());
+    // Mark as touched since user explicitly chose preset
+    touchedFields.current.add('calories');
+    touchedFields.current.add('protein');
+    touchedFields.current.add('carbs');
+    touchedFields.current.add('fats');
+  };
+
+  const handleMacroChange = (field: string, value: string, setter: (v: string) => void) => {
+    setter(value);
+    if (value) {
+      touchedFields.current.add(field);
+    }
   };
 
   const handleSave = async () => {
@@ -106,6 +164,45 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
     } finally {
       setSaving(false);
     }
+  };
+
+  const renderLookupStatus = () => {
+    if (lookupStatus === 'searching_db' || lookupStatus === 'calling_ai') {
+      return (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          <span>{lookupStatus === 'searching_db' ? 'Searching...' : 'AI analyzing...'}</span>
+        </div>
+      );
+    }
+
+    if (lookupStatus === 'ready' && lookupResult) {
+      return (
+        <div className="flex items-center gap-2">
+          {lookupResult.source === 'database' ? (
+            <Badge variant="secondary" className="text-xs gap-1">
+              <Database className="h-3 w-3" />
+              Matched food database
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="text-xs gap-1">
+              <Sparkles className="h-3 w-3" />
+              AI estimate • {lookupResult.confidenceSummary} confidence
+            </Badge>
+          )}
+        </div>
+      );
+    }
+
+    if (lookupStatus === 'error') {
+      return (
+        <div className="text-xs text-muted-foreground">
+          Enter values manually
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -149,17 +246,20 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
             </ToggleGroup>
           </div>
 
-          {/* Meal Title */}
+          {/* Meal Title with Smart Lookup */}
           <div className="space-y-1">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {t('vault.nutrition.mealTitle')}
             </Label>
             <Input
-              placeholder={t('vault.nutrition.mealTitlePlaceholder')}
+              placeholder="e.g., 2 eggs with toast, greek yogurt..."
               value={mealTitle}
               onChange={(e) => setMealTitle(e.target.value)}
               className="h-9"
             />
+            <div className="min-h-[20px]">
+              {renderLookupStatus()}
+            </div>
           </div>
 
           {/* Quick Presets */}
@@ -195,7 +295,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
                 type="number"
                 placeholder="0"
                 value={calories}
-                onChange={(e) => setCalories(e.target.value)}
+                onChange={(e) => handleMacroChange('calories', e.target.value, setCalories)}
                 className="h-9"
               />
             </div>
@@ -205,7 +305,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
                 type="number"
                 placeholder="0"
                 value={protein}
-                onChange={(e) => setProtein(e.target.value)}
+                onChange={(e) => handleMacroChange('protein', e.target.value, setProtein)}
                 className="h-9"
               />
             </div>
@@ -215,7 +315,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
                 type="number"
                 placeholder="0"
                 value={carbs}
-                onChange={(e) => setCarbs(e.target.value)}
+                onChange={(e) => handleMacroChange('carbs', e.target.value, setCarbs)}
                 className="h-9"
               />
             </div>
@@ -225,7 +325,7 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
                 type="number"
                 placeholder="0"
                 value={fats}
-                onChange={(e) => setFats(e.target.value)}
+                onChange={(e) => handleMacroChange('fats', e.target.value, setFats)}
                 className="h-9"
               />
             </div>
