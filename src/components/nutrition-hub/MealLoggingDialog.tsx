@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -10,10 +10,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Zap, List } from 'lucide-react';
+import { Loader2, Zap, List, Sparkles, Database, ArrowRight } from 'lucide-react';
 import { MealBuilder } from '@/components/custom-activities/MealBuilder';
 import { useMealVaultSync } from '@/hooks/useMealVaultSync';
+import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
 import { MealData } from '@/types/customActivity';
 import { toast } from 'sonner';
 
@@ -66,6 +68,12 @@ export function MealLoggingDialog({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { syncMealToVault } = useMealVaultSync();
+  
+  // Smart food lookup
+  const { status: lookupStatus, result: lookupResult, error: lookupError, trigger: triggerLookup, clear: clearLookup } = useSmartFoodLookup();
+  
+  // Track which fields user has manually edited
+  const touchedFields = useRef<Set<string>>(new Set());
   
   const [mode, setMode] = useState<'quick' | 'detailed'>('quick');
   const [saving, setSaving] = useState(false);
@@ -121,6 +129,42 @@ export function MealLoggingDialog({
     }
   }, [prefilledItems]);
 
+  // Trigger smart lookup when meal title changes (only in quick mode)
+  useEffect(() => {
+    if (mode === 'quick' && mealTitle.length >= 3) {
+      triggerLookup(mealTitle);
+    } else {
+      clearLookup();
+    }
+  }, [mealTitle, mode, triggerLookup, clearLookup]);
+
+  // Auto-fill macros when lookup result arrives (only untouched fields)
+  useEffect(() => {
+    if (lookupResult && lookupStatus === 'ready' && mode === 'quick') {
+      const { totals } = lookupResult;
+      
+      if (!touchedFields.current.has('calories') && totals.calories > 0) {
+        setCalories(Math.round(totals.calories).toString());
+      }
+      if (!touchedFields.current.has('protein') && totals.protein_g > 0) {
+        setProtein(Math.round(totals.protein_g).toString());
+      }
+      if (!touchedFields.current.has('carbs') && totals.carbs_g > 0) {
+        setCarbs(Math.round(totals.carbs_g).toString());
+      }
+      if (!touchedFields.current.has('fats') && totals.fats_g > 0) {
+        setFats(Math.round(totals.fats_g).toString());
+      }
+    }
+  }, [lookupResult, lookupStatus, mode]);
+
+  // Show toast for lookup errors
+  useEffect(() => {
+    if (lookupError) {
+      toast.error(lookupError);
+    }
+  }, [lookupError]);
+
   const mealTypeLabel = MEAL_TYPE_LABELS[mealType] || mealType;
 
   const resetForm = () => {
@@ -131,6 +175,37 @@ export function MealLoggingDialog({
     setFats('');
     setMealData(getDefaultMealData());
     setMode('quick');
+    touchedFields.current.clear();
+    clearLookup();
+  };
+
+  const handleMacroChange = (field: string, value: string, setter: (v: string) => void) => {
+    setter(value);
+    if (value) {
+      touchedFields.current.add(field);
+    }
+  };
+
+  // Convert AI result to detailed breakdown
+  const handleUseDetailedBreakdown = () => {
+    if (!lookupResult || lookupResult.foods.length === 0) return;
+    
+    setMealData({
+      items: lookupResult.foods.map(food => ({
+        id: crypto.randomUUID(),
+        name: food.name,
+        calories: food.calories,
+        protein: food.protein_g,
+        carbs: food.carbs_g,
+        fats: food.fats_g,
+        quantity: food.quantity,
+        unit: food.unit,
+      })),
+      vitamins: [],
+      supplements: [],
+      hydration: { amount: 0, unit: 'oz', goal: 100, entries: [] },
+    });
+    setMode('detailed');
   };
 
   const handleSaveQuickEntry = async () => {
@@ -231,6 +306,61 @@ export function MealLoggingDialog({
     }
   };
 
+  const renderLookupStatus = () => {
+    if (lookupStatus === 'searching_db' || lookupStatus === 'calling_ai') {
+      return (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          <span>{lookupStatus === 'searching_db' ? 'Searching...' : 'AI analyzing...'}</span>
+        </div>
+      );
+    }
+
+    if (lookupStatus === 'ready' && lookupResult) {
+      return (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            {lookupResult.source === 'database' ? (
+              <Badge variant="secondary" className="text-xs gap-1">
+                <Database className="h-3 w-3" />
+                Matched food database
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs gap-1">
+                <Sparkles className="h-3 w-3" />
+                AI estimate • {lookupResult.confidenceSummary} confidence
+              </Badge>
+            )}
+          </div>
+          
+          {/* Show "Use detailed breakdown" button if AI returned multiple foods */}
+          {lookupResult.source === 'ai' && lookupResult.foods.length > 1 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleUseDetailedBreakdown}
+              className="text-xs h-7 gap-1 justify-start px-0 text-primary hover:text-primary/80"
+            >
+              <ArrowRight className="h-3 w-3" />
+              Use detailed breakdown ({lookupResult.foods.length} items)
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    if (lookupStatus === 'error') {
+      return (
+        <div className="text-xs text-muted-foreground">
+          Enter values manually
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -253,15 +383,18 @@ export function MealLoggingDialog({
           </TabsList>
 
           <TabsContent value="quick" className="space-y-4 mt-4">
-            {/* Meal Title */}
+            {/* Meal Title with Smart Lookup */}
             <div className="space-y-2">
               <Label htmlFor="meal-title">Meal Title (optional)</Label>
               <Input
                 id="meal-title"
-                placeholder={`e.g., ${mealTypeLabel} bowl`}
+                placeholder="e.g., 2 eggs with toast, greek yogurt..."
                 value={mealTitle}
                 onChange={(e) => setMealTitle(e.target.value)}
               />
+              <div className="min-h-[24px]">
+                {renderLookupStatus()}
+              </div>
             </div>
 
             {/* Macro Grid */}
@@ -273,7 +406,7 @@ export function MealLoggingDialog({
                   type="number"
                   placeholder="0"
                   value={calories}
-                  onChange={(e) => setCalories(e.target.value)}
+                  onChange={(e) => handleMacroChange('calories', e.target.value, setCalories)}
                   className="text-center text-lg font-semibold"
                 />
               </div>
@@ -284,7 +417,7 @@ export function MealLoggingDialog({
                   type="number"
                   placeholder="0"
                   value={protein}
-                  onChange={(e) => setProtein(e.target.value)}
+                  onChange={(e) => handleMacroChange('protein', e.target.value, setProtein)}
                   className="text-center text-lg font-semibold"
                 />
               </div>
@@ -295,7 +428,7 @@ export function MealLoggingDialog({
                   type="number"
                   placeholder="0"
                   value={carbs}
-                  onChange={(e) => setCarbs(e.target.value)}
+                  onChange={(e) => handleMacroChange('carbs', e.target.value, setCarbs)}
                   className="text-center text-lg font-semibold"
                 />
               </div>
@@ -306,7 +439,7 @@ export function MealLoggingDialog({
                   type="number"
                   placeholder="0"
                   value={fats}
-                  onChange={(e) => setFats(e.target.value)}
+                  onChange={(e) => handleMacroChange('fats', e.target.value, setFats)}
                   className="text-center text-lg font-semibold"
                 />
               </div>
