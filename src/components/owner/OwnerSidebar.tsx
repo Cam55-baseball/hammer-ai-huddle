@@ -8,8 +8,10 @@ import {
   Settings, 
   Search,
   Menu,
-  X
+  X,
+  ArrowLeft
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +54,7 @@ export const OwnerSidebar = ({
   onMobileOpenChange,
 }: OwnerSidebarProps) => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const sidebarItems: SidebarItem[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -109,6 +112,18 @@ export const OwnerSidebar = ({
     </ScrollArea>
   );
 
+  const ReturnToAppButton = () => (
+    <div className="border-t p-3 mt-auto">
+      <button
+        onClick={() => navigate('/dashboard')}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4 shrink-0" />
+        <span className="flex-1 text-left">Return to App</span>
+      </button>
+    </div>
+  );
+
   // Mobile: Sheet drawer (controlled from parent)
   if (isMobile) {
     return (
@@ -125,6 +140,7 @@ export const OwnerSidebar = ({
               </div>
             </div>
             <SidebarContent />
+            <ReturnToAppButton />
           </div>
         </SheetContent>
       </Sheet>
@@ -143,6 +159,7 @@ export const OwnerSidebar = ({
         </div>
       </div>
       <SidebarContent />
+      <ReturnToAppButton />
     </aside>
   );
 };
