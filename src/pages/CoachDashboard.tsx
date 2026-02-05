@@ -70,6 +70,7 @@ export default function CoachDashboard() {
     mlbAffiliate: '',
     independentLeague: '',
     isForeignPlayer: null as boolean | null,
+    sportPreference: null as 'baseball' | 'softball' | null,
   });
 
   useEffect(() => {
@@ -207,7 +208,8 @@ export default function CoachDashboard() {
       filters.isFreeAgent !== null ||
       filters.mlbAffiliate ||
       filters.independentLeague ||
-      filters.isForeignPlayer !== null;
+      filters.isForeignPlayer !== null ||
+      filters.sportPreference !== null;
 
     if (searchTerm.trim().length >= 2 || hasActiveFilters) {
       setSearchLoading(true);
@@ -235,6 +237,7 @@ export default function CoachDashboard() {
               mlbAffiliate: filters.mlbAffiliate || undefined,
               independentLeague: filters.independentLeague || undefined,
               isForeignPlayer: filters.isForeignPlayer !== null ? filters.isForeignPlayer : undefined,
+              sport: filters.sportPreference || undefined,
             }
           });
 
@@ -526,6 +529,7 @@ export default function CoachDashboard() {
                   mlbAffiliate: '',
                   independentLeague: '',
                   isForeignPlayer: null,
+                  sportPreference: null,
                 })}
               />
               

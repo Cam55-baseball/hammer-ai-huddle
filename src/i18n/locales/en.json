@@ -745,6 +745,7 @@
   "playerFilters": {
     "advancedFilters": "Advanced Filters",
     "clearAll": "Clear All",
+    "sport": "Sport",
     "primaryPosition": "Primary Position",
     "throwingHand": "Throwing Hand",
     "battingSide": "Batting Side",
@@ -2053,6 +2054,8 @@
   },
   "scout": {
     "dashboard": "Scout Dashboard",
+    "players": "Players",
+    "typeToSearch": "Start typing to search for players...",
     "searchPlayers": "Search Players",
     "followedPlayers": "Followed Players",
     "pendingRequests": "Pending Requests",
