@@ -5178,7 +5178,9 @@
       "enterManually": "Enter values manually",
       "high": "High",
       "medium": "Medium",
-      "low": "Low"
+      "low": "Low",
+      "recognizedFoods": "What I recognized",
+      "calories": "cal"
     },
     "nutritionWeekly": {
       "title": "Weekly Nutrition Summary",

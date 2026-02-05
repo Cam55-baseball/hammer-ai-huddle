@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Badge } from '@/components/ui/badge';
-import { Apple, Coffee, Salad, UtensilsCrossed, Cookie, Droplets, Zap, Dumbbell, Loader2, Sparkles, Database } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Apple, Coffee, Salad, UtensilsCrossed, Cookie, Droplets, Zap, Dumbbell, Loader2, Sparkles, Database, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
@@ -67,28 +68,34 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
     }
   }, [mealTitle, triggerLookup, clearLookup]);
 
-  // Auto-fill macros when lookup result arrives (only untouched fields)
+  // Auto-fill macros when lookup result arrives (only untouched fields, including zeros)
   useEffect(() => {
     if (lookupResult && lookupStatus === 'ready') {
-      const { totals } = lookupResult;
+      const { totals, suggestedMealType } = lookupResult;
       
-      if (!touchedFields.current.has('calories') && totals.calories > 0) {
+      // Auto-fill all macro fields including zeros
+      if (!touchedFields.current.has('calories') && typeof totals.calories === 'number') {
         setCalories(Math.round(totals.calories).toString());
       }
-      if (!touchedFields.current.has('protein') && totals.protein_g > 0) {
+      if (!touchedFields.current.has('protein') && typeof totals.protein_g === 'number') {
         setProtein(Math.round(totals.protein_g).toString());
       }
-      if (!touchedFields.current.has('carbs') && totals.carbs_g > 0) {
+      if (!touchedFields.current.has('carbs') && typeof totals.carbs_g === 'number') {
         setCarbs(Math.round(totals.carbs_g).toString());
       }
-      if (!touchedFields.current.has('fats') && totals.fats_g > 0) {
+      if (!touchedFields.current.has('fats') && typeof totals.fats_g === 'number') {
         setFats(Math.round(totals.fats_g).toString());
       }
-      if (!touchedFields.current.has('hydration') && totals.hydration_oz > 0) {
+      if (!touchedFields.current.has('hydration') && typeof totals.hydration_oz === 'number') {
         setHydration(Math.round(totals.hydration_oz).toString());
       }
+      
+      // Auto-fill meal type if not already set
+      if (!mealType && suggestedMealType) {
+        setMealType(suggestedMealType);
+      }
     }
-  }, [lookupResult, lookupStatus]);
+  }, [lookupResult, lookupStatus, mealType]);
 
   // Show toast for lookup errors
   useEffect(() => {
@@ -181,17 +188,38 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
 
     if (lookupStatus === 'ready' && lookupResult) {
       return (
-        <div className="flex items-center gap-2">
-          {lookupResult.source === 'database' ? (
-            <Badge variant="secondary" className="text-xs gap-1">
-              <Database className="h-3 w-3" />
-              {t('vault.smartFood.matchedDatabase')}
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="text-xs gap-1">
-              <Sparkles className="h-3 w-3" />
-              {t('vault.smartFood.aiEstimate')} • {t(`vault.smartFood.${lookupResult.confidenceSummary}`)} {t('vault.smartFood.confidence')}
-            </Badge>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            {lookupResult.source === 'database' ? (
+              <Badge variant="secondary" className="text-xs gap-1">
+                <Database className="h-3 w-3" />
+                {t('vault.smartFood.matchedDatabase')}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-xs gap-1">
+                <Sparkles className="h-3 w-3" />
+                {t('vault.smartFood.aiEstimate')} • {t(`vault.smartFood.${lookupResult.confidenceSummary}`)} {t('vault.smartFood.confidence')}
+              </Badge>
+            )}
+          </div>
+          
+          {/* Recognized Foods Preview */}
+          {lookupResult.foods && lookupResult.foods.length > 0 && (
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronDown className="h-3 w-3" />
+                {t('vault.smartFood.recognizedFoods')} ({lookupResult.foods.length})
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2">
+                <div className="space-y-1 pl-4 border-l-2 border-muted">
+                  {lookupResult.foods.map((food, idx) => (
+                    <div key={idx} className="text-xs text-muted-foreground">
+                      • {food.name} ({food.quantity} {food.unit}) - {food.calories} {t('vault.smartFood.calories')}
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           )}
         </div>
       );
