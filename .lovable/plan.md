@@ -1,64 +1,112 @@
 
+
+## Overview
+Strengthen the Smart Food Recognition to reliably auto-fill ALL appropriate fields by fixing several issues in the current implementation.
+
+---
+
 ## Issues Identified
 
-### 1. Missing Translation Keys (Raw Text Showing)
-The following translation keys are missing from `en.json`, causing raw key strings to display:
-- `smartFood.aiEstimate` - shows as "smartFood.aiEstimate"
-- `smartFood.confidence` - shows as "smartFood.confidence"
-- `smartFood.matchedDatabase` - referenced but not defined
-- `smartFood.aiAnalyzing` - referenced but not defined
-- `smartFood.enterManually` - referenced but not defined
-- `vault.nutrition.presets` used as a label returns an object (the key exists as an object with nested keys, not a string)
+### Issue 1: Database Query Fails with Special Characters
+**From network logs:**
+```
+GET /nutrition_food_database?or=(name.ilike.%pork chop, rice and 8oz of water%...)
+Status: 400
+Error: "failed to parse logic tree... unexpected '%'"
+```
+When user input contains commas (`,`), the PostgREST `or()` filter breaks. This causes the DB search to fail silently, forcing every query to AI even when simpler foods could match locally.
 
-### 2. Hydration Not Extracted from Food Input
-When a user types "water" or "2 glasses of water" in "What did you eat?", the AI parses it but:
-- The current `parse-food-text` function doesn't return hydration data
-- The frontend hook doesn't extract or auto-fill hydration
-- No hydration-aware logic exists in the smart lookup flow
+### Issue 2: Auto-Fill Only Works When Value > 0
+Current logic:
+```typescript
+if (!touchedFields.current.has('calories') && totals.calories > 0) {
+  setCalories(Math.round(totals.calories).toString());
+}
+```
+This means if a food has **0 carbs** (like "grilled chicken"), the carbs field remains empty instead of showing "0". Users don't know if it's truly 0 or just didn't fill.
 
-### 3. Vault Nutrition Logs Not Syncing to Nutrition Hub
-The Vault's `VaultNutritionLogCard` saves directly to `vault_nutrition_logs` but doesn't trigger React Query cache invalidation for `nutritionLogs` and `macroProgress` queries, causing the Nutrition Hub to show stale data.
+### Issue 3: Meal Type Not Auto-Detected
+The AI could infer meal type from context:
+- "oatmeal and orange juice" → breakfast
+- "chicken sandwich" → lunch
+- "steak and mashed potatoes" → dinner
+- "protein bar" → snack
+- "glass of water" → hydration
+
+Currently this is never set automatically.
+
+### Issue 4: Hook Doesn't Expose Full Food Items
+The hook returns `totals` for auto-fill but the UI doesn't show what was recognized. Users can't verify accuracy before saving.
 
 ---
 
 ## Solution
 
-### Phase 1: Add Missing Translation Keys
-Add the `smartFood` namespace to `en.json`:
+### Phase 1: Fix Database Query Escaping
+In `useSmartFoodLookup.ts`, sanitize the query before sending to PostgREST:
+- Escape or remove special characters (`,`, `%`, `*`) that break `ilike`
+- Use only alphanumeric + spaces for DB search
 
-```json
-"smartFood": {
-  "aiEstimate": "AI Estimate",
-  "confidence": "confidence",
-  "matchedDatabase": "Matched food database",
-  "aiAnalyzing": "AI analyzing...",
-  "enterManually": "Enter values manually",
-  "high": "High",
-  "medium": "Medium",
-  "low": "Low"
+```typescript
+// Sanitize for safe PostgREST query
+const sanitized = trimmed.replace(/[%,*()]/g, ' ').replace(/\s+/g, ' ').trim();
+```
+
+### Phase 2: Auto-Fill Fields Even When Value is 0
+Change the condition from `> 0` to `>= 0` with a check that the field exists:
+```typescript
+if (!touchedFields.current.has('carbs') && typeof totals.carbs_g === 'number') {
+  setCarbs(Math.round(totals.carbs_g).toString());
+}
+```
+This ensures "0" displays explicitly for zero-value macros.
+
+### Phase 3: Add Meal Type Auto-Detection to AI
+Update the edge function's tool schema to include:
+```typescript
+suggested_meal_type: {
+  type: "string",
+  enum: ["breakfast", "lunch", "dinner", "snack", "hydration"],
+  description: "Inferred meal type based on foods (breakfast items → breakfast, etc.)"
+}
+```
+Update the system prompt to guide the AI:
+```
+Infer meal_type from context:
+- Morning items (eggs, bacon, oatmeal, cereal, toast, coffee, juice) → "breakfast"
+- Midday items (sandwich, salad, soup, burger) → "lunch"
+- Evening items (steak, pasta, casserole, dinner plate) → "dinner"
+- Small items (bar, nuts, fruit, chips) → "snack"
+- Only beverages with no calories → "hydration"
+```
+
+### Phase 4: Update Hook to Return Suggested Meal Type
+```typescript
+export interface SmartFoodResult {
+  // ... existing fields
+  suggestedMealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'hydration';
 }
 ```
 
-Fix the presets label issue by using the existing `vault.nutrition.quickPresets` translation instead of `vault.nutrition.presets` (which is an object containing preset names).
+### Phase 5: Auto-Fill Meal Type in UI Components
+In all three dialogs, when result arrives:
+```typescript
+if (!mealType && lookupResult.suggestedMealType) {
+  setMealType(lookupResult.suggestedMealType);
+}
+```
+Only set if user hasn't already selected one (respects user choice).
 
-### Phase 2: Add Hydration Parsing to AI & Frontend
-
-**Backend (`parse-food-text/index.ts`):**
-- Add `hydration_oz` field to the AI tool schema
-- When user mentions "water", "juice", "coffee", "tea", "drink", etc., AI should estimate fluid ounces
-
-**Frontend (`useSmartFoodLookup.ts`):**
-- Add `hydration_oz` to `SmartFoodResult.totals`
-- Return hydration value from AI response
-
-**UI Components:**
-- In `VaultNutritionLogCard.tsx`, `QuickNutritionLogDialog.tsx`, and `MealLoggingDialog.tsx`:
-  - Auto-fill hydration field when `lookupResult.totals.hydration_oz > 0` (respecting touched fields)
-
-### Phase 3: Sync Vault Nutrition Logs to Nutrition Hub
-In `VaultNutritionLogCard.tsx`:
-- After successful `onSave()`, invalidate React Query cache for `nutritionLogs` and `macroProgress` keys
-- This ensures the Nutrition Hub reflects all logged data from any entry point
+### Phase 6: Show Recognized Foods Preview
+Add a collapsible "What I recognized:" section below the status badge:
+```
+✨ AI Estimate • High confidence
+▼ What I recognized:
+  • Pork chop (6 oz) - 380 cal
+  • White rice (1 cup) - 205 cal
+  • Water (8 oz) - 0 cal
+```
+This builds trust and lets users verify before saving.
 
 ---
 
@@ -66,60 +114,60 @@ In `VaultNutritionLogCard.tsx`:
 
 | File | Changes |
 |------|---------|
-| `src/i18n/locales/en.json` | Add `smartFood` namespace with all required keys |
-| `src/components/vault/VaultNutritionLogCard.tsx` | Fix presets label, add hydration auto-fill, add cache invalidation after save |
-| `supabase/functions/parse-food-text/index.ts` | Add `hydration_oz` to AI tool schema |
-| `src/hooks/useSmartFoodLookup.ts` | Add `hydration_oz` to result totals type and parsing |
-| `src/components/QuickNutritionLogDialog.tsx` | Add hydration auto-fill logic |
-| `src/components/nutrition-hub/MealLoggingDialog.tsx` | Add hydration auto-fill logic |
+| `supabase/functions/parse-food-text/index.ts` | Add `suggested_meal_type` to tool schema; enhance system prompt for meal type inference |
+| `src/hooks/useSmartFoodLookup.ts` | Fix query sanitization; add `suggestedMealType` to result; change `> 0` to `typeof === 'number'` |
+| `src/components/vault/VaultNutritionLogCard.tsx` | Auto-fill meal type; show "0" for zero macros; add recognized foods preview |
+| `src/components/QuickNutritionLogDialog.tsx` | Same changes as VaultNutritionLogCard |
+| `src/components/nutrition-hub/MealLoggingDialog.tsx` | Same changes as VaultNutritionLogCard |
+| `src/i18n/locales/en.json` | Add `smartFood.recognizedFoods` translation |
 
 ---
 
 ## Technical Details
 
-### Translation Key Structure
-```json
-{
-  "smartFood": {
-    "aiEstimate": "AI Estimate",
-    "confidence": "confidence",
-    "matchedDatabase": "Matched food database",
-    "aiAnalyzing": "AI analyzing...",
-    "enterManually": "Enter values manually"
+### Sanitized Query Example
+```typescript
+// Input: "pork chop, rice and 8oz of water"
+// Sanitized: "pork chop rice and 8oz of water"
+const sanitized = trimmed.replace(/[%,*()]/g, ' ').replace(/\s+/g, ' ').trim();
+```
+
+### Updated Tool Schema (Edge Function)
+```typescript
+suggested_meal_type: {
+  type: "string",
+  enum: ["breakfast", "lunch", "dinner", "snack", "hydration"],
+  description: "Inferred meal type: breakfast (morning items), lunch (midday), dinner (evening), snack (small items), hydration (beverages only)"
+}
+```
+
+### Auto-Fill Logic (All Zero Values Fill)
+```typescript
+// Fill ALL macro fields including zeros
+const fields = [
+  { key: 'calories', value: totals.calories, setter: setCalories },
+  { key: 'protein', value: totals.protein_g, setter: setProtein },
+  { key: 'carbs', value: totals.carbs_g, setter: setCarbs },
+  { key: 'fats', value: totals.fats_g, setter: setFats },
+  { key: 'hydration', value: totals.hydration_oz, setter: setHydration },
+];
+
+fields.forEach(({ key, value, setter }) => {
+  if (!touchedFields.current.has(key) && typeof value === 'number') {
+    setter(Math.round(value).toString());
   }
-}
-```
-
-### Hydration Schema Addition
-```typescript
-// In parse-food-text tool schema:
-hydration_oz: { 
-  type: "number", 
-  description: "Total fluid ounces if beverages mentioned (water, juice, coffee, etc.)" 
-}
-```
-
-### Auto-fill Logic
-```typescript
-// In useEffect for auto-fill:
-if (!touchedFields.current.has('hydration') && totals.hydration_oz > 0) {
-  setHydration(Math.round(totals.hydration_oz).toString());
-}
-```
-
-### Cache Invalidation
-```typescript
-// After successful save in VaultNutritionLogCard:
-queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
-queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+});
 ```
 
 ---
 
 ## QA Checklist
-1. Open Vault → Nutrition Log → verify "Quick Presets" label displays correctly (not raw object)
-2. Type "greek yogurt" → verify "Matched food database" badge shows (not raw key)
-3. Type "2 eggs and water" → verify AI returns estimate with hydration auto-filled
-4. Manually edit hydration, then re-type food → hydration should NOT be overwritten
-5. Save a meal in Vault → open Nutrition Hub → verify totals update immediately
-6. Verify all smartFood translation keys render properly (no raw keys visible)
+1. Type "grilled chicken" → carbs shows "0" (not empty)
+2. Type "pork chop, rice and water" → no 400 error, AI fills all fields including hydration
+3. Type "oatmeal and OJ" → meal type auto-sets to "breakfast"
+4. Type "protein bar" → meal type auto-sets to "snack"
+5. Type "just water" → meal type auto-sets to "hydration", hydration fills
+6. Manually select "dinner" first, then type food → meal type stays "dinner"
+7. See "What I recognized:" preview with item breakdown
+8. Edit any field manually → that field won't be overwritten on subsequent lookups
+
