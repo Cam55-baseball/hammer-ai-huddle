@@ -22,7 +22,8 @@ export const useScoutAccess = () => {
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
-          .in('role', ['scout', 'coach']);
+           .in('role', ['scout', 'coach'])
+           .eq('status', 'active');
 
         if (error) {
           console.error('Error checking scout/coach access:', error);

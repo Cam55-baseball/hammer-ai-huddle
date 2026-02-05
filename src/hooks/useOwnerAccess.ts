@@ -36,7 +36,8 @@ export const useOwnerAccess = () => {
           .from('user_roles')
           .select('role, status')
           .eq('user_id', user.id)
-          .eq('role', 'owner');
+         .eq('role', 'owner')
+         .eq('status', 'active');
 
         console.log('[useOwnerAccess] Query result:', { data, error });
 

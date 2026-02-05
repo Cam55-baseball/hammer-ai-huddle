@@ -1215,6 +1215,8 @@
   },
   "scout": {
     "dashboard": "Scout Dashboard",
+     "players": "Spelers",
+     "typeToSearch": "Begin met typen om spelers te zoeken...",
     "searchPlayers": "Spelers Zoeken",
     "followedPlayers": "Gevolgde Spelers",
     "pendingRequests": "Lopende Verzoeken",

@@ -1186,6 +1186,8 @@
   },
   "scout": {
     "dashboard": "球探仪表板",
+     "players": "球员",
+     "typeToSearch": "开始输入以搜索球员...",
     "searchPlayers": "搜索球员",
     "followedPlayers": "关注的球员",
     "pendingRequests": "待处理请求",

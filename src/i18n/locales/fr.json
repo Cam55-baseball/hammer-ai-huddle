@@ -1285,6 +1285,8 @@
   },
   "scout": {
     "dashboard": "Tableau Scout",
+     "players": "Joueurs",
+     "typeToSearch": "Commencez à taper pour rechercher des joueurs...",
     "searchPlayers": "Rechercher des Joueurs",
     "followedPlayers": "Joueurs Suivis",
     "pendingRequests": "Demandes en Attente",
