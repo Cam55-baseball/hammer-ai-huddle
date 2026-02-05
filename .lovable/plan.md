@@ -1,253 +1,591 @@
 
 
-## Overview
+# Elite Workout & Running Card System - Complete E2E Implementation Plan
 
-Two improvements to the Owner Dashboard for a seamless experience:
+## Executive Summary
 
-1. **Admin Status Reflection** - Users who are already admins should be clearly distinguished so the owner doesn't accidentally try to make them admin again (which causes a database error due to unique constraint)
-
-2. **Return to Regular Dashboard** - Add navigation to return to the main app dashboard without logging out
+This plan delivers Hammers Modality's Elite Workout & Running Card System as a complete, production-ready feature. The system transforms how athletes from age 5 to MLB/AUSL professionals create, execute, and track training by introducing a **Block-Based Architecture** with intelligent load management, fascial tracking, and context-aware warnings—all while maintaining the app's signature "action-first" simplicity.
 
 ---
 
-## Current State Analysis
-
-### Admin Status Issue
-- The `isActiveAdmin()` function correctly identifies active admins (line 207-210)
-- The UI already shows "Admin" badge + "Revoke" for active admins (lines 566-579)
-- The "Make Admin" button only shows for non-admins (lines 581-589)
-- **BUT**: The error occurs because there may be users with admin role in `pending` or `rejected` status who are NOT active admins, yet clicking "Make Admin" fails due to the unique constraint on `(user_id, role)`
-
-### Missing Navigation
-- Header only has "Sign Out" button (line 417)
-- No way to return to `/dashboard` without logging out
-
----
-
-## Solution
-
-### 1. Fix Admin Detection Logic
-
-The problem is that `isActiveAdmin()` only returns true for `status: 'active'`, but users can have an admin role entry with `pending` or `rejected` status. When the owner tries to "Make Admin", the INSERT fails due to unique constraint.
-
-**Fix**: Check if user has ANY admin role entry (any status), not just active:
-
-```typescript
-// New helper function
-const hasAdminRole = (userId: string) => {
-  return userRoles.some((r) => r.user_id === userId && r.role === 'admin');
-};
-```
-
-Then update the UI logic:
-- If `isActiveAdmin()` → Show "Admin" badge + "Revoke" 
-- Else if `hasAdminRole()` (pending/rejected) → Show status badge + action to reactivate or clear
-- Else → Show "Make Admin" button
-
-### 2. Add "Back to Dashboard" Navigation
-
-Add a button in the header and sidebar to return to the main app:
-
-**Header**: Add a "Back to App" link next to the logo
-**Sidebar**: Add a "Return to Dashboard" item at the bottom
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/pages/OwnerDashboard.tsx` | Add `hasAdminRole` helper, update UI logic, add navigation button |
-| `src/components/owner/OwnerSidebar.tsx` | Add "Return to Dashboard" link at bottom |
-
----
-
-## Technical Implementation
-
-### 1. Enhanced Admin Detection (OwnerDashboard.tsx)
-
-```typescript
-// New helper - checks for any admin role entry (any status)
-const hasAdminRole = (userId: string) => {
-  return userRoles.some((r) => r.user_id === userId && r.role === 'admin');
-};
-
-// Get admin role status (active, pending, rejected)
-const getAdminStatus = (userId: string) => {
-  const role = userRoles.find((r) => r.user_id === userId && r.role === 'admin');
-  return role?.status || null;
-};
-```
-
-### 2. Updated User Management UI
+## Architecture Overview
 
 ```text
-User Row States:
-┌────────────────────────────────────────────────────────────────┐
-│ Active Admin:                                                  │
-│ [Avatar] John Doe                         [✓ Admin] [Revoke]   │
-│          admin · Active · Joined Jan 1                         │
-│          (green highlight)                                     │
-├────────────────────────────────────────────────────────────────┤
-│ Pending Admin (requested but not approved):                    │
-│ [Avatar] Jane Doe                         [⏳ Pending] [Approve]│
-│          admin · Pending · Joined Jan 2                        │
-│          (yellow highlight)                                    │
-├────────────────────────────────────────────────────────────────┤
-│ Rejected Admin (was rejected):                                 │
-│ [Avatar] Bob Smith                        [Reinstate Admin]    │
-│          player · Rejected · Joined Jan 3                      │
-│          (no highlight)                                        │
-├────────────────────────────────────────────────────────────────┤
-│ Regular User (never was admin):                                │
-│ [Avatar] Alice User                       [Make Admin]         │
-│          player · Joined Jan 4                                 │
-│          (no highlight)                                        │
-└────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                               ELITE WORKOUT & RUNNING CARD SYSTEM                           │
+├─────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                             │
+│  ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐                        │
+│  │   VIEW MODES    │     │   DATA LAYER    │     │  INTELLIGENCE   │                        │
+│  │                 │     │                 │     │                 │                        │
+│  │  • Execute      │     │  • Blocks       │     │  • CNS Tracking │                        │
+│  │  • Coach        │     │  • Exercises    │     │  • Load Mgmt    │                        │
+│  │  • Parent       │     │  • Running      │     │  • Overlap Warn │                        │
+│  │                 │     │  • Presets      │     │  • Auto-Adapt   │                        │
+│  └────────┬────────┘     └────────┬────────┘     └────────┬────────┘                        │
+│           │                       │                       │                                 │
+│           └───────────────────────┴───────────────────────┘                                 │
+│                                   │                                                         │
+│                       ┌───────────▼───────────┐                                             │
+│                       │   UNIFIED TEMPLATE    │                                             │
+│                       │   SYSTEM              │                                             │
+│                       └───────────┬───────────┘                                             │
+│                                   │                                                         │
+│           ┌───────────────────────┼───────────────────────┐                                 │
+│           │                       │                       │                                 │
+│  ┌────────▼────────┐     ┌────────▼────────┐     ┌────────▼────────┐                        │
+│  │ Custom Activity │     │   My Activities │     │    Game Plan    │                        │
+│  │    Builder      │     │      Page       │     │     Display     │                        │
+│  └─────────────────┘     └─────────────────┘     └─────────────────┘                        │
+│                                                                                             │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 3. Handle Different Admin Statuses
+---
 
-```typescript
-// For pending admins - show Approve/Reject inline
-{getAdminStatus(user.id) === 'pending' && (
-  <>
-    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 gap-1">
-      <Clock className="h-3 w-3" />
-      Pending
-    </Badge>
-    <Button size="sm" onClick={() => handleApproveAdmin(user.id)}>
-      Approve
-    </Button>
-    <Button size="sm" variant="ghost" onClick={() => handleRejectAdmin(user.id)}>
-      Reject
-    </Button>
-  </>
-)}
+## Phase 1: Database Schema Extension
 
-// For rejected admins - show option to reinstate
-{getAdminStatus(user.id) === 'rejected' && (
-  <>
-    <Badge variant="outline" className="text-muted-foreground gap-1">
-      <XCircle className="h-3 w-3" />
-      Rejected
-    </Badge>
-    <Button size="sm" variant="outline" onClick={() => handleApproveAdmin(user.id)}>
-      Reinstate
-    </Button>
-  </>
-)}
+### New Tables
 
-// For users with no admin role at all
-{!hasAdminRole(user.id) && (
-  <Button size="sm" variant="outline" onClick={() => handleAssignRole(user.id, "admin")}>
-    Make Admin
-  </Button>
-)}
+**1. workout_blocks (Block Definitions)**
+```sql
+CREATE TABLE public.workout_blocks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  template_id UUID REFERENCES custom_activity_templates(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  intent TEXT NOT NULL, -- 'elastic', 'max_output', 'submax_technical', 'accumulation', etc.
+  order_index INTEGER NOT NULL DEFAULT 0,
+  block_type TEXT NOT NULL, -- 'activation', 'elastic_prep', 'cns_primer', 'strength_output', etc.
+  is_custom BOOLEAN DEFAULT false,
+  exercises JSONB DEFAULT '[]',
+  metadata JSONB DEFAULT '{}', -- CNS contribution, fascia bias, etc.
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 ```
 
-### 4. Add "Return to Dashboard" Navigation
+**2. workout_presets (System IP + User Presets)**
+```sql
+CREATE TABLE public.workout_presets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID, -- NULL for system presets (Hammers IP)
+  name TEXT NOT NULL,
+  description TEXT,
+  category TEXT NOT NULL, -- 'explosive_lower', 'elastic_day', 'game_day_prime', etc.
+  difficulty TEXT, -- 'beginner', 'intermediate', 'advanced'
+  sport TEXT, -- 'baseball', 'softball', 'both'
+  preset_data JSONB NOT NULL, -- Full block structure
+  estimated_duration_minutes INTEGER,
+  cns_load_estimate INTEGER, -- 1-100
+  fascial_bias JSONB, -- { compression: 30, elastic: 50, glide: 20 }
+  is_system BOOLEAN DEFAULT false,
+  is_locked BOOLEAN DEFAULT false, -- true for Hammers IP
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
 
-**In Header (OwnerDashboard.tsx):**
-```typescript
-<header className="h-14 border-b bg-card px-4 flex items-center justify-between shrink-0">
-  <div className="flex items-center gap-3">
-    {/* Mobile menu button */}
-    
-    {/* Logo and title */}
-    <div className="flex items-center gap-2 min-w-0">
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={() => navigate('/dashboard')}
-        className="gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        <span className="hidden sm:inline">Back</span>
-      </Button>
-      <div className="h-6 w-px bg-border hidden sm:block" />
-      <div className="min-w-0">
-        <h1 className="font-semibold text-sm md:text-base truncate">Owner Dashboard</h1>
-      </div>
-    </div>
-  </div>
+**3. athlete_load_tracking (Daily/Weekly Load)**
+```sql
+CREATE TABLE public.athlete_load_tracking (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  entry_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  cns_load_total INTEGER DEFAULT 0,
+  fascial_load JSONB DEFAULT '{"compression": 0, "elastic": 0, "glide": 0}',
+  volume_load INTEGER DEFAULT 0, -- total reps/contacts
+  intensity_avg DECIMAL(5,2),
+  recovery_debt INTEGER DEFAULT 0,
+  workout_ids UUID[] DEFAULT '{}',
+  running_ids UUID[] DEFAULT '{}',
+  overlap_warnings JSONB DEFAULT '[]',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, entry_date)
+);
+```
+
+**4. running_sessions (Rebuilt Running Card)**
+```sql
+CREATE TABLE public.running_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  template_id UUID REFERENCES custom_activity_templates(id) ON DELETE SET NULL,
   
-  <Button variant="outline" size="sm" onClick={handleSignOut}>
-    Sign Out
-  </Button>
-</header>
+  -- Core Fields
+  run_type TEXT NOT NULL, -- 'sprint', 'tempo', 'conditioning', 'elastic', 'accel_decel', 'curve', 'cod', 'gait'
+  intent TEXT NOT NULL, -- 'max', 'submax', 'elastic', 'technical', 'recovery'
+  title TEXT,
+  
+  -- Structure (choose one primary metric)
+  distance_value DECIMAL(10,2),
+  distance_unit TEXT, -- 'yards', 'meters', 'feet', 'miles', 'km'
+  time_goal TEXT, -- 'H:MM:SS.T' format
+  reps INTEGER,
+  contacts INTEGER, -- for advanced ground contact tracking
+  
+  -- Context Toggles
+  surface TEXT, -- 'turf', 'grass', 'dirt', 'concrete', 'sand', 'track'
+  shoe_type TEXT, -- 'barefoot', 'barefoot_shoe', 'flats', 'cross_trainer', 'cushion', 'plastic_cleat', 'metal_cleat'
+  fatigue_state TEXT, -- 'fresh', 'accumulated', 'game_day'
+  environment_notes TEXT,
+  pre_run_stiffness INTEGER, -- 1-5 scale
+  
+  -- Intervals (for structured workouts)
+  intervals JSONB DEFAULT '[]',
+  
+  -- Load Metrics (calculated)
+  cns_load INTEGER,
+  ground_contacts_total INTEGER,
+  
+  -- Metadata
+  completed BOOLEAN DEFAULT false,
+  completed_at TIMESTAMPTZ,
+  actual_time TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 ```
 
-**In Sidebar (OwnerSidebar.tsx):**
-Add a "Return to Dashboard" link at the bottom of the sidebar, visually separated from the main navigation items.
-
----
-
-## Visual Design
-
-### Admin Status Indicators
-
-| Status | Background | Badge | Actions |
-|--------|------------|-------|---------|
-| Active Admin | `bg-success/5` (green tint) | Green "Admin" with check | "Revoke" button |
-| Pending Admin | `bg-amber-50` (yellow tint) | Amber "Pending" with clock | "Approve" / "Reject" buttons |
-| Rejected Admin | None | Muted "Rejected" with X | "Reinstate" button |
-| Regular User | None | None | "Make Admin" button |
-
-### Back Navigation Button
-
-- Position: Left side of header, before the logo/title
-- Style: Ghost button with ArrowLeft icon
-- Text: "Back" (hidden on mobile, just icon shown)
-- Destination: `/dashboard`
-
----
-
-## Sidebar Addition
-
-Add a footer section to the sidebar with navigation back to the main app:
+### Extended Exercise Schema (JSONB within blocks)
 
 ```typescript
-// Bottom of sidebar, after the main navigation items
-<div className="border-t p-3 mt-auto">
-  <button
-    onClick={() => navigate('/dashboard')}
-    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-  >
-    <ArrowLeft className="h-4 w-4 shrink-0" />
-    <span className="flex-1 text-left">Return to App</span>
-  </button>
-</div>
+interface EnhancedExercise {
+  id: string;
+  name: string;
+  type: 'strength' | 'cardio' | 'flexibility' | 'plyometric' | 'baseball' | 'core' | 'other';
+  
+  // Base Fields (Child Safe)
+  sets?: number;
+  reps?: number | string;
+  duration?: number; // seconds
+  rest?: number; // seconds
+  
+  // Advanced Fields (Hidden by default)
+  tempo?: string; // e.g., "3-1-2-0" (eccentric-pause-concentric-pause)
+  velocity_intent?: 'slow' | 'moderate' | 'fast' | 'ballistic';
+  external_load?: number;
+  load_type?: 'barbell' | 'dumbbell' | 'band' | 'bodyweight' | 'cable' | 'machine' | 'kettlebell';
+  surface?: string;
+  
+  // Fascia & CNS (Coach Mode)
+  fascia_bias?: 'compression' | 'elastic' | 'glide';
+  breathing_pattern?: string;
+  cns_demand?: 'low' | 'medium' | 'high';
+  is_unilateral?: boolean;
+  
+  // Tracking
+  weight?: number;
+  weight_unit?: 'lbs' | 'kg';
+  notes?: string;
+  video_reference?: string;
+  
+  // Warnings (system-generated)
+  pain_warning?: {
+    severity: 'moderate' | 'high';
+    message: string;
+    affectedAreas: string[];
+  };
+}
 ```
 
 ---
 
-## Edge Cases Handled
+## Phase 2: TypeScript Type Definitions
 
-1. **User already has admin role (any status)**: UI shows appropriate status and actions, prevents duplicate INSERT errors
-2. **Pending admin in Admin Requests vs User Management**: Both views allow approve/reject actions
-3. **Mobile navigation**: Both header back button and sidebar drawer have return navigation
-4. **Owner's own entry**: Should not show admin actions for the owner themselves (they're already owner)
+### New Types File: `src/types/eliteWorkout.ts`
+
+```typescript
+// Block Types
+export type BlockType = 
+  | 'activation'
+  | 'elastic_prep' 
+  | 'cns_primer'
+  | 'strength_output'
+  | 'power_speed'
+  | 'capacity'
+  | 'skill_transfer'
+  | 'decompression'
+  | 'recovery'
+  | 'custom';
+
+export type BlockIntent =
+  | 'elastic'
+  | 'max_output'
+  | 'submax_technical'
+  | 'accumulation'
+  | 'glide_restoration'
+  | 'cns_downregulation'
+  | 'custom';
+
+export interface WorkoutBlock {
+  id: string;
+  name: string;
+  blockType: BlockType;
+  intent: BlockIntent;
+  orderIndex: number;
+  isCustom: boolean;
+  exercises: EnhancedExercise[];
+  metadata: {
+    cnsContribution?: number; // 0-100
+    fasciaBias?: { compression: number; elastic: number; glide: number };
+    estimatedDuration?: number; // minutes
+  };
+}
+
+// Running Types
+export type RunType = 
+  | 'linear_sprint' 
+  | 'tempo' 
+  | 'conditioning' 
+  | 'elastic' 
+  | 'accel_decel' 
+  | 'curve' 
+  | 'cod' 
+  | 'gait';
+
+export type RunIntent = 'max' | 'submax' | 'elastic' | 'technical' | 'recovery';
+
+export interface RunningSession {
+  id: string;
+  runType: RunType;
+  intent: RunIntent;
+  title?: string;
+  distanceValue?: number;
+  distanceUnit?: 'yards' | 'meters' | 'feet' | 'miles' | 'km';
+  timeGoal?: string;
+  reps?: number;
+  contacts?: number;
+  surface?: string;
+  shoeType?: string;
+  fatigueState?: 'fresh' | 'accumulated' | 'game_day';
+  intervals?: RunningInterval[];
+  cnsLoad?: number;
+}
+
+// View Modes
+export type ViewMode = 'execute' | 'coach' | 'parent';
+
+// Load Tracking
+export interface LoadMetrics {
+  cnsLoad: number;
+  fascialLoad: { compression: number; elastic: number; glide: number };
+  volumeLoad: number;
+  recoveryDebt: number;
+}
+
+export interface OverlapWarning {
+  type: 'cns' | 'elastic' | 'load_spike' | 'recovery';
+  severity: 'advisory' | 'warning';
+  message: string;
+  suggestion?: string;
+}
+```
 
 ---
 
-## QA Checklist
+## Phase 3: UI Components
 
-1. **Admin Status Reflection**
-   - Active admins show green badge + Revoke button
-   - Pending admins show amber badge + Approve/Reject buttons
-   - Rejected admins show muted badge + Reinstate button
-   - Regular users show Make Admin button
-   - No duplicate INSERT errors when clicking buttons
+### Component Hierarchy
 
-2. **Navigation**
-   - "Back" button in header returns to /dashboard
-   - "Return to App" in sidebar returns to /dashboard
-   - Mobile: Back button visible in header
-   - Mobile: Return to App visible in sidebar drawer
+```text
+src/components/elite-workout/
+├── blocks/
+│   ├── BlockContainer.tsx          # Drag-drop container for blocks
+│   ├── BlockCard.tsx               # Individual block with exercises
+│   ├── BlockTypeSelector.tsx       # Grid of block type options
+│   ├── BlockIntentPicker.tsx       # Intent selection with icons
+│   └── SystemBlocksLibrary.tsx     # Hammers IP preset blocks
+│
+├── exercises/
+│   ├── EnhancedExerciseCard.tsx    # Exercise with advanced fields
+│   ├── AdvancedFieldsToggle.tsx    # Toggle for tempo/velocity/fascia
+│   ├── ExerciseQuickAdd.tsx        # Rapid exercise addition
+│   └── ExercisePainWarning.tsx     # Warning badge display
+│
+├── running/
+│   ├── RunningCardBuilder.tsx      # Complete running session builder
+│   ├── RunTypeSelector.tsx         # Visual run type picker
+│   ├── IntentSelector.tsx          # Intent with descriptions
+│   ├── ContextToggles.tsx          # Surface, shoes, fatigue
+│   └── RunningExecutionView.tsx    # Big start/finish for execution
+│
+├── readiness/
+│   ├── QuickReadinessCheck.tsx     # 3-tap pre-workout check
+│   ├── ReadinessIndicator.tsx      # Visual readiness display
+│   └── ReadinessFromVault.tsx      # Import from latest Vault check-in
+│
+├── intelligence/
+│   ├── CNSLoadIndicator.tsx        # Visual CNS meter
+│   ├── OverlapWarningBanner.tsx    # Yellow advisory banners
+│   ├── AutoAdaptSuggestion.tsx     # Suggestion cards
+│   └── LoadTrendChart.tsx          # Weekly load visualization
+│
+├── presets/
+│   ├── PresetLibrary.tsx           # Browse system + user presets
+│   ├── PresetCard.tsx              # Preset preview card
+│   └── SaveAsPresetDialog.tsx      # Save current workout as preset
+│
+├── execution/
+│   ├── WorkoutExecutionMode.tsx    # Full-screen workout runner
+│   ├── BlockProgressIndicator.tsx  # Current block/exercise position
+│   └── CompletionFeedbackDialog.tsx # Post-workout feedback
+│
+└── views/
+    ├── ViewModeToggle.tsx          # Execute/Coach/Parent switcher
+    ├── ExecuteView.tsx             # Simple "do this" view
+    ├── CoachView.tsx               # Full data + trends
+    └── ParentView.tsx              # Compliance + safety focused
+```
 
-3. **No Regressions**
-   - All existing functionality still works
-   - Admin requests section still shows pending requests
-   - Approve/Reject/Revoke still function correctly
+---
+
+## Phase 4: Integration Points
+
+### A. Custom Activity Builder Enhancement
+
+Modify `CustomActivityBuilderDialog.tsx` to include:
+
+1. **Block System Toggle** - When activity_type is 'workout', show block builder instead of flat exercise list
+2. **Enhanced Exercise Fields** - Add collapsible advanced fields section
+3. **Running Card Rebuild** - Replace EmbeddedRunningSession with full RunningCardBuilder
+4. **View Mode Selector** - Toggle between Execute/Coach/Parent preview
+
+### B. My Activities Page Enhancement
+
+Modify `MyCustomActivities.tsx` to include:
+
+1. **Preset Library Tab** - New tab for browsing system and user presets
+2. **Load Dashboard** - Weekly CNS/load visualization
+3. **Warning Indicators** - Show overlap warnings on activity cards
+
+### C. Game Plan Integration
+
+Modify `GamePlanCard.tsx` to:
+
+1. **Display Load Metrics** - Show daily CNS total in header
+2. **Warning Banners** - Display overlap warnings
+3. **Readiness Prompt** - Offer quick check before workout tasks
+
+---
+
+## Phase 5: Intelligence Engine
+
+### Load Calculation Logic
+
+```typescript
+// src/utils/loadCalculation.ts
+
+export function calculateExerciseCNS(exercise: EnhancedExercise): number {
+  let cns = 0;
+  
+  // Base by type
+  if (exercise.type === 'plyometric') cns += 40;
+  else if (exercise.type === 'strength') cns += 30;
+  else if (exercise.type === 'baseball') cns += 25;
+  else cns += 15;
+  
+  // Velocity modifier
+  if (exercise.velocity_intent === 'ballistic') cns *= 1.5;
+  else if (exercise.velocity_intent === 'fast') cns *= 1.25;
+  
+  // Volume modifier
+  const volume = (exercise.sets || 1) * (typeof exercise.reps === 'number' ? exercise.reps : 10);
+  cns += volume * 0.5;
+  
+  // Explicit CNS demand override
+  if (exercise.cns_demand === 'high') cns *= 1.3;
+  else if (exercise.cns_demand === 'low') cns *= 0.7;
+  
+  return Math.round(cns);
+}
+
+export function detectOverlaps(
+  workouts: LoadMetrics[],
+  running: LoadMetrics[],
+  date: Date
+): OverlapWarning[] {
+  const warnings: OverlapWarning[] = [];
+  const dayLoad = calculateDayLoad(workouts, running, date);
+  
+  // CNS overlap detection
+  if (dayLoad.cnsLoad > 150) {
+    warnings.push({
+      type: 'cns',
+      severity: 'warning',
+      message: 'High CNS load today - consider spacing explosive work',
+      suggestion: 'Move one high-intensity session to tomorrow'
+    });
+  }
+  
+  // Elastic overload
+  if (dayLoad.fascialLoad.elastic > 100) {
+    warnings.push({
+      type: 'elastic',
+      severity: 'advisory',
+      message: 'High elastic demand - ensure adequate warmup',
+    });
+  }
+  
+  // Load spike (compared to 7-day average)
+  const weekAvg = calculateWeekAverage(date);
+  if (dayLoad.volumeLoad > weekAvg * 1.5) {
+    warnings.push({
+      type: 'load_spike',
+      severity: 'warning',
+      message: 'Load spike detected - risk of overtraining',
+      suggestion: 'Consider reducing volume by 20%'
+    });
+  }
+  
+  return warnings;
+}
+```
+
+---
+
+## Phase 6: Hammers IP System Presets
+
+### Seed Data for `workout_presets`
+
+```sql
+-- Explosive Lower Day
+INSERT INTO workout_presets (name, category, difficulty, sport, is_system, is_locked, preset_data) VALUES
+('Explosive Lower', 'explosive_lower', 'intermediate', 'both', true, true, '{
+  "blocks": [
+    {"blockType": "activation", "intent": "cns_downregulation", "exercises": [...]},
+    {"blockType": "elastic_prep", "intent": "elastic", "exercises": [...]},
+    {"blockType": "power_speed", "intent": "max_output", "exercises": [...]},
+    {"blockType": "strength_output", "intent": "accumulation", "exercises": [...]},
+    {"blockType": "decompression", "intent": "glide_restoration", "exercises": [...]}
+  ]
+}'::jsonb);
+
+-- Elastic Day
+INSERT INTO workout_presets (name, category, difficulty, sport, is_system, is_locked, preset_data) VALUES
+('Elastic Day', 'elastic_day', 'intermediate', 'both', true, true, '...');
+
+-- Game Day Prime
+INSERT INTO workout_presets (name, category, difficulty, sport, is_system, is_locked, preset_data) VALUES
+('Game Day Prime', 'game_day_prime', 'all', 'both', true, true, '...');
+
+-- Fascial Recovery
+INSERT INTO workout_presets (name, category, difficulty, sport, is_system, is_locked, preset_data) VALUES
+('Fascial Recovery', 'fascial_recovery', 'beginner', 'both', true, true, '...');
+```
+
+---
+
+## Phase 7: Edge Functions
+
+### 1. `calculate-load` Edge Function
+
+Calculates and stores daily load metrics after workout completion.
+
+### 2. `detect-overlaps` Edge Function
+
+Analyzes upcoming schedule for potential overlap warnings.
+
+### 3. `suggest-adaptation` Edge Function
+
+AI-powered suggestions for workout modifications based on recovery context.
+
+---
+
+## Phase 8: Internationalization
+
+Add translation keys to all 8 language files:
+
+```json
+{
+  "eliteWorkout": {
+    "blocks": {
+      "activation": "Activation",
+      "elastic_prep": "Elastic Prep",
+      "cns_primer": "CNS Primer",
+      "strength_output": "Strength Output",
+      "power_speed": "Power/Speed",
+      "capacity": "Capacity",
+      "skill_transfer": "Skill Transfer",
+      "decompression": "Decompression",
+      "recovery": "Recovery"
+    },
+    "intent": {
+      "elastic": "Elastic/Bounce",
+      "max_output": "Max Output",
+      "submax_technical": "Submax Technical",
+      "accumulation": "Accumulation",
+      "glide_restoration": "Glide Restoration",
+      "cns_downregulation": "CNS Downregulation"
+    },
+    "running": {
+      "types": {
+        "linear_sprint": "Sprint",
+        "tempo": "Tempo",
+        "conditioning": "Conditioning",
+        "elastic": "Elastic/Bounce",
+        "accel_decel": "Accel/Decel",
+        "curve": "Curve Run",
+        "cod": "Change of Direction",
+        "gait": "Gait Work"
+      }
+    },
+    "viewModes": {
+      "execute": "Do It",
+      "coach": "Full Data",
+      "parent": "Overview"
+    },
+    "warnings": {
+      "cns_overlap": "High CNS load detected",
+      "load_spike": "Load spike - take it easy",
+      "elastic_overload": "Lots of jumping today"
+    }
+  }
+}
+```
+
+---
+
+## File Changes Summary
+
+| Category | Files | Action |
+|----------|-------|--------|
+| Database | 4 new tables + migrations | Create |
+| Types | `src/types/eliteWorkout.ts` | Create |
+| Components | 25+ new components in `src/components/elite-workout/` | Create |
+| Hooks | `useEliteWorkout.ts`, `useLoadTracking.ts`, `useOverlapDetection.ts` | Create |
+| Existing | `CustomActivityBuilderDialog.tsx` | Modify |
+| Existing | `MyCustomActivities.tsx` | Modify |
+| Existing | `GamePlanCard.tsx` | Modify |
+| Existing | `ExerciseBuilder.tsx` | Modify |
+| Existing | `DragDropExerciseBuilder.tsx` | Modify |
+| Edge Functions | `calculate-load`, `detect-overlaps`, `suggest-adaptation` | Create |
+| i18n | All 8 language files | Modify |
+
+---
+
+## Kid-Friendly UX Principles
+
+Throughout implementation:
+
+1. **Default Simple** - Advanced fields hidden until toggled
+2. **Big Tap Targets** - All buttons minimum 44x44px
+3. **Visual Progress** - Clear indicators of where they are in workout
+4. **Encouraging Language** - "Great job!" not "Exercise completed"
+5. **No Cognitive Load** - "What's next?" always obvious
+6. **Soft Guardrails** - Warnings never block, only inform
+7. **Sport-Colored** - Baseball orange, softball pink theming continues
+
+---
+
+## Success Criteria
+
+1. A 5-year-old can start and complete a workout without help
+2. MLB-level athletes have access to CNS/fascial tracking
+3. Coaches can see full system visibility with one toggle
+4. Parents can monitor compliance without complexity
+5. Zero overlap errors or database constraint violations
+6. Full 8-language support
+7. No performance degradation on mobile
 
