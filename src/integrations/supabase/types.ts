@@ -119,6 +119,54 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_load_tracking: {
+        Row: {
+          cns_load_total: number | null
+          created_at: string | null
+          entry_date: string
+          fascial_load: Json | null
+          id: string
+          intensity_avg: number | null
+          overlap_warnings: Json | null
+          recovery_debt: number | null
+          running_ids: string[] | null
+          updated_at: string | null
+          user_id: string
+          volume_load: number | null
+          workout_ids: string[] | null
+        }
+        Insert: {
+          cns_load_total?: number | null
+          created_at?: string | null
+          entry_date?: string
+          fascial_load?: Json | null
+          id?: string
+          intensity_avg?: number | null
+          overlap_warnings?: Json | null
+          recovery_debt?: number | null
+          running_ids?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          volume_load?: number | null
+          workout_ids?: string[] | null
+        }
+        Update: {
+          cns_load_total?: number | null
+          created_at?: string | null
+          entry_date?: string
+          fascial_load?: Json | null
+          id?: string
+          intensity_avg?: number | null
+          overlap_warnings?: Json | null
+          recovery_debt?: number | null
+          running_ids?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          volume_load?: number | null
+          workout_ids?: string[] | null
+        }
+        Relationships: []
+      }
       audit_log: {
         Row: {
           action: string
@@ -1624,6 +1672,98 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      running_sessions: {
+        Row: {
+          actual_time: string | null
+          cns_load: number | null
+          completed: boolean | null
+          completed_at: string | null
+          contacts: number | null
+          created_at: string | null
+          distance_unit: string | null
+          distance_value: number | null
+          environment_notes: string | null
+          fatigue_state: string | null
+          ground_contacts_total: number | null
+          id: string
+          intent: string
+          intervals: Json | null
+          notes: string | null
+          pre_run_stiffness: number | null
+          reps: number | null
+          run_type: string
+          shoe_type: string | null
+          surface: string | null
+          template_id: string | null
+          time_goal: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_time?: string | null
+          cns_load?: number | null
+          completed?: boolean | null
+          completed_at?: string | null
+          contacts?: number | null
+          created_at?: string | null
+          distance_unit?: string | null
+          distance_value?: number | null
+          environment_notes?: string | null
+          fatigue_state?: string | null
+          ground_contacts_total?: number | null
+          id?: string
+          intent?: string
+          intervals?: Json | null
+          notes?: string | null
+          pre_run_stiffness?: number | null
+          reps?: number | null
+          run_type?: string
+          shoe_type?: string | null
+          surface?: string | null
+          template_id?: string | null
+          time_goal?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_time?: string | null
+          cns_load?: number | null
+          completed?: boolean | null
+          completed_at?: string | null
+          contacts?: number | null
+          created_at?: string | null
+          distance_unit?: string | null
+          distance_value?: number | null
+          environment_notes?: string | null
+          fatigue_state?: string | null
+          ground_contacts_total?: number | null
+          id?: string
+          intent?: string
+          intervals?: Json | null
+          notes?: string | null
+          pre_run_stiffness?: number | null
+          reps?: number | null
+          run_type?: string
+          shoe_type?: string | null
+          surface?: string | null
+          template_id?: string | null
+          time_goal?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "running_sessions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "custom_activity_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scout_applications: {
         Row: {
@@ -3954,6 +4094,110 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           wellness_goals?: string[] | null
+        }
+        Relationships: []
+      }
+      workout_blocks: {
+        Row: {
+          block_type: string
+          created_at: string | null
+          exercises: Json | null
+          id: string
+          intent: string
+          is_custom: boolean | null
+          metadata: Json | null
+          name: string
+          order_index: number
+          template_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          block_type?: string
+          created_at?: string | null
+          exercises?: Json | null
+          id?: string
+          intent?: string
+          is_custom?: boolean | null
+          metadata?: Json | null
+          name: string
+          order_index?: number
+          template_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          block_type?: string
+          created_at?: string | null
+          exercises?: Json | null
+          id?: string
+          intent?: string
+          is_custom?: boolean | null
+          metadata?: Json | null
+          name?: string
+          order_index?: number
+          template_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_blocks_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "custom_activity_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workout_presets: {
+        Row: {
+          category: string
+          cns_load_estimate: number | null
+          created_at: string | null
+          description: string | null
+          difficulty: string | null
+          estimated_duration_minutes: number | null
+          fascial_bias: Json | null
+          id: string
+          is_locked: boolean | null
+          is_system: boolean | null
+          name: string
+          preset_data: Json
+          sport: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          cns_load_estimate?: number | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_duration_minutes?: number | null
+          fascial_bias?: Json | null
+          id?: string
+          is_locked?: boolean | null
+          is_system?: boolean | null
+          name: string
+          preset_data?: Json
+          sport?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          cns_load_estimate?: number | null
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_duration_minutes?: number | null
+          fascial_bias?: Json | null
+          id?: string
+          is_locked?: boolean | null
+          is_system?: boolean | null
+          name?: string
+          preset_data?: Json
+          sport?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
