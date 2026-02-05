@@ -8,8 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Target, CircleDot, Zap, Search, BookMarked, User, Settings, ShieldCheck } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { Target, CircleDot, Zap, Search, BookMarked, User, ShieldCheck, Menu, LogOut, Users, Video as VideoIcon, CreditCard, Settings as SettingsIcon, FileText } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScoutApplicationCard } from "@/components/ScoutApplicationCard";
@@ -19,7 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { OwnerSidebar, type OwnerSection } from "@/components/owner/OwnerSidebar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-interface User {
+
+interface UserProfile {
   id: string;
   full_name: string | null;
   created_at: string;
@@ -39,11 +39,24 @@ interface AdminRequest {
   full_name: string | null;
 }
 
+const sectionLabels: Record<OwnerSection, string> = {
+  'overview': 'Overview',
+  'users': 'User Management',
+  'admin-requests': 'Admin Requests',
+  'scout-applications': 'Scout Applications',
+  'videos': 'Recent Videos',
+  'subscriptions': 'Subscriptions',
+  'settings': 'Settings',
+  'player-search': 'Player Search',
+};
+
 const OwnerDashboard = () => {
   const { isOwner, loading } = useOwnerAccess();
   const { signOut } = useAuth();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<User[]>([]);
+  const isMobile = useIsMobile();
+  
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [videos, setVideos] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
@@ -59,7 +72,8 @@ const OwnerDashboard = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [rankingsVisible, setRankingsVisible] = useState(true);
   const [activeSection, setActiveSection] = useState<OwnerSection>('overview');
-  const isMobile = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     if (!loading && !isOwner) {
       navigate("/");
@@ -104,7 +118,6 @@ const OwnerDashboard = () => {
         setAdminRequests(requests);
       }
 
-      // Fetch module subscriptions
       const { data: moduleSubs } = await supabase
         .from("subscriptions")
         .select("subscribed_modules")
@@ -168,7 +181,7 @@ const OwnerDashboard = () => {
       toast({
         title: role === 'admin' ? "Admin Appointed" : "Role Assigned",
         description: role === 'admin' 
-          ? "Admin privileges granted successfully. User now has admin access."
+          ? "Admin privileges granted successfully."
           : `Role ${role} assigned successfully`,
       });
 
@@ -185,12 +198,9 @@ const OwnerDashboard = () => {
 
   const getUserRole = (userId: string) => {
     const userRole = userRoles.find((r) => r.user_id === userId);
-    
-    // If admin role but not active, show as player
     if (userRole?.role === 'admin' && userRole?.status !== 'active') {
       return 'player';
     }
-    
     return userRole?.role || "player";
   };
 
@@ -263,7 +273,7 @@ const OwnerDashboard = () => {
 
       toast({
         title: "Admin Revoked",
-        description: "Admin privileges have been removed from this user",
+        description: "Admin privileges have been removed",
       });
 
       await loadDashboardData();
@@ -292,7 +302,6 @@ const OwnerDashboard = () => {
 
       if (!profiles) return;
 
-      // Get session counts for each player
       const playersWithCounts = await Promise.all(
         profiles.map(async (player) => {
           const { count } = await supabase
@@ -328,14 +337,14 @@ const OwnerDashboard = () => {
 
       setRankingsVisible(enabled);
       toast({
-        title: "Rankings Visibility Updated",
-        description: enabled ? "Rankings are now visible to all users" : "Rankings are now hidden from users",
+        title: "Settings Updated",
+        description: enabled ? "Rankings are now visible" : "Rankings are now hidden",
       });
     } catch (error: any) {
       console.error('Error updating rankings visibility:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update rankings visibility",
+        description: error.message || "Failed to update settings",
         variant: "destructive",
       });
     }
@@ -343,8 +352,8 @@ const OwnerDashboard = () => {
 
   if (loading || dataLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -367,79 +376,146 @@ const OwnerDashboard = () => {
       : 0;
 
   return (
-    <DashboardLayout>
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Sidebar */}
-        <OwnerSidebar
-          activeSection={activeSection}
-          onSectionChange={setActiveSection}
-          pendingAdminRequests={adminRequests.length}
-          pendingScoutApplications={scoutApplications.filter(a => a.status === 'pending').length}
-        />
-        
-        {/* Main content */}
-        <div className="flex-1 p-6 overflow-auto">
-          {/* Mobile menu trigger */}
-          {isMobile && (
-            <div className="mb-4 flex items-center gap-3">
-              <OwnerSidebar
-                activeSection={activeSection}
-                onSectionChange={setActiveSection}
-                pendingAdminRequests={adminRequests.length}
-                pendingScoutApplications={scoutApplications.filter(a => a.status === 'pending').length}
-              />
-              <h1 className="text-xl font-bold">Owner Dashboard</h1>
-            </div>
-          )}
-
-          {/* Header - Desktop only */}
-          {!isMobile && (
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-xl">H</span>
-                </div>
-                <h1 className="text-xl font-bold">Owner Dashboard</h1>
-              </div>
-              <Button variant="outline" onClick={handleSignOut}>
-                Sign Out
+    <div className="flex min-h-screen bg-background">
+      {/* Sidebar - Single instance */}
+      <OwnerSidebar
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        pendingAdminRequests={adminRequests.length}
+        pendingScoutApplications={scoutApplications.filter(a => a.status === 'pending').length}
+        mobileOpen={mobileMenuOpen}
+        onMobileOpenChange={setMobileMenuOpen}
+      />
+      
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="h-14 border-b bg-card px-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            {isMobile && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setMobileMenuOpen(true)}
+                className="shrink-0"
+              >
+                <Menu className="h-5 w-5" />
               </Button>
+            )}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
+                <span className="text-primary-foreground font-bold text-sm">H</span>
+              </div>
+              <div className="min-w-0">
+                <h1 className="font-semibold text-sm md:text-base truncate">Owner Dashboard</h1>
+                <p className="text-xs text-muted-foreground hidden md:block">
+                  {sectionLabels[activeSection]}
+                </p>
+              </div>
             </div>
-          )}
+          </div>
+          <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2 shrink-0">
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Sign Out</span>
+          </Button>
+        </header>
 
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">Welcome, Owner</h2>
-            <p className="text-muted-foreground">Comprehensive oversight and management of all app modules</p>
+        {/* Content */}
+        <main className="flex-1 overflow-auto p-4 md:p-6">
+          {/* Section Header */}
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold">{sectionLabels[activeSection]}</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {activeSection === 'overview' && 'Platform analytics and key metrics'}
+              {activeSection === 'users' && 'Manage user accounts and admin privileges'}
+              {activeSection === 'admin-requests' && 'Review pending admin access requests'}
+              {activeSection === 'scout-applications' && 'Review scout and coach applications'}
+              {activeSection === 'videos' && 'Recently analyzed training videos'}
+              {activeSection === 'subscriptions' && 'Active module subscriptions'}
+              {activeSection === 'settings' && 'Configure app-wide settings'}
+              {activeSection === 'player-search' && 'Search and view player profiles'}
+            </p>
           </div>
 
-          {/* Overview Section - Analytics Cards */}
+          {/* Overview Section */}
           {activeSection === 'overview' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              <Card className="p-6">
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Users</p>
-                  <p className="text-3xl font-bold">{totalUsers}</p>
-                </div>
-              </Card>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Users</p>
+                  <p className="text-3xl font-bold mt-1">{totalUsers}</p>
+                </Card>
 
-              <Card className="p-6">
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Subscriptions</p>
-                  <p className="text-3xl font-bold">{activeSubscriptions}</p>
-                </div>
-              </Card>
+                <Card className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <CreditCard className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Subscriptions</p>
+                  <p className="text-3xl font-bold mt-1">{activeSubscriptions}</p>
+                </Card>
 
-              <Card className="p-6">
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Videos</p>
-                  <p className="text-3xl font-bold">{totalVideosAnalyzed}</p>
-                </div>
-              </Card>
+                <Card className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <VideoIcon className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Videos</p>
+                  <p className="text-3xl font-bold mt-1">{totalVideosAnalyzed}</p>
+                </Card>
 
-              <Card className="p-6">
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Efficiency</p>
-                  <p className="text-3xl font-bold">{avgScore}%</p>
+                <Card className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Target className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg. Score</p>
+                  <p className="text-3xl font-bold mt-1">{avgScore}%</p>
+                </Card>
+              </div>
+
+              {/* Quick Stats */}
+              <Card className="p-5">
+                <h3 className="font-semibold mb-4">Module Distribution</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-4 w-4 text-primary" />
+                        <span className="font-medium">Hitting</span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">{moduleStats.hitting}</span>
+                    </div>
+                    <Progress value={activeSubscriptions > 0 ? (moduleStats.hitting / activeSubscriptions) * 100 : 0} className="h-2" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CircleDot className="h-4 w-4 text-primary" />
+                        <span className="font-medium">Pitching</span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">{moduleStats.pitching}</span>
+                    </div>
+                    <Progress value={activeSubscriptions > 0 ? (moduleStats.pitching / activeSubscriptions) * 100 : 0} className="h-2" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-primary" />
+                        <span className="font-medium">Throwing</span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">{moduleStats.throwing}</span>
+                    </div>
+                    <Progress value={activeSubscriptions > 0 ? (moduleStats.throwing / activeSubscriptions) * 100 : 0} className="h-2" />
+                  </div>
                 </div>
               </Card>
             </div>
@@ -447,48 +523,56 @@ const OwnerDashboard = () => {
 
           {/* User Management Section */}
           {activeSection === 'users' && (
-            <Card className="p-6">
-              <h3 className="text-2xl font-bold mb-4">All Users</h3>
-              <div className="space-y-2">
+            <Card className="overflow-hidden">
+              <div className="divide-y">
                 {users.length === 0 ? (
-                  <p className="text-muted-foreground">No users yet</p>
+                  <div className="p-8 text-center text-muted-foreground">
+                    No users yet
+                  </div>
                 ) : (
                   users.map((user) => (
                     <div
                       key={user.id}
                       className={cn(
-                        "p-4 border rounded-lg transition-colors flex justify-between items-center",
-                        isActiveAdmin(user.id) 
-                          ? "bg-success-muted border-success/30" 
-                          : "hover:bg-muted/50"
+                        "flex items-center justify-between p-4 transition-colors",
+                        isActiveAdmin(user.id) && "bg-success/5"
                       )}
                     >
-                      <div>
-                        <p className="font-semibold">{user.full_name || "No name"}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Role: <span className="capitalize">{getUserRole(user.id)}</span>
-                          {isActiveAdmin(user.id) && (
-                            <span className="ml-2 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-success-muted text-success-muted-foreground">
-                              <ShieldCheck className="h-3 w-3" />
-                              Active Admin
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="h-10 w-10 shrink-0">
+                          <AvatarFallback className="bg-muted">
+                            {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{user.full_name || "No name"}</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm text-muted-foreground capitalize">
+                              {getUserRole(user.id)}
                             </span>
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Joined: {new Date(user.created_at).toLocaleDateString()}
-                        </p>
+                            {isActiveAdmin(user.id) && (
+                              <Badge variant="outline" className="text-success border-success/50 gap-1 text-xs">
+                                <ShieldCheck className="h-3 w-3" />
+                                Active
+                              </Badge>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              · Joined {new Date(user.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
                         {isActiveAdmin(user.id) ? (
                           <>
-                            <Badge className="bg-success hover:bg-success text-success-foreground gap-1">
+                            <Badge className="bg-success hover:bg-success text-success-foreground gap-1 hidden sm:flex">
                               <ShieldCheck className="h-3 w-3" />
                               Admin
                             </Badge>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                              className="text-destructive border-destructive/30 hover:bg-destructive/10"
                               onClick={() => handleRemoveAdmin(user.id)}
                             >
                               Revoke
@@ -513,26 +597,37 @@ const OwnerDashboard = () => {
 
           {/* Admin Requests Section */}
           {activeSection === 'admin-requests' && (
-            <Card className="p-6">
-              <h3 className="text-2xl font-bold mb-4">Pending Admin Requests</h3>
-              <div className="space-y-2">
+            <Card className="overflow-hidden">
+              <div className="divide-y">
                 {adminRequests.length === 0 ? (
-                  <p className="text-muted-foreground">No pending admin requests</p>
+                  <div className="p-8 text-center text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No pending admin requests</p>
+                  </div>
                 ) : (
                   adminRequests.map((request) => (
-                    <div key={request.user_id} className="p-4 border rounded-lg flex justify-between items-center">
-                      <div>
-                        <p className="font-semibold">{request.full_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Requested: {new Date(request.created_at).toLocaleDateString()}
-                        </p>
+                    <div key={request.user_id} className="flex items-center justify-between p-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="h-10 w-10 shrink-0">
+                          <AvatarFallback className="bg-muted">
+                            {request.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{request.full_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Requested {new Date(request.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button onClick={() => handleApproveAdmin(request.user_id)}>
+                      <div className="flex gap-2 shrink-0 ml-2">
+                        <Button size="sm" onClick={() => handleApproveAdmin(request.user_id)}>
                           Approve
                         </Button>
                         <Button 
-                          variant="destructive" 
+                          size="sm"
+                          variant="outline"
+                          className="text-destructive border-destructive/30 hover:bg-destructive/10"
                           onClick={() => handleRejectAdmin(request.user_id)}
                         >
                           Reject
@@ -547,21 +642,26 @@ const OwnerDashboard = () => {
 
           {/* Scout Applications Section */}
           {activeSection === 'scout-applications' && (
-            <Card className="p-6">
-              <h3 className="text-2xl font-bold mb-4">Scout/Coach Applications</h3>
+            <Card className="p-5">
               <Tabs defaultValue="pending" className="space-y-4">
-                <TabsList>
-                  <TabsTrigger value="pending">
-                    Pending ({scoutApplications.filter(a => a.status === 'pending').length})
+                <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
+                  <TabsTrigger value="pending" className="gap-1">
+                    Pending
+                    <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                      {scoutApplications.filter(a => a.status === 'pending').length}
+                    </Badge>
                   </TabsTrigger>
                   <TabsTrigger value="approved">Approved</TabsTrigger>
                   <TabsTrigger value="rejected">Rejected</TabsTrigger>
                   <TabsTrigger value="all">All</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="pending" className="space-y-4">
+                <TabsContent value="pending" className="space-y-3 mt-4">
                   {scoutApplications.filter(a => a.status === 'pending').length === 0 ? (
-                    <p className="text-muted-foreground">No pending applications</p>
+                    <div className="py-8 text-center text-muted-foreground">
+                      <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <p>No pending applications</p>
+                    </div>
                   ) : (
                     scoutApplications
                       .filter(a => a.status === 'pending')
@@ -575,9 +675,9 @@ const OwnerDashboard = () => {
                   )}
                 </TabsContent>
                 
-                <TabsContent value="approved" className="space-y-4">
+                <TabsContent value="approved" className="space-y-3 mt-4">
                   {scoutApplications.filter(a => a.status === 'approved').length === 0 ? (
-                    <p className="text-muted-foreground">No approved applications</p>
+                    <p className="py-8 text-center text-muted-foreground">No approved applications</p>
                   ) : (
                     scoutApplications
                       .filter(a => a.status === 'approved')
@@ -591,9 +691,9 @@ const OwnerDashboard = () => {
                   )}
                 </TabsContent>
                 
-                <TabsContent value="rejected" className="space-y-4">
+                <TabsContent value="rejected" className="space-y-3 mt-4">
                   {scoutApplications.filter(a => a.status === 'rejected').length === 0 ? (
-                    <p className="text-muted-foreground">No rejected applications</p>
+                    <p className="py-8 text-center text-muted-foreground">No rejected applications</p>
                   ) : (
                     scoutApplications
                       .filter(a => a.status === 'rejected')
@@ -607,9 +707,9 @@ const OwnerDashboard = () => {
                   )}
                 </TabsContent>
                 
-                <TabsContent value="all" className="space-y-4">
+                <TabsContent value="all" className="space-y-3 mt-4">
                   {scoutApplications.length === 0 ? (
-                    <p className="text-muted-foreground">No applications yet</p>
+                    <p className="py-8 text-center text-muted-foreground">No applications yet</p>
                   ) : (
                     scoutApplications.map(app => (
                       <ScoutApplicationCard 
@@ -626,26 +726,34 @@ const OwnerDashboard = () => {
 
           {/* Videos Section */}
           {activeSection === 'videos' && (
-            <Card className="p-6">
-              <h3 className="text-2xl font-bold mb-4">Recent Video Analyses</h3>
-              <div className="space-y-2">
+            <Card className="overflow-hidden">
+              <div className="divide-y">
                 {videos.length === 0 ? (
-                  <p className="text-muted-foreground">No videos analyzed yet</p>
+                  <div className="p-8 text-center text-muted-foreground">
+                    <VideoIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No videos analyzed yet</p>
+                  </div>
                 ) : (
                   videos.map((video) => (
-                    <div key={video.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold capitalize">
+                    <div key={video.id} className="p-4 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="font-medium capitalize truncate">
                             {video.sport} - {video.module}
                           </p>
-                          <p className="text-sm text-muted-foreground">Status: {video.status}</p>
-                          {video.efficiency_score && (
-                            <p className="text-sm">Score: {video.efficiency_score}/100</p>
-                          )}
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(video.created_at).toLocaleDateString()}
-                          </p>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <Badge variant={video.status === 'completed' ? 'default' : 'secondary'} className="text-xs">
+                              {video.status}
+                            </Badge>
+                            {video.efficiency_score && (
+                              <span className="text-sm text-muted-foreground">
+                                Score: {video.efficiency_score}/100
+                              </span>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              · {new Date(video.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -657,62 +765,70 @@ const OwnerDashboard = () => {
 
           {/* Subscriptions Section */}
           {activeSection === 'subscriptions' && (
-            <Card className="p-6">
-              <h3 className="text-2xl font-bold mb-4">Module Subscriptions</h3>
-              <p className="text-muted-foreground mb-6">
-                Active subscribers by training module
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 mb-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Target className="h-5 w-5 text-primary" />
-                    <p className="font-semibold text-lg">Hitting</p>
                   </div>
-                  <p className="text-3xl font-bold">{moduleStats.hitting}</p>
-                  <p className="text-sm text-muted-foreground">subscribers</p>
-                  <Progress 
-                    value={activeSubscriptions > 0 ? (moduleStats.hitting / activeSubscriptions) * 100 : 0} 
-                    className="h-2 mt-2" 
-                  />
+                  <div>
+                    <p className="font-semibold">Hitting</p>
+                    <p className="text-xs text-muted-foreground">Training module</p>
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 mb-1">
+                <p className="text-3xl font-bold">{moduleStats.hitting}</p>
+                <p className="text-sm text-muted-foreground mb-3">active subscribers</p>
+                <Progress 
+                  value={activeSubscriptions > 0 ? (moduleStats.hitting / activeSubscriptions) * 100 : 0} 
+                  className="h-2" 
+                />
+              </Card>
+              
+              <Card className="p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <CircleDot className="h-5 w-5 text-primary" />
-                    <p className="font-semibold text-lg">Pitching</p>
                   </div>
-                  <p className="text-3xl font-bold">{moduleStats.pitching}</p>
-                  <p className="text-sm text-muted-foreground">subscribers</p>
-                  <Progress 
-                    value={activeSubscriptions > 0 ? (moduleStats.pitching / activeSubscriptions) * 100 : 0} 
-                    className="h-2 mt-2" 
-                  />
+                  <div>
+                    <p className="font-semibold">Pitching</p>
+                    <p className="text-xs text-muted-foreground">Training module</p>
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 mb-1">
+                <p className="text-3xl font-bold">{moduleStats.pitching}</p>
+                <p className="text-sm text-muted-foreground mb-3">active subscribers</p>
+                <Progress 
+                  value={activeSubscriptions > 0 ? (moduleStats.pitching / activeSubscriptions) * 100 : 0} 
+                  className="h-2" 
+                />
+              </Card>
+              
+              <Card className="p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Zap className="h-5 w-5 text-primary" />
-                    <p className="font-semibold text-lg">Throwing</p>
                   </div>
-                  <p className="text-3xl font-bold">{moduleStats.throwing}</p>
-                  <p className="text-sm text-muted-foreground">subscribers</p>
-                  <Progress 
-                    value={activeSubscriptions > 0 ? (moduleStats.throwing / activeSubscriptions) * 100 : 0} 
-                    className="h-2 mt-2" 
-                  />
+                  <div>
+                    <p className="font-semibold">Throwing</p>
+                    <p className="text-xs text-muted-foreground">Training module</p>
+                  </div>
                 </div>
-              </div>
-            </Card>
+                <p className="text-3xl font-bold">{moduleStats.throwing}</p>
+                <p className="text-sm text-muted-foreground mb-3">active subscribers</p>
+                <Progress 
+                  value={activeSubscriptions > 0 ? (moduleStats.throwing / activeSubscriptions) * 100 : 0} 
+                  className="h-2" 
+                />
+              </Card>
+            </div>
           )}
 
           {/* Settings Section */}
           {activeSection === 'settings' && (
-            <Card className="p-6">
-              <h3 className="text-2xl font-bold mb-4">App Settings</h3>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+            <Card className="p-5">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
                   <div className="space-y-1">
-                    <Label htmlFor="rankings-visibility" className="text-base font-semibold">
+                    <Label htmlFor="rankings-visibility" className="text-base font-medium">
                       Rankings Visibility
                     </Label>
                     <p className="text-sm text-muted-foreground">
@@ -731,9 +847,8 @@ const OwnerDashboard = () => {
 
           {/* Player Search Section */}
           {activeSection === 'player-search' && (
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Search Player Profiles & Libraries</h3>
-              <div className="space-y-4">
+            <div className="space-y-4">
+              <Card className="p-5">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -746,48 +861,61 @@ const OwnerDashboard = () => {
                     className="pl-10"
                   />
                 </div>
-                
-                {searchResults.length > 0 && (
-                  <div className="space-y-2">
+              </Card>
+              
+              {searchResults.length > 0 && (
+                <Card className="overflow-hidden">
+                  <div className="divide-y">
                     {searchResults.map((player) => (
-                      <div key={player.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <Avatar>
+                      <div key={player.id} className="flex items-center justify-between p-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar className="h-10 w-10 shrink-0">
                             {player.avatar_url && <AvatarImage src={player.avatar_url} />}
-                            <AvatarFallback>{player.full_name?.charAt(0) || 'P'}</AvatarFallback>
+                            <AvatarFallback className="bg-muted">
+                              {player.full_name?.charAt(0)?.toUpperCase() || 'P'}
+                            </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="font-semibold">{player.full_name}</p>
-                            <p className="text-sm text-muted-foreground">{player.sessionCount} sessions saved</p>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{player.full_name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {player.sessionCount} sessions saved
+                            </p>
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 shrink-0 ml-2">
                           <Button
                             onClick={() => navigate(`/profile?userId=${player.id}`)}
                             size="sm"
                             variant="outline"
                           >
-                            <User className="h-4 w-4 mr-2" />
-                            View Profile
+                            <User className="h-4 w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Profile</span>
                           </Button>
                           <Button
                             onClick={() => navigate(`/players-club?playerId=${player.id}`)}
                             size="sm"
                           >
-                            <BookMarked className="h-4 w-4 mr-2" />
-                            View Library
+                            <BookMarked className="h-4 w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Library</span>
                           </Button>
                         </div>
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
-            </Card>
+                </Card>
+              )}
+              
+              {playerSearch.length >= 2 && searchResults.length === 0 && (
+                <Card className="p-8 text-center text-muted-foreground">
+                  <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No players found matching "{playerSearch}"</p>
+                </Card>
+              )}
+            </div>
           )}
-        </div>
+        </main>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 
