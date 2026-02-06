@@ -1,84 +1,84 @@
 
 
-# Definitive Fix: Kill Horizontal Overflow in Create Activity Dialog
+# Replace All "AI" Branding with "Hammer" Across the Entire App
 
-## Why Every Previous Fix Failed
+## Scope
 
-Radix ScrollArea's Viewport component internally wraps ALL children in a div with:
+Every user-facing instance of "AI" in the app will be replaced with "Hammer" to align with the established branding convention (Hammer Analysis, Hammer Warmup Generator, Hammer Workout Recommendations). This includes all 8 locale files and hardcoded strings in component/page files.
 
-```text
-<div style="min-width: 100%; display: table">
-  {children}
-</div>
-```
+## Changes by Category
 
-CSS `display: table` makes the container size to its content's intrinsic width, ignoring the parent's width constraint. This means:
+### 1. English Locale (en.json) -- Primary Source of Truth
 
-- Adding `overflow-hidden` to children does NOT prevent the expansion -- the table layout has already sized wider
-- Adding `min-w-0` to flex items doesn't help -- they're inside a table cell that already expanded
-- Reducing padding helps marginally but doesn't fix the root cause
+| Location | Current Text | New Text |
+|----------|-------------|----------|
+| `common.ai` | "AI" | "Hammer" |
+| `realTimePlayback.statusAnalyzing` | "AI analyzing..." | "Hammer analyzing..." |
+| `realTimePlayback.analysisFailed` | "AI analysis failed" | "Hammer analysis failed" |
+| `realTimePlayback.frameCount` | "Frames for AI Analysis" | "Frames for Hammer Analysis" |
+| `landingPage.aiMotionCapture` | "AI Motion Capture" | "Hammer Motion Capture" |
+| `landingPage.aiMotionCaptureDesc` | (keep as-is, describes computer vision, no "AI" in the text) | No change |
+| `playersClub.analysisDescription` | "Allow scouts to view the AI analysis and feedback" | "Allow scouts to view the Hammer analysis and feedback" |
+| `videoAnalysis.uploadDescription` | "Our AI will analyze your mechanics..." | "Hammer will analyze your mechanics..." |
+| `videoAnalysis.enableAIAnalysis` | "Enable AI Analysis" | "Enable Hammer Analysis" |
+| `chatWidget.title` | "AI Coach" | "Hammer Coach" |
+| `chatWidget.greeting` | "I'm your AI coaching assistant..." | "I'm your Hammer coaching assistant..." |
+| `mindFuel.aiGenerated` | "AI Generated" | "Hammer Generated" |
+| `mindFuel.aiTipsWarning` | "AI-generated tips may contain inaccuracies..." | "Hammer-generated tips may contain inaccuracies..." |
+| `nutrition.smartFood.aiEstimate` | "AI Estimate" | "Hammer Estimate" |
+| `nutrition.smartFood.aiAnalyzing` | "AI analyzing..." | "Hammer analyzing..." |
+| `nutrition.aiSuggestions.title` | "AI Meal Suggestions" | "Hammer Meal Suggestions" |
+| `nutrition.aiSuggestions.clickToGet` | "Click refresh to get AI-powered meal suggestions..." | "Click refresh to get Hammer-powered meal suggestions..." |
+| `nutrition.nutritionWeekly.aiPoweredInsights` | "AI-powered insights from your training data" | "Hammer-powered insights from your training data" |
+| `nutrition.nutritionWeekly.aiGenerated` | "AI Generated" | "Hammer Generated" |
+| `aiRecommendations.generate` | "Generate AI Workout" | "Generate Hammer Workout" |
+| `workoutBuilder.warmup.paymentRequired` | "AI credits needed..." | "Hammer credits needed..." |
+| `eliteWorkout.generator.paymentRequired` | "AI credits needed..." | "Hammer credits needed..." |
+| `onboarding.modules.description` | "...cutting-edge AI to help you improve..." | "...cutting-edge Hammer technology to help you improve..." |
+| `onboarding.upload.description` | "Our AI analyzes your mechanics in real-time..." | "Hammer analyzes your mechanics in real-time..." |
 
-The fix must happen at the `display: table` div level itself.
+### 2. Other 7 Locale Files (de, es, fr, ja, ko, nl, zh)
 
-## The Fix (2 changes, bulletproof)
+Each locale file will receive the same changes translated into its language. The key pattern is:
+- Replace the translated equivalent of "AI" / "KI" (German) / "IA" (Spanish/French) with "Hammer"
+- "Hammer" stays as "Hammer" in all languages (it's the brand name)
 
-### Change 1: Add a CSS class to neutralize Radix's table layout (index.css)
+### 3. Hardcoded Strings in Component Files
 
-Create a utility CSS class that targets the auto-generated `display: table` div inside ScrollArea and overrides it:
+| File | Current | New |
+|------|---------|-----|
+| `src/pages/Index.tsx` (line 131) | `"AI Motion Capture"` | `"Hammer Motion Capture"` |
+| `src/pages/Pricing.tsx` (line 116) | `"Advanced AI Analysis"` | `"Advanced Hammer Analysis"` |
+| `src/components/RealTimePlayback.tsx` (line 1034) | fallback `'AI analysis failed'` | `'Hammer analysis failed'` |
+| `src/components/RealTimePlayback.tsx` (line 1124) | fallback `'AI analysis failed'` | `'Hammer analysis failed'` |
+| `src/components/RealTimePlayback.tsx` (line 2467) | fallback `'AI analyzing...'` | `'Hammer analyzing...'` |
+| `src/components/RealTimePlayback.tsx` (line 2280) | fallback `'Frames for AI Analysis'` | `'Frames for Hammer Analysis'` |
+| `src/components/custom-activities/WarmupGeneratorCard.tsx` (line 89) | fallback `'AI Warmup Generator'` | `'Hammer Warmup Generator'` |
+| `src/components/nutrition-hub/AIMealSuggestions.tsx` (line 118) | fallback `'AI Meal Suggestions'` | `'Hammer Meal Suggestions'` |
+| `src/components/nutrition-hub/AIMealSuggestions.tsx` (line 178) | fallback `'Click refresh to get AI-powered meal suggestions...'` | `'Click refresh to get Hammer-powered meal suggestions...'` |
 
-```css
-/* Prevent Radix ScrollArea table-layout from causing horizontal overflow */
-.scroll-area-no-hscroll [data-radix-scroll-area-viewport] > div {
-  display: block !important;
-  min-width: 0 !important;
-}
-```
+### 4. Internal Strings (NOT Changed)
 
-This targets the exact DOM structure:
-```text
-ScrollArea Root (.scroll-area-no-hscroll)
-  > Viewport [data-radix-scroll-area-viewport]
-    > div (style="min-width:100%; display:table")  <-- THIS gets overridden
-      > our content
-```
+These are code-level identifiers and error handling strings that users never see -- they stay as-is:
+- Variable names like `showAIRecommendations`, `handleUseAIWorkout`
+- Status values like `'calling_ai'`, `source: 'ai'`
+- Database column names like `is_ai_generated`
+- Code comments referencing "AI analysis"
+- Internal error strings like `'AI credits required.'` in `useSmartFoodLookup.ts` (these are developer-facing fallbacks)
 
-Changing `display: table` to `display: block` and `min-width: 100%` to `min-width: 0` makes the inner div behave like a normal block element that respects its parent's width constraint. The `!important` is necessary to override inline styles.
+### 5. Hooks with User-Facing Fallback Strings
 
-### Change 2: Apply the class to the dialog's ScrollArea (CustomActivityBuilderDialog.tsx)
+| File | Current | New |
+|------|---------|-----|
+| `src/hooks/useBlockWorkoutGenerator.ts` (line 82) | fallback `'AI credits needed...'` | `'Hammer credits needed...'` |
+| `src/hooks/useWarmupGenerator.ts` (line 71) | fallback `'AI credits needed...'` | `'Hammer credits needed...'` |
+| `src/hooks/useSmartFoodLookup.ts` (line 184) | `'AI credits required.'` | `'Hammer credits required.'` |
 
-On line 383, add the `scroll-area-no-hscroll` class:
+## Technical Details
 
-```text
-Current:  <ScrollArea className="max-h-[calc(90vh-140px)] px-3 sm:px-6">
-Fix:      <ScrollArea className="max-h-[calc(90vh-140px)] px-3 sm:px-6 scroll-area-no-hscroll">
-```
-
-This is scoped -- only this specific ScrollArea instance loses horizontal scroll capability. All other ScrollArea instances in the app (exercise library sidebar, workout timeline, etc.) continue to work normally.
-
-## Why This Fixes Everything
-
-Once the `display: table` is neutralized, the entire width chain becomes correct:
-
-```text
-Screen (375px)
-  DialogContent (p-0)             = 375px
-    ScrollArea Root               = 375px
-      Viewport                    = 375px
-        Inner div (NOW display:block, min-width:0) = 375px (constrained!)
-          Our padding div (px-3)  = 375px - 24px = 351px
-            Content               = 351px (FITS!)
-```
-
-Every single section the user listed -- Running Sessions, Block-Based Builder, Warmup Generator, Hammer Recommendations, Workout Timeline, Custom Fields, Recurring Days, Reminders -- all automatically fit within 351px because they're no longer inside a table layout that ignores parent width.
-
-The existing `overflow-hidden` on line 384 and `min-w-0` classes on child components NOW become effective as secondary safety nets, because they're inside a `display: block` container that actually respects width constraints.
-
-## Summary
-
-| File | Change | Why |
-|------|--------|-----|
-| `src/index.css` | Add `.scroll-area-no-hscroll` CSS class | Override Radix's `display: table` and `min-width: 100%` inline styles |
-| `CustomActivityBuilderDialog.tsx` line 383 | Add `scroll-area-no-hscroll` class to ScrollArea | Apply the fix to this specific instance only |
-
-Two lines of code. No component restructuring. No scattered padding tweaks. This kills the root cause that made every previous fix ineffective.
+- Total files modified: ~13 (8 locale JSON files + 5 component/page files)
+- All changes are string replacements only -- no logic changes
+- The i18n key names (like `aiSuggestions`, `aiRecommendations`) remain unchanged to avoid breaking references
+- Desktop and mobile layouts are unaffected
+- Brand name "Hammer" is used as-is across all languages
 
