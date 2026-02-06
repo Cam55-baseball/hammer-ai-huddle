@@ -6876,7 +6876,7 @@
     "templateLoaded": "Template loaded!"
   },
   "aiRecommendations": {
-    "title": "AI Recommendations",
+    "title": "Hammer Workout Recommendations",
     "generate": "Generate AI Workout",
     "generating": "Analyzing your history...",
     "useThis": "Use This Workout",

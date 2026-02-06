@@ -5127,7 +5127,7 @@
     "templateLoaded": "템플릿이 로드되었습니다!"
   },
   "aiRecommendations": {
-    "title": "AI 추천",
+    "title": "Hammer 추천",
     "generate": "AI 운동 생성",
     "generating": "기록 분석 중...",
     "useThis": "이 운동 사용",

@@ -67,6 +67,20 @@ interface RecoveryWarning {
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
 /**
+ * Normalize exercises field from templates that may use flat arrays or block-based format
+ */
+function extractExercisesFromTemplate(exercisesField: any): any[] {
+  if (!exercisesField) return [];
+  if (Array.isArray(exercisesField)) return exercisesField;
+  if (exercisesField._useBlocks && Array.isArray(exercisesField.blocks)) {
+    return exercisesField.blocks.flatMap(
+      (block: any) => Array.isArray(block.exercises) ? block.exercises : []
+    );
+  }
+  return [];
+}
+
+/**
  * Analyze recovery context and determine warning level
  */
 function analyzeRecoveryStatus(context: RecoveryContext | undefined): RecoveryWarning | null {
@@ -186,7 +200,7 @@ serve(async (req) => {
     };
 
     workoutLogs.forEach(log => {
-      const exercises = log.custom_activity_templates?.exercises || [];
+      const exercises = extractExercisesFromTemplate(log.custom_activity_templates?.exercises);
       exercises.forEach((ex: any) => {
         if (!exerciseFrequency[ex.name]) {
           exerciseFrequency[ex.name] = { count: 0, lastDate: '' };
