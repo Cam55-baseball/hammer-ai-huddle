@@ -14,6 +14,7 @@ import {
   Flame, Zap, Target, Dumbbell, Rocket, Battery, Wind, Moon
 } from 'lucide-react';
 import { EnhancedExerciseCard } from '../exercises/EnhancedExerciseCard';
+import { BlockWorkoutGenerator } from '../intelligence/BlockWorkoutGenerator';
 
 interface BlockCardProps {
   block: WorkoutBlock;
@@ -287,6 +288,20 @@ export function BlockCard({
         {/* Content */}
         <CollapsibleContent id={`block-content-${block.id}`}>
           <div className="p-3 space-y-2" role="list" aria-label={t('eliteWorkout.exercisesList', 'Exercises')}>
+            {/* Hammer Workout Generator - show for coach/parent modes when not locked */}
+            {!isLocked && block.exercises.length < 8 && (
+              <BlockWorkoutGenerator
+                block={block}
+                onAddExercises={(exercises) => {
+                  onUpdate({
+                    ...block,
+                    exercises: [...block.exercises, ...exercises]
+                  });
+                }}
+                isLocked={isLocked}
+              />
+            )}
+            
             {block.exercises.map((exercise, index) => (
               <EnhancedExerciseCard
                 key={exercise.id}
