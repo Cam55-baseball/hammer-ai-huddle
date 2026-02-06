@@ -1,97 +1,155 @@
 
 
-# Complete Speed Lab E2E -- Remaining Work
+# Speed Lab Audit -- Elite-Level Improvements
 
-## Status Check
+## Issues Found
 
-The Speed Lab implementation is approximately 80% complete. Here is what has been built and what remains:
-
-### Already Complete
-- Database: 3 tables (`speed_sessions`, `speed_goals`, `speed_partner_timings`) with RLS policies
-- Data file: `src/data/speedLabProgram.ts` with full drill library, distance configs, session templates, goal tiers
-- Hook: `src/hooks/useSpeedProgress.ts` with session scheduling, goal engine, break day detection, PB tracking
-- All 11 UI components in `src/components/speed-lab/`
-- Main page: `src/pages/SpeedLab.tsx` with onboarding, main view, and session flow
-- Routing: `/speed-lab` route in `App.tsx`
-- Sidebar: Speed Lab submodule under "throwing" in `AppSidebar.tsx`
-- English translations: Full `speedLab` section in `en.json` (lines 7319-7462)
-
-### Remaining Work
-**7 locale files are missing the `speedLab` translations entirely.** The files `de.json`, `es.json`, `fr.json`, `ja.json`, `ko.json`, `nl.json`, and `zh.json` have NO `speedLab` key. This means non-English users will see English fallback strings for every Speed Lab label.
+After a deep audit of every file, database table, RLS policy, hook, and component, here is a comprehensive list of problems and missing pieces that need to be addressed to bring Speed Lab to a true .01% standard.
 
 ---
 
-## Implementation Plan
+## Issue 1: Drills Have NO Kid-Friendly Descriptions (Critical)
 
-### 1. German (`de.json`) -- Add `speedLab` Section
-Append the full `speedLab` translation block before the closing `}`. All user-facing strings translated to German. "Hammer" stays as "Hammer" (brand name). ~145 lines of translated keys covering:
-- Title, subtitle, access gate messaging
-- Onboarding (Start My Speed Journey / Starte meine Speed-Reise)
-- Check-in labels (sleep, body feel, pain)
-- Focus card, drill categories
-- Log results, partner mode, timer controls
-- RPE slider (10 levels)
-- Break day messaging + override dialog
-- Track names + goal text
-- Trend labels, stats, session history
-- Completion screen, adjustment card, disclaimer
+The single biggest gap. The `DrillData` interface only has `name`, `cues`, and `setsReps`. There is NO `description` field. This means a 10-year-old sees:
 
-### 2. Spanish (`es.json`) -- Add `speedLab` Section
-Same structure as German, translated to Spanish. Example entries:
-- "Start My Speed Journey" -> "Comienza Mi Camino de Velocidad"
-- "Recovery builds speed." -> "La recuperacion construye velocidad."
-- "Today we protect speed." -> "Hoy protegemos la velocidad."
+```
+ISO Split Squat Hold
+Cues: "Back knee off ground" | "Stay tall"
+Sets: 8 sec each side
+```
 
-### 3. French (`fr.json`) -- Add `speedLab` Section
-Same structure, translated to French. Example entries:
-- "Start My Speed Journey" -> "Commencer Mon Parcours Vitesse"
-- "Fast bodies are springy bodies." -> "Les corps rapides sont des corps elastiques."
+They have no idea what this exercise IS, what muscles it works, WHY they're doing it, or HOW it helps them get faster. This violates the app's core design principle of kid-friendly, unmistakable feedback.
 
-### 4. Japanese (`ja.json`) -- Add `speedLab` Section
-Same structure, translated to Japanese. Example entries:
-- "Speed Lab" -> "Speed Lab" (brand name kept in English)
-- "Start My Speed Journey" -> "スピードの旅を始める"
-- "Recovery builds speed." -> "回復がスピードを作る。"
+### Fix
+Add a `description` field to `DrillData` with a plain-English, kid-friendly explanation for every single drill (~35 drills). Also add a `whyItHelps` field that connects the drill to speed in one sentence (fascia-integrated reasoning).
 
-### 5. Korean (`ko.json`) -- Add `speedLab` Section
-Same structure, translated to Korean. Example entries:
-- "Start My Speed Journey" -> "스피드 여정 시작하기"
-- "Recovery builds speed." -> "회복이 스피드를 만든다."
-
-### 6. Dutch (`nl.json`) -- Add `speedLab` Section
-Same structure, translated to Dutch. Example entries:
-- "Start My Speed Journey" -> "Begin Mijn Snelheidsreis"
-- "Recovery builds speed." -> "Herstel bouwt snelheid."
-
-### 7. Chinese Simplified (`zh.json`) -- Add `speedLab` Section
-Same structure, translated to Simplified Chinese. Example entries:
-- "Start My Speed Journey" -> "开始我的速度之旅"
-- "Recovery builds speed." -> "恢复造就速度。"
+Example transformation:
+- **Before**: `"ISO Split Squat Hold"` -- cues: `"Back knee off ground", "Stay tall"` -- `8 sec each side`
+- **After**: `"ISO Split Squat Hold"` -- **"Stand in a lunge position and hold still. Keep your back knee just off the ground and your chest tall. This makes your legs strong in the position you use when you sprint."** -- Why it helps: **"Strong legs in the sprint position = faster starts."**
 
 ---
 
-## Technical Details
+## Issue 2: No Sprint Instruction Step in Session Flow (Critical)
 
-- Each locale file gets the same JSON structure as `en.json` lines 7319-7462 (the `speedLab` key with ~145 lines)
-- The new block is inserted before the final closing `}` brace of each file
-- No structural changes to any component or logic files -- they already reference translation keys with English fallbacks
-- All 7 files follow the same pattern: the `myCustomActivities` section is the last key, so the new `speedLab` section is appended after it
-- Brand names ("Speed Lab", "Hammer") remain in English across all languages
-- Kid-friendly tone is maintained in every language
+The session flow goes: Check-In -> Focus -> Drills -> Log Results. But there is NO step that tells the user **"Now go run your sprints!"**. The drill cards include sprint mechanics drills (wall drives, falling starts, etc.), but after completing those drills, users jump straight to "Log Your Times" with no instruction explaining that they need to actually go outside and run their timed distances (10Y, 30Y, 60Y).
 
-### File Changes Summary
+A kid would complete the drills, then see "Log Your Times -- Enter your sprint times in seconds" and wonder: "Wait, was I supposed to run somewhere? When? Which distances?"
 
-| File | Action | Lines Added |
-|------|--------|-------------|
-| `src/i18n/locales/de.json` | Edit (append before `}`) | ~145 |
-| `src/i18n/locales/es.json` | Edit (append before `}`) | ~145 |
-| `src/i18n/locales/fr.json` | Edit (append before `}`) | ~145 |
-| `src/i18n/locales/ja.json` | Edit (append before `}`) | ~145 |
-| `src/i18n/locales/ko.json` | Edit (append before `}`) | ~145 |
-| `src/i18n/locales/nl.json` | Edit (append before `}`) | ~145 |
-| `src/i18n/locales/zh.json` | Edit (append before `}`) | ~145 |
+### Fix
+Add an explicit **"Run Your Sprints"** step between the Drills step and the Log Results step. This step should:
+- Show the exact distances they need to run (sport-specific)
+- Explain the process: "Find a flat open space. Mark your distances. Sprint ALL OUT. Rest 2-3 minutes between sprints."
+- Include Partner Mode instructions: "Have someone tap START when you go and STOP when you finish"
+- Make it clear which distances are optional vs required (all are optional -- if they only run the 10Y, that's fine)
 
-**Total: 7 files edited, ~1,015 lines of translations added**
+---
 
-After this, the Speed Lab will be 100% complete E2E across all 8 supported languages.
+## Issue 3: Partner Timer Results Not Saved to Database (Bug)
+
+The `savePartnerTiming` function exists in `useSpeedProgress.ts` and is returned from the hook, but it is NEVER CALLED anywhere in the UI. The `PartnerTimer` component calls `onComplete` which just sets the numeric value in the time entry field. The partner timing data (who timed it, when, etc.) is never persisted to `speed_partner_timings`.
+
+### Fix
+Wire `savePartnerTiming` into the session completion flow. When Partner Mode is used, record whether each distance was timed by 'self' or 'partner' and save that metadata after the session is saved.
+
+---
+
+## Issue 4: `refreshKey` State is Unused (Bug)
+
+In `SpeedLab.tsx`, `refreshKey` is set when the countdown timer completes, but it's never used as a dependency anywhere. This means the page doesn't actually refresh or re-fetch data when the lock expires. The user would need to manually navigate away and back.
+
+### Fix
+Pass `refreshKey` as a dependency to trigger `fetchData()` when the countdown completes, or call `fetchData()` directly in the `onComplete` callback.
+
+---
+
+## Issue 5: `updated_at` Trigger Missing on `speed_goals` Table
+
+The `speed_goals` table has an `updated_at` column, and the code updates it manually via `.update()`. However, there is no database trigger to automatically set `updated_at = now()` on UPDATE like other tables in the app use (the `update_updated_at_column` trigger function exists but is not attached to `speed_goals`).
+
+### Fix
+Add the `update_updated_at_column` trigger to `speed_goals`.
+
+---
+
+## Issue 6: Session Focus Messages Not Translatable
+
+The `SESSION_FOCUSES` array in `speedLabProgram.ts` contains hardcoded English strings:
+```
+{ icon: '⚡', message: 'Today we build explosive first steps.' }
+```
+
+These are displayed directly in the UI without using the `t()` translation function. Non-English users will always see English focus messages.
+
+### Fix
+Convert focus messages to use translation keys. Store only `icon` and a `messageKey` in the data file, then resolve the translation in the component using `t()`.
+
+---
+
+## Issue 7: Drill Names and Cues Not Translatable
+
+All 35 drill names and their cues are hardcoded in English in `speedLabProgram.ts`. Example:
+```
+name: 'Barefoot Ankle Circles + Toe Grips'
+cues: ['Slow circles', 'Grip the ground with toes']
+```
+
+For non-English users, these will always appear in English even though the rest of the UI is localized.
+
+### Fix
+Add drill translation keys to the locale files and resolve them in `SpeedDrillCard.tsx` using the drill ID as a key prefix: `t('speedLab.drills.ankle_circles.name')`, `t('speedLab.drills.ankle_circles.description')`, etc. Use the English text as fallback.
+
+---
+
+## Issue 8: RPE Slider Accessibility on Mobile
+
+The RPE slider uses a Radix `Slider` component with values 1-10. For kids on phones, a slider with 10 notches on a narrow screen is very hard to hit accurately. A 5-year-old cannot reliably slide to exactly "7" on a tiny slider.
+
+### Fix
+Replace the slider with large tappable number buttons (1-10) or segmented emoji-based options. Each number should be its own large button (minimum 44x44px) with a color indicator and simple label.
+
+---
+
+## Summary of All Changes
+
+| Priority | Issue | Files Affected |
+|----------|-------|----------------|
+| Critical | Add descriptions + whyItHelps to all drills | `speedLabProgram.ts`, `SpeedDrillCard.tsx`, `DrillData` interface |
+| Critical | Add "Run Your Sprints" step to session flow | `SpeedSessionFlow.tsx`, locale files |
+| Bug | Wire savePartnerTiming to session completion | `SpeedSessionFlow.tsx`, `SpeedLab.tsx` |
+| Bug | Fix refreshKey to actually trigger data refresh | `SpeedLab.tsx` |
+| Bug | Add updated_at trigger to speed_goals | Database migration |
+| UX | Make session focus messages translatable | `speedLabProgram.ts`, `SpeedFocusCard.tsx`, locale files |
+| UX | Make drill names/cues translatable | `SpeedDrillCard.tsx`, locale files |
+| UX | Replace RPE slider with tappable buttons | `SpeedRPESlider.tsx` |
+
+### Technical Details
+
+**DrillData interface changes:**
+```text
+Current:  { id, name, category, cues, setsReps, duration?, minSessionNumber? }
+Proposed: { id, name, category, cues, setsReps, duration?, minSessionNumber?, description, whyItHelps }
+```
+
+**Session flow step changes:**
+```text
+Current:  checkin -> focus -> drills -> log_results -> complete
+Proposed: checkin -> focus -> drills -> sprint_efforts -> log_results -> complete
+```
+
+The new `sprint_efforts` step will show:
+- Distance cards for each sprint (e.g., "10 Yard Sprint")
+- Clear instruction: "Sprint as fast as you can!"
+- Rest timer suggestion: "Rest 2-3 minutes between sprints"
+- Partner timer integrated directly into each distance card
+- "Skip" option if a distance is not run that day
+- After all sprints, transition to log_results for RPE + body feel
+
+**Database migration:**
+- Attach `update_updated_at_column` trigger to `speed_goals`
+
+**Locale changes:**
+- Add ~35 drill description + whyItHelps keys per language
+- Add sprint instruction step translation keys
+- Add focus message translation keys (7 messages)
+- Total: ~80 new keys per locale file (8 files)
 
