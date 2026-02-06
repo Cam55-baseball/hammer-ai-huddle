@@ -143,7 +143,7 @@ export function DragDropExerciseBuilder({ exercises, onExercisesChange }: DragDr
   const colorClass = CATEGORY_COLORS[exerciseType] || CATEGORY_COLORS.strength;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-hidden min-w-0">
       {/* Warmup Generator */}
       <WarmupGeneratorCard 
         exercises={exercises} 

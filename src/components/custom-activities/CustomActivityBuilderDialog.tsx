@@ -381,7 +381,7 @@ export function CustomActivityBuilderDialog({
         </DialogHeader>
 
         <ScrollArea className="max-h-[calc(90vh-140px)] px-3 sm:px-6">
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 py-4 overflow-hidden">
             {!isEditing && !presetActivityType && !isFieldLocked('type') && (
               <div className="space-y-2">
                 <Label className="text-sm font-bold">{t('customActivity.selectType')}</Label>
