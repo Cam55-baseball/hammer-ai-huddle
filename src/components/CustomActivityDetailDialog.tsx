@@ -55,6 +55,114 @@ export const getAllCheckableIds = (template: CustomActivityTemplate): string[] =
   return ids;
 };
 
+// Block-based workout section component
+interface BlockBasedWorkoutSectionProps {
+  template: CustomActivityTemplate;
+  customColor: string;
+  getCheckboxState: (fieldId: string, defaultValue?: string) => boolean;
+  handleToggleCheckbox: (fieldId: string, checked: boolean) => void;
+  savingFieldIds: Set<string>;
+  t: ReturnType<typeof useTranslation>['t'];
+}
+
+function BlockBasedWorkoutSection({ 
+  template, 
+  customColor, 
+  getCheckboxState, 
+  handleToggleCheckbox, 
+  savingFieldIds,
+  t 
+}: BlockBasedWorkoutSectionProps) {
+  // Check if this is a block-based workout
+  if (!template.exercises || typeof template.exercises !== 'object' || !('_useBlocks' in (template.exercises as any))) {
+    return null;
+  }
+
+  const blockData = template.exercises as unknown as { 
+    _useBlocks: boolean; 
+    blocks: Array<{ name: string; exercises: Exercise[] }> 
+  };
+  
+  const totalExercises = blockData.blocks?.reduce((sum, b) => sum + (b.exercises?.length || 0), 0) || 0;
+  
+  if (totalExercises === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+        <Dumbbell className="h-4 w-4" />
+        {t('customActivity.exercises.title', 'Exercises')} ({totalExercises})
+      </h4>
+      {blockData.blocks?.map((block, blockIndex) => (
+        block.exercises && block.exercises.length > 0 && (
+          <div key={blockIndex} className="space-y-2">
+            <div 
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide"
+              style={{ backgroundColor: `${customColor}30`, color: customColor }}
+            >
+              <Target className="h-3.5 w-3.5" />
+              {block.name}
+            </div>
+            <div className="space-y-2 pl-2">
+              {block.exercises.map((exercise) => {
+                const fieldId = `exercise_${exercise.id}`;
+                const isChecked = getCheckboxState(fieldId);
+                return (
+                  <div key={exercise.id} className="rounded-lg bg-muted p-3">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={isChecked}
+                        onCheckedChange={(checked) => handleToggleCheckbox(fieldId, !!checked)}
+                        disabled={savingFieldIds.has(fieldId)}
+                        className={cn(
+                          "mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
+                          savingFieldIds.has(fieldId) && "opacity-50"
+                        )}
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className={cn(
+                            "font-medium text-sm",
+                            isChecked && "line-through text-muted-foreground"
+                          )}>
+                            {exercise.name}
+                          </span>
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {exercise.type}
+                          </Badge>
+                        </div>
+                        <div className={cn(
+                          "flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground",
+                          isChecked && "opacity-60"
+                        )}>
+                          {exercise.sets && <span>{exercise.sets} sets</span>}
+                          {exercise.reps && <span>× {exercise.reps} reps</span>}
+                          {exercise.weight && <span>@ {exercise.weight} {exercise.weightUnit || 'lbs'}</span>}
+                          {exercise.rest && <span>• {exercise.rest}s rest</span>}
+                          {exercise.duration && <span>• {exercise.duration}s</span>}
+                        </div>
+                        {exercise.notes && (
+                          <p className={cn(
+                            "text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5",
+                            isChecked && "opacity-60"
+                          )}>
+                            <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                            <span>{exercise.notes}</span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )
+      ))}
+    </div>
+  );
+}
+
 interface CustomActivityDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -277,88 +385,14 @@ export function CustomActivityDetailDialog({
             )}
 
             {/* Block-Based Workout Section */}
-            {template.exercises && typeof template.exercises === 'object' && '_useBlocks' in (template.exercises as any) && (() => {
-              const blockData = template.exercises as unknown as { 
-                _useBlocks: boolean; 
-                blocks: Array<{ name: string; exercises: Exercise[] }> 
-              };
-              const totalExercises = blockData.blocks?.reduce((sum, b) => sum + (b.exercises?.length || 0), 0) || 0;
-              
-              return totalExercises > 0 ? (
-                <div className="space-y-3">
-                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
-                    <Dumbbell className="h-4 w-4" />
-                    {t('customActivity.exercises.title', 'Exercises')} ({totalExercises})
-                  </h4>
-                  {blockData.blocks?.map((block, blockIndex) => (
-                    block.exercises && block.exercises.length > 0 && (
-                      <div key={blockIndex} className="space-y-2">
-                        <div 
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide"
-                          style={{ backgroundColor: `${customColor}30`, color: customColor }}
-                        >
-                          <Target className="h-3.5 w-3.5" />
-                          {block.name}
-                        </div>
-                        <div className="space-y-2 pl-2">
-                          {block.exercises.map((exercise) => {
-                            const fieldId = `exercise_${exercise.id}`;
-                            const isChecked = getCheckboxState(fieldId);
-                            return (
-                              <div key={exercise.id} className="rounded-lg bg-muted p-3">
-                                <div className="flex items-start gap-3">
-                                  <Checkbox
-                                    checked={isChecked}
-                                    onCheckedChange={(checked) => handleToggleCheckbox(fieldId, !!checked)}
-                                    disabled={savingFieldIds.has(fieldId)}
-                                    className={cn(
-                                      "mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
-                                      savingFieldIds.has(fieldId) && "opacity-50"
-                                    )}
-                                  />
-                                  <div className="flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span className={cn(
-                                        "font-medium text-sm",
-                                        isChecked && "line-through text-muted-foreground"
-                                      )}>
-                                        {exercise.name}
-                                      </span>
-                                      <Badge variant="outline" className="text-xs capitalize">
-                                        {exercise.type}
-                                      </Badge>
-                                    </div>
-                                    <div className={cn(
-                                      "flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground",
-                                      isChecked && "opacity-60"
-                                    )}>
-                                      {exercise.sets && <span>{exercise.sets} sets</span>}
-                                      {exercise.reps && <span>× {exercise.reps} reps</span>}
-                                      {exercise.weight && <span>@ {exercise.weight} {exercise.weightUnit || 'lbs'}</span>}
-                                      {exercise.rest && <span>• {exercise.rest}s rest</span>}
-                                      {exercise.duration && <span>• {exercise.duration}s</span>}
-                                    </div>
-                                    {exercise.notes && (
-                                      <p className={cn(
-                                        "text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5",
-                                        isChecked && "opacity-60"
-                                      )}>
-                                        <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                                        <span>{exercise.notes}</span>
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )
-                  ))}
-                </div>
-              ) : null;
-            })()}
+            <BlockBasedWorkoutSection 
+              template={template} 
+              customColor={customColor}
+              getCheckboxState={getCheckboxState}
+              handleToggleCheckbox={handleToggleCheckbox}
+              savingFieldIds={savingFieldIds}
+              t={t}
+            />
 
             {/* Meal Items Section */}
             {template.meals && (template.meals as MealData).items && (template.meals as MealData).items.length > 0 && (
