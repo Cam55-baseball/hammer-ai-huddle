@@ -124,7 +124,7 @@ function SortableExerciseCard({
             <Badge variant="outline" className={cn("text-[10px] sm:text-xs shrink-0", colorClass)}>
               {exerciseType}
             </Badge>
-            <h4 className="font-medium text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">{exercise.name}</h4>
+            <h4 className="font-medium text-xs sm:text-sm truncate min-w-0">{exercise.name}</h4>
           </div>
           <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             {supersetInfo && (

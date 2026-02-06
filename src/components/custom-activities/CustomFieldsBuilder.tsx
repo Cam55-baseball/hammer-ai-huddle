@@ -73,7 +73,7 @@ function SortableFieldItem({
       )}
     >
       {/* Main field row */}
-      <div className="flex items-center gap-2 p-3">
+      <div className="flex items-center gap-2 p-3 overflow-hidden">
         {/* Drag Handle */}
         <button
           type="button"

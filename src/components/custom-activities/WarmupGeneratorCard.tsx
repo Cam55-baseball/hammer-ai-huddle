@@ -80,12 +80,12 @@ export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball'
   };
 
   return (
-    <Card className="border-dashed">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <CardTitle className="text-base">
+    <Card className="border-dashed overflow-hidden">
+      <CardHeader className="p-3 sm:p-6 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="h-5 w-5 text-primary shrink-0" />
+            <CardTitle className="text-base truncate">
               {t('workoutBuilder.warmup.title', 'AI Warmup Generator')}
             </CardTitle>
           </div>
@@ -94,7 +94,7 @@ export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball'
               size="sm" 
               onClick={handleGenerate}
               disabled={isGenerating || !canGenerate || (personalize && goalsLoading)}
-              className="gap-1.5"
+              className="gap-1.5 shrink-0 self-end sm:self-auto"
             >
               {isGenerating ? (
                 <>
@@ -172,7 +172,7 @@ export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball'
       </CardHeader>
 
       {warmupResult && warmupResult.warmupExercises.length > 0 && (
-        <CardContent className="pt-0 space-y-3">
+        <CardContent className="p-3 sm:p-6 pt-0 space-y-3">
           <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between h-auto py-2 px-3 bg-muted/50">

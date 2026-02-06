@@ -359,7 +359,7 @@ export function CustomActivityBuilderDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-0">
+        <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle className="text-xl font-black">
             {isFromCoach 
               ? t('customActivity.editFromCoach', 'Customize Activity') 
@@ -380,7 +380,7 @@ export function CustomActivityBuilderDialog({
           )}
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(90vh-140px)] px-6">
+        <ScrollArea className="max-h-[calc(90vh-140px)] px-3 sm:px-6">
           <div className="space-y-6 py-4">
             {!isEditing && !presetActivityType && !isFieldLocked('type') && (
               <div className="space-y-2">
@@ -460,13 +460,13 @@ export function CustomActivityBuilderDialog({
 
                 {/* Schedule for Today Toggle - Only show for new activities */}
                 {!isEditing && (
-                  <div className="p-4 rounded-lg border bg-primary/5 border-primary/20">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="scheduleForToday" className="flex items-center gap-2 cursor-pointer">
-                        <CalendarPlus className="h-4 w-4 text-primary" />
-                        <div>
+                  <div className="p-3 sm:p-4 rounded-lg border bg-primary/5 border-primary/20 overflow-hidden">
+                    <div className="flex items-center justify-between gap-3">
+                      <Label htmlFor="scheduleForToday" className="flex items-center gap-2 cursor-pointer min-w-0">
+                        <CalendarPlus className="h-4 w-4 text-primary shrink-0" />
+                        <div className="min-w-0">
                           <span className="font-bold">{t('customActivity.scheduleForToday')}</span>
-                          <p className="text-xs text-muted-foreground mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5 break-words">
                             {t('customActivity.scheduleForTodayDesc')}
                           </p>
                         </div>
@@ -538,7 +538,7 @@ export function CustomActivityBuilderDialog({
                 <ColorPicker selected={color} onSelect={setColor} />
 
                 {/* Card Customization Section */}
-                <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
+                <div className="space-y-4 p-3 sm:p-4 rounded-lg border bg-muted/30 overflow-hidden">
                   <h3 className="text-sm font-bold flex items-center gap-2">
                     <Image className="h-4 w-4" />
                     {t('customActivity.cardCustomization.title')}
@@ -598,8 +598,8 @@ export function CustomActivityBuilderDialog({
                     
                     {embeddedRunningSessions.map((session, index) => (
                       <div key={session.id} className="p-4 rounded-lg border bg-muted/30 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">
+                      <div className="flex items-center justify-between gap-2 min-w-0">
+                          <span className="text-sm font-medium truncate min-w-0">
                             {t('customActivity.running.sessionNumber', { number: index + 1 })}
                           </span>
                           <Button
@@ -607,10 +607,10 @@ export function CustomActivityBuilderDialog({
                             variant="ghost"
                             size="sm"
                             onClick={() => removeRunningSession(session.id)}
-                            className="h-7 px-2 text-destructive hover:text-destructive"
+                            className="h-7 px-2 text-destructive hover:text-destructive shrink-0 whitespace-nowrap"
                           >
                             <X className="h-4 w-4" />
-                            {t('customActivity.running.removeSession')}
+                            <span className="hidden sm:inline">{t('customActivity.running.removeSession')}</span>
                           </Button>
                         </div>
                         
@@ -713,13 +713,13 @@ export function CustomActivityBuilderDialog({
                 
                 {/* Block System Toggle - Only for workout type */}
                 {showBlockSystemToggle && (
-                  <div className="p-4 rounded-lg border-2 border-dashed bg-muted/30 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="useBlockSystem" className="flex items-center gap-2 cursor-pointer">
-                        <Layers className="h-4 w-4 text-primary" />
-                        <div>
+                  <div className="p-3 sm:p-4 rounded-lg border-2 border-dashed bg-muted/30 space-y-4 overflow-hidden">
+                    <div className="flex items-center justify-between gap-3">
+                      <Label htmlFor="useBlockSystem" className="flex items-center gap-2 cursor-pointer min-w-0">
+                        <Layers className="h-4 w-4 text-primary shrink-0" />
+                        <div className="min-w-0">
                           <span className="font-bold">{t('eliteWorkout.useBlockSystem', 'Use Block-Based Builder')}</span>
-                          <p className="text-xs text-muted-foreground mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5 break-words">
                             {t('eliteWorkout.useBlockSystemDesc', 'Organize exercises into structured blocks with intelligent load tracking')}
                           </p>
                         </div>
@@ -745,7 +745,7 @@ export function CustomActivityBuilderDialog({
                 )}
                 
                 {/* Universal sections - Available for ALL activity types */}
-                <div className="space-y-4">
+                <div className="space-y-4 overflow-hidden">
                   <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
                     {t('customActivity.universal.additionalOptions')}
                   </h3>
@@ -805,7 +805,7 @@ export function CustomActivityBuilderDialog({
           </div>
         </ScrollArea>
 
-        <div className="flex items-center justify-between gap-3 p-6 pt-4 border-t">
+        <div className="flex items-center justify-between gap-3 p-4 sm:p-6 pt-4 border-t">
           {isEditing && onDelete ? (
             <Button variant="destructive" onClick={handleDelete} className="gap-2">
               <Trash2 className="h-4 w-4" /> {t('common.delete')}
