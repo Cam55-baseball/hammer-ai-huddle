@@ -27,6 +27,8 @@ import { TrainingIntentSelector } from './quiz/TrainingIntentSelector';
 import { MentalEnergyRating } from './quiz/MentalEnergyRating';
 import { WeightTrendMini } from './quiz/WeightTrendMini';
 import { FasciaInsightPanel } from './FasciaInsightPanel';
+import { TissueTypeSelector } from './quiz/TissueTypeSelector';
+import { TISSUE_TYPES } from './quiz/body-maps/tissueTypeDefinitions';
 import { NightCheckInSuccess } from './quiz/NightCheckInSuccess';
 import { useNightCheckInStats } from '@/hooks/useNightCheckInStats';
 import { useRecapCountdown } from '@/hooks/useRecapCountdown';
@@ -66,6 +68,7 @@ interface VaultFocusQuizDialogProps {
     pain_location?: string[];
     pain_scale?: number;
     pain_increases_with_movement?: boolean;
+    pain_tissue_types?: Record<string, string[]>;
     // New pre-workout intent fields
     training_intent?: string[];
     mental_energy?: number;
@@ -299,6 +302,7 @@ export function VaultFocusQuizDialog({
   // NEW: Pre-workout Pain section - now with per-area pain scales
   const [painLocations, setPainLocations] = useState<string[]>([]);
   const [painScales, setPainScales] = useState<Record<string, number>>({});
+  const [painTissueTypes, setPainTissueTypes] = useState<Record<string, string[]>>({});
   const [painIncreasesWithMovement, setPainIncreasesWithMovement] = useState<boolean | null>(null);
 
   // Handler to update pain scale for a specific area
@@ -309,7 +313,7 @@ export function VaultFocusQuizDialog({
     }));
   };
 
-  // Handler for pain location changes - cleans up scales for deselected areas
+  // Handler for pain location changes - cleans up scales and tissue types for deselected areas
   const handlePainLocationsChange = (areas: string[]) => {
     setPainLocations(areas);
     // Remove scales for deselected areas, keep scales for still-selected areas
@@ -322,6 +326,24 @@ export function VaultFocusQuizDialog({
       });
       return newScales;
     });
+    // Remove tissue types for deselected areas
+    setPainTissueTypes(prev => {
+      const newTypes: Record<string, string[]> = {};
+      areas.forEach(area => {
+        if (prev[area] !== undefined) {
+          newTypes[area] = prev[area];
+        }
+      });
+      return newTypes;
+    });
+  };
+
+  // Handler for tissue type changes per area
+  const handleTissueTypesChange = (areaId: string, types: string[]) => {
+    setPainTissueTypes(prev => ({
+      ...prev,
+      [areaId]: types,
+    }));
   };
 
   // NEW: Pre-workout Intent & Focus section
@@ -428,6 +450,8 @@ export function VaultFocusQuizDialog({
         ? Math.max(...Object.values(painScales)) 
         : undefined;
       data.pain_increases_with_movement = painLocations.length > 0 ? painIncreasesWithMovement : undefined;
+      // NEW: Tissue types
+      data.pain_tissue_types = Object.keys(painTissueTypes).length > 0 ? painTissueTypes : undefined;
       // NEW: Intent & Focus section
       data.training_intent = trainingIntents.length > 0 ? trainingIntents : undefined;
       data.mental_energy = mentalEnergy;
@@ -490,6 +514,7 @@ export function VaultFocusQuizDialog({
     setBalanceRightSeconds(null);
     setPainLocations([]);
     setPainScales({});
+    setPainTissueTypes({});
     setPainIncreasesWithMovement(null);
     setTrainingIntents([]);
     setMentalEnergy(3);
@@ -967,6 +992,16 @@ export function VaultFocusQuizDialog({
                   </Label>
                   {painLocations.map((areaId) => (
                     <div key={areaId} className="space-y-2">
+                      {/* Tissue Type Selector for this area */}
+                      <div className="space-y-1">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {getBodyAreaLabel(areaId)} — {t('vault.quiz.pain.tissueType', 'What type of tissue?')}
+                        </span>
+                        <TissueTypeSelector
+                          selectedTypes={painTissueTypes[areaId] || []}
+                          onChange={(types) => handleTissueTypesChange(areaId, types)}
+                        />
+                      </div>
                       <TenPointScale
                         value={painScales[areaId] || 0}
                         onChange={(value) => handlePainScaleChange(areaId, value)}
@@ -982,6 +1017,20 @@ export function VaultFocusQuizDialog({
                         inverted={true}
                         compact={true}
                       />
+                      {/* Selected tissue types label */}
+                      {painTissueTypes[areaId] && painTissueTypes[areaId].length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {painTissueTypes[areaId].map((typeId) => {
+                            const tissue = TISSUE_TYPES.find(t => t.id === typeId);
+                            if (!tissue) return null;
+                            return (
+                              <span key={typeId} className="text-[10px] font-medium text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-full">
+                                {tissue.emoji} {tissue.label}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
                       {/* Fascia Insight Panel for this pain area */}
                       <FasciaInsightPanel areaId={areaId} />
                     </div>

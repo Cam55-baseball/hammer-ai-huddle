@@ -68,6 +68,7 @@ export interface VaultFocusQuiz {
   pain_location?: string[];
   pain_scale?: number;
   pain_scales?: Record<string, number>; // Per-area pain levels
+  pain_tissue_types?: Record<string, string[]>; // Per-area tissue types
   pain_increases_with_movement?: boolean;
   // NEW: Pre-workout intent fields
   training_intent?: string[];
@@ -477,6 +478,7 @@ export function useVault() {
       pain_location?: string[];
       pain_scale?: number;
       pain_scales?: Record<string, number>; // Per-area pain levels
+      pain_tissue_types?: Record<string, string[]>; // Per-area tissue types
       pain_increases_with_movement?: boolean;
       // NEW: Pre-workout intent fields
       training_intent?: string[];
@@ -541,6 +543,8 @@ export function useVault() {
           pain_scale: data.pain_scale,
           pain_scales: data.pain_scales,
           pain_increases_with_movement: data.pain_increases_with_movement,
+          // NEW: Tissue types
+          pain_tissue_types: data.pain_tissue_types,
           // NEW: Pre-workout intent fields
           training_intent: data.training_intent,
           mental_energy: data.mental_energy,
