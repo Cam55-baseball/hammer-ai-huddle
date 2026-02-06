@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Exercise } from '@/types/customActivity';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { AggregatedGoals } from './useAthleteGoalsAggregated';
 
 interface WarmupExercise {
   id: string;
@@ -21,13 +22,22 @@ interface WarmupResult {
   estimatedDuration: number;
 }
 
+interface GenerateWarmupOptions {
+  exercises: Exercise[];
+  sport?: 'baseball' | 'softball';
+  personalize?: boolean;
+  goals?: AggregatedGoals;
+}
+
 export function useWarmupGenerator() {
   const { t } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [warmupResult, setWarmupResult] = useState<WarmupResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const generateWarmup = useCallback(async (exercises: Exercise[], sport: 'baseball' | 'softball' = 'baseball') => {
+  const generateWarmup = useCallback(async (options: GenerateWarmupOptions) => {
+    const { exercises, sport = 'baseball', personalize = false, goals } = options;
+    
     if (exercises.length === 0) {
       toast.error(t('workoutBuilder.warmup.addExercisesFirst', 'Add exercises to your workout first'));
       return null;
@@ -38,7 +48,12 @@ export function useWarmupGenerator() {
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('generate-warmup', {
-        body: { exercises, sport }
+        body: { 
+          exercises, 
+          sport,
+          personalize,
+          goals: personalize ? goals : undefined
+        }
       });
 
       if (fnError) {

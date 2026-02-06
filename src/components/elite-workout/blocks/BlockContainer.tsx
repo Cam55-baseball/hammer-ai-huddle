@@ -17,7 +17,8 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { cn } from '@/lib/utils';
-import { 
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
   WorkoutBlock, 
   ViewMode, 
   BlockType, 
@@ -165,13 +166,15 @@ export function BlockContainer({
                 {t('eliteWorkout.addBlock', 'Add Block')}
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden">
               <DialogHeader>
                 <DialogTitle>
                   {t('eliteWorkout.chooseBlockType', 'Choose Block Type')}
                 </DialogTitle>
               </DialogHeader>
-              <BlockTypeSelector onSelect={handleAddBlock} />
+              <ScrollArea className="max-h-[calc(85vh-100px)] pr-4">
+                <BlockTypeSelector onSelect={handleAddBlock} />
+              </ScrollArea>
             </DialogContent>
           </Dialog>
         </div>

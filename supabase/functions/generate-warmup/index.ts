@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 interface Exercise {
@@ -26,6 +26,14 @@ interface WarmupExercise {
   category: 'general' | 'dynamic' | 'movement-prep' | 'arm-care';
 }
 
+interface PersonalizationGoals {
+  bodyGoal?: { type: string; targetWeightLbs?: number };
+  trainingIntent?: string[];
+  painAreas?: string[];
+  performanceGoals: string[];
+  position?: string;
+}
+
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
 serve(async (req) => {
@@ -34,7 +42,12 @@ serve(async (req) => {
   }
 
   try {
-    const { exercises, sport = 'baseball' } = await req.json() as { exercises: Exercise[], sport?: string };
+    const { exercises, sport = 'baseball', personalize = false, goals } = await req.json() as { 
+      exercises: Exercise[]; 
+      sport?: string;
+      personalize?: boolean;
+      goals?: PersonalizationGoals;
+    };
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
@@ -84,6 +97,30 @@ serve(async (req) => {
     });
 
     console.log("Workout analysis:", analysis);
+    console.log("Personalization enabled:", personalize);
+    if (personalize && goals) {
+      console.log("Athlete goals:", goals);
+    }
+
+    // Build personalization context for the AI
+    let personalizedContext = '';
+    if (personalize && goals) {
+      personalizedContext = `
+
+ATHLETE PERSONALIZATION (IMPORTANT - Customize warmup based on this):
+- Body Goal: ${goals.bodyGoal?.type || 'general performance'}
+- Training Focus Today: ${goals.trainingIntent?.join(', ') || 'general training'}
+- Position: ${goals.position || 'athlete'}
+- Performance Goals: ${goals.performanceGoals?.join(', ') || 'overall athletic development'}
+${goals.painAreas?.length ? `- AVOID stressing these areas (athlete reported discomfort): ${goals.painAreas.join(', ')}` : ''}
+
+Customize the warmup to:
+1. ${goals.bodyGoal?.type === 'cut' ? 'Include slightly more cardio activation to support fat loss while preserving strength' : 'Optimize for maximum performance output'}
+2. Prepare specifically for their stated training intent (${goals.trainingIntent?.[0] || 'general'})
+3. ${goals.painAreas?.length ? `AVOID or modify exercises that stress: ${goals.painAreas.join(', ')} - provide alternatives` : 'Include full-body preparation'}
+4. Target movements that support their performance goals: ${goals.performanceGoals?.slice(0, 3).join(', ')}
+5. Consider their position-specific needs (${goals.position || 'general athlete'})`;
+    }
 
     // Call Lovable AI for warmup generation
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -110,6 +147,7 @@ For ${sport} athletes, always consider:
 - Shoulder/arm activation if throwing is involved
 - Hip mobility for athletic movements
 - Core activation for power transfer
+${personalizedContext}
 
 Always respond using the generate_warmup function.`
           },
@@ -127,6 +165,7 @@ Workout contains:
 - Exercise types: ${Array.from(analysis.exerciseTypes).join(', ')}
 
 Exercises in workout: ${exercises.map(e => e.name).join(', ')}
+${personalize ? `\nIMPORTANT: This is a PERSONALIZED request. Include reasoning that mentions the athlete's specific goals and any modifications made for their needs.` : ''}
 
 Generate a 5-8 exercise warmup that prepares them specifically for this workout.`
           }
@@ -161,7 +200,7 @@ Generate a 5-8 exercise warmup that prepares them specifically for this workout.
                       required: ["id", "name", "type", "category"]
                     }
                   },
-                  reasoning: { type: "string", description: "Brief explanation of why this warmup was chosen" },
+                  reasoning: { type: "string", description: "Brief explanation of why this warmup was chosen, mentioning personalization if applicable" },
                   estimatedDuration: { type: "number", description: "Total warmup duration in minutes" }
                 },
                 required: ["warmupExercises", "reasoning", "estimatedDuration"]
@@ -233,7 +272,7 @@ Generate a 5-8 exercise warmup that prepares them specifically for this workout.
       ];
       result = {
         warmupExercises: fallbackExercises,
-        reasoning: 'Default warmup routine for baseball/softball athletes covering general activation, dynamic mobility, and arm care.',
+        reasoning: `Default warmup routine for ${sport} athletes covering general activation, dynamic mobility, and arm care.`,
         estimatedDuration: 8,
       };
     }

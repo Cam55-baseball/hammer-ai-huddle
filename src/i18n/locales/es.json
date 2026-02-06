@@ -6095,7 +6095,13 @@
       "generate": "Generar Calentamiento",
       "generating": "Generando...",
       "addToStart": "Añadir al Inicio",
-      "basedOn": "Basado en tus ejercicios"
+      "basedOn": "Basado en tus ejercicios",
+      "personalize": "Personalizar",
+      "personalizeHint": "Personaliza según tus objetivos, posición y enfoque de entrenamiento",
+      "personalizedFor": "Personalizado",
+      "addExercisesFirst": "Añade ejercicios primero",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento.",
+      "paymentRequired": "Se necesitan créditos de IA. Contacta a soporte."
     }
   },
   "workoutTemplates": {

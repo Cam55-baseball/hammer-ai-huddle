@@ -5815,7 +5815,13 @@
       "generate": "Aufwärmen generieren",
       "generating": "Generiere...",
       "addToStart": "Am Anfang hinzufügen",
-      "basedOn": "Basierend auf deinen Übungen"
+      "basedOn": "Basierend auf deinen Übungen",
+      "personalize": "Personalisieren",
+      "personalizeHint": "Anpassen basierend auf Zielen, Position und Trainingsfokus",
+      "personalizedFor": "Personalisiert",
+      "addExercisesFirst": "Füge zuerst Übungen hinzu",
+      "rateLimited": "Zu viele Anfragen. Bitte warte einen Moment.",
+      "paymentRequired": "KI-Guthaben erforderlich. Kontaktiere den Support."
     }
   },
   "workoutTemplates": {

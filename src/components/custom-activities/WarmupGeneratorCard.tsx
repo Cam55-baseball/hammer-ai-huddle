@@ -1,13 +1,17 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Plus, Loader2, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Sparkles, Plus, Loader2, Clock, ChevronDown, ChevronUp, User } from 'lucide-react';
 import { Exercise } from '@/types/customActivity';
 import { useWarmupGenerator } from '@/hooks/useWarmupGenerator';
+import { useAthleteGoalsAggregated } from '@/hooks/useAthleteGoalsAggregated';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface WarmupGeneratorCardProps {
   exercises: Exercise[];
@@ -31,11 +35,19 @@ const CATEGORY_COLORS = {
 
 export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball' }: WarmupGeneratorCardProps) {
   const { t } = useTranslation();
-  const { generateWarmup, isGenerating, warmupResult, clearWarmup, convertToExercises } = useWarmupGenerator();
+  const [personalize, setPersonalize] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  const { generateWarmup, isGenerating, warmupResult, clearWarmup, convertToExercises } = useWarmupGenerator();
+  const { data: goals, isLoading: goalsLoading } = useAthleteGoalsAggregated(personalize);
 
   const handleGenerate = async () => {
-    await generateWarmup(exercises, sport);
+    await generateWarmup({
+      exercises,
+      sport,
+      personalize,
+      goals: personalize ? goals : undefined,
+    });
     setIsExpanded(true);
   };
 
@@ -62,7 +74,7 @@ export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball'
             <Button 
               size="sm" 
               onClick={handleGenerate}
-              disabled={isGenerating || exercises.length === 0}
+              disabled={isGenerating || exercises.length === 0 || (personalize && goalsLoading)}
               className="gap-1.5"
             >
               {isGenerating ? (
@@ -79,9 +91,44 @@ export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball'
             </Button>
           )}
         </div>
-        <CardDescription className="text-xs">
-          {t('workoutBuilder.warmup.basedOn', 'Based on your workout exercises')}
-        </CardDescription>
+        
+        <div className="flex items-center justify-between gap-4">
+          <CardDescription className="text-xs">
+            {t('workoutBuilder.warmup.basedOn', 'Based on your workout exercises')}
+          </CardDescription>
+          
+          {!warmupResult && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="personalize-warmup"
+                      checked={personalize}
+                      onCheckedChange={setPersonalize}
+                      disabled={isGenerating}
+                    />
+                    <Label 
+                      htmlFor="personalize-warmup" 
+                      className={cn(
+                        "text-xs cursor-pointer flex items-center gap-1",
+                        personalize && "text-primary font-medium"
+                      )}
+                    >
+                      <User className="h-3 w-3" />
+                      {t('workoutBuilder.warmup.personalize', 'Personalize')}
+                    </Label>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-[200px]">
+                  <p className="text-xs">
+                    {t('workoutBuilder.warmup.personalizeHint', 'Customize based on your goals, position, and training focus')}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
       </CardHeader>
 
       {warmupResult && warmupResult.warmupExercises.length > 0 && (
@@ -94,6 +141,12 @@ export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball'
                   <span>
                     {warmupResult.warmupExercises.length} exercises • ~{warmupResult.estimatedDuration} min
                   </span>
+                  {personalize && (
+                    <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">
+                      <User className="h-2.5 w-2.5 mr-0.5" />
+                      {t('workoutBuilder.warmup.personalizedFor', 'Personalized')}
+                    </Badge>
+                  )}
                 </div>
                 {isExpanded ? (
                   <ChevronUp className="h-4 w-4" />

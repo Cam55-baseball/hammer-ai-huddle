@@ -5114,7 +5114,13 @@
       "generate": "Warming-up Genereren",
       "generating": "Genereren...",
       "addToStart": "Aan Begin Toevoegen",
-      "basedOn": "Gebaseerd op je oefeningen"
+      "basedOn": "Gebaseerd op je oefeningen",
+      "personalize": "Personaliseren",
+      "personalizeHint": "Aanpassen op basis van je doelen, positie en trainingsfocus",
+      "personalizedFor": "Gepersonaliseerd",
+      "addExercisesFirst": "Voeg eerst oefeningen toe",
+      "rateLimited": "Te veel verzoeken. Wacht even.",
+      "paymentRequired": "AI-tegoed nodig. Neem contact op met support."
     }
   },
   "workoutTemplates": {
