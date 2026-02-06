@@ -5210,7 +5210,7 @@
     "browseLibrary": "ライブラリ",
     "tapToAddMobile": "ライブラリをタップしてエクササイズを追加",
     "warmup": {
-      "title": "AIウォームアップジェネレーター",
+      "title": "Hammer ウォームアップジェネレーター",
       "generate": "ウォームアップを生成",
       "generating": "生成中...",
       "addToStart": "最初に追加",
@@ -5220,7 +5220,18 @@
       "personalizedFor": "パーソナライズ済み",
       "addExercisesFirst": "まずエクササイズを追加してください",
       "rateLimited": "リクエストが多すぎます。少々お待ちください。",
-      "paymentRequired": "AIクレジットが必要です。サポートにお問い合わせください。"
+      "paymentRequired": "AIクレジットが必要です。サポートにお問い合わせください。",
+      "warmingUpFor": "ウォームアップの目的...",
+      "warmupContext": {
+        "label": "何のためにウォームアップしますか？",
+        "full_practice": "フル練習",
+        "game": "試合日",
+        "throwing_session": "投球セッション",
+        "hitting_session": "打撃練習",
+        "strength_workout": "筋力トレーニング",
+        "speed_training": "スピードトレーニング",
+        "general_activity": "一般的な活動"
+      }
     }
   },
   "workoutTemplates": {

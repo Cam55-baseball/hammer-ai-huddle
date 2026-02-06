@@ -5110,7 +5110,7 @@
     "browseLibrary": "Bibliotheek",
     "tapToAddMobile": "Tik op Bibliotheek om oefeningen toe te voegen",
     "warmup": {
-      "title": "AI Warming-up Generator",
+      "title": "Hammer Warmup Generator",
       "generate": "Warming-up Genereren",
       "generating": "Genereren...",
       "addToStart": "Aan Begin Toevoegen",
@@ -5120,7 +5120,18 @@
       "personalizedFor": "Gepersonaliseerd",
       "addExercisesFirst": "Voeg eerst oefeningen toe",
       "rateLimited": "Te veel verzoeken. Wacht even.",
-      "paymentRequired": "AI-tegoed nodig. Neem contact op met support."
+      "paymentRequired": "AI-tegoed nodig. Neem contact op met support.",
+      "warmingUpFor": "Opwarmen voor...",
+      "warmupContext": {
+        "label": "Waarvoor warm je op?",
+        "full_practice": "Volledige Training",
+        "game": "Wedstrijddag",
+        "throwing_session": "Werpsessie",
+        "hitting_session": "Slagoefening",
+        "strength_workout": "Krachttraining",
+        "speed_training": "Snelheidstraining",
+        "general_activity": "Algemene Activiteit"
+      }
     }
   },
   "workoutTemplates": {

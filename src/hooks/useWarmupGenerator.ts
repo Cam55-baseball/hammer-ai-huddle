@@ -27,6 +27,7 @@ interface GenerateWarmupOptions {
   sport?: 'baseball' | 'softball';
   personalize?: boolean;
   goals?: AggregatedGoals;
+  warmupContext?: string;
 }
 
 export function useWarmupGenerator() {
@@ -36,9 +37,11 @@ export function useWarmupGenerator() {
   const [error, setError] = useState<string | null>(null);
 
   const generateWarmup = useCallback(async (options: GenerateWarmupOptions) => {
-    const { exercises, sport = 'baseball', personalize = false, goals } = options;
+    const { exercises, sport = 'baseball', personalize = false, goals, warmupContext } = options;
     
-    if (exercises.length === 0) {
+    // For warmup activity type with personalization, we don't require exercises
+    const isWarmupActivity = warmupContext !== undefined;
+    if (exercises.length === 0 && !isWarmupActivity) {
       toast.error(t('workoutBuilder.warmup.addExercisesFirst', 'Add exercises to your workout first'));
       return null;
     }
@@ -52,7 +55,8 @@ export function useWarmupGenerator() {
           exercises, 
           sport,
           personalize,
-          goals: personalize ? goals : undefined
+          goals: personalize ? goals : undefined,
+          warmupContext
         }
       });
 

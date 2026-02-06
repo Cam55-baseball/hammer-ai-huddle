@@ -42,11 +42,12 @@ serve(async (req) => {
   }
 
   try {
-    const { exercises, sport = 'baseball', personalize = false, goals } = await req.json() as { 
+    const { exercises, sport = 'baseball', personalize = false, goals, warmupContext } = await req.json() as { 
       exercises: Exercise[]; 
       sport?: string;
       personalize?: boolean;
       goals?: PersonalizationGoals;
+      warmupContext?: string;
     };
 
     if (!LOVABLE_API_KEY) {
@@ -98,8 +99,28 @@ serve(async (req) => {
 
     console.log("Workout analysis:", analysis);
     console.log("Personalization enabled:", personalize);
+    console.log("Warmup context:", warmupContext);
     if (personalize && goals) {
       console.log("Athlete goals:", goals);
+    }
+
+    // Build warmup context prompt for activity-specific warmups
+    let warmupContextPrompt = '';
+    if (warmupContext) {
+      const contextDescriptions: Record<string, string> = {
+        'full_practice': 'a full practice session - balance comprehensive prep without excessive fatigue, include all major movement patterns',
+        'game': 'game day competition - focus on competition-readiness, activation without fatigue, include mental focus elements',
+        'throwing_session': 'a throwing session - heavy emphasis on arm care, shoulder/rotator cuff prep, progressive throwing preparation',
+        'hitting_session': 'hitting/batting practice - prioritize rotational mobility, hip/core activation, bat speed prep, hand-eye coordination',
+        'strength_workout': 'a strength workout - focus on joint mobility, CNS activation, movement-specific preparation',
+        'speed_training': 'speed/agility training - include dynamic stretching, explosive prep, neural activation, reactive drills',
+        'general_activity': 'general athletic activity - well-rounded warmup covering all major movement patterns'
+      };
+      
+      warmupContextPrompt = `
+WARMUP CONTEXT (CRITICAL - Tailor the warmup specifically for this):
+The athlete is preparing for: ${contextDescriptions[warmupContext] || warmupContext}
+`;
     }
 
     // Build personalization context for the AI
@@ -147,7 +168,7 @@ For ${sport} athletes, always consider:
 - Shoulder/arm activation if throwing is involved
 - Hip mobility for athletic movements
 - Core activation for power transfer
-${personalizedContext}
+${warmupContextPrompt}${personalizedContext}
 
 Always respond using the generate_warmup function.`
           },
