@@ -1,41 +1,87 @@
 
-# Fix: "Failed to save nutrition log" Error
 
-## Root Cause
+# Add Tissue Type Detail to Pain/Limitation Check-In
 
-The database error logs show:
+## What This Does
+
+When you select a pain area on the body map during the Pre-Workout Check-in, you'll now also be able to specify **what type of tissue** is affected -- Muscle, Tendon, Ligament, Bone, Joint, or Nerve. Each selected tissue type will be clearly labeled and visible as colored chips underneath the body area name. The recap view will also show these labels so you can track tissue-specific pain patterns over time.
+
+## How It Will Look
+
+For each selected pain area (e.g., "L Knee (Front)"), you'll see:
+1. The area name (existing)
+2. A row of tissue type chips: Muscle, Tendon, Ligament, Bone, Joint, Nerve (new)
+3. The 1-10 pain intensity scale (existing)
+4. The fascia insight panel (existing)
+
+Selected tissue types will appear as highlighted, labeled chips with distinct colors (e.g., red for Muscle, blue for Tendon, etc.). The chips will also be visible in the selected areas summary and the Day Recap badges.
+
+## Changes
+
+### 1. New File: Tissue Type Definitions
+**`src/components/vault/quiz/body-maps/tissueTypeDefinitions.ts`**
+
+Defines 6 tissue types, each with:
+- ID, label, icon emoji, and a short kid-friendly description
+- Types: Muscle, Tendon, Ligament, Bone, Joint, Nerve
+
+### 2. New File: Tissue Type Selector Component
+**`src/components/vault/quiz/TissueTypeSelector.tsx`**
+
+A compact, mobile-friendly row of toggleable chips that appears for each selected pain area. Features:
+- Multi-select (e.g., an area can have both "Tendon" and "Ligament")
+- Color-coded chips with clear labels when selected
+- Haptic feedback on mobile
+- Compact design that fits within the existing per-area pain card
+
+### 3. Update: Focus Quiz Dialog
+**`src/components/vault/VaultFocusQuizDialog.tsx`**
+
+- Add `painTissueTypes` state as `Record<string, string[]>` (maps area ID to array of tissue type IDs)
+- Add handler function that updates tissue types per area and cleans up when areas are deselected
+- Insert the TissueTypeSelector below each area label and above the pain scale slider
+- Include `pain_tissue_types` in the submitted data payload
+- Reset tissue types state on form close
+
+### 4. Update: Day Recap Card
+**`src/components/vault/VaultDayRecapCard.tsx`**
+
+When displaying pain locations in the recap, show selected tissue types as small labeled badges next to each area (e.g., "L Knee (Front): 6/10 -- Tendon, Ligament").
+
+### 5. Update: Vault Types
+**`src/hooks/useVault.ts`**
+
+Add `pain_tissue_types?: Record<string, string[]>` to the `VaultFocusQuiz` interface so the data is properly typed throughout the app.
+
+### 6. Database Migration
+Add a new JSONB column to `vault_focus_quizzes`:
+
+```sql
+ALTER TABLE vault_focus_quizzes 
+ADD COLUMN pain_tissue_types jsonb DEFAULT NULL;
 ```
-new row for relation "vault_nutrition_logs" violates check constraint "vault_nutrition_logs_energy_level_check"
+
+This stores data like:
+```json
+{"left_knee_front": ["tendon", "ligament"], "right_shin": ["muscle"]}
 ```
 
-The energy level slider in the Vault Nutrition Log form allows values from **1 to 10**, but the database has a CHECK constraint that only accepts **1 to 5**. When a user sets their energy level to 6 or higher (or the default value of 5 is fine, but anything above 5 fails), the insert is rejected by the database.
+## Technical Notes
 
-## Solution
+- The new column is nullable so all existing records remain valid
+- Existing pain tracking fields (`pain_location`, `pain_scale`, `pain_scales`) are unchanged
+- The tissue type selection is optional -- athletes can skip it if unsure
+- The component follows the same design patterns (haptic feedback, mobile-optimized, compact) as the existing pain scale selectors
+- No changes needed to RLS policies since the column is added to an existing table that already has proper policies
 
-Update the energy level slider to match the database constraint (1-5 scale). This is consistent with the memory note that says "The energy level scale is strictly limited to 1-5 to comply with database constraints."
-
-### Changes to `src/components/vault/VaultNutritionLogCard.tsx`
-
-1. **Change Slider max from 10 to 5** (line 787)
-   - `max={10}` becomes `max={5}`
-
-2. **Update the label display** (line 782)
-   - Change `{energyLevel[0]}/10` to `{energyLevel[0]}/5`
-
-3. **Update the number markers below the slider** (lines 792-800)
-   - Change the array from `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]` to `[1, 2, 3, 4, 5]`
-
-No database changes needed -- the constraint is correct and should stay as-is. The UI simply needs to match the allowed range.
-
-## Files Modified
+## Files Summary
 
 | File | Change |
 |------|--------|
-| `src/components/vault/VaultNutritionLogCard.tsx` | Update slider max from 10 to 5, update label and number markers |
+| `src/components/vault/quiz/body-maps/tissueTypeDefinitions.ts` | New -- tissue type definitions with labels, emojis, and descriptions |
+| `src/components/vault/quiz/TissueTypeSelector.tsx` | New -- multi-select chip component for tissue types |
+| `src/components/vault/VaultFocusQuizDialog.tsx` | Add tissue type state, handler, UI integration, and data submission |
+| `src/components/vault/VaultDayRecapCard.tsx` | Show tissue type labels in pain recap badges |
+| `src/hooks/useVault.ts` | Add `pain_tissue_types` to VaultFocusQuiz interface |
+| Database migration | Add `pain_tissue_types` JSONB column |
 
-## Why This Fixes It
-
-- The database only accepts energy_level values 1-5
-- The slider currently allows values up to 10
-- Any value above 5 causes the insert to fail with a constraint violation
-- Limiting the slider to 1-5 prevents invalid values from ever being submitted
