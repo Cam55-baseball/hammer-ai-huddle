@@ -3026,6 +3026,7 @@ export type Database = {
           pain_location: string[] | null
           pain_scale: number | null
           pain_scales: Json | null
+          pain_tissue_types: Json | null
           perceived_recovery: number | null
           physical_readiness: number
           quiz_type: string
@@ -3064,6 +3065,7 @@ export type Database = {
           pain_location?: string[] | null
           pain_scale?: number | null
           pain_scales?: Json | null
+          pain_tissue_types?: Json | null
           perceived_recovery?: number | null
           physical_readiness: number
           quiz_type: string
@@ -3102,6 +3104,7 @@ export type Database = {
           pain_location?: string[] | null
           pain_scale?: number | null
           pain_scales?: Json | null
+          pain_tissue_types?: Json | null
           perceived_recovery?: number | null
           physical_readiness?: number
           quiz_type?: string

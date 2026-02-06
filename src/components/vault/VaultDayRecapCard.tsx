@@ -18,6 +18,7 @@ import {
 import { CustomActivityLog, MealData, Exercise, CustomField, RunningInterval } from '@/types/customActivity';
 import { getBodyAreaLabel } from './quiz/body-maps/bodyAreaDefinitions';
 import { getFasciaConnection } from './quiz/body-maps/fasciaConnectionMappings';
+import { getTissueTypeById } from './quiz/body-maps/tissueTypeDefinitions';
 
 interface HistoryEntry {
   date: string;
@@ -479,12 +480,29 @@ export function VaultDayRecapCard({ historyData, isLoading }: VaultDayRecapCardP
                         {preWorkoutQuiz.pain_location.map((loc, i) => {
                           // Use per-area pain_scales if available, fall back to global pain_scale
                           const painScales = (preWorkoutQuiz as any).pain_scales as Record<string, number> | undefined;
+                          const painTissueTypes = (preWorkoutQuiz as any).pain_tissue_types as Record<string, string[]> | undefined;
                           const level = painScales?.[loc] || preWorkoutQuiz.pain_scale || 0;
                           const connection = getFasciaConnection(loc);
+                          const tissueTypes = painTissueTypes?.[loc] || [];
                           return (
-                            <Badge key={i} variant="destructive" className="text-xs py-0">
-                              {connection?.primaryLine.emoji} {getBodyAreaLabel(loc)}: {level}/10
-                            </Badge>
+                            <div key={i} className="flex flex-col gap-0.5">
+                              <Badge variant="destructive" className="text-xs py-0">
+                                {connection?.primaryLine.emoji} {getBodyAreaLabel(loc)}: {level}/10
+                              </Badge>
+                              {tissueTypes.length > 0 && (
+                                <div className="flex flex-wrap gap-0.5 ml-1">
+                                  {tissueTypes.map((typeId) => {
+                                    const tissue = getTissueTypeById(typeId);
+                                    if (!tissue) return null;
+                                    return (
+                                      <span key={typeId} className="text-[10px] text-muted-foreground">
+                                        {tissue.emoji} {tissue.label}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
                           );
                         })}
                       </div>
