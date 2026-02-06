@@ -112,7 +112,7 @@ function ExerciseBadge({ exercise }: { exercise: ExerciseWithWarning }) {
     <Badge 
       variant="secondary" 
       className={cn(
-        "text-xs font-normal gap-1",
+        "text-xs font-normal gap-1 max-w-full truncate",
         hasWarning && (isHighSeverity 
           ? "border-destructive/50 bg-destructive/10" 
           : "border-amber-500/50 bg-amber-500/10")
@@ -165,9 +165,9 @@ function RecommendationCard({
       "group hover:shadow-md transition-all overflow-hidden",
       isLighterAlternative && "border-green-500/30 bg-green-500/5"
     )}>
-      <CardHeader className="pb-2">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="space-y-1 min-w-0 flex-1">
+      <CardHeader className="p-3 sm:p-6 pb-2">
+        <div className="flex flex-col gap-2">
+          <div className="space-y-1 min-w-0 w-full">
             <div className="flex items-center gap-2 flex-wrap">
               <CardTitle className="text-base font-bold break-words">{recommendation.name}</CardTitle>
               {isLighterAlternative && (
@@ -196,12 +196,12 @@ function RecommendationCard({
               )}
             </div>
           </div>
-          <Button size="sm" onClick={onUse} className="shrink-0">
+          <Button size="sm" onClick={onUse} className="shrink-0 self-end">
             {t('aiRecommendations.useThis')}
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="pt-0 space-y-3">
+      <CardContent className="p-3 sm:p-6 pt-0 space-y-3">
         <div className="flex flex-wrap gap-1">
           {exercises.slice(0, 5).map((ex, i) => (
             <ExerciseBadge key={i} exercise={ex} />
@@ -213,10 +213,10 @@ function RecommendationCard({
           )}
         </div>
         
-        <div className="p-2 rounded-md bg-muted/50 text-xs text-muted-foreground">
-          <div className="flex items-start gap-2">
+        <div className="p-2 rounded-md bg-muted/50 text-xs text-muted-foreground overflow-hidden">
+          <div className="flex items-start gap-2 min-w-0">
             <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
-            <p className="break-words">{recommendation.reasoning}</p>
+            <p className="break-words min-w-0">{recommendation.reasoning}</p>
           </div>
         </div>
       </CardContent>
@@ -283,7 +283,7 @@ export function AIWorkoutRecommendations({ onUseWorkout }: AIWorkoutRecommendati
     : recommendations;
 
   return (
-    <div className="border rounded-lg p-4 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
+    <div className="border rounded-lg p-2 sm:p-4 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
