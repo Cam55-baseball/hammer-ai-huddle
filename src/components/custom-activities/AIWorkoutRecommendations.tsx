@@ -63,7 +63,7 @@ function RecoveryWarningBanner({
     <Alert 
       variant={isHigh ? "destructive" : "default"} 
       className={cn(
-        "mb-4",
+        "mb-4 overflow-hidden",
         isHigh 
           ? "border-destructive/50 bg-destructive/10" 
           : "border-amber-500/50 bg-amber-500/10"
@@ -76,8 +76,8 @@ function RecoveryWarningBanner({
       )}>
         {isHigh ? t('aiRecommendations.recoveryAlertHigh', 'Recovery Alert') : t('aiRecommendations.recoveryAlertModerate', 'Recovery Notice')}
       </AlertTitle>
-      <AlertDescription className="mt-2 space-y-2">
-        <p className="text-sm">{warning.reason}</p>
+      <AlertDescription className="mt-2 space-y-2 break-words">
+        <p className="text-sm break-words">{warning.reason}</p>
         {warning.suggestions.length > 0 && (
           <ul className="text-xs list-disc list-inside opacity-80 space-y-1">
             {warning.suggestions.map((suggestion, i) => (
@@ -162,14 +162,14 @@ function RecommendationCard({
 
   return (
     <Card className={cn(
-      "group hover:shadow-md transition-all",
+      "group hover:shadow-md transition-all overflow-hidden",
       isLighterAlternative && "border-green-500/30 bg-green-500/5"
     )}>
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-base font-bold">{recommendation.name}</CardTitle>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="space-y-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <CardTitle className="text-base font-bold break-words">{recommendation.name}</CardTitle>
               {isLighterAlternative && (
                 <Badge variant="outline" className="text-xs bg-green-500/20 text-green-500 border-green-500/30">
                   Lighter Option
@@ -216,7 +216,7 @@ function RecommendationCard({
         <div className="p-2 rounded-md bg-muted/50 text-xs text-muted-foreground">
           <div className="flex items-start gap-2">
             <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
-            <p>{recommendation.reasoning}</p>
+            <p className="break-words">{recommendation.reasoning}</p>
           </div>
         </div>
       </CardContent>
@@ -283,7 +283,7 @@ export function AIWorkoutRecommendations({ onUseWorkout }: AIWorkoutRecommendati
     : recommendations;
 
   return (
-    <div className="border rounded-lg p-4 bg-gradient-to-br from-primary/5 to-transparent">
+    <div className="border rounded-lg p-4 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
