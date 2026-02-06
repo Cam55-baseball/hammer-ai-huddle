@@ -11,6 +11,7 @@ interface WeeklyWellnessGoals {
   target_discipline_level: number;
   notification_enabled: boolean;
   completed_at: string;
+  weekly_goals_text?: string;
 }
 
 interface WeeklyAverages {
@@ -27,7 +28,7 @@ interface UseWeeklyWellnessQuizReturn {
   isLoading: boolean;
   isDueThisWeek: boolean;
   nextOpenDate: string;
-  saveGoals: (goals: { mood: number; stress: number; discipline: number }) => Promise<{ success: boolean; reason?: string }>;
+  saveGoals: (goals: { mood: number; stress: number; discipline: number; goalsText?: string }) => Promise<{ success: boolean; reason?: string }>;
   refetch: () => void;
 }
 
@@ -119,7 +120,7 @@ export function useWeeklyWellnessQuiz(): UseWeeklyWellnessQuizReturn {
     fetchData();
   }, [fetchData]);
 
-  const saveGoals = async (goals: { mood: number; stress: number; discipline: number }) => {
+  const saveGoals = async (goals: { mood: number; stress: number; discipline: number; goalsText?: string }) => {
     if (!user) return { success: false };
 
     const currentWeekStart = getCurrentWeekStart();
@@ -140,6 +141,7 @@ export function useWeeklyWellnessQuiz(): UseWeeklyWellnessQuizReturn {
           target_mood_level: goals.mood,
           target_stress_level: goals.stress,
           target_discipline_level: goals.discipline,
+          weekly_goals_text: goals.goalsText || null,
           completed_at: new Date().toISOString(),
         });
 

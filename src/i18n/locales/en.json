@@ -5291,7 +5291,9 @@
         "left": "Left (L)",
         "both": "Both",
         "switch": "Switch"
-      }
+      },
+      "sixWeekGoals": "What are your goals for the next 6 weeks?",
+      "sixWeekGoalsPlaceholder": "Example: Increase my exit velocity by 5 mph, add 10 lbs to my squat, improve my long toss distance..."
     },
     "progressPhotos": {
       "title": "Progress Photos",
@@ -5408,9 +5410,11 @@
           "eliteTooltip": "Elite-level tool found in top professional players",
           "hallOfFameTooltip": "Generational talent - rarely seen even among pros"
         }
-      }
+      },
+      "longTermGoals": "What are your long-term goals?",
+      "longTermGoalsDescription": "Think big - where do you want to be in 3 years?",
+      "longTermGoalsPlaceholder": "Example: Play D1 college baseball, get drafted, make the varsity team, earn a scholarship..."
     },
-    "recap": {
       "title": "6-Week Recap",
       "description": "Your personalized performance summary",
       "generate": "Generate Recap",
@@ -5740,6 +5744,9 @@
     "step2Description": "What's your maximum acceptable stress level?",
     "step3Title": "Discipline Goal",
     "step3Description": "Set your commitment level target",
+    "step4Title": "Your Weekly Goals",
+    "step4Description": "What do you want to achieve this week?",
+    "goalsPlaceholder": "Example: Complete all 4 workouts, improve my 10-yard dash time, stay hydrated every day...",
     "next": "Next",
     "back": "Back",
     "complete": "Lock In Goals",

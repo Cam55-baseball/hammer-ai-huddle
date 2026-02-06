@@ -28,9 +28,26 @@ export function CustomActivityCard({ activity, onToggleComplete, onEdit }: Custo
   // Use display_nickname if set, otherwise fall back to title
   const displayName = template.display_nickname || template.title;
 
-  const exercisePreview = template.exercises.slice(0, 3).map(e => 
-    `${e.sets || ''}${e.sets && e.reps ? '×' : ''}${e.reps || ''} ${e.name}`.trim()
-  ).filter(Boolean).join(' • ');
+  // Safe exercise preview that handles both array and block-based exercises
+  const getExercisePreview = () => {
+    // Handle block-based workout system
+    if (template.exercises && typeof template.exercises === 'object' && '_useBlocks' in (template.exercises as any)) {
+      const blockData = template.exercises as unknown as { _useBlocks: boolean; blocks: Array<{ name: string; exercises: any[] }> };
+      const blockNames = blockData.blocks?.slice(0, 3).map(b => b.name) || [];
+      return blockNames.join(' → ');
+    }
+    
+    // Handle traditional exercise array
+    if (Array.isArray(template.exercises)) {
+      return template.exercises.slice(0, 3).map(e => 
+        `${e.sets || ''}${e.sets && e.reps ? '×' : ''}${e.reps || ''} ${e.name}`.trim()
+      ).filter(Boolean).join(' • ');
+    }
+    
+    return '';
+  };
+
+  const exercisePreview = getExercisePreview();
 
   return (
     <>
