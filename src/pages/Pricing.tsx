@@ -113,7 +113,7 @@ const Pricing = () => {
             <ul className="space-y-3 mb-6">
               <li className="flex items-center gap-2">
                 <Check className="h-5 w-5 text-primary" />
-                <span>Advanced AI Analysis</span>
+                <span>Advanced Hammer Analysis</span>
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-5 w-5 text-primary" />

@@ -1031,7 +1031,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
           if (error) {
             console.error('Analysis error:', error);
             setAnalysisStatus('failed');
-            setAnalysisError(t('realTimePlayback.analysisFailed', 'AI analysis failed'));
+            setAnalysisError(t('realTimePlayback.analysisFailed', 'Hammer analysis failed'));
             // Provide fallback analysis with mechanics breakdown
             setAnalysis({
               overallScore: 7.5,
@@ -1121,7 +1121,7 @@ export const RealTimePlayback = ({ isOpen, onClose, module, sport }: RealTimePla
       if (error) {
         console.error('Retry analysis error:', error);
         setAnalysisStatus('failed');
-        setAnalysisError(t('realTimePlayback.analysisFailed', 'AI analysis failed'));
+        setAnalysisError(t('realTimePlayback.analysisFailed', 'Hammer analysis failed'));
       } else if (data) {
         setAnalysis(data);
         setAnalysisStatus('complete');
@@ -2277,7 +2277,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                       <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-2">
                           <Grid3X3 className="h-4 w-4 text-primary" />
-                          <span className="font-medium text-sm">{t('realTimePlayback.frameCount', 'Frames for AI Analysis')}</span>
+                          <span className="font-medium text-sm">{t('realTimePlayback.frameCount', 'Frames for Hammer Analysis')}</span>
                         </div>
                         <ToggleGroup 
                           type="single" 
@@ -2464,7 +2464,7 @@ ${t('realTimePlayback.tryThisDrill', 'Try This Drill')}: ${analysis.drillRecomme
                             <span className="text-muted-foreground">
                               {analysisStatus === 'uploading' && t('realTimePlayback.statusUploading', 'Uploading...')}
                               {analysisStatus === 'extracting' && t('realTimePlayback.statusExtracting', 'Extracting frames...')}
-                              {analysisStatus === 'analyzing' && t('realTimePlayback.statusAnalyzing', 'AI analyzing...')}
+                              {analysisStatus === 'analyzing' && t('realTimePlayback.statusAnalyzing', 'Hammer analyzing...')}
                             </span>
                             <p className="text-xs text-muted-foreground/70 text-center max-w-xs">
                               {t('realTimePlayback.analysisHint', 'This may take a few seconds')}

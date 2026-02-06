@@ -128,7 +128,7 @@ const Index = () => {
               <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-2xl">🎯</span>
               </div>
-              <h4 className="text-xl font-bold mb-2">AI Motion Capture</h4>
+              <h4 className="text-xl font-bold mb-2">Hammer Motion Capture</h4>
               <p className="text-muted-foreground">
                 Advanced computer vision analyzes every throw, pitch, and swing with professional-grade accuracy
               </p>

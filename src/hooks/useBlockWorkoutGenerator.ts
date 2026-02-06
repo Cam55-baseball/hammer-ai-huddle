@@ -79,7 +79,7 @@ export function useBlockWorkoutGenerator() {
         if (data.error.includes('Rate limits')) {
           toast.error(t('eliteWorkout.generator.rateLimited', 'Too many requests. Please wait a moment.'));
         } else if (data.error.includes('Payment required')) {
-          toast.error(t('eliteWorkout.generator.paymentRequired', 'AI credits needed. Please contact support.'));
+          toast.error(t('eliteWorkout.generator.paymentRequired', 'Hammer credits needed. Please contact support.'));
         } else {
           toast.error(data.error);
         }

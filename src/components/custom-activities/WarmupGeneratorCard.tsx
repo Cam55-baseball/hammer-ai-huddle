@@ -86,7 +86,7 @@ export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball'
           <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="h-5 w-5 text-primary shrink-0" />
             <CardTitle className="text-base truncate">
-              {t('workoutBuilder.warmup.title', 'AI Warmup Generator')}
+              {t('workoutBuilder.warmup.title', 'Hammer Warmup Generator')}
             </CardTitle>
           </div>
           {!warmupResult && (

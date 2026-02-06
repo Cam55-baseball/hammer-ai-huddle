@@ -115,7 +115,7 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="h-4 w-4 text-primary" />
-            {t('nutrition.aiSuggestions.title', 'AI Meal Suggestions')}
+            {t('nutrition.aiSuggestions.title', 'Hammer Meal Suggestions')}
           </CardTitle>
           <Button
             variant="ghost"
@@ -175,7 +175,7 @@ export function AIMealSuggestions({ consumed, targets, onAddFood }: AIMealSugges
         {!suggestions.length && !loading && !error && (
           <div className="text-center py-4">
             <p className="text-sm text-muted-foreground mb-2">
-              {t('nutrition.aiSuggestions.clickToGet', 'Click refresh to get AI-powered meal suggestions based on your remaining macros')}
+              {t('nutrition.aiSuggestions.clickToGet', 'Click refresh to get Hammer-powered meal suggestions based on your remaining macros')}
             </p>
             <Button onClick={fetchSuggestions} size="sm">
               <Sparkles className="h-4 w-4 mr-2" />
