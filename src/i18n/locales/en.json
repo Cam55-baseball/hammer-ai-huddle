@@ -5415,6 +5415,7 @@
       "longTermGoalsDescription": "Think big - where do you want to be in 3 years?",
       "longTermGoalsPlaceholder": "Example: Play D1 college baseball, get drafted, make the varsity team, earn a scholarship..."
     },
+    "recap": {
       "title": "6-Week Recap",
       "description": "Your personalized performance summary",
       "generate": "Generate Recap",
