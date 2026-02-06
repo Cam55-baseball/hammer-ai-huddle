@@ -228,7 +228,7 @@ export default function SoftFocusGame({ tier, onComplete, onExit, isPaused }: So
 
           {/* Center focus point - breathing animation */}
           <div
-            className="w-8 h-8 rounded-full bg-[hsl(var(--tex-vision-feedback))] transition-transform duration-[2000ms] ease-in-out"
+            className="w-8 h-8 rounded-full bg-[hsl(var(--tex-vision-feedback))] transition-transform [transition-duration:2000ms] ease-in-out"
             style={{
               transform: `scale(${breathScale})`,
               boxShadow: `0 0 ${breathPhase === 'hold' ? 30 : 15}px hsl(var(--tex-vision-feedback) / 0.6)`,
