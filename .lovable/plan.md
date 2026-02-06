@@ -2,53 +2,51 @@
 
 # Fix Horizontal Overflow in Hammer Workout Recommendations (Mobile)
 
-## Problem
+## Root Cause
 
-On mobile, the Hammer Workout Recommendations panel has text and buttons overflowing horizontally in three places:
-- The "Use This Workout" button gets cut off on the right side of recommendation cards
-- Recovery Notice text overflows past the right edge
-- Reasoning text at the bottom of cards is clipped
+The content overflows because of **excessive nested padding** on mobile. Here's the width breakdown on a 375px screen:
 
-## Root Causes
+```text
+Dialog          ~375px  (full screen on mobile)
+  ScrollArea    -48px   (px-6 = 24px each side)  => 327px
+    Container   -32px   (p-4 = 16px each side)   => 295px
+      Card      -0px    (no margin)               => 295px
+        Header  -48px   (default p-6)             => 247px
+```
 
-All issues stem from the `AIWorkoutRecommendations.tsx` component lacking proper width constraints for mobile:
+At 247px, the title + "Use This" button can't fit side by side, causing the overflow that gets clipped by `overflow-hidden`.
 
-1. **RecommendationCard header** (line 169): The flex row with title + button doesn't have `min-w-0` on the title container, so long workout names push the "Use This Workout" button off-screen
-2. **Card title row** (line 171): Title and "Lighter Option" badge sit in a non-wrapping flex row that can exceed the card width
-3. **Outer container** (line 286): Missing `overflow-hidden` so child content can bleed past the panel boundary
-4. **Card components** (line 164): Cards themselves lack `overflow-hidden`
-5. **Text paragraphs** (lines 80, 219): Recovery notice and reasoning text don't use `break-words` to wrap long text
+## Changes (single file: `AIWorkoutRecommendations.tsx`)
 
-## Changes (single file)
+### 1. Reduce outer container padding on mobile
+Change `p-4` to `p-2 sm:p-4` on the main wrapper div (line 286). Saves 16px on mobile.
 
-All fixes are in `src/components/custom-activities/AIWorkoutRecommendations.tsx`:
+### 2. Reduce card padding on mobile
+- `CardHeader`: override default `p-6` with `p-3 sm:p-6 pb-2` (line 168). Saves 24px on mobile.
+- `CardContent`: override with `p-3 sm:p-6 pt-0` (line 204). Keeps content aligned.
 
-### 1. Outer container -- add overflow protection
-Add `overflow-hidden` to the main wrapper div so nothing bleeds past the panel edges.
+### 3. Stack title and button vertically on mobile
+Instead of `flex-wrap` side-by-side, make the header container always stack the title block and button:
+- The title block takes `w-full min-w-0`
+- The "Use This" button sits below, aligned to the right using `self-end` or `ml-auto`
+- This guarantees the button is always visible and the title has full width to wrap
 
-### 2. RecommendationCard -- restructure header for mobile
-- Stack the title and button vertically on mobile instead of side-by-side: change the header from a horizontal flex to a vertical layout on small screens
-- Add `min-w-0` to the title container so long names wrap instead of pushing content off-screen
-- Add `overflow-hidden` to the Card itself
-- Make the title text wrap with `break-words`
+### 4. Add `min-w-0` to reasoning text flex container
+The `<div className="flex items-start gap-2">` wrapping the reasoning text needs `min-w-0` so the flex child can shrink and allow `break-words` to work properly.
 
-### 3. Recovery warning -- constrain text
-- Add `overflow-hidden` and `break-words` to the Alert component's description text
+### 5. Add `overflow-hidden` and width constraints to exercise badges container
+The `flex flex-wrap gap-1` container for exercise badges already wraps, but individual badges with long names like "Dynamic Ankle Mobility Drills (Left Ankle Only)" need `max-w-full truncate` to prevent a single badge from exceeding the container width.
 
-### 4. Reasoning text -- prevent overflow
-- Add `break-words` to the reasoning paragraph so long text wraps properly within the card
-
-## Technical Details
+## Summary
 
 | Location | Current | Fix |
 |----------|---------|-----|
-| Outer div (line 286) | `border rounded-lg p-4` | Add `overflow-hidden` |
-| Card (line 164) | No overflow constraint | Add `overflow-hidden` |
-| Header flex (line 169) | `flex items-start justify-between gap-2` | Add `flex-wrap` |
-| Title div (line 170) | `space-y-1` | Add `min-w-0` |
-| Title text (line 172) | `text-base font-bold` | Add `break-words` |
-| Alert description (line 79-80) | `mt-2 space-y-2` | Add `break-words` |
-| Reasoning `p` (line 219) | No word-break | Add `break-words` |
+| Outer container padding | `p-4` | `p-2 sm:p-4` |
+| CardHeader padding | default `p-6` | `p-3 sm:p-6 pb-2` |
+| CardContent padding | default + `pt-0` | `p-3 sm:p-6 pt-0` |
+| Header layout | `flex flex-wrap` with `justify-between` | Stack vertically: title full-width, button below |
+| Reasoning container | `flex items-start gap-2` | Add `min-w-0` |
+| Exercise badges | No width constraint | Add `max-w-full truncate` |
 
-No logic changes -- CSS-only fixes that keep the desktop layout intact.
+All changes are CSS-only in a single file. Desktop layout stays the same thanks to `sm:` breakpoints.
 
