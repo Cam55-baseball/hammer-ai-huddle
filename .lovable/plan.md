@@ -1,160 +1,218 @@
 
-# Implementation Plan: Hammer Warmup Generator & Warmup Activity Type
+# Implementation Plan: Hammer Workout Generator for Block Cards
 
 ## Overview
 
-This plan implements three key changes:
-1. **Rename** "AI Warmup Generator" to "Hammer Warmup Generator" throughout the app
-2. **Add** the Hammer Warmup Generator to the warm-up activity type in create activity
-3. **Enhance personalization** for warm-up activity type - ask user what they are warming up for
+This plan adds an AI-powered **"Hammer Workout Generator"** to each workout block type in the Elite Workout system. Similar to the existing Hammer Warmup Generator, it will include:
+
+1. **Block-specific generation** - Each block type (Activation, Strength Output, Power/Speed, etc.) gets its own AI generator with contextual questions
+2. **Personalize toggle** - Uses aggregated athlete goals from throughout the app
+3. **Block-specific prompting questions** - Each block type asks a relevant question to guide the AI
 
 ---
 
-## Current State Analysis
+## Architecture Approach
 
-### Components Involved:
-- `WarmupGeneratorCard.tsx` - The card component with personalize toggle (currently in workout builder only)
-- `CustomActivityBuilderDialog.tsx` - Main activity creation dialog
-- `DragDropExerciseBuilder.tsx` - Imports and uses WarmupGeneratorCard for workout type
-- `ExerciseBuilder.tsx` - Used for non-workout activity types (including warmup)
-- `useWarmupGenerator.ts` - Hook that calls the edge function
-- `useAthleteGoalsAggregated.ts` - Fetches athlete goals for personalization
-- `generate-warmup/index.ts` - Edge function that generates warmup via AI
-- i18n locale files (8 languages)
+The implementation follows the established pattern from the Hammer Warmup Generator:
 
-### Current Flow:
-- WarmupGeneratorCard only appears in `DragDropExerciseBuilder` (workout type)
-- Warmup activity type uses basic `ExerciseBuilder` with no AI generation
-- Personalization fetches athlete goals but doesn't ask what they're warming up for
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│                       BlockCard Component                            │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │              BlockWorkoutGenerator Card                        │  │
+│  │  ┌─────────────────┬────────────────────────────────────────┐ │  │
+│  │  │ Hammer Workout  │  [Personalize Toggle]                   │ │  │
+│  │  │ Generator       │                                         │ │  │
+│  │  ├─────────────────┴────────────────────────────────────────┤ │  │
+│  │  │  Block-Specific Question:                                 │ │  │
+│  │  │  "What's your focus for strength today?"                  │ │  │
+│  │  │  [Dropdown: Max Strength / Hypertrophy / Power / ...]     │ │  │
+│  │  ├─────────────────────────────────────────────────────────┤ │  │
+│  │  │  [Generate Exercises] Button                              │ │  │
+│  │  └─────────────────────────────────────────────────────────┘ │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │              Existing Exercise List                           │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Implementation Details
+## Block-Specific Questions
 
-### Phase 1: Rename to "Hammer Warmup Generator"
+Each block type will have a contextual question to personalize the AI generation:
 
-**i18n Updates (8 files)**
+| Block Type | Question | Options |
+|------------|----------|---------|
+| **Activation** | "What area needs activation?" | Full Body, Lower Body, Upper Body, Core/Hips, Sport-Specific |
+| **Elastic Prep** | "What type of elasticity?" | Bouncy/Reactive, Rotational, Linear, Multi-Directional |
+| **CNS Primer** | "How much CNS spark do you need?" | Light Spark, Moderate Wake-Up, Full Send Primer |
+| **Strength Output** | "What's your strength focus?" | Max Strength, Hypertrophy, Power, Strength-Endurance, Full Body |
+| **Power/Speed** | "What power quality?" | Explosive Power, Speed-Strength, Reactive Power, Rotational Power |
+| **Capacity** | "What capacity type?" | Aerobic Base, Lactate Tolerance, Work Capacity, HIIT |
+| **Skill Transfer** | "What skill are you transferring?" | Throwing Mechanics, Hitting Mechanics, Defensive Agility, Base Running |
+| **Decompression** | "What needs decompression?" | Full Body, Hips/Spine, Shoulders/Thoracic, Lower Body |
+| **Recovery** | "What type of recovery?" | Active Recovery, Mobility Focus, Breathwork, Light Movement |
+| **Custom** | "Describe your goal" | Free text input |
 
-Update the `workoutBuilder.warmup` namespace in all locale files:
+---
 
-**English (en.json):**
-```json
-"warmup": {
-  "title": "Hammer Warmup Generator",
-  "generate": "Generate Warmup",
-  "generating": "Generating...",
-  // ... rest stays the same
+## Component Structure
+
+### New Files to Create:
+
+**1. `src/components/elite-workout/intelligence/BlockWorkoutGenerator.tsx`**
+
+The main generator component that will be added to each BlockCard:
+
+```typescript
+interface BlockWorkoutGeneratorProps {
+  block: WorkoutBlock;
+  onAddExercises: (exercises: EnhancedExercise[]) => void;
+  isLocked?: boolean;
 }
+
+// Features:
+// - Personalize toggle (uses useAthleteGoalsAggregated)
+// - Block-specific dropdown question
+// - Generate button that calls edge function
+// - Collapsible results display
+// - "Add to Block" button
 ```
 
-Similar updates for: `es.json`, `fr.json`, `de.json`, `ja.json`, `zh.json`, `nl.json`, `ko.json`
+**2. `src/hooks/useBlockWorkoutGenerator.ts`**
 
-### Phase 2: Add Hammer Warmup to Warmup Activity Type
-
-**Modify `CustomActivityBuilderDialog.tsx`**
-
-Add new state and logic to show Hammer Warmup Generator for warmup activity type:
+Hook to manage the AI generation logic:
 
 ```typescript
-// New computed value
-const showHammerWarmup = activityType === 'warmup' || activityType === 'workout';
+interface GenerateBlockWorkoutOptions {
+  blockType: BlockType;
+  blockIntent: BlockIntent;
+  blockQuestion: string; // User's answer to block-specific question
+  personalize?: boolean;
+  goals?: AggregatedGoals;
+  existingExercises?: EnhancedExercise[]; // To avoid duplicates
+}
+
+// Returns:
+// - generateExercises: async function
+// - isGenerating: boolean
+// - result: { exercises: EnhancedExercise[], reasoning: string }
+// - error: string | null
+// - clearResult: function
 ```
 
-For warmup activity type, integrate the WarmupGeneratorCard in the dialog's exercise section:
+**3. `supabase/functions/generate-block-workout/index.ts`**
+
+New edge function for block-specific exercise generation:
 
 ```typescript
-{/* Hammer Warmup Generator - for warmup and workout types */}
-{showHammerWarmup && activityType === 'warmup' && (
-  <HammerWarmupForActivity
-    exercises={exercises}
-    onAddWarmup={(warmupExercises) => setExercises(warmupExercises)}
-    sport={selectedSport}
-    isWarmupActivity={true}
+// Input:
+// - blockType: string (activation, strength_output, etc.)
+// - blockIntent: string (elastic, max_output, etc.)
+// - blockQuestion: string (user's focus selection)
+// - personalize: boolean
+// - goals?: AggregatedGoals
+// - existingExercises?: Exercise[] (to avoid duplicates)
+
+// Output:
+// - exercises: EnhancedExercise[]
+// - reasoning: string
+// - estimatedDuration: number
+```
+
+### Files to Modify:
+
+**1. `src/components/elite-workout/blocks/BlockCard.tsx`**
+
+Add the BlockWorkoutGenerator component inside the CollapsibleContent:
+
+```typescript
+// Add import
+import { BlockWorkoutGenerator } from '../intelligence/BlockWorkoutGenerator';
+
+// Add to content section (before Add Exercise button)
+{!isLocked && block.exercises.length < 8 && (
+  <BlockWorkoutGenerator
+    block={block}
+    onAddExercises={(exercises) => {
+      onUpdate({
+        ...block,
+        exercises: [...block.exercises, ...exercises]
+      });
+    }}
   />
 )}
 ```
 
-### Phase 3: Enhanced Personalization for Warmup Activity
+**2. `src/types/eliteWorkout.ts`**
 
-**Create new component: `HammerWarmupForActivity.tsx`**
-
-A variant of WarmupGeneratorCard specifically for the warmup activity type with an additional "What are you warming up for?" prompt:
+Add block question types and configurations:
 
 ```typescript
-interface HammerWarmupForActivityProps {
-  exercises: Exercise[];
-  onAddWarmup: (warmupExercises: Exercise[]) => void;
-  sport?: 'baseball' | 'softball';
+export interface BlockQuestionConfig {
+  question: string;
+  options: { value: string; label: string }[];
 }
 
-// Component includes:
-// 1. Personalize toggle (existing)
-// 2. NEW: "What are you warming up for?" dropdown/selector when personalize is ON
-//    Options: 'full_practice', 'game', 'throwing_session', 'hitting_session', 
-//             'strength_workout', 'speed_training', 'general_activity'
-// 3. Passes warmupContext to the generator
+export const BLOCK_QUESTION_CONFIGS: Record<BlockType, BlockQuestionConfig> = {
+  activation: {
+    question: "What area needs activation?",
+    options: [
+      { value: 'full_body', label: 'Full Body' },
+      { value: 'lower_body', label: 'Lower Body' },
+      // ...
+    ]
+  },
+  // ... other block types
+};
 ```
 
-**Update `useWarmupGenerator.ts`**
+**3. i18n Files (8 languages)**
 
-Add `warmupContext` parameter to the generation options:
+Add translation keys for:
+- Block generator title and labels
+- All block-specific questions and options
+- Generation status messages
 
-```typescript
-interface GenerateWarmupOptions {
-  exercises: Exercise[];
-  sport?: 'baseball' | 'softball';
-  personalize?: boolean;
-  goals?: AggregatedGoals;
-  warmupContext?: string;  // NEW: "What are you warming up for?"
-}
-```
+---
 
-**Update `generate-warmup/index.ts` Edge Function**
+## Edge Function Design
 
-Enhance the AI prompt to include warmup context:
+The `generate-block-workout` function will:
 
-```typescript
-interface RequestBody {
-  exercises: Exercise[];
-  sport?: string;
-  personalize?: boolean;
-  goals?: PersonalizationGoals;
-  warmupContext?: string;  // NEW
-}
+1. **Accept block context** - Block type, intent, and user's focus selection
+2. **Apply personalization** - If enabled, use athlete goals, position, pain areas
+3. **Generate appropriate exercises** - 3-6 exercises based on block type
+4. **Include advanced fields** - Tempo, velocity intent, CNS demand as appropriate for the block
+5. **Avoid duplicates** - Reference existing exercises in the block to suggest new ones
 
-// Enhanced prompt when warmupContext provided:
-const contextPrompt = warmupContext ? `
-WARMUP CONTEXT: The athlete is preparing for: ${warmupContext}
-Tailor the warmup specifically for this upcoming activity:
-- For game: Include competition-ready activation, mental focus elements
-- For practice: Balance comprehensive prep without excessive fatigue
-- For throwing session: Heavy emphasis on arm care and shoulder mobility
-- For hitting session: Rotational mobility, hip activation, hand-eye prep
-- For strength workout: Joint mobility, CNS activation, movement-specific prep
-- For speed training: Dynamic stretches, explosive prep, neural activation
-` : '';
-```
+### AI Prompt Structure
 
-### Phase 4: i18n Updates for New Features
+```text
+You are a {sport} strength and conditioning specialist generating exercises for a {blockType} block.
 
-Add new translation keys for warmup context selection:
+BLOCK CONTEXT:
+- Block Type: {blockType} - {blockDescription}
+- Block Intent: {blockIntent}
+- Athlete's Focus: {blockQuestion} → {selectedOption}
 
-```json
-"warmup": {
-  "title": "Hammer Warmup Generator",
-  "warmingUpFor": "Warming up for...",
-  "warmupContext": {
-    "label": "What are you warming up for?",
-    "full_practice": "Full Practice",
-    "game": "Game Day",
-    "throwing_session": "Throwing Session",
-    "hitting_session": "Hitting/Batting Practice",
-    "strength_workout": "Strength Workout",
-    "speed_training": "Speed/Agility Training",
-    "general_activity": "General Activity"
-  }
-  // ... existing keys
-}
+{PERSONALIZATION SECTION if enabled}
+- Body Goal: {bodyGoal}
+- Training Intent: {trainingIntent}
+- Position: {position}
+- Pain Areas to Avoid: {painAreas}
+- Performance Goals: {performanceGoals}
+
+EXISTING EXERCISES (avoid duplicates): {existingExerciseNames}
+
+Generate 3-6 exercises appropriate for this block with:
+- Name, sets, reps, rest
+- Tempo (if strength/power block)
+- Velocity intent
+- CNS demand level
+- Coaching cues
 ```
 
 ---
@@ -163,11 +221,13 @@ Add new translation keys for warmup context selection:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/components/custom-activities/WarmupGeneratorCard.tsx` | Modify | Update component to support warmupContext prop |
-| `src/components/custom-activities/CustomActivityBuilderDialog.tsx` | Modify | Add WarmupGeneratorCard for warmup activity type |
-| `src/hooks/useWarmupGenerator.ts` | Modify | Add warmupContext parameter |
-| `supabase/functions/generate-warmup/index.ts` | Modify | Accept and use warmupContext in AI prompt |
-| `src/i18n/locales/en.json` | Modify | Rename to "Hammer Warmup" + add context keys |
+| `src/components/elite-workout/intelligence/BlockWorkoutGenerator.tsx` | Create | New AI generator component for blocks |
+| `src/hooks/useBlockWorkoutGenerator.ts` | Create | Hook for block exercise generation logic |
+| `supabase/functions/generate-block-workout/index.ts` | Create | Edge function for AI generation |
+| `src/components/elite-workout/blocks/BlockCard.tsx` | Modify | Integrate BlockWorkoutGenerator |
+| `src/types/eliteWorkout.ts` | Modify | Add block question configurations |
+| `supabase/config.toml` | Modify | Register new edge function |
+| `src/i18n/locales/en.json` | Modify | Add generator translations |
 | `src/i18n/locales/es.json` | Modify | Spanish translations |
 | `src/i18n/locales/fr.json` | Modify | French translations |
 | `src/i18n/locales/de.json` | Modify | German translations |
@@ -178,85 +238,52 @@ Add new translation keys for warmup context selection:
 
 ---
 
-## Technical Details
+## User Experience Flow
 
-### WarmupGeneratorCard Updates
-
-The component will receive new props:
-
-```typescript
-interface WarmupGeneratorCardProps {
-  exercises: Exercise[];
-  onAddWarmup: (warmupExercises: Exercise[]) => void;
-  sport?: 'baseball' | 'softball';
-  isWarmupActivity?: boolean;  // NEW: Enables context selector
-}
-```
-
-When `isWarmupActivity` is true AND `personalize` is toggled on:
-- Show a Select dropdown for "What are you warming up for?"
-- Store selected context in local state
-- Pass context to `generateWarmup()` call
-
-### Warmup Context Options
-
-The dropdown will offer these predefined options aligned with baseball/softball activities:
-
-```typescript
-const WARMUP_CONTEXTS = [
-  { value: 'full_practice', label: 'Full Practice' },
-  { value: 'game', label: 'Game Day' },
-  { value: 'throwing_session', label: 'Throwing Session' },
-  { value: 'hitting_session', label: 'Hitting/Batting Practice' },
-  { value: 'strength_workout', label: 'Strength Workout' },
-  { value: 'speed_training', label: 'Speed/Agility Training' },
-  { value: 'general_activity', label: 'General Activity' },
-];
-```
-
-### Edge Function Enhancement
-
-The AI prompt will be enhanced when warmupContext is provided to generate activity-specific warmups:
-
-```
-For "game": Focus on competition-readiness - activation without fatigue, mental preparation elements
-For "throwing_session": Emphasis on arm care, shoulder/rotator cuff prep, progressive throwing prep
-For "hitting_session": Rotational mobility, hip/core activation, bat speed prep
-For "strength_workout": Joint mobility, muscle activation matching planned movements
-For "speed_training": Dynamic stretching, explosive prep, CNS activation
-```
+1. **User adds a block** (e.g., "Strength Output")
+2. **Block card shows empty state** with generator option
+3. **User sees "Hammer Workout Generator"** card inside the block
+4. **User toggles "Personalize"** (optional) - fetches their goals
+5. **User selects focus** from dropdown (e.g., "Max Strength")
+6. **User clicks "Generate Exercises"**
+7. **AI generates 3-6 exercises** with sets/reps/tempo/cues
+8. **User reviews results** in collapsible panel
+9. **User clicks "Add to Block"** to add exercises
+10. **User can still manually add/edit** exercises after
 
 ---
 
-## User Experience Flow
+## Technical Considerations
 
-### For Warmup Activity Type:
-1. User selects "Warm-up" as activity type
-2. Hammer Warmup Generator card appears prominently
-3. User toggles "Personalize" ON
-4. Dropdown appears: "What are you warming up for?"
-5. User selects context (e.g., "Game Day")
-6. User clicks "Generate Warmup"
-7. AI generates warmup tailored to:
-   - The selected context (game prep)
-   - Athlete's position (pitcher → extra arm care)
-   - Any pain areas (avoid shoulder exercises if shoulder pain reported)
-   - Body goals (maintain energy if cutting)
-8. Warmup exercises populate the activity
+### Performance
+- Generator only loads goals data when "Personalize" is toggled on
+- Results are cleared when block type changes
+- Debounce generation requests (prevent double-clicks)
 
-### For Workout Activity Type:
-- Behavior remains the same as current implementation
-- "What are you warming up for?" NOT shown (context is the workout itself)
+### Accessibility
+- All dropdowns have proper labels and ARIA attributes
+- Loading states announced to screen readers
+- 44x44px minimum touch targets for buttons
+
+### Error Handling
+- Toast notifications for API errors
+- Graceful fallback if AI fails (allow manual exercise entry)
+- Rate limit handling with user-friendly message
+
+### Integration with Existing System
+- Generated exercises use the same EnhancedExercise type
+- Works with locked/unlocked block states
+- Respects View Mode (only show in Coach/Parent mode, hide in Execute)
 
 ---
 
 ## Success Criteria
 
-1. "Hammer Warmup Generator" displays instead of "AI Warmup Generator"
-2. Hammer Warmup Generator appears in warmup activity type builder
-3. "Personalize" toggle in warmup activity shows "What are you warming up for?" selector
-4. Generated warmups incorporate the selected context
-5. All 8 languages have complete translations
-6. No regressions in workout type warmup generation
-7. Mobile-responsive UI for new selector
-
+1. Each block type has its own contextual question dropdown
+2. Personalize toggle fetches and uses athlete goals
+3. Generated exercises include advanced fields (tempo, velocity intent, CNS demand)
+4. Exercises are added to the block correctly
+5. Generator hidden when block is locked or has 8+ exercises
+6. All 8 languages have complete translations
+7. Mobile-responsive UI with proper touch targets
+8. No regressions in existing block functionality
