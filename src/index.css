@@ -409,3 +409,9 @@ All colors MUST be HSL.
 .animate-glow-pulse-amber {
   animation: glow-pulse-amber 2s ease-in-out infinite;
 }
+
+/* Prevent Radix ScrollArea table-layout from causing horizontal overflow */
+.scroll-area-no-hscroll [data-radix-scroll-area-viewport] > div {
+  display: block !important;
+  min-width: 0 !important;
+}
