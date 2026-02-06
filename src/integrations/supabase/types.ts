@@ -2031,6 +2031,143 @@ export type Database = {
         }
         Relationships: []
       }
+      speed_goals: {
+        Row: {
+          adjustment_history: Json | null
+          created_at: string
+          current_track: string
+          goal_distances: Json | null
+          id: string
+          last_adjustment_date: string | null
+          personal_bests: Json | null
+          sport: string
+          updated_at: string
+          user_id: string
+          weeks_without_improvement: number | null
+        }
+        Insert: {
+          adjustment_history?: Json | null
+          created_at?: string
+          current_track?: string
+          goal_distances?: Json | null
+          id?: string
+          last_adjustment_date?: string | null
+          personal_bests?: Json | null
+          sport: string
+          updated_at?: string
+          user_id: string
+          weeks_without_improvement?: number | null
+        }
+        Update: {
+          adjustment_history?: Json | null
+          created_at?: string
+          current_track?: string
+          goal_distances?: Json | null
+          id?: string
+          last_adjustment_date?: string | null
+          personal_bests?: Json | null
+          sport?: string
+          updated_at?: string
+          user_id?: string
+          weeks_without_improvement?: number | null
+        }
+        Relationships: []
+      }
+      speed_partner_timings: {
+        Row: {
+          created_at: string
+          distance: string
+          id: string
+          session_id: string
+          time_seconds: number
+          timed_by: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          distance: string
+          id?: string
+          session_id: string
+          time_seconds: number
+          timed_by?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          distance?: string
+          id?: string
+          session_id?: string
+          time_seconds?: number
+          timed_by?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "speed_partner_timings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "speed_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      speed_sessions: {
+        Row: {
+          body_feel_after: string | null
+          body_feel_before: string | null
+          created_at: string
+          distances: Json | null
+          drill_log: Json | null
+          id: string
+          is_break_day: boolean | null
+          notes: string | null
+          pain_areas: Json | null
+          readiness_score: number | null
+          rpe: number | null
+          session_date: string
+          session_number: number
+          sleep_rating: number | null
+          sport: string
+          user_id: string
+        }
+        Insert: {
+          body_feel_after?: string | null
+          body_feel_before?: string | null
+          created_at?: string
+          distances?: Json | null
+          drill_log?: Json | null
+          id?: string
+          is_break_day?: boolean | null
+          notes?: string | null
+          pain_areas?: Json | null
+          readiness_score?: number | null
+          rpe?: number | null
+          session_date?: string
+          session_number: number
+          sleep_rating?: number | null
+          sport: string
+          user_id: string
+        }
+        Update: {
+          body_feel_after?: string | null
+          body_feel_before?: string | null
+          created_at?: string
+          distances?: Json | null
+          drill_log?: Json | null
+          id?: string
+          is_break_day?: boolean | null
+          notes?: string | null
+          pain_areas?: Json | null
+          readiness_score?: number | null
+          rpe?: number | null
+          session_date?: string
+          session_number?: number
+          sleep_rating?: number | null
+          sport?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stress_assessments: {
         Row: {
           assessment_date: string | null
