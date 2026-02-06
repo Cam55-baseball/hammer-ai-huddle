@@ -1,89 +1,64 @@
 
-# Fix Plan: Block-Based Workout Support in CustomActivityDetailDialog
 
-## Problem
-
-When opening the "Fascia" custom activity (or any block-based workout), the app crashes with:
-
-```
-TypeError: exercises.forEach is not a function
-```
-
-This error originates in `CustomActivityDetailDialog.tsx` at line 28 in the `getAllCheckableIds` function.
+# Fix: Production Build Failure
 
 ## Root Cause
 
-The Elite Workout system stores exercises in two formats:
+The project has **5141 modules** with **no code splitting configuration**. This produces JS chunks well over 500KB, triggering Vite's chunk size warnings on stderr. The deployment pipeline interprets stderr output as a build failure, causing the "Publishing failed" error.
 
-1. **Traditional array format**: `exercises: [{ id, name, sets, reps, ... }, ...]`
-2. **Block-based format**: `exercises: { _useBlocks: true, blocks: [{ name, exercises: [...] }, ...] }`
+Additionally, several test-only packages (`@playwright/test`, `vitest`, `jsdom`, `@testing-library/*`, `baseline-browser-mapping`) are listed in `dependencies` instead of `devDependencies`, bloating the install step unnecessarily.
 
-The `getAllCheckableIds` function (lines 27-28) incorrectly assumes `exercises` is always an array:
+## Changes
 
-```typescript
-const exercises = (template.exercises as Exercise[]) || [];
-exercises.forEach(e => ids.push(`exercise_${e.id}`));  // CRASHES HERE
-```
+### 1. Add Code Splitting and Suppress Chunk Warnings (vite.config.ts)
 
-When `exercises` is a block-based object, calling `.forEach()` fails because objects don't have this method.
+Add `build` configuration with:
+- **`chunkSizeWarningLimit: 1500`** - Raises the threshold to prevent warnings from being emitted to stderr
+- **`rollupOptions.output.manualChunks`** - Splits the monolithic bundle into logical vendor chunks:
+  - `vendor-react`: react, react-dom, react-router-dom
+  - `vendor-ui`: All @radix-ui packages, class-variance-authority, tailwind-merge, clsx, cmdk, vaul, sonner
+  - `vendor-charts`: recharts
+  - `vendor-motion`: framer-motion
+  - `vendor-i18n`: i18next, react-i18next, i18next-browser-languagedetector
+  - `vendor-supabase`: @supabase/supabase-js
+  - `vendor-query`: @tanstack/react-query
+  - `vendor-fabric`: fabric (large canvas library, only used in 2 files)
+  - `vendor-date`: date-fns
+  - `vendor-dnd`: @dnd-kit packages
 
-## Solution
+### 2. Clean Up Dependencies (package.json)
 
-Update `getAllCheckableIds` to detect and handle both formats:
+Move test-only packages from `dependencies` to `devDependencies`:
+- `@playwright/test` (largest offender - downloads browser binaries)
+- `vitest`
+- `jsdom`
+- `@testing-library/jest-dom`
+- `@testing-library/react`
 
-1. For **traditional arrays**: iterate exercises directly
-2. For **block-based workouts**: iterate through `blocks[].exercises[]` to get all checkable exercise IDs
+Remove from direct dependencies entirely:
+- `baseline-browser-mapping` (transitive dependency of `browserslist`, not directly used)
 
-### Code Changes
+### 3. Update package-lock.json
 
-**File: `src/components/CustomActivityDetailDialog.tsx`**
+Regenerate the lock file to reflect the dependency changes cleanly.
 
-Update the `getAllCheckableIds` function (lines 26-28):
-
-```typescript
-// Handle block-based workout system
-if (template.exercises && typeof template.exercises === 'object' && '_useBlocks' in (template.exercises as any)) {
-  const blockData = template.exercises as unknown as { 
-    _useBlocks: boolean; 
-    blocks: Array<{ name: string; exercises: Exercise[] }> 
-  };
-  // Iterate through all blocks and their exercises
-  blockData.blocks?.forEach(block => {
-    block.exercises?.forEach(e => ids.push(`exercise_${e.id}`));
-  });
-} else if (Array.isArray(template.exercises)) {
-  // Traditional exercise array
-  (template.exercises as Exercise[]).forEach(e => ids.push(`exercise_${e.id}`));
-}
-```
-
-Additionally, add a new section to render block-based workouts in the dialog UI (after the traditional exercises section around line 266):
-
-```typescript
-{/* Block-Based Workout Section */}
-{template.exercises && typeof template.exercises === 'object' && '_useBlocks' in (template.exercises as any) && (
-  <div className="space-y-4">
-    {/* Render each block with its exercises as checkable items */}
-  </div>
-)}
-```
-
-## Files to Modify
+## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/components/CustomActivityDetailDialog.tsx` | Fix `getAllCheckableIds` + add block-based UI rendering |
+| `vite.config.ts` | Add `build.chunkSizeWarningLimit` and `rollupOptions.output.manualChunks` |
+| `package.json` | Move test deps to `devDependencies`, remove `baseline-browser-mapping` |
+| `package-lock.json` | Regenerated to match dependency changes |
 
-## Technical Notes
+## Why This Fixes the Build
 
-- The fix follows the same pattern already used in `CustomActivityCard.tsx`
-- Block exercises will be checkable just like traditional exercises
-- Each block will be displayed as a collapsible section with its exercises
+- Splitting chunks keeps individual files under the warning threshold, preventing stderr output
+- Removing test dependencies from production reduces install size by hundreds of MB
+- The deployment pipeline no longer sees stderr warnings and completes successfully
 
-## Success Criteria
+## No Impact on Functionality
 
-1. Clicking on "Fascia" (block-based workout) opens the detail dialog without error
-2. Block-based exercises are displayed organized by block name
-3. Each exercise within blocks can be checked off
-4. Progress counter shows total exercises across all blocks
-5. Traditional array-based activities continue to work unchanged
+- Code splitting only affects how JS is packaged for delivery (multiple smaller files vs one large file)
+- The app loads identically -- the browser fetches the chunks it needs
+- All existing features, components, and pages work exactly the same
+
