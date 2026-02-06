@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Target, ChevronRight, ChevronLeft, Sparkles, Trophy, TrendingUp, TrendingDown } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Target, ChevronRight, ChevronLeft, Sparkles, Trophy, TrendingUp, TrendingDown, PenLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWeeklyWellnessQuiz } from '@/hooks/useWeeklyWellnessQuiz';
 import { ConfettiEffect } from '@/components/bounce-back-bay/ConfettiEffect';
@@ -34,6 +35,7 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [weeklyGoalsText, setWeeklyGoalsText] = useState('');
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -42,13 +44,14 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
       setMoodTarget(lastWeekGoals?.target_mood_level || 4);
       setStressTarget(lastWeekGoals?.target_stress_level || 2);
       setDisciplineTarget(lastWeekGoals?.target_discipline_level || 4);
+      setWeeklyGoalsText('');
       setShowSuccess(false);
       setShowConfetti(false);
     }
   }, [open, lastWeekGoals]);
 
   const handleNext = () => {
-    if (step < 2) {
+    if (step < 3) {
       setStep(step + 1);
     }
   };
@@ -65,6 +68,7 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
       mood: moodTarget,
       stress: stressTarget,
       discipline: disciplineTarget,
+      goalsText: weeklyGoalsText,
     });
 
     if (result.success) {
@@ -249,13 +253,39 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
       color: 'text-amber-400',
       bgColor: 'from-amber-500/30 via-orange-500/20 to-red-500/30',
       render: () => renderSlider(
-        disciplineTarget,
+        disciplineTarget, 
         setDisciplineTarget,
         DISCIPLINE_EMOJIS,
-        DISCIPLINE_LABELS,
+        DISCIPLINE_LABELS, 
         'text-amber-400',
         lastWeekGoals?.target_discipline_level,
         lastWeekAverages.avgDiscipline
+      ),
+    },
+    {
+      titleKey: 'weeklyWellnessQuiz.step4Title',
+      descriptionKey: 'weeklyWellnessQuiz.step4Description',
+      color: 'text-cyan-400',
+      bgColor: 'from-cyan-500/30 via-sky-500/20 to-blue-500/30',
+      render: () => (
+        <div className="space-y-4">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="p-3 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-500/30">
+              <PenLine className="h-8 w-8 text-cyan-400" />
+            </div>
+          </div>
+          <Textarea
+            value={weeklyGoalsText}
+            onChange={(e) => setWeeklyGoalsText(e.target.value)}
+            placeholder={t('weeklyWellnessQuiz.goalsPlaceholder')}
+            rows={4}
+            maxLength={500}
+            className="bg-background/50 border-border/50 focus:border-cyan-500/50 resize-none"
+          />
+          <p className="text-xs text-muted-foreground text-center">
+            {weeklyGoalsText.length}/500
+          </p>
+        </div>
       ),
     },
   ];
@@ -458,7 +488,7 @@ export function WeeklyWellnessQuizDialog({ open, onOpenChange, onComplete }: Wee
                 {t('weeklyWellnessQuiz.back')}
               </Button>
 
-              {step < 2 ? (
+              {step < 3 ? (
                 <Button
                   onClick={handleNext}
                   className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold"

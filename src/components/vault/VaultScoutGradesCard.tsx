@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Star, ChevronDown, Lock, AlertCircle, TrendingUp, TrendingDown, Minus, BarChart3, Flame } from 'lucide-react';
+import { Star, ChevronDown, Lock, AlertCircle, TrendingUp, TrendingDown, Minus, BarChart3, Flame, Trophy } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import {
@@ -174,6 +174,7 @@ export function VaultScoutGradesCard({
   
   const [gradeValues, setGradeValues] = useState<Record<string, number[]>>(getInitialValues);
   const [notes, setNotes] = useState('');
+  const [longTermGoals, setLongTermGoals] = useState('');
 
   const latestGrade = grades[0];
   const canGradeToday = !latestGrade || 
@@ -481,6 +482,26 @@ export function VaultScoutGradesCard({
                     placeholder={t('vault.scoutGrades.notesPlaceholder')}
                     className="min-h-[80px]"
                   />
+                </div>
+
+                {/* Long-Term Goals (3 Years) */}
+                <div className="space-y-2 pt-3 border-t border-border">
+                  <Label className="text-sm font-bold flex items-center gap-2">
+                    <Trophy className="h-4 w-4 text-amber-500" />
+                    {t('vault.scoutGrades.longTermGoals')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('vault.scoutGrades.longTermGoalsDescription')}
+                  </p>
+                  <Textarea
+                    value={longTermGoals}
+                    onChange={(e) => setLongTermGoals(e.target.value)}
+                    placeholder={t('vault.scoutGrades.longTermGoalsPlaceholder')}
+                    rows={4}
+                    maxLength={1000}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground text-right">{longTermGoals.length}/1000</p>
                 </div>
 
                 {/* Save Button */}

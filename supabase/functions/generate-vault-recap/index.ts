@@ -106,6 +106,10 @@ serve(async (req) => {
       { data: viewedLessons },
       { data: nutritionStreak },
       { data: subModuleProgress },
+      // ATHLETE GOALS DATA
+      { data: weeklyWellnessGoals },
+      { data: performanceGoalsData },
+      { data: longTermGoalsData },
     ] = await Promise.all([
       supabase.from("vault_workout_notes").select("*").eq("user_id", user.id)
         .gte("entry_date", startDateStr).lte("entry_date", endDateStr),
@@ -167,6 +171,22 @@ serve(async (req) => {
       supabase.from("nutrition_streaks").select("*").eq("user_id", user.id).maybeSingle(),
       // PROGRAM PROGRESS
       supabase.from("sub_module_progress").select("*").eq("user_id", user.id),
+      // ATHLETE STATED GOALS
+      supabase.from("vault_weekly_wellness_quiz").select("weekly_goals_text, week_start_date")
+        .eq("user_id", user.id)
+        .gte("week_start_date", startDateStr)
+        .not("weekly_goals_text", "is", null)
+        .order("week_start_date", { ascending: false }),
+      supabase.from("vault_performance_tests").select("six_week_goals_text, test_date")
+        .eq("user_id", user.id)
+        .not("six_week_goals_text", "is", null)
+        .order("test_date", { ascending: false })
+        .limit(1),
+      supabase.from("vault_scout_grades").select("long_term_goals_text, graded_at")
+        .eq("user_id", user.id)
+        .not("long_term_goals_text", "is", null)
+        .order("graded_at", { ascending: false })
+        .limit(1),
     ]);
 
     // ========== WORKOUT ANALYSIS ==========
@@ -939,13 +959,33 @@ COMPREHENSIVE DATA ANALYSIS
 10. WELLNESS GOAL TRENDS
     ${goalsAnalysis.length > 0 ? `• Weeks with goals set: ${goalsAnalysis.length}\n   • Average Target Mood: ${avgTargetMood.toFixed(1)}/5` : '• No wellness goals set'}
 
-11. ATHLETE SELF-REFLECTIONS
+11. ATHLETE'S STATED GOALS
+═══════════════════════════════════════════════════════════════
+These are the athlete's own words about their goals. Use these to 
+personalize recommendations and assess progress toward what matters to THEM.
+
+WEEKLY GOALS (from past 6 weeks):
+    ${weeklyWellnessGoals?.filter((g: any) => g.weekly_goals_text).map((g: any) => `• Week of ${g.week_start_date}: "${g.weekly_goals_text}"`).join('\n    ') || '• No weekly goals recorded'}
+
+6-WEEK PERFORMANCE GOALS:
+    ${performanceGoalsData?.[0]?.six_week_goals_text ? `"${performanceGoalsData[0].six_week_goals_text}"` : 'Not set'}
+
+LONG-TERM GOALS (3-Year Vision):
+    ${longTermGoalsData?.[0]?.long_term_goals_text ? `"${longTermGoalsData[0].long_term_goals_text}"` : 'Not set'}
+
+CRITICAL: If the athlete has stated goals, your analysis MUST:
+1. Assess progress toward these specific goals
+2. Identify if current training aligns with their stated aspirations
+3. Call out any gaps between actions and goals
+4. Provide concrete steps to achieve their stated objectives
+
+12. ATHLETE SELF-REFLECTIONS
     What they did well: ${didWellReflections.slice(0, 3).join(' | ') || 'No reflections logged'}
     What they want to improve: ${improveReflections.slice(0, 3).join(' | ') || 'No reflections logged'}
     What they learned: ${learnedReflections.slice(0, 3).join(' | ') || 'No reflections logged'}
     Motivations: ${motivationReflections.slice(0, 2).join(' | ') || 'No motivations logged'}
 
-12. CUSTOM TRAINING ACTIVITIES (User-Designed Programs)
+13. CUSTOM TRAINING ACTIVITIES (User-Designed Programs)
 ═══════════════════════════════════════════════════════════════
 ${customActivityIsPrimary ? '⭐ THIS ATHLETE PRIMARILY TRAINS VIA SELF-DESIGNED ROUTINES ⭐' : ''}
 This athlete designs their own training routines. Treat these as EQUAL 
@@ -1016,7 +1056,7 @@ KID-FRIENDLY BODY LINE NAMES (use these):
 
 ═══════════════════════════════════════════════════════════════
 
-14. TEX VISION - VISUAL TRAINING ANALYSIS (E2E Integration)
+15. TEX VISION - VISUAL TRAINING ANALYSIS (E2E Integration)
 ═══════════════════════════════════════════════════════════════
     • Total Visual Training Sessions: ${totalTexSessions}
     • Average Accuracy: ${avgTexAccuracy.toFixed(1)}%
@@ -1031,7 +1071,7 @@ KID-FRIENDLY BODY LINE NAMES (use these):
 CORRELATION NOTE: Compare reaction time trends with sleep quality and mental readiness scores.
 Low sleep + declining reaction time = CNS fatigue indicator.
 
-15. VIDEO ANALYSIS - MECHANICAL PROGRESSION (E2E Integration)
+16. VIDEO ANALYSIS - MECHANICAL PROGRESSION (E2E Integration)
 ═══════════════════════════════════════════════════════════════
     • Total Videos Analyzed: ${totalVideosAnalyzed}
     ${Object.entries(videosByModule).map(([mod, data]) => 
@@ -1041,7 +1081,7 @@ Low sleep + declining reaction time = CNS fatigue indicator.
 CORRELATION NOTE: Compare video efficiency scores with physical readiness from check-ins.
 Higher physical readiness should correlate with better mechanics.
 
-16. MIND FUEL - MENTAL WELLNESS ENGAGEMENT (E2E Integration)
+17. MIND FUEL - MENTAL WELLNESS ENGAGEMENT (E2E Integration)
 ═══════════════════════════════════════════════════════════════
     • Mindfulness Sessions: ${mindfulnessSessions} (avg ${avgMindfulnessMinutes.toFixed(0)} min)
     • Emotion Check-Ins: ${emotionEntries}
@@ -1055,14 +1095,14 @@ Higher physical readiness should correlate with better mechanics.
 CORRELATION NOTE: Cross-reference dominant emotions with pain patterns and training performance.
 Anxiety spikes often precede muscle tension.
 
-17. HEALTH EDUCATION ENGAGEMENT (E2E Integration)
+18. HEALTH EDUCATION ENGAGEMENT (E2E Integration)
 ═══════════════════════════════════════════════════════════════
     • Daily Tips Viewed: ${tipsViewed}
     • Lessons Completed: ${lessonsCompleted}
     • Nutrition Streak: ${nutritionStreakDays} days
     • Badges Earned: ${nutritionBadges.join(', ') || 'None'}
 
-18. HYDRATION CONSISTENCY (E2E Integration)
+19. HYDRATION CONSISTENCY (E2E Integration)
 ═══════════════════════════════════════════════════════════════
     • Days Tracked: ${hydrationDays.size}
     • Average Daily Intake: ${avgDailyHydration.toFixed(0)} oz
@@ -1072,12 +1112,12 @@ Anxiety spikes often precede muscle tension.
 CORRELATION NOTE: Compare hydration with energy levels and physical readiness.
 Dehydration directly impacts CNS function and recovery.
 
-19. PROGRAM PROGRESS - Structured Training (E2E Integration)
+20. PROGRAM PROGRESS - Structured Training (E2E Integration)
 ═══════════════════════════════════════════════════════════════
     ${Object.entries(programProgress).map(([prog, data]: [string, any]) => 
       `• ${prog}: Week ${data.currentWeek}, ${data.weeksCompleted} weeks completed, Cycle ${data.totalCycles}`).join('\n    ') || '• No program progress tracked'}
 
-20. CROSS-SYSTEM CORRELATION ANALYSIS (CRITICAL - E2E KEY INSIGHT)
+21. CROSS-SYSTEM CORRELATION ANALYSIS (CRITICAL - E2E KEY INSIGHT)
 ═══════════════════════════════════════════════════════════════
 CONTEXT-ADAPTIVE PRIORITY: Analyze correlations with highest data volume first.
 

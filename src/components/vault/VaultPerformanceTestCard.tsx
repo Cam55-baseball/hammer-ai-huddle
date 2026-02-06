@@ -9,7 +9,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Activity, ChevronDown, TrendingUp, TrendingDown, Minus, Calendar, Lock, AlertCircle, Hand } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Activity, ChevronDown, TrendingUp, TrendingDown, Minus, Calendar, Lock, AlertCircle, Hand, Target } from 'lucide-react';
 
 interface PerformanceTest {
   id: string;
@@ -181,7 +182,7 @@ export function VaultPerformanceTestCard({
   const [justSaved, setJustSaved] = useState(false);
   const [selectedModule, setSelectedModule] = useState<string>('');
   const [testResults, setTestResults] = useState<Record<string, string>>({});
-  
+  const [sixWeekGoals, setSixWeekGoals] = useState('');
   // Handedness state - initialize from user profile if available
   const [throwingHand, setThrowingHand] = useState<string>(userProfile?.throwing_hand || '');
   const [battingSide, setBattingSide] = useState<string>(userProfile?.batting_side || '');
@@ -576,6 +577,23 @@ export function VaultPerformanceTestCard({
                     </div>
                   </div>
                 )}
+
+                {/* 6-Week Goals Prompt */}
+                <div className="space-y-2 pt-3 border-t border-border/50">
+                  <Label className="text-sm font-bold flex items-center gap-2">
+                    <Target className="h-4 w-4 text-cyan-500" />
+                    {t('vault.performance.sixWeekGoals')}
+                  </Label>
+                  <Textarea
+                    value={sixWeekGoals}
+                    onChange={(e) => setSixWeekGoals(e.target.value)}
+                    placeholder={t('vault.performance.sixWeekGoalsPlaceholder')}
+                    rows={3}
+                    maxLength={500}
+                    className="resize-none text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground text-right">{sixWeekGoals.length}/500</p>
+                </div>
 
                 <Button onClick={handleSave} disabled={saving || !selectedModule} size="sm" className="w-full">
                   {saving ? t('common.loading') : t('vault.performance.save')}

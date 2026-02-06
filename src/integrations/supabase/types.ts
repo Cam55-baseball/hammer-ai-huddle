@@ -3322,6 +3322,7 @@ export type Database = {
           next_entry_date: string | null
           previous_results: Json | null
           results: Json
+          six_week_goals_text: string | null
           sport: string
           test_date: string
           test_type: string
@@ -3334,6 +3335,7 @@ export type Database = {
           next_entry_date?: string | null
           previous_results?: Json | null
           results?: Json
+          six_week_goals_text?: string | null
           sport: string
           test_date?: string
           test_type: string
@@ -3346,6 +3348,7 @@ export type Database = {
           next_entry_date?: string | null
           previous_results?: Json | null
           results?: Json
+          six_week_goals_text?: string | null
           sport?: string
           test_date?: string
           test_type?: string
@@ -3515,6 +3518,7 @@ export type Database = {
           hitting_grade: number | null
           id: string
           leadership_grade: number | null
+          long_term_goals_text: string | null
           next_prompt_date: string | null
           notes: string | null
           offspeed_grade: number | null
@@ -3536,6 +3540,7 @@ export type Database = {
           hitting_grade?: number | null
           id?: string
           leadership_grade?: number | null
+          long_term_goals_text?: string | null
           next_prompt_date?: string | null
           notes?: string | null
           offspeed_grade?: number | null
@@ -3557,6 +3562,7 @@ export type Database = {
           hitting_grade?: number | null
           id?: string
           leadership_grade?: number | null
+          long_term_goals_text?: string | null
           next_prompt_date?: string | null
           notes?: string | null
           offspeed_grade?: number | null
@@ -3691,6 +3697,7 @@ export type Database = {
           target_stress_level: number | null
           user_id: string
           week_start_date: string
+          weekly_goals_text: string | null
         }
         Insert: {
           completed_at?: string | null
@@ -3702,6 +3709,7 @@ export type Database = {
           target_stress_level?: number | null
           user_id: string
           week_start_date: string
+          weekly_goals_text?: string | null
         }
         Update: {
           completed_at?: string | null
@@ -3713,6 +3721,7 @@ export type Database = {
           target_stress_level?: number | null
           user_id?: string
           week_start_date?: string
+          weekly_goals_text?: string | null
         }
         Relationships: []
       }
