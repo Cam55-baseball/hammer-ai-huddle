@@ -284,10 +284,10 @@ export function AIWorkoutRecommendations({ onUseWorkout }: AIWorkoutRecommendati
 
   return (
     <div className="border rounded-lg p-2 sm:p-4 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h3 className="font-bold text-sm">{t('aiRecommendations.title')}</h3>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <Sparkles className="h-5 w-5 text-primary shrink-0" />
+          <h3 className="font-bold text-sm truncate">{t('aiRecommendations.title')}</h3>
         </div>
         <div className="flex items-center gap-2">
           {lighterAlternatives.length > 0 && (
@@ -306,14 +306,14 @@ export function AIWorkoutRecommendations({ onUseWorkout }: AIWorkoutRecommendati
             size="sm"
             onClick={generateRecommendations}
             disabled={isLoading}
-            className="gap-2"
+            className="gap-1.5"
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            {isLoading ? t('aiRecommendations.generating') : t('aiRecommendations.generate')}
+            <span className="hidden sm:inline">{isLoading ? t('aiRecommendations.generating') : t('aiRecommendations.generate')}</span>
           </Button>
         </div>
       </div>
