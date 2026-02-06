@@ -5099,7 +5099,13 @@
       "generate": "워밍업 생성",
       "generating": "생성 중...",
       "addToStart": "시작에 추가",
-      "basedOn": "운동 기반"
+      "basedOn": "운동 기반",
+      "personalize": "개인화",
+      "personalizeHint": "목표, 포지션, 훈련 중점에 따라 맞춤화",
+      "personalizedFor": "개인화됨",
+      "addExercisesFirst": "먼저 운동을 추가하세요",
+      "rateLimited": "요청이 너무 많습니다. 잠시 기다려주세요.",
+      "paymentRequired": "AI 크레딧이 필요합니다. 지원팀에 문의하세요."
     }
   },
   "workoutTemplates": {

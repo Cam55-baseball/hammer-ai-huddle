@@ -5214,7 +5214,13 @@
       "generate": "ウォームアップを生成",
       "generating": "生成中...",
       "addToStart": "最初に追加",
-      "basedOn": "あなたのエクササイズに基づく"
+      "basedOn": "あなたのエクササイズに基づく",
+      "personalize": "パーソナライズ",
+      "personalizeHint": "目標、ポジション、トレーニングフォーカスに基づいてカスタマイズ",
+      "personalizedFor": "パーソナライズ済み",
+      "addExercisesFirst": "まずエクササイズを追加してください",
+      "rateLimited": "リクエストが多すぎます。少々お待ちください。",
+      "paymentRequired": "AIクレジットが必要です。サポートにお問い合わせください。"
     }
   },
   "workoutTemplates": {

@@ -5815,7 +5815,13 @@
       "generate": "Générer Échauffement",
       "generating": "Génération...",
       "addToStart": "Ajouter au Début",
-      "basedOn": "Basé sur vos exercices"
+      "basedOn": "Basé sur vos exercices",
+      "personalize": "Personnaliser",
+      "personalizeHint": "Personnaliser selon vos objectifs, position et focus d'entraînement",
+      "personalizedFor": "Personnalisé",
+      "addExercisesFirst": "Ajoutez d'abord des exercices",
+      "rateLimited": "Trop de demandes. Patientez un instant.",
+      "paymentRequired": "Crédits IA nécessaires. Contactez le support."
     }
   },
   "workoutTemplates": {

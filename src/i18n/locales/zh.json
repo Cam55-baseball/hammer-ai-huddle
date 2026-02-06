@@ -5058,7 +5058,13 @@
       "generate": "生成热身",
       "generating": "生成中...",
       "addToStart": "添加到开头",
-      "basedOn": "基于您的练习"
+      "basedOn": "基于您的练习",
+      "personalize": "个性化",
+      "personalizeHint": "根据您的目标、位置和训练重点进行定制",
+      "personalizedFor": "已个性化",
+      "addExercisesFirst": "请先添加练习",
+      "rateLimited": "请求过多，请稍候再试。",
+      "paymentRequired": "需要AI积分，请联系支持。"
     }
   },
   "workoutTemplates": {

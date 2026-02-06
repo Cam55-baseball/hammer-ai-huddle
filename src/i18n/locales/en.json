@@ -6840,7 +6840,13 @@
       "generate": "Generate Warmup",
       "generating": "Generating...",
       "addToStart": "Add to Start",
-      "basedOn": "Based on your workout exercises"
+      "basedOn": "Based on your workout exercises",
+      "personalize": "Personalize",
+      "personalizeHint": "Customize based on your goals, position, and training focus",
+      "personalizedFor": "Personalized",
+      "addExercisesFirst": "Add exercises to your workout first",
+      "rateLimited": "Too many requests. Please wait a moment.",
+      "paymentRequired": "AI credits needed. Please contact support."
     }
   },
   "workoutTemplates": {
