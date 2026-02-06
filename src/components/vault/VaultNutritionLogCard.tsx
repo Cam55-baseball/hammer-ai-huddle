@@ -779,17 +779,17 @@ export function VaultNutritionLogCard({
 
             {/* Energy Level with number labels */}
             <div className="space-y-2">
-              <Label className="text-xs">{t('vault.nutrition.energyLevel')}: {energyLevel[0]}/10</Label>
+              <Label className="text-xs">{t('vault.nutrition.energyLevel')}: {energyLevel[0]}/5</Label>
               <Slider
                 value={energyLevel}
                 onValueChange={setEnergyLevel}
                 min={1}
-                max={10}
+                max={5}
                 step={1}
                 className="py-2"
               />
               <div className="flex justify-between px-1">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                {[1, 2, 3, 4, 5].map((num) => (
                   <span 
                     key={num} 
                     className={`text-[10px] w-4 text-center ${
