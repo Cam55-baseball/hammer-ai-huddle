@@ -77,6 +77,7 @@ const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 const MyCustomActivities = lazyWithRetry(() => import("./pages/MyCustomActivities"));
 const SharedActivity = lazyWithRetry(() => import("./pages/SharedActivity"));
 const Calendar = lazyWithRetry(() => import("./pages/Calendar"));
+const SpeedLab = lazyWithRetry(() => import("./pages/SpeedLab"));
 
 const queryClient = new QueryClient();
 
@@ -133,6 +134,7 @@ const App = () => {
               <Route path="/my-custom-activities" element={<MyCustomActivities />} />
               <Route path="/shared-activity/:shareCode" element={<SharedActivity />} />
               <Route path="/calendar" element={<Calendar />} />
+              <Route path="/speed-lab" element={<SpeedLab />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

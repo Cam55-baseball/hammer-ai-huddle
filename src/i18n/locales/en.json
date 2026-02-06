@@ -7315,5 +7315,149 @@
       "elitePresets": "Elite Presets",
       "loadDashboard": "Load Dashboard"
     }
+  },
+  "speedLab": {
+    "title": "Speed Lab",
+    "subtitle": "Build elite speed, protect your body",
+    "access": {
+      "title": "Speed Lab",
+      "message": "Speed Lab unlocks with the Throwing module. Subscribe to start your speed journey.",
+      "viewPlans": "View Plans"
+    },
+    "onboarding": {
+      "title": "Speed Lab",
+      "subtitle": "Build elite speed with structured training, recovery science, and professional drills.",
+      "start": "Start My Speed Journey",
+      "fasciaNote": "Fast bodies are springy bodies."
+    },
+    "checkIn": {
+      "title": "Speed Check-In",
+      "subtitle": "30 seconds to dial in your body",
+      "sleep": "How did you sleep?",
+      "bodyFeel": "How does your body feel?",
+      "good": "Good",
+      "okay": "Okay",
+      "tight": "Tight",
+      "pain": "Any pain?",
+      "hidePainMap": "Hide",
+      "showPainMap": "Tap to Mark",
+      "continue": "Continue"
+    },
+    "focus": {
+      "title": "Today's Speed Focus",
+      "fascia": "Fast bodies are springy bodies.",
+      "letsGo": "Let's Go"
+    },
+    "drills": {
+      "title": "Do The Work",
+      "subtitle": "Complete each drill below",
+      "logResults": "Log Results →"
+    },
+    "categories": {
+      "activation": "Warm-Up",
+      "isometric": "Preload",
+      "sprint_mechanics": "Sprint",
+      "plyometric": "Plyo",
+      "resisted": "Resisted",
+      "cool_down": "Cool-Down",
+      "break_day": "Recovery"
+    },
+    "logResults": {
+      "title": "Log Your Times",
+      "subtitle": "Enter your sprint times in seconds",
+      "partnerMode": "Partner Mode",
+      "partnerModeDesc": "Have a coach or parent time you",
+      "startTimer": "Timer",
+      "bodyFeelAfter": "How does your body feel now?",
+      "saving": "Saving...",
+      "finish": "Complete Session ✓"
+    },
+    "timer": {
+      "seconds": "seconds",
+      "start": "START",
+      "stop": "STOP",
+      "reset": "Reset",
+      "save": "Save Time",
+      "cancel": "Cancel timer"
+    },
+    "rpe": {
+      "title": "How hard was that?",
+      "easy": "Easy",
+      "maxEffort": "Max",
+      "level1": "Super Easy",
+      "level2": "Very Easy",
+      "level3": "Easy",
+      "level4": "Moderate",
+      "level5": "Somewhat Hard",
+      "level6": "Hard",
+      "level7": "Very Hard",
+      "level8": "Really Hard",
+      "level9": "Almost Max",
+      "level10": "Max Effort"
+    },
+    "breakDay": {
+      "title": "Today We Protect Speed",
+      "message": "Your body is telling us it needs a lighter day. Smart athletes listen. This session focuses on recovery and mobility so you come back faster.",
+      "fasciaInsight": "Recovery is where speed is built.",
+      "complete": "Complete Recovery Session",
+      "override": "I feel ready to train",
+      "overrideTitle": "Override Break Day?",
+      "overrideMessage": "Your body signals suggest a recovery day. Are you sure you want to do a full speed session? Listen to your body — there is no shame in protecting it.",
+      "stayRecovery": "Stay on Recovery",
+      "confirmOverride": "Yes, I'm Ready"
+    },
+    "track": {
+      "yourTrack": "Your Speed Track",
+      "goal": "Goal",
+      "plateau": "Your body is adapting. We're shifting focus to help speed stick."
+    },
+    "tracks": {
+      "building_speed": "Building Speed",
+      "competitive_speed": "Competitive Speed",
+      "elite_speed": "Elite Speed",
+      "world_class": "World Class",
+      "building_speed_goal": "Move into Competitive Speed",
+      "competitive_speed_goal": "Move into Elite Speed",
+      "elite_speed_goal": "Move into World Class",
+      "world_class_goal": "Maintain World Class"
+    },
+    "trend": {
+      "improving": "Improving",
+      "maintaining": "Steady",
+      "needs_attention": "Needs Work"
+    },
+    "stats": {
+      "streak": "Streak",
+      "longest": "Best",
+      "total": "Total"
+    },
+    "nextSession": {
+      "title": "Next Session",
+      "locked": "Recovery builds speed.",
+      "breakDay": "Today we protect speed.",
+      "startRecovery": "Start Recovery Session",
+      "start": "Start Session"
+    },
+    "history": {
+      "title": "Session History",
+      "breakDay": "Recovery"
+    },
+    "session": {
+      "exit": "Exit",
+      "number": "Session"
+    },
+    "complete": {
+      "title": "Session Complete!",
+      "newPB": "New Personal Best!",
+      "lockMessage": "Next speed session unlocks in 12:00:00",
+      "recoveryMessage": "Recovery builds speed.",
+      "fasciaInsight": "Fast bodies are springy bodies.",
+      "done": "Done"
+    },
+    "adjustment": {
+      "title": "Speed Focus Shift",
+      "message": "Your body is adapting. We're shifting focus to help speed stick. This is normal — it means your nervous system is building a stronger foundation."
+    },
+    "disclaimer": "Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain."
   }
 }

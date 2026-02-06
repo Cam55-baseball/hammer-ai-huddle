@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -204,7 +204,20 @@ export function AppSidebar() {
         }
       ]
     },
-    { key: 'throwing', title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target },
+    { 
+      key: 'throwing', 
+      title: t('dashboard.modules.throwingAnalysis'), 
+      url: `/analyze/throwing?sport=${selectedSport}`, 
+      icon: Target,
+      subModules: [
+        {
+          title: t('speedLab.title', 'Speed Lab'),
+          url: "/speed-lab",
+          icon: Zap,
+          description: t('speedLab.subtitle', 'Build elite speed, protect your body')
+        }
+      ]
+    },
     { key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked },
   ];
 
