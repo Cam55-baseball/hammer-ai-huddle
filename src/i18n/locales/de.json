@@ -6142,5 +6142,149 @@
       "elitePresets": "Elite-Presets",
       "loadDashboard": "Last-Dashboard"
     }
+  },
+  "speedLab": {
+    "title": "Speed Lab",
+    "subtitle": "Baue Elite-Geschwindigkeit auf, schütze deinen Körper",
+    "access": {
+      "title": "Speed Lab",
+      "message": "Speed Lab wird mit dem Wurfmodul freigeschaltet. Abonniere, um deine Speed-Reise zu starten.",
+      "viewPlans": "Pläne ansehen"
+    },
+    "onboarding": {
+      "title": "Speed Lab",
+      "subtitle": "Baue Elite-Geschwindigkeit auf mit strukturiertem Training, Regenerationswissenschaft und professionellen Übungen.",
+      "start": "Starte meine Speed-Reise",
+      "fasciaNote": "Schnelle Körper sind federnde Körper."
+    },
+    "checkIn": {
+      "title": "Speed Check-In",
+      "subtitle": "30 Sekunden, um deinen Körper einzustellen",
+      "sleep": "Wie hast du geschlafen?",
+      "bodyFeel": "Wie fühlt sich dein Körper an?",
+      "good": "Gut",
+      "okay": "Okay",
+      "tight": "Steif",
+      "pain": "Schmerzen?",
+      "hidePainMap": "Ausblenden",
+      "showPainMap": "Tippe zum Markieren",
+      "continue": "Weiter"
+    },
+    "focus": {
+      "title": "Heutiger Speed-Fokus",
+      "fascia": "Schnelle Körper sind federnde Körper.",
+      "letsGo": "Los geht's"
+    },
+    "drills": {
+      "title": "An die Arbeit",
+      "subtitle": "Führe jede Übung unten aus",
+      "logResults": "Ergebnisse eintragen →"
+    },
+    "categories": {
+      "activation": "Aufwärmen",
+      "isometric": "Vorbelastung",
+      "sprint_mechanics": "Sprint",
+      "plyometric": "Plyo",
+      "resisted": "Widerstand",
+      "cool_down": "Cool-Down",
+      "break_day": "Erholung"
+    },
+    "logResults": {
+      "title": "Trage deine Zeiten ein",
+      "subtitle": "Gib deine Sprintzeiten in Sekunden ein",
+      "partnerMode": "Partner-Modus",
+      "partnerModeDesc": "Lass dich von einem Trainer oder Elternteil stoppen",
+      "startTimer": "Timer",
+      "bodyFeelAfter": "Wie fühlt sich dein Körper jetzt an?",
+      "saving": "Speichern...",
+      "finish": "Einheit abschließen ✓"
+    },
+    "timer": {
+      "seconds": "Sekunden",
+      "start": "START",
+      "stop": "STOPP",
+      "reset": "Zurücksetzen",
+      "save": "Zeit speichern",
+      "cancel": "Timer abbrechen"
+    },
+    "rpe": {
+      "title": "Wie anstrengend war das?",
+      "easy": "Leicht",
+      "maxEffort": "Maximum",
+      "level1": "Super Leicht",
+      "level2": "Sehr Leicht",
+      "level3": "Leicht",
+      "level4": "Mäßig",
+      "level5": "Etwas Schwer",
+      "level6": "Schwer",
+      "level7": "Sehr Schwer",
+      "level8": "Richtig Schwer",
+      "level9": "Fast Maximum",
+      "level10": "Maximale Anstrengung"
+    },
+    "breakDay": {
+      "title": "Heute schützen wir die Geschwindigkeit",
+      "message": "Dein Körper sagt uns, dass er einen leichteren Tag braucht. Schlaue Sportler hören zu. Diese Einheit konzentriert sich auf Erholung und Mobilität, damit du schneller zurückkommst.",
+      "fasciaInsight": "In der Erholung wird Geschwindigkeit aufgebaut.",
+      "complete": "Erholungseinheit abschließen",
+      "override": "Ich bin bereit zu trainieren",
+      "overrideTitle": "Erholungstag überschreiben?",
+      "overrideMessage": "Deine Körpersignale deuten auf einen Erholungstag hin. Bist du sicher, dass du eine volle Speed-Einheit machen willst? Höre auf deinen Körper — es ist keine Schande, ihn zu schützen.",
+      "stayRecovery": "Bei Erholung bleiben",
+      "confirmOverride": "Ja, ich bin bereit"
+    },
+    "track": {
+      "yourTrack": "Dein Speed-Track",
+      "goal": "Ziel",
+      "plateau": "Dein Körper passt sich an. Wir verlagern den Fokus, damit Geschwindigkeit bleibt."
+    },
+    "tracks": {
+      "building_speed": "Geschwindigkeit aufbauen",
+      "competitive_speed": "Wettkampf-Geschwindigkeit",
+      "elite_speed": "Elite-Geschwindigkeit",
+      "world_class": "Weltklasse",
+      "building_speed_goal": "In Wettkampf-Geschwindigkeit aufsteigen",
+      "competitive_speed_goal": "In Elite-Geschwindigkeit aufsteigen",
+      "elite_speed_goal": "In Weltklasse aufsteigen",
+      "world_class_goal": "Weltklasse halten"
+    },
+    "trend": {
+      "improving": "Verbesserung",
+      "maintaining": "Stabil",
+      "needs_attention": "Braucht Arbeit"
+    },
+    "stats": {
+      "streak": "Serie",
+      "longest": "Beste",
+      "total": "Gesamt"
+    },
+    "nextSession": {
+      "title": "Nächste Einheit",
+      "locked": "Erholung baut Geschwindigkeit auf.",
+      "breakDay": "Heute schützen wir die Geschwindigkeit.",
+      "startRecovery": "Erholungseinheit starten",
+      "start": "Einheit starten"
+    },
+    "history": {
+      "title": "Einheit-Verlauf",
+      "breakDay": "Erholung"
+    },
+    "session": {
+      "exit": "Beenden",
+      "number": "Einheit"
+    },
+    "complete": {
+      "title": "Einheit abgeschlossen!",
+      "newPB": "Neue persönliche Bestzeit!",
+      "lockMessage": "Nächste Speed-Einheit wird in 12:00:00 freigeschaltet",
+      "recoveryMessage": "Erholung baut Geschwindigkeit auf.",
+      "fasciaInsight": "Schnelle Körper sind federnde Körper.",
+      "done": "Fertig"
+    },
+    "adjustment": {
+      "title": "Speed-Fokus-Verschiebung",
+      "message": "Dein Körper passt sich an. Wir verlagern den Fokus, damit Geschwindigkeit bleibt. Das ist normal — es bedeutet, dass dein Nervensystem ein stärkeres Fundament baut."
+    },
+    "disclaimer": "Konsultiere immer einen qualifizierten Gesundheitsexperten, bevor du ein Trainingsprogramm beginnst. Höre auf deinen Körper und stoppe sofort, wenn du Schmerzen verspürst."
   }
 }

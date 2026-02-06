@@ -5541,5 +5541,149 @@
       "elitePresets": "エリートプリセット",
       "loadDashboard": "負荷ダッシュボード"
     }
+  },
+  "speedLab": {
+    "title": "Speed Lab",
+    "subtitle": "エリートスピードを構築し、体を守る",
+    "access": {
+      "title": "Speed Lab",
+      "message": "Speed Labはスローイングモジュールでアンロックされます。スピードの旅を始めるにはサブスクリプションが必要です。",
+      "viewPlans": "プランを見る"
+    },
+    "onboarding": {
+      "title": "Speed Lab",
+      "subtitle": "構造化されたトレーニング、回復科学、プロフェッショナルなドリルでエリートスピードを構築しよう。",
+      "start": "スピードの旅を始める",
+      "fasciaNote": "速い体はバネのある体。"
+    },
+    "checkIn": {
+      "title": "スピードチェックイン",
+      "subtitle": "30秒で体の状態を確認",
+      "sleep": "睡眠はどうでしたか？",
+      "bodyFeel": "体の調子は？",
+      "good": "良い",
+      "okay": "まあまあ",
+      "tight": "硬い",
+      "pain": "痛みはある？",
+      "hidePainMap": "隠す",
+      "showPainMap": "タップしてマーク",
+      "continue": "続ける"
+    },
+    "focus": {
+      "title": "今日のスピードフォーカス",
+      "fascia": "速い体はバネのある体。",
+      "letsGo": "さあ行こう！"
+    },
+    "drills": {
+      "title": "トレーニング開始",
+      "subtitle": "下の各ドリルを完了しよう",
+      "logResults": "結果を記録 →"
+    },
+    "categories": {
+      "activation": "ウォームアップ",
+      "isometric": "プリロード",
+      "sprint_mechanics": "スプリント",
+      "plyometric": "プライオ",
+      "resisted": "レジステッド",
+      "cool_down": "クールダウン",
+      "break_day": "リカバリー"
+    },
+    "logResults": {
+      "title": "タイムを記録",
+      "subtitle": "スプリントタイムを秒で入力",
+      "partnerMode": "パートナーモード",
+      "partnerModeDesc": "コーチや保護者にタイムを計ってもらおう",
+      "startTimer": "タイマー",
+      "bodyFeelAfter": "今の体の調子は？",
+      "saving": "保存中...",
+      "finish": "セッション完了 ✓"
+    },
+    "timer": {
+      "seconds": "秒",
+      "start": "スタート",
+      "stop": "ストップ",
+      "reset": "リセット",
+      "save": "タイムを保存",
+      "cancel": "タイマーをキャンセル"
+    },
+    "rpe": {
+      "title": "どのくらいきつかった？",
+      "easy": "楽",
+      "maxEffort": "最大",
+      "level1": "超楽",
+      "level2": "とても楽",
+      "level3": "楽",
+      "level4": "普通",
+      "level5": "ちょっときつい",
+      "level6": "きつい",
+      "level7": "かなりきつい",
+      "level8": "すごくきつい",
+      "level9": "ほぼ限界",
+      "level10": "全力"
+    },
+    "breakDay": {
+      "title": "今日はスピードを守る日",
+      "message": "体が軽めの日を必要としています。賢いアスリートは体の声を聞きます。このセッションは回復とモビリティに集中し、より速く戻れるようにします。",
+      "fasciaInsight": "回復こそがスピードを作る。",
+      "complete": "リカバリーセッションを完了",
+      "override": "トレーニングする準備ができています",
+      "overrideTitle": "休息日をオーバーライドしますか？",
+      "overrideMessage": "体のシグナルは回復日を示唆しています。フルスピードセッションを行いますか？体の声を聞いて — 体を守ることに恥はありません。",
+      "stayRecovery": "リカバリーを続ける",
+      "confirmOverride": "はい、準備できています"
+    },
+    "track": {
+      "yourTrack": "あなたのスピードトラック",
+      "goal": "目標",
+      "plateau": "体が適応しています。スピードが定着するようフォーカスを調整します。"
+    },
+    "tracks": {
+      "building_speed": "スピード構築",
+      "competitive_speed": "競技スピード",
+      "elite_speed": "エリートスピード",
+      "world_class": "ワールドクラス",
+      "building_speed_goal": "競技スピードへ進む",
+      "competitive_speed_goal": "エリートスピードへ進む",
+      "elite_speed_goal": "ワールドクラスへ進む",
+      "world_class_goal": "ワールドクラスを維持"
+    },
+    "trend": {
+      "improving": "向上中",
+      "maintaining": "安定",
+      "needs_attention": "要改善"
+    },
+    "stats": {
+      "streak": "連続",
+      "longest": "最高",
+      "total": "合計"
+    },
+    "nextSession": {
+      "title": "次のセッション",
+      "locked": "回復がスピードを作る。",
+      "breakDay": "今日はスピードを守る。",
+      "startRecovery": "リカバリーセッションを開始",
+      "start": "セッションを開始"
+    },
+    "history": {
+      "title": "セッション履歴",
+      "breakDay": "リカバリー"
+    },
+    "session": {
+      "exit": "終了",
+      "number": "セッション"
+    },
+    "complete": {
+      "title": "セッション完了！",
+      "newPB": "自己ベスト更新！",
+      "lockMessage": "次のスピードセッションは12:00:00後にアンロック",
+      "recoveryMessage": "回復がスピードを作る。",
+      "fasciaInsight": "速い体はバネのある体。",
+      "done": "完了"
+    },
+    "adjustment": {
+      "title": "スピードフォーカスの調整",
+      "message": "体が適応しています。スピードが定着するようフォーカスを調整します。これは正常です — 神経系がより強い基盤を構築していることを意味します。"
+    },
+    "disclaimer": "運動プログラムを始める前に、必ず資格のある医療専門家に相談してください。体の声を聞き、痛みを感じたらすぐに中止してください。"
   }
 }

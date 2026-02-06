@@ -6142,5 +6142,149 @@
       "elitePresets": "Presets Elite",
       "loadDashboard": "Tableau de Charge"
     }
+  },
+  "speedLab": {
+    "title": "Speed Lab",
+    "subtitle": "Construis une vitesse d'élite, protège ton corps",
+    "access": {
+      "title": "Speed Lab",
+      "message": "Speed Lab se débloque avec le module Lancer. Abonne-toi pour commencer ton parcours vitesse.",
+      "viewPlans": "Voir les Plans"
+    },
+    "onboarding": {
+      "title": "Speed Lab",
+      "subtitle": "Construis une vitesse d'élite avec un entraînement structuré, la science de la récupération et des exercices professionnels.",
+      "start": "Commencer Mon Parcours Vitesse",
+      "fasciaNote": "Les corps rapides sont des corps élastiques."
+    },
+    "checkIn": {
+      "title": "Check-In Vitesse",
+      "subtitle": "30 secondes pour connecter avec ton corps",
+      "sleep": "Comment as-tu dormi ?",
+      "bodyFeel": "Comment se sent ton corps ?",
+      "good": "Bien",
+      "okay": "Correct",
+      "tight": "Raide",
+      "pain": "Des douleurs ?",
+      "hidePainMap": "Masquer",
+      "showPainMap": "Appuie pour marquer",
+      "continue": "Continuer"
+    },
+    "focus": {
+      "title": "Focus Vitesse du Jour",
+      "fascia": "Les corps rapides sont des corps élastiques.",
+      "letsGo": "C'est parti !"
+    },
+    "drills": {
+      "title": "Au Travail",
+      "subtitle": "Complète chaque exercice ci-dessous",
+      "logResults": "Enregistrer les Résultats →"
+    },
+    "categories": {
+      "activation": "Échauffement",
+      "isometric": "Précharge",
+      "sprint_mechanics": "Sprint",
+      "plyometric": "Plyo",
+      "resisted": "Résisté",
+      "cool_down": "Retour au calme",
+      "break_day": "Récupération"
+    },
+    "logResults": {
+      "title": "Enregistre tes Temps",
+      "subtitle": "Entre tes temps de sprint en secondes",
+      "partnerMode": "Mode Partenaire",
+      "partnerModeDesc": "Fais-toi chronométrer par un entraîneur ou un parent",
+      "startTimer": "Chrono",
+      "bodyFeelAfter": "Comment se sent ton corps maintenant ?",
+      "saving": "Enregistrement...",
+      "finish": "Terminer la Séance ✓"
+    },
+    "timer": {
+      "seconds": "secondes",
+      "start": "DÉPART",
+      "stop": "ARRÊT",
+      "reset": "Réinitialiser",
+      "save": "Enregistrer le Temps",
+      "cancel": "Annuler le chrono"
+    },
+    "rpe": {
+      "title": "C'était difficile ?",
+      "easy": "Facile",
+      "maxEffort": "Maximum",
+      "level1": "Super Facile",
+      "level2": "Très Facile",
+      "level3": "Facile",
+      "level4": "Modéré",
+      "level5": "Un Peu Difficile",
+      "level6": "Difficile",
+      "level7": "Très Difficile",
+      "level8": "Vraiment Difficile",
+      "level9": "Presque Maximum",
+      "level10": "Effort Maximum"
+    },
+    "breakDay": {
+      "title": "Aujourd'hui on Protège la Vitesse",
+      "message": "Ton corps nous dit qu'il a besoin d'une journée plus légère. Les athlètes intelligents écoutent. Cette séance se concentre sur la récupération et la mobilité pour que tu reviennes plus rapide.",
+      "fasciaInsight": "La récupération, c'est là que la vitesse se construit.",
+      "complete": "Terminer la Séance de Récupération",
+      "override": "Je me sens prêt à m'entraîner",
+      "overrideTitle": "Annuler le jour de récupération ?",
+      "overrideMessage": "Les signaux de ton corps suggèrent un jour de récupération. Es-tu sûr de vouloir faire une séance de vitesse complète ? Écoute ton corps — il n'y a aucune honte à le protéger.",
+      "stayRecovery": "Rester en Récupération",
+      "confirmOverride": "Oui, je suis prêt"
+    },
+    "track": {
+      "yourTrack": "Ton Track Vitesse",
+      "goal": "Objectif",
+      "plateau": "Ton corps s'adapte. On change de focus pour que la vitesse tienne."
+    },
+    "tracks": {
+      "building_speed": "Construction de Vitesse",
+      "competitive_speed": "Vitesse Compétitive",
+      "elite_speed": "Vitesse Élite",
+      "world_class": "Classe Mondiale",
+      "building_speed_goal": "Passer en Vitesse Compétitive",
+      "competitive_speed_goal": "Passer en Vitesse Élite",
+      "elite_speed_goal": "Passer en Classe Mondiale",
+      "world_class_goal": "Maintenir la Classe Mondiale"
+    },
+    "trend": {
+      "improving": "En progression",
+      "maintaining": "Stable",
+      "needs_attention": "À travailler"
+    },
+    "stats": {
+      "streak": "Série",
+      "longest": "Meilleure",
+      "total": "Total"
+    },
+    "nextSession": {
+      "title": "Prochaine Séance",
+      "locked": "La récupération construit la vitesse.",
+      "breakDay": "Aujourd'hui on protège la vitesse.",
+      "startRecovery": "Commencer la Séance de Récupération",
+      "start": "Commencer la Séance"
+    },
+    "history": {
+      "title": "Historique des Séances",
+      "breakDay": "Récupération"
+    },
+    "session": {
+      "exit": "Quitter",
+      "number": "Séance"
+    },
+    "complete": {
+      "title": "Séance Terminée !",
+      "newPB": "Nouveau Record Personnel !",
+      "lockMessage": "La prochaine séance de vitesse se débloque dans 12:00:00",
+      "recoveryMessage": "La récupération construit la vitesse.",
+      "fasciaInsight": "Les corps rapides sont des corps élastiques.",
+      "done": "Terminé"
+    },
+    "adjustment": {
+      "title": "Changement de Focus Vitesse",
+      "message": "Ton corps s'adapte. On change de focus pour que la vitesse tienne. C'est normal — ça veut dire que ton système nerveux construit une base plus solide."
+    },
+    "disclaimer": "Consulte toujours un professionnel de santé qualifié avant de commencer tout programme d'exercice. Écoute ton corps et arrête-toi immédiatement si tu ressens de la douleur."
   }
 }

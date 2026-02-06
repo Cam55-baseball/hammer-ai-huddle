@@ -5441,5 +5441,149 @@
       "elitePresets": "Elite Presets",
       "loadDashboard": "Belasting Dashboard"
     }
+  },
+  "speedLab": {
+    "title": "Speed Lab",
+    "subtitle": "Bouw elite snelheid, bescherm je lichaam",
+    "access": {
+      "title": "Speed Lab",
+      "message": "Speed Lab wordt ontgrendeld met de Werpmodule. Abonneer je om je snelheidsreis te starten.",
+      "viewPlans": "Bekijk Plannen"
+    },
+    "onboarding": {
+      "title": "Speed Lab",
+      "subtitle": "Bouw elite snelheid met gestructureerde training, herstelwetenschap en professionele oefeningen.",
+      "start": "Begin Mijn Snelheidsreis",
+      "fasciaNote": "Snelle lichamen zijn veerkrachtige lichamen."
+    },
+    "checkIn": {
+      "title": "Snelheid Check-In",
+      "subtitle": "30 seconden om je lichaam af te stemmen",
+      "sleep": "Hoe heb je geslapen?",
+      "bodyFeel": "Hoe voelt je lichaam?",
+      "good": "Goed",
+      "okay": "Oké",
+      "tight": "Stijf",
+      "pain": "Pijn?",
+      "hidePainMap": "Verbergen",
+      "showPainMap": "Tik om te markeren",
+      "continue": "Doorgaan"
+    },
+    "focus": {
+      "title": "Snelheidsfocus van Vandaag",
+      "fascia": "Snelle lichamen zijn veerkrachtige lichamen.",
+      "letsGo": "Laten we gaan!"
+    },
+    "drills": {
+      "title": "Aan het Werk",
+      "subtitle": "Voltooi elke oefening hieronder",
+      "logResults": "Resultaten Noteren →"
+    },
+    "categories": {
+      "activation": "Warming-up",
+      "isometric": "Voorbelasting",
+      "sprint_mechanics": "Sprint",
+      "plyometric": "Plyo",
+      "resisted": "Weerstand",
+      "cool_down": "Cooling-down",
+      "break_day": "Herstel"
+    },
+    "logResults": {
+      "title": "Noteer je Tijden",
+      "subtitle": "Voer je sprinttijden in seconden in",
+      "partnerMode": "Partner Modus",
+      "partnerModeDesc": "Laat een coach of ouder je timen",
+      "startTimer": "Timer",
+      "bodyFeelAfter": "Hoe voelt je lichaam nu?",
+      "saving": "Opslaan...",
+      "finish": "Sessie Voltooien ✓"
+    },
+    "timer": {
+      "seconds": "seconden",
+      "start": "START",
+      "stop": "STOP",
+      "reset": "Reset",
+      "save": "Tijd Opslaan",
+      "cancel": "Timer annuleren"
+    },
+    "rpe": {
+      "title": "Hoe zwaar was dat?",
+      "easy": "Makkelijk",
+      "maxEffort": "Maximum",
+      "level1": "Super Makkelijk",
+      "level2": "Heel Makkelijk",
+      "level3": "Makkelijk",
+      "level4": "Matig",
+      "level5": "Enigszins Zwaar",
+      "level6": "Zwaar",
+      "level7": "Heel Zwaar",
+      "level8": "Echt Zwaar",
+      "level9": "Bijna Maximum",
+      "level10": "Maximale Inspanning"
+    },
+    "breakDay": {
+      "title": "Vandaag Beschermen We Snelheid",
+      "message": "Je lichaam vertelt ons dat het een lichtere dag nodig heeft. Slimme atleten luisteren. Deze sessie richt zich op herstel en mobiliteit zodat je sneller terugkomt.",
+      "fasciaInsight": "Herstel is waar snelheid wordt opgebouwd.",
+      "complete": "Herstel Sessie Voltooien",
+      "override": "Ik voel me klaar om te trainen",
+      "overrideTitle": "Hersteldag overschrijven?",
+      "overrideMessage": "Je lichaamssignalen wijzen op een hersteldag. Weet je zeker dat je een volledige snelheidssessie wilt doen? Luister naar je lichaam — er is geen schaamte in het beschermen ervan.",
+      "stayRecovery": "Bij Herstel Blijven",
+      "confirmOverride": "Ja, ik ben klaar"
+    },
+    "track": {
+      "yourTrack": "Jouw Snelheidstrack",
+      "goal": "Doel",
+      "plateau": "Je lichaam past zich aan. We verschuiven de focus zodat snelheid blijft."
+    },
+    "tracks": {
+      "building_speed": "Snelheid Opbouwen",
+      "competitive_speed": "Wedstrijdsnelheid",
+      "elite_speed": "Elite Snelheid",
+      "world_class": "Wereldklasse",
+      "building_speed_goal": "Naar Wedstrijdsnelheid",
+      "competitive_speed_goal": "Naar Elite Snelheid",
+      "elite_speed_goal": "Naar Wereldklasse",
+      "world_class_goal": "Wereldklasse Behouden"
+    },
+    "trend": {
+      "improving": "Vooruitgang",
+      "maintaining": "Stabiel",
+      "needs_attention": "Aandacht Nodig"
+    },
+    "stats": {
+      "streak": "Reeks",
+      "longest": "Beste",
+      "total": "Totaal"
+    },
+    "nextSession": {
+      "title": "Volgende Sessie",
+      "locked": "Herstel bouwt snelheid.",
+      "breakDay": "Vandaag beschermen we snelheid.",
+      "startRecovery": "Herstel Sessie Starten",
+      "start": "Sessie Starten"
+    },
+    "history": {
+      "title": "Sessie Geschiedenis",
+      "breakDay": "Herstel"
+    },
+    "session": {
+      "exit": "Afsluiten",
+      "number": "Sessie"
+    },
+    "complete": {
+      "title": "Sessie Voltooid!",
+      "newPB": "Nieuw Persoonlijk Record!",
+      "lockMessage": "Volgende snelheidssessie wordt ontgrendeld over 12:00:00",
+      "recoveryMessage": "Herstel bouwt snelheid.",
+      "fasciaInsight": "Snelle lichamen zijn veerkrachtige lichamen.",
+      "done": "Klaar"
+    },
+    "adjustment": {
+      "title": "Snelheidsfocus Verschuiving",
+      "message": "Je lichaam past zich aan. We verschuiven de focus zodat snelheid blijft. Dit is normaal — het betekent dat je zenuwstelsel een sterkere basis bouwt."
+    },
+    "disclaimer": "Raadpleeg altijd een gekwalificeerde zorgprofessional voordat je een trainingsprogramma begint. Luister naar je lichaam en stop onmiddellijk als je pijn ervaart."
   }
 }

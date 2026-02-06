@@ -6551,5 +6551,149 @@
       "elitePresets": "Presets Elite",
       "loadDashboard": "Panel de Carga"
     }
+  },
+  "speedLab": {
+    "title": "Speed Lab",
+    "subtitle": "Construye velocidad élite, protege tu cuerpo",
+    "access": {
+      "title": "Speed Lab",
+      "message": "Speed Lab se desbloquea con el módulo de Lanzamiento. Suscríbete para comenzar tu camino de velocidad.",
+      "viewPlans": "Ver Planes"
+    },
+    "onboarding": {
+      "title": "Speed Lab",
+      "subtitle": "Construye velocidad élite con entrenamiento estructurado, ciencia de recuperación y ejercicios profesionales.",
+      "start": "Comienza Mi Camino de Velocidad",
+      "fasciaNote": "Los cuerpos rápidos son cuerpos elásticos."
+    },
+    "checkIn": {
+      "title": "Check-In de Velocidad",
+      "subtitle": "30 segundos para conectar con tu cuerpo",
+      "sleep": "¿Cómo dormiste?",
+      "bodyFeel": "¿Cómo se siente tu cuerpo?",
+      "good": "Bien",
+      "okay": "Regular",
+      "tight": "Tenso",
+      "pain": "¿Algún dolor?",
+      "hidePainMap": "Ocultar",
+      "showPainMap": "Toca para marcar",
+      "continue": "Continuar"
+    },
+    "focus": {
+      "title": "Enfoque de Velocidad de Hoy",
+      "fascia": "Los cuerpos rápidos son cuerpos elásticos.",
+      "letsGo": "¡Vamos!"
+    },
+    "drills": {
+      "title": "A Trabajar",
+      "subtitle": "Completa cada ejercicio abajo",
+      "logResults": "Registrar Resultados →"
+    },
+    "categories": {
+      "activation": "Calentamiento",
+      "isometric": "Precarga",
+      "sprint_mechanics": "Sprint",
+      "plyometric": "Pliométrico",
+      "resisted": "Resistido",
+      "cool_down": "Enfriamiento",
+      "break_day": "Recuperación"
+    },
+    "logResults": {
+      "title": "Registra tus Tiempos",
+      "subtitle": "Ingresa tus tiempos de sprint en segundos",
+      "partnerMode": "Modo Compañero",
+      "partnerModeDesc": "Que un entrenador o padre te tome el tiempo",
+      "startTimer": "Cronómetro",
+      "bodyFeelAfter": "¿Cómo se siente tu cuerpo ahora?",
+      "saving": "Guardando...",
+      "finish": "Completar Sesión ✓"
+    },
+    "timer": {
+      "seconds": "segundos",
+      "start": "INICIAR",
+      "stop": "PARAR",
+      "reset": "Reiniciar",
+      "save": "Guardar Tiempo",
+      "cancel": "Cancelar cronómetro"
+    },
+    "rpe": {
+      "title": "¿Qué tan difícil fue?",
+      "easy": "Fácil",
+      "maxEffort": "Máximo",
+      "level1": "Súper Fácil",
+      "level2": "Muy Fácil",
+      "level3": "Fácil",
+      "level4": "Moderado",
+      "level5": "Algo Difícil",
+      "level6": "Difícil",
+      "level7": "Muy Difícil",
+      "level8": "Realmente Difícil",
+      "level9": "Casi al Máximo",
+      "level10": "Esfuerzo Máximo"
+    },
+    "breakDay": {
+      "title": "Hoy Protegemos la Velocidad",
+      "message": "Tu cuerpo nos dice que necesita un día más ligero. Los atletas inteligentes escuchan. Esta sesión se enfoca en recuperación y movilidad para que vuelvas más rápido.",
+      "fasciaInsight": "La recuperación es donde se construye la velocidad.",
+      "complete": "Completar Sesión de Recuperación",
+      "override": "Me siento listo para entrenar",
+      "overrideTitle": "¿Anular día de recuperación?",
+      "overrideMessage": "Las señales de tu cuerpo sugieren un día de recuperación. ¿Estás seguro de que quieres hacer una sesión completa de velocidad? Escucha a tu cuerpo — no hay vergüenza en protegerlo.",
+      "stayRecovery": "Quedarme en Recuperación",
+      "confirmOverride": "Sí, Estoy Listo"
+    },
+    "track": {
+      "yourTrack": "Tu Track de Velocidad",
+      "goal": "Meta",
+      "plateau": "Tu cuerpo se está adaptando. Estamos cambiando el enfoque para que la velocidad se mantenga."
+    },
+    "tracks": {
+      "building_speed": "Construyendo Velocidad",
+      "competitive_speed": "Velocidad Competitiva",
+      "elite_speed": "Velocidad Élite",
+      "world_class": "Clase Mundial",
+      "building_speed_goal": "Avanzar a Velocidad Competitiva",
+      "competitive_speed_goal": "Avanzar a Velocidad Élite",
+      "elite_speed_goal": "Avanzar a Clase Mundial",
+      "world_class_goal": "Mantener Clase Mundial"
+    },
+    "trend": {
+      "improving": "Mejorando",
+      "maintaining": "Estable",
+      "needs_attention": "Necesita Trabajo"
+    },
+    "stats": {
+      "streak": "Racha",
+      "longest": "Mejor",
+      "total": "Total"
+    },
+    "nextSession": {
+      "title": "Siguiente Sesión",
+      "locked": "La recuperación construye velocidad.",
+      "breakDay": "Hoy protegemos la velocidad.",
+      "startRecovery": "Iniciar Sesión de Recuperación",
+      "start": "Iniciar Sesión"
+    },
+    "history": {
+      "title": "Historial de Sesiones",
+      "breakDay": "Recuperación"
+    },
+    "session": {
+      "exit": "Salir",
+      "number": "Sesión"
+    },
+    "complete": {
+      "title": "¡Sesión Completada!",
+      "newPB": "¡Nuevo Récord Personal!",
+      "lockMessage": "La siguiente sesión de velocidad se desbloquea en 12:00:00",
+      "recoveryMessage": "La recuperación construye velocidad.",
+      "fasciaInsight": "Los cuerpos rápidos son cuerpos elásticos.",
+      "done": "Listo"
+    },
+    "adjustment": {
+      "title": "Cambio de Enfoque de Velocidad",
+      "message": "Tu cuerpo se está adaptando. Estamos cambiando el enfoque para que la velocidad se mantenga. Esto es normal — significa que tu sistema nervioso está construyendo una base más fuerte."
+    },
+    "disclaimer": "Siempre consulta con un profesional de salud calificado antes de comenzar cualquier programa de ejercicios. Escucha a tu cuerpo y detente inmediatamente si sientes dolor."
   }
 }
