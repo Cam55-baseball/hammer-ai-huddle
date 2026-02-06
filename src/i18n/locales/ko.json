@@ -5426,5 +5426,149 @@
       "elitePresets": "엘리트 프리셋",
       "loadDashboard": "부하 대시보드"
     }
+  },
+  "speedLab": {
+    "title": "Speed Lab",
+    "subtitle": "엘리트 스피드를 만들고, 몸을 보호하세요",
+    "access": {
+      "title": "Speed Lab",
+      "message": "Speed Lab은 투구 모듈로 잠금 해제됩니다. 스피드 여정을 시작하려면 구독하세요.",
+      "viewPlans": "플랜 보기"
+    },
+    "onboarding": {
+      "title": "Speed Lab",
+      "subtitle": "체계적인 훈련, 회복 과학, 전문 드릴로 엘리트 스피드를 구축하세요.",
+      "start": "스피드 여정 시작하기",
+      "fasciaNote": "빠른 몸은 탄력 있는 몸입니다."
+    },
+    "checkIn": {
+      "title": "스피드 체크인",
+      "subtitle": "30초로 몸 상태 확인",
+      "sleep": "수면은 어땠나요?",
+      "bodyFeel": "몸 상태는 어떤가요?",
+      "good": "좋음",
+      "okay": "보통",
+      "tight": "뻣뻣함",
+      "pain": "통증이 있나요?",
+      "hidePainMap": "숨기기",
+      "showPainMap": "탭하여 표시",
+      "continue": "계속"
+    },
+    "focus": {
+      "title": "오늘의 스피드 포커스",
+      "fascia": "빠른 몸은 탄력 있는 몸입니다.",
+      "letsGo": "시작하자!"
+    },
+    "drills": {
+      "title": "훈련 시작",
+      "subtitle": "아래 각 드릴을 완료하세요",
+      "logResults": "결과 기록 →"
+    },
+    "categories": {
+      "activation": "워밍업",
+      "isometric": "프리로드",
+      "sprint_mechanics": "스프린트",
+      "plyometric": "플라이오",
+      "resisted": "저항 훈련",
+      "cool_down": "쿨다운",
+      "break_day": "회복"
+    },
+    "logResults": {
+      "title": "기록 입력",
+      "subtitle": "스프린트 시간을 초 단위로 입력하세요",
+      "partnerMode": "파트너 모드",
+      "partnerModeDesc": "코치나 부모님이 시간을 재도록 하세요",
+      "startTimer": "타이머",
+      "bodyFeelAfter": "지금 몸 상태는 어떤가요?",
+      "saving": "저장 중...",
+      "finish": "세션 완료 ✓"
+    },
+    "timer": {
+      "seconds": "초",
+      "start": "시작",
+      "stop": "정지",
+      "reset": "리셋",
+      "save": "기록 저장",
+      "cancel": "타이머 취소"
+    },
+    "rpe": {
+      "title": "얼마나 힘들었나요?",
+      "easy": "쉬움",
+      "maxEffort": "최대",
+      "level1": "매우 쉬움",
+      "level2": "아주 쉬움",
+      "level3": "쉬움",
+      "level4": "보통",
+      "level5": "약간 힘듦",
+      "level6": "힘듦",
+      "level7": "매우 힘듦",
+      "level8": "정말 힘듦",
+      "level9": "거의 한계",
+      "level10": "전력 투구"
+    },
+    "breakDay": {
+      "title": "오늘은 스피드를 보호하는 날",
+      "message": "몸이 가벼운 날이 필요하다고 말하고 있어요. 똑똑한 선수는 몸의 소리를 듣습니다. 이 세션은 회복과 유연성에 집중하여 더 빠르게 돌아올 수 있게 합니다.",
+      "fasciaInsight": "회복이 스피드를 만든다.",
+      "complete": "회복 세션 완료",
+      "override": "훈련할 준비가 되었어요",
+      "overrideTitle": "휴식일을 건너뛰시겠습니까?",
+      "overrideMessage": "몸의 신호가 회복일을 제안합니다. 전체 스피드 세션을 하시겠습니까? 몸의 소리를 들으세요 — 몸을 보호하는 것은 부끄러운 일이 아닙니다.",
+      "stayRecovery": "회복 유지",
+      "confirmOverride": "네, 준비되었습니다"
+    },
+    "track": {
+      "yourTrack": "나의 스피드 트랙",
+      "goal": "목표",
+      "plateau": "몸이 적응하고 있습니다. 스피드가 유지되도록 포커스를 조정합니다."
+    },
+    "tracks": {
+      "building_speed": "스피드 구축",
+      "competitive_speed": "경쟁 스피드",
+      "elite_speed": "엘리트 스피드",
+      "world_class": "월드 클래스",
+      "building_speed_goal": "경쟁 스피드로 진입",
+      "competitive_speed_goal": "엘리트 스피드로 진입",
+      "elite_speed_goal": "월드 클래스로 진입",
+      "world_class_goal": "월드 클래스 유지"
+    },
+    "trend": {
+      "improving": "향상 중",
+      "maintaining": "안정",
+      "needs_attention": "개선 필요"
+    },
+    "stats": {
+      "streak": "연속",
+      "longest": "최고",
+      "total": "총합"
+    },
+    "nextSession": {
+      "title": "다음 세션",
+      "locked": "회복이 스피드를 만든다.",
+      "breakDay": "오늘은 스피드를 보호합니다.",
+      "startRecovery": "회복 세션 시작",
+      "start": "세션 시작"
+    },
+    "history": {
+      "title": "세션 기록",
+      "breakDay": "회복"
+    },
+    "session": {
+      "exit": "나가기",
+      "number": "세션"
+    },
+    "complete": {
+      "title": "세션 완료!",
+      "newPB": "새로운 개인 최고 기록!",
+      "lockMessage": "다음 스피드 세션은 12:00:00 후에 잠금 해제",
+      "recoveryMessage": "회복이 스피드를 만든다.",
+      "fasciaInsight": "빠른 몸은 탄력 있는 몸입니다.",
+      "done": "완료"
+    },
+    "adjustment": {
+      "title": "스피드 포커스 전환",
+      "message": "몸이 적응하고 있습니다. 스피드가 유지되도록 포커스를 조정합니다. 이것은 정상입니다 — 신경계가 더 강한 기반을 만들고 있다는 뜻입니다."
+    },
+    "disclaimer": "운동 프로그램을 시작하기 전에 반드시 자격을 갖춘 의료 전문가와 상담하세요. 몸의 소리를 듣고 통증이 느껴지면 즉시 중단하세요."
   }
 }

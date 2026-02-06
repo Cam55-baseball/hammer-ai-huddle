@@ -5385,5 +5385,149 @@
       "elitePresets": "精英预设",
       "loadDashboard": "负荷仪表板"
     }
+  },
+  "speedLab": {
+    "title": "Speed Lab",
+    "subtitle": "打造精英速度，保护你的身体",
+    "access": {
+      "title": "Speed Lab",
+      "message": "Speed Lab随投掷模块解锁。订阅以开始你的速度之旅。",
+      "viewPlans": "查看方案"
+    },
+    "onboarding": {
+      "title": "Speed Lab",
+      "subtitle": "通过结构化训练、恢复科学和专业训练，打造精英速度。",
+      "start": "开始我的速度之旅",
+      "fasciaNote": "快速的身体是有弹性的身体。"
+    },
+    "checkIn": {
+      "title": "速度签到",
+      "subtitle": "30秒确认身体状态",
+      "sleep": "你睡得怎么样？",
+      "bodyFeel": "你的身体感觉如何？",
+      "good": "好",
+      "okay": "还行",
+      "tight": "紧绷",
+      "pain": "有疼痛吗？",
+      "hidePainMap": "隐藏",
+      "showPainMap": "点击标记",
+      "continue": "继续"
+    },
+    "focus": {
+      "title": "今日速度重点",
+      "fascia": "快速的身体是有弹性的身体。",
+      "letsGo": "开始吧！"
+    },
+    "drills": {
+      "title": "开始训练",
+      "subtitle": "完成下面的每个训练",
+      "logResults": "记录结果 →"
+    },
+    "categories": {
+      "activation": "热身",
+      "isometric": "预载",
+      "sprint_mechanics": "冲刺",
+      "plyometric": "增强式",
+      "resisted": "抗阻",
+      "cool_down": "放松",
+      "break_day": "恢复"
+    },
+    "logResults": {
+      "title": "记录你的成绩",
+      "subtitle": "以秒为单位输入冲刺时间",
+      "partnerMode": "搭档模式",
+      "partnerModeDesc": "让教练或家长为你计时",
+      "startTimer": "计时器",
+      "bodyFeelAfter": "现在身体感觉如何？",
+      "saving": "保存中...",
+      "finish": "完成训练 ✓"
+    },
+    "timer": {
+      "seconds": "秒",
+      "start": "开始",
+      "stop": "停止",
+      "reset": "重置",
+      "save": "保存时间",
+      "cancel": "取消计时"
+    },
+    "rpe": {
+      "title": "有多累？",
+      "easy": "轻松",
+      "maxEffort": "最大",
+      "level1": "非常轻松",
+      "level2": "很轻松",
+      "level3": "轻松",
+      "level4": "适中",
+      "level5": "有点累",
+      "level6": "累",
+      "level7": "很累",
+      "level8": "非常累",
+      "level9": "接近极限",
+      "level10": "全力以赴"
+    },
+    "breakDay": {
+      "title": "今天我们保护速度",
+      "message": "你的身体告诉我们需要轻松一天。聪明的运动员会倾听。这次训练专注于恢复和灵活性，让你更快地回归。",
+      "fasciaInsight": "恢复造就速度。",
+      "complete": "完成恢复训练",
+      "override": "我准备好训练了",
+      "overrideTitle": "跳过休息日？",
+      "overrideMessage": "你的身体信号建议休息一天。你确定要进行完整的速度训练吗？倾听你的身体——保护它没什么好羞愧的。",
+      "stayRecovery": "继续恢复",
+      "confirmOverride": "是的，我准备好了"
+    },
+    "track": {
+      "yourTrack": "你的速度赛道",
+      "goal": "目标",
+      "plateau": "你的身体正在适应。我们正在调整重点以保持速度。"
+    },
+    "tracks": {
+      "building_speed": "速度构建",
+      "competitive_speed": "竞技速度",
+      "elite_speed": "精英速度",
+      "world_class": "世界级",
+      "building_speed_goal": "进入竞技速度",
+      "competitive_speed_goal": "进入精英速度",
+      "elite_speed_goal": "进入世界级",
+      "world_class_goal": "保持世界级"
+    },
+    "trend": {
+      "improving": "进步中",
+      "maintaining": "稳定",
+      "needs_attention": "需改进"
+    },
+    "stats": {
+      "streak": "连续",
+      "longest": "最佳",
+      "total": "总计"
+    },
+    "nextSession": {
+      "title": "下一次训练",
+      "locked": "恢复造就速度。",
+      "breakDay": "今天我们保护速度。",
+      "startRecovery": "开始恢复训练",
+      "start": "开始训练"
+    },
+    "history": {
+      "title": "训练历史",
+      "breakDay": "恢复"
+    },
+    "session": {
+      "exit": "退出",
+      "number": "训练"
+    },
+    "complete": {
+      "title": "训练完成！",
+      "newPB": "新个人最佳记录！",
+      "lockMessage": "下一次速度训练将在12:00:00后解锁",
+      "recoveryMessage": "恢复造就速度。",
+      "fasciaInsight": "快速的身体是有弹性的身体。",
+      "done": "完成"
+    },
+    "adjustment": {
+      "title": "速度重点调整",
+      "message": "你的身体正在适应。我们正在调整重点以保持速度。这是正常的——这意味着你的神经系统正在建立更强的基础。"
+    },
+    "disclaimer": "在开始任何锻炼计划之前，请务必咨询合格的医疗专业人员。倾听你的身体，如果感到疼痛请立即停止。"
   }
 }
