@@ -82,7 +82,7 @@ export function ExerciseBuilder({ exercises, onChange }: ExerciseBuilderProps) {
           >
             {/* Collapsed Header */}
             <div 
-              className="flex items-center gap-2 p-3 cursor-pointer"
+              className="flex items-center gap-2 p-3 cursor-pointer min-w-0 overflow-hidden"
               onClick={() => setExpandedId(expandedId === exercise.id ? null : exercise.id)}
             >
               <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />

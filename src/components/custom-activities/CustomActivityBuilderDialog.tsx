@@ -358,7 +358,7 @@ export function CustomActivityBuilderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="text-xl font-black">
             {isFromCoach 
@@ -503,7 +503,7 @@ export function CustomActivityBuilderDialog({
                     
                     <div className="space-y-2">
                       <Label className="text-sm font-bold">{t('customActivity.running.timeGoal')}</Label>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <div className="space-y-1">
                           <Label className="text-xs text-muted-foreground">{t('customActivity.running.hours')}</Label>
                           <Input type="number" value={timeGoalHours || ''} onChange={(e) => setTimeGoalHours(parseInt(e.target.value) || undefined)} placeholder="0" min={0} />
@@ -643,7 +643,7 @@ export function CustomActivityBuilderDialog({
                         
                         <div className="space-y-2">
                           <Label className="text-sm font-bold">{t('customActivity.running.timeGoal')}</Label>
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {(() => {
                               const timeGoal = session.time_goal || '';
                               const [timePart, tenthsPart] = timeGoal.split('.');

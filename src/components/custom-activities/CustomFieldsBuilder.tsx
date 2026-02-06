@@ -84,7 +84,7 @@ function SortableFieldItem({
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </button>
 
-        <div className="flex-1 grid grid-cols-3 gap-2">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
           <Input
             value={field.label}
             onChange={(e) => onUpdate({ label: e.target.value })}
