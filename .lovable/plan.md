@@ -1,64 +1,41 @@
 
-
-# Fix: Production Build Failure
+# Fix: "Failed to save nutrition log" Error
 
 ## Root Cause
 
-The project has **5141 modules** with **no code splitting configuration**. This produces JS chunks well over 500KB, triggering Vite's chunk size warnings on stderr. The deployment pipeline interprets stderr output as a build failure, causing the "Publishing failed" error.
+The database error logs show:
+```
+new row for relation "vault_nutrition_logs" violates check constraint "vault_nutrition_logs_energy_level_check"
+```
 
-Additionally, several test-only packages (`@playwright/test`, `vitest`, `jsdom`, `@testing-library/*`, `baseline-browser-mapping`) are listed in `dependencies` instead of `devDependencies`, bloating the install step unnecessarily.
+The energy level slider in the Vault Nutrition Log form allows values from **1 to 10**, but the database has a CHECK constraint that only accepts **1 to 5**. When a user sets their energy level to 6 or higher (or the default value of 5 is fine, but anything above 5 fails), the insert is rejected by the database.
 
-## Changes
+## Solution
 
-### 1. Add Code Splitting and Suppress Chunk Warnings (vite.config.ts)
+Update the energy level slider to match the database constraint (1-5 scale). This is consistent with the memory note that says "The energy level scale is strictly limited to 1-5 to comply with database constraints."
 
-Add `build` configuration with:
-- **`chunkSizeWarningLimit: 1500`** - Raises the threshold to prevent warnings from being emitted to stderr
-- **`rollupOptions.output.manualChunks`** - Splits the monolithic bundle into logical vendor chunks:
-  - `vendor-react`: react, react-dom, react-router-dom
-  - `vendor-ui`: All @radix-ui packages, class-variance-authority, tailwind-merge, clsx, cmdk, vaul, sonner
-  - `vendor-charts`: recharts
-  - `vendor-motion`: framer-motion
-  - `vendor-i18n`: i18next, react-i18next, i18next-browser-languagedetector
-  - `vendor-supabase`: @supabase/supabase-js
-  - `vendor-query`: @tanstack/react-query
-  - `vendor-fabric`: fabric (large canvas library, only used in 2 files)
-  - `vendor-date`: date-fns
-  - `vendor-dnd`: @dnd-kit packages
+### Changes to `src/components/vault/VaultNutritionLogCard.tsx`
 
-### 2. Clean Up Dependencies (package.json)
+1. **Change Slider max from 10 to 5** (line 787)
+   - `max={10}` becomes `max={5}`
 
-Move test-only packages from `dependencies` to `devDependencies`:
-- `@playwright/test` (largest offender - downloads browser binaries)
-- `vitest`
-- `jsdom`
-- `@testing-library/jest-dom`
-- `@testing-library/react`
+2. **Update the label display** (line 782)
+   - Change `{energyLevel[0]}/10` to `{energyLevel[0]}/5`
 
-Remove from direct dependencies entirely:
-- `baseline-browser-mapping` (transitive dependency of `browserslist`, not directly used)
+3. **Update the number markers below the slider** (lines 792-800)
+   - Change the array from `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]` to `[1, 2, 3, 4, 5]`
 
-### 3. Update package-lock.json
-
-Regenerate the lock file to reflect the dependency changes cleanly.
+No database changes needed -- the constraint is correct and should stay as-is. The UI simply needs to match the allowed range.
 
 ## Files Modified
 
 | File | Change |
 |------|--------|
-| `vite.config.ts` | Add `build.chunkSizeWarningLimit` and `rollupOptions.output.manualChunks` |
-| `package.json` | Move test deps to `devDependencies`, remove `baseline-browser-mapping` |
-| `package-lock.json` | Regenerated to match dependency changes |
+| `src/components/vault/VaultNutritionLogCard.tsx` | Update slider max from 10 to 5, update label and number markers |
 
-## Why This Fixes the Build
+## Why This Fixes It
 
-- Splitting chunks keeps individual files under the warning threshold, preventing stderr output
-- Removing test dependencies from production reduces install size by hundreds of MB
-- The deployment pipeline no longer sees stderr warnings and completes successfully
-
-## No Impact on Functionality
-
-- Code splitting only affects how JS is packaged for delivery (multiple smaller files vs one large file)
-- The app loads identically -- the browser fetches the chunks it needs
-- All existing features, components, and pages work exactly the same
-
+- The database only accepts energy_level values 1-5
+- The slider currently allows values up to 10
+- Any value above 5 causes the insert to fail with a constraint violation
+- Limiting the slider to 1-5 prevents invalid values from ever being submitted
