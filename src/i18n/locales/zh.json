@@ -5086,7 +5086,7 @@
     "templateLoaded": "模板已加载！"
   },
   "aiRecommendations": {
-    "title": "AI推荐",
+    "title": "Hammer 推荐",
     "generate": "生成AI训练",
     "generating": "分析您的历史记录...",
     "useThis": "使用此训练",

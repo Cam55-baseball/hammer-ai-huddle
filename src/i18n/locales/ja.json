@@ -5242,7 +5242,7 @@
     "templateLoaded": "テンプレートが読み込まれました！"
   },
   "aiRecommendations": {
-    "title": "AI推奨",
+    "title": "Hammer 推奨",
     "generate": "AIワークアウトを生成",
     "generating": "履歴を分析中...",
     "useThis": "このワークアウトを使用",

@@ -161,7 +161,7 @@ export function DragDropExerciseBuilder({ exercises, onExercisesChange }: DragDr
           >
             <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">{t('aiRecommendations.title')}</span>
-            <span className="xs:hidden">AI</span>
+            <span className="xs:hidden">Hammer</span>
           </Button>
           <Button
             variant="outline"
