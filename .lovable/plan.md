@@ -1,53 +1,84 @@
 
 
-# Fix Horizontal Overflow in Hammer Workout Recommendations (Final Solution)
+# Definitive Fix: Kill Horizontal Overflow in Create Activity Dialog
 
-## Root Cause Identified
+## Why Every Previous Fix Failed
 
-The previous fixes (padding reduction, `overflow-hidden`, `break-words`) haven't fully resolved the overflow because of a **fundamental Radix ScrollArea behavior**. The Radix `ScrollArea` Viewport internally wraps all children in a div with:
+Radix ScrollArea's Viewport component internally wraps ALL children in a div with:
+
+```text
+<div style="min-width: 100%; display: table">
+  {children}
+</div>
+```
+
+CSS `display: table` makes the container size to its content's intrinsic width, ignoring the parent's width constraint. This means:
+
+- Adding `overflow-hidden` to children does NOT prevent the expansion -- the table layout has already sized wider
+- Adding `min-w-0` to flex items doesn't help -- they're inside a table cell that already expanded
+- Reducing padding helps marginally but doesn't fix the root cause
+
+The fix must happen at the `display: table` div level itself.
+
+## The Fix (2 changes, bulletproof)
+
+### Change 1: Add a CSS class to neutralize Radix's table layout (index.css)
+
+Create a utility CSS class that targets the auto-generated `display: table` div inside ScrollArea and overrides it:
 
 ```css
-min-width: 100%;
-display: table;
+/* Prevent Radix ScrollArea table-layout from causing horizontal overflow */
+.scroll-area-no-hscroll [data-radix-scroll-area-viewport] > div {
+  display: block !important;
+  min-width: 0 !important;
+}
 ```
 
-This `display: table` layout allows content to **expand the container beyond its parent width** -- the table layout algorithm sizes columns to fit content, ignoring the parent boundary. `overflow-hidden` clips the visual output but doesn't prevent the content from being laid out wider, which causes the horizontal scroll.
-
-## The Fix (3 targeted changes)
-
-### 1. Neutralize the Radix table layout (CustomActivityBuilderDialog.tsx)
-
-The inner `div` inside `ScrollArea` (line 384) needs to break the table-layout expansion chain. Adding `overflow-hidden` to this div forces it to establish a new block formatting context, preventing children from expanding the table cell.
-
-```
-Current:  <div className="space-y-6 py-4">
-Fix:      <div className="space-y-6 py-4 overflow-hidden">
+This targets the exact DOM structure:
+```text
+ScrollArea Root (.scroll-area-no-hscroll)
+  > Viewport [data-radix-scroll-area-viewport]
+    > div (style="min-width:100%; display:table")  <-- THIS gets overridden
+      > our content
 ```
 
-This single change is the most impactful -- it stops ALL children (AI recommendations, warmup generator, block builder, etc.) from being able to push the ScrollArea's internal table-layout div wider than the viewport.
+Changing `display: table` to `display: block` and `min-width: 100%` to `min-width: 0` makes the inner div behave like a normal block element that respects its parent's width constraint. The `!important` is necessary to override inline styles.
 
-### 2. Fix the AIWorkoutRecommendations header bar (AIWorkoutRecommendations.tsx)
+### Change 2: Apply the class to the dialog's ScrollArea (CustomActivityBuilderDialog.tsx)
 
-The header bar (line 287) uses `flex items-center justify-between` with two groups of buttons that don't wrap. On mobile (335px content width), the title "Hammer Recommendations" plus the "Generating..." button with text can exceed the available width.
+On line 383, add the `scroll-area-no-hscroll` class:
 
-Fix the header to wrap properly:
-- Make the header `flex-wrap` so the buttons can drop to the next line
-- Add `min-w-0` to the title group so it can shrink
-- Make the button text responsive: show icon-only on mobile for the refresh button
+```text
+Current:  <ScrollArea className="max-h-[calc(90vh-140px)] px-3 sm:px-6">
+Fix:      <ScrollArea className="max-h-[calc(90vh-140px)] px-3 sm:px-6 scroll-area-no-hscroll">
+```
 
-### 3. Constrain the DragDropExerciseBuilder container (DragDropExerciseBuilder.tsx)
+This is scoped -- only this specific ScrollArea instance loses horizontal scroll capability. All other ScrollArea instances in the app (exercise library sidebar, workout timeline, etc.) continue to work normally.
 
-The `DragDropExerciseBuilder` wraps the AI recommendations and is itself inside the table-layout div. It needs `overflow-hidden min-w-0` on its root div (line 146) to act as a secondary constraint.
+## Why This Fixes Everything
 
-Also, the button row (line 154) that contains "Hammer", "Add", and "Library" buttons uses `flex-wrap` but doesn't have `min-w-0` on the outer container -- adding it ensures the flex children can shrink.
+Once the `display: table` is neutralized, the entire width chain becomes correct:
+
+```text
+Screen (375px)
+  DialogContent (p-0)             = 375px
+    ScrollArea Root               = 375px
+      Viewport                    = 375px
+        Inner div (NOW display:block, min-width:0) = 375px (constrained!)
+          Our padding div (px-3)  = 375px - 24px = 351px
+            Content               = 351px (FITS!)
+```
+
+Every single section the user listed -- Running Sessions, Block-Based Builder, Warmup Generator, Hammer Recommendations, Workout Timeline, Custom Fields, Recurring Days, Reminders -- all automatically fit within 351px because they're no longer inside a table layout that ignores parent width.
+
+The existing `overflow-hidden` on line 384 and `min-w-0` classes on child components NOW become effective as secondary safety nets, because they're inside a `display: block` container that actually respects width constraints.
 
 ## Summary
 
-| File | Line | Change |
-|------|------|--------|
-| `CustomActivityBuilderDialog.tsx` | 384 | Add `overflow-hidden` to inner ScrollArea div to break Radix table-layout expansion |
-| `AIWorkoutRecommendations.tsx` | 287 | Add `flex-wrap` and `min-w-0` to header; make refresh button text responsive |
-| `DragDropExerciseBuilder.tsx` | 146 | Add `overflow-hidden min-w-0` to root container |
+| File | Change | Why |
+|------|--------|-----|
+| `src/index.css` | Add `.scroll-area-no-hscroll` CSS class | Override Radix's `display: table` and `min-width: 100%` inline styles |
+| `CustomActivityBuilderDialog.tsx` line 383 | Add `scroll-area-no-hscroll` class to ScrollArea | Apply the fix to this specific instance only |
 
-All changes are CSS-only. The key insight is that fix #1 (the `overflow-hidden` on the ScrollArea's inner div) is the structural fix that addresses the underlying Radix behavior, while fixes #2 and #3 handle specific child components that contribute wide content.
+Two lines of code. No component restructuring. No scattered padding tweaks. This kills the root cause that made every previous fix ineffective.
 
