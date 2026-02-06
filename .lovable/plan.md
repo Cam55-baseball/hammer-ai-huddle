@@ -1,57 +1,54 @@
 
 
-# Fix Horizontal Text Overflow in Create Activity Dialog (Mobile)
+# Fix Horizontal Overflow in Hammer Workout Recommendations (Mobile)
 
 ## Problem
 
-When creating a custom activity on mobile, the "Additional Options" section and several other areas overflow horizontally, causing unreadable text and a horizontal scrollbar.
+On mobile, the Hammer Workout Recommendations panel has text and buttons overflowing horizontally in three places:
+- The "Use This Workout" button gets cut off on the right side of recommendation cards
+- Recovery Notice text overflows past the right edge
+- Reasoning text at the bottom of cards is clipped
 
 ## Root Causes
 
-After reviewing the code, there are **4 specific areas** causing horizontal overflow on mobile:
+All issues stem from the `AIWorkoutRecommendations.tsx` component lacking proper width constraints for mobile:
 
-### 1. CustomFieldsBuilder -- 3-column grid is too wide
-In `CustomFieldsBuilder.tsx` (line 87), each custom field row uses `grid grid-cols-3 gap-2` for Label, Value, and Type inputs, plus a drag handle, expand button, and delete button -- all in one row. On a ~375px screen inside a dialog with padding, this creates ~500px+ of content.
+1. **RecommendationCard header** (line 169): The flex row with title + button doesn't have `min-w-0` on the title container, so long workout names push the "Use This Workout" button off-screen
+2. **Card title row** (line 171): Title and "Lighter Option" badge sit in a non-wrapping flex row that can exceed the card width
+3. **Outer container** (line 286): Missing `overflow-hidden` so child content can bleed past the panel boundary
+4. **Card components** (line 164): Cards themselves lack `overflow-hidden`
+5. **Text paragraphs** (lines 80, 219): Recovery notice and reasoning text don't use `break-words` to wrap long text
 
-### 2. Time Goal inputs -- 4-column grid is too tight  
-In `CustomActivityBuilderDialog.tsx` (lines 506 and 646), the running time goal uses `grid grid-cols-4 gap-2` to show Hours, Minutes, Seconds, and Tenths inputs side by side. With labels, this gets cramped and can overflow.
+## Changes (single file)
 
-### 3. Dialog missing overflow protection
-The `DialogContent` in `CustomActivityBuilderDialog.tsx` (line 361) uses `max-w-2xl` but doesn't have `overflow-hidden` to prevent child content from pushing beyond bounds on mobile.
+All fixes are in `src/components/custom-activities/AIWorkoutRecommendations.tsx`:
 
-### 4. Exercise Builder row items not wrapping
-In `ExerciseBuilder.tsx` (line 84-138), the collapsed exercise row has a grip handle + input + badges + 3 buttons. On narrow screens, elements can push past the container edge.
+### 1. Outer container -- add overflow protection
+Add `overflow-hidden` to the main wrapper div so nothing bleeds past the panel edges.
 
-## Fix Plan
+### 2. RecommendationCard -- restructure header for mobile
+- Stack the title and button vertically on mobile instead of side-by-side: change the header from a horizontal flex to a vertical layout on small screens
+- Add `min-w-0` to the title container so long names wrap instead of pushing content off-screen
+- Add `overflow-hidden` to the Card itself
+- Make the title text wrap with `break-words`
 
-### File 1: `src/components/custom-activities/CustomFieldsBuilder.tsx`
-**Make the custom field row stack on mobile:**
-- Change the inner grid from `grid grid-cols-3` to `grid grid-cols-1 sm:grid-cols-3` so on mobile the Label, Value, and Type fields stack vertically
-- This keeps the same 3-column layout on larger screens
+### 3. Recovery warning -- constrain text
+- Add `overflow-hidden` and `break-words` to the Alert component's description text
 
-### File 2: `src/components/custom-activities/CustomActivityBuilderDialog.tsx`
-**Add overflow protection and fix time goal grid:**
-- Add `overflow-hidden` to the `DialogContent` class (line 361) to prevent any child from causing horizontal scroll
-- Change the time goal grids from `grid-cols-4` to `grid-cols-2 sm:grid-cols-4` (lines 506, 646) so on mobile, Hours/Minutes stack on the first row and Seconds/Tenths on the second row
-- Ensure all flex containers in the running sessions section use `flex-wrap` and `min-w-0` where needed
+### 4. Reasoning text -- prevent overflow
+- Add `break-words` to the reasoning paragraph so long text wraps properly within the card
 
-### File 3: `src/components/custom-activities/ExerciseBuilder.tsx`
-**Ensure exercise rows don't overflow:**
-- Add `min-w-0` and `overflow-hidden` to the main exercise row container to contain any long text
-- The action buttons already use `flex-shrink-0` which is good
+## Technical Details
 
-### File 4: `src/components/custom-activities/DragDropExerciseBuilder.tsx`
-**Ensure the builder grid doesn't overflow on mobile:**
-- Already uses `isMobile` check -- just need to add `overflow-hidden` to the border container wrapping the mobile timeline (line 161)
+| Location | Current | Fix |
+|----------|---------|-----|
+| Outer div (line 286) | `border rounded-lg p-4` | Add `overflow-hidden` |
+| Card (line 164) | No overflow constraint | Add `overflow-hidden` |
+| Header flex (line 169) | `flex items-start justify-between gap-2` | Add `flex-wrap` |
+| Title div (line 170) | `space-y-1` | Add `min-w-0` |
+| Title text (line 172) | `text-base font-bold` | Add `break-words` |
+| Alert description (line 79-80) | `mt-2 space-y-2` | Add `break-words` |
+| Reasoning `p` (line 219) | No word-break | Add `break-words` |
 
-## Summary of Changes
-
-| File | Change |
-|------|--------|
-| `CustomFieldsBuilder.tsx` | Stack fields vertically on mobile (`grid-cols-1 sm:grid-cols-3`) |
-| `CustomActivityBuilderDialog.tsx` | Add `overflow-hidden` to dialog; change time goal to `grid-cols-2 sm:grid-cols-4` |
-| `ExerciseBuilder.tsx` | Add `min-w-0 overflow-hidden` to exercise row container |
-| `DragDropExerciseBuilder.tsx` | Add `overflow-hidden` to mobile timeline container |
-
-All changes are CSS-only -- no logic or data changes needed. The layout will remain identical on desktop/tablet and simply reflow to fit on mobile screens.
+No logic changes -- CSS-only fixes that keep the desktop layout intact.
 
