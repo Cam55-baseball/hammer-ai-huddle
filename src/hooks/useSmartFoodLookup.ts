@@ -181,7 +181,7 @@ export function useSmartFoodLookup(): UseSmartFoodLookupReturn {
           if (errorMessage.includes('429') || errorMessage.includes('Rate limit')) {
             setError('Rate limit reached. Try again in a moment.');
           } else if (errorMessage.includes('402') || errorMessage.includes('credits')) {
-            setError('AI credits required.');
+            setError('Hammer credits required.');
           } else if (errorMessage.includes('404') || errorMessage.includes('NOT_FOUND')) {
             setError('Auto-fill temporarily unavailable.');
           } else {
