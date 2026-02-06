@@ -6091,7 +6091,7 @@
     "browseLibrary": "Biblioteca",
     "tapToAddMobile": "Toca Biblioteca para agregar ejercicios",
     "warmup": {
-      "title": "Generador de Calentamiento IA",
+      "title": "Hammer Warmup Generator",
       "generate": "Generar Calentamiento",
       "generating": "Generando...",
       "addToStart": "Añadir al Inicio",
@@ -6101,7 +6101,18 @@
       "personalizedFor": "Personalizado",
       "addExercisesFirst": "Añade ejercicios primero",
       "rateLimited": "Demasiadas solicitudes. Espera un momento.",
-      "paymentRequired": "Se necesitan créditos de IA. Contacta a soporte."
+      "paymentRequired": "Se necesitan créditos de IA. Contacta a soporte.",
+      "warmingUpFor": "Calentando para...",
+      "warmupContext": {
+        "label": "¿Para qué estás calentando?",
+        "full_practice": "Práctica Completa",
+        "game": "Día de Juego",
+        "throwing_session": "Sesión de Lanzamiento",
+        "hitting_session": "Práctica de Bateo",
+        "strength_workout": "Entrenamiento de Fuerza",
+        "speed_training": "Entrenamiento de Velocidad",
+        "general_activity": "Actividad General"
+      }
     }
   },
   "workoutTemplates": {

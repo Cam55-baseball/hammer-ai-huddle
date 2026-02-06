@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sparkles, Plus, Loader2, Clock, ChevronDown, ChevronUp, User } from 'lucide-react';
 import { Exercise } from '@/types/customActivity';
 import { useWarmupGenerator } from '@/hooks/useWarmupGenerator';
@@ -17,6 +18,7 @@ interface WarmupGeneratorCardProps {
   exercises: Exercise[];
   onAddWarmup: (warmupExercises: Exercise[]) => void;
   sport?: 'baseball' | 'softball';
+  isWarmupActivity?: boolean;
 }
 
 const CATEGORY_LABELS = {
@@ -33,13 +35,29 @@ const CATEGORY_COLORS = {
   'arm-care': 'bg-rose-500/20 text-rose-400',
 };
 
-export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball' }: WarmupGeneratorCardProps) {
+const WARMUP_CONTEXTS = [
+  { value: 'full_practice', labelKey: 'full_practice' },
+  { value: 'game', labelKey: 'game' },
+  { value: 'throwing_session', labelKey: 'throwing_session' },
+  { value: 'hitting_session', labelKey: 'hitting_session' },
+  { value: 'strength_workout', labelKey: 'strength_workout' },
+  { value: 'speed_training', labelKey: 'speed_training' },
+  { value: 'general_activity', labelKey: 'general_activity' },
+];
+
+export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball', isWarmupActivity = false }: WarmupGeneratorCardProps) {
   const { t } = useTranslation();
   const [personalize, setPersonalize] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [warmupContext, setWarmupContext] = useState<string | undefined>(undefined);
   
   const { generateWarmup, isGenerating, warmupResult, clearWarmup, convertToExercises } = useWarmupGenerator();
   const { data: goals, isLoading: goalsLoading } = useAthleteGoalsAggregated(personalize);
+
+  // For warmup activity type, require context selection when personalized
+  const canGenerate = isWarmupActivity 
+    ? (!personalize || warmupContext !== undefined)
+    : exercises.length > 0;
 
   const handleGenerate = async () => {
     await generateWarmup({
@@ -47,6 +65,7 @@ export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball'
       sport,
       personalize,
       goals: personalize ? goals : undefined,
+      warmupContext: isWarmupActivity && personalize ? warmupContext : undefined,
     });
     setIsExpanded(true);
   };
@@ -74,7 +93,7 @@ export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball'
             <Button 
               size="sm" 
               onClick={handleGenerate}
-              disabled={isGenerating || exercises.length === 0 || (personalize && goalsLoading)}
+              disabled={isGenerating || !canGenerate || (personalize && goalsLoading)}
               className="gap-1.5"
             >
               {isGenerating ? (
@@ -92,41 +111,62 @@ export function WarmupGeneratorCard({ exercises, onAddWarmup, sport = 'baseball'
           )}
         </div>
         
-        <div className="flex items-center justify-between gap-4">
-          <CardDescription className="text-xs">
-            {t('workoutBuilder.warmup.basedOn', 'Based on your workout exercises')}
-          </CardDescription>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <CardDescription className="text-xs">
+              {isWarmupActivity 
+                ? t('workoutBuilder.warmup.warmingUpFor', 'Warming up for...')
+                : t('workoutBuilder.warmup.basedOn', 'Based on your workout exercises')
+              }
+            </CardDescription>
+            
+            {!warmupResult && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="personalize-warmup"
+                        checked={personalize}
+                        onCheckedChange={setPersonalize}
+                        disabled={isGenerating}
+                      />
+                      <Label 
+                        htmlFor="personalize-warmup" 
+                        className={cn(
+                          "text-xs cursor-pointer flex items-center gap-1",
+                          personalize && "text-primary font-medium"
+                        )}
+                      >
+                        <User className="h-3 w-3" />
+                        {t('workoutBuilder.warmup.personalize', 'Personalize')}
+                      </Label>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-[200px]">
+                    <p className="text-xs">
+                      {t('workoutBuilder.warmup.personalizeHint', 'Customize based on your goals, position, and training focus')}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
           
-          {!warmupResult && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="personalize-warmup"
-                      checked={personalize}
-                      onCheckedChange={setPersonalize}
-                      disabled={isGenerating}
-                    />
-                    <Label 
-                      htmlFor="personalize-warmup" 
-                      className={cn(
-                        "text-xs cursor-pointer flex items-center gap-1",
-                        personalize && "text-primary font-medium"
-                      )}
-                    >
-                      <User className="h-3 w-3" />
-                      {t('workoutBuilder.warmup.personalize', 'Personalize')}
-                    </Label>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="left" className="max-w-[200px]">
-                  <p className="text-xs">
-                    {t('workoutBuilder.warmup.personalizeHint', 'Customize based on your goals, position, and training focus')}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+          {/* Context selector for warmup activity type when personalize is on */}
+          {isWarmupActivity && personalize && !warmupResult && (
+            <Select value={warmupContext} onValueChange={setWarmupContext}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t('workoutBuilder.warmup.warmupContext.label', 'What are you warming up for?')} />
+              </SelectTrigger>
+              <SelectContent>
+                {WARMUP_CONTEXTS.map((ctx) => (
+                  <SelectItem key={ctx.value} value={ctx.value}>
+                    {t(`workoutBuilder.warmup.warmupContext.${ctx.labelKey}`, ctx.labelKey)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         </div>
       </CardHeader>

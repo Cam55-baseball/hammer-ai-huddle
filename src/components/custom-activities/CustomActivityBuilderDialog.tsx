@@ -21,6 +21,7 @@ import { ExerciseBuilder } from './ExerciseBuilder';
 import { DragDropExerciseBuilder } from './DragDropExerciseBuilder';
 import { MealBuilder } from './MealBuilder';
 import { CustomFieldsBuilder } from './CustomFieldsBuilder';
+import { WarmupGeneratorCard } from './WarmupGeneratorCard';
 import { BlockContainer } from '@/components/elite-workout/blocks/BlockContainer';
 import { ViewModeToggle } from '@/components/elite-workout/views/ViewModeToggle';
 import { CNSLoadIndicator } from '@/components/elite-workout/intelligence/CNSLoadIndicator';
@@ -352,6 +353,7 @@ export function CustomActivityBuilderDialog({
   const showRunningFields = activityType === 'running';
   const showEmbeddedRunningOption = activityType && !showRunningFields && activityType !== 'meal';
   const showBlockSystemToggle = activityType === 'workout';
+  const showHammerWarmup = activityType === 'warmup';
   const totalCNS = useBlockSystem ? calculateWorkoutCNS(workoutBlocks) : 0;
 
   return (
@@ -563,6 +565,16 @@ export function CustomActivityBuilderDialog({
 
                 {/* Type-specific builders */}
                 {showMealBuilder && <MealBuilder meals={meals} onChange={setMeals} />}
+                
+                {/* Hammer Warmup Generator - for warmup activity type */}
+                {showHammerWarmup && (
+                  <WarmupGeneratorCard
+                    exercises={exercises}
+                    onAddWarmup={(warmupExercises) => setExercises(prev => [...warmupExercises, ...prev])}
+                    sport={selectedSport}
+                    isWarmupActivity={true}
+                  />
+                )}
                 
                 {/* Embedded Running Sessions - for workout, recovery, practice, warmup, etc. */}
                 {showEmbeddedRunningOption && (

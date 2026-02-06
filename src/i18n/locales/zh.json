@@ -5054,7 +5054,7 @@
     "browseLibrary": "练习库",
     "tapToAddMobile": "点击练习库添加练习",
     "warmup": {
-      "title": "AI热身生成器",
+      "title": "Hammer 热身生成器",
       "generate": "生成热身",
       "generating": "生成中...",
       "addToStart": "添加到开头",
@@ -5064,7 +5064,18 @@
       "personalizedFor": "已个性化",
       "addExercisesFirst": "请先添加练习",
       "rateLimited": "请求过多，请稍候再试。",
-      "paymentRequired": "需要AI积分，请联系支持。"
+      "paymentRequired": "需要AI积分，请联系支持。",
+      "warmingUpFor": "热身目的...",
+      "warmupContext": {
+        "label": "您在为什么热身？",
+        "full_practice": "完整训练",
+        "game": "比赛日",
+        "throwing_session": "投掷训练",
+        "hitting_session": "击球练习",
+        "strength_workout": "力量训练",
+        "speed_training": "速度训练",
+        "general_activity": "一般活动"
+      }
     }
   },
   "workoutTemplates": {

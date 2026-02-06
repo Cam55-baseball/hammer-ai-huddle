@@ -5095,7 +5095,7 @@
     "browseLibrary": "라이브러리",
     "tapToAddMobile": "라이브러리를 탭하여 운동 추가",
     "warmup": {
-      "title": "AI 워밍업 생성기",
+      "title": "Hammer 워밍업 생성기",
       "generate": "워밍업 생성",
       "generating": "생성 중...",
       "addToStart": "시작에 추가",
@@ -5105,7 +5105,18 @@
       "personalizedFor": "개인화됨",
       "addExercisesFirst": "먼저 운동을 추가하세요",
       "rateLimited": "요청이 너무 많습니다. 잠시 기다려주세요.",
-      "paymentRequired": "AI 크레딧이 필요합니다. 지원팀에 문의하세요."
+      "paymentRequired": "AI 크레딧이 필요합니다. 지원팀에 문의하세요.",
+      "warmingUpFor": "워밍업 목적...",
+      "warmupContext": {
+        "label": "무엇을 위해 워밍업하나요?",
+        "full_practice": "풀 연습",
+        "game": "경기일",
+        "throwing_session": "투구 세션",
+        "hitting_session": "타격 연습",
+        "strength_workout": "근력 운동",
+        "speed_training": "스피드 훈련",
+        "general_activity": "일반 활동"
+      }
     }
   },
   "workoutTemplates": {

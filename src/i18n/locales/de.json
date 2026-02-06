@@ -5811,7 +5811,7 @@
     "browseLibrary": "Bibliothek",
     "tapToAddMobile": "Tippe auf Bibliothek um Übungen hinzuzufügen",
     "warmup": {
-      "title": "KI-Aufwärm-Generator",
+      "title": "Hammer Warmup Generator",
       "generate": "Aufwärmen generieren",
       "generating": "Generiere...",
       "addToStart": "Am Anfang hinzufügen",
@@ -5821,7 +5821,18 @@
       "personalizedFor": "Personalisiert",
       "addExercisesFirst": "Füge zuerst Übungen hinzu",
       "rateLimited": "Zu viele Anfragen. Bitte warte einen Moment.",
-      "paymentRequired": "KI-Guthaben erforderlich. Kontaktiere den Support."
+      "paymentRequired": "KI-Guthaben erforderlich. Kontaktiere den Support.",
+      "warmingUpFor": "Aufwärmen für...",
+      "warmupContext": {
+        "label": "Wofür wärmst du dich auf?",
+        "full_practice": "Volles Training",
+        "game": "Spieltag",
+        "throwing_session": "Wurf-Session",
+        "hitting_session": "Schlag-Training",
+        "strength_workout": "Krafttraining",
+        "speed_training": "Schnelligkeitstraining",
+        "general_activity": "Allgemeine Aktivität"
+      }
     }
   },
   "workoutTemplates": {

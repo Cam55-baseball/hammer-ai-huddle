@@ -6836,7 +6836,7 @@
     "browseLibrary": "Library",
     "tapToAddMobile": "Tap Library to add exercises",
     "warmup": {
-      "title": "AI Warmup Generator",
+      "title": "Hammer Warmup Generator",
       "generate": "Generate Warmup",
       "generating": "Generating...",
       "addToStart": "Add to Start",
@@ -6846,7 +6846,18 @@
       "personalizedFor": "Personalized",
       "addExercisesFirst": "Add exercises to your workout first",
       "rateLimited": "Too many requests. Please wait a moment.",
-      "paymentRequired": "AI credits needed. Please contact support."
+      "paymentRequired": "AI credits needed. Please contact support.",
+      "warmingUpFor": "Warming up for...",
+      "warmupContext": {
+        "label": "What are you warming up for?",
+        "full_practice": "Full Practice",
+        "game": "Game Day",
+        "throwing_session": "Throwing Session",
+        "hitting_session": "Hitting/Batting Practice",
+        "strength_workout": "Strength Workout",
+        "speed_training": "Speed/Agility Training",
+        "general_activity": "General Activity"
+      }
     }
   },
   "workoutTemplates": {
