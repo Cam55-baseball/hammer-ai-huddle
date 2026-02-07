@@ -1,155 +1,140 @@
 
 
-# Speed Lab Audit -- Elite-Level Improvements
+# Speed Lab: Multi-Rep Sprint System, Barefoot Progression, and Game-Ready Conditioning
 
-## Issues Found
+## What This Changes
 
-After a deep audit of every file, database table, RLS policy, hook, and component, here is a comprehensive list of problems and missing pieces that need to be addressed to bring Speed Lab to a true .01% standard.
-
----
-
-## Issue 1: Drills Have NO Kid-Friendly Descriptions (Critical)
-
-The single biggest gap. The `DrillData` interface only has `name`, `cues`, and `setsReps`. There is NO `description` field. This means a 10-year-old sees:
-
-```
-ISO Split Squat Hold
-Cues: "Back knee off ground" | "Stay tall"
-Sets: 8 sec each side
-```
-
-They have no idea what this exercise IS, what muscles it works, WHY they're doing it, or HOW it helps them get faster. This violates the app's core design principle of kid-friendly, unmistakable feedback.
-
-### Fix
-Add a `description` field to `DrillData` with a plain-English, kid-friendly explanation for every single drill (~35 drills). Also add a `whyItHelps` field that connects the drill to speed in one sentence (fascia-integrated reasoning).
-
-Example transformation:
-- **Before**: `"ISO Split Squat Hold"` -- cues: `"Back knee off ground", "Stay tall"` -- `8 sec each side`
-- **After**: `"ISO Split Squat Hold"` -- **"Stand in a lunge position and hold still. Keep your back knee just off the ground and your chest tall. This makes your legs strong in the position you use when you sprint."** -- Why it helps: **"Strong legs in the sprint position = faster starts."**
+This upgrade transforms the Speed Lab from a single-time-per-distance logger into a full game-ready conditioning system. Athletes will see exactly how many sprints to run at each distance, log every individual rep with its own timer, and progressively build toward 16 full-out sprints per session (the game standard for both MLB and AUSL). Barefoot training will be introduced gradually based on session progression and readiness, with clear explanations of why it matters for development.
 
 ---
 
-## Issue 2: No Sprint Instruction Step in Session Flow (Critical)
+## 1. Sprint Rep Progression System
 
-The session flow goes: Check-In -> Focus -> Drills -> Log Results. But there is NO step that tells the user **"Now go run your sprints!"**. The drill cards include sprint mechanics drills (wall drives, falling starts, etc.), but after completing those drills, users jump straight to "Log Your Times" with no instruction explaining that they need to actually go outside and run their timed distances (10Y, 30Y, 60Y).
+Sprint reps will start low and build progressively, with the system auto-adjusting based on readiness:
 
-A kid would complete the drills, then see "Log Your Times -- Enter your sprint times in seconds" and wonder: "Wait, was I supposed to run somewhere? When? Which distances?"
+| Session Range | 10Y / 7Y Reps | 30Y / 20Y Reps | 60Y / 40Y Reps | Total Sprints |
+|---------------|----------------|-----------------|-----------------|---------------|
+| Sessions 1-3  | 2              | 1               | 1               | 4             |
+| Sessions 4-6  | 3              | 2               | 1               | 6             |
+| Sessions 7-9  | 3              | 2               | 2               | 7             |
+| Sessions 10-14| 4              | 3               | 2               | 9             |
+| Sessions 15-19| 4              | 3               | 3               | 10            |
+| Sessions 20-24| 5              | 4               | 3               | 12            |
+| Sessions 25+  | 6              | 5               | 5               | 16            |
 
-### Fix
-Add an explicit **"Run Your Sprints"** step between the Drills step and the Log Results step. This step should:
-- Show the exact distances they need to run (sport-specific)
-- Explain the process: "Find a flat open space. Mark your distances. Sprint ALL OUT. Rest 2-3 minutes between sprints."
-- Include Partner Mode instructions: "Have someone tap START when you go and STOP when you finish"
-- Make it clear which distances are optional vs required (all are optional -- if they only run the 10Y, that's fine)
-
----
-
-## Issue 3: Partner Timer Results Not Saved to Database (Bug)
-
-The `savePartnerTiming` function exists in `useSpeedProgress.ts` and is returned from the hook, but it is NEVER CALLED anywhere in the UI. The `PartnerTimer` component calls `onComplete` which just sets the numeric value in the time entry field. The partner timing data (who timed it, when, etc.) is never persisted to `speed_partner_timings`.
-
-### Fix
-Wire `savePartnerTiming` into the session completion flow. When Partner Mode is used, record whether each distance was timed by 'self' or 'partner' and save that metadata after the session is saved.
+**Readiness auto-adjustment**: If the readiness score (calculated from sleep, body feel, and pain areas) falls below 40, reps are cut by ~40%. If below 60, reps are cut by ~25%. The UI will explain: "Your body is recovering today. We've adjusted your sprint count."
 
 ---
 
-## Issue 4: `refreshKey` State is Unused (Bug)
+## 2. Multi-Rep Time Logging
 
-In `SpeedLab.tsx`, `refreshKey` is set when the countdown timer completes, but it's never used as a dependency anywhere. This means the page doesn't actually refresh or re-fetch data when the lock expires. The user would need to manually navigate away and back.
+**Current**: One time per distance (e.g., `{ "10y": 1.85 }`)
 
-### Fix
-Pass `refreshKey` as a dependency to trigger `fetchData()` when the countdown completes, or call `fetchData()` directly in the `onComplete` callback.
+**New**: Array of times per distance (e.g., `{ "10y": [1.85, 1.82, 1.79] }`)
 
----
+Each distance card in the sprint logging step will show Rep 1, Rep 2, Rep 3, etc. with:
+- Individual number inputs or partner timer per rep
+- Best time highlighted with a star icon
+- PB comparison shown next to each rep
+- The best time from the array becomes the new PB candidate
 
-## Issue 5: `updated_at` Trigger Missing on `speed_goals` Table
-
-The `speed_goals` table has an `updated_at` column, and the code updates it manually via `.update()`. However, there is no database trigger to automatically set `updated_at = now()` on UPDATE like other tables in the app use (the `update_updated_at_column` trigger function exists but is not attached to `speed_goals`).
-
-### Fix
-Add the `update_updated_at_column` trigger to `speed_goals`.
+The database `distances` column is already JSONB, so it can store arrays without a schema migration. The code will detect both formats (number for old sessions, array for new ones) for backward compatibility.
 
 ---
 
-## Issue 6: Session Focus Messages Not Translatable
+## 3. "Run Your Sprints" Page Redesign
 
-The `SESSION_FOCUSES` array in `speedLabProgram.ts` contains hardcoded English strings:
-```
-{ icon: '⚡', message: 'Today we build explosive first steps.' }
-```
+The `SpeedSprintStep.tsx` component will be completely redesigned:
 
-These are displayed directly in the UI without using the `t()` translation function. Non-English users will always see English focus messages.
-
-### Fix
-Convert focus messages to use translation keys. Store only `icon` and a `messageKey` in the data file, then resolve the translation in the component using `t()`.
+- **Distance cards** show the assigned rep count for the session (e.g., "10 Yard Sprint -- 3 reps")
+- **Rest guidance** between sprints: "Walk back slowly. Rest 2-3 minutes. Sprint only when fully ready."
+- **Readiness adjustment notice**: If reps were reduced, a banner explains why
+- **Button text** changes from "I'm Done Sprinting" to **"Begin Sprinting"** (since they log times on the next page)
+- **Barefoot indicator**: Sessions that include barefoot sprints will show a barefoot badge on the relevant distance
 
 ---
 
-## Issue 7: Drill Names and Cues Not Translatable
+## 4. Barefoot Progression
 
-All 35 drill names and their cues are hardcoded in English in `speedLabProgram.ts`. Example:
-```
-name: 'Barefoot Ankle Circles + Toe Grips'
-cues: ['Slow circles', 'Grip the ground with toes']
-```
+Barefoot training stages based on session number AND readiness:
 
-For non-English users, these will always appear in English even though the rest of the UI is localized.
+| Stage | Sessions | What Changes |
+|-------|----------|-------------|
+| Foundation | 1-9 | Barefoot activation drills only (ankle circles, toe grips) -- already in place |
+| Introduction | 10-14 | Add barefoot A-skips and ankling drills (marked with barefoot badge) |
+| Integration | 15-19 | Introduce barefoot 10Y sprint option (shortest distance only) |
+| Advanced | 20+ | All short-distance sprints can be done barefoot; readiness must be above 60 |
 
-### Fix
-Add drill translation keys to the locale files and resolve them in `SpeedDrillCard.tsx` using the drill ID as a key prefix: `t('speedLab.drills.ankle_circles.name')`, `t('speedLab.drills.ankle_circles.description')`, etc. Use the English text as fallback.
+A new `barefootLevel` field will be added to each drill in the data file. The UI will show a barefoot badge when relevant, and the drill description will explain WHY barefoot training matters for fascia development.
 
----
-
-## Issue 8: RPE Slider Accessibility on Mobile
-
-The RPE slider uses a Radix `Slider` component with values 1-10. For kids on phones, a slider with 10 notches on a narrow screen is very hard to hit accurately. A 5-year-old cannot reliably slide to exactly "7" on a tiny slider.
-
-### Fix
-Replace the slider with large tappable number buttons (1-10) or segmented emoji-based options. Each number should be its own large button (minimum 44x44px) with a color indicator and simple label.
+**Legal disclaimer** added to the bottom of every session flow page:
+> "Barefoot training is introduced gradually to strengthen feet and connective tissue. Always train on safe, clean surfaces. If you experience pain, stop immediately and return to shoes. Consult a qualified professional before beginning any barefoot training program."
 
 ---
 
-## Summary of All Changes
+## 5. Game-Ready Conditioning Context
 
-| Priority | Issue | Files Affected |
-|----------|-------|----------------|
-| Critical | Add descriptions + whyItHelps to all drills | `speedLabProgram.ts`, `SpeedDrillCard.tsx`, `DrillData` interface |
-| Critical | Add "Run Your Sprints" step to session flow | `SpeedSessionFlow.tsx`, locale files |
-| Bug | Wire savePartnerTiming to session completion | `SpeedSessionFlow.tsx`, `SpeedLab.tsx` |
-| Bug | Fix refreshKey to actually trigger data refresh | `SpeedLab.tsx` |
-| Bug | Add updated_at trigger to speed_goals | Database migration |
-| UX | Make session focus messages translatable | `speedLabProgram.ts`, `SpeedFocusCard.tsx`, locale files |
-| UX | Make drill names/cues translatable | `SpeedDrillCard.tsx`, locale files |
-| UX | Replace RPE slider with tappable buttons | `SpeedRPESlider.tsx` |
+Both baseball and softball athletes train toward 16 full-out sprints -- the same UI framework, with sport-specific messaging:
 
-### Technical Details
+- **Baseball**: "Train to sprint 16 times in a game. Full MLB season ready."
+- **Softball**: "Train to sprint 16 times in a game. Full AUSL season ready."
 
-**DrillData interface changes:**
+A progress indicator on the sprint step shows: "You're at 9 of 16 game-ready sprints" with a progress bar.
+
+---
+
+## Technical Details
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/data/speedLabProgram.ts` | Add `getSprintRepsForSession()` function, `barefootLevel` field on DrillData, barefoot progression constants |
+| `src/components/speed-lab/SpeedSprintStep.tsx` | Complete redesign: show rep counts per distance, readiness adjustment notice, game-ready progress bar, barefoot badges, "Begin Sprinting" button, barefoot disclaimer |
+| `src/components/speed-lab/SpeedTimeEntry.tsx` | Multi-rep inputs: render Rep 1, Rep 2... per distance with individual timer/input, highlight best time, PB comparison |
+| `src/components/speed-lab/PartnerTimer.tsx` | No structural changes needed (already works per-rep) |
+| `src/components/speed-lab/SpeedSessionFlow.tsx` | Pass `sessionNumber` and `readinessScore` to SpeedSprintStep; update `distanceTimes` state to `Record<string, number[]>`; update PB detection to scan arrays; pass rep config down; add barefoot disclaimer to footer |
+| `src/hooks/useSpeedProgress.ts` | Update `saveSession` and `updatePersonalBests` to handle `Record<string, number[]>` format; add backward compat for old `Record<string, number>` format in session history |
+| `src/pages/SpeedLab.tsx` | Pass readiness data to session flow |
+| `src/i18n/locales/en.json` | New keys: sprint rep labels, readiness adjustment messages, game-ready progress, barefoot badges, barefoot disclaimer |
+| `src/i18n/locales/de.json` | Same new keys translated to German |
+| `src/i18n/locales/es.json` | Same new keys translated to Spanish |
+| `src/i18n/locales/fr.json` | Same new keys translated to French |
+| `src/i18n/locales/ja.json` | Same new keys translated to Japanese |
+| `src/i18n/locales/ko.json` | Same new keys translated to Korean |
+| `src/i18n/locales/nl.json` | Same new keys translated to Dutch |
+| `src/i18n/locales/zh.json` | Same new keys translated to Chinese |
+
+### Data Structure Changes
+
+**DrillData interface** (adding one field):
 ```text
-Current:  { id, name, category, cues, setsReps, duration?, minSessionNumber? }
-Proposed: { id, name, category, cues, setsReps, duration?, minSessionNumber?, description, whyItHelps }
+interface DrillData {
+  // ... existing fields
+  barefootLevel?: number;  // 0 = never barefoot, 1 = barefoot after session 10, 2 = after 15, 3 = after 20
+}
 ```
 
-**Session flow step changes:**
+**Sprint rep config** (new function):
 ```text
-Current:  checkin -> focus -> drills -> log_results -> complete
-Proposed: checkin -> focus -> drills -> sprint_efforts -> log_results -> complete
+getSprintRepsForSession(sessionNumber, readinessScore) -> { "10y": 3, "30y": 2, "60y": 1 }
 ```
 
-The new `sprint_efforts` step will show:
-- Distance cards for each sprint (e.g., "10 Yard Sprint")
-- Clear instruction: "Sprint as fast as you can!"
-- Rest timer suggestion: "Rest 2-3 minutes between sprints"
-- Partner timer integrated directly into each distance card
-- "Skip" option if a distance is not run that day
-- After all sprints, transition to log_results for RPE + body feel
+**Distance times format change**:
+```text
+Before: { "10y": 1.85, "30y": 3.45 }
+After:  { "10y": [1.85, 1.82, 1.79], "30y": [3.45, 3.50] }
+```
 
-**Database migration:**
-- Attach `update_updated_at_column` trigger to `speed_goals`
+### No Database Migration Required
 
-**Locale changes:**
-- Add ~35 drill description + whyItHelps keys per language
-- Add sprint instruction step translation keys
-- Add focus message translation keys (7 messages)
-- Total: ~80 new keys per locale file (8 files)
+The `distances` column is already JSONB, which handles both `number` and `number[]` values. The code will detect old format (plain numbers) and treat them as single-element arrays for backward compatibility. No schema change needed.
+
+### Backward Compatibility
+
+- Old sessions with `{ "10y": 1.85 }` format will display correctly in session history
+- PB logic will handle both formats: if value is a number, use it directly; if array, use `Math.min(...arr)`
+- No data migration needed
+
+### Total: ~15 files modified, 0 database migrations
 
