@@ -4352,6 +4352,11 @@
       "title": "6週間レキャップ",
       "days": "日",
       "daysRemaining": "残り{{days}}日"
+    },
+    "speedLab": {
+      "title": "スピードラボセッションを完了",
+      "description": "構造化スプリントでエリートスピードを構築",
+      "recoveryBadge": "回復中"
     }
   },
   "weeklyWellnessQuiz": {

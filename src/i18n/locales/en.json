@@ -5734,7 +5734,12 @@
     },
     "skipTask": "Skip for today",
     "restore": "Restore",
-    "skippedForToday": "Skipped for today"
+    "skippedForToday": "Skipped for today",
+    "speedLab": {
+      "title": "Complete Speed Lab Session",
+      "description": "Build elite speed with structured sprints",
+      "recoveryBadge": "RECOVERY"
+    }
   },
   "weeklyWellnessQuiz": {
     "title": "Weekly Wellness Goals",

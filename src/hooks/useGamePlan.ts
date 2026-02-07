@@ -234,6 +234,36 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         status['video-throwing'] = (throwingVideos?.length || 0) > 0;
       }
 
+      // Fetch Speed Lab completion for today (speed_sessions)
+      if (hasThrowingAccess) {
+        const { data: speedData } = await supabase
+          .from('speed_sessions')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('sport', selectedSport)
+          .eq('session_date', today)
+          .limit(1);
+
+        status['speed-lab'] = (speedData?.length || 0) > 0;
+
+        // Check CNS lockout (12-hour recovery window)
+        const { data: latestSession } = await supabase
+          .from('speed_sessions')
+          .select('created_at')
+          .eq('user_id', user.id)
+          .eq('sport', selectedSport)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (latestSession?.[0]) {
+          const lastTime = new Date(latestSession[0].created_at).getTime();
+          const unlockAt = lastTime + 43200000; // 12 hours
+          if (Date.now() < unlockAt) {
+            status['speed-lab-locked'] = true;
+          }
+        }
+      }
+
       // Fetch nutrition check-in for today
       const { data: nutritionData } = await supabase
         .from('vault_nutrition_logs')
@@ -697,6 +727,22 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       module: 'pitching',
       taskType: 'workout',
       section: 'training',
+    });
+  }
+
+  // Speed Lab task (throwing module gated)
+  if (hasThrowingAccess && !isSystemTaskSkippedToday('speed-lab')) {
+    tasks.push({
+      id: 'speed-lab',
+      titleKey: 'gamePlan.speedLab.title',
+      descriptionKey: 'gamePlan.speedLab.description',
+      completed: completionStatus['speed-lab'] || false,
+      icon: Zap,
+      link: '/speed-lab',
+      module: 'throwing',
+      taskType: 'workout',
+      section: 'training',
+      badge: completionStatus['speed-lab-locked'] ? 'gamePlan.speedLab.recoveryBadge' : undefined,
     });
   }
 

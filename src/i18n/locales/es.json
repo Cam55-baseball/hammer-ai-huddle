@@ -5124,6 +5124,11 @@
         "fri": "Viernes",
         "sat": "Sábado"
       }
+    },
+    "speedLab": {
+      "title": "Completar Sesión de Speed Lab",
+      "description": "Desarrolla velocidad élite con sprints estructurados",
+      "recoveryBadge": "RECUPERACIÓN"
     }
   },
   "weeklyWellnessQuiz": {

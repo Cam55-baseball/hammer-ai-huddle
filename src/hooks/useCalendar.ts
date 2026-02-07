@@ -4,7 +4,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useGamePlanLock } from '@/hooks/useGamePlanLock';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfMonth, endOfMonth, addDays, eachDayOfInterval, getDay } from 'date-fns';
-import { LucideIcon, Target, Utensils, Dumbbell, Calendar, Brain, Eye, Moon, Sun, Activity, Apple, Lightbulb, Sparkles, BedDouble, Timer, Flame } from 'lucide-react';
+import { LucideIcon, Target, Utensils, Dumbbell, Calendar, Brain, Eye, Moon, Sun, Activity, Apple, Lightbulb, Sparkles, BedDouble, Timer, Flame, Zap } from 'lucide-react';
 import { getOrderKey, CalendarDayOrder } from '@/hooks/useCalendarDayOrders';
 
 // Helper to get the Game Plan task ID for a calendar event
@@ -106,6 +106,7 @@ const SYSTEM_TASKS: Record<string, { title: string; icon: LucideIcon; color: str
   'video-hitting': { title: 'Video Analysis (Hitting)', icon: Eye, color: '#3b82f6' },
   'video-pitching': { title: 'Video Analysis (Pitching)', icon: Eye, color: '#3b82f6' },
   'video-throwing': { title: 'Video Analysis (Throwing)', icon: Eye, color: '#3b82f6' },
+  'speed-lab': { title: 'Speed Lab', icon: Zap, color: '#eab308' },
   
   // Tracking tasks
   'tracking-performance': { title: 'Performance Tracking', icon: Activity, color: '#3b82f6' },
@@ -128,6 +129,7 @@ const DEFAULT_DAILY_TASKS = [
 const MODULE_GATED_TASKS: Record<string, string[]> = {
   hitting: ['texvision', 'video-hitting', 'tracking-grades'],
   pitching: ['video-pitching', 'tracking-pitching-grades'],
+  throwing: ['video-throwing', 'speed-lab'],
 };
 
 // Map event sources to icons
@@ -194,6 +196,8 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     modules.some(m => m.includes('hitting')), [modules]);
   const hasPitchingAccess = useMemo(() => 
     modules.some(m => m.includes('pitching')), [modules]);
+  const hasThrowingAccess = useMemo(() => 
+    modules.some(m => m.includes('throwing')), [modules]);
 
   const fetchEventsForRange = useCallback(async (startDate: Date, endDate: Date) => {
     if (!user) return;
@@ -558,6 +562,34 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             aggregatedEvents[dateKey].push(calEvent);
           });
         }
+        
+        if (hasThrowingAccess) {
+          MODULE_GATED_TASKS.throwing.forEach(taskId => {
+            if (scheduledTaskIds.has(taskId)) return;
+            
+            const taskDef = SYSTEM_TASKS[taskId];
+            if (!taskDef) return;
+            
+            const alreadyExists = aggregatedEvents[dateKey].some(
+              e => e.source === taskId && e.type === 'game_plan'
+            );
+            if (alreadyExists) return;
+            
+            const calEvent: CalendarEvent = {
+              id: `gated-${taskId}-${dateKey}`,
+              date: dateKey,
+              title: taskDef.title,
+              type: 'game_plan',
+              source: taskId,
+              color: taskDef.color,
+              icon: taskDef.icon,
+              editable: false,
+              deletable: false,
+            };
+            calEvent.orderKey = getOrderKey(calEvent);
+            aggregatedEvents[dateKey].push(calEvent);
+          });
+        }
       });
 
       // Process sub_module_progress for Iron Bambino and Heat Factory
@@ -763,7 +795,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
     } finally {
       setLoading(false);
     }
-  }, [user, sport, hasHittingAccess, hasPitchingAccess, getDaySchedule]);
+  }, [user, sport, hasHittingAccess, hasPitchingAccess, hasThrowingAccess, getDaySchedule]);
 
   const addEvent = useCallback(async (event: CreateCalendarEvent): Promise<boolean> => {
     if (!user) return false;

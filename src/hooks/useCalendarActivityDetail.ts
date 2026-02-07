@@ -42,6 +42,7 @@ const SYSTEM_TASK_ROUTES: Record<string, string> = {
   'workout-hitting': '/production-lab',
   'workout-pitching': '/production-studio',
   'cycle': '/cycle-tracking',
+  'speed-lab': '/speed-lab',
 };
 
 export function useCalendarActivityDetail(
