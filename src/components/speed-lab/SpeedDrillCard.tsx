@@ -3,13 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
-import { DrillData } from '@/data/speedLabProgram';
+import { ChevronDown, ChevronUp, Lightbulb, Footprints } from 'lucide-react';
+import { DrillData, getBarefootStage } from '@/data/speedLabProgram';
 
 interface SpeedDrillCardProps {
   drill: DrillData;
   completed: boolean;
   onToggle: (completed: boolean) => void;
+  sessionNumber?: number;
+  readinessScore?: number;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -32,13 +34,24 @@ const CATEGORY_COLORS: Record<string, string> = {
   break_day: 'bg-sky-500/10 text-sky-700 dark:text-sky-400',
 };
 
-export function SpeedDrillCard({ drill, completed, onToggle }: SpeedDrillCardProps) {
+export function SpeedDrillCard({ drill, completed, onToggle, sessionNumber = 1, readinessScore = 70 }: SpeedDrillCardProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   const drillName = t(`speedLab.drillData.${drill.id}.name`, drill.name);
   const drillDesc = t(`speedLab.drillData.${drill.id}.description`, drill.description);
   const drillWhy = t(`speedLab.drillData.${drill.id}.whyItHelps`, drill.whyItHelps);
+
+  // Determine if this drill qualifies for barefoot based on progression
+  const isBarefootDrill = (() => {
+    if (drill.barefootLevel === undefined) return false;
+    if (drill.barefootLevel === 0) return true; // Always barefoot
+    const stage = getBarefootStage(sessionNumber, readinessScore);
+    if (drill.barefootLevel === 1) return stage !== 'foundation';
+    if (drill.barefootLevel === 2) return stage === 'integration' || stage === 'advanced';
+    if (drill.barefootLevel === 3) return stage === 'advanced';
+    return false;
+  })();
 
   return (
     <Card
@@ -66,6 +79,12 @@ export function SpeedDrillCard({ drill, completed, onToggle }: SpeedDrillCardPro
               <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${CATEGORY_COLORS[drill.category] || ''}`}>
                 {t(`speedLab.categories.${drill.category}`, CATEGORY_LABELS[drill.category] || drill.category)}
               </Badge>
+              {isBarefootDrill && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500/40 text-green-700 dark:text-green-400 gap-0.5">
+                  <Footprints className="h-2.5 w-2.5" />
+                  {t('speedLab.sprintStep.barefoot', 'Barefoot OK')}
+                </Badge>
+              )}
               <button
                 onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
                 className="ml-auto text-muted-foreground hover:text-foreground"

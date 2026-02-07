@@ -5437,11 +5437,18 @@
       "title": "开始冲刺！",
       "subtitle": "是时候测试你的速度了",
       "instruction": "找一个平坦开阔的地方，全力冲刺！",
-      "restTip": "冲刺之间休息2-3分钟",
+      "restTip": "冲刺之间休息2-3分钟。慢慢走回来。",
       "partnerTip": "让人在你出发时按开始，到达时按停止",
       "allOptional": "所有距离都是可选的——跑你能跑的！",
       "optional": "可选",
-      "done": "冲刺完成 →"
+      "done": "开始冲刺 →",
+      "reps": "{{count}} 次",
+      "gameReadyProgress": "{{target}} 次比赛冲刺中已完成 {{current}} 次",
+      "gameReadyBaseball": "训练在比赛中冲刺16次。为MLB赛季做好准备。",
+      "gameReadySoftball": "训练在比赛中冲刺16次。为AUSL赛季做好准备。",
+      "readinessAdjusted": "你的身体今天正在恢复。我们已调整你的冲刺次数。",
+      "barefoot": "赤脚OK",
+      "barefootTip": "赤脚训练强化脚部、脚踝和筋膜连接——弹性速度的基础。"
     },
     "categories": {
       "activation": "热身",
@@ -5460,7 +5467,10 @@
       "startTimer": "计时器",
       "bodyFeelAfter": "现在身体感觉如何？",
       "saving": "保存中...",
-      "finish": "完成训练 ✓"
+      "finish": "完成训练 ✓",
+      "rep": "第{{number}}次",
+      "pbLabel": "PB: {{time}}秒",
+      "newPB": "新PB！"
     },
     "timer": {
       "seconds": "秒",
@@ -5548,6 +5558,11 @@
       "title": "速度重点调整",
       "message": "你的身体正在适应。我们正在调整重点以保持速度。这是正常的——这意味着你的神经系统正在建立更强的基础。"
     },
-    "disclaimer": "在开始任何锻炼计划之前，请务必咨询合格的医疗专业人员。倾听你的身体，如果感到疼痛请立即停止。"
+    "disclaimer": "在开始任何锻炼计划之前，请务必咨询合格的医疗专业人员。倾听你的身体，如果感到疼痛请立即停止。",
+    "barefoot": {
+      "disclaimer": "赤脚训练逐步引入，以强化足部和结缔组织。始终在安全、干净的地面上训练。如果感到疼痛，立即停止并穿上鞋子。在开始任何赤脚训练计划之前，请咨询合格的专业人员。",
+      "whyTitle": "为什么赤脚？",
+      "whyDescription": "赤脚训练可以发展筋膜和弹性连接，这是冲刺速度的基础。"
+    }
   }
 }

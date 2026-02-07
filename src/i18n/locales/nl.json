@@ -5493,11 +5493,18 @@
       "title": "Ren je Sprints!",
       "subtitle": "Tijd om je snelheid te testen",
       "instruction": "Zoek een vlakke, open ruimte. Sprint zo snel als je kunt!",
-      "restTip": "Rust 2-3 minuten tussen sprints",
+      "restTip": "Rust 2-3 minuten tussen sprints. Loop langzaam terug.",
       "partnerTip": "Laat iemand op START tikken als je gaat en STOP als je klaar bent",
       "allOptional": "Alle afstanden zijn optioneel — ren wat je kunt!",
       "optional": "Optioneel",
-      "done": "Klaar met sprinten →"
+      "done": "Begin met Sprinten →",
+      "reps": "{{count}} reps",
+      "gameReadyProgress": "{{current}} van {{target}} wedstrijd-klare sprints",
+      "gameReadyBaseball": "Train om 16 keer te sprinten in een wedstrijd. Klaar voor het MLB-seizoen.",
+      "gameReadySoftball": "Train om 16 keer te sprinten in een wedstrijd. Klaar voor het AUSL-seizoen.",
+      "readinessAdjusted": "Je lichaam herstelt vandaag. We hebben je sprintaantal aangepast.",
+      "barefoot": "Blootsvoets OK",
+      "barefootTip": "Blootsvoets trainen versterkt voeten, enkels en fasciale verbindingen — de basis van elastische snelheid."
     },
     "categories": {
       "activation": "Warming-up",
@@ -5516,7 +5523,10 @@
       "startTimer": "Timer",
       "bodyFeelAfter": "Hoe voelt je lichaam nu?",
       "saving": "Opslaan...",
-      "finish": "Sessie Voltooien ✓"
+      "finish": "Sessie Voltooien ✓",
+      "rep": "Rep {{number}}",
+      "pbLabel": "PB: {{time}}s",
+      "newPB": "Nieuw PB!"
     },
     "timer": {
       "seconds": "seconden",
@@ -5604,6 +5614,11 @@
       "title": "Snelheidsfocus Verschuiving",
       "message": "Je lichaam past zich aan. We verschuiven de focus zodat snelheid blijft. Dit is normaal — het betekent dat je zenuwstelsel een sterkere basis bouwt."
     },
-    "disclaimer": "Raadpleeg altijd een gekwalificeerde zorgprofessional voordat je een trainingsprogramma begint. Luister naar je lichaam en stop onmiddellijk als je pijn ervaart."
+    "disclaimer": "Raadpleeg altijd een gekwalificeerde zorgprofessional voordat je een trainingsprogramma begint. Luister naar je lichaam en stop onmiddellijk als je pijn ervaart.",
+    "barefoot": {
+      "disclaimer": "Blootsvoets trainen wordt geleidelijk geïntroduceerd om voeten en bindweefsel te versterken. Train altijd op veilige, schone oppervlakken. Bij pijn direct stoppen en schoenen aandoen. Raadpleeg een gekwalificeerde professional voordat je begint met blootsvoets trainen.",
+      "whyTitle": "Waarom Blootsvoets?",
+      "whyDescription": "Blootsvoetse oefeningen ontwikkelen het fascia en de elastische verbindingen die verantwoordelijk zijn voor sprintsnelheid."
+    }
   }
 }

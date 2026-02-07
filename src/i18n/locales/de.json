@@ -6194,11 +6194,18 @@
       "title": "Lauf deine Sprints!",
       "subtitle": "Zeit, deine Geschwindigkeit zu testen",
       "instruction": "Finde eine flache, offene Fläche. Sprinte so schnell du kannst!",
-      "restTip": "2-3 Minuten Pause zwischen den Sprints",
+      "restTip": "2-3 Minuten Pause zwischen den Sprints. Geh langsam zurück.",
       "partnerTip": "Lass jemanden START drücken wenn du losläufst und STOPP wenn du fertig bist",
       "allOptional": "Alle Distanzen sind optional — lauf was du kannst!",
       "optional": "Optional",
-      "done": "Fertig mit Sprinten →"
+      "done": "Sprinten beginnen →",
+      "reps": "{{count}} Wdh.",
+      "gameReadyProgress": "{{current}} von {{target}} spielbereiten Sprints",
+      "gameReadyBaseball": "Trainiere, 16 Mal in einem Spiel zu sprinten. Bereit für die MLB-Saison.",
+      "gameReadySoftball": "Trainiere, 16 Mal in einem Spiel zu sprinten. Bereit für die AUSL-Saison.",
+      "readinessAdjusted": "Dein Körper erholt sich heute. Wir haben deine Sprintzahl angepasst.",
+      "barefoot": "Barfuß OK",
+      "barefootTip": "Barfußtraining stärkt Füße, Knöchel und fasziale Verbindungen — die Grundlage elastischer Geschwindigkeit."
     },
     "categories": {
       "activation": "Aufwärmen",
@@ -6217,7 +6224,10 @@
       "startTimer": "Timer",
       "bodyFeelAfter": "Wie fühlt sich dein Körper jetzt an?",
       "saving": "Speichern...",
-      "finish": "Einheit abschließen ✓"
+      "finish": "Einheit abschließen ✓",
+      "rep": "Wdh. {{number}}",
+      "pbLabel": "PB: {{time}}s",
+      "newPB": "Neuer PB!"
     },
     "timer": {
       "seconds": "Sekunden",
@@ -6305,6 +6315,11 @@
       "title": "Speed-Fokus-Verschiebung",
       "message": "Dein Körper passt sich an. Wir verlagern den Fokus, damit Geschwindigkeit bleibt. Das ist normal — es bedeutet, dass dein Nervensystem ein stärkeres Fundament baut."
     },
-    "disclaimer": "Konsultiere immer einen qualifizierten Gesundheitsexperten, bevor du ein Trainingsprogramm beginnst. Höre auf deinen Körper und stoppe sofort, wenn du Schmerzen verspürst."
+    "disclaimer": "Konsultiere immer einen qualifizierten Gesundheitsexperten, bevor du ein Trainingsprogramm beginnst. Höre auf deinen Körper und stoppe sofort, wenn du Schmerzen verspürst.",
+    "barefoot": {
+      "disclaimer": "Barfußtraining wird schrittweise eingeführt, um Füße und Bindegewebe zu stärken. Trainiere immer auf sicheren, sauberen Oberflächen. Bei Schmerzen sofort stoppen und zu Schuhen zurückkehren. Konsultiere einen qualifizierten Fachmann, bevor du mit Barfußtraining beginnst.",
+      "whyTitle": "Warum Barfuß?",
+      "whyDescription": "Barfußübungen entwickeln die Faszien und die elastischen Verbindungen, die für Sprintgeschwindigkeit verantwortlich sind."
+    }
   }
 }

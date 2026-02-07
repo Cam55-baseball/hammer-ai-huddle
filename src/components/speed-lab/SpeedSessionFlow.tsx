@@ -263,6 +263,8 @@ export function SpeedSessionFlow({
                   drill={drill}
                   completed={completedDrills[drill.id] || false}
                   onToggle={(completed) => handleDrillToggle(drill.id, completed)}
+                  sessionNumber={sessionNumber}
+                  readinessScore={readinessScore}
                 />
               ))}
             </div>
