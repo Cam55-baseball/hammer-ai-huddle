@@ -6,6 +6,7 @@ import { ConfettiEffect } from '@/components/bounce-back-bay/ConfettiEffect';
 import { SpeedCheckIn } from './SpeedCheckIn';
 import { SpeedFocusCard } from './SpeedFocusCard';
 import { SpeedDrillCard } from './SpeedDrillCard';
+import { SpeedSprintStep } from './SpeedSprintStep';
 import { SpeedTimeEntry } from './SpeedTimeEntry';
 import { SpeedRPESlider } from './SpeedRPESlider';
 import { BreakDayContent } from './BreakDayContent';
@@ -16,7 +17,7 @@ import {
   DrillData,
 } from '@/data/speedLabProgram';
 
-type FlowStep = 'checkin' | 'focus' | 'break_day' | 'drills' | 'log_results' | 'complete';
+type FlowStep = 'checkin' | 'focus' | 'break_day' | 'drills' | 'sprint_efforts' | 'log_results' | 'complete';
 
 interface SpeedSessionFlowProps {
   sessionNumber: number;
@@ -35,6 +36,7 @@ interface SpeedSessionFlowProps {
     rpe: number;
     isBreakDay: boolean;
     notes?: string;
+    timingMethods?: Record<string, 'self' | 'partner'>;
   }) => Promise<void>;
   onExit: () => void;
 }
@@ -55,6 +57,7 @@ export function SpeedSessionFlow({
   const [checkInData, setCheckInData] = useState<{ sleepRating: number; bodyFeel: string; painAreas: string[] } | null>(null);
   const [completedDrills, setCompletedDrills] = useState<Record<string, boolean>>({});
   const [distanceTimes, setDistanceTimes] = useState<Record<string, number>>({});
+  const [timingMethods, setTimingMethods] = useState<Record<string, 'self' | 'partner'>>({});
   const [rpe, setRpe] = useState(5);
   const [bodyFeelAfter, setBodyFeelAfter] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
@@ -111,6 +114,13 @@ export function SpeedSessionFlow({
     setCompletedDrills(prev => ({ ...prev, [drillId]: completed }));
   };
 
+  const handleDistanceTimeChange = (key: string, val: number, method?: 'self' | 'partner') => {
+    setDistanceTimes(prev => ({ ...prev, [key]: val }));
+    if (method) {
+      setTimingMethods(prev => ({ ...prev, [key]: method }));
+    }
+  };
+
   const handleFinishSession = async () => {
     if (!checkInData) return;
     setSaving(true);
@@ -138,6 +148,7 @@ export function SpeedSessionFlow({
       distances: distanceTimes,
       rpe,
       isBreakDay: false,
+      timingMethods: Object.keys(timingMethods).length > 0 ? timingMethods : undefined,
     });
 
     setShowConfetti(true);
@@ -155,7 +166,7 @@ export function SpeedSessionFlow({
 
   const steps = isBreakDay
     ? ['checkin', 'break_day', 'complete']
-    : ['checkin', 'focus', 'drills', 'log_results', 'complete'];
+    : ['checkin', 'focus', 'drills', 'sprint_efforts', 'log_results', 'complete'];
   const currentStepIndex = steps.indexOf(step);
 
   return (
@@ -224,11 +235,18 @@ export function SpeedSessionFlow({
             <Button
               className="w-full h-14 text-lg font-bold mt-4"
               size="lg"
-              onClick={() => setStep('log_results')}
+              onClick={() => setStep('sprint_efforts')}
             >
-              {t('speedLab.drills.logResults', 'Log Results →')}
+              {t('speedLab.drills.nextSprints', 'Go Sprint! →')}
             </Button>
           </div>
+        )}
+
+        {step === 'sprint_efforts' && (
+          <SpeedSprintStep
+            distances={distances}
+            onContinue={() => setStep('log_results')}
+          />
         )}
 
         {step === 'log_results' && (
@@ -236,7 +254,7 @@ export function SpeedSessionFlow({
             <SpeedTimeEntry
               distances={distances}
               values={distanceTimes}
-              onChange={(key, val) => setDistanceTimes(prev => ({ ...prev, [key]: val }))}
+              onChange={(key, val) => handleDistanceTimeChange(key, val, 'self')}
             />
 
             <SpeedRPESlider value={rpe} onChange={setRpe} />

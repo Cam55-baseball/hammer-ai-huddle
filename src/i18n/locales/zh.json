@@ -5421,7 +5421,27 @@
     "drills": {
       "title": "开始训练",
       "subtitle": "完成下面的每个训练",
-      "logResults": "记录结果 →"
+      "logResults": "记录结果 →",
+      "nextSprints": "去冲刺！→"
+    },
+    "focusMessages": {
+      "focus1": "今天我们打造爆发性的第一步。",
+      "focus2": "今天我们提升最高速度。",
+      "focus3": "今天我们打磨加速技术。",
+      "focus4": "今天我们快速且放松地训练。",
+      "focus5": "今天我们提升步幅力量。",
+      "focus6": "今天我们打造弹性速度。",
+      "focus7": "今天我们积蓄弹性能量。"
+    },
+    "sprintStep": {
+      "title": "开始冲刺！",
+      "subtitle": "是时候测试你的速度了",
+      "instruction": "找一个平坦开阔的地方，全力冲刺！",
+      "restTip": "冲刺之间休息2-3分钟",
+      "partnerTip": "让人在你出发时按开始，到达时按停止",
+      "allOptional": "所有距离都是可选的——跑你能跑的！",
+      "optional": "可选",
+      "done": "冲刺完成 →"
     },
     "categories": {
       "activation": "热身",

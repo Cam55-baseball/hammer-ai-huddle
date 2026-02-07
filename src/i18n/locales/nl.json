@@ -5477,7 +5477,27 @@
     "drills": {
       "title": "Aan het Werk",
       "subtitle": "Voltooi elke oefening hieronder",
-      "logResults": "Resultaten Noteren →"
+      "logResults": "Resultaten Noteren →",
+      "nextSprints": "Ga sprinten! →"
+    },
+    "focusMessages": {
+      "focus1": "Vandaag bouwen we explosieve eerste stappen.",
+      "focus2": "Vandaag ontwikkelen we topsnelheid.",
+      "focus3": "Vandaag slijpen we de versnellingsmechanica.",
+      "focus4": "Vandaag trainen we snel & ontspannen.",
+      "focus5": "Vandaag ontwikkelen we stapkracht.",
+      "focus6": "Vandaag bouwen we veerkrachtige snelheid.",
+      "focus7": "Vandaag bouwen we elastische energie."
+    },
+    "sprintStep": {
+      "title": "Ren je Sprints!",
+      "subtitle": "Tijd om je snelheid te testen",
+      "instruction": "Zoek een vlakke, open ruimte. Sprint zo snel als je kunt!",
+      "restTip": "Rust 2-3 minuten tussen sprints",
+      "partnerTip": "Laat iemand op START tikken als je gaat en STOP als je klaar bent",
+      "allOptional": "Alle afstanden zijn optioneel — ren wat je kunt!",
+      "optional": "Optioneel",
+      "done": "Klaar met sprinten →"
     },
     "categories": {
       "activation": "Warming-up",

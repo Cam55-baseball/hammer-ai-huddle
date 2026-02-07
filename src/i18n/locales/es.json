@@ -6587,7 +6587,27 @@
     "drills": {
       "title": "A Trabajar",
       "subtitle": "Completa cada ejercicio abajo",
-      "logResults": "Registrar Resultados →"
+      "logResults": "Registrar Resultados →",
+      "nextSprints": "¡A Correr! →"
+    },
+    "focusMessages": {
+      "focus1": "Hoy construimos primeros pasos explosivos.",
+      "focus2": "Hoy desarrollamos velocidad máxima.",
+      "focus3": "Hoy afinamos la mecánica de aceleración.",
+      "focus4": "Hoy entrenamos rápido y relajado.",
+      "focus5": "Hoy desarrollamos potencia de zancada.",
+      "focus6": "Hoy construimos velocidad elástica.",
+      "focus7": "Hoy construimos energía elástica."
+    },
+    "sprintStep": {
+      "title": "¡Corre tus Sprints!",
+      "subtitle": "Es hora de probar tu velocidad",
+      "instruction": "Encuentra un espacio plano y abierto. ¡Corre lo más rápido que puedas!",
+      "restTip": "Descansa 2-3 minutos entre sprints",
+      "partnerTip": "Que alguien presione INICIAR cuando salgas y PARAR cuando termines",
+      "allOptional": "¡Todas las distancias son opcionales — corre lo que puedas!",
+      "optional": "Opcional",
+      "done": "Terminé de Correr →"
     },
     "categories": {
       "activation": "Calentamiento",
