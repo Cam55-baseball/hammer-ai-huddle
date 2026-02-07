@@ -19,6 +19,7 @@ export interface DrillData {
   minSessionNumber?: number;
   description: string;
   whyItHelps: string;
+  barefootLevel?: number;
 }
 
 export type DrillCategory = 
@@ -481,3 +482,85 @@ export const RPE_LABELS: Record<number, string> = {
 export const SPEED_UNLOCK_DELAY_MS = 12 * 60 * 60 * 1000; // 12 hours
 export const PLATEAU_THRESHOLD_SESSIONS = 4;
 export const READINESS_BREAK_THRESHOLD = 40;
+export const GAME_READY_SPRINT_TARGET = 16;
+
+// ─── Readiness Calculation ──────────────────────────────────────────────────
+
+export function calculateReadiness(sleepRating: number, bodyFeel: string, painAreas: string[]): number {
+  let score = 50;
+  score += (sleepRating - 3) * 10;
+  if (bodyFeel === 'good') score += 15;
+  else if (bodyFeel === 'okay') score += 0;
+  else if (bodyFeel === 'tight') score -= 15;
+  score -= painAreas.length * 5;
+  return Math.max(0, Math.min(100, score));
+}
+
+// ─── Best Time Helper ───────────────────────────────────────────────────────
+
+export function getBestTime(val: number | number[] | undefined): number {
+  if (!val) return 0;
+  if (Array.isArray(val)) {
+    const valid = val.filter(t => t > 0);
+    return valid.length > 0 ? Math.min(...valid) : 0;
+  }
+  return val;
+}
+
+// ─── Sprint Rep Progression ─────────────────────────────────────────────────
+
+const SPRINT_REP_TIERS = [
+  { maxSession: 3, reps: [2, 1, 1] },
+  { maxSession: 6, reps: [3, 2, 1] },
+  { maxSession: 9, reps: [3, 2, 2] },
+  { maxSession: 14, reps: [4, 3, 2] },
+  { maxSession: 19, reps: [4, 3, 3] },
+  { maxSession: 24, reps: [5, 4, 3] },
+  { maxSession: Infinity, reps: [6, 5, 5] },
+];
+
+export function getSprintRepsForSession(
+  sessionNumber: number,
+  readinessScore: number,
+  distances: DistanceConfig[]
+): Record<string, number> {
+  const tier = SPRINT_REP_TIERS.find(t => sessionNumber <= t.maxSession)!;
+  const result: Record<string, number> = {};
+  distances.forEach((d, i) => {
+    result[d.key] = tier.reps[Math.min(i, tier.reps.length - 1)] || 1;
+  });
+
+  if (readinessScore < 40) {
+    for (const key of Object.keys(result)) {
+      result[key] = Math.max(1, Math.round(result[key] * 0.6));
+    }
+  } else if (readinessScore < 60) {
+    for (const key of Object.keys(result)) {
+      result[key] = Math.max(1, Math.round(result[key] * 0.75));
+    }
+  }
+
+  return result;
+}
+
+// ─── Barefoot Progression ───────────────────────────────────────────────────
+
+export function getBarefootStage(sessionNumber: number, readinessScore: number): string {
+  if (sessionNumber >= 20 && readinessScore >= 60) return 'advanced';
+  if (sessionNumber >= 15 && readinessScore >= 60) return 'integration';
+  if (sessionNumber >= 10) return 'introduction';
+  return 'foundation';
+}
+
+export function isBarefootSprintAllowed(
+  sessionNumber: number,
+  readinessScore: number,
+  distanceKey: string
+): boolean {
+  const stage = getBarefootStage(sessionNumber, readinessScore);
+  if (stage === 'advanced') return true;
+  if (stage === 'integration') {
+    return distanceKey.includes('10') || distanceKey.includes('7');
+  }
+  return false;
+}

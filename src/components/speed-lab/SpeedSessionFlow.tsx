@@ -15,6 +15,10 @@ import {
   SessionFocus,
   DistanceConfig,
   DrillData,
+  SportType,
+  calculateReadiness,
+  getSprintRepsForSession,
+  isBarefootSprintAllowed,
 } from '@/data/speedLabProgram';
 
 type FlowStep = 'checkin' | 'focus' | 'break_day' | 'drills' | 'sprint_efforts' | 'log_results' | 'complete';
@@ -26,13 +30,14 @@ interface SpeedSessionFlowProps {
   distances: DistanceConfig[];
   isBreakDay: boolean;
   personalBests: Record<string, number>;
+  sport: SportType;
   onComplete: (data: {
     sleepRating: number;
     bodyFeelBefore: string;
     bodyFeelAfter: string;
     painAreas: string[];
     drillLog: string[];
-    distances: Record<string, number>;
+    distances: Record<string, number[]>;
     rpe: number;
     isBreakDay: boolean;
     notes?: string;
@@ -48,6 +53,7 @@ export function SpeedSessionFlow({
   distances,
   isBreakDay: systemBreakDay,
   personalBests,
+  sport,
   onComplete,
   onExit,
 }: SpeedSessionFlowProps) {
@@ -56,13 +62,32 @@ export function SpeedSessionFlow({
   const [isBreakDay, setIsBreakDay] = useState(systemBreakDay);
   const [checkInData, setCheckInData] = useState<{ sleepRating: number; bodyFeel: string; painAreas: string[] } | null>(null);
   const [completedDrills, setCompletedDrills] = useState<Record<string, boolean>>({});
-  const [distanceTimes, setDistanceTimes] = useState<Record<string, number>>({});
+  const [distanceTimes, setDistanceTimes] = useState<Record<string, number[]>>({});
   const [timingMethods, setTimingMethods] = useState<Record<string, 'self' | 'partner'>>({});
   const [rpe, setRpe] = useState(5);
   const [bodyFeelAfter, setBodyFeelAfter] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newPBs, setNewPBs] = useState<string[]>([]);
+
+  // ─── Readiness & Sprint Config ──────────────────────────────────────
+
+  const readinessScore = useMemo(() => {
+    if (!checkInData) return 70;
+    return calculateReadiness(checkInData.sleepRating, checkInData.bodyFeel, checkInData.painAreas);
+  }, [checkInData]);
+
+  const sprintReps = useMemo(
+    () => getSprintRepsForSession(sessionNumber, readinessScore, distances),
+    [sessionNumber, readinessScore, distances]
+  );
+
+  const readinessAdjusted = readinessScore < 60;
+
+  const barefootDistances = useMemo(
+    () => distances.filter(d => isBarefootSprintAllowed(sessionNumber, readinessScore, d.key)).map(d => d.key),
+    [distances, sessionNumber, readinessScore]
+  );
 
   // Flatten drills for the session
   const allDrills = useMemo((): DrillData[] => {
@@ -114,23 +139,32 @@ export function SpeedSessionFlow({
     setCompletedDrills(prev => ({ ...prev, [drillId]: completed }));
   };
 
-  const handleDistanceTimeChange = (key: string, val: number, method?: 'self' | 'partner') => {
-    setDistanceTimes(prev => ({ ...prev, [key]: val }));
-    if (method) {
-      setTimingMethods(prev => ({ ...prev, [key]: method }));
-    }
+  const handleDistanceTimeChange = (key: string, repIndex: number, val: number) => {
+    setDistanceTimes(prev => {
+      const current = [...(prev[key] || [])];
+      current[repIndex] = val;
+      return { ...prev, [key]: current };
+    });
+  };
+
+  const handleTimingMethod = (key: string, method: 'self' | 'partner') => {
+    setTimingMethods(prev => ({ ...prev, [key]: method }));
   };
 
   const handleFinishSession = async () => {
     if (!checkInData) return;
     setSaving(true);
 
-    // Detect new PBs
+    // Detect new PBs from arrays
     const pbs: string[] = [];
-    for (const [key, time] of Object.entries(distanceTimes)) {
-      if (time > 0 && (!personalBests[key] || time < personalBests[key])) {
-        const dist = distances.find(d => d.key === key);
-        pbs.push(dist?.label || key);
+    for (const [key, times] of Object.entries(distanceTimes)) {
+      const validTimes = (times || []).filter(t => t > 0);
+      if (validTimes.length > 0) {
+        const bestTime = Math.min(...validTimes);
+        if (!personalBests[key] || bestTime < personalBests[key]) {
+          const dist = distances.find(d => d.key === key);
+          pbs.push(dist?.label || key);
+        }
       }
     }
     setNewPBs(pbs);
@@ -245,6 +279,12 @@ export function SpeedSessionFlow({
         {step === 'sprint_efforts' && (
           <SpeedSprintStep
             distances={distances}
+            sprintReps={sprintReps}
+            readinessAdjusted={readinessAdjusted}
+            readinessScore={readinessScore}
+            sessionNumber={sessionNumber}
+            sport={sport}
+            barefootDistances={barefootDistances}
             onContinue={() => setStep('log_results')}
           />
         )}
@@ -253,8 +293,11 @@ export function SpeedSessionFlow({
           <div className="space-y-6 animate-in fade-in duration-300">
             <SpeedTimeEntry
               distances={distances}
+              sprintReps={sprintReps}
               values={distanceTimes}
-              onChange={(key, val) => handleDistanceTimeChange(key, val, 'self')}
+              personalBests={personalBests}
+              onChange={handleDistanceTimeChange}
+              onTimingMethod={handleTimingMethod}
             />
 
             <SpeedRPESlider value={rpe} onChange={setRpe} />
@@ -294,6 +337,13 @@ export function SpeedSessionFlow({
                 ? t('speedLab.logResults.saving', 'Saving...')
                 : t('speedLab.logResults.finish', 'Complete Session ✓')}
             </Button>
+
+            {/* Barefoot Disclaimer */}
+            {barefootDistances.length > 0 && (
+              <p className="text-[10px] text-muted-foreground text-center italic px-2">
+                {t('speedLab.barefoot.disclaimer', 'Barefoot training is introduced gradually to strengthen feet and connective tissue. Always train on safe, clean surfaces. If you experience pain, stop immediately and return to shoes. Consult a qualified professional before beginning any barefoot training program.')}
+              </p>
+            )}
           </div>
         )}
 

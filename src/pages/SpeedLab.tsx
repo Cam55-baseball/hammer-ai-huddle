@@ -96,14 +96,19 @@ export default function SpeedLab() {
         distances={distances}
         isBreakDay={isBreakDay}
         personalBests={personalBests}
+        sport={selectedSport}
         onComplete={async (data) => {
           const session = await saveSession(data);
           // Persist partner timing metadata
           if (session && data.timingMethods) {
             for (const [distance, method] of Object.entries(data.timingMethods)) {
-              const time = data.distances[distance];
-              if (time && time > 0) {
-                await savePartnerTiming(session.id, distance, time, method);
+              const times = data.distances[distance];
+              if (times && times.length > 0) {
+                const validTimes = times.filter(t => t > 0);
+                if (validTimes.length > 0) {
+                  const bestTime = Math.min(...validTimes);
+                  await savePartnerTiming(session.id, distance, bestTime, method);
+                }
               }
             }
           }

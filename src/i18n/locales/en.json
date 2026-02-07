@@ -7367,11 +7367,18 @@
       "title": "Run Your Sprints!",
       "subtitle": "Time to test your speed",
       "instruction": "Find a flat, open space. Sprint as fast as you can!",
-      "restTip": "Rest 2-3 minutes between sprints",
+      "restTip": "Rest 2-3 minutes between sprints. Walk back slowly.",
       "partnerTip": "Have someone tap START when you go and STOP when you finish",
       "allOptional": "All distances are optional — run what you can!",
       "optional": "Optional",
-      "done": "I'm Done Sprinting →"
+      "done": "Begin Sprinting →",
+      "reps": "{{count}} reps",
+      "gameReadyProgress": "{{current}} of {{target}} game-ready sprints",
+      "gameReadyBaseball": "Train to sprint 16 times in a game. Full MLB season ready.",
+      "gameReadySoftball": "Train to sprint 16 times in a game. Full AUSL season ready.",
+      "readinessAdjusted": "Your body is recovering today. We've adjusted your sprint count.",
+      "barefoot": "Barefoot OK",
+      "barefootTip": "Barefoot training strengthens feet, ankles, and fascial connections — the foundation of elastic speed."
     },
     "categories": {
       "activation": "Warm-Up",
@@ -7390,7 +7397,10 @@
       "startTimer": "Timer",
       "bodyFeelAfter": "How does your body feel now?",
       "saving": "Saving...",
-      "finish": "Complete Session ✓"
+      "finish": "Complete Session ✓",
+      "rep": "Rep {{number}}",
+      "pbLabel": "PB: {{time}}s",
+      "newPB": "New PB!"
     },
     "timer": {
       "seconds": "seconds",
@@ -7477,6 +7487,11 @@
     "adjustment": {
       "title": "Speed Focus Shift",
       "message": "Your body is adapting. We're shifting focus to help speed stick. This is normal — it means your nervous system is building a stronger foundation."
+    },
+    "barefoot": {
+      "disclaimer": "Barefoot training is introduced gradually to strengthen feet and connective tissue. Always train on safe, clean surfaces. If you experience pain, stop immediately and return to shoes. Consult a qualified professional before beginning any barefoot training program.",
+      "whyTitle": "Why Barefoot?",
+      "whyDescription": "Barefoot drills develop the fascia and sensory feedback in your feet — the foundation of elastic, springy speed. Stronger feet = faster ground contact = faster you."
     },
     "disclaimer": "Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain."
   }

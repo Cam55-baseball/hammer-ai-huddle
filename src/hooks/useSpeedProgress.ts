@@ -16,6 +16,8 @@ import {
   SpeedTrackTier,
   SessionFocus,
   DistanceConfig,
+  calculateReadiness,
+  getBestTime,
 } from '@/data/speedLabProgram';
 
 export interface SpeedSession {
@@ -24,7 +26,7 @@ export interface SpeedSession {
   sport: string;
   session_number: number;
   session_date: string;
-  distances: Record<string, number>;
+  distances: Record<string, number | number[]>;
   rpe: number | null;
   body_feel_before: string | null;
   body_feel_after: string | null;
@@ -168,8 +170,8 @@ export function useSpeedProgress(sport: SportType) {
       let declineCount = 0;
       for (const key of distKeys) {
         const pb = personalBests[key];
-        const lastTime = last.distances[key];
-        if (pb && lastTime && lastTime > pb * 1.05) {
+        const lastTime = getBestTime(last.distances[key]);
+        if (pb && lastTime > 0 && lastTime > pb * 1.05) {
           declineCount++;
         }
       }
@@ -217,7 +219,7 @@ export function useSpeedProgress(sport: SportType) {
     bodyFeelAfter: string;
     painAreas: string[];
     drillLog: string[];
-    distances: Record<string, number>;
+    distances: Record<string, number | number[]>;
     rpe: number;
     isBreakDay: boolean;
     notes?: string;
@@ -267,15 +269,16 @@ export function useSpeedProgress(sport: SportType) {
 
   // ─── Update Personal Bests ──────────────────────────────────────────
 
-  const updatePersonalBests = useCallback(async (newDistances: Record<string, number>) => {
+  const updatePersonalBests = useCallback(async (newDistances: Record<string, number | number[]>) => {
     if (!user || !goals) return;
 
     const currentPBs = { ...goals.personal_bests };
     let improved = false;
 
-    for (const [key, time] of Object.entries(newDistances)) {
-      if (time > 0 && (!currentPBs[key] || time < currentPBs[key])) {
-        currentPBs[key] = time;
+    for (const [key, timeOrTimes] of Object.entries(newDistances)) {
+      const best = getBestTime(timeOrTimes);
+      if (best > 0 && (!currentPBs[key] || best < currentPBs[key])) {
+        currentPBs[key] = best;
         improved = true;
       }
     }
@@ -348,7 +351,8 @@ export function useSpeedProgress(sport: SportType) {
 
     if (recentSessions.length < 2) return 'maintaining';
 
-    const times = recentSessions.map(s => s.distances[distanceKey]).reverse();
+    const times = recentSessions.map(s => getBestTime(s.distances[distanceKey])).filter(t => t > 0).reverse();
+    if (times.length < 2) return 'maintaining';
     const improving = times.every((t, i) => i === 0 || t <= times[i - 1]);
     const declining = times.every((t, i) => i === 0 || t >= times[i - 1]);
 
@@ -423,21 +427,4 @@ export function useSpeedProgress(sport: SportType) {
   };
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function calculateReadiness(sleepRating: number, bodyFeel: string, painAreas: string[]): number {
-  let score = 50; // Base
-
-  // Sleep: 1-5 maps to -20 to +20
-  score += (sleepRating - 3) * 10;
-
-  // Body feel
-  if (bodyFeel === 'good') score += 15;
-  else if (bodyFeel === 'okay') score += 0;
-  else if (bodyFeel === 'tight') score -= 15;
-
-  // Pain areas penalty
-  score -= painAreas.length * 5;
-
-  return Math.max(0, Math.min(100, score));
-}
+// calculateReadiness and getBestTime are now imported from @/data/speedLabProgram
