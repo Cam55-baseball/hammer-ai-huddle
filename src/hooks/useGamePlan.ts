@@ -7,6 +7,7 @@ import { startOfWeek, differenceInDays, format, getDay } from 'date-fns';
 import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from '@/types/customActivity';
 import { getTodayDate } from '@/utils/dateUtils';
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
+import { TRAINING_DEFAULT_SCHEDULES } from '@/constants/trainingSchedules';
 
 // Icon mapping for custom activities
 const customActivityIconMap: Record<string, LucideIcon> = {
@@ -599,6 +600,19 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     return skipDays.includes(todayDayOfWeek);
   };
 
+  // Smart default scheduling: only show training tasks on recommended days
+  // unless user has a custom schedule (calendar_skipped_items row).
+  const shouldShowTrainingTask = (taskId: string): boolean => {
+    // If user has explicit skip days via Repeat Weekly, that system handles filtering
+    const hasCustomSchedule = gamePlanSkips.has(taskId);
+    if (hasCustomSchedule) return true; // Custom schedule exists, isSystemTaskSkippedToday handles it
+
+    const defaultDays = TRAINING_DEFAULT_SCHEDULES[taskId];
+    if (!defaultDays) return true; // No default schedule defined, show every day
+
+    return defaultDays.includes(todayDayOfWeek);
+  };
+
   // === FREE ACCESS TASKS (Available to all users with a profile) ===
   // These are accessible without module purchase to drive engagement
   
@@ -686,7 +700,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
 
   // === TRAINING SECTION ===
   // Workout tasks
-  if (hasHittingAccess && !isSystemTaskSkippedToday('workout-hitting')) {
+  if (hasHittingAccess && !isSystemTaskSkippedToday('workout-hitting') && shouldShowTrainingTask('workout-hitting')) {
     tasks.push({
       id: 'workout-hitting',
       titleKey: 'gamePlan.workout.hitting.title',
@@ -716,7 +730,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }
 
-  if (hasPitchingAccess && !isSystemTaskSkippedToday('workout-pitching')) {
+  if (hasPitchingAccess && !isSystemTaskSkippedToday('workout-pitching') && shouldShowTrainingTask('workout-pitching')) {
     tasks.push({
       id: 'workout-pitching',
       titleKey: 'gamePlan.workout.pitching.title',
@@ -731,7 +745,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   }
 
   // Speed Lab task (throwing module gated)
-  if (hasThrowingAccess && !isSystemTaskSkippedToday('speed-lab')) {
+  if (hasThrowingAccess && !isSystemTaskSkippedToday('speed-lab') && shouldShowTrainingTask('speed-lab')) {
     tasks.push({
       id: 'speed-lab',
       titleKey: 'gamePlan.speedLab.title',

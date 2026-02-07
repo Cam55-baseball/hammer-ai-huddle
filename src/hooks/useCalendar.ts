@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, startOfMonth, endOfMonth, addDays, eachDayOfInterval, getDay } from 'date-fns';
 import { LucideIcon, Target, Utensils, Dumbbell, Calendar, Brain, Eye, Moon, Sun, Activity, Apple, Lightbulb, Sparkles, BedDouble, Timer, Flame, Zap } from 'lucide-react';
 import { getOrderKey, CalendarDayOrder } from '@/hooks/useCalendarDayOrders';
+import { TRAINING_DEFAULT_SCHEDULES } from '@/constants/trainingSchedules';
 
 // Helper to get the Game Plan task ID for a calendar event
 const getTaskIdForEvent = (event: { type: string; source: string }): string | null => {
@@ -475,6 +476,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
       
       daysInRange.forEach(day => {
         const dateKey = format(day, 'yyyy-MM-dd');
+        const dayOfWeek = getDay(day);
         if (!aggregatedEvents[dateKey]) aggregatedEvents[dateKey] = [];
         
         // Add default daily tasks that aren't explicitly scheduled
@@ -506,13 +508,18 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           aggregatedEvents[dateKey].push(calEvent);
         });
         
-        // Add module-gated tasks for users with subscription access
-        if (hasHittingAccess) {
-          MODULE_GATED_TASKS.hitting.forEach(taskId => {
+        // Add module-gated tasks with smart default scheduling
+        const addGatedTasks = (moduleKey: string, hasAccess: boolean) => {
+          if (!hasAccess) return;
+          MODULE_GATED_TASKS[moduleKey]?.forEach(taskId => {
             if (scheduledTaskIds.has(taskId)) return;
             
             const taskDef = SYSTEM_TASKS[taskId];
             if (!taskDef) return;
+            
+            // Apply smart default schedule: only show on recommended days when no custom schedule
+            const defaultDays = TRAINING_DEFAULT_SCHEDULES[taskId];
+            if (defaultDays && !defaultDays.includes(dayOfWeek)) return;
             
             const alreadyExists = aggregatedEvents[dateKey].some(
               e => e.source === taskId && e.type === 'game_plan'
@@ -533,63 +540,11 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
             calEvent.orderKey = getOrderKey(calEvent);
             aggregatedEvents[dateKey].push(calEvent);
           });
-        }
-        
-        if (hasPitchingAccess) {
-          MODULE_GATED_TASKS.pitching.forEach(taskId => {
-            if (scheduledTaskIds.has(taskId)) return;
-            
-            const taskDef = SYSTEM_TASKS[taskId];
-            if (!taskDef) return;
-            
-            const alreadyExists = aggregatedEvents[dateKey].some(
-              e => e.source === taskId && e.type === 'game_plan'
-            );
-            if (alreadyExists) return;
-            
-            const calEvent: CalendarEvent = {
-              id: `gated-${taskId}-${dateKey}`,
-              date: dateKey,
-              title: taskDef.title,
-              type: 'game_plan',
-              source: taskId,
-              color: taskDef.color,
-              icon: taskDef.icon,
-              editable: false,
-              deletable: false,
-            };
-            calEvent.orderKey = getOrderKey(calEvent);
-            aggregatedEvents[dateKey].push(calEvent);
-          });
-        }
-        
-        if (hasThrowingAccess) {
-          MODULE_GATED_TASKS.throwing.forEach(taskId => {
-            if (scheduledTaskIds.has(taskId)) return;
-            
-            const taskDef = SYSTEM_TASKS[taskId];
-            if (!taskDef) return;
-            
-            const alreadyExists = aggregatedEvents[dateKey].some(
-              e => e.source === taskId && e.type === 'game_plan'
-            );
-            if (alreadyExists) return;
-            
-            const calEvent: CalendarEvent = {
-              id: `gated-${taskId}-${dateKey}`,
-              date: dateKey,
-              title: taskDef.title,
-              type: 'game_plan',
-              source: taskId,
-              color: taskDef.color,
-              icon: taskDef.icon,
-              editable: false,
-              deletable: false,
-            };
-            calEvent.orderKey = getOrderKey(calEvent);
-            aggregatedEvents[dateKey].push(calEvent);
-          });
-        }
+        };
+
+        addGatedTasks('hitting', hasHittingAccess);
+        addGatedTasks('pitching', hasPitchingAccess);
+        addGatedTasks('throwing', hasThrowingAccess);
       });
 
       // Process sub_module_progress for Iron Bambino and Heat Factory
@@ -630,7 +585,7 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
           
           // Find scheduled days for this program from task schedules
           const programSchedule = taskSchedulesRes.data?.find(s => s.task_id === programTaskId);
-          const scheduledDays = programSchedule?.display_days || [0, 1, 2, 3, 4, 5, 6];
+          const scheduledDays = programSchedule?.display_days || TRAINING_DEFAULT_SCHEDULES[programTaskId] || [0, 1, 2, 3, 4, 5, 6];
           
           // Add program events on scheduled days across the month
           daysInRange.forEach(day => {
