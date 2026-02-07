@@ -6178,7 +6178,27 @@
     "drills": {
       "title": "An die Arbeit",
       "subtitle": "Führe jede Übung unten aus",
-      "logResults": "Ergebnisse eintragen →"
+      "logResults": "Ergebnisse eintragen →",
+      "nextSprints": "Jetzt sprinten! →"
+    },
+    "focusMessages": {
+      "focus1": "Heute bauen wir explosive erste Schritte.",
+      "focus2": "Heute entwickeln wir Höchstgeschwindigkeit.",
+      "focus3": "Heute schärfen wir die Beschleunigungsmechanik.",
+      "focus4": "Heute trainieren wir schnell & entspannt.",
+      "focus5": "Heute entwickeln wir Schrittkraft.",
+      "focus6": "Heute bauen wir federnde Geschwindigkeit.",
+      "focus7": "Heute bauen wir elastische Energie."
+    },
+    "sprintStep": {
+      "title": "Lauf deine Sprints!",
+      "subtitle": "Zeit, deine Geschwindigkeit zu testen",
+      "instruction": "Finde eine flache, offene Fläche. Sprinte so schnell du kannst!",
+      "restTip": "2-3 Minuten Pause zwischen den Sprints",
+      "partnerTip": "Lass jemanden START drücken wenn du losläufst und STOPP wenn du fertig bist",
+      "allOptional": "Alle Distanzen sind optional — lauf was du kannst!",
+      "optional": "Optional",
+      "done": "Fertig mit Sprinten →"
     },
     "categories": {
       "activation": "Aufwärmen",

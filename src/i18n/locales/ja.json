@@ -5577,7 +5577,27 @@
     "drills": {
       "title": "トレーニング開始",
       "subtitle": "下の各ドリルを完了しよう",
-      "logResults": "結果を記録 →"
+      "logResults": "結果を記録 →",
+      "nextSprints": "スプリントへ！→"
+    },
+    "focusMessages": {
+      "focus1": "今日は爆発的なファーストステップを作る。",
+      "focus2": "今日はトップスピードを伸ばす。",
+      "focus3": "今日は加速メカニクスを磨く。",
+      "focus4": "今日は速く＆リラックスしてトレーニング。",
+      "focus5": "今日はストライドパワーを鍛える。",
+      "focus6": "今日はバネのあるスピードを作る。",
+      "focus7": "今日は弾性エネルギーを蓄える。"
+    },
+    "sprintStep": {
+      "title": "スプリントを走ろう！",
+      "subtitle": "スピードを試す時間です",
+      "instruction": "平らで開けた場所を見つけて、全力で走ろう！",
+      "restTip": "スプリント間は2〜3分休憩",
+      "partnerTip": "誰かにスタート時にSTART、ゴール時にSTOPを押してもらおう",
+      "allOptional": "すべての距離は任意です — 走れるものを走ろう！",
+      "optional": "任意",
+      "done": "スプリント完了 →"
     },
     "categories": {
       "activation": "ウォームアップ",

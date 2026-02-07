@@ -5462,7 +5462,27 @@
     "drills": {
       "title": "훈련 시작",
       "subtitle": "아래 각 드릴을 완료하세요",
-      "logResults": "결과 기록 →"
+      "logResults": "결과 기록 →",
+      "nextSprints": "스프린트 시작! →"
+    },
+    "focusMessages": {
+      "focus1": "오늘은 폭발적인 첫 걸음을 만든다.",
+      "focus2": "오늘은 최고 속도를 키운다.",
+      "focus3": "오늘은 가속 메커니즘을 다듬는다.",
+      "focus4": "오늘은 빠르고 편안하게 훈련한다.",
+      "focus5": "오늘은 보폭 파워를 키운다.",
+      "focus6": "오늘은 탄력 있는 스피드를 만든다.",
+      "focus7": "오늘은 탄성 에너지를 축적한다."
+    },
+    "sprintStep": {
+      "title": "스프린트를 뛰세요!",
+      "subtitle": "속도를 테스트할 시간입니다",
+      "instruction": "평평하고 넓은 공간을 찾아 최대한 빠르게 달리세요!",
+      "restTip": "스프린트 사이 2-3분 휴식",
+      "partnerTip": "누군가에게 출발 시 시작, 도착 시 정지를 눌러달라고 하세요",
+      "allOptional": "모든 거리는 선택 사항입니다 — 달릴 수 있는 만큼 달리세요!",
+      "optional": "선택",
+      "done": "스프린트 완료 →"
     },
     "categories": {
       "activation": "워밍업",

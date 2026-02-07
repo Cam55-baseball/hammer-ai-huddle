@@ -16,7 +16,7 @@ import { SpeedTrackCard } from '@/components/speed-lab/SpeedTrackCard';
 import { SpeedSessionFlow } from '@/components/speed-lab/SpeedSessionFlow';
 import { SpeedSessionHistory } from '@/components/speed-lab/SpeedSessionHistory';
 import { SpeedGoalAdjustmentCard } from '@/components/speed-lab/SpeedGoalAdjustmentCard';
-import { SportType } from '@/data/speedLabProgram';
+import { SportType, FOCUS_MESSAGE_FALLBACKS } from '@/data/speedLabProgram';
 import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
 
 export default function SpeedLab() {
@@ -29,7 +29,6 @@ export default function SpeedLab() {
 
   const [selectedSport, setSelectedSport] = useState<SportType>('baseball');
   const [inSession, setInSession] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const saved = localStorage.getItem('selectedSport') as SportType;
@@ -55,6 +54,7 @@ export default function SpeedLab() {
     streakData,
     initializeJourney,
     saveSession,
+    savePartnerTiming,
     fetchData,
     getTrend,
   } = useSpeedProgress(selectedSport);
@@ -97,7 +97,16 @@ export default function SpeedLab() {
         isBreakDay={isBreakDay}
         personalBests={personalBests}
         onComplete={async (data) => {
-          await saveSession(data);
+          const session = await saveSession(data);
+          // Persist partner timing metadata
+          if (session && data.timingMethods) {
+            for (const [distance, method] of Object.entries(data.timingMethods)) {
+              const time = data.distances[distance];
+              if (time && time > 0) {
+                await savePartnerTiming(session.id, distance, time, method);
+              }
+            }
+          }
           setInSession(false);
           fetchData();
         }}
@@ -219,9 +228,9 @@ export default function SpeedLab() {
           <CardContent>
             {isLocked && unlockTime ? (
               <div className="text-center py-4">
-                <CountdownTimer
+              <CountdownTimer
                   unlockTime={unlockTime}
-                  onComplete={() => setRefreshKey(k => k + 1)}
+                  onComplete={() => fetchData()}
                 />
                 <p className="text-xs text-muted-foreground mt-2">
                   {t('speedLab.nextSession.locked', 'Recovery builds speed.')}
@@ -243,7 +252,7 @@ export default function SpeedLab() {
             ) : (
               <div className="text-center py-4">
                 <p className="text-sm text-muted-foreground mb-1">
-                  {sessionFocus.icon} {sessionFocus.message}
+                  {sessionFocus.icon} {t(`speedLab.focusMessages.${sessionFocus.messageKey}`, FOCUS_MESSAGE_FALLBACKS[sessionFocus.messageKey] || '')}
                 </p>
                 <Button
                   onClick={() => setInSession(true)}

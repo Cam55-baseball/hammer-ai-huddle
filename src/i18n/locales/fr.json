@@ -6178,7 +6178,27 @@
     "drills": {
       "title": "Au Travail",
       "subtitle": "Complète chaque exercice ci-dessous",
-      "logResults": "Enregistrer les Résultats →"
+      "logResults": "Enregistrer les Résultats →",
+      "nextSprints": "Va sprinter ! →"
+    },
+    "focusMessages": {
+      "focus1": "Aujourd'hui on construit des premiers pas explosifs.",
+      "focus2": "Aujourd'hui on développe la vitesse maximale.",
+      "focus3": "Aujourd'hui on affine la mécanique d'accélération.",
+      "focus4": "Aujourd'hui on s'entraîne vite et détendu.",
+      "focus5": "Aujourd'hui on développe la puissance de foulée.",
+      "focus6": "Aujourd'hui on construit une vitesse élastique.",
+      "focus7": "Aujourd'hui on construit l'énergie élastique."
+    },
+    "sprintStep": {
+      "title": "Cours tes Sprints !",
+      "subtitle": "C'est le moment de tester ta vitesse",
+      "instruction": "Trouve un espace plat et ouvert. Sprinte aussi vite que tu peux !",
+      "restTip": "Repose-toi 2-3 minutes entre les sprints",
+      "partnerTip": "Demande à quelqu'un d'appuyer sur DÉPART quand tu pars et ARRÊT quand tu finis",
+      "allOptional": "Toutes les distances sont optionnelles — cours ce que tu peux !",
+      "optional": "Optionnel",
+      "done": "J'ai fini de sprinter →"
     },
     "categories": {
       "activation": "Échauffement",

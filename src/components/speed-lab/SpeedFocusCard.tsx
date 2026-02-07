@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { SessionFocus } from '@/data/speedLabProgram';
+import { SessionFocus, FOCUS_MESSAGE_FALLBACKS } from '@/data/speedLabProgram';
 
 interface SpeedFocusCardProps {
   focus: SessionFocus;
@@ -10,6 +10,11 @@ interface SpeedFocusCardProps {
 
 export function SpeedFocusCard({ focus, onContinue }: SpeedFocusCardProps) {
   const { t } = useTranslation();
+
+  const message = t(
+    `speedLab.focusMessages.${focus.messageKey}`,
+    FOCUS_MESSAGE_FALLBACKS[focus.messageKey] || ''
+  );
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in duration-500">
@@ -21,7 +26,7 @@ export function SpeedFocusCard({ focus, onContinue }: SpeedFocusCardProps) {
               {t('speedLab.focus.title', "Today's Speed Focus")}
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed">
-              {focus.message}
+              {message}
             </p>
           </div>
           <p className="text-xs text-muted-foreground italic text-center">

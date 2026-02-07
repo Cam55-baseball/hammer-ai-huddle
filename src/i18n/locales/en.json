@@ -7351,7 +7351,27 @@
     "drills": {
       "title": "Do The Work",
       "subtitle": "Complete each drill below",
-      "logResults": "Log Results →"
+      "logResults": "Log Results →",
+      "nextSprints": "Go Sprint! →"
+    },
+    "focusMessages": {
+      "focus1": "Today we build explosive first steps.",
+      "focus2": "Today we develop top-end speed.",
+      "focus3": "Today we sharpen acceleration mechanics.",
+      "focus4": "Today we train fast & relaxed.",
+      "focus5": "Today we develop stride power.",
+      "focus6": "Today we build springy speed.",
+      "focus7": "Today we build elastic energy."
+    },
+    "sprintStep": {
+      "title": "Run Your Sprints!",
+      "subtitle": "Time to test your speed",
+      "instruction": "Find a flat, open space. Sprint as fast as you can!",
+      "restTip": "Rest 2-3 minutes between sprints",
+      "partnerTip": "Have someone tap START when you go and STOP when you finish",
+      "allOptional": "All distances are optional — run what you can!",
+      "optional": "Optional",
+      "done": "I'm Done Sprinting →"
     },
     "categories": {
       "activation": "Warm-Up",
