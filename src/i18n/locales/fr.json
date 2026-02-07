@@ -5125,6 +5125,11 @@
       "title": "RÉCAP 6 SEMAINES",
       "days": "JOURS",
       "daysRemaining": "{{days}} jours restants"
+    },
+    "speedLab": {
+      "title": "Compléter la Session Speed Lab",
+      "description": "Développez une vitesse d'élite avec des sprints structurés",
+      "recoveryBadge": "RÉCUPÉRATION"
     }
   },
   "weeklyWellnessQuiz": {

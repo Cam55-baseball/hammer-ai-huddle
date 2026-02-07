@@ -4252,6 +4252,11 @@
       "title": "6-WEKEN RECAP",
       "days": "DAGEN",
       "daysRemaining": "{{days}} dagen resterend"
+    },
+    "speedLab": {
+      "title": "Speed Lab Sessie Voltooien",
+      "description": "Bouw elite snelheid op met gestructureerde sprints",
+      "recoveryBadge": "HERSTEL"
     }
   },
   "weeklyWellnessQuiz": {

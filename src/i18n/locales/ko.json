@@ -4237,6 +4237,11 @@
       "title": "6주 요약",
       "days": "일",
       "daysRemaining": "{{days}}일 남음"
+    },
+    "speedLab": {
+      "title": "스피드 랩 세션 완료",
+      "description": "구조화된 스프린트로 엘리트 스피드 구축",
+      "recoveryBadge": "회복 중"
     }
   },
   "weeklyWellnessQuiz": {

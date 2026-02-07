@@ -4223,6 +4223,11 @@
       "title": "6周回顾",
       "days": "天",
       "daysRemaining": "剩余{{days}}天"
+    },
+    "speedLab": {
+      "title": "完成速度实验室训练",
+      "description": "通过结构化冲刺训练打造精英速度",
+      "recoveryBadge": "恢复中"
     }
   },
   "weeklyWellnessQuiz": {
