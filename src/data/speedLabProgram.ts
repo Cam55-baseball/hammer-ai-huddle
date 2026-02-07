@@ -145,12 +145,14 @@ export const ACTIVATION_DRILLS: DrillData[] = [
     cues: ['Slow circles', 'Grip the ground with toes'], setsReps: '10 each direction',
     description: 'Take off your shoes and slowly roll your ankles in circles. Then squeeze the ground with your toes like you\'re picking up a marble.',
     whyItHelps: 'Strong feet and ankles are the foundation of fast running.',
+    barefootLevel: 0,
   },
   {
     id: 'a_skips', name: 'A-Skips (Low Amplitude)', category: 'activation',
     cues: ['Quick ground contact', 'Knee drive'], setsReps: '2 × 20 yards',
     description: 'Skip forward but focus on driving your knee up quickly and hitting the ground fast. Think "quick feet!"',
     whyItHelps: 'Quick ground contact teaches your feet to push off the ground faster.',
+    barefootLevel: 1,
   },
   {
     id: 'b_skips', name: 'B-Skips', category: 'activation',
@@ -163,6 +165,7 @@ export const ACTIVATION_DRILLS: DrillData[] = [
     cues: ['Stiff ankles', 'Quick turnover'], setsReps: '2 × 15 yards',
     description: 'Walk forward on your toes with stiff ankles, bouncing quickly off the ground like a pogo stick.',
     whyItHelps: 'Stiff ankles act like springs — they bounce energy back into every step.',
+    barefootLevel: 1,
   },
   {
     id: 'skip_height', name: 'Light Skipping for Height', category: 'activation',
@@ -256,12 +259,14 @@ export const PLYOMETRIC_DRILLS: DrillData[] = [
     cues: ['Stiff ankles', 'Quick bounce'], setsReps: '3 × 10 hops',
     description: 'Bounce up and down on both feet with stiff ankles — like a pogo stick! Quick, quick, quick!',
     whyItHelps: 'Stiff-ankle bouncing trains the elastic energy in your tendons.',
+    barefootLevel: 2,
   },
   {
     id: 'sl_pogo', name: 'Single-Leg Pogo Hops', category: 'plyometric',
     cues: ['Same stiffness, one leg', 'Stay balanced'], setsReps: '3 × 8 each leg',
     description: 'Same bouncing as Pogo Hops, but on one leg. Stay balanced!',
     whyItHelps: 'Single-leg power is what you actually use when sprinting.',
+    barefootLevel: 3,
   },
   {
     id: 'broad_jump', name: 'Broad Jump + Stick', category: 'plyometric',

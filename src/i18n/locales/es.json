@@ -6603,11 +6603,18 @@
       "title": "¡Corre tus Sprints!",
       "subtitle": "Es hora de probar tu velocidad",
       "instruction": "Encuentra un espacio plano y abierto. ¡Corre lo más rápido que puedas!",
-      "restTip": "Descansa 2-3 minutos entre sprints",
+      "restTip": "Descansa 2-3 minutos entre sprints. Camina de regreso lentamente.",
       "partnerTip": "Que alguien presione INICIAR cuando salgas y PARAR cuando termines",
       "allOptional": "¡Todas las distancias son opcionales — corre lo que puedas!",
       "optional": "Opcional",
-      "done": "Terminé de Correr →"
+      "done": "Comenzar a Correr →",
+      "reps": "{{count}} reps",
+      "gameReadyProgress": "{{current}} de {{target}} sprints listos para juego",
+      "gameReadyBaseball": "Entrena para hacer 16 sprints en un juego. Listo para la temporada MLB.",
+      "gameReadySoftball": "Entrena para hacer 16 sprints en un juego. Listo para la temporada AUSL.",
+      "readinessAdjusted": "Tu cuerpo se está recuperando hoy. Hemos ajustado tu cantidad de sprints.",
+      "barefoot": "Descalzo OK",
+      "barefootTip": "El entrenamiento descalzo fortalece pies, tobillos y conexiones fasciales — la base de la velocidad elástica."
     },
     "categories": {
       "activation": "Calentamiento",
@@ -6626,7 +6633,10 @@
       "startTimer": "Cronómetro",
       "bodyFeelAfter": "¿Cómo se siente tu cuerpo ahora?",
       "saving": "Guardando...",
-      "finish": "Completar Sesión ✓"
+      "finish": "Completar Sesión ✓",
+      "rep": "Rep {{number}}",
+      "pbLabel": "PB: {{time}}s",
+      "newPB": "¡Nuevo PB!"
     },
     "timer": {
       "seconds": "segundos",
@@ -6714,6 +6724,11 @@
       "title": "Cambio de Enfoque de Velocidad",
       "message": "Tu cuerpo se está adaptando. Estamos cambiando el enfoque para que la velocidad se mantenga. Esto es normal — significa que tu sistema nervioso está construyendo una base más fuerte."
     },
-    "disclaimer": "Siempre consulta con un profesional de salud calificado antes de comenzar cualquier programa de ejercicios. Escucha a tu cuerpo y detente inmediatamente si sientes dolor."
+    "disclaimer": "Siempre consulta con un profesional de salud calificado antes de comenzar cualquier programa de ejercicios. Escucha a tu cuerpo y detente inmediatamente si sientes dolor.",
+    "barefoot": {
+      "disclaimer": "El entrenamiento descalzo se introduce gradualmente para fortalecer pies y tejido conectivo. Siempre entrena en superficies seguras y limpias. Si sientes dolor, detente inmediatamente y vuelve a usar zapatos. Consulta a un profesional calificado antes de comenzar cualquier programa de entrenamiento descalzo.",
+      "whyTitle": "¿Por qué Descalzo?",
+      "whyDescription": "Los ejercicios descalzos desarrollan la fascia y las conexiones elásticas responsables de la velocidad en el sprint."
+    }
   }
 }

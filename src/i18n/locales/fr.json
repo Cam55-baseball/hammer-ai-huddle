@@ -6194,11 +6194,18 @@
       "title": "Cours tes Sprints !",
       "subtitle": "C'est le moment de tester ta vitesse",
       "instruction": "Trouve un espace plat et ouvert. Sprinte aussi vite que tu peux !",
-      "restTip": "Repose-toi 2-3 minutes entre les sprints",
+      "restTip": "Repose-toi 2-3 minutes entre les sprints. Reviens en marchant lentement.",
       "partnerTip": "Demande à quelqu'un d'appuyer sur DÉPART quand tu pars et ARRÊT quand tu finis",
       "allOptional": "Toutes les distances sont optionnelles — cours ce que tu peux !",
       "optional": "Optionnel",
-      "done": "J'ai fini de sprinter →"
+      "done": "Commencer à Sprinter →",
+      "reps": "{{count}} reps",
+      "gameReadyProgress": "{{current}} sur {{target}} sprints prêts pour le match",
+      "gameReadyBaseball": "Entraîne-toi à sprinter 16 fois dans un match. Prêt pour la saison MLB.",
+      "gameReadySoftball": "Entraîne-toi à sprinter 16 fois dans un match. Prêt pour la saison AUSL.",
+      "readinessAdjusted": "Ton corps récupère aujourd'hui. Nous avons ajusté ton nombre de sprints.",
+      "barefoot": "Pieds nus OK",
+      "barefootTip": "L'entraînement pieds nus renforce les pieds, les chevilles et les connexions fasciales — la base de la vitesse élastique."
     },
     "categories": {
       "activation": "Échauffement",
@@ -6217,7 +6224,10 @@
       "startTimer": "Chrono",
       "bodyFeelAfter": "Comment se sent ton corps maintenant ?",
       "saving": "Enregistrement...",
-      "finish": "Terminer la Séance ✓"
+      "finish": "Terminer la Séance ✓",
+      "rep": "Rép {{number}}",
+      "pbLabel": "PB : {{time}}s",
+      "newPB": "Nouveau PB !"
     },
     "timer": {
       "seconds": "secondes",
@@ -6305,6 +6315,11 @@
       "title": "Changement de Focus Vitesse",
       "message": "Ton corps s'adapte. On change de focus pour que la vitesse tienne. C'est normal — ça veut dire que ton système nerveux construit une base plus solide."
     },
-    "disclaimer": "Consulte toujours un professionnel de santé qualifié avant de commencer tout programme d'exercice. Écoute ton corps et arrête-toi immédiatement si tu ressens de la douleur."
+    "disclaimer": "Consulte toujours un professionnel de santé qualifié avant de commencer tout programme d'exercice. Écoute ton corps et arrête-toi immédiatement si tu ressens de la douleur.",
+    "barefoot": {
+      "disclaimer": "L'entraînement pieds nus est introduit progressivement pour renforcer les pieds et le tissu conjonctif. Entraîne-toi toujours sur des surfaces sûres et propres. En cas de douleur, arrête immédiatement et remets tes chaussures. Consulte un professionnel qualifié avant de commencer tout programme d'entraînement pieds nus.",
+      "whyTitle": "Pourquoi Pieds Nus ?",
+      "whyDescription": "Les exercices pieds nus développent le fascia et les connexions élastiques responsables de la vitesse en sprint."
+    }
   }
 }

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp, Clock, Shield } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SpeedSession } from '@/hooks/useSpeedProgress';
-import { DistanceConfig } from '@/data/speedLabProgram';
+import { DistanceConfig, getBestTime } from '@/data/speedLabProgram';
 
 interface SpeedSessionHistoryProps {
   sessions: SpeedSession[];
@@ -61,12 +61,17 @@ export function SpeedSessionHistory({ sessions, distances }: SpeedSessionHistory
 
                 {!session.is_break_day && (
                   <div className="flex gap-3 mt-1">
-                    {distances.map((dist) => {
-                      const time = session.distances[dist.key];
-                      return time ? (
+                {distances.map((dist) => {
+                      const rawTime = session.distances[dist.key];
+                      const time = getBestTime(rawTime);
+                      const repCount = Array.isArray(rawTime) ? rawTime.filter(t => t > 0).length : 0;
+                      return time > 0 ? (
                         <div key={dist.key} className="text-center">
                           <p className="text-[10px] text-muted-foreground">{dist.label}</p>
-                          <p className="font-mono font-semibold text-xs">{time.toFixed(2)}s</p>
+                          <p className="font-mono font-semibold text-xs">
+                            {time.toFixed(2)}s
+                            {repCount > 1 && <span className="text-[9px] text-muted-foreground ml-0.5">({repCount})</span>}
+                          </p>
                         </div>
                       ) : null;
                     })}
