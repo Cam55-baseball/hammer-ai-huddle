@@ -1,179 +1,136 @@
 
-# Smart Default Scheduling for Training Modules
 
-## Problem
+# Rename + Navigation Restructure: "The Complete Player: Speed & Throwing"
 
-Iron Bambino, Heat Factory, and Speed Lab all default to showing **7 days per week** on the Game Plan and Calendar. This contradicts sports science, the app's own 12-hour lockout timers, and the recovery-first philosophy. Athletes see training tasks every day even on days they should rest. There is no system-level "recommended schedule" that the app applies automatically.
+## Overview
 
-## Solution
-
-Introduce **intelligent default schedules** for each training module that kick in when a user has no custom `game_plan_task_schedule` row for that task. Users can still override via "Repeat Weekly" settings. The defaults reflect professional training periodization.
+This is a **frontend-only** update that renames the Throwing Analysis dashboard card to "The Complete Player: Speed & Throwing," introduces a new gateway page at `/complete-player`, and updates the sidebar menu header. No Stripe IDs, product slugs, entitlement logic, webhook handlers, or database references are touched.
 
 ---
 
-## 1. Recommended Default Schedules
+## 1. Dashboard Card Update (`src/pages/Dashboard.tsx`)
 
-| Module | Task ID | Default Days | Days/Week | Reasoning |
-|--------|---------|-------------|-----------|-----------|
-| Iron Bambino | `workout-hitting` | Mon, Tue, Thu, Fri, Sat | 5 | Matches 5-day workout structure (D1-D5) with Wed+Sun rest |
-| Heat Factory | `workout-pitching` | Mon, Tue, Thu, Fri, Sat | 5 | Same 5-day structure, mirrors Iron Bambino |
-| Speed Lab | `speed-lab` | Mon, Wed, Fri | 3 | Sprint training needs 48h CNS recovery between sessions |
+**Current behavior** (lines 513-564): The "Throwing" card displays `t('dashboard.modules.throwing')` as its title and navigates to `/analyze/throwing?sport=...` via `handleModuleSelect("throwing")`.
 
-These defaults apply ONLY when the user has NOT set a custom schedule via the "Repeat Weekly" drawer.
+**New behavior**:
+- Display name changes to the new i18n key: `t('dashboard.modules.completePlayer')` which resolves to "The Complete Player: Speed & Throwing"
+- Description changes to `t('dashboard.modules.completePlayerDescription')`
+- When user **has access**: navigate to `/complete-player` instead of `/analyze/throwing`
+- When user **does not have access**: keep the existing pricing redirect (unchanged)
+- Button text when unlocked changes from "Start Analysis" to "Explore" (new i18n key)
+- The card icon stays as `Zap` (or could be updated to a combined icon)
+- Internal module key remains `"throwing"` -- only the display layer changes
 
 ---
 
-## 2. Implementation: Default Schedule Map
+## 2. New Complete Player Landing Page
 
-A new constant in `useGamePlan.ts` and `useCalendar.ts` defines the recommended schedule for each training task:
+**New file**: `src/pages/CompletePlayer.tsx`
 
-```text
-const TRAINING_DEFAULT_SCHEDULES: Record<string, number[]> = {
-  'workout-hitting':  [1, 2, 4, 5, 6],  // Mon, Tue, Thu, Fri, Sat
-  'workout-pitching': [1, 2, 4, 5, 6],  // Mon, Tue, Thu, Fri, Sat
-  'speed-lab':        [1, 3, 5],          // Mon, Wed, Fri
-};
+**Route**: `/complete-player`
+
+This page is a clean selection gateway with two tiles:
+
+| Tile | Icon | Label | Description | Route |
+|------|------|-------|-------------|-------|
+| Throwing Analysis | Target | "Throwing Analysis" | "Analyze arm action, footwork, and energy transfer" | `/analyze/throwing?sport={selectedSport}` |
+| Speed Lab | Zap | "Speed Lab" | "Build elite speed with structured sprints" | `/speed-lab` |
+
+**Design**: 
+- Uses `DashboardLayout` wrapper for consistent navigation
+- Reads `selectedSport` from localStorage for the throwing route
+- Both tiles are large, clickable cards with icons and descriptions
+- No entitlement checks needed on this page (the user already passed the access gate on the dashboard)
+- Page title: "The Complete Player" with a subtitle
+
+---
+
+## 3. App Router Update (`src/App.tsx`)
+
+- Add lazy import: `const CompletePlayer = lazyWithRetry(() => import("./pages/CompletePlayer"));`
+- Add route: `<Route path="/complete-player" element={<CompletePlayer />} />`
+
+---
+
+## 4. Sidebar Menu Update (`src/components/AppSidebar.tsx`)
+
+**Current** (lines 207-220):
+```
+key: 'throwing',
+title: t('dashboard.modules.throwingAnalysis'),  --> "Throwing Analysis"
+url: /analyze/throwing?sport=...
+subModules: [Speed Lab]
 ```
 
-Day values use JavaScript's `getDay()` format: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat.
-
----
-
-## 3. Game Plan Changes (`useGamePlan.ts`)
-
-### Current behavior:
-Training tasks are added to the Game Plan if:
-1. User has module access (`hasHittingAccess`, etc.)
-2. Task is not skipped today via `calendar_skipped_items`
-
-There is **no day-of-week check** for training tasks -- they show every day.
-
-### New behavior:
-Before adding each training task, check:
-1. Does the user have a custom schedule row in `calendar_skipped_items` for this task? If yes, respect that.
-2. If no custom schedule exists, check `TRAINING_DEFAULT_SCHEDULES` for today's day of week. Only show the task if today is in the default schedule.
-
-This means **no database changes** are needed -- the default schedule is purely in-code, and the existing `calendar_skipped_items` / `game_plan_task_schedule` system overrides it when the user customizes.
-
-### Code change:
-
-Add a helper function:
-
-```text
-const shouldShowTrainingTask = (taskId: string): boolean => {
-  // If user has explicit skip days, that takes priority (already handled by isSystemTaskSkippedToday)
-  // If user has NO schedule at all, use the smart default
-  const hasCustomSchedule = gamePlanSkips.has(taskId);
-  if (hasCustomSchedule) return true; // Custom schedule exists, skip-check already handles filtering
-
-  const defaultDays = TRAINING_DEFAULT_SCHEDULES[taskId];
-  if (!defaultDays) return true; // No default schedule, show every day
-
-  return defaultDays.includes(todayDayOfWeek);
-};
+**New**:
+```
+key: 'throwing',
+title: t('dashboard.modules.completePlayerShort'),  --> "Complete Player"
+url: /complete-player
+subModules: [
+  { title: "Throwing Analysis", url: /analyze/throwing?sport=..., icon: Target },
+  { title: "Speed Lab", url: /speed-lab, icon: Zap }
+]
 ```
 
-Then wrap each training task:
-
-```text
-// Iron Bambino
-if (hasHittingAccess && !isSystemTaskSkippedToday('workout-hitting') && shouldShowTrainingTask('workout-hitting')) {
-  tasks.push({ ... });
-}
-
-// Heat Factory
-if (hasPitchingAccess && !isSystemTaskSkippedToday('workout-pitching') && shouldShowTrainingTask('workout-pitching')) {
-  tasks.push({ ... });
-}
-
-// Speed Lab
-if (hasThrowingAccess && !isSystemTaskSkippedToday('speed-lab') && shouldShowTrainingTask('speed-lab')) {
-  tasks.push({ ... });
-}
-```
+Changes:
+- Dropdown header text changes from "Throwing Analysis" to "Complete Player"
+- Parent URL changes from `/analyze/throwing?sport=...` to `/complete-player`
+- Sub-modules now show **both** Throwing Analysis and Speed Lab (Throwing Analysis becomes a sub-item)
+- `expandedModules` default state gets `throwing: true` added (already there in some cases)
 
 ---
 
-## 4. Calendar Changes (`useCalendar.ts`)
+## 5. i18n Keys (All 8 Locales)
 
-### Current behavior:
-Module-gated tasks (including `speed-lab`, `video-throwing`) appear on **every day** in the calendar when the user has no explicit `game_plan_task_schedule` row (lines 566-592). Iron Bambino and Heat Factory also appear every day via `sub_module_progress` processing (lines 595-669), defaulting to `scheduledDays = [0,1,2,3,4,5,6]`.
+New keys added under `dashboard.modules`:
 
-### New behavior:
-Apply the same `TRAINING_DEFAULT_SCHEDULES` map when no explicit schedule exists:
+| Key | English Value |
+|-----|---------------|
+| `completePlayer` | "The Complete Player: Speed & Throwing" |
+| `completePlayerShort` | "Complete Player" |
+| `completePlayerDescription` | "Master speed training and throwing mechanics in one program" |
+| `completePlayerExplore` | "Explore" |
 
-**For module-gated tasks** (Speed Lab in `MODULE_GATED_TASKS.throwing`):
-When iterating days, check if the task has a default schedule and filter by day-of-week.
-
-**For sub_module_progress** (Iron Bambino / Heat Factory):
-Change the fallback from `[0,1,2,3,4,5,6]` to the default schedule:
-
-```text
-// Before:
-const scheduledDays = programSchedule?.display_days || [0, 1, 2, 3, 4, 5, 6];
-
-// After:
-const scheduledDays = programSchedule?.display_days || TRAINING_DEFAULT_SCHEDULES[programTaskId] || [0, 1, 2, 3, 4, 5, 6];
-```
+Translated appropriately for de, es, fr, ja, ko, nl, zh.
 
 ---
 
-## 5. First-Day Behavior
+## 6. What Does NOT Change
 
-### How it starts:
-- **Iron Bambino / Heat Factory**: The task appears on the Game Plan the moment the user subscribes to the hitting/pitching module. No initialization needed -- the subscription gate (`hasHittingAccess`) controls visibility.
-- **Speed Lab**: Appears when the user subscribes to the throwing module. The Speed Lab page itself has an "Initialize Journey" step, but the Game Plan task appears regardless and links to `/speed-lab` where the user can initialize.
-
-### After first completion:
-- **Iron Bambino / Heat Factory**: After completing Day 1, the 12-hour lockout activates. The task still appears on scheduled days but shows a countdown timer when accessed. No change needed here.
-- **Speed Lab**: After completing a session, the 12-hour CNS lockout activates, and the "RECOVERY" badge shows. The task still appears on its scheduled days (Mon/Wed/Fri by default).
-
----
-
-## 6. User Override
-
-The user can always override the default schedule by:
-1. Tapping the pencil icon on any task in the Game Plan
-2. Opening the "Repeat Weekly" drawer
-3. Selecting custom days
-
-Once a `calendar_skipped_items` row exists for that task, the system uses the custom schedule instead of the default. This is the existing behavior -- no changes needed to the override flow.
+| Item | Status |
+|------|--------|
+| Stripe product IDs | Unchanged |
+| Product slug `throwing` | Unchanged |
+| `hasAccessForSport("throwing", ...)` checks | Unchanged |
+| `useSubscription` module key `throwing` | Unchanged |
+| Webhook logic | Unchanged |
+| Purchase confirmation messaging | Unchanged |
+| Database `user_progress`, `speed_sessions` | Unchanged |
+| `/analyze/throwing` route and page | Unchanged (still accessible) |
+| `/speed-lab` route and page | Unchanged |
+| Pricing page module references | Unchanged |
+| Game Plan task IDs | Unchanged |
+| Calendar event IDs | Unchanged |
 
 ---
 
-## Summary of Files Modified
+## Summary of Files
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGamePlan.ts` | Add `TRAINING_DEFAULT_SCHEDULES` constant and `shouldShowTrainingTask()` helper; wrap 3 training task blocks with the new check |
-| `src/hooks/useCalendar.ts` | Add `TRAINING_DEFAULT_SCHEDULES` constant; use it as fallback in module-gated task loops and sub_module_progress processing |
+| `src/pages/CompletePlayer.tsx` | **New file** -- gateway page with two selection tiles |
+| `src/App.tsx` | Add lazy import + route for `/complete-player` |
+| `src/pages/Dashboard.tsx` | Rename throwing card display text + change navigation target for unlocked users |
+| `src/components/AppSidebar.tsx` | Rename "Throwing Analysis" dropdown to "Complete Player", restructure sub-modules |
+| `src/i18n/locales/en.json` | Add 4 new `completePlayer` keys |
+| `src/i18n/locales/de.json` | Add translated keys |
+| `src/i18n/locales/es.json` | Add translated keys |
+| `src/i18n/locales/fr.json` | Add translated keys |
+| `src/i18n/locales/ja.json` | Add translated keys |
+| `src/i18n/locales/ko.json` | Add translated keys |
+| `src/i18n/locales/nl.json` | Add translated keys |
+| `src/i18n/locales/zh.json` | Add translated keys |
 
-**Total**: 2 files modified, 0 database migrations
+**Total**: 12 files (1 new, 11 modified), 0 database migrations, 0 Stripe changes
 
----
-
-## E2E Flow
-
-```text
-User subscribes to hitting module
-  --> Game Plan shows Iron Bambino on Mon/Tue/Thu/Fri/Sat (5 days)
-  --> Calendar shows Iron Bambino sessions on the same 5 days
-  --> Wed and Sun: no Iron Bambino task (rest days)
-
-User completes Day 1 on Monday
-  --> 12-hour lockout starts
-  --> Tuesday: task shows, lockout expired, user can do Day 2
-  --> Wednesday: no task shown (default rest day)
-  --> Thursday: task shows, user does Day 3
-
-User opens "Repeat Weekly" and selects Mon/Wed/Fri
-  --> Custom schedule saved to calendar_skipped_items
-  --> Default schedule overridden
-  --> Game Plan + Calendar now show Mon/Wed/Fri only
-
-User subscribes to throwing module
-  --> Speed Lab appears Mon/Wed/Fri (default 3 days/week)
-  --> Completes session Monday, 12-hour lockout
-  --> Wednesday: lockout expired, task appears, user sprints
-  --> Tuesday/Thursday/Saturday/Sunday: no Speed Lab task
-```
