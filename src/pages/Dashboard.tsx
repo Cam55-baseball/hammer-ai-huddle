@@ -510,25 +510,33 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          {/* Throwing Module */}
+          {/* Complete Player Module (formerly Throwing) */}
           <Card
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
               !hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) 
                 ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
                 : ""
             }`}
-            onClick={() => handleModuleSelect("throwing")}
+            onClick={() => {
+              const isOwnerOrAdmin = isOwner || isAdmin;
+              const hasAccess = hasAccessForSport("throwing", selectedSport, isOwnerOrAdmin);
+              if (!hasAccess) {
+                handleModuleSelect("throwing");
+              } else {
+                navigate("/complete-player");
+              }
+            }}
           >
             <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
               <div className="p-2 sm:p-4 rounded-full bg-primary/10">
                 <Zap className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                {t('dashboard.modules.throwing')}
+                {t('dashboard.modules.completePlayer')}
                 {!hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground">
-                {t('dashboard.modules.throwingDescription')}
+                {t('dashboard.modules.completePlayerDescription')}
               </p>
               {getModuleProgress("throwing") && hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && (
                 <div className="text-sm">
@@ -549,9 +557,9 @@ export default function Dashboard() {
               >
                 {hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? (
                   <>
-                    <Upload className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">{t('dashboard.startAnalysis')}</span>
-                    <span className="xs:hidden">{t('dashboard.analyze')}</span>
+                    <Zap className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">{t('dashboard.modules.completePlayerExplore')}</span>
+                    <span className="xs:hidden">{t('dashboard.modules.completePlayerExplore')}</span>
                   </>
                 ) : (
                   <>

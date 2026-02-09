@@ -206,10 +206,16 @@ export function AppSidebar() {
     },
     { 
       key: 'throwing', 
-      title: t('dashboard.modules.throwingAnalysis'), 
-      url: `/analyze/throwing?sport=${selectedSport}`, 
-      icon: Target,
+      title: t('dashboard.modules.completePlayerShort'), 
+      url: '/complete-player', 
+      icon: Zap,
       subModules: [
+        {
+          title: t('dashboard.modules.throwingAnalysis'),
+          url: `/analyze/throwing?sport=${selectedSport}`,
+          icon: Target,
+          description: t('dashboard.modules.throwingDescription')
+        },
         {
           title: t('speedLab.title', 'Speed Lab'),
           url: "/speed-lab",
