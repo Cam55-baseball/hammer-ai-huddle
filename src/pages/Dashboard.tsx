@@ -404,25 +404,33 @@ export default function Dashboard() {
 
         {/* Module Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 module-cards">
-          {/* Hitting Module */}
+          {/* Complete Hitter Module (formerly Hitting) */}
           <Card
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
               !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) 
                 ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
                 : ""
             }`}
-            onClick={() => handleModuleSelect("hitting")}
+            onClick={() => {
+              const isOwnerOrAdmin = isOwner || isAdmin;
+              const hasAccess = hasAccessForSport("hitting", selectedSport, isOwnerOrAdmin);
+              if (!hasAccess) {
+                handleModuleSelect("hitting");
+              } else {
+                navigate("/complete-hitter");
+              }
+            }}
           >
             <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
               <div className="p-2 sm:p-4 rounded-full bg-primary/10">
                 <Target className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                {t('dashboard.modules.hitting')}
+                {t('dashboard.modules.completeHitter')}
                 {!hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground">
-                {t('dashboard.modules.hittingDescription')}
+                {t('dashboard.modules.completeHitterDescription')}
               </p>
               {getModuleProgress("hitting") && hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && (
                 <div className="text-sm">
@@ -443,9 +451,9 @@ export default function Dashboard() {
               >
                 {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
                   <>
-                    <Upload className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">{t('dashboard.startAnalysis')}</span>
-                    <span className="xs:hidden">{t('dashboard.analyze')}</span>
+                    <Target className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">{t('dashboard.modules.completePlayerExplore')}</span>
+                    <span className="xs:hidden">{t('dashboard.modules.completePlayerExplore')}</span>
                   </>
                 ) : (
                   <>
@@ -457,25 +465,33 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          {/* Pitching Module */}
+          {/* Complete Pitcher Module (formerly Pitching) */}
           <Card
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
               !hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) 
                 ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
                 : ""
             }`}
-            onClick={() => handleModuleSelect("pitching")}
+            onClick={() => {
+              const isOwnerOrAdmin = isOwner || isAdmin;
+              const hasAccess = hasAccessForSport("pitching", selectedSport, isOwnerOrAdmin);
+              if (!hasAccess) {
+                handleModuleSelect("pitching");
+              } else {
+                navigate("/complete-pitcher");
+              }
+            }}
           >
             <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
               <div className="p-2 sm:p-4 rounded-full bg-primary/10">
                 <CircleDot className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                {t('dashboard.modules.pitching')}
+                {t('dashboard.modules.completePitcher')}
                 {!hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground">
-                {t('dashboard.modules.pitchingDescription')}
+                {t('dashboard.modules.completePitcherDescription')}
               </p>
               {getModuleProgress("pitching") && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && (
                 <div className="text-sm">
@@ -496,9 +512,9 @@ export default function Dashboard() {
               >
                 {hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? (
                   <>
-                    <Upload className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">{t('dashboard.startAnalysis')}</span>
-                    <span className="xs:hidden">{t('dashboard.analyze')}</span>
+                    <CircleDot className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden xs:inline">{t('dashboard.modules.completePlayerExplore')}</span>
+                    <span className="xs:hidden">{t('dashboard.modules.completePlayerExplore')}</span>
                   </>
                 ) : (
                   <>

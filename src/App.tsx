@@ -79,6 +79,8 @@ const SharedActivity = lazyWithRetry(() => import("./pages/SharedActivity"));
 const Calendar = lazyWithRetry(() => import("./pages/Calendar"));
 const SpeedLab = lazyWithRetry(() => import("./pages/SpeedLab"));
 const CompletePlayer = lazyWithRetry(() => import("./pages/CompletePlayer"));
+const CompleteHitter = lazyWithRetry(() => import("./pages/CompleteHitter"));
+const CompletePitcher = lazyWithRetry(() => import("./pages/CompletePitcher"));
 
 const queryClient = new QueryClient();
 
@@ -137,6 +139,8 @@ const App = () => {
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/speed-lab" element={<SpeedLab />} />
               <Route path="/complete-player" element={<CompletePlayer />} />
+              <Route path="/complete-hitter" element={<CompleteHitter />} />
+              <Route path="/complete-pitcher" element={<CompletePitcher />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
