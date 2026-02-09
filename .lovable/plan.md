@@ -1,98 +1,138 @@
 
-
-# Rename + Navigation Restructure: "The Complete Player: Speed & Throwing"
+# Complete Hitter + Complete Pitcher: Frontend Restructure
 
 ## Overview
 
-This is a **frontend-only** update that renames the Throwing Analysis dashboard card to "The Complete Player: Speed & Throwing," introduces a new gateway page at `/complete-player`, and updates the sidebar menu header. No Stripe IDs, product slugs, entitlement logic, webhook handlers, or database references are touched.
+Replicate the exact pattern already established by the "Complete Player" restructure for the remaining two modules. This is purely a UI rename + navigation gateway update. All internal keys (`hitting`, `pitching`), Stripe IDs, entitlement logic, and backend references remain untouched.
 
 ---
 
-## 1. Dashboard Card Update (`src/pages/Dashboard.tsx`)
+## 1. New Gateway Pages
 
-**Current behavior** (lines 513-564): The "Throwing" card displays `t('dashboard.modules.throwing')` as its title and navigates to `/analyze/throwing?sport=...` via `handleModuleSelect("throwing")`.
+### `src/pages/CompleteHitter.tsx` (new file)
 
-**New behavior**:
-- Display name changes to the new i18n key: `t('dashboard.modules.completePlayer')` which resolves to "The Complete Player: Speed & Throwing"
-- Description changes to `t('dashboard.modules.completePlayerDescription')`
-- When user **has access**: navigate to `/complete-player` instead of `/analyze/throwing`
-- When user **does not have access**: keep the existing pricing redirect (unchanged)
-- Button text when unlocked changes from "Start Analysis" to "Explore" (new i18n key)
-- The card icon stays as `Zap` (or could be updated to a combined icon)
-- Internal module key remains `"throwing"` -- only the display layer changes
+Mirrors `CompletePlayer.tsx` structure. Three selection tiles:
 
----
+| Tile | Icon | Label | Route |
+|------|------|-------|-------|
+| Hitting Analysis | Target | "Hitting Analysis" | `/analyze/hitting?sport={selectedSport}` |
+| Iron Bambino | Dumbbell | "Iron Bambino" (from i18n `workoutModules.productionLab.title`) | `/production-lab` |
+| Tex Vision | Eye | "Tex Vision" (from i18n `navigation.texVision`) | `/tex-vision` |
 
-## 2. New Complete Player Landing Page
+Page header uses new i18n key `dashboard.modules.completeHitterShort` ("Complete Hitter") with description `dashboard.modules.completeHitterDescription`.
 
-**New file**: `src/pages/CompletePlayer.tsx`
+### `src/pages/CompletePitcher.tsx` (new file)
 
-**Route**: `/complete-player`
+Same pattern. Two selection tiles:
 
-This page is a clean selection gateway with two tiles:
+| Tile | Icon | Label | Route |
+|------|------|-------|-------|
+| Pitching Analysis | Target | "Pitching Analysis" | `/analyze/pitching?sport={selectedSport}` |
+| Heat Factory | Dumbbell | "Heat Factory" (from i18n `workoutModules.productionStudio.title`) | `/production-studio` |
 
-| Tile | Icon | Label | Description | Route |
-|------|------|-------|-------------|-------|
-| Throwing Analysis | Target | "Throwing Analysis" | "Analyze arm action, footwork, and energy transfer" | `/analyze/throwing?sport={selectedSport}` |
-| Speed Lab | Zap | "Speed Lab" | "Build elite speed with structured sprints" | `/speed-lab` |
+Page header uses `dashboard.modules.completePitcherShort` ("Complete Pitcher") with description `dashboard.modules.completePitcherDescription`.
 
-**Design**: 
-- Uses `DashboardLayout` wrapper for consistent navigation
-- Reads `selectedSport` from localStorage for the throwing route
-- Both tiles are large, clickable cards with icons and descriptions
-- No entitlement checks needed on this page (the user already passed the access gate on the dashboard)
-- Page title: "The Complete Player" with a subtitle
+Both pages use `DashboardLayout`, read `selectedSport` from localStorage, and follow the same card layout as `CompletePlayer.tsx`.
 
 ---
 
-## 3. App Router Update (`src/App.tsx`)
+## 2. App Router (`src/App.tsx`)
 
-- Add lazy import: `const CompletePlayer = lazyWithRetry(() => import("./pages/CompletePlayer"));`
-- Add route: `<Route path="/complete-player" element={<CompletePlayer />} />`
+Add two new lazy imports and routes:
 
----
+```text
+const CompleteHitter = lazyWithRetry(() => import("./pages/CompleteHitter"));
+const CompletePitcher = lazyWithRetry(() => import("./pages/CompletePitcher"));
 
-## 4. Sidebar Menu Update (`src/components/AppSidebar.tsx`)
-
-**Current** (lines 207-220):
-```
-key: 'throwing',
-title: t('dashboard.modules.throwingAnalysis'),  --> "Throwing Analysis"
-url: /analyze/throwing?sport=...
-subModules: [Speed Lab]
+<Route path="/complete-hitter" element={<CompleteHitter />} />
+<Route path="/complete-pitcher" element={<CompletePitcher />} />
 ```
 
-**New**:
-```
-key: 'throwing',
-title: t('dashboard.modules.completePlayerShort'),  --> "Complete Player"
-url: /complete-player
+---
+
+## 3. Dashboard Card Updates (`src/pages/Dashboard.tsx`)
+
+### Hitting Card (lines 407-458)
+
+- Display name: change `t('dashboard.modules.hitting')` to `t('dashboard.modules.completeHitter')`
+- Description: change to `t('dashboard.modules.completeHitterDescription')`
+- Click handler: when user **has access**, navigate to `/complete-hitter` instead of `/analyze/hitting`; when no access, keep existing pricing redirect (unchanged)
+- Button text when unlocked: change from "Start Analysis" to "Explore" (reuse `completePlayerExplore` key)
+- Internal module key remains `"hitting"`
+
+### Pitching Card (lines 460-511)
+
+- Display name: change `t('dashboard.modules.pitching')` to `t('dashboard.modules.completePitcher')`
+- Description: change to `t('dashboard.modules.completePitcherDescription')`
+- Click handler: when user **has access**, navigate to `/complete-pitcher`; when no access, keep pricing redirect
+- Button text when unlocked: change to "Explore"
+- Internal module key remains `"pitching"`
+
+---
+
+## 4. Sidebar Menu Updates (`src/components/AppSidebar.tsx`)
+
+### Hitting module (lines 172-191)
+
+```text
+// Before:
+key: 'hitting',
+title: t('dashboard.modules.hittingAnalysis'),  // "Hitting Analysis"
+url: `/analyze/hitting?sport=${selectedSport}`,
+subModules: [Iron Bambino, Tex Vision]
+
+// After:
+key: 'hitting',
+title: t('dashboard.modules.completeHitterShort'),  // "Complete Hitter"
+url: '/complete-hitter',
 subModules: [
-  { title: "Throwing Analysis", url: /analyze/throwing?sport=..., icon: Target },
-  { title: "Speed Lab", url: /speed-lab, icon: Zap }
+  { title: "Hitting Analysis", url: /analyze/hitting?sport=..., icon: Target },
+  { title: "Iron Bambino", url: /production-lab, icon: Dumbbell },
+  { title: "Tex Vision", url: /tex-vision, icon: Eye }
 ]
 ```
 
-Changes:
-- Dropdown header text changes from "Throwing Analysis" to "Complete Player"
-- Parent URL changes from `/analyze/throwing?sport=...` to `/complete-player`
-- Sub-modules now show **both** Throwing Analysis and Speed Lab (Throwing Analysis becomes a sub-item)
-- `expandedModules` default state gets `throwing: true` added (already there in some cases)
+Hitting Analysis becomes a sub-item alongside Iron Bambino and Tex Vision.
+
+### Pitching module (lines 193-206)
+
+```text
+// Before:
+key: 'pitching',
+title: t('dashboard.modules.pitchingAnalysis'),  // "Pitching Analysis"
+url: `/analyze/pitching?sport=${selectedSport}`,
+subModules: [Heat Factory]
+
+// After:
+key: 'pitching',
+title: t('dashboard.modules.completePitcherShort'),  // "Complete Pitcher"
+url: '/complete-pitcher',
+subModules: [
+  { title: "Pitching Analysis", url: /analyze/pitching?sport=..., icon: Target },
+  { title: "Heat Factory", url: /production-studio, icon: Dumbbell }
+]
+```
+
+Pitching Analysis becomes a sub-item alongside Heat Factory.
 
 ---
 
 ## 5. i18n Keys (All 8 Locales)
 
-New keys added under `dashboard.modules`:
+New keys under `dashboard.modules`:
 
 | Key | English Value |
 |-----|---------------|
-| `completePlayer` | "The Complete Player: Speed & Throwing" |
-| `completePlayerShort` | "Complete Player" |
-| `completePlayerDescription` | "Master speed training and throwing mechanics in one program" |
-| `completePlayerExplore` | "Explore" |
+| `completeHitter` | "Complete Hitter" |
+| `completeHitterShort` | "Complete Hitter" |
+| `completeHitterDescription` | "Master hitting mechanics, strength training, and vision in one program" |
+| `completePitcher` | "Complete Pitcher" |
+| `completePitcherShort` | "Complete Pitcher" |
+| `completePitcherDescription` | "Master pitching mechanics and arm strength in one program" |
 
-Translated appropriately for de, es, fr, ja, ko, nl, zh.
+These will be translated for all 7 non-English locales (de, es, fr, ja, ko, nl, zh).
+
+The existing `completePlayerExplore` ("Explore") key will be reused for all three gateway button labels.
 
 ---
 
@@ -101,14 +141,18 @@ Translated appropriately for de, es, fr, ja, ko, nl, zh.
 | Item | Status |
 |------|--------|
 | Stripe product IDs | Unchanged |
-| Product slug `throwing` | Unchanged |
-| `hasAccessForSport("throwing", ...)` checks | Unchanged |
-| `useSubscription` module key `throwing` | Unchanged |
+| Product slugs `hitting`, `pitching` | Unchanged |
+| `hasAccessForSport("hitting", ...)` checks | Unchanged |
+| `hasAccessForSport("pitching", ...)` checks | Unchanged |
+| `useSubscription` module keys | Unchanged |
 | Webhook logic | Unchanged |
 | Purchase confirmation messaging | Unchanged |
-| Database `user_progress`, `speed_sessions` | Unchanged |
-| `/analyze/throwing` route and page | Unchanged (still accessible) |
-| `/speed-lab` route and page | Unchanged |
+| Database tables | Unchanged |
+| `/analyze/hitting` route and page | Unchanged (still accessible) |
+| `/analyze/pitching` route and page | Unchanged (still accessible) |
+| `/production-lab` (Iron Bambino) | Unchanged |
+| `/production-studio` (Heat Factory) | Unchanged |
+| `/tex-vision` | Unchanged |
 | Pricing page module references | Unchanged |
 | Game Plan task IDs | Unchanged |
 | Calendar event IDs | Unchanged |
@@ -119,11 +163,12 @@ Translated appropriately for de, es, fr, ja, ko, nl, zh.
 
 | File | Change |
 |------|--------|
-| `src/pages/CompletePlayer.tsx` | **New file** -- gateway page with two selection tiles |
-| `src/App.tsx` | Add lazy import + route for `/complete-player` |
-| `src/pages/Dashboard.tsx` | Rename throwing card display text + change navigation target for unlocked users |
-| `src/components/AppSidebar.tsx` | Rename "Throwing Analysis" dropdown to "Complete Player", restructure sub-modules |
-| `src/i18n/locales/en.json` | Add 4 new `completePlayer` keys |
+| `src/pages/CompleteHitter.tsx` | New file -- gateway page with 3 tiles (Hitting Analysis, Iron Bambino, Tex Vision) |
+| `src/pages/CompletePitcher.tsx` | New file -- gateway page with 2 tiles (Pitching Analysis, Heat Factory) |
+| `src/App.tsx` | Add 2 lazy imports + 2 routes |
+| `src/pages/Dashboard.tsx` | Rename hitting/pitching card display text + change navigation for unlocked users |
+| `src/components/AppSidebar.tsx` | Rename dropdown headers, restructure sub-modules for hitting and pitching |
+| `src/i18n/locales/en.json` | Add 6 new keys |
 | `src/i18n/locales/de.json` | Add translated keys |
 | `src/i18n/locales/es.json` | Add translated keys |
 | `src/i18n/locales/fr.json` | Add translated keys |
@@ -132,5 +177,27 @@ Translated appropriately for de, es, fr, ja, ko, nl, zh.
 | `src/i18n/locales/nl.json` | Add translated keys |
 | `src/i18n/locales/zh.json` | Add translated keys |
 
-**Total**: 12 files (1 new, 11 modified), 0 database migrations, 0 Stripe changes
+**Total**: 13 files (2 new, 11 modified), 0 database migrations, 0 Stripe changes
 
+---
+
+## E2E Flow
+
+```text
+COMPLETE HITTER:
+  Dashboard card: "Complete Hitter"
+  Click (with access) --> /complete-hitter
+  Gateway shows: Hitting Analysis | Iron Bambino | Tex Vision
+  Click any --> routes to existing module
+  Sidebar: "Complete Hitter" dropdown --> Hitting Analysis, Iron Bambino, Tex Vision
+
+COMPLETE PITCHER:
+  Dashboard card: "Complete Pitcher"
+  Click (with access) --> /complete-pitcher
+  Gateway shows: Pitching Analysis | Heat Factory
+  Click any --> routes to existing module
+  Sidebar: "Complete Pitcher" dropdown --> Pitching Analysis, Heat Factory
+
+No access flow unchanged:
+  Click card without subscription --> /pricing (same as before)
+```
