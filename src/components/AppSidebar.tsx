@@ -172,10 +172,16 @@ export function AppSidebar() {
   const trainingModules = [
     { 
       key: 'hitting',
-      title: t('dashboard.modules.hittingAnalysis'), 
-      url: `/analyze/hitting?sport=${selectedSport}`, 
+      title: t('dashboard.modules.completeHitterShort'), 
+      url: '/complete-hitter', 
       icon: Target,
       subModules: [
+        {
+          title: t('dashboard.modules.hittingAnalysis'),
+          url: `/analyze/hitting?sport=${selectedSport}`,
+          icon: Target,
+          description: t('dashboard.modules.hittingDescription')
+        },
         {
           title: t('workoutModules.productionLab.title'),
           url: "/production-lab",
@@ -192,10 +198,16 @@ export function AppSidebar() {
     },
     {
       key: 'pitching',
-      title: t('dashboard.modules.pitchingAnalysis'), 
-      url: `/analyze/pitching?sport=${selectedSport}`, 
+      title: t('dashboard.modules.completePitcherShort'), 
+      url: '/complete-pitcher', 
       icon: Target,
       subModules: [
+        {
+          title: t('dashboard.modules.pitchingAnalysis'),
+          url: `/analyze/pitching?sport=${selectedSport}`,
+          icon: Target,
+          description: t('dashboard.modules.pitchingDescription')
+        },
         {
           title: t('workoutModules.productionStudio.title'),
           url: "/production-studio",
