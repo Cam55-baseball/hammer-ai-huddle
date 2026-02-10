@@ -95,11 +95,11 @@ serve(async (req) => {
     logStep("Received module request", { modules, sport });
     logStep("Sport selection", { sport, isBaseball: sport === 'baseball', isSoftball: sport === 'softball' });
 
-    // Validate single module selection
-    if (!modules || !Array.isArray(modules) || modules.length !== 1) {
-      logStep("ERROR: Must select exactly one module");
+    // Validate at least one module selected
+    if (!modules || !Array.isArray(modules) || modules.length === 0) {
+      logStep("ERROR: Must select at least one module");
       return new Response(
-        JSON.stringify({ error: 'Must select exactly one module at a time' }),
+        JSON.stringify({ error: 'Must select at least one module' }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400 
