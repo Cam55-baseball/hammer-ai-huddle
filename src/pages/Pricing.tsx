@@ -6,6 +6,12 @@ import { Check, Info } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+const MODULE_DISPLAY_NAMES: Record<string, string> = {
+  hitting: 'Complete Hitter',
+  pitching: 'Complete Pitcher',
+  throwing: 'The Complete Player: Speed & Throwing',
+};
+
 const Pricing = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -71,7 +77,7 @@ const Pricing = () => {
           </div>
           <h1 className="text-4xl font-bold mb-2">{isAddMode ? 'Add Module Subscription' : 'Start Your Subscription'}</h1>
           <p className="text-muted-foreground">
-            {isAddMode ? `Add ${selectedModule} to your training modules` : 'Subscribe to your first training module'}
+            {isAddMode ? `Add ${MODULE_DISPLAY_NAMES[selectedModule || ''] || selectedModule} to your training modules` : 'Subscribe to your first training module'}
           </p>
           {!isAddMode && (
             <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
@@ -79,7 +85,7 @@ const Pricing = () => {
               <span>→</span>
               <span className="bg-muted px-3 py-1 rounded-full">Role: {selectedRole}</span>
               <span>→</span>
-              <span className="bg-muted px-3 py-1 rounded-full capitalize">{selectedModule}</span>
+              <span className="bg-muted px-3 py-1 rounded-full">{MODULE_DISPLAY_NAMES[selectedModule || ''] || selectedModule}</span>
               <span>→</span>
               <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Pricing</span>
             </div>
@@ -92,7 +98,7 @@ const Pricing = () => {
               {isAddMode ? 'Add Module' : 'Get Started'}
             </div>
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold mb-2 capitalize">{selectedModule} Module</h3>
+              <h3 className="text-2xl font-bold mb-2">{MODULE_DISPLAY_NAMES[selectedModule || ''] || selectedModule}</h3>
               <div className="text-4xl font-bold mb-2">
                 ${modulePrice}
                 <span className="text-lg text-muted-foreground">/month</span>

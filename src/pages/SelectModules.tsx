@@ -46,21 +46,21 @@ const SelectModules = () => {
   const modules: { id: ModuleType; label: string; icon: string; description: string }[] = [
     {
       id: 'hitting',
-      label: t('selectModules.hitting'),
+      label: t('dashboard.modules.completeHitter'),
       icon: '⚡',
-      description: t('selectModules.hittingDescription')
+      description: t('dashboard.modules.completeHitterDescription')
     },
     {
       id: 'pitching',
-      label: t('selectModules.pitching'),
+      label: t('dashboard.modules.completePitcher'),
       icon: '🎯',
-      description: t('selectModules.pitchingDescription')
+      description: t('dashboard.modules.completePitcherDescription')
     },
     {
       id: 'throwing',
-      label: t('selectModules.throwing'),
+      label: t('dashboard.modules.completePlayer'),
       icon: '🔥',
-      description: t('selectModules.throwingDescription')
+      description: t('dashboard.modules.completePlayerDescription')
     }
   ];
 
