@@ -1,40 +1,18 @@
 
 
-# UI Synchronization: Purchase Cards Match Dashboard Cards
+# Checkout Flow Upgrade: Nickname Display + Multi-Module Cart
 
-## Problem
+## Overview
 
-The **Select Modules** page and **Pricing** page still display legacy names ("Hitting", "Pitching", "Throwing") while the Dashboard now shows "Complete Hitter", "Complete Pitcher", and "The Complete Player: Speed & Throwing". This creates a jarring brand disconnect during the purchase flow.
-
-## Solution
-
-Update the display layer on both purchase-flow pages to use the same i18n keys and descriptions as the Dashboard cards. Zero Stripe, backend, or entitlement changes.
+Transform the single-module checkout confirmation page into a multi-select cart with branded display names. The edge function already maps modules to line items -- we just need to remove its single-module validation. Zero Stripe product/price changes.
 
 ---
 
-## 1. SelectModules.tsx Updates (lines 46-65)
+## 1. Checkout.tsx -- Full Rewrite of Module Section
 
-Replace the legacy labels and descriptions in the `modules` array with the new branded i18n keys:
+### Display Name Mapping
 
-| Module ID | Current Label Key | New Label Key | Current Description Key | New Description Key |
-|-----------|------------------|---------------|------------------------|---------------------|
-| `hitting` | `selectModules.hitting` ("Hitting") | `dashboard.modules.completeHitter` ("Complete Hitter") | `selectModules.hittingDescription` | `dashboard.modules.completeHitterDescription` |
-| `pitching` | `selectModules.pitching` ("Pitching") | `dashboard.modules.completePitcher` ("Complete Pitcher") | `selectModules.pitchingDescription` | `dashboard.modules.completePitcherDescription` |
-| `throwing` | `selectModules.throwing` ("Throwing") | `dashboard.modules.completePlayer` ("The Complete Player: Speed & Throwing") | `selectModules.throwingDescription` | `dashboard.modules.completePlayerDescription` |
-
-The internal `id` values (`'hitting'`, `'pitching'`, `'throwing'`) remain unchanged -- only the display `label` and `description` strings change.
-
----
-
-## 2. Pricing.tsx Updates (line 95)
-
-Currently the pricing card title shows:
-
-```text
-{selectedModule} Module    -->  e.g. "hitting Module"
-```
-
-This needs a display name mapping so it shows the branded name instead:
+Add the same `MODULE_DISPLAY_NAMES` map already used in Pricing.tsx:
 
 ```text
 const MODULE_DISPLAY_NAMES: Record<string, string> = {
@@ -44,11 +22,55 @@ const MODULE_DISPLAY_NAMES: Record<string, string> = {
 };
 ```
 
-The card title (line 95) changes from `{selectedModule} Module` to `{MODULE_DISPLAY_NAMES[selectedModule] || selectedModule}`.
+### State Changes
 
-Similarly, the breadcrumb pill on line 82 that shows the raw module name (`capitalize` class on `{selectedModule}`) should also use the display name map.
+- Replace single `selectedModule` string with `selectedModules` Set (initialized with the module that brought the user here)
+- Keep original `initialModule` for back-navigation context
+- Filter out already-subscribed modules using `subscribedModules` from `useSubscription`
 
-The subtitle on line 74 (`Add ${selectedModule} to your training modules`) should also use the mapped name.
+### Section Header
+
+Change from "Selected Module" to "Select Modules"
+
+### Module Cards
+
+Show all 3 modules as toggleable cards:
+- Pre-selected: the module that brought the user here (checked, highlighted)
+- Already purchased: greyed out with "Already purchased" label, not toggleable
+- Available: clickable to add/remove from cart
+- Each card shows branded name + price
+
+### Total Section
+
+Dynamic total: `selectedModules.size * MODULE_PRICE`
+
+### Checkout Handler
+
+Change `modules: [selectedModule]` to `modules: Array.from(selectedModules)` when invoking the edge function. Validation changes from checking single module to checking at least one selected.
+
+---
+
+## 2. Edge Function Update (create-checkout/index.ts)
+
+### Single Change
+
+Line 99: Change validation from `modules.length !== 1` to `modules.length === 0`
+
+This allows 1, 2, or 3 modules in a single checkout session. The existing `lineItems` mapping loop on line 138 already handles arrays of any length. Stripe checkout natively supports multiple subscription line items.
+
+Before:
+```text
+if (!modules || !Array.isArray(modules) || modules.length !== 1) {
+  // error: "Must select exactly one module at a time"
+}
+```
+
+After:
+```text
+if (!modules || !Array.isArray(modules) || modules.length === 0) {
+  // error: "Must select at least one module"
+}
+```
 
 ---
 
@@ -56,21 +78,48 @@ The subtitle on line 74 (`Add ${selectedModule} to your training modules`) shoul
 
 | File | Change |
 |------|--------|
-| `src/pages/SelectModules.tsx` | Update 3 label keys and 3 description keys in the `modules` array to use `dashboard.modules.*` i18n keys |
-| `src/pages/Pricing.tsx` | Add `MODULE_DISPLAY_NAMES` map; update card title, breadcrumb pill, and subtitle to use branded names |
+| `src/pages/Checkout.tsx` | Add display name map, convert to multi-select cart with toggleable module cards, dynamic total, array-based checkout call |
+| `supabase/functions/create-checkout/index.ts` | Change validation from exactly-1 to at-least-1 module (line 99) |
 
-**Total**: 2 files modified, 0 new files, 0 database changes, 0 Stripe changes
+**Total**: 2 files modified, 0 new files, 0 database changes, 0 Stripe product/price changes
 
 ---
 
-## What Does NOT Change
+## 4. What Does NOT Change
 
-- Module `id` values (`hitting`, `pitching`, `throwing`) -- unchanged
-- Stripe product IDs -- unchanged
-- Entitlement checks -- unchanged
-- Checkout flow -- unchanged
-- Purchase confirmation messaging -- unchanged
-- Webhook logic -- unchanged
-- Pricing amounts -- unchanged
-- All i18n keys already exist from previous dashboard updates -- no new locale keys needed
+- Stripe product IDs and price IDs -- unchanged
+- Stripe webhook logic -- unchanged
+- Entitlement validation -- unchanged
+- Subscription creation logic -- unchanged (Stripe handles multi-line-item subscriptions natively)
+- Purchase confirmation flow -- unchanged
+- Module internal keys (hitting/pitching/throwing) -- unchanged
+- Promo code support -- unchanged (already enabled on checkout session)
+
+---
+
+## 5. Expected UX
+
+```text
+User arrives at /checkout with "throwing" pre-selected:
+
+  Select Modules
+
+  [x] The Complete Player: Speed & Throwing    $200/mo
+  [ ] Complete Hitter                          $200/mo
+  [ ] Complete Pitcher                         $200/mo
+
+  Total: $200/month
+
+User clicks "Complete Hitter":
+
+  [x] The Complete Player: Speed & Throwing    $200/mo
+  [x] Complete Hitter                          $200/mo
+  [ ] Complete Pitcher                         $200/mo
+
+  Total: $400/month
+
+User clicks "Proceed to Payment" --> single Stripe checkout with 2 line items
+```
+
+Already-purchased modules appear greyed out and cannot be selected.
 
