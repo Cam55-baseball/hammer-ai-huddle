@@ -68,6 +68,7 @@ interface VaultFocusQuizDialogProps {
     pain_location?: string[];
     pain_scale?: number;
     pain_increases_with_movement?: boolean;
+    pain_movement_per_area?: Record<string, boolean>;
     pain_tissue_types?: Record<string, string[]>;
     // New pre-workout intent fields
     training_intent?: string[];
@@ -304,6 +305,7 @@ export function VaultFocusQuizDialog({
   const [painScales, setPainScales] = useState<Record<string, number>>({});
   const [painTissueTypes, setPainTissueTypes] = useState<Record<string, string[]>>({});
   const [painIncreasesWithMovement, setPainIncreasesWithMovement] = useState<boolean | null>(null);
+  const [painMovementPerArea, setPainMovementPerArea] = useState<Record<string, boolean>>({});
 
   // Handler to update pain scale for a specific area
   const handlePainScaleChange = (areaId: string, value: number) => {
@@ -335,6 +337,16 @@ export function VaultFocusQuizDialog({
         }
       });
       return newTypes;
+    });
+    // Remove movement-per-area for deselected areas
+    setPainMovementPerArea(prev => {
+      const newMovement: Record<string, boolean> = {};
+      areas.forEach(area => {
+        if (prev[area] !== undefined) {
+          newMovement[area] = prev[area];
+        }
+      });
+      return newMovement;
     });
   };
 
@@ -449,7 +461,12 @@ export function VaultFocusQuizDialog({
       data.pain_scale = Object.values(painScales).length > 0 
         ? Math.max(...Object.values(painScales)) 
         : undefined;
-      data.pain_increases_with_movement = painLocations.length > 0 ? painIncreasesWithMovement : undefined;
+      // Per-area movement data
+      data.pain_movement_per_area = Object.keys(painMovementPerArea).length > 0 ? painMovementPerArea : undefined;
+      // Legacy: true if ANY area has movement pain
+      data.pain_increases_with_movement = painLocations.length > 0 
+        ? Object.values(painMovementPerArea).some(v => v === true) 
+        : undefined;
       // NEW: Tissue types
       data.pain_tissue_types = Object.keys(painTissueTypes).length > 0 ? painTissueTypes : undefined;
       // NEW: Intent & Focus section
@@ -516,6 +533,7 @@ export function VaultFocusQuizDialog({
     setPainScales({});
     setPainTissueTypes({});
     setPainIncreasesWithMovement(null);
+    setPainMovementPerArea({});
     setTrainingIntents([]);
     setMentalEnergy(3);
     setShowNightSuccess(false);
@@ -1031,6 +1049,49 @@ export function VaultFocusQuizDialog({
                           })}
                         </div>
                       )}
+                      {/* Per-area: Does pain increase with movement? */}
+                      <div className="space-y-1 pt-1">
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {t('vault.quiz.pain.movementQuestion', 'Does pain increase with movement?')}
+                        </span>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant={painMovementPerArea[areaId] === true ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              if (navigator.vibrate) navigator.vibrate(10);
+                              setPainMovementPerArea(prev => ({ ...prev, [areaId]: true }));
+                            }}
+                            className={cn(
+                              "h-7 text-xs",
+                              painMovementPerArea[areaId] === true && "bg-amber-500 hover:bg-amber-600"
+                            )}
+                          >
+                            {t('common.yes', 'Yes')}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={painMovementPerArea[areaId] === false ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => {
+                              if (navigator.vibrate) navigator.vibrate(10);
+                              setPainMovementPerArea(prev => ({ ...prev, [areaId]: false }));
+                            }}
+                            className={cn(
+                              "h-7 text-xs",
+                              painMovementPerArea[areaId] === false && "bg-green-500 hover:bg-green-600"
+                            )}
+                          >
+                            {t('common.no', 'No')}
+                          </Button>
+                        </div>
+                        {painMovementPerArea[areaId] === true && (
+                          <p className="text-[10px] text-amber-500 font-medium">
+                            ⚠️ {t('vault.quiz.pain.movementWarning', 'Monitor closely during training')}
+                          </p>
+                        )}
+                      </div>
                       {/* Fascia Insight Panel for this pain area */}
                       <FasciaInsightPanel areaId={areaId} />
                     </div>
@@ -1038,49 +1099,7 @@ export function VaultFocusQuizDialog({
                 </div>
               )}
 
-              {/* Pain increases with movement */}
-              {painLocations.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">
-                    {t('vault.quiz.pain.movementQuestion', 'Does pain increase with movement?')}
-                  </Label>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant={painIncreasesWithMovement === true ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        if (navigator.vibrate) navigator.vibrate(10);
-                        setPainIncreasesWithMovement(true);
-                      }}
-                      className={cn(
-                        painIncreasesWithMovement === true && "bg-amber-500 hover:bg-amber-600"
-                      )}
-                    >
-                      {t('common.yes', 'Yes')}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={painIncreasesWithMovement === false ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        if (navigator.vibrate) navigator.vibrate(10);
-                        setPainIncreasesWithMovement(false);
-                      }}
-                      className={cn(
-                        painIncreasesWithMovement === false && "bg-green-500 hover:bg-green-600"
-                      )}
-                    >
-                      {t('common.no', 'No')}
-                    </Button>
-                  </div>
-                  {painIncreasesWithMovement === true && (
-                    <p className="text-xs text-amber-500 font-medium">
-                      ⚠️ {t('vault.quiz.pain.movementWarning', 'Monitor closely during training')}
-                    </p>
-                  )}
-                </div>
-              )}
+              {/* Removed: global movement question — now per-area inline below */}
 
               <p className="text-xs text-muted-foreground italic pt-1">
                 {t('vault.quiz.pain.footer', 'Spot motion-limiting issues early!')}

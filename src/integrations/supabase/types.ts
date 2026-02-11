@@ -3161,6 +3161,7 @@ export type Database = {
           mood_level: number | null
           pain_increases_with_movement: boolean | null
           pain_location: string[] | null
+          pain_movement_per_area: Json | null
           pain_scale: number | null
           pain_scales: Json | null
           pain_tissue_types: Json | null
@@ -3200,6 +3201,7 @@ export type Database = {
           mood_level?: number | null
           pain_increases_with_movement?: boolean | null
           pain_location?: string[] | null
+          pain_movement_per_area?: Json | null
           pain_scale?: number | null
           pain_scales?: Json | null
           pain_tissue_types?: Json | null
@@ -3239,6 +3241,7 @@ export type Database = {
           mood_level?: number | null
           pain_increases_with_movement?: boolean | null
           pain_location?: string[] | null
+          pain_movement_per_area?: Json | null
           pain_scale?: number | null
           pain_scales?: Json | null
           pain_tissue_types?: Json | null

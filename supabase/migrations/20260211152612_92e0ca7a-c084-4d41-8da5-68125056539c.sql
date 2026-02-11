@@ -1,0 +1,1 @@
+ALTER TABLE public.vault_focus_quizzes ADD COLUMN IF NOT EXISTS pain_movement_per_area JSONB DEFAULT NULL;
