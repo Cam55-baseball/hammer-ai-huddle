@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -65,6 +65,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const { user } = useAuth();
   const { modules: subscribedModules } = useSubscription();
   const [loading, setLoading] = useState(true);
+  const currentDateRef = useRef(getTodayDate());
   const [completionStatus, setCompletionStatus] = useState<Record<string, boolean>>({});
   const [daysUntilRecap, setDaysUntilRecap] = useState(42);
   const [recapProgress, setRecapProgress] = useState(0);
@@ -542,6 +543,18 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
 
   useEffect(() => {
     fetchTaskStatus();
+  }, [fetchTaskStatus]);
+
+  // Midnight detection: re-fetch when the calendar date rolls over
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = getTodayDate();
+      if (now !== currentDateRef.current) {
+        currentDateRef.current = now;
+        fetchTaskStatus();
+      }
+    }, 30000); // check every 30 seconds
+    return () => clearInterval(interval);
   }, [fetchTaskStatus]);
 
   // Run date repair once per day when user is authenticated

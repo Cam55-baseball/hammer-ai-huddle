@@ -100,6 +100,8 @@ export const LEFT_SIDE_BODY_AREAS: BodyArea[] = [
   { id: 'left_oblique', label: 'L Oblique' },
   { id: 'left_it_band', label: 'L IT Band' },
   { id: 'left_knee_side', label: 'L Knee (Side)' },
+  { id: 'left_tibia', label: 'L Tibia' },
+  { id: 'left_fibula', label: 'L Fibula' },
   { id: 'left_foot_arch', label: 'L Foot Arch' },
 ];
 
@@ -113,6 +115,8 @@ export const RIGHT_SIDE_BODY_AREAS: BodyArea[] = [
   { id: 'right_oblique', label: 'R Oblique' },
   { id: 'right_it_band', label: 'R IT Band' },
   { id: 'right_knee_side', label: 'R Knee (Side)' },
+  { id: 'right_tibia', label: 'R Tibia' },
+  { id: 'right_fibula', label: 'R Fibula' },
   { id: 'right_foot_arch', label: 'R Foot Arch' },
 ];
 

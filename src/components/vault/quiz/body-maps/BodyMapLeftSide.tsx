@@ -145,8 +145,29 @@ export function BodyMapLeftSide({ selectedAreas, onToggle }: BodyMapLeftSideProp
         <ellipse cx="58" cy="238" rx="12" ry="10" />
       </g>
 
-      {/* Lower leg outline */}
-      <rect x="52" y="250" width="12" height="45" rx="5" className="fill-none stroke-muted-foreground/20 stroke-[1]" />
+      {/* Left Tibia (front/inner lower leg bone) */}
+      <g
+        onClick={() => onToggle('left_tibia')}
+        onKeyDown={(e) => handleKeyDown(e, 'left_tibia')}
+        className={getZoneClasses('left_tibia')}
+        tabIndex={0}
+        role="button"
+        aria-pressed={isSelected('left_tibia')}
+      >
+        <rect x="54" y="252" width="8" height="38" rx="3" />
+      </g>
+
+      {/* Left Fibula (outer lower leg bone) */}
+      <g
+        onClick={() => onToggle('left_fibula')}
+        onKeyDown={(e) => handleKeyDown(e, 'left_fibula')}
+        className={getZoneClasses('left_fibula')}
+        tabIndex={0}
+        role="button"
+        aria-pressed={isSelected('left_fibula')}
+      >
+        <rect x="44" y="256" width="7" height="32" rx="3" />
+      </g>
 
       {/* Left Foot Arch */}
       <g

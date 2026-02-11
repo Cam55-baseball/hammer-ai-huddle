@@ -1100,6 +1100,50 @@ export const FASCIA_CONNECTIONS: Record<string, BodyConnectionInfo> = {
     hftPrinciple: 'SBL terminus - suboccipital tension',
     researchSource: 'Myers, Anatomy Trains (SBL)',
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // TIBIA & FIBULA (SIDE VIEWS)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  left_tibia: {
+    areaId: 'left_tibia',
+    primaryLine: BODY_LINES.SFL,
+    secondaryLines: [BODY_LINES.DFL],
+    connectedAreas: ['left_knee_side', 'left_shin', 'left_ankle_inside', 'left_foot_arch'],
+    kidInsight: 'Your tibia (shin bone) is the strong front bone that carries most of your weight when you run!',
+    proTip: 'Tibia stress? Check calf tightness and foot mechanics. Shin splints often start here.',
+    hftPrinciple: 'Anterior compartment loading - ground reaction force transmission',
+    researchSource: 'Myers, Anatomy Trains (SFL, DFL)',
+  },
+  left_fibula: {
+    areaId: 'left_fibula',
+    primaryLine: BODY_LINES.LL,
+    secondaryLines: [BODY_LINES.SBL],
+    connectedAreas: ['left_knee_side', 'left_it_band', 'left_ankle_outside', 'left_calf_outer'],
+    kidInsight: 'Your fibula is the thin bone on the outside of your lower leg - it helps with balance and side-to-side moves!',
+    proTip: 'Fibula pain often relates to lateral ankle instability or peroneal tension. Check lateral chain.',
+    hftPrinciple: 'Lateral stabilization chain - inversion/eversion control',
+    researchSource: 'Myers, Anatomy Trains (LL)',
+  },
+  right_tibia: {
+    areaId: 'right_tibia',
+    primaryLine: BODY_LINES.SFL,
+    secondaryLines: [BODY_LINES.DFL],
+    connectedAreas: ['right_knee_side', 'right_shin', 'right_ankle_inside', 'right_foot_arch'],
+    kidInsight: 'Your tibia (shin bone) is the strong front bone that carries most of your weight when you run!',
+    proTip: 'Tibia stress? Check calf tightness and foot mechanics. Shin splints often start here.',
+    hftPrinciple: 'Anterior compartment loading - ground reaction force transmission',
+    researchSource: 'Myers, Anatomy Trains (SFL, DFL)',
+  },
+  right_fibula: {
+    areaId: 'right_fibula',
+    primaryLine: BODY_LINES.LL,
+    secondaryLines: [BODY_LINES.SBL],
+    connectedAreas: ['right_knee_side', 'right_it_band', 'right_ankle_outside', 'right_calf_outer'],
+    kidInsight: 'Your fibula is the thin bone on the outside of your lower leg - it helps with balance and side-to-side moves!',
+    proTip: 'Fibula pain often relates to lateral ankle instability or peroneal tension. Check lateral chain.',
+    hftPrinciple: 'Lateral stabilization chain - inversion/eversion control',
+    researchSource: 'Myers, Anatomy Trains (LL)',
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
