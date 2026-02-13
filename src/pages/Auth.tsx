@@ -162,18 +162,9 @@ const Auth = () => {
                   replace: true 
                 });
               }, 0);
-            } else if (isScout) {
-              // Scouts go to scout dashboard
-              setTimeout(() => {
-                navigate("/scout-dashboard", { replace: true });
-              }, 0);
-            } else if (isCoach) {
-              // Coaches go to coach dashboard
-              setTimeout(() => {
-                navigate("/coach-dashboard", { replace: true });
-              }, 0);
             } else {
-              // Players/others go to regular dashboard
+              // All users (scouts, coaches, players) go to /dashboard
+              // Scouts/coaches see ScoutGamePlanCard; players see GamePlanCard
               setTimeout(() => {
                 navigate("/dashboard", { replace: true });
               }, 0);

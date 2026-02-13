@@ -295,7 +295,7 @@ export default function Dashboard() {
     );
   };
 
-  if (authLoading || loading || subLoading) {
+  if (authLoading || loading || subLoading || scoutLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-6">
