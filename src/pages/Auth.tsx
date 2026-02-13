@@ -103,12 +103,13 @@ const Auth = () => {
               .eq('user_id', data.user.id)
               .limit(1),
             
-          // Check if user has a role (scout/admin/owner)
+          // Check if user has an active role (scout/admin/owner/coach)
           supabase
             .from('user_roles')
             .select('id, role')
             .eq('user_id', data.user.id)
-            .limit(1),
+            .eq('status', 'active')
+            .limit(10),
           
           // Check for scout application
           supabase
@@ -146,8 +147,9 @@ const Auth = () => {
           
           // Route based on onboarding status and role
           if (hasCompletedOnboarding) {
-            // Check if user is a scout
+            // Check if user is a scout or coach
             const isScout = rolesCheck.data?.some((r: any) => r.role === 'scout');
+            const isCoach = rolesCheck.data?.some((r: any) => r.role === 'coach');
             
             if (state?.returnTo) {
               setTimeout(() => {
@@ -164,6 +166,11 @@ const Auth = () => {
               // Scouts go to scout dashboard
               setTimeout(() => {
                 navigate("/scout-dashboard", { replace: true });
+              }, 0);
+            } else if (isCoach) {
+              // Coaches go to coach dashboard
+              setTimeout(() => {
+                navigate("/coach-dashboard", { replace: true });
               }, 0);
             } else {
               // Players/others go to regular dashboard
