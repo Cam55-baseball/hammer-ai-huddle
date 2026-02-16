@@ -1,64 +1,76 @@
 
 
-# Fix Scout/Coach Game Plan View -- End-to-End
+# Night Check-in Midnight Reset, Per-Area Movement Question, and Tibia/Fibula Zones
 
-## Root Cause (Why It Still Doesn't Work)
+## Problem Summary
 
-There are **two distinct bugs** causing scouts and coaches to never see the ScoutGamePlanCard:
+Three issues to fix:
 
-### Bug 1: Auth.tsx routes scouts/coaches AWAY from `/dashboard`
-
-After login, the code at line 165-173 sends:
-- Scouts to `/scout-dashboard`
-- Coaches to `/coach-dashboard`
-
-But the ScoutGamePlanCard lives on `/dashboard` (line 342). So scouts and coaches are routed to their player-management pages and **never land on the page that has the game plan**. They literally cannot see the ScoutGamePlanCard because they're sent to a different URL.
-
-### Bug 2: Dashboard.tsx loading guard ignores `scoutLoading`
-
-Line 298 checks `authLoading || loading || subLoading` but NOT `scoutLoading`. This means if a scout/coach navigates to `/dashboard` manually, the component renders with `isScout=false` and `isCoach=false` (defaults) before the role check finishes. The player GamePlanCard renders immediately, and depending on timing, the correct card may never appear.
+1. The Night Check-in shows as "completed" the next morning because the Game Plan does not re-fetch data when the date rolls over at midnight
+2. The "Does pain increase with movement?" question is asked once globally, not per selected pain area
+3. The Left Side and Right Side body maps are missing tibia and fibula bone zones
 
 ---
 
-## Fix Plan
+## 1. Midnight Reset for Game Plan
 
-### 1. Auth.tsx -- Route scouts and coaches to `/dashboard`
+**Root cause**: `useGamePlan` fetches task status on mount and when dependencies change, but has no timer to detect when the calendar date changes at midnight. If a user completes the night check-in at 10 PM and opens the app the next morning without a full page reload, the stale completion state persists.
 
-Change the post-login routing so scouts and coaches go to `/dashboard` (where the ScoutGamePlanCard lives), NOT to their separate management pages. The `/scout-dashboard` and `/coach-dashboard` pages remain accessible via navigation but are not the login landing page.
+**Fix**: Add a midnight-detection interval inside `useGamePlan.ts` that:
+- Tracks the current date string in a ref
+- Checks every 30 seconds if `getTodayDate()` has changed
+- When a date change is detected, triggers `fetchTaskStatus()` to re-query with the new date
+- This ensures ALL Game Plan tasks (not just night check-in) reset cleanly at midnight
 
-**Before:**
-```
-} else if (isScout) {
-  navigate("/scout-dashboard", { replace: true });
-} else if (isCoach) {
-  navigate("/coach-dashboard", { replace: true });
-} else {
-  navigate("/dashboard", { replace: true });
-}
-```
+### File: `src/hooks/useGamePlan.ts`
+- Add a `useEffect` with a 30-second `setInterval`
+- Compare `getTodayDate()` against a stored ref value
+- On mismatch, update the ref and call `fetchTaskStatus()`
 
-**After:**
-```
-} else {
-  // All authenticated users (scouts, coaches, players) go to /dashboard
-  // Scouts/coaches see ScoutGamePlanCard; players see GamePlanCard
-  navigate("/dashboard", { replace: true });
-}
-```
+---
 
-### 2. Dashboard.tsx -- Add `scoutLoading` to the loading guard
+## 2. Per-Area "Does Pain Increase with Movement?"
 
-**Before (line 298):**
-```
-if (authLoading || loading || subLoading) {
-```
+**Current behavior**: A single Yes/No toggle applies to all selected pain areas collectively.
 
-**After:**
-```
-if (authLoading || loading || subLoading || scoutLoading) {
-```
+**New behavior**: Each selected pain area gets its own Yes/No toggle, displayed inline within that area's section (after the tissue type selector and pain scale).
 
-This ensures the dashboard waits for the role check to complete before rendering, so the correct game plan card (ScoutGamePlanCard vs GamePlanCard) is shown on first render with no flash.
+### Database Change
+- Add a new JSONB column `pain_movement_per_area` to `vault_focus_quizzes` (maps area_id to boolean, e.g., `{"left_knee_front": true, "right_shin": false}`)
+- Keep the existing `pain_increases_with_movement` boolean column populated with `true` if ANY area has movement pain (backward compatibility)
+
+### File: `src/components/vault/VaultFocusQuizDialog.tsx`
+- Replace `painIncreasesWithMovement` (single boolean state) with `painMovementPerArea` (Record of string to boolean)
+- Move the Yes/No toggle from the bottom of the pain section into each area's block (inside the `painLocations.map()` loop), after the TenPointScale and tissue type chips
+- On submit, populate `pain_movement_per_area` JSONB and set legacy `pain_increases_with_movement` to `Object.values(painMovementPerArea).some(v => v === true)`
+
+### File: `src/hooks/useVault.ts`
+- Add `pain_movement_per_area` to the quiz data interface and upsert logic
+
+---
+
+## 3. Add Tibia and Fibula Zones to Left and Right Side Body Maps
+
+The front view has "L Shin" and "R Shin" zones, but the side views (Left Side, Right Side) have no lower-leg bone zones between the knee and foot. Tibia and fibula are distinct bones visible from the side.
+
+### File: `src/components/vault/quiz/body-maps/bodyAreaDefinitions.ts`
+- Add to `LEFT_SIDE_BODY_AREAS`:
+  - `{ id: 'left_tibia', label: 'L Tibia' }`
+  - `{ id: 'left_fibula', label: 'L Fibula' }`
+- Add to `RIGHT_SIDE_BODY_AREAS`:
+  - `{ id: 'right_tibia', label: 'R Tibia' }`
+  - `{ id: 'right_fibula', label: 'R Fibula' }`
+
+### File: `src/components/vault/quiz/body-maps/BodyMapLeftSide.tsx`
+- Add two new clickable SVG zones between the knee side and foot arch:
+  - **L Tibia**: Front-facing bone zone (inner/front of lower leg)
+  - **L Fibula**: Outer bone zone (outer side of lower leg)
+
+### File: `src/components/vault/quiz/body-maps/BodyMapRightSide.tsx`
+- Add matching R Tibia and R Fibula SVG zones
+
+### File: `src/components/vault/quiz/body-maps/fasciaConnectionMappings.ts`
+- Add fascia connection entries for all 4 new zones (left/right tibia, left/right fibula) with appropriate connected areas, kid insights, and pro tips
 
 ---
 
@@ -66,28 +78,27 @@ This ensures the dashboard waits for the role check to complete before rendering
 
 | File | Change |
 |------|--------|
-| `src/pages/Auth.tsx` | Remove scout/coach-specific routing -- all users go to `/dashboard` |
-| `src/pages/Dashboard.tsx` | Add `scoutLoading` to the loading guard on line 298 |
+| `src/hooks/useGamePlan.ts` | Add midnight detection interval to auto-refetch on date change |
+| `src/components/vault/VaultFocusQuizDialog.tsx` | Convert movement question from global to per-area; add new JSONB field to submit data |
+| `src/hooks/useVault.ts` | Add `pain_movement_per_area` to quiz interface and upsert |
+| `src/components/vault/quiz/body-maps/bodyAreaDefinitions.ts` | Add 4 new area IDs (L/R Tibia, L/R Fibula) |
+| `src/components/vault/quiz/body-maps/BodyMapLeftSide.tsx` | Add 2 SVG clickable zones for tibia and fibula |
+| `src/components/vault/quiz/body-maps/BodyMapRightSide.tsx` | Add 2 SVG clickable zones for tibia and fibula |
+| `src/components/vault/quiz/body-maps/fasciaConnectionMappings.ts` | Add 4 fascia connection entries |
 
-**Total**: 2 files modified, 0 new files, 0 database changes
+**Database migration**: 1 migration adding `pain_movement_per_area JSONB` column to `vault_focus_quizzes`
+
+**Total**: 7 files modified, 1 DB migration, 0 new files
 
 ---
 
 ## What Does NOT Change
 
-- `/scout-dashboard` and `/coach-dashboard` pages still exist and work -- they're for player management (search, follow, activity history)
-- `useScoutAccess` hook -- already correct
-- `ScoutGamePlanCard` component -- already correct
-- The conditional at line 342 -- already correct (`(isScout || isCoach) && !isOwner && !isAdmin`)
-- Subscription logic, Stripe, database schema -- all unchanged
-
----
-
-## Expected Behavior After Fix
-
-1. Scout logs in --> lands on `/dashboard` --> sees ScoutGamePlanCard with player video review checklist
-2. Coach logs in --> lands on `/dashboard` --> sees ScoutGamePlanCard with player video review checklist
-3. Player logs in --> lands on `/dashboard` --> sees standard GamePlanCard with training tasks
-4. No flash of wrong card -- loading skeleton shows until role check completes
-5. Scouts/coaches can still navigate to their management pages (`/scout-dashboard`, `/coach-dashboard`) via sidebar/nav
+- Existing `pain_increases_with_movement` column (kept for backward compat)
+- Pain scale logic and per-area pain scales
+- Tissue type tracking
+- Streak tracking
+- Night check-in submit flow (same endpoint)
+- Front and Back body map views (unchanged)
+- All other Game Plan task completion logic
 
