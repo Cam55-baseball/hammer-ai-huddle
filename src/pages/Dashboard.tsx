@@ -36,7 +36,7 @@ export default function Dashboard() {
   const { modules: subscribedModules, module_details, loading: subLoading, refetch, hasAccessForSport, getModuleDetails, onModulesChange, enableFastPolling } = useSubscription();
   const { isOwner } = useOwnerAccess();
   const { isAdmin } = useAdminAccess();
-  const { isScout, loading: scoutLoading } = useScoutAccess();
+  const { isScout, isCoach, loading: scoutLoading } = useScoutAccess();
   const navigate = useNavigate();
   const [selectedSport, setSelectedSport] = useState<SportType>(() => {
     const saved = localStorage.getItem('selectedSport');
@@ -295,7 +295,7 @@ export default function Dashboard() {
     );
   };
 
-  if (authLoading || loading || subLoading) {
+  if (authLoading || loading || subLoading || scoutLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-6">
@@ -339,7 +339,7 @@ export default function Dashboard() {
         </Card>
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
-        {isScout && !isOwner && !isAdmin ? (
+        {(isScout || isCoach) && !isOwner && !isAdmin ? (
           <ScoutGamePlanCard />
         ) : (
           <GamePlanCard selectedSport={selectedSport} />
