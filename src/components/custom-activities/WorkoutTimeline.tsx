@@ -50,6 +50,7 @@ function SortableExerciseCard({
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState({
+    name: exercise.name,
     sets: exercise.sets || 3,
     reps: exercise.reps || 10,
     duration: exercise.duration || 60,
@@ -159,6 +160,15 @@ function SortableExerciseCard({
 
         {isEditing ? (
           <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1 col-span-2">
+              <label className="text-xs text-muted-foreground">{t('customActivity.exercises.name', 'Name')}</label>
+              <Input
+                type="text"
+                value={editValues.name}
+                onChange={(e) => setEditValues(prev => ({ ...prev, name: e.target.value }))}
+                className="h-7 text-xs"
+              />
+            </div>
             {exercise.sets !== undefined && (
               <>
                 <div className="space-y-1">
