@@ -1,81 +1,30 @@
 
-# Fix: Scout/Coach Game Plan View + Loading Guard
+# Add Exercise Name Editing to Workout Timeline
 
 ## Problem
 
-Two bugs cause scouts and coaches to see the player Game Plan instead of the ScoutGamePlanCard:
+When a user adds an exercise and clicks the pencil (edit) icon, they can only edit sets, reps, duration, and rest. There is no way to change the exercise name, which forces users to delete and re-add if they want a different name.
 
-1. **Missing `isCoach` check**: Dashboard line 342 only checks `isScout`, so coaches always get the player view
-2. **Missing `scoutLoading` guard**: Dashboard line 298 does not wait for the role query to finish before rendering -- the component renders while `isScout`/`isCoach` are still `false`, showing the player Game Plan
+## Fix
 
-The blank preview screen is NOT reproducible -- the app loads correctly. This was likely a transient build/cache issue.
+**File**: `src/components/custom-activities/WorkoutTimeline.tsx`
 
----
+### Change 1: Add `name` to the edit state (line 52-57)
 
-## Fix 1: Add `scoutLoading` to the Loading Guard
+Add `name: exercise.name` to the `editValues` state so the name is included when editing begins.
 
-**File**: `src/pages/Dashboard.tsx`, line 298
+### Change 2: Add a name input field at the top of the editing form (lines 160-161)
 
-Change:
-```
-if (authLoading || loading || subLoading) {
-```
-To:
-```
-if (authLoading || loading || subLoading || scoutLoading) {
-```
+Insert a full-width text input for the exercise name above the existing sets/reps/duration/rest fields, with a "Name" label.
 
-This prevents the dashboard from rendering until the scout/coach role check completes, eliminating the flash of the wrong Game Plan view.
+### Change 3: Include `name` in the save handler (line 75)
+
+The `handleSave` function already spreads all `editValues` into the update -- since `name` will now be part of `editValues`, it will be saved automatically with no additional logic needed.
 
 ---
 
-## Fix 2: Include `isCoach` in the Game Plan Conditional
+## Summary
 
-**File**: `src/pages/Dashboard.tsx`, line 342
-
-Change:
-```
-{isScout && !isOwner && !isAdmin ? (
-```
-To:
-```
-{(isScout || isCoach) && !isOwner && !isAdmin ? (
-```
-
-This also requires destructuring `isCoach` from the `useScoutAccess` hook on line 39.
-
-Change line 39 from:
-```
-const { isScout, loading: scoutLoading } = useScoutAccess();
-```
-To:
-```
-const { isScout, isCoach, loading: scoutLoading } = useScoutAccess();
-```
-
----
-
-## Files Modified
-
-| File | Change |
-|------|--------|
-| `src/pages/Dashboard.tsx` | 3 line changes: add `isCoach` destructure, add `scoutLoading` to guard, add `isCoach` to conditional |
-
-**Total**: 1 file, 3 line edits, 0 database changes, 0 new files
-
----
-
-## What Does NOT Change
-
-- `useScoutAccess` hook (already returns `isCoach` and `loading`)
-- `ScoutGamePlanCard` component (already works for both roles)
-- Scout/Coach dashboard pages
-- Any backend or database logic
-- Player Game Plan behavior
-
----
-
-## Why This Fixes It
-
-- **Before**: A coach logs in, `scoutLoading` is `true` but the dashboard renders anyway because it is not in the guard. `isCoach` is `false` (still loading), so the player Game Plan renders. Even after `isCoach` resolves to `true`, the conditional on line 342 never checks it.
-- **After**: Dashboard waits for role check to complete (`scoutLoading` in guard). Once loaded, `isCoach === true` triggers the `ScoutGamePlanCard`. No role leakage, no flash, no stale state.
+- 1 file modified: `WorkoutTimeline.tsx`
+- 2 small edits: add `name` to state, add name input to form
+- No database changes, no new files
