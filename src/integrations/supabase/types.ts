@@ -3409,6 +3409,7 @@ export type Database = {
           hydration_oz: number | null
           id: string
           logged_at: string | null
+          meal_time: string | null
           meal_title: string | null
           meal_type: string | null
           micros: Json | null
@@ -3428,6 +3429,7 @@ export type Database = {
           hydration_oz?: number | null
           id?: string
           logged_at?: string | null
+          meal_time?: string | null
           meal_title?: string | null
           meal_type?: string | null
           micros?: Json | null
@@ -3447,6 +3449,7 @@ export type Database = {
           hydration_oz?: number | null
           id?: string
           logged_at?: string | null
+          meal_time?: string | null
           meal_title?: string | null
           meal_type?: string | null
           micros?: Json | null

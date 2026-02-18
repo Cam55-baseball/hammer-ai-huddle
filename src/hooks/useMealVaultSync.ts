@@ -11,6 +11,8 @@ interface MealVaultSyncOptions {
   syncToVault?: boolean;
   mealType?: string;
   mealTitle?: string;
+  mealTime?: string;
+  digestionNotes?: string;
 }
 
 /**
@@ -110,7 +112,7 @@ export function useMealVaultSync() {
   ) => {
     if (!user) return { success: false, error: 'Not authenticated' };
 
-    const { syncToVault = true, mealType, mealTitle } = options;
+    const { syncToVault = true, mealType, mealTitle, mealTime, digestionNotes } = options;
     
     if (!syncToVault) return { success: true };
 
@@ -158,10 +160,11 @@ export function useMealVaultSync() {
           fats_g: totals.fats || null,
           hydration_oz: hydrationOz || null,
           energy_level: null,
-          digestion_notes: null,
+          digestion_notes: digestionNotes || null,
           supplements: supplementNames,
           meal_type: mealType || null,
           meal_title: mealTitle || null,
+          meal_time: mealTime || null,
         });
 
       if (error) throw error;

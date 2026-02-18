@@ -1,0 +1,1 @@
+ALTER TABLE public.vault_nutrition_logs ADD COLUMN IF NOT EXISTS meal_time text;

@@ -32,6 +32,7 @@ interface NutritionLog {
   supplements: string[];
   meal_type: string | null;
   meal_title: string | null;
+  meal_time?: string | null;
   logged_at: string | null;
 }
 
@@ -117,6 +118,7 @@ export function VaultNutritionLogCard({
   // Form state
   const [mealType, setMealType] = useState<string>('');
   const [mealTitle, setMealTitle] = useState<string>('');
+  const [mealTime, setMealTime] = useState<string>(() => format(new Date(), 'HH:mm'));
   const [calories, setCalories] = useState<string>('');
   const [protein, setProtein] = useState<string>('');
   const [carbs, setCarbs] = useState<string>('');
@@ -126,6 +128,37 @@ export function VaultNutritionLogCard({
   const [digestionNotes, setDigestionNotes] = useState('');
   const [supplements, setSupplements] = useState<string[]>([]);
   const [newSupplement, setNewSupplement] = useState('');
+
+  const DIGESTION_TAGS = [
+    { label: 'Felt great ✅', value: 'Felt great' },
+    { label: 'Energized ⚡', value: 'Energized' },
+    { label: 'Light 🪶', value: 'Light' },
+    { label: 'Bloated 🫧', value: 'Bloated' },
+    { label: 'Heavy 🧱', value: 'Heavy' },
+    { label: 'Cramps 😣', value: 'Cramps' },
+    { label: 'Heartburn 🔥', value: 'Heartburn' },
+    { label: 'Nauseous 🤢', value: 'Nauseous' },
+  ];
+
+  const toggleDigestionTag = (value: string) => {
+    setDigestionNotes(prev => {
+      const existing = prev.split(',').map(s => s.trim()).filter(Boolean);
+      if (existing.includes(value)) {
+        const filtered = existing.filter(s => s !== value);
+        return filtered.join(', ');
+      } else {
+        return existing.length > 0 ? `${prev.trim().replace(/,$/, '')}, ${value}` : value;
+      }
+    });
+  };
+
+  const convertMealTime = (time24: string): string => {
+    if (!time24) return '';
+    const [h, m] = time24.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+  };
   
   // Smart food lookup
   const { status: lookupStatus, result: lookupResult, error: lookupError, trigger: triggerLookup, clear: clearLookup } = useSmartFoodLookup();
@@ -241,6 +274,7 @@ export function VaultNutritionLogCard({
   const resetForm = () => {
     setMealType('');
     setMealTitle('');
+    setMealTime(format(new Date(), 'HH:mm'));
     setCalories('');
     setProtein('');
     setCarbs('');
@@ -288,6 +322,7 @@ export function VaultNutritionLogCard({
       supplements,
       meal_type: mealType || null,
       meal_title: mealTitle || null,
+      meal_time: mealTime ? convertMealTime(mealTime) : null,
     });
     setSaving(false);
     if (result.success) {
@@ -832,14 +867,47 @@ export function VaultNutritionLogCard({
               </div>
             </div>
 
+            {/* Meal Time */}
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+              <div className="flex-1 space-y-1">
+                <Label className="text-xs">{t('vault.nutrition.mealTime', 'Meal Time')}</Label>
+                <input
+                  type="time"
+                  value={mealTime}
+                  onChange={(e) => setMealTime(e.target.value)}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                />
+              </div>
+            </div>
+
             {/* Digestion Notes */}
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label className="text-xs">{t('vault.nutrition.digestionNotes')}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {DIGESTION_TAGS.map((tag) => {
+                  const active = digestionNotes.split(',').map(s => s.trim()).includes(tag.value);
+                  return (
+                    <button
+                      key={tag.value}
+                      type="button"
+                      onClick={() => toggleDigestionTag(tag.value)}
+                      className={`text-xs px-2 py-1 rounded-full border transition-all ${
+                        active
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-muted/50 text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {tag.label}
+                    </button>
+                  );
+                })}
+              </div>
               <Textarea
                 value={digestionNotes}
                 onChange={(e) => setDigestionNotes(e.target.value)}
-                placeholder={t('vault.nutrition.digestionPlaceholder')}
-                className="min-h-[60px]"
+                placeholder="How did you feel after eating? (e.g., energized, bloated, light, heavy...)"
+                className="min-h-[60px] text-sm"
               />
             </div>
 
