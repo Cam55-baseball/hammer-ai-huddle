@@ -7,6 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, Clock, Trash2, Edit2, Utensils } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { DIGESTION_TAGS } from '@/constants/nutritionLogging';
 
 export interface MealLogData {
   id: string;
@@ -18,6 +19,8 @@ export interface MealLogData {
   carbsG?: number | null;
   fatsG?: number | null;
   supplements?: string[] | null;
+  mealTime?: string | null;
+  digestionNotes?: string | null;
 }
 
 interface MealLogCardProps {
@@ -44,6 +47,9 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
   post_workout: 'Post-Workout',
 };
 
+// Set of known tag values for chip rendering
+const KNOWN_TAG_VALUES = new Set(DIGESTION_TAGS.map(t => t.value));
+
 export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -54,6 +60,18 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
 
   const hasMacros = meal.proteinG || meal.carbsG || meal.fatsG;
   const hasSupplements = meal.supplements && meal.supplements.length > 0;
+
+  // Parse digestion notes into chips (known tags) + freeform text
+  const parsedDigestionNotes = meal.digestionNotes
+    ? meal.digestionNotes.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+  const knownTags = parsedDigestionNotes.filter(n => KNOWN_TAG_VALUES.has(n));
+  const freeformNotes = parsedDigestionNotes.filter(n => !KNOWN_TAG_VALUES.has(n)).join(', ');
+  const hasDigestion = parsedDigestionNotes.length > 0;
+
+  // Display time: prefer user-entered meal_time, fall back to logged-at
+  const displayTime = meal.mealTime || format(new Date(meal.loggedAt), 'h:mm a');
+  const isEatenTime = !!meal.mealTime;
 
   return (
     <Card className="overflow-hidden">
@@ -77,9 +95,15 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                <Clock className="h-3 w-3" />
-                {format(new Date(meal.loggedAt), 'h:mm a')}
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                <Clock className="h-3 w-3 flex-shrink-0" />
+                <span>
+                  {isEatenTime ? (
+                    <><span className="text-foreground/60">Eaten at</span> {displayTime}</>
+                  ) : (
+                    displayTime
+                  )}
+                </span>
               </div>
             </div>
 
@@ -132,6 +156,29 @@ export function MealLogCard({ meal, onEdit, onDelete }: MealLogCardProps) {
                     {supp}
                   </Badge>
                 ))}
+              </div>
+            )}
+
+            {/* Digestion Notes */}
+            {hasDigestion && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-muted-foreground">How it felt</p>
+                <div className="flex flex-wrap gap-1">
+                  {knownTags.map((tag, idx) => (
+                    <Badge
+                      key={idx}
+                      variant="outline"
+                      className="text-xs bg-muted/50 border-border"
+                    >
+                      {DIGESTION_TAGS.find(t => t.value === tag)?.label ?? tag}
+                    </Badge>
+                  ))}
+                  {freeformNotes && (
+                    <span className="text-xs italic text-muted-foreground self-center">
+                      {freeformNotes}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
