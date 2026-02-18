@@ -1,72 +1,131 @@
 
-# Add Meal Time Input & Improve Digestion Notes Across All Nutrition Logging Entry Points
+# Fix: All Nutrition Entry Points → Elite E2E Sync
 
-## Overview
+## What's Broken (Full Audit)
 
-There are **3 distinct nutrition logging entry points** in the app:
-1. **Vault (The Vault page)** — `VaultNutritionLogCard.tsx` — the most feature-rich form
-2. **Quick Log Dialog** — `QuickNutritionLogDialog.tsx` — used from the Game Plan / Dashboard
-3. **Nutrition Hub Meal Logging Dialog** — `MealLoggingDialog.tsx` — used from the Nutrition Hub page
+Five specific issues have been identified across the sync chain:
 
-All 3 need a **Meal Time** field and improved **Digestion Notes**. The changes will be consistent and additive — no breaking changes.
+### Issue 1 — UTC Date Bug in useVault.ts (Critical)
+Line 246 of `useVault.ts`:
+```
+const today = new Date().toISOString().split('T')[0]; // UTC date
+```
+After 7:00 PM Eastern (midnight UTC), meals logged from The Vault are saved under **tomorrow's** UTC date. The Nutrition Hub queries today's **local** date, so the entry never appears. Every other logging path already uses `format(new Date(), 'yyyy-MM-dd')`.
 
----
+### Issue 2 — No React Query Invalidation After Vault Save/Delete (Critical)
+`saveNutritionLog` and `deleteNutritionLog` in `useVault.ts` call `fetchNutritionLogs()` (a local state setter for The Vault's own display), but they never call `queryClient.invalidateQueries`. The Nutrition Hub's `nutritionLogs` and `macroProgress` queries are never told that data changed — so the Nutrition Hub stays stale until a full page refresh. `useQueryClient` isn't even imported in this file.
 
-## Part 1: Database Change
+### Issue 3 — meal_time Is Saved But Never Displayed (UX Gap)
+The `meal_time` field was added to the database and is being saved correctly. However:
+- `NutritionDailyLog.tsx` maps query results to `MealLogData` but doesn't include `mealTime` in the mapped object
+- `MealLogCard.tsx` only shows `loggedAt` (the saved-at timestamp), never `meal_time` (when they actually ate)
+- The `MealLogData` interface has no `mealTime` field
 
-A new `meal_time` column (type `text`, nullable) will be added to `vault_nutrition_logs` to store the time as a user-friendly string (e.g., `"7:30 AM"`, `"12:00 PM"`).
+Users fill in "Meal Time" but it silently disappears — it never shows on their meal cards.
 
-This keeps it simple — no complex time parsing, just the text the user types or selects. The existing `logged_at` column will continue to auto-record when the log was *saved*, while `meal_time` captures when the athlete *actually ate*.
+### Issue 4 — digestion_notes Is Saved But Never Displayed (UX Gap)
+Same pattern as above: `digestion_notes` is saved to the database but `NutritionDailyLog` never fetches or maps it, and `MealLogCard` has no UI to display it.
 
----
-
-## Part 2: Meal Time Input Field
-
-A time picker input will be added to all 3 logging forms. It will:
-- Default to the current time in `h:mm a` format (e.g., "7:30 AM") so users don't have to type it manually
-- Use a native `<input type="time">` under the hood for mobile-friendly picking, displayed with a readable 12-hour format label
-- Show a `Clock` icon
-- Be fully optional (nullable)
-
----
-
-## Part 3: Improved Digestion Notes
-
-Currently, `digestion_notes` is only present in `VaultNutritionLogCard.tsx` — a plain textarea with a generic placeholder. The improvements:
-
-**In VaultNutritionLogCard.tsx:**
-- Replace the plain placeholder with descriptive, structured prompt text that guides athletes:
-  - *"How did you feel after eating? (e.g., bloated, energized, heavy, light, stomach cramps, heartburn, felt great)"*
-- Add **quick-tap tags** above the textarea: common digestion descriptors the user can tap to instantly add them as chips (e.g., "Felt great ✅", "Bloated 🫧", "Energized ⚡", "Heavy 🧱", "Light 🪶", "Cramps 😣", "Heartburn 🔥", "Nauseous 🤢")
-- Tags toggle into the textarea, comma-separated, so free-text is still supported
-- Cap at 60px min-height for cleanliness
-
-**In QuickNutritionLogDialog.tsx and MealLoggingDialog.tsx:**
-- Add a `digestion_notes` field (currently missing from both) — a small, collapsible "Optional Notes" section at the bottom with the same improved placeholder and quick-tap tags
-- Keep it collapsible so it doesn't overwhelm the quick-log experience
+### Issue 5 — DIGESTION_TAGS Defined 3 Times (Code Duplication)
+`DIGESTION_TAGS` and `toggleDigestionTag` are copy-pasted identically in `VaultNutritionLogCard.tsx`, `QuickNutritionLogDialog.tsx`, and `MealLoggingDialog.tsx`. Same for `convertMealTime`. This creates drift risk when tags need updating.
 
 ---
 
-## Files to Modify
+## Fix Plan
 
-| File | Changes |
-|---|---|
-| `src/components/vault/VaultNutritionLogCard.tsx` | Add `mealTime` state, Meal Time input field, improved digestion notes with quick-tap tags |
-| `src/components/QuickNutritionLogDialog.tsx` | Add `mealTime` state, Meal Time input field, add optional collapsible digestion notes section |
-| `src/components/nutrition-hub/MealLoggingDialog.tsx` | Add `mealTime` state, Meal Time input field (both Quick and Detailed tabs), add optional collapsible digestion notes |
-| `src/hooks/useMealVaultSync.ts` | Pass `meal_time` through to the database insert |
+### File 1: `src/hooks/useVault.ts`
 
-## Files to Add (Database Migration)
+**Change 1** — Add `useQueryClient` import from `@tanstack/react-query`
 
-1 migration to add `meal_time text nullable` column to `vault_nutrition_logs`
+**Change 2** — Fix the UTC date bug on line 246:
+```ts
+// BEFORE (UTC - wrong)
+const today = new Date().toISOString().split('T')[0];
+
+// AFTER (local timezone - correct)
+const today = format(new Date(), 'yyyy-MM-dd');
+```
+
+**Change 3** — In `saveNutritionLog` (after success), add query invalidation:
+```ts
+if (!error) {
+  await updateStreak();
+  await fetchNutritionLogs();
+  queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+  queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+}
+```
+
+**Change 4** — In `deleteNutritionLog` (after success), add query invalidation:
+```ts
+if (!error) {
+  await fetchNutritionLogs();
+  queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+  queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+}
+```
+
+---
+
+### File 2: `src/components/nutrition-hub/MealLogCard.tsx`
+
+**Change 1** — Add `mealTime` and `digestionNotes` to the `MealLogData` interface:
+```ts
+export interface MealLogData {
+  // ...existing fields
+  mealTime?: string | null;       // "7:30 AM"
+  digestionNotes?: string | null; // "Felt great, Energized"
+}
+```
+
+**Change 2** — Display `mealTime` (when set) instead of/alongside `loggedAt`:
+Currently shows: `{format(new Date(meal.loggedAt), 'h:mm a')}` — the save time  
+After fix: Show `meal_time` if present (e.g., "Eaten at 7:30 AM"), fall back to logged-at time. This makes the time field the user filled out actually visible.
+
+**Change 3** — Display `digestionNotes` in the collapsible expanded section, shown as tag chips when the value matches a known tag, or as plain italic text for free-form entries.
+
+---
+
+### File 3: `src/components/nutrition-hub/NutritionDailyLog.tsx`
+
+**Change 1** — Map `meal_time` and `digestion_notes` from the database query result into the `MealLogData` object:
+```ts
+return (data || []).map(log => ({
+  // ...existing fields
+  mealTime: log.meal_time,
+  digestionNotes: log.digestion_notes,
+})) as MealLogData[];
+```
+Without this, the new fields are fetched but thrown away before they reach the card component.
+
+---
+
+### File 4 (Optional Cleanup): Extract Shared Constants
+
+Create `src/constants/nutritionLogging.ts` to export:
+- `DIGESTION_TAGS` array (currently duplicated in 3 files)
+- `convertMealTime(time24: string): string` utility (currently duplicated in 3 files)
+
+Then import from this single source in all three logging components. This is a code quality improvement that eliminates drift risk.
+
+---
+
+## Summary of All Files Changed
+
+| File | Change Type | Impact |
+|---|---|---|
+| `src/hooks/useVault.ts` | Bug fix (UTC date + RQ invalidation) | Vault entries now appear in Nutrition Hub immediately |
+| `src/components/nutrition-hub/MealLogCard.tsx` | Feature (display meal_time + digestion_notes) | Users can see what they entered |
+| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Bug fix (map new fields from DB) | Passes meal_time/digestion_notes to card |
+| `src/constants/nutritionLogging.ts` | Refactor (extract shared constants) | Eliminates 3x duplication |
+
+No database migrations needed — the `meal_time` column already exists from the previous migration.
 
 ---
 
 ## Technical Notes
 
-- `meal_time` is stored as text (e.g., `"7:30 AM"`) — simple, human-readable, avoids timezone complexity
-- Default value for the input is computed at form open time: `format(new Date(), 'h:mm a')`
-- The native `<input type="time">` value is in `HH:mm` 24-hour format and will be converted to `h:mm a` for storage/display
-- Digestion quick-tags are stored inline in the `digestion_notes` text field, comma-separated, so no schema change is needed for tags
-- The `VaultNutritionLogCard` `onSave` callback signature already accepts `meal_time` since it spreads into the insert — no hook changes needed for the Vault path; only `useMealVaultSync` needs updating for the other two paths
-- MealLogCard display already shows `loggedAt` time from `logged_at` — we can optionally display `meal_time` if present (shown as "Eaten at: 7:30 AM")
+- `useQueryClient` is already imported and used in `VaultNutritionLogCard.tsx` — so the pattern exists in the codebase. `useVault.ts` just needs to adopt it.
+- The Nutrition Hub's `macroProgress` query key is `['macroProgress', today, user?.id]` — invalidating at the key prefix `['macroProgress']` will correctly match all variants.
+- `meal_time` stored values look like `"7:30 AM"` — already formatted, no conversion needed for display. Just render the string directly.
+- Digestion notes in the card should parse comma-separated tags and render them as small inline badges, matching the visual language of the quick-tap tags used during entry.
