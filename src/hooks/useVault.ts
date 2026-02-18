@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays } from 'date-fns';
@@ -225,6 +226,7 @@ export interface VaultFavoriteMeal {
 
 export function useVault() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState<VaultStreak | null>(null);
   const [todaysQuizzes, setTodaysQuizzes] = useState<VaultFocusQuiz[]>([]);
@@ -243,7 +245,8 @@ export function useVault() {
   const [entriesWithData, setEntriesWithData] = useState<string[]>([]);
   const [favoriteMeals, setFavoriteMeals] = useState<VaultFavoriteMeal[]>([]);
 
-  const today = new Date().toISOString().split('T')[0];
+  // Use local timezone date (not UTC) — critical to match Nutrition Hub queries
+  const today = format(new Date(), 'yyyy-MM-dd');
 
   // Fetch vault streak data
   const fetchStreak = useCallback(async () => {
@@ -712,9 +715,15 @@ export function useVault() {
       logged_at: new Date().toISOString(),
       ...logData,
     });
-    if (!error) { await updateStreak(); await fetchNutritionLogs(); }
+    if (!error) {
+      await updateStreak();
+      await fetchNutritionLogs();
+      // Invalidate Nutrition Hub queries so they refresh immediately
+      queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+      queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+    }
     return { success: !error };
-  }, [user, today, updateStreak, fetchNutritionLogs]);
+  }, [user, today, updateStreak, fetchNutritionLogs, queryClient]);
 
   // Delete nutrition log entry
   const deleteNutritionLog = useCallback(async (id: string) => {
@@ -724,9 +733,14 @@ export function useVault() {
       .delete()
       .eq('id', id)
       .eq('user_id', user.id);
-    if (!error) await fetchNutritionLogs();
+    if (!error) {
+      await fetchNutritionLogs();
+      // Invalidate Nutrition Hub queries so they refresh immediately
+      queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+      queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+    }
     return { success: !error };
-  }, [user, fetchNutritionLogs]);
+  }, [user, fetchNutritionLogs, queryClient]);
 
   // Fetch nutrition goals
   const fetchNutritionGoals = useCallback(async () => {

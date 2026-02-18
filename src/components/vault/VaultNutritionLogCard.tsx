@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { VaultFavoriteMeal } from '@/hooks/useVault';
 import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
+import { DIGESTION_TAGS, convertMealTime, toggleDigestionTagInNotes } from '@/constants/nutritionLogging';
 
 interface NutritionLog {
   id: string;
@@ -129,35 +130,8 @@ export function VaultNutritionLogCard({
   const [supplements, setSupplements] = useState<string[]>([]);
   const [newSupplement, setNewSupplement] = useState('');
 
-  const DIGESTION_TAGS = [
-    { label: 'Felt great ✅', value: 'Felt great' },
-    { label: 'Energized ⚡', value: 'Energized' },
-    { label: 'Light 🪶', value: 'Light' },
-    { label: 'Bloated 🫧', value: 'Bloated' },
-    { label: 'Heavy 🧱', value: 'Heavy' },
-    { label: 'Cramps 😣', value: 'Cramps' },
-    { label: 'Heartburn 🔥', value: 'Heartburn' },
-    { label: 'Nauseous 🤢', value: 'Nauseous' },
-  ];
-
   const toggleDigestionTag = (value: string) => {
-    setDigestionNotes(prev => {
-      const existing = prev.split(',').map(s => s.trim()).filter(Boolean);
-      if (existing.includes(value)) {
-        const filtered = existing.filter(s => s !== value);
-        return filtered.join(', ');
-      } else {
-        return existing.length > 0 ? `${prev.trim().replace(/,$/, '')}, ${value}` : value;
-      }
-    });
-  };
-
-  const convertMealTime = (time24: string): string => {
-    if (!time24) return '';
-    const [h, m] = time24.split(':').map(Number);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const hour12 = h % 12 || 12;
-    return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+    setDigestionNotes(prev => toggleDigestionTagInNotes(prev, value));
   };
   
   // Smart food lookup
