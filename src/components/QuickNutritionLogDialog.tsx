@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Apple, Coffee, Salad, UtensilsCrossed, Cookie, Droplets, Zap, Dumbbell, Loader2, Sparkles, Database, ChevronDown } from 'lucide-react';
+import { Apple, Coffee, Salad, UtensilsCrossed, Cookie, Droplets, Zap, Dumbbell, Loader2, Sparkles, Database, ChevronDown, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
@@ -44,12 +44,45 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
   // Form state
   const [mealType, setMealType] = useState<string>('');
   const [mealTitle, setMealTitle] = useState<string>('');
+  const [mealTime, setMealTime] = useState<string>(() => format(new Date(), 'HH:mm'));
   const [calories, setCalories] = useState<string>('');
   const [protein, setProtein] = useState<string>('');
   const [carbs, setCarbs] = useState<string>('');
   const [fats, setFats] = useState<string>('');
   const [hydration, setHydration] = useState<string>('');
   const [energyLevel, setEnergyLevel] = useState<number>(5);
+  const [digestionNotes, setDigestionNotes] = useState<string>('');
+  const [digestionOpen, setDigestionOpen] = useState(false);
+
+  const DIGESTION_TAGS = [
+    { label: 'Felt great ✅', value: 'Felt great' },
+    { label: 'Energized ⚡', value: 'Energized' },
+    { label: 'Light 🪶', value: 'Light' },
+    { label: 'Bloated 🫧', value: 'Bloated' },
+    { label: 'Heavy 🧱', value: 'Heavy' },
+    { label: 'Cramps 😣', value: 'Cramps' },
+    { label: 'Heartburn 🔥', value: 'Heartburn' },
+    { label: 'Nauseous 🤢', value: 'Nauseous' },
+  ];
+
+  const toggleDigestionTag = (value: string) => {
+    setDigestionNotes(prev => {
+      const existing = prev.split(',').map(s => s.trim()).filter(Boolean);
+      if (existing.includes(value)) {
+        return existing.filter(s => s !== value).join(', ');
+      } else {
+        return existing.length > 0 ? `${prev.trim().replace(/,$/, '')}, ${value}` : value;
+      }
+    });
+  };
+
+  const convertMealTime = (time24: string): string => {
+    if (!time24) return '';
+    const [h, m] = time24.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+  };
 
   const mealTypeOptions = [
     { value: 'breakfast', icon: Coffee, label: t('vault.nutrition.breakfast') },
@@ -107,12 +140,15 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
   const resetForm = () => {
     setMealType('');
     setMealTitle('');
+    setMealTime(format(new Date(), 'HH:mm'));
     setCalories('');
     setProtein('');
     setCarbs('');
     setFats('');
     setHydration('');
     setEnergyLevel(5);
+    setDigestionNotes('');
+    setDigestionOpen(false);
     touchedFields.current.clear();
     clearLookup();
   };
@@ -156,6 +192,8 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
           energy_level: energyLevel,
           meal_type: mealType || null,
           meal_title: mealTitle || null,
+          meal_time: mealTime ? convertMealTime(mealTime) : null,
+          digestion_notes: digestionNotes || null,
         });
 
       if (error) throw error;
@@ -374,6 +412,20 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
             />
           </div>
 
+          {/* Meal Time */}
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="flex-1 space-y-1">
+              <Label className="text-xs text-muted-foreground">{t('vault.nutrition.mealTime', 'Meal Time')}</Label>
+              <input
+                type="time"
+                value={mealTime}
+                onChange={(e) => setMealTime(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
+          </div>
+
           {/* Energy Level */}
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -400,6 +452,41 @@ export function QuickNutritionLogDialog({ open, onOpenChange, onSuccess }: Quick
               ))}
             </div>
           </div>
+
+          {/* Digestion Notes - collapsible */}
+          <Collapsible open={digestionOpen} onOpenChange={setDigestionOpen}>
+            <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full">
+              <ChevronDown className={`h-3 w-3 transition-transform ${digestionOpen ? 'rotate-180' : ''}`} />
+              {t('vault.nutrition.digestionNotes', 'Digestion Notes')} <span className="text-muted-foreground/60">(optional)</span>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2 space-y-2">
+              <div className="flex flex-wrap gap-1.5">
+                {DIGESTION_TAGS.map((tag) => {
+                  const active = digestionNotes.split(',').map(s => s.trim()).includes(tag.value);
+                  return (
+                    <button
+                      key={tag.value}
+                      type="button"
+                      onClick={() => toggleDigestionTag(tag.value)}
+                      className={`text-xs px-2 py-1 rounded-full border transition-all ${
+                        active
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-muted/50 text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {tag.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <textarea
+                value={digestionNotes}
+                onChange={(e) => setDigestionNotes(e.target.value)}
+                placeholder="How did you feel after eating? (e.g., energized, bloated, light, heavy...)"
+                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* Save Button */}
           <Button 

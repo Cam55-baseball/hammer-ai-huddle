@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -13,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, Zap, List, Sparkles, Database, ArrowRight, ChevronDown } from 'lucide-react';
+import { Loader2, Zap, List, Sparkles, Database, ArrowRight, ChevronDown, Clock } from 'lucide-react';
 import { MealBuilder } from '@/components/custom-activities/MealBuilder';
 import { useMealVaultSync } from '@/hooks/useMealVaultSync';
 import { useSmartFoodLookup } from '@/hooks/useSmartFoodLookup';
@@ -78,8 +79,39 @@ export function MealLoggingDialog({
   
   const [mode, setMode] = useState<'quick' | 'detailed'>('quick');
   const [saving, setSaving] = useState(false);
+  const [mealTime, setMealTime] = useState<string>(() => format(new Date(), 'HH:mm'));
+  const [digestionNotes, setDigestionNotes] = useState('');
+  const [digestionOpen, setDigestionOpen] = useState(false);
   
-  // Quick entry state
+  const DIGESTION_TAGS = [
+    { label: 'Felt great ✅', value: 'Felt great' },
+    { label: 'Energized ⚡', value: 'Energized' },
+    { label: 'Light 🪶', value: 'Light' },
+    { label: 'Bloated 🫧', value: 'Bloated' },
+    { label: 'Heavy 🧱', value: 'Heavy' },
+    { label: 'Cramps 😣', value: 'Cramps' },
+    { label: 'Heartburn 🔥', value: 'Heartburn' },
+    { label: 'Nauseous 🤢', value: 'Nauseous' },
+  ];
+
+  const toggleDigestionTag = (value: string) => {
+    setDigestionNotes(prev => {
+      const existing = prev.split(',').map(s => s.trim()).filter(Boolean);
+      if (existing.includes(value)) {
+        return existing.filter(s => s !== value).join(', ');
+      } else {
+        return existing.length > 0 ? `${prev.trim().replace(/,$/, '')}, ${value}` : value;
+      }
+    });
+  };
+
+  const convertMealTime = (time24: string): string => {
+    if (!time24) return '';
+    const [h, m] = time24.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+  };
   const [mealTitle, setMealTitle] = useState('');
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
@@ -182,6 +214,9 @@ export function MealLoggingDialog({
     setHydration('');
     setMealData(getDefaultMealData());
     setMode('quick');
+    setMealTime(format(new Date(), 'HH:mm'));
+    setDigestionNotes('');
+    setDigestionOpen(false);
     touchedFields.current.clear();
     clearLookup();
   };
@@ -249,6 +284,8 @@ export function MealLoggingDialog({
         syncToVault: true,
         mealType,
         mealTitle: mealTitle || undefined,
+        mealTime: mealTime ? convertMealTime(mealTime) : undefined,
+        digestionNotes: digestionNotes || undefined,
       });
 
       if (result.success) {
@@ -283,6 +320,8 @@ export function MealLoggingDialog({
         syncToVault: true,
         mealType,
         mealTitle: mealTitle || undefined,
+        mealTime: mealTime ? convertMealTime(mealTime) : undefined,
+        digestionNotes: digestionNotes || undefined,
       });
 
       if (result.success) {
@@ -502,6 +541,58 @@ export function MealLoggingDialog({
             />
           </TabsContent>
         </Tabs>
+
+        {/* Meal Time + Digestion Notes shared fields */}
+        <div className="space-y-3 pt-3 border-t">
+          {/* Meal Time */}
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="flex-1 space-y-1">
+              <Label className="text-xs text-muted-foreground">Meal Time</Label>
+              <input
+                type="time"
+                value={mealTime}
+                onChange={(e) => setMealTime(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
+          </div>
+
+          {/* Digestion Notes - collapsible */}
+          <Collapsible open={digestionOpen} onOpenChange={setDigestionOpen}>
+            <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full">
+              <ChevronDown className={`h-3 w-3 transition-transform ${digestionOpen ? 'rotate-180' : ''}`} />
+              Digestion Notes <span className="text-muted-foreground/60">(optional)</span>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2 space-y-2">
+              <div className="flex flex-wrap gap-1.5">
+                {DIGESTION_TAGS.map((tag) => {
+                  const active = digestionNotes.split(',').map(s => s.trim()).includes(tag.value);
+                  return (
+                    <button
+                      key={tag.value}
+                      type="button"
+                      onClick={() => toggleDigestionTag(tag.value)}
+                      className={`text-xs px-2 py-1 rounded-full border transition-all ${
+                        active
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-border bg-muted/50 text-muted-foreground hover:bg-muted'
+                      }`}
+                    >
+                      {tag.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <textarea
+                value={digestionNotes}
+                onChange={(e) => setDigestionNotes(e.target.value)}
+                placeholder="How did you feel after eating? (e.g., energized, bloated, light, heavy...)"
+                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
 
         {/* Save Button */}
         <div className="flex justify-end pt-4 border-t">
