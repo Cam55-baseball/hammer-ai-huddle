@@ -1,131 +1,112 @@
 
-# Fix: All Nutrition Entry Points → Elite E2E Sync
+# Fix: Vault Goals Sync with Nutrition Hub + Midnight Reset
 
-## What's Broken (Full Audit)
+## Two Issues to Fix
 
-Five specific issues have been identified across the sync chain:
+### Issue 1 — Vault Goals Show Wrong Numbers (2,000 instead of 2,246)
 
-### Issue 1 — UTC Date Bug in useVault.ts (Critical)
-Line 246 of `useVault.ts`:
-```
-const today = new Date().toISOString().split('T')[0]; // UTC date
-```
-After 7:00 PM Eastern (midnight UTC), meals logged from The Vault are saved under **tomorrow's** UTC date. The Nutrition Hub queries today's **local** date, so the entry never appears. Every other logging path already uses `format(new Date(), 'yyyy-MM-dd')`.
+**Root Cause:** There are two completely separate goal systems:
 
-### Issue 2 — No React Query Invalidation After Vault Save/Delete (Critical)
-`saveNutritionLog` and `deleteNutritionLog` in `useVault.ts` call `fetchNutritionLogs()` (a local state setter for The Vault's own display), but they never call `queryClient.invalidateQueries`. The Nutrition Hub's `nutritionLogs` and `macroProgress` queries are never told that data changed — so the Nutrition Hub stays stale until a full page refresh. `useQueryClient` isn't even imported in this file.
+- **Nutrition Hub** uses `useTDEE` → `useDailyNutritionTargets` → TDEE-calculated goals derived from biometrics (weight, height, DOB, sex, activity level) + the athlete's active body goal (lose fat / maintain / gain muscle). This correctly shows 2,246 cal.
 
-### Issue 3 — meal_time Is Saved But Never Displayed (UX Gap)
-The `meal_time` field was added to the database and is being saved correctly. However:
-- `NutritionDailyLog.tsx` maps query results to `MealLogData` but doesn't include `mealTime` in the mapped object
-- `MealLogCard.tsx` only shows `loggedAt` (the saved-at timestamp), never `meal_time` (when they actually ate)
-- The `MealLogData` interface has no `mealTime` field
+- **Vault Nutrition Log** uses `vault_nutrition_goals` — a manually-editable table with a hardcoded `DEFAULT_GOALS` of 2,000 cal. This is entirely disconnected from the TDEE engine.
 
-Users fill in "Meal Time" but it silently disappears — it never shows on their meal cards.
+The `VaultNutritionLogCard` receives `goals: VaultNutritionGoals | null` from `useVault`, which either loads from the manual table or falls back to the 2,000/150/250/70 defaults. It has zero awareness of the TDEE calculation.
 
-### Issue 4 — digestion_notes Is Saved But Never Displayed (UX Gap)
-Same pattern as above: `digestion_notes` is saved to the database but `NutritionDailyLog` never fetches or maps it, and `MealLogCard` has no UI to display it.
+**Fix:** The Vault's `VaultNutritionLogCard` should use `useTDEE` directly (the same hook the Nutrition Hub uses) as its primary source of truth for goal numbers. The `vault_nutrition_goals` table row will be used as a **manual override fallback** only — if the user has explicitly set custom goals in the Vault's "Set Goals" dialog. This preserves the manual goals feature while making the default goals match the Nutrition Hub automatically.
 
-### Issue 5 — DIGESTION_TAGS Defined 3 Times (Code Duplication)
-`DIGESTION_TAGS` and `toggleDigestionTag` are copy-pasted identically in `VaultNutritionLogCard.tsx`, `QuickNutritionLogDialog.tsx`, and `MealLoggingDialog.tsx`. Same for `convertMealTime`. This creates drift risk when tags need updating.
+Concretely:
+- In `VaultNutritionLogCard.tsx`, call `useTDEE()` to get `nutritionTargets`
+- Derive effective goals: if `nutritionTargets` exists (profile complete), map TDEE targets → goal format. If `goals` prop (manual override from `vault_nutrition_goals`) exists, those take precedence
+- The progress bars and goal numbers will now read from TDEE automatically — matching the Nutrition Hub
 
----
+The `VaultNutritionGoals` manual table and the "Set Goals" dialog are **kept intact** — they become optional overrides for athletes who want custom numbers instead of TDEE-calculated ones.
 
-## Fix Plan
+### Issue 2 — Vault Logs Don't Clear at Midnight
 
-### File 1: `src/hooks/useVault.ts`
+**Root Cause:** `useVault.ts` computes `today = format(new Date(), 'yyyy-MM-dd')` once at hook instantiation and caches it forever. If a user leaves the app open overnight and continues into the next day, `today` stays as yesterday's date. The nutrition logs fetched are still yesterday's, and new logs are written to yesterday's date.
 
-**Change 1** — Add `useQueryClient` import from `@tanstack/react-query`
+The Game Plan already has a proven midnight-detection pattern: a `setInterval` that checks every 30 seconds if the date has changed, and if so, triggers a full re-fetch.
 
-**Change 2** — Fix the UTC date bug on line 246:
-```ts
-// BEFORE (UTC - wrong)
-const today = new Date().toISOString().split('T')[0];
-
-// AFTER (local timezone - correct)
-const today = format(new Date(), 'yyyy-MM-dd');
-```
-
-**Change 3** — In `saveNutritionLog` (after success), add query invalidation:
-```ts
-if (!error) {
-  await updateStreak();
-  await fetchNutritionLogs();
-  queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
-  queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
-}
-```
-
-**Change 4** — In `deleteNutritionLog` (after success), add query invalidation:
-```ts
-if (!error) {
-  await fetchNutritionLogs();
-  queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
-  queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
-}
-```
+**Fix:** Add the same midnight-detection interval to `useVault.ts`. When the date rolls over, `fetchNutritionLogs()` re-fetches (now with the new `today`), which returns 0 results — making the log appear cleared. The `today` variable needs to be moved from a plain const to a `useRef` that gets updated when midnight fires.
 
 ---
 
-### File 2: `src/components/nutrition-hub/MealLogCard.tsx`
+## Files to Modify
 
-**Change 1** — Add `mealTime` and `digestionNotes` to the `MealLogData` interface:
-```ts
-export interface MealLogData {
-  // ...existing fields
-  mealTime?: string | null;       // "7:30 AM"
-  digestionNotes?: string | null; // "Felt great, Energized"
-}
+### File 1: `src/components/vault/VaultNutritionLogCard.tsx`
+
+**Change:** Import and use `useTDEE` to compute TDEE-derived goals. Merge them with the `goals` prop:
+
+```
+// Priority order:
+// 1. Manual vault_nutrition_goals (if user has explicitly set them)
+// 2. TDEE-calculated targets (from profile + active goal)
+// 3. Hardcoded DEFAULT_GOALS (2000 cal etc.) — last resort only
+
+const { nutritionTargets } = useTDEE();
+
+const effectiveGoals: NutritionGoals = useMemo(() => {
+  // Manual override always wins
+  if (goals) return goals;
+  
+  // TDEE-derived goals
+  if (nutritionTargets) {
+    return {
+      calorie_goal: nutritionTargets.dailyCalories,
+      protein_goal: nutritionTargets.macros.protein,
+      carbs_goal: nutritionTargets.macros.carbs,
+      fats_goal: nutritionTargets.macros.fats,
+      hydration_goal: 100, // from hydration settings
+      supplement_goals: [],
+    };
+  }
+  
+  // Fallback
+  return DEFAULT_GOALS;
+}, [goals, nutritionTargets]);
 ```
 
-**Change 2** — Display `mealTime` (when set) instead of/alongside `loggedAt`:
-Currently shows: `{format(new Date(meal.loggedAt), 'h:mm a')}` — the save time  
-After fix: Show `meal_time` if present (e.g., "Eaten at 7:30 AM"), fall back to logged-at time. This makes the time field the user filled out actually visible.
+`effectiveGoals` then replaces `currentGoals` everywhere in the component. The progress bars, goal editors, and all display logic use `effectiveGoals` going forward.
 
-**Change 3** — Display `digestionNotes` in the collapsible expanded section, shown as tag chips when the value matches a known tag, or as plain italic text for free-form entries.
+### File 2: `src/hooks/useVault.ts`
 
----
+**Change 1 — Move `today` to a `useRef` so it can be updated at midnight:**
 
-### File 3: `src/components/nutrition-hub/NutritionDailyLog.tsx`
-
-**Change 1** — Map `meal_time` and `digestion_notes` from the database query result into the `MealLogData` object:
 ```ts
-return (data || []).map(log => ({
-  // ...existing fields
-  mealTime: log.meal_time,
-  digestionNotes: log.digestion_notes,
-})) as MealLogData[];
+const todayRef = useRef(format(new Date(), 'yyyy-MM-dd'));
+const today = todayRef.current;
 ```
-Without this, the new fields are fetched but thrown away before they reach the card component.
+
+**Change 2 — Add midnight-detection interval (matching Game Plan's pattern):**
+
+```ts
+useEffect(() => {
+  const interval = setInterval(() => {
+    const newDate = format(new Date(), 'yyyy-MM-dd');
+    if (newDate !== todayRef.current) {
+      todayRef.current = newDate;
+      // Re-fetch today's nutrition logs (will be empty for new day)
+      fetchNutritionLogs();
+      fetchSupplementTracking();
+      // Invalidate Nutrition Hub queries too
+      queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+      queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+    }
+  }, 30000); // check every 30 seconds
+  return () => clearInterval(interval);
+}, [fetchNutritionLogs, fetchSupplementTracking, queryClient]);
+```
+
+This mirrors the exact same pattern already used in `useGamePlan.ts`.
 
 ---
 
-### File 4 (Optional Cleanup): Extract Shared Constants
+## Summary
 
-Create `src/constants/nutritionLogging.ts` to export:
-- `DIGESTION_TAGS` array (currently duplicated in 3 files)
-- `convertMealTime(time24: string): string` utility (currently duplicated in 3 files)
-
-Then import from this single source in all three logging components. This is a code quality improvement that eliminates drift risk.
-
----
-
-## Summary of All Files Changed
-
-| File | Change Type | Impact |
+| Issue | Root Cause | Fix |
 |---|---|---|
-| `src/hooks/useVault.ts` | Bug fix (UTC date + RQ invalidation) | Vault entries now appear in Nutrition Hub immediately |
-| `src/components/nutrition-hub/MealLogCard.tsx` | Feature (display meal_time + digestion_notes) | Users can see what they entered |
-| `src/components/nutrition-hub/NutritionDailyLog.tsx` | Bug fix (map new fields from DB) | Passes meal_time/digestion_notes to card |
-| `src/constants/nutritionLogging.ts` | Refactor (extract shared constants) | Eliminates 3x duplication |
+| Vault shows 2,000 cal goal instead of 2,246 | `vault_nutrition_goals` table is disconnected from TDEE engine | `VaultNutritionLogCard` calls `useTDEE` directly; TDEE goals used unless user has manual override |
+| Vault logs don't clear at midnight | `today` const never updates after hook mounts | Add 30-second interval in `useVault.ts` to detect date rollover and re-fetch |
 
-No database migrations needed — the `meal_time` column already exists from the previous migration.
-
----
-
-## Technical Notes
-
-- `useQueryClient` is already imported and used in `VaultNutritionLogCard.tsx` — so the pattern exists in the codebase. `useVault.ts` just needs to adopt it.
-- The Nutrition Hub's `macroProgress` query key is `['macroProgress', today, user?.id]` — invalidating at the key prefix `['macroProgress']` will correctly match all variants.
-- `meal_time` stored values look like `"7:30 AM"` — already formatted, no conversion needed for display. Just render the string directly.
-- Digestion notes in the card should parse comma-separated tags and render them as small inline badges, matching the visual language of the quick-tap tags used during entry.
+No database migrations needed. No new tables. No breaking changes to the "Set Goals" dialog — manual goal overrides still work, they just take precedence over TDEE now instead of being the only option.
