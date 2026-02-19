@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -246,7 +246,9 @@ export function useVault() {
   const [favoriteMeals, setFavoriteMeals] = useState<VaultFavoriteMeal[]>([]);
 
   // Use local timezone date (not UTC) — critical to match Nutrition Hub queries
-  const today = format(new Date(), 'yyyy-MM-dd');
+  // Use a ref so midnight-detection can update it without remounting
+  const todayRef = useRef(format(new Date(), 'yyyy-MM-dd'));
+  const today = todayRef.current;
 
   // Fetch vault streak data
   const fetchStreak = useCallback(async () => {
@@ -1484,6 +1486,21 @@ export function useVault() {
     };
     loadData();
   }, [user, fetchStreak, fetchTodaysQuizzes, fetchTodaysNotes, fetchWorkoutNotes, fetchNutritionLogs, fetchNutritionGoals, fetchSupplementTracking, fetchSavedItems, fetchPerformanceTests, fetchProgressPhotos, fetchScoutGrades, fetchPitchingGrades, fetchRecaps, fetchEntriesWithData, fetchFavoriteMeals]);
+
+  // Midnight detection — re-fetch nutrition logs when date rolls over
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newDate = format(new Date(), 'yyyy-MM-dd');
+      if (newDate !== todayRef.current) {
+        todayRef.current = newDate;
+        fetchNutritionLogs();
+        fetchSupplementTracking();
+        queryClient.invalidateQueries({ queryKey: ['nutritionLogs'] });
+        queryClient.invalidateQueries({ queryKey: ['macroProgress'] });
+      }
+    }, 30000); // check every 30 seconds
+    return () => clearInterval(interval);
+  }, [fetchNutritionLogs, fetchSupplementTracking, queryClient]);
 
   return {
     loading, streak, todaysQuizzes, todaysNotes, workoutNotes, nutritionLogs, nutritionGoals, supplementTracking, savedDrills, savedTips, performanceTests, progressPhotos, scoutGrades, pitchingGrades, recaps, entriesWithData, favoriteMeals,
