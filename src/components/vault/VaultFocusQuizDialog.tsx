@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePhysioDailyReport } from '@/hooks/usePhysioDailyReport';
+import { usePhysioProfile } from '@/hooks/usePhysioProfile';
 import { getBodyAreaLabel } from './quiz/body-maps/bodyAreaDefinitions';
 import {
   Dialog,
@@ -247,6 +249,8 @@ export function VaultFocusQuizDialog({
   onSubmit,
 }: VaultFocusQuizDialogProps) {
   const { t } = useTranslation();
+  const { triggerReportGeneration } = usePhysioDailyReport();
+  const { updateIllness } = usePhysioProfile();
   const [loading, setLoading] = useState(false);
   const [showNightSuccess, setShowNightSuccess] = useState(false);
   
@@ -362,6 +366,15 @@ export function VaultFocusQuizDialog({
   const [trainingIntents, setTrainingIntents] = useState<string[]>([]);
   const [mentalEnergy, setMentalEnergy] = useState(3);
 
+  // PHYSIO: Morning check-in additions
+  const [restingHr, setRestingHr] = useState('');
+  const [appetite, setAppetite] = useState('');
+  const [stressSources, setStressSources] = useState<string[]>([]);
+  const [illnessType, setIllnessType] = useState('');
+
+  // PHYSIO: Pre-lift movement restriction
+  const [movementRestriction, setMovementRestriction] = useState<Record<string, string>>({});
+
   // Calculate sleep duration and analysis for morning quiz
   const calculatedSleep = useMemo(() => {
     if (bedtimeActual && wakeTimeActual) {
@@ -444,6 +457,10 @@ export function VaultFocusQuizDialog({
       // NEW: Morning additions
       data.weight_lbs = weightLbs ? parseFloat(weightLbs) : undefined;
       data.perceived_recovery = perceivedRecovery;
+      // PHYSIO: Morning physio fields
+      data.resting_hr = restingHr ? parseInt(restingHr) : undefined;
+      data.appetite = appetite || undefined;
+      data.stress_sources = stressSources.length > 0 ? stressSources : undefined;
     }
 
     if (quizType === 'pre_lift') {
@@ -472,6 +489,8 @@ export function VaultFocusQuizDialog({
       // NEW: Intent & Focus section
       data.training_intent = trainingIntents.length > 0 ? trainingIntents : undefined;
       data.mental_energy = mentalEnergy;
+      // PHYSIO: Movement restriction
+      data.movement_restriction = Object.keys(movementRestriction).length > 0 ? movementRestriction : undefined;
     }
 
     if (quizType === 'night') {
@@ -490,6 +509,8 @@ export function VaultFocusQuizDialog({
     if (result.success) {
       // For night check-in, show success screen instead of closing
       if (quizType === 'night') {
+        // PHYSIO: Trigger regulation report generation (fire-and-forget)
+        triggerReportGeneration();
         // Refetch stats to get updated data
         nightStats.refetch();
         setShowNightSuccess(true);
@@ -536,6 +557,11 @@ export function VaultFocusQuizDialog({
     setPainMovementPerArea({});
     setTrainingIntents([]);
     setMentalEnergy(3);
+    setRestingHr('');
+    setAppetite('');
+    setStressSources([]);
+    setIllnessType('');
+    setMovementRestriction({});
     setShowNightSuccess(false);
     onOpenChange(false);
   };
@@ -677,7 +703,136 @@ export function VaultFocusQuizDialog({
             </div>
           )}
 
-          {/* NEW: Morning Quiz - Weight & Recovery Section */}
+          {/* PHYSIO: Morning Physio Check-in Section */}
+          {quizType === 'morning' && (
+            <div className="space-y-4 p-4 bg-gradient-to-br from-emerald-500/5 to-green-500/5 rounded-xl border border-emerald-500/20">
+              <div className="flex items-center gap-2">
+                <div className="px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-500 text-xs font-bold">
+                  Physio
+                </div>
+                <h4 className="text-sm font-bold">Physio Check-in</h4>
+              </div>
+
+              {/* Resting Heart Rate */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    ❤️ Resting Heart Rate (bpm)
+                  </label>
+                  {restingHr && (
+                    <button
+                      type="button"
+                      onClick={() => setRestingHr('')}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Skip
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="number"
+                    value={restingHr}
+                    onChange={(e) => setRestingHr(e.target.value)}
+                    placeholder="e.g. 58"
+                    className="max-w-[120px]"
+                    min={30}
+                    max={200}
+                  />
+                  {!restingHr && (
+                    <button
+                      type="button"
+                      onClick={() => setRestingHr('')}
+                      className="text-xs text-muted-foreground underline"
+                    >
+                      Skip
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Appetite */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">🍽️ Appetite Today</label>
+                <div className="flex gap-2">
+                  {[{ label: '🥗 Low', value: 'Low' }, { label: '🍽️ Normal', value: 'Normal' }, { label: '🍔 High', value: 'High' }].map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setAppetite(appetite === opt.value ? '' : opt.value)}
+                      className={cn(
+                        "flex-1 py-2 px-3 rounded-xl border-2 text-sm font-semibold transition-all",
+                        appetite === opt.value
+                          ? "border-emerald-500 bg-emerald-500/20 text-emerald-400"
+                          : "border-border bg-background/50 text-muted-foreground hover:border-border/80"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stress Sources */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">🧠 Stress Sources (select all that apply)</label>
+                <div className="flex flex-wrap gap-2">
+                  {['School', 'Work', 'Family', 'Travel', 'Competition Nerves', 'Illness'].map(source => (
+                    <button
+                      key={source}
+                      type="button"
+                      onClick={() => {
+                        setStressSources(prev =>
+                          prev.includes(source)
+                            ? prev.filter(s => s !== source)
+                            : [...prev, source]
+                        );
+                        if (source === 'Illness') setIllnessType('');
+                      }}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full border text-xs font-semibold transition-all",
+                        stressSources.includes(source)
+                          ? "border-amber-500 bg-amber-500/20 text-amber-400"
+                          : "border-border bg-background/50 text-muted-foreground hover:border-border/80"
+                      )}
+                    >
+                      {source}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Illness Sub-selector */}
+              {stressSources.includes('Illness') && (
+                <div className="space-y-2 pl-2 border-l-2 border-amber-500/30">
+                  <label className="text-xs font-medium text-muted-foreground">What type of illness?</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Cold', 'Flu', 'Fever', 'GI Distress'].map(illness => (
+                      <button
+                        key={illness}
+                        type="button"
+                        onClick={() => {
+                          const newType = illnessType === illness ? '' : illness;
+                          setIllnessType(newType);
+                          updateIllness(newType || null);
+                        }}
+                        className={cn(
+                          "px-3 py-1 rounded-full border text-xs font-semibold transition-all",
+                          illnessType === illness
+                            ? "border-red-500 bg-red-500/20 text-red-400"
+                            : "border-border bg-background/50 text-muted-foreground hover:border-border/80"
+                        )}
+                      >
+                        {illness}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+
           {quizType === 'morning' && (
             <div className="space-y-4 p-4 bg-gradient-to-br from-teal-500/10 to-cyan-500/10 rounded-xl border border-teal-500/20">
               <h4 className="text-sm font-bold flex items-center gap-2">
@@ -1133,6 +1288,57 @@ export function VaultFocusQuizDialog({
                 value={mentalEnergy}
                 onChange={setMentalEnergy}
               />
+            </div>
+          )}
+
+          {/* PHYSIO: Pre-Lift Section 5 — Movement Restriction */}
+          {quizType === 'pre_lift' && (
+            <div className="space-y-4 p-4 bg-gradient-to-br from-orange-500/5 to-amber-500/5 rounded-xl border border-orange-500/20">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="px-2 py-1 rounded-md bg-orange-500/20 text-orange-500 text-xs font-bold">
+                    Section 5
+                  </div>
+                  <h4 className="text-sm font-bold">Movement Screen</h4>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  Quick check — how do your joints feel today?
+                </p>
+              </div>
+
+              {[
+                { key: 'toe_touch', label: '🦶 Toe Touch' },
+                { key: 'overhead_reach', label: '🙌 Overhead Reach' },
+                { key: 'squat', label: '🏋️ Bodyweight Squat' },
+              ].map(({ key, label }) => (
+                <div key={key} className="space-y-1.5">
+                  <label className="text-sm font-medium">{label}</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: 'Full', icon: '✅', color: 'border-emerald-500 bg-emerald-500/20 text-emerald-400' },
+                      { value: 'Limited', icon: '⚠️', color: 'border-amber-500 bg-amber-500/20 text-amber-400' },
+                      { value: 'Pain', icon: '❌', color: 'border-red-500 bg-red-500/20 text-red-400' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setMovementRestriction(prev => ({
+                          ...prev,
+                          [key]: movementRestriction[key] === opt.value ? '' : opt.value,
+                        }))}
+                        className={cn(
+                          "flex-1 py-2 px-2 rounded-xl border-2 text-xs font-bold transition-all",
+                          movementRestriction[key] === opt.value
+                            ? opt.color
+                            : "border-border bg-background/50 text-muted-foreground hover:border-border/80"
+                        )}
+                      >
+                        {opt.icon} {opt.value}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 

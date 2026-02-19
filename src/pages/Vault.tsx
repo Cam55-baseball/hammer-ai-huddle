@@ -114,6 +114,10 @@ export default function Vault() {
     deleteRecap,
   } = useVault();
 
+  const { setupCompleted } = usePhysioProfile();
+  const { regulationScore, regulationColor, triggerReportGeneration } = usePhysioDailyReport();
+  const [intakeOpen, setIntakeOpen] = useState(false);
+
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState('today');
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
@@ -227,6 +231,10 @@ export default function Vault() {
     checkAccess();
   }, [checkVaultAccess]);
 
+  // Auto-open intake dialog when physio setup not completed
+  useEffect(() => {
+    if (hasAccess && !setupCompleted) setIntakeOpen(true);
+  }, [hasAccess, setupCompleted]);
 
   // Legacy functions removed - using shared useRecapCountdown hook instead
 
@@ -409,6 +417,7 @@ export default function Vault() {
               <div className="flex items-center gap-3">
                 <BookOpen className="h-8 w-8 text-primary" />
                 <h1 className="text-3xl sm:text-4xl font-black">{t('vault.title')}</h1>
+                <PhysioRegulationBadge score={regulationScore} color={regulationColor} size="md" />
               </div>
               <p className="text-muted-foreground max-w-md">
                 {t('vault.subtitle')}
@@ -446,6 +455,9 @@ export default function Vault() {
                 <VaultCorrelationAnalysisCard />
                 <VaultWellnessGoalsCard />
               </div>
+
+              {/* Physio Adult Tracking Section */}
+              <PhysioAdultTrackingSection />
 
               {/* Daily Check-In Container */}
               <div className="rounded-xl border-2 border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-background p-4 sm:p-6 space-y-4">
@@ -578,6 +590,9 @@ export default function Vault() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Physio Nightly Report Card — shows after night check-in */}
+                {hasCompletedQuiz('night') && <PhysioNightlyReportCard />}
 
                 {/* Nutrition Log */}
                 <div ref={sectionRefs['nutrition']}>
@@ -839,6 +854,9 @@ export default function Vault() {
         quizType={selectedQuizType}
         onSubmit={handleQuizSubmit}
       />
+
+      {/* Physio Health Intake Dialog — auto-opens when setup not completed */}
+      <PhysioHealthIntakeDialog open={intakeOpen} onOpenChange={setIntakeOpen} />
     </DashboardLayout>
   );
 }

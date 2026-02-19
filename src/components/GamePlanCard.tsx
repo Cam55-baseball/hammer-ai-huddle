@@ -34,6 +34,8 @@ import { CustomActivityBuilderDialog, QuickAddFavoritesDrawer, getActivityIcon }
 import { GamePlanCalendarView } from '@/components/GamePlanCalendarView';
 import { useVault } from '@/hooks/useVault';
 import { useAuth } from '@/hooks/useAuth';
+import { PhysioPostWorkoutBanner } from '@/components/physio/PhysioPostWorkoutBanner';
+import { usePhysioGamePlanBadges } from '@/hooks/usePhysioGamePlanBadges';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserColors, hexToRgba } from '@/hooks/useUserColors';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
@@ -68,6 +70,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const colors = useMemo(() => getEffectiveColors(), [getEffectiveColors]);
   const isSoftball = selectedSport === 'softball';
   const { saveFocusQuiz } = useVault();
+  const { getBadgesForTask } = usePhysioGamePlanBadges();
   
   // System task schedule hook - for time/reminder settings only
   const { schedules: taskSchedules, saveSchedule: saveTaskSchedule, getSchedule } = useSystemTaskSchedule();
@@ -1012,6 +1015,34 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 </span>
               )}
             </div>
+            {/* PHYSIO: Badge chips */}
+            {(() => {
+              const badges = getBadgesForTask(task.id);
+              if (badges.length === 0) return null;
+              return (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {badges.map(badge => (
+                    <Popover key={badge.type}>
+                      <PopoverTrigger asChild>
+                        <button className={cn(
+                          "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                          badge.color === 'red' && "bg-red-500/20 text-red-400 border-red-500/30",
+                          badge.color === 'amber' && "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                          badge.color === 'orange' && "bg-orange-500/20 text-orange-400 border-orange-500/30",
+                          badge.color === 'yellow' && "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+                        )} onClick={e => e.stopPropagation()}>
+                          {badge.label}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72 text-xs p-3" onClick={e => e.stopPropagation()}>
+                        <p>{badge.message}</p>
+                        <p className="text-muted-foreground mt-2 text-[10px]">Educational only. Consult a professional for medical concerns.</p>
+                      </PopoverContent>
+                    </Popover>
+                  ))}
+                </div>
+              );
+            })()}
             <div className="flex items-center gap-2">
               <p className={cn(
                 "text-xs sm:text-sm line-clamp-1",
@@ -1492,6 +1523,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         </div>
 
         {/* Task Sections */}
+        <PhysioPostWorkoutBanner />
         <div className="space-y-4">
           {/* Timeline Mode - Unified list with full control */}
           {sortMode === 'timeline' ? (
