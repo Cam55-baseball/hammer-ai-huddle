@@ -1,226 +1,113 @@
 
 # Hammer's Concrete Physio™ — Full E2E Implementation
 
-## What Was Stopping the Build
+## Why It Keeps Stopping (And How To Fix It This Time)
 
-Each implementation attempt stalled at Step 1 (database migration) because the migration requires a separate in-chat approval after the plan approval. When a new message was sent instead of approving the migration prompt, the system reset to plan mode.
+The build requires TWO approvals in sequence:
+1. This plan — click "Approve"
+2. A database migration prompt appears immediately after — click "Approve" on that too
 
-**This time:** Approve this plan, then immediately approve the database migration prompt that appears next. After that, all 17 files will be built without interruption.
+If any message is typed before approving the migration prompt, the system resets to plan mode. Do not type anything between the two approvals.
 
 ---
 
-## Step 1 — Database Migration (Run First, Approve When Prompted)
+## What Gets Built (17 Files Total)
 
-Four columns added to `vault_focus_quizzes`:
-- `appetite` (text) — Low / Normal / High
-- `stress_sources` (text[]) — multi-select chips
-- `movement_restriction` (jsonb) — toe touch / overhead / squat results
-- `resting_hr` (integer) — optional morning input
+### Database Migration (Auto-runs on second approval)
 
-Three new tables created:
-- `physio_health_profiles` — one-time health intake per user (blood type, allergies, medications, conditions, dietary style, illness tracking, adult features gate)
-- `physio_daily_reports` — one row per user per day (regulation score 0-100, color, 6 component scores, AI-generated nightly report text)
+Columns added to `vault_focus_quizzes`:
+- `appetite` text — Low / Normal / High
+- `stress_sources` text[] — multi-select chips
+- `movement_restriction` jsonb — toe touch / overhead / squat
+- `resting_hr` integer — optional morning input
+
+New tables:
+- `physio_health_profiles` — health intake, allergies, medications, adult gate
+- `physio_daily_reports` — regulation score 0-100, AI nightly report, component scores
 - `physio_adult_tracking` — 18+-gated cycle phase + wellness tracking
 
-All three tables have RLS enabled with "users can manage own data only" policies.
+All tables: RLS enabled, users manage own data only.
 
 ---
 
-## Step 2 — Edge Function: `calculate-regulation`
+### Edge Function: `calculate-regulation`
 
-File: `supabase/functions/calculate-regulation/index.ts`
+Uses existing `LOVABLE_API_KEY` — no new secrets needed.
 
-Uses existing `LOVABLE_API_KEY` secret — no new secrets needed.
-
-**Logic flow:**
-1. Auth from Bearer token
-2. Pull today's morning + pre-lift quizzes from `vault_focus_quizzes`
-3. Pull 72h + 7-day CNS load from `athlete_load_tracking`
-4. Pull today's calories from `vault_nutrition_logs`
-5. Pull TDEE target from `athlete_body_goals` + `profiles`
-6. Pull 3-day calendar look-ahead from `athlete_events` + `calendar_events`
-7. Calculate Regulation Index (weighted formula below)
-8. Call Gemini Flash for nightly report text generation
-9. Upsert to `physio_daily_reports`
-
-**Regulation Index Formula (0–100):**
+Regulation Index Formula (0–100, higher = better regulated):
 
 | Component | Weight | Source |
 |---|---|---|
-| Sleep quality | 15% | Morning quiz `sleep_quality` 1-5 → 0-100 |
-| Stress inverted | 10% | Night quiz `stress_level` (1=100, 5=0) |
-| Physical readiness | 10% | Pre-lift `physical_readiness` 1-5 → 0-100 |
-| Muscle restriction | 15% | `movement_restriction` JSONB (Full=100, Limited=60, Pain=20) |
+| Sleep quality | 15% | Morning quiz sleep_quality 1-5 |
+| Stress inverted | 10% | Night quiz stress_level (1=100, 5=0) |
+| Physical readiness | 10% | Pre-lift physical_readiness 1-5 |
+| Muscle restriction | 15% | movement_restriction JSONB (Full=100, Limited=60, Pain=20) |
 | Training load 72h | 15% | CNS load vs 7-day avg deviation |
 | Fuel adequacy | 10% | Calories logged / TDEE × 100, capped at 100 |
 | Calendar buffer | 25% | Game in 1 day=40, 2 days=60, 3 days=80, none=100 |
 
-**Color thresholds:** Green ≥72 / Yellow 50-71 / Red <50
+Color thresholds: Green ≥72 / Yellow 50-71 / Red <50
+
+Gemini Flash generates the nightly report text with forward-only, positive framing.
 
 ---
 
-## Step 3 — New Hooks (4 files)
+### New Hooks (4 files)
 
-### `src/hooks/usePhysioProfile.ts`
-- Fetches/upserts `physio_health_profiles`
-- Exposes: `profile`, `setupCompleted`, `adultFeaturesEnabled`, `saveProfile()`, `updateIllness()`, `enableAdultFeatures()`
-- Age gate: checks `profiles.date_of_birth` — under 18 = `enableAdultFeatures()` is a no-op
-
-### `src/hooks/usePhysioDailyReport.ts`
-- Fetches today's `physio_daily_reports` row
-- Exposes: `report`, `regulationScore`, `regulationColor`, `triggerReportGeneration()`, `logSuggestionResponse()`
-- `triggerReportGeneration()` calls the edge function then invalidates query
-
-### `src/hooks/usePhysioGamePlanBadges.ts`
-- Combines `usePhysioDailyReport` + `useDailyNutritionTargets` + `usePhysioProfile`
-- Returns `PhysioBadge[]` keyed to task IDs
-- Red regulation → workout task gets recovery badge
-- Calories <80% of goal → nutrition task gets fuel badge
-- Active illness → workout task gets load reduction badge
-
-### `src/hooks/usePhysioAdultTracking.ts`
-- Fetches/upserts `physio_adult_tracking` for today
-- Only active when `adultFeaturesEnabled === true`
+- `usePhysioProfile.ts` — fetches/upserts physio_health_profiles, 18+ age gate via profiles.date_of_birth
+- `usePhysioDailyReport.ts` — fetches today's regulation report, triggers edge function after night check-in
+- `usePhysioGamePlanBadges.ts` — returns badge configs per task (recovery / fuel / load / mobility)
+- `usePhysioAdultTracking.ts` — manages physio_adult_tracking, only active when adult_features_enabled
 
 ---
 
-## Step 4 — New Components (6 files)
+### New Components (7 files)
 
-### `src/components/physio/PhysioRegulationBadge.tsx`
-- Small circular colored dot + score number
-- Props: `score`, `color`, `size`
-- Shows "—" when no report exists yet
-
-### `src/components/physio/PhysioHealthIntakeDialog.tsx`
-- Multi-step dialog (3 steps)
-- Step 1: Blood type (optional), dietary style chips, allergies, food intolerances
-- Step 2: Medications, conditions, injury history, supplements
-- Step 3: Adult features opt-in (18+ gate, mandatory disclaimer + "I Agree" before enabling)
-- Auto-opens on first Vault visit if `setup_completed === false`
-
-### `src/components/physio/PhysioNightlyReportCard.tsx`
-- Renders in Vault after night check-in when today's report exists
-- Color-coded header bar (green/yellow/red gradient)
-- 2-3 sentence summary headline
-- Collapsible "Full Report" with 6 expandable sections
-- Each section: WHY / WHAT TO DO / HOW IT HELPS
-- Apply / Modify / Decline buttons (all logged to DB)
-- Disclaimer always visible at bottom
-
-### `src/components/physio/PhysioPostWorkoutBanner.tsx`
-- Dismissable card above Game Plan task list
-- 1-2 sentence contextual message from regulation color + upcoming events
-- Dismissed state stored in sessionStorage (won't re-appear same session)
-
-### `src/components/physio/PhysioNutritionSuggestions.tsx`
-- Card in Nutrition Hub below macro ring
-- Hydration adjusted for training load tier
-- Carb timing if game within 48h
-- Electrolyte note if high CNS load
-- Supplement education (tart cherry for red, magnesium for high stress)
-- Every suggestion has "Educational only. Consult a professional." disclaimer chip
-- Returns null if no today's report → graceful fallback
-
-### `src/components/physio/PhysioAdultTrackingSection.tsx`
-- Only renders when `adultFeaturesEnabled === true`
-- Female: cycle phase selector (Menstrual/Follicular/Ovulatory/Luteal), cycle day input, period toggle
-- Male: single wellness consistency yes/no (plain language, no clinical terms)
-- Shared: libido level 1-5 optional tap selector
-- Auto-saves on any change
+- `PhysioRegulationBadge.tsx` — colored dot + score, shows "—" when no report
+- `PhysioHealthIntakeDialog.tsx` — 3-step setup: basic health → medical history → adult opt-in (18+ gate)
+- `PhysioNightlyReportCard.tsx` — color header, 2-3 sentence summary, 6 collapsible detail sections with WHY/WHAT TO DO/HOW IT HELPS, Apply/Modify/Decline buttons, disclaimer
+- `PhysioPostWorkoutBanner.tsx` — dismissable banner with 1-2 sentence post-workout message, sessionStorage dismiss
+- `PhysioNutritionSuggestions.tsx` — hydration, carb timing, electrolytes, supplement education, all with disclaimer chips, returns null if no report
+- `PhysioAdultTrackingSection.tsx` — female cycle phase + male wellness consistency + shared libido level, self-hides if not enabled
 
 ---
 
-## Step 5 — Modify `VaultFocusQuizDialog.tsx`
+### Modified Files (6 files)
 
-### Morning quiz additions (after sleep section):
-1. Resting HR — number input with "Skip" option → saves to `resting_hr`
-2. Appetite — 3-tap: 🥗 Low / 🍽️ Normal / 🍔 High → saves to `appetite`
-3. Stress sources — multi-select chips (School / Work / Family / Travel / Competition Nerves / Illness) → saves to `stress_sources[]`
-4. Illness sub-selector — appears when "Illness" selected: Cold / Flu / Fever / GI Distress → calls `updateIllness()` to update health profile
+**VaultFocusQuizDialog.tsx:**
+- Morning quiz: resting HR input + skip, appetite 3-tap (Low/Normal/High), stress sources multi-chip (School/Work/Family/Travel/Competition Nerves/Illness), illness sub-selector (Cold/Flu/Fever/GI Distress)
+- Pre-lift quiz: movement restriction screen (Toe Touch / Overhead Reach / Bodyweight Squat — Full/Limited/Pain)
+- Night quiz: fires triggerReportGeneration() non-blocking after successful submit
 
-### Pre-lift quiz additions (new step after body map):
-- Movement restriction screen — 3 tap selectors:
-  - Toe Touch: Full ✅ / Limited ⚠️ / Pain ❌
-  - Overhead Reach: Full ✅ / Limited ⚠️ / Pain ❌
-  - Bodyweight Squat: Full ✅ / Limited ⚠️ / Pain ❌
-- Saves as JSONB to `movement_restriction`
+**useVault.ts:** adds appetite, stress_sources, movement_restriction, resting_hr to saveFocusQuiz upsert
 
-### Night quiz modification:
-- After successful submit, fire `triggerReportGeneration()` non-blocking (doesn't delay success screen)
+**Vault.tsx:** PhysioRegulationBadge in header, PhysioHealthIntakeDialog auto-opens when setup_completed=false, PhysioNightlyReportCard after night check-in, PhysioAdultTrackingSection at bottom of left column
 
----
+**GamePlanCard.tsx:** PhysioPostWorkoutBanner above task list, physio badge chips inline on applicable task rows with Popover message on tap
 
-## Step 6 — Modify `useVault.ts`
+**NutritionHubContent.tsx:** PhysioNutritionSuggestions inserted after MacroTargetDisplay
 
-Add 4 new fields to the `saveFocusQuiz` upsert:
-```ts
-appetite: data.appetite,
-stress_sources: data.stress_sources,
-movement_restriction: data.movement_restriction,
-resting_hr: data.resting_hr,
-```
+**useUnifiedDataSync.ts:** registers physio_daily_reports, physio_health_profiles, physio_adult_tracking in TABLE_QUERY_MAPPINGS
 
 ---
 
-## Step 7 — Modify `Vault.tsx`
+## Zero Loose Ends
 
-- Add `PhysioRegulationBadge` next to streak count in header
-- Add `PhysioHealthIntakeDialog` — auto-opens when `!setupCompleted`
-- Add `PhysioNightlyReportCard` — shows after night check-in completion
-- Add `PhysioAdultTrackingSection` — at bottom of left column (self-hides if not enabled)
-- Wire `triggerReportGeneration()` to night quiz submit callback
-
----
-
-## Step 8 — Modify `GamePlanCard.tsx`
-
-- Import `usePhysioGamePlanBadges()`
-- Render `PhysioBadge` chips inline in each task row (tappable, shows message in Popover)
-- Render `PhysioPostWorkoutBanner` above task list when regulation report exists
-
----
-
-## Step 9 — Modify `NutritionHubContent.tsx`
-
-- Insert `<PhysioNutritionSuggestions />` after `<MacroTargetDisplay>`
-
----
-
-## Step 10 — Modify `useUnifiedDataSync.ts`
-
-Register 3 new tables in `TABLE_QUERY_MAPPINGS`:
-- `physio_daily_reports` → invalidates `physioDailyReport`, `physioGamePlanBadges`
-- `physio_health_profiles` → invalidates `physioProfile`, `physioGamePlanBadges`
-- `physio_adult_tracking` → invalidates `physioAdultTracking`, `physioGamePlanBadges`
-
----
-
-## File Summary
-
-| Action | File |
+| Requirement | Implementation |
 |---|---|
-| CREATE | `supabase/functions/calculate-regulation/index.ts` |
-| CREATE | `src/hooks/usePhysioProfile.ts` |
-| CREATE | `src/hooks/usePhysioDailyReport.ts` |
-| CREATE | `src/hooks/usePhysioGamePlanBadges.ts` |
-| CREATE | `src/hooks/usePhysioAdultTracking.ts` |
-| CREATE | `src/components/physio/PhysioHealthIntakeDialog.tsx` |
-| CREATE | `src/components/physio/PhysioRegulationBadge.tsx` |
-| CREATE | `src/components/physio/PhysioNightlyReportCard.tsx` |
-| CREATE | `src/components/physio/PhysioPostWorkoutBanner.tsx` |
-| CREATE | `src/components/physio/PhysioNutritionSuggestions.tsx` |
-| CREATE | `src/components/physio/PhysioAdultTrackingSection.tsx` |
-| MODIFY | `src/components/vault/VaultFocusQuizDialog.tsx` |
-| MODIFY | `src/hooks/useVault.ts` |
-| MODIFY | `src/pages/Vault.tsx` |
-| MODIFY | `src/components/GamePlanCard.tsx` |
-| MODIFY | `src/components/nutrition-hub/NutritionHubContent.tsx` |
-| MODIFY | `src/hooks/useUnifiedDataSync.ts` |
-
-**11 new files. 6 modified files.**
+| Youth gating locked | adult_features_enabled defaults false; DOB check in enableAdultFeatures() — under 18 = no-op |
+| No adult data in other dashboards | PhysioAdultTrackingSection only renders when adult_features_enabled === true; RLS prevents cross-user reads |
+| Nightly report auto-generates | Night check-in fires triggerReportGeneration() non-blocking |
+| Disclaimer on every suggestion | All physio components include the mandatory disclaimer text |
+| Calendar feeds forward weighting | Edge function queries athlete_events + calendar_events for 3-day look-ahead |
+| Training load feeds engine | Edge function queries athlete_load_tracking for 72h CNS load |
+| Illness reduces load suggestions | active_illness detected in usePhysioGamePlanBadges — load reduction badge on workout task |
 
 ---
 
-## IMPORTANT — After Approving This Plan
+## CRITICAL — TWO APPROVALS REQUIRED
 
-When implementation starts, a **database migration prompt** will appear in the chat asking you to confirm running the SQL for the 3 new tables and 4 new columns. **Approve that prompt immediately** and the entire build will proceed uninterrupted from there.
+1. Approve this plan
+2. When a database migration prompt immediately appears — approve that too
+
+Do NOT type any message between the two approvals. The build proceeds automatically after both are confirmed.
