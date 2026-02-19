@@ -108,6 +108,23 @@ const TABLE_QUERY_MAPPINGS: Record<string, string[][]> = {
     ['calendarEvents'],
     ['customActivities'],
   ],
+
+  // Physio reports affect badges and banners
+  'physio_daily_reports': [
+    ['physioDailyReport'],
+    ['physioGamePlanBadges'],
+  ],
+
+  // Physio profile affects badges and adult tracking
+  'physio_health_profiles': [
+    ['physioProfile'],
+    ['physioGamePlanBadges'],
+  ],
+
+  // Adult tracking
+  'physio_adult_tracking': [
+    ['physioAdultTracking'],
+  ],
 };
 
 interface UseUnifiedDataSyncOptions {

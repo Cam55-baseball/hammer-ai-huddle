@@ -146,3 +146,6 @@ verify_jwt = true
 
 [functions.generate-block-workout]
 verify_jwt = true
+
+[functions.calculate-regulation]
+verify_jwt = false

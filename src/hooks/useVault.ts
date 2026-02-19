@@ -556,6 +556,11 @@ export function useVault() {
           // NEW: Pre-workout intent fields
           training_intent: data.training_intent,
           mental_energy: data.mental_energy,
+          // Physio fields
+          appetite: (data as any).appetite,
+          stress_sources: (data as any).stress_sources,
+          movement_restriction: (data as any).movement_restriction,
+          resting_hr: (data as any).resting_hr,
         }, {
           onConflict: 'user_id,entry_date,quiz_type',
         });

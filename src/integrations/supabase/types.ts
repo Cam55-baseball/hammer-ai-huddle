@@ -1448,6 +1448,162 @@ export type Database = {
         }
         Relationships: []
       }
+      physio_adult_tracking: {
+        Row: {
+          created_at: string
+          cycle_day: number | null
+          cycle_phase: string | null
+          id: string
+          libido_level: number | null
+          period_active: boolean | null
+          tracking_date: string
+          updated_at: string
+          user_id: string
+          wellness_consistency: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          cycle_day?: number | null
+          cycle_phase?: string | null
+          id?: string
+          libido_level?: number | null
+          period_active?: boolean | null
+          tracking_date?: string
+          updated_at?: string
+          user_id: string
+          wellness_consistency?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          cycle_day?: number | null
+          cycle_phase?: string | null
+          id?: string
+          libido_level?: number | null
+          period_active?: boolean | null
+          tracking_date?: string
+          updated_at?: string
+          user_id?: string
+          wellness_consistency?: boolean | null
+        }
+        Relationships: []
+      }
+      physio_daily_reports: {
+        Row: {
+          calendar_score: number | null
+          created_at: string
+          fuel_score: number | null
+          id: string
+          load_score: number | null
+          readiness_score: number | null
+          regulation_color: string
+          regulation_score: number
+          report_date: string
+          report_headline: string | null
+          report_sections: Json | null
+          restriction_score: number | null
+          sleep_score: number | null
+          stress_score: number | null
+          suggestion_responses: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_score?: number | null
+          created_at?: string
+          fuel_score?: number | null
+          id?: string
+          load_score?: number | null
+          readiness_score?: number | null
+          regulation_color?: string
+          regulation_score?: number
+          report_date?: string
+          report_headline?: string | null
+          report_sections?: Json | null
+          restriction_score?: number | null
+          sleep_score?: number | null
+          stress_score?: number | null
+          suggestion_responses?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_score?: number | null
+          created_at?: string
+          fuel_score?: number | null
+          id?: string
+          load_score?: number | null
+          readiness_score?: number | null
+          regulation_color?: string
+          regulation_score?: number
+          report_date?: string
+          report_headline?: string | null
+          report_sections?: Json | null
+          restriction_score?: number | null
+          sleep_score?: number | null
+          stress_score?: number | null
+          suggestion_responses?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      physio_health_profiles: {
+        Row: {
+          active_illness: string | null
+          adult_features_enabled: boolean
+          allergies: string[] | null
+          blood_type: string | null
+          created_at: string
+          dietary_style: string | null
+          food_intolerances: string[] | null
+          id: string
+          illness_started_at: string | null
+          injury_history: string[] | null
+          medical_conditions: string[] | null
+          medications: string[] | null
+          setup_completed: boolean
+          supplements: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_illness?: string | null
+          adult_features_enabled?: boolean
+          allergies?: string[] | null
+          blood_type?: string | null
+          created_at?: string
+          dietary_style?: string | null
+          food_intolerances?: string[] | null
+          id?: string
+          illness_started_at?: string | null
+          injury_history?: string[] | null
+          medical_conditions?: string[] | null
+          medications?: string[] | null
+          setup_completed?: boolean
+          supplements?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_illness?: string | null
+          adult_features_enabled?: boolean
+          allergies?: string[] | null
+          blood_type?: string | null
+          created_at?: string
+          dietary_style?: string | null
+          food_intolerances?: string[] | null
+          id?: string
+          illness_started_at?: string | null
+          injury_history?: string[] | null
+          medical_conditions?: string[] | null
+          medications?: string[] | null
+          setup_completed?: boolean
+          supplements?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       processed_webhook_events: {
         Row: {
           details: Json | null
@@ -3144,6 +3300,7 @@ export type Database = {
       }
       vault_focus_quizzes: {
         Row: {
+          appetite: string | null
           balance_duration_seconds: number | null
           balance_left_seconds: number | null
           balance_right_seconds: number | null
@@ -3159,6 +3316,7 @@ export type Database = {
           mental_energy: number | null
           mental_readiness: number
           mood_level: number | null
+          movement_restriction: Json | null
           pain_increases_with_movement: boolean | null
           pain_location: string[] | null
           pain_movement_per_area: Json | null
@@ -3174,9 +3332,11 @@ export type Database = {
           reflection_improve: string | null
           reflection_learned: string | null
           reflection_motivation: string | null
+          resting_hr: number | null
           sleep_quality: number | null
           sleep_time: string | null
           stress_level: number | null
+          stress_sources: string[] | null
           training_intent: string[] | null
           user_id: string
           wake_time: string | null
@@ -3184,6 +3344,7 @@ export type Database = {
           weight_lbs: number | null
         }
         Insert: {
+          appetite?: string | null
           balance_duration_seconds?: number | null
           balance_left_seconds?: number | null
           balance_right_seconds?: number | null
@@ -3199,6 +3360,7 @@ export type Database = {
           mental_energy?: number | null
           mental_readiness: number
           mood_level?: number | null
+          movement_restriction?: Json | null
           pain_increases_with_movement?: boolean | null
           pain_location?: string[] | null
           pain_movement_per_area?: Json | null
@@ -3214,9 +3376,11 @@ export type Database = {
           reflection_improve?: string | null
           reflection_learned?: string | null
           reflection_motivation?: string | null
+          resting_hr?: number | null
           sleep_quality?: number | null
           sleep_time?: string | null
           stress_level?: number | null
+          stress_sources?: string[] | null
           training_intent?: string[] | null
           user_id: string
           wake_time?: string | null
@@ -3224,6 +3388,7 @@ export type Database = {
           weight_lbs?: number | null
         }
         Update: {
+          appetite?: string | null
           balance_duration_seconds?: number | null
           balance_left_seconds?: number | null
           balance_right_seconds?: number | null
@@ -3239,6 +3404,7 @@ export type Database = {
           mental_energy?: number | null
           mental_readiness?: number
           mood_level?: number | null
+          movement_restriction?: Json | null
           pain_increases_with_movement?: boolean | null
           pain_location?: string[] | null
           pain_movement_per_area?: Json | null
@@ -3254,9 +3420,11 @@ export type Database = {
           reflection_improve?: string | null
           reflection_learned?: string | null
           reflection_motivation?: string | null
+          resting_hr?: number | null
           sleep_quality?: number | null
           sleep_time?: string | null
           stress_level?: number | null
+          stress_sources?: string[] | null
           training_intent?: string[] | null
           user_id?: string
           wake_time?: string | null
