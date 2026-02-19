@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTDEE } from '@/hooks/useTDEE';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,6 +103,7 @@ export function VaultNutritionLogCard({
 }: VaultNutritionLogCardProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { nutritionTargets } = useTDEE();
 
   const [isOpen, setIsOpen] = useState(false);
   const [favoritesOpen, setFavoritesOpen] = useState(false);
@@ -141,8 +143,25 @@ export function VaultNutritionLogCard({
   // Favorite meal name
   const [favoriteMealName, setFavoriteMealName] = useState('');
 
-  // Goals form state
-  const currentGoals = goals || DEFAULT_GOALS;
+  // Effective goals: manual override → TDEE-calculated → hardcoded defaults
+  const effectiveGoals = useMemo((): NutritionGoals => {
+    // Manual vault_nutrition_goals always wins
+    if (goals) return goals;
+    // TDEE-derived (matches Nutrition Hub exactly)
+    if (nutritionTargets) {
+      return {
+        calorie_goal: nutritionTargets.dailyCalories,
+        protein_goal: nutritionTargets.macros.protein,
+        carbs_goal: nutritionTargets.macros.carbs,
+        fats_goal: nutritionTargets.macros.fats,
+        hydration_goal: DEFAULT_GOALS.hydration_goal,
+        supplement_goals: [],
+      };
+    }
+    return DEFAULT_GOALS;
+  }, [goals, nutritionTargets]);
+
+  const currentGoals = effectiveGoals;
   const [goalCalories, setGoalCalories] = useState(currentGoals.calorie_goal.toString());
   const [goalProtein, setGoalProtein] = useState(currentGoals.protein_goal.toString());
   const [goalCarbs, setGoalCarbs] = useState(currentGoals.carbs_goal.toString());
@@ -151,17 +170,15 @@ export function VaultNutritionLogCard({
   const [goalSupplements, setGoalSupplements] = useState<string[]>(currentGoals.supplement_goals || []);
   const [newGoalSupplement, setNewGoalSupplement] = useState('');
 
-  // Sync goals form state when goals prop changes
+  // Sync goals form state when effectiveGoals changes (catches both manual override and TDEE updates)
   useEffect(() => {
-    if (goals) {
-      setGoalCalories(goals.calorie_goal.toString());
-      setGoalProtein(goals.protein_goal.toString());
-      setGoalCarbs(goals.carbs_goal.toString());
-      setGoalFats(goals.fats_goal.toString());
-      setGoalHydration(goals.hydration_goal.toString());
-      setGoalSupplements(goals.supplement_goals || []);
-    }
-  }, [goals]);
+    setGoalCalories(effectiveGoals.calorie_goal.toString());
+    setGoalProtein(effectiveGoals.protein_goal.toString());
+    setGoalCarbs(effectiveGoals.carbs_goal.toString());
+    setGoalFats(effectiveGoals.fats_goal.toString());
+    setGoalHydration(effectiveGoals.hydration_goal.toString());
+    setGoalSupplements(effectiveGoals.supplement_goals || []);
+  }, [effectiveGoals]);
 
   // Trigger smart lookup when meal title changes
   useEffect(() => {
