@@ -1,113 +1,192 @@
 
-# Hammer's Concrete Physio™ — Full E2E Implementation
+# Completing the Remaining Wiring — Hammer's Concrete Physio™
 
-## Why It Keeps Stopping (And How To Fix It This Time)
+## What's Already Done
 
-The build requires TWO approvals in sequence:
-1. This plan — click "Approve"
-2. A database migration prompt appears immediately after — click "Approve" on that too
+- All 4 custom hooks exist and work
+- All 6 physio components are built
+- `useVault.ts` already saves `appetite`, `stress_sources`, `movement_restriction`, `resting_hr`
+- `NutritionHubContent.tsx` already has `PhysioNutritionSuggestions` inserted
+- `useUnifiedDataSync.ts` already has the 3 new tables registered
+- `Vault.tsx` imports all 4 physio components but renders NONE of them
 
-If any message is typed before approving the migration prompt, the system resets to plan mode. Do not type anything between the two approvals.
+## Three Files Need Wiring
 
----
+### File 1: `src/pages/Vault.tsx` (6 changes)
 
-## What Gets Built (17 Files Total)
+**Problem:** Imports exist for `PhysioRegulationBadge`, `PhysioHealthIntakeDialog`, `PhysioNightlyReportCard`, `PhysioAdultTrackingSection`, `usePhysioProfile`, `usePhysioDailyReport` but NONE are used in JSX.
 
-### Database Migration (Auto-runs on second approval)
+**Changes:**
 
-Columns added to `vault_focus_quizzes`:
-- `appetite` text — Low / Normal / High
-- `stress_sources` text[] — multi-select chips
-- `movement_restriction` jsonb — toe touch / overhead / squat
-- `resting_hr` integer — optional morning input
+1. Add hook calls (after existing hooks ~line 125):
+```ts
+const { setupCompleted, adultFeaturesEnabled } = usePhysioProfile();
+const { report, regulationScore, regulationColor, triggerReportGeneration } = usePhysioDailyReport();
+const [intakeOpen, setIntakeOpen] = useState(false);
+```
 
-New tables:
-- `physio_health_profiles` — health intake, allergies, medications, adult gate
-- `physio_daily_reports` — regulation score 0-100, AI nightly report, component scores
-- `physio_adult_tracking` — 18+-gated cycle phase + wellness tracking
+2. Add auto-open useEffect for intake dialog (when `!setupCompleted && hasAccess`):
+```ts
+useEffect(() => {
+  if (hasAccess && !setupCompleted) setIntakeOpen(true);
+}, [hasAccess, setupCompleted]);
+```
 
-All tables: RLS enabled, users manage own data only.
+3. Wire `triggerReportGeneration()` inside `handleQuizSubmit` when `selectedQuizType === 'night'`:
+```ts
+if (selectedQuizType === 'night' && result.success) {
+  triggerReportGeneration();
+}
+```
 
----
+4. Add `PhysioRegulationBadge` next to the BookOpen icon in the Vault hero header (line ~410):
+```tsx
+<PhysioRegulationBadge score={regulationScore} color={regulationColor} size="md" />
+```
 
-### Edge Function: `calculate-regulation`
+5. Add `PhysioNightlyReportCard` after the quiz status grid inside the Daily Check-In container (after the quiz buttons block, ~line 580):
+```tsx
+{hasCompletedQuiz('night') && <PhysioNightlyReportCard />}
+```
 
-Uses existing `LOVABLE_API_KEY` — no new secrets needed.
+6. Add `PhysioAdultTrackingSection` at the bottom of the left column (after `VaultCorrelationAnalysisCard` block, before Daily Check-In container):
+```tsx
+<PhysioAdultTrackingSection />
+```
 
-Regulation Index Formula (0–100, higher = better regulated):
-
-| Component | Weight | Source |
-|---|---|---|
-| Sleep quality | 15% | Morning quiz sleep_quality 1-5 |
-| Stress inverted | 10% | Night quiz stress_level (1=100, 5=0) |
-| Physical readiness | 10% | Pre-lift physical_readiness 1-5 |
-| Muscle restriction | 15% | movement_restriction JSONB (Full=100, Limited=60, Pain=20) |
-| Training load 72h | 15% | CNS load vs 7-day avg deviation |
-| Fuel adequacy | 10% | Calories logged / TDEE × 100, capped at 100 |
-| Calendar buffer | 25% | Game in 1 day=40, 2 days=60, 3 days=80, none=100 |
-
-Color thresholds: Green ≥72 / Yellow 50-71 / Red <50
-
-Gemini Flash generates the nightly report text with forward-only, positive framing.
-
----
-
-### New Hooks (4 files)
-
-- `usePhysioProfile.ts` — fetches/upserts physio_health_profiles, 18+ age gate via profiles.date_of_birth
-- `usePhysioDailyReport.ts` — fetches today's regulation report, triggers edge function after night check-in
-- `usePhysioGamePlanBadges.ts` — returns badge configs per task (recovery / fuel / load / mobility)
-- `usePhysioAdultTracking.ts` — manages physio_adult_tracking, only active when adult_features_enabled
-
----
-
-### New Components (7 files)
-
-- `PhysioRegulationBadge.tsx` — colored dot + score, shows "—" when no report
-- `PhysioHealthIntakeDialog.tsx` — 3-step setup: basic health → medical history → adult opt-in (18+ gate)
-- `PhysioNightlyReportCard.tsx` — color header, 2-3 sentence summary, 6 collapsible detail sections with WHY/WHAT TO DO/HOW IT HELPS, Apply/Modify/Decline buttons, disclaimer
-- `PhysioPostWorkoutBanner.tsx` — dismissable banner with 1-2 sentence post-workout message, sessionStorage dismiss
-- `PhysioNutritionSuggestions.tsx` — hydration, carb timing, electrolytes, supplement education, all with disclaimer chips, returns null if no report
-- `PhysioAdultTrackingSection.tsx` — female cycle phase + male wellness consistency + shared libido level, self-hides if not enabled
+7. Render `PhysioHealthIntakeDialog` near the quiz dialog at line ~836:
+```tsx
+<PhysioHealthIntakeDialog open={intakeOpen} onOpenChange={setIntakeOpen} />
+```
 
 ---
 
-### Modified Files (6 files)
+### File 2: `src/components/vault/VaultFocusQuizDialog.tsx` (4 additions)
 
-**VaultFocusQuizDialog.tsx:**
-- Morning quiz: resting HR input + skip, appetite 3-tap (Low/Normal/High), stress sources multi-chip (School/Work/Family/Travel/Competition Nerves/Illness), illness sub-selector (Cold/Flu/Fever/GI Distress)
-- Pre-lift quiz: movement restriction screen (Toe Touch / Overhead Reach / Bodyweight Squat — Full/Limited/Pain)
-- Night quiz: fires triggerReportGeneration() non-blocking after successful submit
+**Problem:** New physio quiz fields are missing — resting HR, appetite, stress sources, illness sub-selector (morning quiz), and movement restriction screen (pre-lift quiz). Night quiz doesn't fire `triggerReportGeneration`.
 
-**useVault.ts:** adds appetite, stress_sources, movement_restriction, resting_hr to saveFocusQuiz upsert
+The component doesn't accept a callback prop for report generation — the night quiz success flow already works, but it needs to call back to Vault.tsx. The simplest solution: `VaultFocusQuizDialog` calls `usePhysioDailyReport` internally and fires `triggerReportGeneration()` directly from within the night quiz success handler. This keeps zero prop changes.
 
-**Vault.tsx:** PhysioRegulationBadge in header, PhysioHealthIntakeDialog auto-opens when setup_completed=false, PhysioNightlyReportCard after night check-in, PhysioAdultTrackingSection at bottom of left column
+**Morning quiz additions** (injected after the existing `sleepData` section + before motivationTitle section, ~after line 677):
 
-**GamePlanCard.tsx:** PhysioPostWorkoutBanner above task list, physio badge chips inline on applicable task rows with Popover message on tap
+Section label "Physio Check-in" containing:
+- **Resting HR** — `<Input type="number" placeholder="e.g. 58">` + "Skip" button. Saves to `data.resting_hr`.
+- **Appetite** — 3 tap-chips: 🥗 Low / 🍽️ Normal / 🍔 High. Saves to `data.appetite`.
+- **Stress Sources** — multi-select chips: School / Work / Family / Travel / Competition Nerves / Illness. Saves to `data.stress_sources`.
+- **Illness sub-selector** — appears when "Illness" is in stress sources: Cold / Flu / Fever / GI Distress. Calls `updateIllness()` from `usePhysioProfile`.
 
-**NutritionHubContent.tsx:** PhysioNutritionSuggestions inserted after MacroTargetDisplay
+New state variables to add:
+```ts
+const [restingHr, setRestingHr] = useState('');
+const [appetite, setAppetite] = useState('');
+const [stressSources, setStressSources] = useState<string[]>([]);
+const [illnessType, setIllnessType] = useState('');
+```
 
-**useUnifiedDataSync.ts:** registers physio_daily_reports, physio_health_profiles, physio_adult_tracking in TABLE_QUERY_MAPPINGS
+Add to `handleSubmit` morning block:
+```ts
+data.resting_hr = restingHr ? parseInt(restingHr) : undefined;
+data.appetite = appetite || undefined;
+data.stress_sources = stressSources.length > 0 ? stressSources : undefined;
+```
+
+Add to `resetFormAndClose`:
+```ts
+setRestingHr(''); setAppetite(''); setStressSources([]); setIllnessType('');
+```
+
+**Pre-lift quiz additions** (new Section 5 — after existing Intent & Focus Section 4, ~after line 1136):
+
+Movement restriction screen with 3 selectors, each Full ✅ / Limited ⚠️ / Pain ❌:
+- Toe Touch
+- Overhead Reach  
+- Bodyweight Squat
+
+New state:
+```ts
+const [movementRestriction, setMovementRestriction] = useState<Record<string, string>>({});
+```
+
+Saves as: `data.movement_restriction = Object.keys(movementRestriction).length > 0 ? movementRestriction : undefined;`
+
+Add to `resetFormAndClose`: `setMovementRestriction({});`
+
+**Night quiz trigger** — inside `handleSubmit` after `nightStats.refetch()` at line ~494:
+```ts
+if (quizType === 'night') {
+  triggerReportGeneration(); // fire-and-forget, non-blocking
+  nightStats.refetch();
+  setShowNightSuccess(true);
+  return;
+}
+```
+Import `usePhysioDailyReport` at the top of the file and call `const { triggerReportGeneration } = usePhysioDailyReport();`
 
 ---
 
-## Zero Loose Ends
+### File 3: `src/components/GamePlanCard.tsx` (2 additions)
 
-| Requirement | Implementation |
-|---|---|
-| Youth gating locked | adult_features_enabled defaults false; DOB check in enableAdultFeatures() — under 18 = no-op |
-| No adult data in other dashboards | PhysioAdultTrackingSection only renders when adult_features_enabled === true; RLS prevents cross-user reads |
-| Nightly report auto-generates | Night check-in fires triggerReportGeneration() non-blocking |
-| Disclaimer on every suggestion | All physio components include the mandatory disclaimer text |
-| Calendar feeds forward weighting | Edge function queries athlete_events + calendar_events for 3-day look-ahead |
-| Training load feeds engine | Edge function queries athlete_load_tracking for 72h CNS load |
-| Illness reduces load suggestions | active_illness detected in usePhysioGamePlanBadges — load reduction badge on workout task |
+**Problem:** `PhysioPostWorkoutBanner` and `usePhysioGamePlanBadges` badge chips are not imported or rendered.
+
+**Change 1: Add imports + hook call** (~line 50):
+```ts
+import { PhysioPostWorkoutBanner } from '@/components/physio/PhysioPostWorkoutBanner';
+import { usePhysioGamePlanBadges } from '@/hooks/usePhysioGamePlanBadges';
+```
+
+In the component body (~line 63):
+```ts
+const { getBadgesForTask } = usePhysioGamePlanBadges();
+```
+
+**Change 2: Add PhysioPostWorkoutBanner above task sections** (line ~1494, before `{/* Task Sections */}`):
+```tsx
+<PhysioPostWorkoutBanner />
+```
+
+**Change 3: Add badge chips inside `renderTask`** (after the task title `<span>` inside the clickable button area, ~line 1000):
+```tsx
+{(() => {
+  const badges = getBadgesForTask(task.id);
+  if (badges.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {badges.map(badge => (
+        <Popover key={badge.type}>
+          <PopoverTrigger asChild>
+            <button className={cn(
+              "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+              badge.color === 'red' && "bg-red-500/20 text-red-400 border-red-500/30",
+              badge.color === 'amber' && "bg-amber-500/20 text-amber-400 border-amber-500/30",
+              badge.color === 'orange' && "bg-orange-500/20 text-orange-400 border-orange-500/30",
+              badge.color === 'yellow' && "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+            )} onClick={e => e.stopPropagation()}>
+              {badge.label}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 text-xs p-3" onClick={e => e.stopPropagation()}>
+            <p>{badge.message}</p>
+            <p className="text-muted-foreground mt-2 text-[10px]">Educational only. Consult a professional for medical concerns.</p>
+          </PopoverContent>
+        </Popover>
+      ))}
+    </div>
+  );
+})()}
+```
 
 ---
 
-## CRITICAL — TWO APPROVALS REQUIRED
+## Implementation Order
 
-1. Approve this plan
-2. When a database migration prompt immediately appears — approve that too
+1. `VaultFocusQuizDialog.tsx` — add internal `usePhysioDailyReport` + new state + new UI sections + night trigger
+2. `Vault.tsx` — wire all physio hooks + render 4 components + auto-open effect + night quiz trigger
+3. `GamePlanCard.tsx` — add banner + badge chips
 
-Do NOT type any message between the two approvals. The build proceeds automatically after both are confirmed.
+## Technical Notes
+
+- `triggerReportGeneration()` is fire-and-forget (non-blocking) — it will never delay UI
+- `PhysioAdultTrackingSection` self-hides when `adultFeaturesEnabled === false` — safe to always render
+- `PhysioNightlyReportCard` reads from `usePhysioDailyReport` internally — no props needed
+- Badge chips use existing `Popover` component already imported in `GamePlanCard.tsx`
+- The `intakeOpen` auto-open fires only once when `hasAccess && !setupCompleted`
