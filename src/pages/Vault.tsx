@@ -25,6 +25,12 @@ import {
 } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { useSubscription } from '@/hooks/useSubscription';
+import { usePhysioProfile } from '@/hooks/usePhysioProfile';
+import { usePhysioDailyReport } from '@/hooks/usePhysioDailyReport';
+import { PhysioRegulationBadge } from '@/components/physio/PhysioRegulationBadge';
+import { PhysioHealthIntakeDialog } from '@/components/physio/PhysioHealthIntakeDialog';
+import { PhysioNightlyReportCard } from '@/components/physio/PhysioNightlyReportCard';
+import { PhysioAdultTrackingSection } from '@/components/physio/PhysioAdultTrackingSection';
 import { 
   parseVaultParams, 
   scrollToVaultSection, 

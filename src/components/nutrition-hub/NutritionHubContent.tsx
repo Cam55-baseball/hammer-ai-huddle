@@ -25,6 +25,7 @@ import { AIMealSuggestions } from './AIMealSuggestions';
 import { FavoriteFoodsWidget } from './FavoriteFoodsWidget';
 import { CommonFoodsGallery } from './CommonFoodsGallery';
 import { NutritionHubSettings } from './NutritionHubSettings';
+import { PhysioNutritionSuggestions } from '@/components/physio/PhysioNutritionSuggestions';
 import { useRecipes, RecipeIngredient, CreateRecipeInput } from '@/hooks/useRecipes';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -444,6 +445,9 @@ export function NutritionHubContent() {
         consumed={consumedTotals}
         showHydration
       />
+
+      {/* Physio Nutrition Suggestions */}
+      <PhysioNutritionSuggestions />
 
       {/* Food Favorites Quick Access */}
       <FavoriteFoodsWidget onQuickAdd={handleQuickAddFavorite} />
