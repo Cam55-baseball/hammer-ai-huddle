@@ -258,6 +258,55 @@ export function RestingHeartRateCapture({ value, onResult }: Props) {
             <Heart className="h-4 w-4 text-rose-500 shrink-0" />
             <span>Measure using your camera or enter manually.</span>
           </div>
+
+          {/* Camera diagram + instructions */}
+          <div className="flex gap-3 items-start">
+            {/* Inline SVG phone/camera diagram */}
+            <div className="shrink-0">
+              <svg width="56" height="72" viewBox="0 0 56 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Camera placement diagram">
+                {/* Phone body */}
+                <rect x="4" y="2" width="48" height="68" rx="8" fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth="1.5"/>
+                {/* Camera bump area */}
+                <rect x="14" y="10" width="28" height="36" rx="5" fill="hsl(var(--muted-foreground) / 0.15)" stroke="hsl(var(--border))" strokeWidth="1"/>
+                {/* Main (large) lens — highlighted */}
+                <circle cx="28" cy="20" r="7" fill="hsl(var(--rose-500, 244 63% 54%) / 0.15)" stroke="hsl(346 84% 61%)" strokeWidth="2"/>
+                <circle cx="28" cy="20" r="4" fill="hsl(346 84% 61% / 0.3)"/>
+                <circle cx="28" cy="20" r="1.5" fill="hsl(346 84% 61%)"/>
+                {/* Small lens 2 */}
+                <circle cx="20" cy="34" r="4" fill="hsl(var(--muted-foreground) / 0.1)" stroke="hsl(var(--muted-foreground))" strokeWidth="1"/>
+                <circle cx="20" cy="34" r="1.5" fill="hsl(var(--muted-foreground) / 0.4)"/>
+                {/* Small lens 3 */}
+                <circle cx="36" cy="34" r="4" fill="hsl(var(--muted-foreground) / 0.1)" stroke="hsl(var(--muted-foreground))" strokeWidth="1"/>
+                <circle cx="36" cy="34" r="1.5" fill="hsl(var(--muted-foreground) / 0.4)"/>
+                {/* "Use this" arrow pointing to main lens */}
+                <path d="M38 14 L44 10" stroke="hsl(346 84% 61%)" strokeWidth="1.5" strokeLinecap="round"/>
+                <circle cx="44" cy="10" r="2" fill="hsl(346 84% 61%)"/>
+                {/* Home indicator */}
+                <rect x="20" y="62" width="16" height="3" rx="1.5" fill="hsl(var(--muted-foreground) / 0.3)"/>
+              </svg>
+            </div>
+
+            {/* Numbered prep list */}
+            <ol className="space-y-1.5 text-xs text-muted-foreground list-none">
+              <li className="flex gap-2">
+                <span className="shrink-0 w-4 h-4 rounded-full bg-rose-500/20 text-rose-500 flex items-center justify-center text-[10px] font-bold">1</span>
+                <span>Flip your phone so the cameras face <strong className="text-foreground">up</strong></span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 w-4 h-4 rounded-full bg-rose-500/20 text-rose-500 flex items-center justify-center text-[10px] font-bold">2</span>
+                <span>Cover the <strong className="text-foreground">main (largest) lens</strong> — highlighted in red above — with the <strong className="text-foreground">pad</strong> of your index finger</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 w-4 h-4 rounded-full bg-rose-500/20 text-rose-500 flex items-center justify-center text-[10px] font-bold">3</span>
+                <span>Press <strong className="text-foreground">gently but firmly</strong> — your fingertip should glow red/orange through the skin</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 w-4 h-4 rounded-full bg-rose-500/20 text-rose-500 flex items-center justify-center text-[10px] font-bold">4</span>
+                <span>Stay <strong className="text-foreground">still for 30 seconds</strong> while we read your pulse</span>
+              </li>
+            </ol>
+          </div>
+
           {errorMsg && <p className="text-xs text-destructive">{errorMsg}</p>}
           <div className="flex gap-2 flex-wrap">
             <Button
@@ -293,9 +342,10 @@ export function RestingHeartRateCapture({ value, onResult }: Props) {
               <Heart className="h-6 w-6 text-rose-500 fill-rose-500" />
             </span>
           </div>
-          <p className="text-xs text-center text-muted-foreground">
-            Hold your fingertip firmly over the rear camera lens
-          </p>
+          <div className="text-center space-y-1">
+            <p className="text-sm font-medium text-foreground">Cover the main camera lens with the <span className="text-rose-500">pad</span> of your finger</p>
+            <p className="text-xs text-muted-foreground">On multi-camera phones, use the widest/largest lens.<br/>Press firmly — your fingertip should glow red.</p>
+          </div>
           <div className="text-3xl font-bold tabular-nums text-rose-500">{countdown}s</div>
           <Button
             type="button"
