@@ -1,52 +1,53 @@
 
-# Add Delete Button When Clicking the Pencil Icon on Custom Activities
+# Fix: Shared Links Return a Blank Page
 
-## Current Flow (the problem)
+## Root Cause — Confirmed
 
-When a user taps the **pencil icon** on a custom activity card in the Game Plan, it opens the **Schedule Settings Drawer** (day/time/reminder settings) — NOT the full activity editor. There is no delete option anywhere in this drawer.
+The app is a React Single Page Application (SPA). Every route — `/dashboard`, `/auth`, `/shared-activity/ABC123` — is handled **client-side by React Router**. The server only knows about one real file: `index.html`.
 
-The full activity editor (`CustomActivityBuilderDialog`) **already has a delete button** built in — it appears at the bottom left when editing an existing template. But it's only reachable by: tapping the card → opening the detail dialog → tapping "Edit" inside. That's 2 taps, not intuitive.
-
-## The Fix
-
-Change the pencil icon on custom activity cards in the Game Plan to open the **full activity editor** (which already has the delete button) instead of the schedule drawer.
-
-The schedule drawer functionality is not lost — it remains accessible via the skipped tasks "undo" button and can still be opened from within the editor itself.
-
-### What changes in `src/components/GamePlanCard.tsx`
-
-**Line ~1064-1066** — The pencil button's `onClick` for `isCustom` tasks currently calls `handleCustomActivityScheduleEdit(task)`. Change it to call `handleCustomActivityFullEdit(task)` instead.
-
-**Before:**
+When a user opens a direct link like:
 ```
-if (isCustom) {
-  handleCustomActivityScheduleEdit(task);
-} else { ...
+https://hammers-modality.lovable.app/shared-activity/ABC123
 ```
 
-**After:**
+The hosting server receives a request for `/shared-activity/ABC123`. It looks for a file at that path, finds nothing, and returns a blank response or error page. React never boots because `index.html` is never served. The user sees a completely blank screen with no login, no landing page, nothing.
+
+This is a classic SPA deployment problem. The fix is standard: tell the server to **always serve `index.html`** regardless of the URL path, so React Router can handle routing on the client side.
+
+## The Fix — One File
+
+Add a `_redirects` file to the `public/` folder with a single rule:
+
+**File: `public/_redirects`**
 ```
-if (isCustom) {
-  handleCustomActivityFullEdit(task);
-} else { ...
+/*    /index.html   200
 ```
 
-That's the core one-line change. The builder dialog already:
-- Receives `onDelete` in `GamePlanCard` at lines 1846–1854 ✓
-- Shows the red **Delete** button when `isEditing && onDelete` ✓
-- Calls `deleteActivityTemplate`, shows a toast, then calls `refetch()` ✓
+This tells the hosting infrastructure: "For any URL path, serve `index.html` with a 200 status." React Router then boots normally and renders the correct page — `/shared-activity/ABC123` renders `SharedActivity.tsx`, `/auth` renders `Auth.tsx`, etc.
 
-### Result for the user
+This is the standard fix for Vite + React Router SPAs deployed on Netlify-compatible hosts (which Lovable's hosting uses).
 
-1. User taps the **pencil icon** on any custom activity card
-2. The full **Activity Builder dialog** opens in edit mode
-3. A red **Delete** button is visible at the bottom left of the dialog
-4. Tapping Delete soft-deletes the activity (moves it to Recently Deleted with a 30-day recovery window), closes the dialog, and immediately removes the card from the Game Plan
+## Why This Affects Only Direct/Shared Links
+
+When users navigate **within** the app (clicking buttons, links), React Router intercepts the navigation before the browser ever sends a request to the server — so it works fine. But when someone opens a link from outside (shared link in a text, email, copied URL), the browser makes a fresh server request — and that's when the blank page happens.
 
 ## Files Changed
 
-| File | Change |
+| File | Change Type |
 |---|---|
-| `src/components/GamePlanCard.tsx` | 1-line change: pencil on custom cards opens full editor instead of schedule drawer |
+| `public/_redirects` | New file — 1 line |
 
-No database changes, no new components, no prop changes needed — the delete logic is already wired end-to-end.
+No code changes, no database changes, no edge function changes.
+
+## Also Fixing the Previous Auth Redirect Issue
+
+While implementing this, the auth redirect key mismatch (`from` vs `returnTo`) identified in the previous analysis will also be fixed in the same pass:
+
+- `src/pages/SharedActivity.tsx` — change `state: { from: ... }` to `state: { returnTo: ... }`
+- `src/pages/Auth.tsx` — add `|| state?.from` fallback so both keys work
+
+This ensures users who open a shared link while logged out are sent back to the shared activity page (not the dashboard) after signing in.
+
+## Technical Details
+
+The `public/_redirects` file is copied verbatim into the build output's root by Vite. Lovable's hosting reads this file and configures the server accordingly. No Vite config changes are needed — the `public/` directory is already the static assets folder.
