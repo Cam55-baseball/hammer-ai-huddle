@@ -21,7 +21,7 @@ function TapSelector({ options, selected, onSelect }: {
             'px-3 py-1.5 rounded-full text-xs font-medium border transition-all',
             selected === opt
               ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-violet-500/5 border-violet-500/20 text-foreground hover:border-violet-500/50'
+              : 'bg-violet-700/15 border-violet-700/40 text-foreground hover:border-violet-700/70'
           )}
         >
           {opt}
@@ -47,7 +47,7 @@ function StarSelector({ max = 5, value, onSelect }: {
             'w-8 h-8 rounded-full border-2 text-sm font-bold transition-all',
             value !== null && n <= value
               ? 'bg-primary border-primary text-primary-foreground'
-              : 'bg-violet-500/5 border-violet-500/30 text-foreground hover:border-violet-400'
+              : 'bg-violet-700/15 border-violet-700/45 text-foreground hover:border-violet-300'
           )}
         >
           {n}
@@ -69,11 +69,11 @@ export function PhysioAdultTrackingSection() {
   const hasContraceptive = profile?.contraceptive_use === true;
 
   return (
-    <div className="rounded-xl border-2 border-violet-500/25 bg-gradient-to-br from-violet-500/8 to-background p-4 space-y-4">
+    <div className="rounded-xl border-2 border-violet-700/40 bg-gradient-to-br from-violet-700/20 to-background p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-violet-500/15">
-          <Heart className="h-4 w-4 text-violet-400" />
+          <div className="p-2 rounded-lg bg-violet-700/30">
+            <Heart className="h-4 w-4 text-violet-300" />
         </div>
         <div>
           <h3 className="font-bold text-base leading-tight">Adult Wellness Tracking</h3>
@@ -85,9 +85,9 @@ export function PhysioAdultTrackingSection() {
       {isFemale && (
         <>
           {hasContraceptive && (
-            <div className="flex items-start gap-2 p-2 bg-violet-500/10 border border-violet-500/20 rounded-lg">
-              <Info className="h-3 w-3 text-violet-300 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-violet-200">
+            <div className="flex items-start gap-2 p-2 bg-violet-700/25 border border-violet-700/35 rounded-lg">
+              <Info className="h-3 w-3 text-violet-200 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-violet-100">
                 Hormonal contraceptive noted — cycle phase tracking may reflect symptom patterns rather than natural hormonal fluctuations.
               </p>
             </div>
@@ -110,7 +110,7 @@ export function PhysioAdultTrackingSection() {
                 value={tracking?.cycle_day ?? ''}
                 onChange={e => saveTracking({ cycle_day: parseInt(e.target.value) || null })}
                 placeholder="Day #"
-                className="w-20 h-8 px-2 text-sm rounded-md border border-violet-500/30 bg-violet-500/5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-400"
+                className="w-20 h-8 px-2 text-sm rounded-md border border-violet-700/45 bg-violet-700/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-300"
               />
               <button
                 type="button"
@@ -119,7 +119,7 @@ export function PhysioAdultTrackingSection() {
                   'px-3 py-1 rounded-full text-xs font-medium border transition-all',
                   tracking?.period_active
                     ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
-                    : 'bg-violet-500/5 border-violet-500/20 text-foreground'
+                    : 'bg-violet-700/15 border-violet-700/40 text-foreground'
                 )}
               >
                 Period Active
@@ -141,7 +141,7 @@ export function PhysioAdultTrackingSection() {
                 'flex-1 py-2 rounded-xl text-sm font-medium border transition-all',
                 tracking?.wellness_consistency === true
                   ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                  : 'bg-violet-500/5 border-violet-500/20 text-foreground'
+                  : 'bg-violet-700/15 border-violet-700/40 text-foreground'
               )}
             >
               ✓ Feeling Consistent
@@ -153,7 +153,7 @@ export function PhysioAdultTrackingSection() {
                 'flex-1 py-2 rounded-xl text-sm font-medium border transition-all',
                 tracking?.wellness_consistency === false
                   ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                  : 'bg-violet-500/5 border-violet-500/20 text-foreground'
+                  : 'bg-violet-700/15 border-violet-700/40 text-foreground'
               )}
             >
               Off Day
@@ -171,9 +171,9 @@ export function PhysioAdultTrackingSection() {
         />
       </div>
 
-      <div className="flex items-start gap-2 p-2 bg-violet-500/10 border border-violet-500/20 rounded-lg">
-        <AlertTriangle className="h-3 w-3 text-violet-300 mt-0.5 flex-shrink-0" />
-        <p className="text-xs text-violet-200">
+      <div className="flex items-start gap-2 p-2 bg-violet-700/25 border border-violet-700/35 rounded-lg">
+        <AlertTriangle className="h-3 w-3 text-violet-200 mt-0.5 flex-shrink-0" />
+        <p className="text-xs text-violet-100">
           Educational purposes only. Not medical advice. Data is private and encrypted.
         </p>
       </div>
