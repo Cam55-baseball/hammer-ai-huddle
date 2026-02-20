@@ -572,36 +572,79 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       .catch((err) => console.error("[useGamePlan] Date repair error:", err));
   }, [user?.id, fetchTaskStatus]);
 
-  // Listen for custom activity creation from other components
-  useEffect(() => {
-    const checkForNewActivity = () => {
-      const created = localStorage.getItem('customActivityCreated');
-      if (created) {
-        localStorage.removeItem('customActivityCreated');
-        fetchTaskStatus();
+  // Optimistic injection: immediately add a new activity to state before DB confirms
+  const addOptimisticActivity = useCallback((activity: CustomActivityWithLog) => {
+    setCustomActivities(prev => {
+      // Avoid duplicates if refreshCustomActivities already ran
+      if (prev.some(a => a.template.id === activity.template.id)) return prev;
+      return [...prev, activity];
+    });
+  }, []);
+
+  // Lightweight refresh: only re-queries custom_activity_templates + custom_activity_logs
+  const refreshCustomActivities = useCallback(async () => {
+    if (!user) return;
+
+    const today = getTodayDate();
+    const todayDayOfWeek = getDay(new Date());
+
+    const [{ data: templatesData }, { data: logsData }, { data: skipItemsData }] = await Promise.all([
+      supabase
+        .from('custom_activity_templates')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('sport', selectedSport)
+        .is('deleted_at', null),
+      supabase
+        .from('custom_activity_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('entry_date', today),
+      supabase
+        .from('calendar_skipped_items')
+        .select('item_id, skip_days, item_type')
+        .eq('user_id', user.id)
+        .in('item_type', ['custom_activity', 'game_plan']),
+    ]);
+
+    const templates = (templatesData || []) as unknown as CustomActivityTemplate[];
+    const logs = (logsData || []) as unknown as CustomActivityLog[];
+
+    const skipItemsMap = new Map<string, number[]>();
+    (skipItemsData || []).forEach(item => {
+      skipItemsMap.set(item.item_id, item.skip_days || []);
+    });
+
+    const refreshed: CustomActivityWithLog[] = [];
+    templates.forEach(template => {
+      if (template.display_on_game_plan === false) return;
+
+      const itemId = `template-${template.id}`;
+      const skipDays = skipItemsMap.get(itemId) || [];
+      const isSkippedToday = skipDays.includes(todayDayOfWeek);
+
+      const todayLog = logs.find(l => l.template_id === template.id);
+
+      if (isSkippedToday && !todayLog) return;
+
+      const scheduledDays = template.recurring_active
+        ? (template.recurring_days as number[]) || []
+        : (template.display_days as number[] | null) || [0, 1, 2, 3, 4, 5, 6];
+
+      const isScheduledToday = scheduledDays.includes(todayDayOfWeek);
+
+      if ((isScheduledToday && !isSkippedToday) || todayLog) {
+        refreshed.push({
+          template,
+          log: todayLog,
+          isRecurring: template.recurring_active || false,
+          isScheduledForToday: (isScheduledToday && !isSkippedToday) || !!todayLog,
+        });
       }
-    };
+    });
 
-    // Check on mount
-    checkForNewActivity();
-
-    // Listen for storage changes (from other tabs/components)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'customActivityCreated') {
-        checkForNewActivity();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also poll periodically in case same-tab changes don't trigger storage event
-    const interval = setInterval(checkForNewActivity, 1000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, [fetchTaskStatus]);
+    setCustomActivities(refreshed);
+  }, [user, selectedSport]);
 
   // Build dynamic task list based on user's module access
   const tasks: GamePlanTask[] = [];
@@ -918,5 +961,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     recapProgress,
     loading,
     refetch: fetchTaskStatus,
+    addOptimisticActivity,
+    refreshCustomActivities,
   };
 }

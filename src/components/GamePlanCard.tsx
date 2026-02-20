@@ -62,7 +62,7 @@ const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { tasks, customActivities, completedCount, totalCount, loading, refetch } = useGamePlan(selectedSport);
+  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, refreshCustomActivities } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress, canGenerateRecap, hasMissedRecap, waitingForProgressReports } = useRecapCountdown();
   const { pendingActivities, pendingCount, acceptActivity, rejectActivity, refetch: refetchPending } = useReceivedActivities();
   const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
@@ -1801,18 +1801,45 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             result = await updateTemplate(editingTemplate.id, data);
             if (result) {
               toast.success(t('customActivity.saved'));
+              refetch();
+              setEditingTemplate(null);
             }
           } else {
             // Create new template
             result = await createTemplate(data as Omit<CustomActivityTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>, scheduleForToday);
             if (result) {
               toast.success(t('customActivity.saved'));
+              const todayDayOfWeek = new Date().getDay();
+              const isScheduledForToday = scheduleForToday ||
+                (result.recurring_active && (result.recurring_days as number[] || []).includes(todayDayOfWeek));
+
+              if (isScheduledForToday) {
+                // 1. Instantly inject into Game Plan UI (0ms)
+                addOptimisticActivity({
+                  template: result,
+                  log: scheduleForToday
+                    ? {
+                        id: `optimistic-${result.id}`,
+                        user_id: result.user_id,
+                        template_id: result.id,
+                        entry_date: getTodayDate(),
+                        completed: false,
+                        completed_at: undefined,
+                        created_at: new Date().toISOString(),
+                        notes: undefined,
+                        actual_duration_minutes: undefined,
+                        performance_data: {},
+                      }
+                    : undefined,
+                  isRecurring: result.recurring_active || false,
+                  isScheduledForToday: true,
+                });
+                // 2. Background: confirm with lightweight DB refresh
+                refreshCustomActivities();
+              }
+
+              setEditingTemplate(null);
             }
-          }
-          
-          if (result) {
-            refetch();
-            setEditingTemplate(null);
           }
           return result;
         }}
