@@ -28,6 +28,7 @@ import { BodyAreaSelector } from './quiz/BodyAreaSelector';
 import { TrainingIntentSelector } from './quiz/TrainingIntentSelector';
 import { MentalEnergyRating } from './quiz/MentalEnergyRating';
 import { WeightTrendMini } from './quiz/WeightTrendMini';
+import { RestingHeartRateCapture } from './quiz/RestingHeartRateCapture';
 import { FasciaInsightPanel } from './FasciaInsightPanel';
 import { TissueTypeSelector } from './quiz/TissueTypeSelector';
 import { TISSUE_TYPES } from './quiz/body-maps/tissueTypeDefinitions';
@@ -715,40 +716,13 @@ export function VaultFocusQuizDialog({
 
               {/* Resting Heart Rate */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium flex items-center gap-2">
-                    ❤️ Resting Heart Rate (bpm)
-                  </label>
-                  {restingHr && (
-                    <button
-                      type="button"
-                      onClick={() => setRestingHr('')}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      Skip
-                    </button>
-                  )}
-                </div>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    type="number"
-                    value={restingHr}
-                    onChange={(e) => setRestingHr(e.target.value)}
-                    placeholder="e.g. 58"
-                    className="max-w-[120px]"
-                    min={30}
-                    max={200}
-                  />
-                  {!restingHr && (
-                    <button
-                      type="button"
-                      onClick={() => setRestingHr('')}
-                      className="text-xs text-muted-foreground underline"
-                    >
-                      Skip
-                    </button>
-                  )}
-                </div>
+                <label className="text-sm font-medium flex items-center gap-2">
+                  ❤️ Resting Heart Rate (bpm)
+                </label>
+                <RestingHeartRateCapture
+                  value={restingHr}
+                  onResult={(v) => setRestingHr(v ? String(v) : '')}
+                />
               </div>
 
               {/* Appetite */}
