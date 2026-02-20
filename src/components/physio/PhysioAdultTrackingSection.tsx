@@ -1,9 +1,7 @@
 import { usePhysioAdultTracking } from '@/hooks/usePhysioAdultTracking';
-import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { usePhysioProfile } from '@/hooks/usePhysioProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const CYCLE_PHASES = ['Menstrual', 'Follicular', 'Ovulatory', 'Luteal'];
@@ -61,29 +59,16 @@ function StarSelector({ max = 5, value, onSelect }: {
 }
 
 export function PhysioAdultTrackingSection() {
-  const { user } = useAuth();
   const { tracking, adultFeaturesEnabled, saveTracking } = usePhysioAdultTracking();
-
-  // Fetch sex from profile to show gender-appropriate fields
-  const { data: profileData } = useQuery({
-    queryKey: ['profileSex', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data } = await supabase
-        .from('profiles')
-        .select('sex')
-        .eq('id', user.id)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user && adultFeaturesEnabled,
-  });
+  const { profile } = usePhysioProfile();
 
   if (!adultFeaturesEnabled) return null;
 
-  const sex = profileData?.sex?.toLowerCase();
-  const isFemale = sex === 'female' || sex === 'f';
-  const isMale = sex === 'male' || sex === 'm';
+  // Read biological_sex from physio profile (self-contained, no extra query needed)
+  const sex = profile?.biological_sex;
+  const isFemale = sex === 'female';
+  const isMale = sex === 'male';
+  const hasContraceptive = profile?.contraceptive_use === true;
 
   return (
     <Card className="border border-border/50">
@@ -96,6 +81,14 @@ export function PhysioAdultTrackingSection() {
         {/* Female: cycle tracking */}
         {isFemale && (
           <>
+            {hasContraceptive && (
+              <div className="flex items-start gap-2 p-2 bg-muted/20 rounded-lg">
+                <Info className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  Hormonal contraceptive noted — cycle phase tracking may reflect symptom patterns rather than natural hormonal fluctuations.
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <p className="text-xs font-semibold">Cycle Phase</p>
               <TapSelector
@@ -166,7 +159,7 @@ export function PhysioAdultTrackingSection() {
           </div>
         )}
 
-        {/* Shared: libido level */}
+        {/* Shared: energy level */}
         <div className="space-y-2">
           <p className="text-xs font-semibold text-muted-foreground">Energy Level (1–5, optional)</p>
           <StarSelector

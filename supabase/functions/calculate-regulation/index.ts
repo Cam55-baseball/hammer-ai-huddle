@@ -80,6 +80,21 @@ serve(async (req) => {
       .eq("id", userId)
       .maybeSingle();
 
+    const { data: physioHealthProfile } = await supabase
+      .from("physio_health_profiles")
+      .select("biological_sex, contraceptive_use, contraceptive_type, date_of_birth, medications, medical_conditions")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    // Compute athlete age from physio profile DOB
+    let athleteAge: number | null = null;
+    if (physioHealthProfile?.date_of_birth) {
+      const dob = new Date(physioHealthProfile.date_of_birth);
+      const today = new Date();
+      athleteAge = today.getFullYear() - dob.getFullYear() -
+        (today < new Date(today.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0);
+    }
+
     // Fetch upcoming events (3-day look-ahead)
     const { data: athleteEvents } = await supabase
       .from("athlete_events")
@@ -195,10 +210,29 @@ serve(async (req) => {
 
     if (LOVABLE_API_KEY) {
       try {
+        // Build athlete bio context from physio profile
+        const bioLines: string[] = [];
+        if (athleteAge !== null) {
+          if (athleteAge < 18) bioLines.push(`Age ${athleteAge} (developing athlete — prioritise growth plate recovery, sleep as primary adaptation signal, caution on high-load recommendations).`);
+          else if (athleteAge <= 25) bioLines.push(`Age ${athleteAge} (performance/hormonal peak — factor in testosterone/hormonal output, CNS development, peak recovery capacity).`);
+          else if (athleteAge <= 35) bioLines.push(`Age ${athleteAge} (prime durability window — emphasise CNS efficiency, smart load management, sustained performance).`);
+          else bioLines.push(`Age ${athleteAge} (recovery investment phase — weight recovery more heavily, reference durability over peak output, long-term sustainability).`);
+        }
+        if (physioHealthProfile?.biological_sex === 'male') {
+          bioLines.push('Biological sex: male — factor in CNS load tolerance, testosterone-linked recovery rhythms, and male hormonal recovery patterns.');
+        } else if (physioHealthProfile?.biological_sex === 'female') {
+          if (physioHealthProfile.contraceptive_use) {
+            bioLines.push(`Biological sex: female on hormonal contraceptive (${physioHealthProfile.contraceptive_type || 'type unspecified'}) — cycle phase tracking reflects symptom patterns, not natural hormonal fluctuations. Adjust recovery framing for hormonal load sensitivity, iron needs, and suppressed natural cycle.`);
+          } else {
+            bioLines.push('Biological sex: female — factor in cycle phase sensitivity, hormonal load, iron and fuel needs, and natural cycle recovery patterns.');
+          }
+        }
+        const biographicContext = bioLines.length > 0 ? `\n\nAthlete profile context:\n${bioLines.join('\n')}` : '';
+
         const systemPrompt = `You are a sports physio AI that generates athlete regulation reports. 
 Your tone is always forward-looking, positive, and empowering. Never dwell on negatives. 
 Frame every insight as an opportunity for better performance tomorrow.
-Keep all text concise and actionable. No clinical jargon.`;
+Keep all text concise and actionable. No clinical jargon.${biographicContext}`;
 
         const contextData = {
           regulationScore,
@@ -212,17 +246,21 @@ Keep all text concise and actionable. No clinical jargon.`;
           estimatedTDEE,
           gamesSoon: calendarScore < 80,
           daysUntilGame: calendarScore === 40 ? 1 : calendarScore === 60 ? 2 : calendarScore === 80 ? 3 : null,
+          athleteAge,
+          biologicalSex: physioHealthProfile?.biological_sex ?? null,
+          contraceptiveUse: physioHealthProfile?.contraceptive_use ?? null,
+          contraceptiveType: physioHealthProfile?.contraceptive_type ?? null,
         };
 
         const userPrompt = `Based on this athlete data: ${JSON.stringify(contextData)}
 
 Generate a JSON response with:
-1. "headline": A 2-3 sentence forward-looking summary (positive framing)
+1. "headline": A 2-3 sentence forward-looking summary (positive framing, personalised to athlete's age and sex if provided)
 2. "sections": An object with 6 keys: "sleep", "stress", "movement", "training_load", "fuel", "game_readiness"
    Each section has: "why" (1 sentence), "what_to_do" (1-2 sentences), "how_it_helps" (1 sentence)
 
 Regulation score: ${regulationScore}/100 (${regulationColor})
-Be specific, practical, and encouraging.`;
+Be specific, practical, and encouraging. Tailor recommendations to the athlete's biological sex and age where relevant.`;
 
         const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
