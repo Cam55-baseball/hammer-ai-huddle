@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 export type VitaminTiming = 
   | 'morning' 
@@ -11,6 +11,24 @@ export type VitaminTiming =
   | 'with_dinner' 
   | 'evening' 
   | 'before_bed';
+
+export type VitaminCategory =
+  | 'vitamin'
+  | 'mineral'
+  | 'supplement'
+  | 'herb'
+  | 'protein'
+  | 'amino_acid';
+
+export type VitaminUnit =
+  | 'mg'
+  | 'mcg'
+  | 'IU'
+  | 'g'
+  | 'ml'
+  | 'capsule'
+  | 'tablet'
+  | 'serving';
 
 export interface VitaminLog {
   id: string;
@@ -22,6 +40,9 @@ export interface VitaminLog {
   takenAt: string | null;
   taken: boolean;
   isRecurring: boolean;
+  category: VitaminCategory;
+  unit: VitaminUnit;
+  purpose: string | null;
   createdAt: string;
 }
 
@@ -31,12 +52,22 @@ export interface CreateVitaminInput {
   timing?: VitaminTiming;
   isRecurring?: boolean;
   entryDate?: string;
+  category?: VitaminCategory;
+  unit?: VitaminUnit;
+  purpose?: string;
+}
+
+export interface WeeklyAdherence {
+  date: string;
+  taken: number;
+  total: number;
 }
 
 export function useVitaminLogs(date?: Date) {
   const { user } = useAuth();
   const [vitamins, setVitamins] = useState<VitaminLog[]>([]);
   const [todayVitamins, setTodayVitamins] = useState<VitaminLog[]>([]);
+  const [weeklyAdherence, setWeeklyAdherence] = useState<WeeklyAdherence[]>([]);
   const [loading, setLoading] = useState(true);
 
   const targetDate = date ? format(date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
@@ -45,7 +76,6 @@ export function useVitaminLogs(date?: Date) {
     if (!user?.id) return;
 
     try {
-      // Fetch vitamins for the target date
       const { data, error } = await supabase
         .from('vault_vitamin_logs')
         .select('*')
@@ -55,22 +85,10 @@ export function useVitaminLogs(date?: Date) {
 
       if (error) throw error;
 
-      const mappedVitamins: VitaminLog[] = (data || []).map((v) => ({
-        id: v.id,
-        userId: v.user_id,
-        entryDate: v.entry_date,
-        vitaminName: v.vitamin_name,
-        dosage: v.dosage,
-        timing: v.timing as VitaminTiming | null,
-        takenAt: v.taken_at,
-        taken: v.taken || false,
-        isRecurring: v.is_recurring || false,
-        createdAt: v.created_at
-      }));
+      const mappedVitamins: VitaminLog[] = (data || []).map(mapVitamin);
 
       setVitamins(mappedVitamins);
       
-      // Also set today's vitamins
       const today = format(new Date(), 'yyyy-MM-dd');
       if (targetDate === today) {
         setTodayVitamins(mappedVitamins);
@@ -82,22 +100,58 @@ export function useVitaminLogs(date?: Date) {
     }
   }, [user?.id, targetDate]);
 
-  // Generate recurring vitamins for today if they don't exist
+  const fetchWeeklyAdherence = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const days: WeeklyAdherence[] = [];
+      const today = new Date();
+
+      for (let i = 6; i >= 0; i--) {
+        const d = subDays(today, i);
+        const dateStr = format(d, 'yyyy-MM-dd');
+        days.push({ date: dateStr, taken: 0, total: 0 });
+      }
+
+      const startDate = days[0].date;
+      const endDate = days[6].date;
+
+      const { data } = await supabase
+        .from('vault_vitamin_logs')
+        .select('entry_date, taken')
+        .eq('user_id', user.id)
+        .gte('entry_date', startDate)
+        .lte('entry_date', endDate);
+
+      if (data) {
+        data.forEach(row => {
+          const day = days.find(d => d.date === row.entry_date);
+          if (day) {
+            day.total += 1;
+            if (row.taken) day.taken += 1;
+          }
+        });
+      }
+
+      setWeeklyAdherence(days);
+    } catch (error) {
+      console.error('Error fetching weekly adherence:', error);
+    }
+  }, [user?.id]);
+
   const generateRecurringVitamins = useCallback(async () => {
     if (!user?.id) return;
 
     try {
-      // Get all recurring vitamins from the most recent entry
       const { data: recurring } = await supabase
         .from('vault_vitamin_logs')
-        .select('vitamin_name, dosage, timing')
+        .select('vitamin_name, dosage, timing, category, unit, purpose')
         .eq('user_id', user.id)
         .eq('is_recurring', true)
         .order('created_at', { ascending: false });
 
       if (!recurring || recurring.length === 0) return;
 
-      // Check which ones already exist for today
       const { data: existing } = await supabase
         .from('vault_vitamin_logs')
         .select('vitamin_name')
@@ -106,7 +160,6 @@ export function useVitaminLogs(date?: Date) {
 
       const existingNames = new Set((existing || []).map(e => e.vitamin_name));
       
-      // Get unique recurring vitamins that don't exist for today
       const uniqueRecurring = new Map<string, typeof recurring[0]>();
       recurring.forEach(v => {
         if (!existingNames.has(v.vitamin_name) && !uniqueRecurring.has(v.vitamin_name)) {
@@ -116,13 +169,15 @@ export function useVitaminLogs(date?: Date) {
 
       if (uniqueRecurring.size === 0) return;
 
-      // Create entries for today
       const newEntries = Array.from(uniqueRecurring.values()).map(v => ({
         user_id: user.id,
         entry_date: targetDate,
         vitamin_name: v.vitamin_name,
         dosage: v.dosage,
         timing: v.timing,
+        category: v.category || 'supplement',
+        unit: v.unit || 'mg',
+        purpose: v.purpose,
         is_recurring: true,
         taken: false
       }));
@@ -136,10 +191,10 @@ export function useVitaminLogs(date?: Date) {
 
   useEffect(() => {
     fetchVitamins();
-  }, [fetchVitamins]);
+    fetchWeeklyAdherence();
+  }, [fetchVitamins, fetchWeeklyAdherence]);
 
   useEffect(() => {
-    // Generate recurring vitamins for today
     const today = format(new Date(), 'yyyy-MM-dd');
     if (targetDate === today) {
       generateRecurringVitamins();
@@ -159,7 +214,10 @@ export function useVitaminLogs(date?: Date) {
           dosage: input.dosage,
           timing: input.timing,
           is_recurring: input.isRecurring || false,
-          taken: false
+          taken: false,
+          category: input.category || 'supplement',
+          unit: input.unit || 'mg',
+          purpose: input.purpose || null,
         })
         .select()
         .single();
@@ -167,11 +225,12 @@ export function useVitaminLogs(date?: Date) {
       if (error) throw error;
 
       await fetchVitamins();
-      toast.success('Vitamin added');
+      await fetchWeeklyAdherence();
+      toast.success('Supplement added');
       return mapVitamin(data);
     } catch (error) {
       console.error('Error adding vitamin:', error);
-      toast.error('Failed to add vitamin');
+      toast.error('Failed to add supplement');
       return null;
     }
   };
@@ -192,6 +251,7 @@ export function useVitaminLogs(date?: Date) {
       if (error) throw error;
 
       await fetchVitamins();
+      await fetchWeeklyAdherence();
       return true;
     } catch (error) {
       console.error('Error updating vitamin:', error);
@@ -213,7 +273,8 @@ export function useVitaminLogs(date?: Date) {
       if (error) throw error;
 
       await fetchVitamins();
-      toast.success('Vitamin removed');
+      await fetchWeeklyAdherence();
+      toast.success('Supplement removed');
       return true;
     } catch (error) {
       console.error('Error deleting vitamin:', error);
@@ -229,6 +290,7 @@ export function useVitaminLogs(date?: Date) {
   return {
     vitamins,
     todayVitamins,
+    weeklyAdherence,
     loading,
     addVitamin,
     markVitaminTaken,
@@ -251,6 +313,9 @@ function mapVitamin(data: any): VitaminLog {
     takenAt: data.taken_at,
     taken: data.taken || false,
     isRecurring: data.is_recurring || false,
+    category: (data.category as VitaminCategory) || 'supplement',
+    unit: (data.unit as VitaminUnit) || 'mg',
+    purpose: data.purpose || null,
     createdAt: data.created_at
   };
 }

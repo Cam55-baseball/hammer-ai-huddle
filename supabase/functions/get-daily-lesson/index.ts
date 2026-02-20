@@ -268,6 +268,17 @@ serve(async (req) => {
             
             const sportContext = sport === 'both' ? 'baseball and softball' : sport;
             
+            const typeInstructions: Record<string, string> = {
+              lesson: `Write a 2–4 sentence LESSON grounded in neuroscience or sport psychology. Include: (1) the psychological or neurological basis for the concept (e.g., "The prefrontal cortex, which governs elite decision-making, goes offline under acute threat — here is how to keep it online"), and (2) one specific action the athlete applies TODAY during practice or competition. Never be vague.`,
+              teaching: `Write a 2–4 sentence TEACHING that connects a core principle of human performance to a concrete moment in ${sportContext}. Cite the cognitive or physiological basis. End with a specific in-game or in-practice application.`,
+              principle: `Write a 2–4 sentence PRINCIPLE that top 0.001% performers operate by. Ground it in sports psychology research or elite coaching philosophy. Give one explicit example of how this manifests in a ${sportContext} context.`,
+              quote: `Write a powerful QUOTE (1–2 sentences max) attributed ONLY to a real, verified person — a proven coach, elite athlete, philosopher, or performance scientist. Format: "[Quote text]" — [Full Name], [Role/Context]. NEVER invent people. NEVER use generic "ancient wisdom" without attribution.`,
+              mantra: `Write a MANTRA: 10 words or fewer, rhythmic, designed to be repeated in a high-pressure moment in ${sportContext}. It must be anchored to a specific performance state (e.g., at-bat, pre-pitch, after an error, in a slump). Return only the mantra text.`,
+              acronym: `Create a PERFORMANCE ACRONYM where each letter stands for an elite mindset principle relevant to ${sportContext}. Format: STATE THE ACRONYM WORD, then each letter on its own line as "X — [principle]", then 1 sentence explaining the full concept in action.`,
+            };
+
+            const instruction = typeInstructions[selectedType] || typeInstructions['lesson'];
+
             const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
               method: 'POST',
               headers: {
@@ -279,11 +290,11 @@ serve(async (req) => {
                 messages: [
                   {
                     role: 'system',
-                    content: `You are a world-class mental performance coach for elite ${sportContext} athletes. Generate ONE powerful ${selectedType} for the "${selectedCategory.replace('_', ' ')}" category, specifically about "${selectedSubcategory.replace('_', ' ')}". Focus on building selfless, limitless, disciplined leaders. Keep it to 1-3 sentences maximum. Be unique, fresh, and impactful. Return ONLY the content text, no labels, prefixes, or quotation marks.`
+                    content: `You are a world-class mental performance coach working exclusively with elite ${sportContext} athletes — the top 0.001% of performers. You operate at the intersection of neuroscience, sport psychology, and high-performance philosophy. Every word you produce must be elite-grade: specific, actionable, and grounded in real performance science. You build selfless, limitless, unbreakable athletes. NEVER produce surface-level motivational content. NEVER be generic. Return ONLY the requested content with no preamble, labels, or meta-commentary.`,
                   },
                   {
                     role: 'user',
-                    content: `Generate a unique ${selectedType} about ${selectedSubcategory.replace('_', ' ')} for ${sportContext} athletes.`
+                    content: `Category: ${selectedCategory.replace(/_/g, ' ')} | Topic: ${selectedSubcategory.replace(/_/g, ' ')} | Type: ${selectedType}\n\n${instruction}`,
                   }
                 ],
               }),
