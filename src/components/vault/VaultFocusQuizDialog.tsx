@@ -1486,32 +1486,36 @@ export function VaultFocusQuizDialog({
         </div>
 
         <div className="mt-6 space-y-4">
-          {/* Mental Readiness */}
-          <RatingButtonGroup
-            value={mentalReadiness}
-            onChange={setMentalReadiness}
-            label={t('vault.quiz.mentalReadiness')}
-            icon={<Brain className="h-5 w-5 text-purple-500" />}
-            getLevelLabel={getLevelLabel}
-          />
+          {quizType !== 'morning' && (
+            <>
+              {/* Mental Readiness */}
+              <RatingButtonGroup
+                value={mentalReadiness}
+                onChange={setMentalReadiness}
+                label={t('vault.quiz.mentalReadiness')}
+                icon={<Brain className="h-5 w-5 text-purple-500" />}
+                getLevelLabel={getLevelLabel}
+              />
 
-          {/* Emotional State */}
-          <RatingButtonGroup
-            value={emotionalState}
-            onChange={setEmotionalState}
-            label={t('vault.quiz.emotionalState')}
-            icon={<Heart className="h-5 w-5 text-pink-500" />}
-            getLevelLabel={getLevelLabel}
-          />
+              {/* Emotional State */}
+              <RatingButtonGroup
+                value={emotionalState}
+                onChange={setEmotionalState}
+                label={t('vault.quiz.emotionalState')}
+                icon={<Heart className="h-5 w-5 text-pink-500" />}
+                getLevelLabel={getLevelLabel}
+              />
 
-          {/* Physical Readiness */}
-          <RatingButtonGroup
-            value={physicalReadiness}
-            onChange={setPhysicalReadiness}
-            label={t('vault.quiz.physicalReadiness')}
-            icon={<Zap className="h-5 w-5 text-yellow-500" />}
-            getLevelLabel={getLevelLabel}
-          />
+              {/* Physical Readiness */}
+              <RatingButtonGroup
+                value={physicalReadiness}
+                onChange={setPhysicalReadiness}
+                label={t('vault.quiz.physicalReadiness')}
+                icon={<Zap className="h-5 w-5 text-yellow-500" />}
+                getLevelLabel={getLevelLabel}
+              />
+            </>
+          )}
 
           {/* Night Quiz Mood & Stress + Reflections */}
           {quizType === 'night' && (
