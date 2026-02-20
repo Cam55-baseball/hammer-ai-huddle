@@ -1,82 +1,59 @@
 
-# Resting Heart Rate Measurement in Morning Check-In
+# Improve PPG Camera Instructions for Multi-Camera Phones
 
-## Current State
+## Problem
 
-The Morning Check-In already has a "Physio Check-in" section (lines 706–815 of `VaultFocusQuizDialog.tsx`) with a basic `<Input type="number">` for resting heart rate. State (`restingHr`) and the save path (`data.resting_hr`) are already wired up. The `resting_hr` column already exists in the database — no schema migration needed.
+The current measuring phase shows only one line of instruction:
 
-## What's Being Built
+> "Hold your fingertip firmly over the rear camera lens"
 
-A new self-contained component `src/components/vault/quiz/RestingHeartRateCapture.tsx` that:
+This is ambiguous for users with multi-camera phones (e.g. iPhone Pro, Samsung S-series with 3 lenses). Users don't know:
+- **Which specific lens** to cover — the main/wide lens, not ultrawide or telephoto
+- **How much pressure** to apply — firm but not white-knuckle
+- **How to position** their finger — pad of the finger flat over the lens, not the tip
+- **What to expect visually** — the screen will look fully red when done correctly
 
-- **On mobile**: shows a "Measure with camera" button that uses the phone's rear camera and the [Web Photoplethysmography (rPPG)](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) technique to detect pulse from fingertip colour changes
-- **On desktop (or when camera is unavailable)**: shows a clean manual number input
-- Emits a single `onResult(bpm: number | null)` callback used by the dialog
+## What's Changing
 
-The mobile detection reuses the existing `useIsMobile` hook.
+All changes are in **`src/components/vault/quiz/RestingHeartRateCapture.tsx`** only.
 
----
+### 1 — Pre-measurement instruction card (idle phase, mobile only)
 
-## How the Camera Heart Rate Measurement Works
+Add a short numbered "How to" list that appears before the user taps "Measure with Camera", so they know what to do before the 30-second timer starts:
 
-The camera-based approach uses **photoplethysmography (PPG)**:
+```
+1. Flip your phone over so the cameras face up
+2. Cover the MAIN (widest) camera lens with the pad of your index finger
+3. Press gently but firmly — your fingertip should look red/orange
+4. Keep still for 30 seconds while we read your pulse
+```
 
-1. The user presses their fingertip over the phone camera lens
-2. The app captures video frames via `getUserMedia({ video: { facingMode: 'environment' } })`
-3. Each frame is drawn to a `<canvas>` and the average **red channel** pixel value is sampled
-4. The red channel fluctuates subtly in sync with each heartbeat as blood flow changes
-5. Over ~30 seconds of samples, the app detects peaks in the red-channel signal and calculates beats-per-minute from peak intervals
-6. The reading is displayed and the user can accept or retake it
+This is rendered as a compact numbered list below the current description line, styled in `text-xs text-muted-foreground`.
 
-This is an established web technique used by apps like Instant Heart Rate. Accuracy is typically ±5–10 bpm, appropriate for resting measurement.
+### 2 — Measuring phase instructions (expanded)
 
----
+Replace the single-line hint with a two-part instruction block:
+
+**Primary instruction (bold):**
+> Cover the main camera lens with the pad of your finger
+
+**Secondary tip (smaller, muted):**
+> On multi-camera phones, use the widest/largest lens. Press firmly — your fingertip should glow red.
+
+This makes it immediately clear which lens to use as soon as the countdown starts.
+
+### 3 — Visual diagram element
+
+Add a simple SVG camera diagram inline in the idle phase that illustrates:
+- A phone outline (rectangle)
+- Three dots representing the camera array
+- A highlighted circle on the largest dot labelled "Use this one →"
+
+This is entirely inline SVG — no new dependencies.
 
 ## Files Changed
 
-### New file: `src/components/vault/quiz/RestingHeartRateCapture.tsx`
-
-A standalone component with these phases:
-
-```text
-idle → measuring (30s countdown) → result
-         ↓ (camera fail / desktop)
-      manual input
-```
-
-**States:**
-- `phase`: `'idle' | 'measuring' | 'result' | 'manual'`
-- `countdown`: seconds remaining (counts from 30 to 0)
-- `bpm`: calculated result
-- `redSamples`: raw red-channel array collected during measurement
-- `manualValue`: string for the text input fallback
-
-**Key logic:**
-- `startMeasurement()`: calls `navigator.mediaDevices.getUserMedia`, creates a hidden `<video>` + `<canvas>`, samples every 100ms
-- `analyzeSignal(samples)`: smooths the red-channel array, finds peaks using a simple threshold algorithm, computes inter-peak intervals → bpm
-- On camera error: automatically switches to `'manual'` phase
-- Desktop: if `!isMobile`, renders only the manual input (no camera button shown)
-
-**UI layout:**
-- Matches the existing quiz card style (`bg-gradient-to-br from-rose-500/10 to-red-500/10 rounded-xl border border-rose-500/20`)
-- Idle: shows icon, description, and two buttons — "Measure with Camera" (mobile only) and "Enter Manually"
-- Measuring: red pulsing animation, countdown timer, instruction text ("Hold finger over camera")
-- Result: BPM displayed large, Accept / Retake buttons
-- Manual: compact number input with a heart icon, 30–200 range
-
-### Modified file: `src/components/vault/VaultFocusQuizDialog.tsx`
-
-- Import `RestingHeartRateCapture`
-- Replace the existing `<Input type="number">` resting HR block (lines ~716–751) with `<RestingHeartRateCapture value={restingHr} onResult={(v) => setRestingHr(v ? String(v) : '')} />`
-- All existing state (`restingHr`) and save logic remain unchanged
-
----
-
-## Technical Notes
-
-- No database migration needed — `resting_hr` column already exists
-- No new dependencies — uses native browser `getUserMedia` and `<canvas>` APIs
-- Camera permission is requested at measurement time, not on page load
-- If the browser doesn't support `getUserMedia` or the user denies permission, falls back to manual input gracefully
-- The peak-detection algorithm uses a rolling mean + standard deviation threshold, which is robust enough for a 30-second resting window
-- The component is fully self-contained and can be reused in future check-in types
+**`src/components/vault/quiz/RestingHeartRateCapture.tsx`**
+- Idle phase: add numbered prep list + inline camera diagram
+- Measuring phase: expand instruction text from 1 line to 2 lines (primary + tip)
+- No logic changes, no state changes, no dependency changes
