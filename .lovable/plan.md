@@ -1,42 +1,54 @@
 
-# Darken the Violet/Purple Color Scheme
+# Remove Mental Readiness, Emotional State & Physical Readiness from Morning Check-In
 
-## What's Changing
+## What's Being Changed
 
-Every violet reference in `PhysioAdultTrackingSection.tsx` is currently anchored to `violet-500`. Stepping up to `violet-700` (two full steps darker on Tailwind's 100–900 scale) makes the gradient, borders, icon pill, info banners, and inactive buttons all visibly richer and deeper without changing any logic.
+The three `RatingButtonGroup` scale selectors — **Mental Readiness**, **Emotional State**, and **Physical Readiness** — currently render unconditionally for all three quiz types (morning, pre-workout, night). They need to be hidden for the morning check-in only.
 
-## Color Mapping
+## Where the Code Lives
 
-| Element | Current | New |
-|---|---|---|
-| Card border | `border-violet-500/25` | `border-violet-700/40` |
-| Card gradient | `from-violet-500/8` | `from-violet-700/20` |
-| Icon pill background | `bg-violet-500/15` | `bg-violet-700/30` |
-| Icon color | `text-violet-400` | `text-violet-300` |
-| Info banner background | `bg-violet-500/10` | `bg-violet-700/25` |
-| Info banner border | `border-violet-500/20` | `border-violet-700/35` |
-| Info banner icon | `text-violet-300` | `text-violet-200` |
-| Info banner text | `text-violet-200` | `text-violet-100` |
-| TapSelector inactive bg | `bg-violet-500/5` | `bg-violet-700/15` |
-| TapSelector inactive border | `border-violet-500/20` | `border-violet-700/40` |
-| TapSelector inactive hover | `hover:border-violet-500/50` | `hover:border-violet-700/70` |
-| StarSelector inactive bg | `bg-violet-500/5` | `bg-violet-700/15` |
-| StarSelector inactive border | `border-violet-500/30` | `border-violet-700/45` |
-| StarSelector inactive hover | `hover:border-violet-400` | `hover:border-violet-300` |
-| Cycle day input border | `border-violet-500/30` | `border-violet-700/45` |
-| Cycle day input bg | `bg-violet-500/5` | `bg-violet-700/15` |
-| Cycle day input focus | `focus:border-violet-400` | `focus:border-violet-300` |
-| Period Active inactive bg | `bg-violet-500/5` | `bg-violet-700/15` |
-| Period Active inactive border | `border-violet-500/20` | `border-violet-700/40` |
-| Wellness buttons inactive bg | `bg-violet-500/5` | `bg-violet-700/15` |
-| Wellness buttons inactive border | `border-violet-500/20` | `border-violet-700/40` |
+**File:** `src/components/vault/VaultFocusQuizDialog.tsx`
+
+The three components are rendered at lines **1488–1514** inside a `<div className="mt-6 space-y-4">` block:
+
+```tsx
+<div className="mt-6 space-y-4">
+  {/* Mental Readiness */}
+  <RatingButtonGroup ... />
+
+  {/* Emotional State */}
+  <RatingButtonGroup ... />
+
+  {/* Physical Readiness */}
+  <RatingButtonGroup ... />
+
+  {/* Night Quiz Mood & Stress + Reflections */}
+  {quizType === 'night' && ( ... )}
+```
+
+## The Fix
+
+Wrap all three `RatingButtonGroup` components in a single `{quizType !== 'morning' && (...)}` conditional — this hides them during the morning check-in while keeping them visible for pre-workout and night check-ins.
+
+```tsx
+{quizType !== 'morning' && (
+  <>
+    {/* Mental Readiness */}
+    <RatingButtonGroup ... />
+    {/* Emotional State */}
+    <RatingButtonGroup ... />
+    {/* Physical Readiness */}
+    <RatingButtonGroup ... />
+  </>
+)}
+```
+
+## Data / Backend Considerations
+
+- The `handleSubmit` function always includes `mental_readiness`, `emotional_state`, and `physical_readiness` in the payload (they default to `3` from `useState(3)`). Since they're never touched during a morning check-in, the submitted values will just stay at `3` — harmless, and no breaking change to the data contract.
+- No database schema changes needed.
+- No hook changes needed.
 
 ## File Changed
 
-**`src/components/physio/PhysioAdultTrackingSection.tsx`** — color token substitutions only, zero logic changes.
-
-## Technical Notes
-
-- Only one file is touched — purely cosmetic
-- Active states (primary, rose, emerald, amber) are unchanged
-- Opacity values are slightly increased alongside the darker base color to ensure the darker hue reads clearly on both light and dark backgrounds
+**`src/components/vault/VaultFocusQuizDialog.tsx`** — one conditional wrapper added around three existing components, zero logic changes.
