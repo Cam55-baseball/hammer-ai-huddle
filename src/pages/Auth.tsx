@@ -149,16 +149,10 @@ const Auth = () => {
             // Check if user is a scout
             const isScout = rolesCheck.data?.some((r: any) => r.role === 'scout');
             
-            if (state?.returnTo) {
+            const redirectTarget = state?.returnTo || (state as any)?.from;
+            if (redirectTarget) {
               setTimeout(() => {
-                navigate(state.returnTo, { 
-                  state: {
-                    sport: state.sport,
-                    module: state.module,
-                    mode: state.mode
-                  },
-                  replace: true 
-                });
+                navigate(redirectTarget, { replace: true });
               }, 0);
             } else if (isScout) {
               // Scouts go to scout dashboard
