@@ -1552,8 +1552,12 @@ export type Database = {
           active_illness: string | null
           adult_features_enabled: boolean
           allergies: string[] | null
+          biological_sex: string | null
           blood_type: string | null
+          contraceptive_type: string | null
+          contraceptive_use: boolean | null
           created_at: string
+          date_of_birth: string | null
           dietary_style: string | null
           food_intolerances: string[] | null
           id: string
@@ -1570,8 +1574,12 @@ export type Database = {
           active_illness?: string | null
           adult_features_enabled?: boolean
           allergies?: string[] | null
+          biological_sex?: string | null
           blood_type?: string | null
+          contraceptive_type?: string | null
+          contraceptive_use?: boolean | null
           created_at?: string
+          date_of_birth?: string | null
           dietary_style?: string | null
           food_intolerances?: string[] | null
           id?: string
@@ -1588,8 +1596,12 @@ export type Database = {
           active_illness?: string | null
           adult_features_enabled?: boolean
           allergies?: string[] | null
+          biological_sex?: string | null
           blood_type?: string | null
+          contraceptive_type?: string | null
+          contraceptive_use?: boolean | null
           created_at?: string
+          date_of_birth?: string | null
           dietary_style?: string | null
           food_intolerances?: string[] | null
           id?: string

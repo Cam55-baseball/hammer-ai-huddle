@@ -18,8 +18,20 @@ export interface PhysioHealthProfile {
   illness_started_at: string | null;
   adult_features_enabled: boolean;
   setup_completed: boolean;
+  date_of_birth: string | null;
+  biological_sex: string | null;
+  contraceptive_use: boolean | null;
+  contraceptive_type: string | null;
   created_at: string;
   updated_at: string;
+}
+
+function calcAge(dob: string | null): number | null {
+  if (!dob) return null;
+  const d = new Date(dob);
+  const today = new Date();
+  return today.getFullYear() - d.getFullYear() -
+    (today < new Date(today.getFullYear(), d.getMonth(), d.getDate()) ? 1 : 0);
 }
 
 export function usePhysioProfile() {
@@ -43,6 +55,7 @@ export function usePhysioProfile() {
 
   const setupCompleted = profile?.setup_completed ?? false;
   const adultFeaturesEnabled = profile?.adult_features_enabled ?? false;
+  const computedAge = calcAge(profile?.date_of_birth ?? null);
 
   const saveProfile = useCallback(async (updates: Partial<PhysioHealthProfile> & { setup_completed?: boolean }) => {
     if (!user) return { success: false, error: 'Not authenticated' };
@@ -78,33 +91,22 @@ export function usePhysioProfile() {
   const enableAdultFeatures = useCallback(async () => {
     if (!user) return { success: false };
     
-    // Age gate: check date_of_birth from profiles
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('date_of_birth')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    if (profileData?.date_of_birth) {
-      const dob = new Date(profileData.date_of_birth);
-      const today = new Date();
-      const age = today.getFullYear() - dob.getFullYear() - 
-        (today < new Date(today.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0);
-      
-      if (age < 18) {
-        return { success: false, error: 'Age requirement not met' };
-      }
+    // Age gate: read date_of_birth from physio_health_profiles (already in profile)
+    const age = calcAge(profile?.date_of_birth ?? null);
+    if (age !== null && age < 18) {
+      return { success: false, error: 'Age requirement not met' };
     }
 
     const result = await saveProfile({ adult_features_enabled: true });
     return result;
-  }, [user, saveProfile]);
+  }, [user, saveProfile, profile]);
 
   return {
     profile,
     isLoading,
     setupCompleted,
     adultFeaturesEnabled,
+    computedAge,
     saveProfile,
     updateIllness,
     enableAdultFeatures,
