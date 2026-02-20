@@ -1,54 +1,82 @@
 
-# Remove Mental Readiness, Emotional State & Physical Readiness from Morning Check-In
+# Resting Heart Rate Measurement in Morning Check-In
 
-## What's Being Changed
+## Current State
 
-The three `RatingButtonGroup` scale selectors — **Mental Readiness**, **Emotional State**, and **Physical Readiness** — currently render unconditionally for all three quiz types (morning, pre-workout, night). They need to be hidden for the morning check-in only.
+The Morning Check-In already has a "Physio Check-in" section (lines 706–815 of `VaultFocusQuizDialog.tsx`) with a basic `<Input type="number">` for resting heart rate. State (`restingHr`) and the save path (`data.resting_hr`) are already wired up. The `resting_hr` column already exists in the database — no schema migration needed.
 
-## Where the Code Lives
+## What's Being Built
 
-**File:** `src/components/vault/VaultFocusQuizDialog.tsx`
+A new self-contained component `src/components/vault/quiz/RestingHeartRateCapture.tsx` that:
 
-The three components are rendered at lines **1488–1514** inside a `<div className="mt-6 space-y-4">` block:
+- **On mobile**: shows a "Measure with camera" button that uses the phone's rear camera and the [Web Photoplethysmography (rPPG)](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia) technique to detect pulse from fingertip colour changes
+- **On desktop (or when camera is unavailable)**: shows a clean manual number input
+- Emits a single `onResult(bpm: number | null)` callback used by the dialog
 
-```tsx
-<div className="mt-6 space-y-4">
-  {/* Mental Readiness */}
-  <RatingButtonGroup ... />
+The mobile detection reuses the existing `useIsMobile` hook.
 
-  {/* Emotional State */}
-  <RatingButtonGroup ... />
+---
 
-  {/* Physical Readiness */}
-  <RatingButtonGroup ... />
+## How the Camera Heart Rate Measurement Works
 
-  {/* Night Quiz Mood & Stress + Reflections */}
-  {quizType === 'night' && ( ... )}
+The camera-based approach uses **photoplethysmography (PPG)**:
+
+1. The user presses their fingertip over the phone camera lens
+2. The app captures video frames via `getUserMedia({ video: { facingMode: 'environment' } })`
+3. Each frame is drawn to a `<canvas>` and the average **red channel** pixel value is sampled
+4. The red channel fluctuates subtly in sync with each heartbeat as blood flow changes
+5. Over ~30 seconds of samples, the app detects peaks in the red-channel signal and calculates beats-per-minute from peak intervals
+6. The reading is displayed and the user can accept or retake it
+
+This is an established web technique used by apps like Instant Heart Rate. Accuracy is typically ±5–10 bpm, appropriate for resting measurement.
+
+---
+
+## Files Changed
+
+### New file: `src/components/vault/quiz/RestingHeartRateCapture.tsx`
+
+A standalone component with these phases:
+
+```text
+idle → measuring (30s countdown) → result
+         ↓ (camera fail / desktop)
+      manual input
 ```
 
-## The Fix
+**States:**
+- `phase`: `'idle' | 'measuring' | 'result' | 'manual'`
+- `countdown`: seconds remaining (counts from 30 to 0)
+- `bpm`: calculated result
+- `redSamples`: raw red-channel array collected during measurement
+- `manualValue`: string for the text input fallback
 
-Wrap all three `RatingButtonGroup` components in a single `{quizType !== 'morning' && (...)}` conditional — this hides them during the morning check-in while keeping them visible for pre-workout and night check-ins.
+**Key logic:**
+- `startMeasurement()`: calls `navigator.mediaDevices.getUserMedia`, creates a hidden `<video>` + `<canvas>`, samples every 100ms
+- `analyzeSignal(samples)`: smooths the red-channel array, finds peaks using a simple threshold algorithm, computes inter-peak intervals → bpm
+- On camera error: automatically switches to `'manual'` phase
+- Desktop: if `!isMobile`, renders only the manual input (no camera button shown)
 
-```tsx
-{quizType !== 'morning' && (
-  <>
-    {/* Mental Readiness */}
-    <RatingButtonGroup ... />
-    {/* Emotional State */}
-    <RatingButtonGroup ... />
-    {/* Physical Readiness */}
-    <RatingButtonGroup ... />
-  </>
-)}
-```
+**UI layout:**
+- Matches the existing quiz card style (`bg-gradient-to-br from-rose-500/10 to-red-500/10 rounded-xl border border-rose-500/20`)
+- Idle: shows icon, description, and two buttons — "Measure with Camera" (mobile only) and "Enter Manually"
+- Measuring: red pulsing animation, countdown timer, instruction text ("Hold finger over camera")
+- Result: BPM displayed large, Accept / Retake buttons
+- Manual: compact number input with a heart icon, 30–200 range
 
-## Data / Backend Considerations
+### Modified file: `src/components/vault/VaultFocusQuizDialog.tsx`
 
-- The `handleSubmit` function always includes `mental_readiness`, `emotional_state`, and `physical_readiness` in the payload (they default to `3` from `useState(3)`). Since they're never touched during a morning check-in, the submitted values will just stay at `3` — harmless, and no breaking change to the data contract.
-- No database schema changes needed.
-- No hook changes needed.
+- Import `RestingHeartRateCapture`
+- Replace the existing `<Input type="number">` resting HR block (lines ~716–751) with `<RestingHeartRateCapture value={restingHr} onResult={(v) => setRestingHr(v ? String(v) : '')} />`
+- All existing state (`restingHr`) and save logic remain unchanged
 
-## File Changed
+---
 
-**`src/components/vault/VaultFocusQuizDialog.tsx`** — one conditional wrapper added around three existing components, zero logic changes.
+## Technical Notes
+
+- No database migration needed — `resting_hr` column already exists
+- No new dependencies — uses native browser `getUserMedia` and `<canvas>` APIs
+- Camera permission is requested at measurement time, not on page load
+- If the browser doesn't support `getUserMedia` or the user denies permission, falls back to manual input gracefully
+- The peak-detection algorithm uses a rolling mean + standard deviation threshold, which is robust enough for a 30-second resting window
+- The component is fully self-contained and can be reused in future check-in types
