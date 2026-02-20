@@ -1,126 +1,88 @@
 
-# Stronger Health Tips, Mind Fuel Messages & Better Vitamin/Mineral Tracking
+# Instant Optimistic Custom Activity Appearance on Game Plan
 
-## Current State Assessment
+## Root Cause
 
-### Health Tips (515 tips in DB)
-- The current tips are **generic and low-specificity** — e.g., "Type A athletes often thrive on plant-based proteins like lentils, beans, and tofu" — this is speculative pseudoscience (blood-type diets are scientifically unsupported). The category `blood_type` alone fills the first 20 rows.
-- The AI generation prompt is a short one-liner: "1-3 sentences maximum. Actionable." — no depth requirement, no scientific grounding instruction, no elite athlete framing.
-- The daily limit is **2 tips per day** — enough to maintain the habit but the quality ceiling is low.
+When a user saves a new custom activity, the card appears on the Game Plan after a multi-step delay:
 
-### Mind Fuel Messages (257 lessons in DB)
-- Content is solid (quotes from proven coaches, mantras, principles) but the AI generation prompt currently produces surface-level content: "keep it to 1-3 sentences maximum" with no instruction to tie it to real-world application, physiology, or performance science.
-- Only 1 lesson per day — which is correct, but the quality of that single lesson needs to be elite.
+1. `CustomActivityBuilderDialog` calls `createTemplate()` in `useCustomActivities`
+2. `createTemplate()` inserts the DB record, optionally inserts the log, then sets `localStorage.customActivityCreated`
+3. `useGamePlan` polls that localStorage key every **1 second** in a `setInterval`
+4. When found, it calls `fetchTaskStatus()` — a massive function that re-queries 15+ separate database tables sequentially (quizzes, workouts, videos, nutrition, tracking records, etc.)
+5. Only after all those queries complete does `customActivities` update and the card appear
 
-### Vitamin & Mineral Tracker (current `vault_vitamin_logs` table)
-- Only tracks: `vitamin_name`, `dosage`, `timing`, `taken`, `is_recurring`
-- **Missing entirely**: category (vitamin vs. mineral vs. supplement vs. herb), unit of measurement (mg, mcg, IU, g), purpose/health goal tag, weekly adherence analytics, smart suggestions from a curated reference list, and a "why this matters" education layer.
-- The UI is a basic collapsible list with a free-text name input — no guidance on what to track or why.
+This total round-trip is 3–6 seconds in normal conditions, leading users to assume the save failed and create duplicates.
 
----
+## Solution: Optimistic Update + Targeted Partial Refresh
 
-## What's Being Changed
+Instead of waiting for a full `fetchTaskStatus()` re-run, inject the new activity into the Game Plan's `customActivities` state **instantly** while a lightweight background refresh confirms the DB state.
 
-### 1. Health Tips — Upgraded AI Generation Prompt
+### What Changes
 
-**File:** `supabase/functions/get-daily-tip/index.ts`
+#### 1. `src/hooks/useGamePlan.ts` — Add optimistic injection + targeted refresh
 
-The AI generation prompt is rewritten to enforce **elite-grade, science-backed specificity**. The new prompt:
-- Requires citing the **physiological mechanism** (e.g., "cortisol spike post-training blunts glycogen synthesis for ~45 min — this is why timing matters")
-- Requires one **concrete, same-day action** (e.g., "Add 20g whey within 30 min of your last training set today")
-- Requires grounding in **peer-reviewed sports science concepts** without making medical diagnoses
-- Explicitly forbids vague, pseudoscientific, or generic statements
-- Adds sport-context specificity (baseball/softball rotational demands, high-anaerobic output)
-- Scales the depth requirement to 2-4 sentences (up from 1-3)
+**Add a new exported function `addOptimisticActivity(activity: CustomActivityWithLog)`** that:
+- Immediately appends the new activity to the `customActivities` state array
+- The card appears on screen in ~0ms
 
-No database migration needed — same table, better content going forward.
+**Add a new exported function `refreshCustomActivities()`** that:
+- Queries **only** `custom_activity_templates` and `custom_activity_logs` (the two tables that changed)
+- Applies the same skip/schedule filtering already in `fetchTaskStatus()`
+- Replaces `customActivities` state with the DB-truth result
+- This is the "confirm" phase that runs after the optimistic update
 
-### 2. Mind Fuel Messages — Upgraded AI Generation Prompt
+This avoids re-running the 15+ table queries just because a custom activity was created.
 
-**File:** `supabase/functions/get-daily-lesson/index.ts`
+#### 2. `src/hooks/useCustomActivities.ts` — Remove localStorage flag
 
-The AI generation prompt is rewritten to produce **world-class mental performance content**. The new prompt:
-- Requires a **real-world application frame**: what to do TODAY, not just a concept
-- For `lesson`/`teaching`/`principle` types: must include the psychological or neurological basis (e.g., "the prefrontal cortex, responsible for performance regulation, goes offline under threat — here's how to keep it online")
-- For `quote` types: must be attributed only to **verified real people** (coaches, athletes, philosophers), not invented
-- For `mantra` types: must be 10 words or fewer, rhythmic, and anchored in a specific performance moment
-- Adds the "elite 0.001% standard" framing from the app's full-loop philosophy
+The `localStorage.setItem('customActivityCreated', ...)` line and the corresponding polling in `useGamePlan` are dead weight once optimistic updates are in place. They are removed to simplify the codebase and eliminate the 1-second polling interval.
 
-No database migration needed.
+#### 3. `src/components/GamePlanCard.tsx` — Wire the optimistic path
 
-### 3. Vitamin & Mineral Tracker — Full Rebuild
+The `onSave` callback for `CustomActivityBuilderDialog` is updated:
 
-This is the largest change. The tracker becomes a **professional-grade micronutrient management system**.
-
-#### 3a. Database Migration
-
-Add 3 new columns to `vault_vitamin_logs`:
-
-```sql
-ALTER TABLE public.vault_vitamin_logs
-  ADD COLUMN IF NOT EXISTS category text DEFAULT 'supplement',
-  ADD COLUMN IF NOT EXISTS unit text DEFAULT 'mg',
-  ADD COLUMN IF NOT EXISTS purpose text;
+**Before (current):**
+```
+result = await createTemplate(data, scheduleForToday)
+if (result) refetch()  // triggers full 15-table re-query
 ```
 
-- `category`: `'vitamin' | 'mineral' | 'supplement' | 'herb' | 'protein' | 'amino_acid'`
-- `unit`: `'mg' | 'mcg' | 'IU' | 'g' | 'ml' | 'capsule' | 'tablet' | 'serving'`
-- `purpose`: free text tag like `"Bone health"`, `"Energy"`, `"Recovery"`, `"Immunity"`
+**After:**
+```
+result = await createTemplate(data, scheduleForToday)
+if (result) {
+  // 1. Instant: inject into game plan UI immediately
+  addOptimisticActivity({
+    template: result,
+    log: scheduleForToday ? { completed: false, ... } : undefined,
+    isRecurring: result.recurring_active,
+    isScheduledForToday: scheduleForToday || result.recurring_days.includes(todayDayOfWeek)
+  })
+  // 2. Background: confirm with lightweight DB refresh
+  refreshCustomActivities()
+}
+```
 
-#### 3b. New Hook additions to `useVitaminLogs.ts`
+The "Schedule for Today" toggle in the builder already defaults to **on** in a reasonable UX — but no change is made to the toggle itself, only to how fast the result is reflected.
 
-- Add `category`, `unit`, `purpose` to `VitaminLog` interface and `CreateVitaminInput`
-- Expose weekly adherence: a `getWeeklyAdherence()` method that returns taken/total per day for the past 7 days (queried from the DB)
+### Files Changed
 
-#### 3c. Updated `VitaminSupplementTracker.tsx`
-
-Major UI/UX upgrade:
-
-**Add Form** (expanded):
-- Category selector (Vitamin / Mineral / Supplement / Herb / Protein / Amino Acid) with color-coded icons
-- Name: keep as free text BUT add a **smart suggestion dropdown** using a curated reference list (the top 30 most common: Vitamin D3, Magnesium, Zinc, Omega-3, Iron, B12, C, Creatine, Melatonin, etc.) that filters as the user types
-- Dosage field + Unit selector side by side (mg / mcg / IU / g / tablet / capsule / serving)
-- Purpose tag: optional quick-select chips (Energy, Recovery, Immunity, Bone Health, Sleep, Focus, Hormone Support)
-- Timing and Repeat Daily stay as-is
-
-**Main View** (grouped by category, not timing):
-- Group header shows category icon and color
-- Each item row shows: name, dosage + unit, purpose chip (if set), timing badge, taken checkbox
-- **7-day adherence mini-bar** per supplement row: 7 tiny dots (green = taken, grey = missed/not yet) showing the week's history
-- Progress ring at the top showing today's overall completion %
-
-**Info Layer** — a new "What this does" tooltip on each common supplement (for the 30 curated items) showing a one-line science note (e.g., for Vitamin D3: "Supports bone density, immune regulation, and testosterone synthesis")
-
-This is added as a static `SUPPLEMENT_REFERENCE` lookup object in the component — no new API calls.
-
-#### 3d. Curated Reference List (in-component constant)
-
-A static object of 30+ common supplements with:
-- Suggested unit
-- Category
-- One-line benefit note
-- Common dosage range
-
-This powers both the smart suggestions and the "What this does" tooltips.
-
----
-
-## Files Changed
-
-| File | Change Type |
+| File | Change |
 |---|---|
-| `supabase/functions/get-daily-tip/index.ts` | Rewrite AI prompt (~10 lines) |
-| `supabase/functions/get-daily-lesson/index.ts` | Rewrite AI prompt (~10 lines) |
-| `vault_vitamin_logs` table | Migration: 3 new columns |
-| `src/hooks/useVitaminLogs.ts` | Add new fields + weekly adherence query |
-| `src/components/vault/VitaminSupplementTracker.tsx` | Major rebuild of UI + smart suggestions + 7-day history |
+| `src/hooks/useGamePlan.ts` | Add `addOptimisticActivity()` + `refreshCustomActivities()` functions; remove localStorage polling interval; expose both from the return object |
+| `src/hooks/useCustomActivities.ts` | Remove `localStorage.setItem('customActivityCreated', ...)` line (polling no longer needed) |
+| `src/components/GamePlanCard.tsx` | Update `onSave` handler to call `addOptimisticActivity` + `refreshCustomActivities` instead of `refetch()` |
 
----
+### User Experience After Fix
 
-## What the User Will Experience
+1. User taps **Save** in the builder
+2. Dialog closes immediately (existing behaviour — already instant)
+3. The new activity card **appears on the Game Plan within ~50ms** — before any network round-trip completes — via the optimistic state update
+4. ~500ms later, the lightweight `refreshCustomActivities()` DB query completes and confirms/reconciles the state (user never notices this unless there was a save failure, which already shows a toast error)
 
-**Health Tips**: Future AI-generated tips will read like elite sports nutritionist advice — with a physiological reason AND a same-day action step. The 515 existing tips are unchanged (they remain in DB), only new AI-generated tips going forward will be higher quality.
+### No Changes To
 
-**Mind Fuel**: Future AI-generated lessons will feel like a world-class mental performance coach is speaking directly to the athlete — grounded in neuroscience, tied to a real game moment, and immediately actionable.
-
-**Vitamin Tracker**: Transforms from a basic checklist into a professional micronutrient management dashboard — athletes can see what they're tracking, why it matters, what the dosage is in proper units, how consistent they've been this week, and quickly add from a smart-suggested reference list.
+- The "Schedule for Today" toggle UI — it already exists and works correctly
+- The save/insert logic — DB operations remain unchanged
+- Skip/schedule filtering logic — `refreshCustomActivities` reuses the exact same filter code
+- Any other Game Plan features (quizzes, workouts, tracking, etc.)
