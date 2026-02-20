@@ -109,7 +109,7 @@ export default function SharedActivity() {
 
   const handleImport = async () => {
     if (!user) {
-      navigate('/auth', { state: { from: `/shared-activity/${shareCode}` } });
+      navigate('/auth', { state: { returnTo: `/shared-activity/${shareCode}` } });
       return;
     }
 
