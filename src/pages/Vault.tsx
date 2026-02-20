@@ -22,6 +22,7 @@ import {
   Clock,
   Sparkles,
   CalendarDays,
+  Settings,
 } from 'lucide-react';
 import { useVault } from '@/hooks/useVault';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -117,6 +118,7 @@ export default function Vault() {
   const { setupCompleted } = usePhysioProfile();
   const { regulationScore, regulationColor, triggerReportGeneration } = usePhysioDailyReport();
   const [intakeOpen, setIntakeOpen] = useState(false);
+  const [editPhysioOpen, setEditPhysioOpen] = useState(false);
 
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState('today');
@@ -414,10 +416,19 @@ export default function Vault() {
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/20 via-primary/10 to-background p-6 sm:p-8 border border-primary/20">
             <div className="absolute -top-20 -right-20 w-60 h-60 bg-primary/10 rounded-full blur-3xl animate-pulse" />
             <div className="relative z-10 space-y-2">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <BookOpen className="h-8 w-8 text-primary" />
                 <h1 className="text-3xl sm:text-4xl font-black">{t('vault.title')}</h1>
                 <PhysioRegulationBadge score={regulationScore} color={regulationColor} size="md" />
+                {setupCompleted && (
+                  <button
+                    onClick={() => setEditPhysioOpen(true)}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border hover:border-primary/50 rounded-lg px-2.5 py-1.5 transition-all"
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                    Edit Health Profile
+                  </button>
+                )}
               </div>
               <p className="text-muted-foreground max-w-md">
                 {t('vault.subtitle')}
@@ -857,6 +868,13 @@ export default function Vault() {
 
       {/* Physio Health Intake Dialog — auto-opens when setup not completed */}
       <PhysioHealthIntakeDialog open={intakeOpen} onOpenChange={setIntakeOpen} />
+
+      {/* Physio Health Edit Dialog — triggered manually from Edit Health Profile button */}
+      <PhysioHealthIntakeDialog
+        open={editPhysioOpen}
+        onOpenChange={setEditPhysioOpen}
+        isEditMode
+      />
     </DashboardLayout>
   );
 }

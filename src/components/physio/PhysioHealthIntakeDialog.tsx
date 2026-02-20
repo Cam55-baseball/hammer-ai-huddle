@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { Heart, Shield, Users, ChevronRight, Check, CalendarIcon, Info } from 'l
 interface PhysioHealthIntakeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isEditMode?: boolean;
 }
 
 const DIETARY_STYLES = ['Omnivore', 'Vegetarian', 'Vegan', 'Pescatarian', 'Keto', 'Paleo', 'Gluten-Free', 'Dairy-Free'];
@@ -97,8 +98,8 @@ function SexCard({ value, label, emoji, selected, onSelect }: {
   );
 }
 
-export function PhysioHealthIntakeDialog({ open, onOpenChange }: PhysioHealthIntakeDialogProps) {
-  const { saveProfile, enableAdultFeatures } = usePhysioProfile();
+export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = false }: PhysioHealthIntakeDialogProps) {
+  const { profile, saveProfile, enableAdultFeatures } = usePhysioProfile();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
 
@@ -122,6 +123,31 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange }: PhysioHealthInt
   const [contraceptiveType, setContraceptiveType] = useState('');
   const [dobOpen, setDobOpen] = useState(false);
 
+  // Pre-populate state from existing profile when in edit mode
+  useEffect(() => {
+    if (open && isEditMode && profile) {
+      // Step 1
+      setBloodType(profile.blood_type ?? '');
+      setDietaryStyle(profile.dietary_style ? [profile.dietary_style] : []);
+      setAllergiesText((profile.allergies ?? []).join(', '));
+      setIntolerancesText((profile.food_intolerances ?? []).join(', '));
+      // Step 2
+      setMedicationsText((profile.medications ?? []).join(', '));
+      setConditions(profile.medical_conditions ?? []);
+      setInjuryText((profile.injury_history ?? []).join(', '));
+      setSupplementsText((profile.supplements ?? []).join(', '));
+      // Step 3
+      setBiologicalSex(profile.biological_sex ?? '');
+      setEnableAdult(profile.adult_features_enabled ?? false);
+      setContraceptiveUse(profile.contraceptive_use ?? false);
+      setContraceptiveType(profile.contraceptive_type ?? '');
+      // DOB is read-only in edit mode — just set it for display
+      if (profile.date_of_birth) {
+        setDobDate(new Date(profile.date_of_birth));
+      }
+    }
+  }, [open, isEditMode, profile]);
+
   const computedAge = calcAge(dobDate);
   const isAdultEligible = computedAge !== null && computedAge >= 18;
 
@@ -136,10 +162,9 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange }: PhysioHealthInt
   const handleSaveAndClose = async () => {
     setSaving(true);
     try {
-      const dobString = dobDate ? format(dobDate, 'yyyy-MM-dd') : null;
       const isFemaleAdult = biologicalSex === 'female' && enableAdult && isAdultEligible;
 
-      const profileData = {
+      const profileData: Record<string, any> = {
         blood_type: bloodType || null,
         dietary_style: dietaryStyle[0] || null,
         allergies: allergiesText ? allergiesText.split(',').map(s => s.trim()).filter(Boolean) : [],
@@ -148,12 +173,18 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange }: PhysioHealthInt
         medical_conditions: conditions.filter(c => c !== 'None'),
         injury_history: injuryText ? injuryText.split(',').map(s => s.trim()).filter(Boolean) : [],
         supplements: supplementsText ? supplementsText.split(',').map(s => s.trim()).filter(Boolean) : [],
-        date_of_birth: dobString,
         biological_sex: biologicalSex || null,
         contraceptive_use: isFemaleAdult ? contraceptiveUse : null,
         contraceptive_type: isFemaleAdult && contraceptiveUse ? (contraceptiveType || null) : null,
-        setup_completed: true,
       };
+
+      // Only include DOB and setup_completed on initial setup (not edit mode)
+      if (!isEditMode) {
+        const dobString = dobDate ? format(dobDate, 'yyyy-MM-dd') : null;
+        profileData.date_of_birth = dobString;
+        profileData.setup_completed = true;
+      }
+
       await saveProfile(profileData);
       if (enableAdult && isAdultEligible) {
         await enableAdultFeatures();
@@ -178,10 +209,12 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange }: PhysioHealthInt
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5 text-primary" />
-            Physio Health Setup
+            {isEditMode ? 'Edit Health Profile' : 'Physio Health Setup'}
           </DialogTitle>
           <DialogDescription>
-            This helps us personalize your Physio Regulation reports. All data is private and encrypted.
+            {isEditMode
+              ? 'Update your health information. Your date of birth cannot be changed.'
+              : 'This helps us personalize your Physio Regulation reports. All data is private and encrypted.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -291,31 +324,42 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange }: PhysioHealthInt
             {/* DOB Picker */}
             <div className="space-y-2">
               <Label>Date of Birth</Label>
-              <Popover open={dobOpen} onOpenChange={setDobOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !dobDate && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dobDate ? format(dobDate, 'MMMM d, yyyy') : 'Select your date of birth'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dobDate}
-                    onSelect={(d) => { setDobDate(d); setDobOpen(false); }}
-                    disabled={(date) => date > new Date() || date < new Date('1920-01-01')}
-                    defaultMonth={dobDate ?? new Date(new Date().getFullYear() - 20, 0)}
-                    initialFocus
-                    className={cn('p-3 pointer-events-auto')}
-                  />
-                </PopoverContent>
-              </Popover>
+              {isEditMode ? (
+                /* Read-only display in edit mode */
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border">
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm">
+                    {dobDate ? format(dobDate, 'MMMM d, yyyy') : 'Not set'}
+                  </span>
+                  <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap">Cannot be changed</span>
+                </div>
+              ) : (
+                <Popover open={dobOpen} onOpenChange={setDobOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !dobDate && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dobDate ? format(dobDate, 'MMMM d, yyyy') : 'Select your date of birth'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dobDate}
+                      onSelect={(d) => { setDobDate(d); setDobOpen(false); }}
+                      disabled={(date) => date > new Date() || date < new Date('1920-01-01')}
+                      defaultMonth={dobDate ?? new Date(new Date().getFullYear() - 20, 0)}
+                      initialFocus
+                      className={cn('p-3 pointer-events-auto')}
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
               {computedAge !== null && (
                 <p className="text-xs text-muted-foreground pl-1">
                   Age: <span className="font-semibold text-foreground">{computedAge}</span>
@@ -422,7 +466,9 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange }: PhysioHealthInt
             {!biologicalSex && (
               <div className="p-4 rounded-xl bg-primary/10 border border-primary/20">
                 <p className="text-sm text-muted-foreground">
-                  You're almost set! Select your date of birth and biological sex above to personalise your Physio Regulation reports, nutrition suggestions, and recovery recommendations.
+                  {isEditMode
+                    ? 'Update your biological sex below to personalise your Physio Regulation reports, nutrition suggestions, and recovery recommendations.'
+                    : "You're almost set! Select your date of birth and biological sex above to personalise your Physio Regulation reports, nutrition suggestions, and recovery recommendations."}
                 </p>
               </div>
             )}
@@ -446,7 +492,7 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange }: PhysioHealthInt
               disabled={saving}
               className="flex-1"
             >
-              {saving ? 'Saving...' : 'Complete Setup'}
+              {saving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Complete Setup'}
             </Button>
           )}
         </div>
