@@ -1,192 +1,147 @@
 
-# Completing the Remaining Wiring — Hammer's Concrete Physio™
+# Gender-Tailored Physio Health Setup — End-to-End Plan
 
-## What's Already Done
+## What Needs to Change
 
-- All 4 custom hooks exist and work
-- All 6 physio components are built
-- `useVault.ts` already saves `appetite`, `stress_sources`, `movement_restriction`, `resting_hr`
-- `NutritionHubContent.tsx` already has `PhysioNutritionSuggestions` inserted
-- `useUnifiedDataSync.ts` already has the 3 new tables registered
-- `Vault.tsx` imports all 4 physio components but renders NONE of them
+The Step 3 "Preferences" screen of the `PhysioHealthIntakeDialog` currently only shows an adult tracking opt-in button. The goal is to:
 
-## Three Files Need Wiring
+1. Ask for biological sex (Male / Female / Prefer not to say) at the start of Step 3
+2. Show gender-tailored preference options based on the answer
+3. For females who are 18+ and enable adult tracking, show a contraceptive use toggle with a type selector
+4. Persist all of this to the database
+5. Pipe the new context into the AI regulation report for smarter, more personalized insights
+6. Update `PhysioAdultTrackingSection` to read sex from `physio_health_profiles` instead of `profiles`
 
-### File 1: `src/pages/Vault.tsx` (6 changes)
+---
 
-**Problem:** Imports exist for `PhysioRegulationBadge`, `PhysioHealthIntakeDialog`, `PhysioNightlyReportCard`, `PhysioAdultTrackingSection`, `usePhysioProfile`, `usePhysioDailyReport` but NONE are used in JSX.
+## Database Migration
 
-**Changes:**
+Two new columns need to be added:
 
-1. Add hook calls (after existing hooks ~line 125):
+**Table: `physio_health_profiles`**
+- `biological_sex` (text, nullable) — values: `male`, `female`, `prefer_not_to_say`
+- `contraceptive_use` (boolean, nullable, default null) — whether the user is actively using contraceptives
+- `contraceptive_type` (text, nullable) — e.g. Pill, IUD, Implant, Patch, Ring, Injection, Barrier, Other
+
+These are stored on the health profile (not the adult tracking daily log) because they are static health facts, not daily entries.
+
+---
+
+## File Changes
+
+### 1. `src/components/physio/PhysioHealthIntakeDialog.tsx`
+
+**Step 3 becomes a two-part screen:**
+
+**Part A — Biological Sex selector (always shown at top of Step 3):**
+Three large toggle cards:
+- ♂ Male
+- ♀ Female
+- ○ Prefer not to say
+
+This saves `biological_sex` to `physio_health_profiles`.
+
+**Part B — Gender-tailored content (below the sex selector):**
+
+If **Male** selected:
+- A brief note that their regulation reports will be calibrated for male physiology (testosterone cycles, recovery patterns, CNS load tracking)
+- The existing adult opt-in button (no contraceptive section)
+
+If **Female** selected:
+- A note that their reports will factor in cycle phase awareness, hormonal load sensitivity, and iron/fuel considerations
+- The adult opt-in button (same age gate logic as before)
+- **If adult tracking is enabled AND she agrees to 18+:** A new "Contraceptive Use" section appears:
+  - A toggle button: "I am currently using a contraceptive"
+  - If toggled on: a chip selector for type: `Pill`, `IUD`, `Implant`, `Patch`, `Ring`, `Injection`, `Barrier`, `Other`
+  - A small disclaimer: "This helps us factor hormonal influences on your recovery and energy patterns. Educational only."
+
+If **Prefer not to say** selected:
+- Shows the adult opt-in button with neutral language
+- No contraceptive section
+
+**New state variables added to the dialog:**
 ```ts
-const { setupCompleted, adultFeaturesEnabled } = usePhysioProfile();
-const { report, regulationScore, regulationColor, triggerReportGeneration } = usePhysioDailyReport();
-const [intakeOpen, setIntakeOpen] = useState(false);
+const [biologicalSex, setBiologicalSex] = useState('');
+const [contraceptiveUse, setContraceptiveUse] = useState(false);
+const [contraceptiveType, setContraceptiveType] = useState('');
 ```
 
-2. Add auto-open useEffect for intake dialog (when `!setupCompleted && hasAccess`):
+**`handleSaveAndClose` updated to include:**
 ```ts
-useEffect(() => {
-  if (hasAccess && !setupCompleted) setIntakeOpen(true);
-}, [hasAccess, setupCompleted]);
-```
-
-3. Wire `triggerReportGeneration()` inside `handleQuizSubmit` when `selectedQuizType === 'night'`:
-```ts
-if (selectedQuizType === 'night' && result.success) {
-  triggerReportGeneration();
-}
-```
-
-4. Add `PhysioRegulationBadge` next to the BookOpen icon in the Vault hero header (line ~410):
-```tsx
-<PhysioRegulationBadge score={regulationScore} color={regulationColor} size="md" />
-```
-
-5. Add `PhysioNightlyReportCard` after the quiz status grid inside the Daily Check-In container (after the quiz buttons block, ~line 580):
-```tsx
-{hasCompletedQuiz('night') && <PhysioNightlyReportCard />}
-```
-
-6. Add `PhysioAdultTrackingSection` at the bottom of the left column (after `VaultCorrelationAnalysisCard` block, before Daily Check-In container):
-```tsx
-<PhysioAdultTrackingSection />
-```
-
-7. Render `PhysioHealthIntakeDialog` near the quiz dialog at line ~836:
-```tsx
-<PhysioHealthIntakeDialog open={intakeOpen} onOpenChange={setIntakeOpen} />
+biological_sex: biologicalSex || null,
+contraceptive_use: biologicalSex === 'female' && adultAgreed ? contraceptiveUse : null,
+contraceptive_type: biologicalSex === 'female' && adultAgreed && contraceptiveUse ? contraceptiveType || null : null,
 ```
 
 ---
 
-### File 2: `src/components/vault/VaultFocusQuizDialog.tsx` (4 additions)
+### 2. `src/hooks/usePhysioProfile.ts`
 
-**Problem:** New physio quiz fields are missing — resting HR, appetite, stress sources, illness sub-selector (morning quiz), and movement restriction screen (pre-lift quiz). Night quiz doesn't fire `triggerReportGeneration`.
-
-The component doesn't accept a callback prop for report generation — the night quiz success flow already works, but it needs to call back to Vault.tsx. The simplest solution: `VaultFocusQuizDialog` calls `usePhysioDailyReport` internally and fires `triggerReportGeneration()` directly from within the night quiz success handler. This keeps zero prop changes.
-
-**Morning quiz additions** (injected after the existing `sleepData` section + before motivationTitle section, ~after line 677):
-
-Section label "Physio Check-in" containing:
-- **Resting HR** — `<Input type="number" placeholder="e.g. 58">` + "Skip" button. Saves to `data.resting_hr`.
-- **Appetite** — 3 tap-chips: 🥗 Low / 🍽️ Normal / 🍔 High. Saves to `data.appetite`.
-- **Stress Sources** — multi-select chips: School / Work / Family / Travel / Competition Nerves / Illness. Saves to `data.stress_sources`.
-- **Illness sub-selector** — appears when "Illness" is in stress sources: Cold / Flu / Fever / GI Distress. Calls `updateIllness()` from `usePhysioProfile`.
-
-New state variables to add:
+**`PhysioHealthProfile` interface updated:**
 ```ts
-const [restingHr, setRestingHr] = useState('');
-const [appetite, setAppetite] = useState('');
-const [stressSources, setStressSources] = useState<string[]>([]);
-const [illnessType, setIllnessType] = useState('');
+biological_sex: string | null;
+contraceptive_use: boolean | null;
+contraceptive_type: string | null;
 ```
-
-Add to `handleSubmit` morning block:
-```ts
-data.resting_hr = restingHr ? parseInt(restingHr) : undefined;
-data.appetite = appetite || undefined;
-data.stress_sources = stressSources.length > 0 ? stressSources : undefined;
-```
-
-Add to `resetFormAndClose`:
-```ts
-setRestingHr(''); setAppetite(''); setStressSources([]); setIllnessType('');
-```
-
-**Pre-lift quiz additions** (new Section 5 — after existing Intent & Focus Section 4, ~after line 1136):
-
-Movement restriction screen with 3 selectors, each Full ✅ / Limited ⚠️ / Pain ❌:
-- Toe Touch
-- Overhead Reach  
-- Bodyweight Squat
-
-New state:
-```ts
-const [movementRestriction, setMovementRestriction] = useState<Record<string, string>>({});
-```
-
-Saves as: `data.movement_restriction = Object.keys(movementRestriction).length > 0 ? movementRestriction : undefined;`
-
-Add to `resetFormAndClose`: `setMovementRestriction({});`
-
-**Night quiz trigger** — inside `handleSubmit` after `nightStats.refetch()` at line ~494:
-```ts
-if (quizType === 'night') {
-  triggerReportGeneration(); // fire-and-forget, non-blocking
-  nightStats.refetch();
-  setShowNightSuccess(true);
-  return;
-}
-```
-Import `usePhysioDailyReport` at the top of the file and call `const { triggerReportGeneration } = usePhysioDailyReport();`
 
 ---
 
-### File 3: `src/components/GamePlanCard.tsx` (2 additions)
+### 3. `src/components/physio/PhysioAdultTrackingSection.tsx`
 
-**Problem:** `PhysioPostWorkoutBanner` and `usePhysioGamePlanBadges` badge chips are not imported or rendered.
+Currently reads `sex` from the `profiles` table via a separate query. After this change it reads `biological_sex` from `physio_health_profiles` via `usePhysioProfile()` — which is already fetched in the hook — eliminating the extra query.
 
-**Change 1: Add imports + hook call** (~line 50):
 ```ts
-import { PhysioPostWorkoutBanner } from '@/components/physio/PhysioPostWorkoutBanner';
-import { usePhysioGamePlanBadges } from '@/hooks/usePhysioGamePlanBadges';
+// Before:
+const { data: profileData } = useQuery({ ... supabase.from('profiles').select('sex') ... });
+const sex = profileData?.sex?.toLowerCase();
+
+// After:
+const { profile } = usePhysioProfile();
+const sex = profile?.biological_sex?.toLowerCase();
 ```
 
-In the component body (~line 63):
+The `isFemale` / `isMale` checks then use this value. Contraceptive use is also read from `profile.contraceptive_use` to slightly adjust the cycle phase UI — e.g. a small info chip showing "Hormonal contraceptive noted — cycle phase tracking may vary" if `contraceptive_use === true`.
+
+---
+
+### 4. `supabase/functions/calculate-regulation/index.ts`
+
+The edge function already fetches `profiles` for `activity_level` and `weight`. Extend that query to also fetch from `physio_health_profiles` for `biological_sex` and `contraceptive_use`, then pass them into the AI prompt context:
+
 ```ts
-const { getBadgesForTask } = usePhysioGamePlanBadges();
+const { data: physioHealthProfile } = await supabase
+  .from('physio_health_profiles')
+  .select('biological_sex, contraceptive_use, contraceptive_type, medications, medical_conditions')
+  .eq('user_id', userId)
+  .maybeSingle();
 ```
 
-**Change 2: Add PhysioPostWorkoutBanner above task sections** (line ~1494, before `{/* Task Sections */}`):
-```tsx
-<PhysioPostWorkoutBanner />
+The AI context object is enriched:
+```ts
+biologicalSex: physioHealthProfile?.biological_sex,
+contraceptiveUse: physioHealthProfile?.contraceptive_use,
+contraceptiveType: physioHealthProfile?.contraceptive_type,
 ```
 
-**Change 3: Add badge chips inside `renderTask`** (after the task title `<span>` inside the clickable button area, ~line 1000):
-```tsx
-{(() => {
-  const badges = getBadgesForTask(task.id);
-  if (badges.length === 0) return null;
-  return (
-    <div className="flex flex-wrap gap-1 mt-1">
-      {badges.map(badge => (
-        <Popover key={badge.type}>
-          <PopoverTrigger asChild>
-            <button className={cn(
-              "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-              badge.color === 'red' && "bg-red-500/20 text-red-400 border-red-500/30",
-              badge.color === 'amber' && "bg-amber-500/20 text-amber-400 border-amber-500/30",
-              badge.color === 'orange' && "bg-orange-500/20 text-orange-400 border-orange-500/30",
-              badge.color === 'yellow' && "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-            )} onClick={e => e.stopPropagation()}>
-              {badge.label}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-72 text-xs p-3" onClick={e => e.stopPropagation()}>
-            <p>{badge.message}</p>
-            <p className="text-muted-foreground mt-2 text-[10px]">Educational only. Consult a professional for medical concerns.</p>
-          </PopoverContent>
-        </Popover>
-      ))}
-    </div>
-  );
-})()}
-```
+The AI system prompt is updated to acknowledge these factors:
+- For females: factor in cycle phase sensitivity, hormonal load, iron needs
+- For females on hormonal contraceptives: note that cycle phase tracking may not reflect natural hormonal fluctuations and adjust recovery framing accordingly
+- For males: factor in CNS load tolerance, testosterone-linked recovery rhythms
 
 ---
 
 ## Implementation Order
 
-1. `VaultFocusQuizDialog.tsx` — add internal `usePhysioDailyReport` + new state + new UI sections + night trigger
-2. `Vault.tsx` — wire all physio hooks + render 4 components + auto-open effect + night quiz trigger
-3. `GamePlanCard.tsx` — add banner + badge chips
+1. Database migration — add `biological_sex`, `contraceptive_use`, `contraceptive_type` to `physio_health_profiles`
+2. Update `usePhysioProfile.ts` interface
+3. Update `PhysioHealthIntakeDialog.tsx` — add sex selector + conditional contraceptive section in Step 3
+4. Update `PhysioAdultTrackingSection.tsx` — read sex from physio profile instead of profiles table; add contraceptive note
+5. Update `calculate-regulation` edge function — extend context + enrich AI prompt
 
 ## Technical Notes
 
-- `triggerReportGeneration()` is fire-and-forget (non-blocking) — it will never delay UI
-- `PhysioAdultTrackingSection` self-hides when `adultFeaturesEnabled === false` — safe to always render
-- `PhysioNightlyReportCard` reads from `usePhysioDailyReport` internally — no props needed
-- Badge chips use existing `Popover` component already imported in `GamePlanCard.tsx`
-- The `intakeOpen` auto-open fires only once when `hasAccess && !setupCompleted`
+- `biological_sex` is stored on `physio_health_profiles`, not on `profiles.sex`, keeping physio data self-contained in the physio tables
+- The contraceptive section only appears when: `biologicalSex === 'female'` AND `enableAdult === true` AND `adultAgreed === true`
+- `contraceptive_use` and `contraceptive_type` are only written when the user is female and has agreed to adult tracking — otherwise saved as `null`
+- The age gate (`enableAdultFeatures`) remains unchanged — it checks `profiles.date_of_birth`
+- The edge function changes are additive and non-breaking — if `biological_sex` is null, the AI prompt simply omits that context
