@@ -3975,38 +3975,47 @@ export type Database = {
       }
       vault_vitamin_logs: {
         Row: {
+          category: string | null
           created_at: string | null
           dosage: string | null
           entry_date: string | null
           id: string
           is_recurring: boolean | null
+          purpose: string | null
           taken: boolean | null
           taken_at: string | null
           timing: string | null
+          unit: string | null
           user_id: string
           vitamin_name: string
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
           dosage?: string | null
           entry_date?: string | null
           id?: string
           is_recurring?: boolean | null
+          purpose?: string | null
           taken?: boolean | null
           taken_at?: string | null
           timing?: string | null
+          unit?: string | null
           user_id: string
           vitamin_name: string
         }
         Update: {
+          category?: string | null
           created_at?: string | null
           dosage?: string | null
           entry_date?: string | null
           id?: string
           is_recurring?: boolean | null
+          purpose?: string | null
           taken?: boolean | null
           taken_at?: string | null
           timing?: string | null
+          unit?: string | null
           user_id?: string
           vitamin_name?: string
         }

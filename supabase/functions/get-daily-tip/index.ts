@@ -270,18 +270,25 @@ serve(async (req) => {
           .single();
         selectedTip = fallbackTip;
       } else {
-        const prompt = `You are a sports nutrition expert for ${sport} athletes. Generate ONE actionable, specific nutrition or health tip for the category "${categoryName}".
+      const prompt = `You are an elite sports science nutritionist advising professional ${sport} athletes competing at the highest level. Generate ONE premium health or nutrition tip for the category "${categoryName}".
 
-Requirements:
-- Must be safe and practical for athletes
-- Specific to ${sport} training and performance where relevant
-- 1-3 sentences maximum
-- Actionable (athlete can implement today)
-- No medical diagnoses or treatment claims
-- Avoid these recently used tips:
-- ${excludedTips}
+MANDATORY REQUIREMENTS — every tip MUST include ALL of the following:
+1. The PHYSIOLOGICAL MECHANISM: explain WHY this works at the cellular, hormonal, or metabolic level (e.g., "Cortisol spikes post-training suppress glycogen synthase activity for ~45 min, which is why...").
+2. A CONCRETE SAME-DAY ACTION: one specific, measurable thing the athlete can do today (e.g., "Consume 25–40g of whey protein within 30 minutes of your final set").
+3. SPORT CONTEXT: tie it to ${sport} demands — rotational power, explosive anaerobic output, multi-plane loading, high CNS demand, or recovery between training blocks.
 
-Generate only the tip text, nothing else.`;
+STRICTLY FORBIDDEN:
+- Vague generalities ("eat healthy", "stay hydrated", "get enough sleep")
+- Pseudoscience (blood-type diets, alkaline water myths, detox claims)
+- Medical diagnoses or treatment claims
+- Generic advice that applies to any human, not specifically to a high-performance athlete
+
+LENGTH: 2–4 sentences maximum. Dense, specific, actionable.
+
+AVOID repeating these recently used tips:
+${excludedTips}
+
+Generate ONLY the tip text — no labels, no headers, no quotation marks.`;
 
         try {
           const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
