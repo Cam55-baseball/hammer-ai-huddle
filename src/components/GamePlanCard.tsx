@@ -1062,8 +1062,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           onClick={(e) => { 
             e.stopPropagation(); 
             if (isCustom) {
-              // For custom activities, open the schedule drawer (same UX as system tasks)
-              handleCustomActivityScheduleEdit(task);
+              // For custom activities, open the full editor (includes delete button)
+              handleCustomActivityFullEdit(task);
             } else {
               // For system tasks, check auth first
               if (!user) {
