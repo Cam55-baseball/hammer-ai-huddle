@@ -1,59 +1,40 @@
 
-# Improve PPG Camera Instructions for Multi-Camera Phones
+# Simplify Resting Heart Rate to Manual Entry Only
 
-## Problem
+## What's Being Removed
 
-The current measuring phase shows only one line of instruction:
+The entire camera-based PPG measurement system in `src/components/vault/quiz/RestingHeartRateCapture.tsx`:
 
-> "Hold your fingertip firmly over the rear camera lens"
+- `startMeasurement()` function and all camera/canvas setup
+- `analyzeSignal()` peak-detection algorithm
+- `stopCamera()` and all timer/stream refs
+- `videoRef`, `canvasRef`, `streamRef`, `samplesRef`, `sampleTimerRef`, `countdownTimerRef`
+- The `measuring` phase and its pulsing-heart countdown UI
+- The `idle` phase with SVG diagram and camera instructions
+- The camera-permission error handling
+- The `Camera` and `RotateCcw` icon imports (no longer needed)
+- The `useCallback`, `useEffect`, and `useRef` hooks (no longer needed)
+- The `useIsMobile` hook (no longer needed — both platforms now do the same thing)
+- The `MEASURE_DURATION` and `SAMPLE_INTERVAL_MS` constants
 
-This is ambiguous for users with multi-camera phones (e.g. iPhone Pro, Samsung S-series with 3 lenses). Users don't know:
-- **Which specific lens** to cover — the main/wide lens, not ultrawide or telephoto
-- **How much pressure** to apply — firm but not white-knuckle
-- **How to position** their finger — pad of the finger flat over the lens, not the tip
-- **What to expect visually** — the screen will look fully red when done correctly
+## What Stays / What's Built
 
-## What's Changing
+A lean component with **two phases only**:
 
-All changes are in **`src/components/vault/quiz/RestingHeartRateCapture.tsx`** only.
+- **`entry`** — numeric input with a heart icon, 30–200 range, Save button, Enter key support
+- **`result`** — displays the saved BPM with an Edit button to return to entry
 
-### 1 — Pre-measurement instruction card (idle phase, mobile only)
+The result display matches the existing desktop result style already in the component (`bg-rose-500/10 border border-rose-500/20` pill with the heart icon and BPM).
 
-Add a short numbered "How to" list that appears before the user taps "Measure with Camera", so they know what to do before the 30-second timer starts:
+## New Component Shape
 
+```text
+Props:   value: string, onResult: (bpm: number | null) => void
+State:   phase: 'entry' | 'result', inputValue: string, errorMsg: string
 ```
-1. Flip your phone over so the cameras face up
-2. Cover the MAIN (widest) camera lens with the pad of your index finger
-3. Press gently but firmly — your fingertip should look red/orange
-4. Keep still for 30 seconds while we read your pulse
-```
 
-This is rendered as a compact numbered list below the current description line, styled in `text-xs text-muted-foreground`.
-
-### 2 — Measuring phase instructions (expanded)
-
-Replace the single-line hint with a two-part instruction block:
-
-**Primary instruction (bold):**
-> Cover the main camera lens with the pad of your finger
-
-**Secondary tip (smaller, muted):**
-> On multi-camera phones, use the widest/largest lens. Press firmly — your fingertip should glow red.
-
-This makes it immediately clear which lens to use as soon as the countdown starts.
-
-### 3 — Visual diagram element
-
-Add a simple SVG camera diagram inline in the idle phase that illustrates:
-- A phone outline (rectangle)
-- Three dots representing the camera array
-- A highlighted circle on the largest dot labelled "Use this one →"
-
-This is entirely inline SVG — no new dependencies.
+The `phase` initialises to `'result'` if a valid `value` prop is passed in (preserving the existing behaviour), otherwise `'entry'`.
 
 ## Files Changed
 
-**`src/components/vault/quiz/RestingHeartRateCapture.tsx`**
-- Idle phase: add numbered prep list + inline camera diagram
-- Measuring phase: expand instruction text from 1 line to 2 lines (primary + tip)
-- No logic changes, no state changes, no dependency changes
+**`src/components/vault/quiz/RestingHeartRateCapture.tsx`** — rewritten to ~60 lines (down from ~370). No other files need to change; `VaultFocusQuizDialog.tsx` already calls `<RestingHeartRateCapture value={restingHr} onResult={...} />` which remains compatible.
