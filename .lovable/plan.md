@@ -1,69 +1,45 @@
 
-# Fix: Clear All Cached Assets for Returning Visitors
 
-## Problem
-The service worker cleanup script only unregisters service workers, but does not clear the **Cache Storage API** entries left behind by the old PWA. Browsers may still serve stale JS chunks (`vendor-ui-C68qUwAh.js`) from these caches even after the service worker itself is gone.
+# Fix: Force Fresh Production Build to Replace Corrupted HTML
+
+## Problem Identified
+
+Testing revealed that:
+- **Preview (dev server)** works perfectly on both desktop and mobile, no errors
+- **Live published site** (hammers-modality.lovable.app) shows a **blank white page**
+- The HTML served by the live site is completely stripped: `<html lang="en"><body><div id="root"></div></body></html>`
+- The entire `<head>` section, all `<script>` tags, all `<meta>` tags, and the cache cleanup script are **missing** from the production output
+
+This means the currently deployed production build artifact contains a corrupted `index.html` from when the VitePWA plugin was still active. Our cache cleanup script was never part of what's deployed.
+
+## Root Cause
+
+The production site is still serving a build that was created when the VitePWA plugin was corrupting the HTML output. Subsequent publishes may not have triggered a full rebuild, or the CDN is caching the old corrupted HTML.
 
 ## Solution
-Enhance the inline script in `index.html` to also delete all Cache Storage entries via `caches.keys()` + `caches.delete()`. This ensures both the service worker AND its cached assets are fully purged.
 
-## Changes
+Force the build system to produce a new, clean output by making a small change that triggers a full rebuild:
 
-**File: `index.html`** (lines 36-50)
+1. **Add a cache-busting HTML comment** to `index.html` (e.g., `<!-- build: 2026-02-21 -->`) to ensure the file is treated as changed
+2. **Publish the update** -- this should trigger a complete rebuild with the correct, uncorrupted `index.html`
 
-Replace the current service worker cleanup script with an expanded version:
+## Technical Details
 
-```html
-<script>
-  (function() {
-    var needsReload = false;
-    var promises = [];
+**File: `index.html`**
+- Add an HTML comment inside `<head>` to force the build system to recognize the file has changed:
+  ```html
+  <!-- Force rebuild: 2026-02-21 -->
+  ```
 
-    // 1. Unregister all service workers
-    if ('serviceWorker' in navigator) {
-      promises.push(
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          if (registrations.length > 0) {
-            needsReload = true;
-            return Promise.all(registrations.map(function(r) { return r.unregister(); }));
-          }
-        })
-      );
-    }
+## Verification Steps
 
-    // 2. Clear all Cache Storage entries (PWA offline caches)
-    if ('caches' in window) {
-      promises.push(
-        caches.keys().then(function(names) {
-          if (names.length > 0) {
-            needsReload = true;
-            return Promise.all(names.map(function(n) { return caches.delete(n); }));
-          }
-        })
-      );
-    }
+After publishing:
+1. Visit https://hammers-modality.lovable.app in an incognito window
+2. View page source to confirm all `<head>` content, scripts, and the cache cleanup code are present
+3. Test on mobile
+4. Do a hard refresh (`Ctrl+Shift+R`) in your regular browser to bypass any browser-level HTTP caching of the old broken HTML
 
-    // 3. Reload once after cleanup
-    if (promises.length > 0) {
-      Promise.all(promises).then(function() {
-        if (needsReload && !sessionStorage.getItem('sw-cleared')) {
-          sessionStorage.setItem('sw-cleared', '1');
-          window.location.reload();
-        }
-      });
-    }
-  })();
-</script>
-```
+## Why This Should Work
 
-## How It Works
-- Unregisters service workers (same as before)
-- Also deletes all Cache Storage entries -- this is where the old PWA stored offline copies of JS chunks like `vendor-ui-C68qUwAh.js`
-- Reloads exactly once using `sessionStorage` guard (same as before)
-- Harmless for visitors with no caches
+The source `index.html` is correct and complete. The Vite config is clean (no PWA plugin). The only issue is that the deployed build artifact is stale. A fresh publish with a file change will force a complete rebuild and CDN cache invalidation.
 
-## Important
-After publishing, you should still do a **hard refresh** (`Ctrl+Shift+R` / `Cmd+Shift+R`) or clear site data in your own browser, since the old cached `index.html` (without this updated script) may itself be cached by the browser's HTTP cache.
-
-## After Implementation
-Publish the update. Returning visitors whose browsers serve the new `index.html` will automatically have all stale caches purged.
