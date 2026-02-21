@@ -1,175 +1,98 @@
 import { usePhysioAdultTracking } from '@/hooks/usePhysioAdultTracking';
 import { usePhysioProfile } from '@/hooks/usePhysioProfile';
-import { AlertTriangle, Heart, Info } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { AlertTriangle, Heart, Lock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
+const LIBIDO_LABELS = ['', 'Very Low', 'Low', 'Moderate', 'High', 'Very High'];
+const SLEEP_RECOVERY_LABELS = ['', 'Exhausted', 'Groggy', 'Okay', 'Refreshed', 'Fully Restored'];
+const MOOD_STABILITY_LABELS = ['', 'Volatile', 'Shaky', 'Neutral', 'Steady', 'Rock Solid'];
 const CYCLE_PHASES = ['Menstrual', 'Follicular', 'Ovulatory', 'Luteal'];
 
-function TapSelector({ options, selected, onSelect }: {
-  options: string[];
-  selected: string | null;
-  onSelect: (val: string) => void;
-}) {
+function MetricRow({ label, value, subtitle }: { label: string; value: string | null; subtitle?: string }) {
+  if (!value) return null;
   return (
-    <div className="flex flex-wrap gap-2">
-      {options.map(opt => (
-        <button
-          key={opt}
-          type="button"
-          onClick={() => onSelect(opt)}
-          className={cn(
-            'px-3 py-1.5 rounded-full text-xs font-medium border transition-all',
-            selected === opt
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-violet-700/15 border-violet-700/40 text-foreground hover:border-violet-700/70'
-          )}
-        >
-          {opt}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function StarSelector({ max = 5, value, onSelect }: {
-  max?: number;
-  value: number | null;
-  onSelect: (val: number) => void;
-}) {
-  return (
-    <div className="flex gap-1">
-      {Array.from({ length: max }, (_, i) => i + 1).map(n => (
-        <button
-          key={n}
-          type="button"
-          onClick={() => onSelect(n === value ? 0 : n)}
-          className={cn(
-            'w-8 h-8 rounded-full border-2 text-sm font-bold transition-all',
-            value !== null && n <= value
-              ? 'bg-primary border-primary text-primary-foreground'
-              : 'bg-violet-700/15 border-violet-700/45 text-foreground hover:border-violet-300'
-          )}
-        >
-          {n}
-        </button>
-      ))}
+    <div className="flex items-center justify-between py-2 border-b border-violet-700/20 last:border-0">
+      <div>
+        <p className="text-xs font-semibold text-foreground">{label}</p>
+        {subtitle && <p className="text-[10px] text-muted-foreground">{subtitle}</p>}
+      </div>
+      <span className="text-xs font-bold text-violet-300 bg-violet-700/20 px-2.5 py-1 rounded-full">{value}</span>
     </div>
   );
 }
 
 export function PhysioAdultTrackingSection() {
-  const { tracking, adultFeaturesEnabled, saveTracking } = usePhysioAdultTracking();
+  const { tracking, adultFeaturesEnabled } = usePhysioAdultTracking();
   const { profile } = usePhysioProfile();
 
   if (!adultFeaturesEnabled) return null;
 
   const sex = profile?.biological_sex;
   const isFemale = sex === 'female';
-  const isMale = sex === 'male';
-  const hasContraceptive = profile?.contraceptive_use === true;
+  const hasData = tracking && (
+    tracking.libido_level || tracking.sleep_quality_impact || tracking.mood_stability ||
+    tracking.wellness_consistency_text || tracking.cycle_phase || tracking.symptom_tags?.length
+  );
 
   return (
-    <div className="rounded-xl border-2 border-violet-700/40 bg-gradient-to-br from-violet-700/20 to-background p-4 space-y-4">
+    <div className="rounded-xl border-2 border-violet-700/40 bg-gradient-to-br from-violet-700/20 to-background p-4 space-y-3">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-violet-700/30">
             <Heart className="h-4 w-4 text-violet-300" />
+          </div>
+          <div>
+            <h3 className="font-bold text-base leading-tight">Adult Wellness Tracking</h3>
+            <p className="text-xs text-muted-foreground">Tracked via Morning and Night Check-ins</p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-bold text-base leading-tight">Adult Wellness Tracking</h3>
-          <p className="text-xs text-muted-foreground">Private &amp; encrypted</p>
-        </div>
+        <Badge className="bg-violet-700/30 border-violet-700/50 text-violet-300 text-[10px]">
+          <Lock className="h-2.5 w-2.5 mr-1" /> Private
+        </Badge>
       </div>
 
-      {/* Female: cycle tracking */}
-      {isFemale && (
-        <>
-          {hasContraceptive && (
-            <div className="flex items-start gap-2 p-2 bg-violet-700/25 border border-violet-700/35 rounded-lg">
-              <Info className="h-3 w-3 text-violet-200 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-violet-100">
-                Hormonal contraceptive noted — cycle phase tracking may reflect symptom patterns rather than natural hormonal fluctuations.
-              </p>
-            </div>
-          )}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-foreground">Cycle Phase</p>
-            <TapSelector
-              options={CYCLE_PHASES}
-              selected={tracking?.cycle_phase ?? null}
-              onSelect={val => saveTracking({ cycle_phase: val })}
-            />
-          </div>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-foreground">Cycle Day (optional)</p>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min={1}
-                max={35}
-                value={tracking?.cycle_day ?? ''}
-                onChange={e => saveTracking({ cycle_day: parseInt(e.target.value) || null })}
-                placeholder="Day #"
-                className="w-20 h-8 px-2 text-sm rounded-md border border-violet-700/45 bg-violet-700/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-300"
+      {hasData ? (
+        <div className="space-y-0">
+          <MetricRow
+            label="Libido / Sex Drive"
+            value={tracking.libido_level ? `${tracking.libido_level}/5 — ${LIBIDO_LABELS[tracking.libido_level]}` : null}
+          />
+          <MetricRow
+            label="Sleep Recovery Quality"
+            value={tracking.sleep_quality_impact ? `${tracking.sleep_quality_impact}/5 — ${SLEEP_RECOVERY_LABELS[tracking.sleep_quality_impact]}` : null}
+          />
+          <MetricRow
+            label="Mood Stability"
+            value={tracking.mood_stability ? `${tracking.mood_stability}/5 — ${MOOD_STABILITY_LABELS[tracking.mood_stability]}` : null}
+          />
+          <MetricRow
+            label="Overall Wellness"
+            value={tracking.wellness_consistency_text || null}
+          />
+          {isFemale && (
+            <>
+              <MetricRow
+                label="Cycle Phase"
+                value={tracking.cycle_phase || null}
+                subtitle={tracking.cycle_day ? `Day ${tracking.cycle_day}${tracking.period_active ? ' • Period Active' : ''}` : undefined}
               />
-              <button
-                type="button"
-                onClick={() => saveTracking({ period_active: !tracking?.period_active })}
-                className={cn(
-                  'px-3 py-1 rounded-full text-xs font-medium border transition-all',
-                  tracking?.period_active
-                    ? 'bg-rose-500/20 border-rose-500/40 text-rose-400'
-                    : 'bg-violet-700/15 border-violet-700/40 text-foreground'
-                )}
-              >
-                Period Active
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Male: wellness consistency */}
-      {isMale && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-foreground">Wellness Consistency Today</p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => saveTracking({ wellness_consistency: true })}
-              className={cn(
-                'flex-1 py-2 rounded-xl text-sm font-medium border transition-all',
-                tracking?.wellness_consistency === true
-                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                  : 'bg-violet-700/15 border-violet-700/40 text-foreground'
+              {tracking.symptom_tags && tracking.symptom_tags.length > 0 && (
+                <MetricRow
+                  label="Body Signals"
+                  value={tracking.symptom_tags.join(', ')}
+                />
               )}
-            >
-              ✓ Feeling Consistent
-            </button>
-            <button
-              type="button"
-              onClick={() => saveTracking({ wellness_consistency: false })}
-              className={cn(
-                'flex-1 py-2 rounded-xl text-sm font-medium border transition-all',
-                tracking?.wellness_consistency === false
-                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                  : 'bg-violet-700/15 border-violet-700/40 text-foreground'
-              )}
-            >
-              Off Day
-            </button>
-          </div>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="text-center py-4">
+          <p className="text-sm text-muted-foreground">
+            Complete your morning or night check-in to see today's wellness data.
+          </p>
         </div>
       )}
-
-      {/* Shared: energy level */}
-      <div className="space-y-2">
-        <p className="text-xs font-semibold text-foreground">Energy Level (1–5, optional)</p>
-        <StarSelector
-          value={tracking?.libido_level ?? null}
-          onSelect={val => saveTracking({ libido_level: val || null })}
-        />
-      </div>
 
       <div className="flex items-start gap-2 p-2 bg-violet-700/25 border border-violet-700/35 rounded-lg">
         <AlertTriangle className="h-3 w-3 text-violet-200 mt-0.5 flex-shrink-0" />

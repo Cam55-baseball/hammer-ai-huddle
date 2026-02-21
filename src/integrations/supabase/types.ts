@@ -1455,11 +1455,15 @@ export type Database = {
           cycle_phase: string | null
           id: string
           libido_level: number | null
+          mood_stability: number | null
           period_active: boolean | null
+          sleep_quality_impact: number | null
+          symptom_tags: string[] | null
           tracking_date: string
           updated_at: string
           user_id: string
           wellness_consistency: boolean | null
+          wellness_consistency_text: string | null
         }
         Insert: {
           created_at?: string
@@ -1467,11 +1471,15 @@ export type Database = {
           cycle_phase?: string | null
           id?: string
           libido_level?: number | null
+          mood_stability?: number | null
           period_active?: boolean | null
+          sleep_quality_impact?: number | null
+          symptom_tags?: string[] | null
           tracking_date?: string
           updated_at?: string
           user_id: string
           wellness_consistency?: boolean | null
+          wellness_consistency_text?: string | null
         }
         Update: {
           created_at?: string
@@ -1479,11 +1487,15 @@ export type Database = {
           cycle_phase?: string | null
           id?: string
           libido_level?: number | null
+          mood_stability?: number | null
           period_active?: boolean | null
+          sleep_quality_impact?: number | null
+          symptom_tags?: string[] | null
           tracking_date?: string
           updated_at?: string
           user_id?: string
           wellness_consistency?: boolean | null
+          wellness_consistency_text?: string | null
         }
         Relationships: []
       }
