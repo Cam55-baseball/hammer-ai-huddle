@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight, Calculator, Check } from 'lucide-react';
+import { BirthDatePicker } from '@/components/ui/BirthDatePicker';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -163,12 +164,10 @@ export function TDEESetupWizard({ onComplete, onDataSaved, initialData }: TDEESe
             </p>
             <div className="space-y-2">
               <Label htmlFor="dob">Date of Birth</Label>
-              <Input
-                id="dob"
-                type="date"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
+              <BirthDatePicker
+                value={dateOfBirth ? new Date(dateOfBirth + 'T00:00:00') : undefined}
+                onChange={(d) => setDateOfBirth(d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` : '')}
+                placeholder="Select your date of birth"
               />
               {dateOfBirth && (
                 <p className="text-sm text-muted-foreground">Age: {age} years old</p>
