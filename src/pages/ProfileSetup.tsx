@@ -12,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { PlusCircle, X } from "lucide-react";
+import { BirthDatePicker } from "@/components/ui/BirthDatePicker";
+import { format } from "date-fns";
 
 const ProfileSetup = () => {
   const navigate = useNavigate();
@@ -58,6 +60,7 @@ const ProfileSetup = () => {
   const [mlbAffiliate, setMlbAffiliate] = useState("");
   const [independentLeague, setIndependentLeague] = useState("");
   const [isForeignPlayer, setIsForeignPlayer] = useState(false);
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   
   // Coach/Scout-specific fields
   const [yearsAffiliated, setYearsAffiliated] = useState("");
@@ -116,6 +119,15 @@ const ProfileSetup = () => {
       toast({
         title: t('profileSetup.missingInformation'),
         description: t('profileSetup.enterFirstLastName'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!dateOfBirth) {
+      toast({
+        title: t('profileSetup.missingInformation'),
+        description: 'Please select your date of birth.',
         variant: "destructive",
       });
       return;
@@ -184,6 +196,7 @@ const ProfileSetup = () => {
         last_name: lastName,
         bio: bio || null,
         credentials: credentials.filter(c => c.trim() !== ''),
+        date_of_birth: dateOfBirth ? format(dateOfBirth, 'yyyy-MM-dd') : null,
       };
       
       if (avatarUrl) {
@@ -330,6 +343,15 @@ const ProfileSetup = () => {
                   required
                 />
               </div>
+            </div>
+
+            <div>
+              <Label>Date of Birth *</Label>
+              <BirthDatePicker
+                value={dateOfBirth}
+                onChange={setDateOfBirth}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Required — used across the app for age-based features.</p>
             </div>
             
             <div>

@@ -4,10 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { BirthDatePicker } from '@/components/ui/BirthDatePicker';
 import { cn } from '@/lib/utils';
 import { usePhysioProfile } from '@/hooks/usePhysioProfile';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Heart, Shield, Users, ChevronRight, Check, CalendarIcon, Info } from 'lucide-react';
 
 interface PhysioHealthIntakeDialogProps {
@@ -100,8 +101,11 @@ function SexCard({ value, label, emoji, selected, onSelect }: {
 
 export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = false }: PhysioHealthIntakeDialogProps) {
   const { profile, saveProfile, enableAdultFeatures } = usePhysioProfile();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [profileDob, setProfileDob] = useState<Date | undefined>(undefined);
+  const [profileSex, setProfileSex] = useState<string | null>(null);
 
   // Step 1
   const [bloodType, setBloodType] = useState('');
@@ -121,7 +125,29 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
   const [enableAdult, setEnableAdult] = useState(false);
   const [contraceptiveUse, setContraceptiveUse] = useState(false);
   const [contraceptiveType, setContraceptiveType] = useState('');
-  const [dobOpen, setDobOpen] = useState(false);
+
+  // Fetch DOB and sex from main profiles table
+  useEffect(() => {
+    if (!open || !user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('date_of_birth, sex')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (data?.date_of_birth) {
+        const d = new Date(data.date_of_birth + 'T00:00:00');
+        setProfileDob(d);
+        setDobDate(d);
+      }
+      if (data?.sex) {
+        setProfileSex(data.sex);
+        if (!isEditMode && !profile?.biological_sex) {
+          setBiologicalSex(data.sex);
+        }
+      }
+    })();
+  }, [open, user]);
 
   // Pre-populate state from existing profile when in edit mode
   useEffect(() => {
@@ -189,6 +215,15 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
       if (enableAdult && isAdultEligible) {
         await enableAdultFeatures();
       }
+
+      // Sync biological_sex to profiles.sex if not already set
+      if (!isEditMode && biologicalSex && user && !profileSex) {
+        await supabase
+          .from('profiles')
+          .update({ sex: biologicalSex })
+          .eq('id', user.id);
+      }
+
       onOpenChange(false);
     } finally {
       setSaving(false);
@@ -324,41 +359,20 @@ export function PhysioHealthIntakeDialog({ open, onOpenChange, isEditMode = fals
             {/* DOB Picker */}
             <div className="space-y-2">
               <Label>Date of Birth</Label>
-              {isEditMode ? (
-                /* Read-only display in edit mode */
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border">
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-sm">
-                    {dobDate ? format(dobDate, 'MMMM d, yyyy') : 'Not set'}
-                  </span>
-                  <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap">Cannot be changed</span>
-                </div>
+              {isEditMode || profileDob ? (
+                /* Read-only display when DOB already set in profile or in edit mode */
+                <BirthDatePicker value={dobDate} onChange={() => {}} readOnly />
               ) : (
-                <Popover open={dobOpen} onOpenChange={setDobOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !dobDate && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dobDate ? format(dobDate, 'MMMM d, yyyy') : 'Select your date of birth'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dobDate}
-                      onSelect={(d) => { setDobDate(d); setDobOpen(false); }}
-                      disabled={(date) => date > new Date() || date < new Date('1920-01-01')}
-                      defaultMonth={dobDate ?? new Date(new Date().getFullYear() - 20, 0)}
-                      initialFocus
-                      className={cn('p-3 pointer-events-auto')}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <BirthDatePicker
+                  value={dobDate}
+                  onChange={setDobDate}
+                  placeholder="Select your date of birth"
+                />
+              )}
+              {profileDob && !isEditMode && (
+                <p className="text-xs text-muted-foreground pl-1">
+                  Pre-filled from your profile.
+                </p>
               )}
               {computedAge !== null && (
                 <p className="text-xs text-muted-foreground pl-1">

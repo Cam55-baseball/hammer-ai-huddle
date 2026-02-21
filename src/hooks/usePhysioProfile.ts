@@ -53,9 +53,26 @@ export function usePhysioProfile() {
     enabled: !!user,
   });
 
+  // Also fetch the main profile's DOB as the primary source of truth
+  const { data: mainProfile } = useQuery({
+    queryKey: ['mainProfileDob', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('date_of_birth')
+        .eq('id', user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const setupCompleted = profile?.setup_completed ?? false;
   const adultFeaturesEnabled = profile?.adult_features_enabled ?? false;
-  const computedAge = calcAge(profile?.date_of_birth ?? null);
+  // Prefer main profile DOB, fall back to physio profile DOB
+  const primaryDob = mainProfile?.date_of_birth ?? profile?.date_of_birth ?? null;
+  const computedAge = calcAge(primaryDob);
 
   const saveProfile = useCallback(async (updates: Partial<PhysioHealthProfile> & { setup_completed?: boolean }) => {
     if (!user) return { success: false, error: 'Not authenticated' };
@@ -91,15 +108,15 @@ export function usePhysioProfile() {
   const enableAdultFeatures = useCallback(async () => {
     if (!user) return { success: false };
     
-    // Age gate: read date_of_birth from physio_health_profiles (already in profile)
-    const age = calcAge(profile?.date_of_birth ?? null);
+    // Age gate: prefer main profile DOB, fall back to physio profile
+    const age = calcAge(primaryDob);
     if (age !== null && age < 18) {
       return { success: false, error: 'Age requirement not met' };
     }
 
     const result = await saveProfile({ adult_features_enabled: true });
     return result;
-  }, [user, saveProfile, profile]);
+  }, [user, saveProfile, primaryDob]);
 
   return {
     profile,
