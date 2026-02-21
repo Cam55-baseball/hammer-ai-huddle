@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePhysioDailyReport } from '@/hooks/usePhysioDailyReport';
 import { usePhysioProfile } from '@/hooks/usePhysioProfile';
+import { usePhysioAdultTracking } from '@/hooks/usePhysioAdultTracking';
 import { getBodyAreaLabel } from './quiz/body-maps/bodyAreaDefinitions';
 import {
   Dialog,
@@ -16,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone, Flame, Target, Sword, Smile, AlertTriangle, Clock, BedDouble, Scale, Activity } from 'lucide-react';
+import { Brain, Heart, Zap, Moon, Sun, Dumbbell, Sparkles, ChevronDown, Smartphone, Flame, Target, Sword, Smile, AlertTriangle, Clock, BedDouble, Scale, Activity, Lock, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { calculateSleepDuration, getSleepAnalysis, formatSleepDuration } from '@/utils/sleepUtils';
 
@@ -376,6 +377,21 @@ export function VaultFocusQuizDialog({
   // PHYSIO: Pre-lift movement restriction
   const [movementRestriction, setMovementRestriction] = useState<Record<string, string>>({});
 
+  // ADULT WELLNESS: Check-in fields
+  const { adultFeaturesEnabled, saveTracking } = usePhysioAdultTracking();
+  const { profile: physioProfile } = usePhysioProfile();
+  const adultSex = physioProfile?.biological_sex;
+  const isAdultFemale = adultSex === 'female';
+  const isAdultMale = adultSex === 'male';
+  const [adultLibidoLevel, setAdultLibidoLevel] = useState(0);
+  const [adultSleepRecovery, setAdultSleepRecovery] = useState(0);
+  const [adultMoodStability, setAdultMoodStability] = useState(0);
+  const [adultWellnessText, setAdultWellnessText] = useState('');
+  const [adultCyclePhase, setAdultCyclePhase] = useState('');
+  const [adultCycleDay, setAdultCycleDay] = useState('');
+  const [adultPeriodActive, setAdultPeriodActive] = useState(false);
+  const [adultSymptomTags, setAdultSymptomTags] = useState<string[]>([]);
+
   // Calculate sleep duration and analysis for morning quiz
   const calculatedSleep = useMemo(() => {
     if (bedtimeActual && wakeTimeActual) {
@@ -504,6 +520,26 @@ export function VaultFocusQuizDialog({
       data.wake_time_goal = wakeTimeGoal || undefined;
     }
 
+    // Save adult wellness data if enabled
+    if (adultFeaturesEnabled && (quizType === 'morning' || quizType === 'night')) {
+      const adultData: any = {};
+      if (adultLibidoLevel > 0) adultData.libido_level = adultLibidoLevel;
+      if (quizType === 'morning') {
+        if (adultSleepRecovery > 0) adultData.sleep_quality_impact = adultSleepRecovery;
+        if (adultWellnessText) adultData.wellness_consistency_text = adultWellnessText;
+        if (adultCyclePhase) adultData.cycle_phase = adultCyclePhase;
+        if (adultCycleDay) adultData.cycle_day = parseInt(adultCycleDay) || null;
+        adultData.period_active = adultPeriodActive;
+      }
+      if (quizType === 'night') {
+        if (adultMoodStability > 0) adultData.mood_stability = adultMoodStability;
+        if (adultSymptomTags.length > 0) adultData.symptom_tags = adultSymptomTags;
+      }
+      if (Object.keys(adultData).length > 0) {
+        await saveTracking(adultData);
+      }
+    }
+
     const result = await onSubmit(data);
     setLoading(false);
     
@@ -564,6 +600,15 @@ export function VaultFocusQuizDialog({
     setIllnessType('');
     setMovementRestriction({});
     setShowNightSuccess(false);
+    // Reset adult wellness fields
+    setAdultLibidoLevel(0);
+    setAdultSleepRecovery(0);
+    setAdultMoodStability(0);
+    setAdultWellnessText('');
+    setAdultCyclePhase('');
+    setAdultCycleDay('');
+    setAdultPeriodActive(false);
+    setAdultSymptomTags([]);
     onOpenChange(false);
   };
 
@@ -1035,7 +1080,153 @@ export function VaultFocusQuizDialog({
             </div>
           )}
 
-          {/* Pre-Lift Quiz Tip */}
+          {/* ADULT WELLNESS: Morning Check-in Section */}
+          {quizType === 'morning' && adultFeaturesEnabled && (
+            <Collapsible className="rounded-xl border-2 border-violet-700/40 bg-gradient-to-br from-violet-700/20 to-background overflow-hidden">
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-violet-700/30">
+                    <Lock className="h-4 w-4 text-violet-300" />
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-bold text-sm">Adult Wellness (18+)</h4>
+                    <p className="text-[10px] text-muted-foreground">Private and encrypted</p>
+                  </div>
+                </div>
+                <ChevronDown className="h-4 w-4 text-violet-300 transition-transform duration-200" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-4 pb-4 space-y-4">
+                {/* Sleep Recovery Quality */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-foreground">Sleep Recovery Quality</p>
+                  <p className="text-[10px] text-muted-foreground">How restored did you feel waking up?</p>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <button key={n} type="button" onClick={() => setAdultSleepRecovery(n)}
+                        className={cn('flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-all',
+                          adultSleepRecovery === n
+                            ? 'bg-violet-600 border-violet-500 text-white scale-105 shadow-lg'
+                            : 'bg-violet-700/15 border-violet-700/40 text-foreground opacity-70 hover:opacity-90'
+                        )}>{n}</button>
+                    ))}
+                  </div>
+                  {adultSleepRecovery > 0 && (
+                    <p className="text-[10px] font-bold text-violet-300">
+                      {['', 'Exhausted', 'Groggy', 'Okay', 'Refreshed', 'Fully Restored'][adultSleepRecovery]}
+                    </p>
+                  )}
+                  <Collapsible>
+                    <CollapsibleTrigger className="text-[10px] text-violet-400 font-medium flex items-center gap-1">
+                      <Info className="h-3 w-3" /> Why Track This?
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-1">
+                      <p className="text-[10px] text-muted-foreground">Growth hormone peaks during deep sleep. Feeling unrestored may mean disrupted recovery cycles that affect muscle repair and next-day performance.</p>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+
+                {/* Libido / Sex Drive */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-foreground">Libido / Sex Drive</p>
+                  <p className="text-[10px] text-muted-foreground">How strong is your sex drive this morning? Be honest — this is private.</p>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <button key={n} type="button" onClick={() => setAdultLibidoLevel(n)}
+                        className={cn('flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-all',
+                          adultLibidoLevel === n
+                            ? 'bg-violet-600 border-violet-500 text-white scale-105 shadow-lg'
+                            : 'bg-violet-700/15 border-violet-700/40 text-foreground opacity-70 hover:opacity-90'
+                        )}>{n}</button>
+                    ))}
+                  </div>
+                  {adultLibidoLevel > 0 && (
+                    <p className="text-[10px] font-bold text-violet-300">
+                      {['', 'Very Low', 'Low', 'Moderate', 'High', 'Very High'][adultLibidoLevel]}
+                    </p>
+                  )}
+                  <Collapsible>
+                    <CollapsibleTrigger className="text-[10px] text-violet-400 font-medium flex items-center gap-1">
+                      <Info className="h-3 w-3" /> Why Track This?
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-1">
+                      <p className="text-[10px] text-muted-foreground">Your libido is a direct window into your hormonal health. Testosterone and estrogen don't just regulate sex drive — they control muscle protein synthesis, bone density, red blood cell production, and central nervous system recovery. A sudden drop often signals overtraining, under-eating, or poor sleep <strong>before</strong> you feel it in your workouts. Tracking this helps you catch recovery problems 3–5 days earlier.</p>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+
+                {/* Male: Overall Wellness */}
+                {isAdultMale && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-foreground">Overall Wellness</p>
+                    <p className="text-[10px] text-muted-foreground">How does your body feel overall today?</p>
+                    <div className="flex gap-2">
+                      {['Strong Day', 'Average', 'Off Day'].map(opt => (
+                        <button key={opt} type="button" onClick={() => setAdultWellnessText(adultWellnessText === opt ? '' : opt)}
+                          className={cn('flex-1 py-2 rounded-xl text-xs font-medium border-2 transition-all',
+                            adultWellnessText === opt
+                              ? opt === 'Strong Day' ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
+                                : opt === 'Off Day' ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                                : 'bg-violet-600/20 border-violet-500/40 text-violet-300'
+                              : 'bg-violet-700/15 border-violet-700/40 text-foreground'
+                          )}>{opt}</button>
+                      ))}
+                    </div>
+                    <Collapsible>
+                      <CollapsibleTrigger className="text-[10px] text-violet-400 font-medium flex items-center gap-1">
+                        <Info className="h-3 w-3" /> Why Track This?
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pt-1">
+                        <p className="text-[10px] text-muted-foreground">Daily consistency reflects hormonal balance and nervous system readiness. Patterns here help predict when to push hard vs. back off.</p>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
+                )}
+
+                {/* Female: Cycle Tracking */}
+                {isAdultFemale && (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-foreground">Cycle Phase</p>
+                      <div className="flex flex-wrap gap-2">
+                        {['Menstrual', 'Follicular', 'Ovulatory', 'Luteal'].map(phase => (
+                          <button key={phase} type="button" onClick={() => setAdultCyclePhase(adultCyclePhase === phase ? '' : phase)}
+                            className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all',
+                              adultCyclePhase === phase
+                                ? 'bg-violet-600 text-white border-violet-500'
+                                : 'bg-violet-700/15 border-violet-700/40 text-foreground hover:border-violet-700/70'
+                            )}>{phase}</button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="number" min={1} max={35} value={adultCycleDay}
+                        onChange={e => setAdultCycleDay(e.target.value)} placeholder="Day #"
+                        className="w-20 h-8 px-2 text-sm rounded-md border border-violet-700/45 bg-violet-700/15 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-300"
+                      />
+                      <button type="button" onClick={() => setAdultPeriodActive(!adultPeriodActive)}
+                        className={cn('px-3 py-1 rounded-full text-xs font-medium border transition-all',
+                          adultPeriodActive ? 'bg-rose-500/20 border-rose-500/40 text-rose-400' : 'bg-violet-700/15 border-violet-700/40 text-foreground'
+                        )}>Period Active</button>
+                    </div>
+                    <Collapsible>
+                      <CollapsibleTrigger className="text-[10px] text-violet-400 font-medium flex items-center gap-1">
+                        <Info className="h-3 w-3" /> Why Track This?
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pt-1">
+                        <p className="text-[10px] text-muted-foreground">Estrogen and progesterone shifts affect strength, endurance, and injury risk. Tracking your cycle phase helps time training intensity and nutrition for optimal performance.</p>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-2 p-2 bg-violet-700/25 border border-violet-700/35 rounded-lg">
+                  <AlertTriangle className="h-3 w-3 text-violet-200 mt-0.5 flex-shrink-0" />
+                  <p className="text-[10px] text-violet-100">Educational purposes only. Not medical advice. Data is private and encrypted.</p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
           {quizType === 'pre_lift' && (
             <Alert className="bg-orange-500/10 border-orange-500/30">
               <Dumbbell className="h-4 w-4 text-orange-500" />
@@ -1346,6 +1537,115 @@ export function VaultFocusQuizDialog({
                 </p>
               </div>
             </div>
+          )}
+
+          {/* ADULT WELLNESS: Night Check-in Section */}
+          {quizType === 'night' && adultFeaturesEnabled && (
+            <Collapsible className="rounded-xl border-2 border-violet-700/40 bg-gradient-to-br from-violet-700/20 to-background overflow-hidden">
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-violet-700/30">
+                    <Lock className="h-4 w-4 text-violet-300" />
+                  </div>
+                  <div className="text-left">
+                    <h4 className="font-bold text-sm">Adult Wellness (18+)</h4>
+                    <p className="text-[10px] text-muted-foreground">Private and encrypted</p>
+                  </div>
+                </div>
+                <ChevronDown className="h-4 w-4 text-violet-300 transition-transform duration-200" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-4 pb-4 space-y-4">
+                {/* Libido / Sex Drive */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-foreground">Libido / Sex Drive</p>
+                  <p className="text-[10px] text-muted-foreground">How was your sex drive today overall? Be honest — this is private.</p>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <button key={n} type="button" onClick={() => setAdultLibidoLevel(n)}
+                        className={cn('flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-all',
+                          adultLibidoLevel === n
+                            ? 'bg-violet-600 border-violet-500 text-white scale-105 shadow-lg'
+                            : 'bg-violet-700/15 border-violet-700/40 text-foreground opacity-70 hover:opacity-90'
+                        )}>{n}</button>
+                    ))}
+                  </div>
+                  {adultLibidoLevel > 0 && (
+                    <p className="text-[10px] font-bold text-violet-300">
+                      {['', 'Very Low', 'Low', 'Moderate', 'High', 'Very High'][adultLibidoLevel]}
+                    </p>
+                  )}
+                  <Collapsible>
+                    <CollapsibleTrigger className="text-[10px] text-violet-400 font-medium flex items-center gap-1">
+                      <Info className="h-3 w-3" /> Why Track This?
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-1">
+                      <p className="text-[10px] text-muted-foreground">Your libido is a direct window into your hormonal health. Testosterone and estrogen don't just regulate sex drive — they control muscle protein synthesis, bone density, red blood cell production, and central nervous system recovery. A sudden drop often signals overtraining, under-eating, or poor sleep <strong>before</strong> you feel it in your workouts. Tracking this helps you catch recovery problems 3–5 days earlier.</p>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+
+                {/* Mood Stability */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-foreground">Mood Stability</p>
+                  <p className="text-[10px] text-muted-foreground">How emotionally steady were you today?</p>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <button key={n} type="button" onClick={() => setAdultMoodStability(n)}
+                        className={cn('flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-all',
+                          adultMoodStability === n
+                            ? 'bg-violet-600 border-violet-500 text-white scale-105 shadow-lg'
+                            : 'bg-violet-700/15 border-violet-700/40 text-foreground opacity-70 hover:opacity-90'
+                        )}>{n}</button>
+                    ))}
+                  </div>
+                  {adultMoodStability > 0 && (
+                    <p className="text-[10px] font-bold text-violet-300">
+                      {['', 'Volatile', 'Shaky', 'Neutral', 'Steady', 'Rock Solid'][adultMoodStability]}
+                    </p>
+                  )}
+                  <Collapsible>
+                    <CollapsibleTrigger className="text-[10px] text-violet-400 font-medium flex items-center gap-1">
+                      <Info className="h-3 w-3" /> Why Track This?
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-1">
+                      <p className="text-[10px] text-muted-foreground">Mood swings can signal cortisol imbalance or poor sleep quality. Stable mood correlates with better focus during training and faster recovery between sessions.</p>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+
+                {/* Female: Body Signals */}
+                {isAdultFemale && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-foreground">Body Signals</p>
+                    <p className="text-[10px] text-muted-foreground">Select any symptoms you're experiencing today</p>
+                    <div className="flex flex-wrap gap-2">
+                      {['Cramps', 'Bloating', 'Fatigue', 'Headache', 'Cravings', 'Mood Swings'].map(tag => (
+                        <button key={tag} type="button"
+                          onClick={() => setAdultSymptomTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])}
+                          className={cn('px-3 py-1.5 rounded-full text-xs font-medium border transition-all',
+                            adultSymptomTags.includes(tag)
+                              ? 'bg-violet-600 text-white border-violet-500'
+                              : 'bg-violet-700/15 border-violet-700/40 text-foreground hover:border-violet-700/70'
+                          )}>{tag}</button>
+                      ))}
+                    </div>
+                    <Collapsible>
+                      <CollapsibleTrigger className="text-[10px] text-violet-400 font-medium flex items-center gap-1">
+                        <Info className="h-3 w-3" /> Why Track This?
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pt-1">
+                        <p className="text-[10px] text-muted-foreground">These symptoms track hormonal fluctuations throughout your cycle and help time nutrition and training intensity for optimal performance and recovery.</p>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
+                )}
+
+                <div className="flex items-start gap-2 p-2 bg-violet-700/25 border border-violet-700/35 rounded-lg">
+                  <AlertTriangle className="h-3 w-3 text-violet-200 mt-0.5 flex-shrink-0" />
+                  <p className="text-[10px] text-violet-100">Educational purposes only. Not medical advice. Data is private and encrypted.</p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           )}
 
           {/* Night Quiz Tips */}

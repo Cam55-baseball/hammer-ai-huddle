@@ -14,6 +14,10 @@ export interface PhysioAdultTracking {
   cycle_day: number | null;
   period_active: boolean;
   wellness_consistency: boolean | null;
+  mood_stability: number | null;
+  sleep_quality_impact: number | null;
+  wellness_consistency_text: string | null;
+  symptom_tags: string[] | null;
   created_at: string;
   updated_at: string;
 }
