@@ -1,86 +1,88 @@
 
 
-# Year-Round Training: Continuous Looping + Smart Progression
+# Date of Birth: Single Source of Truth Across the App
 
-## Overview
+## Problem
 
-When a user finishes Cycle 4 of Iron Bambino or Heat Factory, the program currently shows "Program Complete!" and dead-ends. This plan makes all three programs (Iron Bambino, Heat Factory, Speed Lab) run year-round with no endpoint, adding intelligent volume auto-adjustment based on biological readiness and progressive weight suggestions.
+1. **Date of birth is entered separately in multiple places** -- Profile Setup doesn't collect it, but Physio Health Setup and TDEE Setup Wizard each ask for it independently, storing it in different tables (`physio_health_profiles.date_of_birth` vs `profiles.date_of_birth`).
+2. **Navigating birth year in the calendar is painfully slow** -- users click month-by-month through potentially 20+ years to reach their birth year.
+3. **Physio 18+ age gate doesn't use the main profile DOB** -- it only checks `physio_health_profiles.date_of_birth`, so users who already entered their DOB elsewhere have to re-enter it.
 
----
+## Solution
 
-## What Changes
+### 1. Add Date of Birth to Profile Setup (required field)
 
-### 1. Cycle Looping (Iron Bambino + Heat Factory)
+**File: `src/pages/ProfileSetup.tsx`**
+- Add a new `dateOfBirth` state field
+- Add a DOB picker input (with year dropdown for fast navigation -- see item 2 below) in the form, marked as required
+- Save `date_of_birth` to the `profiles` table during `handleCompleteSetup`
+- This becomes the single source of truth for DOB across the app
 
-When Cycle 4 / Week 6 is completed, the program loops back to Cycle 1 with:
-- A `loops_completed` counter incremented (tracks how many full 24-week passes)
-- Week progress, exercise progress, and day completion times reset (fresh start)
-- **Weight log preserved** -- carried forward so the system knows your history
-- Streak and total workout counts continue uninterrupted
-- A celebratory toast: "Loop 2 starting -- let's keep building!" instead of "Program Complete!"
+### 2. Fast Year Navigation for All DOB Pickers
 
-### 2. Progressive Weight Suggestions
+**File: `src/components/ui/calendar.tsx`** -- Add a `captionLayout="dropdown"` variant or create a new `BirthDatePicker` component
 
-A new utility function analyzes the user's `weight_log` history to suggest weights for the next loop:
-- Looks at the same exercise from the previous loop's equivalent workout day
-- Suggests a small increase (2.5-5 lbs / ~2-5%) based on readiness score
-- If readiness is low (recovery_focus), suggests the **same** weight or slightly less
-- If readiness is moderate (modify_volume), suggests same weight
-- If readiness is good (full_send), suggests a progressive increase
-- Displayed as a subtle hint next to weight input fields: "Last loop: 135 lbs -- Try 140?"
+**New File: `src/components/ui/BirthDatePicker.tsx`**
+- A specialized date picker with **year and month dropdown selects** instead of clicking arrows month-by-month
+- Year dropdown ranging from current year back to 1920
+- Month dropdown for quick month selection
+- Once year/month are selected, the calendar grid shows days for final selection
+- Used in ProfileSetup, PhysioHealthIntakeDialog, and TDEESetupWizard wherever DOB is collected
 
-### 3. Auto-Adjust Volume Based on Biological Readiness
+### 3. Physio Health Setup Reads DOB from Profile
 
-The existing `ReadinessFromVault` system already calculates readiness scores and produces recommendations (`full_send`, `modify_volume`, `recovery_focus`). This plan wires that into the workout display:
-- **full_send** (score >= 75): Normal prescribed volume
-- **modify_volume** (score 50-74): Show a banner suggesting "Drop 1 set per compound exercise" and visually dim the last set
-- **recovery_focus** (score < 50): Show a banner suggesting "Reduce to 60% intensity, skip plyometrics" with affected exercises flagged
+**File: `src/components/physio/PhysioHealthIntakeDialog.tsx`**
+- On initial setup (not edit mode), fetch `date_of_birth` from the `profiles` table
+- If a DOB already exists in the profile, display it as read-only (same as edit mode behavior) and skip asking the user to re-enter it
+- The age calculation and 18+ gate use the profile's DOB
+- Still save a copy to `physio_health_profiles.date_of_birth` for the regulation engine's convenience, but the profile DOB is the authority
+- Remove the DOB input from step 3 when DOB is already set in the main profile
 
-This uses the existing `suggest-adaptation` edge function and `ReadinessFromVault` component -- no new AI calls needed.
+### 4. Physio Health Profile Syncs to Main Profile on First Setup
 
-### 4. Speed Lab -- No Changes
+**File: `src/components/physio/PhysioHealthIntakeDialog.tsx`**
+- When Physio Health Setup completes for the first time, also write `biological_sex` to `profiles.sex` if the profile's `sex` field is empty (keeps data consistent)
+- If the main profile already has `sex` set, pre-populate the Physio biological sex selector from it
 
-Speed Lab already has no built-in progression endpoint. Confirmed: no cycle/loop logic exists for it. No changes needed.
+### 5. usePhysioProfile Age Gate Uses Profile DOB
 
----
+**File: `src/hooks/usePhysioProfile.ts`**
+- Update `enableAdultFeatures` to check `profiles.date_of_birth` as the primary source, falling back to `physio_health_profiles.date_of_birth`
+- Update `computedAge` to prefer the profile DOB
+
+### 6. TDEE Setup Wizard Pre-fills from Profile
+
+**File: `src/components/nutrition-hub/TDEESetupWizard.tsx`**
+- Already reads from `profiles.date_of_birth` -- no changes needed here, but it will benefit from DOB being set earlier during profile creation
 
 ## Technical Details
 
-### Database Migration
+### No database migration needed
+The `profiles` table already has `date_of_birth` (date, nullable) and `sex` (text, nullable) columns.
 
-Add a `loops_completed` column to `sub_module_progress`:
+### Files to create
+- `src/components/ui/BirthDatePicker.tsx` -- Reusable DOB picker with year/month dropdowns
 
-```sql
-ALTER TABLE sub_module_progress 
-ADD COLUMN IF NOT EXISTS loops_completed integer DEFAULT 0;
+### Files to modify
+- `src/pages/ProfileSetup.tsx` -- Add required DOB field using BirthDatePicker, save to profiles.date_of_birth
+- `src/components/physio/PhysioHealthIntakeDialog.tsx` -- Read DOB from profiles table, show as read-only if already set, sync biological_sex back to profiles.sex
+- `src/hooks/usePhysioProfile.ts` -- Prefer profiles.date_of_birth for age calculations
+- `src/components/nutrition-hub/TDEESetupWizard.tsx` -- Replace calendar with BirthDatePicker for faster year navigation
+
+### Data flow after changes
+
+```text
+Profile Setup (onboarding)
+    |
+    +--> profiles.date_of_birth  (single source of truth)
+    |
+    +--> Physio Health Setup reads it, shows read-only
+    |       |
+    |       +--> copies to physio_health_profiles.date_of_birth
+    |       +--> syncs biological_sex to profiles.sex
+    |
+    +--> TDEE Setup reads it, pre-fills
+    |
+    +--> usePhysioProfile.computedAge reads it
+    +--> 18+ age gate reads it
 ```
-
-### File Changes
-
-**`src/hooks/useSubModuleProgress.ts`** (core changes):
-- Remove the `TOTAL_CYCLES` cap from `advanceToCycle` (remove `newCycle > TOTAL_CYCLES` guard)
-- In `checkAndAdvanceCycle`: when `currentCycle >= 4`, loop back to cycle 1 instead of showing "Program Complete!"
-  - Increment `loops_completed`
-  - Reset week/exercise/day progress but **keep** `weight_log`
-  - Show loop celebration toast
-- Add `loops_completed` to the `SubModuleProgress` interface and fetch/init logic
-- Add a `getWeightSuggestion(exerciseIndex, currentWeek, currentDay)` function that:
-  - Looks up the same exercise's weight from the previous loop (or previous cycle)
-  - Applies a readiness-based multiplier (1.0x, 1.02x, or 0.95x)
-
-**`src/components/workout-modules/DayWorkoutDetailDialog.tsx`**:
-- Accept and display weight suggestions next to weight input fields
-- Show a readiness-based volume adjustment banner at the top when readiness is not `full_send`
-
-**`src/components/workout-modules/WeeklyWorkoutPlan.tsx`**:
-- Display the current loop number (e.g., "Loop 2 -- Cycle 3, Week 4") in the header when loops > 0
-
-**`src/types/workout.ts`** (if needed):
-- Add `loops_completed` to any relevant type interfaces
-
-### Existing Infrastructure Leveraged
-- `ReadinessFromVault` component and `calculateReadinessScore` function (already built)
-- `suggest-adaptation` edge function (already built, already returns volume/intensity suggestions)
-- `weight_log` JSONB field (already stores per-exercise, per-set weights across weeks)
-- `athlete_load_tracking` table (already tracks CNS load for readiness context)
-
