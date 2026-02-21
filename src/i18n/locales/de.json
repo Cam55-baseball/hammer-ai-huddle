@@ -5620,7 +5620,18 @@
       "labelPlaceholder": "Feldbezeichnung...",
       "fieldValue": "Wert",
       "valuePlaceholder": "Wert...",
+      "numberPlaceholder": "z.B. 4.2",
       "empty": "Noch keine eigenen Felder",
+      "notes": "Beschreibung / Anweisungen",
+      "notesPlaceholder": "Beschreibung hinzufügen, die beim Anzeigen dieser Aufgabe erscheint...",
+      "notesHint": "Dieser Text erscheint unter der Aufgabe beim Anzeigen der Aktivität",
+      "guidance": {
+        "title": "Wie eigene Felder funktionieren",
+        "checkbox": "Tägliche Gewohnheiten verfolgen (z.B., 'Eisbad,' 'Foam Roll,' 'Dehnen vor dem Schlafengehen')",
+        "number": "Messbare Daten verfolgen, die die KI für Trends analysiert (z.B., 'Sprintzeit: 4.2,' 'Verwendetes Gewicht: 185')",
+        "text": "Notizen oder Beobachtungen protokollieren (z.B., 'Wie ich mich heute gefühlt habe')",
+        "time": "Zeitbasierte Daten verfolgen (z.B., 'Erholungsdauer')"
+      },
       "types": {
         "text": "Text",
         "number": "Zahl",

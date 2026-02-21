@@ -4863,7 +4863,18 @@
       "labelPlaceholder": "字段标签...",
       "fieldValue": "值",
       "valuePlaceholder": "值...",
+      "numberPlaceholder": "例如 4.2",
       "empty": "暂无自定义字段",
+      "notes": "描述 / 说明",
+      "notesPlaceholder": "添加查看此任务时显示的描述...",
+      "notesHint": "此文本在查看活动时显示在任务下方",
+      "guidance": {
+        "title": "自定义字段如何工作",
+        "checkbox": "追踪每日习惯（例如'冰浴'、'泡沫轴'、'睡前拉伸'）",
+        "number": "追踪AI分析趋势的可测量数据（例如'冲刺时间: 4.2'、'使用重量: 185'）",
+        "text": "记录笔记或观察（例如'今天的感受'）",
+        "time": "追踪基于时间的数据（例如'恢复时间'）"
+      },
       "types": {
         "text": "文本",
         "number": "数字",

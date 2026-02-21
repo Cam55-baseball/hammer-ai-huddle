@@ -679,7 +679,11 @@ serve(async (req) => {
                 break;
               }
               case 'checkbox': {
-                // rawValue is truthy = checked
+                // Collect the checkbox label as a habit/task name for AI analysis
+                if (!entry.habitLabels) entry.habitLabels = [];
+                if (!entry.habitLabels.includes(entry.label)) {
+                  entry.habitLabels.push(entry.label);
+                }
                 break;
               }
             }
@@ -706,7 +710,7 @@ serve(async (req) => {
     const customFieldBreakdown = Object.values(customFieldAnalysis).map(f => {
       switch (f.type) {
         case 'checkbox':
-          return `• ${f.label} (checkbox): ${f.completed}/${f.total} completed (${f.checkboxRate || 0}% rate)`;
+          return `• ${f.label} (daily habit/task tracker): ${f.completed}/${f.total} completed (${f.checkboxRate || 0}% rate) — Athlete self-defined this as an important habit to track daily`;
         case 'number':
           if (f.numericValues && f.numericValues.length > 0) {
             return `• ${f.label} (number): ${f.numericValues.length} entries — min: ${f.numericMin}, max: ${f.numericMax}, avg: ${f.numericAvg}${f.numericValues.length >= 3 ? `, trend: ${f.numericValues.slice(-3).join(' → ')}` : ''}`;
@@ -1112,9 +1116,14 @@ CUSTOM FIELD DETAILED ANALYSIS (${customFieldsCount} unique fields):
     ${customFieldBreakdown || '• No custom fields tracked'}
     
     INSTRUCTIONS FOR AI: Analyze these custom field values deeply. For numeric fields, 
-    identify trends (improving, declining, plateauing). For checkbox fields, comment on 
-    consistency. For text fields, identify patterns or recurring themes. For time fields, 
-    note if times are improving. Reference SPECIFIC values and percentages in your analysis.
+    identify trends (improving, declining, plateauing). For CHECKBOX fields, each label 
+    represents a habit or task the athlete considers important enough to track daily. 
+    Analyze each one BY NAME — comment on consistency, identify which habits they maintain 
+    vs skip, and correlate habit adherence with performance trends. For example, if "Ice Bath" 
+    has 90% completion and performance improved, note that connection. If "Foam Roll" dropped 
+    to 40%, flag it as a concern. For text fields, identify patterns or recurring themes. 
+    For time fields, note if times are improving. Reference SPECIFIC values and percentages 
+    in your analysis.
 
 ATHLETE NOTES FROM ACTIVITIES:
     ${activityNotes.length > 0 ? activityNotes.join('\n    ') : 'No notes logged'}

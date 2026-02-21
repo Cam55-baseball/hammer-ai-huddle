@@ -4904,7 +4904,18 @@
       "labelPlaceholder": "필드 라벨...",
       "fieldValue": "값",
       "valuePlaceholder": "값...",
+      "numberPlaceholder": "예: 4.2",
       "empty": "사용자 정의 필드가 없습니다",
+      "notes": "설명 / 지침",
+      "notesPlaceholder": "이 작업을 볼 때 표시될 설명을 추가...",
+      "notesHint": "이 텍스트는 활동을 볼 때 작업 아래에 표시됩니다",
+      "guidance": {
+        "title": "사용자 정의 필드 사용법",
+        "checkbox": "일일 습관 추적 (예: '아이스 배스,' '폼 롤,' '취침 전 스트레칭')",
+        "number": "AI가 트렌드 분석하는 측정 가능한 데이터 추적 (예: '스프린트 시간: 4.2,' '사용 중량: 185')",
+        "text": "메모나 관찰 기록 (예: '오늘 컨디션')",
+        "time": "시간 기반 데이터 추적 (예: '회복 시간')"
+      },
       "types": {
         "text": "텍스트",
         "number": "숫자",
