@@ -1,32 +1,46 @@
 
 
-# Fix: Remove manualChunks to Resolve Chunk Loading Order Crash
+# Fix: Unregister Stale Service Workers for All Visitors
 
 ## Problem
-The live site crashes with `Cannot read properties of undefined (reading 'forwardRef')` because the `manualChunks` configuration splits React (`vendor-react`) and UI libraries like Radix (`vendor-ui`) into separate chunks. The browser can load `vendor-ui` before `vendor-react` is ready, meaning React is `undefined` when Radix tries to call `React.forwardRef`.
+The site works in incognito but not in regular browsers because a service worker from the previous PWA configuration is still cached. It intercepts requests and serves stale, broken files. This affects any visitor who previously loaded the site while the PWA was active.
 
-## Root Cause
-The `manualChunks` function in `vite.config.ts` forces React core into one chunk and all UI libraries (Radix, cmdk, vaul, sonner) into another. Vite/Rollup does not guarantee loading order between sibling chunks, so the UI chunk can execute before React is available.
+## Solution
+Add a small inline script to `index.html` that detects and unregisters any existing service workers, then reloads the page once. This ensures all visitors get the fresh, working build regardless of their browser cache state.
 
-## Fix
+## Changes
 
-**File: `vite.config.ts`**
+**File: `index.html`**
 
-Remove the entire `manualChunks` configuration from `rollupOptions`. Let Vite handle code splitting automatically -- it understands dependency graphs and will ensure React loads before anything that depends on it.
+Add the following script inside `<body>`, before the main app script:
 
-The build section becomes:
-```typescript
-build: {
-  chunkSizeWarningLimit: 1500,
-},
+```html
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      if (registrations.length > 0) {
+        Promise.all(registrations.map(function(r) { return r.unregister(); }))
+          .then(function() {
+            if (!sessionStorage.getItem('sw-cleared')) {
+              sessionStorage.setItem('sw-cleared', '1');
+              window.location.reload();
+            }
+          });
+      }
+    });
+  }
+</script>
 ```
 
-## Why This Works
-- Vite's default code splitting respects module dependency order
-- React will always be loaded before any library that imports it
-- The chunk sizes may be slightly different, but correctness is more important than manual optimization
-- The `chunkSizeWarningLimit` is kept to suppress warnings for larger chunks
+## How It Works
+- Checks if any service workers are registered
+- Unregisters all of them
+- Uses `sessionStorage` to reload the page exactly once (avoids infinite reload loops)
+- After the reload, the browser fetches fresh assets directly from the server
+- This script is harmless for new visitors who have no service workers cached
 
 ## After Implementation
-You must **publish an update** for the fix to take effect on the live site. Then hard-refresh or open in incognito to verify.
+Publish the update. Visitors with the stale cache will automatically get cleaned up on their next visit -- no manual action needed from them.
 
+## Future Cleanup
+After a few weeks (once all cached visitors have been cleaned up), this script can be safely removed from `index.html`.
