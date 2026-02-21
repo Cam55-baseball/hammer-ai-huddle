@@ -31,6 +31,8 @@ interface WeeklyWorkoutPlanProps {
   getWeightLog: (week: number, day: string) => { [exerciseIndex: number]: number[] };
   onWeightUpdate: (week: number, day: string, exerciseIndex: number, setIndex: number, weight: number) => void;
   experienceLevel: ExperienceLevel;
+  loopsCompleted?: number;
+  currentCycle?: number;
 }
 
 export function WeeklyWorkoutPlan({
@@ -46,6 +48,8 @@ export function WeeklyWorkoutPlan({
   getWeightLog,
   onWeightUpdate,
   experienceLevel,
+  loopsCompleted = 0,
+  currentCycle = 1,
 }: WeeklyWorkoutPlanProps) {
   const { t } = useTranslation();
   const [expandedWeek, setExpandedWeek] = useState<number | null>(currentWeek);
@@ -82,6 +86,11 @@ export function WeeklyWorkoutPlan({
 
   return (
     <>
+      {loopsCompleted > 0 && (
+        <div className="mb-3 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-sm text-primary font-medium flex items-center gap-2">
+          🔄 Loop {loopsCompleted + 1} — Cycle {currentCycle}
+        </div>
+      )}
       <div className="space-y-3">
         {weeks.map((weekData) => {
           const unlocked = isWeekUnlocked(weekData.week);

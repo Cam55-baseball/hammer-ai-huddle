@@ -237,7 +237,14 @@ export default function ProductionLab() {
           </Button>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold">{t('workoutModules.productionLab.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('workoutModules.productionLab.subtitle')}</p>
+            <p className="text-sm text-muted-foreground">
+              {t('workoutModules.productionLab.subtitle')}
+              {(progress?.loops_completed || 0) > 0 && (
+                <span className="ml-2 text-primary font-medium">
+                  🔄 Loop {(progress?.loops_completed || 0) + 1} — Cycle {currentCycle}
+                </span>
+              )}
+            </p>
           </div>
         </div>
 

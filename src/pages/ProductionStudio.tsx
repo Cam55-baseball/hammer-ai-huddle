@@ -267,7 +267,14 @@ export default function ProductionStudio() {
           </Button>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold">{t('workoutModules.productionStudio.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('workoutModules.productionStudio.subtitle')}</p>
+            <p className="text-sm text-muted-foreground">
+              {t('workoutModules.productionStudio.subtitle')}
+              {(progress?.loops_completed || 0) > 0 && (
+                <span className="ml-2 text-primary font-medium">
+                  🔄 Loop {(progress?.loops_completed || 0) + 1} — Cycle {currentCycle}
+                </span>
+              )}
+            </p>
           </div>
         </div>
 
