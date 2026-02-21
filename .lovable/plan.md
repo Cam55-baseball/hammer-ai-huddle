@@ -1,78 +1,73 @@
 
 
-# Enhance Checkbox Field Analysis + Add User Guidance
+# Make Custom Fields Fully Interactive (Daily Input)
 
-## What's Changing
+## The Problem
 
-### Problem 1: Checkbox Labels Are Ignored in AI Analysis
-When a user creates a checkbox field like "Ice Bath Completed" or "Foam Roll Before Bed," the 6-week recap AI only sees: `"Ice Bath Completed (checkbox): 8/10 completed (80% rate)"`. It knows the completion rate but the AI prompt doesn't emphasize treating each checkbox label as a meaningful training/recovery habit to analyze deeply. The checkbox `case` block in the code is literally empty -- it collects nothing extra.
+Right now, when users open a custom activity card on their Game Plan, only **checkbox** fields are interactive (tap to check/uncheck). Number, text, and time fields show a **static value from when the card was created** -- there is no way to enter today's actual sprint time, weight used, or notes.
 
-### Problem 2: Users Don't Understand How to Use Custom Fields
-Users are confused by what "Number" fields do and how to get the most out of custom fields. The builder has no helper text or examples explaining that number fields track measurable data (sprint times, weights, reps) for AI trend analysis.
+This means:
+- A user creates a field called "Sprint Time" with type Number, but can never log daily sprint times
+- The AI recap analysis we built for numbers/text will never receive data because nothing gets saved
+- Users are understandably confused -- "Number" fields look like they should accept daily input, but they don't
 
----
+## The Fix
 
-## Plan
+Make **all custom field types** editable when viewing a card daily:
 
-### Part 1: Deep Checkbox Analysis in 6-Week Recap
+- **Checkbox**: Already works (tap to check/uncheck) -- no change needed
+- **Number**: Show an inline input field so users can type today's value (e.g., "4.2" for sprint time, "185" for weight)
+- **Text**: Show an inline text input for daily notes/observations
+- **Time**: Show a time picker input for duration tracking
 
-Update `supabase/functions/generate-vault-recap/index.ts`:
+Daily values get saved to `performance_data.fieldValues` (alongside the existing `checkboxStates`), so each day's entries are independent and tracked over time for the AI recap.
 
-- **Checkbox case block (lines 681-683)**: Collect the checkbox label text into a dedicated list so the AI knows exactly what habits/tasks the athlete is tracking as checkboxes
-- **Checkbox prompt line (line 709)**: Expand from just showing completion rate to include context like: `"Ice Bath Completed (checkbox/habit): 8/10 completed (80% rate) -- This is a self-defined habit/task the athlete tracks daily"`
-- **AI instruction block (lines 1114-1117)**: Add specific guidance telling the AI to treat checkbox field labels as meaningful habits/recovery tasks. Each checkbox label represents something the athlete considers important enough to track -- the AI should analyze consistency patterns, correlate with performance data, and comment on specific habits by name
+## What Users Will Experience
 
-### Part 2: User-Friendly Guidance in Custom Fields Builder
-
-Update `src/components/custom-activities/CustomFieldsBuilder.tsx`:
-
-- Add a small helper/guidance section below the "Custom Fields" header explaining what each field type does with practical examples:
-  - **Checkbox**: "Track daily habits (e.g., 'Ice Bath,' 'Foam Roll,' 'Stretch Before Bed')"
-  - **Number**: "Track measurable data the AI will analyze for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185')"
-  - **Text**: "Log notes or observations (e.g., 'How I felt today')"
-  - **Time**: "Track time-based data (e.g., 'Recovery Duration')"
-
-- Update placeholder text for number fields to show an example value like "e.g. 4.2" instead of the generic "Value..."
-
-### Part 3: i18n Updates
-
-Update `src/i18n/locales/en.json` (and the other 7 locale files) to add:
-- `customFields.guidance` -- the helper text explaining field types
-- `customFields.numberPlaceholder` -- better placeholder for number inputs
-- `customFields.notes` and `customFields.notesPlaceholder` translations if missing
-
----
+1. Open a custom activity card on the Game Plan
+2. Checkbox fields: tap to check (same as now)
+3. Number/Text/Time fields: tap the value area to edit, type today's value, it auto-saves
+4. The 6-week AI recap will now actually have daily data to analyze trends
 
 ## Technical Details
 
-### File 1: `supabase/functions/generate-vault-recap/index.ts`
+### File 1: `src/components/CustomActivityDetailDialog.tsx`
 
-**Lines 681-683** -- Checkbox case block: Collect checkbox labels into a list on the analysis entry so the AI gets the full context of what each checkbox represents.
+**Custom Fields section (lines 618-674)**: Replace the static display for number/text/time fields with editable inputs:
+- Number fields: `<Input type="number">` that saves to `performance_data.fieldValues[field.id]`
+- Text fields: `<Input type="text">` for daily observations
+- Time fields: `<Input type="time">` for time entries
+- Each input triggers `onUpdateFieldValue(fieldId, value)` which persists to the log's performance_data
+- Show the template's default value as placeholder text, but display the daily-logged value if one exists
 
-**Lines 706-709** -- Checkbox prompt format: Change from:
+**Add new prop**: `onUpdateFieldValue?: (fieldId: string, value: string) => void`
+
+### File 2: `src/components/GamePlanCard.tsx`
+
+**Checkbox handler area (lines 1882-1930)**: Add a parallel `onUpdateFieldValue` handler that:
+- Reads current `performance_data.fieldValues` from the log
+- Merges the new field value
+- Saves via `updateLogPerformanceData` (same mechanism as checkboxes)
+- Uses optimistic UI updates (same pattern)
+
+### File 3: `supabase/functions/generate-vault-recap/index.ts`
+
+**Custom field analysis section**: Update the data extraction to read from `performance_data.fieldValues[fieldId]` for each log entry. The analysis code already handles number/text/time aggregation -- it just needs to look in `fieldValues` for the daily values instead of (or in addition to) the template defaults.
+
+### File 4: `src/components/custom-activities/CustomFieldsBuilder.tsx`
+
+**Guidance section update**: Clarify that:
+- The "Value" column in the builder sets a **default/goal** value
+- Users enter their **actual daily values** when viewing the card on the Game Plan
+- Number fields example: "Set a goal like '4.0' -- you'll log your actual time each day"
+
+### Data Shape
+
 ```
-"Ice Bath (checkbox): 8/10 completed (80% rate)"
-```
-To:
-```
-"Ice Bath (daily habit tracker): 8/10 completed (80% rate) -- Athlete self-tracks this as a key habit"
-```
-
-**Lines 1114-1117** -- AI instructions: Add explicit direction:
-```
-For CHECKBOX fields, each label represents a habit or task the athlete 
-considers important enough to track daily. Analyze each one BY NAME -- 
-comment on consistency, identify which habits they maintain vs skip, 
-and correlate habit adherence with performance trends.
+performance_data: {
+  checkboxStates: { [fieldId]: true/false },   // existing
+  fieldValues: { [fieldId]: "4.2" }             // NEW - daily values for number/text/time
+}
 ```
 
-### File 2: `src/components/custom-activities/CustomFieldsBuilder.tsx`
-
-Add a collapsible or always-visible guidance block after the header showing:
-- Simple one-line explanations for each field type with real examples
-- Update the number field placeholder to show a sample value
-
-### File 3-10: i18n locale files (all 8 languages)
-
-Add translated guidance strings for the custom field type explanations.
-
+This keeps full backward compatibility -- checkboxes continue working exactly as before, and the new `fieldValues` key is additive.
