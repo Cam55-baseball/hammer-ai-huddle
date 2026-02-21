@@ -16,7 +16,7 @@ function MetricRow({ label, value, subtitle }: { label: string; value: string | 
         <p className="text-xs font-semibold text-foreground">{label}</p>
         {subtitle && <p className="text-[10px] text-muted-foreground">{subtitle}</p>}
       </div>
-      <span className="text-xs font-bold text-violet-300 bg-violet-700/20 px-2.5 py-1 rounded-full">{value}</span>
+      <span className="text-xs font-bold text-violet-900 dark:text-violet-200 bg-violet-700/20 px-2.5 py-1 rounded-full">{value}</span>
     </div>
   );
 }
