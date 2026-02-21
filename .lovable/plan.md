@@ -1,53 +1,86 @@
 
-# Fix: Shared Links Return a Blank Page
 
-## Root Cause — Confirmed
+# Year-Round Training: Continuous Looping + Smart Progression
 
-The app is a React Single Page Application (SPA). Every route — `/dashboard`, `/auth`, `/shared-activity/ABC123` — is handled **client-side by React Router**. The server only knows about one real file: `index.html`.
+## Overview
 
-When a user opens a direct link like:
-```
-https://hammers-modality.lovable.app/shared-activity/ABC123
-```
+When a user finishes Cycle 4 of Iron Bambino or Heat Factory, the program currently shows "Program Complete!" and dead-ends. This plan makes all three programs (Iron Bambino, Heat Factory, Speed Lab) run year-round with no endpoint, adding intelligent volume auto-adjustment based on biological readiness and progressive weight suggestions.
 
-The hosting server receives a request for `/shared-activity/ABC123`. It looks for a file at that path, finds nothing, and returns a blank response or error page. React never boots because `index.html` is never served. The user sees a completely blank screen with no login, no landing page, nothing.
+---
 
-This is a classic SPA deployment problem. The fix is standard: tell the server to **always serve `index.html`** regardless of the URL path, so React Router can handle routing on the client side.
+## What Changes
 
-## The Fix — One File
+### 1. Cycle Looping (Iron Bambino + Heat Factory)
 
-Add a `_redirects` file to the `public/` folder with a single rule:
+When Cycle 4 / Week 6 is completed, the program loops back to Cycle 1 with:
+- A `loops_completed` counter incremented (tracks how many full 24-week passes)
+- Week progress, exercise progress, and day completion times reset (fresh start)
+- **Weight log preserved** -- carried forward so the system knows your history
+- Streak and total workout counts continue uninterrupted
+- A celebratory toast: "Loop 2 starting -- let's keep building!" instead of "Program Complete!"
 
-**File: `public/_redirects`**
-```
-/*    /index.html   200
-```
+### 2. Progressive Weight Suggestions
 
-This tells the hosting infrastructure: "For any URL path, serve `index.html` with a 200 status." React Router then boots normally and renders the correct page — `/shared-activity/ABC123` renders `SharedActivity.tsx`, `/auth` renders `Auth.tsx`, etc.
+A new utility function analyzes the user's `weight_log` history to suggest weights for the next loop:
+- Looks at the same exercise from the previous loop's equivalent workout day
+- Suggests a small increase (2.5-5 lbs / ~2-5%) based on readiness score
+- If readiness is low (recovery_focus), suggests the **same** weight or slightly less
+- If readiness is moderate (modify_volume), suggests same weight
+- If readiness is good (full_send), suggests a progressive increase
+- Displayed as a subtle hint next to weight input fields: "Last loop: 135 lbs -- Try 140?"
 
-This is the standard fix for Vite + React Router SPAs deployed on Netlify-compatible hosts (which Lovable's hosting uses).
+### 3. Auto-Adjust Volume Based on Biological Readiness
 
-## Why This Affects Only Direct/Shared Links
+The existing `ReadinessFromVault` system already calculates readiness scores and produces recommendations (`full_send`, `modify_volume`, `recovery_focus`). This plan wires that into the workout display:
+- **full_send** (score >= 75): Normal prescribed volume
+- **modify_volume** (score 50-74): Show a banner suggesting "Drop 1 set per compound exercise" and visually dim the last set
+- **recovery_focus** (score < 50): Show a banner suggesting "Reduce to 60% intensity, skip plyometrics" with affected exercises flagged
 
-When users navigate **within** the app (clicking buttons, links), React Router intercepts the navigation before the browser ever sends a request to the server — so it works fine. But when someone opens a link from outside (shared link in a text, email, copied URL), the browser makes a fresh server request — and that's when the blank page happens.
+This uses the existing `suggest-adaptation` edge function and `ReadinessFromVault` component -- no new AI calls needed.
 
-## Files Changed
+### 4. Speed Lab -- No Changes
 
-| File | Change Type |
-|---|---|
-| `public/_redirects` | New file — 1 line |
+Speed Lab already has no built-in progression endpoint. Confirmed: no cycle/loop logic exists for it. No changes needed.
 
-No code changes, no database changes, no edge function changes.
-
-## Also Fixing the Previous Auth Redirect Issue
-
-While implementing this, the auth redirect key mismatch (`from` vs `returnTo`) identified in the previous analysis will also be fixed in the same pass:
-
-- `src/pages/SharedActivity.tsx` — change `state: { from: ... }` to `state: { returnTo: ... }`
-- `src/pages/Auth.tsx` — add `|| state?.from` fallback so both keys work
-
-This ensures users who open a shared link while logged out are sent back to the shared activity page (not the dashboard) after signing in.
+---
 
 ## Technical Details
 
-The `public/_redirects` file is copied verbatim into the build output's root by Vite. Lovable's hosting reads this file and configures the server accordingly. No Vite config changes are needed — the `public/` directory is already the static assets folder.
+### Database Migration
+
+Add a `loops_completed` column to `sub_module_progress`:
+
+```sql
+ALTER TABLE sub_module_progress 
+ADD COLUMN IF NOT EXISTS loops_completed integer DEFAULT 0;
+```
+
+### File Changes
+
+**`src/hooks/useSubModuleProgress.ts`** (core changes):
+- Remove the `TOTAL_CYCLES` cap from `advanceToCycle` (remove `newCycle > TOTAL_CYCLES` guard)
+- In `checkAndAdvanceCycle`: when `currentCycle >= 4`, loop back to cycle 1 instead of showing "Program Complete!"
+  - Increment `loops_completed`
+  - Reset week/exercise/day progress but **keep** `weight_log`
+  - Show loop celebration toast
+- Add `loops_completed` to the `SubModuleProgress` interface and fetch/init logic
+- Add a `getWeightSuggestion(exerciseIndex, currentWeek, currentDay)` function that:
+  - Looks up the same exercise's weight from the previous loop (or previous cycle)
+  - Applies a readiness-based multiplier (1.0x, 1.02x, or 0.95x)
+
+**`src/components/workout-modules/DayWorkoutDetailDialog.tsx`**:
+- Accept and display weight suggestions next to weight input fields
+- Show a readiness-based volume adjustment banner at the top when readiness is not `full_send`
+
+**`src/components/workout-modules/WeeklyWorkoutPlan.tsx`**:
+- Display the current loop number (e.g., "Loop 2 -- Cycle 3, Week 4") in the header when loops > 0
+
+**`src/types/workout.ts`** (if needed):
+- Add `loops_completed` to any relevant type interfaces
+
+### Existing Infrastructure Leveraged
+- `ReadinessFromVault` component and `calculateReadinessScore` function (already built)
+- `suggest-adaptation` edge function (already built, already returns volume/intensity suggestions)
+- `weight_log` JSONB field (already stores per-exercise, per-set weights across weeks)
+- `athlete_load_tracking` table (already tracks CNS load for readiness context)
+
