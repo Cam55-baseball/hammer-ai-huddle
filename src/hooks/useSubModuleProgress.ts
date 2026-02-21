@@ -41,6 +41,8 @@ export interface SubModuleProgress {
   workout_streak_longest: number;
   total_workouts_completed: number;
   last_workout_date: string | null;
+  // Loop tracking
+  loops_completed: number;
 }
 
 const TOTAL_CYCLES = 4;
@@ -82,6 +84,7 @@ export function useSubModuleProgress(
         workout_streak_longest: (data as unknown as { workout_streak_longest?: number }).workout_streak_longest || 0,
         total_workouts_completed: (data as unknown as { total_workouts_completed?: number }).total_workouts_completed || 0,
         last_workout_date: (data as unknown as { last_workout_date?: string | null }).last_workout_date || null,
+        loops_completed: (data as unknown as { loops_completed?: number }).loops_completed || 0,
       } as SubModuleProgress : null;
       setProgress(progressData);
     } catch (error) {
@@ -132,6 +135,7 @@ export function useSubModuleProgress(
         workout_streak_longest: 0,
         total_workouts_completed: 0,
         last_workout_date: null,
+        loops_completed: 0,
       } as SubModuleProgress;
       setProgress(progressData);
       return data;
@@ -345,17 +349,14 @@ export function useSubModuleProgress(
     if (currentCycle < TOTAL_CYCLES) {
       await advanceToCycle(currentCycle + 1);
     } else {
-      // All cycles complete!
-      toast({
-        title: '🎉 Program Complete!',
-        description: 'Congratulations! You have completed all 4 training cycles!',
-      });
+      // All cycles complete — loop back to cycle 1!
+      await loopBackToCycle1();
     }
   }, [progress]);
 
-  // Advance to a specific cycle (resets week/day progress)
+  // Advance to a specific cycle (resets week/day progress but keeps weight_log)
   const advanceToCycle = useCallback(async (newCycle: number) => {
-    if (!user || !progress || newCycle > TOTAL_CYCLES) return;
+    if (!user || !progress) return;
 
     try {
       const { error } = await supabase
@@ -389,6 +390,82 @@ export function useSubModuleProgress(
       console.error('Error advancing cycle:', error);
     }
   }, [user, progress]);
+
+  // Loop back to cycle 1 after completing all 4 cycles
+  const loopBackToCycle1 = useCallback(async () => {
+    if (!user || !progress) return;
+
+    const newLoopsCompleted = (progress.loops_completed || 0) + 1;
+
+    try {
+      const { error } = await supabase
+        .from('sub_module_progress')
+        .update({
+          current_cycle: 1,
+          current_week: 1,
+          week_progress: {},
+          exercise_progress: {},
+          day_completion_times: {},
+          loops_completed: newLoopsCompleted,
+          last_activity: new Date().toISOString(),
+          // weight_log is intentionally NOT reset — preserved for progressive suggestions
+        })
+        .eq('id', progress.id);
+
+      if (error) throw error;
+
+      setProgress({
+        ...progress,
+        current_cycle: 1,
+        current_week: 1,
+        week_progress: {},
+        exercise_progress: {},
+        day_completion_times: {},
+        loops_completed: newLoopsCompleted,
+      });
+
+      toast({
+        title: `🔄 Loop ${newLoopsCompleted + 1} Starting!`,
+        description: "Let's keep building — your weight history carries forward!",
+      });
+    } catch (error) {
+      console.error('Error looping back to cycle 1:', error);
+    }
+  }, [user, progress]);
+
+  // Get weight suggestion based on previous loop/cycle data
+  const getWeightSuggestion = useCallback((
+    week: number,
+    day: string,
+    exerciseIndex: number,
+    readinessRecommendation?: 'full_send' | 'modify_volume' | 'recovery_focus'
+  ): { suggestedWeight: number; previousWeight: number } | null => {
+    if (!progress?.weight_log) return null;
+
+    // Look up previous weight for same exercise/day/week
+    const previousWeights = progress.weight_log?.[week]?.[day]?.[exerciseIndex];
+    if (!previousWeights || previousWeights.length === 0) return null;
+
+    const validWeights = previousWeights.filter(w => w > 0);
+    if (validWeights.length === 0) return null;
+
+    const avgWeight = validWeights.reduce((a, b) => a + b, 0) / validWeights.length;
+
+    // Apply readiness-based multiplier
+    let multiplier = 1.02; // Default: small progressive increase
+    if (readinessRecommendation === 'recovery_focus') {
+      multiplier = 0.95; // Reduce slightly
+    } else if (readinessRecommendation === 'modify_volume') {
+      multiplier = 1.0; // Same weight
+    }
+
+    const suggested = Math.round(avgWeight * multiplier / 2.5) * 2.5; // Round to nearest 2.5
+
+    return {
+      suggestedWeight: suggested,
+      previousWeight: Math.round(avgWeight * 10) / 10,
+    };
+  }, [progress]);
 
   const updateDayProgress = useCallback(async (week: number, day: string, completed: boolean): Promise<{ reachedMilestone: number | null } | void> => {
     if (!user || !progress) return;
@@ -631,6 +708,7 @@ export function useSubModuleProgress(
     getNextDayUnlockTime,
     getDayCompletionTime,
     completeWorkoutDay,
+    getWeightSuggestion,
     refetch: fetchProgress,
   };
 }

@@ -2384,6 +2384,7 @@ export type Database = {
           id: string
           last_activity: string | null
           last_workout_date: string | null
+          loops_completed: number | null
           module: string
           sport: string
           started_at: string | null
@@ -2408,6 +2409,7 @@ export type Database = {
           id?: string
           last_activity?: string | null
           last_workout_date?: string | null
+          loops_completed?: number | null
           module: string
           sport: string
           started_at?: string | null
@@ -2432,6 +2434,7 @@ export type Database = {
           id?: string
           last_activity?: string | null
           last_workout_date?: string | null
+          loops_completed?: number | null
           module?: string
           sport?: string
           started_at?: string | null

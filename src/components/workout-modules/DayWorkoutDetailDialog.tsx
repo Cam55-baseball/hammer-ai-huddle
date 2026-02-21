@@ -19,6 +19,11 @@ import { Exercise, ExperienceLevel, getAdjustedPercent, isExerciseObject } from 
 import { VaultWorkoutNotesDialog } from '@/components/vault/VaultWorkoutNotesDialog';
 import { useVault, WeightIncrease } from '@/hooks/useVault';
 
+interface WeightSuggestion {
+  suggestedWeight: number;
+  previousWeight: number;
+}
+
 interface DayWorkoutDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,6 +47,9 @@ interface DayWorkoutDetailDialogProps {
   subModule?: string;
   previousWeightLog?: { [exerciseIndex: number]: number[] };
   onEnterFullScreen?: () => void;
+  readinessRecommendation?: 'full_send' | 'modify_volume' | 'recovery_focus';
+  readinessScore?: number;
+  getWeightSuggestion?: (exerciseIndex: number) => WeightSuggestion | null;
 }
 
 export function DayWorkoutDetailDialog({
@@ -63,6 +71,9 @@ export function DayWorkoutDetailDialog({
   subModule = 'iron-bambino',
   previousWeightLog = {},
   onEnterFullScreen,
+  readinessRecommendation,
+  readinessScore,
+  getWeightSuggestion: getWeightSuggestionFn,
 }: DayWorkoutDetailDialogProps) {
   const { t } = useTranslation();
   const { saveWorkoutNote, checkVaultAccess } = useVault();
@@ -328,6 +339,18 @@ export function DayWorkoutDetailDialog({
                 <Label className="text-xs text-muted-foreground">
                   {t('workoutModules.enterWeight')}
                 </Label>
+                {/* Weight suggestion hint */}
+                {getWeightSuggestionFn && (() => {
+                  const suggestion = getWeightSuggestionFn(index);
+                  if (suggestion) {
+                    return (
+                      <p className="text-xs text-muted-foreground/80 italic">
+                        💡 Last: {suggestion.previousWeight} lbs — Try {suggestion.suggestedWeight}?
+                      </p>
+                    );
+                  }
+                  return null;
+                })()}
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {Array.from({ length: exercise.sets }).map((_, setIdx) => (
                     <div key={setIdx} className="space-y-1">
@@ -416,6 +439,27 @@ export function DayWorkoutDetailDialog({
               <Maximize2 className="h-4 w-4" />
               {t('workoutFullScreen.enterFullScreen')}
             </Button>
+          )}
+
+          {/* Readiness-Based Volume Adjustment Banner */}
+          {readinessRecommendation && readinessRecommendation !== 'full_send' && (
+            <Alert className={cn(
+              "mt-3",
+              readinessRecommendation === 'recovery_focus'
+                ? "border-destructive/50 bg-destructive/10"
+                : "border-yellow-500/50 bg-yellow-500/10"
+            )}>
+              <AlertTriangle className={cn(
+                "h-4 w-4",
+                readinessRecommendation === 'recovery_focus' ? "text-destructive" : "text-yellow-500"
+              )} />
+              <AlertDescription className="text-xs">
+                {readinessRecommendation === 'modify_volume'
+                  ? `Readiness score: ${readinessScore ?? '—'}. Consider dropping 1 set per compound exercise today.`
+                  : `Readiness score: ${readinessScore ?? '—'}. Reduce to 60% intensity. Skip plyometrics if present.`
+                }
+              </AlertDescription>
+            </Alert>
           )}
 
           <div className="mt-4 space-y-4">
