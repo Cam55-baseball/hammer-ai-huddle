@@ -1,69 +1,78 @@
 
 
-# Deep Custom Field Analysis + Custom Activity Load Integration
+# Enhance Checkbox Field Analysis + Add User Guidance
 
 ## What's Changing
 
-### Problem 1: Custom Field Analysis is Shallow
-Currently, the 6-week recap only counts how many custom fields exist and whether checkboxes were checked. It ignores the actual **values** users enter -- sets completed, reps logged, weights used, time recorded, and text notes in custom fields. The AI just sees "Custom Fields Logged: 5 unique fields tracked" with no detail.
+### Problem 1: Checkbox Labels Are Ignored in AI Analysis
+When a user creates a checkbox field like "Ice Bath Completed" or "Foam Roll Before Bed," the 6-week recap AI only sees: `"Ice Bath Completed (checkbox): 8/10 completed (80% rate)"`. It knows the completion rate but the AI prompt doesn't emphasize treating each checkbox label as a meaningful training/recovery habit to analyze deeply. The checkbox `case` block in the code is literally empty -- it collects nothing extra.
 
-### Problem 2: Custom Activities Don't Feed Load Tracking
-When you complete a custom workout card (e.g., a Cam Williams profile card with exercises), that training data is invisible to the daily CNS load tracker, overlap warnings, and recovery recommendations. Only program workouts currently count.
+### Problem 2: Users Don't Understand How to Use Custom Fields
+Users are confused by what "Number" fields do and how to get the most out of custom fields. The builder has no helper text or examples explaining that number fields track measurable data (sprint times, weights, reps) for AI trend analysis.
 
 ---
 
 ## Plan
 
-### Part 1: Deep Custom Field Analysis in 6-Week Recap
+### Part 1: Deep Checkbox Analysis in 6-Week Recap
 
-Update the `generate-vault-recap` edge function to extract **actual values** from `performance_data`, not just completion counts:
+Update `supabase/functions/generate-vault-recap/index.ts`:
 
-- For **checkbox** fields: Keep completion tracking (done/not done)
-- For **number** fields: Extract values and compute min/max/average across the period (e.g., "Sprint Time: avg 4.2s, best 3.9s")
-- For **text** fields: Collect the actual text entries and pass them to the AI for pattern analysis
-- For **time** fields: Extract durations and compute trends
+- **Checkbox case block (lines 681-683)**: Collect the checkbox label text into a dedicated list so the AI knows exactly what habits/tasks the athlete is tracking as checkboxes
+- **Checkbox prompt line (line 709)**: Expand from just showing completion rate to include context like: `"Ice Bath Completed (checkbox/habit): 8/10 completed (80% rate) -- This is a self-defined habit/task the athlete tracks daily"`
+- **AI instruction block (lines 1114-1117)**: Add specific guidance telling the AI to treat checkbox field labels as meaningful habits/recovery tasks. Each checkbox label represents something the athlete considers important enough to track -- the AI should analyze consistency patterns, correlate with performance data, and comment on specific habits by name
 
-The AI prompt section on custom fields will be expanded from a single line ("Custom Fields Logged: 5") to a detailed breakdown showing the athlete's actual recorded data, enabling the AI to make specific, data-driven observations like "Your Shower Stretch completion rate was 85% -- strong consistency" or "Your sprint times improved from 4.5s to 4.1s over the period."
+### Part 2: User-Friendly Guidance in Custom Fields Builder
 
-### Part 2: Custom Activity Load Integration
+Update `src/components/custom-activities/CustomFieldsBuilder.tsx`:
 
-When a custom activity containing exercises is completed, calculate its CNS and fascial load contribution and add it to the daily `athlete_load_tracking` record:
+- Add a small helper/guidance section below the "Custom Fields" header explaining what each field type does with practical examples:
+  - **Checkbox**: "Track daily habits (e.g., 'Ice Bath,' 'Foam Roll,' 'Stretch Before Bed')"
+  - **Number**: "Track measurable data the AI will analyze for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185')"
+  - **Text**: "Log notes or observations (e.g., 'How I felt today')"
+  - **Time**: "Track time-based data (e.g., 'Recovery Duration')"
 
-- Reuse the existing load calculation logic from the `calculate-load` edge function
-- Add a client-side hook that triggers after custom activity completion
-- Map custom activity exercise types to CNS/fascial load values (strength, plyometric, cardio, etc.)
-- This means overlap warnings and recovery recommendations will now account for ALL training
+- Update placeholder text for number fields to show an example value like "e.g. 4.2" instead of the generic "Value..."
+
+### Part 3: i18n Updates
+
+Update `src/i18n/locales/en.json` (and the other 7 locale files) to add:
+- `customFields.guidance` -- the helper text explaining field types
+- `customFields.numberPlaceholder` -- better placeholder for number inputs
+- `customFields.notes` and `customFields.notesPlaceholder` translations if missing
 
 ---
 
 ## Technical Details
 
-### Files Modified
+### File 1: `supabase/functions/generate-vault-recap/index.ts`
 
-1. **`supabase/functions/generate-vault-recap/index.ts`** (lines ~616-638, ~1018-1024)
-   - Expand custom field analysis to extract actual values from `performance_data` by field type
-   - Build a detailed per-field breakdown: checkbox completion rates, numeric value ranges/averages, text entries, time trends
-   - Update the AI prompt Section 13 to include this granular data instead of just a count
+**Lines 681-683** -- Checkbox case block: Collect checkbox labels into a list on the analysis entry so the AI gets the full context of what each checkbox represents.
 
-2. **`src/hooks/useLoadTracking.ts`**
-   - Add a new `addCustomActivityLoad` method that calculates CNS/fascial/volume load from a custom activity template's exercises
-   - Reuse the same CNS calculation logic as `calculate-load` (base by exercise type + volume modifier)
+**Lines 706-709** -- Checkbox prompt format: Change from:
+```
+"Ice Bath (checkbox): 8/10 completed (80% rate)"
+```
+To:
+```
+"Ice Bath (daily habit tracker): 8/10 completed (80% rate) -- Athlete self-tracks this as a key habit"
+```
 
-3. **`src/hooks/useCustomActivities.ts`** (or wherever activity completion is handled)
-   - After marking a custom activity as completed, call `addCustomActivityLoad` with the template's exercises
-   - Only add load for activity types that have exercises (workout, practice, short_practice, warmup)
+**Lines 1114-1117** -- AI instructions: Add explicit direction:
+```
+For CHECKBOX fields, each label represents a habit or task the athlete 
+considers important enough to track daily. Analyze each one BY NAME -- 
+comment on consistency, identify which habits they maintain vs skip, 
+and correlate habit adherence with performance trends.
+```
 
-4. **`src/hooks/useGamePlan.ts`** (completion handler)
-   - Same integration point for Game Plan card completions -- trigger load tracking update
+### File 2: `src/components/custom-activities/CustomFieldsBuilder.tsx`
 
-### Load Calculation for Custom Activities
+Add a collapsible or always-visible guidance block after the header showing:
+- Simple one-line explanations for each field type with real examples
+- Update the number field placeholder to show a sample value
 
-The load formula will mirror the existing `calculate-load` edge function logic:
-- **Strength** exercises: base CNS 30, modified by volume (sets x reps)
-- **Plyometric**: base CNS 40
-- **Cardio**: base CNS 20
-- **Baseball/Core**: base CNS 25/10
-- Fascial bias: strength = compression, plyometric = elastic, flexibility = glide
-- Volume = total sets x reps across all exercises
+### File 3-10: i18n locale files (all 8 languages)
 
-This runs client-side to avoid an extra edge function call on every completion, using the same formulas for consistency.
+Add translated guidance strings for the custom field type explanations.
+
