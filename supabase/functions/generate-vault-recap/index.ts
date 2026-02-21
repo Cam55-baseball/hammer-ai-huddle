@@ -613,8 +613,27 @@ serve(async (req) => {
       .slice(0, 5)
       .map(([name, count]) => `${name} (${count}x)`);
 
-    // ========== CUSTOM FIELD ANALYSIS ==========
-    let customFieldsLogged: Record<string, { total: number; completed: number }> = {};
+    // ========== DEEP CUSTOM FIELD ANALYSIS ==========
+    // Analyze actual values from performance_data, not just presence/absence
+    interface FieldAnalysis {
+      label: string;
+      type: string;
+      total: number;
+      completed: number;
+      // Number fields
+      numericValues?: number[];
+      numericMin?: number;
+      numericMax?: number;
+      numericAvg?: number;
+      // Text fields
+      textEntries?: string[];
+      // Time fields
+      timeValues?: string[];
+      // Checkbox fields
+      checkboxRate?: number;
+    }
+    
+    const customFieldAnalysis: Record<string, FieldAnalysis> = {};
     
     customActivities.forEach((log: any) => {
       const customFields = log.custom_activity_templates?.custom_fields || [];
@@ -623,21 +642,91 @@ serve(async (req) => {
       if (Array.isArray(customFields)) {
         customFields.forEach((field: any) => {
           const label = field.label || 'Unknown';
-          if (!customFieldsLogged[label]) {
-            customFieldsLogged[label] = { total: 0, completed: 0 };
-          }
-          customFieldsLogged[label].total += 1;
-          
-          // Check if checkbox was checked or field had value
+          const fieldType = field.type || 'text';
           const fieldKey = `field_${field.id}`;
-          if (performanceData[fieldKey] || performanceData[field.id]) {
-            customFieldsLogged[label].completed += 1;
+          const rawValue = performanceData[fieldKey] ?? performanceData[field.id];
+          
+          if (!customFieldAnalysis[label]) {
+            customFieldAnalysis[label] = { label, type: fieldType, total: 0, completed: 0 };
+          }
+          
+          const entry = customFieldAnalysis[label];
+          entry.total += 1;
+          
+          if (rawValue !== undefined && rawValue !== null && rawValue !== '') {
+            entry.completed += 1;
+            
+            switch (fieldType) {
+              case 'number': {
+                const num = typeof rawValue === 'number' ? rawValue : parseFloat(String(rawValue));
+                if (!isNaN(num)) {
+                  if (!entry.numericValues) entry.numericValues = [];
+                  entry.numericValues.push(num);
+                }
+                break;
+              }
+              case 'text': {
+                if (!entry.textEntries) entry.textEntries = [];
+                const text = String(rawValue).trim();
+                if (text.length > 0) {
+                  entry.textEntries.push(text);
+                }
+                break;
+              }
+              case 'time': {
+                if (!entry.timeValues) entry.timeValues = [];
+                entry.timeValues.push(String(rawValue));
+                break;
+              }
+              case 'checkbox': {
+                // rawValue is truthy = checked
+                break;
+              }
+            }
           }
         });
       }
     });
     
-    const customFieldsCount = Object.keys(customFieldsLogged).length;
+    // Compute aggregates for numeric fields
+    Object.values(customFieldAnalysis).forEach(entry => {
+      if (entry.numericValues && entry.numericValues.length > 0) {
+        entry.numericMin = Math.min(...entry.numericValues);
+        entry.numericMax = Math.max(...entry.numericValues);
+        entry.numericAvg = Math.round((entry.numericValues.reduce((a, b) => a + b, 0) / entry.numericValues.length) * 100) / 100;
+      }
+      if (entry.type === 'checkbox' && entry.total > 0) {
+        entry.checkboxRate = Math.round((entry.completed / entry.total) * 100);
+      }
+    });
+    
+    const customFieldsCount = Object.keys(customFieldAnalysis).length;
+    
+    // Build detailed field breakdown for AI prompt
+    const customFieldBreakdown = Object.values(customFieldAnalysis).map(f => {
+      switch (f.type) {
+        case 'checkbox':
+          return `• ${f.label} (checkbox): ${f.completed}/${f.total} completed (${f.checkboxRate || 0}% rate)`;
+        case 'number':
+          if (f.numericValues && f.numericValues.length > 0) {
+            return `• ${f.label} (number): ${f.numericValues.length} entries — min: ${f.numericMin}, max: ${f.numericMax}, avg: ${f.numericAvg}${f.numericValues.length >= 3 ? `, trend: ${f.numericValues.slice(-3).join(' → ')}` : ''}`;
+          }
+          return `• ${f.label} (number): ${f.completed}/${f.total} logged, no values extracted`;
+        case 'time':
+          if (f.timeValues && f.timeValues.length > 0) {
+            return `• ${f.label} (time): ${f.timeValues.length} entries — values: ${f.timeValues.slice(-5).join(', ')}`;
+          }
+          return `• ${f.label} (time): ${f.completed}/${f.total} logged`;
+        case 'text':
+          if (f.textEntries && f.textEntries.length > 0) {
+            const recentTexts = f.textEntries.slice(-5).map(t => `"${t.substring(0, 80)}"`);
+            return `• ${f.label} (text): ${f.textEntries.length} entries — recent: ${recentTexts.join(', ')}`;
+          }
+          return `• ${f.label} (text): ${f.completed}/${f.total} logged`;
+        default:
+          return `• ${f.label}: ${f.completed}/${f.total} logged`;
+      }
+    }).join('\n    ');
 
     // ========== STREAK ANALYSIS ==========
     const sortedDates = [...customActiveDates].sort();
@@ -1018,7 +1107,14 @@ NUTRITION/SUPPLEMENT TRACKING (from meal activities):
 CUSTOM ROUTINE INSIGHTS:
     • Top Routines by Frequency: ${topRoutines.join(', ') || 'None'}
     • Intensity Distribution: ${Object.entries(customIntensityDistribution).map(([i, count]) => `${i}: ${Math.round((count / totalCustomActivities) * 100)}%`).join(', ') || 'N/A'}
-    • Custom Fields Logged: ${customFieldsCount} unique fields tracked
+
+CUSTOM FIELD DETAILED ANALYSIS (${customFieldsCount} unique fields):
+    ${customFieldBreakdown || '• No custom fields tracked'}
+    
+    INSTRUCTIONS FOR AI: Analyze these custom field values deeply. For numeric fields, 
+    identify trends (improving, declining, plateauing). For checkbox fields, comment on 
+    consistency. For text fields, identify patterns or recurring themes. For time fields, 
+    note if times are improving. Reference SPECIFIC values and percentages in your analysis.
 
 ATHLETE NOTES FROM ACTIVITIES:
     ${activityNotes.length > 0 ? activityNotes.join('\n    ') : 'No notes logged'}
