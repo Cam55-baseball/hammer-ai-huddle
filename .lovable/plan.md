@@ -1,26 +1,23 @@
 
-
-# Fix: Make Adult Wellness Score Values Readable
+# Fix: Make "Private" Badge Readable
 
 ## Problem
-The score values in the Adult Wellness Tracking summary card (e.g., "3/5 -- Moderate") use `text-violet-300`, which is a light purple that's hard to read against the semi-transparent `bg-violet-700/20` background -- particularly in light mode.
+The "Private" badge on the Adult Wellness Tracking card uses `text-violet-300`, the same hard-to-read light purple that was just fixed on the score values.
 
 ## Change
 
-**File: `src/components/physio/PhysioAdultTrackingSection.tsx`** (line 19)
+**File: `src/components/physio/PhysioAdultTrackingSection.tsx`** (line 50)
 
-Change the score badge styling from:
+Change the Badge text color from `text-violet-300` to `text-violet-900 dark:text-violet-200` to match the score value fix.
+
+Before:
 ```
-text-violet-300 bg-violet-700/20
-```
-to:
-```
-text-violet-900 dark:text-violet-200 bg-violet-700/20
+bg-violet-700/30 border-violet-700/50 text-violet-300 text-[10px]
 ```
 
-This gives:
-- **Light mode**: Very dark purple text (`violet-900`) for strong contrast
-- **Dark mode**: Light purple text (`violet-200`) that remains readable on dark backgrounds
+After:
+```
+bg-violet-700/30 border-violet-700/50 text-violet-900 dark:text-violet-200 text-[10px]
+```
 
 Single line change, no other files affected.
-
