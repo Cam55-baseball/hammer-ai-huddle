@@ -30,44 +30,11 @@
     <link rel="dns-prefetch" href="https://wysikbsjalfvjwqzkihj.supabase.co" />
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
   </head>
 
   <body>
     <div id="root"></div>
-    <script>
-      (function() {
-        var needsReload = false;
-        var promises = [];
-        if ('serviceWorker' in navigator) {
-          promises.push(
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-              if (registrations.length > 0) {
-                needsReload = true;
-                return Promise.all(registrations.map(function(r) { return r.unregister(); }));
-              }
-            })
-          );
-        }
-        if ('caches' in window) {
-          promises.push(
-            caches.keys().then(function(names) {
-              if (names.length > 0) {
-                needsReload = true;
-                return Promise.all(names.map(function(n) { return caches.delete(n); }));
-              }
-            })
-          );
-        }
-        if (promises.length > 0) {
-          Promise.all(promises).then(function() {
-            if (needsReload && !sessionStorage.getItem('sw-cleared')) {
-              sessionStorage.setItem('sw-cleared', '1');
-              window.location.reload();
-            }
-          });
-        }
-      })();
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
