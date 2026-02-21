@@ -1971,6 +1971,59 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             toast.error(t('common.error'));
           }
         }}
+        onUpdateFieldValue={async (fieldId, value) => {
+          if (!selectedCustomTask?.customActivityData) return;
+          
+          try {
+            const template = selectedCustomTask.customActivityData.template;
+            let log = selectedCustomTask.customActivityData.log;
+            
+            // Build new field values
+            const currentData = (log?.performance_data as Record<string, any>) || {};
+            const currentFieldValues = (currentData.fieldValues as Record<string, string>) || {};
+            const newFieldValues = { ...currentFieldValues, [fieldId]: value };
+            const newPerformanceData = { ...currentData, fieldValues: newFieldValues };
+            
+            // OPTIMISTIC UI UPDATE
+            setSelectedCustomTask(prev => {
+              if (!prev?.customActivityData) return prev;
+              return {
+                ...prev,
+                customActivityData: {
+                  ...prev.customActivityData,
+                  log: prev.customActivityData.log 
+                    ? { ...prev.customActivityData.log, performance_data: newPerformanceData }
+                    : { id: 'pending', template_id: template.id, completed: false, performance_data: newPerformanceData } as any
+                }
+              };
+            });
+            
+            // ENSURE LOG EXISTS
+            if (!log) {
+              const newLog = await ensureLogExists(template.id);
+              if (!newLog) {
+                toast.error(t('customActivity.addError'));
+                return;
+              }
+              log = newLog;
+              
+              setSelectedCustomTask(prev => prev ? {
+                ...prev,
+                customActivityData: prev.customActivityData ? {
+                  ...prev.customActivityData,
+                  log: { ...log!, performance_data: newPerformanceData }
+                } : undefined
+              } : null);
+            }
+            
+            // PERSIST
+            await updateLogPerformanceData(log.id, newPerformanceData);
+            refetch();
+          } catch (error) {
+            console.error('Error updating field value:', error);
+            toast.error(t('common.error'));
+          }
+        }}
       />
       {/* Quick Add Favorites Drawer */}
       <QuickAddFavoritesDrawer

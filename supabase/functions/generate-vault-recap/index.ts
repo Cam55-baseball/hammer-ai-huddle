@@ -638,13 +638,17 @@ serve(async (req) => {
     customActivities.forEach((log: any) => {
       const customFields = log.custom_activity_templates?.custom_fields || [];
       const performanceData = log.performance_data || {};
+      const fieldValues = performanceData.fieldValues || {};
+      const checkboxStates = performanceData.checkboxStates || {};
       
       if (Array.isArray(customFields)) {
         customFields.forEach((field: any) => {
           const label = field.label || 'Unknown';
           const fieldType = field.type || 'text';
-          const fieldKey = `field_${field.id}`;
-          const rawValue = performanceData[fieldKey] ?? performanceData[field.id];
+          // Read daily values from fieldValues (new) or checkboxStates, falling back to legacy keys
+          const rawValue = fieldType === 'checkbox' 
+            ? (checkboxStates[field.id] ?? performanceData[`field_${field.id}`] ?? performanceData[field.id])
+            : (fieldValues[field.id] ?? performanceData[`field_${field.id}`] ?? performanceData[field.id]);
           
           if (!customFieldAnalysis[label]) {
             customFieldAnalysis[label] = { label, type: fieldType, total: 0, completed: 0 };

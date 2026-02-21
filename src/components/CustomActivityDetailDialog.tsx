@@ -173,6 +173,7 @@ interface CustomActivityDetailDialogProps {
   onEdit: () => void;
   onSaveTime: (time: string | null, reminder: number | null) => void;
   onToggleCheckbox?: (fieldId: string, checked: boolean) => void;
+  onUpdateFieldValue?: (fieldId: string, value: string) => void;
 }
 
 export function CustomActivityDetailDialog({
@@ -185,6 +186,7 @@ export function CustomActivityDetailDialog({
   onEdit,
   onSaveTime,
   onToggleCheckbox,
+  onUpdateFieldValue,
 }: CustomActivityDetailDialogProps) {
   const { t } = useTranslation();
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -209,6 +211,30 @@ export function CustomActivityDetailDialog({
       return checkboxStates[fieldId];
     }
     return defaultValue === 'true';
+  };
+
+  // Get daily field value from performance_data.fieldValues, falling back to template default
+  const getFieldValue = (fieldId: string, templateDefault?: string): string => {
+    const performanceData = log?.performance_data as Record<string, any> | null;
+    const fieldValues = performanceData?.fieldValues as Record<string, string> | undefined;
+    if (fieldValues && fieldId in fieldValues) {
+      return fieldValues[fieldId];
+    }
+    return '';
+  };
+
+  const handleUpdateFieldValue = async (fieldId: string, value: string) => {
+    if (!onUpdateFieldValue) return;
+    setSavingFieldIds(prev => new Set(prev).add(fieldId));
+    try {
+      await onUpdateFieldValue(fieldId, value);
+    } finally {
+      setSavingFieldIds(prev => {
+        const next = new Set(prev);
+        next.delete(fieldId);
+        return next;
+      });
+    }
   };
 
   // Calculate progress
@@ -650,11 +676,32 @@ export function CustomActivityDetailDialog({
                             </span>
                             {field.type !== 'checkbox' && (
                               field.type === 'time' ? (
-                                <span className="text-sm font-mono text-primary">{field.value || '—'}</span>
+                                <Input
+                                  type="time"
+                                  value={getFieldValue(field.id)}
+                                  onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                                  placeholder={field.value || '—'}
+                                  disabled={savingFieldIds.has(field.id)}
+                                  className="h-7 w-28 text-sm font-mono text-primary"
+                                />
                               ) : field.type === 'number' ? (
-                                <Badge variant="outline">{field.value || '—'}</Badge>
+                                <Input
+                                  type="number"
+                                  value={getFieldValue(field.id)}
+                                  onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                                  placeholder={field.value || t('customActivity.customFields.numberPlaceholder', 'e.g. 4.2')}
+                                  disabled={savingFieldIds.has(field.id)}
+                                  className="h-7 w-28 text-sm"
+                                />
                               ) : (
-                                <span className="text-sm text-muted-foreground truncate max-w-[120px]">{field.value || '—'}</span>
+                                <Input
+                                  type="text"
+                                  value={getFieldValue(field.id)}
+                                  onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                                  placeholder={field.value || t('customActivity.customFields.valuePlaceholder', 'Value...')}
+                                  disabled={savingFieldIds.has(field.id)}
+                                  className="h-7 w-32 text-sm"
+                                />
                               )
                             )}
                           </div>
