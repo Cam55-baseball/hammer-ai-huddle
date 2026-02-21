@@ -1,76 +1,38 @@
 
 
-# Fix Blank Screen and Re-add PWA with Corrected Configuration
+# Emergency Fix: Remove VitePWA Entirely to Restore Live Site
 
 ## Problem
-The VitePWA plugin was previously wrapped in a `mode === "production" &&` conditional, which likely caused it to return `false` in a way that corrupted the HTML output during production builds. The plugin has been removed and needs to be re-added safely.
+The published site at `hammers-modality.lovable.app` is still showing a blank white screen. Fetching the live HTML confirms the `<head>` section and all `<script>` tags are being stripped during the production build. The VitePWA plugin -- even when included unconditionally -- is still corrupting the output.
 
-## Root Cause of Original Issue
-The pattern `mode === "production" && VitePWA({...})` is problematic. When the condition is false, it produces `false` in the plugins array (handled by `.filter(Boolean)`), but when true, VitePWA may initialize differently than expected when loaded conditionally. The official docs show VitePWA should always be included in the plugins array unconditionally -- it only generates service worker assets during the build step regardless.
+## Root Cause
+The `vite-plugin-pwa` package is interfering with the production HTML generation. This may be a version compatibility issue or a conflict with the current Vite/build configuration. Regardless of how it is configured (conditional or unconditional), it is producing a broken `index.html` in production.
 
 ## Fix (single file change)
 
 **File: `vite.config.ts`**
 
-1. Re-add the `VitePWA` import
-2. Add `VitePWA()` to the plugins array **unconditionally** (not wrapped in a mode check)
-3. Keep the same manifest and workbox caching config as before
+1. Remove the `import { VitePWA } from 'vite-plugin-pwa'` line
+2. Remove the entire `VitePWA({...})` block from the plugins array
+3. Keep everything else (manual chunks, aliases, etc.) unchanged
 
+The plugins array becomes:
 ```typescript
-import { VitePWA } from 'vite-plugin-pwa';
-
-// In plugins array:
 plugins: [
   react(),
   mode === "development" && componentTagger(),
-  VitePWA({
-    registerType: 'autoUpdate',
-    includeAssets: ['favicon.png', 'robots.txt'],
-    manifest: {
-      name: 'Hammers Modality - Elite Training',
-      short_name: 'Hammers',
-      description: 'Elite baseball & softball training with AI analysis',
-      theme_color: '#000000',
-      background_color: '#ffffff',
-      display: 'standalone',
-      icons: [
-        {
-          src: '/favicon.png',
-          sizes: '512x512',
-          type: 'image/png',
-        },
-      ],
-    },
-    workbox: {
-      runtimeCaching: [
-        {
-          urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*\/(thumbnails|avatars)\/.*/,
-          handler: 'CacheFirst',
-          options: {
-            cacheName: 'media-cache',
-            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
-          },
-        },
-        {
-          urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*\/videos\/.*/,
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'video-cache',
-            expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 7 },
-          },
-        },
-      ],
-    },
-  }),
 ].filter(Boolean),
 ```
 
-## Why This Fixes It
-- VitePWA is no longer conditionally loaded -- it runs in all modes, which is how the official docs recommend using it
-- In development, it simply does nothing significant (no service worker is registered)
-- In production, it correctly processes `index.html` to inject the manifest link and generates the service worker
-- The `index.html` `<head>` content will no longer be stripped
+## What This Means
+- The production build will produce a correct `index.html` with all content intact
+- The live site will load and render properly after publishing
+- PWA features (offline caching, install prompt) will be temporarily unavailable
+- The `vite-plugin-pwa` dependency remains installed and can be investigated/re-added later once the site is confirmed working
 
 ## After Implementation
-You will need to **publish an update** for the fix to take effect on the live site.
+You **must publish an update** for the fix to take effect on the live site. The deployment typically takes 1-2 minutes.
+
+## Future PWA Re-enablement
+Once the site is confirmed working, we can investigate the VitePWA version compatibility and re-add it with a known-working configuration. This should be done as a separate step after the site is stable.
 
