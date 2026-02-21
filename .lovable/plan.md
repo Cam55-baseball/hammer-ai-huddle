@@ -1,88 +1,115 @@
 
 
-# Date of Birth: Single Source of Truth Across the App
+# Libido Tracking: Honest Labels, Science-Backed Education, and Check-in Integration
 
 ## Problem
 
-1. **Date of birth is entered separately in multiple places** -- Profile Setup doesn't collect it, but Physio Health Setup and TDEE Setup Wizard each ask for it independently, storing it in different tables (`physio_health_profiles.date_of_birth` vs `profiles.date_of_birth`).
-2. **Navigating birth year in the calendar is painfully slow** -- users click month-by-month through potentially 20+ years to reach their birth year.
-3. **Physio 18+ age gate doesn't use the main profile DOB** -- it only checks `physio_health_profiles.date_of_birth`, so users who already entered their DOB elsewhere have to re-enter it.
+The current `libido_level` field is disguised as "Energy Level (1-5)" in the standalone Adult Wellness Tracking section. Users have no idea what it actually measures or why it matters for athletic performance. It needs to be:
+1. Honestly labeled as **libido/sex drive**
+2. Accompanied by clear science explaining the testosterone, estrogen, and recovery connection
+3. Available for **all genders** in both **morning and night** check-ins
+4. Converted from standalone entry to check-in-integrated data collection
 
-## Solution
+## What Changes
 
-### 1. Add Date of Birth to Profile Setup (required field)
+### 1. Rename and Redefine the Libido Metric
 
-**File: `src/pages/ProfileSetup.tsx`**
-- Add a new `dateOfBirth` state field
-- Add a DOB picker input (with year dropdown for fast navigation -- see item 2 below) in the form, marked as required
-- Save `date_of_birth` to the `profiles` table during `handleCompleteSetup`
-- This becomes the single source of truth for DOB across the app
+- **Title**: "Libido / Sex Drive"
+- **Subtitle**: "How strong is your sex drive today? Be honest -- this is private."
+- **Scale labels** (1-5): Very Low, Low, Moderate, High, Very High
+- **Collapsible "Why Track This?"** educational note:
 
-### 2. Fast Year Navigation for All DOB Pickers
+> "Your libido is a direct window into your hormonal health. Testosterone and estrogen don't just regulate sex drive -- they control muscle protein synthesis, bone density, red blood cell production, and central nervous system recovery. A sudden drop in libido often signals overtraining, under-eating, or poor sleep **before** you feel it in your workouts. Tracking this pattern helps you catch recovery problems 3-5 days earlier than waiting for performance to decline."
 
-**File: `src/components/ui/calendar.tsx`** -- Add a `captionLayout="dropdown"` variant or create a new `BirthDatePicker` component
+This is straight-up honest, educational, and ties directly to why an athlete should care.
 
-**New File: `src/components/ui/BirthDatePicker.tsx`**
-- A specialized date picker with **year and month dropdown selects** instead of clicking arrows month-by-month
-- Year dropdown ranging from current year back to 1920
-- Month dropdown for quick month selection
-- Once year/month are selected, the calendar grid shows days for final selection
-- Used in ProfileSetup, PhysioHealthIntakeDialog, and TDEESetupWizard wherever DOB is collected
+### 2. Add New Columns to `physio_adult_tracking`
 
-### 3. Physio Health Setup Reads DOB from Profile
+```sql
+ALTER TABLE physio_adult_tracking
+  ADD COLUMN IF NOT EXISTS mood_stability integer,
+  ADD COLUMN IF NOT EXISTS sleep_quality_impact integer,
+  ADD COLUMN IF NOT EXISTS wellness_consistency_text text,
+  ADD COLUMN IF NOT EXISTS symptom_tags text[];
+```
 
-**File: `src/components/physio/PhysioHealthIntakeDialog.tsx`**
-- On initial setup (not edit mode), fetch `date_of_birth` from the `profiles` table
-- If a DOB already exists in the profile, display it as read-only (same as edit mode behavior) and skip asking the user to re-enter it
-- The age calculation and 18+ gate use the profile's DOB
-- Still save a copy to `physio_health_profiles.date_of_birth` for the regulation engine's convenience, but the profile DOB is the authority
-- Remove the DOB input from step 3 when DOB is already set in the main profile
+These support the other adult wellness metrics from the previously approved plan.
 
-### 4. Physio Health Profile Syncs to Main Profile on First Setup
+### 3. Integrate into Check-ins (Morning + Night)
 
-**File: `src/components/physio/PhysioHealthIntakeDialog.tsx`**
-- When Physio Health Setup completes for the first time, also write `biological_sex` to `profiles.sex` if the profile's `sex` field is empty (keeps data consistent)
-- If the main profile already has `sex` set, pre-populate the Physio biological sex selector from it
+Add a gated "Adult Wellness" collapsible section to both morning and night check-ins:
 
-### 5. usePhysioProfile Age Gate Uses Profile DOB
+**Morning Check-in** (after existing fields, gated by `adultFeaturesEnabled`):
+- Sleep Recovery Quality (1-5): "How restored did you feel waking up?"
+  - Why: "Growth hormone peaks during deep sleep. Feeling unrestored may mean disrupted recovery cycles."
+- Libido / Sex Drive (1-5): "How strong is your sex drive this morning?"
+  - Why: (same educational text as above)
+- Overall Wellness -- male only (Strong Day / Average / Off Day)
+  - Why: "Daily consistency reflects hormonal balance and nervous system readiness."
+- Cycle Phase + Day -- female only (existing selectors)
+  - Why: "Estrogen and progesterone shifts affect strength, endurance, and injury risk."
 
-**File: `src/hooks/usePhysioProfile.ts`**
-- Update `enableAdultFeatures` to check `profiles.date_of_birth` as the primary source, falling back to `physio_health_profiles.date_of_birth`
-- Update `computedAge` to prefer the profile DOB
+**Night Check-in** (after existing fields, gated by `adultFeaturesEnabled`):
+- Libido / Sex Drive (1-5): "How was your sex drive today overall?"
+  - Why: (same educational text)
+- Mood Stability (1-5): "How emotionally steady were you today?"
+  - Why: "Mood swings can signal cortisol imbalance. Stable mood correlates with better training focus and faster recovery."
+- Body Signals -- female only (multi-select chips): Cramps, Bloating, Fatigue, Headache, Cravings, Mood Swings
+  - Why: "These symptoms track hormonal fluctuations and help time nutrition and training intensity."
 
-### 6. TDEE Setup Wizard Pre-fills from Profile
+### 4. Convert Standalone Section to Read-Only Summary
 
-**File: `src/components/nutrition-hub/TDEESetupWizard.tsx`**
-- Already reads from `profiles.date_of_birth` -- no changes needed here, but it will benefit from DOB being set earlier during profile creation
+`PhysioAdultTrackingSection` becomes a summary card showing today's values from check-ins, not a data entry form. If no data yet, shows: "Complete your morning or night check-in to see today's wellness data."
 
 ## Technical Details
 
-### No database migration needed
-The `profiles` table already has `date_of_birth` (date, nullable) and `sex` (text, nullable) columns.
+### Database Migration
 
-### Files to create
-- `src/components/ui/BirthDatePicker.tsx` -- Reusable DOB picker with year/month dropdowns
-
-### Files to modify
-- `src/pages/ProfileSetup.tsx` -- Add required DOB field using BirthDatePicker, save to profiles.date_of_birth
-- `src/components/physio/PhysioHealthIntakeDialog.tsx` -- Read DOB from profiles table, show as read-only if already set, sync biological_sex back to profiles.sex
-- `src/hooks/usePhysioProfile.ts` -- Prefer profiles.date_of_birth for age calculations
-- `src/components/nutrition-hub/TDEESetupWizard.tsx` -- Replace calendar with BirthDatePicker for faster year navigation
-
-### Data flow after changes
-
-```text
-Profile Setup (onboarding)
-    |
-    +--> profiles.date_of_birth  (single source of truth)
-    |
-    +--> Physio Health Setup reads it, shows read-only
-    |       |
-    |       +--> copies to physio_health_profiles.date_of_birth
-    |       +--> syncs biological_sex to profiles.sex
-    |
-    +--> TDEE Setup reads it, pre-fills
-    |
-    +--> usePhysioProfile.computedAge reads it
-    +--> 18+ age gate reads it
+```sql
+ALTER TABLE physio_adult_tracking
+  ADD COLUMN IF NOT EXISTS mood_stability integer,
+  ADD COLUMN IF NOT EXISTS sleep_quality_impact integer,
+  ADD COLUMN IF NOT EXISTS wellness_consistency_text text,
+  ADD COLUMN IF NOT EXISTS symptom_tags text[];
 ```
+
+### Files to Modify
+
+**`src/hooks/usePhysioAdultTracking.ts`**
+- Add `mood_stability`, `sleep_quality_impact`, `wellness_consistency_text`, `symptom_tags` to the `PhysioAdultTracking` interface
+
+**`src/components/vault/VaultFocusQuizDialog.tsx`**
+- Import `usePhysioAdultTracking` and `usePhysioProfile`
+- Add state for: `libidoLevel`, `sleepQualityImpact`, `moodStability`, `wellnessConsistencyText`, `symptomTags`
+- Morning section: Add collapsible "Adult Wellness (18+)" section with Sleep Recovery Quality, Libido/Sex Drive (all genders), Overall Wellness (male), Cycle tracking (female) -- each with educational "Why Track This?" collapsible
+- Night section: Add collapsible "Adult Wellness (18+)" section with Libido/Sex Drive (all genders), Mood Stability (all), Body Signals (female) -- each with educational collapsible
+- On submit: call `saveTracking()` with adult values for both morning and night
+- Reset new fields in `resetFormAndClose()`
+
+**`src/components/physio/PhysioAdultTrackingSection.tsx`**
+- Convert from interactive data entry to read-only summary showing today's tracked values
+- Display each metric with its descriptive label and current value
+- Show "Tracked via Morning and Night Check-ins" subtitle
+- Empty state when no data exists
+
+### Scale Labels for Each Metric
+
+| Rating | Libido | Sleep Recovery | Mood Stability | Wellness (male) |
+|--------|--------|----------------|----------------|-----------------|
+| 1 | Very Low | Exhausted | Volatile | -- |
+| 2 | Low | Groggy | Shaky | -- |
+| 3 | Moderate | Okay | Neutral | -- |
+| 4 | High | Refreshed | Steady | -- |
+| 5 | Very High | Fully Restored | Rock Solid | -- |
+
+Wellness uses 3 text options instead: Strong Day / Average / Off Day
+
+### Educational Collapsible Pattern
+
+Each adult metric in the check-in uses a consistent UI pattern:
+1. Violet-themed section header with lock icon and "Private and encrypted" badge
+2. Metric title + honest subtitle (always visible)
+3. Input control (1-5 buttons, selector, or chips)
+4. Collapsible "Why Track This?" with science explanation
+5. Medical disclaimer at the bottom of the adult section
+
