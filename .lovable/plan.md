@@ -1,38 +1,32 @@
 
 
-# Emergency Fix: Remove VitePWA Entirely to Restore Live Site
+# Fix: Remove manualChunks to Resolve Chunk Loading Order Crash
 
 ## Problem
-The published site at `hammers-modality.lovable.app` is still showing a blank white screen. Fetching the live HTML confirms the `<head>` section and all `<script>` tags are being stripped during the production build. The VitePWA plugin -- even when included unconditionally -- is still corrupting the output.
+The live site crashes with `Cannot read properties of undefined (reading 'forwardRef')` because the `manualChunks` configuration splits React (`vendor-react`) and UI libraries like Radix (`vendor-ui`) into separate chunks. The browser can load `vendor-ui` before `vendor-react` is ready, meaning React is `undefined` when Radix tries to call `React.forwardRef`.
 
 ## Root Cause
-The `vite-plugin-pwa` package is interfering with the production HTML generation. This may be a version compatibility issue or a conflict with the current Vite/build configuration. Regardless of how it is configured (conditional or unconditional), it is producing a broken `index.html` in production.
+The `manualChunks` function in `vite.config.ts` forces React core into one chunk and all UI libraries (Radix, cmdk, vaul, sonner) into another. Vite/Rollup does not guarantee loading order between sibling chunks, so the UI chunk can execute before React is available.
 
-## Fix (single file change)
+## Fix
 
 **File: `vite.config.ts`**
 
-1. Remove the `import { VitePWA } from 'vite-plugin-pwa'` line
-2. Remove the entire `VitePWA({...})` block from the plugins array
-3. Keep everything else (manual chunks, aliases, etc.) unchanged
+Remove the entire `manualChunks` configuration from `rollupOptions`. Let Vite handle code splitting automatically -- it understands dependency graphs and will ensure React loads before anything that depends on it.
 
-The plugins array becomes:
+The build section becomes:
 ```typescript
-plugins: [
-  react(),
-  mode === "development" && componentTagger(),
-].filter(Boolean),
+build: {
+  chunkSizeWarningLimit: 1500,
+},
 ```
 
-## What This Means
-- The production build will produce a correct `index.html` with all content intact
-- The live site will load and render properly after publishing
-- PWA features (offline caching, install prompt) will be temporarily unavailable
-- The `vite-plugin-pwa` dependency remains installed and can be investigated/re-added later once the site is confirmed working
+## Why This Works
+- Vite's default code splitting respects module dependency order
+- React will always be loaded before any library that imports it
+- The chunk sizes may be slightly different, but correctness is more important than manual optimization
+- The `chunkSizeWarningLimit` is kept to suppress warnings for larger chunks
 
 ## After Implementation
-You **must publish an update** for the fix to take effect on the live site. The deployment typically takes 1-2 minutes.
-
-## Future PWA Re-enablement
-Once the site is confirmed working, we can investigate the VitePWA version compatibility and re-add it with a known-working configuration. This should be done as a separate step after the site is stable.
+You must **publish an update** for the fix to take effect on the live site. Then hard-refresh or open in incognito to verify.
 
