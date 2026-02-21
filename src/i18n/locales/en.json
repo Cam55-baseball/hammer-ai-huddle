@@ -6680,9 +6680,9 @@
       "guidance": {
         "title": "How custom fields work",
         "checkbox": "Track daily habits (e.g., 'Ice Bath,' 'Foam Roll,' 'Stretch Before Bed')",
-        "number": "Track measurable data the AI analyzes for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185')",
-        "text": "Log notes or observations (e.g., 'How I felt today')",
-        "time": "Track time-based data (e.g., 'Recovery Duration')"
+        "number": "Track measurable data the AI analyzes for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185'). Set a goal here — you'll log your actual value each day on your Game Plan.",
+        "text": "Log notes or observations (e.g., 'How I felt today'). Enter daily notes when viewing the card on your Game Plan.",
+        "time": "Track time-based data (e.g., 'Recovery Duration'). Enter your actual time daily on the Game Plan."
       },
       "types": {
         "text": "Text",
