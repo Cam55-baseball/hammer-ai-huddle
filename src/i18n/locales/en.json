@@ -6672,7 +6672,18 @@
       "labelPlaceholder": "Field label...",
       "fieldValue": "Value",
       "valuePlaceholder": "Value...",
+      "numberPlaceholder": "e.g. 4.2",
       "empty": "No custom fields yet",
+      "notes": "Description / Instructions",
+      "notesPlaceholder": "Add description that will show when viewing this task...",
+      "notesHint": "This text appears below the task when viewing the activity",
+      "guidance": {
+        "title": "How custom fields work",
+        "checkbox": "Track daily habits (e.g., 'Ice Bath,' 'Foam Roll,' 'Stretch Before Bed')",
+        "number": "Track measurable data the AI analyzes for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185')",
+        "text": "Log notes or observations (e.g., 'How I felt today')",
+        "time": "Track time-based data (e.g., 'Recovery Duration')"
+      },
       "types": {
         "text": "Text",
         "number": "Number",

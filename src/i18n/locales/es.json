@@ -5900,7 +5900,18 @@
       "labelPlaceholder": "Etiqueta del campo...",
       "fieldValue": "Valor",
       "valuePlaceholder": "Valor...",
+      "numberPlaceholder": "ej. 4.2",
       "empty": "Sin campos personalizados aún",
+      "notes": "Descripción / Instrucciones",
+      "notesPlaceholder": "Agregar descripción que se mostrará al ver esta tarea...",
+      "notesHint": "Este texto aparece debajo de la tarea al ver la actividad",
+      "guidance": {
+        "title": "Cómo funcionan los campos personalizados",
+        "checkbox": "Seguir hábitos diarios (ej., 'Baño de Hielo,' 'Foam Roll,' 'Estirar Antes de Dormir')",
+        "number": "Seguir datos medibles que la IA analiza para tendencias (ej., 'Tiempo Sprint: 4.2,' 'Peso Usado: 185')",
+        "text": "Registrar notas u observaciones (ej., 'Cómo me sentí hoy')",
+        "time": "Seguir datos basados en tiempo (ej., 'Duración de Recuperación')"
+      },
       "types": {
         "text": "Texto",
         "number": "Número",

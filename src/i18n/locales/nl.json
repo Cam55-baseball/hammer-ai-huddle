@@ -4919,7 +4919,18 @@
       "labelPlaceholder": "Veldlabel...",
       "fieldValue": "Waarde",
       "valuePlaceholder": "Waarde...",
+      "numberPlaceholder": "bijv. 4.2",
       "empty": "Nog geen aangepaste velden",
+      "notes": "Beschrijving / Instructies",
+      "notesPlaceholder": "Voeg een beschrijving toe die wordt weergegeven bij het bekijken van deze taak...",
+      "notesHint": "Deze tekst verschijnt onder de taak bij het bekijken van de activiteit",
+      "guidance": {
+        "title": "Hoe aangepaste velden werken",
+        "checkbox": "Dagelijkse gewoontes bijhouden (bijv. 'IJsbad,' 'Foam Roll,' 'Stretchen voor het Slapen')",
+        "number": "Meetbare data bijhouden die de AI analyseert voor trends (bijv. 'Sprinttijd: 4.2,' 'Gebruikt Gewicht: 185')",
+        "text": "Notities of observaties vastleggen (bijv. 'Hoe ik me vandaag voelde')",
+        "time": "Tijdgebaseerde data bijhouden (bijv. 'Herstelduur')"
+      },
       "types": {
         "text": "Tekst",
         "number": "Nummer",

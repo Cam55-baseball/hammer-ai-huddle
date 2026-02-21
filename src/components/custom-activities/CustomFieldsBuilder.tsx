@@ -25,6 +25,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { CustomField } from '@/types/customActivity';
 import { cn } from '@/lib/utils';
+import { Info, CheckSquare, Hash, Type, Clock } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface CustomFieldsBuilderProps {
   fields: CustomField[];
@@ -102,7 +104,7 @@ function SortableFieldItem({
             <Input
               value={field.value}
               onChange={(e) => onUpdate({ value: e.target.value })}
-              placeholder={t('customActivity.customFields.valuePlaceholder')}
+              placeholder={field.type === 'number' ? t('customActivity.customFields.numberPlaceholder', 'e.g. 4.2') : t('customActivity.customFields.valuePlaceholder')}
               className="h-9"
               type={field.type === 'number' ? 'number' : field.type === 'time' ? 'time' : 'text'}
             />
@@ -231,6 +233,33 @@ export function CustomFieldsBuilder({ fields, onChange }: CustomFieldsBuilderPro
           {t('customActivity.customFields.add')}
         </Button>
       </div>
+
+      <Collapsible>
+        <CollapsibleTrigger className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <Info className="h-3.5 w-3.5" />
+          <span>{t('customActivity.customFields.guidance.title', 'How custom fields work')}</span>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2">
+          <div className="rounded-md border bg-muted/30 p-3 space-y-1.5 text-xs text-muted-foreground">
+            <div className="flex items-start gap-2">
+              <CheckSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>{t('customActivity.customFields.guidance.checkbox', "Track daily habits (e.g., 'Ice Bath,' 'Foam Roll,' 'Stretch Before Bed')")}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <Hash className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>{t('customActivity.customFields.guidance.number', "Track measurable data the AI analyzes for trends (e.g., 'Sprint Time: 4.2,' 'Weight Used: 185')")}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <Type className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>{t('customActivity.customFields.guidance.text', "Log notes or observations (e.g., 'How I felt today')")}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <Clock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>{t('customActivity.customFields.guidance.time', "Track time-based data (e.g., 'Recovery Duration')")}</span>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <DndContext
         sensors={sensors}

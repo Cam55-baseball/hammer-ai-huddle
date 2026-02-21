@@ -5620,7 +5620,18 @@
       "labelPlaceholder": "Libellé du champ...",
       "fieldValue": "Valeur",
       "valuePlaceholder": "Valeur...",
+      "numberPlaceholder": "ex. 4.2",
       "empty": "Pas encore de champs personnalisés",
+      "notes": "Description / Instructions",
+      "notesPlaceholder": "Ajouter une description qui s'affichera lors de la consultation de cette tâche...",
+      "notesHint": "Ce texte apparaît sous la tâche lors de la consultation de l'activité",
+      "guidance": {
+        "title": "Comment fonctionnent les champs personnalisés",
+        "checkbox": "Suivre les habitudes quotidiennes (ex., 'Bain de Glace,' 'Foam Roll,' 'Étirement Avant le Coucher')",
+        "number": "Suivre les données mesurables que l'IA analyse pour les tendances (ex., 'Temps Sprint : 4.2,' 'Poids Utilisé : 185')",
+        "text": "Consigner des notes ou observations (ex., 'Comment je me suis senti aujourd'hui')",
+        "time": "Suivre les données temporelles (ex., 'Durée de Récupération')"
+      },
       "types": {
         "text": "Texte",
         "number": "Nombre",
