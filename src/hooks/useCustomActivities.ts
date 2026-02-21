@@ -13,7 +13,9 @@ import {
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getTodayDate } from '@/utils/dateUtils';
+import { format } from 'date-fns';
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
+import { calculateCustomActivityLoad } from '@/utils/customActivityLoadCalculation';
 
 export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
   const { user } = useAuth();
@@ -368,15 +370,18 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
 
     const today = getTodayDate();
     const existingLog = todayLogs.find(l => l.template_id === templateId);
+    const template = templates.find(t => t.id === templateId);
 
     try {
+      const isCompletingNow = !existingLog?.completed;
+      
       if (existingLog) {
         // Toggle existing log
         const { error } = await supabase
           .from('custom_activity_logs')
           .update({
-            completed: !existingLog.completed,
-            completed_at: !existingLog.completed ? new Date().toISOString() : null,
+            completed: isCompletingNow,
+            completed_at: isCompletingNow ? new Date().toISOString() : null,
           })
           .eq('id', existingLog.id);
 
@@ -394,6 +399,55 @@ export function useCustomActivities(selectedSport: 'baseball' | 'softball') {
           });
 
         if (error) throw error;
+      }
+
+      // When completing (not uncompleting), add exercises to load tracking
+      if (isCompletingNow && template?.exercises && template.exercises.length > 0) {
+        const activityTypes = ['workout', 'practice', 'short_practice', 'warmup'];
+        if (activityTypes.includes(template.activity_type)) {
+          try {
+            const loadMetrics = calculateCustomActivityLoad(template.exercises);
+            if (loadMetrics) {
+              // Fire-and-forget load tracking update
+              const loadToday = format(new Date(), 'yyyy-MM-dd');
+              const { data: existing } = await supabase
+                .from('athlete_load_tracking')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('entry_date', loadToday)
+                .maybeSingle();
+              
+              if (existing) {
+                await supabase
+                  .from('athlete_load_tracking')
+                  .update({
+                    cns_load_total: (existing.cns_load_total || 0) + loadMetrics.cnsLoad,
+                    volume_load: (existing.volume_load || 0) + loadMetrics.volumeLoad,
+                    fascial_load: {
+                      compression: ((existing.fascial_load as any)?.compression || 0) + loadMetrics.fascialLoad.compression,
+                      elastic: ((existing.fascial_load as any)?.elastic || 0) + loadMetrics.fascialLoad.elastic,
+                      glide: ((existing.fascial_load as any)?.glide || 0) + loadMetrics.fascialLoad.glide,
+                    },
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('id', existing.id);
+              } else {
+                await supabase
+                  .from('athlete_load_tracking')
+                  .insert({
+                    user_id: user.id,
+                    entry_date: loadToday,
+                    cns_load_total: loadMetrics.cnsLoad,
+                    volume_load: loadMetrics.volumeLoad,
+                    fascial_load: loadMetrics.fascialLoad,
+                  });
+              }
+              console.log(`[useCustomActivities] Added load for "${template.title}": CNS=${loadMetrics.cnsLoad}, Vol=${loadMetrics.volumeLoad}`);
+            }
+          } catch (loadError) {
+            console.warn('[useCustomActivities] Load tracking update failed (non-blocking):', loadError);
+          }
+        }
       }
 
       await fetchTodayLogs();

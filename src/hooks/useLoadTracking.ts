@@ -10,6 +10,8 @@ import {
 import { format, subDays } from 'date-fns';
 import { Json } from '@/integrations/supabase/types';
 import { toast } from '@/hooks/use-toast';
+import { Exercise } from '@/types/customActivity';
+import { calculateCustomActivityLoad } from '@/utils/customActivityLoadCalculation';
 
 // Safe number extraction with validation
 function safeNumber(value: unknown, fallback = 0): number {
@@ -255,6 +257,23 @@ export function useLoadTracking() {
     },
   });
   
+  // Add load from a completed custom activity's exercises
+  const addCustomActivityLoad = async (exercises: Exercise[], activityTitle?: string) => {
+    const loadMetrics = calculateCustomActivityLoad(exercises);
+    if (!loadMetrics) return; // No exercises = no load to add
+    
+    try {
+      await updateLoadMutation.mutateAsync({
+        cnsLoad: loadMetrics.cnsLoad,
+        fascialLoad: loadMetrics.fascialLoad,
+        volumeLoad: loadMetrics.volumeLoad,
+      });
+      console.log(`[useLoadTracking] Added custom activity load: CNS=${loadMetrics.cnsLoad}, Vol=${loadMetrics.volumeLoad}${activityTitle ? ` (${activityTitle})` : ''}`);
+    } catch (error) {
+      console.error('[useLoadTracking] Failed to add custom activity load:', error);
+    }
+  };
+
   return {
     todayLoad: todayQuery.data,
     weeklyAverage: weeklyQuery.data,
@@ -262,6 +281,7 @@ export function useLoadTracking() {
     error: todayQuery.error || weeklyQuery.error,
     updateLoad: updateLoadMutation.mutateAsync,
     addWarning: addWarningMutation.mutateAsync,
+    addCustomActivityLoad,
     isUpdating: updateLoadMutation.isPending,
     refetch: () => {
       todayQuery.refetch();
