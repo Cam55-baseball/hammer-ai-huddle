@@ -47,7 +47,7 @@ export function PhysioAdultTrackingSection() {
             <p className="text-xs text-muted-foreground">Tracked via Morning and Night Check-ins</p>
           </div>
         </div>
-        <Badge className="bg-violet-700/30 border-violet-700/50 text-violet-300 text-[10px]">
+        <Badge className="bg-violet-700/30 border-violet-700/50 text-violet-900 dark:text-violet-200 text-[10px]">
           <Lock className="h-2.5 w-2.5 mr-1" /> Private
         </Badge>
       </div>
