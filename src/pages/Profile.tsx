@@ -114,7 +114,7 @@ export default function Profile() {
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
         
         setCurrentUserRole(currentRoleData?.role || null);
 
@@ -190,7 +190,7 @@ export default function Profile() {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       
       let userRole = roleData?.role || null;
       
