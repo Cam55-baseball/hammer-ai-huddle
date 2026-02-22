@@ -6,6 +6,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useScoutAccess } from "@/hooks/useScoutAccess";
+import { getActiveTier } from "@/utils/tierAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -52,6 +53,10 @@ export default function Dashboard() {
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
+  // Tier-based display: only the purchased tier card shows "Start Training"
+  const activeTier = getActiveTier(subscribedModules, selectedSport);
+  const isTierUnlocked = (tier: string) => isOwner || isAdmin || activeTier === tier;
+
   const heroImages = [dashboardHero1, dashboardHero2, dashboardHero3, dashboardHero4];
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
 
@@ -427,7 +432,7 @@ export default function Dashboard() {
           {/* Complete Pitcher — $200/mo */}
           <Card
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
-              !hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) 
+              !isTierUnlocked('pitcher') 
                 ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
                 : ""
             }`}
@@ -439,7 +444,7 @@ export default function Dashboard() {
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
                 Complete Pitcher
-                {!hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
+                {!isTierUnlocked('pitcher') && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-sm text-muted-foreground">$200/month</p>
               <p className="text-sm sm:text-base text-muted-foreground">
@@ -447,9 +452,9 @@ export default function Dashboard() {
               </p>
               <Button 
                 className="w-full"
-                variant={hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
+                variant={isTierUnlocked('pitcher') ? "default" : "outline"}
               >
-                {hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? (
+                {isTierUnlocked('pitcher') ? (
                   <><CircleDot className="h-4 w-4 sm:mr-2" /> Start Training</>
                 ) : (
                   <><Sparkles className="h-4 w-4 sm:mr-2" /> {t('dashboard.unlockModule')}</>
@@ -461,7 +466,7 @@ export default function Dashboard() {
           {/* 5Tool Player — $300/mo */}
           <Card
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
-              !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) 
+              !isTierUnlocked('5tool') 
                 ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
                 : "border-primary/50 border-2"
             }`}
@@ -474,7 +479,7 @@ export default function Dashboard() {
               <Badge className="bg-primary text-primary-foreground text-xs">Most Popular</Badge>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
                 5Tool Player
-                {!hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
+                {!isTierUnlocked('5tool') && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-sm text-muted-foreground">$300/month</p>
               <p className="text-sm sm:text-base text-muted-foreground">
@@ -482,9 +487,9 @@ export default function Dashboard() {
               </p>
               <Button 
                 className="w-full"
-                variant={hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
+                variant={isTierUnlocked('5tool') ? "default" : "outline"}
               >
-                {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
+                {isTierUnlocked('5tool') ? (
                   <><Zap className="h-4 w-4 sm:mr-2" /> Start Training</>
                 ) : (
                   <><Sparkles className="h-4 w-4 sm:mr-2" /> {t('dashboard.unlockModule')}</>
@@ -496,7 +501,7 @@ export default function Dashboard() {
           {/* The Golden 2Way — $400/mo */}
           <Card
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
-              !(hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin))
+              !isTierUnlocked('golden2way') 
                 ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
                 : "border-primary border-2"
             }`}
@@ -509,7 +514,7 @@ export default function Dashboard() {
               <Badge className="bg-primary text-primary-foreground text-xs">Best Value</Badge>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
                 The Golden 2Way
-                {!(hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin)) && <Lock className="h-5 w-5" />}
+                {!isTierUnlocked('golden2way') && <Lock className="h-5 w-5" />}
               </h3>
               <p className="text-sm text-muted-foreground">$400/month</p>
               <p className="text-sm sm:text-base text-muted-foreground">
@@ -517,9 +522,9 @@ export default function Dashboard() {
               </p>
               <Button 
                 className="w-full"
-                variant={(hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin)) ? "default" : "outline"}
+                variant={isTierUnlocked('golden2way') ? "default" : "outline"}
               >
-                {(hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin)) ? (
+                {isTierUnlocked('golden2way') ? (
                   <><Target className="h-4 w-4 sm:mr-2" /> Start Training</>
                 ) : (
                   <><Sparkles className="h-4 w-4 sm:mr-2" /> {t('dashboard.unlockModule')}</>
