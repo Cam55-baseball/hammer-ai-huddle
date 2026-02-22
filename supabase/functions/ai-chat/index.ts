@@ -29,7 +29,7 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
-    const { messages } = await req.json();
+    const { messages, analysisContext } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Messages array is required");
@@ -92,11 +92,16 @@ serve(async (req) => {
       }
     }
 
+    let analysisContextSection = "";
+    if (analysisContext) {
+      analysisContextSection = `\n\nANALYSIS CONTEXT:\nThe athlete just received the following analysis. Use this context to answer their follow-up questions with specific, personalized advice:\n${analysisContext}\n`;
+    }
+
     const systemPrompt = `You are an expert biomechanics coach for baseball and softball athletes. You provide detailed, actionable advice on hitting, pitching, and throwing mechanics.
 
 ${ownerBio ? `Follow the coaching philosophy below unless the user asks otherwise.\n\nCoach: ${ownerName}\nPhilosophy: ${ownerBio}\n` : ''}
 ${userContext}
-
+${analysisContextSection}
 Provide clear, concise responses focused on improving athletic performance. Use technical terminology when appropriate but explain concepts clearly.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

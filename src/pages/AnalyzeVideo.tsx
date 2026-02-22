@@ -26,6 +26,7 @@ import { branding } from "@/branding";
 import { generateVideoThumbnail, uploadVideoThumbnail } from "@/lib/videoHelpers";
 import { extractKeyFrames, calculateLandingFrameIndex } from "@/lib/frameExtraction";
 import { useVault } from "@/hooks/useVault";
+import { AnalysisCoachChat } from "@/components/AnalysisCoachChat";
 
 export default function AnalyzeVideo() {
   const { t } = useTranslation();
@@ -949,6 +950,18 @@ export default function AnalyzeVideo() {
                       <span className="xs:hidden">{t('navigation.dashboard')}</span>
                     </Button>
                   </div>
+
+                  {/* Ask the Coach - Post-Analysis AI Chat */}
+                  <AnalysisCoachChat
+                    module={module || 'hitting'}
+                    analysisContext={{
+                      efficiency_score: analysis.efficiency_score,
+                      feedback: analysis.feedback,
+                      positives: analysis.positives,
+                      drills: analysis.drills,
+                      summary: analysis.summary,
+                    }}
+                  />
                 </div>
               </Card>
             )}

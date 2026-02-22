@@ -149,3 +149,6 @@ verify_jwt = true
 
 [functions.calculate-regulation]
 verify_jwt = false
+
+[functions.ai-helpdesk]
+verify_jwt = true
