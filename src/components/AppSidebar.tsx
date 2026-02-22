@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -240,6 +240,7 @@ export function AppSidebar() {
   ];
 
   const accountItems = [
+    { title: t('navigation.helpDesk', 'Help Desk'), url: "/help-desk", icon: HelpCircle },
     { title: t('navigation.profile'), url: "/profile", icon: Settings },
     { title: t('navigation.myCustomActivities'), url: "/my-custom-activities", icon: LayoutGrid },
     ...(isOwner ? [

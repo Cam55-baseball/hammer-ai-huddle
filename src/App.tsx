@@ -82,6 +82,7 @@ const SpeedLab = lazyWithRetry(() => import("./pages/SpeedLab"));
 const CompletePlayer = lazyWithRetry(() => import("./pages/CompletePlayer"));
 const CompleteHitter = lazyWithRetry(() => import("./pages/CompleteHitter"));
 const CompletePitcher = lazyWithRetry(() => import("./pages/CompletePitcher"));
+const HelpDesk = lazyWithRetry(() => import("./pages/HelpDesk"));
 
 const queryClient = new QueryClient();
 
@@ -143,6 +144,7 @@ const App = () => {
               <Route path="/complete-player" element={<CompletePlayer />} />
               <Route path="/complete-hitter" element={<CompleteHitter />} />
               <Route path="/complete-pitcher" element={<CompletePitcher />} />
+              <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
