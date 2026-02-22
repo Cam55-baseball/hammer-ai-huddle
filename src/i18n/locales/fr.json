@@ -6347,5 +6347,76 @@
       "whyTitle": "Pourquoi Pieds Nus ?",
       "whyDescription": "Les exercices pieds nus développent le fascia et les connexions élastiques responsables de la vitesse en sprint."
     }
+  },
+  "subscriptionTiers": {
+    "pitcher": {
+      "name": "Pitcher Complet",
+      "description": "Programme complet de développement du lancer"
+    },
+    "5tool": {
+      "name": "Joueur 5Tool",
+      "description": "Programme de développement frappe + lancer"
+    },
+    "golden2way": {
+      "name": "The Golden 2Way",
+      "description": "Développement complet du joueur 2 voies"
+    },
+    "chooseTrainingTier": "Choisissez Votre Niveau d'Entraînement",
+    "eliteTrainingPrograms": "Programmes d'entraînement d'élite pour les athlètes de baseball et softball",
+    "mostPopular": "Le Plus Populaire",
+    "bestValue": "Meilleur Rapport Qualité-Prix",
+    "startTraining": "Commencer l'Entraînement",
+    "backToDashboard": "← Retour au Tableau de Bord",
+    "pricesBeforePromotions": "Prix affichés avant promotions. Appliquez les codes promo (y compris 100% de réduction) lors du paiement.",
+    "subscribeTo": "S'abonner à {{tier}}",
+    "havePromoCode": "Vous avez un code promo ? Appliquez-le lors du paiement pour des réductions.",
+    "includes": "{{tier}} inclut :",
+    "totalPerMonth": "Total",
+    "billedMonthly": "Facturé mensuellement, annulez à tout moment",
+    "proceedToPayment": "Procéder au Paiement",
+    "processing": "Traitement...",
+    "backToPricing": "← Retour aux Tarifs",
+    "noTierSelected": "Aucun Niveau Sélectionné",
+    "selectTierFromPricing": "Veuillez sélectionner un niveau d'entraînement sur la page des tarifs.",
+    "viewPricing": "Voir les Tarifs",
+    "ownerAccess": "Accès Propriétaire",
+    "adminAccess": "Accès Administrateur",
+    "unlimitedAccessMessage": "Vous avez un accès illimité à tous les niveaux sans paiement.",
+    "goToDashboard": "Aller au Tableau de Bord",
+    "notRedirected": "Si vous n'êtes pas redirigé automatiquement, cliquez ci-dessous :",
+    "openCheckout": "Ouvrir le Paiement",
+    "perMonth": "/mois"
+  },
+  "unicornProgram": {
+    "title": "The Unicorn",
+    "description": "Système d'entraînement fusionné d'élite",
+    "accessDescription": "The Unicorn est le système d'entraînement fusionné d'élite disponible exclusivement avec le niveau The Golden 2Way.",
+    "upgradeToGolden": "Passer au Golden 2Way",
+    "weeklyCNSLoad": "Charge SNC Hebdomadaire",
+    "deloadWeek": "SEMAINE DE DÉCHARGE",
+    "deloadVolumeReduced": "Semaine de décharge — tout le volume réduit de 40%",
+    "strengthSettings": "Paramètres de Force",
+    "sixWeekPlan": "Plan de 6 Semaines",
+    "current": "Actuel",
+    "keyRules": "Règles Clés",
+    "disclaimer": "Hammer's Modality n'est pas responsable des blessures pouvant survenir pendant les exercices. Il n'y a aucune garantie de résultats. Consultez toujours un professionnel de santé qualifié avant de commencer tout programme d'exercices."
+  },
+  "armCare": {
+    "title": "Soin du Bras",
+    "exercises": {
+      "bandPullAparts": "Écartements avec Bande",
+      "wallSlides": "Glissements Muraux",
+      "serratusPushUp": "Pompe Serratus",
+      "proneYTW": "Élévations Y-T-W en Pronation",
+      "sideLyingER": "Rotation Externe Latérale",
+      "proneIRaise": "Élévation I en Pronation",
+      "eccentricWristCurl": "Curl Excentrique du Poignet",
+      "er90Hold": "Maintien Rotation Externe 90/90"
+    }
+  },
+  "velocityDev": {
+    "title": "Développement de la Vélocité",
+    "blockA": "Chaîne Cinétique + Balle Lestée",
+    "blockB": "Surcharge/Sous-charge + Intention"
   }
 }

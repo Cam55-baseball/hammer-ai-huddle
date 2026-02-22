@@ -7520,5 +7520,76 @@
       "whyDescription": "Barefoot drills develop the fascia and sensory feedback in your feet — the foundation of elastic, springy speed. Stronger feet = faster ground contact = faster you."
     },
     "disclaimer": "Always consult with a qualified healthcare professional before beginning any exercise program. Listen to your body and stop immediately if you experience pain."
+  },
+  "subscriptionTiers": {
+    "pitcher": {
+      "name": "Complete Pitcher",
+      "description": "Full pitching development program"
+    },
+    "5tool": {
+      "name": "5Tool Player",
+      "description": "Hitting + throwing development program"
+    },
+    "golden2way": {
+      "name": "The Golden 2Way",
+      "description": "Complete 2-way player development"
+    },
+    "chooseTrainingTier": "Choose Your Training Tier",
+    "eliteTrainingPrograms": "Elite training programs for baseball and softball athletes",
+    "mostPopular": "Most Popular",
+    "bestValue": "Best Value",
+    "startTraining": "Start Training",
+    "backToDashboard": "← Back to Dashboard",
+    "pricesBeforePromotions": "Prices shown before promotions. Apply promo codes (including 100% off) during checkout.",
+    "subscribeTo": "Subscribe to {{tier}}",
+    "havePromoCode": "Have a promo code? Apply it during checkout for discounts.",
+    "includes": "{{tier}} includes:",
+    "totalPerMonth": "Total",
+    "billedMonthly": "Billed monthly, cancel anytime",
+    "proceedToPayment": "Proceed to Payment",
+    "processing": "Processing...",
+    "backToPricing": "← Back to Pricing",
+    "noTierSelected": "No Tier Selected",
+    "selectTierFromPricing": "Please select a training tier from the pricing page.",
+    "viewPricing": "View Pricing",
+    "ownerAccess": "Owner Access",
+    "adminAccess": "Admin Access",
+    "unlimitedAccessMessage": "You have unlimited access to all tiers without payment.",
+    "goToDashboard": "Go to Dashboard",
+    "notRedirected": "If not redirected automatically, click below:",
+    "openCheckout": "Open Checkout",
+    "perMonth": "/month"
+  },
+  "unicornProgram": {
+    "title": "The Unicorn",
+    "description": "Elite merged training system",
+    "accessDescription": "The Unicorn is the elite merged workout system available exclusively with The Golden 2Way tier.",
+    "upgradeToGolden": "Upgrade to Golden 2Way",
+    "weeklyCNSLoad": "Weekly CNS Load",
+    "deloadWeek": "DELOAD WEEK",
+    "deloadVolumeReduced": "Deload week — all volume reduced by 40%",
+    "strengthSettings": "Strength Settings",
+    "sixWeekPlan": "6-Week Plan",
+    "current": "Current",
+    "keyRules": "Key Rules",
+    "disclaimer": "Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program."
+  },
+  "armCare": {
+    "title": "Arm Care",
+    "exercises": {
+      "bandPullAparts": "Band Pull-Aparts",
+      "wallSlides": "Wall Slides",
+      "serratusPushUp": "Serratus Push-Up",
+      "proneYTW": "Prone Y-T-W Raises",
+      "sideLyingER": "Side-Lying External Rotation",
+      "proneIRaise": "Prone I Raise",
+      "eccentricWristCurl": "Eccentric Wrist Flexor Curl",
+      "er90Hold": "90/90 External Rotation Hold"
+    }
+  },
+  "velocityDev": {
+    "title": "Velocity Development",
+    "blockA": "Kinetic Chain + Weighted Ball",
+    "blockB": "Overload/Underload + Intent"
   }
 }

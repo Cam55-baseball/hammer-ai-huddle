@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useOwnerAccess } from "@/hooks/useOwnerAccess";
@@ -12,6 +13,7 @@ import { Check } from "lucide-react";
 import { TIER_CONFIG } from "@/constants/tiers";
 
 const Checkout = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -159,9 +161,9 @@ const Checkout = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
         <Card className="p-8 text-center max-w-md">
-          <h2 className="text-2xl font-bold mb-4">{isOwner ? 'Owner' : 'Admin'} Access</h2>
-          <p className="text-muted-foreground mb-6">You have unlimited access to all tiers without payment.</p>
-          <Button onClick={() => navigate('/dashboard')} className="w-full">Go to Dashboard</Button>
+          <h2 className="text-2xl font-bold mb-4">{isOwner ? t('subscriptionTiers.ownerAccess') : t('subscriptionTiers.adminAccess')}</h2>
+          <p className="text-muted-foreground mb-6">{t('subscriptionTiers.unlimitedAccessMessage')}</p>
+          <Button onClick={() => navigate('/dashboard')} className="w-full">{t('subscriptionTiers.goToDashboard')}</Button>
         </Card>
       </div>
     );
@@ -171,9 +173,9 @@ const Checkout = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
         <Card className="p-8 text-center max-w-md">
-          <h2 className="text-2xl font-bold mb-4">No Tier Selected</h2>
-          <p className="text-muted-foreground mb-6">Please select a training tier from the pricing page.</p>
-          <Button onClick={() => navigate('/pricing')} className="w-full">View Pricing</Button>
+          <h2 className="text-2xl font-bold mb-4">{t('subscriptionTiers.noTierSelected')}</h2>
+          <p className="text-muted-foreground mb-6">{t('subscriptionTiers.selectTierFromPricing')}</p>
+          <Button onClick={() => navigate('/pricing')} className="w-full">{t('subscriptionTiers.viewPricing')}</Button>
         </Card>
       </div>
     );
@@ -183,19 +185,19 @@ const Checkout = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
       <div className="w-full max-w-2xl">
         <Card className="p-8">
-          <h1 className="text-3xl font-bold mb-2">Subscribe to {tierConfig.displayName}</h1>
+          <h1 className="text-3xl font-bold mb-2">{t('subscriptionTiers.subscribeTo', { tier: t(`subscriptionTiers.${selectedTier}.name`) })}</h1>
           <p className="text-muted-foreground mb-6">
-            {selectedSport === 'softball' ? 'Softball' : 'Baseball'} · ${tierConfig.price}/month
+            {selectedSport === 'softball' ? t('onboarding.softball') : t('onboarding.baseball')} · ${tierConfig.price}{t('subscriptionTiers.perMonth')}
           </p>
 
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              💡 <strong>Have a promo code?</strong> Apply it during checkout for discounts.
+              💡 <strong>{t('subscriptionTiers.havePromoCode')}</strong>
             </p>
           </div>
 
           <div className="mb-6 p-4 rounded-lg border bg-card">
-            <h3 className="font-semibold mb-3">{tierConfig.displayName} includes:</h3>
+            <h3 className="font-semibold mb-3">{t('subscriptionTiers.includes', { tier: t(`subscriptionTiers.${selectedTier}.name`) })}</h3>
             <ul className="space-y-2">
               {tierConfig.includes.map((feature, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm">
@@ -208,29 +210,29 @@ const Checkout = () => {
 
           <div className="mb-6 p-4 bg-muted rounded-lg">
             <div className="flex justify-between items-center">
-              <span className="font-semibold">Total</span>
-              <span className="text-2xl font-bold">${tierConfig.price}/month</span>
+              <span className="font-semibold">{t('subscriptionTiers.totalPerMonth')}</span>
+              <span className="text-2xl font-bold">${tierConfig.price}{t('subscriptionTiers.perMonth')}</span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Billed monthly, cancel anytime</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('subscriptionTiers.billedMonthly')}</p>
           </div>
 
           {showManualLink && checkoutUrl && (
             <div className="mb-4 p-4 rounded-lg border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
               <p className="text-sm text-amber-800 dark:text-amber-100 mb-2">
-                If not redirected automatically, click below:
+                {t('subscriptionTiers.notRedirected')}
               </p>
               <Button asChild className="w-full" variant="secondary">
-                <a href={checkoutUrl} target="_top" rel="noopener noreferrer">Open Checkout</a>
+                <a href={checkoutUrl} target="_top" rel="noopener noreferrer">{t('subscriptionTiers.openCheckout')}</a>
               </Button>
             </div>
           )}
 
           <Button onClick={handleCreateCheckout} disabled={checkoutLoading} className="w-full mb-4" size="lg">
-            {checkoutLoading ? "Processing..." : "Proceed to Payment"}
+            {checkoutLoading ? t('subscriptionTiers.processing') : t('subscriptionTiers.proceedToPayment')}
           </Button>
 
           <Button variant="ghost" onClick={() => navigate("/pricing")} className="w-full">
-            ← Back to Pricing
+            {t('subscriptionTiers.backToPricing')}
           </Button>
         </Card>
       </div>

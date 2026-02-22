@@ -5590,5 +5590,76 @@
       "whyTitle": "为什么赤脚？",
       "whyDescription": "赤脚训练可以发展筋膜和弹性连接，这是冲刺速度的基础。"
     }
+  },
+  "subscriptionTiers": {
+    "pitcher": {
+      "name": "完整投手",
+      "description": "完整投球开发计划"
+    },
+    "5tool": {
+      "name": "5Tool球员",
+      "description": "打击+传球开发计划"
+    },
+    "golden2way": {
+      "name": "The Golden 2Way",
+      "description": "完整的双向球员开发"
+    },
+    "chooseTrainingTier": "选择您的训练层级",
+    "eliteTrainingPrograms": "为棒球和垒球运动员提供的精英训练计划",
+    "mostPopular": "最受欢迎",
+    "bestValue": "最佳价值",
+    "startTraining": "开始训练",
+    "backToDashboard": "← 返回仪表板",
+    "pricesBeforePromotions": "显示价格为促销前价格。结账时可使用促销代码（包括100%优惠）。",
+    "subscribeTo": "订阅{{tier}}",
+    "havePromoCode": "有促销代码吗？结账时使用以获取折扣。",
+    "includes": "{{tier}}包含：",
+    "totalPerMonth": "总计",
+    "billedMonthly": "按月计费，随时可取消",
+    "proceedToPayment": "继续支付",
+    "processing": "处理中...",
+    "backToPricing": "← 返回价格",
+    "noTierSelected": "未选择层级",
+    "selectTierFromPricing": "请从价格页面选择训练层级。",
+    "viewPricing": "查看价格",
+    "ownerAccess": "所有者访问",
+    "adminAccess": "管理员访问",
+    "unlimitedAccessMessage": "您可以无限制访问所有层级，无需付款。",
+    "goToDashboard": "前往仪表板",
+    "notRedirected": "如果未自动重定向，请点击以下：",
+    "openCheckout": "打开结账",
+    "perMonth": "/月"
+  },
+  "unicornProgram": {
+    "title": "The Unicorn",
+    "description": "精英融合训练系统",
+    "accessDescription": "The Unicorn是仅在The Golden 2Way层级中可用的精英融合锻炼系统。",
+    "upgradeToGolden": "升级到Golden 2Way",
+    "weeklyCNSLoad": "每周CNS负荷",
+    "deloadWeek": "减载周",
+    "deloadVolumeReduced": "减载周 — 所有训练量减少40%",
+    "strengthSettings": "力量设置",
+    "sixWeekPlan": "6周计划",
+    "current": "当前",
+    "keyRules": "关键规则",
+    "disclaimer": "Hammer's Modality不对运动中可能发生的任何伤害负责。不保证结果。在开始任何锻炼计划之前，请务必咨询合格的医疗保健专业人员。"
+  },
+  "armCare": {
+    "title": "手臂护理",
+    "exercises": {
+      "bandPullAparts": "弹力带拉伸",
+      "wallSlides": "墙壁滑动",
+      "serratusPushUp": "前锯肌俯卧撑",
+      "proneYTW": "俯卧Y-T-W抬举",
+      "sideLyingER": "侧卧外旋",
+      "proneIRaise": "俯卧I抬举",
+      "eccentricWristCurl": "离心腕屈曲",
+      "er90Hold": "90/90外旋保持"
+    }
+  },
+  "velocityDev": {
+    "title": "球速开发",
+    "blockA": "动力链 + 加重球",
+    "blockB": "超负荷/欠负荷 + 意图"
   }
 }

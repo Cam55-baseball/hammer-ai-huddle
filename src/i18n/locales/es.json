@@ -6756,5 +6756,76 @@
       "whyTitle": "¿Por qué Descalzo?",
       "whyDescription": "Los ejercicios descalzos desarrollan la fascia y las conexiones elásticas responsables de la velocidad en el sprint."
     }
+  },
+  "subscriptionTiers": {
+    "pitcher": {
+      "name": "Pitcher Completo",
+      "description": "Programa completo de desarrollo de pitcheo"
+    },
+    "5tool": {
+      "name": "Jugador 5Tool",
+      "description": "Programa de desarrollo de bateo + lanzamiento"
+    },
+    "golden2way": {
+      "name": "The Golden 2Way",
+      "description": "Desarrollo completo de jugador 2 vías"
+    },
+    "chooseTrainingTier": "Elige Tu Nivel de Entrenamiento",
+    "eliteTrainingPrograms": "Programas de entrenamiento de élite para atletas de béisbol y sóftbol",
+    "mostPopular": "Más Popular",
+    "bestValue": "Mejor Valor",
+    "startTraining": "Comenzar Entrenamiento",
+    "backToDashboard": "← Volver al Panel",
+    "pricesBeforePromotions": "Precios mostrados antes de promociones. Aplica códigos promocionales (incluyendo 100% de descuento) durante el pago.",
+    "subscribeTo": "Suscribirse a {{tier}}",
+    "havePromoCode": "¿Tienes un código promocional? Aplícalo durante el pago para descuentos.",
+    "includes": "{{tier}} incluye:",
+    "totalPerMonth": "Total",
+    "billedMonthly": "Facturado mensualmente, cancela cuando quieras",
+    "proceedToPayment": "Proceder al Pago",
+    "processing": "Procesando...",
+    "backToPricing": "← Volver a Precios",
+    "noTierSelected": "Ningún Nivel Seleccionado",
+    "selectTierFromPricing": "Por favor selecciona un nivel de entrenamiento en la página de precios.",
+    "viewPricing": "Ver Precios",
+    "ownerAccess": "Acceso de Propietario",
+    "adminAccess": "Acceso de Administrador",
+    "unlimitedAccessMessage": "Tienes acceso ilimitado a todos los niveles sin pago.",
+    "goToDashboard": "Ir al Panel",
+    "notRedirected": "Si no eres redirigido automáticamente, haz clic abajo:",
+    "openCheckout": "Abrir Pago",
+    "perMonth": "/mes"
+  },
+  "unicornProgram": {
+    "title": "The Unicorn",
+    "description": "Sistema de entrenamiento fusionado de élite",
+    "accessDescription": "The Unicorn es el sistema de entrenamiento fusionado de élite disponible exclusivamente con el nivel The Golden 2Way.",
+    "upgradeToGolden": "Actualizar a Golden 2Way",
+    "weeklyCNSLoad": "Carga CNS Semanal",
+    "deloadWeek": "SEMANA DE DESCARGA",
+    "deloadVolumeReduced": "Semana de descarga — todo el volumen reducido un 40%",
+    "strengthSettings": "Configuración de Fuerza",
+    "sixWeekPlan": "Plan de 6 Semanas",
+    "current": "Actual",
+    "keyRules": "Reglas Clave",
+    "disclaimer": "Hammer's Modality no es responsable de ninguna lesión que pueda ocurrir durante los ejercicios. No hay garantías en los resultados. Siempre consulta con un profesional de salud calificado antes de comenzar cualquier programa de ejercicios."
+  },
+  "armCare": {
+    "title": "Cuidado del Brazo",
+    "exercises": {
+      "bandPullAparts": "Aperturas con Banda",
+      "wallSlides": "Deslizamientos en Pared",
+      "serratusPushUp": "Flexión de Serrato",
+      "proneYTW": "Elevaciones Y-T-W Prono",
+      "sideLyingER": "Rotación Externa Lateral",
+      "proneIRaise": "Elevación I Prono",
+      "eccentricWristCurl": "Curl Excéntrico de Muñeca",
+      "er90Hold": "Retención de Rotación Externa 90/90"
+    }
+  },
+  "velocityDev": {
+    "title": "Desarrollo de Velocidad",
+    "blockA": "Cadena Cinética + Pelota con Peso",
+    "blockB": "Sobrecarga/Subcarga + Intención"
   }
 }

@@ -5631,5 +5631,76 @@
       "whyTitle": "왜 맨발인가요?",
       "whyDescription": "맨발 드릴은 스프린트 속도를 담당하는 근막과 탄력적 연결을 발달시킵니다."
     }
+  },
+  "subscriptionTiers": {
+    "pitcher": {
+      "name": "컴플리트 피처",
+      "description": "완전한 투구 개발 프로그램"
+    },
+    "5tool": {
+      "name": "5Tool 플레이어",
+      "description": "타격 + 송구 개발 프로그램"
+    },
+    "golden2way": {
+      "name": "The Golden 2Way",
+      "description": "완전한 2웨이 선수 개발"
+    },
+    "chooseTrainingTier": "훈련 티어를 선택하세요",
+    "eliteTrainingPrograms": "야구 및 소프트볼 선수를 위한 엘리트 훈련 프로그램",
+    "mostPopular": "가장 인기",
+    "bestValue": "최고의 가치",
+    "startTraining": "훈련 시작",
+    "backToDashboard": "← 대시보드로 돌아가기",
+    "pricesBeforePromotions": "표시된 가격은 프로모션 적용 전입니다. 결제 시 프로모 코드(100% 할인 포함)를 적용하세요.",
+    "subscribeTo": "{{tier}} 구독",
+    "havePromoCode": "프로모 코드가 있으신가요? 결제 시 할인을 적용하세요.",
+    "includes": "{{tier}} 포함 내용:",
+    "totalPerMonth": "총계",
+    "billedMonthly": "월별 청구, 언제든지 취소 가능",
+    "proceedToPayment": "결제 진행",
+    "processing": "처리 중...",
+    "backToPricing": "← 가격으로 돌아가기",
+    "noTierSelected": "티어가 선택되지 않음",
+    "selectTierFromPricing": "가격 페이지에서 훈련 티어를 선택해 주세요.",
+    "viewPricing": "가격 보기",
+    "ownerAccess": "소유자 액세스",
+    "adminAccess": "관리자 액세스",
+    "unlimitedAccessMessage": "모든 티어에 무제한으로 액세스할 수 있습니다. 결제 불필요.",
+    "goToDashboard": "대시보드로 이동",
+    "notRedirected": "자동으로 리디렉션되지 않으면 아래를 클릭하세요:",
+    "openCheckout": "결제 열기",
+    "perMonth": "/월"
+  },
+  "unicornProgram": {
+    "title": "The Unicorn",
+    "description": "엘리트 통합 훈련 시스템",
+    "accessDescription": "The Unicorn은 The Golden 2Way 티어에서만 이용 가능한 엘리트 통합 워크아웃 시스템입니다.",
+    "upgradeToGolden": "Golden 2Way로 업그레이드",
+    "weeklyCNSLoad": "주간 CNS 부하",
+    "deloadWeek": "디로드 주",
+    "deloadVolumeReduced": "디로드 주 — 모든 볼륨 40% 감소",
+    "strengthSettings": "근력 설정",
+    "sixWeekPlan": "6주 플랜",
+    "current": "현재",
+    "keyRules": "핵심 규칙",
+    "disclaimer": "Hammer's Modality는 운동 중 발생할 수 있는 부상에 대해 책임지지 않습니다. 결과에 대한 보장은 없습니다. 운동 프로그램을 시작하기 전에 항상 자격을 갖춘 의료 전문가와 상담하세요."
+  },
+  "armCare": {
+    "title": "팔 관리",
+    "exercises": {
+      "bandPullAparts": "밴드 풀 어파트",
+      "wallSlides": "월 슬라이드",
+      "serratusPushUp": "전거근 푸시업",
+      "proneYTW": "엎드린 Y-T-W 레이즈",
+      "sideLyingER": "옆으로 누운 외회전",
+      "proneIRaise": "엎드린 I 레이즈",
+      "eccentricWristCurl": "편심성 손목 컬",
+      "er90Hold": "90/90 외회전 홀드"
+    }
+  },
+  "velocityDev": {
+    "title": "구속 개발",
+    "blockA": "운동 사슬 + 가중 볼",
+    "blockB": "오버로드/언더로드 + 의도"
   }
 }
