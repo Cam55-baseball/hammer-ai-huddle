@@ -27,7 +27,7 @@ import dashboardHero2 from "@/assets/dashboard-hero-1.jpg";
 import dashboardHero3 from "@/assets/dashboard-hero-2.jpg";
 import dashboardHero4 from "@/assets/dashboard-hero-3.jpg";
 
-type ModuleType = "hitting" | "pitching" | "throwing";
+type ModuleType = "hitting" | "pitching" | "throwing" | "pitcher" | "5tool" | "golden2way";
 type SportType = "baseball" | "softball";
 
 export default function Dashboard() {
@@ -225,18 +225,38 @@ export default function Dashboard() {
 
   const handleModuleSelect = (module: ModuleType) => {
     const isOwnerOrAdmin = isOwner || isAdmin;
-    const hasAccess = hasAccessForSport(module, selectedSport, isOwnerOrAdmin);
     
-    if (!hasAccess) {
-      localStorage.setItem('pendingModule', module);
-      localStorage.setItem('pendingSport', selectedSport);
-      navigate("/pricing", { 
-        state: { mode: 'add', sport: selectedSport, module: module } 
-      });
-      return;
+    // For tier-based modules, check access differently
+    if (module === 'pitcher') {
+      const hasAccess = isOwnerOrAdmin || hasAccessForSport('pitching', selectedSport, isOwnerOrAdmin);
+      if (!hasAccess) {
+        navigate("/pricing", { state: { sport: selectedSport, tier: 'pitcher' } });
+        return;
+      }
+      navigate("/complete-pitcher");
+    } else if (module === '5tool') {
+      const hasAccess = isOwnerOrAdmin || hasAccessForSport('hitting', selectedSport, isOwnerOrAdmin);
+      if (!hasAccess) {
+        navigate("/pricing", { state: { sport: selectedSport, tier: '5tool' } });
+        return;
+      }
+      navigate("/5tool-player");
+    } else if (module === 'golden2way') {
+      const hasAccess = isOwnerOrAdmin || (hasAccessForSport('hitting', selectedSport, isOwnerOrAdmin) && hasAccessForSport('pitching', selectedSport, isOwnerOrAdmin));
+      if (!hasAccess) {
+        navigate("/pricing", { state: { sport: selectedSport, tier: 'golden2way' } });
+        return;
+      }
+      navigate("/golden-2way");
+    } else {
+      // Legacy module handling
+      const hasAccess = hasAccessForSport(module, selectedSport, isOwnerOrAdmin);
+      if (!hasAccess) {
+        navigate("/pricing", { state: { sport: selectedSport } });
+        return;
+      }
+      navigate(`/analyze/${module}?sport=${selectedSport}`);
     }
-    
-    navigate(`/analyze/${module}?sport=${selectedSport}`);
   };
 
   const getModuleProgress = (module: ModuleType) => {
@@ -404,184 +424,105 @@ export default function Dashboard() {
 
         {/* Module Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 module-cards">
-          {/* Complete Hitter Module (formerly Hitting) */}
+          {/* Complete Pitcher — $200/mo */}
           <Card
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
-              !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) 
-                ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
-                : ""
-            }`}
-            onClick={() => {
-              const isOwnerOrAdmin = isOwner || isAdmin;
-              const hasAccess = hasAccessForSport("hitting", selectedSport, isOwnerOrAdmin);
-              if (!hasAccess) {
-                handleModuleSelect("hitting");
-              } else {
-                navigate("/complete-hitter");
-              }
-            }}
-          >
-            <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
-              <div className="p-2 sm:p-4 rounded-full bg-primary/10">
-                <Target className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                {t('dashboard.modules.completeHitter')}
-                {!hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
-              </h3>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                {t('dashboard.modules.completeHitterDescription')}
-              </p>
-              {getModuleProgress("hitting") && hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && (
-                <div className="text-sm">
-                  <p className="font-semibold">
-                    {t('dashboard.videosAnalyzed')} {getModuleProgress("hitting").videos_analyzed}
-                  </p>
-                </div>
-              )}
-              <Button 
-                className={`w-full ${
-                  !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin)
-                    ? selectedSport === 'softball'
-                      ? "bg-gradient-to-r from-pink-400 to-pink-300 hover:from-pink-500 hover:to-pink-400 text-white font-semibold shadow-lg hover:shadow-pink-400/30 transition-all"
-                      : "bg-gradient-to-r from-primary to-primary/70 hover:from-primary/90 hover:to-primary/60 text-white font-semibold shadow-lg hover:shadow-primary/30 transition-all"
-                    : ""
-                }`}
-                variant={hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "default" : undefined}
-              >
-                {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
-                  <>
-                    <Target className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">{t('dashboard.modules.completePlayerExplore')}</span>
-                    <span className="xs:hidden">{t('dashboard.modules.completePlayerExplore')}</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 sm:mr-2" />
-                    {t('dashboard.unlockModule')}
-                  </>
-                )}
-              </Button>
-            </div>
-          </Card>
-
-          {/* Complete Pitcher Module (formerly Pitching) */}
-          <Card
-            className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
               !hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) 
                 ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
                 : ""
             }`}
-            onClick={() => {
-              const isOwnerOrAdmin = isOwner || isAdmin;
-              const hasAccess = hasAccessForSport("pitching", selectedSport, isOwnerOrAdmin);
-              if (!hasAccess) {
-                handleModuleSelect("pitching");
-              } else {
-                navigate("/complete-pitcher");
-              }
-            }}
+            onClick={() => handleModuleSelect("pitcher")}
           >
             <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
               <div className="p-2 sm:p-4 rounded-full bg-primary/10">
                 <CircleDot className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                {t('dashboard.modules.completePitcher')}
+                Complete Pitcher
                 {!hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
+              <p className="text-sm text-muted-foreground">$200/month</p>
               <p className="text-sm sm:text-base text-muted-foreground">
-                {t('dashboard.modules.completePitcherDescription')}
+                Pitching Analysis, Heat Factory, Ask the Coach
               </p>
-              {getModuleProgress("pitching") && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) && (
-                <div className="text-sm">
-                  <p className="font-semibold">
-                    {t('dashboard.videosAnalyzed')} {getModuleProgress("pitching").videos_analyzed}
-                  </p>
-                </div>
-              )}
               <Button 
-                className={`w-full ${
-                  !hasAccessForSport("pitching", selectedSport, isOwner || isAdmin)
-                    ? selectedSport === 'softball'
-                      ? "bg-gradient-to-r from-pink-400 to-pink-300 hover:from-pink-500 hover:to-pink-400 text-white font-semibold shadow-lg hover:shadow-pink-400/30 transition-all"
-                      : "bg-gradient-to-r from-primary to-primary/70 hover:from-primary/90 hover:to-primary/60 text-white font-semibold shadow-lg hover:shadow-primary/30 transition-all"
-                    : ""
-                }`}
-                variant={hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "default" : undefined}
+                className="w-full"
+                variant={hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
               >
                 {hasAccessForSport("pitching", selectedSport, isOwner || isAdmin) ? (
-                  <>
-                    <CircleDot className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">{t('dashboard.modules.completePlayerExplore')}</span>
-                    <span className="xs:hidden">{t('dashboard.modules.completePlayerExplore')}</span>
-                  </>
+                  <><CircleDot className="h-4 w-4 sm:mr-2" /> Start Training</>
                 ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 sm:mr-2" />
-                    {t('dashboard.unlockModule')}
-                  </>
+                  <><Sparkles className="h-4 w-4 sm:mr-2" /> {t('dashboard.unlockModule')}</>
                 )}
               </Button>
             </div>
           </Card>
 
-          {/* Complete Player Module (formerly Throwing) */}
+          {/* 5Tool Player — $300/mo */}
           <Card
-            className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] ${
-              !hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) 
+            className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
+              !hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) 
                 ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
-                : ""
+                : "border-primary/50 border-2"
             }`}
-            onClick={() => {
-              const isOwnerOrAdmin = isOwner || isAdmin;
-              const hasAccess = hasAccessForSport("throwing", selectedSport, isOwnerOrAdmin);
-              if (!hasAccess) {
-                handleModuleSelect("throwing");
-              } else {
-                navigate("/complete-player");
-              }
-            }}
+            onClick={() => handleModuleSelect("5tool")}
           >
             <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
               <div className="p-2 sm:p-4 rounded-full bg-primary/10">
                 <Zap className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
               </div>
+              <Badge className="bg-primary text-primary-foreground text-xs">Most Popular</Badge>
               <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                {t('dashboard.modules.completePlayer')}
-                {!hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
+                5Tool Player
+                {!hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && <Lock className="h-5 w-5" />}
               </h3>
+              <p className="text-sm text-muted-foreground">$300/month</p>
               <p className="text-sm sm:text-base text-muted-foreground">
-                {t('dashboard.modules.completePlayerDescription')}
+                Hitting + Throwing Analysis, Iron Bambino, Speed Lab, Tex Vision
               </p>
-              {getModuleProgress("throwing") && hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) && (
-                <div className="text-sm">
-                  <p className="font-semibold">
-                    {t('dashboard.videosAnalyzed')} {getModuleProgress("throwing").videos_analyzed}
-                  </p>
-                </div>
-              )}
               <Button 
-                className={`w-full ${
-                  !hasAccessForSport("throwing", selectedSport, isOwner || isAdmin)
-                    ? selectedSport === 'softball'
-                      ? "bg-gradient-to-r from-pink-400 to-pink-300 hover:from-pink-500 hover:to-pink-400 text-white font-semibold shadow-lg hover:shadow-pink-400/30 transition-all"
-                      : "bg-gradient-to-r from-primary to-primary/70 hover:from-primary/90 hover:to-primary/60 text-white font-semibold shadow-lg hover:shadow-primary/30 transition-all"
-                    : ""
-                }`}
-                variant={hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? "default" : undefined}
+                className="w-full"
+                variant={hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? "default" : "outline"}
               >
-                {hasAccessForSport("throwing", selectedSport, isOwner || isAdmin) ? (
-                  <>
-                    <Zap className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden xs:inline">{t('dashboard.modules.completePlayerExplore')}</span>
-                    <span className="xs:hidden">{t('dashboard.modules.completePlayerExplore')}</span>
-                  </>
+                {hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) ? (
+                  <><Zap className="h-4 w-4 sm:mr-2" /> Start Training</>
                 ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 sm:mr-2" />
-                    {t('dashboard.unlockModule')}
-                  </>
+                  <><Sparkles className="h-4 w-4 sm:mr-2" /> {t('dashboard.unlockModule')}</>
+                )}
+              </Button>
+            </div>
+          </Card>
+
+          {/* The Golden 2Way — $400/mo */}
+          <Card
+            className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
+              !(hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin))
+                ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
+                : "border-primary border-2"
+            }`}
+            onClick={() => handleModuleSelect("golden2way")}
+          >
+            <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-4">
+              <div className="p-2 sm:p-4 rounded-full bg-primary/10">
+                <Target className="h-7 w-7 sm:h-12 sm:w-12 text-primary" />
+              </div>
+              <Badge className="bg-primary text-primary-foreground text-xs">Best Value</Badge>
+              <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+                The Golden 2Way
+                {!(hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin)) && <Lock className="h-5 w-5" />}
+              </h3>
+              <p className="text-sm text-muted-foreground">$400/month</p>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Everything + The Unicorn workout system
+              </p>
+              <Button 
+                className="w-full"
+                variant={(hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin)) ? "default" : "outline"}
+              >
+                {(hasAccessForSport("hitting", selectedSport, isOwner || isAdmin) && hasAccessForSport("pitching", selectedSport, isOwner || isAdmin)) ? (
+                  <><Target className="h-4 w-4 sm:mr-2" /> Start Training</>
+                ) : (
+                  <><Sparkles className="h-4 w-4 sm:mr-2" /> {t('dashboard.unlockModule')}</>
                 )}
               </Button>
             </div>

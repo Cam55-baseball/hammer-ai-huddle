@@ -7,19 +7,9 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Lock } from "lucide-react";
-
-const MODULE_PRICE = 200;
-
-const ALL_MODULES = ['hitting', 'pitching', 'throwing'] as const;
-
-const MODULE_DISPLAY_NAMES: Record<string, string> = {
-  hitting: 'Complete Hitter',
-  pitching: 'Complete Pitcher',
-  throwing: 'The Complete Player: Speed & Throwing',
-};
+import { Check } from "lucide-react";
+import { TIER_CONFIG } from "@/constants/tiers";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -30,56 +20,26 @@ const Checkout = () => {
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isAdmin, loading: adminLoading } = useAdminAccess();
   const { toast } = useToast();
-  const state = location.state as { module?: string; sport?: string; returnTo?: string };
-  const initialModule = state?.module || localStorage.getItem('selectedModule') || '';
+  const state = location.state as { tier?: string; sport?: string };
+  const selectedTier = state?.tier || localStorage.getItem('selectedTier') || '';
   const selectedSport = state?.sport || localStorage.getItem('selectedSport') || 'baseball';
-  const returnTo = state?.returnTo;
-  const isAddMode = returnTo === '/dashboard';
-  const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set(initialModule ? [initialModule] : []));
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [showManualLink, setShowManualLink] = useState(false);
   const popupRef = useRef<Window | null>(null);
   const successHandledRef = useRef(false);
 
-  // Derive which modules are already owned
-  const ownedModules = new Set(
-    subscribedModules?.map((m: any) => typeof m === 'string' ? m : m.module || m.name) || []
-  );
-
-  const toggleModule = (moduleId: string) => {
-    if (ownedModules.has(moduleId)) return;
-    setSelectedModules(prev => {
-      const next = new Set(prev);
-      if (next.has(moduleId)) {
-        next.delete(moduleId);
-      } else {
-        next.add(moduleId);
-      }
-      return next;
-    });
-  };
+  const tierConfig = selectedTier ? TIER_CONFIG[selectedTier] : null;
 
   useEffect(() => {
-    // CRITICAL: Wait for ALL loading states to complete before making any decisions
-    if (authLoading || ownerLoading || adminLoading) {
-      console.log('Checkout: Still loading...', { authLoading, ownerLoading, adminLoading });
-      return;
-    }
+    if (authLoading || ownerLoading || adminLoading) return;
 
-    // Only redirect to auth if we're CERTAIN the user is not logged in
     if (!user) {
-      console.log('Checkout: No user found, redirecting to auth');
-      localStorage.setItem('selectedModule', initialModule || '');
+      localStorage.setItem('selectedTier', selectedTier);
       localStorage.setItem('selectedSport', selectedSport);
       navigate("/auth", { 
         replace: true,
-        state: {
-          returnTo: '/checkout',
-          module: initialModule,
-          sport: selectedSport,
-          mode: isAddMode ? 'add' : 'new'
-        }
+        state: { returnTo: '/checkout', tier: selectedTier, sport: selectedSport }
       });
       return;
     }
@@ -89,35 +49,21 @@ const Checkout = () => {
       if (successHandledRef.current) return;
       successHandledRef.current = true;
       
-      console.log('Checkout: Payment successful, redirecting...');
-      
       toast({
         title: "Payment Successful!",
-        description: "Your new module(s) are now active. Redirecting to dashboard...",
+        description: "Your training tier is now active. Redirecting to dashboard...",
       });
       
-      if (isAddMode && initialModule && selectedSport) {
-        localStorage.setItem('pendingModuleActivation', JSON.stringify({
-          module: initialModule,
-          sport: selectedSport,
-          timestamp: Date.now()
-        }));
-      }
+      localStorage.setItem('pendingModuleActivation', JSON.stringify({
+        module: selectedTier,
+        sport: selectedSport,
+        timestamp: Date.now()
+      }));
       
       refetch();
-      
-      navigate("/dashboard", { 
-        replace: true,
-        state: {
-          fromPayment: true,
-          newModule: initialModule,
-          sport: selectedSport
-        }
-      });
-      
+      navigate("/dashboard", { replace: true });
       return;
     } else if (status === 'cancel' || status === 'cancelled') {
-      console.log('Checkout: Payment cancelled');
       localStorage.removeItem('pendingModuleActivation');
       toast({
         title: "Payment Cancelled",
@@ -125,155 +71,75 @@ const Checkout = () => {
         variant: "destructive",
       });
     }
-  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, refetch, isAddMode, initialModule, selectedSport]);
+  }, [authLoading, ownerLoading, adminLoading, user, navigate, searchParams, refetch, selectedTier, selectedSport]);
 
   const redirectToStripe = (url: string) => {
-    console.log('Checkout: Redirecting to Stripe URL', url);
     try {
-      if (window.top) {
-        window.top.location.href = url;
-      } else {
-        window.location.href = url;
-      }
+      if (window.top) window.top.location.href = url;
+      else window.location.href = url;
     } catch (e) {
-      console.warn('Checkout: window.top navigation failed, trying assign', e);
-      try {
-        window.location.assign(url);
-      } catch (e2) {
-        console.warn('Checkout: location.assign failed', e2);
-      }
+      try { window.location.assign(url); } catch (e2) { /* fallback */ }
     }
-
-    setTimeout(() => {
-      setShowManualLink(true);
-    }, 1500);
+    setTimeout(() => setShowManualLink(true), 1500);
   };
 
   const handleCreateCheckout = async () => {
-    if (selectedModules.size === 0) {
-      toast({
-        title: "No module selected",
-        description: "Please select at least one module to continue.",
-        variant: "destructive",
-      });
+    if (!selectedTier) {
+      toast({ title: "No tier selected", description: "Please select a training tier.", variant: "destructive" });
       return;
     }
 
     setCheckoutLoading(true);
-
-    console.log('Checkout: Opening blank popup window...');
     popupRef.current = window.open('', '_blank', '') || null;
-    
-    if (!popupRef.current) {
-      console.warn('Checkout: Popup blocked by browser, will fallback to redirect methods');
-    } else {
-      console.log('Checkout: Popup opened successfully');
-    }
 
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (!sessionData.session || sessionError) {
-        console.log('Checkout: Session invalid, attempting refresh...');
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
         const { error: refreshError } = await supabase.auth.refreshSession();
         if (refreshError) {
-          toast({
-            title: "Session Expired",
-            description: "Please log in again to continue.",
-            variant: "destructive",
-          });
-          navigate("/auth", { 
-            state: { 
-              returnTo: '/checkout',
-              module: initialModule,
-              sport: selectedSport
-            }
-          });
+          toast({ title: "Session Expired", description: "Please log in again.", variant: "destructive" });
+          navigate("/auth", { state: { returnTo: '/checkout', tier: selectedTier, sport: selectedSport } });
           return;
         }
       }
 
       if (isOwner || isAdmin) {
-        toast({
-          title: "Full Access Granted",
-          description: "As an owner/admin, you have free access to all modules.",
-        });
+        toast({ title: "Full Access Granted", description: "As an owner/admin, you have free access to all tiers." });
         navigate("/dashboard");
         return;
       }
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { 
-          modules: Array.from(selectedModules),
-          sport: selectedSport
-        }
+        body: { tier: selectedTier, sport: selectedSport }
       });
 
       if (error) throw error;
 
       if (data?.url) {
-        localStorage.setItem('checkoutReturnUrl', window.location.pathname);
-        localStorage.setItem('checkoutModule', initialModule);
-        localStorage.setItem('checkoutSport', selectedSport);
-        
         setCheckoutUrl(data.url);
+        toast({ title: "Redirecting to Checkout", description: "You'll be redirected to complete your payment..." });
         
-        toast({
-          title: "Redirecting to Checkout",
-          description: "You'll be redirected to complete your payment...",
-        });
-        
-        setTimeout(() => {
-          if (popupRef.current && !popupRef.current.closed) {
-            try {
-              if (popupRef.current.location.href === 'about:blank') {
-                console.log('Checkout: Popup stuck on blank page, closing and redirecting');
-                popupRef.current.close();
-                redirectToStripe(data.url);
-              }
-            } catch (e) {
-              console.log('Checkout: Popup navigated (cross-origin check passed)');
-            }
-          }
-        }, 1200);
-        
-        setTimeout(() => {
-          setShowManualLink(true);
-        }, 2000);
+        setTimeout(() => setShowManualLink(true), 2000);
         
         if (popupRef.current && !popupRef.current.closed) {
-          console.log('Checkout: Navigating popup to Stripe URL', data.url);
           try {
             popupRef.current.location.href = data.url;
-            console.log('Checkout: Popup successfully navigated to Stripe');
             return;
           } catch (e) {
-            console.warn('Checkout: Failed to navigate popup, falling back to redirect', e);
             popupRef.current.close();
           }
-        } else {
-          console.log('Checkout: Popup closed or blocked, using fallback redirect');
         }
-        
         redirectToStripe(data.url);
-        return;
       } else {
         throw new Error("No checkout URL received");
       }
     } catch (error: any) {
-      console.error('Checkout error:', error);
-      
-      if (popupRef.current && !popupRef.current.closed) {
-        console.log('Checkout: Closing popup due to error');
-        popupRef.current.close();
-      }
-      
-      const errorMsg = error.message || "Failed to create checkout session";
+      if (popupRef.current && !popupRef.current.closed) popupRef.current.close();
       toast({
         title: "Checkout Failed",
-        description: errorMsg.includes('Auth session missing') 
-          ? "Your session expired. Please refresh the page and try again."
-          : errorMsg,
+        description: error.message?.includes('Auth session missing') 
+          ? "Your session expired. Please refresh and try again."
+          : error.message || "Failed to create checkout session",
         variant: "destructive",
       });
     } finally {
@@ -294,134 +160,77 @@ const Checkout = () => {
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
         <Card className="p-8 text-center max-w-md">
           <h2 className="text-2xl font-bold mb-4">{isOwner ? 'Owner' : 'Admin'} Access</h2>
-          <p className="text-muted-foreground mb-6">
-            You have unlimited access to all modules without any payment required.
-          </p>
-          <Button onClick={() => navigate('/dashboard')} className="w-full">
-            Go to Dashboard
-          </Button>
+          <p className="text-muted-foreground mb-6">You have unlimited access to all tiers without payment.</p>
+          <Button onClick={() => navigate('/dashboard')} className="w-full">Go to Dashboard</Button>
         </Card>
       </div>
     );
   }
 
-  const totalPrice = selectedModules.size * MODULE_PRICE;
+  if (!tierConfig) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
+        <Card className="p-8 text-center max-w-md">
+          <h2 className="text-2xl font-bold mb-4">No Tier Selected</h2>
+          <p className="text-muted-foreground mb-6">Please select a training tier from the pricing page.</p>
+          <Button onClick={() => navigate('/pricing')} className="w-full">View Pricing</Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
       <div className="w-full max-w-2xl">
         <Card className="p-8">
-          <h1 className="text-3xl font-bold mb-4">
-            {isAddMode ? 'Add Training Module' : 'Subscribe to Training Modules'}
-          </h1>
-          <p className="text-muted-foreground mb-4">
-            {isAddMode 
-              ? 'Select the modules you want to add to your subscription' 
-              : 'Select the modules you want to subscribe to'}
+          <h1 className="text-3xl font-bold mb-2">Subscribe to {tierConfig.displayName}</h1>
+          <p className="text-muted-foreground mb-6">
+            {selectedSport === 'softball' ? 'Softball' : 'Baseball'} · ${tierConfig.price}/month
           </p>
+
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              💡 <strong>Have a promo code?</strong> You'll be able to apply it during checkout. 
-              Discounts (including 100% off codes) will be reflected in your final billing.
+              💡 <strong>Have a promo code?</strong> Apply it during checkout for discounts.
             </p>
           </div>
 
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6 animate-glow-pulse-amber">
-            <p className="text-sm text-amber-800 dark:text-amber-200">
-              📌 <strong>Important:</strong> After purchasing your module(s) click 'Back to dashboard' button or sign back in to access your new modules.
-            </p>
-          </div>
-
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">Select Modules</h2>
-            <div className="space-y-3">
-              {ALL_MODULES.map((moduleId) => {
-                const isOwned = ownedModules.has(moduleId);
-                const isSelected = selectedModules.has(moduleId);
-                const displayName = MODULE_DISPLAY_NAMES[moduleId] || moduleId;
-
-                return (
-                  <div
-                    key={moduleId}
-                    onClick={() => !isOwned && toggleModule(moduleId)}
-                    className={`p-4 rounded-lg border transition-colors ${
-                      isOwned
-                        ? 'border-muted bg-muted/30 opacity-60 cursor-not-allowed'
-                        : isSelected
-                          ? 'border-primary bg-primary/5 cursor-pointer'
-                          : 'border-border hover:border-primary/50 cursor-pointer'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {isOwned ? (
-                          <Lock className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleModule(moduleId)}
-                            disabled={isOwned}
-                          />
-                        )}
-                        <div>
-                          <p className="font-medium">{displayName}</p>
-                          {isOwned ? (
-                            <p className="text-sm text-muted-foreground">Already purchased</p>
-                          ) : (
-                            <p className="text-sm text-muted-foreground">${MODULE_PRICE}/month</p>
-                          )}
-                        </div>
-                      </div>
-                      {isSelected && !isOwned && (
-                        <CheckCircle2 className="h-5 w-5 text-primary" />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="mb-6 p-4 rounded-lg border bg-card">
+            <h3 className="font-semibold mb-3">{tierConfig.displayName} includes:</h3>
+            <ul className="space-y-2">
+              {tierConfig.includes.map((feature, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm">
+                  <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="mb-6 p-4 bg-muted rounded-lg">
             <div className="flex justify-between items-center">
               <span className="font-semibold">Total</span>
-              <span className="text-2xl font-bold">
-                {selectedModules.size > 0 
-                  ? `$${totalPrice}/month` 
-                  : '$0/month'}
-              </span>
+              <span className="text-2xl font-bold">${tierConfig.price}/month</span>
             </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              {selectedModules.size > 0 
-                ? `${selectedModules.size} module${selectedModules.size > 1 ? 's' : ''} selected · Billed monthly, cancel anytime`
-                : 'Select at least one module to continue'}
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">Billed monthly, cancel anytime</p>
           </div>
 
           {showManualLink && checkoutUrl && (
             <div className="mb-4 p-4 rounded-lg border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
               <p className="text-sm text-amber-800 dark:text-amber-100 mb-2">
-                If you are not redirected automatically, click the button below to open Stripe Checkout.
+                If not redirected automatically, click below:
               </p>
               <Button asChild className="w-full" variant="secondary">
-                <a href={checkoutUrl} target="_top" rel="noopener noreferrer">
-                  Open Stripe Checkout
-                </a>
+                <a href={checkoutUrl} target="_top" rel="noopener noreferrer">Open Checkout</a>
               </Button>
             </div>
           )}
 
-          <Button 
-            onClick={handleCreateCheckout}
-            disabled={selectedModules.size === 0 || checkoutLoading}
-            className="w-full mb-4"
-            size="lg"
-          >
+          <Button onClick={handleCreateCheckout} disabled={checkoutLoading} className="w-full mb-4" size="lg">
             {checkoutLoading ? "Processing..." : "Proceed to Payment"}
           </Button>
 
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="w-full">
-            ← Back to Dashboard
+          <Button variant="ghost" onClick={() => navigate("/pricing")} className="w-full">
+            ← Back to Pricing
           </Button>
         </Card>
       </div>

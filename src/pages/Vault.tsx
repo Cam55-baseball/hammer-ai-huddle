@@ -164,10 +164,10 @@ export default function Vault() {
     'six-week-checkin': sixWeekCheckinRef,
   }), []);
   
-  // Detect module access for grader display
-  const hasHittingModule = subscribedModules.some(m => m.includes('hitting'));
-  const hasThrowingModule = subscribedModules.some(m => m.includes('throwing'));
-  const hasPitchingModule = subscribedModules.some(m => m.includes('pitching'));
+  // Detect module access for grader display (tier-aware)
+  const hasHittingModule = subscribedModules.some(m => m.includes('hitting') || m.includes('5tool') || m.includes('golden2way'));
+  const hasThrowingModule = subscribedModules.some(m => m.includes('throwing') || m.includes('5tool') || m.includes('golden2way'));
+  const hasPitchingModule = subscribedModules.some(m => m.includes('pitching') || m.includes('pitcher') || m.includes('golden2way'));
   const showHittingThrowingGrader = hasHittingModule || hasThrowingModule;
   const showPitchingGrader = hasPitchingModule;
 

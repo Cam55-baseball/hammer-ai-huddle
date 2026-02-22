@@ -192,13 +192,13 @@ export function useCalendar(sport: 'baseball' | 'softball' = 'baseball'): UseCal
   const [loading, setLoading] = useState(true);
   const [currentRange, setCurrentRange] = useState<{ start: Date; end: Date } | null>(null);
 
-  // Check subscription access for programs
+  // Check subscription access for programs (tier-aware)
   const hasHittingAccess = useMemo(() => 
-    modules.some(m => m.includes('hitting')), [modules]);
+    modules.some(m => m.includes('hitting') || m.includes('5tool') || m.includes('golden2way')), [modules]);
   const hasPitchingAccess = useMemo(() => 
-    modules.some(m => m.includes('pitching')), [modules]);
+    modules.some(m => m.includes('pitching') || m.includes('pitcher') || m.includes('golden2way')), [modules]);
   const hasThrowingAccess = useMemo(() => 
-    modules.some(m => m.includes('throwing')), [modules]);
+    modules.some(m => m.includes('throwing') || m.includes('5tool') || m.includes('golden2way')), [modules]);
 
   const fetchEventsForRange = useCallback(async (startDate: Date, endDate: Date) => {
     if (!user) return;

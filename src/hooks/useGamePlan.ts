@@ -74,10 +74,10 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [customActivities, setCustomActivities] = useState<CustomActivityWithLog[]>([]);
   const [gamePlanSkips, setGamePlanSkips] = useState<Map<string, number[]>>(new Map());
 
-  // Parse subscribed modules to determine access
-  const hasHittingAccess = subscribedModules.some(m => m.includes('hitting'));
-  const hasPitchingAccess = subscribedModules.some(m => m.includes('pitching'));
-  const hasThrowingAccess = subscribedModules.some(m => m.includes('throwing'));
+  // Parse subscribed modules to determine access (tier-aware)
+  const hasHittingAccess = subscribedModules.some(m => m.includes('hitting') || m.includes('5tool') || m.includes('golden2way'));
+  const hasPitchingAccess = subscribedModules.some(m => m.includes('pitching') || m.includes('pitcher') || m.includes('golden2way'));
+  const hasThrowingAccess = subscribedModules.some(m => m.includes('throwing') || m.includes('5tool') || m.includes('golden2way'));
   const hasAnyModuleAccess = subscribedModules.length > 0;
 
   // Using imported getTodayDate from utils/dateUtils for consistent local timezone

@@ -39,7 +39,16 @@ export const useSubscription = () => {
 
   const hasModuleForSport = useCallback((module: string, sport: string) => {
     const key = `${sport}_${module}`;
-    return subscriptionData.modules.includes(key);
+    // Direct match
+    if (subscriptionData.modules.includes(key)) return true;
+    // Tier-aware: check if a higher tier grants access
+    if (module === 'hitting' || module === 'throwing') {
+      return subscriptionData.modules.includes(`${sport}_5tool`) || subscriptionData.modules.includes(`${sport}_golden2way`);
+    }
+    if (module === 'pitching') {
+      return subscriptionData.modules.includes(`${sport}_pitcher`) || subscriptionData.modules.includes(`${sport}_golden2way`);
+    }
+    return false;
   }, [subscriptionData.modules]);
 
   const hasAccessForSport = useCallback((module: string, sport: string, isOwnerOrAdmin: boolean) => {

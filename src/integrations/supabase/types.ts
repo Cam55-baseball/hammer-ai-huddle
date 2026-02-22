@@ -2469,6 +2469,8 @@ export type Database = {
           created_at: string | null
           current_period_end: string
           discount_percent: number | null
+          grandfathered_at: string | null
+          grandfathered_price: string | null
           has_pending_cancellations: boolean | null
           id: string
           module_subscription_mapping: Json | null
@@ -2477,6 +2479,7 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscribed_modules: string[] | null
+          tier: string | null
           updated_at: string | null
           user_id: string
         }
@@ -2486,6 +2489,8 @@ export type Database = {
           created_at?: string | null
           current_period_end?: string
           discount_percent?: number | null
+          grandfathered_at?: string | null
+          grandfathered_price?: string | null
           has_pending_cancellations?: boolean | null
           id?: string
           module_subscription_mapping?: Json | null
@@ -2494,6 +2499,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscribed_modules?: string[] | null
+          tier?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -2503,6 +2509,8 @@ export type Database = {
           created_at?: string | null
           current_period_end?: string
           discount_percent?: number | null
+          grandfathered_at?: string | null
+          grandfathered_price?: string | null
           has_pending_cancellations?: boolean | null
           id?: string
           module_subscription_mapping?: Json | null
@@ -2511,6 +2519,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscribed_modules?: string[] | null
+          tier?: string | null
           updated_at?: string | null
           user_id?: string
         }
