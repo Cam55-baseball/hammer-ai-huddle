@@ -5646,5 +5646,76 @@
       "whyTitle": "Waarom Blootsvoets?",
       "whyDescription": "Blootsvoetse oefeningen ontwikkelen het fascia en de elastische verbindingen die verantwoordelijk zijn voor sprintsnelheid."
     }
+  },
+  "subscriptionTiers": {
+    "pitcher": {
+      "name": "Complete Pitcher",
+      "description": "Volledig pitchingontwikkelingsprogramma"
+    },
+    "5tool": {
+      "name": "5Tool Speler",
+      "description": "Slagwerk + werpend ontwikkelingsprogramma"
+    },
+    "golden2way": {
+      "name": "The Golden 2Way",
+      "description": "Complete 2-weg spelerontwikkeling"
+    },
+    "chooseTrainingTier": "Kies Uw Trainingsniveau",
+    "eliteTrainingPrograms": "Elite trainingsprogramma's voor honkbal- en softbal-atleten",
+    "mostPopular": "Meest Populair",
+    "bestValue": "Beste Waarde",
+    "startTraining": "Training Starten",
+    "backToDashboard": "← Terug naar Dashboard",
+    "pricesBeforePromotions": "Prijzen getoond vóór promoties. Pas promocodes toe (inclusief 100% korting) bij het afrekenen.",
+    "subscribeTo": "Abonneren op {{tier}}",
+    "havePromoCode": "Heeft u een promocode? Pas deze toe bij het afrekenen voor kortingen.",
+    "includes": "{{tier}} omvat:",
+    "totalPerMonth": "Totaal",
+    "billedMonthly": "Maandelijks gefactureerd, op elk moment opzegbaar",
+    "proceedToPayment": "Doorgaan naar Betaling",
+    "processing": "Verwerken...",
+    "backToPricing": "← Terug naar Prijzen",
+    "noTierSelected": "Geen Niveau Geselecteerd",
+    "selectTierFromPricing": "Selecteer een trainingsniveau op de prijzenpagina.",
+    "viewPricing": "Prijzen Bekijken",
+    "ownerAccess": "Eigenaar Toegang",
+    "adminAccess": "Admin Toegang",
+    "unlimitedAccessMessage": "U heeft onbeperkte toegang tot alle niveaus zonder betaling.",
+    "goToDashboard": "Naar Dashboard",
+    "notRedirected": "Als u niet automatisch wordt doorverwezen, klik hieronder:",
+    "openCheckout": "Checkout Openen",
+    "perMonth": "/maand"
+  },
+  "unicornProgram": {
+    "title": "The Unicorn",
+    "description": "Elite samengevoegd trainingssysteem",
+    "accessDescription": "The Unicorn is het elite samengevoegde workout-systeem dat exclusief beschikbaar is met het The Golden 2Way niveau.",
+    "upgradeToGolden": "Upgraden naar Golden 2Way",
+    "weeklyCNSLoad": "Wekelijkse CZS-Belasting",
+    "deloadWeek": "ONTLASTINGSWEEK",
+    "deloadVolumeReduced": "Ontlastingsweek — alle volume met 40% verminderd",
+    "strengthSettings": "Kracht-Instellingen",
+    "sixWeekPlan": "6-Weken Plan",
+    "current": "Huidig",
+    "keyRules": "Belangrijke Regels",
+    "disclaimer": "Hammer's Modality is niet verantwoordelijk voor eventuele blessures tijdens de oefeningen. Er zijn geen garanties op resultaten. Raadpleeg altijd een gekwalificeerde zorgprofessional voordat u een trainingsprogramma begint."
+  },
+  "armCare": {
+    "title": "Armverzorging",
+    "exercises": {
+      "bandPullAparts": "Band Pull-Aparts",
+      "wallSlides": "Wandglijders",
+      "serratusPushUp": "Serratus Push-Up",
+      "proneYTW": "Buikligging Y-T-W Heffers",
+      "sideLyingER": "Zijligging Externe Rotatie",
+      "proneIRaise": "Buikligging I Heffer",
+      "eccentricWristCurl": "Excentrische Polscurl",
+      "er90Hold": "90/90 Externe Rotatie Hold"
+    }
+  },
+  "velocityDev": {
+    "title": "Snelheidsontwikkeling",
+    "blockA": "Kinetische Keten + Verzwaarde Bal",
+    "blockB": "Overbelasting/Onderbelasting + Intentie"
   }
 }

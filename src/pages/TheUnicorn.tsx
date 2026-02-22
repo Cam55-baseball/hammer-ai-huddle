@@ -121,11 +121,11 @@ export default function TheUnicorn() {
       <DashboardLayout>
         <div className="max-w-2xl mx-auto text-center space-y-6 py-12">
           <Sparkles className="h-16 w-16 text-primary mx-auto" />
-          <h1 className="text-3xl font-bold">The Unicorn</h1>
+          <h1 className="text-3xl font-bold">{t('unicornProgram.title')}</h1>
           <p className="text-muted-foreground">
-            The Unicorn is the elite merged workout system available exclusively with The Golden 2Way tier.
+            {t('unicornProgram.accessDescription')}
           </p>
-          <Button onClick={() => navigate('/pricing')}>Upgrade to Golden 2Way</Button>
+          <Button onClick={() => navigate('/pricing')}>{t('unicornProgram.upgradeToGolden')}</Button>
         </div>
       </DashboardLayout>
     );
@@ -171,7 +171,7 @@ export default function TheUnicorn() {
           </Button>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary" /> The Unicorn
+              <Sparkles className="h-6 w-6 text-primary" /> {t('unicornProgram.title')}
             </h1>
             <p className="text-sm text-muted-foreground">
               Cycle {currentCycle}: {currentCycleData.name} ({currentCycleData.intensityRange})
@@ -199,8 +199,8 @@ export default function TheUnicorn() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Zap className="h-4 w-4 text-yellow-500" />
-              Weekly CNS Load
-              {isDeload && <Badge variant="secondary" className="text-xs">DELOAD WEEK</Badge>}
+              {t('unicornProgram.weeklyCNSLoad')}
+              {isDeload && <Badge variant="secondary" className="text-xs">{t('unicornProgram.deloadWeek')}</Badge>}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -214,7 +214,7 @@ export default function TheUnicorn() {
               indicatorClassName={weeklyCNS > UNICORN_WEEKLY_CNS_TARGET ? 'bg-destructive' : 'bg-primary'}
             />
             {isDeload && (
-              <p className="text-xs text-muted-foreground">Deload week — all volume reduced by 40%</p>
+              <p className="text-xs text-muted-foreground">{t('unicornProgram.deloadVolumeReduced')}</p>
             )}
           </CardContent>
         </Card>
@@ -224,7 +224,7 @@ export default function TheUnicorn() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <Dumbbell className="h-4 w-4 text-orange-500" />
-              Strength Settings
+              {t('unicornProgram.strengthSettings')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -237,7 +237,7 @@ export default function TheUnicorn() {
 
         {/* Weekly Plan */}
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold">6-Week Plan</h2>
+          <h2 className="text-lg font-semibold">{t('unicornProgram.sixWeekPlan')}</h2>
 
           {weeks.map((week) => {
             const isUnlocked = isWeekUnlocked(week.week);
@@ -254,7 +254,7 @@ export default function TheUnicorn() {
                     <div className="flex items-center gap-2">
                       {isUnlocked ? <Check className="h-4 w-4 text-green-500" /> : <Lock className="h-4 w-4 text-muted-foreground" />}
                       <CardTitle className="text-sm">{week.title}</CardTitle>
-                      {week.week === currentWeek && <Badge variant="secondary" className="text-xs">Current</Badge>}
+                      {week.week === currentWeek && <Badge variant="secondary" className="text-xs">{t('unicornProgram.current')}</Badge>}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">{weekCompletionPct}%</span>
@@ -309,7 +309,7 @@ export default function TheUnicorn() {
         {/* Key Rules */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Key Rules</CardTitle>
+            <CardTitle className="text-sm">{t('unicornProgram.keyRules')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-1 text-xs">
@@ -328,7 +328,7 @@ export default function TheUnicorn() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Disclaimer</AlertTitle>
           <AlertDescription className="text-xs">
-            Hammer's Modality is not responsible for any injury that may occur during exercises. There are no guarantees in results. Always consult with a qualified healthcare professional before beginning any exercise program.
+            {t('unicornProgram.disclaimer')}
           </AlertDescription>
         </Alert>
 

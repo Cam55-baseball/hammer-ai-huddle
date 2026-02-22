@@ -5746,5 +5746,76 @@
       "whyTitle": "なぜ裸足？",
       "whyDescription": "裸足ドリルはスプリント速度に関わる筋膜と弾性結合を発達させます。"
     }
+  },
+  "subscriptionTiers": {
+    "pitcher": {
+      "name": "コンプリートピッチャー",
+      "description": "完全なピッチング開発プログラム"
+    },
+    "5tool": {
+      "name": "5Toolプレイヤー",
+      "description": "打撃＋送球開発プログラム"
+    },
+    "golden2way": {
+      "name": "The Golden 2Way",
+      "description": "完全な2ウェイプレイヤー開発"
+    },
+    "chooseTrainingTier": "トレーニングティアを選択",
+    "eliteTrainingPrograms": "野球とソフトボール選手のためのエリートトレーニングプログラム",
+    "mostPopular": "最も人気",
+    "bestValue": "最もお得",
+    "startTraining": "トレーニング開始",
+    "backToDashboard": "← ダッシュボードに戻る",
+    "pricesBeforePromotions": "表示価格はプロモーション適用前です。チェックアウト時にプロモコード（100%オフを含む）を適用してください。",
+    "subscribeTo": "{{tier}}を購読",
+    "havePromoCode": "プロモコードをお持ちですか？チェックアウト時に割引を適用できます。",
+    "includes": "{{tier}}に含まれるもの：",
+    "totalPerMonth": "合計",
+    "billedMonthly": "月額請求、いつでもキャンセル可能",
+    "proceedToPayment": "支払いに進む",
+    "processing": "処理中...",
+    "backToPricing": "← 料金に戻る",
+    "noTierSelected": "ティアが選択されていません",
+    "selectTierFromPricing": "料金ページからトレーニングティアを選択してください。",
+    "viewPricing": "料金を見る",
+    "ownerAccess": "オーナーアクセス",
+    "adminAccess": "管理者アクセス",
+    "unlimitedAccessMessage": "すべてのティアに無制限でアクセスできます。支払い不要です。",
+    "goToDashboard": "ダッシュボードへ",
+    "notRedirected": "自動的にリダイレクトされない場合は、下をクリックしてください：",
+    "openCheckout": "チェックアウトを開く",
+    "perMonth": "/月"
+  },
+  "unicornProgram": {
+    "title": "The Unicorn",
+    "description": "エリート統合トレーニングシステム",
+    "accessDescription": "The UnicornはThe Golden 2Wayティアでのみ利用可能なエリート統合ワークアウトシステムです。",
+    "upgradeToGolden": "Golden 2Wayにアップグレード",
+    "weeklyCNSLoad": "週間CNS負荷",
+    "deloadWeek": "ディロード週",
+    "deloadVolumeReduced": "ディロード週 — すべてのボリュームが40%削減",
+    "strengthSettings": "筋力設定",
+    "sixWeekPlan": "6週間プラン",
+    "current": "現在",
+    "keyRules": "主要ルール",
+    "disclaimer": "Hammer's Modalityは運動中に発生する可能性のあるいかなる怪我についても責任を負いません。結果の保証はありません。運動プログラムを開始する前に、必ず資格のある医療専門家に相談してください。"
+  },
+  "armCare": {
+    "title": "腕のケア",
+    "exercises": {
+      "bandPullAparts": "バンドプルアパート",
+      "wallSlides": "ウォールスライド",
+      "serratusPushUp": "前鋸筋プッシュアップ",
+      "proneYTW": "プローンY-T-Wレイズ",
+      "sideLyingER": "側臥位外旋",
+      "proneIRaise": "プローンIレイズ",
+      "eccentricWristCurl": "エキセントリック手首カール",
+      "er90Hold": "90/90外旋ホールド"
+    }
+  },
+  "velocityDev": {
+    "title": "球速開発",
+    "blockA": "キネティックチェーン＋加重ボール",
+    "blockB": "オーバーロード/アンダーロード＋インテント"
   }
 }
