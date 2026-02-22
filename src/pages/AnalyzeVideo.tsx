@@ -882,6 +882,18 @@ export default function AnalyzeVideo() {
                     </div>
                   )}
 
+                  {/* Ask the Coach - Post-Analysis AI Chat */}
+                  <AnalysisCoachChat
+                    module={module || 'hitting'}
+                    analysisContext={{
+                      efficiency_score: analysis.efficiency_score,
+                      feedback: analysis.feedback,
+                      positives: analysis.positives,
+                      drills: analysis.drills,
+                      summary: analysis.summary,
+                    }}
+                  />
+
                   {/* The Scorecard - Progress Report */}
                   {analysis.scorecard && (
                     <div className="pt-4 border-t space-y-4">
@@ -951,17 +963,6 @@ export default function AnalyzeVideo() {
                     </Button>
                   </div>
 
-                  {/* Ask the Coach - Post-Analysis AI Chat */}
-                  <AnalysisCoachChat
-                    module={module || 'hitting'}
-                    analysisContext={{
-                      efficiency_score: analysis.efficiency_score,
-                      feedback: analysis.feedback,
-                      positives: analysis.positives,
-                      drills: analysis.drills,
-                      summary: analysis.summary,
-                    }}
-                  />
                 </div>
               </Card>
             )}
