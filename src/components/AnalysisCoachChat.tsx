@@ -147,7 +147,7 @@ export function AnalysisCoachChat({ module, analysisContext }: AnalysisCoachChat
             <div className="text-left">
               <span className="font-semibold">{t('analysisCoach.title', 'Ask the Coach')}</span>
               <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">
-                {t('analysisCoach.subtitle', 'Have questions about your analysis? Ask our AI biomechanics coach.')}
+                {t('analysisCoach.subtitle', 'Have questions about your analysis? Ask our Biomechanics Coach!')}
               </span>
             </div>
           </div>
@@ -158,7 +158,7 @@ export function AnalysisCoachChat({ module, analysisContext }: AnalysisCoachChat
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
           <div className="p-4 border-b">
             <p className="text-sm text-muted-foreground">
-              {t('analysisCoach.description', 'This is your AI biomechanics coach. Ask follow-up questions about your analysis results, drills, or mechanics.')}
+              {t('analysisCoach.description', 'This is your biomechanics coach. Ask follow-up questions about your analysis results, drills, or mechanics.')}
             </p>
           </div>
           <ScrollArea className="h-64 p-4" ref={scrollRef}>
