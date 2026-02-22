@@ -1,0 +1,2 @@
+ALTER TABLE sub_module_progress DROP CONSTRAINT sub_module_progress_sub_module_check;
+ALTER TABLE sub_module_progress ADD CONSTRAINT sub_module_progress_sub_module_check CHECK (sub_module = ANY (ARRAY['production_lab'::text, 'production_studio'::text, 'the-unicorn'::text]));
