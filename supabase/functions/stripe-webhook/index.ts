@@ -177,9 +177,17 @@ async function handleSubscriptionEvent(
       const product = await stripe.products.retrieve(productId);
       
       // Check for tier-based products first
-      const tier = product.metadata?.tier?.toLowerCase();
+      let tier = product.metadata?.tier?.toLowerCase();
       let sport = product.metadata?.sport?.toLowerCase();
       
+      // Fallback: infer tier from product name if metadata is missing
+      if (!tier) {
+        const name = product.name.toLowerCase();
+        if (name.includes('golden 2way') || name.includes('golden2way')) tier = 'golden2way';
+        else if (name.includes('5tool') || name.includes('5 tool')) tier = '5tool';
+        else if (name.includes('complete pitcher') || name.includes('pitcher')) tier = 'pitcher';
+      }
+
       if (!sport) {
         const name = product.name.toLowerCase();
         if (name.includes('softball')) sport = 'softball';
