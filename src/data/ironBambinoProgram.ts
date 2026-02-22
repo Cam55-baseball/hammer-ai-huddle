@@ -609,4 +609,134 @@ export const HITTING_EQUIPMENT = [
   { id: 'med_ball', name: 'Medicine Ball', required: true, description: '6-10 lb for rotational power' },
   { id: 'box', name: 'Plyo Box/Step', required: false, description: 'For box squats & step-ups' },
   { id: 'landmine', name: 'Landmine Attachment', required: false, description: 'For rotational pressing' },
+  { id: 'weighted_balls', name: 'Weighted Baseballs/Softballs', required: false, description: '2oz to 11oz for velocity development' },
+  { id: 'therabands', name: 'Therabands/Resistance Tubes', required: false, description: 'For arm care and shoulder prehab' },
+  { id: 'foam_roller', name: 'Foam Roller', required: false, description: 'For tissue capacity work and recovery' },
+];
+
+// =====================================================================
+// ARM CARE BLOCK: Pre-Lift Arm Care (added to every workout day)
+// =====================================================================
+
+export const ARM_CARE_BLOCK: Exercise[] = [
+  { name: 'Band Pull-Aparts', type: 'skill', sets: 3, reps: 15,
+    description: 'Hold band at shoulder width with arms extended. Pull band apart by squeezing shoulder blades together. Scap retraction focus.',
+    notes: 'Scap retraction, light band' },
+  { name: 'Wall Slides', type: 'skill', sets: 3, reps: 10,
+    description: 'Back and arms flat against wall, elbows at 90°. Slide arms overhead maintaining wall contact. Trains scapular upward rotation.',
+    notes: 'Keep contact with wall throughout' },
+  { name: 'Serratus Push-Up', type: 'skill', sets: 3, reps: 10,
+    description: 'Standard push-up position. At the top, push further by protracting shoulder blades — rounding upper back. Activates serratus anterior.',
+    notes: 'Protract at top, feel serratus' },
+  { name: 'Prone Y-T-W Raises', type: 'skill', sets: 3, reps: 8,
+    description: 'Lie face down on bench or floor. Raise arms into Y, T, then W positions with thumbs up. Rotator cuff progression.',
+    notes: 'Each position, light weight or bodyweight' },
+  { name: 'Side-Lying External Rotation', type: 'skill', sets: 3, reps: 12,
+    description: 'Lie on side, elbow pinned to waist at 90°. Rotate forearm away from body against gravity. Strengthens external rotators.',
+    notes: 'Each side, 2-5lb dumbbell' },
+  { name: 'Prone I Raise', type: 'skill', sets: 3, reps: 10,
+    description: 'Lie face down, arms extended overhead (I position). Raise arms off ground with thumbs up. Lower trap activation.',
+    notes: 'Thumbs up, squeeze lower traps' },
+  { name: 'Eccentric Wrist Flexor Curl', type: 'skill', sets: 3, reps: 10,
+    description: 'Hold light dumbbell palm up. Use other hand to assist concentric, then slowly lower over 4 seconds. Builds deceleration tissue capacity.',
+    notes: 'Each arm, 4s eccentric' },
+  { name: '90/90 External Rotation Hold', type: 'isometric', sets: 3, holdTime: 15,
+    description: 'Arm at 90° abduction, elbow at 90°. Rotate forearm back and hold. Isometric ER strengthening for throwing athletes.',
+    notes: 'Each side, max tension' },
+];
+
+// =====================================================================
+// DELOAD WEEK LOGIC
+// =====================================================================
+
+export const DELOAD_VOLUME_MODIFIER = 0.6;
+
+export const isDeloadWeek = (weekNumber: number): boolean => {
+  return weekNumber > 0 && weekNumber % 4 === 0;
+};
+
+// =====================================================================
+// THROWING VELOCITY DEVELOPMENT BLOCKS
+// =====================================================================
+
+export const VELOCITY_DEV_BLOCK_A: Exercise[] = [
+  { name: 'Hip-Lead Throws', type: 'skill', sets: 2, reps: 8,
+    description: 'Using connection ball, initiate throw from hip rotation before arm action. Develops kinetic chain sequencing from ground up.',
+    notes: 'Connection ball work, feel hip lead' },
+  { name: 'Pivot Pickoffs', type: 'skill', sets: 2, reps: 8,
+    description: 'From stretch position, pivot and throw to target. Develops hip-shoulder separation and quick transfer.',
+    notes: 'Each side, hip-shoulder separation' },
+  { name: 'Reverse Throws', type: 'skill', sets: 2, reps: 6,
+    description: 'Face away from target, rotate and throw. Eccentric deceleration pattern training for arm health.',
+    notes: 'Deceleration pattern, controlled' },
+  { name: 'Lightweight Weighted Ball (3oz)', type: 'skill', sets: 3, reps: 8,
+    description: '3oz weighted ball constraint drill. Lighter ball forces faster arm speed and cleaner mechanics.',
+    notes: 'Constraint drill, focus on arm speed' },
+  { name: 'Long Toss Progressive', type: 'skill', sets: 1, reps: 1,
+    description: 'Build distance progressively to 120ft+. Track total throw count. Arc throws allowed — focus on building arm strength.',
+    notes: 'Build to 120ft+, track throw count' },
+];
+
+export const VELOCITY_DEV_BLOCK_B: Exercise[] = [
+  { name: 'Overload Weighted Ball (7-11oz)', type: 'skill', sets: 3, reps: 6,
+    description: 'Heavy weighted ball thrown into wall or net. Overload builds arm strength and posterior chain loading.',
+    notes: 'Into wall, controlled intent' },
+  { name: 'Underload Weighted Ball (2-3oz)', type: 'skill', sets: 3, reps: 6,
+    description: 'Lightweight ball thrown with max intent. Underload develops arm speed above game-speed threshold.',
+    notes: 'Max intent throws, arm speed focus' },
+  { name: 'Pull-Down Throws', type: 'skill', sets: 3, reps: 3,
+    description: 'Running approach, throw into net with maximum effort. Develops peak velocity output and intent.',
+    notes: 'Max effort, running start' },
+  { name: 'Long Toss with Intent', type: 'skill', sets: 1, reps: 1,
+    description: 'Build to max distance with intent on each throw. Line drives preferred over arcing. Track distance and throw count.',
+    notes: 'Build to max distance, tracked' },
+  { name: 'CNS Throw Count Tracker', type: 'skill', sets: 1, reps: 1,
+    description: 'Record total throws × intensity coefficient for today. Feeds into weekly CNS budget. Baseball: overhand. Softball: position player overhand throws.',
+    notes: 'Log total throws × intensity' },
+];
+
+// Sport-specific notes for velocity development
+export const VELOCITY_SPORT_NOTES = {
+  baseball: 'All throws overhand. Focus on mound mechanics transfer and arm slot consistency.',
+  softball: 'Position player overhand throws. Focus on footwork patterns and transfer mechanics for defensive throws.',
+};
+
+// =====================================================================
+// CNS BUDGET SYSTEM
+// =====================================================================
+
+export const CNS_BUDGET_DAILY = 100;
+
+export interface CNSActivity {
+  type: 'strength' | 'throwing' | 'sprinting' | 'bat_speed' | 'arm_care';
+  intensity: 'low' | 'moderate' | 'high';
+}
+
+export const CNS_COSTS: Record<string, Record<string, number>> = {
+  strength: { low: 25, moderate: 32, high: 40 },
+  throwing: { low: 15, moderate: 22, high: 30 },
+  sprinting: { low: 20, moderate: 27, high: 35 },
+  bat_speed: { low: 10, moderate: 15, high: 20 },
+  arm_care: { low: 5, moderate: 8, high: 10 },
+};
+
+export const calculateDailyCNS = (activities: CNSActivity[]): number => {
+  return activities.reduce((total, activity) => {
+    return total + (CNS_COSTS[activity.type]?.[activity.intensity] || 0);
+  }, 0);
+};
+
+export const isOverBudget = (activities: CNSActivity[]): boolean => {
+  return calculateDailyCNS(activities) > CNS_BUDGET_DAILY;
+};
+
+// Weekly template for 5Tool tier
+export const FIVE_TOOL_WEEKLY_TEMPLATE = [
+  { day: 1, title: 'Strength + Arm Care (Iron Bambino A)', cns: 40, activities: ['strength', 'arm_care', 'bat_speed'] },
+  { day: 2, title: 'Speed Lab Sprint Session', cns: 30, activities: ['sprinting', 'arm_care'] },
+  { day: 3, title: 'Throwing Velocity Development', cns: 25, activities: ['throwing', 'arm_care'] },
+  { day: 4, title: 'REST', cns: 0, activities: [] },
+  { day: 5, title: 'Strength + Arm Care (Iron Bambino B)', cns: 40, activities: ['strength', 'arm_care', 'bat_speed'] },
+  { day: 6, title: 'Light Throwing + Active Recovery', cns: 15, activities: ['throwing'] },
+  { day: 7, title: 'REST', cns: 0, activities: [] },
 ];

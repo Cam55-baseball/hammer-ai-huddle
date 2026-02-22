@@ -25,7 +25,7 @@ export interface SubModuleProgress {
   user_id: string;
   sport: 'baseball' | 'softball';
   module: 'hitting' | 'pitching';
-  sub_module: 'production_lab' | 'production_studio';
+  sub_module: 'production_lab' | 'production_studio' | 'the-unicorn';
   current_week: number;
   current_cycle: number;
   week_progress: { [week: string]: WeekProgress };
@@ -53,7 +53,7 @@ const UNLOCK_DELAY_MS = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 export function useSubModuleProgress(
   sport: 'baseball' | 'softball',
   module: 'hitting' | 'pitching',
-  subModule: 'production_lab' | 'production_studio'
+  subModule: 'production_lab' | 'production_studio' | 'the-unicorn'
 ) {
   const { user } = useAuth();
   const [progress, setProgress] = useState<SubModuleProgress | null>(null);
