@@ -1,73 +1,130 @@
 
 
-# Make Custom Fields Fully Interactive (Daily Input)
+# AI Help Desk System + Biomechanics Coach in Analysis Pages
 
-## The Problem
+## Overview
 
-Right now, when users open a custom activity card on their Game Plan, only **checkbox** fields are interactive (tap to check/uncheck). Number, text, and time fields show a **static value from when the card was created** -- there is no way to enter today's actual sprint time, weight used, or notes.
+This plan has two parts:
+1. **Transform the floating chatbot into a Help Desk system** with a dedicated page and structured FAQ
+2. **Move the biomechanics coaching chatbot into the analysis pages** so athletes can ask follow-up questions after receiving their video analysis
 
-This means:
-- A user creates a field called "Sprint Time" with type Number, but can never log daily sprint times
-- The AI recap analysis we built for numbers/text will never receive data because nothing gets saved
-- Users are understandably confused -- "Number" fields look like they should accept daily input, but they don't
+---
 
-## The Fix
+## Part 1: Help Desk System
 
-Make **all custom field types** editable when viewing a card daily:
+### New Edge Function: `supabase/functions/ai-helpdesk/index.ts`
 
-- **Checkbox**: Already works (tap to check/uncheck) -- no change needed
-- **Number**: Show an inline input field so users can type today's value (e.g., "4.2" for sprint time, "185" for weight)
-- **Text**: Show an inline text input for daily notes/observations
-- **Time**: Show a time picker input for duration tracking
+A dedicated backend function for help desk queries:
+- Authenticates the user and fetches their role (player, coach, scout, admin, owner)
+- Fetches subscribed modules for context
+- Uses a comprehensive system prompt containing the full app knowledge base: navigation paths, feature explanations, FAQ content, role-specific guidance
+- Uses `google/gemini-3-flash-preview` model
+- Fallback: if the AI cannot answer, directs users to contact support
+- Handles 429/402 errors
 
-Daily values get saved to `performance_data.fieldValues` (alongside the existing `checkboxStates`), so each day's entries are independent and tracked over time for the AI recap.
+### New Page: `src/pages/HelpDesk.tsx`
 
-## What Users Will Experience
+A full page at `/help-desk` with:
+- **Search bar** to filter FAQ topics
+- **Categorized FAQ accordion** covering: Getting Started, Training Modules, Custom Activities, Vault and AI Recap, Account and Settings, and role-specific sections for Coaches/Scouts
+- **Quick navigation cards** linking to common destinations (Dashboard, Custom Activities, Profile, etc.)
+- **Embedded AI chat** at the bottom for questions not covered in the FAQ
 
-1. Open a custom activity card on the Game Plan
-2. Checkbox fields: tap to check (same as now)
-3. Number/Text/Time fields: tap the value area to edit, type today's value, it auto-saves
-4. The 6-week AI recap will now actually have daily data to analyze trends
+### New Component: `src/components/HelpDeskChat.tsx`
 
-## Technical Details
+A reusable chat component that:
+- Accepts an `embedded` prop (true = full-width for the help desk page, false = floating card)
+- Calls the `ai-helpdesk` edge function
+- Shows suggested quick-action buttons ("How do I analyze a video?", "What modules are available?", "How do custom fields work?")
+- Renders AI responses with basic markdown formatting (bold, lists, line breaks)
+- Displays a clear greeting explaining this is the **app support assistant** (not the biomechanics coach)
 
-### File 1: `src/components/CustomActivityDetailDialog.tsx`
+### Update: `src/components/FloatingChatButton.tsx`
 
-**Custom Fields section (lines 618-674)**: Replace the static display for number/text/time fields with editable inputs:
-- Number fields: `<Input type="number">` that saves to `performance_data.fieldValues[field.id]`
-- Text fields: `<Input type="text">` for daily observations
-- Time fields: `<Input type="time">` for time entries
-- Each input triggers `onUpdateFieldValue(fieldId, value)` which persists to the log's performance_data
-- Show the template's default value as placeholder text, but display the daily-logged value if one exists
+- Replace `ChatWidget` with `HelpDeskChat` (embedded=false)
+- Same floating button in bottom-right corner, now labeled/branded as Help Desk
 
-**Add new prop**: `onUpdateFieldValue?: (fieldId: string, value: string) => void`
+### Update: `src/components/AppSidebar.tsx`
 
-### File 2: `src/components/GamePlanCard.tsx`
+- Add "Help Desk" item with `HelpCircle` icon to `accountItems`, positioned as the first item (above Profile/Settings)
+- URL: `/help-desk`
 
-**Checkbox handler area (lines 1882-1930)**: Add a parallel `onUpdateFieldValue` handler that:
-- Reads current `performance_data.fieldValues` from the log
-- Merges the new field value
-- Saves via `updateLogPerformanceData` (same mechanism as checkboxes)
-- Uses optimistic UI updates (same pattern)
+### Update: `src/App.tsx`
 
-### File 3: `supabase/functions/generate-vault-recap/index.ts`
+- Add lazy import for `HelpDesk` page
+- Add route: `/help-desk`
 
-**Custom field analysis section**: Update the data extraction to read from `performance_data.fieldValues[fieldId]` for each log entry. The analysis code already handles number/text/time aggregation -- it just needs to look in `fieldValues` for the daily values instead of (or in addition to) the template defaults.
+### i18n Updates (all 8 locale files)
 
-### File 4: `src/components/custom-activities/CustomFieldsBuilder.tsx`
+Add translation keys for:
+- `navigation.helpDesk`
+- `helpDesk.title`, `helpDesk.searchPlaceholder`, `helpDesk.faqTitle`, `helpDesk.chatTitle`
+- `helpDesk.greeting` -- clearly states: "I'm your app support assistant. Ask me how to navigate, use features, or troubleshoot issues."
+- `helpDesk.fallback` -- "I'm not sure about that. Please contact support for further help."
+- FAQ category and content keys
 
-**Guidance section update**: Clarify that:
-- The "Value" column in the builder sets a **default/goal** value
-- Users enter their **actual daily values** when viewing the card on the Game Plan
-- Number fields example: "Set a goal like '4.0' -- you'll log your actual time each day"
+---
 
-### Data Shape
+## Part 2: Biomechanics Coaching Chatbot in Analysis Pages
 
-```
-performance_data: {
-  checkboxStates: { [fieldId]: true/false },   // existing
-  fieldValues: { [fieldId]: "4.2" }             // NEW - daily values for number/text/time
-}
-```
+### What Changes
 
-This keeps full backward compatibility -- checkboxes continue working exactly as before, and the new `fieldValues` key is additive.
+The existing `ai-chat` edge function (biomechanics coaching assistant) stays as-is -- it already has the coaching system prompt, owner philosophy, and user context. Instead of being attached to the floating button (which now becomes Help Desk), this coaching chat gets embedded directly into the analysis results page.
+
+### New Component: `src/components/AnalysisCoachChat.tsx`
+
+A dedicated chat component for post-analysis coaching questions:
+- Clearly labeled: **"Ask the Coach"** with a subtitle like "Have questions about your analysis? Ask our AI biomechanics coach."
+- Calls the existing `ai-chat` edge function (same coaching backend)
+- Accepts an `analysisContext` prop containing the analysis results (feedback, score, drills) so the AI has full context of what was just analyzed
+- Sends the analysis summary as part of the conversation context so the coach can reference specific findings
+- Collapsible by default -- expands when the user taps "Ask the Coach"
+- Shows 2-3 suggested starter questions based on the analysis type:
+  - Hitting: "What drills fix my bat path?", "How do I improve my timing?"
+  - Pitching: "How do I keep my chest closed longer?", "What causes arm drag?"
+  - Throwing: "How do I improve my transfer?", "What footwork drills help accuracy?"
+
+### Update: `src/pages/AnalyzeVideo.tsx`
+
+- Import `AnalysisCoachChat`
+- Place it after the analysis results card (after the disclaimer and action buttons, around line 951) -- only visible when `analysis` exists
+- Pass the current analysis data and module type as props so the coaching AI has full context
+
+### Update: `supabase/functions/ai-chat/index.ts`
+
+- Accept an optional `analysisContext` field in the request body
+- If provided, append it to the system prompt: "The athlete just received the following analysis: [summary, score, key findings]. Use this context to answer their follow-up questions with specific, personalized advice."
+
+### i18n Updates
+
+Add translation keys for:
+- `analysisCoach.title`: "Ask the Coach"
+- `analysisCoach.subtitle`: "Have questions about your analysis? Ask our AI biomechanics coach."
+- `analysisCoach.placeholder`: "Ask about your mechanics..."
+- `analysisCoach.suggestedQuestions.*`: Starter question labels
+
+---
+
+## Summary of All Files
+
+| File | Action |
+|------|--------|
+| `supabase/functions/ai-helpdesk/index.ts` | New -- Help Desk backend |
+| `src/pages/HelpDesk.tsx` | New -- Full Help Desk page |
+| `src/components/HelpDeskChat.tsx` | New -- Reusable help desk chat |
+| `src/components/AnalysisCoachChat.tsx` | New -- Post-analysis coaching chat |
+| `src/components/FloatingChatButton.tsx` | Update -- use HelpDeskChat |
+| `src/components/AppSidebar.tsx` | Update -- add Help Desk menu item |
+| `src/App.tsx` | Update -- add /help-desk route |
+| `src/pages/AnalyzeVideo.tsx` | Update -- embed AnalysisCoachChat after results |
+| `supabase/functions/ai-chat/index.ts` | Update -- accept analysisContext |
+| `src/i18n/locales/*.json` (8 files) | Update -- add help desk + coach chat keys |
+
+---
+
+## Clear Separation of the Two AI Chatbots
+
+- **Floating button (bottom-right)** = Help Desk assistant -- answers questions about the app, navigation, features, troubleshooting
+- **"Ask the Coach" (inside analysis pages)** = Biomechanics coaching assistant -- answers questions about mechanics, drills, and the specific analysis just received
+- Both are clearly labeled so users always know which AI they are talking to
+
