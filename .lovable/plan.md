@@ -1,20 +1,24 @@
 
-# Update Stripe Price IDs
 
-Replace the 4 placeholder price IDs across 2 files with the real Stripe price IDs you provided.
+# Fix: Add 'the-unicorn' to sub_module_progress Check Constraint
 
-## Price ID Mapping
+## Problem
+The `sub_module_progress` table has a check constraint (`sub_module_progress_sub_module_check`) that restricts the `sub_module` column to a predefined list of allowed values. The value `'the-unicorn'` was never added to this list, so any insert for The Unicorn workout fails with a constraint violation.
 
-| Tier | Sport | Price ID |
-|------|-------|----------|
-| 5Tool Player | Baseball | `price_1T3jzKGc5QIzbAH6deZ4Eyit` |
-| 5Tool Player | Softball | `price_1T3jxwGc5QIzbAH65j6KlJzQ` |
-| Golden 2Way | Baseball | `price_1T3jzxGc5QIzbAH6XoqPgC1b` |
-| Golden 2Way | Softball | `price_1T3jycGc5QIzbAH62T36Iigg` |
+## Solution
+Run a database migration that:
+1. Drops the existing `sub_module_progress_sub_module_check` constraint
+2. Re-creates it with `'the-unicorn'` added to the allowed values list
 
-## Files to Update
+## Technical Details
 
-1. **`src/constants/tiers.ts`** -- Replace 4 `PENDING_*` placeholders with real price IDs
-2. **`supabase/functions/create-checkout/index.ts`** -- Replace the same 4 `PENDING_*` placeholders
+**Migration SQL:**
+- Query the existing constraint to see current allowed values
+- `ALTER TABLE sub_module_progress DROP CONSTRAINT sub_module_progress_sub_module_check;`
+- `ALTER TABLE sub_module_progress ADD CONSTRAINT sub_module_progress_sub_module_check CHECK (sub_module IN (...existing values..., 'the-unicorn'));`
 
-This is a straightforward find-and-replace across both files. No logic changes needed.
+**Files changed:** Database migration only (no code changes needed)
+
+## Secondary Issue
+The intermittent `check-subscription` 404 is a deployment timing issue and should resolve on its own once the edge function finishes deploying.
+
