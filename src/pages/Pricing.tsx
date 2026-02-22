@@ -1,153 +1,129 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Info } from "lucide-react";
+import { Check, Info, Star } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-const MODULE_DISPLAY_NAMES: Record<string, string> = {
-  hitting: 'Complete Hitter',
-  pitching: 'Complete Pitcher',
-  throwing: 'The Complete Player: Speed & Throwing',
-};
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
 
 const Pricing = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const state = location.state as { role?: string; sport?: string; module?: string; mode?: 'add' | 'new' };
+  const state = location.state as { sport?: string; tier?: string };
   
-  const selectedRole = state?.role || localStorage.getItem('selectedRole') || localStorage.getItem('userRole');
-  const selectedSport = state?.sport || localStorage.getItem('pendingSport') || localStorage.getItem('selectedSport') || 'baseball';
-  const selectedModule = state?.module || localStorage.getItem('pendingModule') || localStorage.getItem('selectedModule');
-  const isAddMode = state?.mode === 'add';
-  
-  const modulePrice = 200;
+  const [selectedSport, setSelectedSport] = useState<string>(
+    state?.sport || localStorage.getItem('selectedSport') || 'baseball'
+  );
 
   useEffect(() => {
-    // Wait for auth to finish loading before making decisions
     if (authLoading) return;
-    
     if (!user) {
-      // Preserve state when redirecting to auth
       navigate("/auth", { 
-        state: {
-          returnTo: '/pricing',
-          sport: selectedSport,
-          module: selectedModule,
-          mode: isAddMode ? 'add' : 'new'
-        }
+        state: { returnTo: '/pricing', sport: selectedSport }
       });
-      return;
     }
-    
-    if (!isAddMode && (!selectedSport || !selectedModule)) {
-      navigate("/select-sport");
-      return;
-    }
-    
-    if (isAddMode && !selectedModule) {
-      navigate("/dashboard");
-      return;
-    }
-  }, [user, authLoading, selectedRole, selectedSport, selectedModule, isAddMode, navigate]);
+  }, [user, authLoading, navigate, selectedSport]);
 
-  const handleGetStarted = () => {
-    // Store in localStorage as backup
-    if (selectedModule) localStorage.setItem('selectedModule', selectedModule);
-    if (selectedSport) localStorage.setItem('selectedSport', selectedSport);
-    
+  const handleSelectTier = (tierKey: string) => {
+    localStorage.setItem('selectedSport', selectedSport);
     navigate("/checkout", { 
-      state: { 
-        role: selectedRole, 
-        sport: selectedSport, 
-        module: selectedModule,
-        returnTo: isAddMode ? '/dashboard' : undefined
-      } 
+      state: { tier: tierKey, sport: selectedSport } 
     });
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-5xl">
         <div className="text-center mb-8">
           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold text-2xl">H</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2">{isAddMode ? 'Add Module Subscription' : 'Start Your Subscription'}</h1>
+          <h1 className="text-4xl font-bold mb-2">Choose Your Training Tier</h1>
           <p className="text-muted-foreground">
-            {isAddMode ? `Add ${MODULE_DISPLAY_NAMES[selectedModule || ''] || selectedModule} to your training modules` : 'Subscribe to your first training module'}
+            Elite training programs for baseball and softball athletes
           </p>
-          {!isAddMode && (
-            <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-              <span className="bg-muted px-3 py-1 rounded-full">Sport: {selectedSport}</span>
-              <span>→</span>
-              <span className="bg-muted px-3 py-1 rounded-full">Role: {selectedRole}</span>
-              <span>→</span>
-              <span className="bg-muted px-3 py-1 rounded-full">{MODULE_DISPLAY_NAMES[selectedModule || ''] || selectedModule}</span>
-              <span>→</span>
-              <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">Pricing</span>
-            </div>
-          )}
         </div>
 
-        <div className="max-w-2xl mx-auto">
-          <Card className="p-8 relative border-primary border-2">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
-              {isAddMode ? 'Add Module' : 'Get Started'}
-            </div>
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold mb-2">{MODULE_DISPLAY_NAMES[selectedModule || ''] || selectedModule}</h3>
-              <div className="text-4xl font-bold mb-2">
-                ${modulePrice}
-                <span className="text-lg text-muted-foreground">/month</span>
-              </div>
-              <p className="text-muted-foreground">
-                {isAddMode ? 'This will be added to your current subscription' : 'Perfect for individual training'}
-              </p>
-            </div>
+        {/* Sport Toggle */}
+        <div className="flex justify-center mb-8">
+          <Tabs value={selectedSport} onValueChange={setSelectedSport}>
+            <TabsList className="grid w-64 grid-cols-2">
+              <TabsTrigger value="baseball">Baseball</TabsTrigger>
+              <TabsTrigger value="softball">Softball</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
 
-            <Alert className="mb-6">
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                Price shown before promotions. If you have a promotional code (including 100% off codes), 
-                apply it during checkout. Your discount will be reflected in your final billing.
-              </AlertDescription>
-            </Alert>
-            
-            <ul className="space-y-3 mb-6">
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-primary" />
-                <span>Advanced Hammer Analysis</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-primary" />
-                <span>Unlimited Video Uploads</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-primary" />
-                <span>Performance Tracking</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-primary" />
-                <span>Detailed Feedback Reports</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-primary" />
-                <span>Mobile Access</span>
-              </li>
-            </ul>
-            
-            <Button onClick={handleGetStarted} className="w-full" size="lg">
-              {isAddMode ? 'Add Module' : 'Subscribe Now'}
-            </Button>
-          </Card>
+        <Alert className="mb-6 max-w-2xl mx-auto">
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Prices shown before promotions. Apply promo codes (including 100% off) during checkout.
+          </AlertDescription>
+        </Alert>
+
+        {/* Tier Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {TIER_ORDER.map((tierKey) => {
+            const tier = TIER_CONFIG[tierKey];
+            const isMostPopular = tierKey === '5tool';
+            const isBestValue = tierKey === 'golden2way';
+
+            return (
+              <Card 
+                key={tierKey}
+                className={`p-6 relative transition-all hover:shadow-lg ${
+                  isBestValue ? 'border-primary border-2' : 
+                  isMostPopular ? 'border-primary/50 border-2' : ''
+                }`}
+              >
+                {isMostPopular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                    <Star className="h-3 w-3" /> Most Popular
+                  </div>
+                )}
+                {isBestValue && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                    Best Value
+                  </div>
+                )}
+
+                <div className="text-center mb-6 pt-2">
+                  <h3 className="text-xl font-bold mb-2">{tier.displayName}</h3>
+                  <div className="text-4xl font-bold mb-1">
+                    ${tier.price}
+                    <span className="text-lg text-muted-foreground">/month</span>
+                  </div>
+                </div>
+
+                <ul className="space-y-2 mb-6">
+                  {tier.includes.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button 
+                  onClick={() => handleSelectTier(tierKey)}
+                  className="w-full" 
+                  size="lg"
+                  variant={isBestValue ? "default" : isMostPopular ? "default" : "outline"}
+                >
+                  Start Training
+                </Button>
+              </Card>
+            );
+          })}
         </div>
 
         <div className="text-center mt-6">
-          <Button variant="ghost" onClick={() => isAddMode ? navigate("/dashboard") : navigate("/select-modules", { state: { role: selectedRole || localStorage.getItem('userRole') || undefined, sport: selectedSport } })}>
-            ← Back
+          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+            ← Back to Dashboard
           </Button>
         </div>
       </div>

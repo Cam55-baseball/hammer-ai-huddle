@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useOwnerAccess } from '@/hooks/useOwnerAccess';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
+import { hasFeatureAccess } from '@/utils/tierAccess';
 
 export const useTexVisionAccess = () => {
   // Get loading states from all dependent hooks to prevent race conditions
@@ -12,9 +13,9 @@ export const useTexVisionAccess = () => {
   // Aggregate loading state - wait for ALL hooks to finish
   const loading = subLoading || ownerLoading || adminLoading;
 
-  // Tex Vision requires hitting module access
+  // Tex Vision requires hitting module access (tier-aware)
   const hasHittingAccess = useMemo(() => {
-    return modules.some(m => m.includes('hitting'));
+    return hasFeatureAccess(modules, 'hitting');
   }, [modules]);
 
   // Only evaluate access AFTER all hooks have finished loading

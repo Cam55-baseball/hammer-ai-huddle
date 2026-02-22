@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +12,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useVaultPendingStatus } from "@/hooks/useVaultPendingStatus";
 import { useSportTheme } from "@/contexts/SportThemeContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getActiveTier } from "@/utils/tierAccess";
 import { branding } from "@/branding";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -169,75 +170,113 @@ export function AppSidebar() {
     ...(isCoach ? [{ title: t('navigation.coachDashboard', 'Coach Dashboard'), url: "/coach-dashboard", icon: UserPlus }] : []),
   ];
 
-  const trainingModules = [
-    { 
-      key: 'hitting',
-      title: t('dashboard.modules.completeHitterShort'), 
-      url: '/complete-hitter', 
-      icon: Target,
-      subModules: [
-        {
-          title: t('dashboard.modules.hittingAnalysis'),
-          url: `/analyze/hitting?sport=${selectedSport}`,
+  // Determine active tier for sidebar display
+  const activeTier = useMemo(() => getActiveTier(modules, selectedSport), [modules, selectedSport]);
+
+  // Build training modules based on active tier (or show all for owner/admin)
+  const trainingModules = useMemo(() => {
+    const showAll = isOwner || isAdmin;
+    const items: any[] = [];
+
+    // Complete Pitcher (pitcher tier or golden2way or owner/admin)
+    if (showAll || activeTier === 'pitcher' || activeTier === 'golden2way') {
+      items.push({
+        key: 'pitching',
+        title: activeTier === 'golden2way' || showAll ? t('dashboard.modules.completePitcherShort') : t('dashboard.modules.completePitcherShort'),
+        url: '/complete-pitcher',
+        icon: Target,
+        subModules: [
+          { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.pitchingDescription') },
+          { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell, description: t('workoutModules.productionStudio.subtitle') || "6-week workout" },
+        ]
+      });
+    }
+
+    // 5Tool Player (5tool tier or owner/admin — NOT shown if golden2way)
+    if (showAll || activeTier === '5tool') {
+      items.push({
+        key: '5tool',
+        title: '5Tool Player',
+        url: '/5tool-player',
+        icon: Zap,
+        subModules: [
+          { title: t('dashboard.modules.hittingAnalysis'), url: `/analyze/hitting?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.hittingDescription') },
+          { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.throwingDescription') },
+          { title: t('workoutModules.productionLab.title'), url: "/production-lab", icon: Dumbbell, description: "Iron Bambino" },
+          { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
+          { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
+        ]
+      });
+    }
+
+    // Golden 2Way (golden2way tier or owner/admin)
+    if (showAll || activeTier === 'golden2way') {
+      items.push({
+        key: 'golden2way',
+        title: 'The Golden 2Way',
+        url: '/golden-2way',
+        icon: Sparkles,
+        subModules: [
+          { title: t('dashboard.modules.hittingAnalysis'), url: `/analyze/hitting?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.hittingDescription') },
+          { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.pitchingDescription') },
+          { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.throwingDescription') },
+          { title: 'The Unicorn', url: "/the-unicorn", icon: Sparkles, description: "Elite merged workout system" },
+          { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
+          { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
+        ]
+      });
+    }
+
+    // Legacy: if user has old keys but no new tier, show old-style modules
+    if (!showAll && !activeTier) {
+      const hasHitting = modules.some(m => m.includes('hitting'));
+      const hasPitching = modules.some(m => m.includes('pitching'));
+      const hasThrowing = modules.some(m => m.includes('throwing'));
+
+      if (hasHitting) {
+        items.push({
+          key: 'hitting',
+          title: t('dashboard.modules.completeHitterShort'),
+          url: '/complete-hitter',
           icon: Target,
-          description: t('dashboard.modules.hittingDescription')
-        },
-        {
-          title: t('workoutModules.productionLab.title'),
-          url: "/production-lab",
-          icon: Dumbbell,
-          description: t('workoutModules.productionLab.subtitle') || "6-week workout"
-        },
-        {
-          title: t('navigation.texVision'),
-          url: "/tex-vision",
-          icon: Eye,
-          description: t('texVision.subtitle')
-        }
-      ]
-    },
-    {
-      key: 'pitching',
-      title: t('dashboard.modules.completePitcherShort'), 
-      url: '/complete-pitcher', 
-      icon: Target,
-      subModules: [
-        {
-          title: t('dashboard.modules.pitchingAnalysis'),
-          url: `/analyze/pitching?sport=${selectedSport}`,
+          subModules: [
+            { title: t('dashboard.modules.hittingAnalysis'), url: `/analyze/hitting?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.hittingDescription') },
+            { title: t('workoutModules.productionLab.title'), url: "/production-lab", icon: Dumbbell, description: "6-week workout" },
+            { title: t('navigation.texVision'), url: "/tex-vision", icon: Eye, description: t('texVision.subtitle') },
+          ]
+        });
+      }
+      if (hasPitching) {
+        items.push({
+          key: 'pitching',
+          title: t('dashboard.modules.completePitcherShort'),
+          url: '/complete-pitcher',
           icon: Target,
-          description: t('dashboard.modules.pitchingDescription')
-        },
-        {
-          title: t('workoutModules.productionStudio.title'),
-          url: "/production-studio",
-          icon: Dumbbell,
-          description: t('workoutModules.productionStudio.subtitle') || "6-week workout"
-        }
-      ]
-    },
-    { 
-      key: 'throwing', 
-      title: t('dashboard.modules.completePlayerShort'), 
-      url: '/complete-player', 
-      icon: Zap,
-      subModules: [
-        {
-          title: t('dashboard.modules.throwingAnalysis'),
-          url: `/analyze/throwing?sport=${selectedSport}`,
-          icon: Target,
-          description: t('dashboard.modules.throwingDescription')
-        },
-        {
-          title: t('speedLab.title', 'Speed Lab'),
-          url: "/speed-lab",
+          subModules: [
+            { title: t('dashboard.modules.pitchingAnalysis'), url: `/analyze/pitching?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.pitchingDescription') },
+            { title: t('workoutModules.productionStudio.title'), url: "/production-studio", icon: Dumbbell, description: "6-week workout" },
+          ]
+        });
+      }
+      if (hasThrowing) {
+        items.push({
+          key: 'throwing',
+          title: t('dashboard.modules.completePlayerShort'),
+          url: '/complete-player',
           icon: Zap,
-          description: t('speedLab.subtitle', 'Build elite speed, protect your body')
-        }
-      ]
-    },
-    { key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked },
-  ];
+          subModules: [
+            { title: t('dashboard.modules.throwingAnalysis'), url: `/analyze/throwing?sport=${selectedSport}`, icon: Target, description: t('dashboard.modules.throwingDescription') },
+            { title: t('speedLab.title', 'Speed Lab'), url: "/speed-lab", icon: Zap, description: t('speedLab.subtitle', 'Build elite speed') },
+          ]
+        });
+      }
+    }
+
+    // Players Club always visible
+    items.push({ key: 'players-club', title: t('navigation.playersClub'), url: "/players-club", icon: BookMarked });
+
+    return items;
+  }, [isOwner, isAdmin, activeTier, modules, selectedSport, t]);
 
   const accountItems = [
     { title: t('navigation.helpDesk', 'Help Desk'), url: "/help-desk", icon: HelpCircle },

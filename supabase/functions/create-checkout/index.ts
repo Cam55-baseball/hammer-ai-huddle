@@ -12,7 +12,23 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// Price IDs for each module ($200/month each) - sport-specific
+// Tier-based pricing (replaces per-module pricing)
+const TIER_PRICES: { [tier: string]: { [sport: string]: string } } = {
+  pitcher: {
+    baseball: "price_1SKpoEGc5QIzbAH6FlPRhazY",
+    softball: "price_1SPBwcGc5QIzbAH6XUKF9dNy"
+  },
+  "5tool": {
+    baseball: "PENDING_BASEBALL_5TOOL_PRICE_ID",
+    softball: "PENDING_SOFTBALL_5TOOL_PRICE_ID"
+  },
+  golden2way: {
+    baseball: "PENDING_BASEBALL_GOLDEN2WAY_PRICE_ID",
+    softball: "PENDING_SOFTBALL_GOLDEN2WAY_PRICE_ID"
+  }
+};
+
+// Legacy per-module prices (backward compat during migration)
 const MODULE_PRICES: { [key: string]: { [sport: string]: string } } = {
   hitting: {
     baseball: "price_1SLm0qGc5QIzbAH60wry3lSb",
@@ -51,74 +67,36 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Check if user is owner - no checkout needed
-    const { data: ownerRole } = await supabaseClient
+    // Check if user is owner/admin - no checkout needed
+    const { data: roles } = await supabaseClient
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .eq('role', 'owner')
-      .maybeSingle();
+      .in('role', ['owner', 'admin']);
 
-    if (ownerRole) {
-      logStep("Owner attempted checkout - access already granted");
+    if (roles && roles.length > 0) {
+      logStep("Owner/Admin attempted checkout - access already granted");
       return new Response(JSON.stringify({
         owner: true,
-        message: 'Owners have free access to all modules'
+        message: 'Owners/Admins have free access to all tiers'
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    // Check if user is admin - no checkout needed
-    const { data: adminRole } = await supabaseClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
-
-    if (adminRole) {
-      logStep("Admin attempted checkout - access already granted");
-      return new Response(JSON.stringify({
-        admin: true,
-        message: 'Admins have free access to all modules'
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    // Get requested modules and sport from request body
-    const { modules, sport } = await req.json();
+    const body = await req.json();
+    const { tier, sport, modules } = body;
     
-    logStep("Received module request", { modules, sport });
-    logStep("Sport selection", { sport, isBaseball: sport === 'baseball', isSoftball: sport === 'softball' });
-
-    // Validate at least one module selected
-    if (!modules || !Array.isArray(modules) || modules.length === 0) {
-      logStep("ERROR: Must select at least one module");
-      return new Response(
-        JSON.stringify({ error: 'Must select at least one module' }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
-        }
-      );
-    }
+    logStep("Received request", { tier, sport, modules });
 
     // Validate sport
     if (!sport || !['baseball', 'softball'].includes(sport)) {
-      logStep("ERROR: Invalid or missing sport");
       return new Response(
         JSON.stringify({ error: 'Invalid or missing sport. Must be baseball or softball' }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
-    logStep("Module requested", { modules });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
@@ -130,23 +108,35 @@ serve(async (req) => {
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
       logStep("Existing customer found", { customerId });
-    } else {
-      logStep("No existing customer, will create during checkout");
     }
 
-    // Build line items for selected modules with sport-specific pricing
-    const lineItems = modules.map((module: string) => {
-      const priceId = MODULE_PRICES[module]?.[sport];
+    let lineItems: { price: string; quantity: number }[];
+    let checkoutMetadata: Record<string, string> = { user_id: user.id };
+
+    if (tier) {
+      // NEW: Tier-based checkout
+      const priceId = TIER_PRICES[tier]?.[sport];
       if (!priceId) {
-        logStep("ERROR: No price found", { module, sport, availableSports: Object.keys(MODULE_PRICES[module] || {}) });
-        throw new Error(`No price found for module ${module} and sport ${sport}`);
+        throw new Error(`No price found for tier ${tier} and sport ${sport}`);
       }
-      logStep("Using sport-specific price", { module, sport, priceId });
-      return {
-        price: priceId,
-        quantity: 1,
-      };
-    });
+      logStep("Using tier-based pricing", { tier, sport, priceId });
+      lineItems = [{ price: priceId, quantity: 1 }];
+      checkoutMetadata.tier = tier;
+      checkoutMetadata.sport = sport;
+    } else if (modules && Array.isArray(modules) && modules.length > 0) {
+      // LEGACY: Per-module checkout (backward compat)
+      logStep("Using legacy per-module pricing", { modules, sport });
+      lineItems = modules.map((module: string) => {
+        const priceId = MODULE_PRICES[module]?.[sport];
+        if (!priceId) throw new Error(`No price found for module ${module} and sport ${sport}`);
+        return { price: priceId, quantity: 1 };
+      });
+    } else {
+      return new Response(
+        JSON.stringify({ error: 'Must provide either a tier or modules array' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     
@@ -158,9 +148,7 @@ serve(async (req) => {
       allow_promotion_codes: true,
       success_url: `${origin}/checkout?status=success`,
       cancel_url: `${origin}/checkout?status=cancel`,
-      metadata: {
-        user_id: user.id
-      }
+      metadata: checkoutMetadata
     });
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });

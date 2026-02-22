@@ -3,150 +3,38 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
-import { Loader2 } from "lucide-react";
-
-type ModuleType = 'hitting' | 'pitching' | 'throwing';
+import { Loader2, Star, Check } from "lucide-react";
+import { TIER_CONFIG, TIER_ORDER } from "@/constants/tiers";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SelectModules = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
   const { modules: subscribedModules, loading: subscriptionLoading } = useSubscription();
-  const state = location.state as { role?: string; sport?: string; mode?: 'add' };
+  const state = location.state as { sport?: string; mode?: 'add' };
   
-  const userRole = localStorage.getItem('userRole') || localStorage.getItem('selectedRole');
-  const selectedSport = state?.sport || localStorage.getItem('selectedSport');
   const isAddMode = state?.mode === 'add';
-  
-  const [selectedModule, setSelectedModule] = useState<ModuleType | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedSport, setSelectedSport] = useState<string>(
+    state?.sport || localStorage.getItem('selectedSport') || 'baseball'
+  );
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
 
   useEffect(() => {
-    // Wait for auth to load before making decisions
     if (authLoading) return;
-    
-    if (!isAddMode && (!userRole || !selectedSport)) {
-      navigate("/select-sport");
-    }
-    if (isAddMode && !user) {
-      navigate("/auth");
-    }
-    if (userRole === 'scout') {
-      // Scouts shouldn't be here
-      navigate('/scout-dashboard');
-    }
-  }, [authLoading, userRole, selectedSport, isAddMode, user, navigate]);
+    if (!user && !isAddMode) navigate("/auth");
+  }, [authLoading, user, isAddMode, navigate]);
 
-  const modules: { id: ModuleType; label: string; icon: string; description: string }[] = [
-    {
-      id: 'hitting',
-      label: t('dashboard.modules.completeHitter'),
-      icon: '⚡',
-      description: t('dashboard.modules.completeHitterDescription')
-    },
-    {
-      id: 'pitching',
-      label: t('dashboard.modules.completePitcher'),
-      icon: '🎯',
-      description: t('dashboard.modules.completePitcherDescription')
-    },
-    {
-      id: 'throwing',
-      label: t('dashboard.modules.completePlayer'),
-      icon: '🔥',
-      description: t('dashboard.modules.completePlayerDescription')
-    }
-  ];
-
-  // Check if a module is already purchased
-  const isPurchased = (moduleId: ModuleType) => {
-    if (!selectedSport) return false;
-    const moduleKey = `${selectedSport}_${moduleId}`;
-    return subscribedModules.includes(moduleKey);
-  };
-
-  const handleContinue = async () => {
-    if (!selectedModule) return;
-
-    setLoading(true);
-    
-    try {
-      if (isAddMode) {
-        // Adding from dashboard - store and go directly to pricing
-        localStorage.setItem('pendingModule', selectedModule);
-        localStorage.setItem('pendingSport', selectedSport);
-        navigate("/pricing", { 
-          state: { 
-            module: selectedModule,
-            sport: selectedSport,
-            mode: 'add',
-            role: userRole || undefined
-          } 
-        });
-        return;
-      }
-
-      // For new signups, check if user is owner or admin
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const { data: ownerRole } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'owner')
-          .maybeSingle();
-
-        const { data: adminRole } = await supabase
-          .from('user_roles')
-          .select('role, status')
-          .eq('user_id', user.id)
-          .eq('role', 'admin')
-          .eq('status', 'active')
-          .maybeSingle();
-
-        const isOwnerOrAdmin = ownerRole || adminRole;
-
-        if (isOwnerOrAdmin) {
-          // Owner/Admin bypass payment and go to profile setup
-          navigate("/profile-setup", { 
-            state: { 
-              sport: selectedSport, 
-              module: selectedModule 
-            } 
-          });
-          return;
-        }
-      }
-
-      // Players go to pricing
-      navigate("/pricing", { 
-        state: { 
-          sport: selectedSport, 
-          module: selectedModule,
-          role: userRole || undefined
-        } 
-      });
-    } catch (error) {
-      console.error('Error checking roles:', error);
-      // On error, default to pricing page
-      navigate("/pricing", { 
-        state: { 
-          sport: selectedSport, 
-          module: selectedModule,
-          mode: isAddMode ? 'add' : 'new',
-          role: userRole || undefined
-        } 
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleContinue = () => {
+    if (!selectedTier) return;
+    localStorage.setItem('selectedSport', selectedSport);
+    navigate("/checkout", { 
+      state: { tier: selectedTier, sport: selectedSport } 
+    });
   };
 
   if (authLoading || subscriptionLoading) {
@@ -159,81 +47,91 @@ const SelectModules = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center px-4">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-5xl">
         <div className="text-center mb-8">
           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <span className="text-primary-foreground font-bold text-2xl">H</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2">{isAddMode ? t('selectModules.addModuleTitle') : t('selectModules.title')}</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            {isAddMode ? t('selectModules.addModuleTitle') : 'Select Your Training Tier'}
+          </h1>
           <p className="text-muted-foreground">
-            {isAddMode ? t('selectModules.addModeSubtitle') : t('selectModules.subtitle')}
+            Choose the tier that matches your training goals
           </p>
-          {!isAddMode && (
-            <div className="flex items-center justify-center gap-2 mt-4 text-sm text-muted-foreground">
-              <span className="bg-muted px-3 py-1 rounded-full">{t('selectModules.sport')}: {selectedSport}</span>
-              <span>→</span>
-              <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full">{t('selectModules.module')}</span>
-            </div>
-          )}
         </div>
 
-        <div className="grid gap-4 mb-8">
-          {modules.map((module) => {
-            const purchased = isPurchased(module.id);
+        {/* Sport Toggle */}
+        <div className="flex justify-center mb-8">
+          <Tabs value={selectedSport} onValueChange={setSelectedSport}>
+            <TabsList className="grid w-64 grid-cols-2">
+              <TabsTrigger value="baseball">Baseball</TabsTrigger>
+              <TabsTrigger value="softball">Softball</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3 mb-8">
+          {TIER_ORDER.map((tierKey) => {
+            const tier = TIER_CONFIG[tierKey];
+            const isSelected = selectedTier === tierKey;
+            const isBestValue = tierKey === 'golden2way';
+            const isMostPopular = tierKey === '5tool';
+
             return (
-              <Card 
-                key={module.id}
-                className={`p-6 transition-all ${
-                  purchased
-                    ? 'opacity-50 border-muted cursor-not-allowed'
-                    : selectedModule === module.id 
-                      ? 'border-primary bg-primary/5 ring-2 ring-primary cursor-pointer' 
-                      : 'hover:border-muted-foreground/50 cursor-pointer'
-                }`}
-                onClick={() => !purchased && setSelectedModule(module.id)}
+              <Card
+                key={tierKey}
+                className={`p-6 transition-all cursor-pointer relative ${
+                  isSelected
+                    ? 'border-primary bg-primary/5 ring-2 ring-primary'
+                    : 'hover:border-muted-foreground/50'
+                } ${isBestValue ? 'border-primary/50' : ''}`}
+                onClick={() => setSelectedTier(tierKey)}
               >
-                <div className="flex items-start gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-3xl">{module.icon}</span>
-                      <h3 className="text-xl font-bold">{module.label}</h3>
-                      {purchased ? (
-                        <span className="ml-auto text-muted-foreground font-semibold">{t('selectModules.alreadyPurchased')} ✓</span>
-                      ) : selectedModule === module.id && (
-                        <span className="ml-auto text-primary font-semibold">{t('selectModules.selected')}</span>
-                      )}
-                    </div>
-                    <p className="text-muted-foreground">{module.description}</p>
-                  </div>
-                </div>
+                {isMostPopular && (
+                  <Badge className="absolute -top-2 right-4 bg-primary text-primary-foreground text-xs">
+                    <Star className="h-3 w-3 mr-1" /> Popular
+                  </Badge>
+                )}
+                {isBestValue && (
+                  <Badge className="absolute -top-2 right-4 bg-primary text-primary-foreground text-xs">
+                    Best Value
+                  </Badge>
+                )}
+
+                <h3 className="text-xl font-bold mb-1">{tier.displayName}</h3>
+                <p className="text-2xl font-bold mb-3">
+                  ${tier.price}<span className="text-sm text-muted-foreground">/month</span>
+                </p>
+                <ul className="space-y-1.5">
+                  {tier.includes.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <Check className="h-3 w-3 text-primary flex-shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </Card>
             );
           })}
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 max-w-lg mx-auto">
           <Button 
             variant="outline" 
             onClick={() => isAddMode ? navigate("/dashboard") : navigate("/select-sport")}
             className="flex-1"
           >
-            ← {t('selectModules.back')}
+            ← Back
           </Button>
           <Button 
             onClick={handleContinue}
-            disabled={!selectedModule || loading}
+            disabled={!selectedTier}
             className="flex-1"
             size="lg"
           >
-            {loading ? t('selectModules.loading') : isAddMode ? t('selectModules.continueToPricing') + " →" : t('selectModules.continue') + " →"}
+            Continue →
           </Button>
         </div>
-
-        {!selectedModule && (
-          <p className="text-center text-sm text-muted-foreground mt-4">
-            {t('selectModules.selectModuleToContinue')}
-          </p>
-        )}
       </div>
     </div>
   );

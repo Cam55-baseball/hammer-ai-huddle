@@ -83,6 +83,9 @@ const CompletePlayer = lazyWithRetry(() => import("./pages/CompletePlayer"));
 const CompleteHitter = lazyWithRetry(() => import("./pages/CompleteHitter"));
 const CompletePitcher = lazyWithRetry(() => import("./pages/CompletePitcher"));
 const HelpDesk = lazyWithRetry(() => import("./pages/HelpDesk"));
+const FiveToolPlayer = lazyWithRetry(() => import("./pages/FiveToolPlayer"));
+const GoldenTwoWay = lazyWithRetry(() => import("./pages/GoldenTwoWay"));
+const TheUnicorn = lazyWithRetry(() => import("./pages/TheUnicorn"));
 
 const queryClient = new QueryClient();
 
@@ -144,6 +147,9 @@ const App = () => {
               <Route path="/complete-player" element={<CompletePlayer />} />
               <Route path="/complete-hitter" element={<CompleteHitter />} />
               <Route path="/complete-pitcher" element={<CompletePitcher />} />
+              <Route path="/5tool-player" element={<FiveToolPlayer />} />
+              <Route path="/golden-2way" element={<GoldenTwoWay />} />
+              <Route path="/the-unicorn" element={<TheUnicorn />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
