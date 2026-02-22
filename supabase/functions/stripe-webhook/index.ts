@@ -176,18 +176,50 @@ async function handleSubscriptionEvent(
       
       const product = await stripe.products.retrieve(productId);
       
-      // Extract sport and module
+      // Check for tier-based products first
+      const tier = product.metadata?.tier?.toLowerCase();
       let sport = product.metadata?.sport?.toLowerCase();
+      
+      if (!sport) {
+        const name = product.name.toLowerCase();
+        if (name.includes('softball')) sport = 'softball';
+        else if (name.includes('baseball')) sport = 'baseball';
+      }
+
+      if (tier && sport) {
+        // Tier-based product
+        const sportModule = `${sport}_${tier}`;
+        moduleMapping[sportModule] = {
+          subscription_id: fullSub.id,
+          status: fullSub.status,
+          current_period_end: item.current_period_end 
+            ? new Date(item.current_period_end * 1000).toISOString()
+            : null,
+          cancel_at_period_end: fullSub.cancel_at_period_end || false,
+          price_id: item.price.id,
+          canceled_at: fullSub.canceled_at ? new Date(fullSub.canceled_at * 1000).toISOString() : null
+        };
+        if (fullSub.status === 'active' || 
+            (fullSub.status === 'canceled' && fullSub.current_period_end * 1000 > Date.now())) {
+          activeModules.push(sportModule);
+        }
+        continue;
+      }
+
+      // Legacy module-based products
       let module = product.metadata?.module?.toLowerCase();
       
       if (!sport || !module) {
         const name = product.name.toLowerCase();
-        if (name.includes('softball')) sport = 'softball';
-        else if (name.includes('baseball')) sport = 'baseball';
-        
-        if (name.includes('hitting')) module = 'hitting';
-        else if (name.includes('pitching')) module = 'pitching';
-        else if (name.includes('throwing')) module = 'throwing';
+        if (!sport) {
+          if (name.includes('softball')) sport = 'softball';
+          else if (name.includes('baseball')) sport = 'baseball';
+        }
+        if (!module) {
+          if (name.includes('hitting')) module = 'hitting';
+          else if (name.includes('pitching')) module = 'pitching';
+          else if (name.includes('throwing')) module = 'throwing';
+        }
       }
 
       if (!sport || !module) continue;
@@ -236,21 +268,40 @@ async function handleSubscriptionEvent(
   const hasPendingCancellations = Object.values(moduleMapping)
     .some((m: any) => m.cancel_at_period_end);
 
+  // Determine tier from active modules
+  const activeTier = activeModules.find(m => m.includes('golden2way')) ? 'golden2way'
+    : activeModules.find(m => m.includes('5tool')) ? '5tool'
+    : activeModules.find(m => m.includes('pitcher')) ? 'pitcher'
+    : null;
+
   // Update database
+  const upsertData: any = {
+    user_id: user.id,
+    status: activeModules.length > 0 ? 'active' : 'inactive',
+    subscribed_modules: activeModules,
+    module_subscription_mapping: moduleMapping,
+    has_pending_cancellations: hasPendingCancellations,
+    stripe_customer_id: customerId,
+    stripe_subscription_id: subIds.join(','),
+    current_period_end: latestEnd,
+    tier: activeTier,
+  };
+
+  // Check existing record to preserve grandfathered data
+  const { data: existingSub } = await supabaseClient
+    .from('subscriptions')
+    .select('grandfathered_price')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  // Don't overwrite existing grandfathered data
+  if (existingSub?.grandfathered_price) {
+    // preserve existing grandfathered fields
+  }
+
   await supabaseClient
     .from('subscriptions')
-    .upsert({
-      user_id: user.id,
-      status: activeModules.length > 0 ? 'active' : 'inactive',
-      subscribed_modules: activeModules,
-      module_subscription_mapping: moduleMapping,
-      has_pending_cancellations: hasPendingCancellations,
-      stripe_customer_id: customerId,
-      stripe_subscription_id: subIds.join(','),
-      current_period_end: latestEnd
-    }, {
-      onConflict: 'user_id'
-    });
+    .upsert(upsertData, { onConflict: 'user_id' });
 
   logStep("Database updated", { 
     userId: user.id,

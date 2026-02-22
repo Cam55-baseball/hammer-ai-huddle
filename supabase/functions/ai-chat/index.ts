@@ -82,7 +82,18 @@ serve(async (req) => {
     if (subscription || progress) {
       userContext = `\n\nUser Context:\n`;
       if (subscription?.subscribed_modules) {
-        userContext += `Active Modules: ${subscription.subscribed_modules.join(", ")}\n`;
+        const tierNames: Record<string, string> = {
+          'baseball_pitcher': 'Complete Pitcher (Baseball)',
+          'softball_pitcher': 'Complete Pitcher (Softball)',
+          'baseball_5tool': '5Tool Player (Baseball)',
+          'softball_5tool': '5Tool Player (Softball)',
+          'baseball_golden2way': 'Golden 2Way (Baseball)',
+          'softball_golden2way': 'Golden 2Way (Softball)',
+        };
+        const displayModules = subscription.subscribed_modules.map(
+          (m: string) => tierNames[m] || m
+        );
+        userContext += `Active Tier: ${displayModules.join(", ")}\n`;
       }
       if (progress && progress.length > 0) {
         userContext += `Progress:\n`;
