@@ -1,570 +1,260 @@
 
-# HAMMERS MODALITY -- TIER RESTRUCTURE + ELITE PROGRAM EXPANSION
+# Remaining Phases: Iron Bambino Upgrade, Unicorn Program, Edge Functions, Migration, i18n
 
-## Overview
+## Status Check
 
-Replace the current 3 separate $200 module model (hitting, pitching, throwing) with 3 tiered subscription packages, add new training programs (arm care, velocity development, The Unicorn), migrate existing users, and restructure all access control, sidebar, pricing, Stripe integration, and dashboard UI.
+**Already completed:**
+- Database migration (grandfathered_price, grandfathered_at, tier columns)
+- `src/constants/tiers.ts` and `src/utils/tierAccess.ts`
+- Access control updates (useSubscription, useTexVisionAccess, useGamePlan, useCalendar, Vault)
+- Sidebar restructure (AppSidebar.tsx)
+- Gateway pages (FiveToolPlayer, GoldenTwoWay, TheUnicorn -- shells only)
+- Dashboard, Pricing, Checkout, SelectModules restructure
+- `create-checkout` edge function (tier-based)
+- App.tsx routes
 
----
-
-## PHASE 1: DATABASE + STRIPE FOUNDATION
-
-### 1A. Database Migration
-
-Add columns to `subscriptions` table:
-
-- `grandfathered_price` (text, nullable) -- original Stripe price ID for grandfathered users
-- `grandfathered_at` (timestamptz, nullable) -- when user was grandfathered
-- `tier` (text, nullable) -- 'pitcher', '5tool', 'golden2way' for quick lookups
-
-No structural changes to `subscribed_modules` -- it will now store values like `baseball_5tool`, `softball_golden2way`, `baseball_pitcher` (replacing the old `baseball_hitting`, etc.).
-
-### 1B. New Stripe Products (User Provides Price IDs)
-
-You will create 6 new Stripe products/prices (2 sports x 3 tiers):
-
-| Tier | Baseball Price ID | Softball Price ID | Monthly |
-|------|------------------|------------------|---------|
-| Complete Pitcher | (existing) | (existing) | $200 |
-| 5Tool Player | (you provide) | (you provide) | $300 |
-| The Golden 2Way | (you provide) | (you provide) | $400 |
-
-The existing pitching price IDs remain unchanged.
-
-### 1C. Tier Access Mapping (Constants File)
-
-Create `src/constants/tiers.ts`:
-
-```text
-TIER_CONFIG:
-  pitcher:
-    key: 'pitcher'
-    displayName: 'Complete Pitcher'
-    price: 200
-    grantedAccess: ['pitching']
-    includes: Pitching Analysis, Heat Factory, Ask the Coach, Vault
-
-  5tool:
-    key: '5tool'
-    displayName: '5Tool Player'
-    price: 300
-    grantedAccess: ['hitting', 'throwing']
-    includes: Hitting Analysis, Throwing Analysis, Iron Bambino (upgraded),
-              Speed Lab, Tex Vision, Ask the Coach, Vault
-
-  golden2way:
-    key: 'golden2way'
-    displayName: 'The Golden 2Way'
-    price: 400
-    grantedAccess: ['hitting', 'pitching', 'throwing']
-    includes: Everything from Pitcher + 5Tool, The Unicorn workout system
-```
+**Remaining (this implementation):**
 
 ---
 
-## PHASE 2: ACCESS CONTROL REFACTOR
+## Phase 1: Iron Bambino Upgrade -- Arm Care + Velocity Development
 
-### 2A. Update `useSubscription.ts`
+**File: `src/data/ironBambinoProgram.ts`**
 
-Add tier-aware helper methods:
+Add two new exported data blocks integrated into the existing cycle structure:
 
-- `hasTierAccess(tier: string, sport: string)` -- checks if user has a specific tier
-- `hasFeatureAccess(feature: string, sport: string)` -- maps features to tiers
+### 1A. Pre-Lift Arm Care Block (added to every workout day)
 
-The `hasModuleForSport` and `hasAccessForSport` functions get updated to understand new keys:
+A new exported constant `ARM_CARE_BLOCK: Exercise[]` containing:
+- Band Pull-Aparts (scap retraction, 3x15)
+- Wall Slides (scap upward rotation, 3x10)
+- Serratus Push-Up (serratus anterior activation, 3x10)
+- Prone Y-T-W Raises (rotator cuff progression, 3x8 each)
+- Side-Lying External Rotation (ER strengthening, 3x12 each)
+- Prone I Raise (lower trap activation, 3x10)
+- Eccentric Wrist Flexor Curl (deceleration/tissue capacity, 3x10 each)
+- 90/90 External Rotation Hold (isometric ER, 3x15s each)
 
-- `{sport}_pitcher` grants pitching access
-- `{sport}_5tool` grants hitting + throwing access
-- `{sport}_golden2way` grants hitting + pitching + throwing access
+### 1B. Deload Week Logic
 
-**Backward compatibility**: If legacy keys (`baseball_hitting`, etc.) are still in `subscribed_modules`, they continue to work during migration.
+Add exported constants:
+- `DELOAD_VOLUME_MODIFIER = 0.6` (40% reduction)
+- `isDeloadWeek(weekNumber: number): boolean` -- returns true for weeks 4, 8, 12, 16, 20, 24
 
-### 2B. Update `useTexVisionAccess.ts`
+### 1C. Throwing Velocity Development Blocks (2 per cycle)
 
-Change from checking `m.includes('hitting')` to also checking for `5tool` and `golden2way`:
+New exported constants `VELOCITY_DEV_BLOCK_A` and `VELOCITY_DEV_BLOCK_B`:
 
-```text
-hasHittingAccess = modules.some(m =>
-  m.includes('hitting') || m.includes('5tool') || m.includes('golden2way')
-)
-```
+**Block A (Kinetic Chain + Weighted Ball Intro):**
+- Hip-Lead Throws (connection ball work, 2x8)
+- Pivot Pickoffs (hip-shoulder separation, 2x8 each)
+- Reverse Throws (eccentric/deceleration pattern, 2x6)
+- Lightweight Weighted Ball (3oz, constraint drill, 3x8)
+- Long Toss Progressive (build to 120ft+, track throw count)
 
-### 2C. Update `useGamePlan.ts`
+**Block B (Overload/Underload + Intent Throws):**
+- Overload Weighted Ball (7-11oz, into wall, 3x6)
+- Underload Weighted Ball (2-3oz, intent throws, 3x6)
+- Pull-Down Throws (max effort, 3x3)
+- Long Toss with Intent (build to max distance, tracked)
+- CNS throw count tracker (total throws x intensity coefficient)
 
-Same pattern -- `hasHittingAccess`, `hasPitchingAccess`, `hasThrowingAccess` all get tier-aware checks:
+Sport-specific notes added: baseball (overhand) vs softball (position player overhand throws).
 
-```text
-hasHittingAccess = modules.some(m =>
-  m.includes('hitting') || m.includes('5tool') || m.includes('golden2way')
-)
-hasPitchingAccess = modules.some(m =>
-  m.includes('pitching') || m.includes('pitcher') || m.includes('golden2way')
-)
-hasThrowingAccess = modules.some(m =>
-  m.includes('throwing') || m.includes('5tool') || m.includes('golden2way')
-)
-```
+### 1D. CNS Budget System
 
-### 2D. Update `useCalendar.ts`, `Vault.tsx`, `VaultPerformanceTestCard.tsx`
+New exported types and constants:
+- `CNS_BUDGET_DAILY = 100`
+- `CNS_COSTS` mapping: strength (25-40), throwing (15-30), sprinting (20-35)
+- `calculateDailyCNS(activities)` helper
+- `isOverBudget(activities)` helper
+- Weekly template constants for 5Tool tier (the 7-day schedule from the plan)
 
-All files that check `m.includes('hitting')` etc. get the same tier-aware pattern.
+### 1E. Equipment List Update
 
-### 2E. Create Access Helper
-
-Create `src/utils/tierAccess.ts` with a single reusable function:
-
-```text
-hasAccess(modules, accessType):
-  hitting:  'hitting' OR '5tool' OR 'golden2way'
-  pitching: 'pitching' OR 'pitcher' OR 'golden2way'
-  throwing: 'throwing' OR '5tool' OR 'golden2way'
-```
-
-All hooks and components will use this centralized helper to avoid scattered logic.
-
----
-
-## PHASE 3: STRIPE INTEGRATION UPDATE
-
-### 3A. Update `create-checkout` Edge Function
-
-Replace the current per-module checkout with tier-based checkout:
-
-- Accept `tier` and `sport` instead of `modules[]`
-- Map tier to the correct Stripe price ID
-- Single line item per checkout (one tier = one subscription)
-
-Price ID mapping:
-
-```text
-TIER_PRICES:
-  pitcher:
-    baseball: (existing price_1SKpoEGc...)
-    softball: (existing price_1SPBwcGc...)
-  5tool:
-    baseball: (user provides)
-    softball: (user provides)
-  golden2way:
-    baseball: (user provides)
-    softball: (user provides)
-```
-
-### 3B. Update `stripe-webhook` Edge Function
-
-The webhook currently parses product names/metadata to extract `sport` and `module`. Update to:
-
-1. Check product metadata for `tier` field (new products will have `tier: '5tool'` etc.)
-2. Based on tier, populate `subscribed_modules` with the correct keys:
-   - `pitcher` -> `['{sport}_pitcher']`
-   - `5tool` -> `['{sport}_5tool']`
-   - `golden2way` -> `['{sport}_golden2way']`
-3. Also set the `tier` column on subscriptions table
-4. Preserve grandfathering: if `grandfathered_price` is set, don't overwrite it
-
-### 3C. Update `check-subscription` Edge Function
-
-- Owner/Admin bypass now returns full tier access: `['hitting', 'pitching', 'throwing']` (unchanged)
-- Regular users: read from `subscribed_modules` as before (the new keys will work with the updated access helpers)
-
-### 3D. Update `cancel-module-subscription` and `cancel-all-subscriptions`
-
-These functions reference `module_subscription_mapping`. Update to work with tier-based keys instead of individual module keys.
+Add to `HITTING_EQUIPMENT`:
+- Weighted baseballs/softballs (2oz to 11oz)
+- Therabands/resistance tubes (for arm care)
+- Foam roller (for tissue capacity work)
 
 ---
 
-## PHASE 4: SIDEBAR RESTRUCTURE
+## Phase 2: The Unicorn Program Data
 
-### 4A. Update `AppSidebar.tsx` Training Modules
+**New file: `src/data/unicornProgram.ts`**
 
-Replace the current 3 module entries (Complete Hitter, Complete Pitcher, Complete Player) with tier-aware display:
+Complete merged workout program that combines Heat Factory + Iron Bambino + Speed Lab:
 
-**Visibility Rules:**
+### Structure
+- 4 cycles x 6 weeks = 24 weeks, then loops
+- 5 training days per week + 2 rest days
+- Each day has: Arm Care (always) + Primary Focus + Secondary Focus
 
-- If user has `{sport}_pitcher`: Show "Complete Pitcher" with sub-modules (Pitching Analysis, Heat Factory)
-- If user has `{sport}_5tool`: Show "5Tool Player" with sub-modules (Hitting Analysis, Throwing Analysis, Iron Bambino, Speed Lab, Tex Vision)
-- If user has `{sport}_golden2way`: Show "The Golden 2Way" with sub-modules (ALL sub-modules + The Unicorn)
-- Owner/Admin: Show everything
-- Scout/Coach: Never show training modules
-- No subscription: Show nothing (they see locked cards on dashboard)
-- Players Club remains visible to all
+### Weekly Template (per cycle, with progressive overload across cycles):
 
-**Key Rule:** Only show the user's purchased tier. Never show tiers they don't own.
+**Day 1: Full Body Strength + Scap/Arm Care**
+- Arm Care Block (shared from Iron Bambino)
+- Trap Bar Deadlift, Front Squat, Bench Press, Barbell Row, Pallof Press, Isometric holds
+- CNS: 35
 
-### 4B. Sidebar Sub-Module Structure
+**Day 2: Pitching Velocity Development + Sprint Work**
+- Arm Care Block
+- Velocity Dev Block A (weighted balls, long toss)
+- Sprint mechanics drills (from Speed Lab: A-skips, wall drives, falling starts)
+- Build-up sprints (60-90%)
+- CNS: 40
 
-```text
-5Tool Player:
-  - Hitting Analysis
-  - Throwing Analysis
-  - Iron Bambino (upgraded with arm care + velocity)
-  - Speed Lab
-  - Tex Vision
+**Day 3: Hitting Power (Bat Speed) + Active Recovery**
+- Arm Care Block (light)
+- Bat speed work (overload/underload bats from Iron Bambino bat speed sessions)
+- Med ball rotational work
+- Light mobility/foam rolling
+- CNS: 25
 
-The Golden 2Way:
-  - Hitting Analysis
-  - Pitching Analysis
-  - Throwing Analysis
-  - The Unicorn (merged workout system)
-  - Speed Lab
-  - Tex Vision
+**Day 4: REST**
 
-Complete Pitcher:
-  - Pitching Analysis
-  - Heat Factory
-```
+**Day 5: Full Body Strength + Throwing Velocity**
+- Arm Care Block
+- RDL, Bulgarian Split Squat, Incline Press, Weighted Pull-Up, Cable Woodchop
+- Velocity Dev Block B (overload/underload, pull-downs)
+- CNS: 40
 
----
+**Day 6: Speed Lab + Light Arm Care**
+- Light Arm Care
+- Full Speed Lab session (plyometrics, sprint mechanics, isometrics from speedLabProgram.ts)
+- CNS: 25
 
-## PHASE 5: GATEWAY PAGES + ROUTES
+**Day 7: REST**
 
-### 5A. New Gateway Pages
+### Cycle Progression
+- Cycle 1: Foundation (75% intensity base)
+- Cycle 2: Development (80-85% intensity)
+- Cycle 3: Intensification (82-88% intensity)
+- Cycle 4: Peaking (85-90% intensity)
+- Then loops back to Cycle 1 with increased base weights
 
-Create two new gateway pages:
-
-**`src/pages/FiveToolPlayer.tsx`** (route: `/5tool-player`)
-
-Tile-based selection hub with 5 tiles:
-- Hitting Analysis
-- Throwing Analysis
-- Iron Bambino
-- Speed Lab
-- Tex Vision
-
-**`src/pages/GoldenTwoWay.tsx`** (route: `/golden-2way`)
-
-Tile-based selection hub with 6 tiles:
-- Hitting Analysis
-- Pitching Analysis
-- Throwing Analysis
-- The Unicorn
-- Speed Lab
-- Tex Vision
-
-### 5B. Update `App.tsx` Routes
-
-Add:
-- `/5tool-player` -> FiveToolPlayer
-- `/golden-2way` -> GoldenTwoWay
-- `/the-unicorn` -> TheUnicorn (new workout page)
-
-Keep existing routes (`/complete-hitter`, `/complete-pitcher`, `/complete-player`) as redirects or aliases for backward compatibility.
+### Exported Constants
+- `UNICORN_CYCLES` (array of 4 cycles, each with 5 workout day templates)
+- `UNICORN_WEEKLY_CNS_TARGET = 165`
+- `UNICORN_DELOAD_MODIFIER = 0.6`
+- `UNICORN_RULES` (array of rule strings for display)
+- `isUnicornDeloadWeek(weekNumber)` helper
+- `calculateUnicornWeeklyCNS(dayActivities[])` helper
+- `UNICORN_THROWING_THRESHOLD = 150` (max weekly throws before auto-rest suggestion)
 
 ---
 
-## PHASE 6: DASHBOARD RESTRUCTURE
+## Phase 3: The Unicorn Page Upgrade
 
-### 6A. Update Dashboard Module Cards
+**File: `src/pages/TheUnicorn.tsx`**
 
-Replace the 3 individual module cards with 3 tier cards:
+Upgrade from the current shell (which only shows the weekly template) to a full workout page following the same pattern as ProductionLab (Iron Bambino):
 
-| Card | Price | Locked State |
-|------|-------|-------------|
-| Complete Pitcher | $200/mo | "Unlock Module" button -> pricing page |
-| 5Tool Player | $300/mo | "Unlock Module" button -> pricing page |
-| The Golden 2Way | $400/mo | "Unlock Module" button -> pricing page |
-
-When a user has a tier, the card navigates to the tier's gateway page. When locked, it navigates to the pricing/checkout flow.
-
-### 6B. Module Type Updates
-
-Change `ModuleType` from `"hitting" | "pitching" | "throwing"` to `"pitcher" | "5tool" | "golden2way"` in Dashboard.
+- Import `UNICORN_CYCLES` from the new data file
+- Show current cycle + week + day
+- Display exercises with sets/reps/weight tracking
+- "Workout Complete" button with 24-hour unlock
+- CNS budget indicator (progress bar showing daily/weekly load)
+- Throwing load tracker (cumulative weekly throws)
+- Deload week indicator
+- Progress tracking via `sub_module_progress` table (sub_module = 'the-unicorn')
 
 ---
 
-## PHASE 7: PRICING + CHECKOUT RESTRUCTURE
+## Phase 4: Edge Function Updates
 
-### 7A. Update `Pricing.tsx`
+### 4A. `stripe-webhook/index.ts`
+- Add tier detection from product metadata (`tier` field)
+- Map tier to `subscribed_modules`: pitcher -> `['{sport}_pitcher']`, 5tool -> `['{sport}_5tool']`, golden2way -> `['{sport}_golden2way']`
+- Set `tier` column on subscriptions table
+- Preserve `grandfathered_price` if already set
 
-Replace single module card with 3 tier cards side by side:
+### 4B. `check-subscription/index.ts`
+- Owner/Admin bypass: keep returning `['hitting', 'pitching', 'throwing']` for backward compat
+- No other changes needed (reads from subscribed_modules which now has tier keys)
 
-```text
-Complete Pitcher -- $200/mo
-  - Pitching Analysis
-  - Heat Factory
-  - Ask the Coach
-  - Vault access
+### 4C. `cancel-module-subscription/index.ts`
+- Works as-is since it uses `module_subscription_mapping[sportModule]` -- tier keys will work the same way
+- Update log messages to say "tier" instead of "module"
 
-5Tool Player -- $300/mo (highlighted as "Most Popular")
-  - Hitting + Throwing Analysis
-  - Iron Bambino (upgraded)
-  - Speed Lab + Tex Vision
-  - Ask the Coach
-  - Vault access
+### 4D. `cancel-all-subscriptions/index.ts`
+- No structural changes needed -- already iterates all entries in `module_subscription_mapping`
 
-The Golden 2Way -- $400/mo (highlighted as "Best Value")
-  - Everything in both tiers
-  - The Unicorn workout system
-  - Full 2-way development
-```
+### 4E. `resume-module-subscription/index.ts`
+- Same pattern as cancel -- works with tier keys already via `module_subscription_mapping`
 
-Sport toggle (baseball/softball) at top.
+### 4F. `ai-chat/index.ts`
+- Update the user context section to show tier names instead of raw module keys
+- Map `baseball_5tool` -> "5Tool Player (Baseball)" etc. in the system prompt
 
-### 7B. Update `Checkout.tsx`
+### 4G. `ai-helpdesk/index.ts`
+- Update knowledge base section to reference new tier names and pricing
+- Replace references to "Complete Hitter" / "Complete Player" with "5Tool Player"
 
-- Replace module checkboxes with single tier selection
-- Remove multi-module addition logic
-- One tier = one checkout session
-- Show clear price for the selected tier
+### 4H. `generate-monthly-report/index.ts`
+- No structural changes needed -- reports on `subscribed_modules` which will have the new keys
+- The report generation uses video analysis data which is module-type agnostic
 
-### 7C. Update `SelectModules.tsx`
-
-This page currently shows 3 modules. Update to show 3 tiers instead, with tier descriptions and pricing.
+### 4I. `search-players/index.ts`
+- No changes needed -- this function searches by scout/coach role, not by subscription modules
 
 ---
 
-## PHASE 8: IRON BAMBINO UPGRADE (for 5Tool tier)
+## Phase 5: Migration Edge Function
 
-### 8A. Add Arm Care System to Iron Bambino
+**New file: `supabase/functions/migrate-to-tiers/index.ts`**
 
-Add new training blocks to `src/data/ironBambinoProgram.ts`:
+One-time admin function (requires owner authorization):
 
-**Arm Care Blocks** (integrated into existing 4-day cycle):
-- Scap stability exercises (band work, wall slides, serratus activation)
-- Rotator cuff progression (ER/IR strengthening, prone series)
-- Deceleration training (eccentric throwing patterns, reverse throws)
-- Tissue capacity building (long lever holds, loaded stretches)
-- Structured deload weeks (every 4th week reduces volume 40%)
-
-These get added as a "Pre-Lift Arm Care" block at the start of each workout day.
-
-### 8B. Add Throwing Velocity Development System
-
-Add new exercises/blocks to Iron Bambino:
-
-**Velocity Development Blocks** (2 days per week within the cycle):
-- Kinetic chain efficiency drills (hip-lead throws, connection ball work)
-- Progressive weighted ball program (2oz to 11oz, safe progressions)
-- Overload/underload throwing patterns
-- Long toss with intent protocols
-- CNS-tracked throwing volume (total throws x intensity)
-- Sport-specific: baseball (overhand) vs softball (overhand position player throws)
-
-### 8C. CNS Integration
-
-When Iron Bambino, Speed Lab, and throwing are all active (5Tool tier):
-
-- Daily CNS budget calculation: base 100 units
-- Strength training: 25-40 CNS units depending on volume
-- Throwing/velocity work: 15-30 CNS units depending on throw count
-- Sprinting: 20-35 CNS units depending on volume
-- Auto-balance: If CNS budget exceeded, system suggests rest or reduced volume
-- Weekly load tracking in `athlete_load_tracking` table
-- No conflicting high-CNS days (never sprint + max throwing + heavy strength same day)
-
-**Weekly Template (5Tool):**
-
-```text
-Day 1: Strength + Arm Care (Iron Bambino A) -- CNS: 40
-Day 2: Speed Lab Sprint Session -- CNS: 30
-Day 3: Throwing Velocity Development -- CNS: 25
-Day 4: REST
-Day 5: Strength + Arm Care (Iron Bambino B) -- CNS: 40
-Day 6: Light Throwing + Active Recovery -- CNS: 15
-Day 7: REST
-Weekly Total: ~150 (within safe range of 140-170)
-```
+1. Read all users with active subscriptions
+2. Apply migration rules:
+   - Both `{sport}_hitting` + `{sport}_throwing` -> `{sport}_5tool` (grandfathered at original combined price)
+   - All three -> `{sport}_golden2way` (grandfathered)
+   - Only `{sport}_hitting` or `{sport}_throwing` -> `{sport}_5tool` (grandfathered at $200)
+   - Only `{sport}_pitching` -> `{sport}_pitcher` (no change)
+3. Update `subscribed_modules`, `tier`, `grandfathered_price`, `grandfathered_at`
+4. Log all changes to `audit_log`
+5. Does NOT modify Stripe subscriptions
 
 ---
 
-## PHASE 9: THE UNICORN WORKOUT SYSTEM (Golden 2Way)
+## Phase 6: i18n Updates
 
-### 9A. New Page: `src/pages/TheUnicorn.tsx`
+**All 8 locale files** (`en.json`, `es.json`, `fr.json`, `de.json`, `ja.json`, `ko.json`, `nl.json`, `zh.json`):
 
-A new workout page following the same structure as ProductionLab and ProductionStudio.
-
-### 9B. New Data File: `src/data/unicornProgram.ts`
-
-The Unicorn merges Heat Factory + Iron Bambino + Speed Lab into one unified system:
-
-**Structure:**
-- 4 cycles x 6 weeks = 24 weeks (then loops)
-- 5 training days per week
-- Tracks cumulative throwing load (pitching + position throwing)
-- Tracks cumulative CNS load across ALL modalities
-- Auto-cycles intensity weeks (3 build, 1 deload pattern)
-- Handles dual-role athletes (pitcher days vs position days)
-
-**Weekly Template (Golden 2Way):**
-
-```text
-Day 1: Full Body Strength + Scap/Arm Care -- CNS: 35
-Day 2: Pitching Velocity Development + Sprint Work -- CNS: 40
-Day 3: Hitting Power (Bat Speed) + Active Recovery -- CNS: 25
-Day 4: REST
-Day 5: Full Body Strength + Throwing Velocity -- CNS: 40
-Day 6: Speed Lab + Light Arm Care -- CNS: 25
-Day 7: REST
-Weekly Total: ~165 (elite range)
-```
-
-**Key Rules:**
-- Never pitch and throw max effort same day
-- Never heavy lower body strength + max sprints same day
-- Arm care every training day
-- Deload week every 4th week (all volume drops 40%)
-- Throwing load tracked as pitch count equivalents
-- If total weekly throwing exceeds threshold, auto-suggests rest
-
-**What's Merged:**
-- Heat Factory strength -> Unicorn strength days (Days 1 + 5)
-- Iron Bambino bat speed -> Unicorn power days (Day 3)
-- Heat Factory arm care -> Unicorn arm care (every day)
-- Speed Lab sprints -> Unicorn sprint work (Days 2 + 6)
-- Velocity development -> Unicorn velocity days (Days 2 + 5)
-
-**What's Eliminated:**
-- Duplicate squat patterns across programs
-- Conflicting high-CNS days
-- Redundant arm care routines
-- Overlapping sprint sessions
-
-### 9C. Sub-Module Progress Integration
-
-Add `the-unicorn` as a tracked sub-module in `sub_module_progress` table (no schema change needed -- uses existing `sub_module` text column).
+Add keys for:
+- `tiers.pitcher.name`, `tiers.pitcher.description`
+- `tiers.5tool.name`, `tiers.5tool.description`
+- `tiers.golden2way.name`, `tiers.golden2way.description`
+- `unicorn.title`, `unicorn.description`, `unicorn.rules.*`
+- `armCare.title`, `armCare.exercises.*`
+- `velocityDev.title`, `velocityDev.exercises.*`
+- `cns.budget`, `cns.overBudget`, `cns.deloadWeek`
 
 ---
 
-## PHASE 10: USER MIGRATION
+## Implementation Order
 
-### 10A. Migration Edge Function: `supabase/functions/migrate-to-tiers/index.ts`
-
-A one-time-use admin function that:
-
-1. Reads all users with active subscriptions
-2. Applies migration rules:
-
-```text
-IF has both {sport}_hitting AND {sport}_throwing:
-  -> Set to {sport}_5tool
-  -> Set grandfathered_price = original combined price
-  -> Set grandfathered_at = now()
-  -> Do NOT increase cost
-
-IF has {sport}_pitching AND {sport}_hitting AND {sport}_throwing:
-  -> Set to {sport}_golden2way
-  -> Set grandfathered_price = original combined price
-  -> Set grandfathered_at = now()
-  -> Do NOT increase cost
-
-IF has only {sport}_pitching:
-  -> Set to {sport}_pitcher
-  -> No price change
-
-IF has only {sport}_hitting:
-  -> Set to {sport}_5tool
-  -> Set grandfathered_price = original price ($200)
-  -> Preserve $200 rate (not $300)
-
-IF has only {sport}_throwing:
-  -> Set to {sport}_5tool
-  -> Set grandfathered_price = original price ($200)
-  -> Preserve $200 rate (not $300)
-```
-
-3. Updates `subscribed_modules` and `tier` columns
-4. Logs all changes to `audit_log`
-5. Does NOT modify Stripe subscriptions (keeps billing as-is for grandfathered users)
-
-### 10B. Grandfathering Logic in Checkout
-
-When creating new checkout sessions:
-- Check if user has `grandfathered_price` set
-- If so, use the grandfathered price ID instead of the current tier price
-- Display "Grandfathered Rate" badge on their subscription management page
+1. Iron Bambino data upgrade (arm care + velocity blocks + CNS system)
+2. Unicorn program data file
+3. TheUnicorn.tsx page upgrade
+4. Edge function updates (stripe-webhook tier detection, ai-chat/helpdesk context)
+5. Migration edge function
+6. i18n updates
 
 ---
 
-## PHASE 11: ADDITIONAL FILE UPDATES
-
-### Files That Need Access Check Updates
-
-Every file that currently checks `m.includes('hitting')`, `m.includes('pitching')`, or `m.includes('throwing')` must use the new `tierAccess.ts` helper:
-
-1. `src/hooks/useTexVisionAccess.ts`
-2. `src/hooks/useGamePlan.ts`
-3. `src/hooks/useCalendar.ts`
-4. `src/pages/Vault.tsx`
-5. `src/components/vault/VaultPerformanceTestCard.tsx`
-6. `supabase/functions/stripe-webhook/index.ts`
-7. `supabase/functions/search-players/index.ts`
-8. `supabase/functions/ai-chat/index.ts`
-9. `supabase/functions/generate-monthly-report/index.ts`
-10. `supabase/functions/cancel-module-subscription/index.ts`
-11. `supabase/functions/cancel-all-subscriptions/index.ts`
-
-### Edge Function Updates
-
-- `check-subscription` -- owner bypass returns all access; tier-aware module reading
-- `create-checkout` -- tier-based pricing with grandfathering
-- `stripe-webhook` -- tier detection from product metadata
-- `cancel-module-subscription` -- cancel by tier
-- `cancel-all-subscriptions` -- works with tier subscriptions
-- `ai-chat` -- reports tier name instead of individual modules
-- `generate-monthly-report` -- reports on tier access
-- `ai-helpdesk` -- updated knowledge base with new tier names
-
-### i18n Updates (8 locale files)
-
-New keys for tier names, descriptions, The Unicorn labels, arm care exercise names, velocity development descriptions.
-
----
-
-## COMPLETE FILE CHANGE SUMMARY
+## File Summary
 
 | File | Action |
 |------|--------|
-| `src/constants/tiers.ts` | NEW -- tier config, access mapping, price mapping |
-| `src/utils/tierAccess.ts` | NEW -- centralized access check helper |
-| `src/pages/FiveToolPlayer.tsx` | NEW -- 5Tool gateway page |
-| `src/pages/GoldenTwoWay.tsx` | NEW -- Golden 2Way gateway page |
-| `src/pages/TheUnicorn.tsx` | NEW -- The Unicorn workout page |
-| `src/data/unicornProgram.ts` | NEW -- merged workout program data |
+| `src/data/ironBambinoProgram.ts` | UPDATE -- arm care block, velocity blocks, CNS system, deload logic |
+| `src/data/unicornProgram.ts` | NEW -- complete merged program (4 cycles x 6 weeks) |
+| `src/pages/TheUnicorn.tsx` | UPDATE -- full workout page with progress tracking |
+| `supabase/functions/stripe-webhook/index.ts` | UPDATE -- tier detection from product metadata |
+| `supabase/functions/ai-chat/index.ts` | UPDATE -- tier-aware context in system prompt |
+| `supabase/functions/ai-helpdesk/index.ts` | UPDATE -- tier names in knowledge base |
 | `supabase/functions/migrate-to-tiers/index.ts` | NEW -- one-time migration function |
-| `src/data/ironBambinoProgram.ts` | UPDATE -- add arm care + velocity blocks |
-| `src/hooks/useSubscription.ts` | UPDATE -- tier-aware helpers |
-| `src/hooks/useTexVisionAccess.ts` | UPDATE -- tier-aware access |
-| `src/hooks/useGamePlan.ts` | UPDATE -- tier-aware access |
-| `src/hooks/useCalendar.ts` | UPDATE -- tier-aware access |
-| `src/components/AppSidebar.tsx` | UPDATE -- tier-based sidebar display |
-| `src/pages/Dashboard.tsx` | UPDATE -- 3 tier cards |
-| `src/pages/Pricing.tsx` | UPDATE -- 3 tier pricing cards |
-| `src/pages/Checkout.tsx` | UPDATE -- tier-based checkout |
-| `src/pages/SelectModules.tsx` | UPDATE -- tier selection |
-| `src/pages/Vault.tsx` | UPDATE -- tier-aware access |
-| `src/pages/App.tsx` | UPDATE -- new routes |
-| `src/components/vault/VaultPerformanceTestCard.tsx` | UPDATE -- tier-aware |
-| `supabase/functions/create-checkout/index.ts` | UPDATE -- tier pricing |
-| `supabase/functions/stripe-webhook/index.ts` | UPDATE -- tier detection |
-| `supabase/functions/check-subscription/index.ts` | UPDATE -- tier-aware |
-| `supabase/functions/cancel-module-subscription/index.ts` | UPDATE -- tier cancel |
-| `supabase/functions/cancel-all-subscriptions/index.ts` | UPDATE -- tier cancel |
-| `supabase/functions/ai-chat/index.ts` | UPDATE -- tier context |
-| `supabase/functions/ai-helpdesk/index.ts` | UPDATE -- tier knowledge |
-| `supabase/functions/generate-monthly-report/index.ts` | UPDATE -- tier-aware |
-| `supabase/functions/search-players/index.ts` | UPDATE -- tier-aware |
-| DB Migration | ADD -- grandfathered columns + tier column |
-| `src/i18n/locales/*.json` (8 files) | UPDATE -- tier + unicorn keys |
+| `src/i18n/locales/*.json` (8 files) | UPDATE -- tier + unicorn + arm care keys |
 
----
-
-## IMPLEMENTATION ORDER
-
-Due to the size, implementation will proceed in this order:
-
-1. Database migration (add columns)
-2. `src/constants/tiers.ts` + `src/utils/tierAccess.ts` (foundation)
-3. Access control updates (all hooks + components using the new helper)
-4. Sidebar restructure
-5. Gateway pages + routes
-6. Dashboard + Pricing + Checkout restructure
-7. Iron Bambino upgrade (arm care + velocity data)
-8. The Unicorn program data + page
-9. Edge function updates (Stripe, webhooks, etc.)
-10. Migration function
-11. i18n updates
-
-**You will need to provide the 4 new Stripe price IDs before we can update the checkout edge function:**
-- Baseball 5Tool ($300)
-- Softball 5Tool ($300)
-- Baseball Golden 2Way ($400)
-- Softball Golden 2Way ($400)
+**Note:** The 4 Stripe price IDs for 5Tool and Golden 2Way are still needed. The `create-checkout` function currently has `PENDING_*` placeholders. Please provide these when ready.
