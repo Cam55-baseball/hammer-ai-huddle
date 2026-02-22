@@ -179,7 +179,7 @@ export function AppSidebar() {
     const items: any[] = [];
 
     // Complete Pitcher (pitcher tier or golden2way or owner/admin)
-    if (showAll || activeTier === 'pitcher' || activeTier === 'golden2way') {
+    if (showAll || activeTier === 'pitcher') {
       items.push({
         key: 'pitching',
         title: activeTier === 'golden2way' || showAll ? t('dashboard.modules.completePitcherShort') : t('dashboard.modules.completePitcherShort'),
