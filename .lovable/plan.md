@@ -1,77 +1,53 @@
 
 
-# Phase 6: i18n Updates for Tier Restructure
+# Fix: Add Missing Stripe Product Metadata
 
-## What's Missing
+## Root Cause
+The Stripe webhook cannot recognize the new tier products because they are missing required metadata fields (`tier` and `sport`). Without these, the webhook's tier detection logic (lines 180-181 of `stripe-webhook/index.ts`) fails silently and the subscription is never written to the database.
 
-The 8 locale files need new translation keys for the tier system, Unicorn program, arm care exercises, velocity development, and CNS budget system. Currently the UI uses hardcoded English strings -- this phase adds proper i18n support.
+## The Fix
 
-## Changes
+This is a Stripe-side configuration fix, not a code change. We need to update 4 Stripe products with the correct metadata:
 
-All 8 files in `src/i18n/locales/` (en, es, fr, de, ja, ko, nl, zh) will get a new top-level section with these keys:
+| Product | Product ID | Metadata to Add |
+|---------|------------|-----------------|
+| Baseball 5Tool Player | `prod_U1naxz89S1XaTu` | `tier: 5tool`, `sport: baseball` |
+| Softball 5Tool Player | *(need to look up)* | `tier: 5tool`, `sport: softball` |
+| Baseball Golden 2Way | `prod_U1nbhDT9XDGPY3` | `tier: golden2way`, `sport: baseball` |
+| Softball Golden 2Way | *(need to look up)* | `tier: golden2way`, `sport: softball` |
 
-### Keys to Add
+Since we cannot update Stripe product metadata directly from here, we have two options:
+
+### Option A -- Add metadata via Stripe Dashboard (recommended)
+You would need to go to your Stripe Dashboard, find each product, and add the `tier` and `sport` metadata keys manually.
+
+### Option B -- Make the webhook smarter (code fix)
+Update the webhook to infer tier and sport from the **product name** (e.g., "Baseball Golden 2Way" -> tier=golden2way, sport=baseball) as a fallback when metadata is missing. This is more resilient and doesn't require manual Stripe configuration.
+
+## Recommended Approach: Option B
+
+Update `supabase/functions/stripe-webhook/index.ts` to add name-based tier detection as a fallback after the metadata check:
 
 ```
-subscriptionTiers:
-  pitcher:
-    name: "Complete Pitcher"
-    description: "Full pitching development program"
-  5tool:
-    name: "5Tool Player"
-    description: "Hitting + throwing development program"
-  golden2way:
-    name: "The Golden 2Way"
-    description: "Complete 2-way player development"
-
-unicornProgram:
-  title: "The Unicorn"
-  description: "Elite merged training system"
-  rules: (array of 5-6 rule strings)
-  cnsbudget: "CNS Budget"
-  overBudget: "Over Budget - consider reducing intensity"
-  deloadWeek: "Deload Week - volume reduced by 40%"
-  weeklyThrows: "Weekly Throw Count"
-  throwingThreshold: "Throwing threshold reached"
-
-armCare:
-  title: "Arm Care"
-  exercises:
-    bandPullAparts: "Band Pull-Aparts"
-    wallSlides: "Wall Slides"
-    serratusPushUp: "Serratus Push-Up"
-    proneYTW: "Prone Y-T-W Raises"
-    sideLyingER: "Side-Lying External Rotation"
-    proneIRaise: "Prone I Raise"
-    eccentricWristCurl: "Eccentric Wrist Flexor Curl"
-    er90Hold: "90/90 External Rotation Hold"
-
-velocityDev:
-  title: "Velocity Development"
-  blockA: "Kinetic Chain + Weighted Ball"
-  blockB: "Overload/Underload + Intent"
+// After checking product.metadata?.tier (line 180):
+// If no tier from metadata, infer from product name
+if (!tier) {
+  const name = product.name.toLowerCase();
+  if (name.includes('golden 2way') || name.includes('golden2way')) tier = 'golden2way';
+  else if (name.includes('5tool')) tier = '5tool';
+  else if (name.includes('pitcher') || name.includes('complete pitcher')) tier = 'pitcher';
+}
 ```
 
-### Code Updates
+This ensures the webhook works regardless of whether product metadata is configured, making the system more robust.
 
-After adding the keys, update these files to use `t()` calls instead of hardcoded strings:
-- `src/pages/TheUnicorn.tsx` -- CNS labels, deload messages, rules display
-- `src/pages/Pricing.tsx` -- tier names/descriptions (if hardcoded)
-- `src/pages/Checkout.tsx` -- tier display names
+## After the Fix
 
-## File Summary
+The user's existing subscription from Stripe will be recognized on the next webhook event or the next time they trigger a subscription check. To immediately unlock the module for the user who already purchased, we can also manually update their `subscriptions` row in the database.
 
-| File | Action |
-|------|--------|
-| `src/i18n/locales/en.json` | Add tier/unicorn/armCare/velocityDev keys |
-| `src/i18n/locales/es.json` | Add Spanish translations |
-| `src/i18n/locales/fr.json` | Add French translations |
-| `src/i18n/locales/de.json` | Add German translations |
-| `src/i18n/locales/ja.json` | Add Japanese translations |
-| `src/i18n/locales/ko.json` | Add Korean translations |
-| `src/i18n/locales/nl.json` | Add Dutch translations |
-| `src/i18n/locales/zh.json` | Add Chinese translations |
-| `src/pages/TheUnicorn.tsx` | Replace hardcoded strings with `t()` calls |
-| `src/pages/Pricing.tsx` | Replace hardcoded tier names with `t()` calls |
-| `src/pages/Checkout.tsx` | Replace hardcoded tier names with `t()` calls |
+## Technical Details
+
+**File to update:** `supabase/functions/stripe-webhook/index.ts` (lines 179-207)
+- Add name-based tier/sport inference as fallback after metadata check
+- No other files need changes -- the rest of the system already handles tier keys correctly
 
