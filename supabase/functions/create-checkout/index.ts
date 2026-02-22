@@ -19,12 +19,12 @@ const TIER_PRICES: { [tier: string]: { [sport: string]: string } } = {
     softball: "price_1SPBwcGc5QIzbAH6XUKF9dNy"
   },
   "5tool": {
-    baseball: "PENDING_BASEBALL_5TOOL_PRICE_ID",
-    softball: "PENDING_SOFTBALL_5TOOL_PRICE_ID"
+    baseball: "price_1T3jzKGc5QIzbAH6deZ4Eyit",
+    softball: "price_1T3jxwGc5QIzbAH65j6KlJzQ"
   },
   golden2way: {
-    baseball: "PENDING_BASEBALL_GOLDEN2WAY_PRICE_ID",
-    softball: "PENDING_SOFTBALL_GOLDEN2WAY_PRICE_ID"
+    baseball: "price_1T3jzxGc5QIzbAH6XoqPgC1b",
+    softball: "price_1T3jycGc5QIzbAH62T36Iigg"
   }
 };
 
