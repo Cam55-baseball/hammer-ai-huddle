@@ -1,59 +1,38 @@
 
-# Add "Skip for Today" Button to Custom Activity Detail Dialog
+# Fix Missing Translation: gamePlan.workout.unicorn
 
-## Overview
+## Problem
 
-Add a "Skip for Today" button to the `CustomActivityDetailDialog` component, placed between the "Edit Activity" and "Mark Complete" buttons. This allows users to skip a custom activity directly from its detail view.
+The Unicorn workout task uses translation keys `gamePlan.workout.unicorn.title` and `gamePlan.workout.unicorn.description`, but these keys don't exist in any locale file. This causes raw key text to display on the Game Plan.
 
-## Technical Changes
+## Fix
 
-### 1. Update `CustomActivityDetailDialog` Props (src/components/CustomActivityDetailDialog.tsx)
+Add the missing `unicorn` entry under `gamePlan.workout` in all 8 locale files.
 
-Add a new optional `onSkipTask` prop to the interface:
+### Translation Values
 
-```typescript
-interface CustomActivityDetailDialogProps {
-  // ...existing props
-  onSkipTask?: () => void;  // NEW
+| Locale | Title | Description |
+|--------|-------|-------------|
+| en | Complete The Unicorn Workout | Elite 2-way training: strength, velocity, and speed |
+| es | Completar el Entrenamiento Unicornio | Entrenamiento elite de 2 vias: fuerza, velocidad y rapidez |
+| fr | Terminer l'Entrainement Unicorn | Entrainement elite 2 voies : force, velocite et vitesse |
+| de | Das Unicorn-Training absolvieren | Elite 2-Wege-Training: Kraft, Wurfgeschwindigkeit und Sprint |
+| ja | ユニコーンワークアウトを完了 | エリート二刀流トレーニング：筋力・球速・スピード |
+| ko | 유니콘 운동 완료 | 엘리트 투웨이 훈련: 근력, 구속, 스피드 |
+| nl | Voltooi de Unicorn Workout | Elite 2-way training: kracht, werpsnelheid en snelheid |
+| zh | 完成独角兽训练 | 精英双向训练：力量、球速与速度 |
+
+### Files to Edit (8 files, same structural change)
+
+In each locale file under `src/i18n/locales/`, add a `unicorn` block inside `gamePlan.workout`, right after the existing `pitching` entry:
+
+```json
+"workout": {
+  "hitting": { ... },
+  "pitching": { ... },
+  "unicorn": {
+    "title": "Complete The Unicorn Workout",
+    "description": "Elite 2-way training: strength, velocity, and speed"
+  }
 }
 ```
-
-### 2. Add Skip Button in the Action Buttons Section (src/components/CustomActivityDetailDialog.tsx)
-
-Between the "Edit Activity" button and the "Mark Complete" button (around lines 837-865), insert a full-width "Skip for Today" button:
-
-```
-[Edit Activity]        <-- existing
-[Skip for Today]       <-- NEW full-width button
-[Mark Complete]        <-- existing
-```
-
-The button will:
-- Use the `X` icon (already imported)
-- Have destructive/warning styling (outline variant with amber/warning colors)
-- Call `onSkipTask()` and close the dialog
-- Only render when `onSkipTask` is provided
-
-### 3. Pass `onSkipTask` from GamePlanCard (src/components/GamePlanCard.tsx)
-
-In the `CustomActivityDetailDialog` usage (~line 1848), add the `onSkipTask` prop that calls the existing `handleSkipTask` function:
-
-```typescript
-onSkipTask={() => {
-  if (selectedCustomTask) {
-    handleSkipTask(selectedCustomTask.id);
-    setDetailDialogOpen(false);
-  }
-}}
-```
-
-### 4. Pass `onSkipTask` from CalendarDaySheet (src/components/calendar/CalendarDaySheet.tsx)
-
-The calendar also renders this dialog (~line 861). Since the calendar may not have skip functionality, we simply omit the prop there (it's optional), so no button will render.
-
-## Summary
-
-| File | Change |
-|---|---|
-| `src/components/CustomActivityDetailDialog.tsx` | Add `onSkipTask` prop; render skip button between Edit and Complete |
-| `src/components/GamePlanCard.tsx` | Pass `onSkipTask` handler to dialog |
