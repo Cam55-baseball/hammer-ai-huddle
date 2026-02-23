@@ -174,6 +174,7 @@ interface CustomActivityDetailDialogProps {
   onSaveTime: (time: string | null, reminder: number | null) => void;
   onToggleCheckbox?: (fieldId: string, checked: boolean) => void;
   onUpdateFieldValue?: (fieldId: string, value: string) => void;
+  onSkipTask?: () => void;
 }
 
 export function CustomActivityDetailDialog({
@@ -187,6 +188,7 @@ export function CustomActivityDetailDialog({
   onSaveTime,
   onToggleCheckbox,
   onUpdateFieldValue,
+  onSkipTask,
 }: CustomActivityDetailDialogProps) {
   const { t } = useTranslation();
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -863,6 +865,19 @@ export function CustomActivityDetailDialog({
                   }
                 </Button>
               </div>
+              {onSkipTask && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    onSkipTask();
+                    onOpenChange(false);
+                  }}
+                  className="w-full gap-2 border-amber-500/50 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400 dark:border-amber-400/50"
+                >
+                  <X className="h-4 w-4" />
+                  {t('gamePlan.skipForToday', 'Skip for Today')}
+                </Button>
+              )}
             </div>
           </div>
         </div>

@@ -2013,6 +2013,12 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             toast.error(t('common.error'));
           }
         }}
+        onSkipTask={() => {
+          if (selectedCustomTask) {
+            handleSkipTask(selectedCustomTask.id);
+            setDetailDialogOpen(false);
+          }
+        }}
       />
       {/* Quick Add Favorites Drawer */}
       <QuickAddFavoritesDrawer
