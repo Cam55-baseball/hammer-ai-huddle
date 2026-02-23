@@ -1,63 +1,51 @@
 
 
-# Fix: Skipped Tasks Not Appearing in "Skipped for Today" Section
+# Two Fixes: RHR Instructions + Toast Auto-Dismiss
 
-## Problem
+## 1. Add Resting Heart Rate Instructions
 
-You have 5 activities set to skip on Mondays (Morning Check-in, Pre-Workout Check-in, Mind Fuel, Throwing Video, and Hitting Workout). The database confirms this. However, the "Skipped for today" section shows 0 because of a **double-filtering bug**:
+**File: `src/components/vault/quiz/RestingHeartRateCapture.tsx`**
 
-1. `useGamePlan.ts` removes skipped tasks from the task array entirely (via `isSystemTaskSkippedToday`)
-2. `GamePlanCard.tsx` then looks for skipped tasks in that array to show in the "Skipped" section -- but they were already removed at step 1, so it finds nothing
+Add a collapsible "How to measure" instructional section below the label, with clear steps:
 
-The fix is straightforward: stop removing tasks in step 1 and let the UI layer (which already has the correct logic) handle both hiding and displaying skipped tasks.
+- Sit or lie still for 2 minutes
+- Place two fingers on the inside of your wrist (below the thumb)
+- Count the beats for 15 seconds, then multiply by 4
+- Best measured first thing in the morning before getting out of bed
+- Mention that smartwatches/fitness trackers can also provide this
 
-## Changes
+This will use a small collapsible info section (toggled by a help icon or "How to measure?" link) so it doesn't clutter the UI for users who already know how.
 
-### File: `src/hooks/useGamePlan.ts`
+## 2. Fix Toast Notifications Lingering Too Long
 
-**A. Remove `isSystemTaskSkippedToday()` gates from all `tasks.push()` calls**
+There are two toast systems running simultaneously in the app. Both need to auto-dismiss after 3 seconds:
 
-Remove the `!isSystemTaskSkippedToday(...)` condition from these 14 task entries, keeping all other conditions (module access, program active, etc.) intact:
+**File: `src/components/ui/sonner.tsx`**
+- Change `duration={2000}` to `duration={3000}` (standardize to 3 seconds as requested)
 
-- `nutrition` (line 716)
-- `mindfuel` (line 729)
-- `healthtip` (line 742)
-- `quiz-morning` (line 757)
-- `quiz-prelift` (line 771)
-- `quiz-night` (line 784)
-- `workout-unicorn` (line 806)
-- `workout-hitting` (line 820)
-- `texvision` (line 835)
-- `workout-pitching` (line 851)
-- `speed-lab` (line 866)
-- `video-hitting` (line 882)
-- `video-pitching` (line 896)
-- `video-throwing` (line 910)
+**File: `src/hooks/use-toast.ts`**
+- The radix-based toast system has NO auto-dismiss logic -- toasts stay until manually closed
+- Add an auto-dismiss timer: when a toast is added, automatically call `DISMISS_TOAST` after 3000ms
+- Update `TOAST_REMOVE_DELAY` to a shorter value (e.g., 1000ms) so dismissed toasts clear from the DOM faster
 
-**B. Update `shouldShowTrainingTask()` function**
+**File: `src/components/ui/toaster.tsx`**
+- Add a `duration={3000}` prop to the `ToastProvider` so radix toasts also auto-close after 3 seconds
 
-Remove the `hasCustomSchedule` early-return (lines 703-705) that relies on `gamePlanSkips`. Keep only the default schedule logic so training tasks still respect their default day-of-week schedules when no custom schedule exists.
+### Technical Detail for `use-toast.ts`
 
-**C. Remove unused state and helper**
+In the `toast()` function, after dispatching `ADD_TOAST`, schedule an automatic dismiss:
 
-- Remove the `gamePlanSkips` state variable (line 75) and its setter call (line 500)
-- Remove the `isSystemTaskSkippedToday` function (lines 695-698)
-- Remove the `gamePlanSkipsMap` construction (lines 490, 494-496)
+```typescript
+// Auto-dismiss after 3 seconds
+setTimeout(() => {
+  dismiss();
+}, 3000);
+```
 
-### File: `src/components/GamePlanCard.tsx` -- No changes needed
+This ensures that even if the radix `ToastProvider` duration isn't respected for some reason, the toast will still be programmatically dismissed.
 
-This file already has the correct end-to-end logic:
-- `useCalendarSkips()` fetches skip data from the database (line 79)
-- `isWeeklySkipped()` checks if a task is skipped for today (line 832)
-- `filterSkippedAndScheduledOff()` hides skipped tasks from the main list (line 868)
-- `skippedTasksList` collects them for the "Skipped for today" section (line 883)
-- The section is already moved to a prominent position and expanded by default (from the previous change)
-
-## Why This Happened
-
-The `isSystemTaskSkippedToday` filter in `useGamePlan.ts` was added as an optimization to avoid rendering unnecessary tasks. But `GamePlanCard.tsx` was later updated with its own skip detection (via `useCalendarSkips`) that also needs to see those tasks to populate the "Skipped for today" section. The two systems conflict -- one removes tasks, the other needs them present to display them as skipped.
-
-## Risk Assessment
-
-Low. The filtering already works correctly in `GamePlanCard.tsx`. Removing the redundant pre-filter simply lets the existing UI logic function as designed. All module-access checks, program-active checks, and default schedules remain untouched.
-
+## Files to Edit
+- `src/components/vault/quiz/RestingHeartRateCapture.tsx` -- add instructional content
+- `src/hooks/use-toast.ts` -- add auto-dismiss timer + reduce remove delay
+- `src/components/ui/sonner.tsx` -- update duration to 3000ms
+- `src/components/ui/toaster.tsx` -- add duration prop to ToastProvider
