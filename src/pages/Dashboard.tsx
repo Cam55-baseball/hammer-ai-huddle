@@ -434,7 +434,7 @@ export default function Dashboard() {
             className={`p-2 sm:p-6 hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] module-card ${
               !isTierUnlocked('pitcher') 
                 ? "border-2 border-dashed border-primary/30 hover:border-primary/50" 
-                : ""
+                : "border-primary/50 border-2"
             }`}
             onClick={() => handleModuleSelect("pitcher")}
           >
