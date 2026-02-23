@@ -4183,6 +4183,10 @@
       "pitching": {
         "title": "Heat Factory 운동 완료",
         "description": "구속과 팔 힘 향상"
+      },
+      "unicorn": {
+        "title": "유니콘 운동 완료",
+        "description": "엘리트 투웨이 훈련: 근력, 구속, 스피드"
       }
     },
     "video": {

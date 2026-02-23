@@ -4169,6 +4169,10 @@
       "pitching": {
         "title": "完成Heat Factory训练",
         "description": "提升球速和手臂力量"
+      },
+      "unicorn": {
+        "title": "完成独角兽训练",
+        "description": "精英双向训练：力量、球速与速度"
       }
     },
     "video": {
