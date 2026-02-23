@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -196,7 +196,18 @@ export function CustomActivityDetailDialog({
   const [tempReminder, setTempReminder] = useState<number | null>(taskReminder);
   const [savingFieldIds, setSavingFieldIds] = useState<Set<string>>(new Set());
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [localFieldValues, setLocalFieldValues] = useState<Record<string, string>>({});
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const { canSendActivities, loading: accessLoading } = useScoutAccess();
+
+  // Clean up debounce timers on unmount or dialog close
+  useEffect(() => {
+    if (!open) {
+      Object.values(debounceTimers.current).forEach(clearTimeout);
+      debounceTimers.current = {};
+      setLocalFieldValues({});
+    }
+  }, [open]);
 
   if (!task || !task.customActivityData) return null;
 
@@ -215,14 +226,34 @@ export function CustomActivityDetailDialog({
     return defaultValue === 'true';
   };
 
-  // Get daily field value from performance_data.fieldValues, falling back to template default
+  // Get daily field value from performance_data.fieldValues, preferring local state during editing
   const getFieldValue = (fieldId: string, templateDefault?: string): string => {
+    if (fieldId in localFieldValues) {
+      return localFieldValues[fieldId];
+    }
     const performanceData = log?.performance_data as Record<string, any> | null;
     const fieldValues = performanceData?.fieldValues as Record<string, string> | undefined;
     if (fieldValues && fieldId in fieldValues) {
       return fieldValues[fieldId];
     }
     return '';
+  };
+
+  // Debounced field change handler for text/number inputs
+  const handleLocalFieldChange = (fieldId: string, value: string) => {
+    setLocalFieldValues(prev => ({ ...prev, [fieldId]: value }));
+    if (debounceTimers.current[fieldId]) {
+      clearTimeout(debounceTimers.current[fieldId]);
+    }
+    debounceTimers.current[fieldId] = setTimeout(async () => {
+      await handleUpdateFieldValue(fieldId, value);
+      setLocalFieldValues(prev => {
+        const next = { ...prev };
+        delete next[fieldId];
+        return next;
+      });
+      delete debounceTimers.current[fieldId];
+    }, 800);
   };
 
   const handleUpdateFieldValue = async (fieldId: string, value: string) => {
@@ -690,7 +721,7 @@ export function CustomActivityDetailDialog({
                                 <Input
                                   type="number"
                                   value={getFieldValue(field.id)}
-                                  onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                                  onChange={(e) => handleLocalFieldChange(field.id, e.target.value)}
                                   placeholder={field.value || t('customActivity.customFields.numberPlaceholder', 'e.g. 4.2')}
                                   disabled={savingFieldIds.has(field.id)}
                                   className="h-7 w-28 text-sm"
@@ -699,7 +730,7 @@ export function CustomActivityDetailDialog({
                                 <Input
                                   type="text"
                                   value={getFieldValue(field.id)}
-                                  onChange={(e) => handleUpdateFieldValue(field.id, e.target.value)}
+                                  onChange={(e) => handleLocalFieldChange(field.id, e.target.value)}
                                   placeholder={field.value || t('customActivity.customFields.valuePlaceholder', 'Value...')}
                                   disabled={savingFieldIds.has(field.id)}
                                   className="h-7 w-32 text-sm"
