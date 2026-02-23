@@ -5071,6 +5071,10 @@
       "pitching": {
         "title": "Heat Factory Training Abschließen",
         "description": "Entwickle Geschwindigkeit und Armkraft"
+      },
+      "unicorn": {
+        "title": "Das Unicorn-Training absolvieren",
+        "description": "Elite 2-Wege-Training: Kraft, Wurfgeschwindigkeit und Sprint"
       }
     },
     "video": {

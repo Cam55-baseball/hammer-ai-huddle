@@ -5071,6 +5071,10 @@
       "pitching": {
         "title": "Terminer l'Entraînement Heat Factory",
         "description": "Développez la vélocité et la force du bras"
+      },
+      "unicorn": {
+        "title": "Terminer l'Entrainement Unicorn",
+        "description": "Entrainement elite 2 voies : force, velocite et vitesse"
       }
     },
     "video": {

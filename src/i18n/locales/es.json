@@ -5039,6 +5039,10 @@
       "pitching": {
         "title": "Completa el Entrenamiento Heat Factory",
         "description": "Desarrolla velocidad y fuerza del brazo"
+      },
+      "unicorn": {
+        "title": "Completar el Entrenamiento Unicornio",
+        "description": "Entrenamiento elite de 2 vias: fuerza, velocidad y rapidez"
       }
     },
     "video": {
