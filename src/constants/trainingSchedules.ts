@@ -10,4 +10,5 @@ export const TRAINING_DEFAULT_SCHEDULES: Record<string, number[]> = {
   'workout-hitting':  [1, 2, 4, 5, 6], // Mon, Tue, Thu, Fri, Sat (5-day structure, Wed+Sun rest)
   'workout-pitching': [1, 2, 4, 5, 6], // Mon, Tue, Thu, Fri, Sat (mirrors Iron Bambino)
   'speed-lab':        [1, 3, 5],        // Mon, Wed, Fri (48h CNS recovery between sessions)
+  'workout-unicorn':  [1, 2, 3, 4, 5, 6], // Mon-Sat (unified program, Sun rest only)
 };
