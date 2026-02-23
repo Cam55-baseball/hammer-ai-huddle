@@ -72,7 +72,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [trackingDue, setTrackingDue] = useState<Record<string, boolean>>({});
   const [isStrengthDay, setIsStrengthDay] = useState(false);
   const [customActivities, setCustomActivities] = useState<CustomActivityWithLog[]>([]);
-  const [gamePlanSkips, setGamePlanSkips] = useState<Map<string, number[]>>(new Map());
+  
   const [activeProgramStatuses, setActiveProgramStatuses] = useState<Record<string, string>>({});
 
   // Parse subscribed modules to determine access (tier-aware)
@@ -487,17 +487,9 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         .in('item_type', ['custom_activity', 'game_plan']);
 
       const skipItemsMap = new Map<string, number[]>();
-      const gamePlanSkipsMap = new Map<string, number[]>();
       (skipItemsData || []).forEach(item => {
         skipItemsMap.set(item.item_id, item.skip_days || []);
-        // Also store game_plan skips separately for system task filtering
-        if (item.item_type === 'game_plan') {
-          gamePlanSkipsMap.set(item.item_id, item.skip_days || []);
-        }
       });
-      
-      // Update state with game_plan skips for use in task building
-      setGamePlanSkips(gamePlanSkipsMap);
 
       const templates = (templatesData || []) as unknown as CustomActivityTemplate[];
       const logs = (logsData || []) as unknown as CustomActivityLog[];
@@ -690,20 +682,10 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   // Build dynamic task list based on user's module access
   const tasks: GamePlanTask[] = [];
   
-  // Helper to check if a system task is skipped for today
   const todayDayOfWeek = getDay(new Date()); // 0=Sun, 1=Mon, etc.
-  const isSystemTaskSkippedToday = (taskId: string): boolean => {
-    const skipDays = gamePlanSkips.get(taskId) || [];
-    return skipDays.includes(todayDayOfWeek);
-  };
 
   // Smart default scheduling: only show training tasks on recommended days
-  // unless user has a custom schedule (calendar_skipped_items row).
   const shouldShowTrainingTask = (taskId: string): boolean => {
-    // If user has explicit skip days via Repeat Weekly, that system handles filtering
-    const hasCustomSchedule = gamePlanSkips.has(taskId);
-    if (hasCustomSchedule) return true; // Custom schedule exists, isSystemTaskSkippedToday handles it
-
     const defaultDays = TRAINING_DEFAULT_SCHEDULES[taskId];
     if (!defaultDays) return true; // No default schedule defined, show every day
 
@@ -713,62 +695,54 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   // === FREE ACCESS TASKS (Available to all users with a profile) ===
   // These are accessible without module purchase to drive engagement
   
-  if (!isSystemTaskSkippedToday('nutrition')) {
-    tasks.push({
-      id: 'nutrition',
-      titleKey: 'gamePlan.nutrition.title',
-      descriptionKey: 'gamePlan.nutrition.description',
-      completed: completionStatus['nutrition'] || false,
-      icon: Apple,
-      link: '/nutrition',
-      taskType: 'nutrition',
-      section: 'checkin',
-    });
-  }
+  tasks.push({
+    id: 'nutrition',
+    titleKey: 'gamePlan.nutrition.title',
+    descriptionKey: 'gamePlan.nutrition.description',
+    completed: completionStatus['nutrition'] || false,
+    icon: Apple,
+    link: '/nutrition',
+    taskType: 'nutrition',
+    section: 'checkin',
+  });
 
-  if (!isSystemTaskSkippedToday('mindfuel')) {
-    tasks.push({
-      id: 'mindfuel',
-      titleKey: 'gamePlan.mindfuel.title',
-      descriptionKey: 'gamePlan.mindfuel.description',
-      completed: completionStatus['mindfuel'] || false,
-      icon: Sparkles,
-      link: '/mind-fuel#mental-fuel-plus',
-      taskType: 'quiz',
-      section: 'checkin',
-    });
-  }
+  tasks.push({
+    id: 'mindfuel',
+    titleKey: 'gamePlan.mindfuel.title',
+    descriptionKey: 'gamePlan.mindfuel.description',
+    completed: completionStatus['mindfuel'] || false,
+    icon: Sparkles,
+    link: '/mind-fuel#mental-fuel-plus',
+    taskType: 'quiz',
+    section: 'checkin',
+  });
 
-  if (!isSystemTaskSkippedToday('healthtip')) {
-    tasks.push({
-      id: 'healthtip',
-      titleKey: 'gamePlan.healthtip.title',
-      descriptionKey: 'gamePlan.healthtip.description',
-      completed: completionStatus['healthtip'] || false,
-      icon: Lightbulb,
-      link: '/nutrition#daily-tip',
-      taskType: 'quiz',
-      section: 'checkin',
-    });
-  }
+  tasks.push({
+    id: 'healthtip',
+    titleKey: 'gamePlan.healthtip.title',
+    descriptionKey: 'gamePlan.healthtip.description',
+    completed: completionStatus['healthtip'] || false,
+    icon: Lightbulb,
+    link: '/nutrition#daily-tip',
+    taskType: 'quiz',
+    section: 'checkin',
+  });
 
   // === MODULE-GATED DAILY CHECK-INS ===
   if (hasAnyModuleAccess) {
-    if (!isSystemTaskSkippedToday('quiz-morning')) {
-      tasks.push({
-        id: 'quiz-morning',
-        titleKey: 'gamePlan.quiz.morning.title',
-        descriptionKey: 'gamePlan.quiz.morning.description',
-        completed: completionStatus['quiz-morning'] || false,
-        icon: Sun,
-        link: '/vault',
-        taskType: 'quiz',
-        section: 'checkin',
-      });
-    }
+    tasks.push({
+      id: 'quiz-morning',
+      titleKey: 'gamePlan.quiz.morning.title',
+      descriptionKey: 'gamePlan.quiz.morning.description',
+      completed: completionStatus['quiz-morning'] || false,
+      icon: Sun,
+      link: '/vault',
+      taskType: 'quiz',
+      section: 'checkin',
+    });
 
     // Only show Pre-Lift Check-in on strength training days (Day 1 and Day 5)
-    if (isStrengthDay && (hasHittingAccess || hasPitchingAccess) && !isSystemTaskSkippedToday('quiz-prelift')) {
+    if (isStrengthDay && (hasHittingAccess || hasPitchingAccess)) {
       tasks.push({
         id: 'quiz-prelift',
         titleKey: 'gamePlan.quiz.prelift.title',
@@ -781,18 +755,16 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       });
     }
 
-    if (!isSystemTaskSkippedToday('quiz-night')) {
-      tasks.push({
-        id: 'quiz-night',
-        titleKey: 'gamePlan.quiz.night.title',
-        descriptionKey: 'gamePlan.quiz.night.description',
-        completed: completionStatus['quiz-night'] || false,
-        icon: Moon,
-        link: '/vault',
-        taskType: 'quiz',
-        section: 'checkin',
-      });
-    }
+    tasks.push({
+      id: 'quiz-night',
+      titleKey: 'gamePlan.quiz.night.title',
+      descriptionKey: 'gamePlan.quiz.night.description',
+      completed: completionStatus['quiz-night'] || false,
+      icon: Moon,
+      link: '/vault',
+      taskType: 'quiz',
+      section: 'checkin',
+    });
   }
 
   // === TRAINING SECTION ===
@@ -803,7 +775,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const isSpeedLabProgramActive = activeProgramStatuses['speed-lab'] === 'active';
 
   // The Unicorn: single dedicated task replaces Iron Bambino + Heat Factory
-  if (isUnicornProgramActive && !isSystemTaskSkippedToday('workout-unicorn') && shouldShowTrainingTask('workout-unicorn')) {
+  if (isUnicornProgramActive && shouldShowTrainingTask('workout-unicorn')) {
     tasks.push({
       id: 'workout-unicorn',
       titleKey: 'gamePlan.workout.unicorn.title',
@@ -817,7 +789,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   }
 
   // Iron Bambino (only when Unicorn is NOT active)
-  if (!isUnicornProgramActive && hasHittingAccess && isHittingProgramActive && !isSystemTaskSkippedToday('workout-hitting') && shouldShowTrainingTask('workout-hitting')) {
+  if (!isUnicornProgramActive && hasHittingAccess && isHittingProgramActive && shouldShowTrainingTask('workout-hitting')) {
     tasks.push({
       id: 'workout-hitting',
       titleKey: 'gamePlan.workout.hitting.title',
@@ -832,7 +804,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   }
 
   // Tex Vision task
-  if (hasHittingAccess && !isSystemTaskSkippedToday('texvision')) {
+  if (hasHittingAccess) {
     tasks.push({
       id: 'texvision',
       titleKey: 'texVision.gamePlan.title',
@@ -848,7 +820,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   }
 
   // Heat Factory (only when Unicorn is NOT active)
-  if (!isUnicornProgramActive && hasPitchingAccess && isPitchingProgramActive && !isSystemTaskSkippedToday('workout-pitching') && shouldShowTrainingTask('workout-pitching')) {
+  if (!isUnicornProgramActive && hasPitchingAccess && isPitchingProgramActive && shouldShowTrainingTask('workout-pitching')) {
     tasks.push({
       id: 'workout-pitching',
       titleKey: 'gamePlan.workout.pitching.title',
@@ -863,7 +835,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   }
 
   // Speed Lab task (throwing module gated + program status gated)
-  if (hasThrowingAccess && isSpeedLabProgramActive && !isSystemTaskSkippedToday('speed-lab') && shouldShowTrainingTask('speed-lab')) {
+  if (hasThrowingAccess && isSpeedLabProgramActive && shouldShowTrainingTask('speed-lab')) {
     tasks.push({
       id: 'speed-lab',
       titleKey: 'gamePlan.speedLab.title',
@@ -879,7 +851,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   }
 
   // Video analysis tasks
-  if (hasHittingAccess && !isSystemTaskSkippedToday('video-hitting')) {
+  if (hasHittingAccess) {
     tasks.push({
       id: 'video-hitting',
       titleKey: 'gamePlan.video.hitting.title',
@@ -893,7 +865,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }
 
-  if (hasPitchingAccess && !isSystemTaskSkippedToday('video-pitching')) {
+  if (hasPitchingAccess) {
     tasks.push({
       id: 'video-pitching',
       titleKey: 'gamePlan.video.pitching.title',
@@ -907,7 +879,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }
 
-  if (hasThrowingAccess && !isSystemTaskSkippedToday('video-throwing')) {
+  if (hasThrowingAccess) {
     tasks.push({
       id: 'video-throwing',
       titleKey: 'gamePlan.video.throwing.title',
