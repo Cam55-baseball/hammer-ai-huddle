@@ -208,7 +208,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   
   // Skipped tasks state (load management)
   const [skippedTasks, setSkippedTasks] = useState<Set<string>>(new Set());
-  const [showSkippedSection, setShowSkippedSection] = useState(false);
+  const [showSkippedSection, setShowSkippedSection] = useState(true);
   const { user } = useAuth();
   
   const favorites = useMemo(() => getFavorites(), [getFavorites, templates]);
@@ -1452,6 +1452,11 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                   <span className="text-sm font-black text-white">
                     {t('gamePlan.tasksCompleted', { completed: completedCount, total: totalCount })}
                   </span>
+                  {skippedTasksList.length > 0 && (
+                    <span className="text-[10px] font-bold text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded-full">
+                      {skippedTasksList.length} skipped
+                    </span>
+                  )}
                 </div>
               </>
             )}
@@ -1509,6 +1514,68 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
               </span>
             </div>
           )}
+        </div>
+
+        {/* Skipped Tasks Section - Always visible, before task list */}
+        <div className="mt-4 pt-3 border-t border-white/10">
+          <Collapsible open={showSkippedSection} onOpenChange={setShowSkippedSection}>
+            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-amber-400/80 py-2 w-full hover:text-amber-300 transition-colors font-medium">
+              <ChevronDown className={cn("h-4 w-4 transition-transform", showSkippedSection && "rotate-180")} />
+              {t('gamePlan.skippedForToday', 'Skipped for today')} ({skippedTasksList.length})
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-2 mt-2">
+              {skippedTasksList.length === 0 ? (
+                <p className="text-xs text-white/40 italic pl-6 py-2">
+                  {t('gamePlan.noSkippedTasks', 'No activities skipped today')}
+                </p>
+              ) : (
+                skippedTasksList.map(task => {
+                  const Icon = task.icon;
+                  const isWeeklySkippedTask = isWeeklySkipped(task) && !skippedTasks.has(task.id);
+                  return (
+                    <div 
+                      key={task.id} 
+                      className="flex items-center gap-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20"
+                    >
+                      <Icon className="h-5 w-5 text-amber-400/50 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm line-through text-white/50 block truncate">
+                          {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
+                        </span>
+                        {isWeeklySkippedTask && (
+                          <span className="text-[10px] text-amber-400/70 font-medium flex items-center gap-1 mt-0.5">
+                            <CalendarDays className="h-3 w-3" />
+                            {t('gamePlan.taskSchedule.scheduledOff', 'Scheduled off')}
+                          </span>
+                        )}
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => isWeeklySkippedTask 
+                          ? (task.taskType === 'custom' ? setActiveCustomScheduleTask(task) : setActiveScheduleTaskId(task.id))
+                          : handleRestoreTask(task.id)
+                        }
+                        className="h-10 px-3 text-green-400 hover:text-green-300 hover:bg-green-500/10 gap-1"
+                      >
+                        {isWeeklySkippedTask ? (
+                          <>
+                            <Pencil className="h-4 w-4" />
+                            <span className="text-xs">{t('common.edit', 'Edit')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Undo2 className="h-4 w-4" />
+                            <span className="text-xs">{t('gamePlan.restore', 'Restore')}</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  );
+                })
+              )}
+            </CollapsibleContent>
+          </Collapsible>
         </div>
 
         {/* Task Sections */}
@@ -1688,64 +1755,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           )}
         </div>
 
-        {/* Skipped Tasks Section - Now inside CardContent */}
-        {skippedTasksList.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-white/20">
-            <Collapsible open={showSkippedSection} onOpenChange={setShowSkippedSection}>
-              <CollapsibleTrigger className="flex items-center gap-2 text-sm text-amber-400/80 py-2 w-full hover:text-amber-300 transition-colors font-medium">
-                <ChevronDown className={cn("h-4 w-4 transition-transform", showSkippedSection && "rotate-180")} />
-                {t('gamePlan.skippedForToday', 'Skipped for today')} ({skippedTasksList.length})
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-2 mt-2">
-                {skippedTasksList.map(task => {
-                  const Icon = task.icon;
-                  // Weekly skipped = via calendar skips, NOT manually skipped today
-                  const isWeeklySkippedTask = isWeeklySkipped(task) && !skippedTasks.has(task.id);
-                  return (
-                    <div 
-                      key={task.id} 
-                      className="flex items-center gap-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20"
-                    >
-                      <Icon className="h-5 w-5 text-amber-400/50 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm line-through text-white/50 block truncate">
-                          {task.taskType === 'custom' ? task.titleKey : t(task.titleKey)}
-                        </span>
-                        {isWeeklySkippedTask && (
-                          <span className="text-[10px] text-amber-400/70 font-medium flex items-center gap-1 mt-0.5">
-                            <CalendarDays className="h-3 w-3" />
-                            {t('gamePlan.taskSchedule.scheduledOff', 'Scheduled off')}
-                          </span>
-                        )}
-                      </div>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => isWeeklySkippedTask 
-                          ? (task.taskType === 'custom' ? setActiveCustomScheduleTask(task) : setActiveScheduleTaskId(task.id))
-                          : handleRestoreTask(task.id)
-                        }
-                        className="h-10 px-3 text-green-400 hover:text-green-300 hover:bg-green-500/10 gap-1"
-                      >
-                        {isWeeklySkippedTask ? (
-                          <>
-                            <Pencil className="h-4 w-4" />
-                            <span className="text-xs">{t('common.edit', 'Edit')}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Undo2 className="h-4 w-4" />
-                            <span className="text-xs">{t('gamePlan.restore', 'Restore')}</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        )}
+        {/* Skipped tasks section removed from here - moved higher */}
 
       </CardContent>
       
