@@ -219,6 +219,19 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         status['workout-pitching'] = pitchingWorkout?.some(w => w.last_workout_date === today) || false;
       }
 
+      // Fetch workout completion for The Unicorn
+      if (isUnicornActive) {
+        const { data: unicornWorkout } = await supabase
+          .from('sub_module_progress')
+          .select('last_workout_date')
+          .eq('user_id', user.id)
+          .eq('sport', selectedSport)
+          .eq('sub_module', 'the-unicorn')
+          .maybeSingle();
+        
+        status['workout-unicorn'] = unicornWorkout?.last_workout_date === today;
+      }
+
       // Use local midnight for video queries to ensure proper daily reset
       const localMidnight = getLocalMidnightUTC();
 
@@ -784,12 +797,27 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
 
   // === TRAINING SECTION ===
   // Only show workout tasks for ACTIVE programs
-  const isHittingProgramActive = activeProgramStatuses['production_lab'] === 'active' || activeProgramStatuses['the-unicorn'] === 'active';
-  const isPitchingProgramActive = activeProgramStatuses['production_studio'] === 'active' || activeProgramStatuses['the-unicorn'] === 'active';
+  const isUnicornProgramActive = activeProgramStatuses['the-unicorn'] === 'active';
+  const isHittingProgramActive = activeProgramStatuses['production_lab'] === 'active';
+  const isPitchingProgramActive = activeProgramStatuses['production_studio'] === 'active';
   const isSpeedLabProgramActive = activeProgramStatuses['speed-lab'] === 'active';
 
-  // Workout tasks
-  if (hasHittingAccess && isHittingProgramActive && !isSystemTaskSkippedToday('workout-hitting') && shouldShowTrainingTask('workout-hitting')) {
+  // The Unicorn: single dedicated task replaces Iron Bambino + Heat Factory
+  if (isUnicornProgramActive && !isSystemTaskSkippedToday('workout-unicorn') && shouldShowTrainingTask('workout-unicorn')) {
+    tasks.push({
+      id: 'workout-unicorn',
+      titleKey: 'gamePlan.workout.unicorn.title',
+      descriptionKey: 'gamePlan.workout.unicorn.description',
+      completed: completionStatus['workout-unicorn'] || false,
+      icon: Sparkles,
+      link: '/the-unicorn',
+      taskType: 'workout',
+      section: 'training',
+    });
+  }
+
+  // Iron Bambino (only when Unicorn is NOT active)
+  if (!isUnicornProgramActive && hasHittingAccess && isHittingProgramActive && !isSystemTaskSkippedToday('workout-hitting') && shouldShowTrainingTask('workout-hitting')) {
     tasks.push({
       id: 'workout-hitting',
       titleKey: 'gamePlan.workout.hitting.title',
@@ -819,7 +847,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }
 
-  if (hasPitchingAccess && isPitchingProgramActive && !isSystemTaskSkippedToday('workout-pitching') && shouldShowTrainingTask('workout-pitching')) {
+  // Heat Factory (only when Unicorn is NOT active)
+  if (!isUnicornProgramActive && hasPitchingAccess && isPitchingProgramActive && !isSystemTaskSkippedToday('workout-pitching') && shouldShowTrainingTask('workout-pitching')) {
     tasks.push({
       id: 'workout-pitching',
       titleKey: 'gamePlan.workout.pitching.title',
