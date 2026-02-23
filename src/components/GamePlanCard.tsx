@@ -676,19 +676,14 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const handleLockCurrentOrder = async () => {
     const today = new Date();
     
-    // Filter to only visible tasks for locking
-    const visibleTasks = timelineTasks.filter(t => !skippedTasks.has(t.id));
-    // Note: isWeeklySkipped can't be called here since it's defined later,
-    // but scheduled-off tasks shouldn't be in timelineTasks to begin with
-    
-    // Build order_keys for calendar_day_orders (date-specific)
-    const orderKeys = visibleTasks.map(task => getGamePlanOrderKey(task));
+    // Build order_keys for calendar_day_orders (date-specific) using visible tasks only
+    const orderKeys = timelineVisibleTasks.map(task => getGamePlanOrderKey(task));
     
     // Save to calendar_day_orders first (syncs with Calendar)
     const dayOrderSuccess = await saveDayOrder(today, orderKeys, true);
     
     // Also save to game_plan_locked_days for backward compatibility
-    const schedule: LockScheduleItem[] = visibleTasks.map((t, idx) => ({
+    const schedule: LockScheduleItem[] = timelineVisibleTasks.map((t, idx) => ({
       taskId: t.id,
       order: idx,
       displayTime: taskTimes[t.id] || null,
@@ -713,11 +708,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const today = new Date();
     const todayDayOfWeek = getDay(today);
     
-    // Filter to only visible tasks for locking
-    const visibleTasks = timelineTasks.filter(t => !skippedTasks.has(t.id));
-    
     // Build current schedule for any new locks (only visible tasks)
-    const schedule: LockScheduleItem[] = visibleTasks.map((t, idx) => ({
+    const schedule: LockScheduleItem[] = timelineVisibleTasks.map((t, idx) => ({
       taskId: t.id,
       order: idx,
       displayTime: taskTimes[t.id] || null,
@@ -747,10 +739,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   
   // Handle locking multiple days with current schedule
   const handleLockDays = async (daysToLock: number[]) => {
-    // Filter to only visible tasks for locking
-    const visibleTasks = timelineTasks.filter(t => !skippedTasks.has(t.id));
-    
-    const schedule: LockScheduleItem[] = visibleTasks.map((t, idx) => ({
+    const schedule: LockScheduleItem[] = timelineVisibleTasks.map((t, idx) => ({
       taskId: t.id,
       order: idx,
       displayTime: taskTimes[t.id] || null,
@@ -766,10 +755,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const handleSaveTemplate = async () => {
     if (!newTemplateName.trim()) return;
     
-    // Filter to only visible tasks for template
-    const visibleTasks = timelineTasks.filter(t => !skippedTasks.has(t.id));
-    
-    const schedule: ScheduleItem[] = visibleTasks.map(t => ({
+    const schedule: ScheduleItem[] = timelineVisibleTasks.map(t => ({
       taskId: t.id,
       startTime: taskTimes[t.id] || null,
       reminderMinutes: taskReminders[t.id] || null,
@@ -809,6 +795,9 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     
     setApplyTemplateOpen(false);
     toast.success(t('gamePlan.scheduleTemplate.applySuccess'));
+    
+    // Auto-lock after applying template so it persists to database
+    setTimeout(() => handleLockCurrentOrder(), 100);
   };
   
   // Format time for display
@@ -1292,7 +1281,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                       size="sm" 
                       className="w-full justify-start"
                       onClick={handleLockCurrentOrder}
-                      disabled={todayLocked}
+                      disabled={isDateLockedToday}
                     >
                       <Lock className="h-4 w-4 mr-2" />
                       {t('gamePlan.lockOrder.forToday', 'Lock for Today')}
