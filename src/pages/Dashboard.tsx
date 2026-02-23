@@ -446,7 +446,7 @@ export default function Dashboard() {
                 Complete Pitcher
                 {!isTierUnlocked('pitcher') && <Lock className="h-5 w-5" />}
               </h3>
-              <p className="text-sm text-muted-foreground">$200/month</p>
+              
               <p className="text-sm sm:text-base text-muted-foreground">
                 Pitching Analysis, Heat Factory, Ask the Coach
               </p>
@@ -481,7 +481,7 @@ export default function Dashboard() {
                 5Tool Player
                 {!isTierUnlocked('5tool') && <Lock className="h-5 w-5" />}
               </h3>
-              <p className="text-sm text-muted-foreground">$300/month</p>
+              
               <p className="text-sm sm:text-base text-muted-foreground">
                 Hitting + Throwing Analysis, Iron Bambino, Speed Lab, Tex Vision
               </p>
@@ -516,7 +516,7 @@ export default function Dashboard() {
                 The Golden 2Way
                 {!isTierUnlocked('golden2way') && <Lock className="h-5 w-5" />}
               </h3>
-              <p className="text-sm text-muted-foreground">$400/month</p>
+              
               <p className="text-sm sm:text-base text-muted-foreground">
                 Everything + The Unicorn workout system
               </p>
