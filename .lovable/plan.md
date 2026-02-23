@@ -1,51 +1,50 @@
 
+# Fix: Number Input on Custom Activity Cards Only Allows One Character
 
-# Two Fixes: RHR Instructions + Toast Auto-Dismiss
+## Problem
 
-## 1. Add Resting Heart Rate Instructions
+When you type a number into a custom activity field, each keystroke immediately saves to the database and triggers a full data refetch. The refetch reloads the old value before you can type the next character, effectively resetting your input after every keystroke.
 
-**File: `src/components/vault/quiz/RestingHeartRateCapture.tsx`**
+## Solution
 
-Add a collapsible "How to measure" instructional section below the label, with clear steps:
+Add debounced saving to the number (and text) field inputs in `CustomActivityDetailDialog.tsx`. The input will update locally on every keystroke (so it feels responsive), but the database save will only fire after you stop typing for 800ms.
 
-- Sit or lie still for 2 minutes
-- Place two fingers on the inside of your wrist (below the thumb)
-- Count the beats for 15 seconds, then multiply by 4
-- Best measured first thing in the morning before getting out of bed
-- Mention that smartwatches/fitness trackers can also provide this
+## Changes
 
-This will use a small collapsible info section (toggled by a help icon or "How to measure?" link) so it doesn't clutter the UI for users who already know how.
+### File: `src/components/CustomActivityDetailDialog.tsx`
 
-## 2. Fix Toast Notifications Lingering Too Long
+**A. Add local state for field values being edited**
 
-There are two toast systems running simultaneously in the app. Both need to auto-dismiss after 3 seconds:
+Add a `localFieldValues` state (`Record<string, string>`) and a debounce timer ref. When the user types, update `localFieldValues` immediately (for responsive UI), and schedule the actual `onUpdateFieldValue` call after 800ms of inactivity.
 
-**File: `src/components/ui/sonner.tsx`**
-- Change `duration={2000}` to `duration={3000}` (standardize to 3 seconds as requested)
+**B. Update `getFieldValue` to prefer local state**
 
-**File: `src/hooks/use-toast.ts`**
-- The radix-based toast system has NO auto-dismiss logic -- toasts stay until manually closed
-- Add an auto-dismiss timer: when a toast is added, automatically call `DISMISS_TOAST` after 3000ms
-- Update `TOAST_REMOVE_DELAY` to a shorter value (e.g., 1000ms) so dismissed toasts clear from the DOM faster
+If a field ID exists in `localFieldValues`, return that value instead of the persisted one. This prevents the refetch from overwriting what the user is actively typing.
 
-**File: `src/components/ui/toaster.tsx`**
-- Add a `duration={3000}` prop to the `ToastProvider` so radix toasts also auto-close after 3 seconds
+**C. Create a `handleLocalFieldChange` function**
 
-### Technical Detail for `use-toast.ts`
-
-In the `toast()` function, after dispatching `ADD_TOAST`, schedule an automatic dismiss:
-
-```typescript
-// Auto-dismiss after 3 seconds
-setTimeout(() => {
-  dismiss();
-}, 3000);
+```
+function handleLocalFieldChange(fieldId, value):
+  1. Update localFieldValues[fieldId] = value  (instant UI update)
+  2. Clear any existing debounce timer for this field
+  3. Set a new 800ms timer that calls handleUpdateFieldValue(fieldId, value)
+  4. On save completion, remove the field from localFieldValues
 ```
 
-This ensures that even if the radix `ToastProvider` duration isn't respected for some reason, the toast will still be programmatically dismissed.
+**D. Wire up the number and text inputs**
 
-## Files to Edit
-- `src/components/vault/quiz/RestingHeartRateCapture.tsx` -- add instructional content
-- `src/hooks/use-toast.ts` -- add auto-dismiss timer + reduce remove delay
-- `src/components/ui/sonner.tsx` -- update duration to 3000ms
-- `src/components/ui/toaster.tsx` -- add duration prop to ToastProvider
+Change the `onChange` handler for `type="number"` and `type="text"` inputs from `handleUpdateFieldValue` to `handleLocalFieldChange`.
+
+**E. Clean up timers on unmount**
+
+Add a `useEffect` cleanup that clears all pending debounce timers when the dialog closes.
+
+### File: `src/components/GamePlanCard.tsx` -- No changes needed
+
+The `refetch()` call after saving is fine; the local state in the dialog will shield the user from the refetch overwriting their in-progress typing.
+
+## Why This Works
+
+- Typing is instant because the input reads from local state
+- The save only fires once you pause typing, preventing rapid DB writes
+- After the save completes (and refetch runs), the local override is cleared so the persisted value takes over seamlessly
