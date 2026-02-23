@@ -19,6 +19,9 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Sparkles, Dumbbell, Zap, Target, Heart, ChevronDown, ChevronUp, Check, Lock, AlertTriangle } from 'lucide-react';
+import { ProgramStartCard, ProgramPausedBanner, ProgramPauseButton } from '@/components/workout-modules/ProgramStatusBanner';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { hasUnicornAccess } from '@/utils/tierAccess';
@@ -98,7 +101,8 @@ export default function TheUnicorn() {
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
   const { isAdmin, loading: adminLoading } = useAdminAccess();
   const {
-    progress, loading: progressLoading, initializeProgress, updateDayProgress,
+    progress, loading: progressLoading, programStatus, initializeProgress, startProgram, pauseProgram, resumeProgram,
+    updateDayProgress,
     updateExerciseProgress, getExerciseProgress, updateWeightLog, getWeightLog,
     updateExperienceLevel, getWeekCompletionPercent, canUnlockWeek, isDayAccessible,
     getTimeUntilUnlock,
@@ -108,13 +112,43 @@ export default function TheUnicorn() {
   const hasAccess = isOwnerOrAdmin || hasUnicornAccess(modules);
   const loading = authLoading || subLoading || progressLoading || ownerLoading || adminLoading;
 
-  useEffect(() => {
-    if (!authLoading && !subLoading && user && !progressLoading && !progress) {
-      initializeProgress();
+  // Auto-pause Iron Bambino + Heat Factory when starting The Unicorn
+  const handleStartUnicorn = async () => {
+    await startProgram();
+    // Auto-pause conflicting programs
+    if (user) {
+      try {
+        await supabase
+          .from('sub_module_progress')
+          .update({ program_status: 'paused' })
+          .eq('user_id', user.id)
+          .eq('sport', selectedSport)
+          .in('sub_module', ['production_lab', 'production_studio'])
+          .eq('program_status', 'active');
+        toast({
+          title: 'Programs Updated',
+          description: 'Iron Bambino and Heat Factory have been paused. The Unicorn replaces them.',
+        });
+      } catch (error) {
+        console.error('Error auto-pausing conflicting programs:', error);
+      }
     }
-  }, [authLoading, subLoading, user, progressLoading, progress, initializeProgress]);
+  };
 
   if (loading) return <PageLoadingSkeleton />;
+
+  // ─── Not Started ───────────────────────────────────────────────
+  if (programStatus === 'not_started') {
+    return (
+      <DashboardLayout>
+        <ProgramStartCard
+          programName={t('unicornProgram.title', 'The Unicorn')}
+          programIcon={<Sparkles className="h-10 w-10 text-primary" />}
+          onStart={handleStartUnicorn}
+        />
+      </DashboardLayout>
+    );
+  }
 
   if (!hasAccess) {
     return (
@@ -165,22 +199,28 @@ export default function TheUnicorn() {
     <DashboardLayout>
       <div className="p-3 sm:p-6 max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/golden-2way')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-primary" /> {t('unicornProgram.title')}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Cycle {currentCycle}: {currentCycleData.name} ({currentCycleData.intensityRange})
-              {(progress?.loops_completed || 0) > 0 && (
-                <span className="ml-2 text-primary font-medium">🔄 Loop {(progress?.loops_completed || 0) + 1}</span>
-              )}
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/golden-2way')}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-primary" /> {t('unicornProgram.title')}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Cycle {currentCycle}: {currentCycleData.name} ({currentCycleData.intensityRange})
+                {(progress?.loops_completed || 0) > 0 && (
+                  <span className="ml-2 text-primary font-medium">🔄 Loop {(progress?.loops_completed || 0) + 1}</span>
+                )}
+              </p>
+            </div>
           </div>
+          {programStatus === 'active' && <ProgramPauseButton onPause={pauseProgram} />}
         </div>
+
+        {/* Paused Banner */}
+        {programStatus === 'paused' && <ProgramPausedBanner onResume={resumeProgram} />}
 
         {/* Progress & Streak */}
         <WorkoutProgressStreakCard

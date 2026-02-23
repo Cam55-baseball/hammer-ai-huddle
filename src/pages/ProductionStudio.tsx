@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowLeft, Dumbbell, ChevronDown, ChevronUp, Check, Lock, AlertTriangle } from 'lucide-react';
+import { ProgramStartCard, ProgramPausedBanner, ProgramPauseButton } from '@/components/workout-modules/ProgramStatusBanner';
 import { CountdownTimer } from '@/components/workout-modules/CountdownTimer';
 import { NotificationPermissionCard } from '@/components/workout-modules/NotificationPermissionCard';
 import { useWorkoutNotifications } from '@/hooks/useWorkoutNotifications';
@@ -152,7 +153,11 @@ export default function ProductionStudio() {
   const {
     progress,
     loading: progressLoading,
+    programStatus,
     initializeProgress,
+    startProgram,
+    pauseProgram,
+    resumeProgram,
     updateDayProgress,
     updateExerciseProgress,
     getExerciseProgress,
@@ -177,6 +182,7 @@ export default function ProductionStudio() {
     if (saved) setSelectedSport(saved);
   }, []);
 
+  // Auto-initialize progress row (but NOT program_status)
   useEffect(() => {
     if (!authLoading && !subLoading && user && !progressLoading && !progress) {
       initializeProgress();
@@ -208,6 +214,19 @@ export default function ProductionStudio() {
           <p className="text-muted-foreground mb-4">{t('workoutModules.subscribeToPitching')}</p>
           <Button onClick={() => navigate('/pricing')}>{t('workoutModules.viewPlans')}</Button>
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  // ─── Not Started ───────────────────────────────────────────────
+  if (programStatus === 'not_started') {
+    return (
+      <DashboardLayout>
+        <ProgramStartCard
+          programName={t('workoutModules.productionStudio.title', 'Heat Factory')}
+          programIcon={<Dumbbell className="h-10 w-10 text-primary" />}
+          onStart={startProgram}
+        />
       </DashboardLayout>
     );
   }
@@ -261,22 +280,28 @@ export default function ProductionStudio() {
     <DashboardLayout>
       <div className="p-3 sm:p-6 max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">{t('workoutModules.productionStudio.title')}</h1>
-            <p className="text-sm text-muted-foreground">
-              {t('workoutModules.productionStudio.subtitle')}
-              {(progress?.loops_completed || 0) > 0 && (
-                <span className="ml-2 text-primary font-medium">
-                  🔄 Loop {(progress?.loops_completed || 0) + 1} — Cycle {currentCycle}
-                </span>
-              )}
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold">{t('workoutModules.productionStudio.title')}</h1>
+              <p className="text-sm text-muted-foreground">
+                {t('workoutModules.productionStudio.subtitle')}
+                {(progress?.loops_completed || 0) > 0 && (
+                  <span className="ml-2 text-primary font-medium">
+                    🔄 Loop {(progress?.loops_completed || 0) + 1} — Cycle {currentCycle}
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
+          {programStatus === 'active' && <ProgramPauseButton onPause={pauseProgram} />}
         </div>
+
+        {/* Paused Banner */}
+        {programStatus === 'paused' && <ProgramPausedBanner onResume={resumeProgram} />}
 
         {/* Combined Progress & Streak Card */}
         <WorkoutProgressStreakCard

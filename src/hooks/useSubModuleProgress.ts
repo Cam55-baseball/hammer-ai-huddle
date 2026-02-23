@@ -43,6 +43,8 @@ export interface SubModuleProgress {
   last_workout_date: string | null;
   // Loop tracking
   loops_completed: number;
+  // Program status
+  program_status: 'not_started' | 'active' | 'paused';
 }
 
 const TOTAL_CYCLES = 4;
@@ -85,6 +87,7 @@ export function useSubModuleProgress(
         total_workouts_completed: (data as unknown as { total_workouts_completed?: number }).total_workouts_completed || 0,
         last_workout_date: (data as unknown as { last_workout_date?: string | null }).last_workout_date || null,
         loops_completed: (data as unknown as { loops_completed?: number }).loops_completed || 0,
+        program_status: ((data as unknown as { program_status?: string }).program_status || 'not_started') as 'not_started' | 'active' | 'paused',
       } as SubModuleProgress : null;
       setProgress(progressData);
     } catch (error) {
@@ -689,10 +692,65 @@ export function useSubModuleProgress(
     return previousWeekPercent === 100;
   }, [getWeekCompletionPercent]);
 
+  const programStatus = progress?.program_status || 'not_started';
+
+  const startProgram = useCallback(async () => {
+    if (!user) return;
+    // If no progress row exists yet, initialize first
+    let progressId = progress?.id;
+    if (!progressId) {
+      const result = await initializeProgress();
+      if (!result) return;
+      progressId = result.id;
+    }
+    try {
+      const { error } = await supabase
+        .from('sub_module_progress')
+        .update({ program_status: 'active' })
+        .eq('id', progressId);
+      if (error) throw error;
+      setProgress(prev => prev ? { ...prev, program_status: 'active' } : prev);
+    } catch (error) {
+      console.error('Error starting program:', error);
+    }
+  }, [user, progress, initializeProgress]);
+
+  const pauseProgram = useCallback(async () => {
+    if (!user || !progress) return;
+    try {
+      const { error } = await supabase
+        .from('sub_module_progress')
+        .update({ program_status: 'paused' })
+        .eq('id', progress.id);
+      if (error) throw error;
+      setProgress(prev => prev ? { ...prev, program_status: 'paused' } : prev);
+    } catch (error) {
+      console.error('Error pausing program:', error);
+    }
+  }, [user, progress]);
+
+  const resumeProgram = useCallback(async () => {
+    if (!user || !progress) return;
+    try {
+      const { error } = await supabase
+        .from('sub_module_progress')
+        .update({ program_status: 'active' })
+        .eq('id', progress.id);
+      if (error) throw error;
+      setProgress(prev => prev ? { ...prev, program_status: 'active' } : prev);
+    } catch (error) {
+      console.error('Error resuming program:', error);
+    }
+  }, [user, progress]);
+
   return {
     progress,
     loading,
+    programStatus,
     initializeProgress,
+    startProgram,
+    pauseProgram,
+    resumeProgram,
     updateDayProgress,
     updateExerciseProgress,
     getExerciseProgress,

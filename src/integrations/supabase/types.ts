@@ -2220,6 +2220,7 @@ export type Database = {
           id: string
           last_adjustment_date: string | null
           personal_bests: Json | null
+          program_status: string
           sport: string
           updated_at: string
           user_id: string
@@ -2233,6 +2234,7 @@ export type Database = {
           id?: string
           last_adjustment_date?: string | null
           personal_bests?: Json | null
+          program_status?: string
           sport: string
           updated_at?: string
           user_id: string
@@ -2246,6 +2248,7 @@ export type Database = {
           id?: string
           last_adjustment_date?: string | null
           personal_bests?: Json | null
+          program_status?: string
           sport?: string
           updated_at?: string
           user_id?: string
@@ -2398,6 +2401,7 @@ export type Database = {
           last_workout_date: string | null
           loops_completed: number | null
           module: string
+          program_status: string
           sport: string
           started_at: string | null
           streak_last_updated: string | null
@@ -2423,6 +2427,7 @@ export type Database = {
           last_workout_date?: string | null
           loops_completed?: number | null
           module: string
+          program_status?: string
           sport: string
           started_at?: string | null
           streak_last_updated?: string | null
@@ -2448,6 +2453,7 @@ export type Database = {
           last_workout_date?: string | null
           loops_completed?: number | null
           module?: string
+          program_status?: string
           sport?: string
           started_at?: string | null
           streak_last_updated?: string | null
