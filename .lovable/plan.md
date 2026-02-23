@@ -1,70 +1,59 @@
 
 
-# Fix: The Unicorn Not Appearing on Game Plan
+# Two Fixes: Remove Dashboard Prices + Debug Timeline Lock/Template Issues
 
-## Problem
+## 1. Remove Prices from Dashboard Module Cards
 
-When a user starts The Unicorn, the Game Plan reuses the "Iron Bambino" and "Heat Factory" workout tasks (linking to `/production-lab` and `/production-studio`). This is wrong because:
+The three tier cards on the Dashboard (Complete Pitcher, 5Tool Player, The Golden 2Way) each display hardcoded price text like "$200/month", "$300/month", "$400/month". These need to be removed so users only see prices during checkout.
 
-1. The Unicorn is its own unified program -- it should not masquerade as Iron Bambino or Heat Factory
-2. The task links point to the wrong pages
-3. No dedicated "The Unicorn" task exists on the Game Plan
-4. The `shouldShowTrainingTask` default schedule filter may hide the hitting/pitching tasks on certain days, making it look like nothing is there
+### File: `src/pages/Dashboard.tsx`
 
-## Solution
+Remove these three lines:
+- Line 449: `<p className="text-sm text-muted-foreground">$200/month</p>`
+- Line 484: `<p className="text-sm text-muted-foreground">$300/month</p>`
+- Line 519: `<p className="text-sm text-muted-foreground">$400/month</p>`
 
-Add a dedicated "The Unicorn" Game Plan task and prevent the old Iron Bambino/Heat Factory tasks from appearing when The Unicorn is the active program.
+Prices will still be visible on the Select Modules page and Checkout page where they belong.
 
-## Changes
+---
 
-### File: `src/hooks/useGamePlan.ts`
+## 2. Timeline Lock/Template Feature Investigation
 
-**Training section task generation (around lines 785-850):**
+Users report that the lock and template features in timeline mode are not working. After thorough code review, here are the identified issues and fixes:
 
-1. Add a new condition: when `activeProgramStatuses['the-unicorn'] === 'active'`, show a single dedicated Unicorn task instead of separate hitting/pitching tasks
+### Issue A: Lock button is disabled when it should not be
 
-2. The dedicated task will:
-   - Use the title key `gamePlan.workout.unicorn.title` (fallback: "The Unicorn Workout")
-   - Use the description key `gamePlan.workout.unicorn.description` (fallback: "Complete today's Unicorn training session")
-   - Link to `/the-unicorn`
-   - Use the Sparkles icon (matching the program's branding)
-   - Check completion via the existing `workout-hitting` status (since The Unicorn progress is tracked under hitting module)
+In `GamePlanCard.tsx` around line 1295, the "Lock for Today" button has `disabled={todayLocked}`. If a weekly lock already exists for today's day-of-week, the button is disabled even though the user may want to create a date-specific override lock. The fix is to only disable if `isDateLockedToday` (date-specific lock), not if weekly locked.
 
-3. Only show separate Iron Bambino (`workout-hitting`) and Heat Factory (`workout-pitching`) tasks when their specific sub-module is active AND The Unicorn is NOT active
+### File: `src/components/GamePlanCard.tsx`
+- Line ~1295: Change `disabled={todayLocked}` to `disabled={isDateLockedToday}` so users can override weekly locks with a day-specific lock.
 
-4. Add `'workout-unicorn'` to the default training schedule constants so it shows on appropriate days
+### Issue B: Template apply doesn't persist times correctly
 
-### File: `src/constants/trainingSchedules.ts`
+In `handleApplyTemplate` (line ~786), the template's `schedule` contains `ScheduleItem` objects with `taskId`, `startTime`, and `reminderMinutes`. However, the code reads `s.startTime` and `s.reminderMinutes` but the `ScheduleItem` interface from `useGamePlanLock.ts` defines `displayTime` (not `startTime`) and `reminderEnabled`. There is a mismatch between the template save format and the lock format.
 
-- Add a default schedule entry for `'workout-unicorn'` (show on the same days as hitting/pitching combined, or all weekdays)
+When templates are saved (line ~772), times use `taskTimes[t.id]` saved as `startTime`. When applied (line ~800), they read `s.startTime`. This part actually matches. However the `useScheduleTemplates` hook saves with its own `ScheduleItem` type which has `startTime`, while `useGamePlanLock` uses `displayTime`. This dual naming is confusing but functionally works for templates.
 
-### File: `src/hooks/useGamePlan.ts` (fetchTaskStatus section)
+The real problem is more subtle: after applying a template, the applied order and times are saved to `localStorage` and state, but the timeline is not re-locked. Users expect applying a template to automatically lock the order, but it does not. We should add an auto-lock after template application.
 
-- Add completion tracking for `workout-unicorn` by checking `last_workout_date` on the `the-unicorn` sub_module_progress row
+### File: `src/components/GamePlanCard.tsx`
+- After `handleApplyTemplate` sets the order and times, automatically trigger `handleLockCurrentOrder()` so the applied template is persisted to the database, not just localStorage.
 
-## Technical Details
+### Issue C: Comment says isWeeklySkipped can't be called in lock handler
 
-The key logic change in the training section:
+Line 681 has a comment: "Note: isWeeklySkipped can't be called here since it's defined later." This means the lock handler at line 680 only filters manually skipped tasks but not weekly-scheduled-off tasks. Since `isTaskHiddenToday` is defined later, the lock could include hidden tasks. We should restructure to use `timelineVisibleTasks` instead.
 
-```text
-IF the-unicorn is active:
-  Show ONE "The Unicorn" task -> links to /the-unicorn
-  Do NOT show Iron Bambino or Heat Factory tasks
-ELSE:
-  Show Iron Bambino task if production_lab is active
-  Show Heat Factory task if production_studio is active
-```
+### File: `src/components/GamePlanCard.tsx`
+- In `handleLockCurrentOrder` (line ~680), `handleUnlockSave` (line ~717), `handleLockDays` (line ~751), and `handleSaveTemplate` (line ~770): use `timelineVisibleTasks` instead of manually filtering `timelineTasks`.
 
-This ensures:
-- Users who start The Unicorn see it clearly on their Game Plan
-- No duplicate or misleading tasks appear
-- The task links to the correct page
-- Completion tracking works correctly
+---
 
-## Files Changed
+## Summary of Changes
 
 | File | Change |
 |---|---|
-| `src/hooks/useGamePlan.ts` | Add dedicated Unicorn task, prevent Iron Bambino/Heat Factory tasks when Unicorn is active, add Unicorn completion tracking |
-| `src/constants/trainingSchedules.ts` | Add default schedule for `workout-unicorn` |
+| `src/pages/Dashboard.tsx` | Remove 3 price lines ($200, $300, $400/month) from tier cards |
+| `src/components/GamePlanCard.tsx` | Fix lock button disabled state to allow day-specific override of weekly locks |
+| `src/components/GamePlanCard.tsx` | Auto-lock after applying template so it persists |
+| `src/components/GamePlanCard.tsx` | Use `timelineVisibleTasks` in lock/template handlers to exclude hidden tasks |
 
