@@ -73,6 +73,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [isStrengthDay, setIsStrengthDay] = useState(false);
   const [customActivities, setCustomActivities] = useState<CustomActivityWithLog[]>([]);
   const [gamePlanSkips, setGamePlanSkips] = useState<Map<string, number[]>>(new Map());
+  const [activeProgramStatuses, setActiveProgramStatuses] = useState<Record<string, string>>({});
 
   // Parse subscribed modules to determine access (tier-aware)
   const hasHittingAccess = subscribedModules.some(m => m.includes('hitting') || m.includes('5tool') || m.includes('golden2way'));
@@ -98,6 +99,33 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     const tracking: Record<string, boolean> = {};
     
     try {
+      // Fetch program statuses for all sub_module_progress rows
+      const { data: subModuleData } = await supabase
+        .from('sub_module_progress')
+        .select('sub_module, program_status')
+        .eq('user_id', user.id)
+        .eq('sport', selectedSport);
+
+      // Fetch speed_goals program status
+      const { data: speedGoalsData } = await supabase
+        .from('speed_goals')
+        .select('program_status')
+        .eq('user_id', user.id)
+        .eq('sport', selectedSport)
+        .maybeSingle();
+
+      const programStatuses: Record<string, string> = {};
+      (subModuleData || []).forEach((row: any) => {
+        programStatuses[row.sub_module] = row.program_status || 'not_started';
+      });
+      programStatuses['speed-lab'] = (speedGoalsData as any)?.program_status || 'not_started';
+      setActiveProgramStatuses(programStatuses);
+
+      // Determine which programs are active
+      const isHittingActive = programStatuses['production_lab'] === 'active';
+      const isPitchingActive = programStatuses['production_studio'] === 'active';
+      const isUnicornActive = programStatuses['the-unicorn'] === 'active';
+      const isSpeedLabActive = programStatuses['speed-lab'] === 'active';
       // Fetch today's focus quizzes completion
       const { data: quizData } = await supabase
         .from('vault_focus_quizzes')
@@ -112,8 +140,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       // Detect if today is a strength training day based on user's current program day
       let strengthDayDetected = false;
       
-      // Check Iron Bambino progress for hitting users
-      if (hasHittingAccess) {
+      // Check Iron Bambino progress for hitting users (only if program is active)
+      if (hasHittingAccess && (isHittingActive || isUnicornActive)) {
         const { data: hittingProgress } = await supabase
           .from('sub_module_progress')
           .select('week_progress, current_week')
@@ -139,8 +167,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         }
       }
       
-      // Check Heat Factory progress for pitching users
-      if (hasPitchingAccess && !strengthDayDetected) {
+      // Check Heat Factory progress for pitching users (only if program is active)
+      if (hasPitchingAccess && !strengthDayDetected && (isPitchingActive || isUnicornActive)) {
         const { data: pitchingProgress } = await supabase
           .from('sub_module_progress')
           .select('week_progress, current_week')
@@ -755,8 +783,13 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   }
 
   // === TRAINING SECTION ===
+  // Only show workout tasks for ACTIVE programs
+  const isHittingProgramActive = activeProgramStatuses['production_lab'] === 'active' || activeProgramStatuses['the-unicorn'] === 'active';
+  const isPitchingProgramActive = activeProgramStatuses['production_studio'] === 'active' || activeProgramStatuses['the-unicorn'] === 'active';
+  const isSpeedLabProgramActive = activeProgramStatuses['speed-lab'] === 'active';
+
   // Workout tasks
-  if (hasHittingAccess && !isSystemTaskSkippedToday('workout-hitting') && shouldShowTrainingTask('workout-hitting')) {
+  if (hasHittingAccess && isHittingProgramActive && !isSystemTaskSkippedToday('workout-hitting') && shouldShowTrainingTask('workout-hitting')) {
     tasks.push({
       id: 'workout-hitting',
       titleKey: 'gamePlan.workout.hitting.title',
@@ -786,7 +819,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }
 
-  if (hasPitchingAccess && !isSystemTaskSkippedToday('workout-pitching') && shouldShowTrainingTask('workout-pitching')) {
+  if (hasPitchingAccess && isPitchingProgramActive && !isSystemTaskSkippedToday('workout-pitching') && shouldShowTrainingTask('workout-pitching')) {
     tasks.push({
       id: 'workout-pitching',
       titleKey: 'gamePlan.workout.pitching.title',
@@ -800,8 +833,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }
 
-  // Speed Lab task (throwing module gated)
-  if (hasThrowingAccess && !isSystemTaskSkippedToday('speed-lab') && shouldShowTrainingTask('speed-lab')) {
+  // Speed Lab task (throwing module gated + program status gated)
+  if (hasThrowingAccess && isSpeedLabProgramActive && !isSystemTaskSkippedToday('speed-lab') && shouldShowTrainingTask('speed-lab')) {
     tasks.push({
       id: 'speed-lab',
       titleKey: 'gamePlan.speedLab.title',

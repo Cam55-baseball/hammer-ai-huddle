@@ -49,6 +49,7 @@ export interface SpeedGoals {
   last_adjustment_date: string | null;
   adjustment_history: Array<{ date: string; action: string; reason: string }>;
   personal_bests: Record<string, number>;
+  program_status: 'not_started' | 'active' | 'paused';
   created_at: string;
   updated_at: string;
 }
@@ -107,6 +108,7 @@ export function useSpeedProgress(sport: SportType) {
         goal_distances: goalsRes.data.goal_distances || {},
         adjustment_history: (goalsRes.data.adjustment_history as any) || [],
         personal_bests: goalsRes.data.personal_bests || {},
+        program_status: ((goalsRes.data as any).program_status || 'not_started') as 'not_started' | 'active' | 'paused',
       } as SpeedGoals : null);
       setInitialized(sessData.length > 0 || !!goalsRes.data);
     } catch (error) {
@@ -183,6 +185,10 @@ export function useSpeedProgress(sport: SportType) {
 
   const isBreakDay = useMemo(() => detectBreakDay(), [detectBreakDay]);
 
+  // ─── Program Status ──────────────────────────────────────────────
+
+  const programStatus = goals?.program_status as 'not_started' | 'active' | 'paused' || 'not_started';
+
   // ─── Initialize Journey ─────────────────────────────────────────────
 
   const initializeJourney = useCallback(async () => {
@@ -198,6 +204,7 @@ export function useSpeedProgress(sport: SportType) {
           personal_bests: {},
           weeks_without_improvement: 0,
           adjustment_history: [],
+          program_status: 'active',
         });
 
       if (error) throw error;
@@ -210,6 +217,34 @@ export function useSpeedProgress(sport: SportType) {
       return false;
     }
   }, [user, sport, fetchData]);
+
+  const pauseProgram = useCallback(async () => {
+    if (!user || !goals) return;
+    try {
+      const { error } = await supabase
+        .from('speed_goals')
+        .update({ program_status: 'paused' })
+        .eq('id', goals.id);
+      if (error) throw error;
+      setGoals(prev => prev ? { ...prev, program_status: 'paused' } as SpeedGoals : null);
+    } catch (error) {
+      console.error('Error pausing speed program:', error);
+    }
+  }, [user, goals]);
+
+  const resumeProgram = useCallback(async () => {
+    if (!user || !goals) return;
+    try {
+      const { error } = await supabase
+        .from('speed_goals')
+        .update({ program_status: 'active' })
+        .eq('id', goals.id);
+      if (error) throw error;
+      setGoals(prev => prev ? { ...prev, program_status: 'active' } as SpeedGoals : null);
+    } catch (error) {
+      console.error('Error resuming speed program:', error);
+    }
+  }, [user, goals]);
 
   // ─── Save Session ───────────────────────────────────────────────────
 
@@ -405,6 +440,7 @@ export function useSpeedProgress(sport: SportType) {
     goals,
     lastSession,
     personalBests,
+    programStatus,
 
     // Computed
     nextSessionNumber,
@@ -424,6 +460,8 @@ export function useSpeedProgress(sport: SportType) {
     savePartnerTiming,
     fetchData,
     getTrend,
+    pauseProgram,
+    resumeProgram,
   };
 }
 

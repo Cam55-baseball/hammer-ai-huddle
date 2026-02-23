@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Zap, Lock, Play, Timer, Flame, Trophy, Calendar } from 'lucide-react';
+import { ProgramPausedBanner, ProgramPauseButton } from '@/components/workout-modules/ProgramStatusBanner';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { SpeedTrackCard } from '@/components/speed-lab/SpeedTrackCard';
 import { SpeedSessionFlow } from '@/components/speed-lab/SpeedSessionFlow';
@@ -52,11 +53,14 @@ export default function SpeedLab() {
     sessionDrills,
     isPlateaued,
     streakData,
+    programStatus,
     initializeJourney,
     saveSession,
     savePartnerTiming,
     fetchData,
     getTrend,
+    pauseProgram,
+    resumeProgram,
   } = useSpeedProgress(selectedSport);
 
   const isOwnerOrAdmin = isOwner || isAdmin;
@@ -163,20 +167,26 @@ export default function SpeedLab() {
     <DashboardLayout>
       <div className="p-3 sm:p-6 max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
-              {t('speedLab.title', 'Speed Lab')}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {t('speedLab.subtitle', 'Build elite speed, protect your body')}
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                {t('speedLab.title', 'Speed Lab')}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {t('speedLab.subtitle', 'Build elite speed, protect your body')}
+              </p>
+            </div>
           </div>
+          {programStatus === 'active' && <ProgramPauseButton onPause={pauseProgram} />}
         </div>
+
+        {/* Paused Banner */}
+        {programStatus === 'paused' && <ProgramPausedBanner onResume={resumeProgram} />}
 
         {/* Speed Track Card */}
         <SpeedTrackCard
