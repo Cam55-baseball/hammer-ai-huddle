@@ -1,50 +1,39 @@
 
-# Fix: Number Input on Custom Activity Cards Only Allows One Character
+
+# Fix: PWA Update Notification Must Persist Until Acknowledged
 
 ## Problem
 
-When you type a number into a custom activity field, each keystroke immediately saves to the database and triggers a full data refetch. The refetch reloads the old value before you can type the next character, effectively resetting your input after every keystroke.
+The recent toast auto-dismiss fix added a hard-coded 3-second timeout to ALL toasts in `src/hooks/use-toast.ts`. The PWA update prompt (`PWAUpdatePrompt.tsx`) passes `duration: 0` to indicate it should stay forever, but the auto-dismiss code ignores this.
 
 ## Solution
 
-Add debounced saving to the number (and text) field inputs in `CustomActivityDetailDialog.tsx`. The input will update locally on every keystroke (so it feels responsive), but the database save will only fire after you stop typing for 800ms.
+**File: `src/hooks/use-toast.ts`**
 
-## Changes
+In the `toast()` function, wrap the auto-dismiss `setTimeout` in a condition that checks whether `duration` is `0`. If it is, skip the auto-dismiss entirely.
 
-### File: `src/components/CustomActivityDetailDialog.tsx`
-
-**A. Add local state for field values being edited**
-
-Add a `localFieldValues` state (`Record<string, string>`) and a debounce timer ref. When the user types, update `localFieldValues` immediately (for responsive UI), and schedule the actual `onUpdateFieldValue` call after 800ms of inactivity.
-
-**B. Update `getFieldValue` to prefer local state**
-
-If a field ID exists in `localFieldValues`, return that value instead of the persisted one. This prevents the refetch from overwriting what the user is actively typing.
-
-**C. Create a `handleLocalFieldChange` function**
-
-```
-function handleLocalFieldChange(fieldId, value):
-  1. Update localFieldValues[fieldId] = value  (instant UI update)
-  2. Clear any existing debounce timer for this field
-  3. Set a new 800ms timer that calls handleUpdateFieldValue(fieldId, value)
-  4. On save completion, remove the field from localFieldValues
+Change:
+```typescript
+// Auto-dismiss after 3 seconds
+setTimeout(() => {
+  dismiss();
+}, 3000);
 ```
 
-**D. Wire up the number and text inputs**
+To:
+```typescript
+// Auto-dismiss after specified duration (skip if duration is 0 = persistent)
+if (props.duration !== 0) {
+  setTimeout(() => {
+    dismiss();
+  }, props.duration || 3000);
+}
+```
 
-Change the `onChange` handler for `type="number"` and `type="text"` inputs from `handleUpdateFieldValue` to `handleLocalFieldChange`.
+This means:
+- `duration: 0` -- toast stays until manually dismissed (used by PWA update prompt)
+- `duration: undefined` (default) -- auto-dismiss after 3 seconds
+- `duration: 5000` (custom) -- auto-dismiss after 5 seconds
 
-**E. Clean up timers on unmount**
+No other files need changes. `PWAUpdatePrompt.tsx` already passes `duration: 0` correctly.
 
-Add a `useEffect` cleanup that clears all pending debounce timers when the dialog closes.
-
-### File: `src/components/GamePlanCard.tsx` -- No changes needed
-
-The `refetch()` call after saving is fine; the local state in the dialog will shield the user from the refetch overwriting their in-progress typing.
-
-## Why This Works
-
-- Typing is instant because the input reads from local state
-- The save only fires once you pause typing, preventing rapid DB writes
-- After the save completes (and refetch runs), the local override is cleared so the persisted value takes over seamlessly
