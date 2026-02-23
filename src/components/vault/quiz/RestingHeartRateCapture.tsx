@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Heart, Pencil } from 'lucide-react';
+import { Heart, Pencil, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 
 type Phase = 'entry' | 'result';
 
@@ -68,6 +69,19 @@ export function RestingHeartRateCapture({ value, onResult }: Props) {
         </Button>
       </div>
       {errorMsg && <p className="text-xs text-destructive">{errorMsg}</p>}
+      <Collapsible>
+        <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <HelpCircle className="h-3 w-3" />
+          How to measure
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2 rounded-md border border-border bg-muted/50 p-3 text-xs text-muted-foreground space-y-1.5">
+          <p>• Sit or lie still for <strong>2 minutes</strong> before measuring</p>
+          <p>• Place two fingers on the inside of your wrist, just below the thumb</p>
+          <p>• Count the beats for <strong>15 seconds</strong>, then multiply by 4</p>
+          <p>• Best measured first thing in the morning before getting out of bed</p>
+          <p>• A smartwatch or fitness tracker can also provide this automatically</p>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
