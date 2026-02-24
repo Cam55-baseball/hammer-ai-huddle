@@ -83,7 +83,7 @@ export default function Rankings() {
 
       if (userIds.length > 0) {
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("profiles_public")
           .select("id, full_name")
           .in("id", userIds);
 
