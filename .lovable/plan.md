@@ -1,83 +1,95 @@
 
 
-# Stress Test Report: Full Implementation Audit
+# Stress Test Report #2: Post-Fix Audit
 
-## VERDICT: Core plan is complete, but there are 7 specific gaps/risks that need fixing
+## Previous Fixes Confirmed Working
 
----
-
-## What's Confirmed Working
-
-| Item | Status |
-|------|--------|
-| 31 UI components (splits, micro-layer, professional, organization, authority, practice) | All files present |
-| Rankings page rewritten against `mpi_scores` table | Confirmed |
-| RankingsTable with sport tabs, segment filters, Your Rank card | Confirmed |
-| `gradeLabel.ts` utility | Confirmed |
-| i18n `rankings` keys in en.json | Confirmed (all keys present) |
-| i18n `sportTerms` namespace in all 8 locales | Confirmed |
-| `mpi_scores`, `athlete_mpi_settings`, `governance_flags`, `performance_sessions` tables | All exist in schema |
-| RLS enabled on all 4 core tables | Confirmed |
-| `pg_cron` job active: `0 5 * * *` calling `nightly-mpi-process` | Confirmed (jobid=5, active=true) |
-| `calculate-session` edge function called from `usePerformanceSession` hook | Confirmed |
-| Governance flag creation on inflated grading + volume spike | Confirmed in calculate-session |
+| Fix | Status |
+|-----|--------|
+| `nightly-mpi-process` in config.toml with `verify_jwt = false` | Confirmed (line 156-157) |
+| `calculate-session` in config.toml with `verify_jwt = false` | Confirmed (line 159-160) |
+| Rankings query filters by latest `calculation_date` | Confirmed (lines 38-53) |
+| CORS headers standardized on both edge functions | Confirmed |
+| `get-rankings` edge function deleted | Confirmed |
+| New RLS policy "Authenticated users can view all rankings" | Confirmed (USING true) |
+| Cron job active at `0 5 * * *` | Confirmed (jobid=5) |
 
 ---
 
-## GAPS AND RISKS FOUND
+## NEW GAPS FOUND
 
-### 1. CRITICAL: `nightly-mpi-process` missing from `config.toml`
-The edge function exists at `supabase/functions/nightly-mpi-process/index.ts` but has **no entry** in `supabase/config.toml`. Without a config entry, the default `verify_jwt = true` applies. The cron job calls it with the **anon key**, which is NOT a user JWT -- it will be **rejected at the gateway** with a 401 error.
+### 1. CRITICAL: Segment filter is completely broken
 
-**Fix:** Add `[functions.nightly-mpi-process]` with `verify_jwt = false` to `config.toml`.
-
-### 2. CRITICAL: `calculate-session` also missing from `config.toml`
-Same issue -- no config entry means `verify_jwt = true` by default. The function does use a proper user JWT so it *should* work, but the missing config entry is inconsistent and could cause issues if the signing-keys system requires explicit `verify_jwt = false` as documented.
-
-**Fix:** Add `[functions.calculate-session]` with `verify_jwt = false` to `config.toml` and validate JWT in code (it already does).
-
-### 3. HIGH: `mpi_scores` RLS blocks Rankings page from working
-The Rankings page queries `mpi_scores` directly from the client with `.eq("sport", selectedSport).order("global_rank")`, but the **only SELECT policy** on `mpi_scores` is:
+The `RankingsFilters` component lets users filter by "youth", "hs", "college", "pro" using:
 ```
-(auth.uid() = user_id) OR user_has_role(auth.uid(), 'admin')
+.ilike("segment_pool", "%youth%")
 ```
-This means **a regular athlete can only see their own score** -- the Top 100 leaderboard will return at most 1 row for non-admin users. The entire Rankings page is effectively broken for normal users.
 
-**Fix:** Add a public-read RLS policy for rankings display, e.g.:
+But the nightly process **hardcodes** `segment_pool` to `"baseball_general"` or `"softball_general"` for every single athlete (line 180). The filter values "youth", "hs", "college", "pro" will **never match** -- every segment filter returns zero results except "all".
+
+**Fix:** Map `league_tier` to a proper segment in the nightly process:
+- rec, travel -> "youth"
+- hs_jv, hs_varsity -> "hs"
+- college_d3, college_d2, college_d1 -> "college"
+- indie_pro, milb, mlb, ausl -> "pro"
+
+Set `segment_pool` to e.g. `"baseball_youth"` or `"softball_college"` instead of `"_general"`.
+
+### 2. HIGH: Realtime subscription will never fire
+
+The Rankings page subscribes to realtime changes on `mpi_scores` (line 148-161), but `mpi_scores` is **NOT** added to the `supabase_realtime` publication. The channel subscribes but will never receive events.
+
+**Fix:** Run:
 ```sql
-CREATE POLICY "Anyone can view rankings" ON mpi_scores
-FOR SELECT USING (true);
+ALTER PUBLICATION supabase_realtime ADD TABLE public.mpi_scores;
 ```
-Or a more restrictive version that only exposes rank/score/sport columns via a database view.
 
-### 4. MEDIUM: `get-rankings` edge function is orphaned/stale
-The `supabase/functions/get-rankings/index.ts` queries `user_progress` table (the old ranking system), NOT `mpi_scores`. But the Rankings page no longer calls this function -- it queries `mpi_scores` directly. This function is dead code that could confuse future developers.
+### 3. HIGH: No unique constraint prevents duplicate daily MPI rows
 
-**Fix:** Either delete `get-rankings` edge function or update it to query `mpi_scores`.
+If the nightly cron runs twice on the same day (manual trigger, retry, etc.), it will insert **duplicate rows** for the same user+sport+date. There's no unique constraint on `(user_id, sport, calculation_date)`. This corrupts rankings with double-counted athletes.
 
-### 5. MEDIUM: Rankings page fetches duplicate MPI snapshots
-The query `mpi_scores` ordered by `global_rank` but does NOT filter by `calculation_date`. Since the nightly process inserts a **new row every night**, the query will return multiple entries per athlete (one per night), making the leaderboard show duplicates and wrong rankings.
-
-**Fix:** Add a filter for the latest `calculation_date`:
+**Fix:** Add a unique index:
 ```sql
-.eq("calculation_date", latestDate)
+CREATE UNIQUE INDEX idx_mpi_unique_daily
+ON public.mpi_scores (user_id, sport, calculation_date);
 ```
-Or use a subquery/view that only returns each athlete's most recent score.
+And use `UPSERT` in the nightly process instead of plain `INSERT`.
 
-### 6. LOW: CORS headers inconsistent across edge functions
-- `nightly-mpi-process` and `calculate-session` use the **old/short** CORS headers:
-  ```
-  'authorization, x-client-info, apikey, content-type'
-  ```
-- The recommended CORS headers include additional `x-supabase-client-*` headers.
-This can cause CORS failures on certain client configurations.
+### 4. MEDIUM: Stale "Users can select own MPI scores" policy still exists
 
-**Fix:** Update both functions to use the full recommended CORS header string.
+The migration dropped and recreated the RLS policy, but there are now **two** SELECT policies on `mpi_scores`:
+- "Authenticated users can view all rankings" (USING true) -- new
+- "Users can select own MPI scores" (USING auth.uid()=user_id OR admin) -- old, never dropped
 
-### 7. LOW: Nightly MPI process uses `service_role_key` but called with anon key
-The cron job sends an `Authorization: Bearer <anon_key>` header, but the function creates its Supabase client with `SUPABASE_SERVICE_ROLE_KEY` and ignores the auth header entirely. This works functionally (service role bypasses RLS), but the anon key in the Authorization header is meaningless -- it's only there to pass gateway JWT verification (which is currently blocked by gap #1).
+The old policy is dead weight since the new permissive one already grants access. It should be cleaned up to avoid confusion.
 
-No code fix needed beyond gap #1.
+**Fix:** Drop the old policy:
+```sql
+DROP POLICY IF EXISTS "Users can select own MPI scores" ON public.mpi_scores;
+```
+
+### 5. MEDIUM: Nightly process ranks ALL athletes, ignoring eligibility gates
+
+The process calculates `ranking_eligible` for each athlete (line 132) and stores it in `athlete_mpi_settings`, but then **ranks every athlete regardless** -- including those who fail the 60-session minimum, integrity threshold, or coach validation gates. This undermines the entire gate system.
+
+**Fix:** After calculating gates, skip the athlete's score entry if `ranking_eligible` is false:
+```typescript
+if (!gatesUpdate.ranking_eligible) continue; // Skip ineligible athletes
+```
+
+### 6. LOW: Missing composite index for Rankings query performance
+
+The Rankings page queries `WHERE sport = X AND calculation_date = Y ORDER BY global_rank`. The existing indexes are:
+- `idx_mpi_sport_rank` = (sport, global_rank)
+- `idx_mpi_user_date` = (user_id, calculation_date DESC)
+
+Neither covers the actual query pattern. As data grows, this query will degrade.
+
+**Fix:** Add a covering index:
+```sql
+CREATE INDEX idx_mpi_sport_date_rank
+ON public.mpi_scores (sport, calculation_date, global_rank);
+```
 
 ---
 
@@ -86,12 +98,49 @@ No code fix needed beyond gap #1.
 ```text
 Priority   Gap   Description
 --------   ---   -----------
-P0         #1    Add nightly-mpi-process to config.toml with verify_jwt = false
-P0         #3    Fix mpi_scores RLS to allow public read for rankings
-P0         #5    Filter Rankings query to latest calculation_date only
-P1         #2    Add calculate-session to config.toml with verify_jwt = false
-P1         #4    Delete or update orphaned get-rankings edge function
-P2         #6    Standardize CORS headers across all edge functions
+P0         #1    Fix segment_pool mapping (broken filter = broken UI)
+P0         #3    Add unique constraint + upsert to prevent duplicate daily rows
+P1         #2    Enable realtime publication on mpi_scores
+P1         #5    Skip ranking-ineligible athletes in nightly process
+P2         #4    Drop stale RLS policy
+P2         #6    Add composite index for query performance
 ```
 
-Gaps #1, #3, and #5 are **showstoppers** -- the Rankings page will not work correctly until they are fixed. The cron job will silently fail every night (401), and even if it ran, the leaderboard would show duplicates and only the user's own score.
+## Technical Implementation
+
+### Database migration (gaps #2, #3, #4, #6):
+```sql
+-- Drop stale policy
+DROP POLICY IF EXISTS "Users can select own MPI scores" ON public.mpi_scores;
+
+-- Prevent duplicate daily entries
+CREATE UNIQUE INDEX IF NOT EXISTS idx_mpi_unique_daily
+ON public.mpi_scores (user_id, sport, calculation_date);
+
+-- Enable realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE public.mpi_scores;
+
+-- Add performance index
+CREATE INDEX IF NOT EXISTS idx_mpi_sport_date_rank
+ON public.mpi_scores (sport, calculation_date, global_rank);
+```
+
+### Edge function update -- `nightly-mpi-process/index.ts` (gaps #1, #3, #5):
+
+1. Add tier-to-segment mapping function:
+```typescript
+function tierToSegment(tier: string): string {
+  if (['rec', 'travel'].includes(tier)) return 'youth';
+  if (['hs_jv', 'hs_varsity'].includes(tier)) return 'hs';
+  if (['college_d3', 'college_d2', 'college_d1'].includes(tier)) return 'college';
+  if (['indie_pro', 'milb', 'mlb', 'ausl'].includes(tier)) return 'pro';
+  return 'general';
+}
+```
+
+2. Store segment per athlete alongside their score, then use `${sport}_${segment}` as `segment_pool`.
+
+3. After calculating eligibility gates, skip ineligible athletes from the ranking pool.
+
+4. Change `.insert()` to `.upsert()` with `onConflict: 'user_id,sport,calculation_date'` to prevent duplicates on re-runs.
+
