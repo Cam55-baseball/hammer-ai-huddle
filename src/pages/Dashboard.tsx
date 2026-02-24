@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { useMPIScores } from "@/hooks/useMPIScores";
 import { useAIPrompts } from "@/hooks/useAIPrompts";
 import { Activity, Lightbulb, TrendingUp } from "lucide-react";
+import { getGradeLabel } from "@/lib/gradeLabel";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
 import dashboardHero2 from "@/assets/dashboard-hero-1.jpg";
 import dashboardHero3 from "@/assets/dashboard-hero-2.jpg";
@@ -40,7 +41,7 @@ function PracticeIntelligenceCard() {
   const navigate = useNavigate();
 
   const gradeLabel = mpi?.adjusted_global_score
-    ? mpi.adjusted_global_score >= 70 ? 'Elite' : mpi.adjusted_global_score >= 60 ? 'Plus' : mpi.adjusted_global_score >= 50 ? 'Average' : 'Developing'
+    ? getGradeLabel(mpi.adjusted_global_score)
     : null;
 
   return (
