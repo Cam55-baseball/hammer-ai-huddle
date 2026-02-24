@@ -35,6 +35,23 @@ export default function Rankings() {
     try {
       setLoading(true);
 
+      // First, get the latest calculation_date for this sport
+      const { data: latestRow } = await supabase
+        .from("mpi_scores")
+        .select("calculation_date")
+        .eq("sport", selectedSport)
+        .order("calculation_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const latestDate = latestRow?.calculation_date;
+      if (!latestDate) {
+        setRankings([]);
+        setUserRank(null);
+        setLoading(false);
+        return;
+      }
+
       let query = supabase
         .from("mpi_scores")
         .select(`
@@ -48,6 +65,7 @@ export default function Rankings() {
           segment_pool
         `)
         .eq("sport", selectedSport)
+        .eq("calculation_date", latestDate)
         .not("adjusted_global_score", "is", null)
         .order("global_rank", { ascending: true, nullsFirst: false })
         .limit(100);
