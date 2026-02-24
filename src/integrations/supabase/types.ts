@@ -167,6 +167,206 @@ export type Database = {
         }
         Relationships: []
       }
+      athlete_mpi_settings: {
+        Row: {
+          admin_probability_frozen: boolean | null
+          admin_progression_locked: boolean | null
+          admin_ranking_excluded: boolean | null
+          coach_validation_met: boolean | null
+          created_at: string
+          data_density_level: number | null
+          data_span_met: boolean | null
+          date_of_birth: string | null
+          games_minimum_met: boolean | null
+          id: string
+          integrity_threshold_met: boolean | null
+          is_ambidextrous_thrower: boolean | null
+          is_college_verified: boolean | null
+          is_pro_verified: boolean | null
+          is_switch_hitter: boolean | null
+          league_tier: string | null
+          primary_batting_side: string | null
+          primary_coach_id: string | null
+          primary_position: string | null
+          primary_throwing_hand: string | null
+          ranking_eligible: boolean | null
+          secondary_coach_ids: string[] | null
+          secondary_position: string | null
+          sport: string
+          streak_best: number | null
+          streak_current: number | null
+          updated_at: string
+          user_id: string
+          verified_stat_profile_id: string | null
+        }
+        Insert: {
+          admin_probability_frozen?: boolean | null
+          admin_progression_locked?: boolean | null
+          admin_ranking_excluded?: boolean | null
+          coach_validation_met?: boolean | null
+          created_at?: string
+          data_density_level?: number | null
+          data_span_met?: boolean | null
+          date_of_birth?: string | null
+          games_minimum_met?: boolean | null
+          id?: string
+          integrity_threshold_met?: boolean | null
+          is_ambidextrous_thrower?: boolean | null
+          is_college_verified?: boolean | null
+          is_pro_verified?: boolean | null
+          is_switch_hitter?: boolean | null
+          league_tier?: string | null
+          primary_batting_side?: string | null
+          primary_coach_id?: string | null
+          primary_position?: string | null
+          primary_throwing_hand?: string | null
+          ranking_eligible?: boolean | null
+          secondary_coach_ids?: string[] | null
+          secondary_position?: string | null
+          sport: string
+          streak_best?: number | null
+          streak_current?: number | null
+          updated_at?: string
+          user_id: string
+          verified_stat_profile_id?: string | null
+        }
+        Update: {
+          admin_probability_frozen?: boolean | null
+          admin_progression_locked?: boolean | null
+          admin_ranking_excluded?: boolean | null
+          coach_validation_met?: boolean | null
+          created_at?: string
+          data_density_level?: number | null
+          data_span_met?: boolean | null
+          date_of_birth?: string | null
+          games_minimum_met?: boolean | null
+          id?: string
+          integrity_threshold_met?: boolean | null
+          is_ambidextrous_thrower?: boolean | null
+          is_college_verified?: boolean | null
+          is_pro_verified?: boolean | null
+          is_switch_hitter?: boolean | null
+          league_tier?: string | null
+          primary_batting_side?: string | null
+          primary_coach_id?: string | null
+          primary_position?: string | null
+          primary_throwing_hand?: string | null
+          ranking_eligible?: boolean | null
+          secondary_coach_ids?: string[] | null
+          secondary_position?: string | null
+          sport?: string
+          streak_best?: number | null
+          streak_current?: number | null
+          updated_at?: string
+          user_id?: string
+          verified_stat_profile_id?: string | null
+        }
+        Relationships: []
+      }
+      athlete_professional_status: {
+        Row: {
+          ausl_seasons_completed: number | null
+          contract_status: string | null
+          created_at: string
+          current_league: string | null
+          current_team: string | null
+          hof_activated_at: string | null
+          hof_eligible: boolean | null
+          id: string
+          last_release_date: string | null
+          last_resign_date: string | null
+          mlb_seasons_completed: number | null
+          release_count: number | null
+          roster_verified: boolean | null
+          roster_verified_by: string | null
+          sport: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ausl_seasons_completed?: number | null
+          contract_status?: string | null
+          created_at?: string
+          current_league?: string | null
+          current_team?: string | null
+          hof_activated_at?: string | null
+          hof_eligible?: boolean | null
+          id?: string
+          last_release_date?: string | null
+          last_resign_date?: string | null
+          mlb_seasons_completed?: number | null
+          release_count?: number | null
+          roster_verified?: boolean | null
+          roster_verified_by?: string | null
+          sport: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ausl_seasons_completed?: number | null
+          contract_status?: string | null
+          created_at?: string
+          current_league?: string | null
+          current_team?: string | null
+          hof_activated_at?: string | null
+          hof_eligible?: boolean | null
+          id?: string
+          last_release_date?: string | null
+          last_resign_date?: string | null
+          mlb_seasons_completed?: number | null
+          release_count?: number | null
+          roster_verified?: boolean | null
+          roster_verified_by?: string | null
+          sport?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      athlete_roadmap_progress: {
+        Row: {
+          blocked_reason: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          milestone_id: string
+          progress_pct: number | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocked_reason?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          milestone_id: string
+          progress_pct?: number | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocked_reason?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          milestone_id?: string
+          progress_pct?: number | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_roadmap_progress_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -313,6 +513,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      coach_grade_overrides: {
+        Row: {
+          coach_id: string
+          created_at: string
+          id: string
+          original_grade: number | null
+          override_grade: number | null
+          override_reason: string | null
+          session_id: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          id?: string
+          original_grade?: number | null
+          override_grade?: number | null
+          override_reason?: string | null
+          session_id: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          id?: string
+          original_grade?: number | null
+          override_grade?: number | null
+          override_reason?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_grade_overrides_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "performance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coupon_metadata: {
         Row: {
@@ -670,6 +908,107 @@ export type Database = {
         }
         Relationships: []
       }
+      governance_flags: {
+        Row: {
+          admin_action: string | null
+          admin_notes: string | null
+          created_at: string
+          details: Json | null
+          flag_type: string
+          id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          source_session_id: string | null
+          status: string | null
+          tagged_rep_index: number | null
+          user_id: string
+          video_evidence_url: string | null
+        }
+        Insert: {
+          admin_action?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          details?: Json | null
+          flag_type: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          source_session_id?: string | null
+          status?: string | null
+          tagged_rep_index?: number | null
+          user_id: string
+          video_evidence_url?: string | null
+        }
+        Update: {
+          admin_action?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          details?: Json | null
+          flag_type?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          source_session_id?: string | null
+          status?: string | null
+          tagged_rep_index?: number | null
+          user_id?: string
+          video_evidence_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_flags_source_session_id_fkey"
+            columns: ["source_session_id"]
+            isOneToOne: false
+            referencedRelation: "performance_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      heat_map_snapshots: {
+        Row: {
+          blind_zones: Json | null
+          computed_at: string
+          context_filter: string
+          grid_data: Json
+          id: string
+          map_type: string
+          split_key: string
+          sport: string
+          time_window: string
+          total_data_points: number | null
+          user_id: string
+        }
+        Insert: {
+          blind_zones?: Json | null
+          computed_at?: string
+          context_filter?: string
+          grid_data?: Json
+          id?: string
+          map_type: string
+          split_key?: string
+          sport: string
+          time_window: string
+          total_data_points?: number | null
+          user_id: string
+        }
+        Update: {
+          blind_zones?: Json | null
+          computed_at?: string
+          context_filter?: string
+          grid_data?: Json
+          id?: string
+          map_type?: string
+          split_key?: string
+          sport?: string
+          time_window?: string
+          total_data_points?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       hydration_logs: {
         Row: {
           amount_oz: number
@@ -807,6 +1146,39 @@ export type Database = {
           sport_relevance?: string[] | null
           symptoms?: string[]
           typical_timeline?: string | null
+        }
+        Relationships: []
+      }
+      lesson_trainers: {
+        Row: {
+          created_at: string
+          facility: string | null
+          id: string
+          name: string
+          specializations: string[] | null
+          sport: string | null
+          verified: boolean | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          facility?: string | null
+          id?: string
+          name: string
+          specializations?: string[] | null
+          sport?: string | null
+          verified?: boolean | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          facility?: string | null
+          id?: string
+          name?: string
+          specializations?: string[] | null
+          sport?: string | null
+          verified?: boolean | null
+          verified_by?: string | null
         }
         Relationships: []
       }
@@ -1181,6 +1553,102 @@ export type Database = {
         }
         Relationships: []
       }
+      mpi_scores: {
+        Row: {
+          adjusted_global_score: number | null
+          calculation_date: string
+          composite_bqi: number | null
+          composite_competitive: number | null
+          composite_decision: number | null
+          composite_fqi: number | null
+          composite_pei: number | null
+          contract_status_modifier: number | null
+          created_at: string
+          delta_maturity_index: number | null
+          development_prompts: Json | null
+          fatigue_correlation_flag: boolean | null
+          game_practice_ratio: number | null
+          global_percentile: number | null
+          global_rank: number | null
+          hof_probability: number | null
+          hof_tracking_active: boolean | null
+          id: string
+          integrity_score: number | null
+          mlb_season_count: number | null
+          pro_probability: number | null
+          pro_probability_capped: boolean | null
+          segment_pool: string | null
+          sport: string
+          total_athletes_in_pool: number | null
+          trend_delta_30d: number | null
+          trend_direction: string | null
+          user_id: string
+          verified_stat_boost: number | null
+        }
+        Insert: {
+          adjusted_global_score?: number | null
+          calculation_date: string
+          composite_bqi?: number | null
+          composite_competitive?: number | null
+          composite_decision?: number | null
+          composite_fqi?: number | null
+          composite_pei?: number | null
+          contract_status_modifier?: number | null
+          created_at?: string
+          delta_maturity_index?: number | null
+          development_prompts?: Json | null
+          fatigue_correlation_flag?: boolean | null
+          game_practice_ratio?: number | null
+          global_percentile?: number | null
+          global_rank?: number | null
+          hof_probability?: number | null
+          hof_tracking_active?: boolean | null
+          id?: string
+          integrity_score?: number | null
+          mlb_season_count?: number | null
+          pro_probability?: number | null
+          pro_probability_capped?: boolean | null
+          segment_pool?: string | null
+          sport: string
+          total_athletes_in_pool?: number | null
+          trend_delta_30d?: number | null
+          trend_direction?: string | null
+          user_id: string
+          verified_stat_boost?: number | null
+        }
+        Update: {
+          adjusted_global_score?: number | null
+          calculation_date?: string
+          composite_bqi?: number | null
+          composite_competitive?: number | null
+          composite_decision?: number | null
+          composite_fqi?: number | null
+          composite_pei?: number | null
+          contract_status_modifier?: number | null
+          created_at?: string
+          delta_maturity_index?: number | null
+          development_prompts?: Json | null
+          fatigue_correlation_flag?: boolean | null
+          game_practice_ratio?: number | null
+          global_percentile?: number | null
+          global_rank?: number | null
+          hof_probability?: number | null
+          hof_tracking_active?: boolean | null
+          id?: string
+          integrity_score?: number | null
+          mlb_season_count?: number | null
+          pro_probability?: number | null
+          pro_probability_capped?: boolean | null
+          segment_pool?: string | null
+          sport?: string
+          total_athletes_in_pool?: number | null
+          trend_delta_30d?: number | null
+          trend_direction?: string | null
+          user_id?: string
+          verified_stat_boost?: number | null
+        }
+        Relationships: []
+      }
       nutrition_daily_tips: {
         Row: {
           category: string
@@ -1448,6 +1916,182 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_members: {
+        Row: {
+          id: string
+          joined_at: string
+          organization_id: string
+          removed_at: string | null
+          role_in_org: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          organization_id: string
+          removed_at?: string | null
+          role_in_org?: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          organization_id?: string
+          removed_at?: string | null
+          role_in_org?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          org_type: string
+          owner_user_id: string
+          sport: string
+          updated_at: string
+          verified: boolean | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          org_type: string
+          owner_user_id: string
+          sport: string
+          updated_at?: string
+          verified?: boolean | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          org_type?: string
+          owner_user_id?: string
+          sport?: string
+          updated_at?: string
+          verified?: boolean | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      performance_sessions: {
+        Row: {
+          batting_side_used: string | null
+          calendar_event_id: string | null
+          coach_grade: number | null
+          coach_id: string | null
+          composite_indexes: Json | null
+          created_at: string
+          data_density_level: number | null
+          deleted_at: string | null
+          drill_blocks: Json
+          edited_at: string | null
+          effective_grade: number | null
+          fatigue_state_at_session: Json | null
+          id: string
+          intent_compliance_pct: number | null
+          is_locked: boolean | null
+          is_retroactive: boolean | null
+          micro_layer_data: Json | null
+          notes: string | null
+          opponent_level: string | null
+          opponent_name: string | null
+          organization_id: string | null
+          player_grade: number | null
+          season_context: string | null
+          session_date: string
+          session_type: string
+          sport: string
+          throwing_hand_used: string | null
+          updated_at: string
+          user_id: string
+          voice_notes: string[] | null
+        }
+        Insert: {
+          batting_side_used?: string | null
+          calendar_event_id?: string | null
+          coach_grade?: number | null
+          coach_id?: string | null
+          composite_indexes?: Json | null
+          created_at?: string
+          data_density_level?: number | null
+          deleted_at?: string | null
+          drill_blocks?: Json
+          edited_at?: string | null
+          effective_grade?: number | null
+          fatigue_state_at_session?: Json | null
+          id?: string
+          intent_compliance_pct?: number | null
+          is_locked?: boolean | null
+          is_retroactive?: boolean | null
+          micro_layer_data?: Json | null
+          notes?: string | null
+          opponent_level?: string | null
+          opponent_name?: string | null
+          organization_id?: string | null
+          player_grade?: number | null
+          season_context?: string | null
+          session_date?: string
+          session_type: string
+          sport: string
+          throwing_hand_used?: string | null
+          updated_at?: string
+          user_id: string
+          voice_notes?: string[] | null
+        }
+        Update: {
+          batting_side_used?: string | null
+          calendar_event_id?: string | null
+          coach_grade?: number | null
+          coach_id?: string | null
+          composite_indexes?: Json | null
+          created_at?: string
+          data_density_level?: number | null
+          deleted_at?: string | null
+          drill_blocks?: Json
+          edited_at?: string | null
+          effective_grade?: number | null
+          fatigue_state_at_session?: Json | null
+          id?: string
+          intent_compliance_pct?: number | null
+          is_locked?: boolean | null
+          is_retroactive?: boolean | null
+          micro_layer_data?: Json | null
+          notes?: string | null
+          opponent_level?: string | null
+          opponent_name?: string | null
+          organization_id?: string | null
+          player_grade?: number | null
+          season_context?: string | null
+          session_date?: string
+          session_type?: string
+          sport?: string
+          throwing_hand_used?: string | null
+          updated_at?: string
+          user_id?: string
+          voice_notes?: string[] | null
+        }
+        Relationships: []
+      }
       physio_adult_tracking: {
         Row: {
           created_at: string
@@ -1680,13 +2324,17 @@ export type Database = {
           high_school_grad_year: number | null
           id: string
           independent_league: string | null
+          is_ambidextrous_thrower: boolean | null
           is_foreign_player: boolean | null
           is_free_agent: boolean | null
           is_professional: boolean | null
+          is_switch_hitter: boolean | null
           last_name: string | null
           mlb_affiliate: string | null
           position: string | null
           preferred_language: string | null
+          primary_batting_side: string | null
+          primary_throwing_hand: string | null
           sex: string | null
           social_facebook: string | null
           social_instagram: string | null
@@ -1731,13 +2379,17 @@ export type Database = {
           high_school_grad_year?: number | null
           id: string
           independent_league?: string | null
+          is_ambidextrous_thrower?: boolean | null
           is_foreign_player?: boolean | null
           is_free_agent?: boolean | null
           is_professional?: boolean | null
+          is_switch_hitter?: boolean | null
           last_name?: string | null
           mlb_affiliate?: string | null
           position?: string | null
           preferred_language?: string | null
+          primary_batting_side?: string | null
+          primary_throwing_hand?: string | null
           sex?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
@@ -1782,13 +2434,17 @@ export type Database = {
           high_school_grad_year?: number | null
           id?: string
           independent_league?: string | null
+          is_ambidextrous_thrower?: boolean | null
           is_foreign_player?: boolean | null
           is_free_agent?: boolean | null
           is_professional?: boolean | null
+          is_switch_hitter?: boolean | null
           last_name?: string | null
           mlb_affiliate?: string | null
           position?: string | null
           preferred_language?: string | null
+          primary_batting_side?: string | null
+          primary_throwing_hand?: string | null
           sex?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
@@ -1808,6 +2464,42 @@ export type Database = {
           updated_at?: string | null
           weight?: string | null
           years_affiliated?: number | null
+        }
+        Relationships: []
+      }
+      roadmap_milestones: {
+        Row: {
+          badge_icon: string | null
+          badge_name: string | null
+          created_at: string
+          id: string
+          milestone_name: string
+          milestone_order: number | null
+          module: string
+          requirements: Json
+          sport: string
+        }
+        Insert: {
+          badge_icon?: string | null
+          badge_name?: string | null
+          created_at?: string
+          id?: string
+          milestone_name: string
+          milestone_order?: number | null
+          module: string
+          requirements?: Json
+          sport: string
+        }
+        Update: {
+          badge_icon?: string | null
+          badge_name?: string | null
+          created_at?: string
+          id?: string
+          milestone_name?: string
+          milestone_order?: number | null
+          module?: string
+          requirements?: Json
+          sport?: string
         }
         Relationships: []
       }
@@ -1993,6 +2685,45 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           video_submission_url?: string | null
+        }
+        Relationships: []
+      }
+      scout_evaluations: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          evaluation_date: string
+          game_context: string | null
+          id: string
+          notes: string | null
+          overall_grade: number | null
+          scout_id: string
+          sport: string
+          tool_grades: Json
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          evaluation_date: string
+          game_context?: string | null
+          id?: string
+          notes?: string | null
+          overall_grade?: number | null
+          scout_id: string
+          sport: string
+          tool_grades?: Json
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          evaluation_date?: string
+          game_context?: string | null
+          id?: string
+          notes?: string | null
+          overall_grade?: number | null
+          scout_id?: string
+          sport?: string
+          tool_grades?: Json
         }
         Relationships: []
       }
@@ -4168,6 +4899,63 @@ export type Database = {
           user_id?: string
           week_number?: number
           weight_increases?: Json | null
+        }
+        Relationships: []
+      }
+      verified_stat_profiles: {
+        Row: {
+          created_at: string
+          external_metrics: Json | null
+          id: string
+          identity_match: boolean | null
+          last_synced_at: string | null
+          league: string
+          profile_url: string
+          screenshot_path: string | null
+          sport: string
+          sync_frequency: string | null
+          team_name: string | null
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          external_metrics?: Json | null
+          id?: string
+          identity_match?: boolean | null
+          last_synced_at?: string | null
+          league: string
+          profile_url: string
+          screenshot_path?: string | null
+          sport: string
+          sync_frequency?: string | null
+          team_name?: string | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          external_metrics?: Json | null
+          id?: string
+          identity_match?: boolean | null
+          last_synced_at?: string | null
+          league?: string
+          profile_url?: string
+          screenshot_path?: string | null
+          sport?: string
+          sync_frequency?: string | null
+          team_name?: string | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }
