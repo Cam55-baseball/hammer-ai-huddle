@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles } from "lucide-react";
+import { Home, Trophy, Cloud, Target, Settings, LogOut, Shield, Users, UserPlus, Users2, Instagram, Twitter, Facebook, Linkedin, Youtube, Globe, Mail, Check, BookMarked, Apple, Loader2, HeartPulse, Dumbbell, ChevronDown, Brain, Lock, Star, ShoppingBag, Eye, LayoutGrid, CalendarDays, Zap, HelpCircle, Sparkles, BarChart3, Flame, Building2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -587,6 +587,48 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Practice Intelligence Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="group-label-animated flex items-center gap-2 cursor-default">
+            Practice Intelligence
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {[
+                { title: 'Practice Hub', url: '/practice', icon: Flame },
+                { title: 'Progress Dashboard', url: '/progress', icon: BarChart3 },
+              ].map((item, index) => (
+                <SidebarMenuItem key={item.title} className="sidebar-item">
+                  <SidebarMenuButton
+                    onClick={() => navigate(item.url)}
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                    className="group sidebar-item-hover relative"
+                  >
+                    {isActive(item.url) && <span className="sidebar-active-indicator" />}
+                    <item.icon className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                    <span className="transition-colors duration-200">{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+              {(isOwner || isAdmin) && (
+                <SidebarMenuItem className="sidebar-item">
+                  <SidebarMenuButton
+                    onClick={() => navigate('/organization')}
+                    isActive={isActive('/organization')}
+                    tooltip="Organization"
+                    className="group sidebar-item-hover relative"
+                  >
+                    {isActive('/organization') && <span className="sidebar-active-indicator" />}
+                    <Building2 className="h-4 w-4 sidebar-icon transition-all duration-200 group-hover:scale-110 group-hover:text-primary" />
+                    <span className="transition-colors duration-200">Organization</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
