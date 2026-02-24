@@ -1257,20 +1257,28 @@
     "subtitle": "See how you stack up against other athletes",
     "leaderboard": "Leaderboard",
     "rank": "Rank",
-    "player": "Player",
+    "athlete": "Athlete",
     "sport": "Sport",
-    "module": "Module",
-    "videosAnalyzed": "Videos Analyzed",
-    "lastActive": "Last Active",
+    "mpiScore": "MPI Score",
+    "percentile": "Percentile",
+    "trend": "Trend",
+    "segment": "Segment",
+    "yourRank": "Your Rank",
+    "top100": "Top 100",
+    "you": "You",
     "noRankings": "No rankings available",
-    "filterBySport": "Filter by Sport",
-    "filterByModule": "Filter by Module",
-    "missionStatement": "Our goal is to increase connections between scouts and players through competitive benchmarking. Rankings are temporarily disabled as we optimize this feature.",
+    "allSegments": "All Segments",
+    "youth": "Youth",
+    "highSchool": "High School",
+    "college": "College",
+    "pro": "Professional",
+    "missionStatement": "Global rankings powered by the Master Performance Index — compete across all levels with normalized scoring.",
     "unavailable": "Rankings Currently Unavailable",
     "disabledMessage": "The rankings feature is currently disabled. Check back soon for updates.",
     "loadingRankings": "Loading rankings...",
     "allSports": "All Sports",
-    "allModules": "All Modules"
+    "active": "Active",
+    "failedToLoad": "Failed to load rankings"
   },
   "nutritionHub": {
     "useDetailedBreakdown": "Use detailed breakdown ({{count}} items)"
@@ -7595,5 +7603,23 @@
     "title": "Velocity Development",
     "blockA": "Kinetic Chain + Weighted Ball",
     "blockB": "Overload/Underload + Intent"
+  },
+  "sportTerms": {
+    "baseball": {
+      "pitchTypes": { "fastball": "4-Seam Fastball", "secondaryFastball": "2-Seam Fastball", "slider": "Slider", "changeup": "Changeup", "curveball": "Curveball" },
+      "sessionTypes": { "bullpen": "Bullpen Session", "bp": "Batting Practice", "scrimmage": "Live Scrimmage", "warmup": "Long Toss", "cage": "Cage Work" },
+      "metrics": { "spinEfficiency": "Spin Efficiency", "barrelPct": "Barrel %", "commandPct": "Command %", "chaseRate": "Chase Rate", "whiffRate": "Whiff Rate", "exitVelo": "Exit Velocity", "launchAngle": "Launch Angle" },
+      "drillNames": { "moundWork": "Mound Work", "longToss": "Long Toss", "bp": "BP Rounds", "teeWork": "Tee Work" },
+      "splitLabels": { "overall": "Overall", "vsLHP": "vs LHP", "vsRHP": "vs RHP", "home": "Home", "away": "Away" },
+      "heatMapLabels": { "pitchLocation": "Pitch Location", "chaseZone": "Chase Zone Map", "barrelZone": "Barrel Zone", "commandMap": "Command Map", "missCluster": "Miss Cluster" }
+    },
+    "softball": {
+      "pitchTypes": { "fastball": "Fastball (Windmill)", "circleChange": "Circle Change", "riseball": "Riseball", "dropBall": "Drop Ball", "curveball": "Curveball (12-6 Drop)" },
+      "sessionTypes": { "bullpen": "Circle Session", "bp": "Batting Practice", "scrimmage": "Live Scrimmage", "warmup": "Long Toss", "cage": "Cage Work" },
+      "metrics": { "snapTightness": "Snap Tightness", "sweetSpotPct": "Sweet Spot %", "locationPct": "Location %", "chaseRate": "Chase Rate", "whiffRate": "Whiff Rate", "exitVelo": "Exit Velocity", "launchAngle": "Launch Angle" },
+      "drillNames": { "circleWork": "Circle Work", "longToss": "Long Toss", "bp": "BP Rounds", "teeWork": "Tee Work" },
+      "splitLabels": { "overall": "Overall", "vsLHP": "vs LHP", "vsRHP": "vs RHP", "home": "Home", "away": "Away" },
+      "heatMapLabels": { "pitchLocation": "Pitch Location", "chaseZone": "Chase Zone Map", "sweetSpotZone": "Sweet Spot Zone", "locationMap": "Location Map", "missPattern": "Miss Pattern" }
+    }
   }
 }
