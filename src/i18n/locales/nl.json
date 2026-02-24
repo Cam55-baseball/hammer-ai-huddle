@@ -981,20 +981,28 @@
     "subtitle": "Zie hoe u zich verhoudt tot andere atleten",
     "leaderboard": "Klassement",
     "rank": "Rang",
-    "player": "Speler",
+    "athlete": "Atleet",
     "sport": "Sport",
-    "module": "Module",
-    "videosAnalyzed": "Geanalyseerde Video's",
-    "lastActive": "Laatst Actief",
+    "mpiScore": "MPI Score",
+    "percentile": "Percentiel",
+    "trend": "Trend",
+    "segment": "Segment",
+    "yourRank": "Uw Rang",
+    "top100": "Top 100",
+    "you": "U",
     "noRankings": "Geen ranglijsten beschikbaar",
-    "filterBySport": "Filteren op Sport",
-    "filterByModule": "Filteren op Module",
-    "missionStatement": "Ons doel is om de connecties tussen scouts en spelers te vergroten door middel van competitieve benchmarking. De ranglijsten zijn tijdelijk uitgeschakeld terwijl we deze functie optimaliseren.",
-    "unavailable": "Ranglijsten Momenteel Niet Beschikbaar",
-    "disabledMessage": "De ranglijstfunctie is momenteel uitgeschakeld. Kom binnenkort terug voor updates.",
+    "allSegments": "Alle Segmenten",
+    "youth": "Jeugd",
+    "highSchool": "Middelbare School",
+    "college": "Universiteit",
+    "pro": "Professioneel",
+    "missionStatement": "Wereldwijde ranglijsten aangedreven door de Master Performance Index — concurreer op alle niveaus met genormaliseerde scores.",
+    "unavailable": "Ranglijsten Niet Beschikbaar",
+    "disabledMessage": "De ranglijstfunctie is momenteel uitgeschakeld.",
     "loadingRankings": "Ranglijsten laden...",
     "allSports": "Alle Sporten",
-    "allModules": "Alle Modules"
+    "active": "Actief",
+    "failedToLoad": "Ranglijsten laden mislukt"
   },
   "nutrition": {
     "goalTypes": {
@@ -5721,5 +5729,23 @@
     "title": "Snelheidsontwikkeling",
     "blockA": "Kinetische Keten + Verzwaarde Bal",
     "blockB": "Overbelasting/Onderbelasting + Intentie"
+  },
+  "sportTerms": {
+    "baseball": {
+      "pitchTypes": { "fastball": "4-Naad Fastball", "secondaryFastball": "2-Naad Fastball", "slider": "Slider", "changeup": "Changeup", "curveball": "Curveball" },
+      "sessionTypes": { "bullpen": "Bullpen Sessie", "bp": "Slagtraining", "scrimmage": "Live Scrimmage", "warmup": "Langworp", "cage": "Kooi Werk" },
+      "metrics": { "spinEfficiency": "Draai-efficiëntie", "barrelPct": "Barrel %", "commandPct": "Commando %", "chaseRate": "Achtervolgingspercentage", "whiffRate": "Mis-percentage", "exitVelo": "Uitgangssnelheid", "launchAngle": "Lanceerhoek" },
+      "drillNames": { "moundWork": "Heuvelwerk", "longToss": "Langworp", "bp": "BP Rondes", "teeWork": "Tee Werk" },
+      "splitLabels": { "overall": "Totaal", "vsLHP": "vs Linkshandig", "vsRHP": "vs Rechtshandig", "home": "Thuis", "away": "Uit" },
+      "heatMapLabels": { "pitchLocation": "Werplocatie", "chaseZone": "Achtervolgingszone", "barrelZone": "Barrel Zone", "commandMap": "Commandokaart", "missCluster": "Miscluster" }
+    },
+    "softball": {
+      "pitchTypes": { "fastball": "Fastball (Windmolen)", "circleChange": "Circle Change", "riseball": "Riseball", "dropBall": "Drop Ball", "curveball": "Curveball (12-6 Drop)" },
+      "sessionTypes": { "bullpen": "Cirkel Sessie", "bp": "Slagtraining", "scrimmage": "Live Scrimmage", "warmup": "Langworp", "cage": "Kooi Werk" },
+      "metrics": { "snapTightness": "Snap Precisie", "sweetSpotPct": "Sweet Spot %", "locationPct": "Locatie %", "chaseRate": "Achtervolgingspercentage", "whiffRate": "Mis-percentage", "exitVelo": "Uitgangssnelheid", "launchAngle": "Lanceerhoek" },
+      "drillNames": { "circleWork": "Cirkelwerk", "longToss": "Langworp", "bp": "BP Rondes", "teeWork": "Tee Werk" },
+      "splitLabels": { "overall": "Totaal", "vsLHP": "vs Linkshandig", "vsRHP": "vs Rechtshandig", "home": "Thuis", "away": "Uit" },
+      "heatMapLabels": { "pitchLocation": "Werplocatie", "chaseZone": "Achtervolgingszone", "sweetSpotZone": "Sweet Spot Zone", "locationMap": "Locatiekaart", "missPattern": "Mispatroon" }
+    }
   }
 }

@@ -981,20 +981,28 @@
     "subtitle": "Voyez comment vous vous comparez aux autres athlètes",
     "leaderboard": "Classement",
     "rank": "Rang",
-    "player": "Joueur",
+    "athlete": "Athlète",
     "sport": "Sport",
-    "module": "Module",
-    "videosAnalyzed": "Vidéos Analysées",
-    "lastActive": "Dernière Activité",
+    "mpiScore": "Score MPI",
+    "percentile": "Percentile",
+    "trend": "Tendance",
+    "segment": "Segment",
+    "yourRank": "Votre Rang",
+    "top100": "Top 100",
+    "you": "Vous",
     "noRankings": "Aucun classement disponible",
-    "filterBySport": "Filtrer par Sport",
-    "filterByModule": "Filtrer par Module",
-    "missionStatement": "Notre objectif est d'augmenter les connexions entre scouts et joueurs grâce au benchmarking compétitif. Les classements sont temporairement désactivés pendant que nous optimisons cette fonctionnalité.",
-    "unavailable": "Classements Actuellement Indisponibles",
-    "disabledMessage": "La fonctionnalité de classement est actuellement désactivée. Revenez bientôt pour les mises à jour.",
+    "allSegments": "Tous les Segments",
+    "youth": "Jeunes",
+    "highSchool": "Lycée",
+    "college": "Université",
+    "pro": "Professionnel",
+    "missionStatement": "Classements mondiaux propulsés par l'Indice de Performance Maître — compétitionnez à tous les niveaux avec notation normalisée.",
+    "unavailable": "Classements Indisponibles",
+    "disabledMessage": "Les classements sont actuellement désactivés. Revenez bientôt.",
     "loadingRankings": "Chargement des classements...",
     "allSports": "Tous les Sports",
-    "allModules": "Tous les Modules"
+    "active": "Actif",
+    "failedToLoad": "Échec du chargement des classements"
   },
   "nutrition": {
     "goalTypes": {
@@ -6422,5 +6430,23 @@
     "title": "Développement de la Vélocité",
     "blockA": "Chaîne Cinétique + Balle Lestée",
     "blockB": "Surcharge/Sous-charge + Intention"
+  },
+  "sportTerms": {
+    "baseball": {
+      "pitchTypes": { "fastball": "Balle rapide 4 coutures", "secondaryFastball": "Balle rapide 2 coutures", "slider": "Slider", "changeup": "Changement", "curveball": "Courbe" },
+      "sessionTypes": { "bullpen": "Session Bullpen", "bp": "Pratique au Bâton", "scrimmage": "Scrimmage en Direct", "warmup": "Lancer Long", "cage": "Travail en Cage" },
+      "metrics": { "spinEfficiency": "Efficacité de Rotation", "barrelPct": "% Barrel", "commandPct": "% Commande", "chaseRate": "Taux de Poursuite", "whiffRate": "Taux de Raté", "exitVelo": "Vélocité de Sortie", "launchAngle": "Angle de Lancement" },
+      "drillNames": { "moundWork": "Travail au Monticule", "longToss": "Lancer Long", "bp": "Rondes BP", "teeWork": "Travail au Tee" },
+      "splitLabels": { "overall": "Global", "vsLHP": "vs Gaucher", "vsRHP": "vs Droitier", "home": "Domicile", "away": "Extérieur" },
+      "heatMapLabels": { "pitchLocation": "Emplacement du Lancer", "chaseZone": "Carte Zone Poursuite", "barrelZone": "Zone Barrel", "commandMap": "Carte Commande", "missCluster": "Cluster de Ratés" }
+    },
+    "softball": {
+      "pitchTypes": { "fastball": "Rapide (Moulin)", "circleChange": "Changement Circulaire", "riseball": "Balle Montante", "dropBall": "Balle Descendante", "curveball": "Courbe (Chute 12-6)" },
+      "sessionTypes": { "bullpen": "Session Cercle", "bp": "Pratique au Bâton", "scrimmage": "Scrimmage en Direct", "warmup": "Lancer Long", "cage": "Travail en Cage" },
+      "metrics": { "snapTightness": "Précision du Snap", "sweetSpotPct": "% Zone Idéale", "locationPct": "% Emplacement", "chaseRate": "Taux de Poursuite", "whiffRate": "Taux de Raté", "exitVelo": "Vélocité de Sortie", "launchAngle": "Angle de Lancement" },
+      "drillNames": { "circleWork": "Travail au Cercle", "longToss": "Lancer Long", "bp": "Rondes BP", "teeWork": "Travail au Tee" },
+      "splitLabels": { "overall": "Global", "vsLHP": "vs Gauchère", "vsRHP": "vs Droitière", "home": "Domicile", "away": "Extérieur" },
+      "heatMapLabels": { "pitchLocation": "Emplacement du Lancer", "chaseZone": "Carte Zone Poursuite", "sweetSpotZone": "Zone Idéale", "locationMap": "Carte Emplacement", "missPattern": "Motif de Ratés" }
+    }
   }
 }

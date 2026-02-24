@@ -908,20 +908,28 @@
     "subtitle": "Mira cómo te comparas con otros atletas",
     "leaderboard": "Tabla de Líderes",
     "rank": "Posición",
-    "player": "Jugador",
+    "athlete": "Atleta",
     "sport": "Deporte",
-    "module": "Módulo",
-    "videosAnalyzed": "Videos Analizados",
-    "lastActive": "Última Actividad",
+    "mpiScore": "Puntuación MPI",
+    "percentile": "Percentil",
+    "trend": "Tendencia",
+    "segment": "Segmento",
+    "yourRank": "Tu Posición",
+    "top100": "Top 100",
+    "you": "Tú",
     "noRankings": "No hay clasificaciones disponibles",
-    "filterBySport": "Filtrar por Deporte",
-    "filterByModule": "Filtrar por Módulo",
-    "missionStatement": "Nuestro objetivo es aumentar las conexiones entre scouts y jugadores a través de benchmarking competitivo. Las clasificaciones están temporalmente deshabilitadas mientras optimizamos esta función.",
-    "unavailable": "Clasificaciones No Disponibles Actualmente",
-    "disabledMessage": "La función de clasificaciones está actualmente deshabilitada. Vuelve pronto para actualizaciones.",
+    "allSegments": "Todos los Segmentos",
+    "youth": "Juvenil",
+    "highSchool": "Secundaria",
+    "college": "Universidad",
+    "pro": "Profesional",
+    "missionStatement": "Clasificaciones globales impulsadas por el Índice de Rendimiento Maestro — compite en todos los niveles con puntuación normalizada.",
+    "unavailable": "Clasificaciones No Disponibles",
+    "disabledMessage": "La función de clasificaciones está deshabilitada. Vuelve pronto.",
     "loadingRankings": "Cargando clasificaciones...",
     "allSports": "Todos los Deportes",
-    "allModules": "Todos los Módulos"
+    "active": "Activo",
+    "failedToLoad": "Error al cargar clasificaciones"
   },
   "nutrition": {
     "saveTip": "Guardar Consejo",
@@ -6831,5 +6839,23 @@
     "title": "Desarrollo de Velocidad",
     "blockA": "Cadena Cinética + Pelota con Peso",
     "blockB": "Sobrecarga/Subcarga + Intención"
+  },
+  "sportTerms": {
+    "baseball": {
+      "pitchTypes": { "fastball": "Recta de 4 Costuras", "secondaryFastball": "Recta de 2 Costuras", "slider": "Slider", "changeup": "Cambio", "curveball": "Curva" },
+      "sessionTypes": { "bullpen": "Sesión de Bullpen", "bp": "Práctica de Bateo", "scrimmage": "Scrimmage en Vivo", "warmup": "Tiro Largo", "cage": "Trabajo de Jaula" },
+      "metrics": { "spinEfficiency": "Eficiencia de Giro", "barrelPct": "% Barril", "commandPct": "% Comando", "chaseRate": "Tasa de Persecución", "whiffRate": "Tasa de Abanico", "exitVelo": "Velocidad de Salida", "launchAngle": "Ángulo de Lanzamiento" },
+      "drillNames": { "moundWork": "Trabajo de Montículo", "longToss": "Tiro Largo", "bp": "Rondas de BP", "teeWork": "Trabajo de Tee" },
+      "splitLabels": { "overall": "General", "vsLHP": "vs Zurdo", "vsRHP": "vs Derecho", "home": "Local", "away": "Visitante" },
+      "heatMapLabels": { "pitchLocation": "Ubicación del Lanzamiento", "chaseZone": "Zona de Persecución", "barrelZone": "Zona de Barril", "commandMap": "Mapa de Comando", "missCluster": "Grupo de Fallos" }
+    },
+    "softball": {
+      "pitchTypes": { "fastball": "Recta (Molino)", "circleChange": "Cambio Circular", "riseball": "Bola Ascendente", "dropBall": "Bola Descendente", "curveball": "Curva (Caída 12-6)" },
+      "sessionTypes": { "bullpen": "Sesión de Círculo", "bp": "Práctica de Bateo", "scrimmage": "Scrimmage en Vivo", "warmup": "Tiro Largo", "cage": "Trabajo de Jaula" },
+      "metrics": { "snapTightness": "Precisión de Snap", "sweetSpotPct": "% Punto Dulce", "locationPct": "% Ubicación", "chaseRate": "Tasa de Persecución", "whiffRate": "Tasa de Abanico", "exitVelo": "Velocidad de Salida", "launchAngle": "Ángulo de Lanzamiento" },
+      "drillNames": { "circleWork": "Trabajo de Círculo", "longToss": "Tiro Largo", "bp": "Rondas de BP", "teeWork": "Trabajo de Tee" },
+      "splitLabels": { "overall": "General", "vsLHP": "vs Zurda", "vsRHP": "vs Derecha", "home": "Local", "away": "Visitante" },
+      "heatMapLabels": { "pitchLocation": "Ubicación del Lanzamiento", "chaseZone": "Zona de Persecución", "sweetSpotZone": "Zona de Punto Dulce", "locationMap": "Mapa de Ubicación", "missPattern": "Patrón de Fallos" }
+    }
   }
 }

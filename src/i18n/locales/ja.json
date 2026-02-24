@@ -952,20 +952,28 @@
     "subtitle": "他のアスリートと比較してみましょう",
     "leaderboard": "リーダーボード",
     "rank": "順位",
-    "player": "選手",
+    "athlete": "アスリート",
     "sport": "スポーツ",
-    "module": "モジュール",
-    "videosAnalyzed": "分析済みビデオ",
-    "lastActive": "最終活動",
+    "mpiScore": "MPIスコア",
+    "percentile": "パーセンタイル",
+    "trend": "トレンド",
+    "segment": "セグメント",
+    "yourRank": "あなたの順位",
+    "top100": "トップ100",
+    "you": "あなた",
     "noRankings": "ランキングはありません",
-    "filterBySport": "スポーツで絞り込み",
-    "filterByModule": "モジュールで絞り込み",
-    "missionStatement": "私たちの目標は、競争的ベンチマーキングを通じてスカウトと選手のつながりを増やすことです。この機能を最適化している間、ランキングは一時的に無効になっています。",
+    "allSegments": "全セグメント",
+    "youth": "ユース",
+    "highSchool": "高校",
+    "college": "大学",
+    "pro": "プロ",
+    "missionStatement": "マスターパフォーマンスインデックスによるグローバルランキング — 正規化されたスコアリングで全レベルで競争。",
     "unavailable": "ランキングは現在利用できません",
-    "disabledMessage": "ランキング機能は現在無効になっています。更新についてはすぐに確認してください。",
+    "disabledMessage": "ランキング機能は現在無効になっています。",
     "loadingRankings": "ランキングを読み込み中...",
     "allSports": "全てのスポーツ",
-    "allModules": "全てのモジュール"
+    "active": "アクティブ",
+    "failedToLoad": "ランキングの読み込みに失敗しました"
   },
   "nutrition": {
     "goalTypes": {
@@ -5821,5 +5829,23 @@
     "title": "球速開発",
     "blockA": "キネティックチェーン＋加重ボール",
     "blockB": "オーバーロード/アンダーロード＋インテント"
+  },
+  "sportTerms": {
+    "baseball": {
+      "pitchTypes": { "fastball": "フォーシーム", "secondaryFastball": "ツーシーム", "slider": "スライダー", "changeup": "チェンジアップ", "curveball": "カーブ" },
+      "sessionTypes": { "bullpen": "ブルペン", "bp": "打撃練習", "scrimmage": "実戦練習", "warmup": "遠投", "cage": "ケージ練習" },
+      "metrics": { "spinEfficiency": "スピン効率", "barrelPct": "バレル率", "commandPct": "コマンド率", "chaseRate": "チェイス率", "whiffRate": "空振り率", "exitVelo": "打球速度", "launchAngle": "打球角度" },
+      "drillNames": { "moundWork": "マウンド練習", "longToss": "遠投", "bp": "BPラウンド", "teeWork": "ティー打撃" },
+      "splitLabels": { "overall": "総合", "vsLHP": "vs 左投手", "vsRHP": "vs 右投手", "home": "ホーム", "away": "アウェイ" },
+      "heatMapLabels": { "pitchLocation": "投球位置", "chaseZone": "チェイスゾーン", "barrelZone": "バレルゾーン", "commandMap": "コマンドマップ", "missCluster": "ミスクラスター" }
+    },
+    "softball": {
+      "pitchTypes": { "fastball": "ファストボール（ウインドミル）", "circleChange": "サークルチェンジ", "riseball": "ライズボール", "dropBall": "ドロップボール", "curveball": "カーブ（12-6ドロップ）" },
+      "sessionTypes": { "bullpen": "サークル練習", "bp": "打撃練習", "scrimmage": "実戦練習", "warmup": "遠投", "cage": "ケージ練習" },
+      "metrics": { "snapTightness": "スナップ精度", "sweetSpotPct": "スイートスポット率", "locationPct": "ロケーション率", "chaseRate": "チェイス率", "whiffRate": "空振り率", "exitVelo": "打球速度", "launchAngle": "打球角度" },
+      "drillNames": { "circleWork": "サークル練習", "longToss": "遠投", "bp": "BPラウンド", "teeWork": "ティー打撃" },
+      "splitLabels": { "overall": "総合", "vsLHP": "vs 左投手", "vsRHP": "vs 右投手", "home": "ホーム", "away": "アウェイ" },
+      "heatMapLabels": { "pitchLocation": "投球位置", "chaseZone": "チェイスゾーン", "sweetSpotZone": "スイートスポットゾーン", "locationMap": "ロケーションマップ", "missPattern": "ミスパターン" }
+    }
   }
 }

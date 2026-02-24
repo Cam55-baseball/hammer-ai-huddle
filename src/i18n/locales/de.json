@@ -978,23 +978,31 @@
   },
   "rankings": {
     "title": "Ranglisten",
-    "subtitle": "Sehen Sie, wie Sie im Vergleich zu anderen Athleten abschneiden",
+    "subtitle": "Sehen Sie, wie Sie im Vergleich abschneiden",
     "leaderboard": "Bestenliste",
     "rank": "Rang",
-    "player": "Spieler",
+    "athlete": "Athlet",
     "sport": "Sport",
-    "module": "Modul",
-    "videosAnalyzed": "Analysierte Videos",
-    "lastActive": "Zuletzt aktiv",
+    "mpiScore": "MPI-Punktzahl",
+    "percentile": "Perzentil",
+    "trend": "Trend",
+    "segment": "Segment",
+    "yourRank": "Ihr Rang",
+    "top100": "Top 100",
+    "you": "Sie",
     "noRankings": "Keine Ranglisten verfügbar",
-    "filterBySport": "Nach Sport filtern",
-    "filterByModule": "Nach Modul filtern",
-    "missionStatement": "Unser Ziel ist es, die Verbindungen zwischen Scouts und Spielern durch wettbewerbsfähiges Benchmarking zu erhöhen. Die Ranglisten sind vorübergehend deaktiviert, während wir diese Funktion optimieren.",
-    "unavailable": "Ranglisten Derzeit Nicht Verfügbar",
-    "disabledMessage": "Die Ranglistenfunktion ist derzeit deaktiviert. Schauen Sie bald wieder vorbei für Updates.",
+    "allSegments": "Alle Segmente",
+    "youth": "Jugend",
+    "highSchool": "Oberschule",
+    "college": "Universität",
+    "pro": "Professionell",
+    "missionStatement": "Globale Ranglisten basierend auf dem Master Performance Index — konkurrieren Sie auf allen Ebenen mit normalisierter Bewertung.",
+    "unavailable": "Ranglisten Nicht Verfügbar",
+    "disabledMessage": "Die Ranglistenfunktion ist derzeit deaktiviert.",
     "loadingRankings": "Ranglisten werden geladen...",
     "allSports": "Alle Sportarten",
-    "allModules": "Alle Module"
+    "active": "Aktiv",
+    "failedToLoad": "Laden der Ranglisten fehlgeschlagen"
   },
   "nutrition": {
     "goalTypes": {
@@ -6422,5 +6430,23 @@
     "title": "Geschwindigkeitsentwicklung",
     "blockA": "Kinetische Kette + Gewichteter Ball",
     "blockB": "Überladung/Unterladung + Absicht"
+  },
+  "sportTerms": {
+    "baseball": {
+      "pitchTypes": { "fastball": "4-Naht-Fastball", "secondaryFastball": "2-Naht-Fastball", "slider": "Slider", "changeup": "Changeup", "curveball": "Curveball" },
+      "sessionTypes": { "bullpen": "Bullpen-Sitzung", "bp": "Schlagtraining", "scrimmage": "Live-Scrimmage", "warmup": "Langwurf", "cage": "Käfigarbeit" },
+      "metrics": { "spinEfficiency": "Dreheffizienz", "barrelPct": "Barrel %", "commandPct": "Kommando %", "chaseRate": "Verfolgungsrate", "whiffRate": "Fehlschlagrate", "exitVelo": "Abgangsgeschwindigkeit", "launchAngle": "Startwinkel" },
+      "drillNames": { "moundWork": "Hügelarbeit", "longToss": "Langwurf", "bp": "BP-Runden", "teeWork": "Tee-Arbeit" },
+      "splitLabels": { "overall": "Gesamt", "vsLHP": "vs Linkshänder", "vsRHP": "vs Rechtshänder", "home": "Heim", "away": "Auswärts" },
+      "heatMapLabels": { "pitchLocation": "Wurfposition", "chaseZone": "Verfolgungszone", "barrelZone": "Barrel-Zone", "commandMap": "Kommandokarte", "missCluster": "Fehlschlag-Cluster" }
+    },
+    "softball": {
+      "pitchTypes": { "fastball": "Fastball (Windmühle)", "circleChange": "Circle Change", "riseball": "Riseball", "dropBall": "Drop Ball", "curveball": "Curveball (12-6 Drop)" },
+      "sessionTypes": { "bullpen": "Kreis-Sitzung", "bp": "Schlagtraining", "scrimmage": "Live-Scrimmage", "warmup": "Langwurf", "cage": "Käfigarbeit" },
+      "metrics": { "snapTightness": "Snap-Präzision", "sweetSpotPct": "Sweet Spot %", "locationPct": "Standort %", "chaseRate": "Verfolgungsrate", "whiffRate": "Fehlschlagrate", "exitVelo": "Abgangsgeschwindigkeit", "launchAngle": "Startwinkel" },
+      "drillNames": { "circleWork": "Kreisarbeit", "longToss": "Langwurf", "bp": "BP-Runden", "teeWork": "Tee-Arbeit" },
+      "splitLabels": { "overall": "Gesamt", "vsLHP": "vs Linkshänderin", "vsRHP": "vs Rechtshänderin", "home": "Heim", "away": "Auswärts" },
+      "heatMapLabels": { "pitchLocation": "Wurfposition", "chaseZone": "Verfolgungszone", "sweetSpotZone": "Sweet-Spot-Zone", "locationMap": "Standortkarte", "missPattern": "Fehlmuster" }
+    }
   }
 }

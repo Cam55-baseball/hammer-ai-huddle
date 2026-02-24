@@ -952,20 +952,28 @@
     "subtitle": "看看您与其他运动员的比较",
     "leaderboard": "排行榜",
     "rank": "排名",
-    "player": "球员",
+    "athlete": "运动员",
     "sport": "运动",
-    "module": "模块",
-    "videosAnalyzed": "已分析视频",
-    "lastActive": "最后活跃",
+    "mpiScore": "MPI分数",
+    "percentile": "百分位",
+    "trend": "趋势",
+    "segment": "分段",
+    "yourRank": "您的排名",
+    "top100": "前100名",
+    "you": "您",
     "noRankings": "暂无排名",
-    "filterBySport": "按运动筛选",
-    "filterByModule": "按模块筛选",
-    "missionStatement": "我们的目标是通过竞争性基准测试增加球探与球员之间的联系。在我们优化此功能时，排名暂时禁用。",
+    "allSegments": "所有分段",
+    "youth": "青少年",
+    "highSchool": "高中",
+    "college": "大学",
+    "pro": "职业",
+    "missionStatement": "由大师表现指数驱动的全球排名 — 通过标准化评分在所有级别竞争。",
     "unavailable": "排名当前不可用",
-    "disabledMessage": "排名功能当前已禁用。请稍后查看更新。",
+    "disabledMessage": "排名功能当前已禁用。",
     "loadingRankings": "加载排名中...",
     "allSports": "所有运动",
-    "allModules": "所有模块"
+    "active": "活跃",
+    "failedToLoad": "加载排名失败"
   },
   "nutrition": {
     "goalTypes": {
@@ -5665,5 +5673,23 @@
     "title": "球速开发",
     "blockA": "动力链 + 加重球",
     "blockB": "超负荷/欠负荷 + 意图"
+  },
+  "sportTerms": {
+    "baseball": {
+      "pitchTypes": { "fastball": "四缝快速球", "secondaryFastball": "二缝快速球", "slider": "滑球", "changeup": "变速球", "curveball": "曲球" },
+      "sessionTypes": { "bullpen": "牛棚练习", "bp": "打击练习", "scrimmage": "实战模拟", "warmup": "远传", "cage": "笼内练习" },
+      "metrics": { "spinEfficiency": "旋转效率", "barrelPct": "甜蜜区率", "commandPct": "控球率", "chaseRate": "追击率", "whiffRate": "挥空率", "exitVelo": "出球速度", "launchAngle": "出球角度" },
+      "drillNames": { "moundWork": "投球丘练习", "longToss": "远传", "bp": "BP轮次", "teeWork": "击球座练习" },
+      "splitLabels": { "overall": "总体", "vsLHP": "对左投", "vsRHP": "对右投", "home": "主场", "away": "客场" },
+      "heatMapLabels": { "pitchLocation": "投球位置", "chaseZone": "追击区图", "barrelZone": "甜蜜区", "commandMap": "控球图", "missCluster": "失误集群" }
+    },
+    "softball": {
+      "pitchTypes": { "fastball": "快速球（风车）", "circleChange": "圆形变速球", "riseball": "上升球", "dropBall": "下沉球", "curveball": "曲球（12-6下沉）" },
+      "sessionTypes": { "bullpen": "圆圈练习", "bp": "打击练习", "scrimmage": "实战模拟", "warmup": "远传", "cage": "笼内练习" },
+      "metrics": { "snapTightness": "手腕紧密度", "sweetSpotPct": "甜蜜区率", "locationPct": "位置率", "chaseRate": "追击率", "whiffRate": "挥空率", "exitVelo": "出球速度", "launchAngle": "出球角度" },
+      "drillNames": { "circleWork": "圆圈练习", "longToss": "远传", "bp": "BP轮次", "teeWork": "击球座练习" },
+      "splitLabels": { "overall": "总体", "vsLHP": "对左投", "vsRHP": "对右投", "home": "主场", "away": "客场" },
+      "heatMapLabels": { "pitchLocation": "投球位置", "chaseZone": "追击区图", "sweetSpotZone": "甜蜜区", "locationMap": "位置图", "missPattern": "失误模式" }
+    }
   }
 }

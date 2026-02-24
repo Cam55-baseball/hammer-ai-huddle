@@ -5,152 +5,222 @@ import { RankingsTable } from "@/components/RankingsTable";
 import { RankingsFilters } from "@/components/RankingsFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
-import { Lock } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { getGradeLabel } from "@/lib/gradeLabel";
 
-interface RankingData {
+export interface MPIRankingData {
   user_id: string;
   full_name: string;
   sport: string;
-  module: string;
-  videos_analyzed: number;
-  last_activity: string;
+  adjusted_global_score: number | null;
+  global_rank: number | null;
+  global_percentile: number | null;
+  trend_direction: string | null;
+  trend_delta_30d: number | null;
+  segment_pool: string | null;
 }
 
 export default function Rankings() {
   const { t } = useTranslation();
-  const [rankings, setRankings] = useState<RankingData[]>([]);
+  const [rankings, setRankings] = useState<MPIRankingData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSport, setSelectedSport] = useState<string>("all");
-  const [selectedModule, setSelectedModule] = useState<string>("all");
-  const [rankingsDisabled, setRankingsDisabled] = useState(false);
-  const { user, session } = useAuth();
-  const { toast } = useToast();
+  const [selectedSport, setSelectedSport] = useState<string>("baseball");
+  const [selectedSegment, setSelectedSegment] = useState<string>("all");
+  const [userRank, setUserRank] = useState<MPIRankingData | null>(null);
+  const { user } = useAuth();
 
   const fetchRankings = async () => {
-    if (!session?.access_token) {
-      console.log("No session available, skipping rankings fetch");
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase.functions.invoke('get-rankings', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: {
-          sport: selectedSport,
-          module: selectedModule,
-        },
-      });
 
+      let query = supabase
+        .from("mpi_scores")
+        .select(`
+          user_id,
+          sport,
+          adjusted_global_score,
+          global_rank,
+          global_percentile,
+          trend_direction,
+          trend_delta_30d,
+          segment_pool
+        `)
+        .eq("sport", selectedSport)
+        .not("adjusted_global_score", "is", null)
+        .order("global_rank", { ascending: true, nullsFirst: false })
+        .limit(100);
+
+      if (selectedSegment !== "all") {
+        query = query.ilike("segment_pool", `%${selectedSegment}%`);
+      }
+
+      const { data: mpiData, error } = await query;
       if (error) throw error;
 
-      // Normalize response - handle both direct array and wrapped object formats
-      const normalizedRankings = Array.isArray(data) 
-        ? data 
-        : Array.isArray(data?.data) 
-          ? data.data 
-          : [];
+      // Get user IDs to fetch names
+      const userIds = (mpiData || []).map((d) => d.user_id);
+      let profilesMap: Record<string, string> = {};
 
-      // Check if rankings are disabled
-      if (data?.disabled) {
-        setRankingsDisabled(true);
-        setRankings([]);
-      } else {
-        setRankingsDisabled(false);
-        setRankings(normalizedRankings);
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", userIds);
+
+        if (profiles) {
+          profilesMap = Object.fromEntries(
+            profiles.map((p) => [p.id, p.full_name || "Anonymous"])
+          );
+        }
+      }
+
+      const ranked: MPIRankingData[] = (mpiData || []).map((d) => ({
+        ...d,
+        full_name: profilesMap[d.user_id] || "Anonymous",
+      }));
+
+      setRankings(ranked);
+
+      // Find current user's rank
+      if (user) {
+        const found = ranked.find((r) => r.user_id === user.id);
+        if (found) {
+          setUserRank(found);
+        } else {
+          // User might not be in top 100, fetch separately
+          const { data: userMpi } = await supabase
+            .from("mpi_scores")
+            .select("user_id, sport, adjusted_global_score, global_rank, global_percentile, trend_direction, trend_delta_30d, segment_pool")
+            .eq("user_id", user.id)
+            .eq("sport", selectedSport)
+            .order("calculation_date", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (userMpi) {
+            const { data: userProfile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", user.id)
+              .maybeSingle();
+
+            setUserRank({
+              ...userMpi,
+              full_name: userProfile?.full_name || "You",
+            });
+          } else {
+            setUserRank(null);
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching rankings:", error);
-      toast({
-        title: t('common.error'),
-        description: t('rankings.failedToLoad'),
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (session?.access_token) {
-      fetchRankings();
-    }
-  }, [selectedSport, selectedModule, session?.access_token]);
+    fetchRankings();
+  }, [selectedSport, selectedSegment, user?.id]);
 
-  // Set up realtime subscription
+  // Realtime subscription on mpi_scores
   useEffect(() => {
-    if (!session?.access_token) return;
-
     const channel = supabase
-      .channel("rankings-changes")
+      .channel("rankings-mpi-changes")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "user_progress",
-        },
-        () => {
-          fetchRankings();
-        }
+        { event: "*", schema: "public", table: "mpi_scores" },
+        () => fetchRankings()
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedSport, selectedModule, session?.access_token]);
+  }, [selectedSport, selectedSegment, user?.id]);
+
+  const TrendIcon = userRank?.trend_direction === "rising" ? TrendingUp : userRank?.trend_direction === "dropping" ? TrendingDown : Minus;
+  const trendColor = userRank?.trend_direction === "rising" ? "text-green-500" : userRank?.trend_direction === "dropping" ? "text-red-500" : "text-muted-foreground";
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">{t('rankings.title')}</h1>
-        <p className="text-muted-foreground">
-          {t('rankings.subtitle')}
-        </p>
-      </div>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{t("rankings.title")}</h1>
+          <p className="text-muted-foreground">{t("rankings.subtitle")}</p>
+        </div>
 
-      <Card className="relative overflow-hidden border-red-700 bg-gradient-to-r from-red-600 via-red-500 to-red-700 bg-[length:200%_200%] animate-gradient-shift">
-        <CardContent className="py-4">
-          <p className="text-white text-center font-montserrat font-extrabold text-xl md:text-2xl tracking-wider uppercase leading-relaxed drop-shadow-lg">
-            {t('rankings.missionStatement')}
-          </p>
-        </CardContent>
-      </Card>
+        <Card className="relative overflow-hidden border-red-700 bg-gradient-to-r from-red-600 via-red-500 to-red-700 bg-[length:200%_200%] animate-gradient-shift">
+          <CardContent className="py-4">
+            <p className="text-white text-center font-montserrat font-extrabold text-xl md:text-2xl tracking-wider uppercase leading-relaxed drop-shadow-lg">
+              {t("rankings.missionStatement")}
+            </p>
+          </CardContent>
+        </Card>
 
-      {rankingsDisabled ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Lock className="h-16 w-16 text-muted-foreground/50 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">{t('rankings.unavailable')}</h3>
-              <p className="text-muted-foreground text-center max-w-md">
-                {t('rankings.disabledMessage')}
-              </p>
+        {/* Sport Tabs */}
+        <Tabs value={selectedSport} onValueChange={setSelectedSport}>
+          <TabsList>
+            <TabsTrigger value="baseball">{t("dashboard.baseball")}</TabsTrigger>
+            <TabsTrigger value="softball">{t("dashboard.softball")}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {/* Your Rank Card */}
+        {userRank && userRank.adjusted_global_score != null && (
+          <Card className="border-primary/30 bg-accent/20">
+            <CardContent className="py-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Trophy className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="text-sm text-muted-foreground font-medium">{t("rankings.yourRank")}</p>
+                    <p className="text-2xl font-bold">
+                      #{userRank.global_rank ?? "—"}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">{t("rankings.mpiScore")}</p>
+                  <p className="text-xl font-bold">{Math.round(userRank.adjusted_global_score)}</p>
+                  <p className="text-xs text-primary font-medium">{getGradeLabel(userRank.adjusted_global_score)}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">{t("rankings.percentile")}</p>
+                  <p className="text-xl font-bold">
+                    {userRank.global_percentile != null ? `${Math.round(userRank.global_percentile)}th` : "—"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <TrendIcon className={`h-5 w-5 ${trendColor}`} />
+                  {userRank.trend_delta_30d != null && (
+                    <span className={`text-sm font-medium ${trendColor}`}>
+                      {userRank.trend_delta_30d > 0 ? "+" : ""}
+                      {userRank.trend_delta_30d.toFixed(1)}
+                    </span>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
-        ) : (
-          <>
-            <RankingsFilters
-              selectedSport={selectedSport}
-              selectedModule={selectedModule}
-              onSportChange={setSelectedSport}
-              onModuleChange={setSelectedModule}
-            />
-
-            <RankingsTable
-              rankings={rankings}
-              loading={loading}
-              currentUserId={user?.id}
-            />
-          </>
         )}
+
+        <RankingsFilters
+          selectedSegment={selectedSegment}
+          onSegmentChange={setSelectedSegment}
+        />
+
+        <div>
+          <h2 className="text-lg font-semibold mb-3">{t("rankings.top100")}</h2>
+          <RankingsTable
+            rankings={rankings}
+            loading={loading}
+            currentUserId={user?.id}
+          />
+        </div>
       </div>
     </DashboardLayout>
   );

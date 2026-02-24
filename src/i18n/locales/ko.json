@@ -949,23 +949,31 @@
   },
   "rankings": {
     "title": "랭킹",
+    "subtitle": "다른 선수들과 비교해 보세요",
     "leaderboard": "리더보드",
     "rank": "순위",
-    "player": "선수",
+    "athlete": "선수",
     "sport": "스포츠",
-    "module": "모듈",
-    "videosAnalyzed": "분석된 비디오",
-    "lastActive": "마지막 활동",
+    "mpiScore": "MPI 점수",
+    "percentile": "백분위",
+    "trend": "트렌드",
+    "segment": "세그먼트",
+    "yourRank": "내 순위",
+    "top100": "상위 100",
+    "you": "나",
     "noRankings": "랭킹 없음",
-    "filterBySport": "스포츠별 필터",
-    "filterByModule": "모듈별 필터",
-    "subtitle": "다른 선수들과 비교해 보세요",
-    "missionStatement": "우리의 목표는 경쟁적 벤치마킹을 통해 스카우트와 선수 간의 연결을 증가시키는 것입니다. 이 기능을 최적화하는 동안 랭킹은 일시적으로 비활성화되어 있습니다.",
+    "allSegments": "모든 세그먼트",
+    "youth": "유소년",
+    "highSchool": "고등학교",
+    "college": "대학",
+    "pro": "프로",
+    "missionStatement": "마스터 퍼포먼스 인덱스 기반 글로벌 랭킹 — 정규화된 점수로 모든 레벨에서 경쟁하세요.",
     "unavailable": "랭킹 현재 이용 불가",
-    "disabledMessage": "랭킹 기능이 현재 비활성화되어 있습니다. 업데이트를 위해 나중에 다시 확인해 주세요.",
+    "disabledMessage": "랭킹 기능이 현재 비활성화되어 있습니다.",
     "loadingRankings": "랭킹 로딩 중...",
     "allSports": "모든 스포츠",
-    "allModules": "모든 모듈"
+    "active": "활성",
+    "failedToLoad": "랭킹 로드 실패"
   },
   "nutrition": {
     "goalTypes": {
@@ -5706,5 +5714,23 @@
     "title": "구속 개발",
     "blockA": "운동 사슬 + 가중 볼",
     "blockB": "오버로드/언더로드 + 의도"
+  },
+  "sportTerms": {
+    "baseball": {
+      "pitchTypes": { "fastball": "포심 패스트볼", "secondaryFastball": "투심 패스트볼", "slider": "슬라이더", "changeup": "체인지업", "curveball": "커브볼" },
+      "sessionTypes": { "bullpen": "불펜 세션", "bp": "타격 연습", "scrimmage": "실전 연습", "warmup": "롱토스", "cage": "케이지 훈련" },
+      "metrics": { "spinEfficiency": "회전 효율", "barrelPct": "배럴 %", "commandPct": "커맨드 %", "chaseRate": "체이스율", "whiffRate": "헛스윙율", "exitVelo": "타구 속도", "launchAngle": "발사 각도" },
+      "drillNames": { "moundWork": "마운드 훈련", "longToss": "롱토스", "bp": "BP 라운드", "teeWork": "티 훈련" },
+      "splitLabels": { "overall": "종합", "vsLHP": "vs 좌투수", "vsRHP": "vs 우투수", "home": "홈", "away": "원정" },
+      "heatMapLabels": { "pitchLocation": "투구 위치", "chaseZone": "체이스 존 맵", "barrelZone": "배럴 존", "commandMap": "커맨드 맵", "missCluster": "실투 클러스터" }
+    },
+    "softball": {
+      "pitchTypes": { "fastball": "패스트볼 (윈드밀)", "circleChange": "서클 체인지", "riseball": "라이즈볼", "dropBall": "드롭볼", "curveball": "커브볼 (12-6 드롭)" },
+      "sessionTypes": { "bullpen": "서클 세션", "bp": "타격 연습", "scrimmage": "실전 연습", "warmup": "롱토스", "cage": "케이지 훈련" },
+      "metrics": { "snapTightness": "스냅 정확도", "sweetSpotPct": "스위트 스팟 %", "locationPct": "위치 %", "chaseRate": "체이스율", "whiffRate": "헛스윙율", "exitVelo": "타구 속도", "launchAngle": "발사 각도" },
+      "drillNames": { "circleWork": "서클 훈련", "longToss": "롱토스", "bp": "BP 라운드", "teeWork": "티 훈련" },
+      "splitLabels": { "overall": "종합", "vsLHP": "vs 좌투수", "vsRHP": "vs 우투수", "home": "홈", "away": "원정" },
+      "heatMapLabels": { "pitchLocation": "투구 위치", "chaseZone": "체이스 존 맵", "sweetSpotZone": "스위트 스팟 존", "locationMap": "위치 맵", "missPattern": "실투 패턴" }
+    }
   }
 }
