@@ -108,6 +108,7 @@ const SYSTEM_TASKS: Record<string, { title: string; icon: LucideIcon; color: str
   'video-pitching': { title: 'Video Analysis (Pitching)', icon: Eye, color: '#3b82f6' },
   'video-throwing': { title: 'Video Analysis (Throwing)', icon: Eye, color: '#3b82f6' },
   'speed-lab': { title: 'Speed Lab', icon: Zap, color: '#eab308' },
+  'explosive-conditioning': { title: 'Explosive Conditioning', icon: Zap, color: '#eab308' },
   
   // Tracking tasks
   'tracking-performance': { title: 'Performance Tracking', icon: Activity, color: '#3b82f6' },
@@ -129,7 +130,7 @@ const DEFAULT_DAILY_TASKS = [
 // Tasks that require module access
 const MODULE_GATED_TASKS: Record<string, string[]> = {
   hitting: ['texvision', 'video-hitting', 'tracking-grades'],
-  pitching: ['video-pitching', 'tracking-pitching-grades'],
+  pitching: ['video-pitching', 'tracking-pitching-grades', 'explosive-conditioning'],
   throwing: ['video-throwing', 'speed-lab'],
 };
 

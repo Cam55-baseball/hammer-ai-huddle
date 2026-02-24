@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Target, Dumbbell, ArrowRight } from "lucide-react";
+import { Target, Dumbbell, ArrowRight, Zap } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 
@@ -19,6 +19,14 @@ const tiles = [
     labelFallback: "Heat Factory",
     description: "Build arm strength and durability with structured training",
     getRoute: () => "/production-studio",
+  },
+  {
+    key: "explosive-conditioning",
+    icon: Zap,
+    labelKey: "explosiveConditioning.title",
+    labelFallback: "Explosive Conditioning",
+    description: "Build elite speed and explosive power with structured conditioning",
+    getRoute: () => "/explosive-conditioning",
   },
 ] as const;
 

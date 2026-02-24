@@ -86,6 +86,7 @@ const HelpDesk = lazyWithRetry(() => import("./pages/HelpDesk"));
 const FiveToolPlayer = lazyWithRetry(() => import("./pages/FiveToolPlayer"));
 const GoldenTwoWay = lazyWithRetry(() => import("./pages/GoldenTwoWay"));
 const TheUnicorn = lazyWithRetry(() => import("./pages/TheUnicorn"));
+const ExplosiveConditioning = lazyWithRetry(() => import("./pages/ExplosiveConditioning"));
 
 const queryClient = new QueryClient();
 
@@ -150,6 +151,7 @@ const App = () => {
               <Route path="/5tool-player" element={<FiveToolPlayer />} />
               <Route path="/golden-2way" element={<GoldenTwoWay />} />
               <Route path="/the-unicorn" element={<TheUnicorn />} />
+              <Route path="/explosive-conditioning" element={<ExplosiveConditioning />} />
               <Route path="/help-desk" element={<HelpDesk />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
