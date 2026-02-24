@@ -1,88 +1,48 @@
 
 
-# Add "Explosive Conditioning" to Complete Pitcher (Baseball + Softball)
+# Fix: Add Start/Pause/Resume Flow to Speed Lab and Explosive Conditioning
 
-## Overview
+## Root Cause
 
-Create **Explosive Conditioning** as a pitcher-tier version of Speed Lab. Since the underlying `useSpeedProgress` hook already accepts a `SportType` (`'baseball'` | `'softball'`) and provides sport-specific distance protocols (Baseball: 10/30/60 yd; Softball: 7/20/40 yd), the new page inherits full sport support automatically. Speed Lab remains completely untouched for 5Tool and Golden 2Way users.
+The `speed_goals` table has a `program_status` column (default: `'not_started'`). Both pages render the pause button only when `programStatus === 'active'`. However, unlike Iron Bambino and Heat Factory, the speed pages skip directly to the main view when a goals record exists (`initialized === true`) without checking `programStatus`. Existing users' records were created before the status feature, so their status is stuck at `'not_started'` -- the pause button never appears.
 
-## Changes
+## Solution
 
-### 1. New File: `src/pages/ExplosiveConditioning.tsx`
+Add the same Start/Pause/Resume pattern used by Iron Bambino, Heat Factory, and The Unicorn:
 
-Copy of `SpeedLab.tsx` with these differences:
-- All display text changed from "Speed Lab" to "Explosive Conditioning"
-- Access check uses `pitching`/`pitcher` module instead of `throwing`
-- No-access message references Complete Pitcher subscription
-- Same `useSpeedProgress(selectedSport)` call, which already handles baseball vs softball distances, drills, and protocols
+### 1. `src/hooks/useSpeedProgress.ts` -- Add `startProgram` function
 
-### 2. `src/App.tsx`
+Add a new `startProgram` callback that updates an existing `speed_goals` record from `'not_started'` to `'active'`. This is distinct from `initializeJourney` (which creates a new record). Return it alongside `pauseProgram` and `resumeProgram`.
 
-- Add lazy import for `ExplosiveConditioning`
-- Add route: `/explosive-conditioning`
+### 2. `src/pages/SpeedLab.tsx` -- Add "not started" gate
 
-### 3. `src/pages/CompletePitcher.tsx`
+After the `!initialized` check (line 128), add a new condition:
 
-Add a third tile:
-- Key: `explosive-conditioning`
-- Icon: `Zap`
-- Label: "Explosive Conditioning"
-- Description: "Build elite speed and explosive power with structured conditioning"
-- Route: `/explosive-conditioning`
+```
+if (programStatus === 'not_started') {
+  return <ProgramStartCard ... onStart={startProgram} />;
+}
+```
 
-### 4. `src/components/AppSidebar.tsx`
+This shows the same "Start Program" landing card used by other programs. Once the user clicks "Start Program", the status updates to `'active'`, the main view renders, and the pause button appears in the header.
 
-Add "Explosive Conditioning" to the Complete Pitcher sidebar subModules, linking to `/explosive-conditioning`.
+### 3. `src/pages/ExplosiveConditioning.tsx` -- Same change
 
-### 5. `src/constants/tiers.ts`
+Identical gate added after the `!initialized` check, with "Explosive Conditioning" branding.
 
-Add `'Explosive Conditioning'` to the pitcher tier's `includes` array.
+## User Flow After Fix
 
-### 6. `src/constants/trainingSchedules.ts`
+1. **First visit (no record)**: Onboarding card appears, clicking "Start My Speed Journey" creates the record with `active` status
+2. **Existing user (record exists, status `not_started`)**: "Start Program" card appears, clicking it updates status to `active`
+3. **Active**: Main view with pause button visible in header
+4. **Paused**: Main view with resume banner at top, pause button hidden
 
-Add: `'explosive-conditioning': [1, 3, 5]` (Mon, Wed, Fri -- same CNS recovery pattern as Speed Lab).
+## Files Changed
 
-### 7. `src/hooks/useGamePlan.ts`
+| File | Change |
+|------|--------|
+| `src/hooks/useSpeedProgress.ts` | Add `startProgram` function that updates existing goals to `active` |
+| `src/pages/SpeedLab.tsx` | Add `ProgramStartCard` gate when `programStatus === 'not_started'` |
+| `src/pages/ExplosiveConditioning.tsx` | Same `ProgramStartCard` gate with "Explosive Conditioning" branding |
 
-Add an "Explosive Conditioning" Game Plan task:
-- Gated by `hasPitchingAccess` and NOT `hasThrowingAccess` (avoids duplication for Golden 2Way users who already see Speed Lab)
-- Task ID: `explosive-conditioning`, links to `/explosive-conditioning`
-- Reads completion from the same `speed_sessions` table
-- Shows CNS lockout/recovery badge identically to Speed Lab
-
-### 8. `src/hooks/useCalendar.ts`
-
-- Add `'explosive-conditioning'` to task metadata (title "Explosive Conditioning", Zap icon)
-- Add `'explosive-conditioning'` to the pitching module task list
-
-### 9. `src/hooks/useCalendarActivityDetail.ts`
-
-Add route mapping: `'explosive-conditioning': '/explosive-conditioning'`
-
-## Sport Support
-
-No special handling needed. The `useSpeedProgress` hook already:
-- Reads `selectedSport` from localStorage (`'baseball'` or `'softball'`)
-- Selects sport-specific distances (10/30/60 yd vs 7/20/40 yd)
-- Filters drills by sport
-- Stores sessions with the sport column in `speed_sessions`
-
-Both baseball and softball users on the Complete Pitcher tier will get the correct protocols automatically.
-
-## What Does NOT Change
-
-- Speed Lab page, route, components, and all 5Tool/Golden 2Way references
-- Database tables (`speed_sessions`, `speed_goals`, `athlete_load_tracking`)
-- Edge functions and CNS load calculations
-- `useSpeedProgress` hook
-
-## Access Summary
-
-| Tier | Speed Lab | Explosive Conditioning |
-|------|-----------|----------------------|
-| Complete Pitcher (baseball) | No | Yes |
-| Complete Pitcher (softball) | No | Yes |
-| 5Tool Player | Yes | No |
-| Golden 2Way | Yes | No |
-| Owner/Admin | Both | Both |
-
+No database migrations needed -- the `program_status` column already exists.
