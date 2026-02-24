@@ -23,6 +23,46 @@ import { ColorCustomizationCard } from "@/components/ColorCustomizationCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+import { ContractStatusCard } from "@/components/professional/ContractStatusCard";
+import { VerifiedStatSubmission } from "@/components/professional/VerifiedStatSubmission";
+import { SportBadge } from "@/components/professional/SportBadge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
+
+function PracticeIntelligenceSections() {
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const toggle = (key: string) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+
+  return (
+    <div className="space-y-4 mb-6">
+      <div className="flex items-center gap-2 mb-2">
+        <h3 className="text-xl font-bold">Practice Intelligence</h3>
+        <SportBadge />
+      </div>
+
+      <Collapsible open={openSections.pro} onOpenChange={() => toggle('pro')}>
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+          <span className="font-medium text-sm">Professional Status</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${openSections.pro ? 'rotate-180' : ''}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-2">
+          <ContractStatusCard />
+        </CollapsibleContent>
+      </Collapsible>
+
+      <Collapsible open={openSections.stats} onOpenChange={() => toggle('stats')}>
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+          <span className="font-medium text-sm">Verified Stats</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${openSections.stats ? 'rotate-180' : ''}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-2">
+          <VerifiedStatSubmission />
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+}
+
 export default function Profile() {
   const { user, session, loading: authLoading } = useAuth();
   const { isOwner, loading: ownerLoading } = useOwnerAccess();
@@ -1618,6 +1658,11 @@ export default function Profile() {
               </div>
             </div>
           </Card>
+        )}
+
+        {/* Practice Intelligence Sections - Only show on own profile */}
+        {!viewingOtherProfile && (
+          <PracticeIntelligenceSections />
         )}
 
         {/* Color Customization Card - Only show on own profile */}

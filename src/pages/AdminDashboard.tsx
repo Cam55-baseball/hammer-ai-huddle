@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ScoutApplicationCard } from '@/components/ScoutApplicationCard';
+import { GovernanceFlagCard } from '@/components/authority/GovernanceFlagCard';
+import { useGovernanceFlags } from '@/hooks/useGovernanceFlags';
 
 interface Video {
   id: string;
@@ -42,6 +44,40 @@ interface ScoutApplication {
   created_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
+}
+
+function GovernanceTab() {
+  const { data: flags, resolveFlag } = useGovernanceFlags({ allUsers: true });
+  const [filter, setFilter] = useState<'active' | 'resolved' | 'all'>('active');
+  const filtered = (flags ?? []).filter((f: any) => {
+    if (filter === 'active') return f.status !== 'resolved';
+    if (filter === 'resolved') return f.status === 'resolved';
+    return true;
+  });
+
+  return (
+    <Card className="p-6">
+      <h2 className="text-2xl font-bold mb-4">Governance Flags</h2>
+      <div className="flex gap-2 mb-4">
+        {(['active', 'resolved', 'all'] as const).map(f => (
+          <Button key={f} variant={filter === f ? 'default' : 'outline'} size="sm" onClick={() => setFilter(f)} className="capitalize">{f}</Button>
+        ))}
+      </div>
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <p className="text-muted-foreground">No {filter} flags</p>
+        ) : (
+          filtered.map((flag: any) => (
+            <GovernanceFlagCard
+              key={flag.id}
+              flag={flag}
+              onResolve={(id, action) => resolveFlag.mutate({ flagId: id, action })}
+            />
+          ))
+        )}
+      </div>
+    </Card>
+  );
 }
 
 const AdminDashboard = () => {
@@ -189,6 +225,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="videos">Videos</TabsTrigger>
             <TabsTrigger value="training">Training Data</TabsTrigger>
             <TabsTrigger value="applications">Scout Applications</TabsTrigger>
+            <TabsTrigger value="governance">Governance</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -345,6 +382,10 @@ const AdminDashboard = () => {
                 </TabsContent>
               </Tabs>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="governance" className="space-y-4">
+            <GovernanceTab />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">

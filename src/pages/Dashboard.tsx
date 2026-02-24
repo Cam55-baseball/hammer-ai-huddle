@@ -23,6 +23,9 @@ import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleS
 import { GamePlanCard } from "@/components/GamePlanCard";
 import { ScoutGamePlanCard } from "@/components/ScoutGamePlanCard";
 import { toast } from "sonner";
+import { useMPIScores } from "@/hooks/useMPIScores";
+import { useAIPrompts } from "@/hooks/useAIPrompts";
+import { Activity, Lightbulb, TrendingUp } from "lucide-react";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
 import dashboardHero2 from "@/assets/dashboard-hero-1.jpg";
 import dashboardHero3 from "@/assets/dashboard-hero-2.jpg";
@@ -30,6 +33,50 @@ import dashboardHero4 from "@/assets/dashboard-hero-3.jpg";
 
 type ModuleType = "hitting" | "pitching" | "throwing" | "pitcher" | "5tool" | "golden2way";
 type SportType = "baseball" | "softball";
+
+function PracticeIntelligenceCard() {
+  const { data: mpi } = useMPIScores();
+  const { prompts, hasPrompts } = useAIPrompts();
+  const navigate = useNavigate();
+
+  const gradeLabel = mpi?.adjusted_global_score
+    ? mpi.adjusted_global_score >= 70 ? 'Elite' : mpi.adjusted_global_score >= 60 ? 'Plus' : mpi.adjusted_global_score >= 50 ? 'Average' : 'Developing'
+    : null;
+
+  return (
+    <Card className="p-4 sm:p-6 border-primary/20">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-full bg-primary/10">
+            <Activity className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg">Practice Intelligence</h3>
+            {mpi ? (
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-2xl font-bold">{mpi.adjusted_global_score ?? '—'}</span>
+                <span className="text-sm text-muted-foreground">MPI • {gradeLabel}</span>
+                {mpi.trend_direction === 'rising' && <TrendingUp className="h-4 w-4 text-green-600" />}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-1">Start logging sessions to build your MPI score</p>
+            )}
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate('/practice')}>Practice Hub</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate('/progress')}>Progress</Button>
+        </div>
+      </div>
+      {hasPrompts && prompts[0] && (
+        <div className="mt-3 flex items-start gap-2 rounded-lg bg-muted/30 p-2">
+          <Lightbulb className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground">{prompts[0]}</p>
+        </div>
+      )}
+    </Card>
+  );
+}
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -426,6 +473,9 @@ export default function Dashboard() {
             <span className="sm:hidden">{t('dashboard.refresh')}</span>
           </Button>
         </div>
+
+        {/* Practice Intelligence Summary */}
+        <PracticeIntelligenceCard />
 
         {/* Module Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 module-cards">
