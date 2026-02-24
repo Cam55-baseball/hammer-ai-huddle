@@ -24,6 +24,7 @@ export const TIER_CONFIG: Record<string, TierConfig> = {
     includes: [
       'Pitching Analysis',
       'Heat Factory',
+      'Explosive Conditioning',
       'Ask the Coach',
       'Vault Access',
     ],

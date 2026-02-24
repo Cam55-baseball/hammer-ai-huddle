@@ -850,6 +850,22 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }
 
+  // Explosive Conditioning task (pitching module gated, only if NOT already showing Speed Lab)
+  if (hasPitchingAccess && !hasThrowingAccess && isSpeedLabProgramActive && shouldShowTrainingTask('explosive-conditioning')) {
+    tasks.push({
+      id: 'explosive-conditioning',
+      titleKey: 'gamePlan.explosiveConditioning.title',
+      descriptionKey: 'gamePlan.explosiveConditioning.description',
+      completed: completionStatus['speed-lab'] || false,
+      icon: Zap,
+      link: '/explosive-conditioning',
+      module: 'pitching',
+      taskType: 'workout',
+      section: 'training',
+      badge: completionStatus['speed-lab-locked'] ? 'gamePlan.speedLab.recoveryBadge' : undefined,
+    });
+  }
+
   // Video analysis tasks
   if (hasHittingAccess) {
     tasks.push({

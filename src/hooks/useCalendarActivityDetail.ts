@@ -43,6 +43,7 @@ const SYSTEM_TASK_ROUTES: Record<string, string> = {
   'workout-pitching': '/production-studio',
   'cycle': '/cycle-tracking',
   'speed-lab': '/speed-lab',
+  'explosive-conditioning': '/explosive-conditioning',
 };
 
 export function useCalendarActivityDetail(
