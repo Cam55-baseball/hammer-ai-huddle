@@ -42,8 +42,8 @@ verify_jwt = true
 [functions.get-weather]
 verify_jwt = false
 
-[functions.get-rankings]
-verify_jwt = true
+[functions.get-owner-profile]
+verify_jwt = false
 
 [functions.get-owner-profile]
 verify_jwt = false
@@ -152,3 +152,9 @@ verify_jwt = false
 
 [functions.ai-helpdesk]
 verify_jwt = true
+
+[functions.nightly-mpi-process]
+verify_jwt = false
+
+[functions.calculate-session]
+verify_jwt = false
