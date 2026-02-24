@@ -1,0 +1,11 @@
+export const softballTierMultipliers: Record<string, number> = {
+  rec: 0.6,
+  travel: 0.75,
+  hs_jv: 0.8,
+  hs_varsity: 0.85,
+  college_d3: 0.9,
+  college_d2: 0.95,
+  college_d1: 1.05,
+  indie_pro: 1.1,
+  ausl: 1.5,
+};
