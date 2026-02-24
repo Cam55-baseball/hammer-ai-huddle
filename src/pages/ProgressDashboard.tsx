@@ -1,14 +1,73 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useMPIScores } from '@/hooks/useMPIScores';
-import { TrendingUp, TrendingDown, Minus, Trophy, Target, BarChart3 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { MPIScoreCard } from '@/components/analytics/MPIScoreCard';
+import { ProProbabilityCard } from '@/components/analytics/ProProbabilityCard';
+import { RankMovementBadge } from '@/components/analytics/RankMovementBadge';
+import { HoFCountdown } from '@/components/analytics/HoFCountdown';
+import { IntegrityScoreBar } from '@/components/analytics/IntegrityScoreBar';
+import { AIPromptCard } from '@/components/analytics/AIPromptCard';
+import { DeltaTrendChart } from '@/components/analytics/DeltaTrendChart';
+import { DataBuildingGate } from '@/components/analytics/DataBuildingGate';
+import { RoadmapBlockedBadge } from '@/components/analytics/RoadmapBlockedBadge';
+import { HeatMapDashboard } from '@/components/heatmaps/HeatMapDashboard';
+import { useRoadmapProgress } from '@/hooks/useRoadmapProgress';
+import { CheckCircle2, Circle, Loader2, Lock } from 'lucide-react';
+
+function RoadmapSection() {
+  const { milestones, progress } = useRoadmapProgress();
+  const milestonesData = milestones.data ?? [];
+  const progressData = progress.data ?? [];
+
+  const progressMap = new Map(progressData.map(p => [p.milestone_id, p]));
+
+  if (milestones.isLoading) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Development Roadmap</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {milestonesData.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Complete sessions to unlock milestones.</p>
+        ) : (
+          milestonesData.map((m) => {
+            const p = progressMap.get(m.id);
+            const status = p?.status ?? 'locked';
+            const pct = p?.progress_pct ?? 0;
+
+            return (
+              <div key={m.id} className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-sm min-w-0">
+                    {status === 'completed' ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                    ) : status === 'in_progress' ? (
+                      <Loader2 className="h-4 w-4 text-primary animate-spin shrink-0" />
+                    ) : status === 'blocked' ? (
+                      <Lock className="h-4 w-4 text-amber-500 shrink-0" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
+                    )}
+                    <span className="truncate">{m.milestone_name}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">{Math.round(pct)}%</span>
+                </div>
+                <Progress value={pct} className="h-1.5" />
+                {status === 'blocked' && p?.blocked_reason && (
+                  <RoadmapBlockedBadge reason={p.blocked_reason} />
+                )}
+              </div>
+            );
+          })
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function ProgressDashboard() {
-  const { data: mpi, isLoading } = useMPIScores();
-
-  const trendIcon = mpi?.trend_direction === 'rising' ? TrendingUp : mpi?.trend_direction === 'dropping' ? TrendingDown : Minus;
-  const TrendIcon = trendIcon;
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -17,74 +76,41 @@ export default function ProgressDashboard() {
           <p className="text-muted-foreground">Your MPI score, rankings, and development roadmap</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" /> MPI Score
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="h-12 bg-muted animate-pulse rounded" />
-              ) : mpi ? (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">{Math.round(mpi.adjusted_global_score || 0)}</span>
-                  <TrendIcon className={`h-5 w-5 ${mpi.trend_direction === 'rising' ? 'text-green-500' : mpi.trend_direction === 'dropping' ? 'text-red-500' : 'text-muted-foreground'}`} />
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Log sessions to build your MPI score</p>
-              )}
-            </CardContent>
-          </Card>
+        <DataBuildingGate>
+          <div className="space-y-6">
+            {/* Row 1: Score cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <MPIScoreCard />
+              <ProProbabilityCard />
+              <RankMovementBadge />
+            </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Trophy className="h-4 w-4" /> Global Rank
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {mpi ? (
-                <div>
-                  <span className="text-4xl font-bold">#{mpi.global_rank || '—'}</span>
-                  <span className="text-sm text-muted-foreground ml-2">of {mpi.total_athletes_in_pool || 0}</span>
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Not yet ranked</p>
-              )}
-            </CardContent>
-          </Card>
+            {/* Row 2: HoF + Integrity */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <HoFCountdown />
+              <IntegrityScoreBar />
+            </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Target className="h-4 w-4" /> Pro Probability
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {mpi ? (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">{(mpi.pro_probability || 0).toFixed(1)}%</span>
-                  {mpi.pro_probability_capped && (
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Pre-MLB</span>
-                  )}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">Build data to calculate</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            {/* Row 3: AI Prompts */}
+            <AIPromptCard />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Development Roadmap</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">Complete practice sessions to unlock milestones and progress through your development roadmap.</p>
-          </CardContent>
-        </Card>
+            {/* Row 4: Delta Trend */}
+            <DeltaTrendChart />
+
+            {/* Row 5: Roadmap */}
+            <RoadmapSection />
+
+            {/* Row 6: Heat Maps */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Performance Heat Maps</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <HeatMapDashboard />
+              </CardContent>
+            </Card>
+          </div>
+        </DataBuildingGate>
       </div>
     </DashboardLayout>
   );
