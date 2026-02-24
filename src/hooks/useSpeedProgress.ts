@@ -246,6 +246,20 @@ export function useSpeedProgress(sport: SportType) {
     }
   }, [user, goals]);
 
+  const startProgram = useCallback(async () => {
+    if (!user || !goals) return;
+    try {
+      const { error } = await supabase
+        .from('speed_goals')
+        .update({ program_status: 'active' })
+        .eq('id', goals.id);
+      if (error) throw error;
+      setGoals(prev => prev ? { ...prev, program_status: 'active' } as SpeedGoals : null);
+    } catch (error) {
+      console.error('Error starting speed program:', error);
+    }
+  }, [user, goals]);
+
   // ─── Save Session ───────────────────────────────────────────────────
 
   const saveSession = useCallback(async (sessionData: {
@@ -456,6 +470,7 @@ export function useSpeedProgress(sport: SportType) {
 
     // Actions
     initializeJourney,
+    startProgram,
     saveSession,
     savePartnerTiming,
     fetchData,

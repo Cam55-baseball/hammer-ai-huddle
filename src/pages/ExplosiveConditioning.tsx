@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Zap, Lock, Play, Timer, Flame, Trophy, Calendar } from 'lucide-react';
-import { ProgramPausedBanner, ProgramPauseButton } from '@/components/workout-modules/ProgramStatusBanner';
+import { ProgramPausedBanner, ProgramPauseButton, ProgramStartCard } from '@/components/workout-modules/ProgramStatusBanner';
 import { PageLoadingSkeleton } from '@/components/skeletons/PageLoadingSkeleton';
 import { SpeedTrackCard } from '@/components/speed-lab/SpeedTrackCard';
 import { SpeedSessionFlow } from '@/components/speed-lab/SpeedSessionFlow';
@@ -55,6 +55,7 @@ export default function ExplosiveConditioning() {
     streakData,
     programStatus,
     initializeJourney,
+    startProgram,
     saveSession,
     savePartnerTiming,
     fetchData,
@@ -156,6 +157,21 @@ export default function ExplosiveConditioning() {
             </CardContent>
           </Card>
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  // ─── Not Started Gate ──────────────────────────────────────────────
+
+  if (programStatus === 'not_started') {
+    return (
+      <DashboardLayout>
+        <ProgramStartCard
+          programName="Explosive Conditioning"
+          programIcon={<Zap className="h-10 w-10 text-primary" />}
+          programDescription="Build elite speed with structured training, recovery science, and professional drills."
+          onStart={startProgram}
+        />
       </DashboardLayout>
     );
   }
