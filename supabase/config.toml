@@ -152,3 +152,24 @@ verify_jwt = false
 
 [functions.calculate-session]
 verify_jwt = false
+
+[functions.approve-scout-application]
+verify_jwt = false
+
+[functions.delete-library-session]
+verify_jwt = false
+
+[functions.download-session-video]
+verify_jwt = false
+
+[functions.get-player-library]
+verify_jwt = false
+
+[functions.migrate-to-tiers]
+verify_jwt = false
+
+[functions.unfollow-player]
+verify_jwt = false
+
+[functions.update-library-session]
+verify_jwt = false
