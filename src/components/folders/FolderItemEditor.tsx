@@ -9,17 +9,19 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { ActivityFolderItem, ITEM_TYPES, DAY_LABELS } from '@/types/activityFolder';
-import { Plus, CalendarIcon } from 'lucide-react';
+import { Plus, CalendarIcon, Library } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { ActivityPickerDialog } from './ActivityPickerDialog';
 
 interface FolderItemEditorProps {
   onAdd: (item: Partial<ActivityFolderItem>) => Promise<ActivityFolderItem | null>;
   cycleType?: string;
   cycleLengthWeeks?: number;
+  sport?: string;
 }
 
-export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks }: FolderItemEditorProps) {
+export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: FolderItemEditorProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [itemType, setItemType] = useState('exercise');
@@ -30,6 +32,7 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks }: FolderI
   const [saving, setSaving] = useState(false);
   const [useSpecificDates, setUseSpecificDates] = useState(false);
   const [specificDates, setSpecificDates] = useState<Date[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const toggleDay = (day: number) => {
     setAssignedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort());
@@ -182,10 +185,31 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks }: FolderI
           <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={1} className="min-h-[36px]" />
         </div>
 
-        <Button onClick={handleAdd} disabled={!title.trim() || saving} size="sm" className="gap-1">
-          <Plus className="h-3.5 w-3.5" />
-          {saving ? 'Adding...' : 'Add Item'}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleAdd} disabled={!title.trim() || saving} size="sm" className="gap-1">
+            <Plus className="h-3.5 w-3.5" />
+            {saving ? 'Adding...' : 'Add Item'}
+          </Button>
+          {sport && (
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => setPickerOpen(true)}>
+              <Library className="h-3.5 w-3.5" />
+              Import from Activities
+            </Button>
+          )}
+        </div>
+
+        {sport && (
+          <ActivityPickerDialog
+            open={pickerOpen}
+            onOpenChange={setPickerOpen}
+            sport={sport}
+            onImport={async (items) => {
+              for (const item of items) {
+                await onAdd(item);
+              }
+            }}
+          />
+        )}
       </CardContent>
     </Card>
   );

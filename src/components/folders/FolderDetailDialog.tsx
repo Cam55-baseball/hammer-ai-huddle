@@ -216,6 +216,7 @@ export function FolderDetailDialog({
             }}
             cycleType={folder.cycle_type || undefined}
             cycleLengthWeeks={folder.cycle_length_weeks || undefined}
+            sport={folder.sport}
           />
         )}
       </DialogContent>
