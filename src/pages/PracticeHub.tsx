@@ -8,10 +8,15 @@ import { useSportTerminology } from '@/hooks/useSportTerminology';
 import { useSportTheme } from '@/contexts/SportThemeContext';
 import { usePerformanceSession, type DrillBlock } from '@/hooks/usePerformanceSession';
 import { SessionTypeSelector } from '@/components/practice/SessionTypeSelector';
-import { DrillBlockBuilder } from '@/components/practice/DrillBlockBuilder';
 import { GameSessionFields } from '@/components/practice/GameSessionFields';
+import { RepScorer, type ScoredRep } from '@/components/practice/RepScorer';
+import { GameScorecard, type AtBat } from '@/components/practice/GameScorecard';
+import { FeelingsPrompt, type FeelingState } from '@/components/practice/FeelingsPrompt';
+import { CoachSelector, type CoachSelection } from '@/components/practice/CoachSelector';
+import { SeasonContextToggle } from '@/components/practice/SeasonContextToggle';
+import { RecentSessionsList } from '@/components/practice/RecentSessionsList';
 import { VoiceNoteInput } from '@/components/practice/VoiceNoteInput';
-import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { Target, Flame, Wind, Shield, Zap, Brain, ArrowLeft, Save, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const modules = [
@@ -35,25 +40,84 @@ export default function PracticeHub() {
   const [activeModule, setActiveModule] = useState('hitting');
   const [step, setStep] = useState<FlowStep>('select_type');
   const [sessionType, setSessionType] = useState<string | null>(null);
-  const [drillBlocks, setDrillBlocks] = useState<DrillBlock[]>([]);
   const [notes, setNotes] = useState('');
   const [opponentName, setOpponentName] = useState('');
   const [opponentLevel, setOpponentLevel] = useState('');
+  const [seasonContext, setSeasonContext] = useState('in_season');
+  const [coachSelection, setCoachSelection] = useState<CoachSelection>({ type: 'none' });
+  const [feelings, setFeelings] = useState<FeelingState>({ body: 3, mind: 3 });
+  const [showExtras, setShowExtras] = useState(false);
+
+  // Rep-based scoring
+  const [reps, setReps] = useState<ScoredRep[]>([]);
+  // Game scoring
+  const [atBats, setAtBats] = useState<AtBat[]>([]);
 
   const isGameType = sessionType === 'game' || sessionType === 'live_scrimmage';
+  const isHittingOrPitching = activeModule === 'hitting' || activeModule === 'pitching';
 
   const handleSelectType = (type: string) => {
     setSessionType(type);
     setStep('build_session');
-    setDrillBlocks([]);
+    setReps([]);
+    setAtBats([]);
     setNotes('');
     setOpponentName('');
     setOpponentLevel('');
+    setFeelings({ body: 3, mind: 3 });
   };
 
   const handleBack = () => {
     setStep('select_type');
     setSessionType(null);
+  };
+
+  // Convert reps/atBats into drill blocks for the backend
+  const buildDrillBlocks = (): DrillBlock[] => {
+    if (isGameType && atBats.length > 0) {
+      // Each at-bat becomes a drill block
+      return atBats.map((ab, i) => ({
+        id: crypto.randomUUID(),
+        drill_type: 'game_ab',
+        intent: 'competitive',
+        volume: ab.pitches.length,
+        execution_grade: ['1B', '2B', '3B', 'HR'].includes(ab.outcome) ? 65 : ab.outcome === 'BB' ? 55 : 35,
+        outcome_tags: [ab.outcome],
+        notes: `AB${i + 1}: ${ab.outcome} (${ab.pitches.length} pitches)`,
+      }));
+    }
+
+    if (reps.length > 0) {
+      // Group reps into a single drill block
+      const qualityMap: Record<string, number> = { barrel: 70, hard: 60, weak: 40, foul: 30, miss: 20 };
+      const resultMap: Record<string, number> = { strike: 60, out: 55, ball: 35, hit: 70 };
+      
+      let totalGrade = 0;
+      const outcomeTags: string[] = [];
+      
+      for (const rep of reps) {
+        if (rep.contact_quality) {
+          totalGrade += qualityMap[rep.contact_quality] ?? 50;
+          if (!outcomeTags.includes(rep.contact_quality)) outcomeTags.push(rep.contact_quality);
+        } else if (rep.pitch_result) {
+          totalGrade += resultMap[rep.pitch_result] ?? 50;
+          if (!outcomeTags.includes(rep.pitch_result)) outcomeTags.push(rep.pitch_result);
+        } else {
+          totalGrade += 50;
+        }
+      }
+
+      return [{
+        id: crypto.randomUUID(),
+        drill_type: activeModule === 'pitching' ? 'pitch_session' : 'hitting_session',
+        intent: 'mechanics',
+        volume: reps.length,
+        execution_grade: Math.round(totalGrade / reps.length),
+        outcome_tags: outcomeTags,
+      }];
+    }
+
+    return [];
   };
 
   const handleSave = async () => {
@@ -62,13 +126,10 @@ export default function PracticeHub() {
       toast({ title: 'Missing fields', description: 'Game sessions require opponent name and level.', variant: 'destructive' });
       return;
     }
-    if (drillBlocks.length === 0) {
-      toast({ title: 'No drill blocks', description: 'Add at least one drill block.', variant: 'destructive' });
-      return;
-    }
-    const missingIntent = drillBlocks.some(b => !b.intent);
-    if (missingIntent) {
-      toast({ title: 'Missing intent', description: 'Every drill block requires an intent tag.', variant: 'destructive' });
+
+    const drillBlocks = buildDrillBlocks();
+    if (drillBlocks.length === 0 && reps.length === 0 && atBats.length === 0) {
+      toast({ title: 'No data', description: 'Score at least one rep or at-bat.', variant: 'destructive' });
       return;
     }
 
@@ -77,15 +138,27 @@ export default function PracticeHub() {
         sport: sportKey,
         session_type: sessionType,
         session_date: new Date().toISOString().split('T')[0],
+        season_context: seasonContext,
         drill_blocks: drillBlocks,
         notes: notes || undefined,
         opponent_name: isGameType ? opponentName : undefined,
         opponent_level: isGameType ? opponentLevel : undefined,
+        module: activeModule,
+        coach_id: coachSelection.type === 'assigned' ? coachSelection.coach_id : undefined,
+        fatigue_state: {
+          body: feelings.body,
+          mind: feelings.mind,
+          note: feelings.note,
+          coach_type: coachSelection.type,
+          external_coach_name: coachSelection.type === 'external' ? coachSelection.external_name : undefined,
+        },
+        micro_layer_data: reps.length > 0 ? reps : isGameType ? atBats.flatMap(ab => ab.pitches) : undefined,
       });
       // Reset
       setStep('select_type');
       setSessionType(null);
-      setDrillBlocks([]);
+      setReps([]);
+      setAtBats([]);
       setNotes('');
     } catch {
       // Error toast handled by hook
@@ -113,17 +186,21 @@ export default function PracticeHub() {
           {modules.map(mod => (
             <TabsContent key={mod.id} value={mod.id} className="space-y-4">
               {step === 'select_type' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <mod.icon className="h-5 w-5 text-primary" />
-                      Start {mod.label} Session
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <SessionTypeSelector value={sessionType} onChange={handleSelectType} />
-                  </CardContent>
-                </Card>
+                <>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <mod.icon className="h-5 w-5 text-primary" />
+                        Start {mod.label} Session
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <SessionTypeSelector value={sessionType} onChange={handleSelectType} />
+                    </CardContent>
+                  </Card>
+
+                  <RecentSessionsList sport={sportKey} moduleLabel={mod.label} />
+                </>
               )}
 
               {step === 'build_session' && sessionType && (
@@ -135,6 +212,10 @@ export default function PracticeHub() {
                     <h2 className="text-lg font-semibold capitalize">{sessionType.replace(/_/g, ' ')}</h2>
                   </div>
 
+                  {/* Feelings prompt - always first */}
+                  <FeelingsPrompt value={feelings} onChange={setFeelings} />
+
+                  {/* Game fields */}
                   {isGameType && (
                     <Card>
                       <CardContent className="pt-4">
@@ -148,35 +229,56 @@ export default function PracticeHub() {
                     </Card>
                   )}
 
-                  <DrillBlockBuilder
-                    module={activeModule}
-                    blocks={drillBlocks}
-                    onChange={setDrillBlocks}
-                  />
+                  {/* Main scoring area */}
+                  {isGameType && isHittingOrPitching ? (
+                    <GameScorecard
+                      module={activeModule}
+                      atBats={atBats}
+                      onAtBatsChange={setAtBats}
+                    />
+                  ) : isHittingOrPitching ? (
+                    <RepScorer
+                      module={activeModule}
+                      reps={reps}
+                      onRepsChange={setReps}
+                    />
+                  ) : (
+                    <RepScorer
+                      module={activeModule}
+                      reps={reps}
+                      onRepsChange={setReps}
+                    />
+                  )}
 
-                  <VoiceNoteInput value={notes} onChange={setNotes} />
+                  {/* Expandable extras */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-muted-foreground"
+                    onClick={() => setShowExtras(!showExtras)}
+                  >
+                    {showExtras ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+                    {showExtras ? 'Less Options' : 'More Options'}
+                  </Button>
+
+                  {showExtras && (
+                    <div className="space-y-4">
+                      <CoachSelector value={coachSelection} onChange={setCoachSelection} />
+                      <SeasonContextToggle value={seasonContext} onChange={setSeasonContext} />
+                      <VoiceNoteInput value={notes} onChange={setNotes} />
+                    </div>
+                  )}
 
                   <Button
                     className="w-full"
                     size="lg"
                     onClick={handleSave}
-                    disabled={saving || drillBlocks.length === 0}
+                    disabled={saving || (reps.length === 0 && atBats.length === 0)}
                   >
                     {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                    Save Session
+                    Save Session ({isGameType ? `${atBats.length} ABs` : `${reps.length} reps`})
                   </Button>
                 </>
-              )}
-
-              {step === 'select_type' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent {mod.label} Sessions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground text-sm">No sessions logged yet. Start your first {mod.label.toLowerCase()} session above.</p>
-                  </CardContent>
-                </Card>
               )}
             </TabsContent>
           ))}

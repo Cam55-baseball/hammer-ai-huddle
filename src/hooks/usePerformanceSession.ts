@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface DrillBlock {
   id: string;
@@ -18,6 +19,7 @@ export interface DrillBlock {
 export function usePerformanceSession() {
   const { user, session: authSession } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
 
   const createSession = async (data: {
@@ -32,6 +34,10 @@ export function usePerformanceSession() {
     opponent_level?: string;
     batting_side_used?: string;
     throwing_hand_used?: string;
+    module?: string;
+    coach_id?: string;
+    fatigue_state?: any;
+    micro_layer_data?: any;
   }) => {
     if (!user) throw new Error('Not authenticated');
     setSaving(true);
@@ -51,6 +57,10 @@ export function usePerformanceSession() {
           opponent_level: data.opponent_level,
           batting_side_used: data.batting_side_used,
           throwing_hand_used: data.throwing_hand_used,
+          module: data.module,
+          coach_id: data.coach_id,
+          fatigue_state_at_session: data.fatigue_state as any,
+          micro_layer_data: data.micro_layer_data as any,
         })
         .select()
         .single();
@@ -64,6 +74,9 @@ export function usePerformanceSession() {
           body: { session_id: session.id },
         });
       }
+
+      // Invalidate recent sessions
+      queryClient.invalidateQueries({ queryKey: ['recent-sessions'] });
 
       toast({ title: 'Session saved', description: 'Your practice session has been recorded.' });
       return session;

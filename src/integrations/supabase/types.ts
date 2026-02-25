@@ -1919,6 +1919,8 @@ export type Database = {
       organization_members: {
         Row: {
           id: string
+          invitation_status: string | null
+          invited_email: string | null
           joined_at: string
           organization_id: string
           removed_at: string | null
@@ -1928,6 +1930,8 @@ export type Database = {
         }
         Insert: {
           id?: string
+          invitation_status?: string | null
+          invited_email?: string | null
           joined_at?: string
           organization_id: string
           removed_at?: string | null
@@ -1937,6 +1941,8 @@ export type Database = {
         }
         Update: {
           id?: string
+          invitation_status?: string | null
+          invited_email?: string | null
           joined_at?: string
           organization_id?: string
           removed_at?: string | null
@@ -1958,6 +1964,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          invite_code: string | null
+          invite_expires_at: string | null
           logo_url: string | null
           name: string
           org_type: string
@@ -1970,6 +1978,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          invite_code?: string | null
+          invite_expires_at?: string | null
           logo_url?: string | null
           name: string
           org_type: string
@@ -1982,6 +1992,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          invite_code?: string | null
+          invite_expires_at?: string | null
           logo_url?: string | null
           name?: string
           org_type?: string
@@ -2012,6 +2024,7 @@ export type Database = {
           is_locked: boolean | null
           is_retroactive: boolean | null
           micro_layer_data: Json | null
+          module: string | null
           notes: string | null
           opponent_level: string | null
           opponent_name: string | null
@@ -2044,6 +2057,7 @@ export type Database = {
           is_locked?: boolean | null
           is_retroactive?: boolean | null
           micro_layer_data?: Json | null
+          module?: string | null
           notes?: string | null
           opponent_level?: string | null
           opponent_name?: string | null
@@ -2076,6 +2090,7 @@ export type Database = {
           is_locked?: boolean | null
           is_retroactive?: boolean | null
           micro_layer_data?: Json | null
+          module?: string | null
           notes?: string | null
           opponent_level?: string | null
           opponent_name?: string | null
