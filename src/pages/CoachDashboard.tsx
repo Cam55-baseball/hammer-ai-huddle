@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { GraduationCap, Check, Clock, BookMarked, User, UserMinus, Send, Package } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SentActivitiesHistory } from '@/components/coach/SentActivitiesHistory';
+import { PlayerNotesSection } from '@/components/scout/PlayerNotesSection';
 import { BulkSendDialog } from '@/components/coach/BulkSendDialog';
 import { 
   Command,
@@ -496,6 +497,8 @@ export default function CoachDashboard() {
             )}
           </CardContent>
         </Card>
+
+        <PlayerNotesSection players={following} />
 
         <SentActivitiesHistory />
 
