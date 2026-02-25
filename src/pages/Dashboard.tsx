@@ -21,7 +21,7 @@ import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
 import { ModuleManagementCard } from "@/components/ModuleManagementCard";
 import { DashboardModuleSkeleton } from "@/components/skeletons/DashboardModuleSkeleton";
 import { GamePlanCard } from "@/components/GamePlanCard";
-import { ScoutGamePlanCard } from "@/components/ScoutGamePlanCard";
+import { CoachScoutGamePlanCard } from "@/components/CoachScoutGamePlanCard";
 import { toast } from "sonner";
 import { useMPIScores } from "@/hooks/useMPIScores";
 import { useAIPrompts } from "@/hooks/useAIPrompts";
@@ -428,7 +428,7 @@ export default function Dashboard() {
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
         {(isScout || isCoach) && !isOwner && !isAdmin ? (
-          <ScoutGamePlanCard />
+          <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
         ) : (
           <GamePlanCard selectedSport={selectedSport} />
         )}
