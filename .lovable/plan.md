@@ -1,323 +1,209 @@
 
+# Full-Sweep: Activate All Missing Pieces
 
-# Stress Test #5: Elite Full-Sweep Overhaul
-
-## Executive Summary
-
-The Practice Intelligence system has strong backend bones but the **user-facing experience is confusing, disconnected, and incomplete**. Players without coaches are blocked from meaningful progression. Organizations have no invite/accept flow. Session logging feels like "filling out a database form" instead of an intuitive sports tool. Game scoring has no pitch-by-pitch sheet. The AI never analyzes anything for the MPI. Heat maps and roadmaps are permanently empty. This plan fixes every gap E2E.
+This plan addresses every gap identified in the System Architecture Report where data models exist but logic is not connected, UI components exist but are never rendered, or specifications were defined but simplified.
 
 ---
 
-## Current State Checklist
+## What is Missing (Summary)
 
-| Area | Status | Problem |
-|------|--------|---------|
-| Practice Hub session logging | Functional but clunky | Too many fields, feels like tech work, not a sports app |
-| Recent sessions display | BROKEN | Always says "No sessions logged yet" |
-| Coach tagging on sessions | MISSING | `coach_id` column exists but is never set by UI |
-| Coach-less players in MPI pipeline | BLOCKED | 40% coach validation gate = impossible without a coach |
-| Organization invite/accept flow | MISSING | Only owner can add members by raw user_id -- no invite codes, no accept UI |
-| Organization member names | BROKEN | Shows raw UUID instead of player name |
-| Per-rep scoring | MISSING | Micro-layer exists but is hidden behind density gates and disconnected from sessions |
-| Game scoring sheet | MISSING | No pitch-by-pitch scorecard for games |
-| Real-time heat map input | MISSING | PitchLocationGrid exists but data never flows to heat_map_snapshots |
-| Notes/feelings prompt | MISSING | Generic textarea instead of targeted questions |
-| AI analysis of sessions for MPI | MISSING | development_prompts never populated, no AI edge function for session analysis |
-| Streak reset logic | BUG | Never resets on missed days |
-| Heat map snapshot generation | MISSING | Table exists, 0 rows, no generator |
-| Roadmap milestones | MISSING | Table exists, 0 rows, no seed data |
-| Duplicate getGradeLabel | CODE SMELL | MPIScoreCard has local copy |
-| Module not captured on save | BUG | activeModule never sent to createSession |
+The app has strong data models and UI components but critical backend logic is disconnected. Specifically:
 
----
-
-## Fix Plan (16 Fixes, Priority Order)
-
-### PHASE 1: Core Pipeline Fixes (Make it Work)
-
-**Fix 1 (P0): Coach-less athletes must participate in MPI**
-
-The 40% coach validation gate currently blocks any athlete without a coach from ever becoming ranking-eligible. This is the biggest user-hostile design flaw.
-
-Changes:
-- In `nightly-mpi-process`, modify the `coach_validation_met` gate logic:
-  - If athlete has `primary_coach_id` set: require 40% coach-validated sessions (current behavior)
-  - If athlete has NO coach: auto-pass this gate (set `coach_validation_met = true`)
-- In `DataBuildingGate.tsx`, update the label from "40%+ coach validation" to dynamically show "40%+ coach validation" or "Coach validation (auto-passed -- no coach assigned)" based on whether the user has a coach
-- Athletes with an external/off-app coach can still self-grade; their grades count as player grades but the gate auto-passes
-
-**Fix 2 (P0): Capture module on session save**
-
-Add `module` to the createSession flow:
-- In `PracticeHub.tsx`, pass `activeModule` to `createSession()`
-- In `usePerformanceSession.ts`, add `module` to the insert payload
-- Database: Add `module` column to `performance_sessions` via migration (text, nullable, no default -- existing rows stay null)
-
-**Fix 3 (P0): Coach tagging on sessions**
-
-The `performance_sessions` table already has a `coach_id` column. The UI never sets it.
-
-Changes:
-- Add a "Coach" field to the session builder (below session type selector):
-  - If athlete has `primary_coach_id` in `athlete_mpi_settings`: auto-fill it
-  - Dropdown also shows "External Coach (not on app)" and "No Coach / Self-Directed"
-  - If "External Coach" selected: show a text input for coach name (stored in notes or a new field)
-- Pass `coach_id` to `createSession()` when a coach is selected
-
-**Fix 4 (P0): Streak reset logic**
-
-In `calculate-session`, before incrementing streak:
-- Query the user's most recent session date (excluding current session)
-- If last session was NOT yesterday (or today for multiple same-day sessions): reset `streak_current` to 1
-- If consecutive: increment normally
-
-**Fix 5 (P0): Recent sessions display**
-
-Create `useRecentSessions` hook:
-- Query `performance_sessions` filtered by `user_id`, `sport`, `is deleted_at null`, ordered by `session_date DESC`, limit 10
-- In `PracticeHub.tsx`, replace static "No sessions" text with a list showing: date, session type, module, effective grade, and a grade label badge
-- Each session card is tappable to view details
-
-**Fix 6 (P0): AI-powered development prompts**
-
-The `development_prompts` column in `mpi_scores` exists but is never populated. Add AI analysis to the nightly process:
-- After calculating scores for each athlete, generate 2-4 personalized prompts using Lovable AI (Gemini Flash):
-  - Send composite scores, trend direction, integrity score, session count, weakest composite, and strongest composite
-  - AI returns structured prompts like "Your BQI is your weakest area -- focus on bat quality drills" or "Your trend is rising! Maintain consistency to lock in your gains"
-- Store prompts as JSONB array in the upsert payload
-- Create a new edge function `generate-dev-prompts` that the nightly process calls internally (or inline the AI call)
-- This feeds the existing `AIPromptCard` component which is already wired up but always empty
-
-### PHASE 2: Organization System (Make Teams Work)
-
-**Fix 7 (P0): Organization invite/accept flow**
-
-Current state: Owner can only add members by raw UUID. No invite mechanism. No player acceptance.
-
-Changes:
-- Database migration:
-  - Add `invite_code` (text, unique, nullable) and `invite_expires_at` (timestamptz, nullable) columns to `organizations`
-  - Add `invited_email` (text, nullable) and `invitation_status` (text, default 'pending') columns to `organization_members`
-  - New RLS policy: players can INSERT into `organization_members` WHERE `user_id = auth.uid()` AND `invitation_status = 'pending'` (for accepting invites)
-
-- Coach/Owner side:
-  - Generate a 6-character invite code when org is created (or on-demand "Generate Invite Code" button)
-  - Show the code prominently: "Share this code with your players: **ABC123**"
-  - Also allow adding players by email (creates a pending row)
-
-- Player side:
-  - New "Join Organization" card on Dashboard or Settings
-  - Enter invite code --> looks up org by code --> shows org name + sport --> "Join" button
-  - Inserts into `organization_members` with status 'active'
-  - After joining, the coach appears as their `primary_coach_id` in `athlete_mpi_settings`
-
-- Fix member list: join to `profiles_public` to show `full_name` instead of raw UUID
-
-**Fix 8 (P1): Organization member names display**
-
-`OrganizationMemberList.tsx` displays `m.user_id` (raw UUID) for each member. Fix:
-- Query `organization_members` joined with `profiles_public` on `user_id = profiles_public.id`
-- Display `full_name` and `avatar_url` instead of UUID
-
-### PHASE 3: UX Overhaul -- Make Sessions Joyful
-
-**Fix 9 (P0): Redesign session logging for simplicity and delight**
-
-The current DrillBlockBuilder is overwhelming: dropdown selects, number inputs, sliders, and badge pickers all at once. Per the UX mandate: "3 taps to begin, max 5 inputs per screen."
-
-Redesigned flow:
-1. **Tap session type** (existing cards -- keep these, they're good) -- 1 tap
-2. **Tap primary drill** from a visual grid of 4-6 large icons with labels for the active module -- 1 tap
-3. **Score your reps** using the new Rep Scorer (Fix 10) -- this is the main interaction
-4. **Swipe to finish** -- save button is prominent, notes are optional expandable
-
-Remove the concept of "Drill Blocks" from the user's vocabulary. Internally, each scored rep or group of reps IS a drill block, but the user just sees "Score your reps."
-
-The "Add Drill Block" button becomes "+ Add Another Drill" with a simpler card that auto-selects the module.
-
-**Fix 10 (P0): Per-rep scoring with real-time heat map input**
-
-This is the core innovation. Each rep is scored individually with a tap-tap-done flow:
-
-For **Hitting**:
-1. Tap pitch location on the 3x3 grid (already built as PitchLocationGrid)
-2. Tap contact quality: Miss / Foul / Weak / Hard / Barrel (5 large colored buttons)
-3. Tap exit direction: Pull / Middle / Oppo (3 buttons)
-4. Optional: tap intent badge
-5. Auto-commits rep, animates it into a scrolling rep feed
-
-For **Pitching**:
-1. Tap pitch type (4-Seam, Curve, Change, etc. -- sport-specific)
-2. Tap location on 3x3 grid
-3. Tap result: Strike / Ball / Hit / Out (4 buttons)
-4. Auto-commits
-
-For **Game Mode** (pitch-by-pitch scorecard):
-1. Same flow as hitting/pitching above, but in a dedicated "Game Scorecard" view
-2. Shows running at-bat context: count (0-0), inning, score
-3. Each pitch is logged with: location, pitch type, result, swing decision
-4. At-bat summary auto-generates after strikeout/walk/hit/out
-5. Running game stats displayed: AVG, OBP, K%, BB%
-
-This leverages the existing `useMicroLayerInput` hook and `MicroLayerData` interface. The key change is:
-- Remove the density gate -- rep scoring should be available to ALL users, not just "enhanced" or "advanced"
-- Make it the DEFAULT input method instead of the summary-level DrillBlockBuilder
-- Each committed rep feeds into both the drill_blocks JSONB (for composite calculation) AND the micro_layer_data JSONB (for heat map generation)
-
-**Fix 11 (P1): Feelings/notes prompt**
-
-Replace the generic "Add session notes..." textarea with structured feeling prompts:
-
-- "How is your body feeling right now?" -- 5-point emoji scale (Great / Good / OK / Tired / Hurting)
-- "Mentally, where are you at?" -- 5-point emoji scale (Locked In / Focused / Neutral / Distracted / Struggling)
-- "Anything specific to note?" -- short text field (optional)
-
-These map to `fatigue_state_at_session` JSONB which already exists in `performance_sessions`. The voice note input stays as an alternative.
-
-### PHASE 4: Data Pipeline Completion
-
-**Fix 12 (P1): Heat map snapshot generation**
-
-Add heat map calculation to the nightly process (after MPI scoring):
-- For each athlete, aggregate `micro_layer_data` from the last 30/90 days
-- Count pitch locations across the 3x3 grid
-- Calculate hot zones and blind zones
-- Write to `heat_map_snapshots` with map_type, time_window, grid_data, blind_zones
-- This populates the existing `HeatMapDashboard` component
-
-**Fix 13 (P1): Seed roadmap milestones**
-
-Insert default milestone data via migration:
-- "Log your first session" (1 session)
-- "Build a 3-day streak" (3-day streak)
-- "Complete 10 sessions" (10 sessions)
-- "Reach 40 MPI score" (MPI >= 40)
-- "Get coach validation on 5 sessions" (5 coach-graded sessions)
-- "Achieve Rising trend" (trend = rising)
-- "Complete 60 sessions (ranking eligible)" (60 sessions)
-
-Add roadmap progress updates to the nightly process: check each milestone's criteria against the athlete's data and update `athlete_roadmap_progress`.
-
-**Fix 14 (P2): Deduplicate getGradeLabel**
-
-Replace local function in `MPIScoreCard.tsx` with `import { getGradeLabel } from '@/lib/gradeLabel'`.
-
-### PHASE 5: Polish
-
-**Fix 15 (P2): Season context selector**
-
-Add a simple 3-button toggle (In-Season / Off-Season / Preseason) to the session builder, defaulting to "In-Season". Pass to `createSession()`.
-
-**Fix 16 (P2): Rankings loading skeleton**
-
-Show a skeleton/spinner during segment filter transitions instead of blank screen.
+1. **Verified stat boosts** -- defined in `verifiedStatBoosts.ts` but never applied in `nightly-mpi-process`
+2. **Contract status modifiers** -- defined in `contractStatusRules.ts` but never applied in nightly process
+3. **Age curve multipliers** -- defined in `ageCurves.ts` for both sports but never applied in nightly process
+4. **Position weight multipliers** -- defined in `positionWeights.ts` but never applied
+5. **Arbitration Panel** -- component exists (`ArbitrationPanel.tsx`) but is never rendered in any page
+6. **Scout evaluations not feeding MPI** -- `scout_evaluations` table exists, `useGradeHierarchy` queries it, but nightly process ignores scout grades
+7. **Integrity rebuild rate** -- defined as `+0.5 per verified session` in `integrityRules.ts` but nightly only deducts, never rebuilds
+8. **HoF probability tracking** -- `hof_probability` and `hof_tracking_active` columns exist in `mpi_scores` but nightly process never sets them
+9. **Fatigue correlation flag** -- `fatigue_correlation_flag` column exists in `mpi_scores` but never computed
+10. **Delta maturity index** -- column exists in `mpi_scores` but never computed
+11. **Game-practice ratio** -- column exists in `mpi_scores` but never computed
+12. **Verified stat boost column** -- exists in `mpi_scores` but never computed
+13. **Contract status modifier column** -- exists in `mpi_scores` but never computed
+14. **Additional governance flag types** -- only `inflated_grading` and `volume_spike` are triggered in `calculate-session`, but 14 types are defined in `integrityRules.ts`
+15. **Rankings loading skeleton** -- no loading indicator during filter changes
+16. **Arbitration/appeal submission** -- no player-facing UI to request an arbitration or upload video evidence
+17. **Organization Dashboard** -- page exists but doesn't integrate InviteCodeCard or JoinOrganization components
 
 ---
 
-## Technical Implementation Details
+## Implementation Plan (7 Batches)
 
-### Database Migration
+### Batch 1: Nightly Process -- Apply All Scoring Modifiers
 
-```sql
--- Fix 2: Add module column to performance_sessions
-ALTER TABLE public.performance_sessions
-ADD COLUMN IF NOT EXISTS module text;
+Update `nightly-mpi-process/index.ts` to use the full spec scoring pipeline:
 
--- Fix 7: Organization invite system
-ALTER TABLE public.organizations
-ADD COLUMN IF NOT EXISTS invite_code text UNIQUE,
-ADD COLUMN IF NOT EXISTS invite_expires_at timestamptz;
+**Age curve multiplier:**
+- Read `date_of_birth` from `athlete_mpi_settings`
+- Calculate age, apply sport-specific age curve multiplier to `adjustedScore`
 
-ALTER TABLE public.organization_members
-ADD COLUMN IF NOT EXISTS invited_email text,
-ADD COLUMN IF NOT EXISTS invitation_status text DEFAULT 'active';
+**Verified stat boost:**
+- Query `verified_stat_profiles` for verified profiles (where `verified = true`)
+- Apply `competitiveBoost` and `validationBoost` from `verifiedStatBoosts.ts` mapping
+- Store the boost value in `mpi_scores.verified_stat_boost`
 
--- RLS: Players can accept invitations (insert themselves)
-CREATE POLICY "Players can join via invite"
-ON public.organization_members FOR INSERT
-TO authenticated
-WITH CHECK (auth.uid() = user_id);
+**Contract status modifier:**
+- Query `athlete_professional_status` for `contract_status` and `release_count`
+- Apply rules: free agent = -5%, released = penalty per `contractStatusRules`, retired = freeze, IL = 0.9x
+- Store in `mpi_scores.contract_status_modifier`
 
--- Fix 13: Seed roadmap milestones
-INSERT INTO public.roadmap_milestones (sport, module, milestone_name, milestone_order, requirements) VALUES
-('baseball', 'general', 'Log your first session', 1, '{"min_sessions": 1}'),
-('baseball', 'general', 'Build a 3-day streak', 2, '{"min_streak": 3}'),
-('baseball', 'general', 'Complete 10 sessions', 3, '{"min_sessions": 10}'),
-('baseball', 'general', 'Reach 40 MPI score', 4, '{"min_mpi": 40}'),
-('baseball', 'general', 'Get coach validation on 5 sessions', 5, '{"min_coach_validated": 5}'),
-('baseball', 'general', 'Achieve Rising trend', 6, '{"trend": "rising"}'),
-('baseball', 'general', 'Complete 60 sessions (ranking eligible)', 7, '{"min_sessions": 60}'),
-('softball', 'general', 'Log your first session', 1, '{"min_sessions": 1}'),
-('softball', 'general', 'Build a 3-day streak', 2, '{"min_streak": 3}'),
-('softball', 'general', 'Complete 10 sessions', 3, '{"min_sessions": 10}'),
-('softball', 'general', 'Reach 40 MPI score', 4, '{"min_mpi": 40}'),
-('softball', 'general', 'Get coach validation on 5 sessions', 5, '{"min_coach_validated": 5}'),
-('softball', 'general', 'Achieve Rising trend', 6, '{"trend": "rising"}'),
-('softball', 'general', 'Complete 60 sessions (ranking eligible)', 7, '{"min_sessions": 60}');
-```
+**Position weight:**
+- Read `primary_position` from `athlete_mpi_settings`
+- Apply position weight multiplier from `positionWeights.ts`
 
-### Edge Function Changes
+**Scout evaluation weighting:**
+- Query latest `scout_evaluations` for each athlete
+- If scout grade exists, blend it into the effective grade calculation with a weight
+- Multiple scout submissions average together
 
-**`calculate-session/index.ts`** -- Fixes 3, 4, 11:
-- Add streak reset logic (query last session date, compare to today-1)
-- Store `fatigue_state_at_session` from the feelings prompt data
-- Module is now stored on the session row
+**Game-practice ratio:**
+- Count game vs practice sessions in 90-day window
+- Store ratio in `mpi_scores.game_practice_ratio`
 
-**`nightly-mpi-process/index.ts`** -- Fixes 1, 6, 12, 13:
-- Coach validation gate: auto-pass if no `primary_coach_id`
-- After MPI scoring: call Lovable AI to generate development prompts per athlete
-- After MPI scoring: aggregate micro_layer_data into heat_map_snapshots
-- After MPI scoring: evaluate roadmap milestones and update athlete_roadmap_progress
+**Delta maturity index:**
+- Calculate standard deviation of player-coach grade deltas over recent sessions
+- Lower = more mature (smaller self-assessment gap over time)
+- Store in `mpi_scores.delta_maturity_index`
 
-### Frontend File Changes
+**Fatigue correlation flag:**
+- Cross-reference `fatigue_state_at_session` with `effective_grade`
+- If high fatigue + high grades consistently, set `fatigue_correlation_flag = true`
 
-| File | Changes |
-|------|---------|
-| `src/pages/PracticeHub.tsx` | Complete redesign: rep-by-rep scoring flow, feelings prompts, recent sessions, coach tagging, module capture, season selector |
-| `src/hooks/usePerformanceSession.ts` | Add `module`, `coach_id`, `fatigue_state_at_session` to createSession |
-| `src/hooks/useRecentSessions.ts` | NEW: query recent sessions for Practice Hub |
-| `src/components/practice/RepScorer.tsx` | NEW: tap-tap-done per-rep scoring (replaces DrillBlockBuilder as primary input) |
-| `src/components/practice/GameScorecard.tsx` | NEW: pitch-by-pitch game scoring sheet |
-| `src/components/practice/FeelingsPrompt.tsx` | NEW: structured body/mind check-in |
-| `src/components/practice/CoachSelector.tsx` | NEW: coach picker with "external/no coach" options |
-| `src/components/practice/SessionTypeSelector.tsx` | Keep existing (good UX) |
-| `src/components/organization/JoinOrganization.tsx` | NEW: invite code entry for players |
-| `src/components/organization/InviteCodeCard.tsx` | NEW: displays/generates invite code for coaches |
-| `src/components/organization/OrganizationMemberList.tsx` | Fix: join profiles_public for names |
-| `src/components/analytics/MPIScoreCard.tsx` | Import shared getGradeLabel |
-| `src/components/analytics/DataBuildingGate.tsx` | Dynamic coach validation label |
-| `src/components/micro-layer/MicroLayerInput.tsx` | Remove density gate, make default |
-| `src/pages/Rankings.tsx` | Add loading skeleton on filter change |
+**HoF probability tracking:**
+- Query `athlete_professional_status` for MLB/AUSL season counts
+- If `pro_probability >= 100` AND total pro seasons >= 5: set `hof_tracking_active = true`
+- Calculate `hof_probability` based on consistency metrics
 
-### New Edge Function
+**Integrity rebuild:**
+- For each verified session (has coach grade), add +0.5 to integrity score (capped at 100)
+- This supplements the current deduction-only logic
 
-**`generate-dev-prompts/index.ts`**:
-- Called by nightly process with athlete composite scores + context
-- Uses Lovable AI (Gemini Flash) to generate 2-4 personalized development prompts
-- Returns structured JSON array of prompt strings
+### Batch 2: Enhanced Governance Flags in calculate-session
+
+Add detection for missing flag types from `integrityRules.ts`:
+
+- **Fatigue inconsistency**: If `fatigue_state.body <= 2` (tired/hurting) AND `execution_grade > 60`, flag as info
+- **Retroactive abuse**: If `is_retroactive = true` AND user has > 3 retroactive sessions in 7 days, flag as warning
+- **Grade consistency**: If last 10 sessions all have grades within 5-point band, flag as info (no differentiation)
+- **Rapid improvement**: If composite average increased > 20% vs 7 days ago, flag as info
+- **Game inflation**: If game session grades are > 15 points above practice average, flag as warning
+
+### Batch 3: Arbitration and Appeal System
+
+**Player-facing appeal submission:**
+- Create `src/components/authority/AppealSubmission.tsx`
+  - Player can select a session, describe the dispute, optionally upload video evidence to `scout-videos` bucket
+  - Creates a governance flag with type `arbitration_request` and severity `info`
+  - Stores video URL in flag details
+
+**Admin arbitration view:**
+- Integrate `ArbitrationPanel.tsx` into `AdminDashboard.tsx` (or a session detail view)
+  - Shows session grades, coach overrides, player grades, delta
+  - Admin can Accept (keep grade), Adjust (set new grade), or Reject (revert)
+  - Resolve action updates the governance flag and optionally the session's effective grade
+
+**Session detail dialog updates:**
+- Add "Dispute Grade" button to `SessionDetailDialog.tsx` (visible to players)
+- Opens AppealSubmission flow
+
+### Batch 4: Organization Dashboard Integration
+
+**OrganizationDashboard.tsx updates:**
+- Render `InviteCodeCard` for org owners/coaches
+- Render `JoinOrganization` for players who aren't in an org
+- Show team-level aggregated stats:
+  - Average MPI, trend distribution, session count
+  - Member list with `OrganizationMemberList` (already fixed with names)
+- Ensure `primary_coach_id` is set on athlete's `athlete_mpi_settings` when they join an org (using the org owner as coach)
+
+**Player org membership display:**
+- On player Dashboard or Profile, show "Member of [Org Name]" badge
+- Query `organization_members` where `user_id = auth.uid()` and join with `organizations`
+
+### Batch 5: Rankings Loading Skeleton + Filter UX
+
+- Add `loading` state display in Rankings during segment filter changes
+- Show `Skeleton` components matching the table layout while data loads
+- Prevent blank screen flash
+
+### Batch 6: Additional Nightly Analytics
+
+**Heat map expansion (beyond pitch location):**
+The nightly process currently generates only `pitch_location` type heat maps. Add:
+- `swing_chase` -- zone-based chase rate (swings at pitches outside the strike zone)
+- `barrel_zone` -- zones where barrel contact occurs most
+- `throw_accuracy` -- for fielding module, grid of throw outcomes
+
+These all derive from `micro_layer_data` in the same aggregation pass.
+
+**Split-based heat maps:**
+- Generate separate heat map snapshots per `batting_side_used` (L/R)
+- Generate separate heat map snapshots per `throwing_hand_used`
+- Store with appropriate `split_key` values
+
+### Batch 7: Pro Probability Refinement
+
+Current logic: `Math.min(99, score * 1.1)` -- this is a simplified placeholder.
+
+Replace with tiered threshold logic from `probabilityBaselines.ts`:
+- Map score to probability using `tierThresholds` (elite/high/above_average/average/developing/entry)
+- Interpolate between threshold boundaries for smooth probability curve
+- Cap at 99% for non-verified athletes
+- Only reach 100% with verified MLB/AUSL active roster confirmation
+- Apply release penalty from `contractStatusRules` to reduce probability
+- Free agent status reduces by 5%
 
 ---
 
-## Implementation Priority
+## Technical Details
+
+### Nightly Process Score Formula (Updated)
 
 ```text
-Phase   Fix    Description                                    Effort
-------  -----  -------------------------------------------    ------
-1       #1     Coach-less athletes can participate             Small
-1       #2     Module captured on save                        Small
-1       #3     Coach tagging on sessions                      Medium
-1       #4     Streak reset logic                             Small
-1       #5     Recent sessions display                        Small
-1       #6     AI development prompts                         Medium
-2       #7     Organization invite/accept flow                Large
-2       #8     Organization member names                      Small
-3       #9     Session logging UX redesign                    Large
-3       #10    Per-rep scoring + game scorecard                Large
-3       #11    Feelings/notes prompt                          Small
-4       #12    Heat map snapshot generation                   Medium
-4       #13    Seed roadmap milestones                        Medium
-4       #14    Deduplicate getGradeLabel                      Tiny
-5       #15    Season context selector                        Small
-5       #16    Rankings loading skeleton                      Tiny
+rawScore = (BQI*0.25 + FQI*0.15 + PEI*0.20 + Decision*0.20 + Competitive*0.20)
+tierAdjusted = rawScore * tierMultiplier
+ageAdjusted = tierAdjusted * ageCurveMultiplier
+positionAdjusted = ageAdjusted * positionWeight
+verifiedBoosted = positionAdjusted + verifiedStatBoost
+contractModified = verifiedBoosted * contractModifier
+integrityScaled = contractModified * (integrityScore / 100)
+finalScore = integrityScaled
 ```
 
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `supabase/functions/nightly-mpi-process/index.ts` | Major: add age curves, position weights, verified boosts, contract modifiers, scout eval blending, HoF tracking, fatigue correlation, delta maturity, game-practice ratio, integrity rebuild, heat map expansion, pro probability refinement |
+| `supabase/functions/calculate-session/index.ts` | Add 5 new governance flag detections |
+| `src/components/authority/AppealSubmission.tsx` | NEW: player-facing dispute UI |
+| `src/pages/ProgressDashboard.tsx` | Add appeal button to session details |
+| `src/pages/AdminDashboard.tsx` | Integrate ArbitrationPanel for admin review |
+| `src/pages/OrganizationDashboard.tsx` | Integrate InviteCodeCard, JoinOrganization, team stats |
+| `src/pages/Rankings.tsx` | Add loading skeleton during filter changes |
+| `src/pages/Dashboard.tsx` | Show org membership badge for players |
+| `src/hooks/usePlayerOrganization.ts` | NEW: query player's org membership |
+
+### Database Changes
+
+No new tables needed. All columns already exist in `mpi_scores`, `performance_sessions`, `athlete_mpi_settings`, `athlete_professional_status`, `verified_stat_profiles`, and `governance_flags`. The milestones are already seeded (14 rows confirmed).
+
+---
+
+## Implementation Order
+
+```text
+Batch  Description                                 Effort    Impact
+-----  ------------------------------------------  --------  ------
+1      Nightly scoring modifiers (full pipeline)    Large     Critical -- activates 8 dormant columns
+2      Enhanced governance flags                    Medium    High -- 5 new flag detections
+3      Arbitration/appeal system                    Medium    High -- player dispute flow
+4      Organization dashboard integration           Medium    High -- team experience
+5      Rankings loading skeleton                    Small     Polish
+6      Heat map expansion + splits                  Medium    Data completeness
+7      Pro probability refinement                   Medium    Accuracy improvement
+```
+
+All changes use existing database schema. No migrations required. Edge functions will be redeployed after changes.
