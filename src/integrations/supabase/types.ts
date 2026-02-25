@@ -29,6 +29,7 @@ export type Database = {
           item_type: string | null
           notes: string | null
           order_index: number | null
+          specific_dates: string[] | null
           title: string
         }
         Insert: {
@@ -45,6 +46,7 @@ export type Database = {
           item_type?: string | null
           notes?: string | null
           order_index?: number | null
+          specific_dates?: string[] | null
           title: string
         }
         Update: {
@@ -61,6 +63,7 @@ export type Database = {
           item_type?: string | null
           notes?: string | null
           order_index?: number | null
+          specific_dates?: string[] | null
           title?: string
         }
         Relationships: [
@@ -75,6 +78,8 @@ export type Database = {
       }
       activity_folders: {
         Row: {
+          coach_edit_allowed: boolean | null
+          coach_edit_user_id: string | null
           color: string | null
           created_at: string | null
           cycle_length_weeks: number | null
@@ -84,18 +89,25 @@ export type Database = {
           frequency_days: number[] | null
           icon: string | null
           id: string
+          is_template: boolean | null
           label: string | null
           name: string
           owner_id: string
           owner_type: string
           placement: string | null
           priority_level: number | null
+          source_template_id: string | null
           sport: string
           start_date: string | null
           status: string | null
+          template_category: string | null
+          template_description: string | null
           updated_at: string | null
+          use_count: number | null
         }
         Insert: {
+          coach_edit_allowed?: boolean | null
+          coach_edit_user_id?: string | null
           color?: string | null
           created_at?: string | null
           cycle_length_weeks?: number | null
@@ -105,18 +117,25 @@ export type Database = {
           frequency_days?: number[] | null
           icon?: string | null
           id?: string
+          is_template?: boolean | null
           label?: string | null
           name: string
           owner_id: string
           owner_type: string
           placement?: string | null
           priority_level?: number | null
+          source_template_id?: string | null
           sport?: string
           start_date?: string | null
           status?: string | null
+          template_category?: string | null
+          template_description?: string | null
           updated_at?: string | null
+          use_count?: number | null
         }
         Update: {
+          coach_edit_allowed?: boolean | null
+          coach_edit_user_id?: string | null
           color?: string | null
           created_at?: string | null
           cycle_length_weeks?: number | null
@@ -126,18 +145,31 @@ export type Database = {
           frequency_days?: number[] | null
           icon?: string | null
           id?: string
+          is_template?: boolean | null
           label?: string | null
           name?: string
           owner_id?: string
           owner_type?: string
           placement?: string | null
           priority_level?: number | null
+          source_template_id?: string | null
           sport?: string
           start_date?: string | null
           status?: string | null
+          template_category?: string | null
+          template_description?: string | null
           updated_at?: string | null
+          use_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "activity_folders_source_template_id_fkey"
+            columns: ["source_template_id"]
+            isOneToOne: false
+            referencedRelation: "activity_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       app_settings: {
         Row: {
@@ -5671,6 +5703,10 @@ export type Database = {
       archive_old_scout_applications: { Args: never; Returns: undefined }
       cleanup_deleted_activity_templates: { Args: never; Returns: undefined }
       cleanup_old_webhook_events: { Args: never; Returns: undefined }
+      folder_allows_coach_edit: {
+        Args: { p_coach_id: string; p_folder_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

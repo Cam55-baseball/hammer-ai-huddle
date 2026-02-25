@@ -5,9 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
 import { ActivityFolderItem, ITEM_TYPES, DAY_LABELS } from '@/types/activityFolder';
-import { Plus } from 'lucide-react';
+import { Plus, CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 interface FolderItemEditorProps {
   onAdd: (item: Partial<ActivityFolderItem>) => Promise<ActivityFolderItem | null>;
@@ -24,9 +28,20 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks }: FolderI
   const [durationMinutes, setDurationMinutes] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [useSpecificDates, setUseSpecificDates] = useState(false);
+  const [specificDates, setSpecificDates] = useState<Date[]>([]);
 
   const toggleDay = (day: number) => {
     setAssignedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort());
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (!date) return;
+    setSpecificDates(prev => {
+      const exists = prev.some(d => d.toDateString() === date.toDateString());
+      if (exists) return prev.filter(d => d.toDateString() !== date.toDateString());
+      return [...prev, date].sort((a, b) => a.getTime() - b.getTime());
+    });
   };
 
   const handleAdd = async () => {
@@ -36,7 +51,10 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks }: FolderI
       title: title.trim(),
       description: description.trim() || null,
       item_type: itemType,
-      assigned_days: assignedDays.length > 0 ? assignedDays : null,
+      assigned_days: useSpecificDates ? null : (assignedDays.length > 0 ? assignedDays : null),
+      specific_dates: useSpecificDates && specificDates.length > 0
+        ? specificDates.map(d => format(d, 'yyyy-MM-dd'))
+        : null,
       cycle_week: cycleType === 'custom_rotation' ? cycleWeek : null,
       duration_minutes: durationMinutes ? Number(durationMinutes) : null,
       notes: notes.trim() || null,
@@ -47,6 +65,7 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks }: FolderI
       setNotes('');
       setDurationMinutes('');
       setAssignedDays([]);
+      setSpecificDates([]);
     }
     setSaving(false);
   };
@@ -75,20 +94,68 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks }: FolderI
           <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={1} className="min-h-[36px]" placeholder="Optional..." />
         </div>
 
+        {/* Schedule Type Toggle */}
+        <div className="flex items-center gap-2">
+          <Label className="text-xs">Specific Dates</Label>
+          <Switch checked={useSpecificDates} onCheckedChange={setUseSpecificDates} />
+          <span className="text-[10px] text-muted-foreground">
+            {useSpecificDates ? 'Pick calendar dates' : 'Weekly pattern'}
+          </span>
+        </div>
+
         <div className="flex items-center gap-4 flex-wrap">
-          <div className="space-y-1">
-            <Label className="text-xs">Assigned Days</Label>
-            <div className="flex gap-1">
-              {DAY_LABELS.map((l, i) => (
-                <button key={i} onClick={() => toggleDay(i)} className={cn(
-                  "w-8 h-8 rounded-full text-[10px] font-semibold border transition-all",
-                  assignedDays.includes(i)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted text-muted-foreground border-border"
-                )}>{l}</button>
-              ))}
+          {useSpecificDates ? (
+            <div className="space-y-1">
+              <Label className="text-xs">Select Dates</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
+                    <CalendarIcon className="h-3 w-3" />
+                    {specificDates.length > 0
+                      ? `${specificDates.length} date${specificDates.length !== 1 ? 's' : ''} selected`
+                      : 'Pick dates'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={undefined}
+                    onSelect={handleDateSelect}
+                    modifiers={{ selected: specificDates }}
+                    modifiersClassNames={{ selected: 'bg-primary text-primary-foreground' }}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              {specificDates.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {specificDates.map(d => (
+                    <span
+                      key={d.toISOString()}
+                      className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded cursor-pointer hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setSpecificDates(prev => prev.filter(pd => pd.toDateString() !== d.toDateString()))}
+                    >
+                      {format(d, 'MMM d')} ×
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="space-y-1">
+              <Label className="text-xs">Assigned Days</Label>
+              <div className="flex gap-1">
+                {DAY_LABELS.map((l, i) => (
+                  <button key={i} onClick={() => toggleDay(i)} className={cn(
+                    "w-8 h-8 rounded-full text-[10px] font-semibold border transition-all",
+                    assignedDays.includes(i)
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted text-muted-foreground border-border"
+                  )}>{l}</button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {cycleType === 'custom_rotation' && cycleLengthWeeks && (
             <div className="space-y-1">

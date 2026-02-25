@@ -4,27 +4,43 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useActivityFolders } from '@/hooks/useActivityFolders';
 import { useReceivedFolders } from '@/hooks/useReceivedFolders';
 import { usePlayerFolders } from '@/hooks/usePlayerFolders';
+import { useFolderTemplates } from '@/hooks/useFolderTemplates';
 import { FolderBuilder } from './FolderBuilder';
 import { FolderCard } from './FolderCard';
 import { FolderDetailDialog } from './FolderDetailDialog';
 import { FolderAssignDialog } from './FolderAssignDialog';
 import { ReceivedFolderCard } from './ReceivedFolderCard';
+import { FolderTemplateLibrary } from './FolderTemplateLibrary';
 import { ActivityFolder, FolderAssignment } from '@/types/activityFolder';
-import { FolderPlus, FolderOpen, Inbox } from 'lucide-react';
+import { FolderPlus, FolderOpen, Inbox, BookCopy } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface FolderTabContentProps {
   selectedSport: 'baseball' | 'softball';
   isCoach: boolean;
 }
 
+const TEMPLATE_CATEGORIES = [
+  { value: 'hitting', label: 'Hitting' },
+  { value: 'pitching', label: 'Pitching' },
+  { value: 'conditioning', label: 'Conditioning' },
+  { value: 'recovery', label: 'Recovery' },
+  { value: 'general', label: 'General' },
+];
+
 export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentProps) {
   const { t } = useTranslation();
   const coachFolders = useActivityFolders(selectedSport);
   const receivedFolders = useReceivedFolders();
   const playerFolders = usePlayerFolders(selectedSport);
+  const templateHook = useFolderTemplates(selectedSport);
 
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingFolder, setEditingFolder] = useState<ActivityFolder | null>(null);
@@ -33,6 +49,10 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
   const [detailAssignmentId, setDetailAssignmentId] = useState<string | undefined>();
   const [assignFolder, setAssignFolder] = useState<ActivityFolder | null>(null);
   const [showPlayerBuilder, setShowPlayerBuilder] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [publishFolder, setPublishFolder] = useState<ActivityFolder | null>(null);
+  const [publishCategory, setPublishCategory] = useState('general');
+  const [publishDescription, setPublishDescription] = useState('');
 
   const handleCoachCreate = async (folder: Partial<ActivityFolder>) => {
     const result = await coachFolders.createFolder(folder);
@@ -58,6 +78,15 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
     }
   };
 
+  const handlePublish = async () => {
+    if (!publishFolder) return;
+    await templateHook.publishAsTemplate(publishFolder.id, publishCategory, publishDescription);
+    setPublishFolder(null);
+    setPublishCategory('general');
+    setPublishDescription('');
+    coachFolders.refetch();
+  };
+
   return (
     <div className="space-y-6">
       {/* Coach Section */}
@@ -68,10 +97,19 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
               <FolderOpen className="h-5 w-5" />
               My Folders (Coach)
             </h3>
-            <Button size="sm" onClick={() => setShowBuilder(true)} className="gap-1">
-              <FolderPlus className="h-4 w-4" /> Create Folder
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setShowTemplateLibrary(!showTemplateLibrary)} className="gap-1">
+                <BookCopy className="h-4 w-4" /> Templates
+              </Button>
+              <Button size="sm" onClick={() => setShowBuilder(true)} className="gap-1">
+                <FolderPlus className="h-4 w-4" /> Create Folder
+              </Button>
+            </div>
           </div>
+
+          {showTemplateLibrary && (
+            <FolderTemplateLibrary sport={selectedSport} onDuplicated={() => coachFolders.refetch()} />
+          )}
 
           {showBuilder && (
             <FolderBuilder onSave={handleCoachCreate} onCancel={() => setShowBuilder(false)} />
@@ -94,6 +132,7 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
                   onEdit={() => setEditingFolder(f)}
                   onDelete={() => coachFolders.deleteFolder(f.id)}
                   onArchive={() => coachFolders.updateFolder(f.id, { status: 'archived' })}
+                  onPublishTemplate={() => setPublishFolder(f)}
                 />
               ))}
             </div>
@@ -206,6 +245,42 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
               }}
               onCancel={() => setEditingFolder(null)}
             />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Publish as Template Dialog */}
+      {publishFolder && (
+        <Dialog open={!!publishFolder} onOpenChange={(open) => { if (!open) setPublishFolder(null); }}>
+          <DialogContent className="max-w-sm">
+            <h3 className="font-semibold text-lg">Publish as Template</h3>
+            <p className="text-sm text-muted-foreground">Share "{publishFolder.name}" with other coaches.</p>
+            <div className="space-y-3 mt-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Category</Label>
+                <Select value={publishCategory} onValueChange={setPublishCategory}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TEMPLATE_CATEGORIES.map(c => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Description</Label>
+                <Textarea
+                  value={publishDescription}
+                  onChange={e => setPublishDescription(e.target.value)}
+                  placeholder="Briefly describe what this template covers..."
+                  rows={2}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handlePublish} className="flex-1">Publish</Button>
+                <Button variant="outline" onClick={() => setPublishFolder(null)}>Cancel</Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       )}

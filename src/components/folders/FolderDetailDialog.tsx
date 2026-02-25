@@ -3,12 +3,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { ActivityFolder, ActivityFolderItem, DAY_LABELS } from '@/types/activityFolder';
 import { supabase } from '@/integrations/supabase/client';
 import { FolderItemEditor } from './FolderItemEditor';
-import { FolderOpen, Clock, FileText, Trash2 } from 'lucide-react';
+import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getTodayDate } from '@/utils/dateUtils';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface FolderDetailDialogProps {
   open: boolean;
@@ -28,9 +32,11 @@ export function FolderDetailDialog({
   const [items, setItems] = useState<ActivityFolderItem[]>([]);
   const [completions, setCompletions] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
+  const [coachEditAllowed, setCoachEditAllowed] = useState(false);
 
   useEffect(() => {
     if (!open || !folder) return;
+    setCoachEditAllowed(folder.coach_edit_allowed || false);
     const load = async () => {
       setLoading(true);
       const { data } = await supabase
@@ -72,6 +78,41 @@ export function FolderDetailDialog({
     setCompletions(prev => ({ ...prev, [itemId]: !prev[itemId] }));
   };
 
+  const handleCoachEditToggle = async (allowed: boolean) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      // Get primary coach
+      const { data: mpi } = await supabase
+        .from('athlete_mpi_settings')
+        .select('primary_coach_id')
+        .eq('user_id', userData.user.id)
+        .single();
+
+      const coachId = mpi?.primary_coach_id || null;
+      if (allowed && !coachId) {
+        toast.error('No primary coach set. Go to settings to assign a coach first.');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('activity_folders')
+        .update({
+          coach_edit_allowed: allowed,
+          coach_edit_user_id: allowed ? coachId : null,
+        } as any)
+        .eq('id', folder.id);
+
+      if (error) throw error;
+      setCoachEditAllowed(allowed);
+      toast.success(allowed ? 'Coach can now edit this folder' : 'Coach edit access removed');
+    } catch (err) {
+      console.error('Error toggling coach edit:', err);
+      toast.error('Failed to update permission');
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
@@ -84,6 +125,17 @@ export function FolderDetailDialog({
 
         {folder.description && (
           <p className="text-sm text-muted-foreground">{folder.description}</p>
+        )}
+
+        {/* Coach Edit Toggle (player-owned folders only) */}
+        {isOwner && folder.owner_type === 'player' && (
+          <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/50">
+            <div>
+              <Label className="text-xs font-medium">Allow Coach to Edit</Label>
+              <p className="text-[10px] text-muted-foreground">Your primary coach can add/modify items</p>
+            </div>
+            <Switch checked={coachEditAllowed} onCheckedChange={handleCoachEditToggle} />
+          </div>
         )}
 
         {/* Progress */}
@@ -127,9 +179,14 @@ export function FolderDetailDialog({
                     <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
                   )}
                   <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground flex-wrap">
-                    {item.assigned_days && item.assigned_days.length > 0 && (
+                    {item.specific_dates && item.specific_dates.length > 0 ? (
+                      <span className="flex items-center gap-0.5">
+                        <CalendarDays className="h-2.5 w-2.5" />
+                        {item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}
+                      </span>
+                    ) : item.assigned_days && item.assigned_days.length > 0 ? (
                       <span>{item.assigned_days.map(d => DAY_LABELS[d]).join(', ')}</span>
-                    )}
+                    ) : null}
                     {item.duration_minutes && (
                       <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
                     )}
