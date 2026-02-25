@@ -1,74 +1,79 @@
 
 
-# Fix Vault History: Remove Past Days Dropdown and Fix Translation Errors
+# Add Existing Activities to Activity Folders
 
 ## Overview
 
-Three changes:
-1. Remove the `VaultPastDaysDropdown` component from the Vault page (redundant with the History tab)
-2. Fix the "returned an object instead of string" translation error in VaultHistoryTab for quiz type labels
-3. Ensure all written entries from check-ins and activities are viewable when clicking a day in the history section
+Allow users to import their existing custom activities (from the Custom Activity Templates) into a new or existing activity folder, rather than manually re-entering each item.
+
+---
+
+## How It Works
+
+When adding items to a folder (via the FolderItemEditor in FolderDetailDialog), a new "Import from Activities" button will appear alongside the manual entry form. Clicking it opens a searchable picker dialog showing the user's existing custom activity templates. Selecting one or more activities will pre-fill and insert them as folder items, copying over the title, description, type, duration, and exercises.
 
 ---
 
 ## Changes
 
-### 1. Remove VaultPastDaysDropdown from Vault page
+### 1. New Component: ActivityPickerDialog
 
-**File: `src/pages/Vault.tsx`**
-- Remove the import of `VaultPastDaysDropdown` (line 62)
-- Remove the `<VaultPastDaysDropdown>` usage (lines 821-825)
-- The component file itself (`src/components/vault/VaultPastDaysDropdown.tsx`) can remain in the codebase unused, or be deleted
+**File: `src/components/folders/ActivityPickerDialog.tsx`**
 
-### 2. Fix Translation Key Error in VaultHistoryTab
+A dialog that:
+- Queries `custom_activity_templates` for the current user's active (non-deleted) templates filtered by sport
+- Displays them in a searchable, selectable list (title, type, duration)
+- Allows multi-select with checkboxes
+- On confirm, maps each selected template into a `Partial<ActivityFolderItem>` and calls the `onAdd` callback for each
 
-**File: `src/components/vault/VaultHistoryTab.tsx`**
+Mapping from template to folder item:
+- `title` from template `title`
+- `description` from template `description`
+- `item_type` mapped from template `activity_type` (e.g. "workout" to "exercise", "mobility" to "mobility", etc.)
+- `duration_minutes` from template `duration_minutes`
+- `exercises` from template `exercises` (JSON carried over)
+- `notes` left empty (coach can add after import)
 
-Line 230 currently uses:
-```typescript
-{t(`vault.quiz.${quiz.quiz_type}`)}
-```
+### 2. Update FolderItemEditor
 
-The quiz types are `morning`, `pre_lift`, `night`. But `vault.quiz.morning` is a nested object (with `title`, `subtitle` sub-keys), not a string. This causes the "[object Object]" display.
+**File: `src/components/folders/FolderItemEditor.tsx`**
 
-Fix: Create a mapping function that resolves to the correct flat label keys:
+- Add an "Import from Activities" button (e.g. with a `Library` icon) next to the existing "Add Item" button
+- Clicking it opens the `ActivityPickerDialog`
+- When activities are selected and confirmed, each is added via the existing `onAdd` callback
 
-```typescript
-const getQuizLabel = (quizType: string) => {
-  switch (quizType) {
-    case 'morning': return t('vault.quiz.morningLabel', 'Morning');
-    case 'pre_lift': return t('vault.quiz.preLift', 'Pre-Workout');
-    case 'night': return t('vault.quiz.nightLabel', 'Night');
-    default: return quizType;
-  }
-};
-```
+### 3. Update FolderDetailDialog
 
-Replace `t('vault.quiz.${quiz.quiz_type}')` on line 230 and line 236 with `getQuizLabel(quiz.quiz_type)`.
+**File: `src/components/folders/FolderDetailDialog.tsx`**
 
-### 3. Show All Written Entries in History Day View
-
-**File: `src/components/vault/VaultHistoryTab.tsx`**
-
-Currently the history tab shows quiz scores, notes, workouts, nutrition, performance tests, photos, and scout grades. However, some written reflection fields from quizzes are not fully displayed. Expand the quiz card rendering (around lines 241-280) to show all text fields:
-
-- `reflection_did_well` (already shown)
-- `reflection_improve` (not shown -- add it)
-- `reflection_learned` (not shown -- add it)
-- `reflection_motivation` / `daily_motivation` (not shown -- add it)
-- `mood_level`, `stress_level`, `discipline_level` (if present -- show them)
-
-This ensures that when a user clicks on a day in the history, they can see every piece of written content from their check-ins.
+- Pass the current folder's `sport` down to `FolderItemEditor` so the picker can filter templates by sport
 
 ---
 
 ## Technical Details
 
+### Database Query (in ActivityPickerDialog)
+
+```sql
+SELECT id, title, activity_type, description, duration_minutes, exercises, icon, color
+FROM custom_activity_templates
+WHERE user_id = auth.uid()
+  AND sport = :sport
+  AND deleted_at IS NULL
+ORDER BY title ASC
+```
+
+No new tables or migrations needed -- this reads from the existing `custom_activity_templates` table.
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src/components/folders/ActivityPickerDialog.tsx` | Searchable picker for importing existing activities |
+
 ### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/pages/Vault.tsx` | Remove VaultPastDaysDropdown import and usage |
-| `src/components/vault/VaultHistoryTab.tsx` | Fix quiz label translation keys; add display of all quiz reflection fields |
-
-### No Database Changes Required
+| `src/components/folders/FolderItemEditor.tsx` | Add "Import from Activities" button that opens the picker |
+| `src/components/folders/FolderDetailDialog.tsx` | Pass `sport` prop to FolderItemEditor |
