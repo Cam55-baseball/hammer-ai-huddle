@@ -1,109 +1,144 @@
 
-# Stress Test Report #3: Full Application Sweep
 
-## Previous Fixes Confirmed Working
+# Stress Test Report #4: Extreme Full-App Audit
+
+## All Previous Fixes Verified Working
 
 | Fix | Status |
 |-----|--------|
-| `nightly-mpi-process` in config.toml with `verify_jwt = false` | Confirmed |
-| `calculate-session` in config.toml with `verify_jwt = false` | Confirmed |
-| Rankings query filters by latest `calculation_date` | Confirmed |
-| `tierToSegment()` maps tiers to proper segment_pool values | Confirmed |
-| Eligibility gates enforced (ineligible athletes skipped) | Confirmed |
-| Unique index `idx_mpi_unique_daily` prevents duplicate daily rows | Confirmed |
-| Upsert with `onConflict` in nightly process | Confirmed |
+| `nightly-mpi-process` in config.toml `verify_jwt = false` | Confirmed (line 150-151) |
+| `calculate-session` in config.toml `verify_jwt = false` | Confirmed (line 153-154) |
+| Rankings query filters by latest `calculation_date` | Confirmed (lines 38-53) |
+| `tierToSegment()` maps tiers to proper segment_pool values | Confirmed (lines 9-15) |
+| Eligibility gates enforced (ineligible athletes skipped) | Confirmed (line 134) |
+| Unique index `idx_mpi_unique_daily` on (user_id, sport, calculation_date) | Confirmed |
+| Upsert with `onConflict` in nightly process | Confirmed (line 201) |
 | `mpi_scores` in `supabase_realtime` publication | Confirmed |
-| Stale "Users can select own MPI scores" policy dropped | Confirmed |
-| Composite index `idx_mpi_sport_date_rank` for query performance | Confirmed |
-| Standardized CORS headers on both edge functions | Confirmed |
-| `get-rankings` orphaned function deleted | Confirmed |
-| Cron job active at `0 5 * * *` | Confirmed |
+| Composite index `idx_mpi_sport_date_rank` | Confirmed |
+| `profiles_public` view with `security_invoker = on` | Confirmed |
+| Rankings fetches names from `profiles_public` | Confirmed (line 86) |
+| `handle_new_user()` creates `athlete_mpi_settings` row | Confirmed |
+| Dashboard uses `getGradeLabel()` | Confirmed (line 44) |
+| Cron job active at `0 5 * * *` | Confirmed (jobid 5) |
+| `on_auth_user_created` trigger on `auth.users` | Confirmed |
+| MPI weight formula sums to 1.0 (0.25+0.15+0.2+0.2+0.2) | Confirmed |
 
 ---
 
 ## NEW GAPS FOUND
 
-### 1. CRITICAL: Rankings page shows "Anonymous" for every athlete
+### 1. CRITICAL (Security): `profiles` table PII fully exposed to all authenticated users
 
-The Rankings page fetches athlete names via:
-```typescript
-supabase.from("profiles").select("id, full_name").in("id", userIds)
-```
+The migration added `"Authenticated users can view basic profile info" USING (true)` as a SELECT policy on the **base `profiles` table**. This means any authenticated user can query the base table directly and read ALL 50 columns, including:
 
-But the `profiles` table RLS only allows users to see **their own profile** (`auth.uid() = id`). Scouts/coaches/admins have broader access, but regular athletes do not.
+- `contact_email`, `date_of_birth`, `sex`
+- `height`, `weight`, `height_inches`
+- `social_instagram`, `social_twitter`, `social_tiktok`, `social_facebook`
+- `state`, `team_affiliation`, `graduation_year`
+- `is_professional`, `is_free_agent`, `mlb_affiliate`
 
-**Result:** Every ranked athlete except the current user shows "Anonymous" on the leaderboard. This completely breaks the user experience.
+The `profiles_public` view only exposes 5 safe columns, but the blanket base-table policy makes the view's protection meaningless -- a malicious user can bypass it entirely by querying `profiles` directly.
 
-**Complication:** The `profiles` table contains sensitive PII -- `contact_email`, `date_of_birth`, `social_instagram`, `height`, `weight`, `sex`, etc. A blanket SELECT policy would expose all of this data.
+**Fix:** Replace the blanket `USING (true)` policy with a narrowly-scoped RLS that only allows users to read their own row, while using a `SECURITY DEFINER` function-based approach for the public view. The cleanest solution:
 
-**Fix:** Create a secure database view that exposes ONLY safe, public-facing fields:
+1. Drop the blanket policy: `DROP POLICY "Authenticated users can view basic profile info" ON public.profiles;`
+2. Recreate `profiles_public` as a `SECURITY DEFINER` view (not `security_invoker`), or create a `SECURITY DEFINER` function that returns the limited columns
+3. Grant `SELECT` on the view to `authenticated` role directly
+
+**Alternatively** (simpler, still secure): Change the view to NOT use `security_invoker` (remove the option), which makes it run as the view owner (postgres/superuser), bypassing RLS on the base table. Then the base table's restrictive policies remain intact.
+
 ```sql
-CREATE VIEW public.profiles_public
-WITH (security_invoker = on) AS
+-- Drop the dangerous blanket policy
+DROP POLICY "Authenticated users can view basic profile info" ON public.profiles;
+
+-- Recreate view WITHOUT security_invoker (runs as definer/owner, bypasses RLS)
+DROP VIEW IF EXISTS public.profiles_public;
+CREATE VIEW public.profiles_public AS
 SELECT id, full_name, avatar_url, position, experience_level
 FROM public.profiles;
+
+-- Grant access to authenticated users on the view
+GRANT SELECT ON public.profiles_public TO authenticated;
 ```
-Then add a SELECT policy on `profiles` that allows the view to work for authenticated users, OR add a simple policy scoped to the view. Update `Rankings.tsx` to query `profiles_public` instead of `profiles`.
 
-**Alternative (simpler):** Add a targeted RLS policy that only allows authenticated users to read `id` and `full_name` columns. However, Postgres RLS operates at the row level, not column level -- so a view is the proper solution.
+This way the base `profiles` table retains its restrictive RLS (own row + admin/owner/scout policies) while the view safely exposes only 5 columns.
 
-### 2. HIGH: `athlete_mpi_settings` row never auto-created for new users
+### 2. HIGH: 7 edge functions exist in filesystem but missing from config.toml
 
-The `handle_new_user()` trigger only creates a `profiles` row on signup. There is **no trigger or code path** that creates an `athlete_mpi_settings` row.
+These functions have code in `supabase/functions/` but no entry in `config.toml`:
 
-Without this row:
-- The nightly MPI process **completely ignores** the athlete (queries `athlete_mpi_settings` first)
-- The `DataBuildingGate` component returns null (no eligibility data)
-- The `useSwitchHitterProfile` hook returns null
-- The athlete is invisible to the entire ranking/analytics system
+| Function | Status |
+|----------|--------|
+| `approve-scout-application` | Missing from config |
+| `delete-library-session` | Missing from config |
+| `download-session-video` | Missing from config |
+| `get-player-library` | Missing from config |
+| `migrate-to-tiers` | Missing from config |
+| `unfollow-player` | Missing from config |
+| `update-library-session` | Missing from config |
 
-**Fix:** Either:
-1. Add to the `handle_new_user()` trigger to also insert a default `athlete_mpi_settings` row
-2. Or create a separate trigger/function that runs on profile creation
+All of these are called from the frontend with user JWTs. Per the signing-keys system, the default `verify_jwt = true` is deprecated and may cause auth failures. Each should have `verify_jwt = false` with in-code JWT validation.
 
-The insert should set sensible defaults:
+**Fix:** Add all 7 to `config.toml` with appropriate `verify_jwt` settings. Functions that validate JWT in code should use `verify_jwt = false`. The `migrate-to-tiers` function (one-time migration utility) should also be set to `false` or removed if no longer needed.
+
+### 3. HIGH: `governance_flags` has no INSERT policy for authenticated users
+
+The `calculate-session` edge function inserts governance flags using the **service role key**, which bypasses RLS. This works. However, there is no INSERT policy for regular authenticated users on `governance_flags` -- only:
+- `Admins can manage all flags` (ALL for admins)
+- `Users can select own flags` (SELECT only)
+
+If any future code path tries to insert flags from the client side (not through the edge function), it will silently fail. This is currently safe because the only insert path uses service role, but it's fragile.
+
+**Fix (Low priority):** Add an INSERT policy:
 ```sql
-INSERT INTO public.athlete_mpi_settings (user_id, sport, league_tier)
-VALUES (NEW.id, 'baseball', 'rec');
+CREATE POLICY "System can insert flags for users"
+ON public.governance_flags FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
 ```
 
-**Note:** The `sport` column on `athlete_mpi_settings` is `NOT NULL`, so this must be set. A reasonable default is `'baseball'` since users select their sport during onboarding and can update it later.
+### 4. MEDIUM: `OwnerDashboard` queries `profiles` directly -- will now expose all PII
 
-### 3. MEDIUM: Dashboard `PracticeIntelligenceCard` hardcodes grade labels
-
-`src/pages/Dashboard.tsx` line 42-43:
+`OwnerDashboard.tsx` line 88:
 ```typescript
-const gradeLabel = mpi?.adjusted_global_score
-  ? mpi.adjusted_global_score >= 70 ? 'Elite' : mpi.adjusted_global_score >= 60 ? 'Plus' : mpi.adjusted_global_score >= 50 ? 'Average' : 'Developing'
-  : null;
+supabase.from("profiles").select("id, full_name, created_at")
 ```
 
-This uses different thresholds and labels than `getGradeLabel()` in `src/lib/gradeLabel.ts` (which has 8 tiers: Elite, Plus-Plus, Plus, Above Average, Average, Below Average, Fringe, Poor). The Dashboard shows "Plus" at 60+ while gradeLabel.ts shows "Plus-Plus". The Dashboard shows "Developing" below 50 while gradeLabel.ts shows "Average" at 45+.
+This query goes through the blanket `USING (true)` policy. Once we fix Gap #1 by removing that policy, the Owner Dashboard will break -- it will only return the owner's own profile row.
 
-**Fix:** Replace the inline logic with `getGradeLabel()`:
+**Fix:** The Owner Dashboard should use the admin/owner-specific policies that already exist. Since the owner already has `"Owners can view all profiles" USING (has_role(auth.uid(), 'owner'))`, this query will continue to work for owners after the blanket policy is removed. No code change needed -- just verify the owner-specific policies remain.
+
+### 5. MEDIUM: Nightly MPI process has O(N) database calls per athlete (performance risk)
+
+For each athlete, the nightly process makes:
+- 1 query for sessions (per athlete)
+- 1 query for governance flags (per athlete)
+- 1 update for eligibility gates (per athlete)
+- 1 query for previous MPI score (per ranked athlete)
+- 1 upsert for new MPI score (per ranked athlete)
+
+With 1,000 athletes, that is 5,000+ database calls in a single edge function invocation. Edge functions have a 150-second timeout. At ~50ms per call, 5,000 calls = 250 seconds, which exceeds the timeout.
+
+**Fix (Future optimization):** This is not broken today (0 athletes), but will become a problem at scale. Solutions include:
+- Batch queries using `.in('user_id', userIds)` instead of per-athlete loops
+- Move the entire calculation into a Postgres function (single transaction)
+- Split into batches of 100 athletes per invocation
+
+No immediate code change required, but flag for when the user base grows past ~500 athletes.
+
+### 6. LOW: Stale `user_progress` table still queried on Dashboard
+
+`Dashboard.tsx` line 224-226:
 ```typescript
-import { getGradeLabel } from "@/lib/gradeLabel";
-const gradeLabel = mpi?.adjusted_global_score ? getGradeLabel(mpi.adjusted_global_score) : null;
+const progressResponse = await supabase
+  .from("user_progress")
+  .select("*")
+  .eq("user_id", user!.id);
 ```
 
-### 4. MEDIUM: `config.toml` has ghost/duplicate entries
+The `user_progress` table is the **old** ranking/progress system. The new system uses `mpi_scores` and `performance_sessions`. The Dashboard still queries this legacy table for module progress display (efficiency scores). This isn't broken -- the table still exists and has data -- but it creates confusion about which system is authoritative.
 
-- **Line 6-7:** `[functions.parse-voice-food]` references a function that does NOT exist in the filesystem. No `supabase/functions/parse-voice-food/` directory exists.
-- **Lines 46-49:** `[functions.get-owner-profile]` appears TWICE with identical settings.
-
-These cause no runtime errors but are maintenance hazards and could confuse deployments.
-
-**Fix:** Remove the `parse-voice-food` entry and the duplicate `get-owner-profile` entry from `config.toml`.
-
-### 5. LOW: Zero data in production tables
-
-- `mpi_scores`: 0 rows
-- `performance_sessions`: 0 rows
-- `athlete_mpi_settings`: 0 rows
-
-The entire MPI/Rankings pipeline has never been exercised with real data. The cron job runs nightly but processes nothing because there are no `athlete_mpi_settings` rows (which ties back to Gap #2).
-
-**Impact:** Not a code bug, but confirms that Gap #2 is the root cause of why the system appears dormant. Once Gap #2 is fixed and users start logging sessions, data will begin flowing.
+**Impact:** Low. The Dashboard uses this for per-module efficiency scores (hitting %, pitching %), which are separate from the MPI system. No fix needed unless unifying these systems.
 
 ---
 
@@ -112,86 +147,79 @@ The entire MPI/Rankings pipeline has never been exercised with real data. The cr
 ```text
 Priority   Gap   Description
 --------   ---   -----------
-P0         #1    Create profiles_public view + update Rankings to use it
-P0         #2    Auto-create athlete_mpi_settings on user signup
-P1         #3    Replace hardcoded grade labels with getGradeLabel()
-P1         #4    Clean ghost/duplicate entries from config.toml
+P0         #1    Remove blanket profiles RLS policy + fix profiles_public view
+P1         #2    Add 7 missing edge functions to config.toml
+P2         #3    Add governance_flags INSERT policy for resilience
+P2         #4    Verify OwnerDashboard works after profiles fix (no code change)
+P3         #5    Flag nightly MPI scaling concern (no immediate fix)
+P3         #6    Document user_progress as legacy system
 ```
 
 ---
 
-## Technical Implementation Details
+## Technical Implementation
 
-### Database migration (Gaps #1, #2):
+### Database Migration (Gap #1 -- P0 Critical Security Fix):
 
 ```sql
--- Gap #1: Create a safe public view for profile names
-CREATE VIEW public.profiles_public
-WITH (security_invoker = on) AS
+-- 1. Drop the dangerous blanket SELECT policy that exposes all PII
+DROP POLICY IF EXISTS "Authenticated users can view basic profile info" ON public.profiles;
+
+-- 2. Recreate profiles_public WITHOUT security_invoker
+--    This makes the view run as the owner (superuser), bypassing base table RLS
+--    while only exposing the 5 safe columns
+DROP VIEW IF EXISTS public.profiles_public;
+CREATE VIEW public.profiles_public AS
 SELECT id, full_name, avatar_url, position, experience_level
 FROM public.profiles;
 
--- Allow authenticated users to read from the base table
--- through the view (security_invoker means the view runs
--- as the calling user, so we need a policy)
-CREATE POLICY "Authenticated users can view basic profile info"
-ON public.profiles FOR SELECT TO authenticated
-USING (true);
+-- 3. Grant authenticated users SELECT on the view only
+GRANT SELECT ON public.profiles_public TO authenticated;
 
--- Gap #2: Auto-create athlete_mpi_settings on new user signup
--- Update the existing handle_new_user() function
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-BEGIN
-  INSERT INTO public.profiles (id, full_name)
-  VALUES (NEW.id, NEW.raw_user_meta_data->>'full_name');
-
-  INSERT INTO public.athlete_mpi_settings (user_id, sport)
-  VALUES (NEW.id, 'baseball');
-
-  RETURN NEW;
-END;
-$$;
+-- 4. Add governance_flags INSERT policy (Gap #3)
+CREATE POLICY "Users can insert own governance flags"
+ON public.governance_flags FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
 ```
 
-**Security note on Gap #1:** The `profiles` table contains PII fields like `contact_email`, `date_of_birth`, `social_instagram`, etc. Adding `USING (true)` for SELECT means all authenticated users can see all profile rows including PII. The safer approach is to:
-1. Keep the restrictive existing policies
-2. Have the Rankings page query only the `profiles_public` view (which excludes PII)
-3. Not add the blanket policy -- instead, grant SELECT on the view directly
+**Security verification after migration:**
+- Regular user queries `profiles` directly -> gets only own row (existing `"Users can view their own profile"` policy)
+- Regular user queries `profiles_public` -> gets all rows but ONLY id, full_name, avatar_url, position, experience_level
+- Owner queries `profiles` -> gets all rows (existing `"Owners can view all profiles"` policy)
+- Admin queries `profiles` -> gets all rows (existing `"Admins can view all profiles"` policy)
 
-However, since `security_invoker = on` means the view runs with the caller's permissions, we DO need the base table policy. The tradeoff is acceptable because the Rankings page only selects `id, full_name` -- but a malicious client could query the profiles table directly for all columns.
+### Config.toml Update (Gap #2):
 
-**Recommended safer approach:** Instead of the blanket policy, update the Rankings page to use an edge function that returns only names, or accept the tradeoff since all users are authenticated athletes in a sports community where profile visibility is expected.
+Add these entries:
+```toml
+[functions.approve-scout-application]
+verify_jwt = false
 
-### Frontend changes:
+[functions.delete-library-session]
+verify_jwt = false
 
-**Rankings.tsx** -- Update profiles query to use the view:
-```typescript
-// Change from:
-const { data: profiles } = await supabase
-  .from("profiles")
-  .select("id, full_name")
-  .in("id", userIds);
+[functions.download-session-video]
+verify_jwt = false
 
-// To:
-const { data: profiles } = await supabase
-  .from("profiles_public")
-  .select("id, full_name")
-  .in("id", userIds);
+[functions.get-player-library]
+verify_jwt = false
+
+[functions.migrate-to-tiers]
+verify_jwt = false
+
+[functions.unfollow-player]
+verify_jwt = false
+
+[functions.update-library-session]
+verify_jwt = false
 ```
 
-**Dashboard.tsx** -- Replace hardcoded grade labels:
-```typescript
-import { getGradeLabel } from "@/lib/gradeLabel";
-// Replace lines 42-44 with:
-const gradeLabel = mpi?.adjusted_global_score
-  ? getGradeLabel(mpi.adjusted_global_score) : null;
-```
+### No Frontend Changes Required
 
-### Config cleanup (Gap #4):
+All existing frontend queries will continue to work:
+- `Rankings.tsx` queries `profiles_public` (view) -- still works via GRANT
+- `OwnerDashboard.tsx` queries `profiles` -- still works via owner RLS policy
+- `DashboardLayout.tsx` queries own profile -- still works via own-row policy
+- `TutorialModal.tsx` updates own profile -- still works via own-row update policy
 
-Remove the `parse-voice-food` block (lines 6-7) and the duplicate `get-owner-profile` block (lines 48-49) from `supabase/config.toml`.
