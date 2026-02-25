@@ -59,7 +59,7 @@ import { VaultCorrelationAnalysisCard } from '@/components/vault/VaultCorrelatio
 import { VaultWellnessGoalsCard, checkWellnessGoalsAndNotify } from '@/components/vault/VaultWellnessGoalsCard';
 import { checkPainPatternAndNotify } from '@/components/vault/VaultPainPatternAlert';
 import { VaultTexVisionCard } from '@/components/vault/VaultTexVisionCard';
-import { VaultPastDaysDropdown } from '@/components/vault/VaultPastDaysDropdown';
+// VaultPastDaysDropdown removed - journal entries now show in Calendar day sheet
 
 import { useAuth } from '@/hooks/useAuth';
 
@@ -818,11 +818,7 @@ export default function Vault() {
                     </div>
                   )}
 
-                  {/* Past Days Journal Viewer */}
-                  <VaultPastDaysDropdown
-                    fetchHistoryForDate={fetchHistoryForDate}
-                    entriesWithData={entriesWithData}
-                  />
+                  {/* Past Days Journal Viewer - moved to Calendar day sheet */}
 
                   {/* 6-Week Recap moved to VaultStreakRecapCard in left column */}
                 </TabsContent>
