@@ -2,8 +2,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ActivityFolder } from '@/types/activityFolder';
-import { FolderOpen, Calendar, Send, MoreVertical, Trash2, Archive, Edit } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { FolderOpen, Calendar, Send, MoreVertical, Trash2, Archive, Edit, BookCopy } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 
 interface FolderCardProps {
@@ -13,6 +13,7 @@ interface FolderCardProps {
   onEdit?: (folder: ActivityFolder) => void;
   onDelete?: (folder: ActivityFolder) => void;
   onArchive?: (folder: ActivityFolder) => void;
+  onPublishTemplate?: (folder: ActivityFolder) => void;
   itemCount?: number;
 }
 
@@ -23,7 +24,7 @@ const STATUS_STYLES: Record<string, string> = {
   archived: 'bg-muted text-muted-foreground',
 };
 
-export function FolderCard({ folder, onOpen, onSend, onEdit, onDelete, onArchive, itemCount }: FolderCardProps) {
+export function FolderCard({ folder, onOpen, onSend, onEdit, onDelete, onArchive, onPublishTemplate, itemCount }: FolderCardProps) {
   return (
     <Card
       className="cursor-pointer hover:shadow-md transition-shadow border-l-4"
@@ -67,6 +68,14 @@ export function FolderCard({ folder, onOpen, onSend, onEdit, onDelete, onArchive
                   <DropdownMenuItem onClick={() => onArchive(folder)}>
                     <Archive className="h-4 w-4 mr-2" /> Archive
                   </DropdownMenuItem>
+                )}
+                {onPublishTemplate && !folder.is_template && folder.status !== 'archived' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onPublishTemplate(folder)}>
+                      <BookCopy className="h-4 w-4 mr-2" /> Publish as Template
+                    </DropdownMenuItem>
+                  </>
                 )}
                 {onDelete && (
                   <DropdownMenuItem onClick={() => onDelete(folder)} className="text-destructive">

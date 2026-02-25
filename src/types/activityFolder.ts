@@ -18,6 +18,15 @@ export interface ActivityFolder {
   icon: string;
   created_at: string;
   updated_at: string;
+  // Coach edit permission
+  coach_edit_allowed: boolean;
+  coach_edit_user_id: string | null;
+  // Template library
+  is_template: boolean;
+  template_category: string | null;
+  template_description: string | null;
+  use_count: number;
+  source_template_id: string | null;
 }
 
 export interface ActivityFolderItem {
@@ -34,6 +43,7 @@ export interface ActivityFolderItem {
   duration_minutes: number | null;
   notes: string | null;
   completion_tracking: boolean;
+  specific_dates: string[] | null;
   created_at: string;
 }
 

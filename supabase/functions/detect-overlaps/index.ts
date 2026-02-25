@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 interface OverlapWarning {
-  type: 'cns' | 'elastic' | 'load_spike' | 'recovery';
+  type: 'cns' | 'elastic' | 'load_spike' | 'recovery' | 'folder_overload';
   severity: 'advisory' | 'warning';
   message: string;
   suggestion?: string;
@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     const userId = claimsData.claims.sub;
     const body = await req.json();
-    const { target_date, planned_cns_load, planned_fascial_load } = body;
+    const { target_date, planned_cns_load, planned_fascial_load, folder_cns_load } = body;
 
     console.log('[detect-overlaps] Checking overlaps for user:', userId, 'date:', target_date);
 
@@ -119,6 +119,26 @@ Deno.serve(async (req) => {
         message: `${recentHighDays} high-load days in the past week - recovery may be compromised`,
         suggestion: 'Consider a deload day or lighter session',
       });
+    }
+
+    // Check folder + Hammers combined overload
+    const folderLoad = typeof folder_cns_load === 'number' ? folder_cns_load : 0;
+    const combinedLoad = (planned_cns_load || 0) + folderLoad;
+    if (folderLoad > 0) {
+      if (combinedLoad > 180) {
+        warnings.push({
+          type: 'folder_overload',
+          severity: 'warning',
+          message: 'Combined Hammers + folder load is very high',
+          suggestion: 'Consider reducing folder activities or spacing sessions across days',
+        });
+      } else if (combinedLoad > 140) {
+        warnings.push({
+          type: 'folder_overload',
+          severity: 'advisory',
+          message: 'Moderate combined load today from Hammers + folder activities',
+        });
+      }
     }
 
     console.log('[detect-overlaps] Generated warnings:', warnings.length);
