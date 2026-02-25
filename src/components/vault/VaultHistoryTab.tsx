@@ -227,13 +227,13 @@ export function VaultHistoryTab({
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    {t(`vault.quiz.${quiz.quiz_type}`)}
+                    {quiz.quiz_type === 'morning' ? t('vault.quiz.morningLabel', 'Morning') : quiz.quiz_type === 'pre_lift' ? t('vault.quiz.preLift', 'Pre-Workout') : quiz.quiz_type === 'night' ? t('vault.quiz.nightLabel', 'Night') : quiz.quiz_type}
                     <div className="ml-auto flex items-center gap-1">
                       <Badge variant="outline" className="text-xs">
                         {format(new Date(quiz.created_at), 'h:mm a')}
                       </Badge>
                       {onDeleteQuiz && (
-                        <DeleteButton onClick={() => setDeleteTarget({ type: 'quiz', id: quiz.id, name: t(`vault.quiz.${quiz.quiz_type}`) })} />
+                        <DeleteButton onClick={() => setDeleteTarget({ type: 'quiz', id: quiz.id, name: quiz.quiz_type === 'morning' ? t('vault.quiz.morningLabel', 'Morning') : quiz.quiz_type === 'pre_lift' ? t('vault.quiz.preLift', 'Pre-Workout') : quiz.quiz_type === 'night' ? t('vault.quiz.nightLabel', 'Night') : quiz.quiz_type })} />
                       )}
                     </div>
                   </CardTitle>
@@ -272,10 +272,49 @@ export function VaultHistoryTab({
                     </div>
                   )}
                   
+                  {/* All reflection/written fields */}
                   {quiz.reflection_did_well && (
                     <p className="text-sm mt-2 text-muted-foreground">
-                      <span className="font-medium text-foreground">{t('vault.quiz.reflectionPrompts.didWell')}:</span> {quiz.reflection_did_well}
+                      <span className="font-medium text-foreground">{t('vault.quiz.reflectionPrompts.didWell', 'What I did well')}:</span> {quiz.reflection_did_well}
                     </p>
+                  )}
+                  {(quiz as any).reflection_improve && (
+                    <p className="text-sm mt-1 text-muted-foreground">
+                      <span className="font-medium text-foreground">{t('vault.quiz.reflectionPrompts.improve', 'What to improve')}:</span> {(quiz as any).reflection_improve}
+                    </p>
+                  )}
+                  {(quiz as any).reflection_learned && (
+                    <p className="text-sm mt-1 text-muted-foreground">
+                      <span className="font-medium text-foreground">{t('vault.quiz.reflectionPrompts.learned', 'What I learned')}:</span> {(quiz as any).reflection_learned}
+                    </p>
+                  )}
+                  {((quiz as any).reflection_motivation || (quiz as any).daily_motivation) && (
+                    <p className="text-sm mt-1 text-muted-foreground">
+                      <span className="font-medium text-foreground">{t('vault.quiz.reflectionPrompts.motivation', 'Motivation')}:</span> {(quiz as any).reflection_motivation || (quiz as any).daily_motivation}
+                    </p>
+                  )}
+                  {/* Additional tracked levels */}
+                  {((quiz as any).mood_level || (quiz as any).stress_level || (quiz as any).discipline_level) && (
+                    <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-border">
+                      {(quiz as any).mood_level && (
+                        <div className="text-center p-2 bg-muted/50 rounded">
+                          <p className="text-xs text-muted-foreground">{t('vault.quiz.mood', 'Mood')}</p>
+                          <p className="font-bold">{(quiz as any).mood_level}/5</p>
+                        </div>
+                      )}
+                      {(quiz as any).stress_level && (
+                        <div className="text-center p-2 bg-muted/50 rounded">
+                          <p className="text-xs text-muted-foreground">{t('vault.quiz.stress', 'Stress')}</p>
+                          <p className="font-bold">{(quiz as any).stress_level}/5</p>
+                        </div>
+                      )}
+                      {(quiz as any).discipline_level && (
+                        <div className="text-center p-2 bg-muted/50 rounded">
+                          <p className="text-xs text-muted-foreground">{t('vault.quiz.discipline', 'Discipline')}</p>
+                          <p className="font-bold">{(quiz as any).discipline_level}/5</p>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>
