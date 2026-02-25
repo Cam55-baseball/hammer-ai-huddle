@@ -1,116 +1,116 @@
 
 
-# Player Notes for Coaches and Scouts
+# Coach & Scout Game Plan View
 
-## Overview
+## Problem
 
-Add a "Player Notes" section to both the Scout Dashboard and Coach Dashboard, allowing coaches and scouts to write free-text notes about specific players they follow. Each note is tied to a player and includes a timestamp, making it easy to track observations over time.
+Currently, when coaches or scouts log into the main `/dashboard`, they see the `ScoutGamePlanCard` which **only** shows pending video reviews. This is not a proper "game plan" -- it's just one small slice of their daily workflow. Coaches and scouts need a comprehensive daily task overview tailored to their role, similar in spirit to how players have a full `GamePlanCard` with multiple task categories.
 
----
+## Solution
 
-## Database Changes
-
-### New Table: `player_notes`
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid (PK) | Auto-generated |
-| `author_id` | uuid (FK auth.users, NOT NULL) | The scout/coach writing the note |
-| `player_id` | uuid (FK auth.users, NOT NULL) | The player being noted about |
-| `content` | text (NOT NULL) | Free-text note content |
-| `created_at` | timestamptz | Default now() |
-| `updated_at` | timestamptz | Default now() |
-
-### RLS Policies
-
-- **SELECT**: Authors can read their own notes (`auth.uid() = author_id`)
-- **INSERT**: Authenticated users can insert where `auth.uid() = author_id`
-- **UPDATE**: Authors can update their own notes
-- **DELETE**: Authors can delete their own notes
-
-No cross-user visibility -- notes are private to the coach/scout who wrote them.
-
-### Trigger
-
-- `update_updated_at_column` trigger on UPDATE to auto-set `updated_at`
+Replace the current `ScoutGamePlanCard` with a new `CoachScoutGamePlanCard` component that aggregates all relevant daily tasks for coaches and scouts into a single, actionable game plan view on the main dashboard.
 
 ---
 
-## New Component: `PlayerNotesSection`
+## Game Plan Sections
 
-**File: `src/components/scout/PlayerNotesSection.tsx`**
+The new card will display the following task sections, each with a count and quick-action links:
 
-A card-based section that includes:
+### 1. Video Reviews (existing)
+- Pull from `useScoutGamePlan` hook (already built)
+- Show count of unreviewed videos per player
+- Click navigates to `/scout-dashboard?viewPlayer={id}`
 
-1. **Player Selector** -- A dropdown/select at the top populated with the list of followed players (passed as a prop from the parent dashboard). The coach/scout picks which player to view/write notes for.
+### 2. Player Notes
+- Query `player_notes` for notes written today by the current user
+- Show count of notes written today vs total followed players
+- Quick link: "Write Notes" navigates to the scout/coach dashboard's Player Notes section
 
-2. **Note Input** -- A free-text textarea with a "Save Note" button. Saves a new row to `player_notes`.
+### 3. Pending Folder Assignments (Coach only)
+- Query `folder_assignments` for assignments sent by the coach that are still `pending`
+- Show count of pending assignments awaiting player acceptance
+- Quick summary of which players haven't accepted yet
 
-3. **Notes History** -- A scrollable list of previous notes for the selected player, ordered by most recent first. Each note shows:
-   - The note content
-   - Date/time it was written
-   - A "View Profile" button linking to `/profile?userId={playerId}`
-   - Edit and delete options (inline edit with save/cancel)
+### 4. Players Following Summary
+- Show total count of followed players (accepted status)
+- Quick link to scout/coach dashboard
 
-4. **Empty State** -- When no player is selected or no notes exist for the selected player.
+### 5. Quick Actions Row
+- "Go to Scout Hub" / "Go to Coach Hub" button linking to `/scout-dashboard` or `/coach-dashboard`
+- "View Player Profiles" button
+- "Write Player Notes" button
 
 ---
 
-## UI Integration
+## Changes
 
-### Scout Dashboard (`src/pages/ScoutDashboard.tsx`)
+### 1. New Component: `CoachScoutGamePlanCard`
 
-After the "Following" card (around line 464), add the `PlayerNotesSection` component:
+**File: `src/components/CoachScoutGamePlanCard.tsx`**
 
-```text
-[Following Card]
-[Player Notes Card]  <-- NEW
-[Find Players Card]
-```
+A comprehensive game plan card that:
+- Accepts an `isCoach` boolean prop to conditionally show coach-specific sections (sent activities, folder assignments)
+- Uses the existing `useScoutGamePlan` hook for video review data
+- Queries `player_notes` for today's note count
+- Queries `folder_assignments` for pending count (coach only)
+- Receives `followingCount` as a prop from the dashboard (already loaded there)
+- Displays a progress summary at the top (tasks completed today)
+- Each section is a clickable task row that navigates to the relevant area
+- Keeps the cyan athletic styling from the existing `ScoutGamePlanCard`
+- Shows the date header, progress ring, and task sections
 
-Pass the `following` array as the player list prop.
+### 2. Update Dashboard
 
-### Coach Dashboard (`src/pages/CoachDashboard.tsx`)
+**File: `src/pages/Dashboard.tsx`**
 
-Same placement -- after the "My Players" card, before "Find Players":
+- Replace `ScoutGamePlanCard` import with `CoachScoutGamePlanCard`
+- Pass `isCoach` and `isScout` props from the existing `useScoutAccess` hook
+- The conditional on line 430 stays the same pattern: `(isScout || isCoach) && !isOwner && !isAdmin`
 
-```text
-[My Players Card]
-[Player Notes Card]  <-- NEW
-[Sent Activities History]
-[Find Players Card]
-```
+### 3. Keep Existing `ScoutGamePlanCard`
 
-Pass the `following` array as the player list prop.
+The old `ScoutGamePlanCard` can remain as-is (it's not imported elsewhere). No deletion needed.
 
 ---
 
 ## Technical Details
 
+### Data Fetching (inside CoachScoutGamePlanCard)
+
+**Today's notes count:**
+```sql
+SELECT count(*) FROM player_notes
+WHERE author_id = auth.uid()
+  AND created_at::date = CURRENT_DATE
+```
+
+**Pending folder assignments (coach only):**
+```sql
+SELECT count(*) FROM folder_assignments
+WHERE sender_id = auth.uid()
+  AND status = 'pending'
+```
+
+**Following count:** Passed as a prop -- already fetched by Dashboard or derived from the scout access context. Alternatively, a quick query:
+```sql
+SELECT count(*) FROM follow_requests
+WHERE follower_id = auth.uid()
+  AND status = 'accepted'
+```
+
 ### Files Created
 
 | File | Purpose |
 |------|---------|
-| `src/components/scout/PlayerNotesSection.tsx` | Shared component for player notes (used by both dashboards) |
+| `src/components/CoachScoutGamePlanCard.tsx` | Comprehensive game plan for coaches and scouts |
 
 ### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/pages/ScoutDashboard.tsx` | Import and render `PlayerNotesSection` with `following` players |
-| `src/pages/CoachDashboard.tsx` | Import and render `PlayerNotesSection` with `following` players |
+| `src/pages/Dashboard.tsx` | Import and render `CoachScoutGamePlanCard` instead of `ScoutGamePlanCard` |
 
-### Hook Logic (inline in component)
+### No Database Changes Required
 
-The `PlayerNotesSection` component will manage its own state:
-- `selectedPlayerId` -- which player is selected in the dropdown
-- `notes` -- fetched notes for the selected player
-- `newNote` -- textarea content for new note
-- `editingNoteId` / `editContent` -- for inline editing
-
-Queries:
-- **Fetch**: `SELECT * FROM player_notes WHERE author_id = auth.uid() AND player_id = :selectedPlayerId ORDER BY created_at DESC`
-- **Insert**: `INSERT INTO player_notes (author_id, player_id, content) VALUES (auth.uid(), :playerId, :content)`
-- **Update**: `UPDATE player_notes SET content = :content WHERE id = :noteId AND author_id = auth.uid()`
-- **Delete**: `DELETE FROM player_notes WHERE id = :noteId AND author_id = auth.uid()`
+All data sources already exist (`player_notes`, `folder_assignments`, `follow_requests`, and the `get-scout-pending-reviews` edge function).
 
