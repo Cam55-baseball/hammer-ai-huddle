@@ -1,16 +1,21 @@
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useOrganization } from '@/hooks/useOrganization';
+import { usePlayerOrganization } from '@/hooks/usePlayerOrganization';
 import { OrganizationRegistration } from '@/components/organization/OrganizationRegistration';
 import { OrganizationMemberList } from '@/components/organization/OrganizationMemberList';
 import { TeamComplianceCard } from '@/components/organization/TeamComplianceCard';
 import { TeamHeatMapOverlay } from '@/components/organization/TeamHeatMapOverlay';
+import { InviteCodeCard } from '@/components/organization/InviteCodeCard';
+import { JoinOrganization } from '@/components/organization/JoinOrganization';
 import { Building2 } from 'lucide-react';
 
 export default function OrganizationDashboard() {
   const { myOrgs, members } = useOrganization();
+  const { membership, orgName } = usePlayerOrganization();
   const activeOrg = myOrgs.data?.[0];
   const memberList = members.data ?? [];
+  const isOwnerOrCoach = !!activeOrg;
 
   return (
     <DashboardLayout>
@@ -28,6 +33,7 @@ export default function OrganizationDashboard() {
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
+              <TabsTrigger value="invite">Invite</TabsTrigger>
               <TabsTrigger value="heatmaps">Heat Maps</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
@@ -45,6 +51,10 @@ export default function OrganizationDashboard() {
               <OrganizationMemberList />
             </TabsContent>
 
+            <TabsContent value="invite">
+              <InviteCodeCard orgId={activeOrg.id} existingCode={activeOrg.invite_code} />
+            </TabsContent>
+
             <TabsContent value="heatmaps">
               <TeamHeatMapOverlay gridData={[]} gridSize={{ rows: 3, cols: 3 }} />
             </TabsContent>
@@ -53,8 +63,18 @@ export default function OrganizationDashboard() {
               <OrganizationRegistration existingOrg={activeOrg} />
             </TabsContent>
           </Tabs>
+        ) : membership ? (
+          <div className="space-y-4">
+            <div className="rounded-lg border bg-accent/20 p-6 text-center">
+              <p className="text-lg font-semibold">Member of {orgName}</p>
+              <p className="text-sm text-muted-foreground mt-1">You're part of this organization as a {(membership as any)?.role_in_org ?? 'player'}.</p>
+            </div>
+          </div>
         ) : (
-          <OrganizationRegistration />
+          <div className="grid md:grid-cols-2 gap-6">
+            <JoinOrganization />
+            <OrganizationRegistration />
+          </div>
         )}
       </div>
     </DashboardLayout>

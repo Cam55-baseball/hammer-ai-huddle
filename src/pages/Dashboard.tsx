@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked, RefreshCw, ShoppingBag, ExternalLink } from "lucide-react";
+import { CircleDot, Target, Zap, Upload, Lock, Icon, Construction, Sparkles, BookMarked, RefreshCw, ShoppingBag, ExternalLink, Building2 } from "lucide-react";
 import { baseball } from "@lucide/lab";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FollowRequestsPanel } from "@/components/FollowRequestsPanel";
@@ -25,6 +25,7 @@ import { ScoutGamePlanCard } from "@/components/ScoutGamePlanCard";
 import { toast } from "sonner";
 import { useMPIScores } from "@/hooks/useMPIScores";
 import { useAIPrompts } from "@/hooks/useAIPrompts";
+import { usePlayerOrganization } from "@/hooks/usePlayerOrganization";
 import { Activity, Lightbulb, TrendingUp } from "lucide-react";
 import { getGradeLabel } from "@/lib/gradeLabel";
 import dashboardHero1 from "@/assets/dashboard-hero.jpg";
@@ -76,6 +77,17 @@ function PracticeIntelligenceCard() {
         </div>
       )}
     </Card>
+  );
+}
+
+function OrgBadge() {
+  const { orgName } = usePlayerOrganization();
+  if (!orgName) return null;
+  return (
+    <Badge variant="secondary" className="text-xs">
+      <Building2 className="h-3 w-3 mr-1" />
+      {orgName}
+    </Badge>
   );
 }
 
@@ -393,7 +405,10 @@ export default function Dashboard() {
         
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('dashboard.title')}</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">{t('dashboard.welcomeBack')} {user?.user_metadata?.full_name}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm sm:text-base text-muted-foreground">{t('dashboard.welcomeBack')} {user?.user_metadata?.full_name}</p>
+            <OrgBadge />
+          </div>
         </div>
 
         {/* Hero Image Card */}

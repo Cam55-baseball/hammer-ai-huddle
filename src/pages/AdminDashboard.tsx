@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ScoutApplicationCard } from '@/components/ScoutApplicationCard';
 import { GovernanceFlagCard } from '@/components/authority/GovernanceFlagCard';
+import { ArbitrationPanel } from '@/components/authority/ArbitrationPanel';
 import { useGovernanceFlags } from '@/hooks/useGovernanceFlags';
 
 interface Video {
@@ -226,6 +227,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="training">Training Data</TabsTrigger>
             <TabsTrigger value="applications">Scout Applications</TabsTrigger>
             <TabsTrigger value="governance">Governance</TabsTrigger>
+            <TabsTrigger value="arbitration">Arbitration</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -386,6 +388,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="governance" className="space-y-4">
             <GovernanceTab />
+          </TabsContent>
+
+          <TabsContent value="arbitration" className="space-y-4">
+            <ArbitrationPanel />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">
