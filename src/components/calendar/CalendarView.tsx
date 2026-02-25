@@ -26,7 +26,6 @@ import { CalendarDaySheet } from './CalendarDaySheet';
 import { AddCalendarEventDialog } from './AddCalendarEventDialog';
 import { PendingCoachActivitiesSection } from './PendingCoachActivitiesSection';
 import { cn } from '@/lib/utils';
-import { useVault } from '@/hooks/useVault';
 
 interface CalendarViewProps {
   selectedSport: 'baseball' | 'softball';
@@ -39,7 +38,6 @@ interface CalendarFilters {
   events: boolean;
   gamePlan: boolean;
   athleteEvents: boolean;
-  vaultJournal: boolean;
 }
 
 const FILTER_STORAGE_KEY = 'calendarFilters';
@@ -60,7 +58,6 @@ const getInitialFilters = (): CalendarFilters => {
     events: true,
     gamePlan: true,
     athleteEvents: true,
-    vaultJournal: true,
   };
 };
 
@@ -75,7 +72,6 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
   const [filters, setFilters] = useState<CalendarFilters>(getInitialFilters);
   
   const { events, loading, fetchEventsForRange, addEvent, deleteEvent, refetch } = useCalendar(selectedSport);
-  const { entriesWithData } = useVault();
   
   // Persist filters to localStorage
   useEffect(() => {
@@ -170,17 +166,11 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
       }
     });
     
-    // Convert to array and limit to 5 dots
+    // Convert to array and limit to 4 dots
     return Array.from(uniqueColors.values())
-      .slice(0, 5)
+      .slice(0, 4)
       .map(color => ({ color }));
   };
-
-  // Check if a day has vault journal entries
-  const hasJournalForDay = useCallback((day: Date): boolean => {
-    const dateStr = format(day, 'yyyy-MM-dd');
-    return entriesWithData.includes(dateStr);
-  }, [entriesWithData]);
 
   // Helper for default colors by event type
   const getDefaultColorForType = (type: string): string => {
@@ -288,10 +278,6 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
               const dayEvents = getEventsForDay(day);
               const filteredDayEvents = getFilteredEventsForDay(day);
               const indicators = getEventIndicators(dayEvents);
-              const hasJournal = filters.vaultJournal && hasJournalForDay(day);
-              if (hasJournal && !indicators.find(i => i.color === '#14b8a6')) {
-                indicators.push({ color: '#14b8a6' }); // teal for journal
-              }
               const isCurrentMonth = isSameMonth(day, currentMonth);
               const isSelected = selectedDate && isSameDay(day, selectedDate);
               const isDayToday = isToday(day);
@@ -421,16 +407,6 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
               <div className="w-2 h-2 rounded-full bg-indigo-500" />
               <span className="text-xs">{t('calendar.filter.manual', 'Manual')}</span>
             </Toggle>
-            
-            <Toggle
-              pressed={filters.vaultJournal}
-              onPressedChange={() => toggleFilter('vaultJournal')}
-              size="sm"
-              className="h-7 px-2 gap-1.5 data-[state=on]:bg-teal-500/20 data-[state=on]:text-teal-700 dark:data-[state=on]:text-teal-400"
-            >
-              <div className="w-2 h-2 rounded-full bg-teal-500" />
-              <span className="text-xs">{t('calendar.filter.journal', 'Journal')}</span>
-            </Toggle>
           </div>
         </CardContent>
       </Card>
@@ -466,10 +442,6 @@ export function CalendarView({ selectedSport }: CalendarViewProps) {
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-indigo-500" />
               <span className="text-muted-foreground">{t('calendar.legend.event', 'Event')}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-teal-500" />
-              <span className="text-muted-foreground">{t('calendar.legend.journal', 'Journal')}</span>
             </div>
           </div>
         </CardContent>

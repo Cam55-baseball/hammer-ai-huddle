@@ -39,9 +39,6 @@ import { CustomActivityBuilderDialog } from '@/components/custom-activities/Cust
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { toast } from 'sonner';
 import { useSportTheme } from '@/contexts/SportThemeContext';
-import { useVault } from '@/hooks/useVault';
-import { VaultDayRecapCard } from '@/components/vault/VaultDayRecapCard';
-import { BookOpen } from 'lucide-react';
 
 interface CalendarDaySheetProps {
   open: boolean;
@@ -293,38 +290,6 @@ export function CalendarDaySheet({
   const [orderedEvents, setOrderedEvents] = useState<CalendarEvent[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [showJournalSection, setShowJournalSection] = useState(true);
-
-  // Vault journal data
-  const { fetchHistoryForDate } = useVault();
-  const [journalData, setJournalData] = useState<any>(null);
-  const [journalLoading, setJournalLoading] = useState(false);
-
-  // Fetch vault journal data when sheet opens
-  useEffect(() => {
-    if (open && date) {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      setJournalLoading(true);
-      fetchHistoryForDate(dateStr).then(data => {
-        setJournalData(data);
-        setJournalLoading(false);
-      }).catch(() => setJournalLoading(false));
-    } else {
-      setJournalData(null);
-    }
-  }, [open, date, fetchHistoryForDate]);
-
-  // Count journal entries
-  const journalEntryCount = journalData ? (
-    journalData.quizzes.length +
-    journalData.notes.length +
-    journalData.workouts.length +
-    (journalData.nutritionLogged ? 1 : 0) +
-    journalData.performanceTests.length +
-    journalData.progressPhotos.length +
-    journalData.scoutGrades.length +
-    (journalData.customActivities?.length || 0)
-  ) : 0;
 
   // Combined loading state for lock data
   const isLockDataLoading = gamePlanLockLoading || dayOrdersLoading;
@@ -868,47 +833,6 @@ export function CalendarDaySheet({
                         {skippedEvents.map(e => renderEventCard(e, true))}
                       </CollapsibleContent>
                     </Collapsible>
-                  </div>
-                )}
-
-                {/* Journal Entries Section */}
-                {!isReorderMode && journalEntryCount > 0 && (
-                  <div className="mt-6 pt-4 border-t border-border">
-                    <Collapsible open={showJournalSection} onOpenChange={setShowJournalSection}>
-                      <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="h-4 w-4 text-teal-500" />
-                          <span>
-                            {t('calendar.journalEntries', 'Journal Entries')}
-                          </span>
-                          <Badge variant="secondary" className="text-xs">
-                            {journalEntryCount}
-                          </Badge>
-                        </div>
-                        <ChevronDown className={cn(
-                          "h-4 w-4 transition-transform",
-                          showJournalSection && "rotate-180"
-                        )} />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="pt-2">
-                        <div className="rounded-lg border bg-card">
-                          <VaultDayRecapCard
-                            historyData={journalData}
-                            isLoading={journalLoading}
-                          />
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </div>
-                )}
-
-                {/* Journal loading state */}
-                {!isReorderMode && journalLoading && (
-                  <div className="mt-6 pt-4 border-t border-border flex items-center justify-center py-4">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-sm text-muted-foreground">
-                      {t('calendar.loadingJournal', 'Loading journal...')}
-                    </span>
                   </div>
                 )}
               </div>
