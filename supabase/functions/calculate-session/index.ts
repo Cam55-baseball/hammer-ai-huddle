@@ -98,9 +98,30 @@ serve(async (req) => {
 
     if (updateError) throw updateError;
 
-    // Update streak in MPI settings
+    // Fix 4: Streak reset logic — check last session date
     if (mpiSettings) {
-      const newStreak = (mpiSettings.streak_current || 0) + 1;
+      const { data: lastSession } = await supabase
+        .from('performance_sessions')
+        .select('session_date')
+        .eq('user_id', user.id)
+        .is('deleted_at', null)
+        .neq('id', session_id)
+        .order('session_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const today = new Date(session.session_date);
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      let isConsecutive = false;
+      if (lastSession?.session_date) {
+        const lastDate = new Date(lastSession.session_date);
+        // Consecutive if last session was today or yesterday
+        isConsecutive = lastDate >= yesterday;
+      }
+
+      const newStreak = isConsecutive ? (mpiSettings.streak_current || 0) + 1 : 1;
       await supabase
         .from('athlete_mpi_settings')
         .update({

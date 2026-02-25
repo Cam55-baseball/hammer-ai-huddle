@@ -19,7 +19,7 @@ export function DataBuildingGate({ children }: { children: ReactNode }) {
       if (!user) return null;
       const { data, error } = await supabase
         .from('athlete_mpi_settings')
-        .select('games_minimum_met, integrity_threshold_met, coach_validation_met, data_span_met, ranking_eligible')
+        .select('games_minimum_met, integrity_threshold_met, coach_validation_met, data_span_met, ranking_eligible, primary_coach_id')
         .eq('user_id', user.id)
         .maybeSingle();
       if (error) throw error;
@@ -30,10 +30,17 @@ export function DataBuildingGate({ children }: { children: ReactNode }) {
 
   if (isLoading) return null;
 
+  const hasCoach = !!settings?.primary_coach_id;
+
   const gates: Gate[] = [
     { label: '60+ sessions logged', met: !!settings?.games_minimum_met },
     { label: '80+ integrity score', met: !!settings?.integrity_threshold_met },
-    { label: '40%+ coach validation', met: !!settings?.coach_validation_met },
+    {
+      label: hasCoach
+        ? '40%+ coach validation'
+        : 'Coach validation (auto-passed — no coach assigned)',
+      met: !!settings?.coach_validation_met,
+    },
     { label: '14+ day data span', met: !!settings?.data_span_met },
   ];
 
