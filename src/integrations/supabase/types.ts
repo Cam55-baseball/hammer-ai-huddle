@@ -14,6 +14,131 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_folder_items: {
+        Row: {
+          assigned_days: number[] | null
+          attachments: Json | null
+          completion_tracking: boolean | null
+          created_at: string | null
+          cycle_week: number | null
+          description: string | null
+          duration_minutes: number | null
+          exercises: Json | null
+          folder_id: string
+          id: string
+          item_type: string | null
+          notes: string | null
+          order_index: number | null
+          title: string
+        }
+        Insert: {
+          assigned_days?: number[] | null
+          attachments?: Json | null
+          completion_tracking?: boolean | null
+          created_at?: string | null
+          cycle_week?: number | null
+          description?: string | null
+          duration_minutes?: number | null
+          exercises?: Json | null
+          folder_id: string
+          id?: string
+          item_type?: string | null
+          notes?: string | null
+          order_index?: number | null
+          title: string
+        }
+        Update: {
+          assigned_days?: number[] | null
+          attachments?: Json | null
+          completion_tracking?: boolean | null
+          created_at?: string | null
+          cycle_week?: number | null
+          description?: string | null
+          duration_minutes?: number | null
+          exercises?: Json | null
+          folder_id?: string
+          id?: string
+          item_type?: string | null
+          notes?: string | null
+          order_index?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_folder_items_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "activity_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_folders: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          cycle_length_weeks: number | null
+          cycle_type: string | null
+          description: string | null
+          end_date: string | null
+          frequency_days: number[] | null
+          icon: string | null
+          id: string
+          label: string | null
+          name: string
+          owner_id: string
+          owner_type: string
+          placement: string | null
+          priority_level: number | null
+          sport: string
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          cycle_length_weeks?: number | null
+          cycle_type?: string | null
+          description?: string | null
+          end_date?: string | null
+          frequency_days?: number[] | null
+          icon?: string | null
+          id?: string
+          label?: string | null
+          name: string
+          owner_id: string
+          owner_type: string
+          placement?: string | null
+          priority_level?: number | null
+          sport?: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          cycle_length_weeks?: number | null
+          cycle_type?: string | null
+          description?: string | null
+          end_date?: string | null
+          frequency_days?: number[] | null
+          icon?: string | null
+          id?: string
+          label?: string | null
+          name?: string
+          owner_id?: string
+          owner_type?: string
+          placement?: string | null
+          priority_level?: number | null
+          sport?: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           id: string
@@ -787,6 +912,98 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      folder_assignments: {
+        Row: {
+          accepted_at: string | null
+          declined_at: string | null
+          folder_id: string
+          id: string
+          player_notes: Json | null
+          recipient_id: string
+          sender_id: string
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          declined_at?: string | null
+          folder_id: string
+          id?: string
+          player_notes?: Json | null
+          recipient_id: string
+          sender_id: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          declined_at?: string | null
+          folder_id?: string
+          id?: string
+          player_notes?: Json | null
+          recipient_id?: string
+          sender_id?: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folder_assignments_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "activity_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folder_item_completions: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          entry_date: string
+          folder_assignment_id: string | null
+          folder_item_id: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          entry_date: string
+          folder_assignment_id?: string | null
+          folder_item_id: string
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          entry_date?: string
+          folder_assignment_id?: string | null
+          folder_item_id?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folder_item_completions_folder_assignment_id_fkey"
+            columns: ["folder_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "folder_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folder_item_completions_folder_item_id_fkey"
+            columns: ["folder_item_id"]
+            isOneToOne: false
+            referencedRelation: "activity_folder_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       game_plan_locked_days: {
         Row: {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -14,19 +14,23 @@ import { ReceivedActivitiesList } from '@/components/custom-activities/ReceivedA
 import { RecentlyDeletedList } from '@/components/custom-activities/RecentlyDeletedList';
 import { PresetLibrary } from '@/components/elite-workout/presets/PresetLibrary';
 import { LoadDashboard } from '@/components/elite-workout/intelligence/LoadDashboard';
+import { FolderTabContent } from '@/components/folders/FolderTabContent';
 import { useCustomActivities } from '@/hooks/useCustomActivities';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { useDeletedActivities } from '@/hooks/useDeletedActivities';
+import { useReceivedFolders } from '@/hooks/useReceivedFolders';
 import { WorkoutBlock } from '@/types/eliteWorkout';
-import { LayoutGrid, History, BarChart3, Droplets, Footprints, BookOpen, Inbox, Sparkles, Trash2, Dumbbell, Activity } from 'lucide-react';
+import { LayoutGrid, History, BarChart3, Droplets, Footprints, BookOpen, Inbox, Sparkles, Trash2, Dumbbell, Activity, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function MyCustomActivities() {
   const { t } = useTranslation();
   const [selectedSport] = useState<'baseball' | 'softball'>(() => {
     return (localStorage.getItem('selectedSport') as 'baseball' | 'softball') || 'baseball';
   });
+  const [isCoach, setIsCoach] = useState(false);
   
   const {
     templates,
@@ -41,6 +45,24 @@ export default function MyCustomActivities() {
 
   const { pendingCount } = useReceivedActivities();
   const { deletedCount, refetch: refetchDeleted } = useDeletedActivities(selectedSport);
+  const { pendingCount: folderPendingCount } = useReceivedFolders();
+
+  // Check if user is a coach
+  useEffect(() => {
+    const checkCoach = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+      const { data } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', userData.user.id)
+        .eq('role', 'coach')
+        .eq('status', 'active')
+        .maybeSingle();
+      setIsCoach(!!data);
+    };
+    checkCoach();
+  }, []);
 
   const handleUseTemplate = (exercises: any[], templateName: string) => {
     toast.success(t('workoutTemplates.templateLoaded', `Template "${templateName}" loaded! Create a new activity to use it.`));
@@ -63,6 +85,7 @@ export default function MyCustomActivities() {
 
   const tabs = [
     { value: 'templates', icon: LayoutGrid, label: t('myCustomActivities.tabs.templates', 'Templates') },
+    { value: 'folders', icon: FolderOpen, label: t('myCustomActivities.tabs.folders', 'Folders'), badge: folderPendingCount },
     { value: 'elite-presets', icon: Dumbbell, label: t('myCustomActivities.tabs.elitePresets', 'Elite Presets') },
     { value: 'load-dashboard', icon: Activity, label: t('myCustomActivities.tabs.loadDashboard', 'Load Dashboard') },
     { value: 'received', icon: Inbox, label: t('myCustomActivities.tabs.received', 'Received'), badge: pendingCount },
@@ -135,6 +158,10 @@ export default function MyCustomActivities() {
                 onToggleFavorite={toggleFavorite}
                 onRefetch={refetch}
               />
+            </TabsContent>
+
+            <TabsContent value="folders" className="mt-0 animate-fade-in">
+              <FolderTabContent selectedSport={selectedSport} isCoach={isCoach} />
             </TabsContent>
 
             <TabsContent value="received" className="mt-0 animate-fade-in">
