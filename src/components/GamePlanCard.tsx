@@ -29,6 +29,7 @@ import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { PendingCoachActivityCard } from '@/components/game-plan/PendingCoachActivityCard';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
 import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerformanceLogger';
+import { FolderItemEditDialog } from '@/components/folders/FolderItemEditDialog';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizDialog';
 import { CustomActivityBuilderDialog, QuickAddFavoritesDrawer, getActivityIcon } from '@/components/custom-activities';
@@ -198,6 +199,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Folder item performance logger dialog state
   const [folderLoggerOpen, setFolderLoggerOpen] = useState(false);
   const [selectedFolderTask, setSelectedFolderTask] = useState<GamePlanTask | null>(null);
+  const [folderItemEditOpen, setFolderItemEditOpen] = useState(false);
   
   // Inline time picker state (for non-timeline modes)
   const [expandedTimeTaskId, setExpandedTimeTaskId] = useState<string | null>(null);
@@ -2280,34 +2282,118 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         showSkipOption={true}
       />
       {/* Folder Item Performance Logger Dialog */}
-      {selectedFolderTask?.folderItemData && (
-        <Dialog open={folderLoggerOpen} onOpenChange={setFolderLoggerOpen}>
-          <DialogContent className="max-w-sm" onPointerDownOutside={(e) => e.preventDefault()}>
-            <DialogHeader>
-              <DialogTitle className="text-base">{selectedFolderTask.titleKey}</DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">{selectedFolderTask.descriptionKey}</DialogDescription>
-            </DialogHeader>
-            <FolderItemPerformanceLogger
-              item={folderTasks.find(ft => ft.item.id === selectedFolderTask.folderItemData!.itemId)?.item!}
-              onSave={async (data) => {
-                await toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId, data);
-                toast.success(t('customActivity.markedComplete'));
-                setFolderLoggerOpen(false);
-                refetch();
-              }}
-            />
-            <div className="flex justify-end gap-2 mt-2">
-              <Button variant="outline" size="sm" onClick={() => {
-                toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
-                toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
-                setFolderLoggerOpen(false);
-              }}>
-                {selectedFolderTask.completed ? 'Mark Incomplete' : 'Complete Without Logging'}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      {selectedFolderTask?.folderItemData && (() => {
+        const ft = folderTasks.find(ft => ft.item.id === selectedFolderTask.folderItemData!.itemId);
+        const item = ft?.item;
+        const exercises = item?.exercises as any[] | null;
+        return (
+          <>
+            <Dialog open={folderLoggerOpen} onOpenChange={setFolderLoggerOpen}>
+              <DialogContent className="max-w-sm max-h-[85vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
+                <DialogHeader>
+                  <div className="flex items-center justify-between">
+                    <DialogTitle className="text-base">{selectedFolderTask.titleKey}</DialogTitle>
+                    {selectedFolderTask.folderItemData.isOwner && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setFolderLoggerOpen(false); setFolderItemEditOpen(true); }}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: selectedFolderTask.folderItemData.folderColor }} />
+                    {selectedFolderTask.folderItemData.folderName}
+                  </div>
+                </DialogHeader>
+
+                {/* Metadata badges */}
+                <div className="flex flex-wrap gap-1.5">
+                  {item?.item_type && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">{item.item_type.replace('_', ' ')}</span>
+                  )}
+                  {item?.duration_minutes && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
+                  )}
+                </div>
+
+                {/* Description */}
+                {item?.description && (
+                  <p className="text-xs text-muted-foreground">{item.description}</p>
+                )}
+
+                {/* Exercises */}
+                {exercises && exercises.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium">Exercises</p>
+                    <div className="space-y-1">
+                      {exercises.map((ex: any, idx: number) => (
+                        <div key={idx} className="text-xs text-muted-foreground pl-2 border-l-2 border-muted">
+                          <span className="font-medium text-foreground">{ex.name || `Exercise ${idx + 1}`}</span>
+                          {(ex.sets || ex.reps) && <span> — {ex.sets && `${ex.sets}x`}{ex.reps || ''}</span>}
+                          {ex.weight && <span>, {ex.weight}{ex.weight_unit || 'lbs'}</span>}
+                          {ex.duration && <span>, {ex.duration}</span>}
+                          {ex.notes && <p className="text-[10px] italic mt-0.5">{ex.notes}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {item?.notes && (
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-medium">Notes</p>
+                    <p className="text-xs text-muted-foreground">{item.notes}</p>
+                  </div>
+                )}
+
+                {/* Schedule */}
+                {(item?.assigned_days?.length || item?.specific_dates?.length) && (
+                  <div className="text-[10px] text-muted-foreground">
+                    {item.specific_dates && item.specific_dates.length > 0
+                      ? `Dates: ${item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}`
+                      : item.assigned_days && item.assigned_days.length > 0
+                        ? `Schedule: ${item.assigned_days.map(d => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', ')}`
+                        : null}
+                  </div>
+                )}
+
+                {/* Performance Logger */}
+                {item && (
+                  <FolderItemPerformanceLogger
+                    item={item}
+                    onSave={async (data) => {
+                      await toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId, data);
+                      toast.success(t('customActivity.markedComplete'));
+                      setFolderLoggerOpen(false);
+                      refetch();
+                    }}
+                  />
+                )}
+                <div className="flex justify-end gap-2 mt-2">
+                  <Button variant="outline" size="sm" onClick={() => {
+                    toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
+                    toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
+                    setFolderLoggerOpen(false);
+                  }}>
+                    {selectedFolderTask.completed ? 'Mark Incomplete' : 'Complete Without Logging'}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            {item && (
+              <FolderItemEditDialog
+                open={folderItemEditOpen}
+                onOpenChange={setFolderItemEditOpen}
+                item={item}
+                onSaved={() => {
+                  setFolderItemEditOpen(false);
+                  refetch();
+                }}
+              />
+            )}
+          </>
+        );
+      })()}
       {/* Pulsing animation for incomplete tasks */}
       <style>{`
         @keyframes game-plan-pulse-custom {

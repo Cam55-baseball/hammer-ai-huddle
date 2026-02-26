@@ -17,6 +17,7 @@ export interface FolderGamePlanTask {
   item: ActivityFolderItem;
   completed: boolean;
   completionId?: string;
+  isOwner: boolean;
 }
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 import { TRAINING_DEFAULT_SCHEDULES } from '@/constants/trainingSchedules';
@@ -64,6 +65,7 @@ export interface GamePlanTask {
     folderColor: string;
     itemId: string;
     placement: string;
+    isOwner: boolean;
   };
 }
 
@@ -642,6 +644,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
             item,
             completed: completion?.completed || false,
             completionId: completion?.id,
+            isOwner: folder.owner_id === user.id,
           };
         });
 
@@ -1194,6 +1197,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         folderColor: ft.folderColor,
         itemId: ft.item.id,
         placement: ft.placement,
+        isOwner: ft.isOwner,
       },
     });
   });

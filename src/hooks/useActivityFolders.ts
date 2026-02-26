@@ -115,6 +115,7 @@ export function useActivityFolders(sport: string) {
         .eq('id', itemId);
 
       if (error) throw error;
+      toast.success('Item updated');
     } catch (error) {
       console.error('Error updating item:', error);
       toast.error('Failed to update item');
