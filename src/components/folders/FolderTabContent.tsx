@@ -202,6 +202,7 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
                 key={f.id}
                 folder={f}
                 onOpen={() => openDetail(f, true)}
+                onEdit={() => setEditingFolder(f)}
                 onDelete={() => playerFolders.deleteFolder(f.id)}
               />
             ))}
@@ -239,7 +240,11 @@ export function FolderTabContent({ selectedSport, isCoach }: FolderTabContentPro
             <FolderBuilder
               initialData={editingFolder}
               onSave={async (updates) => {
-                await coachFolders.updateFolder(editingFolder.id, updates);
+                if (editingFolder.owner_type === 'player') {
+                  await playerFolders.updateFolder(editingFolder.id, updates);
+                } else {
+                  await coachFolders.updateFolder(editingFolder.id, updates);
+                }
                 setEditingFolder(null);
                 return editingFolder;
               }}
