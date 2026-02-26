@@ -18,6 +18,7 @@ export interface FolderGamePlanTask {
   completed: boolean;
   completionId?: string;
   isOwner: boolean;
+  performanceData?: any;
 }
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 import { TRAINING_DEFAULT_SCHEDULES } from '@/constants/trainingSchedules';
@@ -617,17 +618,17 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
 
         // Fetch completions for today
         const itemIds = todayItems.map(i => i.id);
-        let completionsMap: Record<string, { id: string; completed: boolean }> = {};
+        let completionsMap: Record<string, { id: string; completed: boolean; performanceData?: any }> = {};
         if (itemIds.length > 0) {
           const { data: completionsData } = await supabase
             .from('folder_item_completions')
-            .select('id, folder_item_id, completed')
+            .select('id, folder_item_id, completed, performance_data')
             .eq('user_id', user.id)
             .eq('entry_date', today)
             .in('folder_item_id', itemIds);
           
           (completionsData || []).forEach((c: any) => {
-            completionsMap[c.folder_item_id] = { id: c.id, completed: c.completed };
+            completionsMap[c.folder_item_id] = { id: c.id, completed: c.completed, performanceData: c.performance_data };
           });
         }
 
@@ -646,6 +647,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
             completed: completion?.completed || false,
             completionId: completion?.id,
             isOwner: folder.owner_id === user.id,
+            performanceData: completion?.performanceData || null,
           };
         });
 
@@ -845,6 +847,44 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       setFolderTasks(prev => prev.map(ft =>
         ft.item.id === itemId ? { ...ft, completed: !ft.completed } : ft
       ));
+    }
+  }, [user]);
+
+  // Save folder item checkbox states to performance_data
+  const saveFolderCheckboxState = useCallback(async (itemId: string, checkboxStates: Record<string, boolean>) => {
+    if (!user) return;
+    const today = getTodayDate();
+
+    try {
+      const { data: existing } = await supabase
+        .from('folder_item_completions')
+        .select('id, performance_data')
+        .eq('folder_item_id', itemId)
+        .eq('user_id', user.id)
+        .eq('entry_date', today)
+        .maybeSingle();
+
+      if (existing) {
+        const currentPd = (existing.performance_data as Record<string, any>) || {};
+        await supabase
+          .from('folder_item_completions')
+          .update({
+            performance_data: { ...currentPd, checkboxStates },
+          })
+          .eq('id', existing.id);
+      } else {
+        await supabase
+          .from('folder_item_completions')
+          .insert({
+            folder_item_id: itemId,
+            user_id: user.id,
+            entry_date: today,
+            completed: false,
+            performance_data: { checkboxStates },
+          });
+      }
+    } catch (error) {
+      console.error('Error saving folder checkbox state:', error);
     }
   }, [user]);
 
@@ -1219,5 +1259,6 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     addOptimisticActivity,
     refreshCustomActivities,
     toggleFolderItemCompletion,
+    saveFolderCheckboxState,
   };
 }
