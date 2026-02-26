@@ -1,103 +1,114 @@
 
 
-# Show Folder Activities on the Game Plan (Player-Created + Coach-Assigned)
+# Add Bat Speed to Performance Tests + Per-Set Logging for Folder Items
 
 ## Overview
-Folder items from both player-created folders and coach-assigned (accepted) folders are currently invisible on the Game Plan. This plan integrates them so they appear as checkable tasks grouped by folder, with daily completion tracking.
+Two enhancements: (1) Add bat speed as a metric in the 6-week performance tests for the hitting module, and (2) add the ability for users to log per-set data (weight, time, reps, etc.) on folder item exercises from the Game Plan and folder detail views.
 
 ---
 
-## Changes
+## Part 1: Add Bat Speed to Hitting Performance Tests
 
-### 1. `src/hooks/useGamePlan.ts` -- Fetch folder items for today
+### File: `src/components/vault/VaultPerformanceTestCard.tsx`
 
-Inside `fetchTaskStatus` (after the custom activities section around line 535), add a new block that:
+**Add `bat_speed` metric to the hitting test arrays** for both baseball and softball:
 
-- Queries `activity_folders` where `owner_id = user.id` AND `owner_type = 'player'` AND `sport = selectedSport` AND `status = 'active'` (player's own folders)
-- Queries `folder_assignments` where `recipient_id = user.id` AND `status = 'accepted'`, then fetches the associated `activity_folders` (coach-assigned folders)
-- For all active folders, fetches their `activity_folder_items`
-- Filters items to today using: `assigned_days` includes today's day-of-week (0-6), OR `specific_dates` includes today's date string, OR both are null (always show)
-- Queries `folder_item_completions` for `user_id = user.id` AND `entry_date = today` to get completion status
-- Stores results in a new `folderTasks` state array
+- `TEST_TYPES_BY_SPORT.baseball.hitting`: Add `'bat_speed'` to the array
+- `TEST_TYPES_BY_SPORT.softball.hitting`: Add `'bat_speed'` to the array
+- `TEST_METRICS`: Add `bat_speed: { unit: 'mph', higher_better: true }`
 
-New state and types:
-- Add `FolderGamePlanTask` interface: `{ folderId, folderName, folderColor, folderIcon, placement, item: ActivityFolderItem, completed: boolean, completionId?: string }`
-- Add `folderTasks` state, returned from the hook
-- Add `toggleFolderItemCompletion(itemId)` function that inserts/updates `folder_item_completions`
+Additionally, add switch-hitter bilateral support:
+- `SWITCH_HITTER_BILATERAL_GROUPS`: Add `bat_speed: ['bat_speed_left', 'bat_speed_right']`
+- `TEST_METRICS`: Add `bat_speed_left` and `bat_speed_right` entries (both `mph`, `higher_better: true`)
 
-### 2. `src/hooks/useGamePlan.ts` -- Inject folder items into tasks list
+### File: `src/i18n/locales/en.json`
 
-At the bottom of the hook (around line 984, after custom activities are pushed), iterate `folderTasks` and push each as a `GamePlanTask` with:
-- `id: 'folder-item-{item.id}'`
-- `taskType: 'custom'` (reuses existing custom styling)
-- `section: 'custom'` (appears in the custom activities section)
-- `titleKey: item.title`
-- `descriptionKey: folderName` (shows parent folder name as subtitle)
-- `badge: folder placement label` (e.g., "Before Workout")
-- A new `folderItemData` field on `GamePlanTask` interface to distinguish folder items from regular custom activities
+Add translation key under `vault.performance.metrics`:
+- `"bat_speed": "Bat Speed"`
+- `"bat_speed_left": "Bat Speed (L)"`
+- `"bat_speed_right": "Bat Speed (R)"`
 
-### 3. `src/hooks/useGamePlan.ts` -- Return new values
+(Same translations added to the other 7 locale files: es, ja, ko, zh, de, fr, pt)
 
-Update the return object to include:
-- `folderTasks`
-- `toggleFolderItemCompletion`
+---
 
-### 4. `src/components/GamePlanCard.tsx` -- Handle folder item completion
+## Part 2: Per-Set Exercise Logging on Folder Items
 
-- Destructure `folderTasks` and `toggleFolderItemCompletion` from `useGamePlan`
-- In the task click handler, detect folder items via `task.folderItemData` and call `toggleFolderItemCompletion` instead of the custom activity toggle
-- Folder items render with the folder's color as accent, using the existing task card UI
+### Problem
+Currently, folder items on the Game Plan only toggle a simple completed/not-completed checkbox. There's no way to log specific data like weight lifted, time ran, or reps completed for each set of an assigned exercise.
 
-### 5. `GamePlanTask` interface update
+### Database Change
 
-Add an optional field to the existing interface:
-```text
-folderItemData?: {
-  folderId: string;
-  folderName: string;
-  folderColor: string;
-  itemId: string;
-  placement: string;
+**Add a `performance_data` JSONB column to `folder_item_completions`**:
+```sql
+ALTER TABLE folder_item_completions ADD COLUMN performance_data jsonb DEFAULT '{}'::jsonb;
+```
+
+This stores per-set logging data in a flexible JSON format:
+```json
+{
+  "sets": [
+    { "set": 1, "weight": 135, "reps": 10, "unit": "lbs" },
+    { "set": 2, "weight": 145, "reps": 8, "unit": "lbs" }
+  ]
 }
 ```
+
+### New Component: `src/components/folders/FolderItemPerformanceLogger.tsx`
+
+A compact expandable form that appears when a user clicks on a folder item (in the Game Plan or Folder Detail Dialog). It provides:
+
+- **Dynamic input rows per set**: Each set row has fields for weight, reps, time, or distance depending on the item type
+- **Add Set button** to append more rows
+- **Auto-detect input type** from `item.item_type`:
+  - `exercise` / `skill_work`: weight (lbs/kg) + reps
+  - `mobility` / `recovery`: duration (minutes/seconds)
+  - `activity` / `custom`: flexible -- weight, reps, time, or distance fields
+- **Save button** that writes to `folder_item_completions.performance_data`
+
+### File: `src/components/folders/FolderDetailDialog.tsx`
+
+- Import and render `FolderItemPerformanceLogger` inside each item card (below the title/description)
+- Pass the item and current completion data
+- On save, upsert `folder_item_completions` with the `performance_data` field
+
+### File: `src/components/GamePlanCard.tsx`
+
+- Update `handleTaskClick` for folder items: instead of just toggling completion, open a small inline expansion or dialog showing the `FolderItemPerformanceLogger`
+- After logging data, auto-mark the item as completed
+- Show a small summary badge (e.g., "3 sets logged") on completed folder tasks
+
+### File: `src/hooks/useGamePlan.ts`
+
+- Update the `toggleFolderItemCompletion` function to accept optional `performance_data` parameter
+- When upserting completion rows, include the `performance_data` JSONB
 
 ---
 
 ## Technical Details
 
-### Day filtering logic
+### Performance data schema (flexible JSONB)
 
 ```text
-todayDow = getDay(new Date())    // 0-6
-todayDate = getTodayDate()        // YYYY-MM-DD
-
-Show item if:
-  item.assigned_days includes todayDow
-  OR item.specific_dates includes todayDate
-  OR (assigned_days is null AND specific_dates is null)
+{
+  "sets": [
+    { "set": 1, "weight": number, "reps": number, "unit": "lbs"|"kg", "time": number, "distance": number }
+  ],
+  "notes": "string"
+}
 ```
 
-### Data sources for folders
-
-```text
-Player folders:  activity_folders WHERE owner_id=user AND owner_type='player' AND status='active'
-Coach folders:   folder_assignments WHERE recipient_id=user AND status='accepted'
-                 --> JOIN activity_folders on folder_id
-Items:           activity_folder_items WHERE folder_id IN (all active folder IDs)
-Completions:     folder_item_completions WHERE user_id=user AND entry_date=today
-```
-
-### Completion toggle
-
-Reuses the same logic from `useReceivedFolders.toggleCompletion`:
-- Check if row exists in `folder_item_completions` for (item_id, user_id, entry_date)
-- If exists: flip `completed` boolean
-- If not: insert new row with `completed = true`
+Each field in a set row is optional -- users fill in whatever is applicable.
 
 ### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGamePlan.ts` | Fetch folder items from both sources, filter by today, check completions, push as tasks, return toggle function |
-| `src/components/GamePlanCard.tsx` | Handle folder item clicks with completion toggle, show folder color accent |
+| `src/components/vault/VaultPerformanceTestCard.tsx` | Add bat_speed metric to hitting arrays and TEST_METRICS |
+| `src/i18n/locales/*.json` (8 files) | Add bat_speed translation keys |
+| Database migration | Add `performance_data` JSONB column to `folder_item_completions` |
+| `src/components/folders/FolderItemPerformanceLogger.tsx` | New component for per-set data logging |
+| `src/components/folders/FolderDetailDialog.tsx` | Integrate performance logger into item cards |
+| `src/components/GamePlanCard.tsx` | Open logger on folder item click, show summary badge |
+| `src/hooks/useGamePlan.ts` | Update completion toggle to include performance_data |
 
