@@ -44,6 +44,7 @@ export interface ActivityFolderItem {
   notes: string | null;
   completion_tracking: boolean;
   specific_dates: string[] | null;
+  template_snapshot: any | null;
   created_at: string;
 }
 

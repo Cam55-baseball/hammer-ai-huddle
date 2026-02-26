@@ -696,6 +696,7 @@ export function CustomActivityDetailDialog({
                   notes: null,
                   completion_tracking: true,
                   specific_dates: null,
+                  template_snapshot: null,
                   created_at: template.created_at || '',
                 }}
                 performanceData={(log?.performance_data as any) || undefined}

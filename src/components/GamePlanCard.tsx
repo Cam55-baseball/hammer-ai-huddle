@@ -2323,6 +2323,143 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
       {selectedFolderTask?.folderItemData && (() => {
         const ft = folderTasks.find(ft => ft.item.id === selectedFolderTask.folderItemData!.itemId);
         const item = ft?.item;
+        const snapshot = (item as any)?.template_snapshot;
+
+        // If item has a template_snapshot, render via CustomActivityDetailDialog for pixel-perfect parity
+        if (snapshot && item) {
+          const pseudoTemplate: CustomActivityTemplate = {
+            id: item.id,
+            user_id: '',
+            title: item.title,
+            description: item.description || null,
+            activity_type: snapshot.activity_type || item.item_type || 'workout',
+            icon: snapshot.icon || selectedFolderTask.folderItemData.folderIcon || 'clipboard',
+            color: snapshot.color || selectedFolderTask.folderItemData.folderColor || '#6366f1',
+            duration_minutes: snapshot.duration_minutes || item.duration_minutes || null,
+            intensity: snapshot.intensity || null,
+            exercises: snapshot.exercises || item.exercises || [],
+            meals: snapshot.meals || { items: [], vitamins: [], supplements: [] },
+            custom_fields: snapshot.custom_fields || [],
+            intervals: snapshot.intervals || [],
+            embedded_running_sessions: snapshot.embedded_running_sessions || [],
+            sport: selectedSport,
+            is_favorited: false,
+            recurring_active: false,
+            recurring_days: [],
+            created_at: item.created_at,
+            updated_at: null,
+            display_nickname: snapshot.display_nickname || null,
+            custom_logo_url: snapshot.custom_logo_url || null,
+            pace_value: null,
+            distance_value: null,
+            distance_unit: null,
+            deleted_at: null,
+            display_on_game_plan: true,
+            display_days: null,
+            display_time: null,
+            reminder_enabled: false,
+            reminder_time: null,
+            reminder_minutes: null,
+          };
+
+          const performanceData = ft?.performanceData as Record<string, any> | null;
+          const pseudoLog = {
+            id: ft?.completionId || '',
+            user_id: '',
+            template_id: item.id,
+            entry_date: getTodayDate(),
+            completed: selectedFolderTask.completed,
+            completed_at: null,
+            created_at: '',
+            notes: null,
+            performance_data: performanceData || null,
+            actual_duration_minutes: null,
+            start_time: null,
+            sort_order: null,
+            reminder_minutes: null,
+          };
+
+          const pseudoTask: GamePlanTask = {
+            ...selectedFolderTask,
+            customActivityData: {
+              template: pseudoTemplate,
+              log: pseudoLog as any,
+              isRecurring: false,
+              isScheduledForToday: true,
+            },
+          };
+
+          const folderTaskTime = taskTimes[selectedFolderTask.id] || null;
+          const folderTaskReminder = taskReminders[selectedFolderTask.id] || null;
+
+          return (
+            <>
+              <CustomActivityDetailDialog
+                open={folderLoggerOpen}
+                onOpenChange={(open) => {
+                  setFolderLoggerOpen(open);
+                }}
+                task={pseudoTask}
+                taskTime={folderTaskTime}
+                taskReminder={folderTaskReminder}
+                onComplete={() => {
+                  toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
+                  toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
+                  setFolderLoggerOpen(false);
+                }}
+                onEdit={() => {
+                  setFolderLoggerOpen(false);
+                  setFolderItemEditOpen(true);
+                }}
+                onSaveTime={(time, reminder) => {
+                  setTaskTimes(prev => ({ ...prev, [selectedFolderTask.id]: time }));
+                  setTaskReminders(prev => ({ ...prev, [selectedFolderTask.id]: reminder }));
+                }}
+                onToggleCheckbox={async (fieldId, checked) => {
+                  const itemId = selectedFolderTask.folderItemData!.itemId;
+                  // Use folder checkbox state persistence
+                  const currentPd = performanceData || {};
+                  const currentStates = (currentPd.checkboxStates as Record<string, boolean>) || {};
+                  const newStates = { ...currentStates, [fieldId]: checked };
+                  
+                  await saveFolderCheckboxState(itemId, newStates);
+                  
+                  // Check auto-complete
+                  const allIds = getAllCheckableIds(pseudoTemplate);
+                  const allChecked = allIds.every(id => id === fieldId ? checked : (newStates[id] || false));
+                  if (allChecked && !selectedFolderTask.completed) {
+                    await toggleFolderItemCompletion(itemId);
+                    setSelectedFolderTask(prev => prev ? { ...prev, completed: true } : null);
+                    triggerCelebration();
+                    toast.success('All items complete! 🎉');
+                  } else if (!allChecked && selectedFolderTask.completed) {
+                    await toggleFolderItemCompletion(itemId);
+                    setSelectedFolderTask(prev => prev ? { ...prev, completed: false } : null);
+                  }
+                  
+                  refetch();
+                }}
+                onSkipTask={() => {
+                  handleSkipTask(selectedFolderTask.id);
+                  setFolderLoggerOpen(false);
+                }}
+              />
+              {item && (
+                <FolderItemEditDialog
+                  open={folderItemEditOpen}
+                  onOpenChange={setFolderItemEditOpen}
+                  item={item}
+                  onSaved={() => {
+                    setFolderItemEditOpen(false);
+                    refetch();
+                  }}
+                />
+              )}
+            </>
+          );
+        }
+
+        // Fallback: no template_snapshot, use original folder dialog
         const exercises = item?.exercises as any[] | null;
         const folderColor = selectedFolderTask.folderItemData.folderColor;
         const folderIconKey = selectedFolderTask.folderItemData.folderIcon || 'clipboard';
