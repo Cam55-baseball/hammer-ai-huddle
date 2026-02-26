@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { StickyNote, User, Pencil, Trash2, Save, X } from 'lucide-react';
+import { StickyNote, User, Pencil, Trash2, Save, X, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Player {
@@ -149,6 +149,14 @@ export function PlayerNotesSection({ players }: PlayerNotesSectionProps) {
               >
                 <User className="h-4 w-4 mr-1" />
                 View Profile
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate(`/players-club?userId=${selectedPlayerId}`)}
+              >
+                <Trophy className="h-4 w-4 mr-1" />
+                Player Club
               </Button>
             </div>
 
