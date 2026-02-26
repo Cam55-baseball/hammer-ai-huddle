@@ -1,104 +1,99 @@
 
 
-# Show Activity Details + Edit on Game Plan (Folder Items)
+# Unify Folder Item and Custom Activity Detail Dialogs on Game Plan
 
 ## Problem
-When clicking a folder item on the Game Plan, the dialog only shows the item title and folder name. There's no description, item type, duration, notes, schedule, or exercises visible. Users also cannot edit the folder item from the Game Plan.
+When a user taps an activity on the Game Plan, the dialog looks completely different depending on whether it came from a custom activity or a folder. The custom activity dialog has a rich colored header with icon, progress counter, checkable exercises/vitamins/supplements, scheduled time picker, Edit/Mark Complete/Skip buttons. The folder item dialog is a plain white dialog with basic text and a generic "Log Sets" performance logger that always shows (even for nutrition items where it makes no sense).
 
-## Changes
+## Solution
+Replace the current folder item dialog (lines 2284-2396 in GamePlanCard.tsx) with a layout that mirrors the `CustomActivityDetailDialog` design:
 
-### 1. Enrich Folder Item Dialog (`src/components/GamePlanCard.tsx`)
+### 1. Redesign Folder Item Dialog in `GamePlanCard.tsx`
 
-Update the folder item dialog (lines 2282-2309) to show full item details before the performance logger:
+**Header**: Colored background matching `folderColor`, icon (from `folderIcon`), title, progress counter (checkable items count), and category label (item_type).
 
-- **Item description** (from `item.description`)
-- **Item type** badge (exercise, mobility, recovery, etc.)
-- **Duration** (if `item.duration_minutes` is set)
-- **Notes** (if `item.notes` is set)
-- **Assigned days** or **specific dates** schedule info
-- **Exercises list** (from `item.exercises` array) showing name, sets, reps, weight, duration
-- **Folder name** with colored dot indicator
-- **Edit button** that opens an inline edit mode or a new `FolderItemEditDialog`
+**Content sections** (matching CustomActivityDetailDialog order):
+- Description (if present)
+- Duration and type badges (pill-shaped, like custom activity)
+- Exercises list with checkboxes (if `item.exercises` exists) -- individual exercise items are checkable, same styling as custom activity exercises
+- Notes section
+- Schedule display
+- **Scheduled Time** section with tap-to-set (reuse the same time picker pattern from CustomActivityDetailDialog)
+- **Performance Logger** -- only show "Log Sets" if `item_type` is exercise/skill_work/flexible, NOT for nutrition/recovery/mobility types
 
-### 2. Add `isOwner` flag to `folderItemData` (`src/hooks/useGamePlan.ts`)
+**Footer buttons** (matching CustomActivityDetailDialog):
+- "Edit Activity" button (left, outline) -- opens FolderItemEditDialog
+- "Mark Complete" button (right, colored) -- completes the item
+- "Skip for Today" button (bottom, amber outline)
 
-Extend the `folderItemData` interface to include `isOwner: boolean`, set by comparing `folder.owner_id === user.id` during task building. This controls whether the Edit button is visible.
+### 2. Add Checkbox State Tracking for Folder Item Exercises
 
-### 3. Create `FolderItemEditDialog` (`src/components/folders/FolderItemEditDialog.tsx`)
+Currently folder items don't track individual exercise checkbox states. We need to:
+- Store checkbox states in the `performance_data` JSONB column of `folder_item_completions` (same pattern as custom activities using `checkboxStates`)
+- Add local state in the dialog for tracking checked exercises
+- Save checkbox toggles immediately to the database (same debounce pattern)
 
-A new dialog for editing an existing folder item, pre-populated with current values:
+### 3. Conditionally Show Performance Logger
 
-- **Fields**: title, description, item type, duration, notes, assigned days (toggle buttons), specific dates (calendar), cycle week
-- **Save**: calls `supabase.from('activity_folder_items').update(...)` and refreshes the Game Plan
-- Reuses the same field layout as `FolderItemEditor` but in edit mode
+Only show the "Log Sets" performance logger when `item_type` is one of: `exercise`, `skill_work`, or when the item has no exercises array (flexible mode). Hide it for `mobility`, `recovery`, and nutrition-type items that don't need set logging.
 
-### 4. Add Edit button to `FolderDetailDialog` (`src/components/folders/FolderDetailDialog.tsx`)
+### 4. Match Visual Layout Exactly
 
-Add a pencil/edit icon next to each item (for owners) that opens the `FolderItemEditDialog`. On save, update items in local state.
-
-### 5. Update `useActivityFolders` hook
-
-Add success toast to `updateItem` function so users get confirmation.
-
----
+The folder item dialog should use:
+- Same `p-0 overflow-hidden` DialogContent styling
+- Same colored header area with `backgroundColor: ${color}20`
+- Same rounded icon box with white icon
+- Same Badge for progress counter
+- Same pill-shaped duration/intensity badges
+- Same exercise card styling (rounded-lg bg-muted p-3 with checkbox)
+- Same button layout (Edit left, Complete right, Skip below)
 
 ## Technical Details
 
-### `folderItemData` interface change (useGamePlan.ts)
-
-```text
-folderItemData?: {
-  folderId: string;
-  folderName: string;
-  folderColor: string;
-  itemId: string;
-  placement: string;
-  isOwner: boolean;  // NEW
-}
-```
-
-Set during task building by checking `folder.owner_id === user.id`.
-
-### Enriched dialog layout (GamePlanCard.tsx)
-
-```text
-Title                                    [Edit]
-Folder: Before Work (colored dot)
-[exercise badge]  [15m badge]
-
-Description text here...
-
-Exercises:
-  1. Push-ups - 3x15
-  2. Plank - 60s hold
-
-Notes: Focus on form
-
-Schedule: Mon, Wed, Fri
-
---- Performance Logger ---
-```
-
-### FolderItemEditDialog fields
-
-Pre-populated from the `ActivityFolderItem` object found via `folderTasks.find(...)`:
-- title (Input)
-- description (Textarea)
-- item_type (Select from ITEM_TYPES)
-- duration_minutes (Input number)
-- notes (Textarea)
-- assigned_days (day-of-week toggle buttons)
-- specific_dates (calendar date picker)
-- cycle_week (number input, if applicable)
-
-On save: `supabase.from('activity_folder_items').update({...}).eq('id', itemId)`, then call `refetch()` to refresh Game Plan.
-
-### Files
+### Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGamePlan.ts` | Add `isOwner` to `folderItemData` interface and task builder |
-| `src/components/GamePlanCard.tsx` | Enrich folder item dialog with full details + Edit button |
-| `src/components/folders/FolderItemEditDialog.tsx` | **New** -- edit dialog for folder items |
-| `src/components/folders/FolderDetailDialog.tsx` | Add edit button per item, open `FolderItemEditDialog` |
-| `src/hooks/useActivityFolders.ts` | Add success toast to `updateItem` |
+| `src/components/GamePlanCard.tsx` | Replace folder item dialog (lines 2284-2396) with unified layout matching CustomActivityDetailDialog. Add exercise checkbox state management, conditional performance logger, time picker, skip button. |
+| `src/hooks/useGamePlan.ts` | Add `folderIcon` to `folderItemData` interface so the dialog can render the correct icon |
+
+### Folder Item Dialog Structure (new)
+
+```text
+[Colored Header Background]
+  [Icon Box]  Title          [0/2 badge]
+              Folder Name (dot + name)
+
+[Scrollable Content]
+  Description text...
+
+  [Duration pill]  [Type pill]
+
+  -- Exercises (if any) --
+  [x] Exercise 1 - 3x15 @ 135lbs
+  [ ] Exercise 2 - sets/reps details
+
+  -- Notes --
+  Coach notes here...
+
+  -- Schedule --
+  Mon, Tue, Wed, Thu, Fri
+
+  -- Log Sets (only for exercise/skill_work types) --
+  Performance logger component
+
+  -- Scheduled Time --
+  Tap to set time (same as custom activity)
+
+  [Edit Activity]  [Mark Complete]
+  [Skip for Today]
+```
+
+### Exercise Checkbox Persistence
+
+Checkbox states will be stored in `folder_item_completions.performance_data.checkboxStates` as `Record<string, boolean>`, keyed by exercise index (`exercise_0`, `exercise_1`, etc.). This mirrors the custom activity pattern without requiring schema changes.
+
+### Icon Mapping
+
+The `folderIcon` field from the folder is already available in `FolderGamePlanTask`. It will be mapped using the existing `customActivityIconMap` in useGamePlan.ts to render the same icon component in the dialog header.
+
