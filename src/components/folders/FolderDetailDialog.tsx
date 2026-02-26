@@ -209,23 +209,23 @@ export function FolderDetailDialog({
               ))
             )}
           </div>
-        </div>
 
-        {/* Add Item (owner only) - pinned at bottom */}
-        {isOwner && onAddItem && (
-          <div className="flex-shrink-0 border-t pt-3">
-            <FolderItemEditor
-              onAdd={async (item) => {
-                const result = await onAddItem(folder.id, item);
-                if (result) setItems(prev => [...prev, result]);
-                return result;
-              }}
-              cycleType={folder.cycle_type || undefined}
-              cycleLengthWeeks={folder.cycle_length_weeks || undefined}
-              sport={folder.sport}
-            />
-          </div>
-        )}
+          {/* Add Item (owner only) */}
+          {isOwner && onAddItem && (
+            <div className="border-t pt-3 mt-2">
+              <FolderItemEditor
+                onAdd={async (item) => {
+                  const result = await onAddItem(folder.id, item);
+                  if (result) setItems(prev => [...prev, result]);
+                  return result;
+                }}
+                cycleType={folder.cycle_type || undefined}
+                cycleLengthWeeks={folder.cycle_length_weeks || undefined}
+                sport={folder.sport}
+              />
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
