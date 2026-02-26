@@ -6,6 +6,18 @@ import { Dumbbell, Flame, Video, Apple, Sun, Brain, Moon, Activity, Camera, Star
 import { startOfWeek, differenceInDays, format, getDay } from 'date-fns';
 import { CustomActivityWithLog, CustomActivityTemplate, CustomActivityLog } from '@/types/customActivity';
 import { getTodayDate } from '@/utils/dateUtils';
+import { ActivityFolder, ActivityFolderItem } from '@/types/activityFolder';
+
+export interface FolderGamePlanTask {
+  folderId: string;
+  folderName: string;
+  folderColor: string;
+  folderIcon: string;
+  placement: string;
+  item: ActivityFolderItem;
+  completed: boolean;
+  completionId?: string;
+}
 import { repairRecentCustomActivityLogDatesOncePerDay } from '@/utils/customActivityLogDateRepair';
 import { TRAINING_DEFAULT_SCHEDULES } from '@/constants/trainingSchedules';
 
@@ -46,6 +58,13 @@ export interface GamePlanTask {
   badge?: string;
   specialStyle?: 'mental-fuel-plus' | 'tex-vision' | 'custom';
   customActivityData?: CustomActivityWithLog;
+  folderItemData?: {
+    folderId: string;
+    folderName: string;
+    folderColor: string;
+    itemId: string;
+    placement: string;
+  };
 }
 
 export interface GamePlanData {
@@ -72,7 +91,8 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   const [trackingDue, setTrackingDue] = useState<Record<string, boolean>>({});
   const [isStrengthDay, setIsStrengthDay] = useState(false);
   const [customActivities, setCustomActivities] = useState<CustomActivityWithLog[]>([]);
-  
+  const [folderTasks, setFolderTasks] = useState<FolderGamePlanTask[]>([]);
+
   const [activeProgramStatuses, setActiveProgramStatuses] = useState<Record<string, string>>({});
 
   // Parse subscribed modules to determine access (tier-aware)
@@ -534,7 +554,103 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
 
       setCustomActivities(customActivitiesForToday);
 
-      // Fetch recap countdown
+      // === FETCH FOLDER ITEMS FOR GAME PLAN ===
+      const todayDow = todayDayOfWeek; // already computed above
+      
+      // 1. Player-owned active folders
+      const { data: playerFoldersData } = await supabase
+        .from('activity_folders')
+        .select('*')
+        .eq('owner_id', user.id)
+        .eq('owner_type', 'player')
+        .eq('sport', selectedSport)
+        .eq('status', 'active');
+
+      // 2. Coach-assigned accepted folders
+      const { data: assignmentsData } = await supabase
+        .from('folder_assignments')
+        .select('folder_id')
+        .eq('recipient_id', user.id)
+        .eq('status', 'accepted');
+
+      const assignedFolderIds = (assignmentsData || []).map((a: any) => a.folder_id);
+      
+      let coachFolders: any[] = [];
+      if (assignedFolderIds.length > 0) {
+        const { data: coachFoldersData } = await supabase
+          .from('activity_folders')
+          .select('*')
+          .in('id', assignedFolderIds)
+          .eq('status', 'active');
+        coachFolders = coachFoldersData || [];
+      }
+
+      const allFolders = [
+        ...((playerFoldersData || []) as unknown as ActivityFolder[]),
+        ...(coachFolders as unknown as ActivityFolder[]),
+      ];
+
+      if (allFolders.length > 0) {
+        const folderIds = allFolders.map(f => f.id);
+
+        // Fetch items for all folders
+        const { data: folderItemsData } = await supabase
+          .from('activity_folder_items')
+          .select('*')
+          .in('folder_id', folderIds)
+          .order('order_index');
+
+        const allItems = (folderItemsData || []) as unknown as ActivityFolderItem[];
+
+        // Filter items to today
+        const todayItems = allItems.filter(item => {
+          const hasDays = item.assigned_days && item.assigned_days.length > 0;
+          const hasDates = item.specific_dates && item.specific_dates.length > 0;
+          if (!hasDays && !hasDates) return true; // always show
+          if (hasDays && item.assigned_days!.includes(todayDow)) return true;
+          if (hasDates && item.specific_dates!.includes(today)) return true;
+          return false;
+        });
+
+        // Fetch completions for today
+        const itemIds = todayItems.map(i => i.id);
+        let completionsMap: Record<string, { id: string; completed: boolean }> = {};
+        if (itemIds.length > 0) {
+          const { data: completionsData } = await supabase
+            .from('folder_item_completions')
+            .select('id, folder_item_id, completed')
+            .eq('user_id', user.id)
+            .eq('entry_date', today)
+            .in('folder_item_id', itemIds);
+          
+          (completionsData || []).forEach((c: any) => {
+            completionsMap[c.folder_item_id] = { id: c.id, completed: c.completed };
+          });
+        }
+
+        // Build folder tasks
+        const folderMap = new Map(allFolders.map(f => [f.id, f]));
+        const builtFolderTasks: FolderGamePlanTask[] = todayItems.map(item => {
+          const folder = folderMap.get(item.folder_id)!;
+          const completion = completionsMap[item.id];
+          return {
+            folderId: folder.id,
+            folderName: folder.name,
+            folderColor: folder.color || '#6366f1',
+            folderIcon: folder.icon || 'clipboard',
+            placement: folder.placement || 'separate_day',
+            item,
+            completed: completion?.completed || false,
+            completionId: completion?.id,
+          };
+        });
+
+        setFolderTasks(builtFolderTasks);
+      } else {
+        setFolderTasks([]);
+      }
+
+
       const { data: streakData } = await supabase
         .from('vault_streaks')
         .select('created_at')
@@ -678,6 +794,51 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
 
     setCustomActivities(refreshed);
   }, [user, selectedSport]);
+
+  // Toggle folder item completion
+  const toggleFolderItemCompletion = useCallback(async (itemId: string) => {
+    if (!user) return;
+    const today = getTodayDate();
+
+    // Optimistic update
+    setFolderTasks(prev => prev.map(ft =>
+      ft.item.id === itemId ? { ...ft, completed: !ft.completed } : ft
+    ));
+
+    try {
+      // Check if completion exists
+      const { data: existing } = await supabase
+        .from('folder_item_completions')
+        .select('id, completed')
+        .eq('folder_item_id', itemId)
+        .eq('user_id', user.id)
+        .eq('entry_date', today)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from('folder_item_completions')
+          .update({ completed: !existing.completed, completed_at: !existing.completed ? new Date().toISOString() : null } as any)
+          .eq('id', existing.id);
+      } else {
+        await supabase
+          .from('folder_item_completions')
+          .insert({
+            folder_item_id: itemId,
+            user_id: user.id,
+            entry_date: today,
+            completed: true,
+            completed_at: new Date().toISOString(),
+          } as any);
+      }
+    } catch (error) {
+      console.error('Error toggling folder item completion:', error);
+      // Rollback
+      setFolderTasks(prev => prev.map(ft =>
+        ft.item.id === itemId ? { ...ft, completed: !ft.completed } : ft
+      ));
+    }
+  }, [user]);
 
   // Build dynamic task list based on user's module access
   const tasks: GamePlanTask[] = [];
@@ -1000,11 +1161,45 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   });
 
+  // Add folder items as tasks
+  const PLACEMENT_LABELS: Record<string, string> = {
+    before: 'Before Workout',
+    after: 'After Workout',
+    separate_day: 'Separate Day',
+    layered: 'Layered Within',
+  };
+
+  folderTasks.forEach(ft => {
+    const iconKey = ft.folderIcon || 'clipboard';
+    const IconComponent = customActivityIconMap[iconKey] || Activity;
+
+    tasks.push({
+      id: `folder-item-${ft.item.id}`,
+      titleKey: ft.item.title,
+      descriptionKey: ft.folderName,
+      completed: ft.completed,
+      icon: IconComponent,
+      link: '',
+      taskType: 'custom',
+      section: 'custom',
+      specialStyle: 'custom',
+      badge: PLACEMENT_LABELS[ft.placement] || undefined,
+      folderItemData: {
+        folderId: ft.folderId,
+        folderName: ft.folderName,
+        folderColor: ft.folderColor,
+        itemId: ft.item.id,
+        placement: ft.placement,
+      },
+    });
+  });
+
   const completedCount = tasks.filter(t => t.completed).length;
 
   return {
     tasks,
     customActivities,
+    folderTasks,
     completedCount,
     totalCount: tasks.length,
     daysUntilRecap,
@@ -1013,5 +1208,6 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     refetch: fetchTaskStatus,
     addOptimisticActivity,
     refreshCustomActivities,
+    toggleFolderItemCompletion,
   };
 }
