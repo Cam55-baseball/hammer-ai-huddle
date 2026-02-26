@@ -796,7 +796,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
   }, [user, selectedSport]);
 
   // Toggle folder item completion
-  const toggleFolderItemCompletion = useCallback(async (itemId: string) => {
+  const toggleFolderItemCompletion = useCallback(async (itemId: string, performanceData?: any) => {
     if (!user) return;
     const today = getTodayDate();
 
@@ -816,20 +816,24 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         .maybeSingle();
 
       if (existing) {
+        const updatePayload: any = { completed: !existing.completed, completed_at: !existing.completed ? new Date().toISOString() : null };
+        if (performanceData) updatePayload.performance_data = performanceData;
         await supabase
           .from('folder_item_completions')
-          .update({ completed: !existing.completed, completed_at: !existing.completed ? new Date().toISOString() : null } as any)
+          .update(updatePayload)
           .eq('id', existing.id);
       } else {
+        const insertPayload: any = {
+          folder_item_id: itemId,
+          user_id: user.id,
+          entry_date: today,
+          completed: true,
+          completed_at: new Date().toISOString(),
+        };
+        if (performanceData) insertPayload.performance_data = performanceData;
         await supabase
           .from('folder_item_completions')
-          .insert({
-            folder_item_id: itemId,
-            user_id: user.id,
-            entry_date: today,
-            completed: true,
-            completed_at: new Date().toISOString(),
-          } as any);
+          .insert(insertPayload);
       }
     } catch (error) {
       console.error('Error toggling folder item completion:', error);

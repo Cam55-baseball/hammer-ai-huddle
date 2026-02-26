@@ -8,11 +8,13 @@ import { Label } from '@/components/ui/label';
 import { ActivityFolder, ActivityFolderItem, DAY_LABELS } from '@/types/activityFolder';
 import { supabase } from '@/integrations/supabase/client';
 import { FolderItemEditor } from './FolderItemEditor';
-import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays } from 'lucide-react';
+import { FolderItemPerformanceLogger } from './FolderItemPerformanceLogger';
+import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getTodayDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface FolderDetailDialogProps {
   open: boolean;
@@ -31,6 +33,8 @@ export function FolderDetailDialog({
 }: FolderDetailDialogProps) {
   const [items, setItems] = useState<ActivityFolderItem[]>([]);
   const [completions, setCompletions] = useState<Record<string, boolean>>({});
+  const [performanceDataMap, setPerformanceDataMap] = useState<Record<string, any>>({});
+  const [expandedLoggers, setExpandedLoggers] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [coachEditAllowed, setCoachEditAllowed] = useState(false);
 
@@ -52,13 +56,18 @@ export function FolderDetailDialog({
         const today = getTodayDate();
         const { data: compData } = await supabase
           .from('folder_item_completions')
-          .select('folder_item_id, completed')
+          .select('folder_item_id, completed, performance_data')
           .eq('user_id', userData.user.id)
           .eq('entry_date', today);
         
         const map: Record<string, boolean> = {};
-        (compData || []).forEach(c => { map[c.folder_item_id] = c.completed || false; });
+        const perfMap: Record<string, any> = {};
+        (compData || []).forEach((c: any) => {
+          map[c.folder_item_id] = c.completed || false;
+          if (c.performance_data) perfMap[c.folder_item_id] = c.performance_data;
+        });
         setCompletions(map);
+        setPerformanceDataMap(perfMap);
       }
       setLoading(false);
     };
@@ -76,6 +85,33 @@ export function FolderDetailDialog({
     const today = getTodayDate();
     await onToggleCompletion(itemId, today, assignmentId);
     setCompletions(prev => ({ ...prev, [itemId]: !prev[itemId] }));
+  };
+
+  const handleSavePerformanceData = async (itemId: string, data: any) => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return;
+    const today = getTodayDate();
+
+    const { data: existing } = await supabase
+      .from('folder_item_completions')
+      .select('id')
+      .eq('folder_item_id', itemId)
+      .eq('user_id', userData.user.id)
+      .eq('entry_date', today)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase.from('folder_item_completions')
+        .update({ performance_data: data, completed: true, completed_at: new Date().toISOString() } as any)
+        .eq('id', existing.id);
+    } else {
+      await supabase.from('folder_item_completions')
+        .insert({ folder_item_id: itemId, user_id: userData.user.id, entry_date: today, completed: true, completed_at: new Date().toISOString(), performance_data: data } as any);
+    }
+
+    setCompletions(prev => ({ ...prev, [itemId]: true }));
+    setPerformanceDataMap(prev => ({ ...prev, [itemId]: data }));
+    toast.success('Performance data saved');
   };
 
   const handleCoachEditToggle = async (allowed: boolean) => {
@@ -162,48 +198,74 @@ export function FolderDetailDialog({
               <p className="text-sm text-muted-foreground">No items yet.</p>
             ) : (
               items.map(item => (
-                <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-                  {item.completion_tracking && onToggleCompletion && (
-                    <Checkbox
-                      checked={completions[item.id] || false}
-                      onCheckedChange={() => handleToggle(item.id)}
-                      className="mt-0.5"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-sm font-medium ${completions[item.id] ? 'line-through text-muted-foreground' : ''}`}>
-                        {item.title}
-                      </span>
-                      {item.item_type && (
-                        <Badge variant="outline" className="text-[10px]">{item.item_type}</Badge>
-                      )}
-                    </div>
-                    {item.description && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                <div key={item.id} className="p-3 rounded-lg border bg-card space-y-1">
+                  <div className="flex items-start gap-3">
+                    {item.completion_tracking && onToggleCompletion && (
+                      <Checkbox
+                        checked={completions[item.id] || false}
+                        onCheckedChange={() => handleToggle(item.id)}
+                        className="mt-0.5"
+                      />
                     )}
-                    <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground flex-wrap">
-                      {item.specific_dates && item.specific_dates.length > 0 ? (
-                        <span className="flex items-center gap-0.5">
-                          <CalendarDays className="h-2.5 w-2.5" />
-                          {item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-medium ${completions[item.id] ? 'line-through text-muted-foreground' : ''}`}>
+                          {item.title}
                         </span>
-                      ) : item.assigned_days && item.assigned_days.length > 0 ? (
-                        <span>{item.assigned_days.map(d => DAY_LABELS[d]).join(', ')}</span>
-                      ) : null}
-                      {item.duration_minutes && (
-                        <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
+                        {item.item_type && (
+                          <Badge variant="outline" className="text-[10px]">{item.item_type}</Badge>
+                        )}
+                        {performanceDataMap[item.id]?.sets?.length > 0 && (
+                          <Badge variant="secondary" className="text-[10px]">{performanceDataMap[item.id].sets.length} sets</Badge>
+                        )}
+                      </div>
+                      {item.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
                       )}
-                      {item.cycle_week && <span>Wk {item.cycle_week}</span>}
-                      {item.notes && (
-                        <span className="flex items-center gap-0.5"><FileText className="h-2.5 w-2.5" />Notes</span>
+                      <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground flex-wrap">
+                        {item.specific_dates && item.specific_dates.length > 0 ? (
+                          <span className="flex items-center gap-0.5">
+                            <CalendarDays className="h-2.5 w-2.5" />
+                            {item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}
+                          </span>
+                        ) : item.assigned_days && item.assigned_days.length > 0 ? (
+                          <span>{item.assigned_days.map(d => DAY_LABELS[d]).join(', ')}</span>
+                        ) : null}
+                        {item.duration_minutes && (
+                          <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
+                        )}
+                        {item.cycle_week && <span>Wk {item.cycle_week}</span>}
+                        {item.notes && (
+                          <span className="flex items-center gap-0.5"><FileText className="h-2.5 w-2.5" />Notes</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {item.completion_tracking && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setExpandedLoggers(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                        >
+                          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expandedLoggers[item.id] ? 'rotate-180' : ''}`} />
+                        </Button>
+                      )}
+                      {isOwner && onDeleteItem && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDeleteItem(item.id).then(() => setItems(prev => prev.filter(i => i.id !== item.id)))}>
+                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
                       )}
                     </div>
                   </div>
-                  {isOwner && onDeleteItem && (
-                    <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => onDeleteItem(item.id).then(() => setItems(prev => prev.filter(i => i.id !== item.id)))}>
-                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
+                  {/* Performance Logger */}
+                  {item.completion_tracking && expandedLoggers[item.id] && (
+                    <FolderItemPerformanceLogger
+                      item={item}
+                      performanceData={performanceDataMap[item.id]}
+                      onSave={async (data) => handleSavePerformanceData(item.id, data)}
+                      compact
+                    />
                   )}
                 </div>
               ))

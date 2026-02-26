@@ -4698,6 +4698,8 @@
       "save": "Sauvegarder Résultats",
       "metrics": {
         "bat_speed": "Vitesse de Batte",
+        "bat_speed_left": "Vitesse de Batte (G)",
+        "bat_speed_right": "Vitesse de Batte (D)",
         "exit_velocity": "Vitesse de Sortie",
         "tee_exit_velocity": "Vitesse de Sortie au Tee",
         "tee_exit_velocity_left": "Vitesse de Sortie au Tee (G)",

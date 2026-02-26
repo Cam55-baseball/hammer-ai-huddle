@@ -4749,6 +4749,8 @@
       "save": "Guardar Resultados",
       "metrics": {
         "bat_speed": "Velocidad del Bate",
+        "bat_speed_left": "Velocidad del Bate (I)",
+        "bat_speed_right": "Velocidad del Bate (D)",
         "exit_velocity": "Velocidad de Salida",
         "tee_exit_velocity": "Velocidad de Salida del Tee",
         "tee_exit_velocity_left": "Velocidad de Salida del Tee (I)",

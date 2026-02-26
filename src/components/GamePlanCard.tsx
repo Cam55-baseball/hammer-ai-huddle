@@ -28,6 +28,7 @@ import { useRecapCountdown } from '@/hooks/useRecapCountdown';
 import { useReceivedActivities } from '@/hooks/useReceivedActivities';
 import { PendingCoachActivityCard } from '@/components/game-plan/PendingCoachActivityCard';
 import { QuickNutritionLogDialog } from '@/components/QuickNutritionLogDialog';
+import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerformanceLogger';
 import { VaultFocusQuizDialog } from '@/components/vault/VaultFocusQuizDialog';
 import { WeeklyWellnessQuizDialog } from '@/components/vault/WeeklyWellnessQuizDialog';
 import { CustomActivityBuilderDialog, QuickAddFavoritesDrawer, getActivityIcon } from '@/components/custom-activities';
@@ -193,6 +194,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   // Custom activity detail dialog state
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedCustomTask, setSelectedCustomTask] = useState<GamePlanTask | null>(null);
+  
+  // Folder item performance logger dialog state
+  const [folderLoggerOpen, setFolderLoggerOpen] = useState(false);
+  const [selectedFolderTask, setSelectedFolderTask] = useState<GamePlanTask | null>(null);
   
   // Inline time picker state (for non-timeline modes)
   const [expandedTimeTaskId, setExpandedTimeTaskId] = useState<string | null>(null);
@@ -488,10 +493,10 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   }, [tasksKey, sortMode, todayLocked, isDateLocked, getOrderKeysForDate, getGamePlanOrderKey]);
 
   const handleTaskClick = (task: GamePlanTask) => {
-    // Handle folder items - toggle completion directly
+    // Handle folder items - open performance logger dialog
     if (task.folderItemData) {
-      toggleFolderItemCompletion(task.folderItemData.itemId);
-      toast.success(task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
+      setSelectedFolderTask(task);
+      setFolderLoggerOpen(true);
       return;
     }
 
@@ -1076,7 +1081,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         
         {/* Status indicator - clickable for custom activities with prominent styling */}
         <button
-          onClick={(e) => { e.stopPropagation(); if (task.folderItemData) { toggleFolderItemCompletion(task.folderItemData.itemId); toast.success(task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete')); } else if (isCustom) handleCustomActivityToggle(task); }}
+          onClick={(e) => { e.stopPropagation(); if (task.folderItemData) { setSelectedFolderTask(task); setFolderLoggerOpen(true); } else if (isCustom) handleCustomActivityToggle(task); }}
           disabled={!isCustom}
           className={cn(
             "flex-shrink-0 rounded-full flex items-center justify-center transition-all",
@@ -2274,6 +2279,35 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         }}
         showSkipOption={true}
       />
+      {/* Folder Item Performance Logger Dialog */}
+      {selectedFolderTask?.folderItemData && (
+        <Dialog open={folderLoggerOpen} onOpenChange={setFolderLoggerOpen}>
+          <DialogContent className="max-w-sm" onPointerDownOutside={(e) => e.preventDefault()}>
+            <DialogHeader>
+              <DialogTitle className="text-base">{selectedFolderTask.titleKey}</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">{selectedFolderTask.descriptionKey}</DialogDescription>
+            </DialogHeader>
+            <FolderItemPerformanceLogger
+              item={folderTasks.find(ft => ft.item.id === selectedFolderTask.folderItemData!.itemId)?.item!}
+              onSave={async (data) => {
+                await toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId, data);
+                toast.success(t('customActivity.markedComplete'));
+                setFolderLoggerOpen(false);
+                refetch();
+              }}
+            />
+            <div className="flex justify-end gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => {
+                toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
+                toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
+                setFolderLoggerOpen(false);
+              }}>
+                {selectedFolderTask.completed ? 'Mark Incomplete' : 'Complete Without Logging'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
       {/* Pulsing animation for incomplete tasks */}
       <style>{`
         @keyframes game-plan-pulse-custom {

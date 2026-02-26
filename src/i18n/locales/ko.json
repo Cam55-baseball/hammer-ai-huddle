@@ -3801,6 +3801,8 @@
       "save": "테스트 결과 저장",
       "metrics": {
         "bat_speed": "배트 속도",
+        "bat_speed_left": "배트 속도 (좌)",
+        "bat_speed_right": "배트 속도 (우)",
         "exit_velocity": "타구 속도",
         "tee_exit_velocity": "티 타구 속도",
         "tee_exit_velocity_left": "티 타구 속도 (좌)",
