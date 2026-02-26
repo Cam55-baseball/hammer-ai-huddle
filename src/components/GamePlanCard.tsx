@@ -202,8 +202,6 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [selectedFolderTask, setSelectedFolderTask] = useState<GamePlanTask | null>(null);
   const [folderItemEditOpen, setFolderItemEditOpen] = useState(false);
   const [folderCheckboxStates, setFolderCheckboxStates] = useState<Record<string, boolean>>({});
-  const [folderSavingFieldIds, setFolderSavingFieldIds] = useState<Set<string>>(new Set());
-  const [showFolderTimePicker, setShowFolderTimePicker] = useState(false);
 
   // Initialize folder checkbox states when dialog opens
   useEffect(() => {
@@ -2402,6 +2400,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                 task={pseudoTask}
                 taskTime={folderTaskTime}
                 taskReminder={folderTaskReminder}
+                categoryLabel={selectedFolderTask.folderItemData.folderName}
+                hideEdit={!selectedFolderTask.folderItemData.isOwner}
                 onComplete={() => {
                   toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
                   toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
@@ -2459,381 +2459,139 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
           );
         }
 
-        // Fallback: no template_snapshot, use original folder dialog
-        const exercises = item?.exercises as any[] | null;
-        const folderColor = selectedFolderTask.folderItemData.folderColor;
-        const folderIconKey = selectedFolderTask.folderItemData.folderIcon || 'clipboard';
-        const FolderIconComponent = getActivityIcon(folderIconKey);
-        const totalCheckable = exercises?.length || 0;
-        const checkedCount = exercises ? exercises.filter((_: any, i: number) => folderCheckboxStates[`exercise_${i}`]).length : 0;
+        // No template_snapshot: build pseudo-template from raw folder item fields
+        const rawExercises = (item?.exercises as any[] | null) || [];
+        const mappedExercises = rawExercises.map((ex: any, idx: number) => ({
+          id: `folder_ex_${idx}`,
+          name: ex.name || `Exercise ${idx + 1}`,
+          type: ex.type || 'other',
+          sets: ex.sets,
+          reps: ex.reps,
+          weight: ex.weight,
+          weightUnit: ex.weight_unit || ex.weightUnit || 'lbs',
+          duration: ex.duration,
+          rest: ex.rest,
+          notes: ex.notes,
+        }));
 
-        // Determine if performance logger should show
-        const showLogger = item?.item_type === 'exercise' || item?.item_type === 'skill_work';
+        const folderColor = selectedFolderTask.folderItemData.folderColor;
+        const folderIcon = selectedFolderTask.folderItemData.folderIcon || 'clipboard';
+
+        const pseudoTemplate: CustomActivityTemplate = {
+          id: item?.id || '',
+          user_id: '',
+          title: item?.title || selectedFolderTask.titleKey,
+          description: item?.description || null,
+          activity_type: (item?.item_type as any) || 'workout',
+          icon: folderIcon,
+          color: folderColor || '#6366f1',
+          duration_minutes: item?.duration_minutes || null,
+          intensity: null,
+          exercises: mappedExercises,
+          meals: { items: [], vitamins: [], supplements: [] },
+          custom_fields: [],
+          intervals: [],
+          embedded_running_sessions: [],
+          sport: selectedSport,
+          is_favorited: false,
+          recurring_active: false,
+          recurring_days: [],
+          created_at: item?.created_at || '',
+          updated_at: null,
+          pace_value: null,
+          distance_value: null,
+          distance_unit: null,
+          deleted_at: null,
+          display_on_game_plan: true,
+          display_days: null,
+          display_time: null,
+          reminder_enabled: false,
+          reminder_time: null,
+          reminder_minutes: null,
+        };
+
+        const performanceData = ft?.performanceData as Record<string, any> | null;
+        const pseudoLog = {
+          id: ft?.completionId || '',
+          user_id: '',
+          template_id: item?.id || '',
+          entry_date: getTodayDate(),
+          completed: selectedFolderTask.completed,
+          completed_at: null,
+          created_at: '',
+          notes: item?.notes || null,
+          performance_data: performanceData || null,
+          actual_duration_minutes: null,
+          start_time: null,
+          sort_order: null,
+          reminder_minutes: null,
+        };
+
+        const pseudoTask: GamePlanTask = {
+          ...selectedFolderTask,
+          customActivityData: {
+            template: pseudoTemplate,
+            log: pseudoLog as any,
+            isRecurring: false,
+            isScheduledForToday: true,
+          },
+        };
 
         const folderTaskTime = taskTimes[selectedFolderTask.id] || null;
         const folderTaskReminder = taskReminders[selectedFolderTask.id] || null;
 
-        const formatTimeDisplay = (time: string | null) => {
-          if (!time) return null;
-          const [hours, minutes] = time.split(':');
-          const h = parseInt(hours);
-          const ampm = h >= 12 ? 'PM' : 'AM';
-          const h12 = h % 12 || 12;
-          return `${h12}:${minutes} ${ampm}`;
-        };
-
-        const handleFolderCheckboxToggle = async (exerciseKey: string, checked: boolean) => {
-          const itemId = selectedFolderTask.folderItemData!.itemId;
-          const newStates = { ...folderCheckboxStates, [exerciseKey]: checked };
-          setFolderCheckboxStates(newStates);
-          setFolderSavingFieldIds(prev => new Set(prev).add(exerciseKey));
-          try {
-            await saveFolderCheckboxState(itemId, newStates);
-            // Auto-complete if all checked
-            if (exercises && exercises.length > 0) {
-              const allChecked = exercises.every((_: any, i: number) => newStates[`exercise_${i}`]);
-              if (allChecked && !selectedFolderTask.completed) {
-                await toggleFolderItemCompletion(itemId);
-                setSelectedFolderTask(prev => prev ? { ...prev, completed: true } : null);
-                triggerCelebration();
-                toast.success('All exercises complete! 🎉');
-              } else if (!allChecked && selectedFolderTask.completed) {
-                await toggleFolderItemCompletion(itemId);
-                setSelectedFolderTask(prev => prev ? { ...prev, completed: false } : null);
-              }
-            }
-          } finally {
-            setFolderSavingFieldIds(prev => {
-              const next = new Set(prev);
-              next.delete(exerciseKey);
-              return next;
-            });
-          }
-        };
-
-        const handleFolderSaveTime = () => {
-          setTaskTimes(prev => ({ ...prev, [selectedFolderTask.id]: tempTime || null }));
-          setTaskReminders(prev => ({ ...prev, [selectedFolderTask.id]: tempReminder }));
-          setShowFolderTimePicker(false);
-        };
-
-        const handleFolderRemoveTime = () => {
-          setTempTime('');
-          setTempReminder(null);
-          setTaskTimes(prev => ({ ...prev, [selectedFolderTask.id]: null }));
-          setTaskReminders(prev => ({ ...prev, [selectedFolderTask.id]: null }));
-          setShowFolderTimePicker(false);
-        };
-
         return (
           <>
-            <Dialog open={folderLoggerOpen} onOpenChange={(open) => {
-              setFolderLoggerOpen(open);
-              if (!open) setShowFolderTimePicker(false);
-            }}>
-              <DialogContent className="sm:max-w-md p-0 overflow-hidden max-h-[90vh] flex flex-col">
-                {/* Colored Header */}
-                <div 
-                  className="p-6 pb-4 flex-shrink-0"
-                  style={{ backgroundColor: `${folderColor}20` }}
-                >
-                  <DialogHeader>
-                    <div className="flex items-center gap-4">
-                      <div 
-                        className="p-3 rounded-xl"
-                        style={{ backgroundColor: folderColor }}
-                      >
-                        <FolderIconComponent className="h-6 w-6 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <DialogTitle className="text-xl font-black text-foreground truncate">
-                            {selectedFolderTask.titleKey}
-                          </DialogTitle>
-                          {totalCheckable > 0 && (
-                            <Badge 
-                              variant={checkedCount === totalCheckable ? "default" : "secondary"}
-                              className={cn(
-                                "text-xs font-bold",
-                                checkedCount === totalCheckable && "bg-green-500"
-                              )}
-                            >
-                              {checkedCount}/{totalCheckable}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
-                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: folderColor }} />
-                          {selectedFolderTask.folderItemData.folderName}
-                        </div>
-                      </div>
-                    </div>
-                  </DialogHeader>
-                </div>
-
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto">
-                  <div className="p-6 pt-2 space-y-4">
-                    {/* Description */}
-                    {item?.description && (
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
-                    )}
-
-                    {/* Duration & Type badges */}
-                    <div className="flex flex-wrap gap-3">
-                      {item?.duration_minutes && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{item.duration_minutes} min</span>
-                        </div>
-                      )}
-                      {item?.item_type && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
-                          <Dumbbell className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium capitalize">{item.item_type.replace('_', ' ')}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Exercises with checkboxes */}
-                    {exercises && exercises.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
-                          <Dumbbell className="h-4 w-4" />
-                          Exercises ({exercises.length})
-                        </h4>
-                        <div className="space-y-2">
-                          {exercises.map((ex: any, idx: number) => {
-                            const fieldId = `exercise_${idx}`;
-                            const isChecked = folderCheckboxStates[fieldId] || false;
-                            return (
-                              <div key={idx} className="rounded-lg bg-muted p-3">
-                                <div className="flex items-start gap-3">
-                                  <Checkbox
-                                    checked={isChecked}
-                                    onCheckedChange={(checked) => handleFolderCheckboxToggle(fieldId, !!checked)}
-                                    disabled={folderSavingFieldIds.has(fieldId)}
-                                    className={cn(
-                                      "mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
-                                      folderSavingFieldIds.has(fieldId) && "opacity-50"
-                                    )}
-                                  />
-                                  <div className="flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <span className={cn(
-                                        "font-medium text-sm",
-                                        isChecked && "line-through text-muted-foreground"
-                                      )}>
-                                        {ex.name || `Exercise ${idx + 1}`}
-                                      </span>
-                                    </div>
-                                    <div className={cn(
-                                      "flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground",
-                                      isChecked && "opacity-60"
-                                    )}>
-                                      {ex.sets && <span>{ex.sets} sets</span>}
-                                      {ex.reps && <span>× {ex.reps} reps</span>}
-                                      {ex.weight && <span>@ {ex.weight} {ex.weight_unit || 'lbs'}</span>}
-                                      {ex.duration && <span>• {ex.duration}</span>}
-                                    </div>
-                                    {ex.notes && (
-                                      <p className={cn(
-                                        "text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5",
-                                        isChecked && "opacity-60"
-                                      )}>
-                                        <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                                        <span>{ex.notes}</span>
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Notes */}
-                    {item?.notes && (
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-bold text-foreground">Notes</h4>
-                        <p className="text-sm text-muted-foreground">{item.notes}</p>
-                      </div>
-                    )}
-
-                    {/* Schedule */}
-                    {(item?.assigned_days?.length || item?.specific_dates?.length) && (
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-bold text-foreground">Schedule</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {item.specific_dates && item.specific_dates.length > 0
-                            ? item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')
-                            : item.assigned_days && item.assigned_days.length > 0
-                              ? item.assigned_days.map(d => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', ')
-                              : null}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Performance Logger - conditional */}
-                    {item && showLogger && (
-                      <FolderItemPerformanceLogger
-                        item={item}
-                        performanceData={(ft?.performanceData as any) || undefined}
-                        onSave={async (data) => {
-                          await toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId, data);
-                          toast.success(t('customActivity.markedComplete'));
-                          setFolderLoggerOpen(false);
-                          refetch();
-                        }}
-                      />
-                    )}
-
-                    {/* Scheduled Time Section */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-foreground">
-                          {t('customActivity.detail.scheduledFor', 'Scheduled Time')}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setTempTime(folderTaskTime || '');
-                            setTempReminder(folderTaskReminder);
-                            setShowFolderTimePicker(!showFolderTimePicker);
-                          }}
-                          className="text-primary h-8"
-                        >
-                          {showFolderTimePicker ? <X className="h-4 w-4" /> : <Clock className="h-4 w-4 mr-1" />}
-                          {showFolderTimePicker ? t('common.cancel', 'Cancel') : folderTaskTime ? t('common.edit', 'Edit') : t('gamePlan.startTime.tapToSet', 'Tap to set')}
-                        </Button>
-                      </div>
-
-                      {folderTaskTime && !showFolderTimePicker && (
-                        <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
-                          <Clock className="h-4 w-4 text-primary" />
-                          <span className="font-medium text-primary">{formatTimeDisplay(folderTaskTime)}</span>
-                          {folderTaskReminder && (
-                            <div className="flex items-center gap-1 ml-auto text-xs text-muted-foreground">
-                              <Bell className="h-3 w-3" />
-                              {t('gamePlan.reminder.minutesBefore', { minutes: folderTaskReminder })}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {!folderTaskTime && !showFolderTimePicker && (
-                        <p className="text-sm text-muted-foreground italic">
-                          {t('customActivity.detail.noTimeSet', 'No time set')}
-                        </p>
-                      )}
-
-                      <AnimatePresence>
-                        {showFolderTimePicker && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="p-4 rounded-lg bg-muted/50 border space-y-3">
-                              <div className="space-y-2">
-                                <label className="text-xs font-medium text-foreground">
-                                  {t('gamePlan.startTime.time', 'Time')}
-                                </label>
-                                <Input
-                                  type="time"
-                                  value={tempTime}
-                                  onChange={(e) => setTempTime(e.target.value)}
-                                  className="h-10"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-xs font-medium text-foreground">
-                                  {t('gamePlan.reminder.remindMe', 'Remind me')}
-                                </label>
-                                <Select 
-                                  value={tempReminder?.toString() || 'none'} 
-                                  onValueChange={(v) => setTempReminder(v === 'none' ? null : parseInt(v))}
-                                >
-                                  <SelectTrigger className="h-10">
-                                    <SelectValue placeholder={t('gamePlan.reminder.noReminder', 'No reminder')} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="none">{t('gamePlan.reminder.noReminder', 'No reminder')}</SelectItem>
-                                    <SelectItem value="5">{t('gamePlan.reminder.minutesBefore', { minutes: 5 })}</SelectItem>
-                                    <SelectItem value="10">{t('gamePlan.reminder.minutesBefore', { minutes: 10 })}</SelectItem>
-                                    <SelectItem value="15">{t('gamePlan.reminder.minutesBefore', { minutes: 15 })}</SelectItem>
-                                    <SelectItem value="20">{t('gamePlan.reminder.minutesBefore', { minutes: 20 })}</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex gap-2 pt-2">
-                                {folderTaskTime && (
-                                  <Button variant="outline" size="sm" onClick={handleFolderRemoveTime} className="flex-1">
-                                    {t('gamePlan.startTime.removeTime', 'Remove Time')}
-                                  </Button>
-                                )}
-                                <Button size="sm" onClick={handleFolderSaveTime} className="flex-1">
-                                  {t('common.save', 'Save')}
-                                </Button>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-col gap-3 pt-4 border-t">
-                      <div className="flex gap-3">
-                        {selectedFolderTask.folderItemData.isOwner && (
-                          <Button
-                            variant="outline"
-                            onClick={() => { setFolderLoggerOpen(false); setFolderItemEditOpen(true); }}
-                            className="flex-1 gap-2"
-                          >
-                            <Pencil className="h-4 w-4" />
-                            Edit Activity
-                          </Button>
-                        )}
-                        <Button
-                          onClick={() => {
-                            toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
-                            toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
-                            setFolderLoggerOpen(false);
-                          }}
-                          className={cn(
-                            "flex-1 gap-2 font-bold",
-                            selectedFolderTask.completed 
-                              ? "bg-muted text-muted-foreground hover:bg-muted" 
-                              : ""
-                          )}
-                          style={!selectedFolderTask.completed ? { backgroundColor: folderColor } : undefined}
-                        >
-                          <Check className="h-4 w-4" />
-                          {selectedFolderTask.completed ? 'Marked Complete' : 'Mark Complete'}
-                        </Button>
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          handleSkipTask(selectedFolderTask.id);
-                          setFolderLoggerOpen(false);
-                        }}
-                        className="w-full gap-2 border-amber-500/50 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400 dark:border-amber-400/50"
-                      >
-                        <X className="h-4 w-4" />
-                        {t('gamePlan.skipForToday', 'Skip for Today')}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <CustomActivityDetailDialog
+              open={folderLoggerOpen}
+              onOpenChange={(open) => {
+                setFolderLoggerOpen(open);
+              }}
+              task={pseudoTask}
+              taskTime={folderTaskTime}
+              taskReminder={folderTaskReminder}
+              categoryLabel={selectedFolderTask.folderItemData.folderName}
+              hideEdit={!selectedFolderTask.folderItemData.isOwner}
+              onComplete={() => {
+                toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
+                toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
+                setFolderLoggerOpen(false);
+              }}
+              onEdit={() => {
+                setFolderLoggerOpen(false);
+                setFolderItemEditOpen(true);
+              }}
+              onSaveTime={(time, reminder) => {
+                setTaskTimes(prev => ({ ...prev, [selectedFolderTask.id]: time }));
+                setTaskReminders(prev => ({ ...prev, [selectedFolderTask.id]: reminder }));
+              }}
+              onToggleCheckbox={async (fieldId, checked) => {
+                const itemId = selectedFolderTask.folderItemData!.itemId;
+                const currentPd = performanceData || {};
+                const currentStates = (currentPd.checkboxStates as Record<string, boolean>) || {};
+                const newStates = { ...currentStates, [fieldId]: checked };
+                
+                await saveFolderCheckboxState(itemId, newStates);
+                
+                const allIds = getAllCheckableIds(pseudoTemplate);
+                const allChecked = allIds.every(id => id === fieldId ? checked : (newStates[id] || false));
+                if (allChecked && !selectedFolderTask.completed) {
+                  await toggleFolderItemCompletion(itemId);
+                  setSelectedFolderTask(prev => prev ? { ...prev, completed: true } : null);
+                  triggerCelebration();
+                  toast.success('All items complete! 🎉');
+                } else if (!allChecked && selectedFolderTask.completed) {
+                  await toggleFolderItemCompletion(itemId);
+                  setSelectedFolderTask(prev => prev ? { ...prev, completed: false } : null);
+                }
+                
+                refetch();
+              }}
+              onSkipTask={() => {
+                handleSkipTask(selectedFolderTask.id);
+                setFolderLoggerOpen(false);
+              }}
+            />
             {item && (
               <FolderItemEditDialog
                 open={folderItemEditOpen}

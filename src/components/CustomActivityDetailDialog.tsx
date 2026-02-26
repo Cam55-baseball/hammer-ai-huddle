@@ -178,6 +178,8 @@ interface CustomActivityDetailDialogProps {
   onUpdateFieldValue?: (fieldId: string, value: string) => void;
   onSkipTask?: () => void;
   onSavePerformanceData?: (data: any) => Promise<void>;
+  categoryLabel?: string;
+  hideEdit?: boolean;
 }
 
 export function CustomActivityDetailDialog({
@@ -193,6 +195,8 @@ export function CustomActivityDetailDialog({
   onUpdateFieldValue,
   onSkipTask,
   onSavePerformanceData,
+  categoryLabel,
+  hideEdit,
 }: CustomActivityDetailDialogProps) {
   const { t } = useTranslation();
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -349,7 +353,7 @@ export function CustomActivityDetailDialog({
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-0.5">
-                  {t(`customActivity.types.${template.activity_type}`)}
+                  {categoryLabel || t(`customActivity.types.${template.activity_type}`)}
                 </p>
               </div>
             </div>
@@ -898,14 +902,16 @@ export function CustomActivityDetailDialog({
               )}
               
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={onEdit}
-                  className="flex-1 gap-2"
-                >
-                  <Pencil className="h-4 w-4" />
-                  {t('customActivity.detail.editActivity')}
-                </Button>
+                {!hideEdit && (
+                  <Button
+                    variant="outline"
+                    onClick={onEdit}
+                    className="flex-1 gap-2"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    {t('customActivity.detail.editActivity')}
+                  </Button>
+                )}
                 <Button
                   onClick={() => {
                     onComplete();
