@@ -9,7 +9,8 @@ import { ActivityFolder, ActivityFolderItem, DAY_LABELS } from '@/types/activity
 import { supabase } from '@/integrations/supabase/client';
 import { FolderItemEditor } from './FolderItemEditor';
 import { FolderItemPerformanceLogger } from './FolderItemPerformanceLogger';
-import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays, ChevronDown } from 'lucide-react';
+import { FolderItemEditDialog } from './FolderItemEditDialog';
+import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays, ChevronDown, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getTodayDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
@@ -37,6 +38,7 @@ export function FolderDetailDialog({
   const [expandedLoggers, setExpandedLoggers] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [coachEditAllowed, setCoachEditAllowed] = useState(false);
+  const [editingItem, setEditingItem] = useState<ActivityFolderItem | null>(null);
 
   useEffect(() => {
     if (!open || !folder) return;
@@ -251,6 +253,11 @@ export function FolderDetailDialog({
                           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expandedLoggers[item.id] ? 'rotate-180' : ''}`} />
                         </Button>
                       )}
+                      {isOwner && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem(item)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                       {isOwner && onDeleteItem && (
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDeleteItem(item.id).then(() => setItems(prev => prev.filter(i => i.id !== item.id)))}>
                           <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -289,6 +296,19 @@ export function FolderDetailDialog({
           )}
         </div>
       </DialogContent>
+      {editingItem && (
+        <FolderItemEditDialog
+          open={!!editingItem}
+          onOpenChange={(open) => { if (!open) setEditingItem(null); }}
+          item={editingItem}
+          onSaved={(updated) => {
+            setItems(prev => prev.map(i => i.id === updated.id ? updated : i));
+            setEditingItem(null);
+          }}
+          cycleType={folder.cycle_type || undefined}
+          cycleLengthWeeks={folder.cycle_length_weeks || undefined}
+        />
+      )}
     </Dialog>
   );
 }
