@@ -115,109 +115,116 @@ export function FolderDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent
+        className="max-w-lg max-h-[85vh] flex flex-col overflow-hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5" style={{ color: folder.color }} />
             {folder.name}
           </DialogTitle>
         </DialogHeader>
 
-        {folder.description && (
-          <p className="text-sm text-muted-foreground">{folder.description}</p>
-        )}
-
-        {/* Coach Edit Toggle (player-owned folders only) */}
-        {isOwner && folder.owner_type === 'player' && (
-          <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/50">
-            <div>
-              <Label className="text-xs font-medium">Allow Coach to Edit</Label>
-              <p className="text-[10px] text-muted-foreground">Your primary coach can add/modify items</p>
-            </div>
-            <Switch checked={coachEditAllowed} onCheckedChange={handleCoachEditToggle} />
-          </div>
-        )}
-
-        {/* Progress */}
-        {totalTrackable > 0 && (
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Today's Progress</span>
-              <span>{completedCount}/{totalTrackable} ({pct}%)</span>
-            </div>
-            <Progress value={pct} className="h-2" />
-          </div>
-        )}
-
-        {/* Items */}
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold">Items ({items.length})</h4>
-          {loading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
-          ) : items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No items yet.</p>
-          ) : (
-            items.map(item => (
-              <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-                {item.completion_tracking && onToggleCompletion && (
-                  <Checkbox
-                    checked={completions[item.id] || false}
-                    onCheckedChange={() => handleToggle(item.id)}
-                    className="mt-0.5"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-medium ${completions[item.id] ? 'line-through text-muted-foreground' : ''}`}>
-                      {item.title}
-                    </span>
-                    {item.item_type && (
-                      <Badge variant="outline" className="text-[10px]">{item.item_type}</Badge>
-                    )}
-                  </div>
-                  {item.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-                  )}
-                  <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground flex-wrap">
-                    {item.specific_dates && item.specific_dates.length > 0 ? (
-                      <span className="flex items-center gap-0.5">
-                        <CalendarDays className="h-2.5 w-2.5" />
-                        {item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}
-                      </span>
-                    ) : item.assigned_days && item.assigned_days.length > 0 ? (
-                      <span>{item.assigned_days.map(d => DAY_LABELS[d]).join(', ')}</span>
-                    ) : null}
-                    {item.duration_minutes && (
-                      <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
-                    )}
-                    {item.cycle_week && <span>Wk {item.cycle_week}</span>}
-                    {item.notes && (
-                      <span className="flex items-center gap-0.5"><FileText className="h-2.5 w-2.5" />Notes</span>
-                    )}
-                  </div>
-                </div>
-                {isOwner && onDeleteItem && (
-                  <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => onDeleteItem(item.id).then(() => setItems(prev => prev.filter(i => i.id !== item.id)))}>
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                  </Button>
-                )}
-              </div>
-            ))
+        <div className="flex-1 overflow-y-auto space-y-3 pr-1" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
+          {folder.description && (
+            <p className="text-sm text-muted-foreground">{folder.description}</p>
           )}
+
+          {/* Coach Edit Toggle (player-owned folders only) */}
+          {isOwner && folder.owner_type === 'player' && (
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/50">
+              <div>
+                <Label className="text-xs font-medium">Allow Coach to Edit</Label>
+                <p className="text-[10px] text-muted-foreground">Your primary coach can add/modify items</p>
+              </div>
+              <Switch checked={coachEditAllowed} onCheckedChange={handleCoachEditToggle} />
+            </div>
+          )}
+
+          {/* Progress */}
+          {totalTrackable > 0 && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Today's Progress</span>
+                <span>{completedCount}/{totalTrackable} ({pct}%)</span>
+              </div>
+              <Progress value={pct} className="h-2" />
+            </div>
+          )}
+
+          {/* Items */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold">Items ({items.length})</h4>
+            {loading ? (
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            ) : items.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No items yet.</p>
+            ) : (
+              items.map(item => (
+                <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
+                  {item.completion_tracking && onToggleCompletion && (
+                    <Checkbox
+                      checked={completions[item.id] || false}
+                      onCheckedChange={() => handleToggle(item.id)}
+                      className="mt-0.5"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-medium ${completions[item.id] ? 'line-through text-muted-foreground' : ''}`}>
+                        {item.title}
+                      </span>
+                      {item.item_type && (
+                        <Badge variant="outline" className="text-[10px]">{item.item_type}</Badge>
+                      )}
+                    </div>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground flex-wrap">
+                      {item.specific_dates && item.specific_dates.length > 0 ? (
+                        <span className="flex items-center gap-0.5">
+                          <CalendarDays className="h-2.5 w-2.5" />
+                          {item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}
+                        </span>
+                      ) : item.assigned_days && item.assigned_days.length > 0 ? (
+                        <span>{item.assigned_days.map(d => DAY_LABELS[d]).join(', ')}</span>
+                      ) : null}
+                      {item.duration_minutes && (
+                        <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
+                      )}
+                      {item.cycle_week && <span>Wk {item.cycle_week}</span>}
+                      {item.notes && (
+                        <span className="flex items-center gap-0.5"><FileText className="h-2.5 w-2.5" />Notes</span>
+                      )}
+                    </div>
+                  </div>
+                  {isOwner && onDeleteItem && (
+                    <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => onDeleteItem(item.id).then(() => setItems(prev => prev.filter(i => i.id !== item.id)))}>
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-        {/* Add Item (owner only) */}
+        {/* Add Item (owner only) - pinned at bottom */}
         {isOwner && onAddItem && (
-          <FolderItemEditor
-            onAdd={async (item) => {
-              const result = await onAddItem(folder.id, item);
-              if (result) setItems(prev => [...prev, result]);
-              return result;
-            }}
-            cycleType={folder.cycle_type || undefined}
-            cycleLengthWeeks={folder.cycle_length_weeks || undefined}
-            sport={folder.sport}
-          />
+          <div className="flex-shrink-0 border-t pt-3">
+            <FolderItemEditor
+              onAdd={async (item) => {
+                const result = await onAddItem(folder.id, item);
+                if (result) setItems(prev => [...prev, result]);
+                return result;
+              }}
+              cycleType={folder.cycle_type || undefined}
+              cycleLengthWeeks={folder.cycle_length_weeks || undefined}
+              sport={folder.sport}
+            />
+          </div>
         )}
       </DialogContent>
     </Dialog>
