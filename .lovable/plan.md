@@ -1,124 +1,132 @@
 
 
-# Fix: Unify Folder Item and Custom Activity Dialogs
+# Unify Activity Detail into ONE Component
 
-## Root Cause
+## Current State
 
-When a custom activity (like "Morning Supplements") is imported into a folder via the Activity Picker, only 5 fields are copied: `title`, `description`, `item_type`, `duration_minutes`, and `exercises`. All the rich template data -- **vitamins, supplements, meal items, custom fields, icon, color, activity_type, intensity** -- is lost. The folder item's `exercises` column is always null for these items.
+There are currently **two separate dialog implementations**:
 
-This means when you tap "Morning Supplements" from the folder on the Game Plan, the dialog has no vitamins/supplements to show checkboxes for, no icon/color from the original template, and no progress counter. Meanwhile the same activity accessed directly from custom activities shows all of this.
+1. **`CustomActivityDetailDialog`** -- the rich, full-featured dialog used for custom activities AND folder items that have a `template_snapshot`
+2. **Fallback folder dialog** -- a separate inline dialog built directly inside `GamePlanCard.tsx` (lines 2462-2849) for folder items WITHOUT a `template_snapshot`
+
+The snapshot path already works correctly -- folder items imported with a snapshot render through `CustomActivityDetailDialog` and look identical to custom activities. The problem is the **fallback path**: folder items created before snapshots existed, or manually created folder items, still use a completely different dialog with different styling, different button placement, and different features.
 
 ## Solution
 
-### 1. Store full template snapshot when importing into folders
+**Eliminate the fallback dialog entirely.** ALL folder items -- with or without a `template_snapshot` -- should construct a pseudo-template and render through `CustomActivityDetailDialog`. This guarantees one component, one layout, one experience.
 
-**File: `src/components/folders/ActivityPickerDialog.tsx`** (lines 161-173)
-
-Change the `handleImport` function to copy ALL relevant template data into the folder item. Store the extra data in a new JSONB column `template_snapshot` on `activity_folder_items`:
-
-Data to copy:
-- `meals` (vitamins, supplements, meal items)
-- `custom_fields`
-- `icon` (template icon)
-- `color` (template color)
-- `activity_type` (e.g., "meal")
-- `intensity`
-- `intervals`
-- `embedded_running_sessions`
-
-### 2. Add `template_snapshot` column to `activity_folder_items`
-
-**Database migration**: Add a nullable JSONB column `template_snapshot` that stores the full original template data at import time. This ensures folder items retain everything needed to render identically.
-
-```text
-ALTER TABLE activity_folder_items 
-ADD COLUMN template_snapshot jsonb DEFAULT NULL;
-```
-
-### 3. Update the `ActivityFolderItem` type
-
-**File: `src/types/activityFolder.ts`**
-
-Add `template_snapshot` to the interface so TypeScript knows about the field.
-
-### 4. Render folder items using `CustomActivityDetailDialog` when they have a template snapshot
+### Step 1: Route ALL Folder Items Through CustomActivityDetailDialog
 
 **File: `src/components/GamePlanCard.tsx`**
 
-When a folder item has `template_snapshot`, instead of showing the current folder-specific dialog, reconstruct a `CustomActivityTemplate`-like object from the snapshot and render it through the same `CustomActivityDetailDialog` component (or its exact rendering logic). This guarantees pixel-perfect parity:
+Replace the fallback dialog (lines 2462-2849) with the same pseudo-template construction logic already used for snapshot items. For folder items without a snapshot:
 
-- Same colored header with the original icon and color
-- Same vitamins/supplements checkboxes
-- Same progress badge (0/2)
-- Same category label ("Meal/Nutrition")
-- Same footer buttons (Edit Activity, Mark Complete, Skip for Today)
+- Build `pseudoTemplate` from the raw folder item fields (`title`, `description`, `item_type`, `exercises`, `duration_minutes`)
+- Use the folder's `folderColor` and `folderIcon` as the template's `color` and `icon`
+- Map the folder item's `exercises` array into the template's exercises format
+- Map `item_type` to `activity_type` (e.g., `exercise` stays `exercise`, `skill_work` stays, etc.)
+- Set `meals`, `custom_fields`, `intervals` to empty defaults since raw folder items don't have these
+- Pass notes from `item.notes` into the template's `description` (appended after existing description)
 
-For folder items WITHOUT a template snapshot (manually created items), continue using the current folder item dialog.
+This means the IIFE block starting at line 2323 will handle ALL cases in one branch, not two.
 
-### 5. Wire checkbox persistence for folder items using template snapshot
+### Step 2: Normalize Folder Item Exercises to Template Exercise Format
 
-Reuse the existing `saveFolderCheckboxState` function. The checkbox field IDs will match the same pattern (`vitamin_xxx`, `supplement_xxx`, `meal_xxx`) since they come from the original template data.
+**File: `src/components/GamePlanCard.tsx`**
 
-### 6. Backfill existing imported items
+Folder item exercises are stored as raw JSON arrays with fields like `name`, `sets`, `reps`, `weight`, `weight_unit`, `notes`. The `CustomActivityDetailDialog` expects exercises in the `Exercise` type format with fields like `id`, `name`, `sets`, `reps`, `weight`, `weightUnit`.
 
-**File: `src/components/folders/ActivityPickerDialog.tsx`**
+Add a small mapper function:
 
-For existing items already imported without snapshots (like the current "Morning Supplements"), add a one-time migration or provide a "Re-import" action. The simpler approach: when a folder item has no `template_snapshot`, the dialog renders as it does today. Users can delete and re-import the item to get the full experience.
+```text
+function mapFolderExercisesToTemplateFormat(exercises: any[]): Exercise[] {
+  return exercises.map((ex, idx) => ({
+    id: `folder_ex_${idx}`,
+    name: ex.name || `Exercise ${idx + 1}`,
+    type: ex.type || 'other',
+    sets: ex.sets,
+    reps: ex.reps,
+    weight: ex.weight,
+    weightUnit: ex.weight_unit || ex.weightUnit || 'lbs',
+    duration: ex.duration,
+    rest: ex.rest,
+    notes: ex.notes,
+  }));
+}
+```
+
+### Step 3: Handle Category Label for Folder Items
+
+The `CustomActivityDetailDialog` shows the category as `t('customActivity.types.${template.activity_type}')`. For folder items, we want it to show the folder name instead (like "Before Work"). 
+
+Add an optional `categoryLabel` prop to `CustomActivityDetailDialog` that overrides the default translation. When rendering folder items, pass the folder name as `categoryLabel`.
+
+### Step 4: Handle Edit Button for Folder Items
+
+The `onEdit` callback already works -- for folder items it opens `FolderItemEditDialog`, for custom activities it opens `CustomActivityBuilderDialog`. No change needed here, just ensure the `isOwner` check is wired correctly (the `onEdit` prop is always passed; the caller controls visibility).
+
+Add an optional `hideEdit` prop to `CustomActivityDetailDialog` so non-owner folder items can hide the Edit button. Pass `hideEdit={!selectedFolderTask.folderItemData.isOwner}` from the folder item path.
+
+### Step 5: Remove All Fallback Dialog Code
+
+**File: `src/components/GamePlanCard.tsx`**
+
+Delete:
+- The entire fallback branch (lines 2462-2849): the inline `<Dialog>` with its own header, exercises, notes, schedule, time picker, and action buttons
+- The `handleFolderCheckboxToggle` function (lines 2485-2512) -- the unified path already uses `onToggleCheckbox` wired to `saveFolderCheckboxState`
+- The `handleFolderSaveTime` and `handleFolderRemoveTime` functions (lines 2514-2526) -- handled by `CustomActivityDetailDialog`'s built-in time picker
+- The `showFolderTimePicker` and `tempTime`/`tempReminder` state for folder items (already managed internally by the dialog)
+- The `folderSavingFieldIds` state -- the dialog manages its own saving indicators
+
+### Step 6: Clean Up Unused State
+
+**File: `src/components/GamePlanCard.tsx`**
+
+Remove state variables that only existed for the fallback dialog:
+- `showFolderTimePicker`
+- `folderSavingFieldIds` 
+- Related `tempTime`/`tempReminder` usage specific to folder items
+
+Keep `folderCheckboxStates` since it's still used to initialize the pseudo-log's `performance_data`.
 
 ---
 
 ## Technical Details
 
-### Database Migration
-
-```text
-ALTER TABLE activity_folder_items 
-ADD COLUMN template_snapshot jsonb DEFAULT NULL;
-```
-
-### Updated Import Logic (`ActivityPickerDialog.tsx`)
-
-The `handleImport` function changes from:
-
-```text
-{
-  title, description, item_type, duration_minutes, exercises
-}
-```
-
-To:
-
-```text
-{
-  title, description, item_type, duration_minutes, exercises,
-  template_snapshot: {
-    icon, color, activity_type, intensity,
-    meals, custom_fields, intervals, 
-    embedded_running_sessions, duration_minutes
-  }
-}
-```
-
-### Dialog Rendering Decision (`GamePlanCard.tsx`)
-
-```text
-if (folderItem has template_snapshot) {
-  -> Build a pseudo-template from snapshot
-  -> Render using CustomActivityDetailDialog layout
-     (vitamins, supplements, exercises, custom fields, 
-      correct icon/color, progress badge)
-} else {
-  -> Use current folder item dialog (for manually created items)
-}
-```
-
 ### Files to Modify
 
 | File | Change |
 |------|--------|
-| Database migration | Add `template_snapshot` JSONB column |
-| `src/types/activityFolder.ts` | Add `template_snapshot` to `ActivityFolderItem` |
-| `src/components/folders/ActivityPickerDialog.tsx` | Copy full template data into `template_snapshot` on import |
-| `src/components/GamePlanCard.tsx` | When `template_snapshot` exists, render folder item dialog using `CustomActivityDetailDialog` layout with full checkboxes, icon, color |
-| `src/hooks/useGamePlan.ts` | Pass `template_snapshot` through `FolderGamePlanTask` so dialog can access it |
+| `src/components/CustomActivityDetailDialog.tsx` | Add optional `categoryLabel` and `hideEdit` props |
+| `src/components/GamePlanCard.tsx` | Remove fallback dialog; route all folder items through pseudo-template + CustomActivityDetailDialog; add exercise mapper function; remove unused state |
+
+### Unified Flow (After Change)
+
+```text
+User taps folder item on Game Plan
+  -> handleTaskClick sets selectedFolderTask + folderLoggerOpen
+  -> IIFE block at line 2323 runs
+  -> Finds matching folderTask for item data
+  -> Builds pseudoTemplate from:
+     - template_snapshot (if exists) OR raw item fields
+     - folderColor, folderIcon from folder metadata
+     - exercises mapped to Exercise[] format
+  -> Builds pseudoLog with performanceData.checkboxStates
+  -> Renders CustomActivityDetailDialog with:
+     - categoryLabel = folderName
+     - hideEdit = !isOwner
+     - onToggleCheckbox wired to saveFolderCheckboxState
+     - onComplete wired to toggleFolderItemCompletion
+     - onSkipTask wired to handleSkipTask
+```
+
+### What Users Will See
+
+- Folder items (with or without snapshot) render the exact same dialog as custom activities
+- Same colored header, same icon box, same progress badge
+- Same checklist items with green checkboxes and line-through
+- Same scheduled time picker with reminder selector
+- Same Edit / Mark Complete / Skip for Today button layout
+- Log Sets appears only for exercise/skill_work types
+- Folder name shown as category label instead of activity type
 
