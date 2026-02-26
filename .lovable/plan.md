@@ -1,66 +1,68 @@
 
 
-# Fix: Allow Editing and Scheduling of Imported Activities
+# Fix: Scroll Issues and Add Save Button in Folder Detail Dialog
 
-## Problem
+## Problem 1: Cannot Scroll When Editing a Folder
 
-When importing activities from the picker, they are saved immediately to the folder without giving the user a chance to edit the title, set assigned days, pick specific dates, set cycle week, or add notes. The user expects imported activities to pre-fill the editor form so they can customize scheduling before saving -- just like creating a new item manually.
+The `FolderDetailDialog` uses a Radix Dialog with `max-h-[85vh] overflow-y-auto` on the `DialogContent`. However, Radix Dialog's content uses `fixed` positioning with `translate(-50%, -50%)` centering, which can cause scroll issues -- especially on mobile where touch events may get intercepted. The content overflows when there are many items plus the editor form at the bottom.
 
-## Solution
+**Fix**: Convert the dialog layout to use a flex column with a scrollable body section, and ensure the dialog content properly handles overflow with `-webkit-overflow-scrolling: touch` for mobile. Also add `overscrollBehavior: contain` to prevent scroll chaining.
 
-Change the import flow so that selected activities **pre-fill the editor form** instead of saving immediately. When multiple activities are selected, they are queued and the user edits/saves each one in sequence.
+## Problem 2: No Prominent Save Button
 
----
+The current "Add Item" button is small and labeled ambiguously. Users importing activities or creating new ones need a clear, prominent **Save** button.
 
-## How It Works
-
-1. User clicks "Import from Activities" and selects one or more activities
-2. Instead of saving immediately, the selected activities are placed in an **import queue**
-3. The first queued activity's data (title, description, type, duration) pre-fills the editor form fields
-4. User can now adjust the schedule (assigned days, specific dates, cycle week, notes, etc.)
-5. User clicks "Add Item" to save -- the next queued activity then fills the form automatically
-6. A small badge shows how many remain in the queue (e.g., "Importing 2 of 3")
-7. User can cancel the remaining queue at any time
+**Fix**: Replace the small `Plus` icon button with a more prominent Save-styled button. Use a `Save` icon (from lucide-react) alongside clear text like "Save Item" (or "Save & Next" during imports). Make it visually distinct with the default primary variant.
 
 ---
 
 ## Changes
 
+### File: `src/components/folders/FolderDetailDialog.tsx`
+
+- Change the dialog content structure to use a flex column layout with a scrollable middle section
+- Add `onPointerDownOutside` handler to prevent accidental closes during scroll
+- Structure: fixed header (title) at top, scrollable body in the middle, and the editor/footer pinned at the bottom so it's always visible
+
 ### File: `src/components/folders/FolderItemEditor.tsx`
 
-- Add an `importQueue` state (`Partial<ActivityFolderItem>[]`) to hold pending imported items
-- Change the `onImport` callback: instead of calling `onAdd` in a loop, set the queue with all selected items
-- Add a `useEffect` that watches the queue: when items exist and the form is empty, pop the first item and fill all form fields (title, description, itemType, durationMinutes)
-- Show a small info banner when the queue is active: "Importing 1 of N -- edit and click Add Item to save"
-- After the user clicks "Add Item" and the item saves successfully, auto-fill the next queued item
-- Add a "Skip" or "Cancel Import" button to clear the remaining queue
-- The existing "Add Item" button text changes to "Add and Next" when more items remain in the queue
-
-### File: `src/components/folders/ActivityPickerDialog.tsx`
-
-No changes needed -- it already returns the selected items via `onImport`. The behavior change is entirely in `FolderItemEditor`.
+- Replace the `Plus` icon with a `Save` icon from lucide-react
+- Change button text from "Add Item" to **"Save Item"** and from "Add & Next" to **"Save & Next"**
+- Make the save button more prominent (default size instead of `sm`, or at minimum ensure it stands out visually)
 
 ---
 
 ## Technical Details
 
-### New State in FolderItemEditor
+### Dialog Layout (FolderDetailDialog.tsx)
+
+The current flat layout puts everything inside one `overflow-y-auto` container. The fix restructures to:
 
 ```text
-importQueue: Partial<ActivityFolderItem>[]   -- items waiting to be edited and saved
-importTotal: number                          -- total count for "X of Y" display
+DialogContent (flex flex-col, max-h-[85vh])
+  +-- DialogHeader (flex-shrink-0, sticky top)
+  +-- Scrollable body (flex-1 overflow-y-auto, -webkit-overflow-scrolling: touch)
+  |     +-- Description
+  |     +-- Coach edit toggle
+  |     +-- Progress bar
+  |     +-- Items list
+  +-- Editor section (flex-shrink-0, border-top) -- always visible at bottom
 ```
 
-### Flow Logic
+This ensures:
+- The items list scrolls independently
+- The editor (with the save button) is always visible at the bottom
+- Touch scrolling works properly on mobile
 
-1. `onImport` callback sets `importQueue` and `importTotal`
-2. `useEffect` on `importQueue`: if queue has items and title is empty, shift the first item and populate form fields
-3. On successful `handleAdd`, if queue still has items, populate next item into form
-4. "Cancel Import" clears the queue and resets the form
+### Save Button (FolderItemEditor.tsx)
+
+- Import `Save` from lucide-react (replace `Plus`)
+- Button labels: "Save Item" (normal), "Save & Next" (during import queue), "Saving..." (while saving)
+- Keep the button disabled when title is empty or saving is in progress
 
 ### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/components/folders/FolderItemEditor.tsx` | Add import queue logic, pre-fill form from queue, show queue progress banner |
-
+| `src/components/folders/FolderDetailDialog.tsx` | Restructure dialog to flex layout with scrollable body and pinned editor |
+| `src/components/folders/FolderItemEditor.tsx` | Replace Plus with Save icon, rename button text to "Save Item" / "Save & Next" |
