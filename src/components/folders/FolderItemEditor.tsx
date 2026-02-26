@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Switch } from '@/components/ui/switch';
 import { ActivityFolderItem, ITEM_TYPES, DAY_LABELS } from '@/types/activityFolder';
 import { Plus, CalendarIcon, Library } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ActivityPickerDialog } from './ActivityPickerDialog';
@@ -204,8 +205,13 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
             onOpenChange={setPickerOpen}
             sport={sport}
             onImport={async (items) => {
+              let count = 0;
               for (const item of items) {
-                await onAdd(item);
+                const result = await onAdd(item);
+                if (result) count++;
+              }
+              if (count > 0) {
+                toast.success(`${count} activit${count === 1 ? 'y' : 'ies'} imported successfully`);
               }
             }}
           />
