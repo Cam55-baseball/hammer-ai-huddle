@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { ActivityFolderItem, ITEM_TYPES, DAY_LABELS } from '@/types/activityFolder';
-import { Plus, CalendarIcon, Library, X } from 'lucide-react';
+import { Save, CalendarIcon, Library, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -237,9 +237,9 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
         )}
 
         <div className="flex gap-2">
-          <Button onClick={handleAdd} disabled={!title.trim() || saving} size="sm" className="gap-1">
-            <Plus className="h-3.5 w-3.5" />
-            {saving ? 'Adding...' : importQueue.length > 0 ? 'Add & Next' : 'Add Item'}
+          <Button onClick={handleAdd} disabled={!title.trim() || saving} className="gap-1">
+            <Save className="h-4 w-4" />
+            {saving ? 'Saving...' : importQueue.length > 0 ? 'Save & Next' : 'Save Item'}
           </Button>
           {sport && importTotal === 0 && (
             <Button variant="outline" size="sm" className="gap-1" onClick={() => setPickerOpen(true)}>
