@@ -115,7 +115,12 @@ export default function Profile() {
     social_website_2: "",
     social_website_3: "",
     social_website_4: "",
-    social_website_5: ""
+    social_website_5: "",
+    currently_in_high_school: false,
+    sat_score: "",
+    act_score: "",
+    gpa: "",
+    ncaa_id: ""
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -289,7 +294,12 @@ export default function Profile() {
         social_website_2: data.social_website_2 || "",
         social_website_3: data.social_website_3 || "",
         social_website_4: data.social_website_4 || "",
-        social_website_5: data.social_website_5 || ""
+        social_website_5: data.social_website_5 || "",
+        currently_in_high_school: data.currently_in_high_school || false,
+        sat_score: data.sat_score?.toString() || "",
+        act_score: data.act_score?.toString() || "",
+        gpa: data.gpa?.toString() || "",
+        ncaa_id: data.ncaa_id || ""
       });
       setAvatarPreview(data.avatar_url);
     } catch (error) {
@@ -427,6 +437,11 @@ export default function Profile() {
         updateData.mlb_affiliate = editForm.mlb_affiliate || null;
         updateData.independent_league = editForm.independent_league || null;
         updateData.is_foreign_player = editForm.is_foreign_player;
+        updateData.currently_in_high_school = editForm.currently_in_high_school;
+        updateData.sat_score = editForm.sat_score ? parseInt(editForm.sat_score) : null;
+        updateData.act_score = editForm.act_score ? parseInt(editForm.act_score) : null;
+        updateData.gpa = editForm.gpa ? parseFloat(editForm.gpa) : null;
+        updateData.ncaa_id = editForm.ncaa_id || null;
       } else if (userRole === 'scout' || userRole === 'admin') {
         updateData.position = editForm.position;
         updateData.team_affiliation = editForm.team_affiliation;
@@ -714,6 +729,7 @@ export default function Profile() {
               
               {/* Player-Specific Info */}
               {isPlayer && (
+                <>
                 <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
                   {profile?.height && (
                     <div>
@@ -820,6 +836,40 @@ export default function Profile() {
                     </div>
                   )}
                 </div>
+                
+                {/* Academic & NCAA Info */}
+                {(profile?.sat_score || profile?.act_score || profile?.gpa || profile?.ncaa_id) && (
+                  <div className="mt-4 p-3 border border-border rounded-lg bg-muted/10">
+                    <Label className="text-sm font-semibold">{t('profile.academicNcaaInfo')}</Label>
+                    <div className="grid grid-cols-2 gap-3 mt-2 text-sm">
+                      {profile?.sat_score && (
+                        <div>
+                          <Label className="text-xs text-muted-foreground">{t('profile.satScore')}</Label>
+                          <p>{profile.sat_score}</p>
+                        </div>
+                      )}
+                      {profile?.act_score && (
+                        <div>
+                          <Label className="text-xs text-muted-foreground">{t('profile.actScore')}</Label>
+                          <p>{profile.act_score}</p>
+                        </div>
+                      )}
+                      {profile?.gpa && (
+                        <div>
+                          <Label className="text-xs text-muted-foreground">{t('profile.gpa')}</Label>
+                          <p>{profile.gpa}</p>
+                        </div>
+                      )}
+                      {profile?.ncaa_id && (
+                        <div>
+                          <Label className="text-xs text-muted-foreground">{t('profile.ncaaId')}</Label>
+                          <p>{profile.ncaa_id}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                </>
               )}
               
               {/* Coach/Scout Info */}
@@ -1333,6 +1383,98 @@ export default function Profile() {
                           onCheckedChange={(checked) => setEditForm({ ...editForm, is_foreign_player: checked })}
                         />
                         <Label htmlFor="is_foreign_player">{t('profile.isForeignPlayer')}</Label>
+                      </div>
+
+                      {/* High School & Academic Fields */}
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="currently_in_high_school"
+                            checked={editForm.currently_in_high_school}
+                            onCheckedChange={(checked) => setEditForm({ ...editForm, currently_in_high_school: checked })}
+                          />
+                          <Label htmlFor="currently_in_high_school">{t('profile.currentlyInHighSchool')}</Label>
+                        </div>
+
+                        {editForm.currently_in_high_school && (
+                          <div className="space-y-3 pl-4 border-l-2 border-primary/20">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-2">
+                                <Label htmlFor="sat_score">{t('profile.satScore')}</Label>
+                                <Input
+                                  id="sat_score"
+                                  type="number"
+                                  value={editForm.sat_score}
+                                  onChange={(e) => setEditForm({ ...editForm, sat_score: e.target.value })}
+                                  placeholder="400-1600"
+                                  min={400}
+                                  max={1600}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="act_score">{t('profile.actScore')}</Label>
+                                <Input
+                                  id="act_score"
+                                  type="number"
+                                  value={editForm.act_score}
+                                  onChange={(e) => setEditForm({ ...editForm, act_score: e.target.value })}
+                                  placeholder="1-36"
+                                  min={1}
+                                  max={36}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="gpa">{t('profile.gpa')}</Label>
+                              <Input
+                                id="gpa"
+                                type="number"
+                                value={editForm.gpa}
+                                onChange={(e) => setEditForm({ ...editForm, gpa: e.target.value })}
+                                placeholder="0.00-5.00"
+                                min={0}
+                                max={5}
+                                step={0.01}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="ncaa_id">{t('profile.ncaaId')}</Label>
+                              <Input
+                                id="ncaa_id"
+                                value={editForm.ncaa_id}
+                                onChange={(e) => setEditForm({ ...editForm, ncaa_id: e.target.value })}
+                                placeholder={t('profile.ncaaIdPlaceholder')}
+                              />
+                              <div className="p-3 bg-muted/40 rounded-md text-xs text-muted-foreground space-y-1">
+                                <p className="font-medium text-foreground">{t('profile.ncaaInfoTitle')}</p>
+                                <p>{t('profile.ncaaInfoDescription')}</p>
+                                <a href="https://web3.ncaa.org/ecwr3/" target="_blank" rel="noopener noreferrer" className="text-primary underline inline-block mt-1">
+                                  {t('profile.ncaaSignupLink')}
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* NCAA ID for college players (when not in high school) */}
+                        {editForm.enrolled_in_college && !editForm.currently_in_high_school && (
+                          <div className="space-y-2 pl-4 border-l-2 border-primary/20">
+                            <Label htmlFor="ncaa_id_college">{t('profile.ncaaId')}</Label>
+                            <Input
+                              id="ncaa_id_college"
+                              value={editForm.ncaa_id}
+                              onChange={(e) => setEditForm({ ...editForm, ncaa_id: e.target.value })}
+                              placeholder={t('profile.ncaaIdPlaceholder')}
+                            />
+                            <div className="p-3 bg-muted/40 rounded-md text-xs text-muted-foreground space-y-1">
+                              <p className="font-medium text-foreground">{t('profile.ncaaInfoTitle')}</p>
+                              <p>{t('profile.ncaaInfoDescription')}</p>
+                              <a href="https://web3.ncaa.org/ecwr3/" target="_blank" rel="noopener noreferrer" className="text-primary underline inline-block mt-1">
+                                {t('profile.ncaaSignupLink')}
+                              </a>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Experience Level */}

@@ -61,6 +61,11 @@ const ProfileSetup = () => {
   const [independentLeague, setIndependentLeague] = useState("");
   const [isForeignPlayer, setIsForeignPlayer] = useState(false);
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
+  const [currentlyInHighSchool, setCurrentlyInHighSchool] = useState(false);
+  const [satScore, setSatScore] = useState("");
+  const [actScore, setActScore] = useState("");
+  const [gpa, setGpa] = useState("");
+  const [ncaaId, setNcaaId] = useState("");
   
   // Coach/Scout-specific fields
   const [yearsAffiliated, setYearsAffiliated] = useState("");
@@ -221,6 +226,11 @@ const ProfileSetup = () => {
         profileData.mlb_affiliate = mlbAffiliate || null;
         profileData.independent_league = independentLeague || null;
         profileData.is_foreign_player = isForeignPlayer;
+        profileData.currently_in_high_school = currentlyInHighSchool;
+        profileData.sat_score = satScore ? parseInt(satScore) : null;
+        profileData.act_score = actScore ? parseInt(actScore) : null;
+        profileData.gpa = gpa ? parseFloat(gpa) : null;
+        profileData.ncaa_id = ncaaId || null;
       } else if (isCoachOrScout) {
         profileData.position = position;
         profileData.team_affiliation = teamAffiliation;
@@ -517,6 +527,16 @@ const ProfileSetup = () => {
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
+                      id="currentlyInHighSchool"
+                      checked={currentlyInHighSchool}
+                      onChange={(e) => setCurrentlyInHighSchool(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="currentlyInHighSchool" className="cursor-pointer">{t('profileSetup.currentlyInHighSchool')}</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
                       id="enrolledInCollege"
                       checked={enrolledInCollege}
                       onChange={(e) => setEnrolledInCollege(e.target.checked)}
@@ -555,6 +575,100 @@ const ProfileSetup = () => {
                     <Label htmlFor="isForeignPlayer" className="cursor-pointer">{t('profileSetup.internationalPlayer')}</Label>
                   </div>
                 </div>
+
+                {/* Academic Fields - High School */}
+                {currentlyInHighSchool && (
+                  <div className="space-y-3 p-4 border border-border rounded-lg bg-muted/20">
+                    <Label className="text-sm font-semibold">{t('profileSetup.academicInfo')}</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="satScore">{t('profileSetup.satScore')}</Label>
+                        <Input
+                          id="satScore"
+                          type="number"
+                          value={satScore}
+                          onChange={(e) => setSatScore(e.target.value)}
+                          placeholder="400-1600"
+                          min={400}
+                          max={1600}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="actScore">{t('profileSetup.actScore')}</Label>
+                        <Input
+                          id="actScore"
+                          type="number"
+                          value={actScore}
+                          onChange={(e) => setActScore(e.target.value)}
+                          placeholder="1-36"
+                          min={1}
+                          max={36}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="gpa">{t('profileSetup.gpa')}</Label>
+                      <Input
+                        id="gpa"
+                        type="number"
+                        value={gpa}
+                        onChange={(e) => setGpa(e.target.value)}
+                        placeholder="0.00-5.00"
+                        min={0}
+                        max={5}
+                        step={0.01}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ncaaId">{t('profileSetup.ncaaId')}</Label>
+                      <Input
+                        id="ncaaId"
+                        value={ncaaId}
+                        onChange={(e) => setNcaaId(e.target.value)}
+                        placeholder={t('profileSetup.ncaaIdPlaceholder')}
+                      />
+                      <div className="mt-2 p-3 bg-muted/40 rounded-md text-xs text-muted-foreground space-y-1">
+                        <p className="font-medium text-foreground">{t('profileSetup.ncaaInfoTitle')}</p>
+                        <p>{t('profileSetup.ncaaInfoDescription')}</p>
+                        <a
+                          href="https://web3.ncaa.org/ecwr3/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline inline-block mt-1"
+                        >
+                          {t('profileSetup.ncaaSignupLink')}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* NCAA ID - College Only (when not already showing from high school) */}
+                {enrolledInCollege && !currentlyInHighSchool && (
+                  <div className="space-y-3 p-4 border border-border rounded-lg bg-muted/20">
+                    <div>
+                      <Label htmlFor="ncaaIdCollege">{t('profileSetup.ncaaId')}</Label>
+                      <Input
+                        id="ncaaIdCollege"
+                        value={ncaaId}
+                        onChange={(e) => setNcaaId(e.target.value)}
+                        placeholder={t('profileSetup.ncaaIdPlaceholder')}
+                      />
+                      <div className="mt-2 p-3 bg-muted/40 rounded-md text-xs text-muted-foreground space-y-1">
+                        <p className="font-medium text-foreground">{t('profileSetup.ncaaInfoTitle')}</p>
+                        <p>{t('profileSetup.ncaaInfoDescription')}</p>
+                        <a
+                          href="https://web3.ncaa.org/ecwr3/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline inline-block mt-1"
+                        >
+                          {t('profileSetup.ncaaSignupLink')}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {isProfessional && (
                   <>

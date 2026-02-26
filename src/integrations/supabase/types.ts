@@ -2592,6 +2592,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          act_score: number | null
           activity_level: string | null
           avatar_url: string | null
           batting_side: Database["public"]["Enums"]["batting_side"] | null
@@ -2604,11 +2605,13 @@ export type Database = {
           contact_email: string | null
           created_at: string | null
           credentials: string[] | null
+          currently_in_high_school: boolean | null
           date_of_birth: string | null
           enrolled_in_college: boolean | null
           experience_level: string | null
           first_name: string | null
           full_name: string | null
+          gpa: number | null
           graduation_year: number | null
           height: string | null
           height_inches: number | null
@@ -2622,10 +2625,12 @@ export type Database = {
           is_switch_hitter: boolean | null
           last_name: string | null
           mlb_affiliate: string | null
+          ncaa_id: string | null
           position: string | null
           preferred_language: string | null
           primary_batting_side: string | null
           primary_throwing_hand: string | null
+          sat_score: number | null
           sex: string | null
           social_facebook: string | null
           social_instagram: string | null
@@ -2647,6 +2652,7 @@ export type Database = {
           years_affiliated: number | null
         }
         Insert: {
+          act_score?: number | null
           activity_level?: string | null
           avatar_url?: string | null
           batting_side?: Database["public"]["Enums"]["batting_side"] | null
@@ -2659,11 +2665,13 @@ export type Database = {
           contact_email?: string | null
           created_at?: string | null
           credentials?: string[] | null
+          currently_in_high_school?: boolean | null
           date_of_birth?: string | null
           enrolled_in_college?: boolean | null
           experience_level?: string | null
           first_name?: string | null
           full_name?: string | null
+          gpa?: number | null
           graduation_year?: number | null
           height?: string | null
           height_inches?: number | null
@@ -2677,10 +2685,12 @@ export type Database = {
           is_switch_hitter?: boolean | null
           last_name?: string | null
           mlb_affiliate?: string | null
+          ncaa_id?: string | null
           position?: string | null
           preferred_language?: string | null
           primary_batting_side?: string | null
           primary_throwing_hand?: string | null
+          sat_score?: number | null
           sex?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
@@ -2702,6 +2712,7 @@ export type Database = {
           years_affiliated?: number | null
         }
         Update: {
+          act_score?: number | null
           activity_level?: string | null
           avatar_url?: string | null
           batting_side?: Database["public"]["Enums"]["batting_side"] | null
@@ -2714,11 +2725,13 @@ export type Database = {
           contact_email?: string | null
           created_at?: string | null
           credentials?: string[] | null
+          currently_in_high_school?: boolean | null
           date_of_birth?: string | null
           enrolled_in_college?: boolean | null
           experience_level?: string | null
           first_name?: string | null
           full_name?: string | null
+          gpa?: number | null
           graduation_year?: number | null
           height?: string | null
           height_inches?: number | null
@@ -2732,10 +2745,12 @@ export type Database = {
           is_switch_hitter?: boolean | null
           last_name?: string | null
           mlb_affiliate?: string | null
+          ncaa_id?: string | null
           position?: string | null
           preferred_language?: string | null
           primary_batting_side?: string | null
           primary_throwing_hand?: string | null
+          sat_score?: number | null
           sex?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
