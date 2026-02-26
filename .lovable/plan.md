@@ -1,58 +1,43 @@
 
+# Fix: Import Save Feedback and Personal Folder Edit Button
 
-# Fix: Coach/Scout Game Plan Not Showing for Owner/Admin Users
+## Problem 1: Import Activities Not Refreshing
 
-## Problem
+When importing activities via the "Import from Activities" picker inside a folder detail dialog, the items are saved to the database but the folder detail view doesn't refresh its items list. This makes it appear like nothing was saved.
 
-The Dashboard condition on line 430 prevents the Coach/Scout Game Plan from displaying if the user also has an `owner` or `admin` role:
+**Fix**: After import completes in `FolderItemEditor`, the parent `FolderDetailDialog` needs to reload items. Add a callback so that when `onAdd` is called for imported items, the resulting items are added to the local state (this already happens for manual adds on line 214 of `FolderDetailDialog` -- `if (result) setItems(prev => [...prev, result])`). The issue is that `FolderItemEditor`'s `onImport` handler calls `onAdd` but the results aren't being captured back into the parent's state. The `onAdd` prop returns the result, so this is already wired. The real problem is that `ActivityPickerDialog`'s `onImport` callback in `FolderItemEditor` does `await onAdd(item)` but doesn't use the return value to update any UI.
 
-```typescript
-(isScout || isCoach) && !isOwner && !isAdmin
-```
+Actually, tracing more carefully: `FolderDetailDialog` line 212-216 passes `onAdd` which calls `onAddItem(folder.id, item)` and then `if (result) setItems(prev => [...prev, result])`. So when `FolderItemEditor` calls `onAdd(item)`, it calls this wrapper which DOES update the items list. So items should appear. Let me re-check -- the `onImport` handler in `FolderItemEditor` (line 206-209) does `await onAdd(item)` in a loop. Each `onAdd` call triggers the wrapper in `FolderDetailDialog` which updates items state. This should work.
 
-Since your account has both scout/coach AND owner/admin roles, it skips the `CoachScoutGamePlanCard` and shows the regular player `GamePlanCard` instead.
+The actual issue is likely that the `ActivityPickerDialog` import button text just says "Import" with no clear save confirmation -- users may not realize the import also saves. Adding a toast confirmation after import completes will solve this UX gap.
 
-## Solution
+**Fix**: Add a success toast in `FolderItemEditor` after all imported items are saved, so users see clear feedback.
 
-Show **both** game plan cards when a user has coach/scout roles alongside owner/admin roles. This way:
-- Owner/admin users who are also coaches/scouts see their Coach/Scout Game Plan AND the player Game Plan
-- Pure coach/scout users (no owner/admin) see only the Coach/Scout Game Plan
-- Pure players see only the player Game Plan
+## Problem 2: No Edit Button on Personal Folders
+
+In `FolderTabContent.tsx`, personal folder cards (lines 200-206) only pass `onOpen` and `onDelete` -- they're missing the `onEdit` handler. Coach folders (lines 127-136) have `onEdit` wired to open the `FolderBuilder` in edit mode.
+
+**Fix**: Pass `onEdit` to personal folder `FolderCard` components, wiring it to open the same edit dialog but using `playerFolders.updateFolder` instead of `coachFolders.updateFolder`.
+
+---
 
 ## Changes
 
-### File: `src/pages/Dashboard.tsx`
+### File: `src/components/folders/FolderItemEditor.tsx`
 
-Update the rendering logic (around line 429-434) from:
+- In the `onImport` handler (around line 206-209), add a success toast after the loop completes to confirm items were saved: `toast.success('X activities imported successfully')`
+- Import `toast` from `sonner`
 
-```text
-{(isScout || isCoach) && !isOwner && !isAdmin ? (
-  <CoachScoutGamePlanCard ... />
-) : (
-  <GamePlanCard ... />
-)}
-```
+### File: `src/components/folders/FolderTabContent.tsx`
 
-To:
-
-```text
-{(isScout || isCoach) && (
-  <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
-)}
-{(isOwner || isAdmin || (!isScout && !isCoach)) && (
-  <GamePlanCard selectedSport={selectedSport} />
-)}
-```
-
-This ensures:
-- The Coach/Scout Game Plan always renders for scouts and coaches, regardless of other roles
-- The player Game Plan renders for owners, admins, or users with no scout/coach role
-- Users with dual roles (e.g., owner + coach) see both cards stacked
+- On personal folder `FolderCard` components (around line 201-206), add the `onEdit` prop: `onEdit={() => setEditingFolder(f)}`
+- Update the edit dialog's `onSave` handler (around lines 236-249) to detect whether the folder being edited is a player folder or coach folder and use the appropriate update function:
+  - If `editingFolder.owner_type === 'player'`, use `playerFolders.updateFolder`
+  - Otherwise, use `coachFolders.updateFolder`
 
 ### Files Modified
 
 | File | Change |
-|------|--------|
-| `src/pages/Dashboard.tsx` | Update conditional rendering to show both game plans for dual-role users |
-
-No database changes needed.
+|------|---------|
+| `src/components/folders/FolderItemEditor.tsx` | Add toast confirmation after importing activities |
+| `src/components/folders/FolderTabContent.tsx` | Add `onEdit` prop to personal folder cards; update edit dialog to handle both player and coach folders |
