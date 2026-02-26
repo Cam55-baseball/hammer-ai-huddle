@@ -62,7 +62,7 @@ const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, refreshCustomActivities } = useGamePlan(selectedSport);
+  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress, canGenerateRecap, hasMissedRecap, waitingForProgressReports } = useRecapCountdown();
   const { pendingActivities, pendingCount, acceptActivity, rejectActivity, refetch: refetchPending } = useReceivedActivities();
   const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
@@ -488,6 +488,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   }, [tasksKey, sortMode, todayLocked, isDateLocked, getOrderKeysForDate, getGamePlanOrderKey]);
 
   const handleTaskClick = (task: GamePlanTask) => {
+    // Handle folder items - toggle completion directly
+    if (task.folderItemData) {
+      toggleFolderItemCompletion(task.folderItemData.itemId);
+      toast.success(task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
+      return;
+    }
+
     // Handle custom activities - open detail dialog
     if (task.taskType === 'custom' && task.customActivityData) {
       setSelectedCustomTask(task);
@@ -897,8 +904,8 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
     const trackingColors = colors.gamePlan.tracking;
     const texVisionColors = colors.gamePlan.texVision;
     
-    // Custom activity uses its own color
-    const customColor = task.customActivityData?.template.color || '#10b981';
+    // Custom activity / folder item uses its own color
+    const customColor = task.folderItemData?.folderColor || task.customActivityData?.template.color || '#10b981';
     const customColors = {
       background: hexToRgba(customColor, 0.15),
       border: hexToRgba(customColor, 0.5),
@@ -1069,7 +1076,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         
         {/* Status indicator - clickable for custom activities with prominent styling */}
         <button
-          onClick={(e) => { e.stopPropagation(); if (isCustom) handleCustomActivityToggle(task); }}
+          onClick={(e) => { e.stopPropagation(); if (task.folderItemData) { toggleFolderItemCompletion(task.folderItemData.itemId); toast.success(task.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete')); } else if (isCustom) handleCustomActivityToggle(task); }}
           disabled={!isCustom}
           className={cn(
             "flex-shrink-0 rounded-full flex items-center justify-center transition-all",
