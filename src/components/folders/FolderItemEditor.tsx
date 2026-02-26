@@ -9,12 +9,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { ActivityFolderItem, ITEM_TYPES, DAY_LABELS } from '@/types/activityFolder';
-import { Plus, CalendarIcon, Library } from 'lucide-react';
+import { Plus, CalendarIcon, Library, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ActivityPickerDialog } from './ActivityPickerDialog';
-
 interface FolderItemEditorProps {
   onAdd: (item: Partial<ActivityFolderItem>) => Promise<ActivityFolderItem | null>;
   cycleType?: string;
@@ -34,6 +33,20 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
   const [useSpecificDates, setUseSpecificDates] = useState(false);
   const [specificDates, setSpecificDates] = useState<Date[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [importQueue, setImportQueue] = useState<Partial<ActivityFolderItem>[]>([]);
+  const [importTotal, setImportTotal] = useState(0);
+
+  const fillFromItem = (item: Partial<ActivityFolderItem>) => {
+    setTitle(item.title || '');
+    setDescription(item.description || '');
+    setItemType(item.item_type || 'exercise');
+    setDurationMinutes(item.duration_minutes ? String(item.duration_minutes) : '');
+    setNotes(item.notes || '');
+    setAssignedDays([]);
+    setSpecificDates([]);
+    setUseSpecificDates(false);
+    setCycleWeek(1);
+  };
 
   const toggleDay = (day: number) => {
     setAssignedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort());
@@ -64,14 +77,39 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
       notes: notes.trim() || null,
     });
     if (result) {
-      setTitle('');
-      setDescription('');
-      setNotes('');
-      setDurationMinutes('');
-      setAssignedDays([]);
-      setSpecificDates([]);
+      // If there are more items in the import queue, fill the next one
+      if (importQueue.length > 0) {
+        const [next, ...rest] = importQueue;
+        fillFromItem(next);
+        setImportQueue(rest);
+        toast.success(`Saved! ${rest.length + 1} of ${importTotal} remaining`);
+      } else {
+        setTitle('');
+        setDescription('');
+        setNotes('');
+        setDurationMinutes('');
+        setAssignedDays([]);
+        setSpecificDates([]);
+        if (importTotal > 0) {
+          toast.success(`All ${importTotal} activities imported!`);
+          setImportTotal(0);
+        }
+      }
     }
     setSaving(false);
+  };
+
+  const cancelImport = () => {
+    setImportQueue([]);
+    setImportTotal(0);
+    setTitle('');
+    setDescription('');
+    setNotes('');
+    setDurationMinutes('');
+    setAssignedDays([]);
+    setSpecificDates([]);
+    setUseSpecificDates(false);
+    setCycleWeek(1);
   };
 
   return (
@@ -186,12 +224,24 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
           <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={1} className="min-h-[36px]" />
         </div>
 
+        {/* Import queue banner */}
+        {importTotal > 0 && (
+          <div className="flex items-center justify-between p-2 rounded-lg border bg-accent/50 text-xs">
+            <span className="font-medium text-accent-foreground">
+              Importing {importTotal - importQueue.length} of {importTotal} — edit & save each item
+            </span>
+            <Button variant="ghost" size="sm" className="h-6 gap-1 text-xs" onClick={cancelImport}>
+              <X className="h-3 w-3" /> Cancel
+            </Button>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <Button onClick={handleAdd} disabled={!title.trim() || saving} size="sm" className="gap-1">
             <Plus className="h-3.5 w-3.5" />
-            {saving ? 'Adding...' : 'Add Item'}
+            {saving ? 'Adding...' : importQueue.length > 0 ? 'Add & Next' : 'Add Item'}
           </Button>
-          {sport && (
+          {sport && importTotal === 0 && (
             <Button variant="outline" size="sm" className="gap-1" onClick={() => setPickerOpen(true)}>
               <Library className="h-3.5 w-3.5" />
               Import from Activities
@@ -205,14 +255,12 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
             onOpenChange={setPickerOpen}
             sport={sport}
             onImport={async (items) => {
-              let count = 0;
-              for (const item of items) {
-                const result = await onAdd(item);
-                if (result) count++;
-              }
-              if (count > 0) {
-                toast.success(`${count} activit${count === 1 ? 'y' : 'ies'} imported successfully`);
-              }
+              if (items.length === 0) return;
+              const [first, ...rest] = items;
+              fillFromItem(first);
+              setImportQueue(rest);
+              setImportTotal(items.length);
+              toast.info(`${items.length} activit${items.length === 1 ? 'y' : 'ies'} ready to edit — save each one`);
             }}
           />
         )}
