@@ -3816,6 +3816,8 @@
       "save": "Resultaten Opslaan",
       "metrics": {
         "bat_speed": "Knuppelsnelheid",
+        "bat_speed_left": "Knuppelsnelheid (L)",
+        "bat_speed_right": "Knuppelsnelheid (R)",
         "exit_velocity": "Slagsnelheid",
         "tee_exit_velocity": "Tee Slagsnelheid",
         "tee_exit_velocity_left": "Tee Slagsnelheid (L)",

@@ -5280,6 +5280,8 @@
       "save": "Save Test Results",
       "metrics": {
         "bat_speed": "Bat Speed",
+        "bat_speed_left": "Bat Speed (L)",
+        "bat_speed_right": "Bat Speed (R)",
         "exit_velocity": "Exit Velocity",
         "tee_exit_velocity": "Tee Exit Velocity",
         "tee_exit_velocity_left": "Tee Exit Velocity (L)",

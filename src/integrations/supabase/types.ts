@@ -998,6 +998,7 @@ export type Database = {
           folder_item_id: string
           id: string
           notes: string | null
+          performance_data: Json | null
           user_id: string
         }
         Insert: {
@@ -1008,6 +1009,7 @@ export type Database = {
           folder_item_id: string
           id?: string
           notes?: string | null
+          performance_data?: Json | null
           user_id: string
         }
         Update: {
@@ -1018,6 +1020,7 @@ export type Database = {
           folder_item_id?: string
           id?: string
           notes?: string | null
+          performance_data?: Json | null
           user_id?: string
         }
         Relationships: [

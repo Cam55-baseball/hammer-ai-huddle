@@ -1,0 +1,1 @@
+ALTER TABLE public.folder_item_completions ADD COLUMN IF NOT EXISTS performance_data jsonb DEFAULT '{}'::jsonb;

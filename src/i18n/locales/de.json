@@ -4698,6 +4698,8 @@
       "save": "Ergebnisse Speichern",
       "metrics": {
         "bat_speed": "Schlägergeschwindigkeit",
+        "bat_speed_left": "Schlägergeschwindigkeit (L)",
+        "bat_speed_right": "Schlägergeschwindigkeit (R)",
         "exit_velocity": "Abschlaggeschwindigkeit",
         "tee_exit_velocity": "Tee Abschlaggeschwindigkeit",
         "tee_exit_velocity_left": "Tee Abschlaggeschwindigkeit (L)",

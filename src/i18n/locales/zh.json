@@ -3787,6 +3787,8 @@
       "save": "保存测试结果",
       "metrics": {
         "bat_speed": "球棒速度",
+        "bat_speed_left": "球棒速度 (左)",
+        "bat_speed_right": "球棒速度 (右)",
         "exit_velocity": "击球速度",
         "tee_exit_velocity": "座架击球速度",
         "tee_exit_velocity_left": "座架击球速度 (左)",

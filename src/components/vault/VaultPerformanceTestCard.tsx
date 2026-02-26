@@ -42,6 +42,7 @@ const TEST_TYPES_BY_SPORT = {
       'ten_yard_dash',
       'tee_exit_velocity',
       'max_tee_distance',
+      'bat_speed',
       'sl_broad_jump_left',
       'sl_broad_jump_right',
       'sl_lateral_broad_jump_left',
@@ -78,6 +79,7 @@ const TEST_TYPES_BY_SPORT = {
       'ten_yard_dash',
       'tee_exit_velocity',
       'max_tee_distance',
+      'bat_speed',
       'sl_broad_jump_left',
       'sl_broad_jump_right',
       'sl_lateral_broad_jump_left',
@@ -143,6 +145,11 @@ const TEST_METRICS: Record<string, { unit: string; higher_better: boolean }> = {
   tee_exit_velocity: { unit: 'mph', higher_better: true },
   tee_exit_velocity_left: { unit: 'mph', higher_better: true },
   tee_exit_velocity_right: { unit: 'mph', higher_better: true },
+  
+  // Bat speed metrics (mph)
+  bat_speed: { unit: 'mph', higher_better: true },
+  bat_speed_left: { unit: 'mph', higher_better: true },
+  bat_speed_right: { unit: 'mph', higher_better: true },
 };
 
 // Define all bilateral metric groups for grouped UI rendering (leg-based)
@@ -156,6 +163,7 @@ const BILATERAL_METRIC_GROUPS: Record<string, [string, string]> = {
 const SWITCH_HITTER_BILATERAL_GROUPS: Record<string, [string, string]> = {
   tee_exit_velocity: ['tee_exit_velocity_left', 'tee_exit_velocity_right'],
   max_tee_distance: ['max_tee_distance_left', 'max_tee_distance_right'],
+  bat_speed: ['bat_speed_left', 'bat_speed_right'],
 };
 
 // Both-handed thrower bilateral groups (throwing hand = "B")
