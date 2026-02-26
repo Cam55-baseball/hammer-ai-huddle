@@ -427,9 +427,10 @@ export default function Dashboard() {
         </Card>
 
         {/* The Game Plan - Daily To-Do List (or Scout Game Plan for scouts-only) */}
-        {(isScout || isCoach) && !isOwner && !isAdmin ? (
+        {(isScout || isCoach) && (
           <CoachScoutGamePlanCard isCoach={isCoach} isScout={isScout} />
-        ) : (
+        )}
+        {(isOwner || isAdmin || (!isScout && !isCoach)) && (
           <GamePlanCard selectedSport={selectedSport} />
         )}
 
