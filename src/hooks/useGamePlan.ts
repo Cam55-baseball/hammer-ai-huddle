@@ -63,6 +63,7 @@ export interface GamePlanTask {
     folderId: string;
     folderName: string;
     folderColor: string;
+    folderIcon: string;
     itemId: string;
     placement: string;
     isOwner: boolean;
@@ -1195,6 +1196,7 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
         folderId: ft.folderId,
         folderName: ft.folderName,
         folderColor: ft.folderColor,
+        folderIcon: ft.folderIcon,
         itemId: ft.item.id,
         placement: ft.placement,
         isOwner: ft.isOwner,

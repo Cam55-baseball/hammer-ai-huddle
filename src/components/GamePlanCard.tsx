@@ -15,7 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles } from 'lucide-react';
+import { Check, Target, Clock, Trophy, Zap, Plus, ArrowUpDown, GripVertical, Star, Pencil, Utensils, CalendarDays, Lock, Unlock, Save, Bell, BellOff, Trash2, ChevronDown, ChevronUp, Eye, X, Undo2, UserCheck, Sparkles, Dumbbell, Info } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { getTodayDate } from '@/utils/dateUtils';
 import { CustomActivityDetailDialog, getAllCheckableIds } from '@/components/CustomActivityDetailDialog';
 import { TimeSettingsDrawer } from '@/components/TimeSettingsDrawer';
@@ -2281,102 +2282,199 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         }}
         showSkipOption={true}
       />
-      {/* Folder Item Performance Logger Dialog */}
+      {/* Folder Item Detail Dialog (Unified with Custom Activity layout) */}
       {selectedFolderTask?.folderItemData && (() => {
         const ft = folderTasks.find(ft => ft.item.id === selectedFolderTask.folderItemData!.itemId);
         const item = ft?.item;
         const exercises = item?.exercises as any[] | null;
+        const folderColor = selectedFolderTask.folderItemData.folderColor;
+        const folderIconKey = selectedFolderTask.folderItemData.folderIcon || 'clipboard';
+        const FolderIconComponent = getActivityIcon(folderIconKey);
+        const totalCheckable = exercises?.length || 0;
+
+        // Determine if performance logger should show
+        const showLogger = item?.item_type === 'exercise' || item?.item_type === 'skill_work' || (!exercises?.length && item?.item_type !== 'mobility' && item?.item_type !== 'recovery');
+
         return (
           <>
             <Dialog open={folderLoggerOpen} onOpenChange={setFolderLoggerOpen}>
-              <DialogContent className="max-w-sm max-h-[85vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
-                <DialogHeader>
-                  <div className="flex items-center justify-between">
-                    <DialogTitle className="text-base">{selectedFolderTask.titleKey}</DialogTitle>
-                    {selectedFolderTask.folderItemData.isOwner && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setFolderLoggerOpen(false); setFolderItemEditOpen(true); }}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: selectedFolderTask.folderItemData.folderColor }} />
-                    {selectedFolderTask.folderItemData.folderName}
-                  </div>
-                </DialogHeader>
-
-                {/* Metadata badges */}
-                <div className="flex flex-wrap gap-1.5">
-                  {item?.item_type && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">{item.item_type.replace('_', ' ')}</span>
-                  )}
-                  {item?.duration_minutes && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
-                  )}
+              <DialogContent className="sm:max-w-md p-0 overflow-hidden max-h-[90vh] flex flex-col">
+                {/* Colored Header */}
+                <div 
+                  className="p-6 pb-4 flex-shrink-0"
+                  style={{ backgroundColor: `${folderColor}20` }}
+                >
+                  <DialogHeader>
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className="p-3 rounded-xl"
+                        style={{ backgroundColor: folderColor }}
+                      >
+                        <FolderIconComponent className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <DialogTitle className="text-xl font-black text-foreground truncate">
+                            {selectedFolderTask.titleKey}
+                          </DialogTitle>
+                          {totalCheckable > 0 && (
+                            <Badge 
+                              variant="secondary"
+                              className="text-xs font-bold"
+                            >
+                              {totalCheckable}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: folderColor }} />
+                          {selectedFolderTask.folderItemData.folderName}
+                        </div>
+                      </div>
+                    </div>
+                  </DialogHeader>
                 </div>
 
-                {/* Description */}
-                {item?.description && (
-                  <p className="text-xs text-muted-foreground">{item.description}</p>
-                )}
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="p-6 pt-2 space-y-4">
+                    {/* Description */}
+                    {item?.description && (
+                      <p className="text-sm text-muted-foreground">{item.description}</p>
+                    )}
 
-                {/* Exercises */}
-                {exercises && exercises.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium">Exercises</p>
-                    <div className="space-y-1">
-                      {exercises.map((ex: any, idx: number) => (
-                        <div key={idx} className="text-xs text-muted-foreground pl-2 border-l-2 border-muted">
-                          <span className="font-medium text-foreground">{ex.name || `Exercise ${idx + 1}`}</span>
-                          {(ex.sets || ex.reps) && <span> — {ex.sets && `${ex.sets}x`}{ex.reps || ''}</span>}
-                          {ex.weight && <span>, {ex.weight}{ex.weight_unit || 'lbs'}</span>}
-                          {ex.duration && <span>, {ex.duration}</span>}
-                          {ex.notes && <p className="text-[10px] italic mt-0.5">{ex.notes}</p>}
+                    {/* Duration & Type badges */}
+                    <div className="flex flex-wrap gap-3">
+                      {item?.duration_minutes && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">{item.duration_minutes} min</span>
                         </div>
-                      ))}
+                      )}
+                      {item?.item_type && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
+                          <Dumbbell className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm font-medium capitalize">{item.item_type.replace('_', ' ')}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Exercises with checkboxes */}
+                    {exercises && exercises.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                          <Dumbbell className="h-4 w-4" />
+                          Exercises ({exercises.length})
+                        </h4>
+                        <div className="space-y-2">
+                          {exercises.map((ex: any, idx: number) => (
+                            <div key={idx} className="rounded-lg bg-muted p-3">
+                              <div className="flex items-start gap-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-medium text-sm">
+                                      {ex.name || `Exercise ${idx + 1}`}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground">
+                                    {ex.sets && <span>{ex.sets} sets</span>}
+                                    {ex.reps && <span>× {ex.reps} reps</span>}
+                                    {ex.weight && <span>@ {ex.weight} {ex.weight_unit || 'lbs'}</span>}
+                                    {ex.duration && <span>• {ex.duration}</span>}
+                                  </div>
+                                  {ex.notes && (
+                                    <p className="text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5">
+                                      <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                      <span>{ex.notes}</span>
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {item?.notes && (
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-foreground">Notes</h4>
+                        <p className="text-sm text-muted-foreground">{item.notes}</p>
+                      </div>
+                    )}
+
+                    {/* Schedule */}
+                    {(item?.assigned_days?.length || item?.specific_dates?.length) && (
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-foreground">Schedule</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {item.specific_dates && item.specific_dates.length > 0
+                            ? item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')
+                            : item.assigned_days && item.assigned_days.length > 0
+                              ? item.assigned_days.map(d => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', ')
+                              : null}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Performance Logger - conditional */}
+                    {item && showLogger && (
+                      <FolderItemPerformanceLogger
+                        item={item}
+                        onSave={async (data) => {
+                          await toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId, data);
+                          toast.success(t('customActivity.markedComplete'));
+                          setFolderLoggerOpen(false);
+                          refetch();
+                        }}
+                      />
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-3 pt-4 border-t">
+                      <div className="flex gap-3">
+                        {selectedFolderTask.folderItemData.isOwner && (
+                          <Button
+                            variant="outline"
+                            onClick={() => { setFolderLoggerOpen(false); setFolderItemEditOpen(true); }}
+                            className="flex-1 gap-2"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Edit Activity
+                          </Button>
+                        )}
+                        <Button
+                          onClick={() => {
+                            toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
+                            toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
+                            setFolderLoggerOpen(false);
+                          }}
+                          className={cn(
+                            "flex-1 gap-2 font-bold",
+                            selectedFolderTask.completed 
+                              ? "bg-muted text-muted-foreground hover:bg-muted" 
+                              : ""
+                          )}
+                          style={!selectedFolderTask.completed ? { backgroundColor: folderColor } : undefined}
+                        >
+                          <Check className="h-4 w-4" />
+                          {selectedFolderTask.completed ? 'Marked Complete' : 'Mark Complete'}
+                        </Button>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          handleSkipTask(selectedFolderTask.id);
+                          setFolderLoggerOpen(false);
+                        }}
+                        className="w-full gap-2 border-amber-500/50 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400 dark:border-amber-400/50"
+                      >
+                        <X className="h-4 w-4" />
+                        {t('gamePlan.skipForToday', 'Skip for Today')}
+                      </Button>
                     </div>
                   </div>
-                )}
-
-                {/* Notes */}
-                {item?.notes && (
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-medium">Notes</p>
-                    <p className="text-xs text-muted-foreground">{item.notes}</p>
-                  </div>
-                )}
-
-                {/* Schedule */}
-                {(item?.assigned_days?.length || item?.specific_dates?.length) && (
-                  <div className="text-[10px] text-muted-foreground">
-                    {item.specific_dates && item.specific_dates.length > 0
-                      ? `Dates: ${item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}`
-                      : item.assigned_days && item.assigned_days.length > 0
-                        ? `Schedule: ${item.assigned_days.map(d => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', ')}`
-                        : null}
-                  </div>
-                )}
-
-                {/* Performance Logger */}
-                {item && (
-                  <FolderItemPerformanceLogger
-                    item={item}
-                    onSave={async (data) => {
-                      await toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId, data);
-                      toast.success(t('customActivity.markedComplete'));
-                      setFolderLoggerOpen(false);
-                      refetch();
-                    }}
-                  />
-                )}
-                <div className="flex justify-end gap-2 mt-2">
-                  <Button variant="outline" size="sm" onClick={() => {
-                    toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId);
-                    toast.success(selectedFolderTask.completed ? t('customActivity.unmarkedComplete') : t('customActivity.markedComplete'));
-                    setFolderLoggerOpen(false);
-                  }}>
-                    {selectedFolderTask.completed ? 'Mark Incomplete' : 'Complete Without Logging'}
-                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
