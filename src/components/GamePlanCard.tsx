@@ -65,7 +65,7 @@ const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6] as const;
 export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion } = useGamePlan(selectedSport);
+  const { tasks, customActivities, completedCount, totalCount, loading, refetch, addOptimisticActivity, refreshCustomActivities, folderTasks, toggleFolderItemCompletion, saveFolderCheckboxState } = useGamePlan(selectedSport);
   const { daysUntilRecap, recapProgress, canGenerateRecap, hasMissedRecap, waitingForProgressReports } = useRecapCountdown();
   const { pendingActivities, pendingCount, acceptActivity, rejectActivity, refetch: refetchPending } = useReceivedActivities();
   const { getFavorites, toggleComplete, addToToday, templates, todayLogs, createTemplate, updateTemplate, updateTemplateSchedule, deleteTemplate: deleteActivityTemplate, updateLogPerformanceData, ensureLogExists, refetch: refetchActivities } = useCustomActivities(selectedSport);
@@ -201,6 +201,18 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
   const [folderLoggerOpen, setFolderLoggerOpen] = useState(false);
   const [selectedFolderTask, setSelectedFolderTask] = useState<GamePlanTask | null>(null);
   const [folderItemEditOpen, setFolderItemEditOpen] = useState(false);
+  const [folderCheckboxStates, setFolderCheckboxStates] = useState<Record<string, boolean>>({});
+  const [folderSavingFieldIds, setFolderSavingFieldIds] = useState<Set<string>>(new Set());
+  const [showFolderTimePicker, setShowFolderTimePicker] = useState(false);
+
+  // Initialize folder checkbox states when dialog opens
+  useEffect(() => {
+    if (selectedFolderTask?.folderItemData && folderLoggerOpen) {
+      const ft = folderTasks.find(ft => ft.item.id === selectedFolderTask.folderItemData!.itemId);
+      const pd = ft?.performanceData as any;
+      setFolderCheckboxStates(pd?.checkboxStates || {});
+    }
+  }, [selectedFolderTask, folderLoggerOpen, folderTasks]);
   
   // Inline time picker state (for non-timeline modes)
   const [expandedTimeTaskId, setExpandedTimeTaskId] = useState<string | null>(null);
@@ -2044,6 +2056,31 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
             setDetailDialogOpen(false);
           }
         }}
+        onSavePerformanceData={async (data) => {
+          if (!selectedCustomTask?.customActivityData) return;
+          const template = selectedCustomTask.customActivityData.template;
+          let log = selectedCustomTask.customActivityData.log;
+          if (!log) {
+            log = await ensureLogExists(template.id);
+            if (!log) return;
+          }
+          const currentPd = (log.performance_data as Record<string, any>) || {};
+          await updateLogPerformanceData(log.id, { ...currentPd, ...data });
+          setSelectedCustomTask(prev => {
+            if (!prev?.customActivityData) return prev;
+            return {
+              ...prev,
+              customActivityData: {
+                ...prev.customActivityData,
+                log: prev.customActivityData.log 
+                  ? { ...prev.customActivityData.log, performance_data: { ...currentPd, ...data } }
+                  : { id: 'pending', template_id: template.id, completed: false, performance_data: { ...currentPd, ...data } } as any
+              }
+            };
+          });
+          toast.success('Performance data saved');
+          refetch();
+        }}
       />
       {/* Quick Add Favorites Drawer */}
       <QuickAddFavoritesDrawer
@@ -2291,13 +2328,72 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
         const folderIconKey = selectedFolderTask.folderItemData.folderIcon || 'clipboard';
         const FolderIconComponent = getActivityIcon(folderIconKey);
         const totalCheckable = exercises?.length || 0;
+        const checkedCount = exercises ? exercises.filter((_: any, i: number) => folderCheckboxStates[`exercise_${i}`]).length : 0;
 
         // Determine if performance logger should show
-        const showLogger = item?.item_type === 'exercise' || item?.item_type === 'skill_work' || (!exercises?.length && item?.item_type !== 'mobility' && item?.item_type !== 'recovery');
+        const showLogger = item?.item_type === 'exercise' || item?.item_type === 'skill_work';
+
+        const folderTaskTime = taskTimes[selectedFolderTask.id] || null;
+        const folderTaskReminder = taskReminders[selectedFolderTask.id] || null;
+
+        const formatTimeDisplay = (time: string | null) => {
+          if (!time) return null;
+          const [hours, minutes] = time.split(':');
+          const h = parseInt(hours);
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          const h12 = h % 12 || 12;
+          return `${h12}:${minutes} ${ampm}`;
+        };
+
+        const handleFolderCheckboxToggle = async (exerciseKey: string, checked: boolean) => {
+          const itemId = selectedFolderTask.folderItemData!.itemId;
+          const newStates = { ...folderCheckboxStates, [exerciseKey]: checked };
+          setFolderCheckboxStates(newStates);
+          setFolderSavingFieldIds(prev => new Set(prev).add(exerciseKey));
+          try {
+            await saveFolderCheckboxState(itemId, newStates);
+            // Auto-complete if all checked
+            if (exercises && exercises.length > 0) {
+              const allChecked = exercises.every((_: any, i: number) => newStates[`exercise_${i}`]);
+              if (allChecked && !selectedFolderTask.completed) {
+                await toggleFolderItemCompletion(itemId);
+                setSelectedFolderTask(prev => prev ? { ...prev, completed: true } : null);
+                triggerCelebration();
+                toast.success('All exercises complete! 🎉');
+              } else if (!allChecked && selectedFolderTask.completed) {
+                await toggleFolderItemCompletion(itemId);
+                setSelectedFolderTask(prev => prev ? { ...prev, completed: false } : null);
+              }
+            }
+          } finally {
+            setFolderSavingFieldIds(prev => {
+              const next = new Set(prev);
+              next.delete(exerciseKey);
+              return next;
+            });
+          }
+        };
+
+        const handleFolderSaveTime = () => {
+          setTaskTimes(prev => ({ ...prev, [selectedFolderTask.id]: tempTime || null }));
+          setTaskReminders(prev => ({ ...prev, [selectedFolderTask.id]: tempReminder }));
+          setShowFolderTimePicker(false);
+        };
+
+        const handleFolderRemoveTime = () => {
+          setTempTime('');
+          setTempReminder(null);
+          setTaskTimes(prev => ({ ...prev, [selectedFolderTask.id]: null }));
+          setTaskReminders(prev => ({ ...prev, [selectedFolderTask.id]: null }));
+          setShowFolderTimePicker(false);
+        };
 
         return (
           <>
-            <Dialog open={folderLoggerOpen} onOpenChange={setFolderLoggerOpen}>
+            <Dialog open={folderLoggerOpen} onOpenChange={(open) => {
+              setFolderLoggerOpen(open);
+              if (!open) setShowFolderTimePicker(false);
+            }}>
               <DialogContent className="sm:max-w-md p-0 overflow-hidden max-h-[90vh] flex flex-col">
                 {/* Colored Header */}
                 <div 
@@ -2319,10 +2415,13 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                           </DialogTitle>
                           {totalCheckable > 0 && (
                             <Badge 
-                              variant="secondary"
-                              className="text-xs font-bold"
+                              variant={checkedCount === totalCheckable ? "default" : "secondary"}
+                              className={cn(
+                                "text-xs font-bold",
+                                checkedCount === totalCheckable && "bg-green-500"
+                              )}
                             >
-                              {totalCheckable}
+                              {checkedCount}/{totalCheckable}
                             </Badge>
                           )}
                         </div>
@@ -2367,31 +2466,53 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                           Exercises ({exercises.length})
                         </h4>
                         <div className="space-y-2">
-                          {exercises.map((ex: any, idx: number) => (
-                            <div key={idx} className="rounded-lg bg-muted p-3">
-                              <div className="flex items-start gap-3">
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-medium text-sm">
-                                      {ex.name || `Exercise ${idx + 1}`}
-                                    </span>
+                          {exercises.map((ex: any, idx: number) => {
+                            const fieldId = `exercise_${idx}`;
+                            const isChecked = folderCheckboxStates[fieldId] || false;
+                            return (
+                              <div key={idx} className="rounded-lg bg-muted p-3">
+                                <div className="flex items-start gap-3">
+                                  <Checkbox
+                                    checked={isChecked}
+                                    onCheckedChange={(checked) => handleFolderCheckboxToggle(fieldId, !!checked)}
+                                    disabled={folderSavingFieldIds.has(fieldId)}
+                                    className={cn(
+                                      "mt-0.5 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500",
+                                      folderSavingFieldIds.has(fieldId) && "opacity-50"
+                                    )}
+                                  />
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between">
+                                      <span className={cn(
+                                        "font-medium text-sm",
+                                        isChecked && "line-through text-muted-foreground"
+                                      )}>
+                                        {ex.name || `Exercise ${idx + 1}`}
+                                      </span>
+                                    </div>
+                                    <div className={cn(
+                                      "flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground",
+                                      isChecked && "opacity-60"
+                                    )}>
+                                      {ex.sets && <span>{ex.sets} sets</span>}
+                                      {ex.reps && <span>× {ex.reps} reps</span>}
+                                      {ex.weight && <span>@ {ex.weight} {ex.weight_unit || 'lbs'}</span>}
+                                      {ex.duration && <span>• {ex.duration}</span>}
+                                    </div>
+                                    {ex.notes && (
+                                      <p className={cn(
+                                        "text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5",
+                                        isChecked && "opacity-60"
+                                      )}>
+                                        <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                        <span>{ex.notes}</span>
+                                      </p>
+                                    )}
                                   </div>
-                                  <div className="flex flex-wrap gap-2 mt-1.5 text-xs text-muted-foreground">
-                                    {ex.sets && <span>{ex.sets} sets</span>}
-                                    {ex.reps && <span>× {ex.reps} reps</span>}
-                                    {ex.weight && <span>@ {ex.weight} {ex.weight_unit || 'lbs'}</span>}
-                                    {ex.duration && <span>• {ex.duration}</span>}
-                                  </div>
-                                  {ex.notes && (
-                                    <p className="text-xs text-muted-foreground mt-1.5 flex items-start gap-1.5">
-                                      <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                                      <span>{ex.notes}</span>
-                                    </p>
-                                  )}
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -2422,6 +2543,7 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                     {item && showLogger && (
                       <FolderItemPerformanceLogger
                         item={item}
+                        performanceData={(ft?.performanceData as any) || undefined}
                         onSave={async (data) => {
                           await toggleFolderItemCompletion(selectedFolderTask.folderItemData!.itemId, data);
                           toast.success(t('customActivity.markedComplete'));
@@ -2430,6 +2552,103 @@ export function GamePlanCard({ selectedSport }: GamePlanCardProps) {
                         }}
                       />
                     )}
+
+                    {/* Scheduled Time Section */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">
+                          {t('customActivity.detail.scheduledFor', 'Scheduled Time')}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setTempTime(folderTaskTime || '');
+                            setTempReminder(folderTaskReminder);
+                            setShowFolderTimePicker(!showFolderTimePicker);
+                          }}
+                          className="text-primary h-8"
+                        >
+                          {showFolderTimePicker ? <X className="h-4 w-4" /> : <Clock className="h-4 w-4 mr-1" />}
+                          {showFolderTimePicker ? t('common.cancel', 'Cancel') : folderTaskTime ? t('common.edit', 'Edit') : t('gamePlan.startTime.tapToSet', 'Tap to set')}
+                        </Button>
+                      </div>
+
+                      {folderTaskTime && !showFolderTimePicker && (
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                          <Clock className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-primary">{formatTimeDisplay(folderTaskTime)}</span>
+                          {folderTaskReminder && (
+                            <div className="flex items-center gap-1 ml-auto text-xs text-muted-foreground">
+                              <Bell className="h-3 w-3" />
+                              {t('gamePlan.reminder.minutesBefore', { minutes: folderTaskReminder })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {!folderTaskTime && !showFolderTimePicker && (
+                        <p className="text-sm text-muted-foreground italic">
+                          {t('customActivity.detail.noTimeSet', 'No time set')}
+                        </p>
+                      )}
+
+                      <AnimatePresence>
+                        {showFolderTimePicker && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 rounded-lg bg-muted/50 border space-y-3">
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium text-foreground">
+                                  {t('gamePlan.startTime.time', 'Time')}
+                                </label>
+                                <Input
+                                  type="time"
+                                  value={tempTime}
+                                  onChange={(e) => setTempTime(e.target.value)}
+                                  className="h-10"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium text-foreground">
+                                  {t('gamePlan.reminder.remindMe', 'Remind me')}
+                                </label>
+                                <Select 
+                                  value={tempReminder?.toString() || 'none'} 
+                                  onValueChange={(v) => setTempReminder(v === 'none' ? null : parseInt(v))}
+                                >
+                                  <SelectTrigger className="h-10">
+                                    <SelectValue placeholder={t('gamePlan.reminder.noReminder', 'No reminder')} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">{t('gamePlan.reminder.noReminder', 'No reminder')}</SelectItem>
+                                    <SelectItem value="5">{t('gamePlan.reminder.minutesBefore', { minutes: 5 })}</SelectItem>
+                                    <SelectItem value="10">{t('gamePlan.reminder.minutesBefore', { minutes: 10 })}</SelectItem>
+                                    <SelectItem value="15">{t('gamePlan.reminder.minutesBefore', { minutes: 15 })}</SelectItem>
+                                    <SelectItem value="20">{t('gamePlan.reminder.minutesBefore', { minutes: 20 })}</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="flex gap-2 pt-2">
+                                {folderTaskTime && (
+                                  <Button variant="outline" size="sm" onClick={handleFolderRemoveTime} className="flex-1">
+                                    {t('gamePlan.startTime.removeTime', 'Remove Time')}
+                                  </Button>
+                                )}
+                                <Button size="sm" onClick={handleFolderSaveTime} className="flex-1">
+                                  {t('common.save', 'Save')}
+                                </Button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
 
                     {/* Action Buttons */}
                     <div className="flex flex-col gap-3 pt-4 border-t">

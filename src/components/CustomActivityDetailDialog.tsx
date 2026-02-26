@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
 import { CustomField, Exercise, MealData, RunningInterval, EmbeddedRunningSession, CustomActivityTemplate } from '@/types/customActivity';
+import { ActivityFolderItem } from '@/types/activityFolder';
+import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerformanceLogger';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { SendToPlayerDialog } from '@/components/custom-activities/SendToPlayerDialog';
 
@@ -175,6 +177,7 @@ interface CustomActivityDetailDialogProps {
   onToggleCheckbox?: (fieldId: string, checked: boolean) => void;
   onUpdateFieldValue?: (fieldId: string, value: string) => void;
   onSkipTask?: () => void;
+  onSavePerformanceData?: (data: any) => Promise<void>;
 }
 
 export function CustomActivityDetailDialog({
@@ -189,6 +192,7 @@ export function CustomActivityDetailDialog({
   onToggleCheckbox,
   onUpdateFieldValue,
   onSkipTask,
+  onSavePerformanceData,
 }: CustomActivityDetailDialogProps) {
   const { t } = useTranslation();
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -672,6 +676,31 @@ export function CustomActivityDetailDialog({
                   })}
                 </div>
               </div>
+            )}
+
+            {/* Log Sets - conditional for exercise/skill_work types */}
+            {(template.activity_type === 'workout' || template.activity_type === 'practice' || template.activity_type === 'free_session') && onSavePerformanceData && (
+              <FolderItemPerformanceLogger
+                item={{
+                  id: template.id,
+                  folder_id: '',
+                  title: template.title,
+                  description: template.description,
+                  item_type: template.activity_type,
+                  assigned_days: null,
+                  cycle_week: null,
+                  order_index: 0,
+                  exercises: template.exercises as any,
+                  attachments: null,
+                  duration_minutes: template.duration_minutes || null,
+                  notes: null,
+                  completion_tracking: true,
+                  specific_dates: null,
+                  created_at: template.created_at || '',
+                }}
+                performanceData={(log?.performance_data as any) || undefined}
+                onSave={onSavePerformanceData}
+              />
             )}
 
             {/* Custom Fields - Always visible, no accordion */}
