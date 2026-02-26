@@ -1,0 +1,1 @@
+ALTER TABLE activity_folder_items ADD COLUMN template_snapshot jsonb DEFAULT NULL;

@@ -30,6 +30,7 @@ export type Database = {
           notes: string | null
           order_index: number | null
           specific_dates: string[] | null
+          template_snapshot: Json | null
           title: string
         }
         Insert: {
@@ -47,6 +48,7 @@ export type Database = {
           notes?: string | null
           order_index?: number | null
           specific_dates?: string[] | null
+          template_snapshot?: Json | null
           title: string
         }
         Update: {
@@ -64,6 +66,7 @@ export type Database = {
           notes?: string | null
           order_index?: number | null
           specific_dates?: string[] | null
+          template_snapshot?: Json | null
           title?: string
         }
         Relationships: [

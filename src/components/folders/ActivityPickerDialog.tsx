@@ -167,6 +167,20 @@ export function ActivityPickerDialog({ open, onOpenChange, sport, onImport }: Ac
         item_type: mapActivityType(t.activity_type),
         duration_minutes: t.duration_minutes,
         exercises: t.exercises as any,
+        template_snapshot: {
+          icon: t.icon,
+          color: t.color,
+          activity_type: t.activity_type,
+          intensity: t.intensity,
+          meals: t.meals,
+          custom_fields: t.custom_fields,
+          intervals: t.intervals,
+          embedded_running_sessions: t.embedded_running_sessions,
+          duration_minutes: t.duration_minutes,
+          exercises: t.exercises,
+          display_nickname: t.display_nickname,
+          custom_logo_url: t.custom_logo_url,
+        },
       }));
     onImport(items);
     onOpenChange(false);

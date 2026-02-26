@@ -35,6 +35,7 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [importQueue, setImportQueue] = useState<Partial<ActivityFolderItem>[]>([]);
   const [importTotal, setImportTotal] = useState(0);
+  const [pendingSnapshot, setPendingSnapshot] = useState<any>(null);
 
   const fillFromItem = (item: Partial<ActivityFolderItem>) => {
     setTitle(item.title || '');
@@ -46,6 +47,7 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
     setSpecificDates([]);
     setUseSpecificDates(false);
     setCycleWeek(1);
+    setPendingSnapshot(item.template_snapshot || null);
   };
 
   const toggleDay = (day: number) => {
@@ -75,6 +77,7 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
       cycle_week: cycleType === 'custom_rotation' ? cycleWeek : null,
       duration_minutes: durationMinutes ? Number(durationMinutes) : null,
       notes: notes.trim() || null,
+      template_snapshot: pendingSnapshot,
     });
     if (result) {
       // If there are more items in the import queue, fill the next one
@@ -90,6 +93,7 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
         setDurationMinutes('');
         setAssignedDays([]);
         setSpecificDates([]);
+        setPendingSnapshot(null);
         if (importTotal > 0) {
           toast.success(`All ${importTotal} activities imported!`);
           setImportTotal(0);
@@ -109,6 +113,7 @@ export function FolderItemEditor({ onAdd, cycleType, cycleLengthWeeks, sport }: 
     setAssignedDays([]);
     setSpecificDates([]);
     setUseSpecificDates(false);
+    setPendingSnapshot(null);
     setCycleWeek(1);
   };
 
