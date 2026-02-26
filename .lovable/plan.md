@@ -1,68 +1,79 @@
 
 
-# Fix: Scroll Issues and Add Save Button in Folder Detail Dialog
+# Add Academic & NCAA Fields for High School AND College Players
 
-## Problem 1: Cannot Scroll When Editing a Folder
+## Overview
 
-The `FolderDetailDialog` uses a Radix Dialog with `max-h-[85vh] overflow-y-auto` on the `DialogContent`. However, Radix Dialog's content uses `fixed` positioning with `translate(-50%, -50%)` centering, which can cause scroll issues -- especially on mobile where touch events may get intercepted. The content overflows when there are many items plus the editor form at the bottom.
-
-**Fix**: Convert the dialog layout to use a flex column with a scrollable body section, and ensure the dialog content properly handles overflow with `-webkit-overflow-scrolling: touch` for mobile. Also add `overscrollBehavior: contain` to prevent scroll chaining.
-
-## Problem 2: No Prominent Save Button
-
-The current "Add Item" button is small and labeled ambiguously. Users importing activities or creating new ones need a clear, prominent **Save** button.
-
-**Fix**: Replace the small `Plus` icon button with a more prominent Save-styled button. Use a `Save` icon (from lucide-react) alongside clear text like "Save Item" (or "Save & Next" during imports). Make it visually distinct with the default primary variant.
+When a player indicates they are **in high school** (via a new checkbox), show fields for SAT Score, ACT Score, GPA, and NCAA ID Number. When a player indicates they are **enrolled in college** (existing checkbox), also show the NCAA ID Number field. The NCAA ID field includes an info button with a link to sign up, why it's needed, and when to register. All fields are visible to coaches and scouts on the player's profile.
 
 ---
 
 ## Changes
 
-### File: `src/components/folders/FolderDetailDialog.tsx`
+### 1. Database Migration
 
-- Change the dialog content structure to use a flex column layout with a scrollable middle section
-- Add `onPointerDownOutside` handler to prevent accidental closes during scroll
-- Structure: fixed header (title) at top, scrollable body in the middle, and the editor/footer pinned at the bottom so it's always visible
+Add four new columns to the `profiles` table:
 
-### File: `src/components/folders/FolderItemEditor.tsx`
+| Column | Type | Notes |
+|--------|------|-------|
+| `sat_score` | integer | Nullable, range 400-1600 |
+| `act_score` | integer | Nullable, range 1-36 |
+| `gpa` | numeric(4,2) | Nullable, range 0.00-5.00 |
+| `ncaa_id` | text | Nullable |
+| `currently_in_high_school` | boolean | Default false |
 
-- Replace the `Plus` icon with a `Save` icon from lucide-react
-- Change button text from "Add Item" to **"Save Item"** and from "Add & Next" to **"Save & Next"**
-- Make the save button more prominent (default size instead of `sm`, or at minimum ensure it stands out visually)
+### 2. Profile Setup (`src/pages/ProfileSetup.tsx`)
+
+- Add state: `currentlyInHighSchool`, `satScore`, `actScore`, `gpa`, `ncaaId`
+- Add a **"Currently in High School"** checkbox alongside the existing checkboxes (enrolled in college, professional, etc.)
+- When `currentlyInHighSchool` is checked, show:
+  - SAT Score (number input, optional)
+  - ACT Score (number input, optional)
+  - GPA - End of Last Quarter (number input, optional)
+  - NCAA ID Number (text input, optional) with info button
+- When `enrolledInCollege` is checked (already exists), show:
+  - NCAA ID Number (text input, optional) with info button
+- The NCAA info button opens a popover/tooltip with:
+  - What: Your NCAA Eligibility Center ID
+  - Why: Required for college athletic recruitment eligibility
+  - When: Register by the start of your junior year (recommended)
+  - Link: https://web3.ncaa.org/ecwr3/
+- Save all new fields to the profile on submit
+
+### 3. Profile View & Edit (`src/pages/Profile.tsx`)
+
+**Display**: Add an "Academic & NCAA Info" section in the player info grid, visible to all viewers (coaches, scouts, other players). Shows SAT, ACT, GPA, NCAA ID when any are populated.
+
+**Edit Dialog**: Add the same conditional fields (high school checkbox triggers SAT/ACT/GPA/NCAA; college checkbox triggers NCAA). Include in `editForm` state and save logic.
+
+### 4. Translations (`src/i18n/locales/en.json`)
+
+Add keys for all new labels: `currentlyInHighSchool`, `satScore`, `actScore`, `gpa`, `ncaaId`, `ncaaInfoTitle`, `ncaaInfoDescription`, `ncaaInfoWhy`, `ncaaInfoWhen`, `ncaaSignupLink`
 
 ---
 
 ## Technical Details
 
-### Dialog Layout (FolderDetailDialog.tsx)
-
-The current flat layout puts everything inside one `overflow-y-auto` container. The fix restructures to:
+### Conditional Logic Summary
 
 ```text
-DialogContent (flex flex-col, max-h-[85vh])
-  +-- DialogHeader (flex-shrink-0, sticky top)
-  +-- Scrollable body (flex-1 overflow-y-auto, -webkit-overflow-scrolling: touch)
-  |     +-- Description
-  |     +-- Coach edit toggle
-  |     +-- Progress bar
-  |     +-- Items list
-  +-- Editor section (flex-shrink-0, border-top) -- always visible at bottom
+High School checked --> Show SAT, ACT, GPA, NCAA ID + info
+College checked     --> Show NCAA ID + info
+Both checked        --> Show all (NCAA ID shown once)
+Neither checked     --> Show none of these fields
 ```
 
-This ensures:
-- The items list scrolls independently
-- The editor (with the save button) is always visible at the bottom
-- Touch scrolling works properly on mobile
+### NCAA Info Button Content
 
-### Save Button (FolderItemEditor.tsx)
-
-- Import `Save` from lucide-react (replace `Plus`)
-- Button labels: "Save Item" (normal), "Save & Next" (during import queue), "Saving..." (while saving)
-- Keep the button disabled when title is empty or saving is in progress
+- "Your NCAA Eligibility Center ID is required for college athletic recruitment eligibility. It is recommended to register by the start of your junior year."
+- Button links to: https://web3.ncaa.org/ecwr3/
 
 ### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/components/folders/FolderDetailDialog.tsx` | Restructure dialog to flex layout with scrollable body and pinned editor |
-| `src/components/folders/FolderItemEditor.tsx` | Replace Plus with Save icon, rename button text to "Save Item" / "Save & Next" |
+| Database migration | Add `sat_score`, `act_score`, `gpa`, `ncaa_id`, `currently_in_high_school` to `profiles` |
+| `src/pages/ProfileSetup.tsx` | Add high school checkbox, conditional academic fields, NCAA info button |
+| `src/pages/Profile.tsx` | Display academic/NCAA section; add to edit dialog |
+| `src/i18n/locales/en.json` | Add translation keys for new labels and NCAA info |
+
