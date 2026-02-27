@@ -7,10 +7,12 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ActivityFolder, ActivityFolderItem, DAY_LABELS } from '@/types/activityFolder';
 import { supabase } from '@/integrations/supabase/client';
-import { FolderItemEditor } from './FolderItemEditor';
 import { FolderItemPerformanceLogger } from './FolderItemPerformanceLogger';
 import { FolderItemEditDialog } from './FolderItemEditDialog';
-import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays, ChevronDown, Pencil } from 'lucide-react';
+import { CustomActivityBuilderDialog } from '@/components/custom-activities/CustomActivityBuilderDialog';
+import { ActivityPickerDialog } from './ActivityPickerDialog';
+import { CustomActivityTemplate, Exercise } from '@/types/customActivity';
+import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays, ChevronDown, Pencil, Plus, Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getTodayDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
@@ -39,6 +41,8 @@ export function FolderDetailDialog({
   const [loading, setLoading] = useState(false);
   const [coachEditAllowed, setCoachEditAllowed] = useState(false);
   const [editingItem, setEditingItem] = useState<ActivityFolderItem | null>(null);
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [importPickerOpen, setImportPickerOpen] = useState(false);
 
   useEffect(() => {
     if (!open || !folder) return;
@@ -281,17 +285,17 @@ export function FolderDetailDialog({
 
           {/* Add Item (owner only) */}
           {isOwner && onAddItem && (
-            <div className="border-t pt-3 mt-2">
-              <FolderItemEditor
-                onAdd={async (item) => {
-                  const result = await onAddItem(folder.id, item);
-                  if (result) setItems(prev => [...prev, result]);
-                  return result;
-                }}
-                cycleType={folder.cycle_type || undefined}
-                cycleLengthWeeks={folder.cycle_length_weeks || undefined}
-                sport={folder.sport}
-              />
+            <div className="border-t pt-3 mt-2 space-y-2">
+              <div className="flex gap-2">
+                <Button size="sm" className="gap-1" onClick={() => setBuilderOpen(true)}>
+                  <Plus className="h-4 w-4" /> Create Activity
+                </Button>
+                {folder.sport && (
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => setImportPickerOpen(true)}>
+                    <Library className="h-3.5 w-3.5" /> Import
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -307,6 +311,62 @@ export function FolderDetailDialog({
           }}
           cycleType={folder.cycle_type || undefined}
           cycleLengthWeeks={folder.cycle_length_weeks || undefined}
+        />
+      )}
+
+      {/* Full Activity Builder for creating new folder items */}
+      {builderOpen && folder && onAddItem && (
+        <CustomActivityBuilderDialog
+          open={builderOpen}
+          onOpenChange={setBuilderOpen}
+          selectedSport={(folder.sport as 'baseball' | 'softball') || 'baseball'}
+          onSave={async (data) => {
+            const folderItem: Partial<ActivityFolderItem> = {
+              title: data.title,
+              description: data.description || null,
+              item_type: data.activity_type || 'exercise',
+              duration_minutes: data.duration_minutes || null,
+              exercises: data.exercises as any,
+              template_snapshot: {
+                icon: data.icon,
+                color: data.color,
+                activity_type: data.activity_type,
+                title: data.title,
+                description: data.description,
+                intensity: data.intensity,
+                meals: data.meals,
+                custom_fields: data.custom_fields,
+                intervals: data.intervals,
+                embedded_running_sessions: data.embedded_running_sessions,
+                duration_minutes: data.duration_minutes,
+                exercises: data.exercises,
+                display_nickname: data.display_nickname,
+                custom_logo_url: data.custom_logo_url,
+              } as any,
+            };
+            const result = await onAddItem(folder.id, folderItem);
+            if (result) {
+              setItems(prev => [...prev, result]);
+              setBuilderOpen(false);
+            }
+            return result;
+          }}
+        />
+      )}
+
+      {/* Import from existing activities */}
+      {importPickerOpen && folder && folder.sport && onAddItem && (
+        <ActivityPickerDialog
+          open={importPickerOpen}
+          onOpenChange={setImportPickerOpen}
+          sport={folder.sport}
+          onImport={async (importedItems) => {
+            for (const item of importedItems) {
+              const result = await onAddItem(folder.id, item);
+              if (result) setItems(prev => [...prev, result]);
+            }
+            toast.success(`${importedItems.length} activit${importedItems.length === 1 ? 'y' : 'ies'} imported`);
+          }}
         />
       )}
     </Dialog>

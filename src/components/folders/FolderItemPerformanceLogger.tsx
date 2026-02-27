@@ -25,6 +25,8 @@ interface FolderItemPerformanceLoggerProps {
   performanceData?: PerformanceData;
   onSave: (data: PerformanceData) => Promise<void>;
   compact?: boolean;
+  exerciseId?: string;
+  exerciseName?: string;
 }
 
 type InputMode = 'weight_reps' | 'duration' | 'flexible';
@@ -49,18 +51,23 @@ function getDefaultSet(mode: InputMode, setNum: number): SetRow {
   return { ...base, weight: undefined, reps: undefined, time: undefined, distance: undefined };
 }
 
-export function FolderItemPerformanceLogger({ item, performanceData, onSave, compact }: FolderItemPerformanceLoggerProps) {
+export function FolderItemPerformanceLogger({ item, performanceData, onSave, compact, exerciseId, exerciseName }: FolderItemPerformanceLoggerProps) {
   const mode = getInputMode(item.item_type);
   const [sets, setSets] = useState<SetRow[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (performanceData?.sets && performanceData.sets.length > 0) {
-      setSets(performanceData.sets);
+    // If scoped to a specific exercise, load from exerciseSets map
+    const scopedData = exerciseId
+      ? (performanceData as any)?.exerciseSets?.[exerciseId]
+      : performanceData;
+    
+    if (scopedData?.sets && scopedData.sets.length > 0) {
+      setSets(scopedData.sets);
     } else {
       setSets([getDefaultSet(mode, 1)]);
     }
-  }, [performanceData, mode]);
+  }, [performanceData, mode, exerciseId]);
 
   const addSet = () => {
     const lastSet = sets[sets.length - 1];
@@ -83,7 +90,20 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave({ sets });
+      if (exerciseId) {
+        // Merge into exerciseSets map
+        const existing = (performanceData as any) || {};
+        const existingSets = existing.exerciseSets || {};
+        await onSave({
+          ...existing,
+          exerciseSets: {
+            ...existingSets,
+            [exerciseId]: { sets },
+          },
+        } as any);
+      } else {
+        await onSave({ sets });
+      }
     } finally {
       setSaving(false);
     }
@@ -97,7 +117,7 @@ export function FolderItemPerformanceLogger({ item, performanceData, onSave, com
         {mode === 'weight_reps' && <Dumbbell className="h-3 w-3" />}
         {mode === 'duration' && <Timer className="h-3 w-3" />}
         {mode === 'flexible' && <Footprints className="h-3 w-3" />}
-        <span>Log Sets</span>
+        <span>{exerciseName ? `${exerciseName} — Log Sets` : 'Log Sets'}</span>
       </div>
 
       <div className="space-y-1.5">
