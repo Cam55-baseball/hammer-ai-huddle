@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target, Send } from 'lucide-react';
+import { Check, Clock, Bell, Pencil, Dumbbell, X, Info, Utensils, Footprints, Pill, Target, Send, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GamePlanTask } from '@/hooks/useGamePlan';
 import { getActivityIcon } from '@/components/custom-activities';
 import { CustomField, Exercise, MealData, RunningInterval, EmbeddedRunningSession, CustomActivityTemplate } from '@/types/customActivity';
 import { ActivityFolderItem } from '@/types/activityFolder';
 import { FolderItemPerformanceLogger } from '@/components/folders/FolderItemPerformanceLogger';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useScoutAccess } from '@/hooks/useScoutAccess';
 import { SendToPlayerDialog } from '@/components/custom-activities/SendToPlayerDialog';
 
@@ -682,31 +683,67 @@ export function CustomActivityDetailDialog({
               </div>
             )}
 
-            {/* Log Sets - conditional for exercise/skill_work types */}
-            {(template.activity_type === 'workout' || template.activity_type === 'practice' || template.activity_type === 'free_session') && onSavePerformanceData && (
-              <FolderItemPerformanceLogger
-                item={{
-                  id: template.id,
-                  folder_id: '',
-                  title: template.title,
-                  description: template.description,
-                  item_type: template.activity_type,
-                  assigned_days: null,
-                  cycle_week: null,
-                  order_index: 0,
-                  exercises: template.exercises as any,
-                  attachments: null,
-                  duration_minutes: template.duration_minutes || null,
-                  notes: null,
-                  completion_tracking: true,
-                  specific_dates: null,
-                  template_snapshot: null,
-                  created_at: template.created_at || '',
-                }}
-                performanceData={(log?.performance_data as any) || undefined}
-                onSave={onSavePerformanceData}
-              />
-            )}
+            {/* Per-Exercise Log Sets */}
+            {onSavePerformanceData && (() => {
+              // Gather all exercises (traditional array or block-based)
+              let allExercises: Exercise[] = [];
+              if (template.exercises && typeof template.exercises === 'object' && '_useBlocks' in (template.exercises as any)) {
+                const blockData = template.exercises as unknown as { blocks: Array<{ exercises: Exercise[] }> };
+                blockData.blocks?.forEach(block => {
+                  if (block.exercises) allExercises.push(...block.exercises);
+                });
+              } else if (Array.isArray(template.exercises)) {
+                allExercises = template.exercises as Exercise[];
+              }
+
+              if (allExercises.length === 0) return null;
+
+              const folderItem: ActivityFolderItem = {
+                id: template.id,
+                folder_id: '',
+                title: template.title,
+                description: template.description,
+                item_type: template.activity_type,
+                assigned_days: null,
+                cycle_week: null,
+                order_index: 0,
+                exercises: template.exercises as any,
+                attachments: null,
+                duration_minutes: template.duration_minutes || null,
+                notes: null,
+                completion_tracking: true,
+                specific_dates: null,
+                template_snapshot: null,
+                created_at: template.created_at || '',
+              };
+
+              return (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <Dumbbell className="h-4 w-4" />
+                    Log Sets
+                  </h4>
+                  {allExercises.map((exercise) => (
+                    <Collapsible key={exercise.id}>
+                      <CollapsibleTrigger className="flex items-center justify-between w-full rounded-lg bg-muted px-3 py-2 text-sm font-medium hover:bg-muted/80 transition-colors">
+                        <span>{exercise.name}</span>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="px-1 pt-1">
+                        <FolderItemPerformanceLogger
+                          item={folderItem}
+                          exerciseId={exercise.id}
+                          exerciseName={exercise.name}
+                          performanceData={(log?.performance_data as any) || undefined}
+                          onSave={onSavePerformanceData}
+                          compact
+                        />
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ))}
+                </div>
+              );
+            })()}
 
             {/* Custom Fields - Always visible, no accordion */}
             {template.custom_fields && Array.isArray(template.custom_fields) && template.custom_fields.length > 0 && (
