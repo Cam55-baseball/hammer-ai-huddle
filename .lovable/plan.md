@@ -1,53 +1,57 @@
 
-# Add Log Sets to Folder Activities on Game Plan
+
+# Deduplicate Custom Activities That Exist in Folders
 
 ## Problem
 
-When a folder activity is opened from the Game Plan, the "Log Sets" section doesn't appear -- even though the activity has exercises. This is because the `onSavePerformanceData` prop is never passed to `CustomActivityDetailDialog` for folder items (line 2395). The dialog checks `onSavePerformanceData && (...)` before rendering the Log Sets section, so it's always hidden for folder activities.
+When a user has a custom activity (e.g., "Morning Supplements") AND the same activity exists inside a folder (e.g., "Before Work"), both appear on the Game Plan as separate items. The user wants the folder version to take priority, hiding the standalone custom activity.
 
-## Solution
+## Matching Strategy
 
-Pass an `onSavePerformanceData` handler to `CustomActivityDetailDialog` in the folder item rendering path. This handler will persist exercise set data to `folder_item_completions.performance_data` -- the same table already used for folder checkbox states.
+A custom activity is considered a duplicate of a folder item when their titles match (case-insensitive, trimmed). This is the safest heuristic since:
+- Folder items created via "Import from Activities" copy the title exactly
+- Folder items created via the builder with the same name are intentionally the same activity
+- There's no direct `template_id` foreign key linking folder items back to custom activity templates
 
 ## Changes
 
-### 1. Add `onSavePerformanceData` prop to folder item dialog (`src/components/GamePlanCard.tsx`)
+### File: `src/hooks/useGamePlan.ts`
 
-In the folder item `CustomActivityDetailDialog` block (around line 2395), add:
+**Where**: At lines 1231-1248, where custom activities are pushed into the `tasks` array.
 
-```text
-onSavePerformanceData={async (data) => {
-  const itemId = selectedFolderTask.folderItemData!.itemId;
-  // Merge new exercise set data into existing performance_data
-  // Reuse saveFolderPerformanceData (new function)
-  await saveFolderPerformanceData(itemId, data);
-  // Update local state so the dialog reflects saved data
-  refetch();
-  toast.success('Performance data saved');
-}}
-```
-
-### 2. Add `saveFolderPerformanceData` function to `useGamePlan.ts` (`src/hooks/useGamePlan.ts`)
-
-Add a new function alongside `saveFolderCheckboxState` that merges arbitrary performance data (including `exerciseSets`) into the `folder_item_completions` row for today:
+**What**: Before iterating over `customActivities`, build a Set of folder item titles (lowercased, trimmed) from the already-built `folderTasks` array. Then, when iterating custom activities, skip any whose title matches a folder item title.
 
 ```text
-const saveFolderPerformanceData = async (itemId, data) => {
-  // Find or create today's completion row
-  // Merge data into existing performance_data (preserving checkboxStates)
-  // Upsert to folder_item_completions
-}
+// Collect folder item titles for deduplication
+const folderItemTitles = new Set(
+  folderTasks.map(ft => ft.item.title.trim().toLowerCase())
+);
+
+// Add custom activities, skipping duplicates that exist in folders
+customActivities.forEach(activity => {
+  const title = activity.template.title.trim().toLowerCase();
+  if (folderItemTitles.has(title)) return; // folder version takes priority
+
+  // ... existing task push logic unchanged
+});
 ```
 
-This keeps checkbox state intact while adding exercise set data alongside it.
+This is a 3-line addition. No other files need to change.
 
-### 3. Export the new function from `useGamePlan.ts`
+### Behavior
 
-Add `saveFolderPerformanceData` to the hook's return object so `GamePlanCard` can use it.
+- Folder version always wins -- it shows with its folder context (color, icon, folder name label)
+- If the user removes the activity from the folder, the custom activity reappears automatically on next refresh
+- Completion data stays independent: folder completions go to `folder_item_completions`, custom activity completions go to `custom_activity_logs`
+- The `refreshCustomActivities` lightweight refresh path (line 773) also needs the same filter applied using the current `folderTasks` state
 
-### Files Modified
+### File: `src/hooks/useGamePlan.ts` (refreshCustomActivities)
+
+Also apply the same dedup in `refreshCustomActivities` (line 773-801) so the filter persists after quick refreshes. Use the current `folderTasks` state variable (already in scope via closure) to build the same title Set.
+
+### Summary of Changes
 
 | File | Change |
 |------|--------|
-| `src/hooks/useGamePlan.ts` | Add `saveFolderPerformanceData` function; export it |
-| `src/components/GamePlanCard.tsx` | Pass `onSavePerformanceData` to the folder item `CustomActivityDetailDialog` using the new function |
+| `src/hooks/useGamePlan.ts` | Add ~6 lines: build folder title Set, skip matching custom activities in both `fetchTaskStatus` and `refreshCustomActivities` |
+
