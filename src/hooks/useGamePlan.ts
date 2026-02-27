@@ -888,6 +888,44 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     }
   }, [user]);
 
+  // Save folder item performance data (exerciseSets, etc.) to performance_data
+  const saveFolderPerformanceData = useCallback(async (itemId: string, data: Record<string, any>) => {
+    if (!user) return;
+    const today = getTodayDate();
+
+    try {
+      const { data: existing } = await supabase
+        .from('folder_item_completions')
+        .select('id, performance_data')
+        .eq('folder_item_id', itemId)
+        .eq('user_id', user.id)
+        .eq('entry_date', today)
+        .maybeSingle();
+
+      if (existing) {
+        const currentPd = (existing.performance_data as Record<string, any>) || {};
+        await supabase
+          .from('folder_item_completions')
+          .update({
+            performance_data: { ...currentPd, ...data },
+          })
+          .eq('id', existing.id);
+      } else {
+        await supabase
+          .from('folder_item_completions')
+          .insert({
+            folder_item_id: itemId,
+            user_id: user.id,
+            entry_date: today,
+            completed: false,
+            performance_data: data,
+          });
+      }
+    } catch (error) {
+      console.error('Error saving folder performance data:', error);
+    }
+  }, [user]);
+
   // Build dynamic task list based on user's module access
   const tasks: GamePlanTask[] = [];
   
@@ -1260,5 +1298,6 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     refreshCustomActivities,
     toggleFolderItemCompletion,
     saveFolderCheckboxState,
+    saveFolderPerformanceData,
   };
 }
