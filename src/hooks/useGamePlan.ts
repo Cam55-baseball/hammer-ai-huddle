@@ -798,8 +798,16 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
       }
     });
 
-    setCustomActivities(refreshed);
-  }, [user, selectedSport]);
+    // Deduplicate: remove custom activities whose title matches a folder item
+    const currentFolderTitles = new Set(
+      folderTasks.map(ft => ft.item.title.trim().toLowerCase())
+    );
+    const deduped = refreshed.filter(
+      a => !currentFolderTitles.has(a.template.title.trim().toLowerCase())
+    );
+
+    setCustomActivities(deduped);
+  }, [user, selectedSport, folderTasks]);
 
   // Toggle folder item completion
   const toggleFolderItemCompletion = useCallback(async (itemId: string, performanceData?: any) => {
@@ -1228,8 +1236,14 @@ export function useGamePlan(selectedSport: 'baseball' | 'softball') {
     });
   }
 
-  // Add custom activities as tasks
+  // Collect folder item titles for deduplication (folder version takes priority)
+  const folderItemTitles = new Set(
+    folderTasks.map(ft => ft.item.title.trim().toLowerCase())
+  );
+
+  // Add custom activities as tasks, skipping duplicates that exist in folders
   customActivities.forEach(activity => {
+    if (folderItemTitles.has(activity.template.title.trim().toLowerCase())) return;
     const iconKey = activity.template.icon || 'activity';
     const IconComponent = customActivityIconMap[iconKey] || Activity;
     
