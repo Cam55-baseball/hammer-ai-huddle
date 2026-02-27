@@ -1,132 +1,138 @@
 
+# Two Changes: Per-Custom-Field Log Sets + Full Activity Builder in Folders
 
-# Unify Activity Detail into ONE Component
+## Problem 1: Log Sets is Activity-Level, Not Per-Custom-Field
 
-## Current State
+Currently, `FolderItemPerformanceLogger` renders a single global "Log Sets" section per activity. The user wants each custom field (e.g., each exercise in the activity's custom fields) to have its own individual set-logging area. This means if an activity has 3 exercises defined as custom fields, each one gets its own weight/reps/time logger.
 
-There are currently **two separate dialog implementations**:
+## Problem 2: Folder Item Creation is a "Lite" Version
 
-1. **`CustomActivityDetailDialog`** -- the rich, full-featured dialog used for custom activities AND folder items that have a `template_snapshot`
-2. **Fallback folder dialog** -- a separate inline dialog built directly inside `GamePlanCard.tsx` (lines 2462-2849) for folder items WITHOUT a `template_snapshot`
+The `FolderItemEditor` component is a stripped-down form with only: title, type, description, days, duration, and notes. It lacks all the features of the full `CustomActivityBuilderDialog`: activity type selection, exercises builder, meal/vitamin/supplement builder, custom fields, icon picker, color picker, intensity, running sessions, reminders, etc.
 
-The snapshot path already works correctly -- folder items imported with a snapshot render through `CustomActivityDetailDialog` and look identical to custom activities. The problem is the **fallback path**: folder items created before snapshots existed, or manually created folder items, still use a completely different dialog with different styling, different button placement, and different features.
+---
 
 ## Solution
 
-**Eliminate the fallback dialog entirely.** ALL folder items -- with or without a `template_snapshot` -- should construct a pseudo-template and render through `CustomActivityDetailDialog`. This guarantees one component, one layout, one experience.
+### Part 1: Per-Custom-Field Log Sets
 
-### Step 1: Route ALL Folder Items Through CustomActivityDetailDialog
+**File: `src/components/CustomActivityDetailDialog.tsx`**
 
-**File: `src/components/GamePlanCard.tsx`**
+Currently the Log Sets section (lines 685-708) renders a single `FolderItemPerformanceLogger` for the entire activity. Change this to render one logger PER exercise in the activity, so each exercise gets its own set-logging inputs.
 
-Replace the fallback dialog (lines 2462-2849) with the same pseudo-template construction logic already used for snapshot items. For folder items without a snapshot:
+- Instead of one `FolderItemPerformanceLogger`, iterate over the template's exercises array
+- For each exercise, render a collapsible section with the exercise name as header and its own `FolderItemPerformanceLogger` instance
+- Key each logger's data by exercise ID in `performance_data.exerciseSets` (e.g., `{ exerciseSets: { "exercise_abc": { sets: [...] }, "exercise_def": { sets: [...] } } }`)
+- Also support custom fields of type `number` -- these should get a mini log-sets input inline
+- Hide the single global logger; replace with per-exercise loggers
 
-- Build `pseudoTemplate` from the raw folder item fields (`title`, `description`, `item_type`, `exercises`, `duration_minutes`)
-- Use the folder's `folderColor` and `folderIcon` as the template's `color` and `icon`
-- Map the folder item's `exercises` array into the template's exercises format
-- Map `item_type` to `activity_type` (e.g., `exercise` stays `exercise`, `skill_work` stays, etc.)
-- Set `meals`, `custom_fields`, `intervals` to empty defaults since raw folder items don't have these
-- Pass notes from `item.notes` into the template's `description` (appended after existing description)
+**File: `src/components/folders/FolderItemPerformanceLogger.tsx`**
 
-This means the IIFE block starting at line 2323 will handle ALL cases in one branch, not two.
+- Add an optional `exerciseId` prop so the component knows which exercise's data to load/save from the parent `performance_data`
+- When `exerciseId` is provided, scope the sets data to `performance_data.exerciseSets[exerciseId]` instead of the root `performance_data.sets`
 
-### Step 2: Normalize Folder Item Exercises to Template Exercise Format
+### Part 2: Replace FolderItemEditor with CustomActivityBuilderDialog
 
-**File: `src/components/GamePlanCard.tsx`**
+**File: `src/components/folders/FolderDetailDialog.tsx`**
 
-Folder item exercises are stored as raw JSON arrays with fields like `name`, `sets`, `reps`, `weight`, `weight_unit`, `notes`. The `CustomActivityDetailDialog` expects exercises in the `Exercise` type format with fields like `id`, `name`, `sets`, `reps`, `weight`, `weightUnit`.
+Replace the inline `FolderItemEditor` (used for adding new items to folders) with an "Add Activity" button that opens the full `CustomActivityBuilderDialog`. When saved:
 
-Add a small mapper function:
+1. The builder's output (a full `CustomActivityTemplate`-shaped object) is converted into an `ActivityFolderItem` with a complete `template_snapshot`
+2. The item is inserted via the existing `onAddItem` callback
+3. This ensures every folder item created inside a folder has full parity with custom activities
 
-```text
-function mapFolderExercisesToTemplateFormat(exercises: any[]): Exercise[] {
-  return exercises.map((ex, idx) => ({
-    id: `folder_ex_${idx}`,
-    name: ex.name || `Exercise ${idx + 1}`,
-    type: ex.type || 'other',
-    sets: ex.sets,
-    reps: ex.reps,
-    weight: ex.weight,
-    weightUnit: ex.weight_unit || ex.weightUnit || 'lbs',
-    duration: ex.duration,
-    rest: ex.rest,
-    notes: ex.notes,
-  }));
-}
-```
+Changes:
+- Remove the `FolderItemEditor` usage from the "Add Item" section
+- Add a "Create Activity" button that opens `CustomActivityBuilderDialog`
+- Keep the "Import from Activities" button (already works via `ActivityPickerDialog`)
+- Wire the builder's `onSave` to construct a folder item with `template_snapshot` containing all the rich data
 
-### Step 3: Handle Category Label for Folder Items
+**File: `src/components/folders/FolderTabContent.tsx`**
 
-The `CustomActivityDetailDialog` shows the category as `t('customActivity.types.${template.activity_type}')`. For folder items, we want it to show the folder name instead (like "Before Work"). 
-
-Add an optional `categoryLabel` prop to `CustomActivityDetailDialog` that overrides the default translation. When rendering folder items, pass the folder name as `categoryLabel`.
-
-### Step 4: Handle Edit Button for Folder Items
-
-The `onEdit` callback already works -- for folder items it opens `FolderItemEditDialog`, for custom activities it opens `CustomActivityBuilderDialog`. No change needed here, just ensure the `isOwner` check is wired correctly (the `onEdit` prop is always passed; the caller controls visibility).
-
-Add an optional `hideEdit` prop to `CustomActivityDetailDialog` so non-owner folder items can hide the Edit button. Pass `hideEdit={!selectedFolderTask.folderItemData.isOwner}` from the folder item path.
-
-### Step 5: Remove All Fallback Dialog Code
-
-**File: `src/components/GamePlanCard.tsx`**
-
-Delete:
-- The entire fallback branch (lines 2462-2849): the inline `<Dialog>` with its own header, exercises, notes, schedule, time picker, and action buttons
-- The `handleFolderCheckboxToggle` function (lines 2485-2512) -- the unified path already uses `onToggleCheckbox` wired to `saveFolderCheckboxState`
-- The `handleFolderSaveTime` and `handleFolderRemoveTime` functions (lines 2514-2526) -- handled by `CustomActivityDetailDialog`'s built-in time picker
-- The `showFolderTimePicker` and `tempTime`/`tempReminder` state for folder items (already managed internally by the dialog)
-- The `folderSavingFieldIds` state -- the dialog manages its own saving indicators
-
-### Step 6: Clean Up Unused State
-
-**File: `src/components/GamePlanCard.tsx`**
-
-Remove state variables that only existed for the fallback dialog:
-- `showFolderTimePicker`
-- `folderSavingFieldIds` 
-- Related `tempTime`/`tempReminder` usage specific to folder items
-
-Keep `folderCheckboxStates` since it's still used to initialize the pseudo-log's `performance_data`.
+Same change for the inline builders: replace `FolderBuilder` + `FolderItemEditor` pattern with a flow that uses `CustomActivityBuilderDialog` for item creation.
 
 ---
 
 ## Technical Details
 
+### Per-Exercise Log Sets Data Structure
+
+```text
+performance_data = {
+  checkboxStates: { ... },           // existing
+  exerciseSets: {                     // NEW
+    "exercise_abc": {
+      sets: [{ set: 1, weight: 135, reps: 10, unit: "lbs" }]
+    },
+    "exercise_def": {
+      sets: [{ set: 1, time: 30 }]
+    }
+  }
+}
+```
+
+### FolderItemPerformanceLogger Changes
+
+| Prop | Change |
+|------|--------|
+| `exerciseId?: string` | NEW - scopes data to a specific exercise |
+| `exerciseName?: string` | NEW - displayed as header label |
+
+When `exerciseId` is set:
+- Load from `performanceData?.exerciseSets?.[exerciseId]?.sets`
+- Save to `{ ...existingData, exerciseSets: { ...existing, [exerciseId]: { sets } } }`
+
+### CustomActivityDetailDialog Log Sets Section
+
+Replace the single logger block (lines 685-708) with:
+
+```text
+For each exercise in template.exercises:
+  <Collapsible>
+    <CollapsibleTrigger> exercise.name - Log Sets </CollapsibleTrigger>
+    <CollapsibleContent>
+      <FolderItemPerformanceLogger
+        exerciseId={exercise.id}
+        exerciseName={exercise.name}
+        ...
+      />
+    </CollapsibleContent>
+  </Collapsible>
+```
+
+### Folder Item Creation via Builder
+
+When `CustomActivityBuilderDialog.onSave` fires inside the folder context:
+
+```text
+const folderItem = {
+  title: data.title,
+  description: data.description,
+  item_type: mapActivityType(data.activity_type),
+  duration_minutes: data.duration_minutes,
+  exercises: data.exercises,
+  template_snapshot: {
+    icon: data.icon,
+    color: data.color,
+    activity_type: data.activity_type,
+    intensity: data.intensity,
+    meals: data.meals,
+    custom_fields: data.custom_fields,
+    intervals: data.intervals,
+    embedded_running_sessions: data.embedded_running_sessions,
+    duration_minutes: data.duration_minutes,
+    exercises: data.exercises,
+    display_nickname: data.display_nickname,
+    custom_logo_url: data.custom_logo_url,
+  },
+};
+await onAddItem(folderId, folderItem);
+```
+
 ### Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/CustomActivityDetailDialog.tsx` | Add optional `categoryLabel` and `hideEdit` props |
-| `src/components/GamePlanCard.tsx` | Remove fallback dialog; route all folder items through pseudo-template + CustomActivityDetailDialog; add exercise mapper function; remove unused state |
-
-### Unified Flow (After Change)
-
-```text
-User taps folder item on Game Plan
-  -> handleTaskClick sets selectedFolderTask + folderLoggerOpen
-  -> IIFE block at line 2323 runs
-  -> Finds matching folderTask for item data
-  -> Builds pseudoTemplate from:
-     - template_snapshot (if exists) OR raw item fields
-     - folderColor, folderIcon from folder metadata
-     - exercises mapped to Exercise[] format
-  -> Builds pseudoLog with performanceData.checkboxStates
-  -> Renders CustomActivityDetailDialog with:
-     - categoryLabel = folderName
-     - hideEdit = !isOwner
-     - onToggleCheckbox wired to saveFolderCheckboxState
-     - onComplete wired to toggleFolderItemCompletion
-     - onSkipTask wired to handleSkipTask
-```
-
-### What Users Will See
-
-- Folder items (with or without snapshot) render the exact same dialog as custom activities
-- Same colored header, same icon box, same progress badge
-- Same checklist items with green checkboxes and line-through
-- Same scheduled time picker with reminder selector
-- Same Edit / Mark Complete / Skip for Today button layout
-- Log Sets appears only for exercise/skill_work types
-- Folder name shown as category label instead of activity type
-
+| `src/components/folders/FolderItemPerformanceLogger.tsx` | Add `exerciseId` and `exerciseName` props; scope data read/write to per-exercise |
+| `src/components/CustomActivityDetailDialog.tsx` | Replace single Log Sets with per-exercise loggers |
+| `src/components/folders/FolderDetailDialog.tsx` | Replace `FolderItemEditor` with "Create Activity" button that opens `CustomActivityBuilderDialog`; keep import button |
+| `src/components/folders/FolderTabContent.tsx` | Minor: ensure the player folder "Create" also uses the full builder |
