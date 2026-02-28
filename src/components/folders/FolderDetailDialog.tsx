@@ -132,9 +132,12 @@ export function FolderDetailDialog({
   const currentCycleWeek = isRotating ? getCurrentCycleWeek(folder.start_date!, folder.cycle_length_weeks!) : null;
 
   // Filter items by cycle week if rotating and showCurrentWeekOnly
+  // When showing all, sort by cycle_week for grouped headers (nulls = "Every Week" first)
   const displayItems = isRotating && showCurrentWeekOnly
     ? items.filter(i => i.cycle_week === null || i.cycle_week === undefined || i.cycle_week === currentCycleWeek)
-    : items;
+    : isRotating && !showCurrentWeekOnly
+      ? [...items].sort((a, b) => (a.cycle_week ?? 0) - (b.cycle_week ?? 0))
+      : items;
 
   const completedCount = Object.values(completions).filter(Boolean).length;
   const totalTrackable = displayItems.filter(i => i.completion_tracking).length;
@@ -329,16 +332,23 @@ export function FolderDetailDialog({
             </div>
           )}
 
-          {/* Cycle Week Banner */}
+          {/* Cycle Week Info Card */}
           {isRotating && currentCycleWeek !== null && (
-            <div className="flex items-center justify-between p-3 rounded-lg border bg-primary/10">
-              <div className="flex items-center gap-2">
-                <Badge className="text-xs">Week {currentCycleWeek} of {folder.cycle_length_weeks}</Badge>
-                <span className="text-xs text-muted-foreground">Rotating Program</span>
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold">
+                  You're in <span className="text-primary">Week {currentCycleWeek}</span> of your {folder.cycle_length_weeks}-week cycle
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Activities tagged "Week {currentCycleWeek}" are showing.{' '}
+                  {currentCycleWeek! < folder.cycle_length_weeks!
+                    ? `After this week, Week ${currentCycleWeek! + 1} activities will appear.`
+                    : `After this week, it cycles back to Week 1.`}
+                </p>
               </div>
               <div className="flex items-center gap-2">
-                <Label className="text-[10px] text-muted-foreground">Current week only</Label>
-                <Switch checked={showCurrentWeekOnly} onCheckedChange={setShowCurrentWeekOnly} />
+                <Switch checked={showCurrentWeekOnly} onCheckedChange={setShowCurrentWeekOnly} id="cycle-toggle" />
+                <Label htmlFor="cycle-toggle" className="text-xs cursor-pointer">Show only this week's activities</Label>
               </div>
             </div>
           )}
@@ -364,9 +374,25 @@ export function FolderDetailDialog({
             ) : (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={displayItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                  {displayItems.map(item => (
-                    <SortableFolderItem key={item.id} id={item.id}>
-                      {({ dragHandleProps }) => (
+                  {displayItems.map((item, idx) => {
+                    // Week headers when showing all weeks in rotating folders
+                    const showWeekHeader = isRotating && !showCurrentWeekOnly && (
+                      idx === 0 || item.cycle_week !== displayItems[idx - 1].cycle_week
+                    );
+                    const weekLabel = item.cycle_week == null ? 'Every Week' : `Week ${item.cycle_week}`;
+                    return (
+                      <div key={item.id}>
+                        {showWeekHeader && (
+                          <div className="flex items-center gap-2 py-1.5">
+                            <div className="h-px flex-1 bg-border" />
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              {weekLabel}{item.cycle_week === currentCycleWeek ? ' (current)' : ''}
+                            </span>
+                            <div className="h-px flex-1 bg-border" />
+                          </div>
+                        )}
+                        <SortableFolderItem id={item.id}>
+                    {({ dragHandleProps }) => (
                         <div className="p-3 rounded-lg border bg-card space-y-1">
                           <div className="flex items-start gap-2">
                             {isOwner && (
@@ -449,7 +475,9 @@ export function FolderDetailDialog({
                         </div>
                       )}
                     </SortableFolderItem>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </SortableContext>
               </DndContext>
             )}

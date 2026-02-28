@@ -10,7 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { ActivityFolder, FOLDER_LABELS, PLACEMENT_OPTIONS, DAY_LABELS } from '@/types/activityFolder';
-import { CalendarIcon, FolderPlus } from 'lucide-react';
+import { CalendarIcon, FolderPlus, Repeat, RefreshCw, Minus, Plus, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -119,7 +119,7 @@ export function FolderBuilder({ onSave, onCancel, initialData }: FolderBuilderPr
         {/* Dates */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Start Date</Label>
+            <Label>{cycleType === 'custom_rotation' ? 'When does Week 1 begin?' : 'Start Date'}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -146,34 +146,125 @@ export function FolderBuilder({ onSave, onCancel, initialData }: FolderBuilderPr
 
         {/* Frequency Days removed - scheduling is at activity level only */}
 
-        {/* Cycle Type */}
+        {/* How should activities repeat? */}
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Program Type</Label>
-              <Select value={cycleType} onValueChange={setCycleType}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="weekly">Same Every Week</SelectItem>
-                  <SelectItem value="custom_rotation">Rotating Program</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {cycleType === 'custom_rotation' && (
-              <div className="space-y-2">
-                <Label>Rotation Length (Weeks)</Label>
-                <Input type="number" min={2} max={12} value={cycleLengthWeeks} onChange={e => setCycleLengthWeeks(Number(e.target.value))} />
+          <Label className="text-sm font-semibold">How should activities repeat?</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Same Every Week card */}
+            <button
+              type="button"
+              onClick={() => setCycleType('weekly')}
+              className={cn(
+                "p-4 rounded-lg border-2 text-left transition-all space-y-2",
+                cycleType === 'weekly'
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                  : "border-border hover:border-muted-foreground/40"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <Repeat className="h-5 w-5 text-primary" />
+                <span className="font-semibold text-sm">Same Every Week</span>
               </div>
-            )}
+              <p className="text-xs text-muted-foreground">Your activities show up every week, same routine.</p>
+              <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground/70 pt-1">
+                <span className="px-1.5 py-0.5 rounded bg-muted">Mon Tue Wed</span>
+                <span>→</span>
+                <span className="px-1.5 py-0.5 rounded bg-muted">Mon Tue Wed</span>
+                <span>→</span>
+                <span className="px-1.5 py-0.5 rounded bg-muted">Mon Tue Wed</span>
+              </div>
+            </button>
+
+            {/* Rotating Program card */}
+            <button
+              type="button"
+              onClick={() => setCycleType('custom_rotation')}
+              className={cn(
+                "p-4 rounded-lg border-2 text-left transition-all space-y-2",
+                cycleType === 'custom_rotation'
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                  : "border-border hover:border-muted-foreground/40"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 text-primary" />
+                <span className="font-semibold text-sm">Rotating Program</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Activities change each week in a cycle, then repeat.</p>
+              <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground/70 pt-1 flex-wrap">
+                <span className="px-1.5 py-0.5 rounded bg-muted">Wk1</span>
+                <span>→</span>
+                <span className="px-1.5 py-0.5 rounded bg-muted">Wk2</span>
+                <span>→</span>
+                <span className="px-1.5 py-0.5 rounded bg-muted">Wk3</span>
+                <span>→</span>
+                <span className="text-primary font-semibold">back to Wk1</span>
+              </div>
+            </button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            {cycleType === 'custom_rotation'
-              ? `Activities tagged with the current rotation week will appear on your Game Plan. The system auto-advances each week based on your start date. You're setting up a ${cycleLengthWeeks}-week rotating cycle.`
-              : 'All activities in this folder appear every week on their scheduled days.'}
-          </p>
-          {cycleType === 'custom_rotation' && !startDate && (
-            <p className="text-xs text-destructive font-medium">⚠ A Start Date is required for rotating programs so the system can calculate the current week.</p>
+
+          {/* Rotating Program explainer */}
+          {cycleType === 'custom_rotation' && (
+            <div className="space-y-4">
+              {/* Tip callout */}
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <div className="space-y-2 text-xs text-muted-foreground">
+                    <p className="font-medium text-foreground">How it works:</p>
+                    <p>Pick a start date and how many weeks your cycle lasts. Each activity you add will be assigned to a specific week. The system automatically knows which week you're in and only shows those activities on your Game Plan.</p>
+                    <div className="rounded bg-muted/50 p-2 font-mono text-[10px] space-y-0.5">
+                      <p className="font-semibold text-foreground">Example: 3-week cycle starting Jan 6</p>
+                      <p>Jan 6–12 = Week 1</p>
+                      <p>Jan 13–19 = Week 2</p>
+                      <p>Jan 20–26 = Week 3</p>
+                      <p className="text-primary">Jan 27+ = back to Week 1 ↻</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cycle length stepper */}
+              <div className="space-y-2">
+                <Label className="text-sm">How many weeks before it repeats?</Label>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => setCycleLengthWeeks(Math.max(2, cycleLengthWeeks - 1))}
+                    disabled={cycleLengthWeeks <= 2}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <div className="flex items-center gap-1.5 min-w-[80px] justify-center">
+                    <span className="text-2xl font-bold">{cycleLengthWeeks}</span>
+                    <span className="text-sm text-muted-foreground">weeks</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => setCycleLengthWeeks(Math.min(12, cycleLengthWeeks + 1))}
+                    disabled={cycleLengthWeeks >= 12}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Start date warning */}
+              {!startDate && (
+                <p className="text-xs text-destructive font-medium flex items-center gap-1.5">
+                  ⚠ Pick a start date so the system knows which week you're in!
+                </p>
+              )}
+            </div>
           )}
+
+          <p className="text-[11px] text-muted-foreground/70 italic">Each folder runs its own schedule independently.</p>
         </div>
 
         {/* Placement */}
