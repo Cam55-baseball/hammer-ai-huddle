@@ -878,13 +878,16 @@ export function CustomActivityBuilderDialog({
                   )}
                 </div>
 
-                {/* Rotation Week Selector - only in rotating folder context */}
+                {/* Which week does this belong to? */}
                 {folderCycleType === 'custom_rotation' && folderCycleLengthWeeks && (
-                  <div className="space-y-2 p-4 rounded-lg border bg-muted/30">
+                  <div className="space-y-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
                     <Label className="text-sm font-bold flex items-center gap-2">
                       <Layers className="h-4 w-4" />
-                      Rotation Week
+                      Which week does this belong to?
                     </Label>
+                    <p className="text-xs text-muted-foreground">
+                      This activity will only show on your Game Plan during this week of the cycle.
+                    </p>
                     <Select
                       value={cycleWeek?.toString() || 'all'}
                       onValueChange={(v) => {
@@ -895,15 +898,19 @@ export function CustomActivityBuilderDialog({
                     >
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Every Week</SelectItem>
+                        <SelectItem value="all">
+                          <span className="flex items-center gap-2">
+                            Every Week
+                            <span className="text-[10px] text-muted-foreground">— shows no matter which cycle week</span>
+                          </span>
+                        </SelectItem>
                         {Array.from({ length: folderCycleLengthWeeks }, (_, i) => (
-                          <SelectItem key={i + 1} value={(i + 1).toString()}>Week {i + 1}</SelectItem>
+                          <SelectItem key={i + 1} value={(i + 1).toString()}>
+                            Week {i + 1}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Choose which rotation week this activity belongs to. "Every Week" means it shows regardless of the current cycle week.
-                    </p>
                   </div>
                 )}
 
