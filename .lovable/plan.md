@@ -1,72 +1,94 @@
 
 
-# Make Cycle System Crystal Clear -- 10-Year-Old Friendly
+# Cycle Plan System — Critical UX and Functionality Overhaul
 
-## Problem
+## Overview
 
-The cycle/rotation system works correctly in code but the UI provides zero visual explanation. Users see "Program Type" and "Rotating Program" with no understanding of what it does, how it affects their activities, or what "Week 2 of 4" means in practice.
+Four changes: rename the cycle label, fix scroll in the folder edit dialog, add inline cycle-week tagging on activity cards, and restructure the folder detail view with collapsible weekly dropdowns and per-week drag-and-drop ordering.
 
-## Changes
+## 1. Title Rename
 
-### 1. Rewrite FolderBuilder Cycle Section with Visual Explanation
+**File: `src/components/folders/FolderBuilder.tsx` (line 151)**
 
-**File: `src/components/folders/FolderBuilder.tsx`**
+Change the label from:
+- "How should activities repeat?"
 
-Replace the current "Program Type" section (lines 149-177) with a guided, visual explanation:
+To:
+- **"Cycle Plan: How should activities repeat?"**
 
-- Rename "Program Type" label to **"How should activities repeat?"**
-- Replace the Select dropdown with two tappable cards (radio-style):
-  - **Card 1: "Same Every Week"** with a one-line description: "Your activities show up every week, same routine."  Plus a small visual: `[Mon Tue Wed] -> [Mon Tue Wed] -> [Mon Tue Wed]`
-  - **Card 2: "Rotating Program"** with: "Activities change each week in a cycle, then repeat." Plus a small visual: `[Wk1: Strength] -> [Wk2: Speed] -> [Wk3: Recovery] -> back to Wk1`
-- When "Rotating Program" is selected, show an inline explainer box (styled like a tip/callout):
-  - "Pick a start date and how many weeks your cycle lasts. Each activity you add will be assigned to a specific week. The system automatically knows which week you're in and only shows those activities on your Game Plan."
-  - Visual example: "If you set a 3-week cycle starting Jan 6: Jan 6-12 = Week 1, Jan 13-19 = Week 2, Jan 20-26 = Week 3, Jan 27+ = back to Week 1"
-- Keep the cycle length input but relabel to **"How many weeks before it repeats?"** with a stepper (not raw number input) clamped 2-12
-- Start Date picker gets a helper: "When does Week 1 begin?"
-- If no start date is set when Rotating is chosen, show a friendly warning: "Pick a start date so the system knows which week you're in!"
+Simple one-line text change.
 
-### 2. Improve Cycle Week Banner in FolderDetailDialog
+## 2. Folder Edit Scroll Fix
+
+**File: `src/components/folders/FolderTabContent.tsx` (lines 271-288)**
+
+The edit dialog at line 272 wraps `FolderBuilder` in a `DialogContent` with no scroll handling. The `FolderBuilder` is a `<Card>` with potentially long content that gets clipped.
+
+Fix: Add `max-h-[85vh] overflow-y-auto` to the `DialogContent` at line 272, matching the pattern used in the folder detail edit dialog (line 598 of `FolderDetailDialog.tsx`).
+
+**File: `src/components/folders/FolderDetailDialog.tsx` (lines 594-610)**
+
+The nested edit dialog at line 598 already has `max-h-[85vh] overflow-y-auto` -- confirm this is intact (it is). No change needed here.
+
+## 3. Inline Cycle-Week Tagging on Activity Cards (No Deep Edit Required)
 
 **File: `src/components/folders/FolderDetailDialog.tsx`**
 
-Upgrade the existing "Week X of Y" banner (lines 332-344) to be more informative:
+Currently, to change an activity's cycle week, users must open the full activity builder (pencil icon). This is confusing and heavy.
 
-- Change from a compact badge to a slightly larger info card
-- Show: "You're in **Week 2** of your 4-week cycle"
-- Add a sub-line: "Activities tagged 'Week 2' are showing. After this week, Week 3 activities will appear."
-- The "Current week only" toggle stays, but relabel to: "Show only this week's activities"
-- When toggle is OFF (showing all), group items visually with week headers: "-- Week 1 --", "-- Week 2 --", etc., plus "-- Every Week --" for untagged items
+Add a lightweight inline "Tag to Week" selector directly on each activity card in the folder detail view:
 
-### 3. Clarify Cycle Week Selector in Activity Builder
+- On each item card (lines 396-475), add a small `Select` dropdown next to the existing badges
+- Options: "Every Week", "Week 1", "Week 2", ... up to `folder.cycle_length_weeks`
+- Only visible when the folder is a rotating program (`isRotating`)
+- On change, directly update `cycle_week` in the database and local state -- no need to open the builder
+- Implementation: a new handler `handleQuickCycleWeekChange(itemId, newWeek)` that calls `supabase.from('activity_folder_items').update({ cycle_week: newWeek }).eq('id', itemId)` and updates local `items` state
 
-**File: `src/components/custom-activities/CustomActivityBuilderDialog.tsx`**
+This gives users a one-tap way to assign/reassign activities to weeks without editing the card.
 
-When adding/editing an activity inside a rotating folder, the "Rotation Week" dropdown needs context:
+## 4. Weekly Dropdown Structure with Per-Week Ordering
 
-- Relabel from "Rotation Week" to **"Which week does this belong to?"**
-- Add helper text: "This activity will only show on your Game Plan during this week of the cycle"
-- Include an "Every Week" option (sets cycle_week to null) with helper: "Shows up every week, no matter which cycle week it is"
-- Show a visual indicator next to each option: "Wk 1 (current)" if that week is the active one
+**File: `src/components/folders/FolderDetailDialog.tsx`**
 
-### 4. No Multi-Start-Date or Cross-Folder Co-Planning
+Replace the current flat item list (with thin week headers) with collapsible weekly sections when the folder is a rotating program:
 
-Each folder is its own independent container. This is by design and should be stated clearly:
+**A. Collapsible Week Sections**
 
-- In the FolderBuilder, add a small note under the rotation section: "Each folder runs its own schedule independently."
-- No changes to cross-folder logic needed -- folders don't interact with each other's cycles
+When `isRotating` and showing all weeks (`!showCurrentWeekOnly`):
+- Group `displayItems` by `cycle_week` (null = "Every Week", 1 = "Week 1", etc.)
+- Render each group inside a `Collapsible` component (already installed via `@radix-ui/react-collapsible`)
+- Each section header shows: "Week 1" with a chevron toggle and item count badge
+- The current week's header gets a "(current)" indicator
+- Default: current week expanded, others collapsed
+
+**B. Per-Week Drag-and-Drop**
+
+Each weekly section gets its own `DndContext` + `SortableContext`:
+- Items can be reordered within their week
+- `order_index` is persisted per-week (scoped to items sharing the same `cycle_week`)
+- This allows Week 1 to have "Speed before Strength" and Week 2 to have "Strength before Speed" independently
+
+When `showCurrentWeekOnly` is true or the folder is not rotating, keep the existing single flat list with drag-and-drop (unchanged behavior).
+
+**C. "Every Week" section**
+
+Activities with `cycle_week === null` appear in an "Every Week" collapsible section at the top, always expanded by default. These activities show in every rotation week.
+
+## 5. Cycle Behavior Explanation in UI
+
+**File: `src/components/folders/FolderBuilder.tsx`**
+
+The existing explainer (lines 209-225) already covers most of this. Add one additional line inside the explainer to clarify looping behavior:
+
+- After the example block, add: **"The cycle loops forever until you set an end date or archive the folder."**
+
+This explicitly answers "what happens when weeks complete."
 
 ## Technical Summary
 
 | File | Changes |
 |------|---------|
-| `src/components/folders/FolderBuilder.tsx` | Replace Select dropdown with visual card selector; add inline explainer with examples; relabel all fields to plain language; add stepper for cycle length |
-| `src/components/folders/FolderDetailDialog.tsx` | Upgrade cycle banner to info card with context sentence; group items by week headers when showing all weeks |
-| `src/components/custom-activities/CustomActivityBuilderDialog.tsx` | Relabel rotation week dropdown; add helper text; mark current week; add "Every Week" option explanation |
+| `FolderBuilder.tsx` | Rename label to "Cycle Plan: How should activities repeat?"; add loop clarification sentence to explainer |
+| `FolderTabContent.tsx` | Add `max-h-[85vh] overflow-y-auto` to the edit folder `DialogContent` |
+| `FolderDetailDialog.tsx` | Add inline cycle-week `Select` on each item card; restructure items into collapsible weekly sections with per-week `DndContext`; add `handleQuickCycleWeekChange` handler |
 
-## What This Does NOT Change
-
-- The database schema (no migrations needed)
-- The Game Plan filtering logic (already working correctly)
-- The `getCurrentCycleWeek` calculation (already correct)
-- Cross-folder behavior (folders remain independent by design)
-- The ability to have multiple folders with different rotation schedules (already supported)
