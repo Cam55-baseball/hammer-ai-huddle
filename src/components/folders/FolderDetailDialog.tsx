@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ActivityFolder, ActivityFolderItem, DAY_LABELS, getCurrentCycleWeek } from '@/types/activityFolder';
 import { supabase } from '@/integrations/supabase/client';
 import { FolderItemPerformanceLogger } from './FolderItemPerformanceLogger';
@@ -13,7 +15,7 @@ import { FolderBuilder } from './FolderBuilder';
 import { CustomActivityBuilderDialog } from '@/components/custom-activities/CustomActivityBuilderDialog';
 import { ActivityPickerDialog } from './ActivityPickerDialog';
 import { CustomActivityTemplate, Exercise } from '@/types/customActivity';
-import { FolderOpen, Clock, FileText, Trash2, AlertTriangle, CalendarDays, ChevronDown, Pencil, Plus, Library, Edit, GripVertical } from 'lucide-react';
+import { FolderOpen, Clock, FileText, Trash2, CalendarDays, ChevronDown, ChevronRight, Pencil, Plus, Library, Edit, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getTodayDate } from '@/utils/dateUtils';
 import { format } from 'date-fns';
@@ -69,6 +71,7 @@ export function FolderDetailDialog({
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [showCurrentWeekOnly, setShowCurrentWeekOnly] = useState(true);
   const [pendingCycleWeek, setPendingCycleWeek] = useState<number | null>(null);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -102,7 +105,6 @@ export function FolderDetailDialog({
         .order('order_index');
       setItems((data || []) as unknown as ActivityFolderItem[]);
 
-      // Load today's completions
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user) {
         const today = getTodayDate();
@@ -126,22 +128,51 @@ export function FolderDetailDialog({
     load();
   }, [open, folder]);
 
+  // Derived values that need folder — safe since we guard rendering below
+  const isRotating = folder ? (folder.cycle_type === 'custom_rotation' && folder.start_date && folder.cycle_length_weeks) : false;
+  const currentCycleWeek = isRotating && folder ? getCurrentCycleWeek(folder.start_date!, folder.cycle_length_weeks!) : null;
+
+  const groupedItems = useMemo(() => {
+    if (!folder || !isRotating || showCurrentWeekOnly) return null;
+    const groups: Record<string, ActivityFolderItem[]> = {};
+    groups['__every_week__'] = [];
+    for (let w = 1; w <= (folder.cycle_length_weeks || 4); w++) {
+      groups[String(w)] = [];
+    }
+    items.forEach(item => {
+      if (item.cycle_week == null) {
+        groups['__every_week__'].push(item);
+      } else {
+        const key = String(item.cycle_week);
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(item);
+      }
+    });
+    Object.values(groups).forEach(arr => arr.sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0)));
+    return groups;
+  }, [items, isRotating, showCurrentWeekOnly, folder?.cycle_length_weeks]);
+
+  useEffect(() => {
+    if (groupedItems && currentCycleWeek !== null) {
+      const defaults: Record<string, boolean> = { '__every_week__': true };
+      Object.keys(groupedItems).forEach(key => {
+        defaults[key] = key === '__every_week__' || key === String(currentCycleWeek);
+      });
+      setOpenSections(defaults);
+    }
+  }, [!!groupedItems, currentCycleWeek]);
+
   if (!folder) return null;
 
-  const isRotating = folder.cycle_type === 'custom_rotation' && folder.start_date && folder.cycle_length_weeks;
-  const currentCycleWeek = isRotating ? getCurrentCycleWeek(folder.start_date!, folder.cycle_length_weeks!) : null;
-
-  // Filter items by cycle week if rotating and showCurrentWeekOnly
-  // When showing all, sort by cycle_week for grouped headers (nulls = "Every Week" first)
   const displayItems = isRotating && showCurrentWeekOnly
     ? items.filter(i => i.cycle_week === null || i.cycle_week === undefined || i.cycle_week === currentCycleWeek)
-    : isRotating && !showCurrentWeekOnly
-      ? [...items].sort((a, b) => (a.cycle_week ?? 0) - (b.cycle_week ?? 0))
-      : items;
+    : !isRotating ? items : [];
 
   const completedCount = Object.values(completions).filter(Boolean).length;
-  const totalTrackable = displayItems.filter(i => i.completion_tracking).length;
+  const allDisplayItems = groupedItems ? Object.values(groupedItems).flat() : displayItems;
+  const totalTrackable = allDisplayItems.filter(i => i.completion_tracking).length;
   const pct = totalTrackable > 0 ? Math.round((completedCount / totalTrackable) * 100) : 0;
+  const totalItemCount = groupedItems ? Object.values(groupedItems).flat().length : displayItems.length;
 
   const handleToggle = async (itemId: string) => {
     if (!onToggleCompletion) return;
@@ -154,7 +185,6 @@ export function FolderDetailDialog({
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return;
     const today = getTodayDate();
-
     const { data: existing } = await supabase
       .from('folder_item_completions')
       .select('id')
@@ -162,7 +192,6 @@ export function FolderDetailDialog({
       .eq('user_id', userData.user.id)
       .eq('entry_date', today)
       .maybeSingle();
-
     if (existing) {
       await supabase.from('folder_item_completions')
         .update({ performance_data: data, completed: true, completed_at: new Date().toISOString() } as any)
@@ -171,7 +200,6 @@ export function FolderDetailDialog({
       await supabase.from('folder_item_completions')
         .insert({ folder_item_id: itemId, user_id: userData.user.id, entry_date: today, completed: true, completed_at: new Date().toISOString(), performance_data: data } as any);
     }
-
     setCompletions(prev => ({ ...prev, [itemId]: true }));
     setPerformanceDataMap(prev => ({ ...prev, [itemId]: data }));
     toast.success('Performance data saved');
@@ -181,27 +209,20 @@ export function FolderDetailDialog({
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
-
       const { data: mpi } = await supabase
         .from('athlete_mpi_settings')
         .select('primary_coach_id')
         .eq('user_id', userData.user.id)
         .single();
-
       const coachId = mpi?.primary_coach_id || null;
       if (allowed && !coachId) {
         toast.error('No primary coach set. Go to settings to assign a coach first.');
         return;
       }
-
       const { error } = await supabase
         .from('activity_folders')
-        .update({
-          coach_edit_allowed: allowed,
-          coach_edit_user_id: allowed ? coachId : null,
-        } as any)
+        .update({ coach_edit_allowed: allowed, coach_edit_user_id: allowed ? coachId : null } as any)
         .eq('id', folder.id);
-
       if (error) throw error;
       setCoachEditAllowed(allowed);
       toast.success(allowed ? 'Coach can now edit this folder' : 'Coach edit access removed');
@@ -224,30 +245,15 @@ export function FolderDetailDialog({
         specific_dates: (data as any).specific_dates?.length > 0 ? (data as any).specific_dates : null,
         cycle_week: pendingCycleWeek !== undefined ? pendingCycleWeek : editingItem.cycle_week,
         template_snapshot: {
-          icon: data.icon,
-          color: data.color,
-          activity_type: data.activity_type,
-          title: data.title,
-          description: data.description,
-          intensity: data.intensity,
-          meals: data.meals,
-          custom_fields: data.custom_fields,
-          intervals: data.intervals,
-          embedded_running_sessions: data.embedded_running_sessions,
-          duration_minutes: data.duration_minutes,
-          exercises: data.exercises,
-          display_nickname: data.display_nickname,
-          custom_logo_url: data.custom_logo_url,
+          icon: data.icon, color: data.color, activity_type: data.activity_type,
+          title: data.title, description: data.description, intensity: data.intensity,
+          meals: data.meals, custom_fields: data.custom_fields, intervals: data.intervals,
+          embedded_running_sessions: data.embedded_running_sessions, duration_minutes: data.duration_minutes,
+          exercises: data.exercises, display_nickname: data.display_nickname, custom_logo_url: data.custom_logo_url,
         },
       };
-
-      const { error } = await supabase
-        .from('activity_folder_items')
-        .update(updates)
-        .eq('id', editingItem.id);
-
+      const { error } = await supabase.from('activity_folder_items').update(updates).eq('id', editingItem.id);
       if (error) throw error;
-
       setItems(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...updates } : i));
       setEditingItem(null);
       toast.success('Item updated');
@@ -259,51 +265,189 @@ export function FolderDetailDialog({
     }
   };
 
-  // Build a template object from folder item for the full builder
   const buildTemplateFromItem = (item: ActivityFolderItem): CustomActivityTemplate | null => {
     const snapshot = (item.template_snapshot || {}) as any;
     return {
-      id: item.id,
-      user_id: '',
-      created_at: '',
-      updated_at: '',
-      sport: folder.sport || 'baseball',
-      title: item.title,
-      description: item.description || '',
+      id: item.id, user_id: '', created_at: '', updated_at: '',
+      sport: folder.sport || 'baseball', title: item.title, description: item.description || '',
       activity_type: snapshot.activity_type || item.item_type || 'exercise',
-      icon: snapshot.icon || 'dumbbell',
-      color: snapshot.color || '#8b5cf6',
+      icon: snapshot.icon || 'dumbbell', color: snapshot.color || '#8b5cf6',
       exercises: (snapshot.exercises || item.exercises || []) as Exercise[],
-      meals: snapshot.meals || null,
-      custom_fields: snapshot.custom_fields || null,
+      meals: snapshot.meals || null, custom_fields: snapshot.custom_fields || null,
       duration_minutes: item.duration_minutes || snapshot.duration_minutes || undefined,
-      intensity: snapshot.intensity || undefined,
-      intervals: snapshot.intervals || null,
+      intensity: snapshot.intensity || undefined, intervals: snapshot.intervals || null,
       embedded_running_sessions: snapshot.embedded_running_sessions || null,
-      display_nickname: snapshot.display_nickname || null,
-      custom_logo_url: snapshot.custom_logo_url || null,
-      is_favorited: false,
-      display_days: item.assigned_days || null,
-      display_time: null,
+      display_nickname: snapshot.display_nickname || null, custom_logo_url: snapshot.custom_logo_url || null,
+      is_favorited: false, display_days: item.assigned_days || null, display_time: null,
       recurring_active: !!(item.assigned_days && item.assigned_days.length > 0),
-      recurring_days: item.assigned_days || null,
-      specific_dates: item.specific_dates || undefined,
-      reminder_enabled: false,
-      reminder_minutes: null,
-      reminder_time: null,
-      display_on_game_plan: true,
-      distance_value: snapshot.distance_value || undefined,
-      distance_unit: snapshot.distance_unit || 'miles',
+      recurring_days: item.assigned_days || null, specific_dates: item.specific_dates || undefined,
+      reminder_enabled: false, reminder_minutes: null, reminder_time: null, display_on_game_plan: true,
+      distance_value: snapshot.distance_value || undefined, distance_unit: snapshot.distance_unit || 'miles',
       pace_value: snapshot.pace_value || undefined,
     } as CustomActivityTemplate;
   };
 
   const handleConfirmFolderDelete = async () => {
-    if (onDeleteFolder) {
-      await onDeleteFolder(folder.id);
-    }
+    if (onDeleteFolder) await onDeleteFolder(folder.id);
     setConfirmDeleteOpen(false);
     onOpenChange(false);
+  };
+
+  const handleQuickCycleWeekChange = async (itemId: string, newWeek: number | null) => {
+    try {
+      const { error } = await supabase
+        .from('activity_folder_items')
+        .update({ cycle_week: newWeek } as any)
+        .eq('id', itemId);
+      if (error) throw error;
+      setItems(prev => prev.map(i => i.id === itemId ? { ...i, cycle_week: newWeek } : i));
+      toast.success(`Tagged to ${newWeek == null ? 'Every Week' : `Week ${newWeek}`}`);
+    } catch (err) {
+      console.error('Error updating cycle week:', err);
+      toast.error('Failed to update week tag');
+    }
+  };
+
+  const handleGroupDragEnd = async (weekKey: string, event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !groupedItems) return;
+    const group = groupedItems[weekKey];
+    if (!group) return;
+    const oldIdx = group.findIndex(i => i.id === active.id);
+    const newIdx = group.findIndex(i => i.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove([...group], oldIdx, newIdx);
+    const reorderedIds = new Set(reordered.map(i => i.id));
+    setItems(prev => {
+      const others = prev.filter(i => !reorderedIds.has(i.id));
+      return [...others, ...reordered.map((item, idx) => ({ ...item, order_index: idx }))];
+    });
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from('activity_folder_items').update({ order_index: i }).eq('id', reordered[i].id);
+    }
+  };
+
+  const renderItemCard = (item: ActivityFolderItem) => (
+    <SortableFolderItem id={item.id} key={item.id}>
+      {({ dragHandleProps }) => (
+        <div className="p-3 rounded-lg border bg-card space-y-1">
+          <div className="flex items-start gap-2">
+            {isOwner && (
+              <div {...dragHandleProps} className="cursor-grab mt-1 touch-none">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+              </div>
+            )}
+            {item.completion_tracking && onToggleCompletion && (
+              <Checkbox checked={completions[item.id] || false} onCheckedChange={() => handleToggle(item.id)} className="mt-0.5" />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-sm font-medium ${completions[item.id] ? 'line-through text-muted-foreground' : ''}`}>
+                  {item.title}
+                </span>
+                {item.item_type && <Badge variant="outline" className="text-[10px]">{item.item_type}</Badge>}
+                {performanceDataMap[item.id]?.sets?.length > 0 && (
+                  <Badge variant="secondary" className="text-[10px]">{performanceDataMap[item.id].sets.length} sets</Badge>
+                )}
+                {/* Inline cycle-week quick tag */}
+                {isRotating && isOwner && (
+                  <Select
+                    value={item.cycle_week == null ? 'every' : String(item.cycle_week)}
+                    onValueChange={(val) => handleQuickCycleWeekChange(item.id, val === 'every' ? null : parseInt(val))}
+                  >
+                    <SelectTrigger className="h-5 w-auto min-w-[70px] text-[10px] px-1.5 py-0 border-dashed gap-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="every" className="text-xs">Every Week</SelectItem>
+                      {Array.from({ length: folder.cycle_length_weeks || 4 }, (_, i) => i + 1).map(w => (
+                        <SelectItem key={w} value={String(w)} className="text-xs">
+                          Wk {w}{w === currentCycleWeek ? ' (current)' : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              {item.description && <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>}
+              <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground flex-wrap">
+                {item.specific_dates && item.specific_dates.length > 0 ? (
+                  <span className="flex items-center gap-0.5">
+                    <CalendarDays className="h-2.5 w-2.5" />
+                    {item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}
+                  </span>
+                ) : item.assigned_days && item.assigned_days.length > 0 ? (
+                  <span>{item.assigned_days.map(d => DAY_LABELS[d]).join(', ')}</span>
+                ) : null}
+                {item.duration_minutes && (
+                  <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
+                )}
+                {item.notes && (
+                  <span className="flex items-center gap-0.5"><FileText className="h-2.5 w-2.5" />Notes</span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {item.completion_tracking && (
+                <Button variant="ghost" size="icon" className="h-7 w-7"
+                  onClick={() => setExpandedLoggers(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                >
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expandedLoggers[item.id] ? 'rotate-180' : ''}`} />
+                </Button>
+              )}
+              {isOwner && (
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem(item)}>
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {isOwner && onDeleteItem && (
+                <Button variant="ghost" size="icon" className="h-7 w-7"
+                  onClick={() => onDeleteItem(item.id).then(() => setItems(prev => prev.filter(i => i.id !== item.id)))}
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </Button>
+              )}
+            </div>
+          </div>
+          {item.completion_tracking && expandedLoggers[item.id] && (
+            <FolderItemPerformanceLogger
+              item={item}
+              performanceData={performanceDataMap[item.id]}
+              onSave={async (data) => handleSavePerformanceData(item.id, data)}
+              compact
+            />
+          )}
+        </div>
+      )}
+    </SortableFolderItem>
+  );
+
+  const renderCollapsibleWeekSection = (weekKey: string, weekItems: ActivityFolderItem[]) => {
+    const label = weekKey === '__every_week__' ? 'Every Week' : `Week ${weekKey}`;
+    const isCurrent = weekKey === String(currentCycleWeek);
+    const isOpen = openSections[weekKey] ?? (weekKey === '__every_week__' || isCurrent);
+
+    return (
+      <Collapsible key={weekKey} open={isOpen} onOpenChange={(open) => setOpenSections(prev => ({ ...prev, [weekKey]: open }))}>
+        <CollapsibleTrigger className="flex items-center gap-2 w-full py-2 px-1 hover:bg-muted/50 rounded-md transition-colors">
+          {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+          {isCurrent && <Badge variant="default" className="text-[9px] h-4 px-1.5">current</Badge>}
+          <Badge variant="outline" className="text-[9px] h-4 px-1.5 ml-auto">{weekItems.length}</Badge>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-2 pl-1">
+          {weekItems.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-2 pl-6">No activities in this week yet.</p>
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleGroupDragEnd(weekKey, e)}>
+              <SortableContext items={weekItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                {weekItems.map(item => renderItemCard(item))}
+              </SortableContext>
+            </DndContext>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+    );
   };
 
   return (
@@ -317,9 +461,7 @@ export function FolderDetailDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-3 px-6 pb-2" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
-          {folder.description && (
-            <p className="text-sm text-muted-foreground">{folder.description}</p>
-          )}
+          {folder.description && <p className="text-sm text-muted-foreground">{folder.description}</p>}
 
           {/* Coach Edit Toggle (player-owned folders only) */}
           {isOwner && folder.owner_type === 'player' && (
@@ -366,118 +508,22 @@ export function FolderDetailDialog({
 
           {/* Items */}
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Items ({displayItems.length}{isRotating && !showCurrentWeekOnly ? ` / ${items.length} total` : ''})</h4>
+            <h4 className="text-sm font-semibold">Items ({totalItemCount}{isRotating && !showCurrentWeekOnly ? ` / ${items.length} total` : ''})</h4>
             {loading ? (
               <p className="text-sm text-muted-foreground">Loading...</p>
-            ) : displayItems.length === 0 ? (
+            ) : totalItemCount === 0 ? (
               <p className="text-sm text-muted-foreground">{isRotating && showCurrentWeekOnly ? 'No items for the current rotation week.' : 'No items yet.'}</p>
+            ) : groupedItems ? (
+              <div className="space-y-1">
+                {renderCollapsibleWeekSection('__every_week__', groupedItems['__every_week__'] || [])}
+                {Array.from({ length: folder.cycle_length_weeks || 4 }, (_, i) => String(i + 1)).map(weekKey =>
+                  renderCollapsibleWeekSection(weekKey, groupedItems[weekKey] || [])
+                )}
+              </div>
             ) : (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={displayItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                  {displayItems.map((item, idx) => {
-                    // Week headers when showing all weeks in rotating folders
-                    const showWeekHeader = isRotating && !showCurrentWeekOnly && (
-                      idx === 0 || item.cycle_week !== displayItems[idx - 1].cycle_week
-                    );
-                    const weekLabel = item.cycle_week == null ? 'Every Week' : `Week ${item.cycle_week}`;
-                    return (
-                      <div key={item.id}>
-                        {showWeekHeader && (
-                          <div className="flex items-center gap-2 py-1.5">
-                            <div className="h-px flex-1 bg-border" />
-                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                              {weekLabel}{item.cycle_week === currentCycleWeek ? ' (current)' : ''}
-                            </span>
-                            <div className="h-px flex-1 bg-border" />
-                          </div>
-                        )}
-                        <SortableFolderItem id={item.id}>
-                    {({ dragHandleProps }) => (
-                        <div className="p-3 rounded-lg border bg-card space-y-1">
-                          <div className="flex items-start gap-2">
-                            {isOwner && (
-                              <div {...dragHandleProps} className="cursor-grab mt-1 touch-none">
-                                <GripVertical className="h-4 w-4 text-muted-foreground" />
-                              </div>
-                            )}
-                            {item.completion_tracking && onToggleCompletion && (
-                              <Checkbox
-                                checked={completions[item.id] || false}
-                                onCheckedChange={() => handleToggle(item.id)}
-                                className="mt-0.5"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className={`text-sm font-medium ${completions[item.id] ? 'line-through text-muted-foreground' : ''}`}>
-                                  {item.title}
-                                </span>
-                                {item.item_type && (
-                                  <Badge variant="outline" className="text-[10px]">{item.item_type}</Badge>
-                                )}
-                                {performanceDataMap[item.id]?.sets?.length > 0 && (
-                                  <Badge variant="secondary" className="text-[10px]">{performanceDataMap[item.id].sets.length} sets</Badge>
-                                )}
-                              </div>
-                              {item.description && (
-                                <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
-                              )}
-                              <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground flex-wrap">
-                                {item.specific_dates && item.specific_dates.length > 0 ? (
-                                  <span className="flex items-center gap-0.5">
-                                    <CalendarDays className="h-2.5 w-2.5" />
-                                    {item.specific_dates.map(d => format(new Date(d + 'T00:00:00'), 'MMM d')).join(', ')}
-                                  </span>
-                                ) : item.assigned_days && item.assigned_days.length > 0 ? (
-                                  <span>{item.assigned_days.map(d => DAY_LABELS[d]).join(', ')}</span>
-                                ) : null}
-                                {item.duration_minutes && (
-                                  <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{item.duration_minutes}m</span>
-                                )}
-                                {item.cycle_week && <span>Wk {item.cycle_week}</span>}
-                                {item.notes && (
-                                  <span className="flex items-center gap-0.5"><FileText className="h-2.5 w-2.5" />Notes</span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1 flex-shrink-0">
-                              {item.completion_tracking && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  onClick={() => setExpandedLoggers(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                                >
-                                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expandedLoggers[item.id] ? 'rotate-180' : ''}`} />
-                                </Button>
-                              )}
-                              {isOwner && (
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingItem(item)}>
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </Button>
-                              )}
-                      {isOwner && onDeleteItem && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDeleteItem(item.id).then(() => setItems(prev => prev.filter(i => i.id !== item.id)))}>
-                          <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                  {/* Performance Logger */}
-                  {item.completion_tracking && expandedLoggers[item.id] && (
-                    <FolderItemPerformanceLogger
-                      item={item}
-                      performanceData={performanceDataMap[item.id]}
-                      onSave={async (data) => handleSavePerformanceData(item.id, data)}
-                      compact
-                    />
-                  )}
-                        </div>
-                      )}
-                    </SortableFolderItem>
-                      </div>
-                    );
-                  })}
+                  {displayItems.map(item => renderItemCard(item))}
                 </SortableContext>
               </DndContext>
             )}
@@ -548,20 +594,11 @@ export function FolderDetailDialog({
               specific_dates: (data as any).specific_dates?.length > 0 ? (data as any).specific_dates : null,
               cycle_week: pendingCycleWeek,
               template_snapshot: {
-                icon: data.icon,
-                color: data.color,
-                activity_type: data.activity_type,
-                title: data.title,
-                description: data.description,
-                intensity: data.intensity,
-                meals: data.meals,
-                custom_fields: data.custom_fields,
-                intervals: data.intervals,
-                embedded_running_sessions: data.embedded_running_sessions,
-                duration_minutes: data.duration_minutes,
-                exercises: data.exercises,
-                display_nickname: data.display_nickname,
-                custom_logo_url: data.custom_logo_url,
+                icon: data.icon, color: data.color, activity_type: data.activity_type,
+                title: data.title, description: data.description, intensity: data.intensity,
+                meals: data.meals, custom_fields: data.custom_fields, intervals: data.intervals,
+                embedded_running_sessions: data.embedded_running_sessions, duration_minutes: data.duration_minutes,
+                exercises: data.exercises, display_nickname: data.display_nickname, custom_logo_url: data.custom_logo_url,
               } as any,
             };
             const result = await onAddItem(folder.id, folderItem);
@@ -590,11 +627,9 @@ export function FolderDetailDialog({
         />
       )}
 
-      {/* Inline Folder Edit - replaces nested dialog to fix scroll lock */}
+      {/* Inline Folder Edit */}
       {editFolderOpen && onEditFolder && (
-        <Dialog open={editFolderOpen} onOpenChange={(open) => {
-          if (!open) setEditFolderOpen(false);
-        }}>
+        <Dialog open={editFolderOpen} onOpenChange={(open) => { if (!open) setEditFolderOpen(false); }}>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <FolderBuilder
               initialData={folder}
